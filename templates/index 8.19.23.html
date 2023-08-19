@@ -3,59 +3,29 @@
 <head>
     <title>Classroom Chat</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-            background-color: #f5f5f5;
-        }
-        #chat {
-            padding: 10px;
-            border: 1px solid #ccc;
-            height: 300px;
-            overflow: auto;
-            margin-bottom: 15px;
-        }
-        #messageForm, #usernameForm {
-            display: flex;
-            margin-bottom: 10px;
-        }
-        #message, #username {
-            flex-grow: 1;
-            margin-right: 5px;
-            padding: 5px;
-            border: 1px solid #ccc;
-        }
-        button {
-            padding: 5px 10px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-        }
-        button:hover {
-            background-color: #0056b3;
-        }
         a {
             color: blue;
             text-decoration: underline;
         }
-        h1 {
-            color: #333;
-        }
     </style>
 </head>
 <body>
-    <h1>Classroom Chat</h1>
+    <div id="chat">
+        <!-- ... -->
+    </div>
+
     <form id="usernameForm">
         <label for="username">Choose Username:</label>
-        <input type="text" id="username" name="username" required>
+        <input type="text" id="username" name="username" value="user" required>
         <button type="submit">Set Username</button>
     </form>
-    <input type="hidden" id="currentUsername" value="">
-    <div id="chat"></div>
+    <input type="hidden" id="currentUsername" value="user">
+
     <form id="messageForm">
         <input type="text" id="message" name="message" required>
         <button type="submit">Send Message</button>
     </form>
+
 <script>
     // Event listener for username form submission
     document.getElementById('usernameForm').addEventListener('submit', function(e) {
