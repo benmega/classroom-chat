@@ -1,12 +1,16 @@
 from flask import Flask, render_template, request, jsonify
 import openai
+import os
 
 #Service access at http://192.168.1.37:5000/
 #Blossom 192.168.1.136
 # Set your OpenAI API key
-openai.api_key = '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'
 
-app = Flask(__name__)
+
+openai.api_key = os.environ.get('OPEN_AI_API_KEY')
+
+
+app = Flask(__name__, static_url_path='/templates', static_folder='templates')
 
 # Your conversation history and AI role
 conversation_history = []
