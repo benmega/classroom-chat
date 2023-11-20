@@ -1,121 +1,111 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+
 <head>
     <title>Classroom Chat</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap">
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Roboto', sans-serif;
             margin: 20px;
             background-color: #f5f5f5;
         }
+
+        h1 {
+            color: #333;
+        }
+
+        #container {
+            max-width: 1500px;
+            margin: 0 auto;
+            padding: 0 20px; /* Add padding for better readability on larger screens */
+        }
+
         #chat {
             padding: 10px;
             border: 1px solid #ccc;
-            height: 300px;
+            height: 500px;
             overflow: auto;
             margin-bottom: 15px;
+            width: 100%; /* Make the message history full width */
         }
-        #messageForm, #usernameForm {
+
+        #usernameForm,
+        #messageForm {
             display: flex;
+            flex-wrap: wrap; /* Allow items to wrap to the next line on smaller screens */
             margin-bottom: 10px;
+            width: 100%; /* Make both forms full width */
         }
-        #message, #username {
-            flex-grow: 1;
+
+        label {
             margin-right: 5px;
-            padding: 5px;
-            border: 1px solid #ccc;
+            color: #555;
         }
+
+        input {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            flex: 1; /* Take up remaining space */
+            margin-bottom: 5px;
+            width: 80%; /* Make the input full width */
+        }
+
         button {
-            padding: 5px 10px;
-            background-color: #007bff;
+            padding: 10px 15px;
+            background-color: #3498db;
             color: white;
             border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            flex-basis: 20%; /* Full width on smaller screens */
         }
+
         button:hover {
-            background-color: #0056b3;
+            background-color: #2980b9;
         }
+
         a {
             color: blue;
             text-decoration: underline;
         }
-        h1 {
-            color: #333;
+
+        @media (max-width: 600px) {
+            /* Adjust styles for smaller screens */
+            #usernameForm,
+            #messageForm {
+                flex-direction: column;
+            }
+
+            input {
+                margin-bottom: 10px;
+            }
         }
     </style>
 </head>
+
 <body>
-    <h1>Classroom Chat</h1>
-    <form id="usernameForm">
-        <label for="username">Choose Username:</label>
-        <input type="text" id="username" name="username" required>
-        <button type="submit">Set Username</button>
-    </form>
-    <input type="hidden" id="currentUsername" value="">
-    <div id="chat"></div>
-    <form id="messageForm">
-        <input type="text" id="message" name="message" required>
-        <button type="submit">Send Message</button>
-    </form>
-<script>
-    // Event listener for username form submission
-    document.getElementById('usernameForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        var username = document.getElementById('username').value;
-        document.getElementById('currentUsername').value = username;
-    });
+    <div id="container">
+        <h1>Classroom Chat</h1>
 
-    // Event listener for message form submission
-    document.getElementById('messageForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        var message = document.getElementById('message').value;
-        var username = document.getElementById('currentUsername').value;
+        <form id="usernameForm">
+            <label for="username">Choose Username:</label>
+            <input type="text" id="username" name="username" required>
+            <button type="submit">Set Username</button>
+        </form>
 
-        // Check if username is set
-        if (!username) {
-            alert("Please set your username first!");
-            return;
-        }
-        var params = new URLSearchParams();
-        params.append('message', message);
-        params.append('username', username);
+        <input type="hidden" id="currentUsername" value="">
 
-        fetch('/send_message', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: params
-        }).then(function(response) {
-            if (response.ok) {
-                document.getElementById('message').value = '';
-            }
-        });
-    });
+        <div id="chat"></div>
 
-    // Function to update the conversation
-    function updateConversation() {
-        fetch('/get_conversation')
-            .then(response => response.json())
-            .then(data => {
-                var chatDiv = document.getElementById('chat');
-                chatDiv.innerHTML = '';
-                data.conversation_history.forEach(function(entry) {
-                    var user = entry[0];
-                    var message = entry[1];
-                    // Convert URLs to clickable links
-                    //var urlRegex = /(https?:\/\/[^\s]+)/g;
-                    var urlRegex = /(https?:\/\/[^\s]+)|(\bwww\.[^\s]+(?:\.[^\s]+)+\b)/g;
-                    message = message.replace(urlRegex, function(url) {
-                        return '<a href="' + url + '" target="_blank">' + url + '</a>';
-                    });
-                    chatDiv.innerHTML += '<p><strong>' + user + ':</strong> ' + message + '</p>';
-                });
-            });
-    }
+        <form id="messageForm">
+            <input type="text" id="message" name="message" required>
+            <button type="submit">Send Message</button>
+        </form>
+    </div>
 
-    // Set an interval to update the conversation every 2 seconds
-    setInterval(updateConversation, 2000);
-</script>
-
+    <script src="templates/script.js"></script>
 </body>
+
 </html>
