@@ -1,46 +1,69 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
     <title>Classroom Chat</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap">
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Roboto', sans-serif;
             margin: 20px;
             background-color: #f5f5f5;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        #container {
+            max-width: 1500px;
+            margin: 0 auto;
+            padding: 0 20px; /* Add padding for better readability on larger screens */
         }
 
         #chat {
             padding: 10px;
             border: 1px solid #ccc;
-            height: 300px;
+            height: 500px;
             overflow: auto;
             margin-bottom: 15px;
+            width: 100%; /* Make the message history full width */
         }
 
-        #messageForm,
-        #usernameForm {
+        #usernameForm,
+        #messageForm {
             display: flex;
+            flex-wrap: wrap; /* Allow items to wrap to the next line on smaller screens */
             margin-bottom: 10px;
+            width: 100%; /* Make both forms full width */
         }
 
-        #message,
-        #username {
-            flex-grow: 1;
+        label {
             margin-right: 5px;
-            padding: 5px;
+            color: #555;
+        }
+
+        input {
+            padding: 10px;
             border: 1px solid #ccc;
+            border-radius: 5px;
+            flex: 1; /* Take up remaining space */
+            margin-bottom: 5px;
+            width: 80%; /* Make the input full width */
         }
 
         button {
-            padding: 5px 10px;
-            background-color: #007bff;
+            padding: 10px 15px;
+            background-color: #3498db;
             color: white;
             border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            flex-basis: 20%; /* Full width on smaller screens */
         }
 
         button:hover {
-            background-color: #0056b3;
+            background-color: #2980b9;
         }
 
         a {
@@ -48,32 +71,41 @@
             text-decoration: underline;
         }
 
-        h1 {
-            color: #333;
+        @media (max-width: 600px) {
+            /* Adjust styles for smaller screens */
+            #usernameForm,
+            #messageForm {
+                flex-direction: column;
+            }
+
+            input {
+                margin-bottom: 10px;
+            }
         }
     </style>
 </head>
 
 <body>
-    <h1>Classroom Chat</h1>
+    <div id="container">
+        <h1>Classroom Chat</h1>
 
-    <form id="usernameForm">
-        <label for="username">Choose Username:</label>
-        <input type="text" id="username" name="username" required>
-        <button type="submit">Set Username</button>
-    </form>
+        <form id="usernameForm">
+            <label for="username">Choose Username:</label>
+            <input type="text" id="username" name="username" required>
+            <button type="submit">Set Username</button>
+        </form>
 
-    <input type="hidden" id="currentUsername" value="">
+        <input type="hidden" id="currentUsername" value="">
 
-    <div id="chat"></div>
+        <div id="chat"></div>
 
-    <form id="messageForm">
-        <input type="text" id="message" name="message" required>
-        <button type="submit">Send Message</button>
-    </form>
+        <form id="messageForm">
+            <input type="text" id="message" name="message" required>
+            <button type="submit">Send Message</button>
+        </form>
+    </div>
 
     <script src="templates/script.js"></script>
-
 </body>
 
 </html>
