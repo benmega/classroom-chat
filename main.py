@@ -10,7 +10,8 @@ import os
 openai.api_key = os.environ.get('OPEN_AI_API_KEY')
 
 
-app = Flask(__name__, static_url_path='/templates', static_folder='templates')
+
+app = Flask(__name__, static_url_path='', static_folder='static')
 
 # Your conversation history and AI role
 conversation_history = []
