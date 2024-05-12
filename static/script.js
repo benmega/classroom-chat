@@ -12,10 +12,10 @@
         var username = document.getElementById('currentUsername').value;
 
         // Check if username is set
-        if (!username) {
-            alert("Please set your username first!");
-            return;
-        }
+//        if (!username) {
+//            alert("Please set your username first!");
+//            return;
+//        }
         var params = new URLSearchParams();
         params.append('message', message);
         params.append('username', username);
