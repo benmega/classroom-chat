@@ -20,6 +20,7 @@ def index():
 
 @app.route('/send_message', methods=['POST'])
 def send_message():
+    print('sending message')
     user_ip = request.remote_addr
     username = request.form['username']
     user = User.query.filter_by(ip_address=user_ip).first()
@@ -66,6 +67,23 @@ def send_message():
 @app.route('/get_conversation', methods=['GET'])
 def get_conversation():
     return jsonify(conversation_history=conversation_history)
+
+
+@app.route('/set_username', methods=['POST'])
+def set_username():
+    username = request.form['username']
+    # Logic to update the username in your database or session
+    return jsonify({'success': True})
+
+@app.route('/verify_password', methods=['POST'])
+def verify_password():
+    username = request.form['username']
+    password = request.form['password']
+    if password == '1234':  # Normally, you'd use a more secure comparison method
+        # Update username logic here (e.g., update session or database)
+        return jsonify(success=True)
+    else:
+        return jsonify(success=False), 401
 
 with app.app_context():
     db.create_all()
