@@ -1,65 +1,91 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, jsonify, request
+from models import db, User
 import openai
-import os
+from config import Config
 
-#Service access at http://192.168.1.37:5000/
-#Blossom 192.168.1.136
-# Set your OpenAI API key
-
-
-openai.api_key = os.environ.get('OPEN_AI_API_KEY')
-
-
-
-app = Flask(__name__, static_url_path='/static', static_folder='static')
-
+app = Flask(__name__)
+app.config.from_object(Config)
+db.init_app(app)
 
 # Your conversation history and AI role
 conversation_history = []
-#ai_role = "I am trying to impersonate a human."
-ai_role = "I am an elementary teacher. My goal is to provide easy to understand answers that, while possibly simplified, give an understand of what is."
-#ai_role = "I am a DND dungeon master" #meh
-#ai_role = "I am the computer in the text adventure game Zork first released in 1977 by developers Tim Anderson"
+ai_role = '''I am an elementary teacher.
+    My goal is to provide easy to understand answers that, while possibly simplified, give an understand of what is."
+'''
 ai_username = "AI Teacher"
-
 @app.route('/')
 def index():
-    return render_template('index.html', conversation_history=conversation_history)
-
-@app.route('/set_role', methods=['POST'])
-def set_role():
-    global ai_role
-    ai_role = request.form['role']
-    return jsonify(success=True)
-
-@app.route('/get_conversation', methods=['GET'])
-def get_conversation():
-    return jsonify(conversation_history=conversation_history)
+    return render_template('index.html')
 
 @app.route('/send_message', methods=['POST'])
 def send_message():
-    print("Received data:", request.form)
+    print('sending message')
+    user_ip = request.remote_addr
+    username = request.form['username']
+    user = User.query.filter_by(ip_address=user_ip).first()
+
+    if user:
+        if not username:
+            username = user.username
+        elif user.username != username:
+            print(f"Updating user from {user.username} to {username}")
+            user.username = username
+            try:
+                db.session.commit()
+            except Exception as e:
+                print(f"Database error: {e}")
+                db.session.rollback()  # Roll back on error
+    else:
+        print("No user found, creating a new one.")
+        user = User(ip_address=user_ip, username=username)
+        db.session.add(user)
+        db.session.commit()
+
 
     user_message = request.form['message']
-    username = request.form['username']
+    # Assuming you're storing the message history somewhere
     conversation_history.append((username, user_message))
 
     # Concatenate all pending messages
     prompt = ai_role + " " + " ".join([message for user, message in conversation_history])
 
     # Send to OpenAI and get response
-    noChatBot = True # TODO make easy to switch on and of f
+    noChatBot = True  # TODO make easy to switch on and off
     if noChatBot:
         return jsonify(success=True)
     response = openai.Completion.create(
-      engine="text-davinci-003",
-      prompt=prompt,
-      max_tokens=150
+        engine="text-davinci-003",
+        prompt=prompt,
+        max_tokens=150
     )
     conversation_history.append((ai_username, response.choices[0].text))
-    #TODO Add optional wait time based on length of message so as to appear more realistic
+    # TODO Add optional wait time based on length of message so as to appear more realistic
     return jsonify(success=True)
 
+
+@app.route('/get_conversation', methods=['GET'])
+def get_conversation():
+    return jsonify(conversation_history=conversation_history)
+
+
+@app.route('/set_username', methods=['POST'])
+def set_username():
+    username = request.form['username']
+    # Logic to update the username in your database or session
+    return jsonify({'success': True})
+
+@app.route('/verify_password', methods=['POST'])
+def verify_password():
+    username = request.form['username']
+    password = request.form['password']
+    if password == '1234':  # Normally, you'd use a more secure comparison method
+        # Update username logic here (e.g., update session or database)
+        return jsonify(success=True)
+    else:
+        return jsonify(success=False), 401
+
+with app.app_context():
+    db.create_all()
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')
