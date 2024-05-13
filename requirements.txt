@@ -1,5 +1,6 @@
 Package           Version
 ----------------- --------
+alembic           1.13.1
 annotated-types   0.7.0
 anyio             4.3.0
 bidict            0.23.1
@@ -37,3 +38,10 @@ tqdm              4.66.4
 typing_extensions 4.12.0
 Werkzeug          3.0.3
 wsproto           1.2.0
+
+SQLAlchemy~=2.0.30
+flask~=3.0.3
+openai            1.30.5
+python-dotenv~=1.0.1
+alembic~=1.13.1
+openai~=1.30.5

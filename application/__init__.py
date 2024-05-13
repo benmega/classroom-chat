@@ -13,8 +13,8 @@ def create_app():
     app.config.from_object(Config)
 
     db.init_app(app)
-    socketio.init_app(app, cors_allowed_origins="*", async_mode='eventlet')
-    # socketio.run(app, host='0.0.0.0')
+    # socketio.init_app(app, cors_allowed_origins="*", async_mode='eventlet')
+    socketio.init_app(app, cors_allowed_origins="*", async_mode='threading')
 
     register_blueprints(app)  # Register all blueprints
 

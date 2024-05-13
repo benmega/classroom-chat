@@ -108,7 +108,7 @@ def get_or_make_user(user_ip, form_username="", admin_override=False):
             print(f"No changes made to the username for user {user.username}")
     else:
         print("No user found, creating a new one.")
-        user = User(ip_address=user_ip, username=form_username or generate_unique_username)
+        user = User(ip_address=user_ip, username=form_username or generate_unique_username())
         db.session.add(user)
 
     success = request_database_commit()
