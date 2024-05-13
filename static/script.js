@@ -8,7 +8,6 @@ var passwordInput = document.getElementById('passwordInput');
 var currentUsernameInput = document.getElementById('currentUsername');
 var usernameForm = document.getElementById('usernameForm');
 var messageForm = document.getElementById('messageForm');
-console.log('hello');
 var submitPasswordBtn = document.getElementById('submitPasswordBtn');
 
 // Open the modal on username form submission
@@ -38,6 +37,7 @@ messageForm.addEventListener('submit', function(e) {
 });
 
 function openModal() {
+    document.getElementById('passwordInput').value = ''; // Clear the password field
     modal.style.display = "block";
 }
 
@@ -56,7 +56,6 @@ function verifyPassword(username, password) {
     var params = new URLSearchParams();
     params.append('username', username);
     params.append('password', password);
-
     fetch('/verify_password', {
         method: 'POST',
         headers: {
@@ -108,7 +107,7 @@ window.onclick = function(event) {
 }
 
 // Example listener for submitting the password form within the modal
-document.getElementById('submitPasswordBtn').addEventListener('click', submitPassword);
+// document.getElementById('submitPasswordBtn').addEventListener('click', submitPassword);
 
 // Function to update the conversation
 function updateConversation() {

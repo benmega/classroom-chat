@@ -1,7 +1,6 @@
 from flask import Flask, render_template, jsonify, request
 from models import db, User
 import openai
-import os
 from config import Config
 
 app = Flask(__name__)
