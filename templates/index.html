@@ -5,7 +5,7 @@
     <title>Classroom Chat</title>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap">
     <link rel="icon" href="{{ url_for('static', filename='logo.ico') }}" type="image/x-icon">
-    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <script src="{{ url_for('static', filename='main.js') }}"></script>
 
     <style>
 
@@ -157,7 +157,7 @@
         </div>
     </div>
 
-    <script src="static/script.js"></script>
+    <script type="module" src="{{ url_for('static', filename='main.js') }}"></script>
 </body>
 
 </html>

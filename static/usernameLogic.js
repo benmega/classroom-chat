@@ -1,40 +1,45 @@
+// usernameLogic.js
+
 // Open the modal on username form submission
-usernameForm.addEventListener('submit', function(e) {
+export function handleUsernameFormSubmission(e) {
     e.preventDefault();
     openModal();
-});
+}
 
 // Close the modal logic
-span.onclick = closeModal;
-window.onclick = function(event) {
-    if (event.target == modal) {
-        closeModal();
+export function closeModalLogic(span, modal) {
+    span.onclick = closeModal;
+    window.onclick = function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
     }
 }
 
-function openModal() {
+export function openModal() {
     document.getElementById('passwordInput').value = ''; // Clear the password field
-    modal.style.display = "block";
+    document.getElementById('passwordModal').style.display = "block";
 }
 
-function closeModal() {
-    modal.style.display = "none";
+export function closeModal() {
+    document.getElementById('passwordModal').style.display = "none";
 }
-
 
 // Handle password submission
-submitPasswordBtn.onclick = function() {
-    submitPassword();
+export function handlePasswordSubmission(submitPasswordBtn) {
+    submitPasswordBtn.onclick = function() {
+        submitPassword();
+    }
 }
 
-function submitPassword() {
-    var password = passwordInput.value;
-    var username = usernameInput.value;
+export function submitPassword() {
+    var password = document.getElementById('passwordInput').value;
+    var username = document.getElementById('username').value;
     closeModal();
     verifyPassword(username, password);
 }
 
-function verifyPassword(username, password) {
+export function verifyPassword(username, password) {
     var params = new URLSearchParams();
     params.append('username', username);
     params.append('password', password);
@@ -47,21 +52,11 @@ function verifyPassword(username, password) {
     }).then(response => response.json())
     .then(data => {
         if (data.success) {
-            currentUsernameInput.value = username;
+            document.getElementById('currentUsername').value = username;
             alert('Username updated successfully!');
         } else {
             alert("Incorrect password. You are not allowed to change the username.");
-            usernameInput.value = currentUsernameInput.value;
+            document.getElementById('username').value = document.getElementById('currentUsername').value;
         }
     });
-}
-
-// Close the modal when the user clicks on <span> (x)
-span.onclick = closeModal;
-
-// Close the modal when the user clicks outside of it
-window.onclick = function(event) {
-    if (event.target == modal) {
-        closeModal();
-    }
 }
