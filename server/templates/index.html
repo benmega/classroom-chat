@@ -147,6 +147,15 @@
         </form>
     </div>
 
+    {% if username == 'Mr. Mega' %}
+    <div id="admin-panel">
+        <h2>Admin Panel</h2>
+        <table id="users-table">
+            <!-- Users data will be dynamically populated -->
+        </table>
+    </div>
+    {% endif %}
+
     <!-- Password Modal -->
     <div id="passwordModal" class="modal">
         <div class="modal-content">
@@ -156,6 +165,7 @@
             <button id="submitPasswordBtn">Submit</button>
         </div>
     </div>
+
 
     <script type="module" src="{{ url_for('static', filename='main.js') }}"></script>
 </body>
