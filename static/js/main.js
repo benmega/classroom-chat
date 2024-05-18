@@ -29,7 +29,7 @@ document.addEventListener('DOMContentLoaded', function() {
         params.append('message', message);
         params.append('username', username);
 
-        fetch('/send_message', {
+        fetch('user/send_message', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
@@ -44,7 +44,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Function to update the conversation
     function updateConversation() {
-        fetch('/get_conversation')
+        fetch('user/get_conversation')
             .then(response => response.json())
             .then(data => {
                 var chatDiv = document.getElementById('chat');

@@ -2,8 +2,10 @@
 
 import openai
 
-from config import Config
 from flask import Blueprint, jsonify, request
+
+from application.config import Config
+
 # from server.ai_teacher import get_ai_response
 
 ai_bp = Blueprint('ai_bp', __name__)

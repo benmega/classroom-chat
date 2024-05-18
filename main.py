@@ -1,5 +1,6 @@
-from server.models import db
-from server.app_factory import create_app
+from application import create_app
+# from app_factory import create_app
+from application.models.user import db
 
 app = create_app()
 

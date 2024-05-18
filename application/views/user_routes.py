@@ -1,11 +1,12 @@
 from flask import Blueprint, request, jsonify
 
-from server.ai_teacher import ChatBotEnabled, get_ai_response
-from server.models import db, User
-from server.routes.routes import conversation_history
+from application.ai.ai_teacher import ChatBotEnabled, get_ai_response
+from application.models.user import User, db
+
+# from server.views.views import conversation_history
 
 user_bp = Blueprint('user_bp', __name__)
-
+conversation_history = []
 
 @user_bp.route('/send_message', methods=['POST'])
 def send_message():
@@ -49,3 +50,7 @@ def get_users():
 def update_user(user_id):
     pass
     # Logic to update user
+
+@user_bp.route('/get_conversation', methods=['GET'])
+def get_conversation():
+    return jsonify(conversation_history=conversation_history)

@@ -4,7 +4,6 @@ from logging.config import fileConfig
 from sqlalchemy import engine_from_config, pool
 from alembic import context
 from dotenv import load_dotenv
-import os
 
 # Load environment variables from .env file
 load_dotenv()
@@ -18,7 +17,7 @@ fileConfig(config.config_file_name)
 
 # add your model's MetaData object here
 # for 'autogenerate' support
-from server.models import db  # Import your SQLAlchemy models
+from application import db  # Import your SQLAlchemy models
 target_metadata = db.metadata
 
 # other values from the config, defined by the needs of env.py,

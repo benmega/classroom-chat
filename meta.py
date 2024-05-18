@@ -14,9 +14,10 @@ def create_file(path):
 
 import os
 
-def print_directory_structure(startpath):
+def print_directory_structure(startpath, exclude=[]):
     for root, dirs, files in os.walk(startpath):
-
+        # Filtering out excluded directories from the dirs list
+        dirs[:] = [d for d in dirs if d not in exclude]
         level = root.replace(startpath, '').count(os.sep)
         indent = ' ' * 4 * level
         print(f"{indent}{os.path.basename(root)}/")
@@ -25,17 +26,12 @@ def print_directory_structure(startpath):
             print(f"{subindent}{f}")
 
 def main():
-    # Replace 'your_project_directory_path' with the path to your project directory
     project_directory = os.getcwd()
+    print_directory_structure(project_directory, ['venv', '.git', '.idea'])
 
-    # project_directory = project_directory + "/src"
-    print_directory_structure(project_directory)
+if __name__ == "__main__":
+    main()
 
-# Define the base path for the tests directory
-base_path = "/"
-
-
-main()
 
 '''
 groupChat2/
@@ -45,8 +41,8 @@ groupChat2/
 │
 ├── server/
 │   ├── __init__.py
-│   ├── models.py
-│   ├── routes.py
+│   ├── user.py
+│   ├── views.py
 │   └── templates/
 │       └── index.html
 │
