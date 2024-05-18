@@ -24,39 +24,7 @@ def create_app():
     def index():
         return render_template('index.html')
 
-    @app.route('/send_message', methods=['POST'])
-    def send_message():
 
-        # TODO refactor to part of the user object
-        # TODO make user object
-        user_ip = request.remote_addr
-        username = request.form['username']
-        user = User.query.filter_by(ip_address=user_ip).first()
-        print(f'sending message from {user_ip} ({username})')
-        if user:
-            if not username:
-                username = user.username
-            elif user.username != username:
-                print(f"Updating user from {user.username} to {username}")
-                user.username = username
-                try:
-                    db.session.commit()
-                except Exception as e:
-                    print(f"Database error: {e}")
-                    db.session.rollback()  # Roll back on error
-        else:
-            print("No user found, creating a new one.")
-            user = User(ip_address=user_ip, username=username)
-            db.session.add(user)
-            db.session.commit()
-
-        user_message = request.form['message']
-        conversation_history.append((username, user_message))
-
-        if not ChatBotEnabled:
-            return jsonify(success=True)
-
-        return jsonify(success=True, ai_response=get_ai_response(user_message, username))
 
     @app.route('/get_conversation', methods=['GET'])
     def get_conversation():
