@@ -53,8 +53,6 @@ def create_app():
         user_message = request.form['message']
         conversation_history.append((username, user_message))
 
-        prompt = ai_role + " " + " ".join([message for user, message in conversation_history])
-
         if not ChatBotEnabled:
             return jsonify(success=True)
 
