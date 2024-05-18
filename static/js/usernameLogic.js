@@ -43,7 +43,7 @@ export function verifyPassword(username, password) {
     var params = new URLSearchParams();
     params.append('username', username);
     params.append('password', password);
-    fetch('/verify_password', {
+    fetch('admin/verify_password', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
