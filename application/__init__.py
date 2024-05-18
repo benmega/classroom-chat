@@ -9,7 +9,6 @@ from application.views.general_routes import general_bp
 def create_app():
     app = Flask(__name__, template_folder=Config.TEMPLATE_FOLDER, static_folder=Config.STATIC_FOLDER)
     app.config.from_object(Config)
-    print("Template folder is set to:", app.template_folder)
     db.init_app(app)
 
     app.register_blueprint(user_bp, url_prefix='/user')

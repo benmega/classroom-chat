@@ -22,3 +22,17 @@ def update_user(user_id):
         db.session.commit()
         return jsonify({"success": True})
     return jsonify({"error": "User not found"}), 404
+
+
+@admin_bp.route('/set_username', methods=['POST'])
+def set_username():
+    username = request.form['username']
+    return jsonify({'success': True})
+
+@admin_bp.route('/verify_password', methods=['POST'])
+def verify_password():
+    password = request.form['password']
+    if password == '1234':
+        return jsonify(success=True)
+    else:
+        return jsonify(success=False), 401
