@@ -1,45 +1,54 @@
 from flask import Blueprint, request, jsonify
-
-from application.ai.ai_teacher import ChatBotEnabled, get_ai_response
 from application.models.user import User, db
-
-# from server.views.views import conversation_history
+from application.models.conversation import Conversation
+from application.ai.ai_teacher import ChatBotEnabled, get_ai_response
 
 user_bp = Blueprint('user_bp', __name__)
-conversation_history = []
-
 
 @user_bp.route('/send_message', methods=['POST'])
 def send_message():
-    # TODO refactor to part of the user object
-    # TODO make user object
     user_ip = request.remote_addr
     formUsername = request.form['username']
     user_message = request.form['message']
+
+    # Ensure user exists or create new one
     user = get_or_make_user(user_ip, formUsername)
-    conversation_history.append((user.username, user_message))
 
-    if not ChatBotEnabled:
-        return jsonify(success=True)
+    # Save the message to the database
+    conversation = Conversation(message=user_message, user_id=user.id)
+    db.session.add(conversation)
+    try:
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        return jsonify(success=False, error=str(e)), 500
 
-    return jsonify(success=True, ai_response=get_ai_response(user_message, user.username))
+    # If the ChatBot is enabled, get a response
+    if ChatBotEnabled:
+        ai_response = get_ai_response(user_message, user.username)
+        return jsonify(success=True, ai_response=ai_response)
+
+    return jsonify(success=True)
 
 
 @user_bp.route('/get_users', methods=['GET'])
 def get_users():
-    pass
-    # Logic to retrieve users
+    # Query the database for all users
+    users = User.query.all()
+    # Convert the list of User objects to a list of dictionaries
+    users_data = [{'id': user.id, 'username': user.username, 'email': user.email} for user in users]
+    # Return the data in JSON format
+    return jsonify(users_data)
 
-
-@user_bp.route('/admin/users/<int:user_id>', methods=['PUT'])
-def update_user(user_id):
-    pass
-    # Logic to update user
 
 
 @user_bp.route('/get_conversation', methods=['GET'])
 def get_conversation():
-    return jsonify(conversation_history=conversation_history)
+    # Fetch all conversations from the database
+    conversations = Conversation.query.join(User).all()
+    # Prepare data for JSON response
+    conversation_data = [{'username': conv.user.username, 'message': conv.message} for conv in conversations]
+    return jsonify(conversation_history=conversation_data)
 
 
 def get_or_make_user(user_ip, formUsername=""):

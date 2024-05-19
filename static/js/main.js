@@ -42,25 +42,40 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Function to update the conversation
-    function updateConversation() {
-        fetch('user/get_conversation')
-            .then(response => response.json())
-            .then(data => {
-                var chatDiv = document.getElementById('chat');
-                chatDiv.innerHTML = '';
-                data.conversation_history.forEach(function(entry) {
-                    var user = entry[0];
-                    var message = entry[1];
-                    // Convert URLs to clickable links
-                    var urlRegex = /(https?:\/\/[^\s]+)|(\bwww\.[^\s]+(?:\.[^\s]+)+\b)/g;
-                    message = message.replace(urlRegex, function(url) {
-                        return '<a href="' + url + '" target="_blank">' + url + '</a>';
-                    });
-                    chatDiv.innerHTML += '<p><strong>' + user + ':</strong> ' + message + '</p>';
+// Function to update the conversation
+function updateConversation() {
+    fetch('/user/get_conversation')  // Ensure the path is absolute or correctly relative
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok: ' + response.statusText);
+            }
+            return response.json();
+        })
+        .then(data => {
+            var chatDiv = document.getElementById('chat');
+            if (!chatDiv) {
+                console.error('Chat div not found');
+                return;
+            }
+            chatDiv.innerHTML = '';  // Clear previous content
+
+            data.conversation_history.forEach(function(entry) {
+                var user = entry.username;   // Assuming the object has 'username'
+                var message = entry.message; // Assuming the object has 'message'
+
+                // Convert URLs to clickable links
+                var urlRegex = /(https?:\/\/[^\s]+)|(\bwww\.[^\s]+(?:\.[^\s]+)+\b)/g;
+                message = message.replace(urlRegex, function(url) {
+                    return '<a href="' + (url.startsWith('http') ? url : 'http://' + url) + '" target="_blank">' + url + '</a>';
                 });
+
+                chatDiv.innerHTML += '<p><strong>' + user + ':</strong> ' + message + '</p>';
             });
-    }
+        })
+        .catch(error => {
+            console.error('Failed to fetch conversation:', error);
+        });
+}
 
     // Set an interval to update the conversation every 2 seconds
     setInterval(updateConversation, 2000);
