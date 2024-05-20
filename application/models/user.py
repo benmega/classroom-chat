@@ -6,7 +6,7 @@ class User(db.Model):
     username = db.Column(db.String(50), unique=True, nullable=False)
     ip_address = db.Column(db.String(45), nullable=False)
     conversations = db.relationship('Conversation', backref='user', lazy='dynamic')
-    # is_ai_teacher = db.Column(db.Boolean, default=False)
+    is_online = db.Column(db.Boolean, default=False)
 
     def __repr__(self):
         return f'<User {self.username}>'

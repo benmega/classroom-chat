@@ -22,10 +22,12 @@ function displayUsers(users) {
     let usersTable = document.getElementById('users-table');
     users.forEach(user => {
         let row = usersTable.insertRow();
+        console.log('user display admin.js')
         row.insertCell(0).innerHTML = user.username;
         row.insertCell(1).innerHTML = user.ip_address;
-        row.insertCell(2).innerHTML = `<input type="checkbox" ${user.is_ai_teacher ? 'checked' : ''} onchange="toggleAITeacher(${user.id}, this.checked)">`;
-        row.insertCell(3).innerHTML = `<button onclick="changeUsername(${user.id})">Change Username</button>`;
+        row.insertCell(2).innerHTML = user.is_online ? 'Online' : 'Offline';  // Display online status
+        row.insertCell(3).innerHTML = `<input type="checkbox" ${user.is_ai_teacher ? 'checked' : ''} onchange="toggleAITeacher(${user.id}, this.checked)">`;
+        row.insertCell(4).innerHTML = `<button onclick="changeUsername(${user.id})">Change Username</button>`;
     });
 }
 
