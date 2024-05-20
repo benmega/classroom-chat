@@ -6,6 +6,11 @@ export function handleUsernameFormSubmission(e) {
     openModal();
 }
 
+export function openModal() {
+    document.getElementById('passwordInput').value = ''; // Clear the password field
+    document.getElementById('passwordModal').style.display = "block";
+}
+
 // Close the modal logic
 export function closeModalLogic(span, modal) {
     span.onclick = closeModal;
@@ -16,14 +21,12 @@ export function closeModalLogic(span, modal) {
     }
 }
 
-export function openModal() {
-    document.getElementById('passwordInput').value = ''; // Clear the password field
-    document.getElementById('passwordModal').style.display = "block";
-}
-
 export function closeModal() {
     document.getElementById('passwordModal').style.display = "none";
 }
+
+
+
 
 // Handle password submission
 export function handlePasswordSubmission(submitPasswordBtn) {
@@ -31,29 +34,6 @@ export function handlePasswordSubmission(submitPasswordBtn) {
         submitPassword();
     }
 }
-
-
-//export function verifyPassword(username, password) {
-//    var params = new URLSearchParams();
-//    params.append('username', username);
-//    params.append('password', password);
-//    fetch('admin/verify_password', {
-//        method: 'POST',
-//        headers: {
-//            'Content-Type': 'application/x-www-form-urlencoded',
-//        },
-//        body: params
-//    }).then(response => response.json())
-//    .then(data => {
-//        if (data.success) {
-//            document.getElementById('currentUsername').value = username;
-//            alert('Username updated successfully!');
-//        } else {
-//            alert("Incorrect password. You are not allowed to change the username.");
-//            document.getElementById('username').value = document.getElementById('currentUsername').value;
-//        }
-//    });
-//}
 
 // Function to verify the password
 export function verifyPassword(username, password) {
