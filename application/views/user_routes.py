@@ -2,33 +2,33 @@ from flask import Blueprint, request, jsonify
 from application.models.user import User, db
 from application.models.conversation import Conversation
 from application.ai.ai_teacher import ChatBotEnabled, get_ai_response
+from application.utilities.helper_functions import request_database_commit
 
 user_bp = Blueprint('user_bp', __name__)
+
 
 @user_bp.route('/send_message', methods=['POST'])
 def send_message():
     user_ip = request.remote_addr
-    formUsername = request.form['username']
-    user_message = request.form['message']
+    form_username = request.form['username']
+    form_message = request.form['message']
 
     # Ensure user exists or create new one
-    user = get_or_make_user(user_ip, formUsername)
+    user = get_or_make_user(user_ip, form_username)
 
     # Save the message to the database
-    conversation = Conversation(message=user_message, user_id=user.id)
+    conversation = Conversation(message=form_message, user_id=user.id)
     db.session.add(conversation)
-    try:
-        db.session.commit()
-    except Exception as e:
-        db.session.rollback()
-        return jsonify(success=False, error=str(e)), 500
+
+    if not request_database_commit():
+        return jsonify(success=False, error="Database commit failed"), 500
 
     # If the ChatBot is enabled, get a response
-    if ChatBotEnabled:
-        ai_response = get_ai_response(user_message, user.username)
-        return jsonify(success=True, ai_response=ai_response)
+    if not ChatBotEnabled:
+        return jsonify(success=True), 200
 
-    return jsonify(success=True)
+    ai_response = get_ai_response(form_message, user.username)
+    return jsonify(success=True, ai_response=ai_response)
 
 
 @user_bp.route('/get_users', methods=['GET'])
@@ -41,7 +41,6 @@ def get_users():
     return jsonify(users_data)
 
 
-
 @user_bp.route('/get_conversation', methods=['GET'])
 def get_conversation():
     # Fetch all conversations from the database
@@ -51,23 +50,36 @@ def get_conversation():
     return jsonify(conversation_history=conversation_data)
 
 
-def get_or_make_user(user_ip, formUsername=""):
-    # retrieve user info or create a new user with given username and ip
+def get_or_make_user(user_ip, form_username="", admin_override=False):
+    """
+    Retrieves an existing user by IP or creates a new one with the given username and IP.
+    Updates username only if admin override is true or the user does not exist.
+
+    Args:
+    user_ip (str): IP address of the user.
+    form_username (str): Proposed new username.
+    admin_override (bool): Whether the change is approved by an admin.
+
+    Returns:
+    User: The retrieved or newly created user object.
+    """
     user = User.query.filter_by(ip_address=user_ip).first()
-    print(f'sending message from {user_ip} ({formUsername})')
+    print(f'Sending message from {user_ip} ({form_username})')
+
     if user:
-        # return user
-        if user.username != formUsername:
-            print(f"Updating user from {user.username} to {formUsername}")
-            user.username = formUsername
-            try:
-                db.session.commit()
-            except Exception as e:
-                print(f"Database error: {e}")
-                db.session.rollback()  # Roll back on error
+        # Only update if admin has overridden, or consider other conditions
+        if admin_override and user.username != form_username:
+            print(f"Admin updating user from {user.username} to {form_username}")
+            user.username = form_username
+        else:
+            print(f"No changes made to the username for user {user.username}")
     else:
         print("No user found, creating a new one.")
-        user = User(ip_address=user_ip, username=formUsername)
+        user = User(ip_address=user_ip, username=form_username)
         db.session.add(user)
-        db.session.commit()
-    return user
+
+    success = request_database_commit()
+    return user if success else None
+
+
+

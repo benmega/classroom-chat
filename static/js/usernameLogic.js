@@ -32,31 +32,75 @@ export function handlePasswordSubmission(submitPasswordBtn) {
     }
 }
 
-export function submitPassword() {
-    var password = document.getElementById('passwordInput').value;
-    var username = document.getElementById('username').value;
-    closeModal();
-    verifyPassword(username, password);
-}
 
+//export function verifyPassword(username, password) {
+//    var params = new URLSearchParams();
+//    params.append('username', username);
+//    params.append('password', password);
+//    fetch('admin/verify_password', {
+//        method: 'POST',
+//        headers: {
+//            'Content-Type': 'application/x-www-form-urlencoded',
+//        },
+//        body: params
+//    }).then(response => response.json())
+//    .then(data => {
+//        if (data.success) {
+//            document.getElementById('currentUsername').value = username;
+//            alert('Username updated successfully!');
+//        } else {
+//            alert("Incorrect password. You are not allowed to change the username.");
+//            document.getElementById('username').value = document.getElementById('currentUsername').value;
+//        }
+//    });
+//}
+
+// Function to verify the password
 export function verifyPassword(username, password) {
     var params = new URLSearchParams();
     params.append('username', username);
     params.append('password', password);
-    fetch('admin/verify_password', {
+
+    return fetch('admin/verify_password', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
         },
         body: params
-    }).then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            document.getElementById('currentUsername').value = username;
-            alert('Username updated successfully!');
-        } else {
-            alert("Incorrect password. You are not allowed to change the username.");
-            document.getElementById('username').value = document.getElementById('currentUsername').value;
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
         }
+        return response.json();
     });
+}
+
+// Function to update the username on successful verification
+function updateUsername(username, success) {
+    if (success) {
+        document.getElementById('currentUsername').value = username;
+        alert('Username updated successfully!');
+    } else {
+        alert("Incorrect password. You are not allowed to change the username.");
+        document.getElementById('username').value = document.getElementById('currentUsername').value;
+    }
+}
+
+export function handlePasswordVerification(username, password) {
+    verifyPassword(username, password)
+        .then(data => {
+            updateUsername(username, data.success);
+        })
+        .catch(error => {
+            console.error('Error during verification:', error);
+            alert('Failed to verify password due to an error.');
+        });
+}
+
+export function submitPassword() {
+    var password = document.getElementById('passwordInput').value;
+    var username = document.getElementById('username').value;
+    closeModal();
+    handlePasswordVerification(username, password);
 }

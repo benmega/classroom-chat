@@ -4,9 +4,10 @@ from functools import wraps
 from application.models.conversation import Conversation
 from application.models.database import Configuration
 from application.models.user import db, User
+from application.utilities.helper_functions import request_database_commit
 
 admin_bp = Blueprint('admin_bp', __name__)
-adminPass = '1234'  # Global variable for admin password
+admin_pass = '1234'  # Global variable for admin password. This should be securely fetched or better yet, use hashed passwords
 adminUsername = 'Mr. Mega'
 
 def check_auth(f):
@@ -14,7 +15,7 @@ def check_auth(f):
     def authenticate_and_execute(*args, **kwargs):
         username = request.args.get('username') if request.method == 'GET' else request.form['username']
         password = request.args.get('password') if request.method == 'GET' else request.form['password']
-        if username != adminUsername or password != adminPass:
+        if username != adminUsername or password != admin_pass:
             return jsonify({"error": "Unauthorized"}), 401
         return f(*args, **kwargs)
     return authenticate_and_execute
@@ -37,35 +38,43 @@ def update_user(user_id):
         return jsonify({"success": True})
     return jsonify({"error": "User not found"}), 404
 
-@admin_bp.route('/set_username', methods=['POST'])
-def set_username():
-    # Assuming the user ID is sent in the form data
-    user_id = request.form.get('user_id')
-    new_username = request.form.get('username')
 
-    if not user_id or not new_username:
+def update_username(new_username, user_id=None, user_ip=None):
+    if user_id: #ID takes priority
+        user = User.query.get(user_id)
+    elif user_ip:
+        user = User.query.filter_by(ip_address=user_ip).first()
+    else:
+        return False, 'User not found'
+
+    print(f"Admin updating user from {user.username} to {new_username}")
+    user.username = new_username
+    db.session.commit()
+    return True, None
+
+def set_username():
+    user_id = request.form.get('user_id')
+    user_ip = request.remote_addr
+    new_username = request.form.get('username')
+    if not new_username:
         return jsonify({'error': 'Missing user ID or new username'}), 400
 
-    # Find the user in the database
-    user = User.query.get(user_id)
-    if not user:
-        return jsonify({'error': 'User not found'}), 404
-
-    # Update the username
-    user.username = new_username
-    try:
-        db.session.commit()
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({'error': 'Failed to update username', 'message': str(e)}), 500
+    success, error_message = update_username(new_username, user_id, user_ip)
+    if not success:
+        return jsonify({'error': 'Failed to update username', 'message': error_message}), 500
 
     return jsonify({'success': True})
+@admin_bp.route('/set_username', methods=['POST'])
+def set_username_route():
+    return set_username()
+
 
 @admin_bp.route('/verify_password', methods=['POST'])
 def verify_password():
     password = request.form['password']
-    if password == adminPass:
-        return jsonify(success=True)
+    # Assuming password comparison for simplicity; use hashed passwords in real applications
+    if password == admin_pass:
+        return set_username()
     else:
         return jsonify(success=False), 401
 
