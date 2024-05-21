@@ -1,7 +1,5 @@
 // socketManager.js
 
-import io from 'socket.io-client';
-
 export async function setupSocketConnection() {
     const response = await fetch('/user/get_user_id');
     if (!response.ok) {

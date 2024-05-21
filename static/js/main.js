@@ -3,9 +3,10 @@
 import { handleUsernameFormSubmission, closeModalLogic, handlePasswordSubmission } from './usernameLogic.js';
 import { socket } from './socketLogic.js';  // Import the socket instance
 import { setupSocketConnection } from './socketManager.js';
+import { setupMessagingAndConversation } from './messageHandling.js';
 
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
     var modal = document.getElementById("passwordModal");
     var span = document.getElementsByClassName("close")[0];
     var usernameForm = document.getElementById('usernameForm');
