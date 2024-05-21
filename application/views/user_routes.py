@@ -3,6 +3,7 @@ from application.models.user import User, db
 from application.models.conversation import Conversation
 from application.ai.ai_teacher import ChatBotEnabled, get_ai_response
 from application.utilities.helper_functions import request_database_commit
+import uuid
 
 user_bp = Blueprint('user_bp', __name__)
 
@@ -15,7 +16,8 @@ def send_message():
 
     # Ensure user exists or create new one
     user = get_or_make_user(user_ip, form_username)
-
+    if not user:
+        return jsonify(success=False, error="Unknown User"), 500
     # Save the message to the database
     conversation = Conversation(message=form_message, user_id=user.id)
     db.session.add(conversation)
@@ -44,12 +46,15 @@ def get_users():
 @user_bp.route('/get_conversation', methods=['GET'])
 def get_conversation():
     # Fetch all conversations from the database
+    # get_or_make_user()
     conversations = Conversation.query.join(User).all()
     # Prepare data for JSON response
     conversation_data = [{'username': conv.user.username, 'message': conv.message} for conv in conversations]
     return jsonify(conversation_history=conversation_data)
 
 
+def generate_unique_username():
+    return f"user_{uuid.uuid4()}"
 def get_or_make_user(user_ip, form_username="", admin_override=False):
     """
     Retrieves an existing user by IP or creates a new one with the given username and IP.
@@ -75,11 +80,16 @@ def get_or_make_user(user_ip, form_username="", admin_override=False):
             print(f"No changes made to the username for user {user.username}")
     else:
         print("No user found, creating a new one.")
-        user = User(ip_address=user_ip, username=form_username)
+        user = User(ip_address=user_ip, username=form_username or generate_unique_username)
         db.session.add(user)
 
     success = request_database_commit()
     return user if success else None
 
-
-
+@user_bp.route('/get_user_id')
+def get_user_id():
+    user_ip = request.remote_addr
+    user = User.query.filter_by(ip_address=user_ip).first()
+    if user:
+        return jsonify({'user_id': user.id})
+    return jsonify({'user_id': None}), 404

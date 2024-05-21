@@ -1,4 +1,7 @@
-from flask_sqlalchemy import SQLAlchemy
+# application/extensions.py
 
-# Initialize SQLAlchemy without binding it to a specific Flask app.
+from flask_sqlalchemy import SQLAlchemy
+from flask_socketio import SocketIO
+
 db = SQLAlchemy()
+socketio = SocketIO()

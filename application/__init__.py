@@ -1,25 +1,26 @@
 from flask import Flask
 
 from application.models.database import Configuration
-from application.extensions import db
+from application.extensions import db, socketio
 from application.config import Config
-from application.views.user_routes import user_bp
-from application.views.ai_routes import ai_bp
-from application.views.admin_routes import admin_bp
-from application.views.general_routes import general_bp
+# from application.views.user_routes import user_bp
+# from application.views.ai_routes import ai_bp
+# from application.views.admin_routes import admin_bp
+# from application.views.general_routes import general_bp
 from application.models import setup_models  # This will setup your models
+from application.views import register_blueprints
+# Ensure the SocketIO event handlers are registered
+from . import socket_events  # This import registers the event handlers
+
 
 def create_app():
     app = Flask(__name__, template_folder=Config.TEMPLATE_FOLDER, static_folder=Config.STATIC_FOLDER)
     app.config.from_object(Config)
 
-
-    app.register_blueprint(user_bp, url_prefix='/user')
-    app.register_blueprint(ai_bp, url_prefix='/ai')
-    app.register_blueprint(admin_bp, url_prefix='/admin')
-    app.register_blueprint(general_bp)
-
     db.init_app(app)
+    socketio.init_app(app, cors_allowed_origins="*")
+
+    register_blueprints(app)  # Register all blueprints
 
     setup_models()
 

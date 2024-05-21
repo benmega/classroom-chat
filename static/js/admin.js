@@ -1,5 +1,13 @@
 const ADMIN_USER = 'Mr. Mega';
 const ADMIN_PASS = '1234';  // Reminder: This should be securely managed, not hardcoded in production
+const socket = io.connect('http://localhost:5000/admin');
+
+socket.on('user_status_change', function(data) {
+    const userElement = document.getElementById(`user-${data.user_id}`);
+    if (userElement) {
+        userElement.getElementsByClassName('status')[0].textContent = data.is_online ? 'Online' : 'Offline';
+    }
+});
 
 document.addEventListener("DOMContentLoaded", function() {
     if (username === ADMIN_USER) {
