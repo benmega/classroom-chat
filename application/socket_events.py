@@ -6,57 +6,50 @@ from flask import request
 
 
 
-
 @socketio.on('connect')
-def handle_connect():
-    # Check if user is known (by IP address or session)
-
-    user_ip = request.remote_addr  # Example identifier
+def handle_connect(auth=None):
+    user_ip = request.remote_addr
     print(f'user connected {user_ip}')
+
+    # Try finding user by IP address first (works without auth)
     user = User.query.filter_by(ip_address=user_ip).first()
 
+    # If user not found by IP, try using auth info
+    if not user and auth and 'user_id' in auth:
+        user_id = auth['user_id']
+        user = User.query.get(user_id)
+
+    # Update user status and broadcast event
     if user:
         user.is_online = True
         db.session.commit()
         emit('user_status_change', {'user_id': user.id, 'is_online': True}, broadcast=True)
     else:
-        # Create a dummy user entry if not registered
+        # Create a dummy user for anonymous connection
         new_user = User(username=f"guest_{user_ip}", ip_address=user_ip, is_online=True)
         db.session.add(new_user)
         db.session.commit()
         emit('user_status_change', {'user_id': new_user.id, 'is_online': True}, broadcast=True)
 
+        print(f'New anonymous user created: {new_user.username}')
+
 
 @socketio.on('disconnect')
-def handle_disconnect():
+def handle_disconnect(auth=None):
     user_ip = request.remote_addr
     print(f'user disconnected {user_ip}')
+
+    # Try getting user by IP address first (works without auth)
     user = User.query.filter_by(ip_address=user_ip).first()
 
+    # If user not found by IP or authentication is available, try using auth
+    if not user and auth:
+        user = User.query.get(auth['user_id'])
+
     if user:
         user.is_online = False
         db.session.commit()
-        emit('user_status_change', {'user_id': user.id, 'is_online': False}, broadcast=True)
 
-
-
-@socketio.on('connect')
-def handle_connect(auth=None):
-    if auth and 'user_id' in auth:
-        user_id = auth['user_id']
-        user = User.query.get(user_id)
-        if user:
-            print('User connected:', user.username)
-        else:
-            print('No user found with that ID')
-    else:
-        print('No auth data provided')
-
-@socketio.on('disconnect')
-def handle_disconnect(auth):
-    print("Client disconnected")
-    user = User.query.get(auth['user_id'])
-    if user:
-        user.is_online = False
-        db.session.commit()
-        socketio.emit('user_status_change', {'user_id': user.id, 'is_online': False}, namespace='/admin')
+        # Check for namespace for broadcast (default or admin)
+        namespace = '/admin' # request.namespace.strip('/')  # Remove leading slash
+        emit('user_status_change', {'user_id': user.id, 'is_online': False}, broadcast=True, namespace=namespace)
