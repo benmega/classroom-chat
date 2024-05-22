@@ -3,13 +3,8 @@ from flask import Flask
 from application.models.database import Configuration
 from application.extensions import db, socketio
 from application.config import Config
-# from application.views.user_routes import user_bp
-# from application.views.ai_routes import ai_bp
-# from application.views.admin_routes import admin_bp
-# from application.views.general_routes import general_bp
-from application.models import setup_models  # This will setup your models
+from application.models import setup_models
 from application.views import register_blueprints
-# Ensure the SocketIO event handlers are registered
 from . import socket_events  # This import registers the event handlers
 
 

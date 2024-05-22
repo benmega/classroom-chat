@@ -1,16 +1,15 @@
 // main.js
 
-import { handleUsernameFormSubmission, closeModalLogic, handlePasswordSubmission } from './usernameLogic.js';
-import { socket } from './socketLogic.js';  // Import the socket instance
-import { setupSocketConnection } from './socketManager.js';
-import { setupMessagingAndConversation } from './messageHandling.js';
+import { handleUsernameFormSubmission, closeModalLogic, handlePasswordSubmission } from './users/usernameLogic.js';
+import { socket } from './sockets/socketLogic.js';  // Import the socket instance
+import { setupSocketConnection } from './sockets/socketManager.js';
+import { setupMessagingAndConversation } from './messages/messageHandling.js';
 
 
 document.addEventListener('DOMContentLoaded', async function() {
     var modal = document.getElementById("passwordModal");
     var span = document.getElementsByClassName("close")[0];
     var usernameForm = document.getElementById('usernameForm');
-    var messageForm = document.getElementById('messageForm');
     var submitPasswordBtn = document.getElementById('submitPasswordBtn');
 
     // Attach the imported event handlers
@@ -24,10 +23,14 @@ document.addEventListener('DOMContentLoaded', async function() {
     } catch (error) {
         console.error('Failed to set up socket connection:', error);
     }
+
+
+    var messageForm = document.getElementById('messageForm');
     // Set up messaging and conversation updates
     setupMessagingAndConversation();
 
     setupSocketListeners();
+
 
     function setupMessagingAndConversation() {
         // Define function to send messages
