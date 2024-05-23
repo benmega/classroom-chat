@@ -12,29 +12,31 @@ ai_bp = Blueprint('ai_bp', __name__)
 
 
 # Your conversation history and AI role
-conversation_history = []  # TODO: Add GUI to clear. (teacher only)
+conversation_history = []  # TODO: Pull from db
 ai_role = '''Answer computer science questions about Python.
 The students are learning using the programs Code Combat and Ozaria.
-'''  # TODO: Add GUI to change (teacher only)
-ai_username = "AI Teacher"  # TODO: Add GUI to change (teacher only)
-ChatBotEnabled = False  # TODO: Add GUI to toggle (teacher only)
+'''  # TODO: Move to db.config Add GUI to change (teacher only)
+ai_username = "AI Teacher"  # TODO: Move to db.config Add GUI to change (teacher only)
+ChatBotEnabled = False  # TODO: Pull from db
 openai.api_key = Config.OPENAI_API_KEY
 
 def get_ai_response(user_message, username):
-    conversation_history.append((username, user_message))
-    prompt = ai_role + " " + " ".join([message for user, message in conversation_history])
-
-    if not ChatBotEnabled:
-        return ""
-
-    response = openai.Completion.create(
-        engine="text-davinci-003",
-        prompt=prompt,
-        max_tokens=150
-    )
-    ai_response = response['choices'][0]['text']
-    conversation_history.append((ai_username, ai_response))
-    return ai_response
+    return 'Hello, World!'
+    #TODO update to current API rules
+    # conversation_history.append((username, user_message))
+    # prompt = ai_role + " " + " ".join([message for user, message in conversation_history])
+    #
+    # if not ChatBotEnabled:
+    #     return ""
+    #
+    # response = openai.Completion.create(
+    #     engine="text-davinci-003",
+    #     prompt=prompt,
+    #     max_tokens=150
+    # )
+    # ai_response = response['choices'][0]['text']
+    # conversation_history.append((ai_username, ai_response))
+    # return ai_response
 
 
 @ai_bp.route('/get_ai_response', methods=['POST'])

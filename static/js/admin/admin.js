@@ -1,5 +1,6 @@
 import config from './config.js';
 
+// TODO Connect to rest of code
 // Access admin credentials and socket
 const ADMIN_USER = config.adminUser;
 const ADMIN_PASS = config.adminPass;

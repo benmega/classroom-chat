@@ -25,6 +25,7 @@ def create_app():
 
     return app
 
+
 def ensure_default_configuration():
     if Configuration.query.first() is None:
         default_config = Configuration(ai_teacher_enabled=False)

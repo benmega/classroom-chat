@@ -1,6 +1,6 @@
 import sqlite3
 
-conn = sqlite3.connect('users.db')
+conn = sqlite3.connect('../users.db')
 cursor = conn.cursor()
 
 # Fetch and print the schema of the 'user' table
