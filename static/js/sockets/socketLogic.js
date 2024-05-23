@@ -1,6 +1,7 @@
-
-
-const serverEndpoint = 'http://localhost:5000'; // This should be dynamic in production
+import config from '../config.js';
+const serverEndpoint = config.serverEndpoint;
+console.log(config.serverEndpoint);
+//const serverEndpoint = 'http://192.168.1.28:5000'; // This should be dynamic in production
 export const socket = io.connect(serverEndpoint);
 
 
@@ -22,6 +23,7 @@ socket.on('user_status_change', (data) => {
 
 socket.on('new_message', function(data) {
     // Assume data contains { username: string, content: string, timestamp: string }
+    sendMessage(); // TODO test to ensure this is correct
     const chatDiv = document.getElementById('chat'); // ID of your chat container
     if (chatDiv) {
         const newMessageElement = document.createElement('p');
@@ -50,8 +52,4 @@ socket.on('disconnect', () => {
 
 socket.on('error', (error) => {
     console.error('Socket error:', error);
-});
-
-socket.on('new_message', function(data) {
-    sendMessage();
 });

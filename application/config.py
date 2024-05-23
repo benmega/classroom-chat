@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 # Ensure environment variables are loaded
 load_dotenv()
 
+
 class Config:
     # Use a more robust method to set the BASE_DIR relative to this file's location
     BASE_DIR = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
@@ -20,13 +21,18 @@ class Config:
     # Securely manage API keys and secret keys from environment variables
     OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
     SECRET_KEY = os.getenv('SECRET_KEY', 'your-default-secret-key')
+    admin_pass = '1234'  # Global variable for admin password. This should be securely fetched or better yet, use hashed passwords
+    adminUsername = 'Mr. Mega'
+
 
 class DevelopmentConfig(Config):
     DEBUG = True
 
+
 class TestingConfig(Config):
     TESTING = True
     SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'
+
 
 class ProductionConfig(Config):
     DEBUG = False

@@ -5,7 +5,6 @@ from flask_socketio import emit
 from flask import request
 
 
-
 @socketio.on('connect')
 def handle_connect(auth=None):
     user_ip = request.remote_addr
@@ -51,5 +50,5 @@ def handle_disconnect(auth=None):
         db.session.commit()
 
         # Check for namespace for broadcast (default or admin)
-        namespace = '/admin' # request.namespace.strip('/')  # Remove leading slash
+        namespace = '/admin'  # request.namespace.strip('/')  # Remove leading slash
         emit('user_status_change', {'user_id': user.id, 'is_online': False}, broadcast=True, namespace=namespace)

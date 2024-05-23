@@ -55,6 +55,8 @@ def get_conversation():
 
 def generate_unique_username():
     return f"user_{uuid.uuid4()}"
+
+
 def get_or_make_user(user_ip, form_username="", admin_override=False):
     """
     Retrieves an existing user by IP or creates a new one with the given username and IP.
@@ -85,6 +87,7 @@ def get_or_make_user(user_ip, form_username="", admin_override=False):
 
     success = request_database_commit()
     return user if success else None
+
 
 @user_bp.route('/get_user_id')
 def get_user_id():
