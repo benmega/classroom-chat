@@ -51,3 +51,7 @@ socket.on('disconnect', () => {
 socket.on('error', (error) => {
     console.error('Socket error:', error);
 });
+
+socket.on('new_message', function(data) {
+    sendMessage();
+});
