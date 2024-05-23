@@ -3,6 +3,7 @@ from application.ai.ai_teacher import get_ai_response
 
 ai_bp = Blueprint('ai_bp', __name__)
 
+
 @ai_bp.route('/get_ai_response', methods=['POST'])
 def ai_response():
     user_message = request.form['message']

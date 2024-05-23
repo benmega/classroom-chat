@@ -1,6 +1,9 @@
-const ADMIN_USER = 'Mr. Mega';
-const ADMIN_PASS = '1234';  // Reminder: This should be securely managed, not hardcoded in production
-const socket = io.connect('http://localhost:5000/admin');
+import config from './config.js';
+
+// Access admin credentials and socket
+const ADMIN_USER = config.adminUser;
+const ADMIN_PASS = config.adminPass;
+const socket = io.connect(config.adminSocket);
 
 socket.on('user_status_change', function(data) {
     const userElement = document.getElementById(`user-${data.user_id}`);

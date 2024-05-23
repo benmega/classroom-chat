@@ -1,4 +1,6 @@
 // socketManager.js
+import config from '../config.js';
+const serverEndpoint = config.serverEndpoint;
 
 export async function setupSocketConnection() {
     const response = await fetch('/user/get_user_id');
@@ -6,7 +8,7 @@ export async function setupSocketConnection() {
         throw new Error('Failed to fetch user ID');
     }
     const { user_id } = await response.json();
-    const serverEndpoint = 'http://localhost:5000'; // This should be dynamic in production
+//    const serverEndpoint = 'http://localhost:5000'; // This should be dynamic in production
     const socket = io.connect(serverEndpoint, {
         auth: {
             user_id: user_id  // Pass user_id obtained from the server
@@ -34,4 +36,14 @@ export async function setupSocketConnection() {
     });
 
     return socket;
+}
+
+export async function setupSocket() {
+    try {
+        const socket = await setupSocketConnection();
+        console.log('Socket setup complete.');
+        return socket;
+    } catch (error) {
+        console.error('Failed to set up socket connection:', error);
+    }
 }

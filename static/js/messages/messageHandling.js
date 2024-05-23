@@ -66,4 +66,6 @@ export function setupMessagingAndConversation() {
     sendMessage();
     updateConversation();
     });
+    // Set an interval to update the conversation every 2 seconds
+    setInterval(updateConversation, 2000);
 }

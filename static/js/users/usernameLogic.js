@@ -84,3 +84,14 @@ export function submitPassword() {
     closeModal();
     handlePasswordVerification(username, password);
 }
+
+export function setupUsernameLogic() {
+    var modal = document.getElementById("passwordModal");
+    var span = document.getElementsByClassName("close")[0];
+    var usernameForm = document.getElementById('usernameForm');
+    var submitPasswordBtn = document.getElementById('submitPasswordBtn');
+
+    usernameForm.addEventListener('submit', handleUsernameFormSubmission);
+    closeModalLogic(span, modal);
+    handlePasswordSubmission(submitPasswordBtn);
+}

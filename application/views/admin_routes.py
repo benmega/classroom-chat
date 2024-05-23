@@ -4,11 +4,12 @@ from functools import wraps
 from application.models.conversation import Conversation
 from application.models.database import Configuration
 from application.models.user import db, User
-from application.utilities.helper_functions import request_database_commit
+from application.config import Config
 
 admin_bp = Blueprint('admin_bp', __name__)
-admin_pass = '1234'  # Global variable for admin password. This should be securely fetched or better yet, use hashed passwords
-adminUsername = 'Mr. Mega'
+admin_pass = Config.admin_pass
+adminUsername = Config.adminUsername
+
 
 def check_auth(f):
     @wraps(f)
@@ -18,14 +19,19 @@ def check_auth(f):
         if username != adminUsername or password != admin_pass:
             return jsonify({"error": "Unauthorized"}), 401
         return f(*args, **kwargs)
+
     return authenticate_and_execute
+
 
 @admin_bp.route('/users', methods=['GET'])
 @check_auth
 def get_users():
     users = User.query.all()
-    users_data = [{"id": user.id, "username": user.username, "ip_address": user.ip_address, "is_ai_teacher": user.is_ai_teacher} for user in users]
+    users_data = [
+        {"id": user.id, "username": user.username, "ip_address": user.ip_address, "is_ai_teacher": user.is_ai_teacher}
+        for user in users]
     return jsonify(users_data)
+
 
 @admin_bp.route('/users/<int:user_id>', methods=['PUT'])
 @check_auth
@@ -40,7 +46,7 @@ def update_user(user_id):
 
 
 def update_username(new_username, user_id=None, user_ip=None):
-    if user_id: #ID takes priority
+    if user_id:  # ID takes priority
         user = User.query.get(user_id)
     elif user_ip:
         user = User.query.filter_by(ip_address=user_ip).first()
@@ -51,6 +57,7 @@ def update_username(new_username, user_id=None, user_ip=None):
     user.username = new_username
     db.session.commit()
     return True, None
+
 
 def set_username():
     user_id = request.form.get('user_id')
@@ -64,6 +71,8 @@ def set_username():
         return jsonify({'error': 'Failed to update username', 'message': error_message}), 500
 
     return jsonify({'success': True})
+
+
 @admin_bp.route('/set_username', methods=['POST'])
 def set_username_route():
     return set_username()
@@ -77,6 +86,7 @@ def verify_password():
         return set_username()
     else:
         return jsonify(success=False), 401
+
 
 @admin_bp.route('/dashboard')
 def dashboard():
@@ -97,6 +107,7 @@ def toggle_ai():
     config.ai_teacher_enabled = not config.ai_teacher_enabled
     db.session.commit()
     return redirect(url_for('admin_bp.dashboard'))
+
 
 @admin_bp.route('/clear-history', methods=['POST'])
 def clear_history():
