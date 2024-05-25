@@ -15,10 +15,10 @@ adminUsername = Config.adminUsername
 def check_auth(f):
     @wraps(f)
     def authenticate_and_execute(*args, **kwargs):
-        username = request.args.get('username') if request.method == 'GET' else request.form['username']
-        password = request.args.get('password') if request.method == 'GET' else request.form['password']
-        if username != adminUsername or password != admin_pass:
-            return jsonify({"error": "Unauthorized"}), 401
+        auth = request.authorization
+        if not auth or not (auth.password == admin_pass):
+            # Send a WWW-Authenticate header to prompt the client to provide credentials
+            return jsonify({"error": "Unauthorized"}), 401, {'WWW-Authenticate': 'Basic realm="Login Required"'}
         return f(*args, **kwargs)
 
     return authenticate_and_execute
@@ -89,8 +89,8 @@ def verify_password():
         return jsonify(success=False), 401
 
 
-
 @admin_bp.route('/dashboard')
+@check_auth
 def dashboard():
     users = User.query.all()
     config = Configuration.query.first()
