@@ -1,9 +1,14 @@
 from flask import Blueprint, request, jsonify
+
+from application import Configuration
 from application.models.user import User, db
 from application.models.conversation import Conversation
+from application.models.banned_words import BannedWords
 from application.ai.ai_teacher import ChatBotEnabled, get_ai_response
 from application.utilities.helper_functions import request_database_commit
 import uuid
+from application.views.admin_routes import adminUsername
+# from application.config import BANNED_WORDS
 
 user_bp = Blueprint('user_bp', __name__)
 
@@ -14,10 +19,24 @@ def send_message():
     form_username = request.form['username']
     form_message = request.form['message']
 
-    # Ensure user exists or create new one
+    # Ensure user exists or create new one # TODO reconsider if unknown users should be able to send messages or not
     user = get_or_make_user(user_ip, form_username)
     if not user:
         return jsonify(success=False, error="Unknown User"), 500
+
+    # Confirm messaging is enabled
+    config = Configuration.query.first()
+    if not config:
+        return jsonify(success=False, error="No Configuration Found"), 500
+    messages_sending_enabled = config.message_sending_enabled
+    if user.username != adminUsername and not messages_sending_enabled:
+        return jsonify(success=False, error="Non-admin messages are disabled"), 500
+
+    # Confirm message is appropriate
+    banned_words = [word.word for word in BannedWords.query.all()]
+    if not is_appropriate(message=form_message, banned_words=banned_words):
+        return jsonify(success=False, error="Inappropriate message are not allowed"), 500
+
     # Save the message to the database
     conversation = Conversation(message=form_message, user_id=user.id)
     db.session.add(conversation)
@@ -96,3 +115,20 @@ def get_user_id():
     if user:
         return jsonify({'user_id': user.id})
     return jsonify({'user_id': None}), 404
+
+
+
+
+def is_appropriate(message, banned_words=None):
+
+    # Normalize message and banned words to lower case to ensure case insensitivity
+    if banned_words is None:
+        banned_words = []
+    message_lower = message.lower()
+    banned_words = [word.lower() for word in banned_words]
+
+    # Check if the message contains any banned words
+    if any(word in message_lower for word in banned_words):
+        return False
+    else:
+        return True
