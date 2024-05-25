@@ -1,11 +1,11 @@
 from flask import Blueprint, request, jsonify, render_template, redirect, url_for
 from functools import wraps
-
+from application.extensions import db
 from application.models.conversation import Conversation
 from application.models.configuration import Configuration
-from application.models.user import db, User
+from application.models.user import User
 from application.config import Config
-from application.models.banned_words import BannedWords, db
+from application.models.banned_words import BannedWords
 
 admin_bp = Blueprint('admin_bp', __name__)
 admin_pass = Config.admin_pass
