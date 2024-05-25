@@ -1,7 +1,6 @@
 import config from '../config.js';
 const serverEndpoint = config.serverEndpoint;
 console.log(config.serverEndpoint);
-//const serverEndpoint = 'http://192.168.1.28:5000'; // This should be dynamic in production
 export const socket = io.connect(serverEndpoint);
 
 

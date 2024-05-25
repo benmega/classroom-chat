@@ -66,29 +66,6 @@ export function sendMessage() {
 }
 
 
-
-//export function sendMessage() {
-//    var message = document.getElementById('message').value;
-//    var username = document.getElementById('currentUsername').value;
-//
-//    var params = new URLSearchParams();
-//    params.append('message', message);
-//    params.append('username', username);
-//
-//    fetch('user/send_message', {
-//        method: 'POST',
-//        headers: {
-//            'Content-Type': 'application/x-www-form-urlencoded',
-//        },
-//        body: params
-//    }).then(function(response) {
-//        if (response.ok) {
-//            document.getElementById('message').value = '';
-//        }
-//    });
-//}
-
-
 export function setupMessagingAndConversation() {
     // Define function to send messages
     // Define function to update conversations
