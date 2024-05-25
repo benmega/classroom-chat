@@ -1,7 +1,12 @@
 <!DOCTYPE html>
 <!-- templates/dashboard.html -->
 <html>
-<head><title>Admin Dashboard</title></head>
+<head>
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap">
+    <link rel="icon" href="{{ url_for('static', filename='images/logo.ico') }}" type="image/x-icon">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+</head>
 <body>
     <h1>Admin Dashboard</h1>
     <h2>Users Online</h2>
@@ -20,5 +25,26 @@
     <form action="{{ url_for('admin_bp.clear_history') }}" method="post">
         <button type="submit">Clear History</button>
     </form>
+
+    <h2>Message Sending Status</h2>
+    <form action="{{ url_for('admin_bp.toggle_message_sending') }}" method="post">
+        <button type="submit">{{ 'Disable' if config.message_sending_enabled else 'Enable' }} Message Sending</button>
+    </form>
+
+    <h2>Banned Words List</h2>
+    <ul>
+    {% for word in banned_words %}
+        <li>
+            Word: {{ word.word }}, Reason: {{ word.reason or "No reason provided" }}
+            <!-- Add a button or link to delete or edit if necessary -->
+        </li>
+    {% endfor %}
+    </ul>
+    <form action="{{ url_for('admin_bp.add_banned_word') }}" method="post">
+        <input type="text" name="word" placeholder="Enter new banned word" required>
+        <textarea name="reason" placeholder="Enter reason (optional)"></textarea>
+        <button type="submit">Add Word</button>
+    </form>
+
 </body>
 </html>

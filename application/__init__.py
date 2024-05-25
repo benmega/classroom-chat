@@ -1,6 +1,6 @@
 from flask import Flask
 
-from application.models.database import Configuration
+from application.models.configuration import Configuration
 from application.extensions import db, socketio
 from application.config import Config
 from application.models import setup_models

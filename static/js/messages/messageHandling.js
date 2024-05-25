@@ -34,7 +34,6 @@ export function updateConversation() {
             });
     }
 
-
 export function sendMessage() {
     var message = document.getElementById('message').value;
     var username = document.getElementById('currentUsername').value;
@@ -49,12 +48,45 @@ export function sendMessage() {
             'Content-Type': 'application/x-www-form-urlencoded',
         },
         body: params
-    }).then(function(response) {
-        if (response.ok) {
+    })
+    .then(function(response) {
+        return response.json();  // Parse the JSON response
+    })
+    .then(function(data) {
+        if (data.success) {
             document.getElementById('message').value = '';
+        } else {
+            alert('Error: ' + data.error);
         }
+    })
+    .catch(function(error) {
+        console.error('Error:', error);
+        alert('An unexpected error occurred.');
     });
 }
+
+
+
+//export function sendMessage() {
+//    var message = document.getElementById('message').value;
+//    var username = document.getElementById('currentUsername').value;
+//
+//    var params = new URLSearchParams();
+//    params.append('message', message);
+//    params.append('username', username);
+//
+//    fetch('user/send_message', {
+//        method: 'POST',
+//        headers: {
+//            'Content-Type': 'application/x-www-form-urlencoded',
+//        },
+//        body: params
+//    }).then(function(response) {
+//        if (response.ok) {
+//            document.getElementById('message').value = '';
+//        }
+//    });
+//}
 
 
 export function setupMessagingAndConversation() {

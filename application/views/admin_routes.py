@@ -2,9 +2,10 @@ from flask import Blueprint, request, jsonify, render_template, redirect, url_fo
 from functools import wraps
 
 from application.models.conversation import Conversation
-from application.models.database import Configuration
+from application.models.configuration import Configuration
 from application.models.user import db, User
 from application.config import Config
+from application.models.banned_words import BannedWords, db
 
 admin_bp = Blueprint('admin_bp', __name__)
 admin_pass = Config.admin_pass
@@ -88,11 +89,14 @@ def verify_password():
         return jsonify(success=False), 401
 
 
+
 @admin_bp.route('/dashboard')
 def dashboard():
     users = User.query.all()
     config = Configuration.query.first()
-    return render_template('dashboard.html', users=users, config=config)
+    banned_words = BannedWords.query.all()  # Retrieve all banned words from the database
+    return render_template('dashboard.html', users=users, config=config, banned_words=banned_words)
+
 
 
 @admin_bp.route('/toggle-ai', methods=['POST'])
@@ -109,8 +113,41 @@ def toggle_ai():
     return redirect(url_for('admin_bp.dashboard'))
 
 
+@admin_bp.route('/toggle-message-sending', methods=['POST'])
+def toggle_message_sending():
+    # Retrieve the first configuration entry from the database
+    config = Configuration.query.first()
+
+    if config is None:
+        # If no configuration exists, initialize with default message sending disabled
+        config = Configuration(message_sending_enabled=False)
+        db.session.add(config)
+
+    # Toggle the message sending setting
+    config.message_sending_enabled = not config.message_sending_enabled
+    db.session.commit()
+
+    # Redirect to the dashboard after toggling the setting
+    return redirect(url_for('admin_bp.dashboard'))
+
+
 @admin_bp.route('/clear-history', methods=['POST'])
 def clear_history():
     Conversation.query.delete()
+    db.session.commit()
+    return redirect(url_for('admin_bp.dashboard'))
+
+
+
+# I should @check_auth
+@admin_bp.route('/add-banned-word', methods=['POST'])
+def add_banned_word():
+    word = request.form['word']
+    reason = request.form.get('reason', None)  # Optional field
+    if BannedWords.query.filter_by(word=word).first():
+        return jsonify({'error': 'Word already banned'}), 400
+
+    new_banned_word = BannedWords(word=word, reason=reason)
+    db.session.add(new_banned_word)
     db.session.commit()
     return redirect(url_for('admin_bp.dashboard'))
