@@ -1,7 +1,7 @@
 from flask import Flask
 
 from application.models.configuration import Configuration
-from application.extensions import db, socketio
+from application.extensions import db #, socketio
 from application.config import Config
 from application.models import setup_models
 from application.views import register_blueprints
@@ -13,7 +13,7 @@ def create_app():
     app.config.from_object(Config)
 
     db.init_app(app)
-    socketio.init_app(app, cors_allowed_origins="*")
+    # socketio.init_app(app, cors_allowed_origins="*", async_mode='eventlet')
 
     register_blueprints(app)  # Register all blueprints
 

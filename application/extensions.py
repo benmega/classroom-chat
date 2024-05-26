@@ -4,7 +4,7 @@ from flask_socketio import SocketIO
 db = SQLAlchemy()
 
 # Example with threading, which does not require additional installations
-socketio = SocketIO(async_mode='threading')
+#socketio = SocketIO(async_mode='threading')
 
 # If you want to use eventlet or gevent, you first need to install them:
 # pip install eventlet
