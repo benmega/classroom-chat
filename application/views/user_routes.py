@@ -4,13 +4,14 @@ from application import Configuration
 from application.models.user import User, db
 from application.models.conversation import Conversation
 from application.models.banned_words import BannedWords
-from application.ai.ai_teacher import ChatBotEnabled, get_ai_response
+from application.ai.ai_teacher import get_ai_response
 from application.utilities.helper_functions import request_database_commit
 import uuid
 from application.views.admin_routes import adminUsername
 # from application.config import BANNED_WORDS
 
 user_bp = Blueprint('user_bp', __name__)
+
 
 
 @user_bp.route('/send_message', methods=['POST'])
@@ -40,12 +41,18 @@ def send_message():
     # Save the message to the database
     conversation = Conversation(message=form_message, user_id=user.id)
     db.session.add(conversation)
-
     if not request_database_commit():
         return jsonify(success=False, error="Database commit failed"), 500
 
+    # To get a configuration value for 'ai_teacher_enabled'
+    config = Configuration.query.first()  # Assuming there's only one config row
+    if config:
+        chatBotEnabled = config.ai_teacher_enabled
+    else:
+        chatBotEnabled = False  # Default value if no configuration is found
+
     # If the ChatBot is enabled, get a response
-    if not ChatBotEnabled:
+    if not chatBotEnabled:
         return jsonify(success=True), 200
 
     ai_response = get_ai_response(form_message, user.username)
@@ -66,7 +73,7 @@ def get_users():
 def get_conversation():
     # Fetch all conversations from the database
     # get_or_make_user()
-    conversations = Conversation.query.join(User).all()
+    conversations = db.session.query(Conversation).join(User).all()
     # Prepare data for JSON response
     conversation_data = [{'username': conv.user.username, 'message': conv.message} for conv in conversations]
     return jsonify(conversation_history=conversation_data)
