@@ -8,6 +8,7 @@
     <script src="{{ url_for('static', filename='script.js') }}"></script>
 
     <style>
+
         body {
             font-family: 'Roboto', sans-serif;
             margin: 20px;
@@ -85,6 +86,44 @@
                 margin-bottom: 10px;
             }
         }
+        /* The Modal (background) */
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed; /* Stay in place */
+            z-index: 1; /* Sit on top */
+            left: 0;
+            top: 0;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: auto; /* Enable scroll if needed */
+            background-color: rgb(0,0,0); /* Fallback color */
+            background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+        }
+
+        /* Modal Content */
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto; /* 15% from the top and centered */
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%; /* Could be more or less, depending on screen size */
+        }
+
+        /* The Close Button */
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
     </style>
 </head>
 
@@ -96,9 +135,9 @@
             <label for="username">Choose Username:</label>
             <input type="text" id="username" name="username" required>
             <button type="submit">Set Username</button>
+            <input type="hidden" id="currentUsername" value="">
         </form>
 
-        <input type="hidden" id="currentUsername" value="">
 
         <div id="chat"></div>
 
@@ -106,6 +145,16 @@
             <input type="text" id="message" name="message" required>
             <button type="submit">Send Message</button>
         </form>
+    </div>
+
+    <!-- Password Modal -->
+    <div id="passwordModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <p>Please enter the teacher's password to change your username:</p>
+            <input type="password" id="passwordInput" placeholder="Enter password">
+            <button id="submitPasswordBtn">Submit</button>
+        </div>
     </div>
 
     <script src="static/script.js"></script>
