@@ -18,7 +18,6 @@ ai_bp = Blueprint('ai_bp', __name__)
 # Retrieve AI settings and conversation history from the database
 ai_settings = get_ai_settings()
 
-
 def get_or_create_ai_teacher():
     # Check if the user with ID 0 already exists
     user = User.query.get(0)
@@ -53,7 +52,7 @@ def get_ai_response(user_message, username):
         messages=[
             {
                 "role": "user",
-                "content": str(conversation_history),
+                "content": str(user_message),
             }
         ],
         model="gpt-3.5-turbo",

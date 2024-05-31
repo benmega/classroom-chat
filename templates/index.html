@@ -4,127 +4,9 @@
 <head>
     <title>Classroom Chat</title>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap">
-    <link rel="icon" href="{{ url_for('static', filename='logo.ico') }}" type="image/x-icon">
-    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <link rel="icon" href="{{ url_for('static', filename='images/logo.ico') }}" type="image/x-icon">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
 
-    <style>
-
-        body {
-            font-family: 'Roboto', sans-serif;
-            margin: 20px;
-            background-color: #f5f5f5;
-        }
-
-        h1 {
-            color: #333;
-        }
-
-        #container {
-            max-width: 1500px;
-            margin: 0 auto;
-            padding: 0 20px; /* Add padding for better readability on larger screens */
-        }
-
-        #chat {
-            padding: 10px;
-            border: 1px solid #ccc;
-            height: 500px;
-            overflow: auto;
-            margin-bottom: 15px;
-            width: 100%; /* Make the message history full width */
-        }
-
-        #usernameForm,
-        #messageForm {
-            display: flex;
-            flex-wrap: wrap; /* Allow items to wrap to the next line on smaller screens */
-            margin-bottom: 10px;
-            width: 100%; /* Make both forms full width */
-        }
-
-        label {
-            margin-right: 5px;
-            color: #555;
-        }
-
-        input {
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            flex: 1; /* Take up remaining space */
-            margin-bottom: 5px;
-            width: 80%; /* Make the input full width */
-        }
-
-        button {
-            padding: 10px 15px;
-            background-color: #3498db;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            flex-basis: 20%; /* Full width on smaller screens */
-        }
-
-        button:hover {
-            background-color: #2980b9;
-        }
-
-        a {
-            color: blue;
-            text-decoration: underline;
-        }
-
-        @media (max-width: 600px) {
-            /* Adjust styles for smaller screens */
-            #usernameForm,
-            #messageForm {
-                flex-direction: column;
-            }
-
-            input {
-                margin-bottom: 10px;
-            }
-        }
-        /* The Modal (background) */
-        .modal {
-            display: none; /* Hidden by default */
-            position: fixed; /* Stay in place */
-            z-index: 1; /* Sit on top */
-            left: 0;
-            top: 0;
-            width: 100%; /* Full width */
-            height: 100%; /* Full height */
-            overflow: auto; /* Enable scroll if needed */
-            background-color: rgb(0,0,0); /* Fallback color */
-            background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
-        }
-
-        /* Modal Content */
-        .modal-content {
-            background-color: #fefefe;
-            margin: 15% auto; /* 15% from the top and centered */
-            padding: 20px;
-            border: 1px solid #888;
-            width: 80%; /* Could be more or less, depending on screen size */
-        }
-
-        /* The Close Button */
-        .close {
-            color: #aaa;
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
-        }
-
-        .close:hover,
-        .close:focus {
-            color: black;
-            text-decoration: none;
-            cursor: pointer;
-        }
-
-    </style>
 </head>
 
 <body>
@@ -132,7 +14,7 @@
         <h1>Classroom Chat</h1>
 
         <form id="usernameForm">
-            <label for="username">Choose Username:</label>
+            <label for="username">Username:</label>
             <input type="text" id="username" name="username" required>
             <button type="submit">Set Username</button>
             <input type="hidden" id="currentUsername" value="">
@@ -147,6 +29,7 @@
         </form>
     </div>
 
+
     <!-- Password Modal -->
     <div id="passwordModal" class="modal">
         <div class="modal-content">
@@ -157,7 +40,9 @@
         </div>
     </div>
 
-    <script src="static/script.js"></script>
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+    <script type="module" src="{{ url_for('static', filename='js/main.js') }}"></script>
+
 </body>
 
 </html>
