@@ -1,3 +1,5 @@
+import base64
+
 from flask import Blueprint, request, jsonify
 
 from application import Configuration
@@ -8,7 +10,10 @@ from application.ai.ai_teacher import get_ai_response
 from application.utilities.helper_functions import request_database_commit
 import uuid
 from application.views.admin_routes import adminUsername
-# from application.config import BANNED_WORDS
+from flask import request, jsonify
+import base64
+from io import BytesIO
+from PIL import Image
 
 user_bp = Blueprint('user_bp', __name__)
 
@@ -124,6 +129,18 @@ def get_user_id():
     return jsonify({'user_id': None}), 404
 
 
+@user_bp.route('/upload_screenshot', methods=['POST'])
+def upload_screenshot():
+    data_url = request.json.get('image')  # Safely get the image data from the JSON request
+    if not data_url:
+        return jsonify({"error": "No image data provided"}), 400
+
+    header, encoded = data_url.split(",", 1)
+    data = base64.b64decode(encoded)
+    image = Image.open(BytesIO(data))
+
+    image.save('screenshots/screenshot.png')  # Save the image
+    return jsonify({"message": "Screenshot uploaded successfully"})
 
 
 def is_appropriate(message, banned_words=None):

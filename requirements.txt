@@ -45,3 +45,4 @@ openai            1.30.5
 python-dotenv~=1.0.1
 alembic~=1.13.1
 openai~=1.30.5
+pillow~=10.4.0

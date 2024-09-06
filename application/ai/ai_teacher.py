@@ -1,17 +1,13 @@
 # server/ai_teacher.py
 
-# import openai
 from flask import Blueprint, jsonify, request
 from openai import OpenAI
-
 from application import db
 from application.config import Config
 from application.models.ai_settings import get_ai_settings
 from application.models.conversation import Conversation
 from application.models.user import User
 
-# Additional imports for database integration
-# from application.database import get_conversation_history, set_conversation_history, get_ai_settings
 
 ai_bp = Blueprint('ai_bp', __name__)
 
@@ -29,9 +25,6 @@ def get_or_create_ai_teacher():
         db.session.commit()
 
     return user
-
-
-# openai.api_key = Config.OPENAI_API_KEY
 
 def get_ai_response(user_message, username):
     ai_teacher = get_or_create_ai_teacher()
