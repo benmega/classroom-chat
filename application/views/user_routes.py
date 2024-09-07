@@ -130,8 +130,8 @@ def get_user_id():
     return jsonify({'user_id': None}), 404
 
 
-@user_bp.route('/upload_screenshot', methods=['POST'])
-def upload_screenshot():
+@user_bp.route('/upload_image', methods=['POST'])
+def upload_image():
     # print(request.headers)  # Log headers to ensure Content-Type is correct
     # print(request.data)  # Log raw data to see what's being sent
 
@@ -155,11 +155,11 @@ def upload_screenshot():
 
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
 
-    file_path = f'screenshots/screenshot_{timestamp}.png'
+    file_path = f'images/image_{timestamp}.png'
 
     # Save the image
     image.save(file_path)
-    return jsonify({"message": "Screenshot uploaded successfully"})
+    return jsonify({"message": "Image uploaded successfully"})
 
 
 def is_appropriate(message, banned_words=None):

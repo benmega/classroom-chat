@@ -4,7 +4,7 @@ export function setupMessagingAndConversation() {
     messageForm.addEventListener('submit', function(e) {
         e.preventDefault();
         sendMessage();
-        uploadScreenshot();
+        uploadImage();
         updateConversation();
     });
     // Set an interval to update the conversation every 2 seconds
@@ -127,8 +127,8 @@ function clearMessageInput() {
 
 
 // Image upload helper functions
-export function uploadScreenshot() {
-    const file = getScreenshotFile();
+export function uploadImage() {
+    const file = getImageFile();
 
     if (!file) {
         return;
@@ -137,7 +137,7 @@ export function uploadScreenshot() {
     convertFileToBase64(file)
         .then(dataURL => {
             const params = createJSONRequestParams({ image: dataURL });
-            return sendJsonRequest('/user/upload_screenshot', params);
+            return sendJsonRequest('/user/upload_image', params);
         })
         .then(handleUploadResponse)
         .catch(handleError);
@@ -158,8 +158,8 @@ function sendJsonRequest(url, data) {
         .then(response => response.json());
 }
 
-function getScreenshotFile() {
-    return document.getElementById('screenshot').files[0];
+function getImageFile() {
+    return document.getElementById('image').files[0];
 }
 
 function convertFileToBase64(file) {
@@ -175,7 +175,7 @@ function handleUploadResponse(data) {
     if (data.message) {
         console.log(data.message); // Success message from server
         alert('Image uploaded successfully.');
-        document.getElementById('screenshot').value = ''; // Clear the file input after upload
+        document.getElementById('image').value = ''; // Clear the file input after upload
     } else {
         alert('Error: ' + data.error);
     }
@@ -249,8 +249,8 @@ function handleUploadResponse(data) {
 
 
 //
-//function uploadScreenshot() {
-//    const file = getScreenshotFile();
+//function uploadImage() {
+//    const file = getImageFile();
 //
 //    if (!file) {
 //        return;
@@ -260,7 +260,7 @@ function handleUploadResponse(data) {
 //    convertFileToBase64(file)
 //        .then(dataURL => {
 //            const params = createJSONRequestParams({ image: dummyDataURL });
-//            return sendJsonRequest('/user/upload_screenshot', params);
+//            return sendJsonRequest('/user/upload_image', params);
 //        })
 //        .then(handleUploadResponse)
 //        .catch(handleError);
