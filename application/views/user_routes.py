@@ -14,6 +14,7 @@ from flask import request, jsonify
 import base64
 from io import BytesIO
 from PIL import Image
+from datetime import datetime
 
 user_bp = Blueprint('user_bp', __name__)
 
@@ -131,7 +132,19 @@ def get_user_id():
 
 @user_bp.route('/upload_screenshot', methods=['POST'])
 def upload_screenshot():
-    data_url = request.json.get('image')  # Safely get the image data from the JSON request
+    # print(request.headers)  # Log headers to ensure Content-Type is correct
+    # print(request.data)  # Log raw data to see what's being sent
+
+    # Attempt to parse JSON
+    json_data = request.get_json()
+    # print("JSON Data:", json_data)  # This should not be None
+
+    if not json_data:
+        return jsonify({"error": "Invalid JSON data"}), 400
+
+    data_url = json_data.get('image')  # Safely get the image data from the JSON request
+    # print("Data URL:", data_url)  # This should not be None
+
     if not data_url:
         return jsonify({"error": "No image data provided"}), 400
 
@@ -139,7 +152,13 @@ def upload_screenshot():
     data = base64.b64decode(encoded)
     image = Image.open(BytesIO(data))
 
-    image.save('screenshots/screenshot.png')  # Save the image
+
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+
+    file_path = f'screenshots/screenshot_{timestamp}.png'
+
+    # Save the image
+    image.save(file_path)
     return jsonify({"message": "Screenshot uploaded successfully"})
 
 

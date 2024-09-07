@@ -4,8 +4,8 @@ export function setupMessagingAndConversation() {
     messageForm.addEventListener('submit', function(e) {
         e.preventDefault();
         sendMessage();
-        updateConversation();
         uploadScreenshot();
+        updateConversation();
     });
     // Set an interval to update the conversation every 2 seconds
     setInterval(updateConversation, 2000);
@@ -26,10 +26,10 @@ export function sendMessage() {
     const message = getMessageInput();
     const username = getUsernameInput();
 
-    if (!message || !username) {
-        alert('Both message and username are required.');
-        return;
-    }
+//    if (!message || !username) {
+//        alert('Both message and username are required.');
+//        return;
+//    }
 
     const params = createRequestParams({ message, username });
 
@@ -38,21 +38,7 @@ export function sendMessage() {
         .catch(handleError);
 }
 
-export function uploadScreenshot() {
-    const file = getScreenshotFile();
 
-    if (!file) {
-        return;
-    }
-
-    convertFileToBase64(file)
-        .then(dataURL => {
-            const params = createRequestParams({ image: dataURL });
-            return sendJsonRequest('/user/upload_screenshot', params);
-        })
-        .then(handleUploadResponse)
-        .catch(handleError);
-}
 
 // update conversation helper functions
 
@@ -107,6 +93,7 @@ function createRequestParams(data) {
     return params;
 }
 
+
 function sendRequest(url, params) {
     return fetch(url, {
         method: 'POST',
@@ -140,17 +127,36 @@ function clearMessageInput() {
 
 
 // Image upload helper functions
+export function uploadScreenshot() {
+    const file = getScreenshotFile();
 
-function sendJsonRequest(url, data) {
-    return fetch(url, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',  // Correct content type for JSON data
-        },
-        body: JSON.stringify(data)  // Convert the data object to a JSON string
-    }).then(response => response.json());
+    if (!file) {
+        return;
+    }
+
+    convertFileToBase64(file)
+        .then(dataURL => {
+            const params = createJSONRequestParams({ image: dataURL });
+            return sendJsonRequest('/user/upload_screenshot', params);
+        })
+        .then(handleUploadResponse)
+        .catch(handleError);
 }
 
+function createJSONRequestParams(data) {
+    return {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),  // Convert the data object to a JSON string
+    };
+}
+
+function sendJsonRequest(url, data) {
+    return fetch(url, data)  // No need to re-stringify; data is already JSON
+        .then(response => response.json());
+}
 
 function getScreenshotFile() {
     return document.getElementById('screenshot').files[0];
@@ -168,7 +174,8 @@ function convertFileToBase64(file) {
 function handleUploadResponse(data) {
     if (data.message) {
         console.log(data.message); // Success message from server
-        alert('Screenshot uploaded successfully.');
+        alert('Image uploaded successfully.');
+        document.getElementById('screenshot').value = ''; // Clear the file input after upload
     } else {
         alert('Error: ' + data.error);
     }
@@ -238,5 +245,46 @@ function handleUploadResponse(data) {
 //        console.error('Error:', error);
 //        alert('An unexpected error occurred.');
 //    });
+//}
+
+
+//
+//function uploadScreenshot() {
+//    const file = getScreenshotFile();
+//
+//    if (!file) {
+//        return;
+//    }
+//    const dummyDataURL = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/wcAAgMBAQABAwAAAA==";
+//
+//    convertFileToBase64(file)
+//        .then(dataURL => {
+//            const params = createJSONRequestParams({ image: dummyDataURL });
+//            return sendJsonRequest('/user/upload_screenshot', params);
+//        })
+//        .then(handleUploadResponse)
+//        .catch(handleError);
+//}
+//
+//function createJSONRequestParams(data) {
+//    return {
+//        method: 'POST',
+//        headers: {
+//            'Content-Type': 'application/json',
+//        },
+//        body: JSON.stringify(data),
+//    };
+//}
+//
+//
+//
+//function sendJsonRequest(url, data) {
+//    return fetch(url, {
+//        method: 'POST',
+//        headers: {
+//            'Content-Type': 'application/json',  // Correct content type for JSON data
+//        },
+//        body: JSON.stringify(data)  // Convert the data object to a JSON string
+//    }).then(response => response.json());
 //}
 
