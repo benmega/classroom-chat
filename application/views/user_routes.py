@@ -129,39 +129,41 @@ def get_user_id():
         return jsonify({'user_id': user.id})
     return jsonify({'user_id': None}), 404
 
-
-@user_bp.route('/upload_image', methods=['POST'])
-def upload_image():
-    # print(request.headers)  # Log headers to ensure Content-Type is correct
-    # print(request.data)  # Log raw data to see what's being sent
-
+@user_bp.route('/upload_file', methods=['POST'])
+def upload_file():
     # Attempt to parse JSON
     json_data = request.get_json()
-    # print("JSON Data:", json_data)  # This should not be None
 
     if not json_data:
         return jsonify({"error": "Invalid JSON data"}), 400
 
-    data_url = json_data.get('image')  # Safely get the image data from the JSON request
-    # print("Data URL:", data_url)  # This should not be None
+    data_url = json_data.get('file')
 
     if not data_url:
-        return jsonify({"error": "No image data provided"}), 400
+        return jsonify({"error": "No file data provided"}), 400
 
+    # Determine file type
     header, encoded = data_url.split(",", 1)
+    mime_type = header.split(";")[0].split(":")[1]
     data = base64.b64decode(encoded)
-    image = Image.open(BytesIO(data))
-
 
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    file_path = None
 
-    file_path = f'images/image_{timestamp}.png'
+    if mime_type.startswith('image/'):
+        # Handle image files
+        image = Image.open(BytesIO(data))
+        file_path = f'images/file_{timestamp}.png'
+        image.save(file_path)
+    elif mime_type == 'application/pdf':
+        # Handle PDF files
+        file_path = f'pdfs/file_{timestamp}.pdf'
+        with open(file_path, 'wb') as f:
+            f.write(data)
+    else:
+        return jsonify({"error": "Unsupported file type"}), 400
 
-    # Save the image
-    image.save(file_path)
-    return jsonify({"message": "Image uploaded successfully"})
-
-
+    return jsonify({"message": "File uploaded successfully"})
 def is_appropriate(message, banned_words=None):
 
     # Normalize message and banned words to lower case to ensure case insensitivity
