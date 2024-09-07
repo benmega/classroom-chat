@@ -136,8 +136,8 @@ export function uploadImage() {
 
     convertFileToBase64(file)
         .then(dataURL => {
-            const params = createJSONRequestParams({ image: dataURL });
-            return sendJsonRequest('/user/upload_image', params);
+            const params = createJSONRequestParams({ file: dataURL });
+            return sendJsonRequest('/user/upload_file', params);
         })
         .then(handleUploadResponse)
         .catch(handleError);
@@ -159,7 +159,7 @@ function sendJsonRequest(url, data) {
 }
 
 function getImageFile() {
-    return document.getElementById('image').files[0];
+    return document.getElementById('file').files[0];
 }
 
 function convertFileToBase64(file) {
@@ -175,7 +175,7 @@ function handleUploadResponse(data) {
     if (data.message) {
         console.log(data.message); // Success message from server
         alert('Image uploaded successfully.');
-        document.getElementById('image').value = ''; // Clear the file input after upload
+        document.getElementById('file').value = ''; // Clear the file input after upload
     } else {
         alert('Error: ' + data.error);
     }
