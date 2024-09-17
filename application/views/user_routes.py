@@ -15,6 +15,7 @@ import base64
 from io import BytesIO
 from PIL import Image
 from datetime import datetime
+import mimetypes
 
 user_bp = Blueprint('user_bp', __name__)
 
@@ -129,6 +130,7 @@ def get_user_id():
         return jsonify({'user_id': user.id})
     return jsonify({'user_id': None}), 404
 
+
 @user_bp.route('/upload_file', methods=['POST'])
 def upload_file():
     # Attempt to parse JSON
@@ -150,20 +152,28 @@ def upload_file():
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
     file_path = None
 
+    # Use mimetypes to guess the file extension
+    extension = mimetypes.guess_extension(mime_type) or 'bin'
+
     if mime_type.startswith('image/'):
         # Handle image files
+        file_path = f'userData/images/file_{timestamp}{extension}'
         image = Image.open(BytesIO(data))
-        file_path = f'images/file_{timestamp}.png'
         image.save(file_path)
     elif mime_type == 'application/pdf':
         # Handle PDF files
-        file_path = f'pdfs/file_{timestamp}.pdf'
+        file_path = f'userData/pdfs/file_{timestamp}{extension}'
         with open(file_path, 'wb') as f:
             f.write(data)
     else:
-        return jsonify({"error": "Unsupported file type"}), 400
+        # Handle other file types
+        file_path = f'userData/other/file_{timestamp}{extension}'
+        with open(file_path, 'wb') as f:
+            f.write(data)
 
-    return jsonify({"message": "File uploaded successfully"})
+    return jsonify({"message": "File uploaded successfully", "file_path": file_path})
+
+
 def is_appropriate(message, banned_words=None):
 
     # Normalize message and banned words to lower case to ensure case insensitivity
