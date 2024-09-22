@@ -4,7 +4,7 @@ from application.models.configuration import Configuration
 from application.extensions import db, socketio  # , socketio
 from application.config import Config
 from application.models import setup_models
-from application.views import register_blueprints
+from application.routes import register_blueprints
 from . import socket_events  # This import registers the event handlers
 
 

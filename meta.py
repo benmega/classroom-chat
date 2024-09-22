@@ -91,7 +91,7 @@ groupChat2/
             __pycache__/
                 helper_functions.cpython-310.pyc
                 __init__.cpython-310.pyc
-        views/
+        routes/
             admin_routes.py
             ai_routes.py
             general_routes.py
