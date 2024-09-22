@@ -157,7 +157,7 @@
 #
 #     if mime_type.startswith('image/'):
 #         # Handle image files
-#         file_path = f'userData/images/file_{timestamp}{extension}'
+#         file_path = f'userData/image/file_{timestamp}{extension}'
 #         image = Image.open(BytesIO(data))
 #         image.save(file_path)
 #     elif mime_type == 'application/pdf':
@@ -191,7 +191,7 @@
 
 from flask import Blueprint, request, jsonify
 from application.models.user import User
-from helpers.db_helpers import get_or_make_user
+from application.helpers.db_helpers import get_or_make_user
 
 user_bp = Blueprint('user_bp', __name__)
 

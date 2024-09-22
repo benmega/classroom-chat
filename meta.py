@@ -154,7 +154,7 @@ groupChat2/
     static/
         css/
             main.css
-        images/
+        image/
             logo.ico
         js/
             config.js

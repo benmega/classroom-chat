@@ -1,10 +1,12 @@
 from flask import Blueprint, request, jsonify
 from application.models.conversation import Conversation
 from application.utilities.helper_functions import request_database_commit
-from helpers.db_helpers import get_or_make_user
-from helpers.validation_helpers import message_is_appropriate
+from application.helpers.db_helpers import get_or_make_user
+from application.helpers.validation_helpers import message_is_appropriate
 from application.ai.ai_teacher import get_ai_response
-from application import Configuration
+from application import Configuration, db
+from application.routes.admin_routes import adminUsername
+from models import User
 
 message_bp = Blueprint('message_bp', __name__)
 
@@ -43,8 +45,15 @@ def send_message():
     return jsonify(success=True), 200
 
 
+def save_message_to_db(user_id, message):
+    conversation = Conversation(message=message, user_id=user_id)
+    db.session.add(conversation)
+    return request_database_commit()
 @message_bp.route('/get_conversation', methods=['GET'])
 def get_conversation():
-    conversations = db.session.query(Conversation).join(User).all()
+    # conversations = db.session.query(Conversation).join(User).all()
+    conversations = db.session.query(Conversation).\
+        join(User, Conversation.user_id == User.id).all()
     conversation_data = [{'username': conv.user.username, 'message': conv.message} for conv in conversations]
     return jsonify(conversation_history=conversation_data)
+

@@ -33,7 +33,7 @@ export function sendMessage() {
 
     const params = createRequestParams({ message, username });
 
-    sendRequest('user/send_message', params)
+    sendRequest('message/send_message', params)
         .then(handleResponse)
         .catch(handleError);
 }
@@ -43,7 +43,7 @@ export function sendMessage() {
 // update conversation helper functions
 
 function fetchConversationData() {
-    return fetch('/user/get_conversation')
+    return fetch('/message/get_conversation')
         .then(response => {
             if (!response.ok) {
                 throw new Error('Network response was not ok: ' + response.statusText);
@@ -137,7 +137,7 @@ export function uploadImage() {
     convertFileToBase64(file)
         .then(dataURL => {
             const params = createJSONRequestParams({ file: dataURL });
-            return sendJsonRequest('/user/upload_file', params);
+            return sendJsonRequest('/upload/upload_file', params);
         })
         .then(handleUploadResponse)
         .catch(handleError);
