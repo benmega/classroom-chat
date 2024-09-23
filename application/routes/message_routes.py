@@ -49,6 +49,7 @@ def save_message_to_db(user_id, message):
     conversation = Conversation(message=message, user_id=user_id)
     db.session.add(conversation)
     return request_database_commit()
+
 @message_bp.route('/get_conversation', methods=['GET'])
 def get_conversation():
     # conversations = db.session.query(Conversation).join(User).all()
