@@ -13,7 +13,7 @@
 <body>
     <div id="signup-container">
         <h1>Create a Classroom Chat Account</h1>
-        <form id="signupForm" method="POST" action="{{ url_for('general_bp.signup') }}">
+        <form id="signupForm" method="POST" action="{{ url_for('user_bp.signup') }}">
             <label for="username">Username:</label>
             <input type="text" id="username" name="username" required>
 
@@ -29,7 +29,7 @@
             <button type="submit">Sign Up</button>
         </form>
 
-        <p>Already have an account? <a href="{{ url_for('general_bp.login') }}">Login here</a>.</p>
+        <p>Already have an account? <a href="{{ url_for('user_bp.login') }}">Login here</a>.</p>
     </div>
 </body>
 

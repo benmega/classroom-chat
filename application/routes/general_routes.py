@@ -1,20 +1,13 @@
-from flask import Blueprint, render_template
+from flask import Blueprint
+from flask import session, redirect, url_for, render_template
 
 general_bp = Blueprint('general_bp', __name__)
 
 
 @general_bp.route('/')
 def index():
-    # TODO set to reroute if user not in session
+    # Check if the user is in session
+    if 'user' not in session:
+        return redirect(url_for('user_bp.login'))
     return render_template('index.html')
-
-# TODO move to user routes
-@general_bp.route('/login')
-def login():
-    return render_template('login.html')
-
-# TODO move to user routes
-@general_bp.route('/signup')
-def signup():
-    return render_template('signup.html')
 
