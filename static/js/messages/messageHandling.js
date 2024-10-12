@@ -24,19 +24,36 @@ export function updateConversation() {
 
 export function sendMessage() {
     const message = getMessageInput();
-    const username = getUsernameInput();
 
-//    if (!message || !username) {
-//        alert('Both message and username are required.');
-//        return;
-//    }
+    if (!message) {
+        alert('Message is required.');
+        return;
+    }
 
-    const params = createRequestParams({ message, username });
+    // Since username is stored in session, we don’t need to send it manually
+    const params = createRequestParams({ message });
 
     sendRequest('message/send_message', params)
         .then(handleResponse)
         .catch(handleError);
 }
+
+
+//export function sendMessage() {
+//    const message = getMessageInput();
+//    const username = getUsername();
+//
+//    if (!message || !username) {
+//        alert('Both message and username are required.');
+//        return;
+//    }
+//
+//    const params = createRequestParams({ message, username });
+//
+//    sendRequest('message/send_message', params)
+//        .then(handleResponse)
+//        .catch(handleError);
+//}
 
 
 
@@ -83,8 +100,9 @@ function getMessageInput() {
     return document.getElementById('message').value.trim();
 }
 
-function getUsernameInput() {
-    return document.getElementById('currentUsername').value.trim();
+
+function getUsername() {
+    return document.getElementById('currentUsername').textContent.trim();
 }
 
 function createRequestParams(data) {
@@ -180,111 +198,4 @@ function handleUploadResponse(data) {
         alert('Error: ' + data.error);
     }
 }
-
-
-//export function updateConversation() {
-//        fetch('/user/get_conversation')
-//            .then(response => {
-//                if (!response.ok) {
-//                    throw new Error('Network response was not ok: ' + response.statusText);
-//                }
-//                return response.json();
-//            })
-//            .then(data => {
-//                var chatDiv = document.getElementById('chat');
-//                if (!chatDiv) {
-//                    console.error('Chat div not found');
-//                    return;
-//                }
-//                chatDiv.innerHTML = '';  // Clear previous content
-//
-//                data.conversation_history.forEach(function(entry) {
-//                    var user = entry.username;   // Assuming the object has 'username'
-//                    var message = entry.message; // Assuming the object has 'message'
-//
-//                    // Convert URLs to clickable links
-//                    var urlRegex = /(https?:\/\/[^\s]+)|(\bwww\.[^\s]+(?:\.[^\s]+)+\b)/g;
-//                    message = message.replace(urlRegex, function(url) {
-//                        return '<a href="' + (url.startsWith('http') ? url : 'http://' + url) + '" target="_blank">' + url + '</a>';
-//                    });
-//
-//                    chatDiv.innerHTML += '<p><strong>' + user + ':</strong> ' + message + '</p>';
-//                });
-//            })
-//            .catch(error => {
-//                console.error('Failed to fetch conversation:', error);
-//            });
-//    }
-
-//export function sendMessage() {
-//    var message = document.getElementById('message').value;
-//    var username = document.getElementById('currentUsername').value;
-//
-//    var params = new URLSearchParams();
-//    params.append('message', message);
-//    params.append('username', username);
-//
-//    fetch('user/send_message', {
-//        method: 'POST',
-//        headers: {
-//            'Content-Type': 'application/x-www-form-urlencoded',
-//        },
-//        body: params
-//    })
-//    .then(function(response) {
-//        return response.json();  // Parse the JSON response
-//    })
-//    .then(function(data) {
-//        if (data.success) {
-//            document.getElementById('message').value = '';
-//        } else {
-//            alert('Error: ' + data.error);
-//        }
-//    })
-//    .catch(function(error) {
-//        console.error('Error:', error);
-//        alert('An unexpected error occurred.');
-//    });
-//}
-
-
-//
-//function uploadImage() {
-//    const file = getImageFile();
-//
-//    if (!file) {
-//        return;
-//    }
-//    const dummyDataURL = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/wcAAgMBAQABAwAAAA==";
-//
-//    convertFileToBase64(file)
-//        .then(dataURL => {
-//            const params = createJSONRequestParams({ image: dummyDataURL });
-//            return sendJsonRequest('/user/upload_image', params);
-//        })
-//        .then(handleUploadResponse)
-//        .catch(handleError);
-//}
-//
-//function createJSONRequestParams(data) {
-//    return {
-//        method: 'POST',
-//        headers: {
-//            'Content-Type': 'application/json',
-//        },
-//        body: JSON.stringify(data),
-//    };
-//}
-//
-//
-//
-//function sendJsonRequest(url, data) {
-//    return fetch(url, {
-//        method: 'POST',
-//        headers: {
-//            'Content-Type': 'application/json',  // Correct content type for JSON data
-//        },
-//        body: JSON.stringify(data)  // Convert the data object to a JSON string
-//    }).then(response => response.json());
-//}
 

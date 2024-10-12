@@ -13,12 +13,15 @@
     <div id="container">
         <h1>Classroom Chat</h1>
 
-        <form id="usernameForm">
-            <label for="username">Username:</label>
-            <input type="text" id="username" name="username" required>
-            <button type="submit">Set Username</button>
-            <input type="hidden" id="currentUsername" value="">
-        </form>
+
+        <!-- Store the username in a hidden div or directly in a JavaScript variable -->
+        <div id="currentUsername" style="display:none;">{{ username }}</div>
+<!--        <form id="usernameForm">-->
+<!--            <label for="username">Username:</label>-->
+<!--            <input type="text" id="username" name="username" required>-->
+<!--            <button type="submit">Set Username</button>-->
+<!--            <input type="hidden" id="currentUsername" value="">-->
+<!--        </form>-->
 
 
         <div id="chat"></div>
@@ -34,18 +37,19 @@
 
 
     <!-- Password Modal -->
-    <div id="passwordModal" class="modal">
-        <div class="modal-content">
-            <span class="close">&times;</span>
-            <p>Please enter the teacher's password to change your username:</p>
-            <input type="password" id="passwordInput" placeholder="Enter password">
-            <button id="submitPasswordBtn">Submit</button>
-        </div>
-    </div>
+<!--    <div id="passwordModal" class="modal">-->
+<!--        <div class="modal-content">-->
+<!--            <span class="close">&times;</span>-->
+<!--            <p>Please enter the teacher's password to change your username:</p>-->
+<!--            <input type="password" id="passwordInput" placeholder="Enter password">-->
+<!--            <button id="submitPasswordBtn">Submit</button>-->
+<!--        </div>-->
+<!--    </div>-->
 
     <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
     <script type="module" src="{{ url_for('static', filename='js/main.js') }}"></script>
 
 </body>
+
 
 </html>

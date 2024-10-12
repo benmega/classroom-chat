@@ -205,14 +205,23 @@ def get_users():
     users_data = [{'id': user.id, 'username': user.username, 'email': user.email} for user in users]
     return jsonify(users_data)
 
+# @user_bp.route('/get_user_id', methods=['GET'])
+# def get_user_id():
+#     user_ip = request.remote_addr
+#     user = User.query.filter_by(ip_address=user_ip).first()
+#     if user:
+#         return jsonify({'user_id': user.id})
+#     return jsonify({'user_id': None}), 404
+
+
 @user_bp.route('/get_user_id', methods=['GET'])
 def get_user_id():
-    user_ip = request.remote_addr
-    user = User.query.filter_by(ip_address=user_ip).first()
-    if user:
-        return jsonify({'user_id': user.id})
+    user_username = session.get('user')
+    if user_username:
+        user = User.query.filter_by(username=user_username).first()
+        if user:
+            return jsonify({'user_id': user.id})
     return jsonify({'user_id': None}), 404
-
 
 
 @user_bp.route('/login', methods=['GET', 'POST'])
