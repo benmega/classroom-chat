@@ -20,7 +20,7 @@ def get_or_create_ai_teacher():
 
     # If not, create the user
     if not user:
-        user = User(id=0, username="AI Teacher", ip_address="0.0.0.0")  # Provide a default IP address
+        user = User(id=0, username="AI Teacher", ip_address="0.0.0.0", password_hash="temp")  # Provide a default IP address
         db.session.add(user)
         db.session.commit()
 

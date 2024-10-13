@@ -6,7 +6,7 @@ class User(db.Model):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(50), unique=True, nullable=False)
-    password_hash = db.Column(db.String(128), nullable=False)  # Add hashed password field
+    password_hash = db.Column(db.String(128), nullable=False)
     ip_address = db.Column(db.String(45), nullable=False)
     conversations = db.relationship('Conversation', backref='user', lazy='dynamic')
     is_online = db.Column(db.Boolean, default=False)
