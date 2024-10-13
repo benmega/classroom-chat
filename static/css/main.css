@@ -106,8 +106,12 @@ button:hover {
 }
 
 a {
-    color: #FFD700; /* Yellow */
+    color: #0000EE; /* Blue */
     text-decoration: none;
+}
+
+a:visited {
+    color: #551A8B; /* Purple */
 }
 
 a:hover {
