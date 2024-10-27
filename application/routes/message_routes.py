@@ -7,6 +7,8 @@ from application.ai.ai_teacher import get_ai_response
 from application import Configuration, db
 from application.routes.admin_routes import adminUsername
 from models import User
+from markupsafe import Markup
+
 
 message_bp = Blueprint('message_bp', __name__)
 
@@ -16,6 +18,7 @@ def send_message():
     user_ip = request.remote_addr
     session_username = session.get('user', None)  # Get username from the session
     form_message = request.form['message']
+    # formatted_message = format_message(form_message)
 
     if not session_username:
         return jsonify(success=False, error="No session username found"), 400
@@ -47,6 +50,10 @@ def send_message():
 
     return jsonify(success=True), 200
 
+
+# def format_message(message):
+#     return message
+    # return Markup(message.replace('\n', '<br>'))
 
 def save_message_to_db(user_id, message):
     conversation = Conversation(message=message, user_id=user_id)
