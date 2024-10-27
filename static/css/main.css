@@ -53,6 +53,23 @@ input[type="text"]:focus, input[type="password"]:focus {
     box-shadow: 0 0 8px rgba(0, 128, 128, 0.2);
 }
 
+textarea {
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 16px;
+    width: 100%;
+    box-sizing: border-box;
+    overflow: hidden; /* Hide scrollbars initially */
+}
+
+textarea:focus {
+    outline: none;
+    border-color: #0EB2BB; /* Teal */
+    box-shadow: 0 0 8px rgba(0, 128, 128, 0.2);
+}
+
+
 button {
     padding: 12px 20px;
     background-color: #0EB2BB; /* Teal */

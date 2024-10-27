@@ -84,14 +84,42 @@ function updateChatUI(conversationHistory) {
 }
 
 function formatMessage(username, message) {
-    const urlRegex = /(https?:\/\/[^\s]+)|(\bwww\.[^\s]+(?:\.[^\s]+)+\b)/g;
+    // Replace \n with <br> first
+    message = message.replace(/\n/g, '<br>');
+
+    // Regular expression to match URLs
+    const urlRegex = /(https?:\/\/[^\s<]+)|(\bwww\.[^\s<]+(?:\.[^\s<]+)+\b)/g;
+
+    // Replace URLs with anchor tags
     const formattedMessage = message.replace(urlRegex, url => {
         const href = url.startsWith('http') ? url : 'http://' + url;
         return `<a href="${href}" target="_blank">${url}</a>`;
     });
 
+    // Return the formatted message with <br> properly handled
     return `<p><strong>${username}:</strong> ${formattedMessage}</p>`;
 }
+
+
+//function formatMessage(username, message) {
+//    const urlRegex = /(https?:\/\/[^\s\n\r]+)|(\bwww\.[^\s\n\r]+(?:\.[^\s\n\r]+)+\b)/g;
+//    const formattedMessage = message.replace(urlRegex, url => {
+//        const href = url.startsWith('http') ? url : 'http://' + url;
+//        return `<a href="${href}" target="_blank">${url}</a>`;
+//    });
+//
+//    return `<p><strong>${username}:</strong> ${formattedMessage}</p>`;
+//}
+
+//function formatMessage(username, message) {
+//    const urlRegex = ^/(https?:\/\/[^\s\n\r]+)|(\bwww\.[^\s\n\r]+(?:\.[^\s\n\r]+)+\b)/g;
+//    const formattedMessage = message.replace(urlRegex, url => {
+//        const href = url.startsWith('http') ? url : 'http://' + url;
+//        return `<a href="${href}" target="_blank">${url}</a>`;
+//    });
+//
+//    return `<p><strong>${username}:</strong> ${formattedMessage}</p>`;
+//}
 
 
 // send messages helper functions
