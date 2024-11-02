@@ -151,3 +151,13 @@ def add_banned_word():
     db.session.add(new_banned_word)
     db.session.commit()
     return redirect(url_for('admin_bp.dashboard'))
+
+@admin_bp.route('/strike_message/<int:message_id>', methods=['POST'])
+def strike_message(message_id):
+    message = Conversation.query.get(message_id)
+    if not message:
+        return jsonify(success=False, error="Message not found"), 404
+
+    message.is_struck = True
+    db.session.commit()
+    return jsonify(success=True, message="Message struck successfully"), 200
