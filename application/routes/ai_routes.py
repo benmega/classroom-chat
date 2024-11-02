@@ -9,4 +9,8 @@ def ai_response():
     user_message = request.form['message']
     username = request.form['username']
     # Call AI logic here...
-    return jsonify(success=True, ai_response=get_ai_response(user_message, username))
+    response = get_ai_response(user_message, username)
+    if response:
+        return jsonify(success=True, ai_response=response)
+    else:
+        return jsonify(success=False, ai_response=response)

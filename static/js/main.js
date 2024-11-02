@@ -7,7 +7,7 @@ import { setupMessagingAndConversation, sendMessage, updateConversation } from '
 
 
 document.addEventListener('DOMContentLoaded', async function() {
-    setupUsernameLogic();
+//    setupUsernameLogic();
     await setupSocket();
     setupMessagingAndConversation();
 });
