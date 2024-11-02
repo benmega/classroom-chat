@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Bug Bounty Submission</title>
+</head>
+<body>
+    <h1>Submit a Bug Bounty</h1>
+    <form action="{{ url_for('submit_bug_bounty') }}" method="POST">
+        <label for="description">Bug Description:</label>
+        <textarea id="description" name="description" required></textarea>
+
+        <label for="bounty">Bounty (Binary Number):</label>
+        <input type="text" id="bounty" name="bounty" pattern="[0-1]+" required
+               title="Please enter a binary number, e.g., 10010">
+
+        <label for="expected_behavior">Expected Behavior (optional):</label>
+        <textarea id="expected_behavior" name="expected_behavior"></textarea>
+
+        <button type="submit">Submit</button>
+    </form>
+</body>
+</html>
