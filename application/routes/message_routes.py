@@ -48,10 +48,16 @@ def send_message():
     return jsonify(success=True), 200
 
 
-def save_message_to_db(user_id, message):
-    conversation = Conversation(message=message, user_id=user_id)
-    db.session.add(conversation)
-    return request_database_commit()
+def save_message_to_db(user_id, message, message_type="text"):
+    try:
+        new_message = Conversation(user_id=user_id, message=message, message_type=message_type)
+        db.session.add(new_message)
+        db.session.commit()
+        return True
+    except Exception as e:
+        print(f"Error saving message to db: {e}")
+        db.session.rollback()
+        return False
 
 @message_bp.route('/get_conversation', methods=['GET'])
 def get_conversation():
@@ -60,3 +66,15 @@ def get_conversation():
     conversation_data = [{'username': conv.user.username, 'message': conv.message} for conv in conversations]
     return jsonify(conversation_history=conversation_data)
 
+@message_bp.route('/conversation/<int:user_id>', methods=['GET'])
+def get_conversation_history(user_id):
+    messages = Conversation.query.filter_by(user_id=user_id, is_struck=False).order_by(Conversation.timestamp).all()
+    return jsonify([
+        {
+            "sender": msg.sender,
+            "message_type": msg.message_type,
+            "content": msg.content,
+            "timestamp": msg.timestamp
+        }
+        for msg in messages
+    ])
