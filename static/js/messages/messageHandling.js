@@ -1,80 +1,229 @@
 // messageHandling.js
 
+export function setupMessagingAndConversation() {
+    messageForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        sendMessage();
+        uploadImage();
+        updateConversation();
+    });
+    // Set an interval to update the conversation every 2 seconds
+    setInterval(updateConversation, 2000);
+}
+
 export function updateConversation() {
-        fetch('/user/get_conversation')  // Ensure the path is absolute or correctly relative
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok: ' + response.statusText);
-                }
-                return response.json();
-            })
-            .then(data => {
-                var chatDiv = document.getElementById('chat');
-                if (!chatDiv) {
-                    console.error('Chat div not found');
-                    return;
-                }
-                chatDiv.innerHTML = '';  // Clear previous content
+    fetchConversationData()
+        .then(data => {
+            updateChatUI(data.conversation_history);
+        })
+        .catch(error => {
+            console.error('Failed to fetch conversation:', error);
+        });
+}
 
-                data.conversation_history.forEach(function(entry) {
-                    var user = entry.username;   // Assuming the object has 'username'
-                    var message = entry.message; // Assuming the object has 'message'
-
-                    // Convert URLs to clickable links
-                    var urlRegex = /(https?:\/\/[^\s]+)|(\bwww\.[^\s]+(?:\.[^\s]+)+\b)/g;
-                    message = message.replace(urlRegex, function(url) {
-                        return '<a href="' + (url.startsWith('http') ? url : 'http://' + url) + '" target="_blank">' + url + '</a>';
-                    });
-
-                    chatDiv.innerHTML += '<p><strong>' + user + ':</strong> ' + message + '</p>';
-                });
-            })
-            .catch(error => {
-                console.error('Failed to fetch conversation:', error);
-            });
-    }
 
 export function sendMessage() {
-    var message = document.getElementById('message').value;
-    var username = document.getElementById('currentUsername').value;
+    const message = getMessageInput();
 
-    var params = new URLSearchParams();
-    params.append('message', message);
-    params.append('username', username);
+    if (!message) {
+        alert('Message is required.');
+        return;
+    }
 
-    fetch('user/send_message', {
+    // Since username is stored in session, we don’t need to send it manually
+    const params = createRequestParams({ message });
+
+    sendRequest('message/send_message', params)
+        .then(handleResponse)
+        .catch(handleError);
+}
+
+
+//export function sendMessage() {
+//    const message = getMessageInput();
+//    const username = getUsername();
+//
+//    if (!message || !username) {
+//        alert('Both message and username are required.');
+//        return;
+//    }
+//
+//    const params = createRequestParams({ message, username });
+//
+//    sendRequest('message/send_message', params)
+//        .then(handleResponse)
+//        .catch(handleError);
+//}
+
+
+
+// update conversation helper functions
+
+function fetchConversationData() {
+    return fetch('/message/get_conversation')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok: ' + response.statusText);
+            }
+            return response.json();
+        });
+}
+
+function updateChatUI(conversationHistory) {
+    const chatDiv = document.getElementById('chat');
+    if (!chatDiv) {
+        console.error('Chat div not found');
+        return;
+    }
+    chatDiv.innerHTML = '';  // Clear previous content
+
+    conversationHistory.forEach(entry => {
+        const messageHTML = formatMessage(entry.username, entry.message);
+        chatDiv.innerHTML += messageHTML;
+    });
+}
+
+function formatMessage(username, message) {
+    // Replace \n with <br> first
+    message = message.replace(/\n/g, '<br>');
+
+    // Regular expression to match URLs
+    const urlRegex = /(https?:\/\/[^\s<]+)|(\bwww\.[^\s<]+(?:\.[^\s<]+)+\b)/g;
+
+    // Replace URLs with anchor tags
+    const formattedMessage = message.replace(urlRegex, url => {
+        const href = url.startsWith('http') ? url : 'http://' + url;
+        return `<a href="${href}" target="_blank">${url}</a>`;
+    });
+
+    // Return the formatted message with <br> properly handled
+    return `<p><strong>${username}:</strong> ${formattedMessage}</p>`;
+}
+
+
+//function formatMessage(username, message) {
+//    const urlRegex = /(https?:\/\/[^\s\n\r]+)|(\bwww\.[^\s\n\r]+(?:\.[^\s\n\r]+)+\b)/g;
+//    const formattedMessage = message.replace(urlRegex, url => {
+//        const href = url.startsWith('http') ? url : 'http://' + url;
+//        return `<a href="${href}" target="_blank">${url}</a>`;
+//    });
+//
+//    return `<p><strong>${username}:</strong> ${formattedMessage}</p>`;
+//}
+
+//function formatMessage(username, message) {
+//    const urlRegex = ^/(https?:\/\/[^\s\n\r]+)|(\bwww\.[^\s\n\r]+(?:\.[^\s\n\r]+)+\b)/g;
+//    const formattedMessage = message.replace(urlRegex, url => {
+//        const href = url.startsWith('http') ? url : 'http://' + url;
+//        return `<a href="${href}" target="_blank">${url}</a>`;
+//    });
+//
+//    return `<p><strong>${username}:</strong> ${formattedMessage}</p>`;
+//}
+
+
+// send messages helper functions
+
+function getMessageInput() {
+    return document.getElementById('message').value.trim();
+}
+
+
+function getUsername() {
+    return document.getElementById('currentUsername').textContent.trim();
+}
+
+function createRequestParams(data) {
+    const params = new URLSearchParams();
+    Object.keys(data).forEach(key => params.append(key, data[key]));
+    return params;
+}
+
+
+function sendRequest(url, params) {
+    return fetch(url, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
         },
         body: params
-    })
-    .then(function(response) {
-        return response.json();  // Parse the JSON response
-    })
-    .then(function(data) {
-        if (data.success) {
-            document.getElementById('message').value = '';
-        } else {
-            alert('Error: ' + data.error);
-        }
-    })
-    .catch(function(error) {
-        console.error('Error:', error);
-        alert('An unexpected error occurred.');
-    });
+    }).then(response => response.json());
 }
 
 
-export function setupMessagingAndConversation() {
-    // Define function to send messages
-    // Define function to update conversations
-    messageForm.addEventListener('submit', function(e) {
-    e.preventDefault();
-    console.log('Form submitted cool');
-    sendMessage();
-    updateConversation();
-    });
-    // Set an interval to update the conversation every 2 seconds
-    setInterval(updateConversation, 2000);
+
+function handleResponse(data) {
+    if (data.success) {
+        clearMessageInput();
+    } else {
+        alert('Error: ' + data.error);
+    }
 }
+
+function handleError(error) {
+    console.error('Error:', error);
+    alert('An unexpected error occurred.');
+}
+
+function clearMessageInput() {
+    document.getElementById('message').value = '';
+}
+
+
+
+
+// Image upload helper functions
+export function uploadImage() {
+    const file = getImageFile();
+
+    if (!file) {
+        return;
+    }
+
+    convertFileToBase64(file)
+        .then(dataURL => {
+            const params = createJSONRequestParams({ file: dataURL });
+            return sendJsonRequest('/upload/upload_file', params);
+        })
+        .then(handleUploadResponse)
+        .catch(handleError);
+}
+
+function createJSONRequestParams(data) {
+    return {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),  // Convert the data object to a JSON string
+    };
+}
+
+function sendJsonRequest(url, data) {
+    return fetch(url, data)  // No need to re-stringify; data is already JSON
+        .then(response => response.json());
+}
+
+function getImageFile() {
+    return document.getElementById('file').files[0];
+}
+
+function convertFileToBase64(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+}
+
+function handleUploadResponse(data) {
+    if (data.message) {
+        console.log(data.message); // Success message from server
+        alert('Image uploaded successfully.');
+        document.getElementById('file').value = ''; // Clear the file input after upload
+    } else {
+        alert('Error: ' + data.error);
+    }
+}
+

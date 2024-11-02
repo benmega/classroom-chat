@@ -1,4 +1,6 @@
 import os
+from datetime import timedelta
+
 from dotenv import load_dotenv
 
 # Ensure environment variables are loaded
@@ -24,6 +26,7 @@ class Config:
     admin_pass = '1234'  # Global variable for admin password. This should be securely fetched or better yet, use hashed passwords
     adminUsername = 'Mr. Mega'
 
+    # PERMANENT_SESSION_LIFETIME = timedelta(minutes=1)
 
 class DevelopmentConfig(Config):
     DEBUG = True
