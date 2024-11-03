@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>View Bug Bounties</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bug_bounty.css') }}">
+</head>
+<body>
+    <div id="bounty-container">
+        <h1>All Bug Bounties</h1>
+        <ul>
+            {% for bounty in bounties %}
+                <li>
+                    <strong>Description:</strong> <pre>{{ bounty.description }}</pre><br>
+                    <strong>Bounty:</strong> {{ bounty.bounty }}<br>
+                    <strong>Expected Behavior:</strong> <pre>{{ bounty.expected_behavior if bounty.expected_behavior else 'N/A' }}</pre><br>
+                    <strong>Status:</strong> {{ bounty.status }}<br>
+                    <strong>Submitted on:</strong> {{ bounty.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}
+
+                    {% if user_id == bounty.user_id %}
+                        <form action="{{ url_for('bounty_bp.update_bounty_status', bounty_id=bounty.id) }}" method="POST">
+                            <label for="status-{{ bounty.id }}">Change Status:</label>
+                            <select name="status" id="status-{{ bounty.id }}">
+                                <option value="Open" {% if bounty.status == "Open" %}selected{% endif %}>Open </option>
+                                <option value="In Progress" {% if bounty.status == "In Progress" %}selected{% endif %}>In Progress </option>
+                                <option value="Resolved" {% if bounty.status == "Resolved" %}selected{% endif %}>Resolved </option>
+                            </select>
+                            <button type="submit">Update</button>
+                        </form>
+                    {% else %}
+                        <p><strong>Status:</strong> {{ bounty.status }}</p>
+                    {% endif %}
+                    <hr>
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+</body>
+</html>

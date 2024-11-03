@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Submit a Bug Bounty</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bug_bounty.css') }}">
+</head>
+<body>
+    <div id="bounty-container">
+        <h1>Submit a Bug Bounty</h1>
+        <form action="{{ url_for('bounty_bp.submit_bug_bounty') }}" method="POST">
+            <div class="form-group">
+                <label for="description">Bug Description:</label>
+                <textarea id="description" name="description" required></textarea>
+            </div>
+            <div class="form-group">
+                <label for="bounty">Bounty (Binary Number):</label>
+                <input type="text" id="bounty" name="bounty" pattern="[0-1]+" required
+                    title="Please enter a binary number, e.g., 10010">
+
+            </div>
+            <div class="form-group">
+                <label for="expected_behavior">Expected Behavior (optional):</label>
+                <textarea id="expected_behavior" name="expected_behavior"></textarea>
+            </div>
+            <button type="submit">Submit</button>
+        </form>
+    </div>
+</body>
+</html>
