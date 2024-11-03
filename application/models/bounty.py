@@ -11,6 +11,7 @@ class Bounty(db.Model):
     expected_behavior = db.Column(db.Text, nullable=True)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
     status = db.Column(db.String, default="Open", nullable=True)
+    image_path = db.Column(db.String(255), nullable=True)  # Store relative path to the image file
 
     def __repr__(self):
         return f"<Bounty {self.id} by User {self.user_id}>"

@@ -8,7 +8,7 @@ def add_column(db_path):
     # SQL to add the new column with a default value
     alter_table_sql = """
     ALTER TABLE bounties
-    ADD COLUMN status;
+    ADD COLUMN image_path;
     """
 
     try:

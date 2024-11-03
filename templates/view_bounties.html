@@ -13,6 +13,10 @@
                 <li>
                     <strong>Description:</strong> <pre>{{ bounty.description }}</pre><br>
                     <strong>Bounty:</strong> {{ bounty.bounty }}<br>
+                    {% if bounty.image_path %}
+                        <strong>Screenshot:</strong><br>
+                        <img src="{{ url_for('static', filename=bounty.image_path) }}" alt="Screenshot for the bug bounty" style="max-width: 100%; height: auto;">
+                    {% endif %}
                     <strong>Expected Behavior:</strong> <pre>{{ bounty.expected_behavior if bounty.expected_behavior else 'N/A' }}</pre><br>
                     <strong>Status:</strong> {{ bounty.status }}<br>
                     <strong>Submitted on:</strong> {{ bounty.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}
