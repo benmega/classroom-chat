@@ -9,7 +9,8 @@
     <div id="bounty-container">
         <h1>All Bug Bounties</h1>
         <ul>
-            {% for bounty in bounties %}
+        {% for bounty in bounties %}
+            {% if bounty.status == "Open" %}
                 <li>
                     <strong>Description:</strong> <pre>{{ bounty.description }}</pre><br>
                     <strong>Bounty:</strong> {{ bounty.bounty }}<br>
@@ -25,9 +26,9 @@
                         <form action="{{ url_for('bounty_bp.update_bounty_status', bounty_id=bounty.id) }}" method="POST">
                             <label for="status-{{ bounty.id }}">Change Status:</label>
                             <select name="status" id="status-{{ bounty.id }}">
-                                <option value="Open" {% if bounty.status == "Open" %}selected{% endif %}>Open </option>
-                                <option value="In Progress" {% if bounty.status == "In Progress" %}selected{% endif %}>In Progress </option>
-                                <option value="Resolved" {% if bounty.status == "Resolved" %}selected{% endif %}>Resolved </option>
+                                <option value="Open" {% if bounty.status == "Open" %}selected{% endif %}>Open</option>
+                                <option value="In Progress" {% if bounty.status == "In Progress" %}selected{% endif %}>In Progress</option>
+                                <option value="Resolved" {% if bounty.status == "Resolved" %}selected{% endif %}>Resolved</option>
                             </select>
                             <button type="submit">Update</button>
                         </form>
@@ -36,7 +37,8 @@
                     {% endif %}
                     <hr>
                 </li>
-            {% endfor %}
+            {% endif %}
+        {% endfor %}
         </ul>
     </div>
 </body>
