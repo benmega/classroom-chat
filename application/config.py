@@ -24,7 +24,7 @@ class Config:
     OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
     SECRET_KEY = os.getenv('SECRET_KEY', 'your-default-secret-key')
     admin_pass = '1234'  # Global variable for admin password. This should be securely fetched or better yet, use hashed passwords
-    adminUsername = 'Mr. Mega'
+    adminUsername = 'ben'
 
     # PERMANENT_SESSION_LIFETIME = timedelta(minutes=1)
 
