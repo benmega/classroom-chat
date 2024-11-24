@@ -1,5 +1,8 @@
+from datetime import datetime
+
 from flask import Blueprint, request, jsonify, session
 from application.models.conversation import Conversation
+from application.models.message import Message
 from application.utilities.helper_functions import request_database_commit
 from application.helpers.db_helpers import get_or_make_user
 from application.helpers.validation_helpers import message_is_appropriate
@@ -48,33 +51,105 @@ def send_message():
     return jsonify(success=True), 200
 
 
-def save_message_to_db(user_id, message, message_type="text"):
+
+def save_message_to_db(user_id, message, message_type="text", conversation_id=None):
     try:
-        new_message = Conversation(user_id=user_id, message=message, message_type=message_type)
+        # Retrieve or create the associated conversation
+        if conversation_id:
+            conversation = Conversation.query.get(conversation_id)
+            if not conversation:
+                return {"success": False, "error": "Conversation not found."}
+        else:
+            # Create a new conversation if no conversation ID is provided
+            conversation = Conversation(
+                title=f"Conversation started by User {user_id} at {datetime.utcnow()}",
+    ***REMOVED***
+            db.session.add(conversation)
+            db.session.commit()  # Generate an ID for the new conversation
+
+        # Save the new message
+        new_message = Message(
+            user_id=user_id,
+            conversation_id=conversation.id,
+            content=message,
+            message_type=message_type,
+***REMOVED***
         db.session.add(new_message)
         db.session.commit()
-        return True
+        return {"success": True, "message_id": new_message.id, "conversation_id": conversation.id}
     except Exception as e:
         print(f"Error saving message to db: {e}")
         db.session.rollback()
-        return False
+        return {"success": False, "error": str(e)}
+
 
 @message_bp.route('/get_conversation', methods=['GET'])
 def get_conversation():
-    # conversations = db.session.query(Conversation).join(User).all()
-    conversations = db.session.query(Conversation).all()
-    conversation_data = [{'username': conv.user.username, 'message': conv.message} for conv in conversations]
-    return jsonify(conversation_history=conversation_data)
+    conversations = Conversation.query.all()
+    conversation_data = [
+        {
+            "conversation_id": conv.id,
+            "title": conv.title,
+            "messages": [
+                {"user_id": msg.user_id, "content": msg.content, "timestamp": msg.timestamp}
+                for msg in conv.messages
+            ],
+        }
+        for conv in conversations
+    ]
+    return jsonify(conversations=conversation_data)
+
 
 @message_bp.route('/conversation/<int:user_id>', methods=['GET'])
 def get_conversation_history(user_id):
-    messages = Conversation.query.filter_by(user_id=user_id, is_struck=False).order_by(Conversation.timestamp).all()
+    conversations = Conversation.query.filter(
+        Conversation.users.any(id=user_id)  # Check if the user is part of the conversation
+    ).all()
     return jsonify([
         {
-            "sender": msg.sender,
-            "message_type": msg.message_type,
-            "content": msg.content,
-            "timestamp": msg.timestamp
+            "conversation_id": conv.id,
+            "title": conv.title,
+            "messages": [
+                {
+                    "user_id": msg.user_id,
+                    "content": msg.content,
+                    "message_type": msg.message_type,
+                    "timestamp": msg.timestamp,
+                }
+                for msg in conv.messages if not msg.is_struck
+            ],
         }
-        for msg in messages
+        for conv in conversations
     ])
+
+
+# def save_message_to_db(user_id, message, message_type="text"):
+#     try:
+#         new_message = Conversation(user_id=user_id, message=message, message_type=message_type)
+#         db.session.add(new_message)
+#         db.session.commit()
+#         return True
+#     except Exception as e:
+#         print(f"Error saving message to db: {e}")
+#         db.session.rollback()
+#         return False
+#
+# @message_bp.route('/get_conversation', methods=['GET'])
+# def get_conversation():
+#     # conversations = db.session.query(Conversation).join(User).all()
+#     conversations = db.session.query(Conversation).all()
+#     conversation_data = [{'username': conv.user.username, 'message': conv.message} for conv in conversations]
+#     return jsonify(conversation_history=conversation_data)
+#
+# @message_bp.route('/conversation/<int:user_id>', methods=['GET'])
+# def get_conversation_history(user_id):
+#     messages = Conversation.query.filter_by(user_id=user_id, is_struck=False).order_by(Conversation.timestamp).all()
+#     return jsonify([
+#         {
+#             "sender": msg.sender,
+#             "message_type": msg.message_type,
+#             "content": msg.content,
+#             "timestamp": msg.timestamp
+#         }
+#         for msg in messages
+#     ])

@@ -2,6 +2,9 @@
 from application.extensions import db
 from werkzeug.security import generate_password_hash, check_password_hash
 
+from application.models.conversation import conversation_users
+
+
 class User(db.Model):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
@@ -11,6 +14,12 @@ class User(db.Model):
     conversations = db.relationship('Conversation', backref='user', lazy='dynamic')
     is_online = db.Column(db.Boolean, default=False)
 
+    # Relationships
+    conversations = db.relationship(
+        'Conversation',
+        secondary=conversation_users,
+        backref=db.backref('users', lazy=True)
+    )
     def __repr__(self):
         return f'<User {self.username}>'
 
