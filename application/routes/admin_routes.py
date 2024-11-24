@@ -1,8 +1,11 @@
+from datetime import datetime, timedelta
+
 from flask import Blueprint, request, jsonify, render_template, redirect, url_for
 from functools import wraps
 from application.extensions import db
 from application.models.conversation import Conversation
 from application.models.configuration import Configuration
+from application.models.message import Message
 from application.models.user import User
 from application.config import Config
 from application.models.banned_words import BannedWords
@@ -131,12 +134,38 @@ def toggle_message_sending():
     return redirect(url_for('admin_bp.dashboard'))
 
 
+# @admin_bp.route('/clear-history', methods=['POST'])
+# def clear_history():
+#     Conversation.query.delete()
+#     db.session.commit()
+#     return redirect(url_for('admin_bp.dashboard'))
+
 @admin_bp.route('/clear-history', methods=['POST'])
 def clear_history():
-    Conversation.query.delete()
-    db.session.commit()
-    return redirect(url_for('admin_bp.dashboard'))
+    try:
+        # Delete all conversations (messages will be deleted via cascade)
+        Conversation.query.delete()
+        db.session.commit()
+        return redirect(url_for('admin_bp.dashboard'))
+    except Exception as e:
+        db.session.rollback()  # Rollback in case of an error
+        print(f"Error clearing history: {e}")
+        return redirect(url_for('admin_bp.dashboard', error="Failed to clear history"))
 
+
+@admin_bp.route('/clear-partial-history', methods=['POST'])
+def clear_partial_history():
+    try:
+        # Example: Clear only conversations older than 30 days
+        cutoff_date = datetime.utcnow() - timedelta(days=30)
+        conversations_to_delete = Conversation.query.filter(Conversation.created_at < cutoff_date)
+        conversations_to_delete.delete(synchronize_session=False)
+        db.session.commit()
+        return redirect(url_for('admin_bp.dashboard'))
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error clearing history: {e}")
+        return redirect(url_for('admin_bp.dashboard', error="Failed to clear history"))
 
 
 # I should @check_auth
@@ -152,12 +181,31 @@ def add_banned_word():
     db.session.commit()
     return redirect(url_for('admin_bp.dashboard'))
 
+
 @admin_bp.route('/strike_message/<int:message_id>', methods=['POST'])
 def strike_message(message_id):
-    message = Conversation.query.get(message_id)
+    # Query the message from the Message model
+    message = Message.query.get(message_id)
     if not message:
         return jsonify(success=False, error="Message not found"), 404
 
-    message.is_struck = True
-    db.session.commit()
-    return jsonify(success=True, message="Message struck successfully"), 200
+    try:
+        # Mark the message as struck
+        message.is_struck = True
+        db.session.commit()
+        return jsonify(success=True, message="Message struck successfully"), 200
+    except Exception as e:
+        db.session.rollback()  # Rollback any changes in case of an error
+        print(f"Error striking message: {e}")
+        return jsonify(success=False, error="An error occurred while striking the message"), 500
+
+
+# @admin_bp.route('/strike_message/<int:message_id>', methods=['POST'])
+# def strike_message(message_id):
+#     message = Conversation.query.get(message_id)
+#     if not message:
+#         return jsonify(success=False, error="Message not found"), 404
+#
+#     message.is_struck = True
+#     db.session.commit()
+#     return jsonify(success=True, message="Message struck successfully"), 200
