@@ -23,6 +23,7 @@ class Config:
     # Securely manage API keys and secret keys from environment variables
     OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
     SECRET_KEY = os.getenv('SECRET_KEY', 'your-default-secret-key')
+    SESSION_TYPE = 'filesystem'
     admin_pass = '1234'  # Global variable for admin password. This should be securely fetched or better yet, use hashed passwords
     adminUsername = 'Mr. Mega'
 

@@ -11,15 +11,14 @@ class User(db.Model):
     username = db.Column(db.String(50), unique=True, nullable=False)
     password_hash = db.Column(db.String(128), nullable=False)
     ip_address = db.Column(db.String(45), nullable=False)
-    conversations = db.relationship('Conversation', backref='user', lazy='dynamic')
     is_online = db.Column(db.Boolean, default=False)
 
     # Relationships
-    conversations = db.relationship(
-        'Conversation',
-        secondary=conversation_users,
-        backref=db.backref('users', lazy=True)
-    )
+    # conversations = db.relationship(
+    #     'Conversation',
+    #     secondary=conversation_users,
+    #     backref=db.backref('users', lazy=True)
+    # )
     def __repr__(self):
         return f'<User {self.username}>'
 

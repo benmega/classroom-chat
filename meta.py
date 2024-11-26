@@ -148,7 +148,7 @@ groupChat2/
         users.db
         utilities/
             add_column.py
-            clean_slate.py
+            drop.py
             inspectdb.py
             recreate.py
     static/

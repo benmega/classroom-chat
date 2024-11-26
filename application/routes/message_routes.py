@@ -19,6 +19,7 @@ def send_message():
     user_ip = request.remote_addr
     session_username = session.get('user', None)  # Get username from the session
     form_message = request.form['message']
+    conversation_id = session.get('conversation_id')
 
     if not session_username:
         return jsonify(success=False, error="No session username found"), 400
@@ -51,21 +52,26 @@ def send_message():
     return jsonify(success=True), 200
 
 
-
-def save_message_to_db(user_id, message, message_type="text", conversation_id=None):
+def save_message_to_db(user_id, message, message_type="text"):
     try:
-        # Retrieve or create the associated conversation
-        if conversation_id:
-            conversation = Conversation.query.get(conversation_id)
-            if not conversation:
-                return {"success": False, "error": "Conversation not found."}
-        else:
-            # Create a new conversation if no conversation ID is provided
+        # Retrieve the conversation ID from the session
+        conversation_id = session.get('conversation_id')
+
+        # If no active conversation, create a new one
+        if not conversation_id:
             conversation = Conversation(
                 title=f"Conversation started by User {user_id} at {datetime.utcnow()}",
     ***REMOVED***
             db.session.add(conversation)
             db.session.commit()  # Generate an ID for the new conversation
+
+            # Store the new conversation ID in the session
+            session['conversation_id'] = conversation.id
+        else:
+            # Fetch the existing conversation from the database
+            conversation = Conversation.query.get(conversation_id)
+            if not conversation:
+                return {"success": False, "error": "Active conversation not found in the database."}
 
         # Save the new message
         new_message = Message(
@@ -76,28 +82,106 @@ def save_message_to_db(user_id, message, message_type="text", conversation_id=No
 ***REMOVED***
         db.session.add(new_message)
         db.session.commit()
+
         return {"success": True, "message_id": new_message.id, "conversation_id": conversation.id}
+
     except Exception as e:
         print(f"Error saving message to db: {e}")
         db.session.rollback()
         return {"success": False, "error": str(e)}
 
 
+
+@message_bp.route('/start_conversation', methods=['POST'])
+def start_conversation():
+    # Create a new conversation
+    title = request.json.get('title', 'New Conversation')
+    new_conversation = Conversation(title=title)
+    db.session.add(new_conversation)
+    db.session.commit()
+
+    # Store the new conversation's ID in the session
+    session['conversation_id'] = new_conversation.id
+
+    return jsonify({"conversation_id": new_conversation.id, "title": new_conversation.title}), 201
+
+
+@message_bp.route('/set_active_conversation', methods=['POST'])
+def set_active_conversation():
+    conversation_id = request.json.get('conversation_id')
+
+    # Verify the conversation exists
+    conversation = Conversation.query.get(conversation_id)
+    if not conversation:
+        return jsonify({"error": "Conversation not found"}), 404
+
+    # Update the session with the active conversation
+    session['conversation_id'] = conversation_id
+    return jsonify({"message": "Conversation updated", "conversation_id": conversation_id}), 200
+
+@message_bp.route('/get_current_conversation', methods=['GET'])
+def get_current_conversation():
+    conversation_id = session.get('conversation_id')
+
+    if not conversation_id:
+        return jsonify({"error": "No active conversation"}), 400
+
+    # Fetch the conversation
+    print(f'getting conversation number {conversation_id}')
+    conversation = Conversation.query.get(conversation_id)
+    if not conversation:
+        return jsonify({"error": "Conversation not found"}), 404
+
+    # Prepare the response
+    conversation_data = {
+        "conversation_id": conversation.id,
+        "title": conversation.title,
+        "messages": [
+            {
+                "user_id": msg.user_id,
+                "user_name": msg.user.username,  # Assuming msg.user.name provides the user name
+                "content": msg.content,
+                "timestamp": msg.created_at,
+            }
+            for msg in conversation.messages
+        ],
+    }
+    return jsonify(conversation=conversation_data)
+
+@message_bp.route('/end_conversation', methods=['POST'])
+def end_conversation():
+    if 'conversation_id' in session:
+        session.pop('conversation_id')
+        return jsonify({"message": "Conversation ended"}), 200
+    return jsonify({"error": "No active conversation to end"}), 400
+
+
+
 @message_bp.route('/get_conversation', methods=['GET'])
 def get_conversation():
-    conversations = Conversation.query.all()
-    conversation_data = [
-        {
-            "conversation_id": conv.id,
-            "title": conv.title,
-            "messages": [
-                {"user_id": msg.user_id, "content": msg.content, "timestamp": msg.timestamp}
-                for msg in conv.messages
-            ],
-        }
-        for conv in conversations
-    ]
-    return jsonify(conversations=conversation_data)
+    conversation_id = session.get('conversation_id')
+
+    if not conversation_id:
+        return jsonify({"error": "No active conversation"}), 400
+
+    # Fetch the specific conversation
+    conversation = Conversation.query.filter_by(id=conversation_id).first()
+
+    if not conversation:
+        return jsonify({"error": "Conversation not found"}), 404
+
+    # Prepare conversation data
+    conversation_data = {
+        "conversation_id": conversation.id,
+        "title": conversation.title,
+        "messages": [
+            {"user_id": msg.user_id, "content": msg.content, "timestamp": msg.created_at}
+            for msg in conversation.messages
+        ],
+    }
+    return jsonify(conversation=conversation_data)
+
+
 
 
 @message_bp.route('/conversation/<int:user_id>', methods=['GET'])
