@@ -12,9 +12,9 @@ export function setupMessagingAndConversation() {
 }
 
 export function updateConversation() {
-    fetchConversationData()
+    fetchCurrentConversation()
         .then(data => {
-            updateChatUI(data.conversation_history);
+            updateChatUI(data.conversation);
         })
         .catch(error => {
             console.error('Failed to fetch conversation:', error);
@@ -59,17 +59,18 @@ export function sendMessage() {
 
 // update conversation helper functions
 
-function fetchConversationData() {
-    return fetch('/message/get_conversation')
+function fetchCurrentConversation() {
+    return fetch('message/get_current_conversation')
         .then(response => {
             if (!response.ok) {
-                throw new Error('Network response was not ok: ' + response.statusText);
+                throw new Error(`HTTP error! status: ${response.status}`);
             }
             return response.json();
         });
 }
 
-function updateChatUI(conversationHistory) {
+function updateChatUI(conversationData) {
+    console.log(conversationData)
     const chatDiv = document.getElementById('chat');
     if (!chatDiv) {
         console.error('Chat div not found');
@@ -77,11 +78,32 @@ function updateChatUI(conversationHistory) {
     }
     chatDiv.innerHTML = '';  // Clear previous content
 
-    conversationHistory.forEach(entry => {
-        const messageHTML = formatMessage(entry.username, entry.message);
+    // Optionally, display the conversation title
+//    const titleDiv = document.createElement('div');
+//    titleDiv.classList.add('conversation-title');
+//    titleDiv.textContent = conversationData.title;
+//    chatDiv.appendChild(titleDiv);
+
+    // Loop through the messages and display each one
+    conversationData.messages.forEach(msg => {
+        const messageHTML = formatMessage(msg.user_name, msg.content);
         chatDiv.innerHTML += messageHTML;
     });
 }
+
+//function updateChatUI(conversationHistory) {
+//    const chatDiv = document.getElementById('chat');
+//    if (!chatDiv) {
+//        console.error('Chat div not found');
+//        return;
+//    }
+//    chatDiv.innerHTML = '';  // Clear previous content
+//
+//    conversationHistory.forEach(entry => {
+//        const messageHTML = formatMessage(entry.username, entry.message);
+//        chatDiv.innerHTML += messageHTML;
+//    });
+//}
 
 function formatMessage(username, message) {
     const urlRegex = /(https?:\/\/[^\s]+)|(\bwww\.[^\s]+(?:\.[^\s]+)+\b)/g;

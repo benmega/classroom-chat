@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 
-from flask import Blueprint, request, jsonify, render_template, redirect, url_for
+from flask import Blueprint, request, jsonify, render_template, redirect, url_for, session
 from functools import wraps
 from application.extensions import db
 from application.models.conversation import Conversation
@@ -143,14 +143,29 @@ def toggle_message_sending():
 @admin_bp.route('/clear-history', methods=['POST'])
 def clear_history():
     try:
-        # Delete all conversations (messages will be deleted via cascade)
-        Conversation.query.delete()
+        conversations = Conversation.query.all()
+        for conversation in conversations:
+            db.session.delete(conversation)
         db.session.commit()
+        session['conversation_id'] = ''
         return redirect(url_for('admin_bp.dashboard'))
     except Exception as e:
         db.session.rollback()  # Rollback in case of an error
         print(f"Error clearing history: {e}")
         return redirect(url_for('admin_bp.dashboard', error="Failed to clear history"))
+
+
+# @admin_bp.route('/clear-history', methods=['POST'])
+# def clear_history():
+#     try:
+#         Conversation.query.delete()
+#         db.session.commit()
+#         session['conversation_id'] = ''
+#         return redirect(url_for('admin_bp.dashboard'))
+#     except Exception as e:
+#         db.session.rollback()  # Rollback in case of an error
+#         print(f"Error clearing history: {e}")
+#         return redirect(url_for('admin_bp.dashboard', error="Failed to clear history"))
 
 
 @admin_bp.route('/clear-partial-history', methods=['POST'])

@@ -1,13 +1,13 @@
 import sqlite3
 import json
 
-def backup_users_data(db_path, backup_file):
+def backup_users_data(db_path, backup_file, tableName):
     # Connect to the SQLite database
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
 
     # Query to fetch all users data
-    cursor.execute("SELECT * FROM users")
+    cursor.execute(f"SELECT * FROM {tableName}")
     users = cursor.fetchall()
 
     # Convert the data into a list of dictionaries
@@ -25,7 +25,7 @@ def backup_users_data(db_path, backup_file):
 
 
 
-def restore_users_data(db_path, backup_file):
+def restore_users_data(db_path, backup_file, tableName):
     # Load the backup data from the file
     with open(backup_file, 'r') as f:
         users_data = json.load(f)
@@ -38,16 +38,16 @@ def restore_users_data(db_path, backup_file):
     for user in users_data:
         columns = ', '.join(user.keys())
         placeholders = ', '.join('?' * len(user))
-        sql = f"INSERT INTO users ({columns}) VALUES ({placeholders})"
+        sql = f"INSERT INTO {tableName} ({columns}) VALUES ({placeholders})"
         cursor.execute(sql, tuple(user.values()))
 
     conn.commit()
     conn.close()
-    print("Users data restored successfully.")
+    print(f"{tableName} data restored successfully.")
 
 # Usage
 if __name__ == "__main__":
     database_path = "C:\\Users\\Ben\\PycharmProjects\\groupChat2\\instance\\users.db"
     backup_file = "backup_users_data.json"
-    backup_users_data(database_path, backup_file)
+    # backup_users_data(database_path, backup_file, "users")
     restore_users_data(database_path, backup_file)
