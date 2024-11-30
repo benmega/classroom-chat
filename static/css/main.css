@@ -76,19 +76,7 @@ button:hover {
     flex: 1;
 }
 
-/* Chat Container */
-#chat {
-    margin: 0 auto;
-    padding: 20px;
-    background-color: rgba(255, 255, 255, 0.3); /* Light background */
-    border-radius: 10px;
-    height: 400px;
-    width: 80%; /* 80% of the page width with 10% buffer on each side */
-    max-width: 1200px;
-    overflow-y: auto;
-    text-align: left;
-    box-sizing: border-box;
-}
+
 
 /* Scrollbar Styles */
 #chat::-webkit-scrollbar {

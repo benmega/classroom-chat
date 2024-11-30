@@ -82,8 +82,9 @@ nav ul li {
     border-radius: 10px;
     box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.2);
     padding: 40px;
-    width: 80%;
-    max-width: 900px;
+    width: 100vw;
+    max-width: none;
+    margin: 0;
     text-align: center;
     backdrop-filter: blur(10px); /* Frosted glass effect */
     border: 1px solid rgba(255, 255, 255, 0.3);
@@ -97,13 +98,18 @@ nav ul li {
 
 /* Chat messages and form layout */
 #chat {
-    margin-bottom: 30px;
-    padding: 10px;
+    margin: 0 auto 30px auto; /* Centers horizontally and adds bottom margin */
+    padding: 20px; /* Ensures a comfortable inner padding */
     background-color: rgba(255, 255, 255, 0.3);
     border-radius: 10px;
     height: 400px;
+    width: calc(100% - 40px); /* Fills the container but leaves a 20px margin on each side */
+    max-width: 100%; /* Prevents overflow in smaller containers */
     overflow-y: auto;
     text-align: left;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column; /* Flex layout for child elements */
 }
 
 /* Message input field */

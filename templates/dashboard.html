@@ -26,10 +26,6 @@
         <button type="submit">Start</button>
     </form>
 
-    <h2>Clear Conversation History</h2>
-    <form action="{{ url_for('admin_bp.clear_history') }}" method="post">
-        <button type="submit">Clear History</button>
-    </form>
 
     <h2>Message Sending Status</h2>
     <form action="{{ url_for('admin_bp.toggle_message_sending') }}" method="post">
