@@ -21,6 +21,11 @@
         <button type="submit">{{ 'Disable' if config.ai_teacher_enabled else 'Enable' }} AI Teacher</button>
     </form>
 
+    <h2>Start New Conversation</h2>
+    <form action="{{ url_for('message_bp.start_conversation') }}" method="post">
+        <button type="submit">Start</button>
+    </form>
+
     <h2>Clear Conversation History</h2>
     <form action="{{ url_for('admin_bp.clear_history') }}" method="post">
         <button type="submit">Clear History</button>

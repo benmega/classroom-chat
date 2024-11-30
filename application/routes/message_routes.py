@@ -94,8 +94,10 @@ def save_message_to_db(user_id, message, message_type="text"):
 
 @message_bp.route('/start_conversation', methods=['POST'])
 def start_conversation():
-    # Create a new conversation
-    title = request.json.get('title', 'New Conversation')
+    # Get the title from the form (or use a default)
+    title = request.form.get('title', 'New Conversation')
+
+    # Create and save the new conversation
     new_conversation = Conversation(title=title)
     db.session.add(new_conversation)
     db.session.commit()
@@ -104,6 +106,7 @@ def start_conversation():
     session['conversation_id'] = new_conversation.id
 
     return jsonify({"conversation_id": new_conversation.id, "title": new_conversation.title}), 201
+
 
 
 @message_bp.route('/set_active_conversation', methods=['POST'])
@@ -119,15 +122,77 @@ def set_active_conversation():
     session['conversation_id'] = conversation_id
     return jsonify({"message": "Conversation updated", "conversation_id": conversation_id}), 200
 
+
+
 @message_bp.route('/get_current_conversation', methods=['GET'])
 def get_current_conversation():
+    # Fetch the most recent conversation
+    conversation = Conversation.query.order_by(Conversation.created_at.desc()).first()
+
+    if not conversation:
+        return jsonify({"error": "No active conversation available"}), 400
+
+    # Store the new conversation ID in the session
+    session['conversation_id'] = conversation.id
+
+    # Prepare the response
+    conversation_data = {
+        "conversation_id": conversation.id,
+        "title": conversation.title,
+        "messages": [
+            {
+                "user_id": msg.user_id,
+                "user_name": msg.user.username,
+                "content": msg.content,
+                "timestamp": msg.created_at,
+            }
+            for msg in conversation.messages
+        ],
+    }
+    return jsonify(conversation=conversation_data)
+
+# @message_bp.route('/get_current_conversation', methods=['GET'])
+# def get_current_conversation():
+#     # Try to get the conversation ID from the session
+#     conversation_id = session.get('conversation_id')
+#
+#     # If not in session or the conversation doesn't exist, fetch the most recent one
+#     conversation = Conversation.query.get(conversation_id) if conversation_id else None
+#
+#     if not conversation:
+#         conversation = (
+#             Conversation.query.order_by(Conversation.created_at.desc()).first()
+#         )
+#         if conversation:
+#             session['conversation_id'] = conversation.id  # Update session to reflect this
+#
+#     if not conversation:
+#         return jsonify({"error": "No active conversation available"}), 400
+#
+#     # Prepare the response
+#     conversation_data = {
+#         "conversation_id": conversation.id,
+#         "title": conversation.title,
+#         "messages": [
+#             {
+#                 "user_id": msg.user_id,
+#                 "user_name": msg.user.username,
+#                 "content": msg.content,
+#                 "timestamp": msg.created_at,
+#             }
+#             for msg in conversation.messages
+#         ],
+#     }
+#     return jsonify(conversation=conversation_data)
+
+
+@message_bp.route('/get_historical_conversation', methods=['GET'])
+def get_historical_conversation():
     conversation_id = session.get('conversation_id')
 
     if not conversation_id:
-        return jsonify({"error": "No active conversation"}), 400
+        return jsonify({"error": "No historical conversation in session"}), 400
 
-    # Fetch the conversation
-    print(f'getting conversation number {conversation_id}')
     conversation = Conversation.query.get(conversation_id)
     if not conversation:
         return jsonify({"error": "Conversation not found"}), 404
@@ -139,7 +204,7 @@ def get_current_conversation():
         "messages": [
             {
                 "user_id": msg.user_id,
-                "user_name": msg.user.username,  # Assuming msg.user.name provides the user name
+                "user_name": msg.user.username,
                 "content": msg.content,
                 "timestamp": msg.created_at,
             }
