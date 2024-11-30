@@ -14,10 +14,10 @@ body {
     background-color: white;
     border-radius: 10px;
     box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
-    padding: 15px; /* Reduced padding */
+    padding: 15px;
     width: 100%;
     max-width: 1200px;
-    height: 90vh; /* Takes up most of the screen vertically */
+    height: 90vh;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -26,16 +26,17 @@ body {
 
 h1 {
     color: #0EB2BB; /* Teal */
-    margin-bottom: 15px; /* Reduced margin */
+    margin-bottom: 15px;
     text-align: center;
 }
 
+/* Form Styles */
 form {
     display: flex;
     justify-content: space-between;
     align-items: center;
     gap: 10px;
-    margin-top: 10px; /* Reduced top margin */
+    margin-top: 10px;
 }
 
 input[type="text"], input[type="file"], input[type="password"] {
@@ -47,12 +48,14 @@ input[type="text"], input[type="file"], input[type="password"] {
     box-sizing: border-box;
 }
 
+/* Focused input styles */
 input[type="text"]:focus, input[type="password"]:focus {
     outline: none;
     border-color: #0EB2BB; /* Teal */
     box-shadow: 0 0 8px rgba(0, 128, 128, 0.2);
 }
 
+/* Button Styles */
 button {
     padding: 12px 20px;
     background-color: #0EB2BB; /* Teal */
@@ -68,24 +71,28 @@ button:hover {
     background-color: #006666; /* Darker teal */
 }
 
+/* Message Form Specific Styles */
 #messageForm input[type="text"] {
     flex: 1;
 }
 
+/* Chat Container */
 #chat {
-    background-color: #f0f0f0;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: rgba(255, 255, 255, 0.3); /* Light background */
     border-radius: 10px;
-    padding: 10px; /* Slightly reduced padding */
-    flex-grow: 1; /* Chat area will grow to fill available space */
-    overflow-y: auto; /* Enable vertical scroll */
-    margin-bottom: 20px;
-    border: 1px solid #ddd;
+    height: 400px;
+    width: 80%; /* 80% of the page width with 10% buffer on each side */
+    max-width: 1200px;
+    overflow-y: auto;
+    text-align: left;
     box-sizing: border-box;
-    width: 100%;
 }
 
+/* Scrollbar Styles */
 #chat::-webkit-scrollbar {
-    width: 10px; /* Make scrollbar visible and styled */
+    width: 10px;
 }
 
 #chat::-webkit-scrollbar-thumb {
@@ -93,6 +100,7 @@ button:hover {
     border-radius: 5px;
 }
 
+/* Chat Message Styles */
 #chat div {
     margin-bottom: 10px;
     padding: 8px;
@@ -105,6 +113,7 @@ button:hover {
     background-color: #f9f9f9;
 }
 
+/* Link Styles */
 a {
     color: #0000EE; /* Blue */
     text-decoration: none;
@@ -142,6 +151,7 @@ a:hover {
     text-align: center;
 }
 
+/* Modal Close Button */
 .close {
     float: right;
     font-size: 20px;
@@ -171,5 +181,12 @@ a:hover {
 
     #chat {
         height: 50vh; /* Adjust chat height for smaller screens */
+    }
+}
+
+/* Optional: Chat Width Adjustment for Smaller Screens */
+@media (max-width: 768px) {
+    #chat {
+        width: 90%; /* Increase width for smaller screens */
     }
 }
