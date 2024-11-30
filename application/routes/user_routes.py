@@ -65,42 +65,6 @@ def login():
 
     return render_template('login.html')
 
-# @user_bp.route('/login', methods=['GET', 'POST'])
-# def login():
-#     if request.method == 'POST':
-#         username = request.form.get('username')
-#         password = request.form.get('password')
-#
-#         # Find the user by username
-#         user = User.query.filter_by(username=username).first()
-#
-#         # Validate credentials
-#         if user and user.check_password(password):
-#             session['user'] = user.username
-#             session.permanent = True  # Make the session permanent
-#             user.set_online(user.id)  # Mark the user as online
-#
-#             # Fetch the most recent conversation
-#             recent_conversation = (
-#                 Conversation.query
-#                 .order_by(Conversation.created_at.desc())
-#                 .first()
-#             )
-#
-#             if recent_conversation:
-#                 session['conversation_id'] = recent_conversation.id
-#             else:
-#                 session['conversation_id'] = None  # Or handle new conversation creation
-#
-#             flash('Login successful!', 'success')
-#             return redirect(url_for('general_bp.index'))
-#
-#         else:
-#             flash('Invalid username or password.', 'error')
-#             return render_template('login.html')
-#
-#     return render_template('login.html')
-
 
 @user_bp.route('/logout')
 def logout():
@@ -112,7 +76,7 @@ def logout():
 
     if user:
         # Mark the user as offline
-        user.set_offline(user.id)
+        user.set_online(user.id, False)
         db.session.commit()
 
     # Clear the session

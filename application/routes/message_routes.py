@@ -1,15 +1,16 @@
 from datetime import datetime
 
-from flask import Blueprint, request, jsonify, session
-from application.models.conversation import Conversation
+from flask import Blueprint, request, jsonify, session, flash, redirect, url_for, render_template
+from application.models.conversation import Conversation, conversation_users
 from application.models.message import Message
-from application.utilities.helper_functions import request_database_commit
 from application.helpers.db_helpers import get_or_make_user
 from application.helpers.validation_helpers import message_is_appropriate
 from application.ai.ai_teacher import get_ai_response
-from application import Configuration, db
-from application.routes.admin_routes import adminUsername
-from models import User
+from application import Configuration
+from application.extensions import db
+from application.routes.admin_routes import adminUsername  # Only if used
+from application.models.user import User  # Assuming User model is in application.models.user
+
 
 message_bp = Blueprint('message_bp', __name__)
 
@@ -247,14 +248,57 @@ def get_conversation():
     return jsonify(conversation=conversation_data)
 
 
+# @message_bp.route('/get_current_conversation/<int:conversation_id>', methods=['GET'])
+# def get_current_conversation(conversation_id):
+#     conversation = Conversation.query.get_or_404(conversation_id)
+#
+#     # Prepare the response
+#     conversation_data = {
+#         "conversation_id": conversation.id,
+#         "title": conversation.title,
+#         "messages": [
+#             {
+#                 "user_id": msg.user_id,
+#                 "user_name": msg.user.username,
+#                 "content": msg.content,
+#                 "timestamp": msg.created_at,
+#             }
+#             for msg in conversation.messages
+#         ],
+#     }
+#     return jsonify(conversation=conversation_data)
 
+@message_bp.route('/conversation_history', methods=['GET'])
+def conversation_history():
+    # Ensure the user is logged in
+    if 'user' not in session:
+        flash('You must be logged in to view your conversation history.', 'error')
+        return redirect(url_for('user_bp.login'))
 
-@message_bp.route('/conversation/<int:user_id>', methods=['GET'])
+    # Fetch the current logged-in user
+    username = session['user']
+    user = User.query.filter_by(username=username).first()
+
+    if not user:
+        flash('User not found.', 'error')
+        return redirect(url_for('user_bp.login'))
+
+    # Get all conversations the user participated in
+    conversations = (
+        Conversation.query
+        .join(conversation_users)
+        .filter(conversation_users.c.user_id == user.id)
+        .order_by(Conversation.created_at.desc())
+        .all()
+    )
+
+    return render_template('conversation_history.html', conversations=conversations)
+@message_bp.route('/api/conversations/<int:user_id>', methods=['GET'])
 def get_conversation_history(user_id):
     conversations = Conversation.query.filter(
         Conversation.users.any(id=user_id)  # Check if the user is part of the conversation
     ).all()
-    return jsonify([
+    return jsonify([  # Return conversations as JSON data
         {
             "conversation_id": conv.id,
             "title": conv.title,
@@ -270,6 +314,51 @@ def get_conversation_history(user_id):
         }
         for conv in conversations
     ])
+
+
+@message_bp.route('/view_conversation/<int:conversation_id>', methods=['GET'])
+def view_conversation(conversation_id):
+    conversation = Conversation.query.get_or_404(conversation_id)
+
+    # Prepare the response (same as get_current_conversation, but here it's full)
+    conversation_data = {
+        "conversation_id": conversation.id,
+        "title": conversation.title,
+        "messages": [
+            {
+                "user_id": msg.user_id,
+                "user_name": msg.user.username,
+                "content": msg.content,
+                "timestamp": msg.created_at,
+            }
+            for msg in conversation.messages
+        ],
+    }
+
+    return render_template('view_conversation.html', conversation=conversation_data)
+
+# @message_bp.route('/conversation/<int:user_id>', methods=['GET'])
+# def get_conversation_history(user_id):
+#     conversations = Conversation.query.filter(
+#         Conversation.users.any(id=user_id)  # Check if the user is part of the conversation
+#     ).all()
+#     return jsonify([
+#         {
+#             "conversation_id": conv.id,
+#             "title": conv.title,
+#             "messages": [
+#                 {
+#                     "user_id": msg.user_id,
+#                     "content": msg.content,
+#                     "message_type": msg.message_type,
+#                     "timestamp": msg.timestamp,
+#                 }
+#                 for msg in conv.messages if not msg.is_struck
+#             ],
+#         }
+#         for conv in conversations
+#     ])
+
 
 
 # def save_message_to_db(user_id, message, message_type="text"):
