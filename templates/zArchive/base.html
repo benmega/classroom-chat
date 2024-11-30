@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Classroom Chat</title>
-    <!-- Link to the base stylesheet -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
 </head>
 <body>
@@ -16,22 +15,17 @@
         </div>
         <nav>
             <ul>
-                <!-- Home Link -->
                 <li><a class="nav-button" href="{{ url_for('general_bp.index') }}">Home</a></li>
-
-                <!-- Conversation History Link -->
                 <li><a class="nav-button" href="{{ url_for('message_bp.conversation_history') }}">Conversation History</a></li>
-
                 {% if 'user' in session %}
-                    <!-- Logout Link (if logged in) -->
                     <li><a class="nav-button logout" href="{{ url_for('user_bp.logout') }}">Logout</a></li>
                 {% else %}
-                    <!-- Login Link (if not logged in) -->
                     <li><a class="nav-button login" href="{{ url_for('user_bp.login') }}">Login</a></li>
                 {% endif %}
             </ul>
         </nav>
     </header>
+
 
     <!-- Main Content -->
     <main>
