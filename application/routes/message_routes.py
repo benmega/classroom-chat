@@ -3,7 +3,7 @@ from datetime import datetime
 from flask import Blueprint, request, jsonify, session, flash, redirect, url_for, render_template
 from application.models.conversation import Conversation, conversation_users
 from application.models.message import Message
-from application.helpers.db_helpers import get_or_make_user
+from application.helpers.db_helpers import get_user, save_message_to_db
 from application.helpers.validation_helpers import message_is_appropriate
 from application.ai.ai_teacher import get_ai_response
 from application import Configuration
@@ -17,16 +17,16 @@ message_bp = Blueprint('message_bp', __name__)
 
 @message_bp.route('/send_message', methods=['POST'])
 def send_message():
-    user_ip = request.remote_addr
+    # user_ip = request.remote_addr
     session_username = session.get('user', None)  # Get username from the session
     form_message = request.form['message']
-    conversation_id = session.get('conversation_id')
 
     if not session_username:
         return jsonify(success=False, error="No session username found"), 400
 
     # Handle user creation (using session_username instead of form_username)
-    user = get_or_make_user(user_ip, session_username)
+    # user = get_or_make_user(user_ip, session_username)
+    user = get_user(session_username)
     if not user:
         return jsonify(success=False, error="Unknown User"), 500
 
@@ -53,43 +53,43 @@ def send_message():
     return jsonify(success=True), 200
 
 
-def save_message_to_db(user_id, message, message_type="text"):
-    try:
-        # Retrieve the conversation ID from the session
-        conversation_id = session.get('conversation_id')
-
-        # If no active conversation, create a new one
-        if not conversation_id:
-            conversation = Conversation(
-                title=f"Conversation started by User {user_id} at {datetime.utcnow()}",
-            )
-            db.session.add(conversation)
-            db.session.commit()  # Generate an ID for the new conversation
-
-            # Store the new conversation ID in the session
-            session['conversation_id'] = conversation.id
-        else:
-            # Fetch the existing conversation from the database
-            conversation = Conversation.query.get(conversation_id)
-            if not conversation:
-                return {"success": False, "error": "Active conversation not found in the database."}
-
-        # Save the new message
-        new_message = Message(
-            user_id=user_id,
-            conversation_id=conversation.id,
-            content=message,
-            message_type=message_type,
-        )
-        db.session.add(new_message)
-        db.session.commit()
-
-        return {"success": True, "message_id": new_message.id, "conversation_id": conversation.id}
-
-    except Exception as e:
-        print(f"Error saving message to db: {e}")
-        db.session.rollback()
-        return {"success": False, "error": str(e)}
+# def save_message_to_db(user_id, message, message_type="text"):
+#     try:
+#         # Retrieve the conversation ID from the session
+#         conversation_id = session.get('conversation_id')
+#
+#         # If no active conversation, create a new one
+#         if not conversation_id:
+#             conversation = Conversation(
+#                 title=f"Conversation started by User {user_id} at {datetime.utcnow()}",
+#             )
+#             db.session.add(conversation)
+#             db.session.commit()  # Generate an ID for the new conversation
+#
+#             # Store the new conversation ID in the session
+#             session['conversation_id'] = conversation.id
+#         else:
+#             # Fetch the existing conversation from the database
+#             conversation = Conversation.query.get(conversation_id)
+#             if not conversation:
+#                 return {"success": False, "error": "Active conversation not found in the database."}
+#
+#         # Save the new message
+#         new_message = Message(
+#             user_id=user_id,
+#             conversation_id=conversation.id,
+#             content=message,
+#             message_type=message_type,
+#         )
+#         db.session.add(new_message)
+#         db.session.commit()
+#
+#         return {"success": True, "message_id": new_message.id, "conversation_id": conversation.id}
+#
+#     except Exception as e:
+#         print(f"Error saving message to db: {e}")
+#         db.session.rollback()
+#         return {"success": False, "error": str(e)}
 
 
 
