@@ -2,6 +2,7 @@ from flask import Blueprint, jsonify
 from flask import render_template, request, redirect, url_for, session, flash
 
 from application import db
+from application.models.conversation import Conversation
 from application.models.user import User
 
 
@@ -37,8 +38,27 @@ def login():
             session['user'] = user.username
             session.permanent = True  # Make the session permanent
             user.set_online(user.id)  # Mark the user as online
+
+            # Fetch the most recent conversation
+            recent_conversation = (
+                Conversation.query
+                .order_by(Conversation.created_at.desc())
+                .first()
+    ***REMOVED***
+
+            if recent_conversation:
+                # Add the user to the conversation if not already a participant
+                if user not in recent_conversation.users:
+                    recent_conversation.users.append(user)
+                    db.session.commit()
+
+                session['conversation_id'] = recent_conversation.id
+            else:
+                session['conversation_id'] = None  # Or handle new conversation creation
+
             flash('Login successful!', 'success')
             return redirect(url_for('general_bp.index'))
+
         else:
             flash('Invalid username or password.', 'error')
             return render_template('login.html')
@@ -56,7 +76,7 @@ def logout():
 
     if user:
         # Mark the user as offline
-        user.set_offline(user.id)
+        user.set_online(user.id, False)
         db.session.commit()
 
     # Clear the session
