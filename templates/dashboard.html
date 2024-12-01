@@ -22,10 +22,31 @@
     </form>
 
     <h2>Start New Conversation</h2>
-    <form action="{{ url_for('message_bp.start_conversation') }}" method="post">
+    <form id="start-conversation-form">
         <button type="submit">Start</button>
     </form>
+    <script>
+        document.getElementById('start-conversation-form').addEventListener('submit', function(event) {
+            event.preventDefault(); // Prevent the default form submission
 
+            fetch('{{ url_for("message_bp.start_conversation") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams()
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Flash a notification or handle UI updates
+                alert(`Conversation started: ${data.title}`); // Example notification
+                // Optionally update the page without reloading
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        });
+    </script>
 
     <h2>Message Sending Status</h2>
     <form action="{{ url_for('admin_bp.toggle_message_sending') }}" method="post">
