@@ -1,0 +1,93 @@
+/* Conversation History Page */
+.history-container {
+    margin: 20px auto;
+    max-width: 1200px;
+    padding: 20px;
+    background: #f5f5f5; /* Light background for the container */
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    font-family: 'Roboto', sans-serif;
+}
+
+.history-container h2 {
+    text-align: center;
+    font-size: 2rem;
+    color: #0EB2BB; /* Teal */
+    margin-bottom: 30px;
+}
+
+.conversation-list {
+    display: grid;
+    gap: 20px;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); /* Responsive grid */
+}
+
+.conversation-card {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.conversation-card:hover {
+    transform: translateY(-10px); /* Hover effect */
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+}
+
+.conversation-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.conversation-header strong {
+    font-size: 1.2rem;
+    color: #333;
+}
+
+.date {
+    font-size: 0.9rem;
+    color: #888;
+}
+
+.view-btn {
+    display: inline-block;
+    padding: 10px 20px;
+    margin-top: 10px;
+    text-decoration: none;
+    background-color: #0EB2BB; /* Teal */
+    color: white;
+    font-weight: bold;
+    border-radius: 30px;
+    text-align: center;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+.view-btn:hover {
+    background-color: #006666; /* Darker teal */
+    transform: scale(1.05); /* Button hover effect */
+}
+
+.no-conversations {
+    text-align: center;
+    color: #555;
+    font-size: 1.1rem;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .conversation-list {
+        grid-template-columns: 1fr; /* Single column layout for small screens */
+    }
+
+    .conversation-card {
+        padding: 15px;
+    }
+
+    .view-btn {
+        width: 100%;
+        padding: 12px;
+    }
+}
