@@ -39,24 +39,6 @@ export function sendMessage() {
 }
 
 
-//export function sendMessage() {
-//    const message = getMessageInput();
-//    const username = getUsername();
-//
-//    if (!message || !username) {
-//        alert('Both message and username are required.');
-//        return;
-//    }
-//
-//    const params = createRequestParams({ message, username });
-//
-//    sendRequest('message/send_message', params)
-//        .then(handleResponse)
-//        .catch(handleError);
-//}
-
-
-
 // update conversation helper functions
 
 function fetchCurrentConversation() {
@@ -91,19 +73,6 @@ function updateChatUI(conversationData) {
     });
 }
 
-//function updateChatUI(conversationHistory) {
-//    const chatDiv = document.getElementById('chat');
-//    if (!chatDiv) {
-//        console.error('Chat div not found');
-//        return;
-//    }
-//    chatDiv.innerHTML = '';  // Clear previous content
-//
-//    conversationHistory.forEach(entry => {
-//        const messageHTML = formatMessage(entry.username, entry.message);
-//        chatDiv.innerHTML += messageHTML;
-//    });
-//}
 
 function formatMessage(username, message) {
     const urlRegex = /(https?:\/\/[^\s]+)|(\bwww\.[^\s]+(?:\.[^\s]+)+\b)/g;
