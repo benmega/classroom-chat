@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify, session, flash, redirect, url_for, render_template
 from application.models.conversation import Conversation, conversation_users
 from application.helpers.db_helpers import get_user, save_message_to_db
-from application.helpers.validation_helpers import message_is_appropriate, detect_and_handle_codecombat_url
+from application.helpers.validation_helpers import message_is_appropriate, detect_and_handle_challenge_url
 from application.ai.ai_teacher import get_ai_response
 from application import Configuration
 from application.extensions import db
@@ -38,9 +38,9 @@ def send_message():
         return jsonify(success=False, error="Inappropriate messages are not allowed"), 500
 
     # Check for and process CodeCombat URL
-    if detect_and_handle_codecombat_url(form_message, user.username):
+    if detect_and_handle_challenge_url(form_message, user.username):
         # Send a congratulatory system message
-        system_message = f"Congrats {user.username}, on completing a CodeCombat level!"
+        system_message = f"Congrats {user.username}, on completing a challenge!"
         # Add system message to chat (handle chat logic here)
         return jsonify(success=True, system_message=system_message), 200
 
