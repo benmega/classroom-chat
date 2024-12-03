@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/profile.css') }}">
+
+<div class="profile-container">
+    <div class="profile-header">
+        <!-- Profile Picture -->
+        <img src="{{ url_for('static', filename='images/Default_pfp.jpg') }}" alt="Profile Picture" class="profile-img">
+
+        <div class="profile-info">
+            <h1>{{ user.username }}</h1>
+            <p class="job-title">Computer Science Student</p>
+            <p class="location">Udon Thani, Thailand</p>
+        </div>
+
+        <!-- Edit Button -->
+        <a href="{{ url_for('user_bp.update_profile') }}" class="edit-btn">Edit</a>
+    </div>
+
+    <div class="profile-body">
+        <!-- Roles and Experience Section -->
+        <div class="roles-section">
+            <h2>Roles and Experience</h2>
+            <div class="role">
+                <p>Python Developer</p>
+                <div class="progress-bar"><div class="progress" style="width: 20%;"></div></div>
+                <p>1-2 yrs</p>
+            </div>
+            <div class="experience">
+                <p>Code Combat</p>
+                <div class="progress-bar"><div class="progress" style="width: 60%;"></div></div>
+                <p>50 levels</p>
+
+                <p>Ozaria</p>
+                <div class="progress-bar"><div class="progress" style="width: 40%;"></div></div>
+                <p>40 levels</p>
+            </div>
+        </div>
+
+        <!-- Top Skills Section -->
+        <div class="skills-section">
+            <h2>Top Skills</h2>
+            <div class="skills">
+                <span class="skill-tag">Python <a href="#" class="remove-skill">x</a></span>
+                <span class="skill-tag">JavaScript <a href="#" class="remove-skill">x</a></span>
+                <span class="skill-tag">HTML/CSS <a href="#" class="remove-skill">x</a></span>
+            </div>
+        </div>
+
+        <!-- Education Section -->
+        <div class="education-section">
+            <h2>Education</h2>
+            <div class="education-entry">
+                <h3>Bachelor's in Computer Science</h3>
+                <p>University of Udon Thani</p>
+                <p>Graduation Year: 2025</p>
+                <p>Current GPA: 3.8/4.0</p>
+            </div>
+        </div>
+
+        <!-- Projects Section -->
+        <div class="projects-section">
+            <h2>Projects</h2>
+            <div class="project-entry">
+                <h3>Personal Portfolio Website</h3>
+                <p>Developed a responsive personal portfolio website to showcase my skills and projects.</p>
+                <p><a href="https://github.com/username/portfolio" target="_blank">View Project</a></p>
+            </div>
+            <div class="project-entry">
+                <h3>Task Manager App</h3>
+                <p>Built a task manager app using Python and Flask to help users organize their daily tasks.</p>
+                <p><a href="https://github.com/username/task-manager" target="_blank">View Project</a></p>
+            </div>
+        </div>
+
+        <!-- Certifications Section -->
+        <div class="certifications-section">
+            <h2>Certifications</h2>
+            <div class="certification-entry">
+                <h3>Python for Data Science (Coursera)</h3>
+                <p>Completed: January 2024</p>
+                <p><a href="https://www.coursera.org/learn/python-for-data-science" target="_blank">View Certificate</a></p>
+            </div>
+            <div class="certification-entry">
+                <h3>Web Development Bootcamp (Udemy)</h3>
+                <p>Completed: March 2024</p>
+                <p><a href="https://www.udemy.com/course/the-web-developer-bootcamp/" target="_blank">View Certificate</a></p>
+            </div>
+        </div>
+
+        <!-- GitHub Profile Section -->
+        <div class="github-section">
+            <h2>GitHub Profile</h2>
+            <p>Check out my GitHub for more projects and contributions:</p>
+            <a href="https://github.com/username" class="github-link" target="_blank">GitHub: @username</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

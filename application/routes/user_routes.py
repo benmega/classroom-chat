@@ -111,3 +111,52 @@ def signup():
 
     # Render the signup page on GET request
     return render_template('signup.html')
+
+@user_bp.route('/update_profile', methods=['POST'])
+def update_profile():
+    user_id = session.get('user')
+    user = User.query.get(user_id)
+
+    if user:
+        user.username = request.form['username']
+        db.session.commit()
+        flash('Profile updated successfully!', 'success')
+    else:
+        flash('User not found!', 'danger')
+
+    return redirect(url_for('user_bp.profile'))
+
+@user_bp.route('/change_password', methods=['POST'])
+def change_password():
+    user_id = session.get('user')
+    user = User.query.get(user_id)
+
+    current_password = request.form['current_password']
+    new_password = request.form['new_password']
+    confirm_password = request.form['confirm_password']
+
+    if not user.check_password(current_password):
+        flash('Incorrect current password!', 'danger')
+    elif new_password != confirm_password:
+        flash('Passwords do not match!', 'danger')
+    else:
+        user.set_password(new_password)
+        db.session.commit()
+        flash('Password updated successfully!', 'success')
+
+    return redirect(url_for('user_bp.profile'))
+
+
+@user_bp.route('/profile', methods=['GET'])
+def profile():
+    user_id = session.get('user')
+    if not user_id:
+        flash('Please log in to access your profile.', 'warning')
+        return redirect(url_for('user_bp.login'))
+
+    user = User.query.get(user_id)
+    # if not user:
+    #     flash('User not found!', 'danger')
+    #     return redirect(url_for('user_bp.login'))
+
+    return render_template('profile.html', user=user)
