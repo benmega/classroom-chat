@@ -60,12 +60,6 @@ function updateChatUI(conversationData) {
     }
     chatDiv.innerHTML = '';  // Clear previous content
 
-    // Optionally, display the conversation title
-//    const titleDiv = document.createElement('div');
-//    titleDiv.classList.add('conversation-title');
-//    titleDiv.textContent = conversationData.title;
-//    chatDiv.appendChild(titleDiv);
-
     // Loop through the messages and display each one
     conversationData.messages.forEach(msg => {
         const messageHTML = formatMessage(msg.user_name, msg.content);
@@ -145,11 +139,28 @@ function sendRequest(url, params) {
 
 function handleResponse(data) {
     if (data.success) {
-        clearMessageInput();
+        if (data.system_message) {
+            displaySystemMessage(data.system_message); // handle system messages
+        } else {
+            clearMessageInput();
+            // Optionally: render user's message in chat if needed
+        }
     } else {
         alert('Error: ' + data.error);
     }
 }
+function displaySystemMessage(message) {
+    alert(message); // Simple alert for immediate feedback
+}
+
+
+//function displaySystemMessage(message) {
+//    const chatBox = document.getElementById("chat"); // Assuming a chatBox element exists
+//    const systemMessageElement = document.createElement("div");
+//    systemMessageElement.className = "system-message";
+//    systemMessageElement.textContent = message;
+//    chatBox.appendChild(systemMessageElement);
+//}
 
 function handleError(error) {
     console.error('Error:', error);
