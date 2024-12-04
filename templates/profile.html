@@ -10,8 +10,8 @@
 
         <div class="profile-info">
             <h1>{{ user.username }}</h1>
-            <p class="job-title">Computer Science Student</p>
-            <p class="location">Udon Thani, Thailand</p>
+            <p class="job-title">Aspiring Coder</p>
+            <p class="location">Classroom 101</p>
         </div>
 
         <!-- Edit Button -->
@@ -19,81 +19,41 @@
     </div>
 
     <div class="profile-body">
-        <!-- Roles and Experience Section -->
-        <div class="roles-section">
-            <h2>Roles and Experience</h2>
-            <div class="role">
-                <p>Python Developer</p>
-                <div class="progress-bar"><div class="progress" style="width: 20%;"></div></div>
-                <p>1-2 yrs</p>
+        <!-- Progress Section -->
+        <div class="progress-section">
+            <h2>Classroom Progress</h2>
+            <div class="activity">
+                <p>CodeCombat Levels Completed</p>
+                <div class="progress-bar"><div class="progress" style="width: {{ user.codecombat_progress }}%;"></div></div>
+                <p>{{ user.codecombat_progress if user.codecombat_progress else 'No progress yet' }}%</p>
             </div>
-            <div class="experience">
-                <p>Code Combat</p>
-                <div class="progress-bar"><div class="progress" style="width: 60%;"></div></div>
-                <p>50 levels</p>
-
-                <p>Ozaria</p>
-                <div class="progress-bar"><div class="progress" style="width: 40%;"></div></div>
-                <p>40 levels</p>
+            <div class="activity">
+                <p>Ozaria Missions Completed</p>
+                <div class="progress-bar"><div class="progress" style="width: {{ user.ozaria_progress }}%;"></div></div>
+                <p>{{ user.ozaria_progress }}%</p>
             </div>
         </div>
 
-        <!-- Top Skills Section -->
+        <!-- Skills Section -->
         <div class="skills-section">
             <h2>Top Skills</h2>
             <div class="skills">
-                <span class="skill-tag">Python <a href="#" class="remove-skill">x</a></span>
-                <span class="skill-tag">JavaScript <a href="#" class="remove-skill">x</a></span>
-                <span class="skill-tag">HTML/CSS <a href="#" class="remove-skill">x</a></span>
-            </div>
-        </div>
-
-        <!-- Education Section -->
-        <div class="education-section">
-            <h2>Education</h2>
-            <div class="education-entry">
-                <h3>Bachelor's in Computer Science</h3>
-                <p>University of Udon Thani</p>
-                <p>Graduation Year: 2025</p>
-                <p>Current GPA: 3.8/4.0</p>
+                {% for skill in user.skills %}
+                <span class="skill-tag">{{ skill }} <a href="#" class="remove-skill">x</a></span>
+                {% endfor %}
             </div>
         </div>
 
         <!-- Projects Section -->
         <div class="projects-section">
-            <h2>Projects</h2>
+            <h2>Recent Projects</h2>
+            {% for project in user.projects %}
             <div class="project-entry">
-                <h3>Personal Portfolio Website</h3>
-                <p>Developed a responsive personal portfolio website to showcase my skills and projects.</p>
-                <p><a href="https://github.com/username/portfolio" target="_blank">View Project</a></p>
+                <h3>{{ project.name }}</h3>
+                <p>{{ project.description }}</p>
+                <p><a href="{{ project.link }}" target="_blank">View Project</a></p>
             </div>
-            <div class="project-entry">
-                <h3>Task Manager App</h3>
-                <p>Built a task manager app using Python and Flask to help users organize their daily tasks.</p>
-                <p><a href="https://github.com/username/task-manager" target="_blank">View Project</a></p>
-            </div>
-        </div>
-
-        <!-- Certifications Section -->
-        <div class="certifications-section">
-            <h2>Certifications</h2>
-            <div class="certification-entry">
-                <h3>Python for Data Science (Coursera)</h3>
-                <p>Completed: January 2024</p>
-                <p><a href="https://www.coursera.org/learn/python-for-data-science" target="_blank">View Certificate</a></p>
-            </div>
-            <div class="certification-entry">
-                <h3>Web Development Bootcamp (Udemy)</h3>
-                <p>Completed: March 2024</p>
-                <p><a href="https://www.udemy.com/course/the-web-developer-bootcamp/" target="_blank">View Certificate</a></p>
-            </div>
-        </div>
-
-        <!-- GitHub Profile Section -->
-        <div class="github-section">
-            <h2>GitHub Profile</h2>
-            <p>Check out my GitHub for more projects and contributions:</p>
-            <a href="https://github.com/username" class="github-link" target="_blank">GitHub: @username</a>
+            {% endfor %}
         </div>
     </div>
 </div>
