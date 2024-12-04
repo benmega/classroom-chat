@@ -154,9 +154,9 @@ def profile():
         flash('Please log in to access your profile.', 'warning')
         return redirect(url_for('user_bp.login'))
 
-    user = User.query.get(user_id)
-    # if not user:
-    #     flash('User not found!', 'danger')
-    #     return redirect(url_for('user_bp.login'))
+    user = User.query.filter_by(username=user_id).first()
+    if not user:
+        flash('User not found!', 'danger')
+        return redirect(url_for('user_bp.login'))
 
     return render_template('profile.html', user=user)
