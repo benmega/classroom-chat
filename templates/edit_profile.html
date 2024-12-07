@@ -6,11 +6,11 @@
 <div class="edit-profile-container">
     <h1>Edit Profile</h1>
     <form method="POST" action="{{ url_for('user_bp.edit_profile') }}">
-        <!-- Username Field -->
-        <div class="form-group">
-            <label for="username">Username:</label>
-            <input type="text" id="username" name="username" value="{{ user.username }}" required>
-        </div>
+        <!-- Username Field  REMOVED FOR SECURITY-->
+<!--        <div class="form-group">-->
+<!--            <label for="username">Username:</label>-->
+<!--            <input type="text" id="username" name="username" value="{{ user.username }}" required>-->
+<!--        </div>-->
 
         <!-- Password Field -->
         <div class="form-group">
