@@ -1,4 +1,4 @@
-from application import db
+from application.extensions import db
 
 class ChallengeLog(db.Model):
     __tablename__ = 'challenge_logs'

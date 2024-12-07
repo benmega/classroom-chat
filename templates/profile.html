@@ -24,12 +24,14 @@
             <h2>Classroom Progress</h2>
             <div class="activity">
                 <p>CodeCombat Levels Completed</p>
-                <div class="progress-bar"><div class="progress" style="width: {{ user.codecombat_progress }}%;"></div></div>
+                <div class="progress-bar">
+                    <div class="progress" style='width: {{ user.get_progress("codecombat.com") }}%;'></div>
+                </div>
                 <p>{{ user.codecombat_progress if user.codecombat_progress else 'No progress yet' }}%</p>
             </div>
             <div class="activity">
                 <p>Ozaria Missions Completed</p>
-                <div class="progress-bar"><div class="progress" style="width: {{ user.ozaria_progress }}%;"></div></div>
+                <div class="progress" style='width: {{ user.get_progress("ozaria.com") }}%;'></div>
                 <p>{{ user.ozaria_progress }}%</p>
             </div>
         </div>
