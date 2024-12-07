@@ -24,6 +24,6 @@ if __name__ == "__main__":
     database_path = "C:\\Users\\Ben\\PycharmProjects\\groupChat2\\instance\\users.db"
 
     # Name of the table to drop
-    table_name = "bounties"
+    table_name = "challenges"
 
     drop_table(database_path, table_name)
