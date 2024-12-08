@@ -1,3 +1,6 @@
+import os
+import uuid
+
 from flask import Blueprint, jsonify
 from flask import render_template, request, redirect, url_for, session, flash
 
@@ -6,6 +9,8 @@ from application.models.conversation import Conversation
 from application.models.project import Project
 from application.models.skill import Skill
 from application.models.user import User
+from application.utilities.helper_functions import allowed_file
+from application.config import Config
 
 user_bp = Blueprint('user_bp', __name__)
 
@@ -38,6 +43,7 @@ def login():
 
         # Validate credentials
         if user and user.check_password(password):
+            print(user)
             session['user'] = user.username
             session.permanent = True  # Make the session permanent
             user.set_online(user.id)  # Mark the user as online
@@ -58,7 +64,7 @@ def login():
                 session['conversation_id'] = recent_conversation.id
             else:
                 session['conversation_id'] = None  # Or handle new conversation creation
-
+            print('yes')
             flash('Login successful!', 'success')
             return redirect(url_for('general_bp.index'))
 
@@ -175,6 +181,19 @@ def edit_profile():
             if name.strip():
                 user.projects.append(Project(name=name.strip(), description=desc.strip(), link=link.strip()))
 
+        if 'profile_picture' in request.files:
+            file = request.files['profile_picture']
+            if file and allowed_file(file.filename):
+                # Generate a unique filename
+                filename = f"{uuid.uuid4().hex}_{file.filename.rsplit('.', 1)[1].lower()}"
+                filepath = os.path.join(Config.UPLOAD_FOLDER, filename)
+
+                # Save the file
+                file.save(filepath)
+
+                # Update user's profile picture
+                user.profile_picture = filename
+
         db.session.commit()
         flash('Profile updated successfully!', 'success')
         return redirect(url_for('user_bp.profile'))
@@ -216,3 +235,58 @@ def profile():
         return redirect(url_for('user_bp.login'))
 
     return render_template('profile.html', user=user)
+
+
+@user_bp.route('/delete_profile_picture', methods=['POST'])
+def delete_profile_picture():
+    user_id = session.get('user')
+    user = User.query.filter_by(username=user_id).first()
+
+    if user.profile_picture:
+        # Remove the file from storage
+        filepath = os.path.join(Config.UPLOAD_FOLDER, user.profile_picture)
+        if os.path.exists(filepath):
+            os.remove(filepath)
+
+        # Remove the reference in the database
+        user.profile_picture = None
+        db.session.commit()
+
+    flash('Profile picture removed successfully!', 'success')
+    return redirect(url_for('profile'))
+
+
+@user_bp.route('/upload_profile_picture', methods=['POST'])
+def upload_profile_picture():
+    user_id = session.get('user')
+    user = User.query.filter_by(username=user_id).first()
+
+    if 'profile_picture' not in request.files:
+        flash('No file part', 'error')
+        return redirect(url_for('user_bp.profile'))
+
+    file = request.files['profile_picture']
+    if file.filename == '':
+        flash('No selected file', 'error')
+        return redirect(url_for('user_bp.profile'))
+
+    if file and allowed_file(file.filename):
+        filename = f"{uuid.uuid4().hex}_{file.filename.rsplit('.', 1)[1].lower()}"
+        filepath = os.path.join(Config.UPLOAD_FOLDER, filename)
+        file.save(filepath)
+
+        # Update the user's profile picture
+        if user.profile_picture:
+            # Remove old profile picture
+            old_filepath = os.path.join(Config.UPLOAD_FOLDER, user.profile_picture)
+            if os.path.exists(old_filepath):
+                os.remove(old_filepath)
+
+        user.profile_picture = filename
+        db.session.commit()
+
+        flash('Profile picture updated successfully!', 'success')
+    else:
+        flash('Invalid file type', 'error')
+
+    return redirect(url_for('user_bp.profile'))
