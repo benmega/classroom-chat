@@ -2,6 +2,8 @@ from application.extensions import db
 from werkzeug.security import generate_password_hash, check_password_hash
 
 from application.models.challenge_log import ChallengeLog
+from application.models.project import Project
+from application.models.skill import Skill
 
 
 class User(db.Model):
@@ -48,23 +50,28 @@ class User(db.Model):
         # Calculate progress percentage
         return (completed_challenges / total_challenges) * 100 if total_challenges > 0 else 0
 
-class Skill(db.Model):
-    __tablename__ = 'skills'
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(50), nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    def add_skill(self, skill_name):
+        """Add a skill to the user."""
+        new_skill = Skill(name=skill_name, user_id=self.id)
+        db.session.add(new_skill)
+        db.session.commit()
 
-    def __repr__(self):
-        return f'<Skill {self.name}>'
+    def remove_skill(self, skill_id):
+        """Remove a skill by ID."""
+        skill = Skill.query.get(skill_id)
+        if skill and skill.user_id == self.id:
+            db.session.delete(skill)
+            db.session.commit()
 
+    def add_project(self, name, description=None, link=None):
+        """Add a project to the user."""
+        new_project = Project(name=name, description=description, link=link, user_id=self.id)
+        db.session.add(new_project)
+        db.session.commit()
 
-class Project(db.Model):
-    __tablename__ = 'projects'
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
-    description = db.Column(db.Text, nullable=True)
-    link = db.Column(db.String(255), nullable=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-
-    def __repr__(self):
-        return f'<Project {self.name}>'
+    def remove_project(self, project_id):
+        """Remove a project by ID."""
+        project = Project.query.get(project_id)
+        if project and project.user_id == self.id:
+            db.session.delete(project)
+            db.session.commit()

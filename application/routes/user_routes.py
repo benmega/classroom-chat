@@ -3,16 +3,19 @@ from flask import render_template, request, redirect, url_for, session, flash
 
 from application import db
 from application.models.conversation import Conversation
+from application.models.project import Project
+from application.models.skill import Skill
 from application.models.user import User
 
-
 user_bp = Blueprint('user_bp', __name__)
+
 
 @user_bp.route('/get_users', methods=['GET'])
 def get_users():
     users = User.query.all()
     users_data = [{'id': user.id, 'username': user.username, 'email': user.email} for user in users]
     return jsonify(users_data)
+
 
 @user_bp.route('/get_user_id', methods=['GET'])
 def get_user_id():
@@ -112,6 +115,7 @@ def signup():
     # Render the signup page on GET request
     return render_template('signup.html')
 
+
 @user_bp.route('/update_profile', methods=['POST'])
 def update_profile():
     user_id = session.get('user')
@@ -126,24 +130,6 @@ def update_profile():
 
     return redirect(url_for('user_bp.profile'))
 
-# @user_bp.route('/edit_profile', methods=['GET', 'POST'])
-# def edit_profile():
-#     user_id = session.get('user')  # Get the logged-in user's ID from the session
-#     user = User.query.filter_by(username=user_id).first()
-#
-#     if not user:
-#         flash('User not found!', 'danger')
-#         return redirect(url_for('user_bp.profile'))
-#
-#     if request.method == 'POST':
-#         # Handle profile update logic
-#         user.username = request.form['username']
-#         # Add logic for updating additional fields if needed
-#         db.session.commit()
-#         flash('Profile updated successfully!', 'success')
-#         return redirect(url_for('user_bp.profile'))
-#
-#     return render_template('edit_profile.html', user=user)
 
 @user_bp.route('/edit_profile', methods=['GET', 'POST'])
 def edit_profile():
@@ -156,7 +142,7 @@ def edit_profile():
 
     if request.method == 'POST':
         # Update basic fields
-        user.username = request.form['username']
+        # user.username = request.form['username']
         ip_address = request.form.get('ip_address')
         user.ip_address = ip_address if ip_address else user.ip_address
         user.is_online = request.form.get('is_online') == 'true'
@@ -166,20 +152,28 @@ def edit_profile():
         if password:
             user.set_password(password)
 
+        # Prevent autoflush
+        with db.session.no_autoflush:
+            # Remove all skills and projects explicitly
+            for skill in user.skills:
+                db.session.delete(skill)
+            for project in user.projects:
+                db.session.delete(project)
+
         # Update skills
-        # user.skills = []
-        # for skill_name in request.form.getlist('skills[]'):
-        #     if skill_name.strip():
-        #         user.skills.append(Skill(name=skill_name.strip()))
-        #
-        # # Update projects
-        # user.projects = []
-        # project_names = request.form.getlist('project_names[]')
-        # project_descriptions = request.form.getlist('project_descriptions[]')
-        # project_links = request.form.getlist('project_links[]')
-        # for name, desc, link in zip(project_names, project_descriptions, project_links):
-        #     if name.strip():
-        #         user.projects.append(Project(name=name.strip(), description=desc.strip(), link=link.strip()))
+        user.skills = []
+        for skill_name in request.form.getlist('skills[]'):
+            if skill_name.strip():
+                user.skills.append(Skill(name=skill_name.strip()))
+
+        # Update projects
+        user.projects = []
+        project_names = request.form.getlist('project_names[]')
+        project_descriptions = request.form.getlist('project_descriptions[]')
+        project_links = request.form.getlist('project_links[]')
+        for name, desc, link in zip(project_names, project_descriptions, project_links):
+            if name.strip():
+                user.projects.append(Project(name=name.strip(), description=desc.strip(), link=link.strip()))
 
         db.session.commit()
         flash('Profile updated successfully!', 'success')
