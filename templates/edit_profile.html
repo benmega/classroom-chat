@@ -11,6 +11,10 @@
 <!--            <label for="username">Username:</label>-->
 <!--            <input type="text" id="username" name="username" value="{{ user.username }}" required>-->
 <!--        </div>-->
+        <form action="/edit_profile" method="POST" enctype="multipart/form-data">
+            <input type="file" name="profile_picture" accept="image/*">
+            <button type="submit">Upload</button>
+        </form>
 
         <!-- Password Field -->
         <div class="form-group">
