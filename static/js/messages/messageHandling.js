@@ -52,15 +52,20 @@ function fetchCurrentConversation() {
 }
 
 function updateChatUI(conversationData) {
-    console.log(conversationData)
+    console.log(conversationData);
+
     const chatDiv = document.getElementById('chat');
     if (!chatDiv) {
         console.error('Chat div not found');
         return;
     }
-    chatDiv.innerHTML = '';  // Clear previous content
 
-    // Loop through the messages and display each one
+    chatDiv.innerHTML = ''; // Clear previous content
+
+    // Ensure sorting is based on timestamp
+    conversationData.messages.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+
+    // Loop through the sorted messages and display each one
     conversationData.messages.forEach(msg => {
         const messageHTML = formatMessage(msg.user_name, msg.content);
         chatDiv.innerHTML += messageHTML;

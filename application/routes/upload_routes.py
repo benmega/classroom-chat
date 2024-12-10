@@ -56,8 +56,5 @@ def upload_file():
 
 @upload_bp.route('/profile_pictures/<filename>')
 def uploaded_file(filename):
-    print(os.path.isfile(f'static/uploads/profile_pictures/{filename}.jpg'))
-    print(Config.UPLOAD_FOLDER)
-    print(filename)
     absolute_path = os.path.abspath(Config.UPLOAD_FOLDER)
     return send_from_directory(absolute_path, filename)

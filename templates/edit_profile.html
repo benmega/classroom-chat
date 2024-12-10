@@ -5,21 +5,46 @@
 
 <div class="edit-profile-container">
     <h1>Edit Profile</h1>
-    <form method="POST" action="{{ url_for('user_bp.edit_profile') }}">
-        <!-- Username Field  REMOVED FOR SECURITY-->
-<!--        <div class="form-group">-->
-<!--            <label for="username">Username:</label>-->
-<!--            <input type="text" id="username" name="username" value="{{ user.username }}" required>-->
-<!--        </div>-->
-        <form action="/edit_profile" method="POST" enctype="multipart/form-data">
-            <input type="file" name="profile_picture" accept="image/*">
-            <button type="submit">Upload</button>
-        </form>
+    <form method="POST" action="{{ url_for('user_bp.edit_profile') }}" enctype="multipart/form-data">
+         <!-- Hidden Username Field (for accessibility) -->
+        <input type="text" name="username" value="{{ user.username }}" style="display:none;" autocomplete="username">
 
-        <!-- Password Field -->
+
+        <!-- Profile Picture Upload -->
+        <div class="form-group">
+            <label for="profile_picture">Profile Picture:</label>
+            <input type="file" id="profile_picture" name="profile_picture" accept="image/*">
+        </div>
+
+        <!-- Password Section -->
         <div class="form-group">
             <label for="password">Password:</label>
-            <input type="password" id="password" name="password" placeholder="Leave blank to keep current password">
+            <div class="password-container">
+                <input
+                    type="password"
+                    id="password"
+                    name="password"
+                    placeholder="Leave blank to keep current password"
+                    autocomplete="new-password">
+                <button type="button" class="toggle-password" data-target="password">
+                    👁️
+                </button>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="confirm_password">Confirm Password:</label>
+            <div class="password-container">
+                <input
+                    type="password"
+                    id="confirm_password"
+                    name="confirm_password"
+                    placeholder="Re-enter the password"
+                    autocomplete="new-password">
+                <button type="button" class="toggle-password" data-target="confirm_password">
+                    👁️
+                </button>
+            </div>
         </div>
 
         <!-- IP Address Field -->
@@ -105,5 +130,19 @@
             e.target.parentElement.remove();
         }
     });
+    document.querySelectorAll('.toggle-password').forEach(button => {
+    button.addEventListener('click', function() {
+        const targetId = this.dataset.target;
+        const input = document.getElementById(targetId);
+        if (input.type === 'password') {
+            input.type = 'text';
+            this.textContent = '🙈'; // Switch icon to hide
+        } else {
+            input.type = 'password';
+            this.textContent = '👁️'; // Switch icon to show
+        }
+    });
+    });
+
 </script>
 {% endblock %}

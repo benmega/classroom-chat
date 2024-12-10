@@ -27,7 +27,7 @@ class Config:
     admin_pass = '1234'  # Global variable for admin password. This should be securely fetched or better yet, use hashed passwords
     adminUsername = 'ben'
     UPLOAD_FOLDER = 'static/uploads/profile_pictures'
-    MAX_CONTENT_LENGTH = 2 * 1024 * 1024  # Max 2MB
+    MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # Max 2MB
     ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
     # PERMANENT_SESSION_LIFETIME = timedelta(minutes=1)
 

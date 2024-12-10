@@ -104,3 +104,20 @@
 .btn-cancel:hover {
     background-color: #d32f2f;
 }
+.password-container {
+    display: flex;
+    align-items: center;
+}
+
+.password-container input {
+    flex-grow: 1;
+    margin-right: 5px;
+}
+
+.toggle-password {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.2rem;
+    padding: 5px;
+}

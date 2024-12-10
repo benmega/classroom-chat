@@ -43,7 +43,6 @@ def login():
 
         # Validate credentials
         if user and user.check_password(password):
-            print(user)
             session['user'] = user.username
             session.permanent = True  # Make the session permanent
             user.set_online(user.id)  # Mark the user as online
@@ -64,7 +63,6 @@ def login():
                 session['conversation_id'] = recent_conversation.id
             else:
                 session['conversation_id'] = None  # Or handle new conversation creation
-            print('yes')
             flash('Login successful!', 'success')
             return redirect(url_for('general_bp.index'))
 
@@ -137,6 +135,72 @@ def update_profile():
     return redirect(url_for('user_bp.profile'))
 
 
+# @user_bp.route('/edit_profile', methods=['GET', 'POST'])
+# def edit_profile():
+#     user_id = session.get('user')
+#     user = User.query.filter_by(username=user_id).first()
+#
+#     if not user:
+#         flash('User not found!', 'danger')
+#         return redirect(url_for('user_bp.profile'))
+#
+#     if request.method == 'POST':
+#         # Update basic fields
+#         # user.username = request.form['username']
+#         ip_address = request.form.get('ip_address')
+#         user.ip_address = ip_address if ip_address else user.ip_address
+#         user.is_online = request.form.get('is_online') == 'true'
+#
+#         # Update password if provided
+#         password = request.form.get('password')
+#         if password:
+#             user.set_password(password)
+#
+#         # Prevent autoflush
+#         with db.session.no_autoflush:
+#             # Remove all skills and projects explicitly
+#             for skill in user.skills:
+#                 db.session.delete(skill)
+#             for project in user.projects:
+#                 db.session.delete(project)
+#
+#         # Update skills
+#         user.skills = []
+#         for skill_name in request.form.getlist('skills[]'):
+#             if skill_name.strip():
+#                 user.skills.append(Skill(name=skill_name.strip()))
+#
+#         # Update projects
+#         user.projects = []
+#         project_names = request.form.getlist('project_names[]')
+#         project_descriptions = request.form.getlist('project_descriptions[]')
+#         project_links = request.form.getlist('project_links[]')
+#         for name, desc, link in zip(project_names, project_descriptions, project_links):
+#             if name.strip():
+#                 user.projects.append(Project(name=name.strip(), description=desc.strip(), link=link.strip()))
+#
+#
+#         print(request)
+#         if 'profile_picture' in request.files:
+#             print(request.files)
+#             file = request.files['profile_picture']
+#             if file and allowed_file(file.filename):
+#                 # Generate a unique filename
+#                 filename = f"{uuid.uuid4().hex}_{file.filename.rsplit('.', 1)[1].lower()}"
+#                 filepath = os.path.join(Config.UPLOAD_FOLDER, filename)
+#
+#                 # Save the file
+#                 file.save(filepath)
+#
+#                 # Update user's profile picture
+#                 user.profile_picture = filename
+#
+#         db.session.commit()
+#         flash('Profile updated successfully!', 'success')
+#         return redirect(url_for('user_bp.profile'))
+#
+#     return render_template('edit_profile.html', user=user)
+
 @user_bp.route('/edit_profile', methods=['GET', 'POST'])
 def edit_profile():
     user_id = session.get('user')
@@ -147,58 +211,98 @@ def edit_profile():
         return redirect(url_for('user_bp.profile'))
 
     if request.method == 'POST':
-        # Update basic fields
-        # user.username = request.form['username']
-        ip_address = request.form.get('ip_address')
-        user.ip_address = ip_address if ip_address else user.ip_address
-        user.is_online = request.form.get('is_online') == 'true'
+        try:
+            # 1. Update basic fields
+            update_basic_user_info(user)
 
-        # Update password if provided
-        password = request.form.get('password')
-        if password:
-            user.set_password(password)
+            # 2. Remove existing skills and projects safely
+            clear_user_skills_and_projects(user)
 
-        # Prevent autoflush
-        with db.session.no_autoflush:
-            # Remove all skills and projects explicitly
-            for skill in user.skills:
-                db.session.delete(skill)
-            for project in user.projects:
-                db.session.delete(project)
+            # 3. Add new skills
+            add_user_skills(user, request.form.getlist('skills[]'))
 
-        # Update skills
-        user.skills = []
-        for skill_name in request.form.getlist('skills[]'):
-            if skill_name.strip():
-                user.skills.append(Skill(name=skill_name.strip()))
+            # 4. Add new projects
+            add_user_projects(
+                user,
+                request.form.getlist('project_names[]'),
+                request.form.getlist('project_descriptions[]'),
+                request.form.getlist('project_links[]'),
+            )
 
-        # Update projects
-        user.projects = []
-        project_names = request.form.getlist('project_names[]')
-        project_descriptions = request.form.getlist('project_descriptions[]')
-        project_links = request.form.getlist('project_links[]')
-        for name, desc, link in zip(project_names, project_descriptions, project_links):
-            if name.strip():
-                user.projects.append(Project(name=name.strip(), description=desc.strip(), link=link.strip()))
+            # 5. Handle profile picture upload
+            handle_profile_picture_upload(user)
 
-        if 'profile_picture' in request.files:
-            file = request.files['profile_picture']
-            if file and allowed_file(file.filename):
-                # Generate a unique filename
-                filename = f"{uuid.uuid4().hex}_{file.filename.rsplit('.', 1)[1].lower()}"
-                filepath = os.path.join(Config.UPLOAD_FOLDER, filename)
-
-                # Save the file
-                file.save(filepath)
-
-                # Update user's profile picture
-                user.profile_picture = filename
-
-        db.session.commit()
-        flash('Profile updated successfully!', 'success')
-        return redirect(url_for('user_bp.profile'))
+            # Commit changes to the database
+            db.session.commit()
+            flash('Profile updated successfully!', 'success')
+            return redirect(url_for('user_bp.profile'))
+        except Exception as e:
+            db.session.rollback()  # Roll back any changes on error
+            print(f"Error during profile update: {e}")
+            flash('An error occurred while updating the profile.', 'danger')
 
     return render_template('edit_profile.html', user=user)
+
+
+# Helper Functions
+def update_basic_user_info(user):
+    """Updates basic user information from the form."""
+    ip_address = request.form.get('ip_address')
+    user.ip_address = ip_address if ip_address else user.ip_address
+    user.is_online = request.form.get('is_online') == 'true'
+
+    password = request.form.get('password')
+    confirm_password = request.form.get('confirm_password')
+
+    if password and password != confirm_password:
+        flash('Passwords do not match!', 'danger')
+        return redirect(url_for('user_bp.edit_profile'))
+
+    if password:
+        user.set_password(password)
+
+def clear_user_skills_and_projects(user):
+    """Clears all skills and projects for the user."""
+    with db.session.no_autoflush:
+        for skill in user.skills:
+            db.session.delete(skill)
+        for project in user.projects:
+            db.session.delete(project)
+
+
+def add_user_skills(user, skills):
+    """Adds new skills to the user."""
+    user.skills = []
+    for skill_name in skills:
+        skill_name = skill_name.strip()
+        if skill_name:
+            user.skills.append(Skill(name=skill_name))
+
+
+def add_user_projects(user, project_names, project_descriptions, project_links):
+    """Adds new projects to the user."""
+    user.projects = []
+    for name, desc, link in zip(project_names, project_descriptions, project_links):
+        name = name.strip()
+        if name:
+            user.projects.append(Project(name=name, description=desc.strip(), link=link.strip()))
+
+
+def handle_profile_picture_upload(user):
+    """Handles uploading and saving a profile picture."""
+    if 'profile_picture' in request.files:
+        file = request.files['profile_picture']
+        if file and allowed_file(file.filename):
+            # Generate a unique filename
+            filename = f"{uuid.uuid4().hex}_{file.filename.rsplit('.', 1)[1].lower()}"
+            filepath = os.path.join(Config.UPLOAD_FOLDER, filename)
+
+            # Save the file and update user profile
+            file.save(filepath)
+            user.profile_picture = filename
+            print(f"Profile picture uploaded: {filename}")
+        else:
+            print("Invalid file type or no file selected.")
 
 
 @user_bp.route('/change_password', methods=['POST'])
