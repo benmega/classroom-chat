@@ -170,7 +170,7 @@ groupChat2/
                 usernameLogic.js
             utils/
     templates/
-        dashboard.html
+        admin.html
         index.html
     tests/
     __pycache__/

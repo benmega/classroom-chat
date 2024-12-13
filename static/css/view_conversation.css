@@ -1,14 +1,14 @@
 /* General Container for the conversation with frosted glass effect */
 .conversation-container {
     padding: 20px;
-    max-width: 800px;
+    max-width: var(--max-container-width);
     margin: 0 auto;
     background: rgba(255, 255, 255, 0.2); /* Frosted glass effect */
-    border-radius: 10px;
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1); /* Slightly stronger shadow */
+    border-radius: var(--border-radius-medium);
+    box-shadow: var(--box-shadow-medium); /* Slightly stronger shadow */
     backdrop-filter: blur(10px); /* Frosted glass effect */
     border: 1px solid rgba(255, 255, 255, 0.3); /* Bevel border */
-    transition: transform 0.3s ease;
+    transition: transform var(--transition-default);
 }
 
 .conversation-container:hover {
@@ -18,7 +18,7 @@
 /* Title Styling */
 .conversation-title {
     font-size: 1.8em;
-    color: #0EB2BB; /* Teal */
+    color: var(--primary-color); /* Teal */
     margin-bottom: 20px;
 }
 
@@ -32,10 +32,10 @@
 /* Message Card with a subtle shadow */
 .message-card {
     background: rgba(255, 255, 255, 0.9); /* Light background for messages */
-    border-radius: 8px;
+    border-radius: var(--border-radius-small);
     padding: 15px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-    transition: transform 0.3s ease;
+    box-shadow: var(--box-shadow-light);
+    transition: transform var(--transition-default);
 }
 
 .message-card:hover {
@@ -47,12 +47,12 @@
     display: flex;
     justify-content: space-between;
     font-size: 0.9em;
-    color: #555;
+    color: var(--text-color);
 }
 
 .user-name {
     font-weight: bold;
-    color: #0EB2BB; /* Teal */
+    color: var(--primary-color); /* Teal */
 }
 
 .message-timestamp {
@@ -65,25 +65,25 @@
     margin-top: 10px;
     font-size: 1.1em;
     line-height: 1.5;
-    color: #333;
+    color: var(--text-color);
 }
 
 /* Back Button */
 .back-button {
     display: inline-block;
     margin-top: 30px;
-    padding: 12px 20px;
-    background-color: #0EB2BB;
+    padding: var(--button-padding);
+    background-color: var(--primary-color);
     color: white;
-    border-radius: 5px;
+    border-radius: var(--border-radius-small);
     text-decoration: none;
     font-size: 1.2em;
     text-align: center;
-    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    transition: background-color var(--transition-default), box-shadow var(--transition-default);
 }
 
 .back-button:hover {
-    background-color: #006666;
+    background-color: var(--primary-color-dark);
     box-shadow: 0 8px 15px rgba(0, 128, 128, 0.3);
 }
 

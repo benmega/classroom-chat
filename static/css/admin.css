@@ -1,21 +1,21 @@
 /* General Styles */
 body {
-    font-family: 'Roboto', sans-serif;
+    font-family: var(--font-family);
     margin: 0;
     padding: 20px;
-    background-color: #f5f5f5;
-    color: #333;
+    background-color: var(--background-light);
+    color: var(--text-color);
 }
 
 h1 {
     text-align: center;
-    color: #0EB2BB; /* Teal */
+    color: var(--primary-color);
     margin-bottom: 30px;
 }
 
 h2 {
-    color: #0EB2BB; /* Teal */
-    border-bottom: 2px solid #FFD700; /* Yellow line below headings */
+    color: var(--primary-color);
+    border-bottom: 2px solid var(--highlight-color);
     padding-bottom: 10px;
     margin-bottom: 20px;
 }
@@ -34,18 +34,18 @@ ul li {
     background-color: #fff;
     margin: 10px;              /* Add margin for spacing */
     padding: 10px 15px;
-    border-radius: 8px;
-    box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.05);
+    border-radius: var(--border-radius-medium);
+    box-shadow: var(--box-shadow-light);
     width: calc(20% - 20px);   /* 5 items per row, accounting for margins */
     box-sizing: border-box;     /* Include padding and border in width */
 }
 
 ul li.online {
-    border-left: 5px solid #0EB2BB; /* Teal for online users */
+    border-left: 5px solid var(--primary-color);
 }
 
 ul li.offline {
-    border-left: 5px solid #ff6f61; /* Red for offline users */
+    border-left: 5px solid var(--error-color);
 }
 
 /* Forms */
@@ -53,41 +53,41 @@ form {
     margin-bottom: 30px;
     padding: 20px;
     background-color: #fff;
-    border-radius: 10px;
-    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: var(--border-radius-medium);
+    box-shadow: var(--box-shadow-medium);
 }
 
 input[type="text"], textarea {
     width: 100%;
-    padding: 12px;
+    padding: var(--input-padding);
     margin-bottom: 15px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-small);
     font-size: 16px;
 }
 
 input[type="text"]:focus, textarea:focus {
     outline: none;
-    border-color: #0EB2BB; /* Teal */
+    border-color: var(--focus-border-color);
     box-shadow: 0 0 8px rgba(0, 128, 128, 0.2);
 }
 
 /* Buttons */
 button {
-    padding: 12px 20px;
-    background-color: #0EB2BB; /* Teal */
+    padding: var(--button-padding);
+    background-color: var(--primary-color);
     color: white;
     border: none;
-    border-radius: 5px;
+    border-radius: var(--border-radius-small);
     font-size: 16px;
     cursor: pointer;
-    transition: background-color 0.3s ease;
+    transition: background-color var(--transition-default);
     width: 100%;
     margin-top: 10px;
 }
 
 button:hover {
-    background-color: #006666; /* Darker teal */
+    background-color: var(--primary-color-dark);
 }
 
 /* Media Queries for Responsive Design */

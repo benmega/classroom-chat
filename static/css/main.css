@@ -1,22 +1,22 @@
 /* General Styles */
 body {
-    font-family: 'Roboto', sans-serif;
+    font-family: var(--font-family);
     margin: 0;
-    background-color: #f5f5f5;
+    background-color: var(--background-light);
     display: flex;
     justify-content: center;
     align-items: center;
     height: 100vh;
-    color: #333;
+    color: var(--text-color);
 }
 
 #container {
     background-color: white;
-    border-radius: 10px;
-    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: var(--border-radius-medium);
+    box-shadow: var(--box-shadow-light);
     padding: 15px;
     width: 100%;
-    max-width: 1200px;
+    max-width: var(--max-container-width);
     height: 90vh;
     display: flex;
     flex-direction: column;
@@ -25,7 +25,7 @@ body {
 }
 
 h1 {
-    color: #0EB2BB; /* Teal */
+    color: var(--primary-color);
     margin-bottom: 15px;
     text-align: center;
 }
@@ -40,9 +40,9 @@ form {
 }
 
 input[type="text"], input[type="file"], input[type="password"] {
-    padding: 12px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
+    padding: var(--input-padding);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-small);
     font-size: 16px;
     width: 100%;
     box-sizing: border-box;
@@ -51,24 +51,24 @@ input[type="text"], input[type="file"], input[type="password"] {
 /* Focused input styles */
 input[type="text"]:focus, input[type="password"]:focus {
     outline: none;
-    border-color: #0EB2BB; /* Teal */
+    border-color: var(--primary-color);
     box-shadow: 0 0 8px rgba(0, 128, 128, 0.2);
 }
 
 /* Button Styles */
 button {
-    padding: 12px 20px;
-    background-color: #0EB2BB; /* Teal */
+    padding: var(--button-padding);
+    background-color: var(--primary-color);
     color: white;
     border: none;
-    border-radius: 5px;
+    border-radius: var(--border-radius-small);
     font-size: 16px;
     cursor: pointer;
-    transition: background-color 0.3s ease;
+    transition: background-color var(--transition-default);
 }
 
 button:hover {
-    background-color: #006666; /* Darker teal */
+    background-color: var(--primary-color-dark);
 }
 
 /* Message Form Specific Styles */
@@ -76,25 +76,23 @@ button:hover {
     flex: 1;
 }
 
-
-
 /* Scrollbar Styles */
 #chat::-webkit-scrollbar {
     width: 10px;
 }
 
 #chat::-webkit-scrollbar-thumb {
-    background-color: #0EB2BB; /* Teal scrollbar */
-    border-radius: 5px;
+    background-color: var(--primary-color);
+    border-radius: var(--border-radius-small);
 }
 
 /* Chat Message Styles */
 #chat div {
     margin-bottom: 10px;
     padding: 8px;
-    background-color: #fff;
-    border-radius: 5px;
-    box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.05);
+    background-color: white;
+    border-radius: var(--border-radius-small);
+    box-shadow: var(--box-shadow-light);
 }
 
 #chat div:nth-child(even) {
@@ -103,12 +101,12 @@ button:hover {
 
 /* Link Styles */
 a {
-    color: #0000EE; /* Blue */
+    color: var(--link-color);
     text-decoration: none;
 }
 
 a:visited {
-    color: #551A8B; /* Purple */
+    color: var(--visited-link-color);
 }
 
 a:hover {
@@ -132,8 +130,8 @@ a:hover {
 .modal-content {
     background-color: white;
     padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+    border-radius: var(--border-radius-medium);
+    box-shadow: var(--box-shadow-medium);
     width: 400px;
     max-width: 90%;
     text-align: center;
@@ -149,7 +147,7 @@ a:hover {
 }
 
 .close:hover {
-    color: #000;
+    color: black;
 }
 
 /* Mobile Responsiveness */
