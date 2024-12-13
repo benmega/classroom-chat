@@ -1,18 +1,18 @@
 /* Conversation History Page */
 .history-container {
     margin: 20px auto;
-    max-width: 1200px;
+    max-width: var(--max-container-width);
     padding: 20px;
-    background: #f5f5f5; /* Light background for the container */
-    border-radius: 10px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    font-family: 'Roboto', sans-serif;
+    background: var(--background-light); /* Light background for the container */
+    border-radius: var(--border-radius-medium);
+    box-shadow: var(--box-shadow-medium);
+    font-family: var(--font-family);
 }
 
 .history-container h2 {
     text-align: center;
     font-size: 2rem;
-    color: #0EB2BB; /* Teal */
+    color: var(--heading-color); /* Teal */
     margin-bottom: 30px;
 }
 
@@ -25,9 +25,9 @@
 .conversation-card {
     background: white;
     padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border-radius: var(--border-radius-medium);
+    box-shadow: var(--box-shadow-light);
+    transition: transform var(--transition-default), box-shadow var(--transition-default);
 }
 
 .conversation-card:hover {
@@ -44,7 +44,7 @@
 
 .conversation-header strong {
     font-size: 1.2rem;
-    color: #333;
+    color: var(--text-color);
 }
 
 .date {
@@ -54,19 +54,19 @@
 
 .view-btn {
     display: inline-block;
-    padding: 10px 20px;
+    padding: var(--button-padding);
     margin-top: 10px;
     text-decoration: none;
-    background-color: #0EB2BB; /* Teal */
+    background-color: var(--primary-color); /* Teal */
     color: white;
     font-weight: bold;
     border-radius: 30px;
     text-align: center;
-    transition: background-color 0.3s ease, transform 0.3s ease;
+    transition: background-color var(--transition-default), transform var(--transition-default);
 }
 
 .view-btn:hover {
-    background-color: #006666; /* Darker teal */
+    background-color: var(--primary-color-dark); /* Darker teal */
     transform: scale(1.05); /* Button hover effect */
 }
 

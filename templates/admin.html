@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<!-- templates/admin.html -->
+<html>
+<head>
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap">
+    <link rel="icon" href="{{ url_for('static', filename='images/logo.ico') }}" type="image/x-icon">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+    <link rel="stylesheet" href="/static/css/variables.css">
+</head>
+<body>
+    <h1>Admin Dashboard</h1>
+    <h2>Users Online</h2>
+
+    <ul>
+        {% for user in users %}
+        <li>{{ user.username }} - {% if user.is_online %}Online{% else %}Offline{% endif %}</li>
+        {% endfor %}
+    </ul>
+
+    <h2>Conversation Management</h2>
+    <ul>
+        <form action="{{ url_for('admin_bp.toggle_ai') }}" method="post">
+            <button type="submit">{{ 'Disable' if config.ai_teacher_enabled else 'Enable' }} AI Teacher</button>
+        </form>
+
+
+        <form id="start-conversation-form">
+            <button type="submit">Start New Conversation</button>
+        </form>
+        <script>
+            document.getElementById('start-conversation-form').addEventListener('submit', function(event) {
+                event.preventDefault(); // Prevent the default form submission
+
+                fetch('{{ url_for("message_bp.start_conversation") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: new URLSearchParams()
+                })
+                .then(response => response.json())
+                .then(data => {
+                    // Flash a notification or handle UI updates
+                    alert(`Conversation started: ${data.title}`); // Example notification
+                    // Optionally update the page without reloading
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+            });
+        </script>
+
+        <form action="{{ url_for('admin_bp.toggle_message_sending') }}" method="post">
+            <button type="submit">{{ 'Disable' if config.message_sending_enabled else 'Enable' }} Message Sending</button>
+        </form>
+    </ul>
+    <h2>Ban A Word</h2>
+
+    <form action="{{ url_for('admin_bp.add_banned_word') }}" method="post">
+        <input type="text" name="word" placeholder="Enter new banned word" required>
+        <textarea name="reason" placeholder="Enter reason (optional)"></textarea>
+        <button type="submit">Add Word</button>
+    </form>
+
+</body>
+</html>
