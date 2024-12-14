@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Classroom Chat</title>
+
     <!-- Link to the base stylesheet -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
 </head>
@@ -16,8 +17,13 @@
         </div>
         <nav>
             <ul>
+                {% if user %}
+                <li><a class="digital-ducks">Digital Ducks: {{ user.ducks }}</a></li>
+                {% endif %}
+
                 <!-- Home Link -->
                 <li><a class="nav-button" href="{{ url_for('general_bp.index') }}">Home</a></li>
+
 
                 <!-- Conversation History Link -->
                 <li><a class="nav-button" href="{{ url_for('message_bp.conversation_history') }}">Conversation History</a></li>
