@@ -14,6 +14,7 @@ class User(db.Model):
     profile_picture = db.Column(db.String(150), default="Default_pfp.jpg")
     ip_address = db.Column(db.String(45), nullable=True)
     is_online = db.Column(db.Boolean, default=False)
+    ducks = db.Column(db.Integer, nullable=False, default=0)  # Tracks the total ducks earned
 
     # Relationships
     skills = db.relationship('Skill', backref='user', lazy=True)
