@@ -38,7 +38,8 @@ def send_message():
         return jsonify(success=False, error="Inappropriate messages are not allowed"), 500
 
     # Check for and process CodeCombat URL
-    if detect_and_handle_challenge_url(form_message, user.username):
+    challenge_check = detect_and_handle_challenge_url(form_message, user.username)
+    if challenge_check.get("handled"):
         # Send a congratulatory system message
         system_message = f"Congrats {user.username}, on completing a challenge!"
         # Add system message to chat (handle chat logic here)
