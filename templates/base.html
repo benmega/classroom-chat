@@ -31,7 +31,12 @@
                 <li><a class="nav-button" href="{{ url_for('message_bp.conversation_history') }}">Conversation History</a></li>
 
                 {% if 'user' in session %}
+                    <!-- Profile Link -->
                     <li><a class="nav-button profile" href="{{ url_for('user_bp.profile') }}">Profile</a></li>
+
+                    <!-- bit_Pond Link -->
+                    <li><a class="nav-button" href="{{ url_for('bitpond_bp.index') }}">bit_Pond</a></li>
+
                     <!-- Logout Link (if logged in) -->
                     <li><a class="nav-button logout" href="{{ url_for('user_bp.logout') }}">Logout</a></li>
                 {% else %}
@@ -40,6 +45,7 @@
                 {% endif %}
             </ul>
         </nav>
+
     </header>
 
     <!-- Main Content -->
