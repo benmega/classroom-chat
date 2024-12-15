@@ -206,3 +206,10 @@ a:hover {
         font-size: 14px;
     }
 }
+
+.digital-ducks {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #f39c12; /* Golden duck color */
+    padding-left: 20px;
+}

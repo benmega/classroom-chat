@@ -30,6 +30,7 @@ class Config:
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # Max 2MB
     ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
     # PERMANENT_SESSION_LIFETIME = timedelta(minutes=1)
+    SQLALCHEMY_ECHO = False
 
 class DevelopmentConfig(Config):
     DEBUG = True

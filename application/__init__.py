@@ -5,7 +5,7 @@ from application.extensions import db, socketio  # , socketio
 from application.config import Config
 from application.models import setup_models
 from application.routes import register_blueprints
-from models import User
+from application.models.user import User
 from . import socket_events  # This import registers the event handlers
 from datetime import timedelta
 
@@ -36,6 +36,12 @@ def create_app():
     #                 if not session.get('user'):
     #                     user.set_online(user.id, online=False)  # Mark user as offline
     #                     db.session.commit()
+
+    @app.context_processor
+    def inject_user():
+        user_id = session.get('user')
+        user = User.query.filter_by(username=user_id).first() if user_id else None
+        return {'user': user}
 
     with app.app_context():
         db.create_all()
