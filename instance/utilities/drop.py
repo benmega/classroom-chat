@@ -1,13 +1,28 @@
-# from application import db
-# db.drop_all()
-#
 import sqlite3
-
 from application.config import Config
-from sqlalchemy import create_engine, MetaData, Table
+from sqlalchemy import create_engine
 
 SQLALCHEMY_DATABASE_URI = Config.SQLALCHEMY_DATABASE_URI  # Replace with your actual database URI
 engine = create_engine(SQLALCHEMY_DATABASE_URI)
+
+def list_tables(db_path):
+    """
+    Fetch and list all tables in the SQLite database.
+
+    Parameters:
+    - db_path (str): Path to the SQLite database file.
+
+    Returns:
+    - list: A list of table names.
+    """
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    try:
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
+        tables = [table[0] for table in cursor.fetchall()]
+        return tables
+    finally:
+        conn.close()
 
 def drop_table(db_path, table_name, confirm=False):
     """
@@ -18,19 +33,15 @@ def drop_table(db_path, table_name, confirm=False):
     - table_name (str): Name of the table to drop.
     - confirm (bool): If True, prompts for confirmation before dropping the table.
     """
-    # Connect to the SQLite database
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
-
     try:
-        # If confirmation is required, prompt the user
         if confirm:
             user_input = input(f"Are you sure you want to drop the table '{table_name}'? (yes/no): ")
             if user_input.lower() != 'yes':
                 print("Operation canceled.")
                 return
 
-        # SQL to drop the table
         drop_table_sql = f"DROP TABLE IF EXISTS {table_name};"
         cursor.execute(drop_table_sql)
         conn.commit()
@@ -40,14 +51,37 @@ def drop_table(db_path, table_name, confirm=False):
     finally:
         conn.close()
 
-def dropAll():
+def drop_all():
+    """Drops all tables in the database."""
     with engine.connect() as conn:
-        # Drop the alembic_version table if it exists
-        conn.execute("DROP TABLE IF EXISTS alembic_version")
+        conn.execute("DROP TABLE IF EXISTS alembic_version;")
+        print("Dropped 'alembic_version' table if it existed.")
 
-
-if __name__ == "__main__":
-    # Path to your database
+def interactive_drop_table():
+    """
+    Interactively prompts the user to select a table to drop.
+    """
     database_path = "C:\\Users\\Ben\\PycharmProjects\\groupChat2\\instance\\users.db"
 
-    drop_table(database_path, table_name="messages", confirm=True)
+    # List all tables
+    tables = list_tables(database_path)
+    if not tables:
+        print("No tables found in the database.")
+        return
+
+    print("Available tables:")
+    for i, table in enumerate(tables, start=1):
+        print(f"{i}. {table}")
+
+    try:
+        choice = int(input("Select a table to drop (enter the number): "))
+        if 1 <= choice <= len(tables):
+            table_name = tables[choice - 1]
+            drop_table(database_path, table_name, confirm=True)
+        else:
+            print("Invalid selection. Operation canceled.")
+    except ValueError:
+        print("Invalid input. Please enter a number.")
+
+if __name__ == "__main__":
+    interactive_drop_table()

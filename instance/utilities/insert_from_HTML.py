@@ -44,6 +44,7 @@ def parse_and_store_challenges(app, url, html_content):
             # Create and add challenge to the database
             challenge = Challenge(
                 name=name,
+                slug=slug,
                 domain=domain,  # Pulled from URL
                 course_id=course_id,
                 description=description,

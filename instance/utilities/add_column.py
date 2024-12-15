@@ -48,4 +48,4 @@ if __name__ == "__main__":
     # Path to your database
     database_path = "C:\\Users\\Ben\\PycharmProjects\\groupChat2\\instance\\users.db"
 
-    add_column(database_path, tableName="users", columnName="ducks", defaultValue=0)
+    add_column(database_path, tableName="challenges", columnName="slug", defaultValue=0)
