@@ -1,8 +1,8 @@
 .edit-profile-container {
     background: rgba(255, 255, 255, 0.8);
-    padding: 30px;
-    border-radius: 10px;
-    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    padding: var(--input-padding);
+    border-radius: var(--border-radius-medium);
+    box-shadow: var(--box-shadow-medium);
     width: 100vw; /* Full width */
     max-width: none; /* No restriction on width */
     margin: 0 auto; /* Center horizontally */
@@ -13,7 +13,7 @@
     text-align: center;
     margin-bottom: 20px;
     font-size: 28px;
-    color: #333;
+    color: var(--text-color);
 }
 
 .form-group {
@@ -24,14 +24,14 @@
     display: block;
     font-weight: bold;
     margin-bottom: 8px;
-    color: #555;
+    color: var(--text-color);
 }
 
 .form-group input {
     width: 100%;
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
+    padding: var(--input-padding);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-small);
     font-size: 16px;
     box-sizing: border-box;
 }
@@ -48,49 +48,49 @@
 }
 
 .remove-skill, .remove-project {
-    background-color: #f44336;
+    background-color: var(--error-color);
     color: white;
     padding: 5px 10px;
     border: none;
-    border-radius: 4px;
+    border-radius: var(--border-radius-small);
     cursor: pointer;
 }
 
 .remove-skill:hover, .remove-project:hover {
-    background-color: #d32f2f;
+    background-color: var(--error-color-dark);
 }
 
 #add-skill, #add-project {
-    background-color: #007BFF;
+    background-color: var(--secondary-color);
     color: white;
     padding: 8px 15px;
     border: none;
-    border-radius: 5px;
+    border-radius: var(--border-radius-small);
     cursor: pointer;
     display: inline-block;
     margin-top: 10px;
 }
 
 #add-skill:hover, #add-project:hover {
-    background-color: #0056b3;
+    background-color: var(--secondary-color-dark);
 }
 
 .btn-save {
     background-color: #4caf50;
     color: white;
-    padding: 12px 20px;
+    padding: var(--button-padding);
     border: none;
-    border-radius: 6px;
+    border-radius: var(--border-radius-small);
     cursor: pointer;
     font-size: 16px;
 }
 
 .btn-cancel {
-    background-color: #f44336;
+    background-color: var(--error-color);
     color: white;
-    padding: 12px 20px;
+    padding: var(--button-padding);
     text-decoration: none;
-    border-radius: 6px;
+    border-radius: var(--border-radius-small);
     margin-left: 15px;
     font-size: 16px;
     display: inline-block;
@@ -102,8 +102,9 @@
 }
 
 .btn-cancel:hover {
-    background-color: #d32f2f;
+    background-color: var(--error-color-dark);
 }
+
 .password-container {
     display: flex;
     align-items: center;

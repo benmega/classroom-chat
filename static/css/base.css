@@ -1,8 +1,8 @@
 /* General body styles */
 body {
-    font-family: 'Roboto', sans-serif;
+    font-family: var(--font-family);
     margin: 0;
-    background: linear-gradient(135deg, #f5f5f5, #e0f7fa); /* Same gradient as login */
+    background: var(--background-gradient); /* Same gradient as login */
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -16,10 +16,10 @@ header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0px 40px;
-    background-color: #0EB2BB; /* Teal background for the header */
+    padding: var(--header-padding);
+    background-color: var(--primary-color);
     color: white;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--box-shadow-light);
     position: sticky;
     top: 0;
     z-index: 10;
@@ -41,54 +41,54 @@ nav ul li {
 }
 
 .nav-button {
-    font-size: 16px;
+    font-size: var(--font-size-medium);
     color: white;
     text-decoration: none;
     padding: 12px 18px;
-    border-radius: 30px; /* Rounded buttons */
-    background-color: #006666; /* Darker teal for buttons */
-    transition: background-color 0.3s, transform 0.3s;
+    border-radius: var(--border-radius-medium);
+    background-color: var(--primary-color-dark);
+    transition: var(--transition-default);
 }
 
 .nav-button:hover {
-    background-color: #004d4d; /* Even darker teal on hover */
-    transform: scale(1.1); /* Slight enlargement effect on hover */
+    background-color: var(--secondary-color-dark);
+    transform: scale(1.1);
 }
 
 .nav-button:active {
-    transform: scale(0.98); /* Button shrink effect when clicked */
+    transform: scale(0.98);
 }
 
 /* Style for Login/Logout specific buttons */
 .nav-button.login {
-    background-color: #FFD700; /* Yellow for login */
+    background-color: var(--highlight-color);
 }
 
 .nav-button.login:hover {
-    background-color: #FFA500; /* Darker yellow for login hover */
+    background-color: var(--highlight-hover);
 }
 
 .nav-button.logout {
-    background-color: #FF6347; /* Tomato red for logout */
+    background-color: var(--error-color);
 }
 
 .nav-button.logout:hover {
-    background-color: #FF4500; /* Darker red for logout hover */
+    background-color: var(--error-color-dark);
 }
 
 /* Container for the main content */
 #container {
     background: rgba(255, 255, 255, 0.2); /* Glassmorphism effect */
-    border-radius: 10px;
-    box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.2);
+    border-radius: var(--border-radius-medium);
+    box-shadow: var(--box-shadow-medium);
     padding: 40px;
-    width: 100vw;
+    width: var(--max-container-width);
     max-width: none;
     margin: 0;
     text-align: center;
     backdrop-filter: blur(10px); /* Frosted glass effect */
     border: 1px solid rgba(255, 255, 255, 0.3);
-    transition: transform 0.3s ease;
+    transition: transform var(--transition-default);
 }
 
 /* Hover effect on the container */
@@ -99,10 +99,10 @@ nav ul li {
 /* Chat messages and form layout */
 #chat {
     margin: 0 auto 30px auto; /* Centers horizontally and adds bottom margin */
-    padding: 20px; /* Ensures a comfortable inner padding */
+    padding: var(--input-padding); /* Ensures a comfortable inner padding */
     background-color: rgba(255, 255, 255, 0.3);
-    border-radius: 10px;
-    height: 400px;
+    border-radius: var(--border-radius-medium);
+    height: var(--chat-height);
     width: calc(100% - 40px); /* Fills the container but leaves a 20px margin on each side */
     max-width: 100%; /* Prevents overflow in smaller containers */
     overflow-y: auto;
@@ -120,30 +120,30 @@ nav ul li {
 }
 
 #message {
-    padding: 12px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    font-size: 16px;
-    transition: box-shadow 0.3s ease, border-color 0.3s ease;
+    padding: var(--input-padding);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-small);
+    font-size: var(--font-size-medium);
+    transition: var(--transition-default);
 }
 
 /* Button styles */
 button {
-    padding: 12px 0;
-    background-color: #0EB2BB; /* Teal */
+    padding: var(--button-padding);
+    background-color: var(--primary-color);
     color: white;
     border: none;
-    border-radius: 5px;
-    font-size: 18px;
+    border-radius: var(--border-radius-small);
+    font-size: var(--font-size-large);
     cursor: pointer;
     position: relative;
     overflow: hidden;
-    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    transition: var(--transition-default);
 }
 
 button:hover {
-    background-color: #006666; /* Darker teal */
-    box-shadow: 0 8px 15px rgba(0, 128, 128, 0.3); /* Added shadow */
+    background-color: var(--primary-color-dark);
+    box-shadow: var(--button-hover-shadow);
 }
 
 button:active::after {
@@ -156,7 +156,7 @@ button:active::after {
     height: 300%;
     background: rgba(255, 255, 255, 0.5);
     border-radius: 50%;
-    animation: rippleEffect 0.6s ease-out;
+    animation: rippleEffect var(--ripple-duration) ease-out;
 }
 
 /* Ripple effect animation */
@@ -176,18 +176,18 @@ button:active::after {
 /* File input styling */
 input[type="file"] {
     margin-top: 15px;
-    padding: 10px;
+    padding: var(--input-padding);
 }
 
 /* Styling for links */
 a {
-    color: #FFD700; /* Yellow */
+    color: var(--highlight-color);
     text-decoration: none;
-    transition: color 0.3s ease;
+    transition: var(--transition-default);
 }
 
 a:hover {
-    color: #FFA500; /* Darker yellow */
+    color: var(--highlight-hover);
     text-decoration: underline;
 }
 
@@ -199,11 +199,11 @@ a:hover {
     }
 
     button {
-        font-size: 16px;
+        font-size: var(--font-size-medium);
     }
 
     input {
-        font-size: 14px;
+        font-size: var(--font-size-small);
     }
 }
 

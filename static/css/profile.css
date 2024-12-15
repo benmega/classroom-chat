@@ -1,8 +1,8 @@
 .profile-container {
     background: rgba(255, 255, 255, 0.8);
-    padding: 30px;
-    border-radius: 10px;
-    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    padding: var(--input-padding);
+    border-radius: var(--border-radius-medium);
+    box-shadow: var(--box-shadow-medium);
     width: 100vw; /* Full width */
     max-width: none; /* Remove width restriction */
     margin: 0 auto; /* Center horizontally */
@@ -29,16 +29,21 @@
 
 .job-title, .location {
     margin: 5px 0;
-    color: gray;
+    color: var(--text-color);
 }
 
 .edit-btn {
     margin-left: auto;
-    background: #007BFF;
+    background: var(--secondary-color);
     color: white;
-    padding: 10px 20px;
-    border-radius: 5px;
+    padding: var(--button-padding);
+    border-radius: var(--border-radius-small);
     text-decoration: none;
+    transition: background-color var(--transition-default);
+}
+
+.edit-btn:hover {
+    background: var(--secondary-color-dark);
 }
 
 .roles-section, .skills-section {
@@ -55,29 +60,29 @@
 .progress-bar {
     flex: 1;
     height: 10px;
-    background: #e0e0e0;
+    background: var(--border-color);
     margin: 0 10px;
-    border-radius: 5px;
+    border-radius: var(--border-radius-small);
 }
 
 .progress {
     height: 100%;
-    background: #007BFF;
-    border-radius: 5px;
+    background: var(--secondary-color);
+    border-radius: var(--border-radius-small);
 }
 
 .skill-tag {
-    background: #f0f0f0;
+    background: var(--background-light);
     padding: 8px 12px;
-    border-radius: 20px;
+    border-radius: var(--border-radius-medium);
     display: inline-block;
     margin: 5px;
 }
 
 .add-skill-input {
     width: 100%;
-    padding: 10px;
-    border-radius: 5px;
-    border: 1px solid #ccc;
+    padding: var(--input-padding);
+    border-radius: var(--border-radius-small);
+    border: 1px solid var(--border-color);
     margin-top: 10px;
 }
