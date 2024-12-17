@@ -13,15 +13,12 @@ message_bp = Blueprint('message_bp', __name__)
 
 @message_bp.route('/send_message', methods=['POST'])
 def send_message():
-    # user_ip = request.remote_addr
     session_username = session.get('user', None)  # Get username from the session
     form_message = request.form['message']
 
     if not session_username:
         return jsonify(success=False, error="No session username found"), 400
 
-    # Handle user creation (using session_username instead of form_username)
-    # user = get_or_make_user(user_ip, session_username)
     user = get_user(session_username)
     if not user:
         return jsonify(success=False, error="Unknown User"), 500
