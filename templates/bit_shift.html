@@ -1,47 +1,53 @@
 {% extends "base.html" %}
 
 {% block content %}
-<section id="duck-trade-form">
-    <h2>Trade Your Digital Ducks for Physical Ducks</h2>
-    <p>Use this form to exchange your digital ducks for physical (3D printed) ducks. Select how many ducks you want to trade and specify the quantity of each type you'd like to receive.</p>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/bit_shift.css') }}">
+<section id="duck-trade-form" class="trade-form-section">
+    <h2 class="form-heading">Trade Your Digital Ducks for Physical Ducks</h2>
+    <p class="form-description">
+        Use this form to exchange your digital ducks for physical (3D printed) ducks. Select how many ducks you want to trade and specify the quantity of each type you'd like to receive.
+    </p>
 
-    <form action="{{ url_for('duck_trade_bp.submit_trade') }}" method="post">
+    <form action="{{ url_for('duck_trade_bp.submit_trade') }}" method="post" class="trade-form">
         {{ form.hidden_tag() }}
 
-        <!-- Digital Ducks to Trade -->
         <div class="form-group">
             <label for="digital_ducks">How many digital ducks would you like to trade?</label>
-            <input type="number" id="digital_ducks" name="digital_ducks" min="1" required>
+            <input type="number" id="digital_ducks" name="digital_ducks" class="form-control" min="0" required>
         </div>
 
-        <!-- Bit Ducks Selection -->
-        <fieldset>
-            <legend>Bit Ducks</legend>
-            <p>Select the number of each type of "bit duck" you want:</p>
+        <div class="ducks-container">
+            <!-- Bit Ducks -->
+            <fieldset class="ducks-fieldset">
+                <legend>Bit Ducks</legend>
+                <p>Select the number of each type of bit duck you want:</p>
+                <div class="ducks-grid">
+                    {% for i in range(7) %}
+                    <div class="form-group">
+                        <label for="bit_duck_{{ i }}">{{ '{:b}'.format(2 ** i) }} bit</label>
+                        <input type="number" id="bit_duck_{{ i }}" name="bit_duck_{{ i }}" class="form-control" min="0" value="0">
+                    </div>
+                    {% endfor %}
+                </div>
+            </fieldset>
 
-            {% for i in range(7) %}
-            <div class="form-group">
-                <label for="bit_duck_{{ i }}">Bit Duck {{ 2 ** i }}</label>
-                <input type="number" id="bit_duck_{{ i }}" name="bit_duck_{{ i }}" min="0" value="0">
-            </div>
-            {% endfor %}
-        </fieldset>
+            <!-- Byte Ducks -->
+            <fieldset class="ducks-fieldset">
+                <legend>Byte Ducks</legend>
+                <p>Select the number of each type of Byte duck you want:</p>
+                <div class="ducks-grid">
+                    {% for i in range(7) %}
+                    <div class="form-group">
+                        <label for="byte_duck_{{ i }}">{{ '{:b}'.format(2 ** i) }} Byte</label>
+                        <input type="number" id="byte_duck_{{ i }}" name="byte_duck_{{ i }}" class="form-control" min="0" value="0">
+                    </div>
+                    {% endfor %}
+                </div>
+            </fieldset>
+        </div>
 
-        <!-- Byte Ducks Selection -->
-        <fieldset>
-            <legend>Byte Ducks</legend>
-            <p>Select the number of each type of "byte duck" you want:</p>
-
-            {% for i in range(7) %}
-            <div class="form-group">
-                <label for="byte_duck_{{ i }}">Byte Duck {{ 2 ** i }}</label>
-                <input type="number" id="byte_duck_{{ i }}" name="byte_duck_{{ i }}" min="0" value="0">
-            </div>
-            {% endfor %}
-        </fieldset>
-
-        <!-- Submit Button -->
         <button type="submit" class="submit-button">Submit Request</button>
     </form>
 </section>
+
 {% endblock %}

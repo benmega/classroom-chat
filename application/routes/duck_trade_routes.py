@@ -1,4 +1,8 @@
 from flask import Blueprint, render_template, request, jsonify
+from flask import Blueprint, render_template, url_for
+from flask_wtf import FlaskForm
+from wtforms import HiddenField, IntegerField, FieldList, FormField, SubmitField
+from wtforms.validators import DataRequired, NumberRange
 
 # Define the blueprint
 duck_trade_bp = Blueprint('duck_trade_bp', __name__, template_folder='templates')
@@ -36,14 +40,15 @@ def submit_trade():
         bit_ducks = {f'bit_duck_{i}': int(request.form.get(f'bit_duck_{i}', 0)) for i in range(7)}
         byte_ducks = {f'byte_duck_{i}': int(request.form.get(f'byte_duck_{i}', 0)) for i in range(7)}
 
-        # Total requested physical ducks
-        total_requested = sum(bit_ducks.values()) + sum(byte_ducks.values())
+        # Calculate total requested physical ducks
+        total_requested = sum(count * (2 ** i) for i, count in enumerate(bit_ducks.values())) + \
+                          sum(count * (2 ** (i + 8)) for i, count in enumerate(byte_ducks.values()))
 
         # Simple validation for testing (ensure digital ducks >= requested physical ducks)
-        if total_requested > digital_ducks:
+        if total_requested != digital_ducks:
             return jsonify({
                 'status': 'error',
-                'message': 'You do not have enough digital ducks to complete this trade.'
+                'message': 'The duck amounts do not match.'
             }), 400
 
         # Log trade details (simulating saving to a database or processing)
@@ -52,7 +57,7 @@ def submit_trade():
             'bit_ducks': bit_ducks,
             'byte_ducks': byte_ducks
         }
-
+        print(trade_details)
         # Success response
         return jsonify({
             'status': 'success',
@@ -67,25 +72,39 @@ def submit_trade():
         }), 400
 
 
-@duck_trade_bp.route('/bit_shift', methods=['GET'])
-def bit_shift():
-    hint_cost = 10
-    solution_cost = 50
-    debug_cost = 100
-    double_ducks_cost = 200
-    setup_cost = 300
-    vip_cost = 500
-    wallpaper_cost = 150
-    font_cost = 100
-    avatar_cost = 250
+class BitDuckForm(FlaskForm):
+    """Sub-form for Bit Ducks selection."""
+    bit_ducks = FieldList(IntegerField('Bit Duck Count',
+                                       validators=[NumberRange(min=0, message="Count must be non-negative")]),
+                          min_entries=7,  # 7 Bit Ducks for 2^0 to 2^6
+                          max_entries=7)
 
-    return render_template('bit_shift.html',
-                           hint_cost=hint_cost,
-                           solution_cost=solution_cost,
-                           debug_cost=debug_cost,
-                           double_ducks_cost=double_ducks_cost,
-                           setup_cost=setup_cost,
-                           vip_cost=vip_cost,
-                           wallpaper_cost=wallpaper_cost,
-                           font_cost=font_cost,
-                           avatar_cost=avatar_cost)
+
+class ByteDuckForm(FlaskForm):
+    """Sub-form for Byte Ducks selection."""
+    byte_ducks = FieldList(IntegerField('Byte Duck Count',
+                                        validators=[NumberRange(min=0, message="Count must be non-negative")]),
+                           min_entries=7,  # 7 Byte Ducks for 2^0 to 2^6
+                           max_entries=7)
+
+
+class DuckTradeForm(FlaskForm):
+    """Main form for duck trading."""
+    hidden_tag = HiddenField()
+    digital_ducks = IntegerField('Digital Ducks',
+                                 validators=[DataRequired(),
+                                             NumberRange(min=1, message="Must trade at least 1 duck")])
+    bit_duck_selection = FormField(BitDuckForm)
+    byte_duck_selection = FormField(ByteDuckForm)
+    submit = SubmitField('Submit Request')
+
+
+@duck_trade_bp.route('/bit_shift', methods=['GET', 'POST'])
+def bit_shift():
+    form = DuckTradeForm()
+
+    if form.validate_on_submit():
+        # Process form data here
+        return "Form submitted successfully!"  # Replace with actual logic
+
+    return render_template('bit_shift.html', form=form)

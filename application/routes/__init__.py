@@ -17,5 +17,5 @@ def register_blueprints(app: Flask):
     app.register_blueprint(bounty_bp, url_prefix='/bounty')
     app.register_blueprint(upload_bp, url_prefix='/upload')
     app.register_blueprint(message_bp, url_prefix='/message')
-    app.register_blueprint(duck_trade_bp, url_prefix='/bitpond')
+    app.register_blueprint(duck_trade_bp, url_prefix='/duck_trade')
     app.register_blueprint(general_bp)  # Assuming no URL prefix is needed
