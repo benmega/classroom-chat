@@ -1,20 +1,27 @@
 document.addEventListener("DOMContentLoaded", () => {
     const digitalDucksInput = document.getElementById("digital_ducks");
-    const bitInputs = document.querySelectorAll(".bit-input");
-    const byteInputs = document.querySelectorAll(".byte-input");
+    const duckInputs = document.querySelectorAll(".input-sm");
+    const toggle = document.getElementById("duck-type-toggle");
+    const labels = document.querySelectorAll(".duck-label");
     const form = document.getElementById("trade-form");
+
+    let isByte = toggle.value === "byte"; // Track current duck type
+
+    function updateLabels() {
+        isByte = toggle.value === "byte"; // Update current duck type
+        labels.forEach((label, index) => {
+            const value = (2 ** index) ; //* (isByte ? 256 : 1)
+            const unit = isByte ? "B" : "b";
+            label.textContent = `${value.toString(2)}${unit}`;
+        });
+    }
 
     function calculateTotalDucks() {
         let total = 0;
 
-        // Calculate bit ducks
-        bitInputs.forEach((input, index) => {
-            total += parseInt(input.value || 0) * Math.pow(2, index);
-        });
-
-        // Calculate byte ducks
-        byteInputs.forEach((input, index) => {
-            total += parseInt(input.value || 0) * Math.pow(2, index + 8);
+        duckInputs.forEach((input, index) => {
+            const multiplier = isByte ? Math.pow(2, index + 8) : Math.pow(2, index);
+            total += parseInt(input.value || 0) * multiplier;
         });
 
         return total;
@@ -49,6 +56,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (response.ok && result.status === "success") {
                 showToast(result.message, "success");
                 form.reset(); // Reset the form on success
+                updateLabels(); // Reset labels to match the default duck type
             } else {
                 showToast(result.message || "An error occurred.", "error");
             }
@@ -70,5 +78,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // Attach event listeners
+    toggle.addEventListener("change", updateLabels);
     form.addEventListener("submit", handleSubmit);
 });

@@ -49,37 +49,59 @@ def submit_trade():
 
     try:
         digital_ducks = int(request.form.get('digital_ducks', 0))
-        bit_ducks = {f'bit_duck_{i}': int(request.form.get(f'bit_duck_{i}', 0)) for i in range(7)}
-        byte_ducks = {f'byte_duck_{i}': int(request.form.get(f'byte_duck_{i}', 0)) for i in range(7)}
+        duck_type = request.form.get('duck_type', 'bit')  # 'bit' or 'byte'
+        duck_inputs = {f'duck_{i}': int(request.form.get(f'duck_{i}', 0)) for i in range(7)}
 
-        total_requested = (
-            sum(count * (2 ** i) for i, count in enumerate(bit_ducks.values())) +
-            sum(count * (2 ** (i + 8)) for i, count in enumerate(byte_ducks.values()))
-***REMOVED***
+        # Calculate total based on the selected type
+        if duck_type == 'bit':
+            total_requested = sum(count * (2 ** i) for i, count in enumerate(duck_inputs.values()))
+        elif duck_type == 'byte':
+            total_requested = sum(count * (2 ** (i + 8)) for i, count in enumerate(duck_inputs.values()))
+        else:
+            return jsonify({'status': 'error', 'message': 'Invalid duck type selected.'}), 400
 
         if user.ducks < total_requested:
             return jsonify({'status': 'error', 'message': 'You do not have enough ducks.'}), 400
 
         if total_requested != digital_ducks:
+            print(f'{user.username} requested {total_requested} 3D ducks for {digital_ducks} digital ducks.')
             return jsonify({'status': 'error', 'message': 'The duck amounts do not match.'}), 400
 
-        user.ducks -= digital_ducks
-        db.session.commit()
-
-        # Log the trade
-        trade = Trade(
-            user_id=user.id,
-            digital_ducks_traded=digital_ducks,
-            bit_ducks=bit_ducks,
-            byte_ducks=byte_ducks
-***REMOVED***
-        db.session.add(trade)
+        # Subtract ducks and process the trade
+        user.ducks -= total_requested
+        log_trade(user.id, digital_ducks, duck_inputs, duck_type)  # Log the trade
         db.session.commit()
 
         return jsonify({'status': 'success', 'message': 'Trade successfully submitted!'}), 200
 
     except ValueError as e:
         return jsonify({'status': 'error', 'message': f'Invalid input: {str(e)}'}), 400
+
+
+def log_trade(user_id, digital_ducks, duck_breakdown, duck_type):
+    """
+    Logs a trade into the database.
+
+    :param user_id: ID of the user making the trade.
+    :param digital_ducks: Total number of digital ducks traded.
+    :param duck_breakdown: A dictionary representing the duck breakdown (e.g., {'duck_0': 3, 'duck_1': 2}).
+    :param duck_type: Type of ducks traded ('bit' or 'byte').
+    """
+    try:
+        trade = Trade(
+            user_id=user_id,
+            digital_ducks_traded=digital_ducks,
+            duck_breakdown=duck_breakdown,
+            duck_type=duck_type
+***REMOVED***
+        db.session.add(trade)
+        db.session.commit()
+        print(f"Trade logged: User {user_id} traded {digital_ducks} digital ducks as {duck_type} ducks.")
+    except Exception as e:
+        db.session.rollback()
+        print(f"Failed to log trade: {e}")
+        raise
+
 
 # @duck_trade_bp.route('/submit_trade', methods=['POST'])
 # def submit_trade():
