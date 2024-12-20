@@ -1,38 +1,38 @@
 .trade-form-section {
     background: #f9f9f9;
-    padding: 2rem;
+    padding: 1rem;
     border-radius: 8px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    max-width: 100%;
+    margin: 0 auto;
 }
 
-.form-heading {
-    font-size: 1.8rem;
-    font-weight: bold;
-    margin-bottom: 1rem;
-    text-align: center;
+.trade-form {
+    display: grid;
+    grid-template-rows: auto auto auto auto;
+    gap: 1rem;
+    width: 100%;
 }
 
-.form-description {
-    margin-bottom: 1.5rem;
-    text-align: center;
-    font-size: 1rem;
-    color: #555;
-}
-
-.trade-form .form-group {
-    margin-bottom: 1rem;
-}
-
-.ducks-container {
+.form-group {
     display: flex;
-    gap: 2rem;
-    flex-wrap: wrap;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+}
+
+.toggle-container {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
 }
 
 .ducks-fieldset {
-    flex: 1 1 45%;
-    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
     border: 1px solid #ddd;
+    padding: 1rem;
     border-radius: 8px;
     background: #fff;
 }
@@ -43,11 +43,31 @@
     gap: 0.5rem;
 }
 
+.small-input-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+}
+
+.small-input-group label {
+    font-size: 0.85rem;
+    text-align: center;
+}
+
+.input-sm {
+    width: 60px;
+    padding: 0.3rem;
+    font-size: 0.85rem;
+    text-align: center;
+}
+
 .submit-button {
-    background: #007bff;
-    color: #fff;
-    padding: 0.75rem 1.5rem;
+    padding: 0.5rem 1rem;
     font-size: 1rem;
+    color: white;
+    background: #007bff;
     border: none;
     border-radius: 4px;
     cursor: pointer;
@@ -56,41 +76,4 @@
 
 .submit-button:hover {
     background: #0056b3;
-}
-
-/* Toast Notification */
-.toast {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    padding: 15px 20px;
-    border-radius: 5px;
-    color: #fff;
-    font-size: 14px;
-    z-index: 1000;
-    animation: fade-in-out 3s forwards;
-    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.toast.success {
-    background-color: #4caf50;
-}
-
-.toast.error {
-    background-color: #f44336;
-}
-
-@keyframes fade-in-out {
-    0% {
-        opacity: 0;
-        transform: translateY(-20px);
-    }
-    10%, 90% {
-        opacity: 1;
-        transform: translateY(0);
-    }
-    100% {
-        opacity: 0;
-        transform: translateY(-20px);
-    }
 }
