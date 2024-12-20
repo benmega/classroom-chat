@@ -1,17 +1,19 @@
 from datetime import datetime, timedelta
+
 from flask import Blueprint, request, jsonify, render_template, redirect, url_for, session
 from functools import wraps
 from application.extensions import db
 from application.models.conversation import Conversation
 from application.models.configuration import Configuration
 from application.models.message import Message
+from application.models.trade import Trade
 from application.models.user import User
 from application.config import Config
 from application.models.banned_words import BannedWords
 
 admin_bp = Blueprint('admin_bp', __name__)
-admin_pass = Config.ADMIN_PASSWORD
-adminUsername = Config.ADMIN_USERNAME
+admin_pass = Config.admin_pass
+adminUsername = Config.adminUsername
 
 
 def check_auth(f):
@@ -30,13 +32,9 @@ def check_auth(f):
 @check_auth
 def get_users():
     users = User.query.all()
-    users_data = []
-    for user in users:
-        user_dict = {column.name: getattr(user, column.name) for column in user.__table__.columns}
-        user_dict['skills'] = [{"id": skill.id, "name": skill.name} for skill in user.skills]
-        user_dict['projects'] = [{"id": project.id, "name": project.name, "description": project.description, "link": project.link} for project in user.projects]
-        users_data.append(user_dict)
-
+    users_data = [
+        {"id": user.id, "username": user.username, "ip_address": user.ip_address, "is_ai_teacher": user.is_ai_teacher}
+        for user in users]
     return jsonify(users_data)
 
 
@@ -45,11 +43,8 @@ def get_users():
 def update_user(user_id):
     user = User.query.get(user_id)
     if user:
-        for column in user.__table__.columns:
-            column_name = column.name
-            if column_name in request.form:
-                setattr(user, column_name, request.form[column_name])
-
+        user.username = request.form.get('username', user.username)
+        user.is_ai_teacher = request.form.get('is_ai_teacher', user.is_ai_teacher) in ['true', 'True', '1']
         db.session.commit()
         return jsonify({"success": True})
     return jsonify({"error": "User not found"}), 404
@@ -131,13 +126,20 @@ def toggle_message_sending():
         # If no configuration exists, initialize with default message sending disabled
         config = Configuration(message_sending_enabled=False)
         db.session.add(config)
-    else:
-        # Toggle the message sending setting
-        config.message_sending_enabled = not config.message_sending_enabled
+
+    # Toggle the message sending setting
+    config.message_sending_enabled = not config.message_sending_enabled
     db.session.commit()
 
     # Redirect to the dashboard after toggling the setting
     return redirect(url_for('admin_bp.dashboard'))
+
+
+# @admin_bp.route('/clear-history', methods=['POST'])
+# def clear_history():
+#     Conversation.query.delete()
+#     db.session.commit()
+#     return redirect(url_for('admin_bp.dashboard'))
 
 @admin_bp.route('/clear-history', methods=['POST'])
 def clear_history():
@@ -152,6 +154,19 @@ def clear_history():
         db.session.rollback()  # Rollback in case of an error
         print(f"Error clearing history: {e}")
         return redirect(url_for('admin_bp.dashboard', error="Failed to clear history"))
+
+
+# @admin_bp.route('/clear-history', methods=['POST'])
+# def clear_history():
+#     try:
+#         Conversation.query.delete()
+#         db.session.commit()
+#         session['conversation_id'] = ''
+#         return redirect(url_for('admin_bp.dashboard'))
+#     except Exception as e:
+#         db.session.rollback()  # Rollback in case of an error
+#         print(f"Error clearing history: {e}")
+#         return redirect(url_for('admin_bp.dashboard', error="Failed to clear history"))
 
 
 @admin_bp.route('/clear-partial-history', methods=['POST'])
@@ -200,3 +215,8 @@ def strike_message(message_id):
         print(f"Error striking message: {e}")
         return jsonify(success=False, error="An error occurred while striking the message"), 500
 
+@admin_bp.route('/trades')
+def trades():
+    # Fetch trades from the database
+    trades = Trade.query.order_by(Trade.timestamp.desc()).all()
+    return render_template('admin/trades.html', trades=trades)

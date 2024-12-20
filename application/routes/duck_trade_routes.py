@@ -4,7 +4,9 @@ from flask_wtf import FlaskForm
 from wtforms import HiddenField, IntegerField, FieldList, FormField, SubmitField
 from wtforms.validators import DataRequired, NumberRange
 
+from application import db
 from application.helpers.db_helpers import get_user
+from application.models.trade import Trade
 
 # Define the blueprint
 duck_trade_bp = Blueprint('duck_trade_bp', __name__, template_folder='templates')
@@ -34,58 +36,127 @@ def index():
 
     return render_template('bit_pond.html', title='bit_Pond', **costs_binary)
 
+
 @duck_trade_bp.route('/submit_trade', methods=['POST'])
 def submit_trade():
-    session_username = session.get('user', None)  # Get username from the session
-
+    session_username = session.get('user')
     if not session_username:
-        return jsonify(success=False, error="No session username found"), 400
+        return jsonify({'status': 'error', 'message': 'You are not logged in.'}), 400
 
     user = get_user(session_username)
     if not user:
-        return jsonify(success=False, error="Unknown User"), 500
+        return jsonify({'status': 'error', 'message': 'User not found.'}), 404
 
     try:
-        # Parse the form data
         digital_ducks = int(request.form.get('digital_ducks', 0))
         bit_ducks = {f'bit_duck_{i}': int(request.form.get(f'bit_duck_{i}', 0)) for i in range(7)}
         byte_ducks = {f'byte_duck_{i}': int(request.form.get(f'byte_duck_{i}', 0)) for i in range(7)}
 
-        # Calculate total requested physical ducks
-        total_requested = sum(count * (2 ** i) for i, count in enumerate(bit_ducks.values())) + \
-                          sum(count * (2 ** (i + 8)) for i, count in enumerate(byte_ducks.values()))
+        total_requested = (
+            sum(count * (2 ** i) for i, count in enumerate(bit_ducks.values())) +
+            sum(count * (2 ** (i + 8)) for i, count in enumerate(byte_ducks.values()))
+        )
 
         if user.ducks < total_requested:
-            return jsonify({
-                'status': 'error',
-                'message': 'You do not have enough ducks.'
-            }), 400
+            return jsonify({'status': 'error', 'message': 'You do not have enough ducks.'}), 400
 
         if total_requested != digital_ducks:
-            return jsonify({
-                'status': 'error',
-                'message': 'The duck amounts do not match.'
-            }), 400
+            return jsonify({'status': 'error', 'message': 'The duck amounts do not match.'}), 400
 
-        # Log trade details (simulating saving to a database or processing)
-        trade_details = {
-            'digital_ducks_used': digital_ducks,
-            'bit_ducks': bit_ducks,
-            'byte_ducks': byte_ducks
-        }
-        print(trade_details)
-        # Success response
-        return jsonify({
-            'status': 'success',
-            'message': 'Trade request submitted successfully.',
-            'trade_details': trade_details
-        }), 200
+        user.ducks -= digital_ducks
+        db.session.commit()
+
+        # Log the trade
+        trade = Trade(
+            user_id=user.id,
+            digital_ducks_traded=digital_ducks,
+            bit_ducks=bit_ducks,
+            byte_ducks=byte_ducks
+        )
+        db.session.add(trade)
+        db.session.commit()
+
+        return jsonify({'status': 'success', 'message': 'Trade successfully submitted!'}), 200
 
     except ValueError as e:
-        return jsonify({
-            'status': 'error',
-            'message': f'Invalid input: {str(e)}'
-        }), 400
+        return jsonify({'status': 'error', 'message': f'Invalid input: {str(e)}'}), 400
+
+# @duck_trade_bp.route('/submit_trade', methods=['POST'])
+# def submit_trade():
+#     session_username = session.get('user')
+#     if not session_username:
+#         return jsonify({'status': 'error', 'message': 'You are not logged in.'}), 400
+#
+#     user = get_user(session_username)
+#     if not user:
+#         return jsonify({'status': 'error', 'message': 'User not found.'}), 404
+#
+#     try:
+#         digital_ducks = int(request.form.get('digital_ducks', 0))
+#         bit_ducks = {f'bit_duck_{i}': int(request.form.get(f'bit_duck_{i}', 0)) for i in range(7)}
+#         byte_ducks = {f'byte_duck_{i}': int(request.form.get(f'byte_duck_{i}', 0)) for i in range(7)}
+#
+#         total_requested = (
+#             sum(count * (2 ** i) for i, count in enumerate(bit_ducks.values())) +
+#             sum(count * (2 ** (i + 8)) for i, count in enumerate(byte_ducks.values()))
+#         )
+#
+#         if user.ducks < total_requested:
+#             return jsonify({'status': 'error', 'message': 'You do not have enough ducks.'}), 400
+#
+#         if total_requested != digital_ducks:
+#             return jsonify({'status': 'error', 'message': 'The duck amounts do not match.'}), 400
+#
+#         user.ducks -= digital_ducks
+#         db.session.commit()
+#
+#         return jsonify({'status': 'success', 'message': 'Trade successfully submitted!'}), 200
+#
+#     except ValueError as e:
+#         return jsonify({'status': 'error', 'message': f'Invalid input: {str(e)}'}), 400
+
+# @duck_trade_bp.route('/submit_trade', methods=['POST'])
+# def submit_trade():
+#     session_username = session.get('user')
+#     if not session_username:
+#         return jsonify(success=False, error="No session username found"), 400
+#
+#     user = get_user(session_username)
+#     if not user:
+#         return jsonify(success=False, error="Unknown User"), 500
+#
+#     try:
+#         # Parse form data
+#         digital_ducks = int(request.form.get('digital_ducks', 0))
+#         bit_ducks = {f'bit_duck_{i}': int(request.form.get(f'bit_duck_{i}', 0)) for i in range(7)}
+#         byte_ducks = {f'byte_duck_{i}': int(request.form.get(f'byte_duck_{i}', 0)) for i in range(7)}
+#
+#         total_requested = (
+#             sum(count * (2 ** i) for i, count in enumerate(bit_ducks.values())) +
+#             sum(count * (2 ** (i + 8)) for i, count in enumerate(byte_ducks.values()))
+#         )
+#
+#         # Validate duck amounts
+#         if user.ducks < total_requested:
+#             return jsonify(status='error', message='You do not have enough ducks.'), 400
+#
+#         if total_requested != digital_ducks:
+#             return jsonify(status='error', message='The duck amounts do not match.'), 400
+#
+#         # Update user's ducks and log trade
+#         user.ducks -= digital_ducks
+#         db.session.commit()  # Persist changes to the database
+#
+#         trade_details = {
+#             'digital_ducks_used': digital_ducks,
+#             'bit_ducks': bit_ducks,
+#             'byte_ducks': byte_ducks
+#         }
+#         return jsonify(status='success', message='Trade successfully submitted!', trade_details=trade_details), 200
+#
+#     except ValueError as e:
+#         return jsonify(status='error', message=f'Invalid input: {str(e)}'), 400
+
 
 
 class BitDuckForm(FlaskForm):

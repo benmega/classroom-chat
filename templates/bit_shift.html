@@ -5,10 +5,10 @@
 <section id="duck-trade-form" class="trade-form-section">
     <h2 class="form-heading">Trade Your Digital Ducks for Physical Ducks</h2>
     <p class="form-description">
-        Use this form to exchange your digital ducks for physical (3D printed) ducks. Select how many ducks you want to trade and specify the quantity of each type you'd like to receive.
+        Use this form to exchange your digital ducks for physical (3D printed) ducks. Specify the quantity of each type you'd like to receive.
     </p>
 
-    <form action="{{ url_for('duck_trade_bp.submit_trade') }}" method="post" class="trade-form">
+    <form id="trade-form" action="{{ url_for('duck_trade_bp.submit_trade') }}" method="post" class="trade-form">
         {{ form.hidden_tag() }}
 
         <div class="form-group">
@@ -20,12 +20,11 @@
             <!-- Bit Ducks -->
             <fieldset class="ducks-fieldset">
                 <legend>Bit Ducks</legend>
-                <p>Select the number of each type of bit duck you want:</p>
                 <div class="ducks-grid">
                     {% for i in range(7) %}
                     <div class="form-group">
                         <label for="bit_duck_{{ i }}">{{ '{:b}'.format(2 ** i) }} bit</label>
-                        <input type="number" id="bit_duck_{{ i }}" name="bit_duck_{{ i }}" class="form-control" min="0" value="0">
+                        <input type="number" id="bit_duck_{{ i }}" name="bit_duck_{{ i }}" class="form-control bit-input" min="0" value="0">
                     </div>
                     {% endfor %}
                 </div>
@@ -34,12 +33,11 @@
             <!-- Byte Ducks -->
             <fieldset class="ducks-fieldset">
                 <legend>Byte Ducks</legend>
-                <p>Select the number of each type of Byte duck you want:</p>
                 <div class="ducks-grid">
                     {% for i in range(7) %}
                     <div class="form-group">
                         <label for="byte_duck_{{ i }}">{{ '{:b}'.format(2 ** i) }} Byte</label>
-                        <input type="number" id="byte_duck_{{ i }}" name="byte_duck_{{ i }}" class="form-control" min="0" value="0">
+                        <input type="number" id="byte_duck_{{ i }}" name="byte_duck_{{ i }}" class="form-control byte-input" min="0" value="0">
                     </div>
                     {% endfor %}
                 </div>
@@ -50,4 +48,5 @@
     </form>
 </section>
 
+<script src="{{ url_for('static', filename='js/ducks/duck_trade.js') }}"></script>
 {% endblock %}

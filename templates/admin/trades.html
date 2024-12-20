@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Trade Logs</h1>
+<table>
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>User</th>
+            <th>Digital Ducks Traded</th>
+            <th>Bit Ducks</th>
+            <th>Byte Ducks</th>
+            <th>Timestamp</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for trade in trades %}
+        <tr>
+            <td>{{ trade.id }}</td>
+            <td>{{ trade.user.username }}</td>
+            <td>{{ trade.digital_ducks_traded }}</td>
+            <td>
+                {% for duck_type, count in trade.bit_ducks.items() if count > 0 %}
+                {{ duck_type }}: {{ count }}<br>
+                {% endfor %}
+            </td>
+            <td>
+                {% for duck_type, count in trade.byte_ducks.items() if count > 0 %}
+                {{ duck_type }}: {{ count }}<br>
+                {% endfor %}
+            </td>
+            <td>{{ trade.timestamp }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
