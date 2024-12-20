@@ -1,8 +1,10 @@
-from flask import Blueprint, render_template, request, jsonify
+from flask import Blueprint, render_template, request, jsonify, session
 from flask import Blueprint, render_template, url_for
 from flask_wtf import FlaskForm
 from wtforms import HiddenField, IntegerField, FieldList, FormField, SubmitField
 from wtforms.validators import DataRequired, NumberRange
+
+from application.helpers.db_helpers import get_user
 
 # Define the blueprint
 duck_trade_bp = Blueprint('duck_trade_bp', __name__, template_folder='templates')
@@ -34,6 +36,15 @@ def index():
 
 @duck_trade_bp.route('/submit_trade', methods=['POST'])
 def submit_trade():
+    session_username = session.get('user', None)  # Get username from the session
+
+    if not session_username:
+        return jsonify(success=False, error="No session username found"), 400
+
+    user = get_user(session_username)
+    if not user:
+        return jsonify(success=False, error="Unknown User"), 500
+
     try:
         # Parse the form data
         digital_ducks = int(request.form.get('digital_ducks', 0))
@@ -44,7 +55,12 @@ def submit_trade():
         total_requested = sum(count * (2 ** i) for i, count in enumerate(bit_ducks.values())) + \
                           sum(count * (2 ** (i + 8)) for i, count in enumerate(byte_ducks.values()))
 
-        # Simple validation for testing (ensure digital ducks >= requested physical ducks)
+        if user.ducks < total_requested:
+            return jsonify({
+                'status': 'error',
+                'message': 'You do not have enough ducks.'
+            }), 400
+
         if total_requested != digital_ducks:
             return jsonify({
                 'status': 'error',
