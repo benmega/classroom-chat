@@ -10,7 +10,7 @@ document.addEventListener("DOMContentLoaded", () => {
     function updateLabels() {
         isByte = toggle.value === "byte"; // Update current duck type
         labels.forEach((label, index) => {
-            const value = (2 ** index) ; //* (isByte ? 256 : 1)
+            const value = (2 ** index) ;
             const unit = isByte ? "B" : "b";
             label.textContent = `${value.toString(2)}${unit}`;
         });
