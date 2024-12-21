@@ -8,8 +8,8 @@
             <th>ID</th>
             <th>User</th>
             <th>Digital Ducks Traded</th>
-            <th>Bit Ducks</th>
-            <th>Byte Ducks</th>
+            <th>Duck Breakdown</th>
+            <th>Duck Type</th>
             <th>Timestamp</th>
         </tr>
     </thead>
@@ -20,15 +20,11 @@
             <td>{{ trade.user.username }}</td>
             <td>{{ trade.digital_ducks_traded }}</td>
             <td>
-                {% for duck_type, count in trade.bit_ducks.items() if count > 0 %}
+                {% for duck_type, count in trade.duck_breakdown.items() if count > 0 %}
                 {{ duck_type }}: {{ count }}<br>
                 {% endfor %}
             </td>
-            <td>
-                {% for duck_type, count in trade.byte_ducks.items() if count > 0 %}
-                {{ duck_type }}: {{ count }}<br>
-                {% endfor %}
-            </td>
+            <td>{{ trade.duck_type }}</td>
             <td>{{ trade.timestamp }}</td>
         </tr>
         {% endfor %}
