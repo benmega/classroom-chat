@@ -8,5 +8,6 @@ class Trade(db.Model):
     duck_breakdown = db.Column(db.JSON, nullable=False)  # Combined bit and byte breakdown
     duck_type = db.Column(db.String(4), nullable=False)  # 'bit' or 'byte'
     timestamp = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    status = db.Column(db.String(20), default='Pending', nullable=False)
 
     user = db.relationship('User', backref='trades')
