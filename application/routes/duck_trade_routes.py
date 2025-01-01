@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, jsonify, session
+from flask import Blueprint, render_template, request, jsonify, session, flash, redirect
 from flask import Blueprint, render_template, url_for
 from flask_wtf import FlaskForm
 from wtforms import HiddenField, IntegerField, FieldList, FormField, SubmitField
@@ -103,84 +103,6 @@ def log_trade(user_id, digital_ducks, duck_breakdown, duck_type):
         raise
 
 
-# @duck_trade_bp.route('/submit_trade', methods=['POST'])
-# def submit_trade():
-#     session_username = session.get('user')
-#     if not session_username:
-#         return jsonify({'status': 'error', 'message': 'You are not logged in.'}), 400
-#
-#     user = get_user(session_username)
-#     if not user:
-#         return jsonify({'status': 'error', 'message': 'User not found.'}), 404
-#
-#     try:
-#         digital_ducks = int(request.form.get('digital_ducks', 0))
-#         bit_ducks = {f'bit_duck_{i}': int(request.form.get(f'bit_duck_{i}', 0)) for i in range(7)}
-#         byte_ducks = {f'byte_duck_{i}': int(request.form.get(f'byte_duck_{i}', 0)) for i in range(7)}
-#
-#         total_requested = (
-#             sum(count * (2 ** i) for i, count in enumerate(bit_ducks.values())) +
-#             sum(count * (2 ** (i + 8)) for i, count in enumerate(byte_ducks.values()))
-# ***REMOVED***
-#
-#         if user.ducks < total_requested:
-#             return jsonify({'status': 'error', 'message': 'You do not have enough ducks.'}), 400
-#
-#         if total_requested != digital_ducks:
-#             return jsonify({'status': 'error', 'message': 'The duck amounts do not match.'}), 400
-#
-#         user.ducks -= digital_ducks
-#         db.session.commit()
-#
-#         return jsonify({'status': 'success', 'message': 'Trade successfully submitted!'}), 200
-#
-#     except ValueError as e:
-#         return jsonify({'status': 'error', 'message': f'Invalid input: {str(e)}'}), 400
-
-# @duck_trade_bp.route('/submit_trade', methods=['POST'])
-# def submit_trade():
-#     session_username = session.get('user')
-#     if not session_username:
-#         return jsonify(success=False, error="No session username found"), 400
-#
-#     user = get_user(session_username)
-#     if not user:
-#         return jsonify(success=False, error="Unknown User"), 500
-#
-#     try:
-#         # Parse form data
-#         digital_ducks = int(request.form.get('digital_ducks', 0))
-#         bit_ducks = {f'bit_duck_{i}': int(request.form.get(f'bit_duck_{i}', 0)) for i in range(7)}
-#         byte_ducks = {f'byte_duck_{i}': int(request.form.get(f'byte_duck_{i}', 0)) for i in range(7)}
-#
-#         total_requested = (
-#             sum(count * (2 ** i) for i, count in enumerate(bit_ducks.values())) +
-#             sum(count * (2 ** (i + 8)) for i, count in enumerate(byte_ducks.values()))
-# ***REMOVED***
-#
-#         # Validate duck amounts
-#         if user.ducks < total_requested:
-#             return jsonify(status='error', message='You do not have enough ducks.'), 400
-#
-#         if total_requested != digital_ducks:
-#             return jsonify(status='error', message='The duck amounts do not match.'), 400
-#
-#         # Update user's ducks and log trade
-#         user.ducks -= digital_ducks
-#         db.session.commit()  # Persist changes to the database
-#
-#         trade_details = {
-#             'digital_ducks_used': digital_ducks,
-#             'bit_ducks': bit_ducks,
-#             'byte_ducks': byte_ducks
-#         }
-#         return jsonify(status='success', message='Trade successfully submitted!', trade_details=trade_details), 200
-#
-#     except ValueError as e:
-#         return jsonify(status='error', message=f'Invalid input: {str(e)}'), 400
-
-
-
 class BitDuckForm(FlaskForm):
     """Sub-form for Bit Ducks selection."""
     bit_ducks = FieldList(IntegerField('Bit Duck Count',
@@ -217,3 +139,45 @@ def bit_shift():
         return "Form submitted successfully!"  # Replace with actual logic
 
     return render_template('bit_shift.html', form=form)
+
+
+@duck_trade_bp.route('/update_trade_status/<int:trade_id>', methods=['POST'])
+def update_trade_status(trade_id):
+    trade = Trade.query.get_or_404(trade_id)
+    new_status = request.form.get('status')
+    if new_status not in ['Pending', 'Completed', 'Cancelled']:
+        flash('Invalid status selected.', 'error')
+        return redirect(url_for('duck_trade_bp.trade_logs'))
+
+    trade.status = new_status
+    db.session.commit()
+    flash('Trade status updated successfully.', 'success')
+    return redirect(url_for('duck_trade_bp.trade_logs'))
+
+
+@duck_trade_bp.route('/trade_logs')
+def trade_logs():
+    trades = Trade.query.order_by(Trade.timestamp.desc()).all()
+    return render_template('trade_logs.html', trades=trades)
+
+
+import logging
+
+logging.basicConfig(level=logging.INFO)
+
+
+# @duck_trade_bp.route('/update_trade_status/<int:trade_id>', methods=['POST'])
+# def update_trade_status(trade_id):
+#     trade = Trade.query.get_or_404(trade_id)
+#     old_status = trade.status
+#     new_status = request.form.get('status')
+#
+#     if new_status not in ['Pending', 'Completed', 'Cancelled']:
+#         flash('Invalid status selected.', 'error')
+#         return redirect(url_for('duck_trade_bp.trade_logs'))
+#
+#     trade.status = new_status
+#     db.session.commit()
+#     logging.info(f"Trade ID {trade.id} status changed from {old_status} to {new_status}")
+#     flash('Trade status updated successfully.', 'success')
+#     return redirect(url_for('duck_trade_bp.trade_logs'))

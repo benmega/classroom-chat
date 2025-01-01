@@ -11,6 +11,8 @@
             <th>Duck Breakdown</th>
             <th>Duck Type</th>
             <th>Timestamp</th>
+            <th>Status</th>
+            <th>Actions</th>
         </tr>
     </thead>
     <tbody>
@@ -26,6 +28,18 @@
             </td>
             <td>{{ trade.duck_type }}</td>
             <td>{{ trade.timestamp }}</td>
+            <td>{{ trade.status }}</td>
+            <td>
+                <form method="POST" action="{{ url_for('update_trade_status', trade_id=trade.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <select name="status">
+                        <option value="Pending" {% if trade.status == 'Pending' %}selected{% endif %}>Pending</option>
+                        <option value="Completed" {% if trade.status == 'Completed' %}selected{% endif %}>Completed</option>
+                        <option value="Cancelled" {% if trade.status == 'Cancelled' %}selected{% endif %}>Cancelled</option>
+                    </select>
+                    <button type="submit">Update</button>
+                </form>
+            </td>
         </tr>
         {% endfor %}
     </tbody>
