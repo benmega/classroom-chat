@@ -23,19 +23,6 @@ def create_app():
 
     setup_models()
 
-    # Before request hook to mark users as offline
-    # @app.before_request
-    # def before_request():
-    #     username = session.get('user')
-    #     if username:
-    #         # Use the application context for db queries
-    #         with app.app_context():
-    #             user = User.query.filter_by(username=username).first()
-    #             if user:
-    #                 # Check if the session has expired
-    #                 if not session.get('user'):
-    #                     user.set_online(user.id, online=False)  # Mark user as offline
-    #                     db.session.commit()
 
     @app.context_processor
     def inject_user():

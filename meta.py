@@ -25,6 +25,8 @@ def print_directory_structure(startpath, exclude=[]):
         for f in files:
             print(f"{subindent}{f}")
 
+
+
 def main():
     project_directory = os.getcwd()
     print_directory_structure(project_directory, ['venv', '.git', '.idea'])
