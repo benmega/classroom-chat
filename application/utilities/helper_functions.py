@@ -1,7 +1,8 @@
-from application import Config
+from application.config import Config
 
 
 def request_database_commit():
+    # from application.config import Config
     from application import db
     """
     Attempts to commit changes to the database session.
