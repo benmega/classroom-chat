@@ -5,10 +5,17 @@ import uuid
 import pytest
 
 from application import create_app, ensure_default_configuration
+from application.models.ai_settings import AISettings
+from application.models.banned_words import BannedWords
+from application.models.bounty import Bounty
 from application.models.challenge import Challenge
 from application.models.challenge_log import ChallengeLog
 from application.models.configuration import Configuration
 from application.extensions import db
+from application.models.conversation import Conversation
+from application.models.course import Course
+from application.models.message import Message
+from application.models.project import Project
 from application.models.user import User
 from application.config import TestingConfig
 
@@ -110,3 +117,160 @@ def sample_challenge_log(init_db):
     db.session.add(challenge_log)
     db.session.commit()
     return challenge_log
+
+
+@pytest.fixture
+def sample_ai_settings(init_db):
+    """Fixture to populate the database with sample AISettings."""
+    settings = [
+        AISettings(key='role', value='Custom AI role'),
+        AISettings(key='username', value='AI Assistant'),
+        AISettings(key='chat_bot_enabled', value='False'),
+    ]
+    db.session.add_all(settings)
+    db.session.commit()
+    return settings
+
+@pytest.fixture
+def sample_banned_words(init_db):
+    """Fixture to populate the database with sample BannedWords."""
+    words = [
+        BannedWords(word='forbidden', reason='Inappropriate language', active=True),
+        BannedWords(word='bannedword', reason='General ban', active=False),
+    ]
+    db.session.add_all(words)
+    db.session.commit()
+    return words
+
+@pytest.fixture
+def sample_bounty(init_db):
+    """Fixture to create a sample Bounty entry."""
+    bounty = Bounty(
+        user_id=1,
+        description="Fix a bug in the classroom chat application.",
+        bounty="50",
+        expected_behavior="Chat application should not crash under high load.",
+        image_path="images/bounty1.png",
+        status="Open"
+    )
+    db.session.add(bounty)
+    db.session.commit()
+    return bounty
+
+@pytest.fixture
+def sample_configuration(init_db):
+    """Fixture to create a sample Configuration entry."""
+    config = Configuration(
+        ai_teacher_enabled=True,
+        message_sending_enabled=False
+    )
+    db.session.add(config)
+    db.session.commit()
+    return config
+
+
+@pytest.fixture
+def sample_users(init_db):
+    """Fixture to create sample users."""
+    user1 = User(username="User1", email="user1@example.com")
+    user2 = User(username="User2", email="user2@example.com")
+    db.session.add_all([user1, user2])
+    db.session.commit()
+    return [user1, user2]
+
+@pytest.fixture
+def sample_conversation(init_db, sample_users):
+    """Fixture to create a sample Conversation with users."""
+    conversation = Conversation(title="Sample Conversation")
+    conversation.users.extend(sample_users)
+    db.session.add(conversation)
+    db.session.commit()
+    return conversation
+
+@pytest.fixture
+def sample_course(init_db):
+    """Fixture to create a sample Course."""
+    course = Course(
+        id="course_123",
+        name="Intro to Programming",
+        domain="CodeCombat",
+        description="Learn the basics of programming.",
+        is_active=True
+    )
+    db.session.add(course)
+    db.session.commit()
+    return course
+
+@pytest.fixture
+def sample_user(init_db):
+    """Fixture to create a sample user."""
+    user = User(username="test_user")
+    db.session.add(user)
+    db.session.commit()
+    return user
+
+
+@pytest.fixture
+def sample_conversation(init_db):
+    """Fixture to create a sample conversation."""
+    conversation = Conversation(title="Sample Conversation")
+    db.session.add(conversation)
+    db.session.commit()
+    return conversation
+
+
+@pytest.fixture
+def sample_message(init_db, sample_user, sample_conversation):
+    """Fixture to create a sample message."""
+    message = Message(
+        conversation_id=sample_conversation.id,
+        user_id=sample_user.id,
+        content="This is a test message.",
+        message_type="text"
+    )
+    db.session.add(message)
+    db.session.commit()
+    return message
+
+@pytest.fixture
+def sample_user(init_db):
+    """Fixture to create a sample user."""
+    user = User(username="test_user")
+    db.session.add(user)
+    db.session.commit()
+    return user
+
+
+@pytest.fixture
+def sample_project(init_db, sample_user):
+    """Fixture to create a sample project."""
+    project = Project(
+        name="Sample Project",
+        description="This is a sample project description.",
+        link="http://example.com",
+        user_id=sample_user.id
+    )
+    db.session.add(project)
+    db.session.commit()
+    return project
+
+
+@pytest.fixture
+def sample_user(init_db):
+    """Fixture to create a sample user."""
+    user = User(username="test_user")
+    db.session.add(user)
+    db.session.commit()
+    return user
+
+
+@pytest.fixture
+def sample_skill(init_db, sample_user):
+    """Fixture to create a sample skill."""
+    skill = Skill(
+        name="Python",
+        user_id=sample_user.id
+    )
+    db.session.add(skill)
+    db.session.commit()
+    return skill
