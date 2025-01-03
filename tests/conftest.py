@@ -34,8 +34,15 @@ def init_db(test_app):
 
 @pytest.fixture
 def add_sample_user(init_db):
-    def _add_user(username, password_hash):
-        user = User(username=username, password_hash=password_hash, ducks=0)
+    def _add_user(username, password, ducks=0, profile_picture='Default_pfp.jpg'):
+        # Ensure the username does not exist in the database already
+        existing_user = User.query.filter_by(username=username).first()
+        if existing_user:
+            db.session.delete(existing_user)
+            db.session.commit()
+
+        # Add the new user with optional ducks and profile picture
+        user = User(username=username, password_hash=password, ducks=ducks, profile_picture=profile_picture)
         db.session.add(user)
         db.session.commit()
         return user
