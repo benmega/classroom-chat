@@ -1,10 +1,12 @@
 import random
 import string
+import uuid
 
 import pytest
 
 from application import create_app, ensure_default_configuration
 from application.models.challenge import Challenge
+from application.models.challenge_log import ChallengeLog
 from application.models.configuration import Configuration
 from application.extensions import db
 from application.models.user import User
@@ -89,3 +91,22 @@ def sample_user(init_db):
     db.session.add(user)
     db.session.commit()
     return user
+
+
+@pytest.fixture
+def sample_challenge_log(init_db):
+    """Fixture for adding a sample ChallengeLog entry with unique values."""
+    # Generate unique identifiers to avoid uniqueness issues
+    unique_username = f"user_{uuid.uuid4()}"
+    unique_challenge_name = f"challenge_{uuid.uuid4()}"
+
+    challenge_log = ChallengeLog(
+        username=unique_username,
+        domain="CodeCombat",
+        challenge_name=unique_challenge_name,
+        course_id="12345",
+        course_instance="spring2025"
+    )
+    db.session.add(challenge_log)
+    db.session.commit()
+    return challenge_log
