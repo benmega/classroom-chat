@@ -7,7 +7,7 @@ from PIL import Image
 from datetime import datetime
 import mimetypes
 
-from application import Config
+from application.config import Config
 
 upload_bp = Blueprint('upload_bp', __name__)
 

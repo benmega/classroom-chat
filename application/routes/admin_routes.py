@@ -11,8 +11,8 @@ from application.config import Config
 from application.models.banned_words import BannedWords
 
 admin_bp = Blueprint('admin_bp', __name__)
-admin_pass = Config.admin_pass
-adminUsername = Config.adminUsername
+admin_pass = Config.ADMIN_PASSWORD
+adminUsername = Config.ADMIN_USERNAME
 
 
 def check_auth(f):

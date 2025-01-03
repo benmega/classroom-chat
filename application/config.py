@@ -47,6 +47,7 @@ class TestingConfig(Config):
     TESTING = True
     # Use an in-memory SQLite database for fast tests
     SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
     # Override or add any test-specific configuration here, e.g., disable logging
     SQLALCHEMY_ECHO = False
 
