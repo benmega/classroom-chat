@@ -3,7 +3,7 @@ from application.models.conversation import Conversation, conversation_users
 from application.helpers.db_helpers import get_user, save_message_to_db
 from application.helpers.validation_helpers import message_is_appropriate, detect_and_handle_challenge_url
 from application.ai.ai_teacher import get_ai_response
-from application import Configuration
+from application.models.configuration import Configuration
 from application.extensions import db
 from application.routes.admin_routes import adminUsername  # Only if used
 from application.models.user import User  # Assuming User model is in application.models.user

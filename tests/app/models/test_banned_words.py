@@ -1,7 +1,9 @@
+from datetime import datetime
+
 import pytest
 
 from application import db
-from application.models import BannedWords
+from application.models.banned_words import BannedWords
 
 def test_banned_words_creation(init_db):
     """Test creating a BannedWords entry."""

@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from application import db
-from application.models import Bounty
+from application.models.bounty import Bounty
 
 def test_bounty_creation(init_db):
     """Test creating a Bounty entry."""

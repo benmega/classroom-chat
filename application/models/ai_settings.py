@@ -7,8 +7,6 @@ class AISettings(db.Model):
     value = db.Column(db.String(1000))
 
 def get_ai_settings():
-    # settings = {setting.key: setting.value for setting in AISettings.query.all()}
-
     defaultRole = '''
         Answer computer science questions about Python.
         The students are learning using the programs Code Combat and Ozaria.
@@ -18,6 +16,13 @@ def get_ai_settings():
         'username': 'AI Teacher',
         'chat_bot_enabled': 'True'
     }
+
+    # Ensure that this function is being called within an app context
+    with db.session.begin():
+        db_settings = AISettings.query.all()  # Query the database for AI settings
+        for setting in db_settings:
+            settings[setting.key] = setting.value
+
     return {
         'role': settings.get('role', defaultRole),
         'username': settings.get('username', 'AI Teacher'),

@@ -20,15 +20,3 @@ class Conversation(db.Model):
 
     def __repr__(self):
         return f"<Conversation {self.id}: {self.title}>"
-
-
-# class Conversation(db.Model):
-#     __tablename__ = 'conversations'
-#     id = db.Column(db.Integer, primary_key=True)
-#     title = db.Column(db.String(100), nullable=False, default=lambda: f"Conversation {datetime.utcnow()}")
-#     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-#
-#     # Relationships
-#     users = db.relationship('User', secondary=conversation_users, backref=db.backref('conversations', lazy=True))
-#     messages = db.relationship('Message', backref='conversation', lazy=True, cascade='all, delete-orphan')
-
