@@ -32,10 +32,12 @@ def test_app():
         db.session.remove()
         db.drop_all()  # Clean up the test database
 
+
 # This fixture allows you to use a test client in your tests.
 @pytest.fixture(scope='function')
 def test_client(test_app):
     return test_app.test_client()
+
 
 # This fixture provides a function to add a sample user to the database for tests.
 @pytest.fixture
@@ -47,12 +49,15 @@ def init_db(test_app):
         db.session.rollback()  # Rollback after the test
         db.drop_all()  # Clean up the database
 
+
 def generate_random_slug(length=10):
     return ''.join(random.choices(string.ascii_lowercase + string.digits, k=length))
+
 
 @pytest.fixture
 def add_sample_user(init_db):
     """Adds a unique user to the database."""
+
     def _add_user(username, password, ducks=0, profile_picture='Default_pfp.jpg'):
         # Ensure the username does not exist in the database already
         existing_user = User.query.filter_by(username=username).first()
@@ -65,7 +70,9 @@ def add_sample_user(init_db):
         db.session.add(user)
         db.session.commit()
         return user
+
     return _add_user
+
 
 @pytest.fixture
 def sample_challenge(init_db):
@@ -82,6 +89,7 @@ def sample_challenge(init_db):
     db.session.add(challenge)
     db.session.commit()
     return challenge
+
 
 @pytest.fixture
 def sample_user(init_db):
@@ -101,6 +109,7 @@ def sample_admin(init_db):
     db.session.add(admin_user)
     db.session.commit()
     return admin_user
+
 
 @pytest.fixture
 def sample_challenge_log(init_db):
@@ -154,6 +163,7 @@ def sample_banned_words(init_db):
     db.session.commit()
     return words
 
+
 @pytest.fixture
 def sample_bounty(init_db):
     """Fixture to create a sample Bounty entry."""
@@ -169,6 +179,7 @@ def sample_bounty(init_db):
     db.session.commit()
     return bounty
 
+
 @pytest.fixture
 def sample_configuration(init_db):
     """Fixture to create a sample Configuration entry."""
@@ -180,6 +191,7 @@ def sample_configuration(init_db):
     db.session.commit()
     return config
 
+
 @pytest.fixture
 def sample_users(init_db):
     """Fixture to create sample users."""
@@ -189,6 +201,7 @@ def sample_users(init_db):
     db.session.commit()
     return [user1, user2]
 
+
 @pytest.fixture
 def sample_conversation(init_db, sample_users):
     """Fixture to create a sample Conversation with users."""
@@ -197,6 +210,7 @@ def sample_conversation(init_db, sample_users):
     db.session.add(conversation)
     db.session.commit()
     return conversation
+
 
 @pytest.fixture
 def sample_course(init_db):
@@ -212,6 +226,7 @@ def sample_course(init_db):
     db.session.commit()
     return course
 
+
 @pytest.fixture
 def sample_message(init_db, sample_user, sample_conversation):
     """Fixture to create a sample message."""
@@ -224,6 +239,7 @@ def sample_message(init_db, sample_user, sample_conversation):
     db.session.add(message)
     db.session.commit()
     return message
+
 
 @pytest.fixture
 def sample_project(init_db, sample_user):
@@ -238,6 +254,7 @@ def sample_project(init_db, sample_user):
     db.session.commit()
     return project
 
+
 @pytest.fixture
 def sample_skill(init_db, sample_user):
     """Fixture to create a sample skill."""
@@ -248,6 +265,7 @@ def sample_skill(init_db, sample_user):
     db.session.add(skill)
     db.session.commit()
     return skill
+
 
 @pytest.fixture
 def client(app):
