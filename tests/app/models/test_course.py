@@ -1,7 +1,7 @@
 import pytest
 
 from application import db
-from application.models import Course
+from application.models.course import Course
 from datetime import datetime
 
 def test_course_creation(init_db):

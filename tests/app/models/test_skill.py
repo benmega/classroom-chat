@@ -1,6 +1,8 @@
 import random
 
-from application import db
+import pytest
+
+from application import db, User
 from application.models.skill import Skill
 
 
@@ -37,13 +39,13 @@ def test_skill_unique_per_user(init_db, sample_user):
     skill_2 = Skill(name="C++", user_id=sample_user.id)
     db.session.add(skill_2)
 
-    with pytest.raises(Exception):
+    with pytest.raises(Exception):  # Expect an IntegrityError or similar
         db.session.commit()
 
 
 def test_skill_multiple_users(init_db, sample_user):
     """Test adding the same skill for different users."""
-    other_user = User(username="other_user")
+    other_user = User(username="other_user", password_hash="dummy_hash")
     db.session.add(other_user)
     db.session.commit()
 
@@ -84,7 +86,10 @@ def test_dynamic_skill_generation(init_db, sample_user):
     """Test creating skills with random data to simulate real-world conditions."""
     skill_names = ["Python", "JavaScript", "Java", "Ruby", "Go", "Swift", "Rust", "Kotlin"]
 
-    for skill_name in random.choices(skill_names, k=10):  # Randomly choose skills
+    # Generate unique skill names
+    unique_skills = set(random.choices(skill_names, k=10))
+
+    for skill_name in unique_skills:
         skill = Skill(
             name=skill_name,
             user_id=sample_user.id
@@ -92,6 +97,9 @@ def test_dynamic_skill_generation(init_db, sample_user):
         db.session.add(skill)
     db.session.commit()
 
+    # Retrieve skills and assert
     skills = Skill.query.filter_by(user_id=sample_user.id).all()
-    assert len(skills) == 10
+    assert len(skills) == len(unique_skills)
     assert all(isinstance(skill, Skill) for skill in skills)
+
+

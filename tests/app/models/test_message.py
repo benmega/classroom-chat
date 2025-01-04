@@ -1,5 +1,6 @@
+import random
 import string
-from random import random
+from datetime import datetime
 
 from application import db
 from application.models.message import Message
