@@ -1,23 +1,23 @@
 /* General Styles */
 body {
-    font-family: 'Roboto', sans-serif;
+    font-family: var(--font-family);
     margin: 0;
-    background-color: #f5f5f5;
+    background-color: var(--background-light);
     display: flex;
     justify-content: center;
     align-items: center;
     height: 100vh;
-    color: #333;
+    color: var(--text-color);
 }
 
 #container {
     background-color: white;
-    border-radius: 10px;
-    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
-    padding: 15px; /* Reduced padding */
+    border-radius: var(--border-radius-medium);
+    box-shadow: var(--box-shadow-light);
+    padding: 15px;
     width: 100%;
-    max-width: 1200px;
-    height: 90vh; /* Takes up most of the screen vertically */
+    max-width: var(--max-container-width);
+    height: 90vh;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -25,110 +25,88 @@ body {
 }
 
 h1 {
-    color: #0EB2BB; /* Teal */
-    margin-bottom: 15px; /* Reduced margin */
+    color: var(--primary-color);
+    margin-bottom: 15px;
     text-align: center;
 }
 
+/* Form Styles */
 form {
     display: flex;
     justify-content: space-between;
     align-items: center;
     gap: 10px;
-    margin-top: 10px; /* Reduced top margin */
+    margin-top: 10px;
 }
 
 input[type="text"], input[type="file"], input[type="password"] {
-    padding: 12px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
+    padding: var(--input-padding);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-small);
     font-size: 16px;
     width: 100%;
     box-sizing: border-box;
 }
 
+/* Focused input styles */
 input[type="text"]:focus, input[type="password"]:focus {
     outline: none;
-    border-color: #0EB2BB; /* Teal */
+    border-color: var(--primary-color);
     box-shadow: 0 0 8px rgba(0, 128, 128, 0.2);
 }
 
-textarea {
-    padding: 12px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    font-size: 16px;
-    width: 100%;
-    box-sizing: border-box;
-    overflow: hidden; /* Hide scrollbars initially */
-}
-
-textarea:focus {
-    outline: none;
-    border-color: #0EB2BB; /* Teal */
-    box-shadow: 0 0 8px rgba(0, 128, 128, 0.2);
-}
-
-
+/* Button Styles */
 button {
-    padding: 12px 20px;
-    background-color: #0EB2BB; /* Teal */
+    padding: var(--button-padding);
+    background-color: var(--primary-color);
     color: white;
     border: none;
-    border-radius: 5px;
+    border-radius: var(--border-radius-small);
     font-size: 16px;
     cursor: pointer;
-    transition: background-color 0.3s ease;
+    transition: background-color var(--transition-default);
 }
 
 button:hover {
-    background-color: #006666; /* Darker teal */
+    background-color: var(--primary-color-dark);
 }
 
+/* Message Form Specific Styles */
 #messageForm input[type="text"] {
     flex: 1;
 }
 
-#chat {
-    background-color: #f0f0f0;
-    border-radius: 10px;
-    padding: 10px; /* Slightly reduced padding */
-    flex-grow: 1; /* Chat area will grow to fill available space */
-    overflow-y: auto; /* Enable vertical scroll */
-    margin-bottom: 20px;
-    border: 1px solid #ddd;
-    box-sizing: border-box;
-    width: 100%;
-}
-
+/* Scrollbar Styles */
 #chat::-webkit-scrollbar {
-    width: 10px; /* Make scrollbar visible and styled */
+    width: 10px;
 }
 
 #chat::-webkit-scrollbar-thumb {
-    background-color: #0EB2BB; /* Teal scrollbar */
-    border-radius: 5px;
+    background-color: var(--primary-color);
+    border-radius: var(--border-radius-small);
 }
 
+/* Chat Message Styles */
 #chat div {
     margin-bottom: 10px;
     padding: 8px;
-    background-color: #fff;
-    border-radius: 5px;
-    box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.05);
+    background-color: white;
+    border-radius: var(--border-radius-small);
+    box-shadow: var(--box-shadow-light);
 }
 
 #chat div:nth-child(even) {
     background-color: #f9f9f9;
 }
 
+/* Link Styles */
 a {
-    color: #0000EE; /* Blue */
+    color: var(--link-color);
     text-decoration: none;
 }
 
 a:visited {
-    color: #551A8B; /* Purple */
+    color: var(--visited-link-color);
 }
 
 a:hover {
@@ -152,13 +130,14 @@ a:hover {
 .modal-content {
     background-color: white;
     padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+    border-radius: var(--border-radius-medium);
+    box-shadow: var(--box-shadow-medium);
     width: 400px;
     max-width: 90%;
     text-align: center;
 }
 
+/* Modal Close Button */
 .close {
     float: right;
     font-size: 20px;
@@ -168,7 +147,7 @@ a:hover {
 }
 
 .close:hover {
-    color: #000;
+    color: black;
 }
 
 /* Mobile Responsiveness */
@@ -188,5 +167,12 @@ a:hover {
 
     #chat {
         height: 50vh; /* Adjust chat height for smaller screens */
+    }
+}
+
+/* Optional: Chat Width Adjustment for Smaller Screens */
+@media (max-width: 768px) {
+    #chat {
+        width: 90%; /* Increase width for smaller screens */
     }
 }

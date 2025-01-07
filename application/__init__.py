@@ -1,47 +1,65 @@
-from flask import Flask, session
-
+import os
+from flask import Flask, session, g
+from datetime import timedelta
 from application.models.configuration import Configuration
-from application.extensions import db, socketio  # , socketio
-from application.config import Config
+from application.extensions import db, socketio
 from application.models import setup_models
 from application.routes import register_blueprints
-from models import User
+from application.models.user import User
 from . import socket_events  # This import registers the event handlers
-from datetime import timedelta
+from application.config import DevelopmentConfig, TestingConfig, ProductionConfig
+import logging
 
-def create_app():
-    app = Flask(__name__, template_folder=Config.TEMPLATE_FOLDER, static_folder=Config.STATIC_FOLDER)
-    app.config.from_object(Config)
+def create_app(config_class=None):
+    # Configure logging
+    logging.basicConfig(level=logging.INFO)
+    logger = logging.getLogger(__name__)
 
-    # Set the session timeout
+    # Dynamically select config if not explicitly passed
+    if config_class is None:
+        env = os.getenv('FLASK_ENV', 'development').lower()
+        logger.info(f"Configuring app for environment: {env}")
+        if env == 'production':
+            config_class = ProductionConfig
+        elif env == 'testing':
+            config_class = TestingConfig
+        else:
+            config_class = DevelopmentConfig
+
+    template_folder = getattr(config_class, "TEMPLATE_FOLDER", "templates")
+    static_folder = getattr(config_class, "STATIC_FOLDER", "static")
+    app = Flask(__name__, template_folder=template_folder, static_folder=static_folder)
+    app.config.from_object(config_class)
+
+    # Configure session timeout
     app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=10)
 
+    # Initialize extensions
     db.init_app(app)
-    socketio.init_app(app, cors_allowed_origins="*", async_mode='threading')
+    socketio.init_app(app, cors_allowed_origins="*", async_mode=app.config.get('SOCKETIO_ASYNC_MODE', 'threading'))
 
-    register_blueprints(app)  # Register all blueprints
+    # Register blueprints
+    register_blueprints(app)
 
-    setup_models()
-
-    # Before request hook to mark users as offline
-    # @app.before_request
-    # def before_request():
-    #     username = session.get('user')
-    #     if username:
-    #         # Use the application context for db queries
-    #         with app.app_context():
-    #             user = User.query.filter_by(username=username).first()
-    #             if user:
-    #                 # Check if the session has expired
-    #                 if not session.get('user'):
-    #                     user.set_online(user.id, online=False)  # Mark user as offline
-    #                     db.session.commit()
-
+    # Setup models and configuration
     with app.app_context():
-        db.create_all()
-        ensure_default_configuration()
+        setup_models()  # Import all models to register them with SQLAlchemy
+        db.create_all()  # Create the database schema if it doesn't exist
+        ensure_default_configuration()  # Populate default configuration data if needed
+
+    # Load user for the request lifecycle
+    @app.before_request
+    def load_user():
+        user_id = session.get('user')
+        g.user = User.query.filter_by(username=user_id).first() if user_id else None
+
+    # Inject user into templates
+    @app.context_processor
+    def inject_user():
+        return {'user': g.get('user')}
 
     return app
+
 
 
 def ensure_default_configuration():
@@ -49,3 +67,95 @@ def ensure_default_configuration():
         default_config = Configuration(ai_teacher_enabled=False)
         db.session.add(default_config)
         db.session.commit()
+
+
+# def create_app(config_class=None):
+#     # Dynamically select the config if not explicitly passed
+#     if config_class is None:
+#         env = os.getenv('FLASK_ENV', 'development').lower()
+#         print(f"Configuring app for environment: {env}")  # Debug statement for environment
+#         if env == 'production':
+#             config_class = ProductionConfig
+#         elif env == 'testing':
+#             config_class = TestingConfig
+#         else:
+#             config_class = DevelopmentConfig
+#
+#     template_folder = getattr(config_class, "TEMPLATE_FOLDER", "templates")
+#     static_folder = getattr(config_class, "STATIC_FOLDER", "static")
+#     app = Flask(__name__, template_folder=template_folder, static_folder=static_folder)
+#     app.config.from_object(config_class)
+#
+#     # Set the session timeout
+#     app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=10)
+#
+#     db.init_app(app)
+#     socketio.init_app(app, cors_allowed_origins="*", async_mode='threading')
+#
+#     register_blueprints(app)  # Register all blueprints
+#     setup_models()
+#
+#     @app.context_processor
+#     def inject_user():
+#         user_id = session.get('user')
+#         if not user_id:
+#             return {'user': None}
+#
+#         user = User.query.filter_by(username=user_id).first()
+#         if not user:
+#             print(f"Warning: No user found for user_id '{user_id}'")  # Debug log for invalid user_id
+#         return {'user': user}
+#
+#     with app.app_context():
+#         db.create_all()
+#         ensure_default_configuration()
+#
+#     return app
+
+
+
+
+# from flask import Flask, session
+#
+# from application.models.configuration import Configuration
+# from application.extensions import db, socketio  # , socketio
+# from application.config import Config
+# from application.models import setup_models
+# from application.routes import register_blueprints
+# from application.models.user import User
+# from . import socket_events  # This import registers the event handlers
+# from datetime import timedelta
+#
+# def create_app():
+#     app = Flask(__name__, template_folder=Config.TEMPLATE_FOLDER, static_folder=Config.STATIC_FOLDER)
+#     app.config.from_object(Config)
+#
+#     # Set the session timeout
+#     app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=10)
+#
+#     db.init_app(app)
+#     socketio.init_app(app, cors_allowed_origins="*", async_mode='threading')
+#
+#     register_blueprints(app)  # Register all blueprints
+#
+#     setup_models()
+#
+#
+#     @app.context_processor
+#     def inject_user():
+#         user_id = session.get('user')
+#         user = User.query.filter_by(username=user_id).first() if user_id else None
+#         return {'user': user}
+#
+#     with app.app_context():
+#         db.create_all()
+#         ensure_default_configuration()
+#
+#     return app
+#
+#
+# def ensure_default_configuration():
+#     if Configuration.query.first() is None:
+#         default_config = Configuration(ai_teacher_enabled=False)
+#         db.session.add(default_config)
+#         db.session.commit()

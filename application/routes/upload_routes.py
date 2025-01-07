@@ -1,9 +1,13 @@
-from flask import Blueprint, request, jsonify
+import os
+
+from flask import Blueprint, request, jsonify, send_from_directory
 import base64
 from io import BytesIO
 from PIL import Image
 from datetime import datetime
 import mimetypes
+
+from application.config import Config
 
 upload_bp = Blueprint('upload_bp', __name__)
 
@@ -49,37 +53,8 @@ def upload_file():
 
     return jsonify({"message": "File uploaded successfully", "file_path": file_path})
 
-#     # Attempt to parse JSON
-# def upload_file():
-#     json_data = request.get_json()
-#
-#     if not json_data:
-#         return jsonify({"error": "Invalid JSON data"}), 400
-#
-#     data_url = json_data.get('file')
-#     if not data_url:
-#         return jsonify({"error": "No file data provided"}), 400
-#
-#     # Determine file type
-#     header, encoded = data_url.split(",", 1)
-#     mime_type = header.split(";")[0].split(":")[1]
-#     data = base64.b64decode(encoded)
-#
-#     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-#     extension = mimetypes.guess_extension(mime_type) or 'bin'
-#
-#     file_path = f'userData/{mime_type.split("/")[0]}/file_{timestamp}{extension}'
-#
-#     if mime_type.startswith('image/'):
-#         image = Image.open(BytesIO(data))
-#         image.save(file_path)
-#     elif mime_type == 'application/pdf':
-#         file_path = f'userData/pdfs/file_{timestamp}{extension}'
-#         with open(file_path, 'wb') as f:
-#             f.write(data)
-#     else:
-#         file_path = f'userData/other/file_{timestamp}{extension}'
-#         with open(file_path, 'wb') as f:
-#             f.write(data)
-#
-#     return jsonify({"message": "File uploaded successfully", "file_path": file_path})
+
+@upload_bp.route('/profile_pictures/<filename>')
+def uploaded_file(filename):
+    absolute_path = os.path.abspath(Config.UPLOAD_FOLDER)
+    return send_from_directory(absolute_path, filename)

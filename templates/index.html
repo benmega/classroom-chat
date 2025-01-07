@@ -1,62 +1,23 @@
-<!DOCTYPE html>
-<html lang="en">
+{% extends "base.html" %}
 
-<head>
-    <title>Classroom Chat</title>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap">
-    <link rel="icon" href="{{ url_for('static', filename='images/logo.ico') }}" type="image/x-icon">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+{% block content %}
 
-</head>
-
-<body>
     <div id="container">
-        <h1>Classroom Chat</h1>
-
 
         <!-- Store the username in a hidden div or directly in a JavaScript variable -->
         <div id="currentUsername" style="display:none;">{{ username }}</div>
-<!--        <form id="usernameForm">-->
-<!--            <label for="username">Username:</label>-->
-<!--            <input type="text" id="username" name="username" required>-->
-<!--            <button type="submit">Set Username</button>-->
-<!--            <input type="hidden" id="currentUsername" value="">-->
-<!--        </form>-->
-
 
         <div id="chat"></div>
 
-<!--        <form id="messageForm">-->
-<!--            <input type="text" id="message" name="message" required>-->
-<!--            <button type="submit">Send Message</button>-->
-<!--        </form>-->
         <form id="messageForm">
-            <textarea id="message" name="message" required rows="1" style="resize: none;"></textarea>
+            <textarea  type="text" id="message" name="message" required></textarea>
             <button type="submit">Send Message</button>
         </form>
 
+        <input type="file" id="file" multiple>
 
-        <input type="file" id="file" accept="image/*">
 
-        <p><a href="{{ url_for('bounty_bp.view_bounties') }}">View My Bug Bounties</a></p>
-        <p><a href="{{ url_for('bounty_bp.submit_bug_bounty') }}">Create Bug Bounty</a></p>
     </div>
-
-
-    <!-- Password Modal -->
-<!--    <div id="passwordModal" class="modal">-->
-<!--        <div class="modal-content">-->
-<!--            <span class="close">&times;</span>-->
-<!--            <p>Please enter the teacher's password to change your username:</p>-->
-<!--            <input type="password" id="passwordInput" placeholder="Enter password">-->
-<!--            <button id="submitPasswordBtn">Submit</button>-->
-<!--        </div>-->
-<!--    </div>-->
-
     <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
     <script type="module" src="{{ url_for('static', filename='js/main.js') }}"></script>
-
-</body>
-
-
-</html>
+{% endblock %}

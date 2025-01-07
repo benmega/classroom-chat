@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Classroom Chat</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap">
+    <link rel="icon" href="{{ url_for('static', filename='images/logo.ico') }}" type="image/x-icon">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+
+</head>
+
+<body>
+    <div id="container">
+        <h1>Classroom Chat</h1>
+
+
+        <!-- Store the username in a hidden div or directly in a JavaScript variable -->
+        <div id="currentUsername" style="display:none;">{{ username }}</div>
+
+
+        <div id="chat"></div>
+
+        <form id="messageForm">
+            <input type="text" id="message" name="message" required>
+            <button type="submit">Send Message</button>
+        </form>
+
+        <input type="file" id="file" accept="image/*">
+
+        <a href="{{ url_for('message_bp.conversation_history') }}">View Conversation History</a>
+    </div>
+
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+    <script type="module" src="{{ url_for('static', filename='js/main.js') }}"></script>
+
+</body>
+
+
+</html>
