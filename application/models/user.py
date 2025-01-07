@@ -1,3 +1,5 @@
+from sqlalchemy.ext.hybrid import hybrid_property
+
 from application.extensions import db
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -9,7 +11,7 @@ from application.models.skill import Skill
 class User(db.Model):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(50), unique=True, nullable=False)
+    _username = db.Column("username", db.String(50), unique=True, nullable=False)
     password_hash = db.Column(db.String(128), nullable=False)
     profile_picture = db.Column(db.String(150), default="Default_pfp.jpg")
     ip_address = db.Column(db.String(45), nullable=True)
@@ -21,7 +23,15 @@ class User(db.Model):
     projects = db.relationship('Project', backref='user', lazy=True)
 
     def __repr__(self):
-        return f'<User {self.username}>'
+        return f'<User {self._username}>'
+
+    @hybrid_property
+    def username(self):
+        return self._username
+
+    @username.setter
+    def username(self, value):
+        self._username = value.lower()
 
     def set_password(self, password):
         """Generate a hashed password and store it"""
@@ -40,14 +50,14 @@ class User(db.Model):
 
     def get_progress(self, domain):
         """Calculate progress based on challenges completed for a specific domain."""
-        total_challenges = ChallengeLog.query.filter_by(username=self.username, domain=domain).count()
+        total_challenges = ChallengeLog.query.filter_by(username=self._username, domain=domain).count()
         return total_challenges  # Modify if you want percentages based on predefined thresholds.
 
     @property
     def codecombat_progress(self):
         """Calculate CodeCombat progress as a percentage of completed challenges."""
         total_challenges = 100  # Set this to the actual total number of challenges in CodeCombat.
-        completed_challenges = ChallengeLog.query.filter_by(username=self.username, domain="codecombat.com").count()
+        completed_challenges = ChallengeLog.query.filter_by(username=self._username, domain="codecombat.com").count()
 
         # Calculate progress percentage
         return (completed_challenges / total_challenges) * 100 if total_challenges > 0 else 0
