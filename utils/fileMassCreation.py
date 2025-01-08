@@ -32,6 +32,6 @@ def create_prefixed_folder(src_dir, prefix="test_"):
     return dest_dir
 
 # Example usage:
-src_directory = "C:\\Users\\Ben\\PycharmProjects\\groupChat2\\application\\models"
+src_directory = "C:\\Users\\Ben\\PycharmProjects\\groupChat2\\application\\routes"
 new_directory = create_prefixed_folder(src_directory)
 print(f"Prefixed files are stored in: {new_directory}")

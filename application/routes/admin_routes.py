@@ -1,5 +1,4 @@
 from datetime import datetime, timedelta
-
 from flask import Blueprint, request, jsonify, render_template, redirect, url_for, session
 from functools import wraps
 from application.extensions import db
@@ -132,14 +131,6 @@ def toggle_message_sending():
 
     # Redirect to the dashboard after toggling the setting
     return redirect(url_for('admin_bp.dashboard'))
-
-
-# @admin_bp.route('/clear-history', methods=['POST'])
-# def clear_history():
-#     Conversation.query.delete()
-#     db.session.commit()
-#     return redirect(url_for('admin_bp.dashboard'))
-
 @admin_bp.route('/clear-history', methods=['POST'])
 def clear_history():
     try:
@@ -154,18 +145,6 @@ def clear_history():
         print(f"Error clearing history: {e}")
         return redirect(url_for('admin_bp.dashboard', error="Failed to clear history"))
 
-
-# @admin_bp.route('/clear-history', methods=['POST'])
-# def clear_history():
-#     try:
-#         Conversation.query.delete()
-#         db.session.commit()
-#         session['conversation_id'] = ''
-#         return redirect(url_for('admin_bp.dashboard'))
-#     except Exception as e:
-#         db.session.rollback()  # Rollback in case of an error
-#         print(f"Error clearing history: {e}")
-#         return redirect(url_for('admin_bp.dashboard', error="Failed to clear history"))
 
 
 @admin_bp.route('/clear-partial-history', methods=['POST'])
@@ -214,13 +193,3 @@ def strike_message(message_id):
         print(f"Error striking message: {e}")
         return jsonify(success=False, error="An error occurred while striking the message"), 500
 
-
-# @admin_bp.route('/strike_message/<int:message_id>', methods=['POST'])
-# def strike_message(message_id):
-#     message = Conversation.query.get(message_id)
-#     if not message:
-#         return jsonify(success=False, error="Message not found"), 404
-#
-#     message.is_struck = True
-#     db.session.commit()
-#     return jsonify(success=True, message="Message struck successfully"), 200
