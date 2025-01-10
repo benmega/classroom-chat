@@ -14,6 +14,9 @@ upload_bp = Blueprint('upload_bp', __name__)
 
 @upload_bp.route('/upload_file', methods=['POST'])
 def upload_file():
+    if not request.is_json:
+        return jsonify({"error": "Invalid JSON data"}), 400
+
     json_data = request.get_json()
 
     if not json_data:
