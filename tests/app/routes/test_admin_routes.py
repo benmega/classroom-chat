@@ -9,11 +9,11 @@ from application.models.conversation import Conversation
 # Test the /users route
 def test_get_users(test_client, sample_users, sample_admin):
     # Simulate logging in as an admin
-    response = test_client.get(url_for('admin_bp.get_users'), auth=(sample_admin.username, 'hashedpassword'))
+    response = test_client.get(url_for('admin_bp.get_users'), auth=(sample_admin.username, sample_admin.password_hash))
 
     assert response.status_code == 200
     users_data = response.get_json()
-    assert len(users_data) == len(sample_users)
+    assert len(users_data) == len(sample_users) + 1 # For the sample_admin
     assert users_data[0]['username'] == sample_users[0].username
 
 
@@ -23,7 +23,7 @@ def test_update_user(test_client, sample_user, sample_admin):
     response = test_client.put(
         url_for('admin_bp.update_user', user_id=sample_user.id),
         data={'username': new_username},
-        auth=(sample_admin.username, 'hashedpassword')
+        auth=(sample_admin.username, sample_admin.password_hash)
     )
 
     assert response.status_code == 200

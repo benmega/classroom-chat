@@ -34,6 +34,7 @@ class Config:
 
     # Add any general session or lifetime configuration here
     # PERMANENT_SESSION_LIFETIME = timedelta(minutes=1)
+    SERVER_NAME = 'localhost:5000'
 
 class DevelopmentConfig(Config):
     # Enable development-specific settings

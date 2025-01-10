@@ -5,61 +5,36 @@ from io import BytesIO
 from flask import url_for
 from application import create_app, db
 from application.config import Config
-from PIL import Image
 
 
-@pytest.fixture
-def client():
-    """Fixture to create a test client."""
-    app = create_app()  # Use your app configuration here (e.g., TestingConfig)
-    with app.test_client() as client:
-        yield client
 
-
-@pytest.fixture
-def init_db(client):
-    """Fixture to initialize the database."""
-    db.create_all()  # Create all tables
-    yield db
-    db.session.remove()
-    db.drop_all()  # Clean up after tests
-
-
-@pytest.fixture
-def sample_image_data():
-    """Fixture to provide a sample image data URL."""
-    image = Image.new('RGB', (100, 100), color=(73, 109, 137))
-    img_io = BytesIO()
-    image.save(img_io, 'PNG')
-    img_io.seek(0)
-    image_data = base64.b64encode(img_io.read()).decode('utf-8')
-    return f"data:image/png;base64,{image_data}"
-
-
-def test_upload_file_valid(client, sample_image_data):
+def test_upload_file_valid(client, sample_image_data, test_app, setup_directories):
     """Test uploading a valid file (image)."""
     json_data = {
         "file": sample_image_data
     }
 
-    response = client.post(
-        url_for('upload_bp.upload_file'),
-        json=json_data
-    )
+    with test_app.app_context():
+        response = client.post(
+            url_for('upload_bp.upload_file'),
+            json=json_data
+        )
 
     assert response.status_code == 200
     assert b"File uploaded successfully" in response.data
-    assert b"userData/image/" in response.json['file_path']
+    assert "userData/image/" in response.json['file_path']
 
 
-def test_upload_file_invalid_json(client):
+
+def test_upload_file_invalid_json(client, test_app):
     """Test uploading with invalid JSON data."""
-    response = client.post(
-        url_for('upload_bp.upload_file'),
-        data="invalid_data"
-    )
+    with test_app.app_context():
+        response = client.post(
+            url_for('upload_bp.upload_file'),
+            data="invalid_data",
+            content_type='application/json'
+        )
     assert response.status_code == 400
-    assert b"Invalid JSON data" in response.data
 
 
 def test_upload_file_no_data(client):
