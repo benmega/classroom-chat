@@ -1,6 +1,6 @@
 import os
 
-from flask import Blueprint, request, jsonify, send_from_directory
+from flask import Blueprint, request, jsonify, send_from_directory, abort
 import base64
 from io import BytesIO
 from PIL import Image
@@ -57,7 +57,10 @@ def upload_file():
     return jsonify({"message": "File uploaded successfully", "file_path": file_path})
 
 
-@upload_bp.route('/profile_pictures/<filename>')
+@upload_bp.route('/uploads/<filename>')
 def uploaded_file(filename):
-    absolute_path = os.path.abspath(Config.UPLOAD_FOLDER)
-    return send_from_directory(absolute_path, filename)
+    file_path = os.path.join(Config.UPLOAD_FOLDER, 'userData', 'image', filename)
+    if os.path.exists(file_path):
+        return send_from_directory(os.path.dirname(file_path), filename)
+    else:
+        abort(404)

@@ -29,7 +29,7 @@ def test_bounty_query_status(sample_bounty):
     """Test querying bounties by status."""
     open_bounties = Bounty.query.filter_by(status="Open").all()
     assert len(open_bounties) == 1
-    assert open_bounties[0].description == "Fix a bug in the classroom chat application."
+    assert open_bounties[0].description == 'Test bug bounty'
 
 def test_bounty_repr(sample_bounty):
     """Test the __repr__ method of Bounty."""
