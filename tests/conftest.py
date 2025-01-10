@@ -183,7 +183,7 @@ def sample_bounty(init_db):
     """Fixture to create a sample Bounty entry."""
     bounty = Bounty(
         user_id=1,
-        description="Fix a bug in the classroom chat application.",
+        description="Test bug bounty",
         bounty="50",
         expected_behavior="Chat application should not crash under high load.",
         image_path="images/bounty1.png",
