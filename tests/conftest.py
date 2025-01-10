@@ -50,7 +50,8 @@ def test_client(test_app):
 
 @pytest.fixture
 def client(test_app):
-    return test_app.test_client()
+    with test_app.test_client() as client:
+        yield client
 
 # This fixture provides a function to add a sample user to the database for tests.
 @pytest.fixture
