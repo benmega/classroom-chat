@@ -4,41 +4,12 @@ import os
 from werkzeug.utils import secure_filename
 from flask import current_app
 
-
-
 from application import db
 from application.models.bounty import Bounty
 
 # Define the blueprint
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 bounty_bp = Blueprint('bounty_bp', __name__)
-
-# @bounty_bp.route('/bug_bounty', methods=['GET', 'POST'])
-# def submit_bug_bounty():
-#     # Check if the user is logged in
-#     if 'user' not in session:
-#         flash("Please log in to submit a bug bounty.")
-#         return redirect(url_for('user_bp.login'))  # Adjust this if your login route is named differently
-#
-#     if request.method == 'POST':
-#         description = request.form.get('description')
-#         bounty = request.form.get('bounty')
-#         expected_behavior = request.form.get('expected_behavior')
-#
-#         # Validate that the bounty is a binary number
-#         if not re.fullmatch(r'[0-1]+', bounty):
-#             flash("Bounty must be a binary number.")
-#             return redirect(url_for('bounty_py.submit_bug_bounty'))
-#
-#         if add_bug_bounty(session['user'], description, bounty, expected_behavior):
-#             flash("Bug bounty submitted successfully!")
-#         else:
-#             flash("Error submitting bug bounty. Please try again.")
-#
-#         flash("Bug bounty submitted successfully!")
-#         return redirect(url_for('general_bp.index'))
-#
-#     return render_template('bug_bounty.html')
 
 
 @bounty_bp.route('/bug_bounty', methods=['GET', 'POST'])
@@ -58,22 +29,16 @@ def submit_bug_bounty():
         # Validate that the bounty is a binary number
         if not re.fullmatch(r'[0-1]+', bounty):
             flash("Bounty must be a binary number.")
-            return redirect(url_for('bounty_bp.submit_bug_bounty'))
+            return render_template('bug_bounty.html', description=description, expected_behavior=expected_behavior)
 
         # Process and save the image if provided
         image_path = None
         if image and allowed_file(image.filename):
             filename = secure_filename(image.filename)
-            # image_path = os.path.join('uploads', filename)
-            # image.save(os.path.join(current_app.root_path, '..', 'static', image_path))
-
-            # Define the path using forward slashes
             upload_folder = os.path.join(current_app.root_path, '..', 'static', 'uploads')
             os.makedirs(upload_folder, exist_ok=True)
             full_image_path = os.path.join(upload_folder, filename)
             image.save(full_image_path)
-
-            # Store the relative path with forward slashes for Flask
             image_path = f'uploads/{filename}'
 
         # Add the bug bounty to the database
@@ -81,10 +46,11 @@ def submit_bug_bounty():
             flash("Bug bounty submitted successfully!")
             return redirect(url_for('general_bp.index'))
         else:
-            flash("Error submitting bug bounty. Please try again.")
+            flash("Error submitting bug bounty. Bounty must be a binary number.  Please try again.")
 
     # GET request: render the form
     return render_template('bug_bounty.html')
+
 
 def add_bug_bounty(user_id, description, bounty, expected_behavior=None, image_path=None):
     try:
