@@ -20,6 +20,7 @@ from application.models.course import Course
 from application.models.message import Message
 from application.models.project import Project
 from application.models.skill import Skill
+from application.models.trade import Trade
 from application.models.user import User
 from application.config import TestingConfig
 
@@ -290,3 +291,39 @@ def sample_image_data():
     img_io.seek(0)
     image_data = base64.b64encode(img_io.read()).decode('utf-8')
     return f"data:image/png;base64,{image_data}"
+
+
+@pytest.fixture
+def sample_user_with_ducks(test_app):
+    with test_app.app_context():
+        user = User(username='user_with_ducks', password_hash='test_password', ducks=50)
+        db.session.add(user)
+        db.session.commit()
+        yield user
+        db.session.delete(user)
+        db.session.commit()
+
+@pytest.fixture
+def sample_user_with_few_ducks(test_app):
+    with test_app.app_context():
+        user = User(username='user_with_few_ducks', ducks=5)
+        db.session.add(user)
+        db.session.commit()
+        yield user
+        db.session.delete(user)
+        db.session.commit()
+
+@pytest.fixture
+def sample_trade(test_app, sample_user_with_ducks):
+    with test_app.app_context():
+        trade = Trade(
+            user_id=sample_user_with_ducks.id,
+            digital_ducks=10,
+            duck_type='bit',
+            status='pending'
+***REMOVED***
+        db.session.add(trade)
+        db.session.commit()
+        yield trade
+        db.session.delete(trade)
+        db.session.commit()
