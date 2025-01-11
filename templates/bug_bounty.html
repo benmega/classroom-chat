@@ -6,6 +6,15 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/bug_bounty.css') }}">
 </head>
 <body>
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <ul class="flashes">
+          {% for message in messages %}
+            <li>{{ message }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
     <div id="bounty-container">
         <h1>Submit a Bug Bounty</h1>
         <form action="{{ url_for('bounty_bp.submit_bug_bounty') }}" method="POST" enctype="multipart/form-data">
