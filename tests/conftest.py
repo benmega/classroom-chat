@@ -1,6 +1,10 @@
+import base64
+import os
 import random
 import string
 import uuid
+from io import BytesIO
+from PIL import Image
 import pytest
 
 from application import create_app, ensure_default_configuration
@@ -20,6 +24,12 @@ from application.models.user import User
 from application.config import TestingConfig
 
 
+@pytest.fixture(scope="module", autouse=True)
+def setup_directories():
+    os.makedirs('userData/image', exist_ok=True)
+    os.makedirs('userData/pdfs', exist_ok=True)
+    os.makedirs('userData/other', exist_ok=True)
+
 # This fixture creates the app, initializes the database, and cleans up after tests.
 @pytest.fixture(scope='session')
 def test_app():
@@ -38,6 +48,10 @@ def test_app():
 def test_client(test_app):
     return test_app.test_client()
 
+@pytest.fixture
+def client(test_app):
+    with test_app.test_client() as client:
+        yield client
 
 # This fixture provides a function to add a sample user to the database for tests.
 @pytest.fixture
@@ -105,7 +119,8 @@ def sample_user(init_db):
 def sample_admin(init_db):
     """Fixture to create a sample admin user with dynamic data."""
     username = TestingConfig.ADMIN_USERNAME
-    admin_user = User(username=username, password_hash="hashedpassword", ducks=0)
+    password = TestingConfig.ADMIN_PASSWORD
+    admin_user = User(username=username, password_hash=password, ducks=0)
     db.session.add(admin_user)
     db.session.commit()
     return admin_user
@@ -169,7 +184,7 @@ def sample_bounty(init_db):
     """Fixture to create a sample Bounty entry."""
     bounty = Bounty(
         user_id=1,
-        description="Fix a bug in the classroom chat application.",
+        description="Test bug bounty",
         bounty="50",
         expected_behavior="Chat application should not crash under high load.",
         image_path="images/bounty1.png",
@@ -266,7 +281,12 @@ def sample_skill(init_db, sample_user):
     db.session.commit()
     return skill
 
-
 @pytest.fixture
-def client(app):
-    return app.test_client()
+def sample_image_data():
+    """Fixture to provide a sample image data URL."""
+    image = Image.new('RGB', (100, 100), color=(73, 109, 137))
+    img_io = BytesIO()
+    image.save(img_io, 'PNG')
+    img_io.seek(0)
+    image_data = base64.b64encode(img_io.read()).decode('utf-8')
+    return f"data:image/png;base64,{image_data}"

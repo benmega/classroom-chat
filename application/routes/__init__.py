@@ -1,7 +1,7 @@
 
 from flask import Flask
 
-from .bounty_bounty import bounty_bp
+from .bounty_routes import bounty_bp
 from .user_routes import user_bp
 from .ai_routes import ai_bp
 from .admin_routes import admin_bp
