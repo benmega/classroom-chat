@@ -31,7 +31,7 @@ def test_update_user(test_client, sample_user, sample_admin):
     assert json_response['success'] is True
 
     updated_user = User.query.get(sample_user.id)
-    assert updated_user.username == new_username
+    assert updated_user.username == new_username.lower() # usernames should be stored in lower case
 
 
 # Test the /set_username route
@@ -47,7 +47,7 @@ def test_set_username(test_client, sample_user):
     assert json_response['success'] is True
 
     updated_user = User.query.get(sample_user.id)
-    assert updated_user.username == new_username
+    assert updated_user.username == new_username.lower() # usernames should be stored in lower case
 
 
 # Test the /clear-history route
