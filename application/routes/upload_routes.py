@@ -45,7 +45,7 @@ def upload_file():
         image.save(file_path)
     elif mime_type == 'application/pdf':
         # Handle PDF files
-        file_path = f'userData/pdfs/file_{timestamp}{extension}'
+        file_path = f'userData/pdf/file_{timestamp}{extension}'
         with open(file_path, 'wb') as f:
             f.write(data)
     else:

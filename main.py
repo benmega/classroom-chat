@@ -11,4 +11,4 @@ if __name__ == '__main__':
                  log_output=True, # Enables or disables the logging output by the server
                  use_reloader=True, # Enable or disable the reloader
                  allow_unsafe_werkzeug=True,
-                 debug=True)      # Toggle debug mode for Flask and SocketIO
+                 debug=False)      # Toggle debug mode for Flask and SocketIO
