@@ -15,57 +15,58 @@ def populate_courses_from_csv(folder_path):
     Returns:
         None
     """
-    # Define the expected CSV file path
     csv_file_path = os.path.join(folder_path, "CodeCombat_Courses.csv")
 
-    # Check if the CSV file exists
     if not os.path.exists(csv_file_path):
         print(f"CSV file not found in folder: {csv_file_path}")
         return
 
-    # Parse the CSV and create Course entries
     try:
         with open(csv_file_path, mode="r", encoding="utf-8") as csv_file:
             csv_reader = csv.DictReader(csv_file)
             courses = []
 
             for row in csv_reader:
-                # Extract data for Course model
                 course_id = row["URL"].split("course=")[-1].split("&")[0]
-                domain = "codecombat.com"  # Assuming all courses are from CodeCombat
-                name = row["File Name"].replace(".html", "")  # Name inferred from file name
-                description = row.get("Description", "No description provided.")  # Optional column
-
-                # Avoid duplicates
-                if Course.query.get(course_id):
+                domain = row["URL"].split("//")[-1].split("/")[0]
+                name = row["File Name"].replace(".html", "")
+                description = row.get("Description", "No description provided.")
+                default_challenge_value = row["default_challenge_value"]
+                # Use the new Session.get() method
+                course = db.session.get(Course, course_id)
+                if course:
                     print(f"Course with ID {course_id} already exists. Skipping.")
                     continue
 
-                # Create a new Course instance
+                # Create Course instance
                 course = Course(
                     id=course_id,
                     name=name,
                     domain=domain,
                     description=description,
-                    is_active=True
+                    is_active=True,
+                    default_challenge_value=default_challenge_value
                 )
                 courses.append(course)
 
-            # Add all courses to the database
-            with db.session.begin():
+            # Add courses and commit changes
+            if courses:
                 db.session.add_all(courses)
-
-            print(f"{len(courses)} courses imported successfully.")
+                db.session.commit()
+                print(f"{len(courses)} courses imported successfully.")
+            else:
+                print("No new courses to import.")
 
     except Exception as e:
+        db.session.rollback()
         print(f"An error occurred while processing the CSV file: {e}")
 
+if __name__ == "__main__":
+    # Initialize Flask app
+    app = create_app()
 
-# Initialize Flask app
-app = create_app()
+    # Example usage
+    folder_path = r"C:\Users\Ben\OneDrive\Career\Teaching\Blossom\Computer Science\Code Combat\Map HTML"
 
-# Example usage
-folder_path = r"C:\Users\Ben\OneDrive\Career\Teaching\Blossom\Computer Science\Code Combat\Map HTML"
-
-with app.app_context():
-    populate_courses_from_csv(folder_path)
+    with app.app_context():
+        populate_courses_from_csv(folder_path)

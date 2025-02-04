@@ -1,12 +1,9 @@
 from bs4 import BeautifulSoup
-from application import db, create_app  # Import your Flask app factory
+from application import db, create_app, ProductionConfig  # Import your Flask app factory
 from application.models.challenge import Challenge
 from urllib.parse import urlparse, parse_qs
 import os
 import csv
-
-
-
 
 
 def parse_and_store_challenges(app, url, html_content):
@@ -122,7 +119,7 @@ def process_html_files_with_csv(app, folder_path):
 
 def main():
     # Initialize Flask app
-    app = create_app()
+    app = create_app(ProductionConfig)
 
     # Example usage
     folder_path = r"C:\Users\Ben\OneDrive\Career\Teaching\Blossom\Computer Science\Code Combat\Map HTML"
