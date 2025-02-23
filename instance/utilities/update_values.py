@@ -37,7 +37,7 @@ def update_column_values(db_path, table_name, column_name, transform_function):
 
 if __name__ == "__main__":
     # Path to your database
-    database_path = "C:\\Users\\Ben\\PycharmProjects\\groupChat2\\instance\\users.db"
+    database_path = "C:\\Users\\Ben\\PycharmProjects\\groupChat2\\instance\\dev_users.db"
 
     # Function to convert string to lowercase
     to_lowercase = lambda x: x.lower() if isinstance(x, str) else x

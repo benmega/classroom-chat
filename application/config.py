@@ -14,7 +14,7 @@ class Config:
     TEMPLATE_FOLDER = os.path.join(BASE_DIR, 'templates')
 
     # Default database URI configuration
-    SQLALCHEMY_DATABASE_URI = f'sqlite:///{os.path.join(INSTANCE_FOLDER, "users.db")}'
+    SQLALCHEMY_DATABASE_URI = f'sqlite:///{os.path.join(INSTANCE_FOLDER, "dev_users.db")}'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ECHO = False  # Log SQL queries, helpful for debugging
 

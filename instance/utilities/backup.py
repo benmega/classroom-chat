@@ -47,7 +47,7 @@ def restore_users_data(db_path, backup_file, tableName):
 
 # Usage
 if __name__ == "__main__":
-    database_path = "C:\\Users\\Ben\\PycharmProjects\\groupChat2\\instance\\users.db"
+    database_path = "C:\\Users\\Ben\\PycharmProjects\\groupChat2\\instance\\dev_users.db"
     backup_file = "backup_users_data.json"
     # backup_users_data(database_path, backup_file, "users")
     restore_users_data(database_path, backup_file)
