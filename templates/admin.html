@@ -63,5 +63,20 @@
         <button type="submit">Add Word</button>
     </form>
 
+    <h2>Adjust Ducks</h2>
+    <form action="{{ url_for('admin_bp.adjust_ducks') }}" method="post">
+        <label for="username">User:</label>
+        <select name="username" required>
+            {% for user in users %}
+            <option value="{{ user.username }}">{{ user.username }}</option>
+            {% endfor %}
+        </select>
+
+        <label for="amount">Amount:</label>
+        <input type="number" name="amount" required placeholder="Enter amount (+/-)">
+
+        <button type="submit">Update Ducks</button>
+    </form>
+
 </body>
 </html>

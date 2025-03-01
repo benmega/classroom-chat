@@ -1,6 +1,5 @@
 from datetime import datetime, timedelta
-
-from flask import Blueprint, request, jsonify, render_template, redirect, url_for, session
+from flask import Blueprint, request, jsonify, render_template, redirect, url_for, session, flash
 from functools import wraps
 from application.extensions import db
 from application.models.conversation import Conversation
@@ -12,8 +11,8 @@ from application.config import Config
 from application.models.banned_words import BannedWords
 
 admin_bp = Blueprint('admin_bp', __name__)
-admin_pass = Config.admin_pass
-adminUsername = Config.adminUsername
+admin_pass = Config.ADMIN_PASSWORD
+adminUsername = Config.ADMIN_USERNAME
 
 
 def check_auth(f):
@@ -32,9 +31,13 @@ def check_auth(f):
 @check_auth
 def get_users():
     users = User.query.all()
-    users_data = [
-        {"id": user.id, "username": user.username, "ip_address": user.ip_address, "is_ai_teacher": user.is_ai_teacher}
-        for user in users]
+    users_data = []
+    for user in users:
+        user_dict = {column.name: getattr(user, column.name) for column in user.__table__.columns}
+        user_dict['skills'] = [{"id": skill.id, "name": skill.name} for skill in user.skills]
+        user_dict['projects'] = [{"id": project.id, "name": project.name, "description": project.description, "link": project.link} for project in user.projects]
+        users_data.append(user_dict)
+
     return jsonify(users_data)
 
 
@@ -43,8 +46,11 @@ def get_users():
 def update_user(user_id):
     user = User.query.get(user_id)
     if user:
-        user.username = request.form.get('username', user.username)
-        user.is_ai_teacher = request.form.get('is_ai_teacher', user.is_ai_teacher) in ['true', 'True', '1']
+        for column in user.__table__.columns:
+            column_name = column.name
+            if column_name in request.form:
+                setattr(user, column_name, request.form[column_name])
+
         db.session.commit()
         return jsonify({"success": True})
     return jsonify({"error": "User not found"}), 404
@@ -133,14 +139,6 @@ def toggle_message_sending():
 
     # Redirect to the dashboard after toggling the setting
     return redirect(url_for('admin_bp.dashboard'))
-
-
-# @admin_bp.route('/clear-history', methods=['POST'])
-# def clear_history():
-#     Conversation.query.delete()
-#     db.session.commit()
-#     return redirect(url_for('admin_bp.dashboard'))
-
 @admin_bp.route('/clear-history', methods=['POST'])
 def clear_history():
     try:
@@ -155,18 +153,6 @@ def clear_history():
         print(f"Error clearing history: {e}")
         return redirect(url_for('admin_bp.dashboard', error="Failed to clear history"))
 
-
-# @admin_bp.route('/clear-history', methods=['POST'])
-# def clear_history():
-#     try:
-#         Conversation.query.delete()
-#         db.session.commit()
-#         session['conversation_id'] = ''
-#         return redirect(url_for('admin_bp.dashboard'))
-#     except Exception as e:
-#         db.session.rollback()  # Rollback in case of an error
-#         print(f"Error clearing history: {e}")
-#         return redirect(url_for('admin_bp.dashboard', error="Failed to clear history"))
 
 
 @admin_bp.route('/clear-partial-history', methods=['POST'])
@@ -220,3 +206,24 @@ def trades():
     # Fetch trades from the database
     trades = Trade.query.order_by(Trade.timestamp.desc()).all()
     return render_template('admin/trades.html', trades=trades)
+
+
+@admin_bp.route('/adjust_ducks', methods=['POST'])
+# @login_required
+def adjust_ducks():
+    # if not current_user.is_admin:  # Ensure only admins can modify ducks
+    #     flash("Unauthorized action.", "danger")
+    #     return redirect(url_for('admin_bp.admin_dashboard'))
+
+    username = request.form.get('username')
+    amount = request.form.get('amount', type=int)
+
+    user = User.query.filter_by(username=username).first()
+    if user:
+        user.ducks += amount  # Add or subtract ducks
+        db.session.commit()
+        flash(f"Updated {username}'s ducks by {amount}.", "success")
+    else:
+        flash("User not found.", "danger")
+
+    return redirect(url_for('admin_bp.dashboard'))

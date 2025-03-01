@@ -5,7 +5,6 @@ from wtforms import HiddenField, IntegerField, FieldList, FormField, SubmitField
 from wtforms.validators import DataRequired, NumberRange
 import logging
 from application import db
-from application.helpers.db_helpers import get_user
 from application.models.trade import Trade
 
 # Define the blueprint
@@ -116,14 +115,19 @@ def log_trade(user_id, digital_ducks, duck_breakdown, duck_type):
 
 
 
-@duck_trade_bp.route('/bit_shift', methods=['GET', 'POST'])
-def bit_shift():
+@duck_trade_bp.route('/submit_trade', methods=['GET', 'POST'])
+def submit_trade():
     form = DuckTradeForm()
 
     if form.validate_on_submit():
         # Process form data here
         return "Form submitted successfully!"  # Replace with actual logic
 
+    return render_template('bit_shift.html', form=form)
+
+@duck_trade_bp.route('/bit_shift', methods=['GET'])
+def bit_shift():
+    form = DuckTradeForm()
     return render_template('bit_shift.html', form=form)
 
 
