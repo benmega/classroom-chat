@@ -36,11 +36,11 @@ def update_column_values(db_path, table_name, column_name, transform_function):
         conn.close()
 
 if __name__ == "__main__":
-    # Path to your database
     database_path = "C:\\Users\\Ben\\PycharmProjects\\groupChat2\\instance\\dev_users.db"
 
     # Function to convert string to lowercase
     to_lowercase = lambda x: x.lower() if isinstance(x, str) else x
+    divide_10 = lambda x: x/10
 
     # Update 'username' column in the 'user' table
-    update_column_values(database_path, table_name="users", column_name="username", transform_function=to_lowercase)
+    update_column_values(database_path, table_name="challenges", column_name="value", transform_function=divide_10)
