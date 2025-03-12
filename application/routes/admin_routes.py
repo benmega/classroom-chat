@@ -131,9 +131,9 @@ def toggle_message_sending():
         # If no configuration exists, initialize with default message sending disabled
         config = Configuration(message_sending_enabled=False)
         db.session.add(config)
-
-    # Toggle the message sending setting
-    config.message_sending_enabled = not config.message_sending_enabled
+    else:
+        # Toggle the message sending setting
+        config.message_sending_enabled = not config.message_sending_enabled
     db.session.commit()
 
     # Redirect to the dashboard after toggling the setting
