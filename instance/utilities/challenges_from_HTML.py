@@ -162,6 +162,8 @@ def parse_and_store_challenges(app, url, html_content, default_difficulty="mediu
     domain = parsed_url.netloc
     query_params = parse_qs(parsed_url.query)
     course_id = query_params.get("course", [""])[0]
+    if not course_id:
+        course_id = parsed_url.path.split("/")[-1]  # Extract last part of the path
 
     # Get challenge data
     challenges = get_challenge_data(domain, soup)
@@ -346,7 +348,7 @@ def select_folder():
     return filedialog.askdirectory()
 
 def main():
-    app = create_app(ProductionConfig)
+    app = create_app(DevelopmentConfig)
     folder_path = select_folder()
     process_html_files_with_csv(app, folder_path)
 
