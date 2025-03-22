@@ -153,5 +153,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-# Example Usage:
-# add_challenge_logs("student123", "CodeCombat", ["Dungeon Escape", "Loop Master"], course_id="CS101", course_instance="Spring2025")

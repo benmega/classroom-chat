@@ -348,7 +348,7 @@ def select_folder():
     return filedialog.askdirectory()
 
 def main():
-    app = create_app(DevelopmentConfig)
+    app = create_app(ProductionConfig)
     folder_path = select_folder()
     process_html_files_with_csv(app, folder_path)
 
