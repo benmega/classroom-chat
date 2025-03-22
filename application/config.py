@@ -36,25 +36,27 @@ class Config:
     # PERMANENT_SESSION_LIFETIME = timedelta(minutes=1)
 
 class DevelopmentConfig(Config):
-    # Enable development-specific settings
+
     DEBUG = True
     # Override database URI for development purposes
     SQLALCHEMY_DATABASE_URI = os.getenv('DEV_DATABASE_URI', f'sqlite:///{os.path.join(Config.INSTANCE_FOLDER, "dev_users.db")}')
+    # SERVER_NAME = '192.168.1.136:5000' # Is this needed for testing? 3.22.25
 
 
 class TestingConfig(Config):
-    # Enable testing-specific settings
+
     TESTING = True
     # Use an in-memory SQLite database for fast tests
     SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     # Override or add any test-specific configuration here, e.g., disable logging
     SQLALCHEMY_ECHO = False
-    # SERVER_NAME = 'localhost:5000'
+    SERVER_NAME = 'localhost:5000' # TODO Confirm why this was commented out 3.22.25
+    WTF_CSRF_ENABLED = False
 
 
 class ProductionConfig(Config):
-    # Production settings that ensure high performance and security
+
     DEBUG = False
     SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL', f'sqlite:///{os.path.join(Config.INSTANCE_FOLDER, "prod_users.db")}')
-    # More production settings can be added, e.g., cache, logging, etc.
+    SERVER_NAME = '192.168.1.1356:5000'

@@ -66,25 +66,25 @@ def index():
     return render_template('bit_pond.html', title='bit_Pond', **costs_binary)
 
 
-
-def test_submit_trade_valid(client, sample_user_with_ducks):
-    with client.session_transaction() as sess:
-        sess['user'] = sample_user_with_ducks.username  # Set the session user
-
-    response = client.post(url_for('duck_trade_bp.submit_trade'), data={
-        'digital_ducks': 3,
-        'duck_type': 'bit',
-        'duck_0': 1,
-        'duck_1': 1,
-        'duck_2': 0,
-        'duck_3': 0,
-        'duck_4': 0,
-        'duck_5': 0,
-        'duck_6': 0
-    })
-
-    assert response.status_code == 200
-    assert response.json['status'] == 'success'
+#
+# def test_submit_trade_valid(client, sample_user_with_ducks):
+#     with client.session_transaction() as sess:
+#         sess['user'] = sample_user_with_ducks.username  # Set the session user
+#
+#     response = client.post(url_for('duck_trade_bp.submit_trade'), data={
+#         'digital_ducks': 3,
+#         'duck_type': 'bit',
+#         'duck_0': 1,
+#         'duck_1': 1,
+#         'duck_2': 0,
+#         'duck_3': 0,
+#         'duck_4': 0,
+#         'duck_5': 0,
+#         'duck_6': 0
+#     })
+#
+#     assert response.status_code == 200
+#     assert response.json['status'] == 'success'
 
 
 
@@ -115,15 +115,20 @@ def log_trade(user_id, digital_ducks, duck_breakdown, duck_type):
 
 
 
+
+# from flask import jsonify
+
 @duck_trade_bp.route('/submit_trade', methods=['GET', 'POST'])
 def submit_trade():
     form = DuckTradeForm()
 
     if form.validate_on_submit():
         # Process form data here
-        return "Form submitted successfully!"  # Replace with actual logic
+        # Your logic to handle the trade
+        return jsonify({'status': 'success'})  # Return JSON response with status
 
     return render_template('bit_shift.html', form=form)
+
 
 @duck_trade_bp.route('/bit_shift', methods=['GET'])
 def bit_shift():

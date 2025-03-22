@@ -7,7 +7,7 @@ from io import BytesIO
 from PIL import Image
 import pytest
 
-from application import create_app, ensure_default_configuration
+from application import create_app
 from application.models.ai_settings import AISettings
 from application.models.banned_words import BannedWords
 from application.models.bounty import Bounty
@@ -23,7 +23,7 @@ from application.models.skill import Skill
 from application.models.trade import Trade
 from application.models.user import User
 from application.config import TestingConfig
-
+from sqlalchemy import inspect
 
 @pytest.fixture(scope="module", autouse=True)
 def setup_directories():
@@ -31,28 +31,50 @@ def setup_directories():
     os.makedirs('userData/pdfs', exist_ok=True)
     os.makedirs('userData/other', exist_ok=True)
 
-# This fixture creates the app, initializes the database, and cleans up after tests.
+
+
+
 @pytest.fixture(scope='session')
 def test_app():
-    app = create_app(TestingConfig)
+    app = create_app(TestingConfig)  # Replace with your actual app creation method
     with app.app_context():
         db.create_all()  # Create all tables for tests
-        ensure_default_configuration()  # Set up default configuration
+        db.session.commit()  # Ensure the changes are committed
+        print(inspect(db.engine).get_table_names())  # Check created tables
     yield app
     with app.app_context():
         db.session.remove()
         db.drop_all()  # Clean up the test database
 
+# @pytest.fixture(scope='session')
+# def test_app():
+#     app = create_app(TestingConfig)
+#     with app.app_context():
+#         db.create_all()  # Create all tables for tests
+#         db.session.commit()  # Ensure the changes are committed
+#         # Debugging: Print the tables
+#         print(inspect(db.engine).get_table_names())  # Check created tables
+#     yield app
+#     with app.app_context():
+#         db.session.remove()
+#         db.drop_all()  # Clean up the test database
 
-# This fixture allows you to use a test client in your tests.
-@pytest.fixture(scope='function')
-def test_client(test_app):
-    return test_app.test_client()
+
+
+# # This fixture allows you to use a test client in your tests.
+# @pytest.fixture(scope='function')
+# def test_client(test_app):
+#     return test_app.test_client()
 
 @pytest.fixture
 def client(test_app):
     with test_app.test_client() as client:
         yield client
+
+# @pytest.fixture
+# def client(test_app):
+#     with test_app.test_client() as client:
+#         yield client
 
 # This fixture provides a function to add a sample user to the database for tests.
 @pytest.fixture
@@ -295,13 +317,35 @@ def sample_image_data():
 
 @pytest.fixture
 def sample_user_with_ducks(test_app):
+    """Fixture that creates a user with ducks and cleans up afterward."""
     with test_app.app_context():
-        user = User(username='user_with_ducks', password_hash='test_password', ducks=50)
-        db.session.add(user)
-        db.session.commit()
-        yield user
-        db.session.delete(user)
-        db.session.commit()
+        try:
+            user = User(username='user_with_ducks', password_hash='test_password', ducks=50)
+            db.session.add(user)
+            db.session.commit()
+            yield user
+        except Exception as e:
+            db.session.rollback()  # Rollback if there's any error
+            raise e  # Reraise the exception to fail the test
+        finally:
+            # Cleanup: Delete user and commit changes
+            try:
+                db.session.delete(user)
+                db.session.commit()
+            except Exception as cleanup_error:
+                db.session.rollback()  # In case of an error during cleanup
+                raise cleanup_error
+
+
+# @pytest.fixture
+# def sample_user_with_ducks(test_app):
+#     with test_app.app_context():
+#         user = User(username='user_with_ducks', password_hash='test_password', ducks=50)
+#         db.session.add(user)
+#         db.session.commit()
+#         yield user
+#         db.session.delete(user)
+#         db.session.commit()
 
 @pytest.fixture
 def sample_user_with_few_ducks(test_app):

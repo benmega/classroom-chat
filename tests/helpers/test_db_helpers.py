@@ -36,33 +36,33 @@ def test_generate_unique_username():
 
 
 
-def test_save_message_to_db_new_conversation(init_db, sample_user, test_client):
+def test_save_message_to_db_new_conversation(init_db, sample_user, client):
     user = sample_user
-    with test_client.application.test_request_context('/'):
-        with test_client.session_transaction() as sess:
+    with client.application.test_request_context('/'):
+        with client.session_transaction() as sess:
             sess.pop('conversation_id', None)  # Ensure no active conversation
 
         result = save_message_to_db(user.id, "Hello, world!")
         assert result["success"] is True
 
 
-def test_save_message_to_db_existing_conversation(init_db, sample_user, sample_conversation, test_client):
+def test_save_message_to_db_existing_conversation(init_db, sample_user, sample_conversation, client):
     user = sample_user
     conversation = sample_conversation
 
-    with test_client.application.test_request_context('/'):
-        with test_client.session_transaction() as sess:
+    with client.application.test_request_context('/'):
+        with client.session_transaction() as sess:
             sess['conversation_id'] = conversation.id
 
         result = save_message_to_db(user.id, "Hello again!")
         assert result["success"] is True
 
 
-def test_save_message_to_db_no_conversation_in_db(init_db, sample_user, test_client):
+def test_save_message_to_db_no_conversation_in_db(init_db, sample_user, client):
     user = sample_user
 
-    with test_client.application.test_request_context('/'):
-        with test_client.session_transaction() as sess:
+    with client.application.test_request_context('/'):
+        with client.session_transaction() as sess:
             sess['conversation_id'] = 9999  # Non-existent conversation ID
 
         result = save_message_to_db(user.id, "This should succeed.")
