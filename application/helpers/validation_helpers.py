@@ -126,7 +126,7 @@ def _update_user_ducks(username, challenge_name):
         challenge = Challenge.query.filter(Challenge.slug.ilike(challenge_name)).first()
         if not challenge:
             raise ValueError(f"Challenge '{challenge_name}' not found in the database")
-        user.ducks += challenge.value
+        user.ducks = round(user.ducks + challenge.value, 4)
         db.session.commit()
 
     except ValueError:
