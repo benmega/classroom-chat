@@ -1,6 +1,9 @@
 import os
-from flask import Flask, session, g
+from flask import Flask, session, g, jsonify
 from datetime import timedelta
+
+from werkzeug.exceptions import RequestEntityTooLarge
+
 from application.models.configuration import Configuration
 from application.extensions import db, socketio
 from application.models import setup_models
@@ -63,6 +66,10 @@ def create_app(config_class=None):
     @app.context_processor
     def inject_user():
         return {'user': g.get('user')}
+
+    @app.errorhandler(RequestEntityTooLarge)
+    def handle_large_request(error):
+        return jsonify({'error': 'Request body too large'}), 413
 
     return app
 

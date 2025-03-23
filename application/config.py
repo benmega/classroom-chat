@@ -25,7 +25,7 @@ class Config:
 
     # File upload settings
     UPLOAD_FOLDER = os.path.join(STATIC_FOLDER, 'uploads', 'profile_pictures')
-    MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # Max 16MB upload size
+    MAX_CONTENT_LENGTH = 500 * 1024 * 1024  # Max 500MB upload size
     ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
     # Admin user configuration: Ideally, use hashed passwords in production, not plaintext
@@ -41,6 +41,7 @@ class DevelopmentConfig(Config):
     # Override database URI for development purposes
     SQLALCHEMY_DATABASE_URI = os.getenv('DEV_DATABASE_URI', f'sqlite:///{os.path.join(Config.INSTANCE_FOLDER, "dev_users.db")}')
     # SERVER_NAME = '192.168.1.136:5000' # Is this needed for testing? 3.22.25
+    WTF_CSRF_ENABLED = False
 
 
 class TestingConfig(Config):
