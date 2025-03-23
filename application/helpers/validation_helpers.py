@@ -1,7 +1,5 @@
-
 import re
 from datetime import datetime
-
 from application.extensions import db
 from application.models.banned_words import BannedWords
 from application.models.challenge import Challenge
@@ -22,11 +20,6 @@ def is_appropriate(message, banned_words=None):
 
 
 # URL pattern for detecting challenge URLs
-# URL_PATTERN = (
-#     r"https://(?P<domain>[\w\.-]+)/play/level/(?P<challenge_name>[\w-]+)"
-#     r"(?:\?.*?&course=(?P<course_id>\w+))?"
-#     r"(?:&course-instance=(?P<course_instance>\w+))?"
-# )
 URL_PATTERN = (
     r"https://(?P<domain>[\w\.-]+)"
     r"(?:/play/level/(?P<challenge_name>[\w-]+)"
