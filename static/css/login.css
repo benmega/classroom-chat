@@ -54,14 +54,14 @@ input {
 input:focus {
     outline: none;
     border-color: var(--focus-border-color);
-    box-shadow: 0 0 8px rgba(0, 128, 128, 0.3);
+    box-shadow: 0 0 8px var(--focus-border-color);
     animation: pulseGlow 1.5s infinite;
 }
 
 @keyframes pulseGlow {
-    0% { box-shadow: 0 0 8px rgba(0, 128, 128, 0.3); }
-    50% { box-shadow: 0 0 12px rgba(0, 128, 128, 0.5); }
-    100% { box-shadow: 0 0 8px rgba(0, 128, 128, 0.3); }
+    0% { box-shadow: 0 0 8px var(--focus-border-color); }
+    50% { box-shadow: 0 0 12px var(--focus-border-color); }
+    100% { box-shadow: 0 0 8px var(--focus-border-color); }
 }
 
 button {
@@ -110,7 +110,7 @@ button:active::after {
 
 p {
     margin-top: 15px;
-    color: #555;
+    color: var(--text-color);
 }
 
 a {
@@ -137,4 +137,34 @@ a:hover {
     input {
         font-size: 14px;
     }
+}
+
+.login-button {
+    background-color: var(--secondary-color);
+    color: white;
+    padding: var(--input-padding);
+    border: none;
+    border-radius: var(--border-radius-small);
+    cursor: pointer;
+}
+
+.form-control {
+    width: 100%;
+    padding: var(--input-padding);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-small);
+    font-size: 16px;
+}
+
+.btn-primary {
+    background-color: var(--secondary-color);
+    color: white;
+    padding: var(--button-padding);
+    border: none;
+    border-radius: var(--border-radius-small);
+    cursor: pointer;
+}
+
+.btn-primary:hover {
+    background-color: var(--secondary-color-dark);
 }

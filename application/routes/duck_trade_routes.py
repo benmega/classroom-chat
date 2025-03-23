@@ -31,7 +31,7 @@ class ByteDuckForm(FlaskForm):
 
 class DuckTradeForm(FlaskForm):
     """Main form for duck trading."""
-    hidden_tag = HiddenField()
+    # hidden_tag = HiddenField()
     digital_ducks = IntegerField('Digital Ducks',
                                  validators=[DataRequired(),
                                              NumberRange(min=1, message="Must trade at least 1 duck")])
