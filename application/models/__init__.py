@@ -12,3 +12,4 @@ def setup_models():
     from .project import Project
     from .skill import Skill
     from .user import User
+    from .duck_trade import DuckTradeLog

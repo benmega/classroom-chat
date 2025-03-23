@@ -5,6 +5,7 @@ from wtforms import HiddenField, IntegerField, FieldList, FormField, SubmitField
 from wtforms.validators import DataRequired, NumberRange
 import logging
 from application import db
+from application.models.duck_trade import DuckTradeLog
 from application.models.trade import Trade
 
 # Define the blueprint
@@ -16,6 +17,7 @@ logging.basicConfig(level=logging.INFO)
 class BitDuckForm(FlaskForm):
     """Sub-form for Bit Ducks selection."""
     bit_ducks = FieldList(IntegerField('Bit Duck Count',
+                                       default=0,  # Ensure a default value is set
                                        validators=[NumberRange(min=0, message="Count must be non-negative")]),
                           min_entries=7,  # 7 Bit Ducks for 2^0 to 2^6
                           max_entries=7)
@@ -24,9 +26,11 @@ class BitDuckForm(FlaskForm):
 class ByteDuckForm(FlaskForm):
     """Sub-form for Byte Ducks selection."""
     byte_ducks = FieldList(IntegerField('Byte Duck Count',
+                                        default=0,  # Ensure a default value is set
                                         validators=[NumberRange(min=0, message="Count must be non-negative")]),
                            min_entries=7,  # 7 Byte Ducks for 2^0 to 2^6
                            max_entries=7)
+
 
 
 class DuckTradeForm(FlaskForm):
@@ -118,16 +122,62 @@ def log_trade(user_id, digital_ducks, duck_breakdown, duck_type):
 
 # from flask import jsonify
 
-@duck_trade_bp.route('/submit_trade', methods=['GET', 'POST'])
+from flask import Blueprint, request, jsonify, render_template
+from werkzeug.exceptions import InternalServerError
+
+
+@duck_trade_bp.route('/submit_trade', methods=['POST'])
 def submit_trade():
     form = DuckTradeForm()
 
-    if form.validate_on_submit():
-        # Process form data here
-        # Your logic to handle the trade
-        return jsonify({'status': 'success'})  # Return JSON response with status
+    if not form.validate_on_submit():
+        return jsonify({'status': 'error', 'errors': form.errors}), 400
 
-    return render_template('bit_shift.html', form=form)
+    try:
+        username = session.get('user')
+        if not username:
+            return jsonify({'status': 'error', 'message': 'User not authenticated'}), 403
+
+        # Extract trade details
+        digital_ducks = form.digital_ducks.data
+        bit_ducks = form.bit_duck_selection.bit_ducks.data
+        byte_ducks = form.byte_duck_selection.byte_ducks.data
+
+        # Create a trade log entry
+        trade = DuckTradeLog(
+            username=username,
+            digital_ducks=digital_ducks,
+            bit_ducks=bit_ducks,
+            byte_ducks=byte_ducks,
+            status="pending"
+        )
+        db.session.add(trade)
+        db.session.commit()
+
+        # Notify admin (this could be an email, logging, or an alert system)
+        print(f"New trade request from {username}")
+
+        return jsonify({'status': 'success', 'message': 'Trade submitted for admin approval'})
+
+    except Exception as e:
+        print(e)
+        db.session.rollback()
+        return jsonify({'status': 'error', 'message': 'An unexpected error occurred'}), 500
+
+
+
+
+
+# @duck_trade_bp.route('/submit_trade', methods=['GET', 'POST'])
+# def submit_trade():
+#     form = DuckTradeForm()
+#
+#     if form.validate_on_submit():
+#         # Process form data here
+#         # Your logic to handle the trade
+#         return jsonify({'status': 'success'})  # Return JSON response with status
+#
+#     return render_template('bit_shift.html', form=form)
 
 
 @duck_trade_bp.route('/bit_shift', methods=['GET'])

@@ -4,6 +4,7 @@ from functools import wraps
 from application.extensions import db
 from application.models.conversation import Conversation
 from application.models.configuration import Configuration
+from application.models.duck_trade import DuckTradeLog
 from application.models.message import Message
 from application.models.trade import Trade
 from application.models.user import User
@@ -227,3 +228,40 @@ def adjust_ducks():
         flash("User not found.", "danger")
 
     return redirect(url_for('admin_bp.dashboard'))
+
+
+@admin_bp.route('/pending_trades', methods=['GET'])
+def pending_trades():
+    trades = DuckTradeLog.query.filter_by(status="pending").all()
+    return render_template('admin/pending_trades.html', trades=trades)
+
+
+@admin_bp.route('/trade_action', methods=['POST'])
+def trade_action():
+    trade_id = request.form.get('trade_id')
+    action = request.form.get('action')
+
+    trade = DuckTradeLog.query.get(trade_id)
+    if not trade:
+        return jsonify({'status': 'error', 'message': 'Trade not found'}), 404
+
+    if action == "approve":
+        # Deduct ducks
+        user = User.query.filter_by(username=trade.username).first()
+        if not user:
+            return jsonify({'status': 'error', 'message': 'User not found'}), 404
+
+        # Deduct digital ducks
+        if user.ducks < trade.digital_ducks:
+            return jsonify({'status': 'error', 'message': 'Insufficient ducks'}), 400
+        user.ducks -= trade.digital_ducks
+
+        trade.approve()
+        db.session.commit()
+        return jsonify({'status': 'success', 'message': 'Trade approved'})
+
+    elif action == "reject":
+        trade.reject()
+        return jsonify({'status': 'success', 'message': 'Trade rejected'})
+
+    return jsonify({'status': 'error', 'message': 'Invalid action'}), 400
