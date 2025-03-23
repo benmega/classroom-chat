@@ -1,4 +1,4 @@
-{% extends "admin_base.html" %}
+{% extends "base.html" %}
 
 {% block content %}
 <h2>Pending Trades</h2>
@@ -17,7 +17,7 @@
         <td>{{ trade.bit_ducks }}</td>
         <td>{{ trade.byte_ducks }}</td>
         <td>
-            <form method="post" action="{{ url_for('admin.trade_action') }}">
+            <form method="post" action="{{ url_for('admin_bp.trade_action') }}">
                 <input type="hidden" name="trade_id" value="{{ trade.id }}">
                 <button type="submit" name="action" value="approve">Approve</button>
                 <button type="submit" name="action" value="reject">Reject</button>
