@@ -5,10 +5,16 @@ document.addEventListener("DOMContentLoaded", () => {
     const labels = document.querySelectorAll(".duck-label");
     const form = document.getElementById("trade-form");
 
-    let isByte = toggle.checked; // Assuming it's a checkbox; otherwise, use toggle.value === "byte"
+//    let isByte = toggle.checked; // Assuming it's a checkbox; otherwise, use toggle.value === "byte"
+    let isByte = (toggle.value === "byte");
+
+
+
 
     function updateLabels() {
-        isByte = toggle.checked; // Update based on checkbox state
+//        isByte = toggle.checked; // Update based on checkbox state
+        let isByte = (toggle.value === "byte");
+
         labels.forEach((label, index) => {
             const value = 2 ** index;
             const unit = isByte ? "B" : "b";
@@ -19,8 +25,12 @@ document.addEventListener("DOMContentLoaded", () => {
     function calculateTotalDucks() {
         let total = 0;
 
+        // Always fetch the latest value
+        let isByte = (toggle.value === "byte");
+        console.log("isByte (fresh):", isByte);
+
         duckInputs.forEach((input, index) => {
-            const multiplier = isByte ? Math.pow(2, index) * 256 : Math.pow(2, index);
+            const multiplier = isByte ? Math.pow(2, index) * 128 : Math.pow(2, index);
             total += parseInt(input.value || 0) * multiplier;
         });
 
@@ -30,6 +40,7 @@ document.addEventListener("DOMContentLoaded", () => {
     function validateForm() {
         const digitalDucks = parseInt(digitalDucksInput.value || 0);
         const calculatedTotal = calculateTotalDucks();
+        console.log(calculatedTotal)
 
         if (digitalDucks !== calculatedTotal) {
             showToast("The number of digital ducks does not match the total requested ducks.", "error");

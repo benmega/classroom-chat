@@ -28,7 +28,7 @@ class ByteDuckForm(FlaskForm):
     byte_ducks = FieldList(IntegerField('Byte Duck Count',
                                         default=0,  # Ensure a default value is set
                                         validators=[NumberRange(min=0, message="Count must be non-negative")]),
-                           min_entries=7,  # 7 Byte Ducks for 2^0 to 2^6
+                           min_entries=7,  # 7 Byte Ducks for 2^7 to 2^13
                            max_entries=7)
 
 
