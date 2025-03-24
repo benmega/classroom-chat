@@ -133,13 +133,14 @@ def toggle_message_sending():
         # If no configuration exists, initialize with default message sending disabled
         config = Configuration(message_sending_enabled=False)
         db.session.add(config)
-
-    # Toggle the message sending setting
-    config.message_sending_enabled = not config.message_sending_enabled
+    else:
+        # Toggle the message sending setting
+        config.message_sending_enabled = not config.message_sending_enabled
     db.session.commit()
 
     # Redirect to the dashboard after toggling the setting
     return redirect(url_for('admin_bp.dashboard'))
+
 @admin_bp.route('/clear-history', methods=['POST'])
 def clear_history():
     try:
@@ -153,7 +154,6 @@ def clear_history():
         db.session.rollback()  # Rollback in case of an error
         print(f"Error clearing history: {e}")
         return redirect(url_for('admin_bp.dashboard', error="Failed to clear history"))
-
 
 
 @admin_bp.route('/clear-partial-history', methods=['POST'])
