@@ -27,7 +27,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Always fetch the latest value
         let isByte = (toggle.value === "byte");
-        console.log("isByte (fresh):", isByte);
 
         duckInputs.forEach((input, index) => {
             const multiplier = isByte ? Math.pow(2, index) * 128 : Math.pow(2, index);
@@ -40,7 +39,8 @@ document.addEventListener("DOMContentLoaded", () => {
     function validateForm() {
         const digitalDucks = parseInt(digitalDucksInput.value || 0);
         const calculatedTotal = calculateTotalDucks();
-        console.log(calculatedTotal)
+        console.log(`hint: the correct amount is ${calculatedTotal}`);
+
 
         if (digitalDucks !== calculatedTotal) {
             showToast("The number of digital ducks does not match the total requested ducks.", "error");
