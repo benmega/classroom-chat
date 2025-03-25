@@ -122,18 +122,33 @@ def index():
 def submit_trade():
     form = DuckTradeForm()
 
+    # Debug: Print raw form data
+    print("Received form data:", request.form)
+
     if not form.validate_on_submit():
+        print("Form validation failed:", form.errors)
         return jsonify({'status': 'error', 'errors': form.errors}), 400
 
     try:
+        print("Raw form field data:")
+        print("bit_duck_selection.bit_ducks:", getattr(form.bit_duck_selection, 'bit_ducks', None))
+        print("byte_duck_selection.byte_ducks:", getattr(form.byte_duck_selection, 'byte_ducks', None))
+
         username = session.get('user')
         if not username:
+            print("Error: User not authenticated")
             return jsonify({'status': 'error', 'message': 'User not authenticated'}), 403
+
+        # Debug: Print extracted session username
+        print(f"Authenticated user: {username}")
 
         # Extract trade details
         digital_ducks = form.digital_ducks.data
-        bit_ducks = list(form.bit_duck_selection.bit_ducks.data)
-        byte_ducks = list(form.byte_duck_selection.byte_ducks.data)
+        bit_ducks = [int(request.form.get(f'duck_{i}', 0)) for i in range(7)]
+        byte_ducks = [int(request.form.get(f'byte_duck_{i}', 0)) for i in range(7)]
+
+        # Debug: Print extracted trade values
+        print(f"Extracted values - Digital Ducks: {digital_ducks}, Bit Ducks: {bit_ducks}, Byte Ducks: {byte_ducks}")
 
         # Create a trade log entry
         trade = DuckTradeLog(
@@ -146,18 +161,15 @@ def submit_trade():
         db.session.add(trade)
         db.session.commit()
 
-        # Notify admin (this could be an email, logging, or an alert system)
-        print(f"New trade request from {username}")
+        # Debug: Print confirmation of trade submission
+        print(f"Trade successfully logged for user: {username}")
 
         return jsonify({'status': 'success', 'message': 'Trade submitted for admin approval'})
 
     except Exception as e:
-        print(e)
+        print("Unexpected error:", str(e))
         db.session.rollback()
         return jsonify({'status': 'error', 'message': 'An unexpected error occurred'}), 500
-
-
-
 
 
 # @duck_trade_bp.route('/submit_trade', methods=['GET', 'POST'])
