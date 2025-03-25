@@ -48,7 +48,7 @@ def detect_and_handle_challenge_url(message, username):
                     }
                 }
         return {
-            "handled": False,
+            "handled": True,
             "details": log_result
         }
     return {
