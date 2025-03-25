@@ -232,8 +232,8 @@ def adjust_ducks():
 
 @admin_bp.route('/pending_trades', methods=['GET'])
 def pending_trades():
-    trades = DuckTradeLog.query.filter_by(status="pending").all()
-    return render_template('admin/pending_trades.html', trades=trades)
+    pend_trades = DuckTradeLog.query.filter_by(status="pending").all()
+    return render_template('admin/pending_trades.html', trades=pend_trades)
 
 
 @admin_bp.route('/trade_action', methods=['POST'])
