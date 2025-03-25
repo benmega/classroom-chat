@@ -7,6 +7,7 @@ import logging
 from application import db
 from application.models.duck_trade import DuckTradeLog
 from application.models.trade import Trade
+from flask import request, jsonify, render_template
 
 # Define the blueprint
 duck_trade_bp = Blueprint('duck_trade_bp', __name__, template_folder='templates')
@@ -92,38 +93,29 @@ def index():
 
 
 
-def log_trade(user_id, digital_ducks, duck_breakdown, duck_type):
-    """
-    Logs a trade into the database.
-
-    :param user_id: ID of the user making the trade.
-    :param digital_ducks: Total number of digital ducks traded.
-    :param duck_breakdown: A dictionary representing the duck breakdown (e.g., {'duck_0': 3, 'duck_1': 2}).
-    :param duck_type: Type of ducks traded ('bit' or 'byte').
-    """
-    try:
-        trade = Trade(
-            user_id=user_id,
-            digital_ducks_traded=digital_ducks,
-            duck_breakdown=duck_breakdown,
-            duck_type=duck_type
-        )
-        db.session.add(trade)
-        db.session.commit()
-        print(f"Trade logged: User {user_id} traded {digital_ducks} digital ducks as {duck_type} ducks.")
-    except Exception as e:
-        db.session.rollback()
-        print(f"Failed to log trade: {e}")
-        raise
-
-
-
-
-
-# from flask import jsonify
-
-from flask import Blueprint, request, jsonify, render_template
-from werkzeug.exceptions import InternalServerError
+# def log_trade(user_id, digital_ducks, duck_breakdown, duck_type):
+#     """
+#     Logs a trade into the database.
+#
+#     :param user_id: ID of the user making the trade.
+#     :param digital_ducks: Total number of digital ducks traded.
+#     :param duck_breakdown: A dictionary representing the duck breakdown (e.g., {'duck_0': 3, 'duck_1': 2}).
+#     :param duck_type: Type of ducks traded ('bit' or 'byte').
+#     """
+#     try:
+#         trade = Trade(
+#             user_id=user_id,
+#             digital_ducks_traded=digital_ducks,
+#             duck_breakdown=duck_breakdown,
+#             duck_type=duck_type
+#         )
+#         db.session.add(trade)
+#         db.session.commit()
+#         print(f"Trade logged: User {user_id} traded {digital_ducks} digital ducks as {duck_type} ducks.")
+#     except Exception as e:
+#         db.session.rollback()
+#         print(f"Failed to log trade: {e}")
+#         raise
 
 
 @duck_trade_bp.route('/submit_trade', methods=['POST'])
@@ -140,8 +132,8 @@ def submit_trade():
 
         # Extract trade details
         digital_ducks = form.digital_ducks.data
-        bit_ducks = form.bit_duck_selection.bit_ducks.data
-        byte_ducks = form.byte_duck_selection.byte_ducks.data
+        bit_ducks = list(form.bit_duck_selection.bit_ducks.data)
+        byte_ducks = list(form.byte_duck_selection.byte_ducks.data)
 
         # Create a trade log entry
         trade = DuckTradeLog(
