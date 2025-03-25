@@ -1,5 +1,8 @@
 import sqlite3
 
+from application import create_app, ProductionConfig
+
+
 def update_column_values(db_path, table_name, column_name, transform_function):
     """
     Update values in a specified column for all rows in a SQLite table using a transformation function.
@@ -35,12 +38,12 @@ def update_column_values(db_path, table_name, column_name, transform_function):
     finally:
         conn.close()
 
-if __name__ == "__main__":
-    database_path = "C:\\Users\\Ben\\PycharmProjects\\groupChat2\\instance\\dev_users.db"
-
-    # Function to convert string to lowercase
-    to_lowercase = lambda x: x.lower() if isinstance(x, str) else x
-    divide_10 = lambda x: x/10
-
-    # Update 'username' column in the 'user' table
-    update_column_values(database_path, table_name="challenges", column_name="value", transform_function=divide_10)
+# if __name__ == "__main__":
+#     database_path = "C:\\Users\\Ben\\PycharmProjects\\groupChat2\\instance\\dev_users.db"
+#
+#     # Function to convert string to lowercase
+#     to_lowercase = lambda x: x.lower() if isinstance(x, str) else x
+#     divide_10 = lambda x: x/10
+#
+#     # Update 'username' column in the 'user' table
+#     update_column_values(database_path, table_name="challenges", column_name="value", transform_function=divide_10)
