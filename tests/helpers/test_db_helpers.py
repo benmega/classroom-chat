@@ -1,9 +1,5 @@
 import pytest
-from flask import session
-from application.models.user import User
-from application.models.message import Message
-from application.models.conversation import Conversation
-from application.helpers.db_helpers import get_user, save_message_to_db, generate_unique_username
+from application.utilities.db_helpers import get_user, save_message_to_db, generate_unique_username
 
 
 def test_get_user_by_username(init_db, add_sample_user):
