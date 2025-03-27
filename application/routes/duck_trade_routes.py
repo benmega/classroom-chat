@@ -118,39 +118,37 @@ def index():
 #         raise
 
 
+# from flask import request, jsonify, render_template, redirect, flash, url_for
+
+
 @duck_trade_bp.route('/submit_trade', methods=['POST'])
 def submit_trade():
     form = DuckTradeForm()
 
-    # Debug: Print raw form data
-    print("Received form data:", request.form)
+    # Determine if it's an AJAX request
+    is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"
 
     if not form.validate_on_submit():
-        print("Form validation failed:", form.errors)
-        return jsonify({'status': 'error', 'errors': form.errors}), 400
+        error_message = "There was an error with your trade submission. Please check your inputs."
+        if is_ajax:
+            return jsonify({'status': 'error', 'message': error_message, 'errors': form.errors}), 400
+        flash(error_message, "danger")
+        return redirect(url_for('duck_trade_bp.trade_page'))
 
     try:
-        print("Raw form field data:")
-        print("bit_duck_selection.bit_ducks:", getattr(form.bit_duck_selection, 'bit_ducks', None))
-        print("byte_duck_selection.byte_ducks:", getattr(form.byte_duck_selection, 'byte_ducks', None))
-
         username = session.get('user')
         if not username:
-            print("Error: User not authenticated")
-            return jsonify({'status': 'error', 'message': 'User not authenticated'}), 403
-
-        # Debug: Print extracted session username
-        print(f"Authenticated user: {username}")
+            error_message = "You must be logged in to submit a trade."
+            if is_ajax:
+                return jsonify({'status': 'error', 'message': error_message}), 403
+            flash(error_message, "warning")
+            return redirect(url_for('duck_trade_bp.trade_page'))
 
         # Extract trade details
         digital_ducks = form.digital_ducks.data
         bit_ducks = [int(request.form.get(f'duck_{i}', 0)) for i in range(7)]
         byte_ducks = [int(request.form.get(f'byte_duck_{i}', 0)) for i in range(7)]
 
-        # Debug: Print extracted trade values
-        print(f"Extracted values - Digital Ducks: {digital_ducks}, Bit Ducks: {bit_ducks}, Byte Ducks: {byte_ducks}")
-
-        # Create a trade log entry
         trade = DuckTradeLog(
             username=username,
             digital_ducks=digital_ducks,
@@ -161,15 +159,74 @@ def submit_trade():
         db.session.add(trade)
         db.session.commit()
 
-        # Debug: Print confirmation of trade submission
-        print(f"Trade successfully logged for user: {username}")
+        success_message = "Your trade has been submitted for admin approval."
+        if is_ajax:
+            return jsonify({'status': 'success', 'message': success_message})
 
-        return jsonify({'status': 'success', 'message': 'Trade submitted for admin approval'})
+        flash(success_message, "success")
+        return redirect(url_for('duck_trade_bp.trade_page'))
 
     except Exception as e:
-        print("Unexpected error:", str(e))
         db.session.rollback()
-        return jsonify({'status': 'error', 'message': 'An unexpected error occurred'}), 500
+        error_message = "An unexpected error occurred. Please try again."
+        if is_ajax:
+            return jsonify({'status': 'error', 'message': error_message}), 500
+        flash(error_message, "danger")
+        return redirect(url_for('duck_trade_bp.trade_page'))
+
+
+# @duck_trade_bp.route('/submit_trade', methods=['POST'])
+# def submit_trade():
+#     form = DuckTradeForm()
+#
+#     # Debug: Print raw form data
+#     print("Received form data:", request.form)
+#
+#     if not form.validate_on_submit():
+#         print("Form validation failed:", form.errors)
+#         return jsonify({'status': 'error', 'errors': form.errors}), 400
+#
+#     try:
+#         print("Raw form field data:")
+#         print("bit_duck_selection.bit_ducks:", getattr(form.bit_duck_selection, 'bit_ducks', None))
+#         print("byte_duck_selection.byte_ducks:", getattr(form.byte_duck_selection, 'byte_ducks', None))
+#
+#         username = session.get('user')
+#         if not username:
+#             print("Error: User not authenticated")
+#             return jsonify({'status': 'error', 'message': 'User not authenticated'}), 403
+#
+#         # Debug: Print extracted session username
+#         print(f"Authenticated user: {username}")
+#
+#         # Extract trade details
+#         digital_ducks = form.digital_ducks.data
+#         bit_ducks = [int(request.form.get(f'duck_{i}', 0)) for i in range(7)]
+#         byte_ducks = [int(request.form.get(f'byte_duck_{i}', 0)) for i in range(7)]
+#
+#         # Debug: Print extracted trade values
+#         print(f"Extracted values - Digital Ducks: {digital_ducks}, Bit Ducks: {bit_ducks}, Byte Ducks: {byte_ducks}")
+#
+#         # Create a trade log entry
+#         trade = DuckTradeLog(
+#             username=username,
+#             digital_ducks=digital_ducks,
+#             bit_ducks=bit_ducks,
+#             byte_ducks=byte_ducks,
+#             status="pending"
+# ***REMOVED***
+#         db.session.add(trade)
+#         db.session.commit()
+#
+#         # Debug: Print confirmation of trade submission
+#         print(f"Trade successfully logged for user: {username}")
+#
+#         return jsonify({'status': 'success', 'message': 'Trade submitted for admin approval'})
+#
+#     except Exception as e:
+#         print("Unexpected error:", str(e))
+#         db.session.rollback()
+#         return jsonify({'status': 'error', 'message': 'An unexpected error occurred'}), 500
 
 
 # @duck_trade_bp.route('/submit_trade', methods=['GET', 'POST'])
