@@ -294,7 +294,7 @@ def handle_profile_picture_upload(user):
         file = request.files['profile_picture']
         if file and allowed_file(file.filename):
             # Generate a unique filename
-            filename = f"{uuid.uuid4().hex}_{file.filename.rsplit('.', 1)[1].lower()}"
+            filename = f"{uuid.uuid4().hex}.{file.filename.rsplit('.', 1)[1].lower()}"
             filepath = os.path.join(Config.UPLOAD_FOLDER, filename)
 
             # Save the file and update user profile
