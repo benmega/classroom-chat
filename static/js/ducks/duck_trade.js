@@ -4,16 +4,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const toggle = document.getElementById("duck-type-toggle");
     const labels = document.querySelectorAll(".duck-label");
     const form = document.getElementById("trade-form");
-
-    let isByte = (toggle.value === "byte");
-
-
-
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute("content");
 
     function updateLabels() {
-//        isByte = toggle.checked; // Update based on checkbox state
-        let isByte = (toggle.value === "byte");
-
+        const isByte = (toggle.value === "byte");
         labels.forEach((label, index) => {
             const value = 2 ** index;
             const unit = isByte ? "B" : "b";
@@ -23,23 +17,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function calculateTotalDucks() {
         let total = 0;
-
-        // Always fetch the latest value
-        let isByte = (toggle.value === "byte");
-
+        const isByte = (toggle.value === "byte");
         duckInputs.forEach((input, index) => {
             const multiplier = isByte ? Math.pow(2, index) * 128 : Math.pow(2, index);
             total += parseInt(input.value || 0) * multiplier;
         });
-
         return total;
     }
 
     function validateForm() {
         const digitalDucks = parseInt(digitalDucksInput.value || 0);
         const calculatedTotal = calculateTotalDucks();
-        console.log(`hint: the correct amount is ${calculatedTotal}`);
-
 
         if (digitalDucks !== calculatedTotal) {
             showToast("The number of digital ducks does not match the total requested ducks.", "error");
@@ -48,18 +36,26 @@ document.addEventListener("DOMContentLoaded", () => {
         return true;
     }
 
-
     async function handleSubmit(event) {
         event.preventDefault();
 
         if (!validateForm()) return;
 
-        const formData = new FormData(form);
+        const formData = {
+            digital_ducks: parseInt(digitalDucksInput.value || 0),
+            bit_duck_selection: { bit_ducks: Array.from(duckInputs).map(input => parseInt(input.value || 0)) },
+            byte_duck_selection: { byte_ducks: Array.from(duckInputs).map(input => parseInt(input.value || 0)) }
+        };
 
         try {
             const response = await fetch(form.action, {
                 method: "POST",
-                body: formData,
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-Requested-With": "XMLHttpRequest",
+                    ...(csrfToken ? { "X-CSRF-Token": csrfToken } : {})
+                },
+                body: JSON.stringify(formData),
             });
 
             const result = await response.json();
@@ -77,55 +73,17 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-
-//    async function handleSubmit(event) {
-//        event.preventDefault();
-//
-//        if (!validateForm()) return;
-//
-//        // Construct JSON payload instead of using FormData
-//        const formData = {
-//            digital_ducks: parseInt(digitalDucksInput.value || 0),
-//            bit_duck_selection: { bit_ducks: Array.from(duckInputs).map(input => parseInt(input.value || 0)) },
-//            byte_duck_selection: { byte_ducks: Array.from(duckInputs).map(input => parseInt(input.value || 0)) }
-//        };
-//
-//        try {
-//            const response = await fetch(form.action, {
-//                method: "POST",
-//                headers: { "Content-Type": "application/json" },
-//                body: JSON.stringify(formData),
-//            });
-//
-//            const result = await response.json();
-//
-//            if (response.ok && result.status === "success") {
-//                showToast(result.message || "Trade submitted successfully!", "success");
-//                form.reset(); // Reset the form on success
-//                updateLabels(); // Reset labels to match the default duck type
-//            } else {
-//                showToast(result.message || "An error occurred.", "error");
-//            }
-//        } catch (error) {
-//            showToast("Failed to submit trade. Please try again later.", "error");
-//            console.error("Error submitting trade:", error);
-//        }
-//    }
-
     function showToast(message, type = "success") {
         const toast = document.createElement("div");
         toast.className = `toast ${type}`;
         toast.innerText = message;
         document.body.appendChild(toast);
 
-        setTimeout(() => {
-            toast.remove();
-        }, 3000);
+        setTimeout(() => toast.remove(), 3000);
     }
 
-    // Attach event listeners
     toggle.addEventListener("change", (event) => {
-        event.preventDefault(); // Prevent accidental form submission
+        event.preventDefault();
         updateLabels();
     });
 
