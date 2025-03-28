@@ -1,13 +1,15 @@
-from flask import request, jsonify, session, flash, redirect
-from flask import Blueprint, render_template, url_for
-from flask_wtf import FlaskForm
-from wtforms import HiddenField, IntegerField, FieldList, FormField, SubmitField
-from wtforms.validators import DataRequired, NumberRange
 import logging
+
+from flask import Blueprint, url_for
+from flask import request, jsonify, render_template
+from flask import session, flash, redirect
+from flask_wtf import FlaskForm
+from wtforms import IntegerField, FieldList, FormField, SubmitField
+from wtforms.validators import DataRequired, NumberRange
+
 from application import db
 from application.models.duck_trade import DuckTradeLog
 from application.models.trade import Trade
-from flask import request, jsonify, render_template
 
 # Define the blueprint
 duck_trade_bp = Blueprint('duck_trade_bp', __name__, template_folder='templates')
@@ -71,56 +73,6 @@ def index():
     return render_template('bit_pond.html', title='bit_Pond', **costs_binary)
 
 
-#
-# def test_submit_trade_valid(client, sample_user_with_ducks):
-#     with client.session_transaction() as sess:
-#         sess['user'] = sample_user_with_ducks.username  # Set the session user
-#
-#     response = client.post(url_for('duck_trade_bp.submit_trade'), data={
-#         'digital_ducks': 3,
-#         'duck_type': 'bit',
-#         'duck_0': 1,
-#         'duck_1': 1,
-#         'duck_2': 0,
-#         'duck_3': 0,
-#         'duck_4': 0,
-#         'duck_5': 0,
-#         'duck_6': 0
-#     })
-#
-#     assert response.status_code == 200
-#     assert response.json['status'] == 'success'
-
-
-
-# def log_trade(user_id, digital_ducks, duck_breakdown, duck_type):
-#     """
-#     Logs a trade into the database.
-#
-#     :param user_id: ID of the user making the trade.
-#     :param digital_ducks: Total number of digital ducks traded.
-#     :param duck_breakdown: A dictionary representing the duck breakdown (e.g., {'duck_0': 3, 'duck_1': 2}).
-#     :param duck_type: Type of ducks traded ('bit' or 'byte').
-#     """
-#     try:
-#         trade = Trade(
-#             user_id=user_id,
-#             digital_ducks_traded=digital_ducks,
-#             duck_breakdown=duck_breakdown,
-#             duck_type=duck_type
-#         )
-#         db.session.add(trade)
-#         db.session.commit()
-#         print(f"Trade logged: User {user_id} traded {digital_ducks} digital ducks as {duck_type} ducks.")
-#     except Exception as e:
-#         db.session.rollback()
-#         print(f"Failed to log trade: {e}")
-#         raise
-
-
-# from flask import request, jsonify, render_template, redirect, flash, url_for
-
-
 @duck_trade_bp.route('/submit_trade', methods=['POST'])
 def submit_trade():
     form = DuckTradeForm()
@@ -173,72 +125,6 @@ def submit_trade():
             return jsonify({'status': 'error', 'message': error_message}), 500
         flash(error_message, "danger")
         return redirect(url_for('duck_trade_bp.trade_page'))
-
-
-# @duck_trade_bp.route('/submit_trade', methods=['POST'])
-# def submit_trade():
-#     form = DuckTradeForm()
-#
-#     # Debug: Print raw form data
-#     print("Received form data:", request.form)
-#
-#     if not form.validate_on_submit():
-#         print("Form validation failed:", form.errors)
-#         return jsonify({'status': 'error', 'errors': form.errors}), 400
-#
-#     try:
-#         print("Raw form field data:")
-#         print("bit_duck_selection.bit_ducks:", getattr(form.bit_duck_selection, 'bit_ducks', None))
-#         print("byte_duck_selection.byte_ducks:", getattr(form.byte_duck_selection, 'byte_ducks', None))
-#
-#         username = session.get('user')
-#         if not username:
-#             print("Error: User not authenticated")
-#             return jsonify({'status': 'error', 'message': 'User not authenticated'}), 403
-#
-#         # Debug: Print extracted session username
-#         print(f"Authenticated user: {username}")
-#
-#         # Extract trade details
-#         digital_ducks = form.digital_ducks.data
-#         bit_ducks = [int(request.form.get(f'duck_{i}', 0)) for i in range(7)]
-#         byte_ducks = [int(request.form.get(f'byte_duck_{i}', 0)) for i in range(7)]
-#
-#         # Debug: Print extracted trade values
-#         print(f"Extracted values - Digital Ducks: {digital_ducks}, Bit Ducks: {bit_ducks}, Byte Ducks: {byte_ducks}")
-#
-#         # Create a trade log entry
-#         trade = DuckTradeLog(
-#             username=username,
-#             digital_ducks=digital_ducks,
-#             bit_ducks=bit_ducks,
-#             byte_ducks=byte_ducks,
-#             status="pending"
-#         )
-#         db.session.add(trade)
-#         db.session.commit()
-#
-#         # Debug: Print confirmation of trade submission
-#         print(f"Trade successfully logged for user: {username}")
-#
-#         return jsonify({'status': 'success', 'message': 'Trade submitted for admin approval'})
-#
-#     except Exception as e:
-#         print("Unexpected error:", str(e))
-#         db.session.rollback()
-#         return jsonify({'status': 'error', 'message': 'An unexpected error occurred'}), 500
-
-
-# @duck_trade_bp.route('/submit_trade', methods=['GET', 'POST'])
-# def submit_trade():
-#     form = DuckTradeForm()
-#
-#     if form.validate_on_submit():
-#         # Process form data here
-#         # Your logic to handle the trade
-#         return jsonify({'status': 'success'})  # Return JSON response with status
-#
-#     return render_template('bit_shift.html', form=form)
 
 
 @duck_trade_bp.route('/bit_shift', methods=['GET'])
