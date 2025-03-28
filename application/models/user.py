@@ -55,12 +55,14 @@ class User(db.Model):
 
     @property
     def codecombat_progress(self):
-        """Calculate CodeCombat progress as a percentage of completed challenges."""
-        total_challenges = 100  # Set this to the actual total number of challenges in CodeCombat.
+        """Calculate CodeCombat progress as a percentage of completed challenges (rounded for readability)."""
+        from application.models.challenge import Challenge
+        total_challenges = Challenge.query.filter_by(domain="codecombat.com").count()
         completed_challenges = ChallengeLog.query.filter_by(username=self._username, domain="codecombat.com").count()
 
-        # Calculate progress percentage
-        return (completed_challenges / total_challenges) * 100 if total_challenges > 0 else 0
+        # Calculate progress percentage and round to 4 significant figures
+        progress = (completed_challenges / total_challenges) * 100 if total_challenges > 0 else 0
+        return round(progress, 3) if progress >= 10 else round(progress, 2)
 
     def add_skill(self, skill_name):
         """Add a skill to the user."""
