@@ -246,22 +246,21 @@ def trade_action():
         return jsonify({'status': 'error', 'message': 'Trade not found'}), 404
 
     if action == "approve":
-        # Deduct ducks
         user = User.query.filter_by(username=trade.username).first()
         if not user:
             return jsonify({'status': 'error', 'message': 'User not found'}), 404
 
-        # Deduct digital ducks
         if user.ducks < trade.digital_ducks:
             return jsonify({'status': 'error', 'message': 'Insufficient ducks'}), 400
-        user.ducks -= trade.digital_ducks
 
+        user.ducks -= trade.digital_ducks
         trade.approve()
         db.session.commit()
         return jsonify({'status': 'success', 'message': 'Trade approved'})
 
     elif action == "reject":
         trade.reject()
+        db.session.commit()
         return jsonify({'status': 'success', 'message': 'Trade rejected'})
 
     return jsonify({'status': 'error', 'message': 'Invalid action'}), 400

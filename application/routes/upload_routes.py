@@ -59,7 +59,7 @@ def upload_file():
 
 @upload_bp.route('/uploads/<filename>')
 def uploaded_file(filename):
-    file_path = os.path.join(Config.UPLOAD_FOLDER, 'userData', 'image', filename)
+    file_path = os.path.join(Config.UPLOAD_FOLDER, filename)
     if os.path.exists(file_path):
         return send_from_directory(os.path.dirname(file_path), filename)
     else:
