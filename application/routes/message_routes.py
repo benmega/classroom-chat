@@ -40,8 +40,7 @@ def send_message():
         # Send a congratulatory system message
         if challenge_check.get("details").get("success"):
             system_message = f"Congrats {user.username}, on completing a challenge!"
-            # Add system message to chat (handle chat logic here)
-            return jsonify(success=True, system_message=system_message), 200
+            return jsonify(success=True, system_message=system_message, play_sound=True), 200
         else:
             system_message = f"Error claiming challenge. Please refresh the page and try again. If the issue persists, ask Mr. Mega"
             return jsonify(success=True, system_message=system_message), 200
