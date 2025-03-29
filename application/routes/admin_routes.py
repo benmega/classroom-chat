@@ -106,7 +106,7 @@ def dashboard():
     users = User.query.all()
     config = Configuration.query.first()
     banned_words = BannedWords.query.all()  # Retrieve all banned words from the database
-    return render_template('admin.html', users=users, config=config, banned_words=banned_words)
+    return render_template('admin/admin.html', users=users, config=config, banned_words=banned_words)
 
 
 
