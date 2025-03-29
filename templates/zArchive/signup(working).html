@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up - Classroom Chat</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap">
+    <link rel="icon" href="{{ url_for('static', filename='images/logo.ico') }}" type="image/x-icon">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/signup.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/variables.css') }}">
+</head>
+
+<body>
+    <div id="signup-container">
+        <h1>Create a Classroom Chat Account</h1>
+        <form id="signupForm" method="POST" action="{{ url_for('user_bp.signup') }}">
+            <label for="username">Username:</label>
+            <input type="text" id="username" name="username" required>
+
+<!--            <label for="email">Email:</label>-->
+<!--            <input type="email" id="email" name="email" required>-->
+
+            <label for="password">Password:</label>
+            <input type="password" id="password" name="password" required>
+
+            <label for="confirm-password">Confirm Password:</label>
+            <input type="password" id="confirm-password" name="confirm-password" required>
+
+            <button type="submit">Sign Up</button>
+        </form>
+
+        <p>Already have an account? <a href="{{ url_for('user_bp.login') }}">Login here</a>.</p>
+    </div>
+</body>
+
+</html>
