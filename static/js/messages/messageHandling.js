@@ -156,8 +156,6 @@ function clearMessageInput() {
 }
 
 
-
-
 // Image upload helper functions
 export function uploadImage() {
     const file = getImageFile();
