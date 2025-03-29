@@ -192,9 +192,9 @@ def interactive_delete_multiple_users():
         print("Invalid input. Please enter valid user IDs separated by commas.")
 
 if __name__ == "__main__":
-    action = input('edit a single user (1) or multiple (2)?')
+    action = input('edit a single user (1) or delete multiple (2)?')
     while action != "1" and action != "2":
-        action = input('edit a single user (1) or multiple (2)?')
+        action = input('edit a single user (1) or delete multiple (2)?')
     if action == "1":
         interactive_edit_user()
     elif action == "2":
