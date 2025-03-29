@@ -102,43 +102,50 @@ def userSelectDomain():
 
 def userSelectCourse(domain):
     """
-    Queries the database for all unique course_ids associated with a given domain and lets the user select one.
+    Queries the database for all unique courses associated with a given domain and lets the user select one.
     Returns the selected course_id as a string.
     """
-    courses = db.session.query(Challenge.course_id).filter(Challenge.domain == domain).distinct().all()
-    courses = [c.course_id for c in courses if c.course_id]  # Exclude null course_ids
+    from application.models.course import Course
+    courses = db.session.query(Course.id, Course.name).filter(Course.domain == domain).distinct().all()
 
     if not courses:
         print(f"No courses found for domain: {domain}")
         return None
 
     print("\nSelect a course:")
-    for i, course in enumerate(courses, start=1):
-        print(f"{i}. {course}")
+    for i, (course_id, course_name) in enumerate(courses, start=1):
+        print(f"{i}. {course_name} ({course_id})")  # Show name, but ID in parentheses
 
     while True:
         try:
             choice = int(input("Enter the number corresponding to the course: "))
             if 1 <= choice <= len(courses):
-                return courses[choice - 1]
+                return courses[choice - 1][0]  # Return the course_id
             else:
                 print("Invalid selection. Please enter a valid number.")
         except ValueError:
             print("Invalid input. Please enter a number.")
 
+
 def main():
     app = create_app(DevelopmentConfig)
     with app.app_context():
         username = input("Please enter the username -> ")
-        domain = userSelectDomain()
-        if not domain:
-            return
 
-        course_id = userSelectCourse(domain)
-        if not course_id:
-            return
+        while True:
+            domain = userSelectDomain()
+            if not domain:
+                return
 
-        add_course_challenge_logs(username, domain, course_id)
+            course_id = userSelectCourse(domain)
+            if not course_id:
+                return
+
+            add_course_challenge_logs(username, domain, course_id)
+
+            another = input("Would you like to add another submission? (y/n) -> ").strip().lower()
+            if another != 'y':
+                break
 
 
 # def main():
