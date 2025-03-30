@@ -26,48 +26,6 @@
             <button id="toggle-message-sending-button">
                 {{ 'Disable' if config.message_sending_enabled else 'Enable' }} Message Sending
             </button>
-
-            <script>
-                // Toggle AI Teacher
-                document.getElementById('toggle-ai-button').addEventListener('click', function() {
-                    fetch('{{ url_for("admin_bp.toggle_ai") }}', {
-                        method: 'POST',
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        alert(data.message);  // Assuming the response contains a message
-                        // Optionally update button text here based on the new status
-                    })
-                    .catch(error => { console.error('Error:', error); });
-                });
-
-                // Start a new conversation
-                document.getElementById('start-conversation-button').addEventListener('click', function() {
-                    fetch('{{ url_for("message_bp.start_conversation") }}', {
-                        method: 'POST',
-                        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-                        body: new URLSearchParams()  // Empty body, you can add parameters if needed
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        alert(`Conversation started: ${data.title}`);
-                    })
-                    .catch(error => { console.error('Error:', error); });
-                });
-
-                // Toggle Message Sending
-                document.getElementById('toggle-message-sending-button').addEventListener('click', function() {
-                    fetch('{{ url_for("admin_bp.toggle_message_sending") }}', {
-                        method: 'POST',
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        alert(data.message);  // Assuming the response contains a message
-                        // Optionally update button text here based on the new status
-                    })
-                    .catch(error => { console.error('Error:', error); });
-                });
-            </script>
         </div>
 
         <div class="card">
@@ -75,27 +33,6 @@
             <input type="text" id="ban-word" placeholder="Enter new banned word" required>
             <textarea id="ban-reason" placeholder="Enter reason (optional)"></textarea>
             <button id="add-banned-word-button">Add Word</button>
-
-            <script>
-                document.getElementById('add-banned-word-button').addEventListener('click', function() {
-                    const word = document.getElementById('ban-word').value;
-                    const reason = document.getElementById('ban-reason').value;
-
-                    fetch('{{ url_for("admin_bp.add_banned_word") }}', {
-                        method: 'POST',
-                        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-                        body: new URLSearchParams({
-                            'word': word,
-                            'reason': reason
-                        })
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        alert(data.message); // Assuming the response contains a message
-                    })
-                    .catch(error => { console.error('Error:', error); });
-                });
-            </script>
         </div>
 
         <div class="card">
@@ -109,27 +46,6 @@
             <label for="amount">Amount:</label>
             <input type="number" id="duck-amount" required placeholder="Enter amount (+/-)">
             <button id="update-ducks-button">Update Ducks</button>
-
-            <script>
-                document.getElementById('update-ducks-button').addEventListener('click', function() {
-                    const username = document.getElementById('duck-username').value;
-                    const amount = document.getElementById('duck-amount').value;
-
-                    fetch('{{ url_for("admin_bp.adjust_ducks") }}', {
-                        method: 'POST',
-                        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-                        body: new URLSearchParams({
-                            'username': username,
-                            'amount': amount
-                        })
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        alert(data.message); // Assuming the response contains a message
-                    })
-                    .catch(error => { console.error('Error:', error); });
-                });
-            </script>
         </div>
 
         <div class="card">
@@ -142,4 +58,18 @@
             </a>
         </div>
     </div>
+
+    <!-- Pass URLs as data attributes to the JavaScript -->
+    <script>
+        window.urls = {
+            toggleAiUrl: "{{ url_for('admin_bp.toggle_ai') }}",
+            startConversationUrl: "{{ url_for('message_bp.start_conversation') }}",
+            toggleMessageSendingUrl: "{{ url_for('admin_bp.toggle_message_sending') }}",
+            addBannedWordUrl: "{{ url_for('admin_bp.add_banned_word') }}",
+            adjustDucksUrl: "{{ url_for('admin_bp.adjust_ducks') }}",
+        };
+    </script>
+
+    <!-- Link to external JS file -->
+    <script src="{{ url_for('static', filename='js/admin/admin2.js') }}"></script>
 {% endblock %}
