@@ -1,0 +1,33 @@
+<!-- templates/admin/admin_base.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Classroom Chat</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+    <link rel="stylesheet" href="/static/css/variables.css">
+</head>
+<body>
+    <header>
+        <h1>Admin Dashboard</h1>
+        <nav>
+            <ul>
+                <li><a class="nav-button"  href="{{ url_for('admin_bp.dashboard') }}">Dashboard</a></li>
+                <li><a class="nav-button" href="{{ url_for('admin_bp.pending_trades') }}">Pending Trades</a></li>
+                <li><a class="nav-button" href="{{ url_for('admin_bp.trades') }}">Trade Logs</a></li>
+                <li><a class="nav-button" href="{{ url_for('user_bp.logout') }}">Logout</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer>
+        <p>&copy; 2024 Classroom Chat Admin. All Rights Reserved.</p>
+    </footer>
+</body>
+</html>
