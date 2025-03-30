@@ -1,128 +1,162 @@
-/* General Styles */
-body {
-    font-family: var(--font-family);
-    margin: 0;
-    padding: 20px;
-    background-color: var(--background-light);
-    color: var(--text-color);
+/* General body styles - Scoped for Admin Pages */
+body.admin {
+    background: var(--background-gradient);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    height: 100vh;
+    padding-top: 0;
 }
 
-h1 {
-    text-align: center;
-    color: var(--primary-color);
-    margin-bottom: 30px;
-}
-
-h2 {
-    color: var(--primary-color);
-    border-bottom: 2px solid var(--highlight-color);
-    padding-bottom: 10px;
-    margin-bottom: 20px;
-}
-
-/* User List */
-ul {
-    list-style: none;
-    padding: 0;
-    margin-bottom: 30px;
-    display: flex;              /* Use Flexbox */
-    flex-wrap: wrap;           /* Allow wrapping for multiple rows */
-    justify-content: space-between; /* Space items evenly */
-}
-
-ul li {
-    background-color: #fff;
-    margin: 10px;              /* Add margin for spacing */
-    padding: 10px 15px;
-    border-radius: var(--border-radius-medium);
+/* Header Styles - Specific to Admin */
+header.admin {
+    background-color: var(--primary-color);
+    color: white;
     box-shadow: var(--box-shadow-light);
-    width: calc(20% - 20px);   /* 5 items per row, accounting for margins */
-    box-sizing: border-box;     /* Include padding and border in width */
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    width: 100%;
+    box-sizing: border-box;
 }
 
-ul li.online {
-    border-left: 5px solid var(--primary-color);
+/* Admin Navigation menu */
+nav.admin ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    gap: 20px;
 }
 
-ul li.offline {
-    border-left: 5px solid var(--error-color);
+nav.admin ul li {
+    display: inline-block;
 }
 
-/* Forms */
-form {
-    margin-bottom: 30px;
-    padding: 20px;
-    background-color: #fff;
+.nav-button {
+    font-size: var(--font-size-medium);
+    color: white;
+    text-decoration: none;
+    padding: 12px 18px;
+    border-radius: var(--border-radius-medium);
+    background-color: var(--primary-color-dark);
+    transition: var(--transition-default);
+}
+
+.nav-button:hover {
+    background-color: var(--secondary-color-dark);
+    transform: scale(1.1);
+}
+
+/* Admin Container */
+#admin-container {
+    background: rgba(255, 255, 255, 0.2);
     border-radius: var(--border-radius-medium);
     box-shadow: var(--box-shadow-medium);
+    padding: 40px;
+    width: var(--max-container-width);
+    max-width: none;
+    text-align: center;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    transition: transform var(--transition-default);
 }
 
-input[type="text"], textarea {
-    width: 100%;
+#admin-container:hover {
+    transform: translateY(-10px);
+}
+
+/* Chat messages and form layout */
+#chat {
+    margin: 0 auto 30px auto;
     padding: var(--input-padding);
-    margin-bottom: 15px;
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius-small);
-    font-size: 16px;
+    background-color: rgba(255, 255, 255, 0.3);
+    border-radius: var(--border-radius-medium);
+    height: var(--chat-height);
+    width: calc(100% - 40px);
+    max-width: 100%;
+    overflow-y: auto;
+    text-align: left;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
 }
 
-input[type="text"]:focus, textarea:focus {
-    outline: none;
-    border-color: var(--focus-border-color);
-    box-shadow: 0 0 8px rgba(0, 128, 128, 0.2);
-}
-
-/* Buttons */
-button {
+/* Button styles - Scoped to Admin */
+button.admin {
     padding: var(--button-padding);
     background-color: var(--primary-color);
     color: white;
     border: none;
     border-radius: var(--border-radius-small);
+    font-size: var(--font-size-large);
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: var(--transition-default);
+}
+
+button.admin:hover {
+    background-color: var(--primary-color-dark);
+    box-shadow: var(--button-hover-shadow);
+}
+
+/* File input styling */
+input[type="file"].admin {
+    margin-top: 15px;
+    padding: var(--input-padding);
+}
+
+/* Bit Pond Container - Scoped */
+#bit-pond-container.admin {
+    margin: 20px auto;
+    text-align: center;
+    background: rgba(255, 255, 255, 0.4);
+    border-radius: 10px;
+    padding: 20px;
+    width: 90%;
+    max-width: 800px;
+    box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+#bit-pond-container.admin h2 {
+    font-size: 28px;
+    color: #0EB2BB;
+    margin-bottom: 10px;
+}
+
+.bit-pond-item.admin {
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    width: 200px;
+    padding: 15px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.bit-pond-item.admin:hover {
+    transform: scale(1.05);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+.purchase-button.admin {
+    background-color: #FFD700;
+    color: #333;
+    border: none;
+    border-radius: 5px;
+    padding: 10px 15px;
     font-size: 16px;
     cursor: pointer;
-    transition: background-color var(--transition-default);
-    width: 100%;
-    margin-top: 10px;
+    transition: background-color 0.3s ease;
 }
 
-button:hover {
-    background-color: var(--primary-color-dark);
+.purchase-button.admin:hover {
+    background-color: #FFA500;
 }
 
-/* Media Queries for Responsive Design */
-@media (max-width: 768px) {
-    body {
-        padding: 10px;
-    }
-
-    form {
-        padding: 15px;
-    }
-
-    button {
-        font-size: 14px;
-    }
-
-    input[type="text"], textarea {
-        font-size: 14px;
-    }
-
-    h1 {
-        font-size: 28px;
-    }
-
-    h2 {
-        font-size: 20px;
-    }
-
-    ul li {
-        width: calc(50% - 20px); /* Adjust for 2 columns on smaller screens */
-    }
-}
-
-@media (max-width: 480px) {
-    ul li {
-        width: 100%; /* Single column on very small screens */
-    }
+.purchase-button.admin:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
 }
