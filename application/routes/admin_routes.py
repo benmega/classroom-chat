@@ -264,3 +264,88 @@ def trade_action():
         return jsonify({'status': 'success', 'message': 'Trade rejected'})
 
     return jsonify({'status': 'error', 'message': 'Invalid action'}), 400
+
+
+@admin_bp.route('/reset_password', methods=['POST'])
+def reset_password():
+    pass
+    # data = request.json
+    # username = data.get('username')
+    # new_password = data.get('new_password')
+    #
+    # # Find user and update password
+    # user = User.query.filter_by(username=username).first()
+    # if not user:
+    #     return jsonify({'success': False, 'error': 'User not found'})
+    #
+    # # Update password (using your password hashing method)
+    # user.password = hash_password(new_password)
+    # db.session.commit()
+
+    return jsonify({'success': True})
+
+
+@admin_bp.route('/duck_transactions_data')
+def duck_transactions_data():
+    pass
+    # # Get date range (last 7 days)
+    # end_date = datetime.now()
+    # start_date = end_date - timedelta(days=7)
+    #
+    # # Get daily earned/spent data
+    # # This is just an example - adapt to your data model
+    # daily_data = []
+    # labels = []
+    # earned = []
+    # spent = []
+    #
+    # for i in range(7):
+    #     date = end_date - timedelta(days=i)
+    #     day_earned = DuckTransaction.query.filter(
+    #         DuckTransaction.date >= date.replace(hour=0, minute=0, second=0),
+    #         DuckTransaction.date < date.replace(hour=23, minute=59, second=59),
+    #         DuckTransaction.amount > 0
+    #     ).with_entities(func.sum(DuckTransaction.amount)).scalar() or 0
+    #
+    #     day_spent = abs(DuckTransaction.query.filter(
+    #         DuckTransaction.date >= date.replace(hour=0, minute=0, second=0),
+    #         DuckTransaction.date < date.replace(hour=23, minute=59, second=59),
+    #         DuckTransaction.amount < 0
+    #     ).with_entities(func.sum(DuckTransaction.amount)).scalar() or 0)
+    #
+    #     labels.insert(0, date.strftime('%a'))
+    #     earned.insert(0, day_earned)
+    #     spent.insert(0, day_spent)
+    #
+    # return jsonify({
+    #     'labels': labels,
+    #     'earned': earned,
+    #     'spent': spent
+    # })
+
+
+# @admin_bp.route('/dashboard')
+# def dashboard():
+#     # Get total ducks in circulation
+#     total_ducks = db.session.query(func.sum(User.ducks)).scalar() or 0
+#
+#     # Get ducks earned today
+#     today = datetime.now().date()
+#     ducks_earned_today = DuckTransaction.query.filter(
+#         DuckTransaction.date >= today,
+#         DuckTransaction.amount > 0
+#     ).with_entities(func.sum(DuckTransaction.amount)).scalar() or 0
+#
+#     # Get pending trades count
+#     pending_trades_count = Trade.query.filter_by(status='pending').count()
+#
+#     # Get active users count
+#     active_users_count = User.query.filter_by(is_online=True).count()
+#
+#     return render_template('admin/dashboard.html',
+#                            users=User.query.all(),
+#                            config=get_app_config(),
+#                            total_ducks=total_ducks,
+#                            ducks_earned_today=ducks_earned_today,
+#                            pending_trades_count=pending_trades_count,
+#                            active_users_count=active_users_count)
