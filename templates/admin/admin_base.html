@@ -5,28 +5,29 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Panel - Classroom Chat</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
     <link rel="stylesheet" href="/static/css/variables.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
 </head>
-<body>
-    <header>
-        <h1>Admin Dashboard</h1>
-        <nav>
-            <ul>
-                <li><a class="nav-button"  href="{{ url_for('admin_bp.dashboard') }}">Dashboard</a></li>
-                <li><a class="nav-button" href="{{ url_for('admin_bp.pending_trades') }}">Pending Trades</a></li>
-                <li><a class="nav-button" href="{{ url_for('admin_bp.trades') }}">Trade Logs</a></li>
-                <li><a class="nav-button" href="{{ url_for('user_bp.logout') }}">Logout</a></li>
-            </ul>
-        </nav>
+<body class="admin-body">
+    <header class="admin-header">
+        <div class="header-content">
+            <h1>Admin Dashboard</h1>
+            <nav class="admin-nav">
+                <ul>
+                    <li><a class="admin-nav-button" href="{{ url_for('admin_bp.dashboard') }}">Dashboard</a></li>
+                    <li><a class="admin-nav-button" href="{{ url_for('admin_bp.pending_trades') }}">Pending Trades</a></li>
+                    <li><a class="admin-nav-button" href="{{ url_for('admin_bp.trades') }}">Trade Logs</a></li>
+                    <li><a class="admin-nav-button logout" href="{{ url_for('user_bp.logout') }}">Logout</a></li>
+                </ul>
+            </nav>
+        </div>
     </header>
 
-    <main>
+    <main class="admin-main">
         {% block content %}{% endblock %}
     </main>
 
-    <footer>
+    <footer class="admin-footer">
         <p>&copy; 2024 Classroom Chat Admin. All Rights Reserved.</p>
     </footer>
 </body>

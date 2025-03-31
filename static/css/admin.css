@@ -1,16 +1,16 @@
-/* General body styles - Scoped for Admin Pages */
-body.admin {
+/* Admin-specific styles */
+.admin-body {
+    font-family: var(--font-family);
     background: var(--background-gradient);
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: flex-start;
-    height: 100vh;
-    padding-top: 0;
 }
 
-/* Header Styles - Specific to Admin */
-header.admin {
+/* Header styles */
+.admin-header {
     background-color: var(--primary-color);
     color: white;
     box-shadow: var(--box-shadow-light);
@@ -18,145 +18,260 @@ header.admin {
     top: 0;
     z-index: 10;
     width: 100%;
-    box-sizing: border-box;
 }
 
-/* Admin Navigation menu */
-nav.admin ul {
+.header-content {
+    max-width: var(--max-container-width);
+    margin: 0 auto;
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.admin-header h1 {
+    margin: 0;
+    font-size: 1.8rem;
+    color: white;
+}
+
+/* Navigation styles */
+.admin-nav ul {
     list-style: none;
     margin: 0;
     padding: 0;
     display: flex;
-    gap: 20px;
+    gap: 15px;
 }
 
-nav.admin ul li {
+.admin-nav-button {
     display: inline-block;
-}
-
-.nav-button {
-    font-size: var(--font-size-medium);
+    padding: 8px 16px;
+    background-color: var(--primary-color-dark);
     color: white;
     text-decoration: none;
-    padding: 12px 18px;
-    border-radius: var(--border-radius-medium);
-    background-color: var(--primary-color-dark);
-    transition: var(--transition-default);
-}
-
-.nav-button:hover {
-    background-color: var(--secondary-color-dark);
-    transform: scale(1.1);
-}
-
-/* Admin Container */
-#admin-container {
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: var(--border-radius-medium);
-    box-shadow: var(--box-shadow-medium);
-    padding: 40px;
-    width: var(--max-container-width);
-    max-width: none;
-    text-align: center;
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    transition: transform var(--transition-default);
-}
-
-#admin-container:hover {
-    transform: translateY(-10px);
-}
-
-/* Chat messages and form layout */
-#chat {
-    margin: 0 auto 30px auto;
-    padding: var(--input-padding);
-    background-color: rgba(255, 255, 255, 0.3);
-    border-radius: var(--border-radius-medium);
-    height: var(--chat-height);
-    width: calc(100% - 40px);
-    max-width: 100%;
-    overflow-y: auto;
-    text-align: left;
-    box-sizing: border-box;
-    display: flex;
-    flex-direction: column;
-}
-
-/* Button styles - Scoped to Admin */
-button.admin {
-    padding: var(--button-padding);
-    background-color: var(--primary-color);
-    color: white;
-    border: none;
     border-radius: var(--border-radius-small);
-    font-size: var(--font-size-large);
-    cursor: pointer;
-    position: relative;
+    transition: var(--transition-default);
+    font-weight: 500;
+}
+
+.admin-nav-button:hover {
+    background-color: var(--secondary-color-dark);
+    transform: translateY(-2px);
+}
+
+.admin-nav-button.logout {
+    background-color: var(--error-color);
+}
+
+.admin-nav-button.logout:hover {
+    background-color: var(--error-color-dark);
+}
+
+/* Main content area */
+.admin-main {
+    flex: 1;
+    padding: 20px;
+    max-width: var(--max-container-width);
+    width: 100%;
+    margin: 0 auto;
+    box-sizing: border-box;
+}
+
+/* Admin container grid layout */
+.admin-container {
+    width: 100%;
+    max-width: 100%;
+    margin: 0 auto;
+}
+
+.admin-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+/* Card styles */
+.admin-card {
+    background-color: white;
+    border-radius: var(--border-radius-medium);
+    box-shadow: var(--box-shadow-light);
     overflow: hidden;
     transition: var(--transition-default);
 }
 
-button.admin:hover {
-    background-color: var(--primary-color-dark);
-    box-shadow: var(--button-hover-shadow);
+.admin-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--box-shadow-medium);
 }
 
-/* File input styling */
-input[type="file"].admin {
-    margin-top: 15px;
-    padding: var(--input-padding);
-}
-
-/* Bit Pond Container - Scoped */
-#bit-pond-container.admin {
-    margin: 20px auto;
-    text-align: center;
-    background: rgba(255, 255, 255, 0.4);
-    border-radius: 10px;
-    padding: 20px;
-    width: 90%;
-    max-width: 800px;
-    box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.2);
-}
-
-#bit-pond-container.admin h2 {
-    font-size: 28px;
-    color: #0EB2BB;
-    margin-bottom: 10px;
-}
-
-.bit-pond-item.admin {
-    background: rgba(255, 255, 255, 0.8);
-    border: 1px solid rgba(0, 0, 0, 0.1);
-    border-radius: 8px;
-    width: 200px;
+.card-title {
+    margin: 0;
     padding: 15px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    background-color: var(--primary-color);
+    color: white;
+    font-size: 1.2rem;
+    font-weight: 500;
 }
 
-.bit-pond-item.admin:hover {
-    transform: scale(1.05);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+.card-content {
+    padding: 20px;
 }
 
-.purchase-button.admin {
-    background-color: #FFD700;
-    color: #333;
+/* Form elements */
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+    color: var(--text-color);
+}
+
+.admin-input,
+.admin-select,
+.admin-textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-small);
+    font-family: var(--font-family);
+    font-size: 1rem;
+    box-sizing: border-box;
+    transition: var(--transition-default);
+}
+
+.admin-input:focus,
+.admin-select:focus,
+.admin-textarea:focus {
+    outline: none;
+    border-color: var(--focus-border-color);
+    box-shadow: 0 0 0 2px rgba(14, 178, 187, 0.2);
+}
+
+.admin-textarea {
+    min-height: 80px;
+    resize: vertical;
+}
+
+/* Button styles */
+.admin-button {
+    display: inline-block;
+    padding: 10px 16px;
     border: none;
-    border-radius: 5px;
-    padding: 10px 15px;
-    font-size: 16px;
+    border-radius: var(--border-radius-small);
+    font-family: var(--font-family);
+    font-size: 1rem;
+    font-weight: 500;
     cursor: pointer;
-    transition: background-color 0.3s ease;
+    transition: var(--transition-default);
+    color: white;
+    background-color: var(--primary-color);
+    text-align: center;
+    margin-right: 8px;
+    margin-bottom: 8px;
 }
 
-.purchase-button.admin:hover {
-    background-color: #FFA500;
+.admin-button:last-child {
+    margin-right: 0;
 }
 
-.purchase-button.admin:disabled {
-    background-color: #ccc;
-    cursor: not-allowed;
+.admin-button:hover {
+    transform: translateY(-2px);
+}
+
+.admin-button.primary {
+    background-color: var(--primary-color);
+}
+
+.admin-button.primary:hover {
+    background-color: var(--primary-color-dark);
+}
+
+.admin-button.secondary {
+    background-color: var(--secondary-color);
+}
+
+.admin-button.secondary:hover {
+    background-color: var(--secondary-color-dark);
+}
+
+.admin-button.warning {
+    background-color: var(--error-color);
+}
+
+.admin-button.warning:hover {
+    background-color: var(--error-color-dark);
+}
+
+.admin-button.highlight {
+    background-color: var(--highlight-color);
+    color: var(--text-color);
+}
+
+.admin-button.highlight:hover {
+    background-color: var(--highlight-hover);
+}
+
+.admin-button-link {
+    text-decoration: none;
+    display: inline-block;
+}
+
+/* Button group alignment */
+.button-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+/* Lists */
+.user-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.user-list li {
+    padding: 8px;
+    background-color: var(--background-light);
+    border-radius: var(--border-radius-small);
+    margin-bottom: 5px;
+}
+
+.user-list li:last-child {
+    margin-bottom: 0;
+}
+
+/* Footer styles */
+.admin-footer {
+    background-color: var(--primary-color);
+    color: white;
+    text-align: center;
+    padding: 15px;
+    margin-top: auto;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .header-content {
+        flex-direction: column;
+        padding: 10px;
+    }
+
+    .admin-header h1 {
+        margin-bottom: 10px;
+    }
+
+    .admin-nav ul {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .admin-grid {
+        grid-template-columns: 1fr;
+    }
 }

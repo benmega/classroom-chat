@@ -4,58 +4,64 @@
 
 {% block content %}
     <div class="admin-container">
-        <div class="card">
-            <h2>Users Online</h2>
-            <ul>
-                {% for user in users %}
-                {% if user.is_online %}<li>{{ user.username }}</li>{% endif %}
-                {% endfor %}
-            </ul>
-        </div>
+        <div class="admin-grid">
+            <div class="admin-card">
+                <h2 class="card-title">Users Online</h2>
+                <div class="card-content">
+                    <ul class="user-list">
+                        {% for user in users %}
+                        {% if user.is_online %}<li>{{ user.username }}</li>{% endif %}
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
 
-        <div class="card">
-            <h2>Conversation Management</h2>
-            <button id="toggle-ai-button">
-                {{ 'Disable' if config.ai_teacher_enabled else 'Enable' }} AI Teacher
-            </button>
+            <div class="admin-card">
+                <h2 class="card-title">Conversation Management</h2>
+                <div class="card-content button-group">
+                    <button id="toggle-ai-button" class="admin-button primary">
+                        {{ 'Disable' if config.ai_teacher_enabled else 'Enable' }} AI Teacher
+                    </button>
+                    <button id="start-conversation-button" class="admin-button secondary">
+                        Start New Conversation
+                    </button>
+                    <button id="toggle-message-sending-button" class="admin-button primary">
+                        {{ 'Disable' if config.message_sending_enabled else 'Enable' }} Message Sending
+                    </button>
+                </div>
+            </div>
 
-            <button id="start-conversation-button">
-                Start New Conversation
-            </button>
+            <div class="admin-card">
+                <h2 class="card-title">Ban A Word</h2>
+                <div class="card-content">
+                    <div class="form-group">
+                        <input type="text" id="ban-word" class="admin-input" placeholder="Enter new banned word" required>
+                    </div>
+                    <div class="form-group">
+                        <textarea id="ban-reason" class="admin-textarea" placeholder="Enter reason (optional)"></textarea>
+                    </div>
+                    <button id="add-banned-word-button" class="admin-button warning">Add Word</button>
+                </div>
+            </div>
 
-            <button id="toggle-message-sending-button">
-                {{ 'Disable' if config.message_sending_enabled else 'Enable' }} Message Sending
-            </button>
-        </div>
-
-        <div class="card">
-            <h2>Ban A Word</h2>
-            <input type="text" id="ban-word" placeholder="Enter new banned word" required>
-            <textarea id="ban-reason" placeholder="Enter reason (optional)"></textarea>
-            <button id="add-banned-word-button">Add Word</button>
-        </div>
-
-        <div class="card">
-            <h2>Adjust Ducks</h2>
-            <label for="username">User:</label>
-            <select id="duck-username" required>
-                {% for user in users|sort(attribute='username') %}
-                    <option value="{{ user.username }}">{{ user.username }}</option>
-                {% endfor %}
-            </select>
-            <label for="amount">Amount:</label>
-            <input type="number" id="duck-amount" required placeholder="Enter amount (+/-)">
-            <button id="update-ducks-button">Update Ducks</button>
-        </div>
-
-        <div class="card">
-            <h2>Trades</h2>
-            <a href="/admin/pending_trades">
-                <button>Pending Trades</button>
-            </a>
-            <a href="/admin/trades">
-                <button>Trade Logs</button>
-            </a>
+            <div class="admin-card">
+                <h2 class="card-title">Adjust Ducks</h2>
+                <div class="card-content">
+                    <div class="form-group">
+                        <label for="duck-username">User:</label>
+                        <select id="duck-username" class="admin-select" required>
+                            {% for user in users|sort(attribute='username') %}
+                                <option value="{{ user.username }}">{{ user.username }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="duck-amount">Amount:</label>
+                        <input type="number" id="duck-amount" class="admin-input" required placeholder="Enter amount (+/-)">
+                    </div>
+                    <button id="update-ducks-button" class="admin-button highlight">Update Ducks</button>
+                </div>
+            </div>
         </div>
     </div>
 
