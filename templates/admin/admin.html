@@ -1,88 +1,188 @@
-<!DOCTYPE html>
-<!-- templates/admin.html -->
-<html>
-<head>
-    <title>Admin Dashboard</title>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap">
-    <link rel="icon" href="{{ url_for('static', filename='images/logo.ico') }}" type="image/x-icon">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
-    <link rel="stylesheet" href="/static/css/variables.css">
-</head>
-<body>
-    <h1>Admin Dashboard</h1>
-    <h2>Users Online</h2>
+{% extends 'admin/admin_base.html' %}
 
-    <ul>
-        {% for user in users %}
-        <li>{{ user.username }} - {% if user.is_online %}Online{% else %}Offline{% endif %}</li>
-        {% endfor %}
-    </ul>
+{% block title %}Admin Dashboard{% endblock %}
 
-    <h2>Conversation Management</h2>
-    <ul>
-        <form action="{{ url_for('admin_bp.toggle_ai') }}" method="post">
-            <button type="submit">{{ 'Disable' if config.ai_teacher_enabled else 'Enable' }} AI Teacher</button>
-        </form>
+{% block content %}
+    <!-- Stats Overview Section -->
+    <div class="stats-overview">
+        <div class="stat-card">
+            <div class="stat-icon">🦆</div>
+            <div class="stat-content">
+                <h3>Total Ducks</h3>
+                <p class="stat-value">{{ total_ducks }}</p>
+                <p class="stat-label">In Circulation</p>
+            </div>
+        </div>
 
+        <div class="stat-card">
+            <div class="stat-icon">📈</div>
+            <div class="stat-content">
+                <h3>Ducks Earned</h3>
+                <p class="stat-value">{{ ducks_earned_today }}</p>
+                <p class="stat-label">Today</p>
+            </div>
+        </div>
 
-        <form id="start-conversation-form">
-            <button type="submit">Start New Conversation</button>
-        </form>
-        <script>
-            document.getElementById('start-conversation-form').addEventListener('submit', function(event) {
-                event.preventDefault(); // Prevent the default form submission
+        <div class="stat-card">
+            <div class="stat-icon">🔄</div>
+            <div class="stat-content">
+                <h3>Pending Trades</h3>
+                <p class="stat-value">{{ pending_trades_count }}</p>
+                <a href="{{ url_for('admin_bp.pending_trades') }}" class="stat-link">View Details</a>
+            </div>
+        </div>
 
-                fetch('{{ url_for("message_bp.start_conversation") }}', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                    },
-                    body: new URLSearchParams()
-                })
-                .then(response => response.json())
-                .then(data => {
-                    // Flash a notification or handle UI updates
-                    alert(`Conversation started: ${data.title}`); // Example notification
-                    // Optionally update the page without reloading
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                });
-            });
-        </script>
+        <div class="stat-card">
+            <div class="stat-icon">👥</div>
+            <div class="stat-content">
+                <h3>Active Users</h3>
+                <p class="stat-value">{{ active_users_count }}</p>
+                <p class="stat-label">Online Now</p>
+            </div>
+        </div>
+    </div>
 
-        <form action="{{ url_for('admin_bp.toggle_message_sending') }}" method="post">
-            <button type="submit">{{ 'Disable' if config.message_sending_enabled else 'Enable' }} Message Sending</button>
-        </form>
-    </ul>
-    <h2>Ban A Word</h2>
+    <div class="admin-container">
+        <div class="admin-grid">
+            <div class="admin-card">
+                <h2 class="card-title">Users Online</h2>
+                <div class="card-content">
+                    <ul class="user-list">
+                        {% for user in users %}
+                        {% if user.is_online %}
+                        <li>
+                            <span class="user-name">{{ user.username }}</span>
+                            <span class="user-ducks">🦆 {{ user.ducks }}</span>
+                        </li>
+                        {% endif %}
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
 
-    <form action="{{ url_for('admin_bp.add_banned_word') }}" method="post">
-        <input type="text" name="word" placeholder="Enter new banned word" required>
-        <textarea name="reason" placeholder="Enter reason (optional)"></textarea>
-        <button type="submit">Add Word</button>
-    </form>
+            <div class="admin-card">
+                <h2 class="card-title">Conversation Management</h2>
+                <div class="card-content button-group">
+                    <button id="toggle-ai-button" class="admin-button primary">
+                        {{ 'Disable' if config.ai_teacher_enabled else 'Enable' }} AI Teacher
+                    </button>
+                    <button id="start-conversation-button" class="admin-button secondary">
+                        Start New Conversation
+                    </button>
+                    <button id="toggle-message-sending-button" class="admin-button primary">
+                        {{ 'Disable' if config.message_sending_enabled else 'Enable' }} Message Sending
+                    </button>
+                </div>
+            </div>
 
-    <h2>Adjust Ducks</h2>
-    <form action="{{ url_for('admin_bp.adjust_ducks') }}" method="post">
-        <label for="username">User:</label>
-        <select name="username" required>
-            {% for user in users|sort(attribute='username') %}
-            <option value="{{ user.username }}">{{ user.username }}</option>
-            {% endfor %}
-        </select>
+            <div class="admin-card">
+                <h2 class="card-title">Ban A Word</h2>
+                <div class="card-content">
+                    <div class="form-group">
+                        <input type="text" id="ban-word" class="admin-input" placeholder="Enter new banned word" required>
+                    </div>
+                    <div class="form-group">
+                        <textarea id="ban-reason" class="admin-textarea" placeholder="Enter reason (optional)"></textarea>
+                    </div>
+                    <button id="add-banned-word-button" class="admin-button warning">Add Word</button>
+                </div>
+            </div>
 
-        <label for="amount">Amount:</label>
-        <input type="number" name="amount" required placeholder="Enter amount (+/-)">
+            <div class="admin-card">
+                <h2 class="card-title">Adjust Ducks</h2>
+                <div class="card-content">
+                    <div class="form-group">
+                        <label for="duck-username">User:</label>
+                        <select id="duck-username" class="admin-select" required>
+                            {% for user in users|sort(attribute='username') %}
+                                <option value="{{ user.username }}">{{ user.username }} (🦆 {{ user.ducks }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="duck-amount">Amount:</label>
+                        <input type="number" id="duck-amount" class="admin-input" required placeholder="Enter amount (+/-)">
+                    </div>
+                    <button id="update-ducks-button" class="admin-button highlight">Update Ducks</button>
+                </div>
+            </div>
 
-        <button type="submit">Update Ducks</button>
-    </form>
+            <div class="admin-card">
+                <h2 class="card-title">Password Reset</h2>
+                <div class="card-content">
+                    <div class="form-group">
+                        <label for="reset-username">Select User:</label>
+                        <select id="reset-username" class="admin-select" required>
+                            {% for user in users|sort(attribute='username') %}
+                                <option value="{{ user.username }}">{{ user.username }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="new-password">New Password:</label>
+                        <input type="password" id="new-password" class="admin-input" required placeholder="Enter new password">
+                        <div class="password-strength-meter">
+                            <div class="strength-bar"></div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="confirm-password">Confirm Password:</label>
+                        <input type="password" id="confirm-password" class="admin-input" required placeholder="Confirm new password">
+                    </div>
+                    <div class="password-match-indicator"></div>
+                    <button id="reset-password-button" class="admin-button warning">Reset Password</button>
+                </div>
+            </div>
 
-    <h2>Trades</h2>
-    <a href="/admin/pending_trades">
-        <button>Pending Trades</button>
-    </a>
+            <div class="admin-card">
+                <h2 class="card-title">Duck Transactions</h2>
+                <div class="card-content">
+                    <div class="transaction-chart-container">
+                        <canvas id="duck-transactions-chart"></canvas>
+                    </div>
+                    <p class="chart-legend">Last 7 days of duck activity</p>
+                </div>
+            </div>
 
+            <div class="admin-card">
+                <h2 class="card-title">Trades</h2>
+                <div class="card-content button-group">
+                    <a href="/admin/pending_trades" class="admin-button-link">
+                        <button class="admin-button secondary">Pending Trades <span class="badge">{{ pending_trades_count }}</span></button>
+                    </a>
+                    <a href="/admin/trades" class="admin-button-link">
+                        <button class="admin-button secondary">Trade Logs</button>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
 
-</body>
-</html>
+    <!-- Pass URLs as data attributes to the JavaScript -->
+    <script>
+        window.urls = {
+            toggleAiUrl: "{{ url_for('admin_bp.toggle_ai') }}",
+            startConversationUrl: "{{ url_for('message_bp.start_conversation') }}",
+            toggleMessageSendingUrl: "{{ url_for('admin_bp.toggle_message_sending') }}",
+            addBannedWordUrl: "{{ url_for('admin_bp.add_banned_word') }}",
+            adjustDucksUrl: "{{ url_for('admin_bp.adjust_ducks') }}",
+            resetPasswordUrl: "{{ url_for('admin_bp.reset_password') }}",
+            duckTransactionsDataUrl: "{{ url_for('admin_bp.duck_transactions_data') }}"
+        };
+
+        // Sample data for the chart (you'll replace this with actual data from your backend)
+        window.chartData = {
+            labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+            earned: [45, 29, 68, 31, 52, 27, 38],
+            spent: [30, 15, 42, 25, 40, 20, 35]
+        };
+    </script>
+
+    <!-- Include Chart.js for the duck transactions chart -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.1/chart.min.js"></script>
+
+    <!-- Link to external JS files -->
+    <script src="{{ url_for('static', filename='js/admin/admin2.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/admin/password-manager.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/admin/duck-stats.js') }}"></script>
+{% endblock %}
