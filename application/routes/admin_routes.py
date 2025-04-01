@@ -217,7 +217,13 @@ def adjust_ducks():
     #     return redirect(url_for('admin_bp.admin_dashboard'))
 
     username = request.form.get('username')
-    amount = request.form.get('amount', type=int)
+    amount = request.form.get('amount')
+
+    try:
+        amount = float(amount)  # Allow decimals
+    except (TypeError, ValueError):
+        flash("Invalid duck amount.", "danger")
+        return redirect(url_for('admin_bp.dashboard'))
 
     user = User.query.filter_by(username=username).first()
     if user:
