@@ -429,3 +429,19 @@
     border-radius: 10px;
     margin-left: 5px;
 }
+
+/* For responsive rubber duck icons */
+.emoji.duck-icon {
+    height: 1.5em;
+    width: auto;
+    vertical-align: middle;
+    object-fit: contain;
+}
+
+/* General emoji styling for JS replacements */
+.emoji {
+    height: 1em;
+    width: auto;
+    vertical-align: middle;
+    object-fit: contain;
+}
