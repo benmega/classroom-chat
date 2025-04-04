@@ -345,10 +345,10 @@ def duck_transactions_data():
 
     # Since DuckTransaction is not fully implemented, return sample data
     # In a real implementation, you would query the database
-
+    print('route received')
     # Sample data structure
     labels = [(end_date - timedelta(days=i)).strftime('%a') for i in range(6, -1, -1)]
-    earned = [45, 29, 68, 31, 52, 27, 38]  # Replace with actual data
+    earned = [80, 29, 68, 31, 52, 27, 38]  # Replace with actual data
     spent = [30, 15, 42, 25, 40, 20, 35]  # Replace with actual data
 
     return jsonify({
