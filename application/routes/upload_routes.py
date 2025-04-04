@@ -8,11 +8,13 @@ from datetime import datetime
 import mimetypes
 
 from application.config import Config
+from application.decorators.licensing import premium_required
 
 upload_bp = Blueprint('upload_bp', __name__)
 
 
 @upload_bp.route('/upload_file', methods=['POST'])
+@premium_required
 def upload_file():
     if not request.is_json:
         return jsonify({"error": "Invalid JSON data"}), 400
