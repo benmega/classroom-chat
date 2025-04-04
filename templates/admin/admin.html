@@ -172,12 +172,8 @@
             duckTransactionsDataUrl: "{{ url_for('admin_bp.duck_transactions_data') }}"
         };
 
-        // Sample data for the chart (you'll replace this with actual data from your backend)
-        window.chartData = {
-            labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-            earned: [80, 29, 68, 31, 52, 27, 38],
-            spent: [30, 15, 42, 25, 40, 20, 35]
-        };
+        window.chartData = {{ chart_data | default({}) | tojson }};
+
     </script>
 
     <!-- Include Chart.js for the duck transactions chart -->

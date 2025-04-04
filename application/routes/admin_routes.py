@@ -1,7 +1,11 @@
 from datetime import datetime, timedelta
-from flask import Blueprint, request, jsonify, render_template, redirect, url_for, session, flash
+from sqlite3 import Date
+
+from flask import Blueprint, request, jsonify, render_template
 from functools import wraps
 from application.extensions import db
+from application.models.challenge import Challenge
+from application.models.challenge_log import ChallengeLog
 from application.models.conversation import Conversation
 from application.models.configuration import Configuration
 from application.models.duck_trade import DuckTradeLog
@@ -11,6 +15,7 @@ from application.models.user import User
 from application.config import Config
 from application.models.banned_words import BannedWords
 from sqlalchemy.sql import func
+from sqlalchemy import cast, Date
 
 admin_bp = Blueprint('admin_bp', __name__)
 admin_pass = Config.ADMIN_PASSWORD
@@ -103,26 +108,31 @@ def verify_password():
         return jsonify(success=False), 401
 
 
+
 @admin_bp.route('/dashboard')
 @check_auth
 def dashboard():
-    # Get total ducks in circulation
     total_ducks = db.session.query(func.sum(User.ducks)).scalar() or 0
 
-    # Get ducks earned today (placeholder since DuckTransaction is not fully implemented)
-    # In a real implementation, you would query actual transactions
+    # Calculate ducks earned today using actual challenge completions
     today = datetime.now().date()
-    ducks_earned_today = 0  # Replace with actual query when DuckTransaction is implemented
+    ducks_earned_today = db.session.query(
+        func.coalesce(func.sum(Challenge.value), 0)
+    ).select_from(ChallengeLog).join(
+        Challenge, Challenge.slug.ilike(ChallengeLog.challenge_name)
+    ).filter(
+        cast(ChallengeLog.timestamp, Date) == today
+    ).scalar()
 
-    # Get pending trades count
     pending_trades_count = DuckTradeLog.query.filter_by(status='pending').count()
-
-    # Get active users count
     active_users_count = User.query.filter_by(is_online=True).count()
 
     users = User.query.all()
     config = Configuration.query.first()
     banned_words = BannedWords.query.all()
+
+    # Get chart data from the utility function
+    chart_data = get_duck_transactions_data()
 
     return render_template('admin/admin.html',
                            users=users,
@@ -131,7 +141,16 @@ def dashboard():
                            total_ducks=total_ducks,
                            ducks_earned_today=ducks_earned_today,
                            pending_trades_count=pending_trades_count,
-                           active_users_count=active_users_count)
+                           active_users_count=active_users_count,
+                           chart_data=chart_data)
+
+
+@admin_bp.route('/duck_transactions_data')
+@check_auth
+def duck_transactions_data():
+    # Simply use the same utility function for the API endpoint
+    chart_data = get_duck_transactions_data()
+    return jsonify(chart_data)
 
 
 @admin_bp.route('/toggle-ai', methods=['POST'])
@@ -336,23 +355,45 @@ def reset_password():
     return jsonify({'success': True, 'message': f"Password reset for {username}"})
 
 
-@admin_bp.route('/duck_transactions_data')
-@check_auth
-def duck_transactions_data():
-    # Get date range (last 7 days)
+def get_duck_transactions_data():
+    """Generate chart data for duck transactions over the past 7 days"""
     end_date = datetime.now()
     start_date = end_date - timedelta(days=7)
 
-    # Since DuckTransaction is not fully implemented, return sample data
-    # In a real implementation, you would query the database
-    print('route received')
-    # Sample data structure
+    # Create date labels (last 7 days)
     labels = [(end_date - timedelta(days=i)).strftime('%a') for i in range(6, -1, -1)]
-    earned = [80, 29, 68, 31, 52, 27, 38]  # Replace with actual data
-    spent = [30, 15, 42, 25, 40, 20, 35]  # Replace with actual data
 
-    return jsonify({
+    # Calculate ducks earned per day
+    earned = []
+    spent = []
+
+    for i in range(6, -1, -1):
+        day = end_date - timedelta(days=i)
+        day_start = datetime(day.year, day.month, day.day, 0, 0, 0)
+        day_end = datetime(day.year, day.month, day.day, 23, 59, 59)
+
+        # Ducks earned from challenges
+        day_earned = db.session.query(
+            func.coalesce(func.sum(Challenge.value), 0)
+        ).select_from(ChallengeLog).join(
+            Challenge, Challenge.slug.ilike(ChallengeLog.challenge_name)
+        ).filter(
+            ChallengeLog.timestamp.between(day_start, day_end)
+        ).scalar() or 0
+
+        # Ducks spent in trades
+        day_spent = db.session.query(
+            func.coalesce(func.sum(DuckTradeLog.digital_ducks), 0)
+        ).filter(
+            DuckTradeLog.timestamp.between(day_start, day_end),
+            DuckTradeLog.status == 'approved'
+        ).scalar() or 0
+
+        earned.append(day_earned)
+        spent.append(day_spent)
+
+    return {
         'labels': labels,
         'earned': earned,
         'spent': spent
-    })
+    }
