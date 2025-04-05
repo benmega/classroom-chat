@@ -351,14 +351,15 @@
 
 .user-ducks {
     font-weight: bold;
-    color: var(--highlight-color);
+    color: var(--primary-color-dark);
 }
+
 
 /* Password reset section */
 .password-strength-meter {
     height: 5px;
-    background-color: #e0e0e0;
-    border-radius: 3px;
+    background-color: var(--border-color);
+    border-radius: var(--border-radius-small);
     margin-top: 5px;
     overflow: hidden;
 }
@@ -366,22 +367,22 @@
 .strength-bar {
     height: 100%;
     width: 0;
-    background-color: #ff6347;
-    transition: width 0.3s ease, background-color 0.3s ease;
+    background-color: var(--strength-weak);
+    transition: width var(--transition-default), background-color var(--transition-default);
 }
 
 .strength-bar.weak {
-    background-color: #ff6347;
+    background-color: var(--strength-weak);
     width: 30%;
 }
 
 .strength-bar.medium {
-    background-color: #ffa500;
+    background-color: var(--strength-medium);
     width: 60%;
 }
 
 .strength-bar.strong {
-    background-color: #32cd32;
+    background-color: var(--strength-strong);
     width: 100%;
 }
 
@@ -393,39 +394,56 @@
 }
 
 .password-match-indicator.match {
-    color: #32cd32;
+    color: var(--strength-strong);
 }
 
 .password-match-indicator.no-match {
-    color: #ff6347;
+    color: var(--strength-weak);
 }
 
 /* Duck transactions chart */
 .transaction-chart-container {
     width: 100%;
-    height: 200px;
-    margin-bottom: 10px;
+    height: var(--chart-height);
+    margin-bottom: var(--chart-margin);
 }
 
 .chart-legend {
     text-align: center;
     font-size: 0.85rem;
-    color: #666;
+    color: var(--text-color);
+    opacity: 0.8;
     margin: 5px 0 0 0;
 }
 
 /* Badge for pending trades count */
 .badge {
     display: inline-block;
-    min-width: 20px;
-    height: 20px;
-    line-height: 20px;
-    padding: 0 6px;
-    font-size: 12px;
+    min-width: var(--badge-size);
+    height: var(--badge-size);
+    line-height: var(--badge-size);
+    padding: var(--badge-padding);
+    font-size: var(--badge-font-size);
     font-weight: bold;
     color: white;
     text-align: center;
     background-color: var(--error-color);
-    border-radius: 10px;
+    border-radius: calc(var(--badge-size) / 2);
     margin-left: 5px;
+}
+
+/* For responsive rubber duck icons */
+.emoji.duck-icon {
+    height: var(--duck-icon-size);
+    width: auto;
+    vertical-align: middle;
+    object-fit: contain;
+}
+
+/* General emoji styling for JS replacements */
+.emoji {
+    height: var(--emoji-size);
+    width: auto;
+    vertical-align: middle;
+    object-fit: contain;
 }
