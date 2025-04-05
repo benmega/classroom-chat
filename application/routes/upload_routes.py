@@ -60,6 +60,7 @@ def upload_file():
 
 
 @upload_bp.route('/uploads/<filename>')
+@premium_required
 def uploaded_file(filename):
     file_path = os.path.join(Config.UPLOAD_FOLDER, filename)
     if os.path.exists(file_path):
