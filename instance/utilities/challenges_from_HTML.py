@@ -348,7 +348,24 @@ def select_folder():
     return filedialog.askdirectory()
 
 def main():
-    app = create_app(ProductionConfig)
+    print("Select environment:")
+    print("1. Development")
+    print("2. Production")
+    choice = input("Enter 1 or 2: ").strip()
+
+    if choice == "1":
+        config = DevelopmentConfig
+    elif choice == "2":
+        confirm = input("⚠️  You selected PRODUCTION. Type 'yes' to confirm: ").strip().lower()
+        if confirm != "yes":
+            print("Aborted.")
+            return
+        config = ProductionConfig
+    else:
+        print("Invalid selection. Aborted.")
+        return
+
+    app = create_app(config)
     folder_path = select_folder()
     process_html_files_with_csv(app, folder_path)
 
