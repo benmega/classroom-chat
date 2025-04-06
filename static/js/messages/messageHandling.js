@@ -91,29 +91,6 @@ function formatMessage(username, message) {
 }
 
 
-//function formatMessage(username, message) {
-//    const urlRegex = /(https?:\/\/[^\s\n\r]+)|(\bwww\.[^\s\n\r]+(?:\.[^\s\n\r]+)+\b)/g;
-//    const formattedMessage = message.replace(urlRegex, url => {
-//        const href = url.startsWith('http') ? url : 'http://' + url;
-//        return `<a href="${href}" target="_blank">${url}</a>`;
-//    });
-//
-//    return `<p><strong>${username}:</strong> ${formattedMessage}</p>`;
-//}
-
-//function formatMessage(username, message) {
-//    const urlRegex = ^/(https?:\/\/[^\s\n\r]+)|(\bwww\.[^\s\n\r]+(?:\.[^\s\n\r]+)+\b)/g;
-//    const formattedMessage = message.replace(urlRegex, url => {
-//        const href = url.startsWith('http') ? url : 'http://' + url;
-//        return `<a href="${href}" target="_blank">${url}</a>`;
-//    });
-//
-//    return `<p><strong>${username}:</strong> ${formattedMessage}</p>`;
-//}
-
-
-// send messages helper functions
-
 function getMessageInput() {
     return document.getElementById('message').value.trim();
 }
@@ -145,27 +122,29 @@ function sendRequest(url, params) {
 function handleResponse(data) {
     if (data.success) {
         if (data.system_message) {
-            displaySystemMessage(data.system_message); // handle system messages
+            displaySystemMessage(data.system_message); // Handle system messages
+            if (data.play_sound) {
+                playQuackSound();
+            }
         } else {
             clearMessageInput();
-            // Optionally: render user's message in chat if needed
         }
     } else {
         alert('Error: ' + data.error);
     }
 }
+
 function displaySystemMessage(message) {
     alert(message); // Simple alert for immediate feedback
 }
 
+// Function to play the quack sound
+function playQuackSound() {
+    let quack = new Audio("/static/sounds/quack.mp3"); // Ensure this file exists
+    quack.play().catch(error => console.error("Error playing sound:", error));
+}
 
-//function displaySystemMessage(message) {
-//    const chatBox = document.getElementById("chat"); // Assuming a chatBox element exists
-//    const systemMessageElement = document.createElement("div");
-//    systemMessageElement.className = "system-message";
-//    systemMessageElement.textContent = message;
-//    chatBox.appendChild(systemMessageElement);
-//}
+
 
 function handleError(error) {
     console.error('Error:', error);
@@ -175,8 +154,6 @@ function handleError(error) {
 function clearMessageInput() {
     document.getElementById('message').value = '';
 }
-
-
 
 
 // Image upload helper functions

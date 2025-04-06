@@ -3,6 +3,7 @@ import uuid
 
 from flask import Blueprint, jsonify
 from flask import render_template, request, redirect, url_for, session, flash
+from flask_wtf.csrf import generate_csrf
 
 from application import db
 from application.models.conversation import Conversation
@@ -13,6 +14,23 @@ from application.utilities.helper_functions import allowed_file
 from application.config import Config
 
 user_bp = Blueprint('user_bp', __name__)
+
+from flask_wtf import FlaskForm
+from wtforms import StringField, PasswordField, SubmitField
+from wtforms.validators import DataRequired
+
+class LoginForm(FlaskForm):
+    username = StringField(
+        'Username',
+        validators=[DataRequired()],
+        render_kw={"id": "username", "required": "required"}
+    )
+    password = PasswordField(
+        'Password',
+        validators=[DataRequired()],
+        render_kw={"id": "password", "required": "required"}
+    )
+    submit = SubmitField('Login', render_kw={"class": "login-button"})
 
 
 @user_bp.route('/get_users', methods=['GET'])
@@ -34,9 +52,11 @@ def get_user_id():
 
 @user_bp.route('/login', methods=['GET', 'POST'])
 def login():
-    if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
+    form = LoginForm()
+
+    if form.validate_on_submit():  # Automatically handles CSRF
+        username = form.username.data
+        password = form.password.data
 
         # Find the user by username
         user = User.query.filter_by(username=username).first()
@@ -68,9 +88,55 @@ def login():
 
         else:
             flash('Invalid username or password.', 'error')
-            return render_template('login.html')
 
-    return render_template('login.html')
+    return render_template('login.html', form=form)
+
+# @user_bp.route('/login', methods=['GET', 'POST'])
+# def login():
+#     if request.method == 'POST':
+#         username = request.form.get('username')
+#         password = request.form.get('password')
+#
+#
+#         # Validate CSRF token manually
+#         csrf_token = request.form.get("csrf_token")
+#         if csrf_token != session.get("_csrf_token"):
+#             flash("CSRF token is missing or invalid.", "error")
+#             return render_template('login.html', csrf_token=generate_csrf())
+#
+#         # Find the user by username
+#         user = User.query.filter_by(username=username).first()
+#
+#         # Validate credentials
+#         if user and user.check_password(password):
+#             session['user'] = user.username
+#             session.permanent = True  # Make the session permanent
+#             user.set_online(user.id)  # Mark the user as online
+#
+#             # Fetch the most recent conversation
+#             recent_conversation = (
+#                 Conversation.query
+#                 .order_by(Conversation.created_at.desc())
+#                 .first()
+#             )
+#
+#             if recent_conversation:
+#                 # Add the user to the conversation if not already a participant
+#                 if user not in recent_conversation.users:
+#                     recent_conversation.users.append(user)
+#                     db.session.commit()
+#
+#                 session['conversation_id'] = recent_conversation.id
+#             else:
+#                 session['conversation_id'] = None  # Or handle new conversation creation
+#             flash('Login successful!', 'success')
+#             return redirect(url_for('general_bp.index'))
+#
+#         else:
+#             flash('Invalid username or password.', 'error')
+#             return render_template('login.html', csrf_token=generate_csrf())
+#
+#     return render_template('login.html')
 
 
 @user_bp.route('/logout')
@@ -134,72 +200,6 @@ def update_profile():
 
     return redirect(url_for('user_bp.profile'))
 
-
-# @user_bp.route('/edit_profile', methods=['GET', 'POST'])
-# def edit_profile():
-#     user_id = session.get('user')
-#     user = User.query.filter_by(username=user_id).first()
-#
-#     if not user:
-#         flash('User not found!', 'danger')
-#         return redirect(url_for('user_bp.profile'))
-#
-#     if request.method == 'POST':
-#         # Update basic fields
-#         # user.username = request.form['username']
-#         ip_address = request.form.get('ip_address')
-#         user.ip_address = ip_address if ip_address else user.ip_address
-#         user.is_online = request.form.get('is_online') == 'true'
-#
-#         # Update password if provided
-#         password = request.form.get('password')
-#         if password:
-#             user.set_password(password)
-#
-#         # Prevent autoflush
-#         with db.session.no_autoflush:
-#             # Remove all skills and projects explicitly
-#             for skill in user.skills:
-#                 db.session.delete(skill)
-#             for project in user.projects:
-#                 db.session.delete(project)
-#
-#         # Update skills
-#         user.skills = []
-#         for skill_name in request.form.getlist('skills[]'):
-#             if skill_name.strip():
-#                 user.skills.append(Skill(name=skill_name.strip()))
-#
-#         # Update projects
-#         user.projects = []
-#         project_names = request.form.getlist('project_names[]')
-#         project_descriptions = request.form.getlist('project_descriptions[]')
-#         project_links = request.form.getlist('project_links[]')
-#         for name, desc, link in zip(project_names, project_descriptions, project_links):
-#             if name.strip():
-#                 user.projects.append(Project(name=name.strip(), description=desc.strip(), link=link.strip()))
-#
-#
-#         print(request)
-#         if 'profile_picture' in request.files:
-#             print(request.files)
-#             file = request.files['profile_picture']
-#             if file and allowed_file(file.filename):
-#                 # Generate a unique filename
-#                 filename = f"{uuid.uuid4().hex}_{file.filename.rsplit('.', 1)[1].lower()}"
-#                 filepath = os.path.join(Config.UPLOAD_FOLDER, filename)
-#
-#                 # Save the file
-#                 file.save(filepath)
-#
-#                 # Update user's profile picture
-#                 user.profile_picture = filename
-#
-#         db.session.commit()
-#         flash('Profile updated successfully!', 'success')
-#         return redirect(url_for('user_bp.profile'))
-#
-#     return render_template('edit_profile.html', user=user)
 
 @user_bp.route('/edit_profile', methods=['GET', 'POST'])
 def edit_profile():
@@ -294,7 +294,7 @@ def handle_profile_picture_upload(user):
         file = request.files['profile_picture']
         if file and allowed_file(file.filename):
             # Generate a unique filename
-            filename = f"{uuid.uuid4().hex}_{file.filename.rsplit('.', 1)[1].lower()}"
+            filename = f"{uuid.uuid4().hex}.{file.filename.rsplit('.', 1)[1].lower()}"
             filepath = os.path.join(Config.UPLOAD_FOLDER, filename)
 
             # Save the file and update user profile

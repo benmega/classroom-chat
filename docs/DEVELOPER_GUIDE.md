@@ -65,8 +65,9 @@ Includes:
 - Write unit tests for all new features and ensure existing tests pass.  
 - Run tests before submitting pull requests:  
   ```bash
-  pytest tests/
-Contributing
+  pytest ../tests/
+
+## Contributing
 Fork the repository: Create your own copy of the repository.
 Feature Development: Work on a new feature branch.
 Submit Pull Requests: Provide a clear description of changes made.

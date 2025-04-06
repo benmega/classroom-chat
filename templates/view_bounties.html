@@ -6,6 +6,15 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/bug_bounty.css') }}">
 </head>
 <body>
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <ul>
+          {% for message in messages %}
+            <li>{{ message }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
     <div id="bounty-container">
         <h1>All Bug Bounties</h1>
         <ul>

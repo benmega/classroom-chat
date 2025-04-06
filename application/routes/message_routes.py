@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify, session, flash, redirect, url_for, render_template
 from application.models.conversation import Conversation, conversation_users
-from application.helpers.db_helpers import get_user, save_message_to_db
-from application.helpers.validation_helpers import message_is_appropriate, detect_and_handle_challenge_url
+from application.utilities.db_helpers import get_user, save_message_to_db
+from application.utilities.validation_helpers import message_is_appropriate, detect_and_handle_challenge_url
 from application.ai.ai_teacher import get_ai_response
 from application.models.configuration import Configuration
 from application.extensions import db
@@ -38,9 +38,12 @@ def send_message():
     challenge_check = detect_and_handle_challenge_url(form_message, user.username)
     if challenge_check.get("handled"):
         # Send a congratulatory system message
-        system_message = f"Congrats {user.username}, on completing a challenge!"
-        # Add system message to chat (handle chat logic here)
-        return jsonify(success=True, system_message=system_message), 200
+        if challenge_check.get("details").get("success"):
+            system_message = f"Congrats {user.username}, on completing a challenge!"
+            return jsonify(success=True, system_message=system_message, play_sound=True), 200
+        else:
+            system_message = f"Error claiming challenge. Please refresh the page and try again. If the issue persists, ask Mr. Mega"
+            return jsonify(success=True, system_message=system_message), 200
 
     # Save message to the database
     if not save_message_to_db(user.id, form_message):
