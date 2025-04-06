@@ -12,7 +12,8 @@
       {
         "title": "Classroom Chat",
         "width": 800,
-        "height": 600
+        "height": 600,
+        "url": "http://127.0.0.1:5000/admin/dashboard"
       }
     ],
     "security": {
