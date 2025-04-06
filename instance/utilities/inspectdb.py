@@ -27,7 +27,7 @@ def search_in_table(cursor, table_name, column, search_value):
 
 
 def main():
-    db_path = '../users.db'  # Adjust your database path as needed
+    db_path = '../dev_users.db'  # Adjust your database path as needed
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
 

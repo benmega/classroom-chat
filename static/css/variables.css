@@ -1,3 +1,4 @@
+/* variables.css */
 :root {
     /* Colors */
     --primary-color: #0EB2BB; /* Teal */
@@ -39,4 +40,22 @@
 
     /* Transitions */
     --transition-default: 0.3s ease;
+
+    /* Password strength colors */
+    --strength-weak: var(--error-color);
+    --strength-medium: var(--highlight-hover); /* Orange */
+    --strength-strong: #32cd32; /* Green - adding as new variable */
+
+    /* Chart dimensions */
+    --chart-height: 200px;
+    --chart-margin: 10px;
+
+    /* Badge styling */
+    --badge-size: 20px;
+    --badge-padding: 0 6px;
+    --badge-font-size: 12px;
+
+    /* Icon sizing */
+    --duck-icon-size: 1.5em;
+    --emoji-size: 1em;
 }

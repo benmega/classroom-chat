@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,25 +8,23 @@
     <link rel="icon" href="{{ url_for('static', filename='images/logo.ico') }}" type="image/x-icon">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
     <link rel="stylesheet" href="/static/css/variables.css">
-
 </head>
-
 <body>
-
     <div id="login-container">
         <h1>Login to Classroom Chat</h1>
-        <form id="loginForm" method="POST" action="{{ url_for('user_bp.login') }}">
+        <form method="POST" action="{{ url_for('user_bp.login') }}">
+            {{ form.hidden_tag() }}  <!-- This includes CSRF token -->
+
             <label for="username">Username:</label>
-            <input type="text" id="username" name="username" required>
+            {{ form.username(class="form-control", id="username", required="required") }}
 
             <label for="password">Password:</label>
-            <input type="password" id="password" name="password" required>
+            {{ form.password(class="form-control", id="password", required="required") }}
 
-            <button type="submit">Login</button>
+            {{ form.submit(class="btn btn-primary") }}
         </form>
 
         <p>Don’t have an account? <a href="{{ url_for('user_bp.signup') }}">Sign up here</a>.</p>
     </div>
 </body>
-
 </html>

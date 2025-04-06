@@ -61,7 +61,7 @@ def interactive_drop_table():
     """
     Interactively prompts the user to select a table to drop.
     """
-    database_path = "C:\\Users\\Ben\\PycharmProjects\\groupChat2\\instance\\users.db"
+    database_path = "C:\\Users\\Ben\\PycharmProjects\\groupChat2\\instance\\dev_users.db"
 
     # List all tables
     tables = list_tables(database_path)

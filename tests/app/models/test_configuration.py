@@ -3,7 +3,7 @@ from application.models.configuration import Configuration
 from application.models.conversation import Conversation
 
 
-def test_conversation_history(test_client, init_db, sample_user):
+def test_conversation_history(client, init_db, sample_user):
     """Test conversation history page."""
     # Create a conversation and associate it with the sample_user
     conversation = Conversation(title="User Conversation")
@@ -11,10 +11,10 @@ def test_conversation_history(test_client, init_db, sample_user):
     db.session.add(conversation)
     db.session.commit()
 
-    with test_client.session_transaction() as sess:
+    with client.session_transaction() as sess:
         sess['user'] = sample_user.username
 
-    response = test_client.get('/message/conversation_history')
+    response = client.get('/message/conversation_history')
     assert response.status_code == 200
     assert b'User Conversation' in response.data
 

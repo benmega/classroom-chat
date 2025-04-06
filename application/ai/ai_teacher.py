@@ -5,10 +5,9 @@ from flask import Blueprint, jsonify, request
 from openai import OpenAI
 from application import db
 from application.config import Config
-from application.helpers.db_helpers import save_message_to_db
+from application.utilities.db_helpers import save_message_to_db
 from application.models.ai_settings import get_ai_settings
 from application.models.conversation import Conversation
-from application.models.message import Message
 from application.models.user import User
 
 
