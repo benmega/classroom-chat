@@ -1,0 +1,170 @@
+/* Updated login.css */
+body {
+    font-family: var(--font-family);
+    margin: 0;
+    background: var(--background-gradient);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+#login-container {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: var(--border-radius-medium);
+    box-shadow: var(--box-shadow-medium);
+    padding: 40px;
+    width: 400px;
+    max-width: 90%;
+    text-align: center;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    transition: transform var(--transition-default);
+}
+
+#login-container:hover {
+    transform: translateY(-10px);
+}
+
+h1 {
+    color: var(--primary-color);
+    margin-bottom: 20px;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+label {
+    font-weight: bold;
+    color: var(--text-color);
+    text-align: left;
+}
+
+input {
+    padding: var(--input-padding);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-small);
+    font-size: 16px;
+    transition: box-shadow var(--transition-default), border-color var(--transition-default);
+}
+
+input:focus {
+    outline: none;
+    border-color: var(--focus-border-color);
+    box-shadow: 0 0 8px var(--focus-border-color);
+    animation: pulseGlow 1.5s infinite;
+}
+
+@keyframes pulseGlow {
+    0% { box-shadow: 0 0 8px var(--focus-border-color); }
+    50% { box-shadow: 0 0 12px var(--focus-border-color); }
+    100% { box-shadow: 0 0 8px var(--focus-border-color); }
+}
+
+button {
+    padding: var(--button-padding);
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: var(--border-radius-small);
+    font-size: 18px;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: background-color var(--transition-default), box-shadow var(--transition-default);
+}
+
+button:hover {
+    background-color: var(--primary-color-dark);
+    box-shadow: 0 8px 15px rgba(0, 128, 128, 0.3);
+}
+
+button:active::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 300%;
+    height: 300%;
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 50%;
+    animation: rippleEffect 0.6s ease-out;
+}
+
+@keyframes rippleEffect {
+    0% {
+        width: 0;
+        height: 0;
+        opacity: 1;
+    }
+    100% {
+        width: 300%;
+        height: 300%;
+        opacity: 0;
+    }
+}
+
+p {
+    margin-top: 15px;
+    color: var(--text-color);
+}
+
+a {
+    color: var(--highlight-color);
+    text-decoration: none;
+    transition: color var(--transition-default);
+}
+
+a:hover {
+    color: var(--highlight-hover);
+    text-decoration: underline;
+}
+
+@media (max-width: 600px) {
+    #login-container {
+        padding: 20px;
+        width: 100%;
+    }
+
+    button {
+        font-size: 16px;
+    }
+
+    input {
+        font-size: 14px;
+    }
+}
+
+.login-button {
+    background-color: var(--secondary-color);
+    color: white;
+    padding: var(--input-padding);
+    border: none;
+    border-radius: var(--border-radius-small);
+    cursor: pointer;
+}
+
+.form-control {
+    width: 100%;
+    padding: var(--input-padding);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-small);
+    font-size: 16px;
+}
+
+.btn-primary {
+    background-color: var(--secondary-color);
+    color: white;
+    padding: var(--button-padding);
+    border: none;
+    border-radius: var(--border-radius-small);
+    cursor: pointer;
+}
+
+.btn-primary:hover {
+    background-color: var(--secondary-color-dark);
+}

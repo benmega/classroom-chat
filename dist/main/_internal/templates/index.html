@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+    <div id="container">
+
+        <!-- Store the username in a hidden div or directly in a JavaScript variable -->
+        <div id="currentUsername" style="display:none;">{{ username }}</div>
+
+        <div id="chat"></div>
+
+        <form id="messageForm">
+            <textarea  type="text" id="message" name="message" required></textarea>
+            <button type="submit">Send Message</button>
+        </form>
+
+        <input type="file" id="file" multiple>
+
+
+    </div>
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+    <script type="module" src="{{ url_for('static', filename='js/main.js') }}"></script>
+{% endblock %}

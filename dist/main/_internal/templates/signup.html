@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up - Classroom Chat</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap">
+    <link rel="icon" href="{{ url_for('static', filename='images/logo.ico') }}" type="image/x-icon">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/signup.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/variables.css') }}">
+</head>
+
+<body>
+    <div id="signup-container">
+        <h1>Sign-Up is Closed</h1>
+        <p>New accounts can no longer be created. If you need access, please ask Mr. Mega.</p>
+        <p>Already have an account? <a href="{{ url_for('user_bp.login') }}">Log in here</a>.</p>
+    </div>
+</body>
+
+</html>

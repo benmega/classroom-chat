@@ -1,0 +1,93 @@
+/* Conversation History Page */
+.history-container {
+    margin: 20px auto;
+    max-width: var(--max-container-width);
+    padding: 20px;
+    background: var(--background-light); /* Light background for the container */
+    border-radius: var(--border-radius-medium);
+    box-shadow: var(--box-shadow-medium);
+    font-family: var(--font-family);
+}
+
+.history-container h2 {
+    text-align: center;
+    font-size: 2rem;
+    color: var(--heading-color); /* Teal */
+    margin-bottom: 30px;
+}
+
+.conversation-list {
+    display: grid;
+    gap: 20px;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); /* Responsive grid */
+}
+
+.conversation-card {
+    background: white;
+    padding: 20px;
+    border-radius: var(--border-radius-medium);
+    box-shadow: var(--box-shadow-light);
+    transition: transform var(--transition-default), box-shadow var(--transition-default);
+}
+
+.conversation-card:hover {
+    transform: translateY(-10px); /* Hover effect */
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+}
+
+.conversation-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.conversation-header strong {
+    font-size: 1.2rem;
+    color: var(--text-color);
+}
+
+.date {
+    font-size: 0.9rem;
+    color: #888;
+}
+
+.view-btn {
+    display: inline-block;
+    padding: var(--button-padding);
+    margin-top: 10px;
+    text-decoration: none;
+    background-color: var(--primary-color); /* Teal */
+    color: white;
+    font-weight: bold;
+    border-radius: 30px;
+    text-align: center;
+    transition: background-color var(--transition-default), transform var(--transition-default);
+}
+
+.view-btn:hover {
+    background-color: var(--primary-color-dark); /* Darker teal */
+    transform: scale(1.05); /* Button hover effect */
+}
+
+.no-conversations {
+    text-align: center;
+    color: #555;
+    font-size: 1.1rem;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .conversation-list {
+        grid-template-columns: 1fr; /* Single column layout for small screens */
+    }
+
+    .conversation-card {
+        padding: 15px;
+    }
+
+    .view-btn {
+        width: 100%;
+        padding: 12px;
+    }
+}
