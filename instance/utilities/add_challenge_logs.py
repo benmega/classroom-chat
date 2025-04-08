@@ -147,16 +147,5 @@ def main():
             if another != 'y':
                 break
 
-
-# def main():
-#     app = create_app(DevelopmentConfig)
-#     with ((app.app_context())):
-#         username = "test"
-#         domain = "CodeCombat"
-#         challenges = ["Dungeon Escape", "Loop Master"]
-#         course_id=""
-#         course_instance= ""
-#         add_challenge_logs(username, domain, challenges, course_id, course_instance)
-
 if __name__ == "__main__":
     main()
