@@ -32,23 +32,19 @@ def setup_directories():
 
 
 
-
 @pytest.fixture(scope='session')
 def test_app():
-    app = create_app(TestingConfig)  # Replace with your actual app creation method
+    app = create_app(TestingConfig)
     with app.app_context():
-        db.create_all()  # Create all tables for tests
-        db.session.commit()  # Ensure the changes are committed
-        print(inspect(db.engine).get_table_names())  # Check created tables
-    yield app
-    with app.app_context():
+        db.create_all()
+        yield app                  # context is still active here
         db.session.remove()
-        db.drop_all()  # Clean up the test database
+        db.drop_all()
 
 @pytest.fixture
 def client(test_app):
-    with test_app.test_client() as client:
-        yield client
+    return test_app.test_client()
+
 
 # This fixture provides a function to add a sample user to the database for tests.
 @pytest.fixture
@@ -334,14 +330,14 @@ def sample_duck_trade(test_app, sample_user):
     """Create a sample duck trade for testing."""
     with test_app.app_context():
         from application.models.duck_trade import DuckTradeLog
+
         trade = DuckTradeLog(
             username=sample_user.username,
-            digital_ducks=50,
+            digital_ducks=1,
+            bit_ducks=[1,0,0,0,0,0,0],      # ← satisfy NOT NULL
+            byte_ducks=[0,0,0,0,0,0,0],     # ← satisfy NOT NULL
             status='pending'
         )
         db.session.add(trade)
         db.session.commit()
-        yield trade
-        # Cleanup
-        db.session.delete(trade)
-        db.session.commit()
+        return trade
