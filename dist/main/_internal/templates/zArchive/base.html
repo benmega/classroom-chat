@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Classroom Chat</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+</head>
+<body>
+
+    <!-- Navigation Bar -->
+    <header>
+        <div id="logo-container">
+            <h1>Classroom Chat</h1>
+        </div>
+        <nav>
+            <ul>
+                <li><a class="nav-button" href="{{ url_for('general_bp.index') }}">Home</a></li>
+                <li><a class="nav-button" href="{{ url_for('message_bp.conversation_history') }}">Conversation History</a></li>
+                {% if 'user' in session %}
+                    <li><a class="nav-button logout" href="{{ url_for('user_bp.logout') }}">Logout</a></li>
+                {% else %}
+                    <li><a class="nav-button login" href="{{ url_for('user_bp.login') }}">Login</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+    </header>
+
+
+    <!-- Main Content -->
+    <main>
+        {% block content %}
+        <!-- Content from other templates will be injected here -->
+        {% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <p>&copy; 2024 Classroom Chat. All Rights Reserved.</p>
+    </footer>
+
+</body>
+</html>

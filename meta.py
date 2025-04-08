@@ -34,3 +34,12 @@ def main():
 if __name__ == "__main__":
     main()
 
+# groupChat2/
+# │
+# ├── application/           # Flask code (routes, models, views, etc.)
+# ├── instance/              # SQLite DB files
+# ├── static/                # CSS, JS, images
+# ├── templates/             # Jinja2 HTML templates
+# ├── license/               # License file for freemium check
+# ├── main.py                # YFlask entry point
+# └── ...
