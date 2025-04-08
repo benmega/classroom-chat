@@ -1,0 +1,300 @@
+/* General body styles */
+body {
+    font-family: var(--font-family);
+    margin: 0;
+    background: var(--background-gradient); /* Same gradient as login */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    height: 100vh;
+    padding-top: 0; /* Removed padding-top to eliminate gap */
+}
+
+/* Header Styles */
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--header-padding);
+    background-color: var(--primary-color);
+    color: white;
+    box-shadow: var(--box-shadow-light);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    width: 100%; /* Ensures header spans the entire width */
+    box-sizing: border-box; /* Ensures padding doesn't affect width */
+}
+
+/* Navigation menu */
+nav ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    gap: 20px;
+}
+
+nav ul li {
+    display: inline-block;
+}
+
+.nav-button {
+    font-size: var(--font-size-medium);
+    color: white;
+    text-decoration: none;
+    padding: 12px 18px;
+    border-radius: var(--border-radius-medium);
+    background-color: var(--primary-color-dark);
+    transition: var(--transition-default);
+}
+
+.nav-button:hover {
+    background-color: var(--secondary-color-dark);
+    transform: scale(1.1);
+}
+
+.nav-button:active {
+    transform: scale(0.98);
+}
+
+/* Style for Login/Logout specific buttons */
+.nav-button.login {
+    background-color: var(--highlight-color);
+}
+
+.nav-button.login:hover {
+    background-color: var(--highlight-hover);
+}
+
+.nav-button.logout {
+    background-color: var(--error-color);
+}
+
+.nav-button.logout:hover {
+    background-color: var(--error-color-dark);
+}
+
+/* Container for the main content */
+#container {
+    background: rgba(255, 255, 255, 0.2); /* Glassmorphism effect */
+    border-radius: var(--border-radius-medium);
+    box-shadow: var(--box-shadow-medium);
+    padding: 40px;
+    width: var(--max-container-width);
+    max-width: none;
+    margin: 0;
+    text-align: center;
+    backdrop-filter: blur(10px); /* Frosted glass effect */
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    transition: transform var(--transition-default);
+}
+
+/* Hover effect on the container */
+#container:hover {
+    transform: translateY(-10px);
+}
+
+/* Chat messages and form layout */
+#chat {
+    margin: 0 auto 30px auto; /* Centers horizontally and adds bottom margin */
+    padding: var(--input-padding); /* Ensures a comfortable inner padding */
+    background-color: rgba(255, 255, 255, 0.3);
+    border-radius: var(--border-radius-medium);
+    height: var(--chat-height);
+    width: calc(100% - 40px); /* Fills the container but leaves a 20px margin on each side */
+    max-width: 100%; /* Prevents overflow in smaller containers */
+    overflow-y: auto;
+    text-align: left;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column; /* Flex layout for child elements */
+}
+
+/* Message input field */
+#messageForm {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+#message {
+    padding: var(--input-padding);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-small);
+    font-size: var(--font-size-medium);
+    transition: var(--transition-default);
+}
+
+/* Button styles */
+button {
+    padding: var(--button-padding);
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: var(--border-radius-small);
+    font-size: var(--font-size-large);
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: var(--transition-default);
+}
+
+button:hover {
+    background-color: var(--primary-color-dark);
+    box-shadow: var(--button-hover-shadow);
+}
+
+button:active::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 300%;
+    height: 300%;
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 50%;
+    animation: rippleEffect var(--ripple-duration) ease-out;
+}
+
+/* Ripple effect animation */
+@keyframes rippleEffect {
+    0% {
+        width: 0;
+        height: 0;
+        opacity: 1;
+    }
+    100% {
+        width: 300%;
+        height: 300%;
+        opacity: 0;
+    }
+}
+
+/* File input styling */
+input[type="file"] {
+    margin-top: 15px;
+    padding: var(--input-padding);
+}
+
+/* Styling for links */
+a {
+    color: var(--highlight-color);
+    text-decoration: none;
+    transition: var(--transition-default);
+}
+
+a:hover {
+    color: var(--highlight-hover);
+    text-decoration: underline;
+}
+
+/* Small screen adjustments */
+@media (max-width: 600px) {
+    #container {
+        padding: 20px;
+        width: 100%;
+    }
+
+    button {
+        font-size: var(--font-size-medium);
+    }
+
+    input {
+        font-size: var(--font-size-small);
+    }
+}
+
+* bit_Pond Container */
+#bit-pond-container {
+    margin: 20px auto;
+    text-align: center;
+    background: rgba(255, 255, 255, 0.4); /* Glass-like effect */
+    border-radius: 10px;
+    padding: 20px;
+    width: 90%;
+    max-width: 800px;
+    box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+/* Heading */
+#bit-pond-container h2 {
+    font-size: 28px;
+    color: #0EB2BB; /* Teal heading */
+    margin-bottom: 10px;
+}
+
+#bit-pond-container p {
+    font-size: 18px;
+    color: #333;
+    margin-bottom: 20px;
+}
+
+/* Items Container */
+#bit-pond-items {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 20px;
+}
+
+/* Individual Item Styling */
+.bit-pond-item {
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    width: 200px;
+    padding: 15px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    text-align: left;
+}
+
+.bit-pond-item:hover {
+    transform: scale(1.05);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+/* Item Heading */
+.bit-pond-item h3 {
+    font-size: 20px;
+    color: #0EB2BB;
+    margin-bottom: 5px;
+}
+
+/* Item Description */
+.item-desc {
+    font-size: 16px;
+    color: #555;
+    margin-bottom: 15px;
+}
+
+/* Purchase Button */
+.purchase-button {
+    background-color: #FFD700; /* Golden for purchasing */
+    color: #333;
+    border: none;
+    border-radius: 5px;
+    padding: 10px 15px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.purchase-button:hover {
+    background-color: #FFA500; /* Darker gold on hover */
+}
+
+.purchase-button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+.digital-ducks {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #f39c12; /* Golden duck color */
+    padding-left: 20px;
+}

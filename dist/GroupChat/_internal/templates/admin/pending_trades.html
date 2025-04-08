@@ -1,0 +1,72 @@
+<!-- templates/admin/pending_trades.html -->
+{% extends 'admin/admin_base.html' %}
+
+{% block content %}
+<h2>Pending Trades</h2>
+<table>
+    <tr>
+        <th>User</th>
+        <th>Digital Ducks</th>
+        <th>Bit Ducks</th>
+        <th>Byte Ducks</th>
+        <th>Action</th>
+    </tr>
+    {% for trade in trades %}
+    <tr id="trade-row-{{ trade.id }}">
+        <td>{{ trade.username }}</td>
+        <td>{{ trade.digital_ducks }}</td>
+        <td>{{ trade.bit_ducks }}</td>
+        <td>{{ trade.byte_ducks }}</td>
+        <td>
+            <button class="trade-action" data-trade-id="{{ trade.id }}" value="approve">Approve</button>
+            <button class="trade-action" data-trade-id="{{ trade.id }}" value="reject">Reject</button>
+        </td>
+    </tr>
+    {% endfor %}
+    <script>
+    document.addEventListener("DOMContentLoaded", () => {
+        document.querySelectorAll(".trade-action").forEach(button => {
+            button.addEventListener("click", async (event) => {
+                event.preventDefault();
+                const tradeId = event.target.dataset.tradeId;
+                const action = event.target.value;
+
+                const formData = new FormData();
+                formData.append("trade_id", tradeId);
+                formData.append("action", action);
+
+                try {
+                    const response = await fetch("{{ url_for('admin_bp.trade_action') }}", {
+                        method: "POST",
+                        body: formData,
+                    });
+
+                    const result = await response.json();
+
+                    if (response.ok && result.status === "success") {
+                        showToast(result.message, "success");
+
+                        // Remove the row from the table
+                        document.getElementById(`trade-row-${tradeId}`).remove();
+                    } else {
+                        showToast(result.message, "error");
+                    }
+                } catch (error) {
+                    showToast("Failed to process trade. Please try again.", "error");
+                    console.error("Trade action error:", error);
+                }
+            });
+        });
+
+        function showToast(message, type = "success") {
+            const toast = document.createElement("div");
+            toast.className = `toast ${type}`;
+            toast.innerText = message;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+    });
+    </script>
+
+</table>
+{% endblock %}

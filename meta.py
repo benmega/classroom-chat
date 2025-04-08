@@ -29,6 +29,7 @@ def print_directory_structure(startpath, exclude=[]):
 
 def main():
     project_directory = os.getcwd()
+    project_directory = project_directory + "/templates"
     print_directory_structure(project_directory, ['venv', '.git', '.idea'])
 
 if __name__ == "__main__":
@@ -41,5 +42,5 @@ if __name__ == "__main__":
 # ├── static/                # CSS, JS, images
 # ├── templates/             # Jinja2 HTML templates
 # ├── license/               # License file for freemium check
-# ├── main.py                # YFlask entry point
+# ├── main.py                # Flask entry point
 # └── ...

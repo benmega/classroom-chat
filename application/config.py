@@ -1,7 +1,7 @@
 import os
 import sys
 from dotenv import load_dotenv
-from pip._internal.utils import appdirs
+import appdirs
 
 # Load environment variables
 load_dotenv()
