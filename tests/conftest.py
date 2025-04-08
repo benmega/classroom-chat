@@ -10,7 +10,6 @@ import pytest
 from application import create_app
 from application.models.ai_settings import AISettings
 from application.models.banned_words import BannedWords
-from application.models.bounty import Bounty
 from application.models.challenge import Challenge
 from application.models.challenge_log import ChallengeLog
 from application.models.configuration import Configuration
@@ -175,23 +174,6 @@ def sample_banned_words(init_db):
     db.session.add_all(words)
     db.session.commit()
     return words
-
-
-@pytest.fixture
-def sample_bounty(init_db):
-    """Fixture to create a sample Bounty entry."""
-    bounty = Bounty(
-        user_id=1,
-        description="Test bug bounty",
-        bounty="50",
-        expected_behavior="Chat application should not crash under high load.",
-        image_path="images/bounty1.png",
-        status="Open"
-    )
-    db.session.add(bounty)
-    db.session.commit()
-    return bounty
-
 
 @pytest.fixture
 def sample_configuration(init_db):
