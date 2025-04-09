@@ -19,7 +19,7 @@ from application.models.course import Course
 from application.models.message import Message
 from application.models.project import Project
 from application.models.skill import Skill
-from application.models.trade import Trade
+# from application.models.trade import Trade
 from application.models.user import User
 from application.config import TestingConfig
 from sqlalchemy import inspect
@@ -78,6 +78,28 @@ def add_sample_user(init_db):
         return user
 
     return _add_user
+
+
+@pytest.fixture
+def sample_user_with_ducks(test_app):
+    """Fixture that creates a user with ducks and cleans up afterward."""
+    with test_app.app_context():
+        try:
+            user = User(username='user_with_ducks', password_hash='test_password', ducks=50)
+            db.session.add(user)
+            db.session.commit()
+            yield user
+        except Exception as e:
+            db.session.rollback()  # Rollback if there's any error
+            raise e  # Reraise the exception to fail the test
+        finally:
+            # Cleanup: Delete user and commit changes
+            try:
+                db.session.delete(user)
+                db.session.commit()
+            except Exception as cleanup_error:
+                db.session.rollback()  # In case of an error during cleanup
+                raise cleanup_error
 
 
 @pytest.fixture
@@ -267,51 +289,21 @@ def sample_image_data():
     return f"data:image/png;base64,{image_data}"
 
 
-@pytest.fixture
-def sample_user_with_ducks(test_app):
-    """Fixture that creates a user with ducks and cleans up afterward."""
-    with test_app.app_context():
-        try:
-            user = User(username='user_with_ducks', password_hash='test_password', ducks=50)
-            db.session.add(user)
-            db.session.commit()
-            yield user
-        except Exception as e:
-            db.session.rollback()  # Rollback if there's any error
-            raise e  # Reraise the exception to fail the test
-        finally:
-            # Cleanup: Delete user and commit changes
-            try:
-                db.session.delete(user)
-                db.session.commit()
-            except Exception as cleanup_error:
-                db.session.rollback()  # In case of an error during cleanup
-                raise cleanup_error
-
+#
 # @pytest.fixture
-# def sample_user_with_few_ducks(test_app):
+# def sample_trade(test_app, sample_user_with_ducks):
 #     with test_app.app_context():
-#         user = User(username='user_with_few_ducks', ducks=5)
-#         db.session.add(user)
+#         trade = Trade(
+#             user_id=sample_user_with_ducks.id,
+#             digital_ducks=10,
+#             duck_type='bit',
+#             status='pending'
+# ***REMOVED***
+#         db.session.add(trade)
 #         db.session.commit()
-#         yield user
-#         db.session.delete(user)
+#         yield trade
+#         db.session.delete(trade)
 #         db.session.commit()
-
-@pytest.fixture
-def sample_trade(test_app, sample_user_with_ducks):
-    with test_app.app_context():
-        trade = Trade(
-            user_id=sample_user_with_ducks.id,
-            digital_ducks=10,
-            duck_type='bit',
-            status='pending'
-***REMOVED***
-        db.session.add(trade)
-        db.session.commit()
-        yield trade
-        db.session.delete(trade)
-        db.session.commit()
 
 @pytest.fixture
 def auth_headers(sample_admin):

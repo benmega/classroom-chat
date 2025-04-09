@@ -9,7 +9,6 @@ from wtforms.validators import DataRequired, NumberRange
 
 from application import db
 from application.models.duck_trade import DuckTradeLog
-from application.models.trade import Trade
 
 # Define the blueprint
 duck_trade_bp = Blueprint('duck_trade_bp', __name__, template_folder='templates')
@@ -53,25 +52,8 @@ def to_binary(costs_dict):
 
 @duck_trade_bp.route('/')
 def index():
-    # Base 10 cost dictionary
-    costs_base10 = {
-        'hint_cost': 1,
-        'solution_cost': 10,
-        'debug_cost': 2,
-        'double_ducks_cost': 20,
-        'setup_cost': 1,
-        'packup_cost': 1,
-        'vip_cost': 1000,
-        'wallpaper_cost': 100,
-        'font_cost': 50,
-        'avatar_cost': 200
-    }
-
-    # Convert costs to binary
-    costs_binary = to_binary(costs_base10)
-
-    return render_template('bit_pond.html', title='bit_Pond', **costs_binary)
-
+    form = DuckTradeForm()
+    return render_template('bit_shift.html', form=form)
 
 @duck_trade_bp.route('/submit_trade', methods=['POST'])
 def submit_trade():
@@ -132,28 +114,22 @@ def bit_shift():
     form = DuckTradeForm()
     return render_template('bit_shift.html', form=form)
 
-
-@duck_trade_bp.route('/update_trade_status/<int:trade_id>', methods=['POST'])
-def update_trade_status(trade_id):
-    trade = Trade.query.get_or_404(trade_id)
-    new_status = request.form.get('status')
-    if new_status not in ['Pending', 'Completed', 'Cancelled']:
-        flash('Invalid status selected.', 'error')
-        return redirect(url_for('duck_trade_bp.trade_logs'))
-
-    trade.status = new_status
-    db.session.commit()
-    flash('Trade status updated successfully.', 'success')
-    return redirect(url_for('duck_trade_bp.trade_logs'))
-
-
-@duck_trade_bp.route('/trade_logs')
-def trade_logs():
-    trades = Trade.query.order_by(Trade.timestamp.desc()).all()
-    return render_template('trade_logs.html', trades=trades)
+#
+# @duck_trade_bp.route('/update_trade_status/<int:trade_id>', methods=['POST'])
+# def update_trade_status(trade_id):
+#     trade = Trade.query.get_or_404(trade_id)
+#     new_status = request.form.get('status')
+#     if new_status not in ['Pending', 'Completed', 'Cancelled']:
+#         flash('Invalid status selected.', 'error')
+#         return redirect(url_for('duck_trade_bp.trade_logs'))
+#
+#     trade.status = new_status
+#     db.session.commit()
+#     flash('Trade status updated successfully.', 'success')
+#     return redirect(url_for('duck_trade_bp.trade_logs'))
 
 
-
-
-
-
+# @duck_trade_bp.route('/trade_logs')
+# def trade_logs():
+#     trades = Trade.query.order_by(Trade.timestamp.desc()).all()
+#     return render_template('trade_logs.html', trades=trades)
