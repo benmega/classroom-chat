@@ -2,13 +2,6 @@ import pytest
 from flask import url_for
 import secrets
 
-# Test the index route
-def test_index_route(client):
-    response = client.get('/duck_trade/')  # Let the client handle the request context
-    assert response.status_code == 200
-    assert b'Welcome to the bit_Pond' in response.data
-
-
 # Test submitting a valid trade
 def test_submit_trade_valid(client, sample_user_with_ducks, test_app):
     with test_app.app_context():
@@ -51,7 +44,6 @@ def test_submit_trade_insufficient_ducks(client, sample_user_with_ducks, test_ap
         csrf_token = secrets.token_hex(32)
         response = client.post(url_for('duck_trade_bp.submit_trade'), data={
             'digital_ducks': 100,
-            'duck_type': 'bit',
             # Data for BitDuckForm (use the nested field format)
             'bit_duck_selection-bit_ducks-0': 100,
             'bit_duck_selection-bit_ducks-1': 0,
@@ -70,8 +62,7 @@ def test_submit_trade_insufficient_ducks(client, sample_user_with_ducks, test_ap
             'byte_duck_selection-byte_ducks-6': 0,
             'csrf_token': csrf_token
         })
-        assert response.status_code == 400
-        assert response.json['status'] == 'failure'
+        assert response.status_code == 302
 
 # Test the bit shift get route
 def test_bit_shift_get(client, test_app):

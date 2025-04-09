@@ -11,7 +11,6 @@ from application.models.conversation import Conversation
 from application.models.configuration import Configuration
 from application.models.duck_trade import DuckTradeLog
 from application.models.message import Message
-from application.models.trade import Trade
 from application.models.user import User
 from application.models.banned_words import BannedWords
 from application.config import Config
@@ -370,11 +369,11 @@ def strike_message(message_id):
 # Trade Management Routes
 # --------------------------
 
-@admin_bp.route('/trades')
-@check_auth
-def trades():
-    trades = Trade.query.order_by(Trade.timestamp.desc()).all()
-    return render_template('admin/trades.html', trades=trades)
+# @admin_bp.route('/trades')
+# @check_auth
+# def trades():
+#     trades = Trade.query.order_by(Trade.timestamp.desc()).all()
+#     return render_template('admin/trades.html', trades=trades)
 
 
 @admin_bp.route('/pending_trades', methods=['GET'])
