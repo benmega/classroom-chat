@@ -37,7 +37,7 @@ def test_app():
     app = create_app(TestingConfig)
     with app.app_context():
         db.create_all()
-        yield app                  # context is still active here
+        yield app
         db.session.remove()
         db.drop_all()
 
@@ -46,7 +46,6 @@ def client(test_app):
     return test_app.test_client()
 
 
-# This fixture provides a function to add a sample user to the database for tests.
 @pytest.fixture
 def init_db(test_app):
     """Provide a transactional database session for the test."""
@@ -289,15 +288,15 @@ def sample_user_with_ducks(test_app):
                 db.session.rollback()  # In case of an error during cleanup
                 raise cleanup_error
 
-@pytest.fixture
-def sample_user_with_few_ducks(test_app):
-    with test_app.app_context():
-        user = User(username='user_with_few_ducks', ducks=5)
-        db.session.add(user)
-        db.session.commit()
-        yield user
-        db.session.delete(user)
-        db.session.commit()
+# @pytest.fixture
+# def sample_user_with_few_ducks(test_app):
+#     with test_app.app_context():
+#         user = User(username='user_with_few_ducks', ducks=5)
+#         db.session.add(user)
+#         db.session.commit()
+#         yield user
+#         db.session.delete(user)
+#         db.session.commit()
 
 @pytest.fixture
 def sample_trade(test_app, sample_user_with_ducks):
