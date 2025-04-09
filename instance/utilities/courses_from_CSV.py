@@ -15,7 +15,7 @@ def populate_courses_from_csv(folder_path):
     Returns:
         None
     """
-    csv_file_path = os.path.join(folder_path, "CodeCombat_Courses.csv")
+    csv_file_path = os.path.join(folder_path, "courses.csv")
 
     if not os.path.exists(csv_file_path):
         print(f"CSV file not found in folder: {csv_file_path}")
@@ -31,7 +31,7 @@ def populate_courses_from_csv(folder_path):
                 domain = row["URL"].split("//")[-1].split("/")[0]
                 name = row["File Name"].replace(".html", "")
                 description = row.get("Description", "No description provided.")
-                default_challenge_value = row["default_challenge_value"]
+                default_challenge_value = row["challenge_value"]
                 # Use the new Session.get() method
                 course = db.session.get(Course, course_id)
                 if course:
@@ -65,8 +65,7 @@ if __name__ == "__main__":
     # Initialize Flask app
     app = create_app()
 
-    # Example usage
-    folder_path = r"C:\Users\Ben\OneDrive\Career\Teaching\Blossom\Computer Science\Code Combat\Map HTML"
+    folder_path = r"C:\Users\Ben\OneDrive\Career\Teaching\Blossom\Computer Science\Ozaria\Map HTML"
 
     with app.app_context():
         populate_courses_from_csv(folder_path)

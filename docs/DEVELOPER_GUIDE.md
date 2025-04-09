@@ -5,8 +5,6 @@
 ### High-Level Overview:
 ├── app/ │ ├── init.py │ ├── models.py │ ├── routes.py │ ├── templates/ │ └── static/ ├── groupChat2/ │ ├── alembic/ │ ├── application/ │ ├── docs/ │ ├── instance/ │ ├── static/ │ ├── templates/ │ ├── tests/ │ ├── userData/ │ ├── config.env │ ├── config.py │ ├── main.py │ └── README.md
 
-markdown
-Copy code
 
 ### Detailed Project Structure:
 #### 1. **GroupChat2 Directory**  
@@ -79,7 +77,6 @@ Additional Notes:
 Keep your branches synchronized with the main repository.
 Add clear and concise documentation for all new features or changes.
 Use meaningful commit messages to explain the reasoning behind each change.
-Copy code
 
 
 

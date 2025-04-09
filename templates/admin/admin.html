@@ -6,7 +6,9 @@
     <!-- Stats Overview Section -->
     <div class="stats-overview">
         <div class="stat-card">
-            <div class="stat-icon">🦆</div>
+            <div class="stat-icon">
+                <img src="/static/images/rubber_duck.jpg" alt="Rubber Duck" class="emoji duck-icon">
+            </div>
             <div class="stat-content">
                 <h3>Total Ducks</h3>
                 <p class="stat-value">{{ total_ducks }}</p>
@@ -143,18 +145,6 @@
                     <p class="chart-legend">Last 7 days of duck activity</p>
                 </div>
             </div>
-
-            <div class="admin-card">
-                <h2 class="card-title">Trades</h2>
-                <div class="card-content button-group">
-                    <a href="/admin/pending_trades" class="admin-button-link">
-                        <button class="admin-button secondary">Pending Trades <span class="badge">{{ pending_trades_count }}</span></button>
-                    </a>
-                    <a href="/admin/trades" class="admin-button-link">
-                        <button class="admin-button secondary">Trade Logs</button>
-                    </a>
-                </div>
-            </div>
         </div>
     </div>
 
@@ -170,19 +160,15 @@
             duckTransactionsDataUrl: "{{ url_for('admin_bp.duck_transactions_data') }}"
         };
 
-        // Sample data for the chart (you'll replace this with actual data from your backend)
-        window.chartData = {
-            labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-            earned: [45, 29, 68, 31, 52, 27, 38],
-            spent: [30, 15, 42, 25, 40, 20, 35]
-        };
+        window.chartData = {{ chart_data | default({}) | tojson }};
+
     </script>
 
     <!-- Include Chart.js for the duck transactions chart -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.1/chart.min.js"></script>
 
     <!-- Link to external JS files -->
-    <script src="{{ url_for('static', filename='js/admin/admin2.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/admin/admin.js') }}"></script>
     <script src="{{ url_for('static', filename='js/admin/password-manager.js') }}"></script>
     <script src="{{ url_for('static', filename='js/admin/duck-stats.js') }}"></script>
 {% endblock %}

@@ -1,75 +1,105 @@
-//import config from './config.js';
-//
-//// TODO Connect to rest of code
-//// Access admin credentials and socket
-//const ADMIN_USER = config.adminUser;
-//const ADMIN_PASS = config.adminPass;
-//const socket = io.connect(config.adminSocket);
-//
-//socket.on('user_status_change', function(data) {
-//    const userElement = document.getElementById(`user-${data.user_id}`);
-//    if (userElement) {
-//        userElement.getElementsByClassName('status')[0].textContent = data.is_online ? 'Online' : 'Offline';
-//    }
-//});
-//
-//document.addEventListener("DOMContentLoaded", function() {
-//    if (username === ADMIN_USER) {
-//        fetchAdminUsers();
-//    }
-//});
-//
-//function fetchAdminUsers() {
-//    const queryParams = new URLSearchParams({ username: ADMIN_USER, password: ADMIN_PASS });
-//    fetch(`/admin/users?${queryParams}`)
-//        .then(response => {
-//            if (!response.ok) throw new Error('Failed to fetch users');
-//            return response.json();
-//        })
-//        .then(displayUsers)
-//        .catch(error => console.error('Error fetching users:', error));
-//}
-//
-//function displayUsers(users) {
-//    let usersTable = document.getElementById('users-table');
-//    users.forEach(user => {
-//        let row = usersTable.insertRow();
-//        console.log('user display admin.js')
-//        row.insertCell(0).innerHTML = user.username;
-//        row.insertCell(1).innerHTML = user.ip_address;
-//        row.insertCell(2).innerHTML = user.is_online ? 'Online' : 'Offline';  // Display online status
-//        row.insertCell(3).innerHTML = `<input type="checkbox" ${user.is_ai_teacher ? 'checked' : ''} onchange="toggleAITeacher(${user.id}, this.checked)">`;
-//        row.insertCell(4).innerHTML = `<button onclick="changeUsername(${user.id})">Change Username</button>`;
-//    });
-//}
-//
-//window.toggleAITeacher = function(userId, isChecked) {
-//    fetch(`/admin/users/${userId}`, {
-//        method: 'PUT',
-//        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-//        body: new URLSearchParams({
-//            username: ADMIN_USER,
-//            password: ADMIN_PASS,
-//            is_ai_teacher: isChecked
-//        })
-//    }).then(response => {
-//        if (!response.ok) console.error('Failed to update AI teacher status');
-//    }).catch(error => console.error('Error updating AI teacher status:', error));
-//};
-//
-//window.changeUsername = function(userId) {
-//    let newUsername = prompt("Enter new username:");
-//    if (newUsername) {
-//        fetch(`/admin/users/${userId}`, {
-//            method: 'PUT',
-//            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-//            body: new URLSearchParams({
-//                username: ADMIN_USER,
-//                password: ADMIN_PASS,
-//                username: newUsername
-//            })
-//        }).then(response => {
-//            if (!response.ok) console.error('Failed to change username');
-//        }).catch(error => console.error('Error changing username:', error));
-//    }
-//};
+// Toggle AI Teacher
+document.getElementById('toggle-ai-button').addEventListener('click', function() {
+    fetch(window.urls.toggleAiUrl, {
+        method: 'POST',
+    })
+    .then(response => response.json())
+    .then(data => {
+        alert(data.message);  // Assuming the response contains a message
+        // Optionally update button text here based on the new status
+    })
+    .catch(error => { console.error('Error:', error); });
+});
+
+// Start a new conversation
+document.getElementById('start-conversation-button').addEventListener('click', function() {
+    fetch(window.urls.startConversationUrl, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: new URLSearchParams()  // Empty body, you can add parameters if needed
+    })
+    .then(response => response.json())
+    .then(data => {
+        alert(`Conversation started: ${data.title}`);
+    })
+    .catch(error => { console.error('Error:', error); });
+});
+
+// Toggle Message Sending
+document.getElementById('toggle-message-sending-button').addEventListener('click', function() {
+    fetch(window.urls.toggleMessageSendingUrl, {
+        method: 'POST',
+    })
+    .then(response => response.json())
+    .then(data => {
+        alert(data.message);  // Assuming the response contains a message
+        // Optionally update button text here based on the new status
+    })
+    .catch(error => { console.error('Error:', error); });
+});
+
+// Ban a word
+document.getElementById('add-banned-word-button').addEventListener('click', function() {
+    const word = document.getElementById('ban-word').value;
+    const reason = document.getElementById('ban-reason').value;
+
+    fetch(window.urls.addBannedWordUrl, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: new URLSearchParams({
+            'word': word,
+            'reason': reason
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        alert(data.message); // Assuming the response contains a message
+    })
+    .catch(error => { console.error('Error:', error); });
+});
+
+// Adjust Ducks
+document.getElementById('update-ducks-button').addEventListener('click', function() {
+    const username = document.getElementById('duck-username').value;
+    const amount = document.getElementById('duck-amount').value;
+
+    fetch(window.urls.adjustDucksUrl, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: new URLSearchParams({
+            'username': username,
+            'amount': amount
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        alert(data.message); // Assuming the response contains a message
+    })
+    .catch(error => { console.error('Error:', error); });
+});
+
+function replaceDuckEmojis() {
+    document.querySelectorAll('*').forEach(el => {
+        el.childNodes.forEach(node => {
+            if (node.nodeType === 3 && node.nodeValue.includes("🦆")) {
+                const parts = node.nodeValue.split("🦆");
+                const fragment = document.createDocumentFragment();
+
+                parts.forEach((text, index) => {
+                    fragment.appendChild(document.createTextNode(text));
+                    if (index < parts.length - 1) {
+                        const img = document.createElement('img');
+                        img.src = "/static/images/rubber_duck.jpg";
+                        img.alt = "Rubber Duck";
+                        img.className = "emoji";
+                        fragment.appendChild(img);
+                    }
+                });
+
+                el.replaceChild(fragment, node);
+            }
+        });
+    });
+}
+
+document.addEventListener('DOMContentLoaded', replaceDuckEmojis);

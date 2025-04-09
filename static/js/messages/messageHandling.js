@@ -1,4 +1,5 @@
 // messageHandling.js
+const updateInterval = 2000 // Set an interval to update the conversation every 2 seconds
 
 export function setupMessagingAndConversation() {
     messageForm.addEventListener('submit', function(e) {
@@ -7,8 +8,7 @@ export function setupMessagingAndConversation() {
         uploadImage();
         updateConversation();
     });
-    // Set an interval to update the conversation every 2 seconds
-    setInterval(updateConversation, 2000);
+    setInterval(updateConversation, updateInterval);
 }
 
 export function updateConversation() {
@@ -30,7 +30,6 @@ export function sendMessage() {
         return;
     }
 
-    // Since username is stored in session, we don’t need to send it manually
     const params = createRequestParams({ message });
 
     sendRequest('message/send_message', params)
@@ -40,7 +39,6 @@ export function sendMessage() {
 
 
 // update conversation helper functions
-
 function fetchCurrentConversation() {
     return fetch('message/get_current_conversation')
         .then(response => {
@@ -122,7 +120,7 @@ function sendRequest(url, params) {
 function handleResponse(data) {
     if (data.success) {
         if (data.system_message) {
-            displaySystemMessage(data.system_message); // Handle system messages
+            alert(data.system_message); // Handle system messages
             if (data.play_sound) {
                 playQuackSound();
             }
@@ -134,16 +132,11 @@ function handleResponse(data) {
     }
 }
 
-function displaySystemMessage(message) {
-    alert(message); // Simple alert for immediate feedback
-}
-
 // Function to play the quack sound
 function playQuackSound() {
     let quack = new Audio("/static/sounds/quack.mp3"); // Ensure this file exists
     quack.play().catch(error => console.error("Error playing sound:", error));
 }
-
 
 
 function handleError(error) {
