@@ -85,7 +85,7 @@ def submit_trade():
         if is_ajax:
             return jsonify({'status': 'error', 'message': error_message, 'errors': form.errors}), 400
         flash(error_message, "danger")
-        return redirect(url_for('duck_trade_bp.trade_page'))
+        return redirect(url_for('duck_trade_bp.index'))
 
     try:
         username = session.get('user')
@@ -94,7 +94,7 @@ def submit_trade():
             if is_ajax:
                 return jsonify({'status': 'error', 'message': error_message}), 403
             flash(error_message, "warning")
-            return redirect(url_for('duck_trade_bp.trade_page'))
+            return redirect(url_for('duck_trade_bp.index'))
 
         # Extract trade details
         digital_ducks = form.digital_ducks.data
@@ -116,7 +116,7 @@ def submit_trade():
             return jsonify({'status': 'success', 'message': success_message})
 
         flash(success_message, "success")
-        return redirect(url_for('duck_trade_bp.trade_page'))
+        return redirect(url_for('duck_trade_bp.index'))
 
     except Exception as e:
         db.session.rollback()
@@ -124,7 +124,7 @@ def submit_trade():
         if is_ajax:
             return jsonify({'status': 'error', 'message': error_message}), 500
         flash(error_message, "danger")
-        return redirect(url_for('duck_trade_bp.trade_page'))
+        return redirect(url_for('duck_trade_bp.index'))
 
 
 @duck_trade_bp.route('/bit_shift', methods=['GET'])
