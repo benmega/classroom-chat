@@ -55,6 +55,7 @@ class TestingConfig(Config):
     SQLALCHEMY_ECHO = False
     SERVER_NAME = 'localhost:5000' # TODO Confirm why this was commented out 3.22.25
     WTF_CSRF_ENABLED = False
+    RATELIMIT_ENABLED = False
 
 
 class ProductionConfig(Config):
