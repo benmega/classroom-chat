@@ -91,6 +91,7 @@ def set_active_conversation():
 
 
 @message_bp.route('/get_current_conversation', methods=['GET'])
+@limiter.limit("60 per minute")
 def get_current_conversation():
     # Fetch the most recent conversation
     conversation = Conversation.query.order_by(Conversation.created_at.desc()).first()

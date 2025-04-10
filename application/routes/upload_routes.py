@@ -7,12 +7,14 @@ from PIL import Image
 from datetime import datetime
 import mimetypes
 
+from application import limiter
 from application.config import Config
 
 upload_bp = Blueprint('upload_bp', __name__)
 
 
 @upload_bp.route('/upload_file', methods=['POST'])
+@limiter.limit("10 per minute; 20 per day")
 def upload_file():
     if not request.is_json:
         return jsonify({"error": "Invalid JSON data"}), 400
