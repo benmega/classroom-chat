@@ -3,7 +3,6 @@ def setup_models():
     from .configuration import Configuration
     from .ai_settings import AISettings
     from .banned_words import BannedWords
-    from .bounty import Bounty
     from .challenge import Challenge
     from .challenge_log import ChallengeLog
     from .conversation import Conversation

@@ -11,7 +11,7 @@ class Course(db.Model):
     description = db.Column(db.Text, default="No description provided.")
     is_active = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    base_challenge_value = db.Column(db.Integer, default=1)
+    default_challenge_value = db.Column(db.Integer, default=1)
 
     def __repr__(self):
         return f"<Course(id={self.id}, name={self.name}, domain={self.domain})>"
