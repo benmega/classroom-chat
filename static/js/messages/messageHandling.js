@@ -26,7 +26,7 @@ export function sendMessage() {
     const message = getMessageInput();
 
     if (!message) {
-        alert('Message is required.');
+        showAlert('Message is required.');
         return;
     }
 
@@ -112,15 +112,21 @@ function sendRequest(url, params) {
             'Content-Type': 'application/x-www-form-urlencoded',
         },
         body: params
-    }).then(response => response.json());
+    }).then(response => {
+        if (!response.ok) {
+            return response.json().then(errorData => {
+                throw errorData;
+            });
+        }
+        return response.json();
+    });
 }
-
 
 
 function handleResponse(data) {
     if (data.success) {
         if (data.system_message) {
-            alert(data.system_message); // Handle system messages
+            showAlert(data.system_message);
             if (data.play_sound) {
                 playQuackSound();
             }
@@ -128,7 +134,7 @@ function handleResponse(data) {
             clearMessageInput();
         }
     } else {
-        alert('Error: ' + data.error);
+        showAlert('Error: ' + (data.error || "Something went wrong."));
     }
 }
 
@@ -141,7 +147,11 @@ function playQuackSound() {
 
 function handleError(error) {
     console.error('Error:', error);
-    alert('An unexpected error occurred.');
+    if (error && error.message) {
+        showAlert('Error: ' + error.message);
+    } else {
+        showAlert('An unexpected error occurred.');
+    }
 }
 
 function clearMessageInput() {
@@ -204,3 +214,13 @@ function handleUploadResponse(data) {
     }
 }
 
+function showAlert(message) {
+    const iframe = document.createElement("iframe");
+    iframe.style.display = "none";
+    iframe.src = "data:text/plain,";
+    document.body.appendChild(iframe);
+
+    // Use iframe window to override the alert box title
+    iframe.contentWindow.alert("Mr. Mega says\n\n" + message);
+    document.body.removeChild(iframe);
+}

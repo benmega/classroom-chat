@@ -295,7 +295,7 @@ def handle_profile_picture_upload(user):
         if file and allowed_file(file.filename):
             # Generate a unique filename
             filename = f"{uuid.uuid4().hex}.{file.filename.rsplit('.', 1)[1].lower()}"
-            filepath = os.path.join(Config.UPLOAD_FOLDER, filename)
+            filepath = os.path.join(Config.UPLOAD_FOLDER, 'profile_pictures', filename)
 
             # Save the file and update user profile
             file.save(filepath)
@@ -348,7 +348,7 @@ def delete_profile_picture():
 
     if user.profile_picture:
         # Remove the file from storage
-        filepath = os.path.join(Config.UPLOAD_FOLDER, user.profile_picture)
+        filepath = os.path.join(Config.UPLOAD_FOLDER, 'profile_pictures', user.profile_picture)
         if os.path.exists(filepath):
             os.remove(filepath)
 
@@ -376,13 +376,13 @@ def upload_profile_picture():
 
     if file and allowed_file(file.filename):
         filename = f"{uuid.uuid4().hex}_{file.filename.rsplit('.', 1)[1].lower()}"
-        filepath = os.path.join(Config.UPLOAD_FOLDER, filename)
+        filepath = os.path.join(Config.UPLOAD_FOLDER, 'profile_pictures' , filename)
         file.save(filepath)
 
         # Update the user's profile picture
         if user.profile_picture:
             # Remove old profile picture
-            old_filepath = os.path.join(Config.UPLOAD_FOLDER, user.profile_picture)
+            old_filepath = os.path.join(Config.UPLOAD_FOLDER, 'profile_pictures', user.profile_picture)
             if os.path.exists(old_filepath):
                 os.remove(old_filepath)
 

@@ -25,7 +25,7 @@ class Config:
     SESSION_TYPE = 'filesystem'
 
     # File upload settings
-    UPLOAD_FOLDER = os.path.join(STATIC_FOLDER, 'uploads', 'profile_pictures')
+    UPLOAD_FOLDER = os.path.join(STATIC_FOLDER, 'uploads')
     MAX_CONTENT_LENGTH = 500 * 1024 * 1024  # Max 500MB upload size
     ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 

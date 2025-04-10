@@ -17,8 +17,6 @@ class Challenge(db.Model):
     created_at = db.Column(db.DateTime, nullable=False, default=db.func.now())
 
 
-
-
     def __repr__(self):
         return f"<Challenge(name={self.name}, domain={self.domain}, difficulty={self.difficulty}, value={self.value})>"
 
@@ -34,6 +32,7 @@ class Challenge(db.Model):
         """Scales the challenge value based on difficulty."""
         scale_factors = {'easy': 0.5, 'medium': 1.0, 'hard': 2.0}
         return int(self.value * scale_factors.get(self.difficulty, 1.0) * difficulty_multiplier)
+
 @listens_for(Challenge, 'before_insert')
 def set_default_slug(mapper, connection, target):
     if not target.slug:
