@@ -4,14 +4,17 @@ from application.utilities.db_helpers import get_user, save_message_to_db
 from application.utilities.validation_helpers import message_is_appropriate, detect_and_handle_challenge_url
 from application.ai.ai_teacher import get_ai_response
 from application.models.configuration import Configuration
-from application.extensions import db
+from application.extensions import db, limiter
 from application.routes.admin_routes import adminUsername  # Only if used
 from application.models.user import User  # Assuming User model is in application.models.user
+
+
 
 message_bp = Blueprint('message_bp', __name__)
 
 
 @message_bp.route('/send_message', methods=['POST'])
+@limiter.limit("4 per minute; 100 per day")  # Customize the rate
 def send_message():
     session_username = session.get('user', None)  # Get username from the session
     form_message = request.form['message']
@@ -88,6 +91,7 @@ def set_active_conversation():
 
 
 @message_bp.route('/get_current_conversation', methods=['GET'])
+@limiter.limit("60 per minute")
 def get_current_conversation():
     # Fetch the most recent conversation
     conversation = Conversation.query.order_by(Conversation.created_at.desc()).first()

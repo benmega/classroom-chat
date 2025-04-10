@@ -22,7 +22,7 @@ socket.on('user_status_change', (data) => {
 
 socket.on('new_message', function(data) {
     // Assume data contains { username: string, content: string, timestamp: string }
-    sendMessage(); // TODO test to ensure this is correct
+    sendMessage();
     const chatDiv = document.getElementById('chat'); // ID of your chat container
     if (chatDiv) {
         const newMessageElement = document.createElement('p');
