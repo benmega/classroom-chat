@@ -20,4 +20,5 @@ def test_index_not_logged_in(client):
         response = client.get(url_for('general_bp.index'))
 
         assert response.status_code == 302  # Should redirect to login
-        assert response.location == url_for('user_bp.login')  # Compare relative URL
+        assert response.location == url_for('user_bp.login', _external=False)
+
