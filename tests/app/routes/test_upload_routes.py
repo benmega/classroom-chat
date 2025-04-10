@@ -99,7 +99,7 @@ def test_uploaded_file(client):
     with client.application.app_context():
         """Test the file retrieval route."""
         # Simulate an uploaded file
-        file_path = os.path.join(Config.UPLOAD_FOLDER, 'userData', 'image', 'file_20230101_120000.png')
+        file_path = os.path.join(Config.UPLOAD_FOLDER, 'profile_pictures', 'userData', 'image', 'file_20230101_120000.png')
 
         # Ensure the file exists for testing
         os.makedirs(os.path.dirname(file_path), exist_ok=True)

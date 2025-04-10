@@ -1,7 +1,16 @@
 from flask_sqlalchemy import SQLAlchemy
 from flask_socketio import SocketIO
 import engineio.async_drivers.threading
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 
+limiter = Limiter(key_func=get_remote_address,
+                  default_limits=[
+                      "1 per second",
+                      "10 per minute",
+                      "200 per hour",  # ≈3 messages/minute sustained
+                      "2000 per day"  # ≈20 messages/hour averaged over 24 h
+                  ])
 db = SQLAlchemy()
 
 socketio = SocketIO(async_mode='threading')
