@@ -317,18 +317,20 @@ def auth_headers(sample_admin):
 
 
 @pytest.fixture
-def sample_duck_trade(test_app, sample_user):
-    """Create a sample duck trade for testing."""
-    with test_app.app_context():
-        from application.models.duck_trade import DuckTradeLog
+def sample_duck_trade(init_db, sample_user):
+    """Create a sample duck trade for testing (bound to correct session)."""
+    from application.models.duck_trade import DuckTradeLog
+    sample_user.ducks = 100
+    trade = DuckTradeLog(
+        username=sample_user.username,
+        digital_ducks=1,
+        bit_ducks=[1, 0, 0, 0, 0, 0, 0],
+        byte_ducks=[0, 0, 0, 0, 0, 0, 0],
+        status='pending'
+    )
+    db.session.add(trade)
+    db.session.commit()
 
-        trade = DuckTradeLog(
-            username=sample_user.username,
-            digital_ducks=1,
-            bit_ducks=[1,0,0,0,0,0,0],      # ← satisfy NOT NULL
-            byte_ducks=[0,0,0,0,0,0,0],     # ← satisfy NOT NULL
-            status='pending'
-        )
-        db.session.add(trade)
-        db.session.commit()
-        return trade
+    # Optional: re-fetch from session to ensure it's not detached
+    trade = DuckTradeLog.query.get(trade.id)
+    return trade

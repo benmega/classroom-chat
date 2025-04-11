@@ -258,26 +258,30 @@ def test_adjust_ducks(client, auth_headers, sample_user, test_app):
         updated_user = User.query.get(sample_user.id)
         assert updated_user.ducks == initial_ducks + 50
 
-
 def test_trade_action_approve(client, auth_headers, sample_user, sample_duck_trade, test_app, init_db):
-    """Test approving a duck trade."""
     with test_app.app_context():
-        # Set initial ducks for the user
         sample_user.ducks = 100
         db.session.commit()
 
-        # Test approving the trade
+        trade_id = sample_duck_trade.id
+
         with patch.object(DuckTradeLog, 'approve') as mock_approve:
             response = client.post(
                 '/admin/trade_action',
-                data={'trade_id': sample_duck_trade.id, 'action': 'approve'},
-                headers=auth_headers
+                data={
+                    'trade_id': str(trade_id),
+                    'action': 'approve'
+                },
+                headers=auth_headers,
+                content_type='application/x-www-form-urlencoded'
             )
 
             data = json.loads(response.data)
             assert response.status_code == 200
             assert data['status'] == 'success'
             mock_approve.assert_called_once()
+
+
 
 
 def test_trade_action_reject(client, auth_headers, sample_duck_trade, init_db):
