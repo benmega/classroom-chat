@@ -42,16 +42,22 @@ def upload_file():
 
     if mime_type.startswith('image/'):
         # Handle image files
+        directory = 'userData/image'
+        os.makedirs(directory, exist_ok=True)  # Create directory if it doesn't exist
         file_path = f'userData/image/file_{timestamp}{extension}'
         image = Image.open(BytesIO(data))
         image.save(file_path)
     elif mime_type == 'application/pdf':
         # Handle PDF files
+        directory = 'userData/pdf'
+        os.makedirs(directory, exist_ok=True)  # Create directory if it doesn't exist
         file_path = f'userData/pdf/file_{timestamp}{extension}'
         with open(file_path, 'wb') as f:
             f.write(data)
     else:
         # Handle other file types
+        directory = 'userData/other'
+        os.makedirs(directory, exist_ok=True)  # Create directory if it doesn't exist
         file_path = f'userData/other/file_{timestamp}{extension}'
         with open(file_path, 'wb') as f:
             f.write(data)

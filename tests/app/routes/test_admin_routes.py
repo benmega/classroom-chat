@@ -299,15 +299,15 @@ def test_trade_action_reject(client, auth_headers, sample_duck_trade, init_db):
         assert data['status'] == 'success'
         mock_reject.assert_called_once()
 
-
 def test_reset_password(client, auth_headers, sample_user, test_app, init_db):
     """Test resetting a user's password."""
     with test_app.app_context():
         # Mock the set_password method
         with patch.object(User, 'set_password') as mock_set_password:
+            # Send JSON data instead of form data
             response = client.post(
                 '/admin/reset_password',
-                data={'username': sample_user.username, 'new_password': 'newpassword'},
+                json={'username': sample_user.username, 'new_password': 'newpassword'},
                 headers=auth_headers
     ***REMOVED***
             data = json.loads(response.data)
@@ -316,15 +316,14 @@ def test_reset_password(client, auth_headers, sample_user, test_app, init_db):
             assert data['success'] is True
             mock_set_password.assert_called_once_with('newpassword')
 
-        # Test with non-existent user
+        # Test with non-existent user - also using JSON data
         response = client.post(
             '/admin/reset_password',
-            data={'username': 'nonexistent_user', 'new_password': 'newpassword'},
+            json={'username': 'nonexistent_user', 'new_password': 'newpassword'},
             headers=auth_headers
 ***REMOVED***
 
         assert response.status_code == 404
-
 
 def test_duck_transactions_data(client, auth_headers):
     """Test retrieving duck transaction data."""
@@ -338,13 +337,13 @@ def test_duck_transactions_data(client, auth_headers):
     assert len(data['labels']) == 7  # 7 days of data
 
 
-def test_get_users(client, test_app, sample_users, sample_admin, init_db):
+def test_get_users(client, test_app, sample_users, sample_admin, init_db, auth_headers):
     """Test the /users route properly returns user data."""
     with test_app.app_context():
         # Create basic auth credentials
         response = client.get(
             url_for('admin_bp.get_users'),
-            headers=auth_headers(sample_admin)
+            headers=auth_headers
 ***REMOVED***
 
         assert response.status_code == 200

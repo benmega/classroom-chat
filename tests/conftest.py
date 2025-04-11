@@ -84,6 +84,9 @@ def add_sample_user(init_db):
 def sample_user_with_ducks(test_app):
     """Fixture that creates a user with ducks and cleans up afterward."""
     with test_app.app_context():
+        # Create tables if they don't exist
+        db.create_all()
+
         try:
             user = User(username='user_with_ducks', password_hash='test_password', ducks=50)
             db.session.add(user)
@@ -95,11 +98,13 @@ def sample_user_with_ducks(test_app):
         finally:
             # Cleanup: Delete user and commit changes
             try:
-                db.session.delete(user)
-                db.session.commit()
-            except Exception as cleanup_error:
+                user_to_delete = db.session.query(User).filter_by(username='user_with_ducks').first()
+                if user_to_delete:
+                    db.session.delete(user_to_delete)
+                    db.session.commit()
+            except Exception:
                 db.session.rollback()  # In case of an error during cleanup
-                raise cleanup_error
+                # Don't raise the cleanup error, as it might mask the actual test error
 
 
 @pytest.fixture
