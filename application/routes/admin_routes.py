@@ -209,8 +209,9 @@ def set_username():
 @admin_bp.route('/reset_password', methods=['POST'])
 @check_auth
 def reset_password():
-    username = request.form.get('username')
-    new_password = request.form.get('new_password')
+    data = request.json
+    username = data.get('username')
+    new_password = data.get('new_password')
 
     if not username or not new_password:
         return jsonify({'success': False, 'message': 'Username and new password required'}), 400
@@ -219,8 +220,7 @@ def reset_password():
     if not user:
         return jsonify({'success': False, 'message': 'User not found'}), 404
 
-    # Update password - in production, use proper password hashing
-    user.password = new_password  # Replace with proper hashing in production
+    user.set_password(new_password)
     db.session.commit()
 
     return jsonify({'success': True, 'message': f"Password reset for {username}"})
