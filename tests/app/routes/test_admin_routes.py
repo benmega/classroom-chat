@@ -33,11 +33,11 @@ def test_get_users_with_auth(client, auth_headers, sample_users):
     for user in sample_users:
         assert user.username in usernames
 
-def test_set_username_route(client, sample_user):
+def test_set_username_route(client, sample_user, auth_headers):
     # no need for explicit app_context here
     client.environ_base = {'REMOTE_ADDR': sample_user.ip_address}
     resp = client.post('/admin/set_username',
-                       data={'user_id': sample_user.id, 'username': 'new_username'})
+                       data={'user_id': sample_user.id, 'username': 'new_username'}, headers=auth_headers)
     assert resp.status_code == 200
     assert resp.get_json()['success'] is True
 
@@ -48,7 +48,7 @@ def test_set_username_route(client, sample_user):
 
 
 
-def test_verify_password_success(client, test_app):
+def test_verify_password_success(client, test_app,auth_headers):
     """Test successful password verification."""
     from application.config import TestingConfig
 
@@ -71,7 +71,8 @@ def test_verify_password_success(client, test_app):
             with patch('application.routes.admin_routes.admin_pass', TestingConfig.ADMIN_PASSWORD):
                 response = client.post(
                     '/admin/verify_password',
-                    data={'password': TestingConfig.ADMIN_PASSWORD, 'username': 'verified_username'}
+                    data={'password': TestingConfig.ADMIN_PASSWORD, 'username': 'verified_username'},
+                    headers=auth_headers
                 )
 
             assert response.status_code == 200
@@ -91,11 +92,12 @@ def test_verify_password_success(client, test_app):
             except:
                 pass  # If cleanup fails, don't crash the test
 
-def test_verify_password_failure(client):
+def test_verify_password_failure(client,auth_headers):
     """Test failed password verification."""
     response = client.post(
         '/admin/verify_password',
-        data={'password': 'wrong_password', 'username': 'any_username'}
+        data={'password': 'wrong_password', 'username': 'any_username'},
+        headers=auth_headers
     )
 
     assert response.status_code == 401
@@ -114,13 +116,13 @@ def test_dashboard(client, auth_headers, sample_user, sample_configuration, samp
     # since we can't easily test template rendering
 
 
-def test_toggle_ai(client, test_app, sample_configuration):
+def test_toggle_ai(client, test_app, sample_configuration, auth_headers):
     """Test toggling AI teacher functionality."""
     with test_app.app_context():
         initial_state = sample_configuration.ai_teacher_enabled
 
         # Test toggle
-        response = client.post('/admin/toggle-ai')
+        response = client.post('/admin/toggle-ai', headers=auth_headers)
         data = json.loads(response.data)
 
         assert response.status_code == 200
@@ -131,13 +133,13 @@ def test_toggle_ai(client, test_app, sample_configuration):
         assert updated_config.ai_teacher_enabled != initial_state
 
 
-def test_toggle_message_sending(client, test_app, sample_configuration):
+def test_toggle_message_sending(client, test_app, sample_configuration, auth_headers):
     """Test toggling message sending functionality."""
     with test_app.app_context():
         initial_state = sample_configuration.message_sending_enabled
 
         # Test toggle
-        response = client.post('/admin/toggle-message-sending')
+        response = client.post('/admin/toggle-message-sending', headers=auth_headers)
         data = json.loads(response.data)
 
         assert response.status_code == 200
@@ -148,7 +150,7 @@ def test_toggle_message_sending(client, test_app, sample_configuration):
         assert updated_config.message_sending_enabled != initial_state
 
 
-def test_clear_partial_history(client, test_app, init_db):
+def test_clear_partial_history(client, test_app, init_db, auth_headers):
     """Test clearing partial conversation history."""
     with test_app.app_context():
         # Create old and new conversations
@@ -164,7 +166,7 @@ def test_clear_partial_history(client, test_app, init_db):
         new_id = new_conv.id
 
         # Test clearing history
-        response = client.post('/admin/clear-partial-history')
+        response = client.post('/admin/clear-partial-history', headers=auth_headers)
         data = json.loads(response.data)
 
         assert response.status_code == 200
@@ -358,14 +360,15 @@ def test_get_users(client, test_app, sample_users, sample_admin, init_db, auth_h
 
 
 
-def test_set_username_proper_case_handling(client, test_app, sample_user):
+def test_set_username_proper_case_handling(client, test_app, sample_user,auth_headers):
     """Test that usernames are properly converted to lowercase per the User model."""
     with test_app.app_context():
         mixed_case_username = "MixedCaseUsername"
 
         response = client.post(
             url_for('admin_bp.set_username_route'),
-            data={'user_id': sample_user.id, 'username': mixed_case_username}
+            data={'user_id': sample_user.id, 'username': mixed_case_username},
+            headers=auth_headers
         )
 
         assert response.status_code == 200

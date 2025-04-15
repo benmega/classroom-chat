@@ -189,11 +189,13 @@ def update_user(user_id):
 
 
 @admin_bp.route('/set_username', methods=['POST'])
+@check_auth
 def set_username_route():
     return set_username()
 
 
 @admin_bp.route('/verify_password', methods=['POST'])
+@check_auth
 def verify_password():
     password = request.form['password']
     if password == admin_pass:
@@ -319,6 +321,7 @@ def remove_user():
 # --------------------------
 
 @admin_bp.route('/toggle-ai', methods=['POST'])
+@check_auth
 def toggle_ai():
     config = Configuration.query.first()
     if config is None:
@@ -339,6 +342,7 @@ def toggle_ai():
 
 
 @admin_bp.route('/toggle-message-sending', methods=['POST'])
+@check_auth
 def toggle_message_sending():
     # Retrieve the first configuration entry from the database
     config = Configuration.query.first()
@@ -361,6 +365,7 @@ def toggle_message_sending():
 
 
 @admin_bp.route('/clear-partial-history', methods=['POST'])
+@check_auth
 def clear_partial_history():
     try:
         # Example: Clear only conversations older than 30 days
