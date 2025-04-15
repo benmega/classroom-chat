@@ -41,12 +41,13 @@ with open('wrapper.py', 'w') as f:
     f.write('''
 import sys
 import traceback
+from main import main as run_app
+
 
 def main():
     try:
         # Import and run your actual application
-        import main
-        main.app.run()
+        return run_app()
     except Exception as e:
         print("ERROR: An exception occurred:")
         print(traceback.format_exc())
@@ -59,7 +60,7 @@ if __name__ == "__main__":
 ''')
 
 a = Analysis(
-    ['wrapper.py', 'main.py'],  # Add both files to the analysis
+    ['wrapper.py'],
     pathex=[os.path.dirname(os.path.abspath('main.py'))],
     binaries=[],
     datas=all_datas,
@@ -96,7 +97,7 @@ exe = EXE(
     a.scripts,
     [],
     exclude_binaries=True,
-    name='GroupChat',
+    name='room_chat',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
@@ -113,5 +114,5 @@ coll = COLLECT(
     strip=False,
     upx=True,
     upx_exclude=[],
-    name='GroupChat',
+    name='room_chat',
 )

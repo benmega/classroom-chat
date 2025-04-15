@@ -28,9 +28,10 @@ def print_directory_structure(startpath, exclude=[]):
 
 
 def main():
-    project_directory = os.getcwd()
-    project_directory = project_directory + "/templates"
-    print_directory_structure(project_directory, ['venv', '.git', '.idea'])
+    # project_directory = os.getcwd()
+    # project_directory = project_directory + "/templates"
+    project_directory = "C:\\Users\\Ben\\PycharmProjects\\tauri-roomchat"
+    print_directory_structure(project_directory, ['venv', '.git', '.idea', "node_modules", "target"])
 
 if __name__ == "__main__":
     main()

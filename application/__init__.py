@@ -1,7 +1,10 @@
 import os
+import socket
+
 from flask import Flask, session, g, jsonify
 from datetime import timedelta
 
+from flask_cors import CORS
 from flask_limiter import RateLimitExceeded
 from werkzeug.exceptions import RequestEntityTooLarge
 
@@ -39,6 +42,9 @@ def create_app(config_class=None):
     static_folder = getattr(config_class, "STATIC_FOLDER", "static")
     app = Flask(__name__, template_folder=template_folder, static_folder=static_folder)
     app.config.from_object(config_class)
+
+    # For communication with Tauri
+    CORS(app)
 
     # Configure session timeout
     app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=10)

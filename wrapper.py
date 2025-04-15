@@ -1,12 +1,13 @@
 
 import sys
 import traceback
+from main import main as run_app
+
 
 def main():
     try:
         # Import and run your actual application
-        import main
-        main.app.run()
+        return run_app()
     except Exception as e:
         print("ERROR: An exception occurred:")
         print(traceback.format_exc())
