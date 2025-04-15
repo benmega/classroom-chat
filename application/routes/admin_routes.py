@@ -1,3 +1,4 @@
+import re
 from datetime import datetime, timedelta
 from flask import Blueprint, request, jsonify, render_template
 from functools import wraps
@@ -252,6 +253,57 @@ def adjust_ducks():
             'message': "User not found."
         }), 404
 
+@admin_bp.route('/create_user', methods=['POST'])
+@check_auth
+def create_user():
+    username = request.form.get('username', '').strip().lower()
+    password = request.form.get('password', '')
+    ducks    = request.form.get('ducks', type=int)
+
+    # server‑side validation
+    if not username or not password or ducks is None or ducks < 0:
+        return jsonify(success=False,
+                       message="Username, password, and non‑negative ducks required"), 400
+
+    # 3–30 chars, lowercase letters, numbers, underscores
+    if not re.fullmatch(r'[a-z0-9_]{3,30}', username):
+        return jsonify(success=False,
+                       message="Username must be 3–30 chars: lowercase letters, numbers, or underscores only"), 400
+
+    if User.query.filter_by(username=username).first():
+        return jsonify(success=False, message="Username already exists"), 409
+
+    try:
+        new_user = User(username=username, ducks=ducks)
+        new_user.set_password(password)
+        db.session.add(new_user)
+        db.session.commit()
+        return jsonify(success=True,
+                       message=f"User '{username}' created with {ducks} ducks")
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error: Failed to create user: {e}")
+        return jsonify(success=False, message="Internal server error"), 500
+
+@admin_bp.route('/remove_user', methods=['POST'])
+@check_auth
+def remove_user():
+    username = request.form.get('username', '').strip().lower()
+    if not username:
+        return jsonify(success=False, message="Username is required"), 400
+
+    user = User.query.filter_by(username=username).first()
+    if not user:
+        return jsonify(success=False, message="User not found"), 404
+
+    try:
+        db.session.delete(user)
+        db.session.commit()
+        return jsonify(success=True, message=f"User '{username}' removed successfully")
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error deleting user '{username}': {e}")
+        return jsonify(success=False, message="Internal server error"), 500
 
 # --------------------------
 # System Configuration Routes
