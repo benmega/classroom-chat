@@ -1,3 +1,4 @@
+import re
 from datetime import datetime, timedelta
 from flask import Blueprint, request, jsonify, render_template
 from functools import wraps
@@ -11,7 +12,6 @@ from application.models.conversation import Conversation
 from application.models.configuration import Configuration
 from application.models.duck_trade import DuckTradeLog
 from application.models.message import Message
-from application.models.trade import Trade
 from application.models.user import User
 from application.models.banned_words import BannedWords
 from application.config import Config
@@ -104,10 +104,10 @@ def get_duck_transactions_data():
 
 
 
-@admin_bp.route('/dashboard')
+@admin_bp.route('/')
 @check_auth
-def dashboard():
-    return redirect(url_for('admin.dashboard'))
+def base():
+    return redirect(url_for('admin_bp.dashboard'))
 
 
 @admin_bp.route('/dashboard')
@@ -219,8 +219,9 @@ def set_username():
 @admin_bp.route('/reset_password', methods=['POST'])
 @check_auth
 def reset_password():
-    username = request.form.get('username')
-    new_password = request.form.get('new_password')
+    data = request.json
+    username = data.get('username')
+    new_password = data.get('new_password')
 
     if not username or not new_password:
         return jsonify({'success': False, 'message': 'Username and new password required'}), 400
@@ -229,8 +230,7 @@ def reset_password():
     if not user:
         return jsonify({'success': False, 'message': 'User not found'}), 404
 
-    # Update password - in production, use proper password hashing
-    user.password = new_password  # Replace with proper hashing in production
+    user.set_password(new_password)
     db.session.commit()
 
     return jsonify({'success': True, 'message': f"Password reset for {username}"})
@@ -262,6 +262,57 @@ def adjust_ducks():
             'message': "User not found."
         }), 404
 
+@admin_bp.route('/create_user', methods=['POST'])
+@check_auth
+def create_user():
+    username = request.form.get('username', '').strip().lower()
+    password = request.form.get('password', '')
+    ducks    = request.form.get('ducks', type=int)
+
+    # server‑side validation
+    if not username or not password or ducks is None or ducks < 0:
+        return jsonify(success=False,
+                       message="Username, password, and non‑negative ducks required"), 400
+
+    # 3–30 chars, lowercase letters, numbers, underscores
+    if not re.fullmatch(r'[a-z0-9_]{3,30}', username):
+        return jsonify(success=False,
+                       message="Username must be 3–30 chars: lowercase letters, numbers, or underscores only"), 400
+
+    if User.query.filter_by(username=username).first():
+        return jsonify(success=False, message="Username already exists"), 409
+
+    try:
+        new_user = User(username=username, ducks=ducks)
+        new_user.set_password(password)
+        db.session.add(new_user)
+        db.session.commit()
+        return jsonify(success=True,
+                       message=f"User '{username}' created with {ducks} ducks")
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error: Failed to create user: {e}")
+        return jsonify(success=False, message="Internal server error"), 500
+
+@admin_bp.route('/remove_user', methods=['POST'])
+@check_auth
+def remove_user():
+    username = request.form.get('username', '').strip().lower()
+    if not username:
+        return jsonify(success=False, message="Username is required"), 400
+
+    user = User.query.filter_by(username=username).first()
+    if not user:
+        return jsonify(success=False, message="User not found"), 404
+
+    try:
+        db.session.delete(user)
+        db.session.commit()
+        return jsonify(success=True, message=f"User '{username}' removed successfully")
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error deleting user '{username}': {e}")
+        return jsonify(success=False, message="Internal server error"), 500
 
 # --------------------------
 # System Configuration Routes
@@ -379,11 +430,11 @@ def strike_message(message_id):
 # Trade Management Routes
 # --------------------------
 
-@admin_bp.route('/trades')
-@check_auth
-def trades():
-    trades = Trade.query.order_by(Trade.timestamp.desc()).all()
-    return render_template('admin/trades.html', trades=trades)
+# @admin_bp.route('/trades')
+# @check_auth
+# def trades():
+#     trades = Trade.query.order_by(Trade.timestamp.desc()).all()
+#     return render_template('admin/trades.html', trades=trades)
 
 
 @admin_bp.route('/pending_trades', methods=['GET'])

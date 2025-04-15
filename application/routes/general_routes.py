@@ -5,6 +5,7 @@ general_bp = Blueprint('general_bp', __name__)
 
 
 @general_bp.route('/')
+
 def index():
     # Check if the user is in session
     if 'user' not in session:

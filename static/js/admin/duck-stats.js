@@ -3,7 +3,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Create the duck transactions chart
     const ctx = document.getElementById('duck-transactions-chart').getContext('2d');
 
-    // Use the data from the window object (this would be populated from your backend)
     const { labels, earned, spent } = window.chartData;
 
     new Chart(ctx, {
@@ -58,7 +57,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Optional: Fetch real-time duck transaction data
+    // Fetch real-time duck transaction data
     function fetchDuckTransactionsData() {
         fetch(window.urls.duckTransactionsDataUrl)
             .then(response => response.json())
@@ -72,6 +71,6 @@ document.addEventListener('DOMContentLoaded', function() {
             .catch(error => console.error('Error fetching duck transactions data:', error));
     }
 
-    // Uncomment to enable real-time updates every 5 minutes
-    // setInterval(fetchDuckTransactionsData, 5 * 60 * 1000);
+    // updates every 5 minutes
+     setInterval(fetchDuckTransactionsData, 5 * 60 * 1000);
 });
