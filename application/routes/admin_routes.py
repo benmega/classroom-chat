@@ -15,6 +15,7 @@ from application.models.trade import Trade
 from application.models.user import User
 from application.models.banned_words import BannedWords
 from application.config import Config
+from flask import redirect, url_for
 
 admin_bp = Blueprint('admin_bp', __name__)
 admin_pass = Config.ADMIN_PASSWORD
@@ -100,6 +101,14 @@ def get_duck_transactions_data():
 # --------------------------
 # Dashboard Routes
 # --------------------------
+
+
+
+@admin_bp.route('/dashboard')
+@check_auth
+def dashboard():
+    return redirect(url_for('admin.dashboard'))
+
 
 @admin_bp.route('/dashboard')
 @check_auth
