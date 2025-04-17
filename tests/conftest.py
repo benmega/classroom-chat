@@ -84,6 +84,9 @@ def add_sample_user(init_db):
 def sample_user_with_ducks(test_app):
     """Fixture that creates a user with ducks and cleans up afterward."""
     with test_app.app_context():
+        # Create tables if they don't exist
+        db.create_all()
+
         try:
             user = User(username='user_with_ducks', password_hash='test_password', ducks=50)
             db.session.add(user)
@@ -95,11 +98,13 @@ def sample_user_with_ducks(test_app):
         finally:
             # Cleanup: Delete user and commit changes
             try:
-                db.session.delete(user)
-                db.session.commit()
-            except Exception as cleanup_error:
+                user_to_delete = db.session.query(User).filter_by(username='user_with_ducks').first()
+                if user_to_delete:
+                    db.session.delete(user_to_delete)
+                    db.session.commit()
+            except Exception:
                 db.session.rollback()  # In case of an error during cleanup
-                raise cleanup_error
+                # Don't raise the cleanup error, as it might mask the actual test error
 
 
 @pytest.fixture
@@ -317,18 +322,20 @@ def auth_headers(sample_admin):
 
 
 @pytest.fixture
-def sample_duck_trade(test_app, sample_user):
-    """Create a sample duck trade for testing."""
-    with test_app.app_context():
-        from application.models.duck_trade import DuckTradeLog
+def sample_duck_trade(init_db, sample_user):
+    """Create a sample duck trade for testing (bound to correct session)."""
+    from application.models.duck_trade import DuckTradeLog
+    sample_user.ducks = 100
+    trade = DuckTradeLog(
+        username=sample_user.username,
+        digital_ducks=1,
+        bit_ducks=[1, 0, 0, 0, 0, 0, 0],
+        byte_ducks=[0, 0, 0, 0, 0, 0, 0],
+        status='pending'
+    )
+    db.session.add(trade)
+    db.session.commit()
 
-        trade = DuckTradeLog(
-            username=sample_user.username,
-            digital_ducks=1,
-            bit_ducks=[1,0,0,0,0,0,0],      # ← satisfy NOT NULL
-            byte_ducks=[0,0,0,0,0,0,0],     # ← satisfy NOT NULL
-            status='pending'
-        )
-        db.session.add(trade)
-        db.session.commit()
-        return trade
+    # Optional: re-fetch from session to ensure it's not detached
+    trade = DuckTradeLog.query.get(trade.id)
+    return trade
