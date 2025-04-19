@@ -5,7 +5,7 @@ from functools import wraps
 from sqlalchemy.sql import func
 from sqlalchemy import cast, Date
 
-from application.extensions import db
+from application.extensions import db, limiter
 from application.models.challenge import Challenge
 from application.models.challenge_log import ChallengeLog
 from application.models.conversation import Conversation
@@ -21,6 +21,11 @@ admin_bp = Blueprint('admin_bp', __name__)
 admin_pass = Config.ADMIN_PASSWORD
 adminUsername = Config.ADMIN_USERNAME
 
+@admin_bp.before_request
+@limiter.limit("5 per second, 50 per minute")
+def before_user_request():
+    # This function is just used for the decorator that handles the rate limiting logic.
+    pass
 
 # --------------------------
 # Authentication Decorators
