@@ -1,3 +1,4 @@
+import re
 from datetime import datetime, timedelta
 from flask import Blueprint, request, jsonify, render_template
 from functools import wraps
@@ -11,10 +12,10 @@ from application.models.conversation import Conversation
 from application.models.configuration import Configuration
 from application.models.duck_trade import DuckTradeLog
 from application.models.message import Message
-from application.models.trade import Trade
 from application.models.user import User
 from application.models.banned_words import BannedWords
 from application.config import Config
+from flask import redirect, url_for
 
 admin_bp = Blueprint('admin_bp', __name__)
 admin_pass = Config.ADMIN_PASSWORD
@@ -24,6 +25,14 @@ adminUsername = Config.ADMIN_USERNAME
 # --------------------------
 # Authentication Decorators
 # --------------------------
+
+def local_only(f):
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        if request.remote_addr != '127.0.0.1':
+            return jsonify({"error": "Forbidden – local requests only"}), 403
+        return f(*args, **kwargs)
+    return wrapper
 
 def check_auth(f):
     @wraps(f)
@@ -101,8 +110,16 @@ def get_duck_transactions_data():
 # Dashboard Routes
 # --------------------------
 
+
+
+@admin_bp.route('/')
+@local_only
+def base():
+    return redirect(url_for('admin_bp.dashboard'))
+
+
 @admin_bp.route('/dashboard')
-@check_auth
+@local_only
 def dashboard():
     total_ducks = db.session.query(func.sum(User.ducks)).scalar() or 0
 
@@ -138,7 +155,7 @@ def dashboard():
 
 
 @admin_bp.route('/duck_transactions_data')
-@check_auth
+@local_only
 def duck_transactions_data():
     chart_data = get_duck_transactions_data()
     return jsonify(chart_data)
@@ -149,7 +166,7 @@ def duck_transactions_data():
 # --------------------------
 
 @admin_bp.route('/users', methods=['GET'])
-@check_auth
+@local_only
 def get_users():
     users = User.query.all()
     users_data = []
@@ -165,7 +182,7 @@ def get_users():
 
 
 @admin_bp.route('/users/<int:user_id>', methods=['PUT'])
-@check_auth
+@local_only
 def update_user(user_id):
     user = User.query.get(user_id)
     if user:
@@ -180,11 +197,13 @@ def update_user(user_id):
 
 
 @admin_bp.route('/set_username', methods=['POST'])
+@local_only
 def set_username_route():
     return set_username()
 
 
 @admin_bp.route('/verify_password', methods=['POST'])
+@local_only
 def verify_password():
     password = request.form['password']
     if password == admin_pass:
@@ -208,10 +227,11 @@ def set_username():
 
 
 @admin_bp.route('/reset_password', methods=['POST'])
-@check_auth
+@local_only
 def reset_password():
-    username = request.form.get('username')
-    new_password = request.form.get('new_password')
+    data = request.json
+    username = data.get('username')
+    new_password = data.get('new_password')
 
     if not username or not new_password:
         return jsonify({'success': False, 'message': 'Username and new password required'}), 400
@@ -220,15 +240,14 @@ def reset_password():
     if not user:
         return jsonify({'success': False, 'message': 'User not found'}), 404
 
-    # Update password - in production, use proper password hashing
-    user.password = new_password  # Replace with proper hashing in production
+    user.set_password(new_password)
     db.session.commit()
 
     return jsonify({'success': True, 'message': f"Password reset for {username}"})
 
 
 @admin_bp.route('/adjust_ducks', methods=['POST'])
-@check_auth
+@local_only
 def adjust_ducks():
     username = request.form.get('username')
     amount = request.form.get('amount', type=int)
@@ -253,12 +272,64 @@ def adjust_ducks():
             'message': "User not found."
         }), 404
 
+@admin_bp.route('/create_user', methods=['POST'])
+@local_only
+def create_user():
+    username = request.form.get('username', '').strip().lower()
+    password = request.form.get('password', '')
+    ducks    = request.form.get('ducks', type=int)
+
+    # server‑side validation
+    if not username or not password or ducks is None or ducks < 0:
+        return jsonify(success=False,
+                       message="Username, password, and non‑negative ducks required"), 400
+
+    # 3–30 chars, lowercase letters, numbers, underscores
+    if not re.fullmatch(r'[a-z0-9_]{3,30}', username):
+        return jsonify(success=False,
+                       message="Username must be 3–30 chars: lowercase letters, numbers, or underscores only"), 400
+
+    if User.query.filter_by(username=username).first():
+        return jsonify(success=False, message="Username already exists"), 409
+
+    try:
+        new_user = User(username=username, ducks=ducks)
+        new_user.set_password(password)
+        db.session.add(new_user)
+        db.session.commit()
+        return jsonify(success=True,
+                       message=f"User '{username}' created with {ducks} ducks")
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error: Failed to create user: {e}")
+        return jsonify(success=False, message="Internal server error"), 500
+
+@admin_bp.route('/remove_user', methods=['POST'])
+@local_only
+def remove_user():
+    username = request.form.get('username', '').strip().lower()
+    if not username:
+        return jsonify(success=False, message="Username is required"), 400
+
+    user = User.query.filter_by(username=username).first()
+    if not user:
+        return jsonify(success=False, message="User not found"), 404
+
+    try:
+        db.session.delete(user)
+        db.session.commit()
+        return jsonify(success=True, message=f"User '{username}' removed successfully")
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error deleting user '{username}': {e}")
+        return jsonify(success=False, message="Internal server error"), 500
 
 # --------------------------
 # System Configuration Routes
 # --------------------------
 
 @admin_bp.route('/toggle-ai', methods=['POST'])
+@local_only
 def toggle_ai():
     config = Configuration.query.first()
     if config is None:
@@ -279,6 +350,7 @@ def toggle_ai():
 
 
 @admin_bp.route('/toggle-message-sending', methods=['POST'])
+@local_only
 def toggle_message_sending():
     # Retrieve the first configuration entry from the database
     config = Configuration.query.first()
@@ -301,6 +373,7 @@ def toggle_message_sending():
 
 
 @admin_bp.route('/clear-partial-history', methods=['POST'])
+@local_only
 def clear_partial_history():
     try:
         # Example: Clear only conversations older than 30 days
@@ -328,7 +401,7 @@ def clear_partial_history():
 # --------------------------
 
 @admin_bp.route('/add-banned-word', methods=['POST'])
-@check_auth
+@local_only
 def add_banned_word():
     word = request.form.get('word')
     reason = request.form.get('reason', None)  # Optional field
@@ -350,7 +423,7 @@ def add_banned_word():
 
 
 @admin_bp.route('/strike_message/<int:message_id>', methods=['POST'])
-@check_auth
+@local_only
 def strike_message(message_id):
     message = Message.query.get(message_id)
     if not message:
@@ -370,22 +443,22 @@ def strike_message(message_id):
 # Trade Management Routes
 # --------------------------
 
-@admin_bp.route('/trades')
-@check_auth
-def trades():
-    trades = Trade.query.order_by(Trade.timestamp.desc()).all()
-    return render_template('admin/trades.html', trades=trades)
+# @admin_bp.route('/trades')
+# @local_only
+# def trades():
+#     trades = Trade.query.order_by(Trade.timestamp.desc()).all()
+#     return render_template('admin/trades.html', trades=trades)
 
 
 @admin_bp.route('/pending_trades', methods=['GET'])
-@check_auth
+@local_only
 def pending_trades():
     pend_trades = DuckTradeLog.query.filter_by(status="pending").all()
     return render_template('admin/pending_trades.html', trades=pend_trades)
 
 
 @admin_bp.route('/trade_action', methods=['POST'])
-@check_auth
+@local_only
 def trade_action():
     trade_id = request.form.get('trade_id')
     action = request.form.get('action')

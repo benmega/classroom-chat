@@ -1,9 +1,9 @@
-# server/ai_teacher.py
+# application/ ai/ai_teacher.py
 from datetime import datetime
 
 from flask import Blueprint, jsonify, request
 from openai import OpenAI
-from application import db
+from application import db, limiter
 from application.config import Config
 from application.utilities.db_helpers import save_message_to_db
 from application.models.ai_settings import get_ai_settings
@@ -25,7 +25,7 @@ def get_or_create_ai_teacher():
 
     return user
 
-
+@limiter.limit("1 per minute; 10 per day")
 def get_ai_response(user_message, username, conversation_id=None):
     # Retrieve AI settings and conversation history from the database
     ai_settings = get_ai_settings()

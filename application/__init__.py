@@ -2,10 +2,11 @@ import os
 from flask import Flask, session, g, jsonify
 from datetime import timedelta
 
+from flask_limiter import RateLimitExceeded
 from werkzeug.exceptions import RequestEntityTooLarge
 
 from application.models.configuration import Configuration
-from application.extensions import db, socketio
+from application.extensions import db, socketio, limiter
 from application.models import setup_models
 from application.routes import register_blueprints
 from application.models.user import User
@@ -42,6 +43,8 @@ def create_app(config_class=None):
     # Initialize extensions
     db.init_app(app)
     socketio.init_app(app, cors_allowed_origins="*", async_mode=app.config.get('SOCKETIO_ASYNC_MODE', 'threading'))
+    limiter.init_app(app)
+
 
     # Initialize CSRF protection
     csrf = CSRFProtect(app)
@@ -70,6 +73,14 @@ def create_app(config_class=None):
     @app.errorhandler(RequestEntityTooLarge)
     def handle_large_request(error):
         return jsonify({'error': 'Request body too large'}), 413
+
+    @app.errorhandler(RateLimitExceeded)
+    def ratelimit_handler(e):
+        return jsonify({
+            "error": "Rate limit exceeded",
+            "message": "You're sending messages too quickly. Please wait a bit!",
+            "retry_after": e.description  # Often includes the seconds to wait
+        }), 429
 
     return app
 
