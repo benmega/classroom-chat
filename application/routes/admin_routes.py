@@ -114,7 +114,6 @@ def get_duck_transactions_data():
 
 @admin_bp.route('/')
 @local_only
-@local_only
 def base():
     return redirect(url_for('admin_bp.dashboard'))
 
