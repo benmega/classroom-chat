@@ -7,12 +7,14 @@ from PIL import Image
 from datetime import datetime
 import mimetypes
 
+from application import limiter
 from application.config import Config
 
 upload_bp = Blueprint('upload_bp', __name__)
 
 
 @upload_bp.route('/upload_file', methods=['POST'])
+@limiter.limit("10 per minute; 20 per day")
 def upload_file():
     if not request.is_json:
         return jsonify({"error": "Invalid JSON data"}), 400
@@ -40,16 +42,22 @@ def upload_file():
 
     if mime_type.startswith('image/'):
         # Handle image files
+        directory = 'userData/image'
+        os.makedirs(directory, exist_ok=True)  # Create directory if it doesn't exist
         file_path = f'userData/image/file_{timestamp}{extension}'
         image = Image.open(BytesIO(data))
         image.save(file_path)
     elif mime_type == 'application/pdf':
         # Handle PDF files
+        directory = 'userData/pdf'
+        os.makedirs(directory, exist_ok=True)  # Create directory if it doesn't exist
         file_path = f'userData/pdf/file_{timestamp}{extension}'
         with open(file_path, 'wb') as f:
             f.write(data)
     else:
         # Handle other file types
+        directory = 'userData/other'
+        os.makedirs(directory, exist_ok=True)  # Create directory if it doesn't exist
         file_path = f'userData/other/file_{timestamp}{extension}'
         with open(file_path, 'wb') as f:
             f.write(data)

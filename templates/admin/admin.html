@@ -112,27 +112,28 @@
             <div class="admin-card">
                 <h2 class="card-title">Password Reset</h2>
                 <div class="card-content">
-                    <div class="form-group">
+                    <form id="password-reset-form" class="form-group">
                         <label for="reset-username">Select User:</label>
                         <select id="reset-username" class="admin-select" required>
                             {% for user in users|sort(attribute='username') %}
                                 <option value="{{ user.username }}">{{ user.username }}</option>
                             {% endfor %}
                         </select>
-                    </div>
-                    <div class="form-group">
+
                         <label for="new-password">New Password:</label>
-                        <input type="password" id="new-password" class="admin-input" required placeholder="Enter new password">
+                        <input type="password" id="new-password" class="admin-input" placeholder="Enter new password" required>
                         <div class="password-strength-meter">
                             <div class="strength-bar"></div>
                         </div>
-                    </div>
-                    <div class="form-group">
+
                         <label for="confirm-password">Confirm Password:</label>
-                        <input type="password" id="confirm-password" class="admin-input" required placeholder="Confirm new password">
-                    </div>
-                    <div class="password-match-indicator"></div>
-                    <button id="reset-password-button" class="admin-button warning">Reset Password</button>
+                        <input type="password" id="confirm-password" class="admin-input" placeholder="Confirm new password" required>
+                        <div class="password-match-indicator"></div>
+
+                        <button type="button" id="reset-password-button" class="admin-button warning">
+                            Reset Password
+                        </button>
+                    </form>
                 </div>
             </div>
 
@@ -147,14 +148,48 @@
             </div>
 
             <div class="admin-card">
-                <h2 class="card-title">Trades</h2>
-                <div class="card-content button-group">
-                    <a href="/admin/pending_trades" class="admin-button-link">
-                        <button class="admin-button secondary">Pending Trades <span class="badge">{{ pending_trades_count }}</span></button>
-                    </a>
-                    <a href="/admin/trades" class="admin-button-link">
-                        <button class="admin-button secondary">Trade Logs</button>
-                    </a>
+                <h2 class="card-title">Create New User</h2>
+                <div class="card-content">
+                    <div class="form-group">
+                        <label for="new-username">Username:</label>
+                        <input
+                            type="text"
+                            id="new-username"
+                            class="admin-input"
+                            placeholder="Enter username"
+                            required
+                            maxlength="30"
+                            pattern="^[a-z0-9_]{3,30}$"
+                            title="3–30 characters: lowercase letters, numbers, or underscores only"
+                        >
+                    </div>
+                    <div class="form-group">
+                        <label for="create-password">Password:</label>
+                        <input type="password" id="create-password" class="admin-input" placeholder="Enter password" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="new-ducks">Starting Ducks:</label>
+                        <input type="number" id="new-ducks" class="admin-input" placeholder="0" value="0" min="0" required>
+                    </div>
+                    <button id="create-user-button" class="admin-button highlight">Create User</button>
+                </div>
+            </div>
+
+            <div class="admin-card">
+                <h2 class="card-title">Remove User</h2>
+                <div class="card-content">
+                    <div class="form-group">
+                        <label for="remove-username">Username to remove:</label>
+                        <input
+                            type="text"
+                            id="remove-username"
+                            name="username"
+                            class="admin-input"
+                            placeholder="Enter username"
+                            required
+                        >
+                    </div>
+                    <button id="remove-user-button" class="admin-button highlight">Remove User</button>
                 </div>
             </div>
         </div>
@@ -169,11 +204,11 @@
             addBannedWordUrl: "{{ url_for('admin_bp.add_banned_word') }}",
             adjustDucksUrl: "{{ url_for('admin_bp.adjust_ducks') }}",
             resetPasswordUrl: "{{ url_for('admin_bp.reset_password') }}",
-            duckTransactionsDataUrl: "{{ url_for('admin_bp.duck_transactions_data') }}"
+            duckTransactionsDataUrl: "{{ url_for('admin_bp.duck_transactions_data') }}",
+            createUserUrl: "{{ url_for('admin_bp.create_user') }}"
         };
 
-        window.chartData = {{ chart_data | default({}) | tojson }};
-
+        window.chartData = {{ chart_data | default({}) | tojson | safe }};
     </script>
 
     <!-- Include Chart.js for the duck transactions chart -->

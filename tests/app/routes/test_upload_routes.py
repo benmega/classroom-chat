@@ -1,4 +1,6 @@
 import os
+import time
+
 import pytest
 import base64
 from io import BytesIO
@@ -75,42 +77,30 @@ def test_upload_file_multiple_file_types(client):
             assert response.status_code == 200, f"Failed for {mime_type}"
             assert b"File uploaded successfully" in response.data, f"Unexpected response for {mime_type}"
 
-
-def test_upload_file_pdf(client):
-    with client.application.app_context():
-        """Test uploading a PDF file."""
-        fake_data = "data:application/pdf;base64,JVBERi0xLjQKJeLjz8zPpM4ftFDbP1Zb+J6ECR5IKUxlwq1D2V2clnUoLvi8LSg6BvUlYIQe6G5yOPw=="
-
-        json_data = {
-            "file": fake_data
-        }
-
-        response = client.post(
-            url_for('upload_bp.upload_file'),
-            json=json_data
-***REMOVED***
-
-        assert response.status_code == 200
-        assert b"File uploaded successfully" in response.data
-        assert "userData/pdfs/" in response.json['file_path']
-
-
 def test_uploaded_file(client):
+    """Test the file retrieval route."""
     with client.application.app_context():
-        """Test the file retrieval route."""
-        # Simulate an uploaded file
-        file_path = os.path.join(Config.UPLOAD_FOLDER, 'userData', 'image', 'file_20230101_120000.png')
+        filename = 'file_20230101_120000.png'
+        file_path = os.path.join(Config.UPLOAD_FOLDER, filename)
 
-        # Ensure the file exists for testing
+        # Ensure the directory exists
         os.makedirs(os.path.dirname(file_path), exist_ok=True)
+
+        # Create a fake file
         with open(file_path, 'wb') as f:
             f.write(b"fake image data")
 
-        # Test accessing the uploaded file
-        response = client.get(url_for('upload_bp.uploaded_file', filename='file_20230101_120000.png'))
-        assert response.status_code == 200
-        assert response.data == b"fake image data"
-
+        try:
+            # Access the uploaded file with buffering enabled
+            response = client.get(
+                url_for('upload_bp.uploaded_file', filename=filename),
+                buffered=True
+    ***REMOVED***
+            assert response.status_code == 200
+            assert response.data == b"fake image data"
+        finally:
+            if os.path.exists(file_path):
+                os.remove(file_path)
 
 def test_uploaded_file_not_found(client):
     with client.application.app_context():

@@ -10,7 +10,6 @@ import pytest
 from application import create_app
 from application.models.ai_settings import AISettings
 from application.models.banned_words import BannedWords
-from application.models.bounty import Bounty
 from application.models.challenge import Challenge
 from application.models.challenge_log import ChallengeLog
 from application.models.configuration import Configuration
@@ -20,7 +19,7 @@ from application.models.course import Course
 from application.models.message import Message
 from application.models.project import Project
 from application.models.skill import Skill
-from application.models.trade import Trade
+# from application.models.trade import Trade
 from application.models.user import User
 from application.config import TestingConfig
 from sqlalchemy import inspect
@@ -33,25 +32,20 @@ def setup_directories():
 
 
 
-
 @pytest.fixture(scope='session')
 def test_app():
-    app = create_app(TestingConfig)  # Replace with your actual app creation method
+    app = create_app(TestingConfig)
     with app.app_context():
-        db.create_all()  # Create all tables for tests
-        db.session.commit()  # Ensure the changes are committed
-        print(inspect(db.engine).get_table_names())  # Check created tables
-    yield app
-    with app.app_context():
+        db.create_all()
+        yield app
         db.session.remove()
-        db.drop_all()  # Clean up the test database
+        db.drop_all()
 
 @pytest.fixture
 def client(test_app):
-    with test_app.test_client() as client:
-        yield client
+    return test_app.test_client()
 
-# This fixture provides a function to add a sample user to the database for tests.
+
 @pytest.fixture
 def init_db(test_app):
     """Provide a transactional database session for the test."""
@@ -84,6 +78,33 @@ def add_sample_user(init_db):
         return user
 
     return _add_user
+
+
+@pytest.fixture
+def sample_user_with_ducks(test_app):
+    """Fixture that creates a user with ducks and cleans up afterward."""
+    with test_app.app_context():
+        # Create tables if they don't exist
+        db.create_all()
+
+        try:
+            user = User(username='user_with_ducks', password_hash='test_password', ducks=50)
+            db.session.add(user)
+            db.session.commit()
+            yield user
+        except Exception as e:
+            db.session.rollback()  # Rollback if there's any error
+            raise e  # Reraise the exception to fail the test
+        finally:
+            # Cleanup: Delete user and commit changes
+            try:
+                user_to_delete = db.session.query(User).filter_by(username='user_with_ducks').first()
+                if user_to_delete:
+                    db.session.delete(user_to_delete)
+                    db.session.commit()
+            except Exception:
+                db.session.rollback()  # In case of an error during cleanup
+                # Don't raise the cleanup error, as it might mask the actual test error
 
 
 @pytest.fixture
@@ -175,23 +196,6 @@ def sample_banned_words(init_db):
     db.session.add_all(words)
     db.session.commit()
     return words
-
-
-@pytest.fixture
-def sample_bounty(init_db):
-    """Fixture to create a sample Bounty entry."""
-    bounty = Bounty(
-        user_id=1,
-        description="Test bug bounty",
-        bounty="50",
-        expected_behavior="Chat application should not crash under high load.",
-        image_path="images/bounty1.png",
-        status="Open"
-    )
-    db.session.add(bounty)
-    db.session.commit()
-    return bounty
-
 
 @pytest.fixture
 def sample_configuration(init_db):
@@ -290,51 +294,21 @@ def sample_image_data():
     return f"data:image/png;base64,{image_data}"
 
 
-@pytest.fixture
-def sample_user_with_ducks(test_app):
-    """Fixture that creates a user with ducks and cleans up afterward."""
-    with test_app.app_context():
-        try:
-            user = User(username='user_with_ducks', password_hash='test_password', ducks=50)
-            db.session.add(user)
-            db.session.commit()
-            yield user
-        except Exception as e:
-            db.session.rollback()  # Rollback if there's any error
-            raise e  # Reraise the exception to fail the test
-        finally:
-            # Cleanup: Delete user and commit changes
-            try:
-                db.session.delete(user)
-                db.session.commit()
-            except Exception as cleanup_error:
-                db.session.rollback()  # In case of an error during cleanup
-                raise cleanup_error
-
-@pytest.fixture
-def sample_user_with_few_ducks(test_app):
-    with test_app.app_context():
-        user = User(username='user_with_few_ducks', ducks=5)
-        db.session.add(user)
-        db.session.commit()
-        yield user
-        db.session.delete(user)
-        db.session.commit()
-
-@pytest.fixture
-def sample_trade(test_app, sample_user_with_ducks):
-    with test_app.app_context():
-        trade = Trade(
-            user_id=sample_user_with_ducks.id,
-            digital_ducks=10,
-            duck_type='bit',
-            status='pending'
-***REMOVED***
-        db.session.add(trade)
-        db.session.commit()
-        yield trade
-        db.session.delete(trade)
-        db.session.commit()
+#
+# @pytest.fixture
+# def sample_trade(test_app, sample_user_with_ducks):
+#     with test_app.app_context():
+#         trade = Trade(
+#             user_id=sample_user_with_ducks.id,
+#             digital_ducks=10,
+#             duck_type='bit',
+#             status='pending'
+# ***REMOVED***
+#         db.session.add(trade)
+#         db.session.commit()
+#         yield trade
+#         db.session.delete(trade)
+#         db.session.commit()
 
 @pytest.fixture
 def auth_headers(sample_admin):
@@ -348,18 +322,20 @@ def auth_headers(sample_admin):
 
 
 @pytest.fixture
-def sample_duck_trade(test_app, sample_user):
-    """Create a sample duck trade for testing."""
-    with test_app.app_context():
-        from application.models.duck_trade import DuckTradeLog
-        trade = DuckTradeLog(
-            username=sample_user.username,
-            digital_ducks=50,
-            status='pending'
-***REMOVED***
-        db.session.add(trade)
-        db.session.commit()
-        yield trade
-        # Cleanup
-        db.session.delete(trade)
-        db.session.commit()
+def sample_duck_trade(init_db, sample_user):
+    """Create a sample duck trade for testing (bound to correct session)."""
+    from application.models.duck_trade import DuckTradeLog
+    sample_user.ducks = 100
+    trade = DuckTradeLog(
+        username=sample_user.username,
+        digital_ducks=1,
+        bit_ducks=[1, 0, 0, 0, 0, 0, 0],
+        byte_ducks=[0, 0, 0, 0, 0, 0, 0],
+        status='pending'
+    )
+    db.session.add(trade)
+    db.session.commit()
+
+    # Optional: re-fetch from session to ensure it's not detached
+    trade = DuckTradeLog.query.get(trade.id)
+    return trade

@@ -1,6 +1,7 @@
 import os
 from dotenv import load_dotenv
 
+
 # Ensure environment variables are loaded
 load_dotenv()
 
@@ -24,12 +25,12 @@ class Config:
     SESSION_TYPE = 'filesystem'
 
     # File upload settings
-    UPLOAD_FOLDER = os.path.join(STATIC_FOLDER, 'uploads', 'profile_pictures')
+    UPLOAD_FOLDER = os.path.join(STATIC_FOLDER, 'uploads')
     MAX_CONTENT_LENGTH = 500 * 1024 * 1024  # Max 500MB upload size
     ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
     # Admin user configuration: Ideally, use hashed passwords in production, not plaintext
-    ADMIN_USERNAME = os.getenv('ADMIN_USERNAME', 'ben')  # Use environment variable for flexibility
+    ADMIN_USERNAME = os.getenv('ADMIN_USERNAME', 'admin')  # Use environment variable for flexibility
     ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD', '1234')  # Never store plaintext passwords in code
 
     # Add any general session or lifetime configuration here
@@ -54,6 +55,7 @@ class TestingConfig(Config):
     SQLALCHEMY_ECHO = False
     SERVER_NAME = 'localhost:5000' # TODO Confirm why this was commented out 3.22.25
     WTF_CSRF_ENABLED = False
+    RATELIMIT_ENABLED = False
 
 
 class ProductionConfig(Config):

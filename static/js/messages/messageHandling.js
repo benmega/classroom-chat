@@ -1,4 +1,5 @@
 // messageHandling.js
+const updateInterval = 2000 // Set an interval to update the conversation every 2 seconds
 
 export function setupMessagingAndConversation() {
     messageForm.addEventListener('submit', function(e) {
@@ -7,8 +8,7 @@ export function setupMessagingAndConversation() {
         uploadImage();
         updateConversation();
     });
-    // Set an interval to update the conversation every 2 seconds
-    setInterval(updateConversation, 2000);
+    setInterval(updateConversation, updateInterval);
 }
 
 export function updateConversation() {
@@ -26,11 +26,10 @@ export function sendMessage() {
     const message = getMessageInput();
 
     if (!message) {
-        alert('Message is required.');
+        showAlert('Message is required.');
         return;
     }
 
-    // Since username is stored in session, we don’t need to send it manually
     const params = createRequestParams({ message });
 
     sendRequest('message/send_message', params)
@@ -40,7 +39,6 @@ export function sendMessage() {
 
 
 // update conversation helper functions
-
 function fetchCurrentConversation() {
     return fetch('message/get_current_conversation')
         .then(response => {
@@ -114,15 +112,21 @@ function sendRequest(url, params) {
             'Content-Type': 'application/x-www-form-urlencoded',
         },
         body: params
-    }).then(response => response.json());
+    }).then(response => {
+        if (!response.ok) {
+            return response.json().then(errorData => {
+                throw errorData;
+            });
+        }
+        return response.json();
+    });
 }
-
 
 
 function handleResponse(data) {
     if (data.success) {
         if (data.system_message) {
-            displaySystemMessage(data.system_message); // Handle system messages
+            showAlert(data.system_message);
             if (data.play_sound) {
                 playQuackSound();
             }
@@ -130,12 +134,8 @@ function handleResponse(data) {
             clearMessageInput();
         }
     } else {
-        alert('Error: ' + data.error);
+        showAlert('Error: ' + (data.error || "Something went wrong."));
     }
-}
-
-function displaySystemMessage(message) {
-    alert(message); // Simple alert for immediate feedback
 }
 
 // Function to play the quack sound
@@ -145,10 +145,13 @@ function playQuackSound() {
 }
 
 
-
 function handleError(error) {
     console.error('Error:', error);
-    alert('An unexpected error occurred.');
+    if (error && error.message) {
+        showAlert('Error: ' + error.message);
+    } else {
+        showAlert('An unexpected error occurred.');
+    }
 }
 
 function clearMessageInput() {
@@ -211,3 +214,13 @@ function handleUploadResponse(data) {
     }
 }
 
+function showAlert(message) {
+    const iframe = document.createElement("iframe");
+    iframe.style.display = "none";
+    iframe.src = "data:text/plain,";
+    document.body.appendChild(iframe);
+
+    // Use iframe window to override the alert box title
+    iframe.contentWindow.alert("Mr. Mega says\n\n" + message);
+    document.body.removeChild(iframe);
+}
