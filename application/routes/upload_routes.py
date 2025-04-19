@@ -9,12 +9,14 @@ import mimetypes
 
 from application import limiter
 from application.config import Config
+from application.decorators.licensing import premium_required
 
 upload_bp = Blueprint('upload_bp', __name__)
 
 
 @upload_bp.route('/upload_file', methods=['POST'])
 @limiter.limit("10 per minute; 20 per day")
+@premium_required
 def upload_file():
     if not request.is_json:
         return jsonify({"error": "Invalid JSON data"}), 400
@@ -66,6 +68,7 @@ def upload_file():
 
 
 @upload_bp.route('/uploads/<filename>')
+@premium_required
 def uploaded_file(filename):
     file_path = os.path.join(Config.UPLOAD_FOLDER, filename)
     if os.path.exists(file_path):
