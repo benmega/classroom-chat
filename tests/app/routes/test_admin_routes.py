@@ -13,11 +13,12 @@ from application.models.message import Message
 from application.models.user import User
 
 
-def test_get_users_requires_auth(client):
+def test_get_users_requires_auth(client, sample_user):
     """Test that the users endpoint requires authentication."""
+    client.environ_base = {'REMOTE_ADDR': sample_user.ip_address}
     response = client.get('/admin/users')
-    assert response.status_code == 401
-    assert b'Unauthorized' in response.data
+    assert response.status_code == 403
+    assert b'Forbidden' in response.data
 
 
 def test_get_users_with_auth(client, auth_headers, sample_users):
@@ -35,7 +36,7 @@ def test_get_users_with_auth(client, auth_headers, sample_users):
 
 def test_set_username_route(client, sample_user, auth_headers):
     # no need for explicit app_context here
-    client.environ_base = {'REMOTE_ADDR': sample_user.ip_address}
+    client.environ_base = {'REMOTE_ADDR': '127.0.0.1'}
     resp = client.post('/admin/set_username',
                        data={'user_id': sample_user.id, 'username': 'new_username'}, headers=auth_headers)
     assert resp.status_code == 200
