@@ -40,13 +40,17 @@ document.addEventListener("DOMContentLoaded", () => {
         event.preventDefault();
 
         if (!validateForm()) return;
+        const isByte = (toggle.value === "byte");
+        const duckValues = Array.from(duckInputs).map(input => parseInt(input.value || 0));
 
         const formData = {
             digital_ducks: parseInt(digitalDucksInput.value || 0),
-            bit_duck_selection: { bit_ducks: Array.from(duckInputs).map(input => parseInt(input.value || 0)) },
-            byte_duck_selection: { byte_ducks: Array.from(duckInputs).map(input => parseInt(input.value || 0)) }
+            bit_ducks: isByte ? [0, 0, 0, 0, 0, 0, 0] : duckValues,
+            byte_ducks: isByte ? duckValues : [0, 0, 0, 0, 0, 0, 0]
         };
 
+        const responseBody = JSON.stringify(formData);
+        console.log(responseBody)
         try {
             const response = await fetch(form.action, {
                 method: "POST",
@@ -55,7 +59,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     "X-Requested-With": "XMLHttpRequest",
                     ...(csrfToken ? { "X-CSRF-Token": csrfToken } : {})
                 },
-                body: JSON.stringify(formData),
+                body: responseBody,
             });
 
             const result = await response.json();
