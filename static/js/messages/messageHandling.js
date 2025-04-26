@@ -1,5 +1,5 @@
 // messageHandling.js
-const updateInterval = 2000 // Set an interval to update the conversation every 2 seconds
+const updateInterval = 2000; // Update conversation every 2 seconds
 
 export function setupMessagingAndConversation() {
     messageForm.addEventListener('submit', function(e) {
@@ -21,12 +21,11 @@ export function updateConversation() {
         });
 }
 
-
 export function sendMessage() {
     const message = getMessageInput();
 
     if (!message) {
-        showAlert('Message is required.');
+        showAlert('Message is required.', 'warning');
         return;
     }
 
@@ -37,8 +36,8 @@ export function sendMessage() {
         .catch(handleError);
 }
 
+// --- Update conversation helpers ---
 
-// update conversation helper functions
 function fetchCurrentConversation() {
     return fetch('message/get_current_conversation')
         .then(response => {
@@ -58,41 +57,32 @@ function updateChatUI(conversationData) {
         return;
     }
 
-    chatDiv.innerHTML = ''; // Clear previous content
+    chatDiv.innerHTML = '';
 
-    // Ensure sorting is based on timestamp
     conversationData.messages.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
 
-    // Loop through the sorted messages and display each one
     conversationData.messages.forEach(msg => {
         const messageHTML = formatMessage(msg.user_name, msg.content);
         chatDiv.innerHTML += messageHTML;
     });
 }
 
-
 function formatMessage(username, message) {
-    // Replace \n with <br> first
     message = message.replace(/\n/g, '<br>');
 
-    // Regular expression to match URLs
     const urlRegex = /(https?:\/\/[^\s<]+)|(\bwww\.[^\s<]+(?:\.[^\s<]+)+\b)/g;
 
-    // Replace URLs with anchor tags
     const formattedMessage = message.replace(urlRegex, url => {
         const href = url.startsWith('http') ? url : 'http://' + url;
         return `<a href="${href}" target="_blank">${url}</a>`;
     });
 
-    // Return the formatted message with <br> properly handled
     return `<p><strong>${username}:</strong> ${formattedMessage}</p>`;
 }
-
 
 function getMessageInput() {
     return document.getElementById('message').value.trim();
 }
-
 
 function getUsername() {
     return document.getElementById('currentUsername').textContent.trim();
@@ -103,7 +93,6 @@ function createRequestParams(data) {
     Object.keys(data).forEach(key => params.append(key, data[key]));
     return params;
 }
-
 
 function sendRequest(url, params) {
     return fetch(url, {
@@ -122,11 +111,10 @@ function sendRequest(url, params) {
     });
 }
 
-
 function handleResponse(data) {
     if (data.success) {
         if (data.system_message) {
-            showAlert(data.system_message);
+            showAlert(data.system_message, 'success');
             if (data.play_sound) {
                 playQuackSound();
             }
@@ -134,23 +122,21 @@ function handleResponse(data) {
             clearMessageInput();
         }
     } else {
-        showAlert('Error: ' + (data.error || "Something went wrong."));
+        showAlert('Error: ' + (data.error || "Something went wrong."), 'error');
     }
 }
 
-// Function to play the quack sound
 function playQuackSound() {
-    let quack = new Audio("/static/sounds/quack.mp3"); // Ensure this file exists
+    let quack = new Audio("/static/sounds/quack.mp3");
     quack.play().catch(error => console.error("Error playing sound:", error));
 }
-
 
 function handleError(error) {
     console.error('Error:', error);
     if (error && error.message) {
-        showAlert('Error: ' + error.message);
+        showAlert('Error: ' + error.message, 'error');
     } else {
-        showAlert('An unexpected error occurred.');
+        showAlert('An unexpected error occurred.', 'error');
     }
 }
 
@@ -158,14 +144,12 @@ function clearMessageInput() {
     document.getElementById('message').value = '';
 }
 
+// --- Image upload helpers ---
 
-// Image upload helper functions
 export function uploadImage() {
     const file = getImageFile();
 
-    if (!file) {
-        return;
-    }
+    if (!file) return;
 
     convertFileToBase64(file)
         .then(dataURL => {
@@ -182,13 +166,12 @@ function createJSONRequestParams(data) {
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify(data),  // Convert the data object to a JSON string
+        body: JSON.stringify(data),
     };
 }
 
 function sendJsonRequest(url, data) {
-    return fetch(url, data)  // No need to re-stringify; data is already JSON
-        .then(response => response.json());
+    return fetch(url, data).then(response => response.json());
 }
 
 function getImageFile() {
@@ -206,21 +189,20 @@ function convertFileToBase64(file) {
 
 function handleUploadResponse(data) {
     if (data.message) {
-        console.log(data.message); // Success message from server
-        alert('Image uploaded successfully.');
-        document.getElementById('file').value = ''; // Clear the file input after upload
+        console.log(data.message);
+        showAlert('Image uploaded successfully.', 'success');
+        document.getElementById('file').value = '';
     } else {
-        alert('Error: ' + data.error);
+        showAlert('Error: ' + data.error, 'error');
     }
 }
 
-function showAlert(message) {
-    const iframe = document.createElement("iframe");
-    iframe.style.display = "none";
-    iframe.src = "data:text/plain,";
-    document.body.appendChild(iframe);
-
-    // Use iframe window to override the alert box title
-    iframe.contentWindow.alert("Mr. Mega says\n\n" + message);
-    document.body.removeChild(iframe);
+// --- SweetAlert2 wrapper ---
+function showAlert(message, icon = 'info') {
+    Swal.fire({
+        title: 'Mr. Mega says',
+        text: message,
+        icon: icon,
+        confirmButtonText: 'OK'
+    });
 }
