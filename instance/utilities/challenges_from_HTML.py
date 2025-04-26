@@ -10,6 +10,9 @@ from tkinter import filedialog
 
 from bs4 import BeautifulSoup
 from urllib.parse import urlparse, parse_qs
+import warnings
+warnings.filterwarnings("ignore", message="Using the in-memory storage for tracking rate limits")
+
 
 def get_challenge_data(domain, soup):
     """
@@ -177,90 +180,6 @@ def parse_and_store_challenges(app, url, html_content, default_difficulty="mediu
     print(f"{count} challenges imported successfully.")
     return count > 0
 
-
-# def parse_and_store_challenges(app, url, html_content, default_difficulty="medium", default_value=1):
-#     """
-#     Parses HTML to extract challenge data and stores it in the database.
-#
-#     Args:
-#         app: The Flask application instance.
-#         url (str): The URL of the challenge page.
-#         html_content (str): The HTML content of the page.
-#         default_difficulty (str, optional): Default difficulty level for challenges.
-#         default_value (int, optional): Default point value for challenges.
-#
-#     Returns:
-#         bool: True if challenges were imported, False otherwise.
-#     """
-#     # Parse HTML content
-#     soup = BeautifulSoup(html_content, "html.parser")
-#
-#     # Extract key values from URL
-#     parsed_url = urlparse(url)
-#     domain = parsed_url.netloc  # Extract domain, e.g., "ozaria.com"
-#     query_params = parse_qs(parsed_url.query)
-#     course_id = query_params.get("course", [""])[0]  # Extract course_id if present
-#     count = 0
-#
-#     # Identify challenge elements based on the domain
-#     if "codecombat.com" in domain:
-#         challenge_elements = soup.find_all("div", class_="level-info-container")
-#         name_attr = "data-level-name"
-#         slug_attr = "data-level-slug"
-#         description_class = "level-description"
-#     elif "studio.code.org" in domain:
-#         challenge_elements = soup.find_all("a", class_="progress-bubble-link")
-#         name_attr = "title"
-#         slug_attr = "href"
-#         description_class = None
-#     elif "ozaria.com" in domain:
-#         challenge_elements = soup.find_all("a", class_="level-dot-link")
-#         name_attr = "title"
-#         slug_attr = "href"
-#         description_class = None  # No direct description found
-#     else:
-#         print("Unsupported domain. No challenges extracted.")
-#         return False
-#
-#     # Use the app context to interact with the database
-#     with app.app_context():
-#         for challenge_element in challenge_elements:
-#             name = challenge_element.get(name_attr)
-#             if not name:
-#                 continue
-#             slug = challenge_element.get(slug_attr)
-#             if not slug:
-#                 continue
-#
-#             # Clean up slug for Ozaria (remove query parameters)
-#             if "ozaria.com" in domain:
-#                 slug = urlparse(slug).path.split("/")[-1]  # Extract last part of the path
-#
-#             description = "No description provided."
-#             if description_class:
-#                 description_tag = challenge_element.find("div", class_=description_class)
-#                 if description_tag:
-#                     description = description_tag.text.strip()
-#
-#             # Create and add challenge to the database
-#             challenge = Challenge(
-#                 name=name,
-#                 slug=slug,
-#                 domain=domain,  # Pulled from URL
-#                 course_id=course_id,
-#                 description=description,
-#                 difficulty=default_difficulty,  # Configurable default
-#                 value=default_value  # Configurable default
-#             )
-#
-#             db.session.add(challenge)
-#             count += 1
-#
-#         # Commit changes to the database
-#         db.session.commit()
-#
-#     print(f"{count} challenges imported successfully.")
-#     return count > 0
 
 
 

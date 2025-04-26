@@ -10,7 +10,7 @@ ai_bp = Blueprint('ai_bp', __name__)
 def ai_response():
     user_message = request.form['message']
     username = request.form['username']
-    # Call AI logic here...
+
     response = get_ai_response(user_message, username)
     if response:
         return jsonify(success=True, ai_response=response)

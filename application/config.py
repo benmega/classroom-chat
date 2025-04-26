@@ -43,6 +43,7 @@ class DevelopmentConfig(Config):
     SQLALCHEMY_DATABASE_URI = os.getenv('DEV_DATABASE_URI', f'sqlite:///{os.path.join(Config.INSTANCE_FOLDER, "dev_users.db")}')
     # SERVER_NAME = '192.168.1.136:5000' # Is this needed for testing? 3.22.25
     WTF_CSRF_ENABLED = False
+    RATELIMIT_STORAGE_URL = "memory://"
 
 
 class TestingConfig(Config):
