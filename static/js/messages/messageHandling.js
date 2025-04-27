@@ -122,7 +122,7 @@ function handleResponse(data) {
             clearMessageInput();
         }
     } else {
-        showAlert('Error: ' + (data.error || "Something went wrong."), 'error');
+        showAlert((data.system_message || data.error || "Something went wrong."), 'error');
     }
 }
 

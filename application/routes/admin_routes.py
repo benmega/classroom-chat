@@ -251,31 +251,6 @@ def reset_password():
     return jsonify({'success': True, 'message': f"Password reset for {username}"})
 
 
-@admin_bp.route('/adjust_ducks', methods=['POST'])
-@local_only
-def adjust_ducks():
-    username = request.form.get('username')
-    amount = request.form.get('amount', type=int)
-
-    if not username or amount is None:
-        return jsonify({
-            'success': False,
-            'message': "Username and amount required"
-        }), 400
-
-    user = User.query.filter_by(username=username).first()
-    if user:
-        user.ducks += amount  # Add or subtract ducks
-        db.session.commit()
-        return jsonify({
-            'success': True,
-            'message': f"Updated {username}'s ducks by {amount}."
-        })
-    else:
-        return jsonify({
-            'success': False,
-            'message': "User not found."
-        }), 404
 
 @admin_bp.route('/create_user', methods=['POST'])
 @local_only
@@ -516,3 +491,30 @@ def update_duck_multiplier():
     except Exception as e:
         db.session.rollback() # Rollback in case of other errors
         return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@admin_bp.route('/adjust_ducks', methods=['POST'])
+@local_only
+def adjust_ducks():
+    username = request.form.get('username')
+    amount = request.form.get('amount', type=float)
+
+    if not username or amount is None:
+        return jsonify({
+            'success': False,
+            'message': "Username and amount required"
+        }), 400
+
+    user = User.query.filter_by(username=username).first()
+    if user:
+        user.ducks += amount  # Add or subtract ducks
+        db.session.commit()
+        return jsonify({
+            'success': True,
+            'message': f"Updated {username}'s ducks by {amount}."
+        })
+    else:
+        return jsonify({
+            'success': False,
+            'message': "User not found."
+        }), 404

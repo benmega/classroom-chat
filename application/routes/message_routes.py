@@ -46,8 +46,9 @@ def send_message():
             system_message = f"Congrats {user.username}, on completing a challenge!"
             return jsonify(success=True, system_message=system_message, play_sound=True), 200
         else:
-            system_message = f"Error claiming challenge. Please refresh the page and try again. If the issue persists, ask Mr. Mega"
-            return jsonify(success=True, system_message=system_message), 200
+            # system_message = f"Error claiming challenge. Please refresh the page and try again. If the issue persists, ask Mr. Mega"
+            system_message = challenge_check.get("details").get("message")
+            return jsonify(success=False, system_message=system_message), 200
 
     # Save message to the database
     if not save_message_to_db(user.id, form_message):
