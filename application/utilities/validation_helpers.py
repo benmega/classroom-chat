@@ -82,7 +82,7 @@ def _log_challenge(details, username):
         if existing_log:
             return {
                 "success": False,
-                "message": "Challenge log already exists",
+                "message": "You already claimed this level!",
                 "timestamp": existing_log.timestamp
             }
 
