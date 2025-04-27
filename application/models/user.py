@@ -9,6 +9,10 @@ from application.models.skill import Skill
 
 
 class User(db.Model):
+    @property
+    def username(self):
+        return self._username
+
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
     _username = db.Column("username", db.String(50), unique=True, nullable=False)

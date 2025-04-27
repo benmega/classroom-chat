@@ -158,3 +158,34 @@ function replaceDuckEmojis() {
 }
 
 document.addEventListener('DOMContentLoaded', replaceDuckEmojis);
+
+// Duck Multiplier Adjustment
+document.getElementById('update-multiplier-button').addEventListener('click', function() {
+    const newMultiplier = parseFloat(document.getElementById('duck-multiplier-input').value);
+
+    if (isNaN(newMultiplier) || newMultiplier < 0) {
+        Swal.fire('Invalid Input', 'Please enter a valid non-negative number.', 'error');
+        return;
+    }
+
+    fetch(window.urls.updateMultiplierUrl, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            // 'X-CSRFToken': getCSRFToken() // If you're using CSRF protection
+        },
+        body: JSON.stringify({ multiplier: newMultiplier })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            Swal.fire('Multiplier Updated', `New duck multiplier: ${newMultiplier}`, 'success');
+        } else {
+            Swal.fire('Error', data.message || 'Failed to update multiplier.', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error updating multiplier:', error);
+        Swal.fire('Error', 'Server error occurred.', 'error');
+    });
+});

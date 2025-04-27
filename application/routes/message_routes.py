@@ -38,7 +38,8 @@ def send_message():
         return jsonify(success=False, error="Inappropriate messages are not allowed"), 500
 
     # Check for and process CodeCombat URL
-    challenge_check = detect_and_handle_challenge_url(form_message, user.username)
+    duck_multiplier = config.duck_multiplier
+    challenge_check = detect_and_handle_challenge_url(form_message, user.username, duck_multiplier)
     if challenge_check.get("handled"):
         # Send a congratulatory system message
         if challenge_check.get("details").get("success"):

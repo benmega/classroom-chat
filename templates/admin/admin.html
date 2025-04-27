@@ -110,6 +110,17 @@
             </div>
 
             <div class="admin-card">
+                <h2 class="card-title">Duck Multiplier</h2>
+                <div class="card-content">
+                    <div class="form-group">
+                        <label for="duck-multiplier-input">Multiplier (e.g., 1.0, 2.5):</label>
+                        <input type="number" id="duck-multiplier-input" class="admin-input" step="0.1" min="0" required value="{{ config.duck_multiplier }}">
+                    </div>
+                    <button id="update-multiplier-button" class="admin-button highlight">Update Multiplier</button>
+                </div>
+            </div>
+
+            <div class="admin-card">
                 <h2 class="card-title">Password Reset</h2>
                 <div class="card-content">
                     <form id="password-reset-form" class="form-group">
@@ -205,7 +216,9 @@
             adjustDucksUrl: "{{ url_for('admin_bp.adjust_ducks') }}",
             resetPasswordUrl: "{{ url_for('admin_bp.reset_password') }}",
             duckTransactionsDataUrl: "{{ url_for('admin_bp.duck_transactions_data') }}",
-            createUserUrl: "{{ url_for('admin_bp.create_user') }}"
+            createUserUrl: "{{ url_for('admin_bp.create_user') }}",
+            updateMultiplierUrl: "{{ url_for('admin_bp.update_duck_multiplier') }}",
+
         };
 
         window.chartData = {{ chart_data | default({}) | tojson | safe }};

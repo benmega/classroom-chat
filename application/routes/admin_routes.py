@@ -491,3 +491,28 @@ def trade_action():
         return jsonify({'status': 'success', 'message': 'Trade rejected'})
 
     return jsonify({'status': 'error', 'message': 'Invalid action'}), 400
+
+
+@admin_bp.route('/update_duck_multiplier', methods=['POST'])
+def update_duck_multiplier():
+    data = request.get_json()
+    new_multiplier = data.get('multiplier')
+
+    if new_multiplier is None:
+        return jsonify({'success': False, 'error': 'No multiplier provided'}), 400
+
+    try:
+        new_multiplier = float(new_multiplier)
+
+        config = Configuration.query.first()
+        if config is None:
+            return jsonify({'success': False, 'error': 'Configuration not found'}), 404
+        config.duck_multiplier = new_multiplier
+
+        db.session.commit()
+        return jsonify({'success': True, 'new_multiplier': new_multiplier})
+    except (ValueError, TypeError):
+        return jsonify({'success': False, 'error': 'Invalid multiplier value'}), 400
+    except Exception as e:
+        db.session.rollback() # Rollback in case of other errors
+        return jsonify({'success': False, 'error': str(e)}), 500
