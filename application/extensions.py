@@ -1,6 +1,6 @@
 from flask_sqlalchemy import SQLAlchemy
 from flask_socketio import SocketIO
-import engineio.async_drivers.threading
+# import engineio.async_drivers.threading
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 

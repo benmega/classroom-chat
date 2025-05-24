@@ -26,12 +26,29 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function validateForm() {
+        const validInputValues = validateInputValues();
+        if (!validInputValues) {
+            showToast("You may only request between 1 and 10 of each duck type.", "error");
+            return false;
+        }
         const digitalDucks = parseInt(digitalDucksInput.value || 0);
         const calculatedTotal = calculateTotalDucks();
 
         if (digitalDucks !== calculatedTotal) {
             showToast("The number of digital ducks does not match the total requested ducks.", "error");
             return false;
+        }
+        return true;
+    }
+
+    function validateInputValues() {
+        for (const input of duckInputs) {
+            const value = parseInt(input.value, 10);
+
+            // Check if value is not a number or out of bounds
+            if (isNaN(value) || value < 0 || value > 10) {
+                return false;
+            }
         }
         return true;
     }
