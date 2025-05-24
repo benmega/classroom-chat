@@ -11,7 +11,8 @@
 
     <!-- Link to the base stylesheet -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
-    <link rel="stylesheet" href="/static/css/variables.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/message.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/variables.css') }}">
 
 </head>
 <body>
@@ -35,11 +36,7 @@
                 <li><a class="nav-button" href="{{ url_for('message_bp.conversation_history') }}">Conversation History</a></li>
 
                 {% if 'user' in session %}
-                    <!-- Profile Link -->
                     <li><a class="nav-button profile" href="{{ url_for('user_bp.profile') }}">Profile</a></li>
-
-                    <!-- bit_Pond Link -->
-<!--                    <li><a class="nav-button" href="{{ url_for('duck_trade_bp.index') }}">bit_Pond</a></li>-->
                     <li><a class="nav-button" href="{{ url_for('duck_trade_bp.bit_shift') }}">bitShift</a></li>
 
                     <!-- Logout Link (if logged in) -->
@@ -62,7 +59,7 @@
 
     <!-- Footer -->
     <footer>
-        <p>&copy; 2024 Classroom Chat. All Rights Reserved.</p>
+        <p>&copy; 2025 Classroom Chat. All Rights Reserved.</p>
     </footer>
 
 </body>

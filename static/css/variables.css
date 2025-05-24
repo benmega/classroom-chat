@@ -33,7 +33,7 @@
 
     /* Sizes */
     --max-container-width: 1300px;
-    --chat-height: 400px;
+    --chat-height: 60vh;
     --header-padding: 0px 40px;
     --input-padding: 12px;
     --button-padding: 12px 20px;
