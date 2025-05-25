@@ -144,7 +144,7 @@ function replaceDuckEmojis() {
                     fragment.appendChild(document.createTextNode(text));
                     if (idx < parts.length - 1) {
                         const img = document.createElement('img');
-                        img.src = '/static/images/rubber_duck.jpg';
+                        img.src = '/static/images/rubber_duck.png';
                         img.alt = 'Rubber Duck';
                         img.className = 'emoji';
                         fragment.appendChild(img);

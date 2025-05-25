@@ -5,11 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Classroom Chat</title>
-
-    <link rel="icon" href="static/images/logo.ico" type="image/x-icon">
-
-
-    <!-- Link to the base stylesheet -->
+    <link rel="icon" href="{{ url_for('static', filename='images/logo.ico') }}" type="image/x-icon">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/message.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/variables.css') }}">
@@ -20,29 +16,22 @@
     <!-- Navigation Bar -->
     <header>
         <div id="logo-container">
-            <h1>Classroom Chat</h1>
+            <h1><a href="{{ url_for('general_bp.index') }}" style="text-decoration: none; color: inherit;">Classroom Chat</a></h1>
         </div>
         <nav>
             <ul>
                 {% if user %}
-                <li><a class="digital-ducks">Digital Ducks: {{ user.ducks }}</a></li>
+                    <li><a class="digital-ducks">Digital Ducks: {{ user.ducks }}</a></li>
                 {% endif %}
 
-                <!-- Home Link -->
-                <li><a class="nav-button" href="{{ url_for('general_bp.index') }}">Home</a></li>
 
-
-                <!-- Conversation History Link -->
                 <li><a class="nav-button" href="{{ url_for('message_bp.conversation_history') }}">Conversation History</a></li>
 
                 {% if 'user' in session %}
                     <li><a class="nav-button profile" href="{{ url_for('user_bp.profile') }}">Profile</a></li>
                     <li><a class="nav-button" href="{{ url_for('duck_trade_bp.bit_shift') }}">bitShift</a></li>
-
-                    <!-- Logout Link (if logged in) -->
                     <li><a class="nav-button logout" href="{{ url_for('user_bp.logout') }}">Logout</a></li>
                 {% else %}
-                    <!-- Login Link (if not logged in) -->
                     <li><a class="nav-button login" href="{{ url_for('user_bp.login') }}">Login</a></li>
                 {% endif %}
             </ul>
