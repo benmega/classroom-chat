@@ -142,6 +142,7 @@ def dashboard():
     active_users_count = User.query.filter_by(is_online=True).count()
 
     users = User.query.all()
+    users_sorted = sorted(users, key=lambda u: u.ducks or 0, reverse=True)
     config = Configuration.query.first()
     banned_words = BannedWords.query.all()
 
@@ -149,7 +150,7 @@ def dashboard():
     chart_data = get_duck_transactions_data()
 
     return render_template('admin/admin.html',
-                           users=users,
+                           users=users_sorted,
                            config=config,
                            banned_words=banned_words,
                            total_ducks=total_ducks,

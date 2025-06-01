@@ -44,7 +44,7 @@ def send_message():
         # Send a congratulatory system message
         if challenge_check.get("details").get("success"):
             system_message = f"Congrats {user.username}, on completing a challenge!"
-            return jsonify(success=True, system_message=system_message, play_sound=True), 200
+            return jsonify(success=True, system_message=system_message, quack_count=duck_multiplier), 200
         else:
             # system_message = f"Error claiming challenge. Please refresh the page and try again. If the issue persists, ask Mr. Mega"
             system_message = challenge_check.get("details").get("message")

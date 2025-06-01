@@ -54,7 +54,7 @@ class TestingConfig(Config):
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     # Override or add any test-specific configuration here, e.g., disable logging
     SQLALCHEMY_ECHO = False
-    SERVER_NAME = 'localhost:5000' # TODO Confirm why this was commented out 3.22.25
+    SERVER_NAME = 'localhost:5000'
     WTF_CSRF_ENABLED = False
     RATELIMIT_ENABLED = False
 

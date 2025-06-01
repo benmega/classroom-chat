@@ -115,8 +115,8 @@ function handleResponse(data) {
     if (data.success) {
         if (data.system_message) {
             showAlert(data.system_message, 'success');
-            if (data.play_sound) {
-                playQuackSound();
+            if (data.quack_count) {
+                playQuacksSequentially(data.quack_count);
             }
         } else {
             clearMessageInput();
@@ -126,9 +126,19 @@ function handleResponse(data) {
     }
 }
 
+async function playQuacksSequentially(count) {
+    for (let i = 0; i < count; i++) {
+        await playQuackSound();
+    }
+}
+
 function playQuackSound() {
-    let quack = new Audio("/static/sounds/quack.mp3");
-    quack.play().catch(error => console.error("Error playing sound:", error));
+    return new Promise((resolve, reject) => {
+        const quack = new Audio("/static/sounds/quack.mp3");
+        quack.onended = resolve;
+        quack.onerror = reject;
+        quack.play().catch(reject);
+    });
 }
 
 function handleError(error) {
