@@ -4,8 +4,16 @@ const updateInterval = 2000; // Update conversation every 2 seconds
 export function setupMessagingAndConversation() {
     messageForm.addEventListener('submit', function(e) {
         e.preventDefault();
-        sendMessage();
-        uploadImage();
+
+        // Only try to upload if there's a file selected
+        const fileInput = document.getElementById('file');
+
+        if (fileInput && fileInput.files.length > 0) {
+            uploadFile();
+        } else {
+            sendMessage();
+        }
+
         updateConversation();
     });
     setInterval(updateConversation, updateInterval);
@@ -156,7 +164,7 @@ function clearMessageInput() {
 
 // --- Image upload helpers ---
 
-export function uploadImage() {
+export function uploadFile() {
     const file = getImageFile();
 
     if (!file) return;
@@ -200,7 +208,7 @@ function convertFileToBase64(file) {
 function handleUploadResponse(data) {
     if (data.message) {
         console.log(data.message);
-        showAlert('Image uploaded successfully.', 'success');
+        showAlert('File uploaded successfully.', 'success');
         document.getElementById('file').value = '';
     } else {
         showAlert('Error: ' + data.error, 'error');

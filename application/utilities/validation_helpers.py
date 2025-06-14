@@ -75,8 +75,7 @@ def _log_challenge(details, username):
             username=username,
             domain=details["domain"],
             challenge_name=details["challenge_name"],
-            course_id=details["course_id"],
-            course_instance=details["course_instance"]
+            course_id=details["course_id"]
 ***REMOVED***.first()
 
         if existing_log:
