@@ -121,18 +121,18 @@ function sendRequest(url, params) {
 
 function handleResponse(data) {
     if (data.success) {
+        clearMessageInput();
         if (data.system_message) {
             showAlert(data.system_message, 'success');
             if (data.quack_count) {
                 playQuacksSequentially(data.quack_count);
             }
-        } else {
-            clearMessageInput();
         }
     } else {
         showAlert((data.system_message || data.error || "Something went wrong."), 'error');
     }
 }
+
 
 async function playQuacksSequentially(count) {
     for (let i = 0; i < count; i++) {
