@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify, session, flash, redirect, url_for
 from application.models.conversation import Conversation, conversation_users
 from application.utilities.db_helpers import get_user, save_message_to_db
 from application.utilities.validation_helpers import message_is_appropriate, detect_and_handle_challenge_url
-from application.ai.ai_teacher import get_ai_response
+from application.ai.ai_teacher import get_ai_response, get_or_create_ai_teacher
 from application.models.configuration import Configuration
 from application.extensions import db, limiter
 from application.routes.admin_routes import adminUsername  # Only if used
@@ -14,7 +14,7 @@ message_bp = Blueprint('message_bp', __name__)
 
 
 @message_bp.route('/send_message', methods=['POST'])
-@limiter.limit("4 per minute; 100 per day")  # Customize the rate
+@limiter.limit("20 per minute; 100 per day")
 def send_message():
     session_username = session.get('user', None)  # Get username from the session
     form_message = request.form['message']
@@ -57,6 +57,7 @@ def send_message():
     # Get AI response if Chatbot is enabled
     if config.ai_teacher_enabled:
         ai_response = get_ai_response(form_message, user.username)
+        # save_message_to_db(get_or_create_ai_teacher().id, ai_response)
         return jsonify(success=True, ai_response=ai_response)
 
     return jsonify(success=True), 200
