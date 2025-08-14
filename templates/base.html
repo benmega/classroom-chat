@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/variables.css') }}">
 
 </head>
+
 <body>
 
     <!-- Navigation Bar -->
@@ -24,13 +25,22 @@
                     <li><a class="digital-ducks">Digital Ducks: {{ user.ducks }}</a></li>
                 {% endif %}
 
-
-                <li><a class="nav-button" href="{{ url_for('message_bp.conversation_history') }}">Conversation History</a></li>
-
                 {% if 'user' in session %}
-                    <li><a class="nav-button profile" href="{{ url_for('user_bp.profile') }}">Profile</a></li>
+                    <li><a class="nav-button" href="{{ url_for('message_bp.conversation_history') }}">Conversation History</a></li>
                     <li><a class="nav-button" href="{{ url_for('duck_trade_bp.bit_shift') }}">bitShift</a></li>
-                    <li><a class="nav-button logout" href="{{ url_for('user_bp.logout') }}">Logout</a></li>
+                        <!-- Profile Menu -->
+                    <li class="profile-menu">
+                        <img src="{{ url_for('user_bp.profile_picture', filename=user.profile_picture) }}"
+                             alt="Profile Picture"
+                             class="profile-menu_img"
+                             id="profileToggle">
+                        <ul class="dropdown-menu">
+                            <li><a href="{{ url_for('user_bp.profile') }}">View Profile</a></li>
+                            <li><a href="{{ url_for('user_bp.logout') }}">Logout</a></li>
+                        </ul>
+                    </li>
+
+
                 {% else %}
                     <li><a class="nav-button login" href="{{ url_for('user_bp.login') }}">Login</a></li>
                 {% endif %}
@@ -52,4 +62,15 @@
     </footer>
 
 </body>
+<script>
+    document.getElementById("profileToggle").addEventListener("click", function (e) {
+    e.stopPropagation();
+    document.querySelector(".dropdown-menu").classList.toggle("show");
+});
+
+document.addEventListener("click", function () {
+    document.querySelector(".dropdown-menu").classList.remove("show");
+});
+
+</script>
 </html>
