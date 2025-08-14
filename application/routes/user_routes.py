@@ -1,7 +1,7 @@
 import os
 import uuid
 
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, send_from_directory
 from flask import render_template, request, redirect, url_for, session, flash
 from flask_wtf.csrf import generate_csrf
 
@@ -90,53 +90,6 @@ def login():
             flash('Invalid username or password.', 'error')
 
     return render_template('login.html', form=form)
-
-# @user_bp.route('/login', methods=['GET', 'POST'])
-# def login():
-#     if request.method == 'POST':
-#         username = request.form.get('username')
-#         password = request.form.get('password')
-#
-#
-#         # Validate CSRF token manually
-#         csrf_token = request.form.get("csrf_token")
-#         if csrf_token != session.get("_csrf_token"):
-#             flash("CSRF token is missing or invalid.", "error")
-#             return render_template('login.html', csrf_token=generate_csrf())
-#
-#         # Find the user by username
-#         user = User.query.filter_by(username=username).first()
-#
-#         # Validate credentials
-#         if user and user.check_password(password):
-#             session['user'] = user.username
-#             session.permanent = True  # Make the session permanent
-#             user.set_online(user.id)  # Mark the user as online
-#
-#             # Fetch the most recent conversation
-#             recent_conversation = (
-#                 Conversation.query
-#                 .order_by(Conversation.created_at.desc())
-#                 .first()
-#     ***REMOVED***
-#
-#             if recent_conversation:
-#                 # Add the user to the conversation if not already a participant
-#                 if user not in recent_conversation.users:
-#                     recent_conversation.users.append(user)
-#                     db.session.commit()
-#
-#                 session['conversation_id'] = recent_conversation.id
-#             else:
-#                 session['conversation_id'] = None  # Or handle new conversation creation
-#             flash('Login successful!', 'success')
-#             return redirect(url_for('general_bp.index'))
-#
-#         else:
-#             flash('Invalid username or password.', 'error')
-#             return render_template('login.html', csrf_token=generate_csrf())
-#
-#     return render_template('login.html')
 
 
 @user_bp.route('/logout')
@@ -394,3 +347,13 @@ def upload_profile_picture():
         flash('Invalid file type', 'error')
 
     return redirect(url_for('user_bp.profile'))
+
+
+
+@user_bp.route('/profile_pictures/<filename>')
+def profile_picture(filename):
+    PROFILE_PICTURE_FOLDER = os.path.join(Config.UPLOAD_FOLDER, 'profile_pictures')
+    try:
+        return send_from_directory(PROFILE_PICTURE_FOLDER, filename)
+    except FileNotFoundError:
+        abort(404)

@@ -6,8 +6,7 @@
 <div class="profile-container">
     <div class="profile-header">
         <!-- Profile Picture -->
-<!--        <img src="{{ url_for('static', filename='images/Default_pfp.jpg') }}" alt="Profile Picture" class="profile-img">-->
-        <img src="{{ url_for('upload_bp.uploaded_file', filename=user.profile_picture) }}" alt="Profile Picture" class="profile-img">
+        <img src="{{ url_for('user_bp.profile_picture', filename=user.profile_picture) }}" alt="Profile Picture" class="profile-img">
 
         <div class="profile-info">
             <h1>{{ user.username }}</h1>
