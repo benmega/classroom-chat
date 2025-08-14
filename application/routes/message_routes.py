@@ -111,7 +111,7 @@ def get_current_conversation():
         "messages": [
             {
                 "user_id": msg.user_id,
-                "user_name": msg.user.username,
+                "user_name": msg.user.nickname,
                 "content": msg.content,
                 "timestamp": msg.created_at,
             }
