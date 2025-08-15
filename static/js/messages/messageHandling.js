@@ -82,7 +82,7 @@ function formatMessage(username, message) {
 
     const formattedMessage = message.replace(urlRegex, url => {
         const href = url.startsWith('http') ? url : 'http://' + url;
-        return `<a href="${href}" target="_blank">${url}</a>`;
+        return `<a href="${href}" class="link" target="_blank">${url}</a>`;
     });
 
     return `<p><strong>${username}:</strong> ${formattedMessage}</p>`;

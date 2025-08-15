@@ -244,3 +244,7 @@ a:hover {
     color: transparent;
 }
 
+/* Make links blue */
+a {
+    color: blue;
+}
