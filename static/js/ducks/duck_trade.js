@@ -6,18 +6,18 @@ document.addEventListener("DOMContentLoaded", () => {
     const form = document.getElementById("trade-form");
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute("content");
 
-    function updateLabels() {
-        const isByte = (toggle.value === "byte");
-        labels.forEach((label, index) => {
-            const value = 2 ** index;
-            const unit = isByte ? "B" : "b";
-            label.textContent = `${value.toString(2)}${unit}`;
-        });
-    }
+function updateLabels() {
+    const isByte = toggle.checked;
+    labels.forEach((label, index) => {
+        const value = 2 ** index;
+        const unit = isByte ? "B" : "b";
+        label.textContent = `${value.toString(2)}${unit}`;
+    });
+}
 
     function calculateTotalDucks() {
         let total = 0;
-        const isByte = (toggle.value === "byte");
+        const isByte = toggle.checked;
         duckInputs.forEach((input, index) => {
             const multiplier = isByte ? Math.pow(2, index) * 128 : Math.pow(2, index);
             total += parseInt(input.value || 0) * multiplier;
@@ -57,7 +57,7 @@ document.addEventListener("DOMContentLoaded", () => {
         event.preventDefault();
 
         if (!validateForm()) return;
-        const isByte = (toggle.value === "byte");
+        const isByte = toggle.checked;
         const duckValues = Array.from(duckInputs).map(input => parseInt(input.value || 0));
 
         const formData = {
