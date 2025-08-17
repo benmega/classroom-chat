@@ -28,6 +28,12 @@ header {
 }
 
 /* Navigation menu */
+
+.logo{
+    text-decoration: none;
+    color: inherit;
+}
+
 nav ul {
     list-style: none;
     margin: 0;
@@ -79,25 +85,8 @@ nav ul {
 }
 
 
-/* Style for Login/Logout specific buttons
-.nav-button.login {
-    background-color: var(--highlight-color);
-}
-
-.nav-button.login:hover {
-    background-color: var(--highlight-hover);
-}
-
-.nav-button.logout {
-    background-color: var(--error-color);
-}
-
-.nav-button.logout:hover {
-    background-color: var(--error-color-dark);
-}*/
-
 nav ul li.profile-pic {
-    width: 40px;  /* fixed size */
+    width: 40px;
     height: 40px;
     overflow: hidden;
     flex-shrink: 0;
@@ -151,6 +140,38 @@ nav ul li.profile-pic {
     display: block;
 }
 
+/* Styling for Digital Duck Label */
+.digital-ducks {
+    font-size: 1.2em;
+    padding-left: 20px;
+    color: inherit;
+    text-decoration: none;
+}
+
+.digital-ducks .label {
+    font-weight: normal;
+    color: var(--highlight-color);
+}
+
+.digital-ducks .count {
+    font-weight: bold;
+    color: var(--highlight-color);
+}
+
+.digital-ducks:hover .label,
+.digital-ducks:hover .count {
+    color: var(--highlight-hover);
+    text-decoration: underline;
+}
+
+
+.gradient-heading {
+    background: var(--logo-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    color: transparent;
+}
 
 
 /* Button styles (general) */
@@ -202,7 +223,7 @@ button:active::after {
 
 /* Styling for links */
 a {
-    color: var(--highlight-color);
+    color: var(--link-color);
     text-decoration: none;
     transition: var(--transition-default);
 }
@@ -212,39 +233,48 @@ a:hover {
     text-decoration: underline;
 }
 
-.digital-ducks {
-    font-size: 1.2em;
-    padding-left: 20px;
-    color: inherit;
+
+nav ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px; /* smaller so items align cleanly */
+}
+
+/* Text nav buttons */
+.nav-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: var(--nav-item-size);
+    font-size: var(--nav-font-size);
+    color: white;
     text-decoration: none;
+    padding: var(--nav-padding);
+    border-radius: var(--border-radius-medium);
+    background-color: var(--primary-color-dark);
+    transition: var(--transition-default);
+    box-sizing: border-box;
 }
 
-.digital-ducks .label {
-    font-weight: normal;
-    color: var(--highlight-color);
+/* Icon nav items */
+.nav-icon,
+nav ul li.profile-pic,
+.profile-menu {
+    width: var(--nav-item-size);
+    height: var(--nav-item-size);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-.digital-ducks .count {
-    font-weight: bold;
-    color: var(--highlight-color);
-}
-
-.digital-ducks:hover .label,
-.digital-ducks:hover .count {
-    color: var(--highlight-hover);
-    text-decoration: underline;
-}
-
-
-.gradient-heading {
-    background: var(--logo-gradient);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    color: transparent;
-}
-
-/* Make links blue */
-a {
-    color: blue;
+.nav-icon img,
+.profile-menu_img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
 }

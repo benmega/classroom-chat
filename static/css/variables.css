@@ -58,4 +58,9 @@
     /* Icon sizing */
     --duck-icon-size: 1.5em;
     --emoji-size: 1em;
+
+    /* Nav sizing */
+    --nav-item-size: 44px;   /* square dimension */
+    --nav-font-size: 16px;
+    --nav-padding: 0 16px;
 }
