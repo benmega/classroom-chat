@@ -2,21 +2,42 @@
 
 {% block content %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/profile.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='lib/cropper.min.css') }}">
 
 <div class="profile-container">
     <div class="profile-header">
-        <!-- Profile Picture -->
-        <img src="{{ url_for('user_bp.profile_picture', filename=user.profile_picture) }}" alt="Profile Picture" class="profile-img">
+        <div class="profile-pic-container">
+            <img src="{{ url_for('user_bp.profile_picture', filename=user.profile_picture) }}"
+                 alt="Profile Picture"
+                 class="profile-img"
+                 id="current-profile-img">
+            <button type="button" class="edit-pic-btn" id="edit-pic-trigger">✎</button>
+        </div>
+
+        <!-- Hidden file input -->
+        <input type="file" id="file-input" accept="image/*" style="display:none;">
 
         <div class="profile-info">
             <h1>{{ user.username }}</h1>
             <p class="job-title">Aspiring Coder</p>
             <p class="location">Classroom 101</p>
-            <p class="digital ducks">digital ducks {{ user.ducks }}</p>
+            <p class="digital-ducks">Digital Ducks: {{ user.ducks }}</p>
         </div>
 
         <!-- Edit Button -->
-        <a href="{{ url_for('user_bp.edit_profile') }}" class="edit-btn">Edit</a>
+        <a href="{{ url_for('user_bp.edit_profile') }}" class="edit-btn">Edit Profile</a>
+    </div>
+
+    <!-- Modal for cropping -->
+    <div id="crop-modal" class="modal">
+        <div class="modal-content">
+            <button class="close-btn" id="close-modal">&times;</button>
+            <h3>Adjust your profile picture</h3>
+            <img id="preview" alt="Preview">
+            <div class="modal-buttons">
+                <button id="crop-btn">Crop & Save</button>
+            </div>
+        </div>
     </div>
 
     <div class="profile-body">
@@ -32,8 +53,10 @@
             </div>
             <div class="activity">
                 <p>Ozaria Missions Completed</p>
-                <div class="progress" style='width: {{ user.get_progress("ozaria.com") }}%;'></div>
-                <p>{{ user.ozaria_progress }}%</p>
+                <div class="progress-bar">
+                    <div class="progress" style='width: {{ user.get_progress("ozaria.com") }}%;'></div>
+                </div>
+                <p>{{ user.ozaria_progress if user.ozaria_progress else 'No progress yet' }}%</p>
             </div>
         </div>
 
@@ -42,7 +65,7 @@
             <h2>Top Skills</h2>
             <div class="skills">
                 {% for skill in user.skills %}
-                <span class="skill-tag">{{ skill }} <a href="#" class="remove-skill">x</a></span>
+                <span class="skill-tag">{{ skill }} <a href="#" class="remove-skill">×</a></span>
                 {% endfor %}
             </div>
         </div>
@@ -60,4 +83,11 @@
         </div>
     </div>
 </div>
+
+<!-- Scripts -->
+
+<script src="{{ url_for('static', filename='lib/cropper.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/users/profile.js') }}"></script>
+
+
 {% endblock %}
