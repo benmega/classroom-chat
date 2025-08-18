@@ -1,9 +1,10 @@
 import os
 import uuid
 
-from flask import Blueprint, jsonify, send_from_directory
+from flask import Blueprint, jsonify, send_from_directory, current_app, abort
 from flask import render_template, request, redirect, url_for, session, flash
 from flask_wtf.csrf import generate_csrf
+from werkzeug.utils import secure_filename
 
 from application import db
 from application.models.conversation import Conversation
@@ -12,12 +13,16 @@ from application.models.skill import Skill
 from application.models.user import User
 from application.utilities.helper_functions import allowed_file
 from application.config import Config
-
-user_bp = Blueprint('user_bp', __name__)
-
+import base64
+from io import BytesIO
+from PIL import Image
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField
 from wtforms.validators import DataRequired
+
+user_bp = Blueprint('user_bp', __name__)
+
+
 
 class LoginForm(FlaskForm):
     username = StringField(
@@ -195,6 +200,46 @@ def edit_profile():
             flash('An error occurred while updating the profile.', 'danger')
 
     return render_template('edit_profile.html', user=user)
+
+
+
+@user_bp.route('/edit_profile_picture', methods=['POST'])
+def edit_profile_picture():
+    user_id = session.get('user')
+    user = User.query.filter_by(username=user_id).first()
+    if not user:
+        return jsonify({'success': False, 'error': 'User not found!'}), 404
+
+    if 'profile_picture' not in request.files:
+        return jsonify({'success': False, 'error': 'No file part in the request'}), 400
+
+    file = request.files['profile_picture']
+    if file.filename == '':
+        return jsonify({'success': False, 'error': 'No selected file'}), 400
+
+    try:
+
+        filename = f"{user.username}_avatar.png"
+        secure_path = os.path.join(current_app.config['UPLOAD_FOLDER'], 'profile_pictures', filename)
+        img = Image.open(file)
+        img.save(secure_path)
+        user.profile_picture = filename
+
+        db.session.commit()
+
+        new_url = url_for('user_bp.profile_picture', filename=filename)
+
+        return jsonify({
+            'success': True,
+            'message': 'Profile picture updated successfully!',
+            'new_url': new_url
+        })
+
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error updating profile picture: {e}")
+        return jsonify({'success': False, 'error': 'Error updating profile picture.'}), 500
+
 
 
 # Helper Functions

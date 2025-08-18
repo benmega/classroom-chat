@@ -43,3 +43,4 @@ document.querySelectorAll('.toggle-password').forEach(button => {
         }
     });
 });
+
