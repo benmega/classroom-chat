@@ -105,6 +105,7 @@ def get_current_conversation():
     session['conversation_id'] = conversation.id
 
     # Prepare the response
+
     conversation_data = {
         "conversation_id": conversation.id,
         "title": conversation.title,
@@ -112,6 +113,7 @@ def get_current_conversation():
             {
                 "user_id": msg.user_id,
                 "user_name": msg.user.nickname,
+                "user_profile_pic": msg.user.profile_picture,
                 "content": msg.content,
                 "timestamp": msg.created_at,
             }
@@ -140,6 +142,7 @@ def get_historical_conversation():
             {
                 "user_id": msg.user_id,
                 "user_name": msg.user.username,
+                "user_profile_pic": msg.user.profile_picture,
                 "content": msg.content,
                 "timestamp": msg.created_at,
             }
@@ -175,7 +178,9 @@ def get_conversation():
         "conversation_id": conversation.id,
         "title": conversation.title,
         "messages": [
-            {"user_id": msg.user_id, "content": msg.content, "timestamp": msg.created_at}
+            {"user_id": msg.user_id,
+             "content": msg.content,
+             "timestamp": msg.created_at}
             for msg in conversation.messages
         ],
     }
@@ -244,6 +249,7 @@ def view_conversation(conversation_id):
             {
                 "user_id": msg.user_id,
                 "user_name": msg.user.username,
+                "user_profile_pic": msg.user.profile_picture,
                 "content": msg.content,
                 "timestamp": msg.created_at,
             }

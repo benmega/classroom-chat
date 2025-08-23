@@ -70,12 +70,12 @@ function updateChatUI(conversationData) {
     conversationData.messages.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
 
     conversationData.messages.forEach(msg => {
-        const messageHTML = formatMessage(msg.user_name, msg.content);
+        const messageHTML = formatMessage(msg.user_name, msg.user_profile_pic, msg.content);
         chatDiv.innerHTML += messageHTML;
     });
 }
 
-function formatMessage(username, message) {
+function formatMessage(nickname, profilePicFilename, message) {
     message = message.replace(/\n/g, '<br>');
 
     const urlRegex = /(https?:\/\/[^\s<]+)|(\bwww\.[^\s<]+(?:\.[^\s<]+)+\b)/g;
@@ -85,8 +85,30 @@ function formatMessage(username, message) {
         return `<a href="${href}" class="link" target="_blank">${url}</a>`;
     });
 
-    return `<p><strong>${username}:</strong> ${formattedMessage}</p>`;
+    const profilePicUrl = `/user/profile_pictures/${profilePicFilename || 'Default_pfp.jpg'}`;
+
+    return `
+        <div class="message-line">
+            <img src="${profilePicUrl}" alt="${nickname}" class="user-profile-pic">
+            <strong class="user-name">${nickname}</strong>:
+            <span class="message-text">${formattedMessage}</span>
+        </div>
+    `;
 }
+
+
+//function formatMessage(username, message) {
+//    message = message.replace(/\n/g, '<br>');
+//
+//    const urlRegex = /(https?:\/\/[^\s<]+)|(\bwww\.[^\s<]+(?:\.[^\s<]+)+\b)/g;
+//
+//    const formattedMessage = message.replace(urlRegex, url => {
+//        const href = url.startsWith('http') ? url : 'http://' + url;
+//        return `<a href="${href}" class="link" target="_blank">${url}</a>`;
+//    });
+//
+//    return `<p><strong>${username}:</strong> ${formattedMessage}</p>`;
+//}
 
 function getMessageInput() {
     return document.getElementById('message').value.trim();
