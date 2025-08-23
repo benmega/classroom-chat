@@ -237,3 +237,21 @@
     }
 }
 
+.user-profile-pic {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    object-fit: cover;
+    vertical-align: middle;
+    margin-right: 6px;
+}
+
+.message-line {
+    display: flex;
+    align-items: center;
+    margin-bottom: 6px;
+}
+
+.message-line .user-name {
+    margin-right: 4px;
+}

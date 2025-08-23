@@ -9,8 +9,15 @@
       {% for message in conversation.messages %}
         <div class="message-card">
           <p class="message-meta">
-            <strong class="user-name">{{ message.user_name }}</strong>
-            <span class="message-timestamp">{{ message.timestamp }}</span>
+            <img src="{% if message.user_profile_pic %}
+                        {{ url_for('user_bp.profile_picture', filename=message.user_profile_pic) }}
+                      {% else %}
+                        {{ url_for('user_bp.profile_picture', filename='Default_pfp.jpg') }}
+                      {% endif %}"
+                 alt="{{ message.user_name }}"
+                 class="user-profile-pic">
+
+              <span class="message-timestamp">{{ message.timestamp }}</span>
           </p>
           <p class="message-content">{{ message.content }}</p>
         </div>

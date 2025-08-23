@@ -3,9 +3,6 @@ import uuid
 
 from flask import Blueprint, jsonify, send_from_directory, current_app, abort
 from flask import render_template, request, redirect, url_for, session, flash
-from flask_wtf.csrf import generate_csrf
-from werkzeug.utils import secure_filename
-
 from application import db
 from application.models.conversation import Conversation
 from application.models.project import Project
@@ -13,8 +10,6 @@ from application.models.skill import Skill
 from application.models.user import User
 from application.utilities.helper_functions import allowed_file
 from application.config import Config
-import base64
-from io import BytesIO
 from PIL import Image
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField
@@ -395,10 +390,16 @@ def upload_profile_picture():
 
 
 
-@user_bp.route('/profile_pictures/<filename>')
+@user_bp.route('/profile_pictures/<path:filename>')
 def profile_picture(filename):
     PROFILE_PICTURE_FOLDER = os.path.join(Config.UPLOAD_FOLDER, 'profile_pictures')
+
+    # prevent path traversal (../../ attacks)
+    safe_path = os.path.normpath(filename)
+    if os.path.isabs(safe_path) or safe_path.startswith(".."):
+        abort(400)
+
     try:
-        return send_from_directory(PROFILE_PICTURE_FOLDER, filename)
+        return send_from_directory(PROFILE_PICTURE_FOLDER, safe_path)
     except FileNotFoundError:
         abort(404)
