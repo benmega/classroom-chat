@@ -75,26 +75,33 @@ function updateChatUI(conversationData) {
     });
 }
 
-function formatMessage(nickname, profilePicFilename, message) {
+function formatMessage(username, profilePicFilename, message) {
+    // Replace line breaks with <br>
     message = message.replace(/\n/g, '<br>');
 
+    // Detect and wrap URLs
     const urlRegex = /(https?:\/\/[^\s<]+)|(\bwww\.[^\s<]+(?:\.[^\s<]+)+\b)/g;
-
     const formattedMessage = message.replace(urlRegex, url => {
         const href = url.startsWith('http') ? url : 'http://' + url;
-        return `<a href="${href}" class="link" target="_blank">${url}</a>`;
+        return `<a href="${href}" target="_blank">${url}</a>`;
     });
 
+    // Profile picture fallback
     const profilePicUrl = `/user/profile_pictures/${profilePicFilename || 'Default_pfp.jpg'}`;
 
+    const isSelf = username === getUsername();
+
     return `
-        <div class="message-line">
-            <img src="${profilePicUrl}" alt="${nickname}" class="user-profile-pic">
-            <strong class="user-name">${nickname}</strong>:
-            <span class="message-text">${formattedMessage}</span>
+        <div class="chat-message ${isSelf ? 'self' : ''}">
+            <img src="${profilePicUrl}" alt="${username}" class="user-profile-pic">
+            <div class="message-bubble">
+                <strong class="username">${username}:</strong>
+                <span class="message-text">${formattedMessage}</span>
+            </div>
         </div>
     `;
 }
+
 
 
 //function formatMessage(username, message) {
