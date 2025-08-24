@@ -211,7 +211,7 @@ def conversation_history():
         .all()
     )
 
-    return render_template('conversation_history.html', conversations=conversations)
+    return render_template('chat/conversation_history.html', conversations=conversations)
 
 
 @message_bp.route('/api/conversations/<int:user_id>', methods=['GET'])
@@ -257,4 +257,4 @@ def view_conversation(conversation_id):
         ],
     }
 
-    return render_template('view_conversation.html', conversation=conversation_data)
+    return render_template('chat/view_conversation.html', conversation=conversation_data)

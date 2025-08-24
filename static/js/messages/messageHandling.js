@@ -104,19 +104,6 @@ function formatMessage(username, profilePicFilename, message) {
 
 
 
-//function formatMessage(username, message) {
-//    message = message.replace(/\n/g, '<br>');
-//
-//    const urlRegex = /(https?:\/\/[^\s<]+)|(\bwww\.[^\s<]+(?:\.[^\s<]+)+\b)/g;
-//
-//    const formattedMessage = message.replace(urlRegex, url => {
-//        const href = url.startsWith('http') ? url : 'http://' + url;
-//        return `<a href="${href}" class="link" target="_blank">${url}</a>`;
-//    });
-//
-//    return `<p><strong>${username}:</strong> ${formattedMessage}</p>`;
-//}
-
 function getMessageInput() {
     return document.getElementById('message').value.trim();
 }

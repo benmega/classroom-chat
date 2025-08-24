@@ -89,7 +89,7 @@ def login():
         else:
             flash('Invalid username or password.', 'error')
 
-    return render_template('login.html', form=form)
+    return render_template('auth/login.html', form=form)
 
 
 @user_bp.route('/logout')
@@ -122,7 +122,7 @@ def signup():
         existing_user = User.query.filter_by(username=username).first()
         if existing_user:
             flash('Username already taken, please choose another.', 'error')
-            return render_template('signup.html')
+            return render_template('auth/signup.html')
 
         # Create a new user with the hashed password
         new_user = User(username=username, ip_address=request.remote_addr)
@@ -136,7 +136,7 @@ def signup():
         return redirect(url_for('user_bp.login'))
 
     # Render the signup page on GET request
-    return render_template('signup.html')
+    return render_template('auth/signup.html')
 
 
 @user_bp.route('/update_profile', methods=['POST'])
@@ -194,7 +194,7 @@ def edit_profile():
             print(f"Error during profile update: {e}")
             flash('An error occurred while updating the profile.', 'danger')
 
-    return render_template('edit_profile.html', user=user)
+    return render_template('user/edit_profile.html', user=user)
 
 
 
@@ -331,7 +331,7 @@ def profile():
         flash('User not found!', 'danger')
         return redirect(url_for('user_bp.login'))
 
-    return render_template('profile.html', user=user)
+    return render_template('user/profile.html', user=user)
 
 
 @user_bp.route('/delete_profile_picture', methods=['POST'])
