@@ -236,6 +236,15 @@ def edit_profile_picture():
         return jsonify({'success': False, 'error': 'Error updating profile picture.'}), 500
 
 
+@user_bp.route("/remove_skill/<int:skill_id>", methods=["POST"])
+def remove_skill(skill_id):
+    user_id = session.get('user')
+    user = User.query.filter_by(username=user_id).first()
+    if not user:
+        return jsonify({'success': False, 'error': 'User not found!'}), 404
+
+    user.remove_skill(skill_id)
+    return jsonify(success=True)
 
 # Helper Functions
 def update_basic_user_info(user):

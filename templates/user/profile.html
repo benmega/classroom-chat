@@ -91,7 +91,10 @@
             <h2>Top Skills</h2>
             <div class="skills">
                 {% for skill in user.skills %}
-                <span class="skill-tag">{{ skill }} <a href="#" class="remove-skill">×</a></span>
+                <span class="skill-tag">
+                    {{ skill.name }}
+                    <a href="#" class="remove-skill" data-skill-id="{{ skill.id }}">×</a>
+                </span>
                 {% endfor %}
             </div>
         </div>

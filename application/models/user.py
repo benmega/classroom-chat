@@ -75,6 +75,8 @@ class User(db.Model):
         db.session.add(new_skill)
         db.session.commit()
 
+
+
     def remove_skill(self, skill_id):
         """Remove a skill by ID."""
         skill = Skill.query.get(skill_id)

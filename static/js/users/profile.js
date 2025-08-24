@@ -439,3 +439,23 @@ function initProfileEditor() {
         showError
     };
 }
+
+
+document.addEventListener('click', async function(e) {
+    if (e.target.classList.contains('remove-skill')) {
+        e.preventDefault();
+        const skillId = e.target.dataset.skillId;
+
+        const response = await fetch(`/user/remove_skill/${skillId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token() }}' // if using CSRF
+            }
+        });
+
+        if (response.ok) {
+            e.target.parentElement.remove(); // remove from DOM if backend succeeded
+        }
+    }
+});

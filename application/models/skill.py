@@ -12,5 +12,5 @@ class Skill(db.Model):
     __table_args__ = (UniqueConstraint('name', 'user_id', name='uq_skill_name_user'),)
 
     def __repr__(self):
-        return f'<Skill {self.name}>'
+        return f'{self.name}'
 
