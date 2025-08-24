@@ -45,20 +45,45 @@
         <!-- Progress Section -->
         <div class="progress-section">
             <h2>Classroom Progress</h2>
-            <div class="activity">
-                <p>CodeCombat Levels Completed</p>
-                <div class="progress-bar">
-                    <div class="progress" style='width: {{ user.get_progress("codecombat.com") }}%;'></div>
-                </div>
-                <p>{{ user.codecombat_progress if user.codecombat_progress else 'No progress yet' }}%</p>
+            <div class="activity-card">
+                <h3 class="game-title">CodeCombat</h3>
+
+                {% set completed = user.get_progress("codecombat.com") %}
+                {% set percent = user.get_progress_percent("codecombat.com") %}
+
+                {% if completed %}
+                    <div class="progress-info">
+                        <span class="levels">{{ completed }} Levels Completed</span>
+                        <span class="percent">({{ percent }}%)</span>
+                    </div>
+
+                    <div class="progress-bar">
+                        <div class="progress" style="width: {{ percent }}%;"></div>
+                    </div>
+                {% else %}
+                    <p class="no-progress">No progress yet</p>
+                {% endif %}
             </div>
-            <div class="activity">
-                <p>Ozaria Missions Completed</p>
-                <div class="progress-bar">
-                    <div class="progress" style='width: {{ user.get_progress("ozaria.com") }}%;'></div>
-                </div>
-                <p>{{ user.ozaria_progress if user.ozaria_progress else 'No progress yet' }}%</p>
+            <div class="activity-card">
+                <h3 class="game-title">Ozaria</h3>
+
+                {% set completed = user.get_progress("www.ozaria.com") %}
+                {% set percent = user.get_progress_percent("www.ozaria.com") %}
+
+                {% if completed %}
+                    <div class="progress-info">
+                        <span class="levels">{{ completed }} Levels Completed</span>
+                        <span class="percent">({{ percent }}%)</span>
+                    </div>
+
+                    <div class="progress-bar">
+                        <div class="progress" style="width: {{ percent }}%;"></div>
+                    </div>
+                {% else %}
+                    <p class="no-progress">No progress yet</p>
+                {% endif %}
             </div>
+
         </div>
 
         <!-- Skills Section -->
