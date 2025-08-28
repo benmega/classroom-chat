@@ -14,6 +14,5 @@ def main():
                  allow_unsafe_werkzeug=True,
                  debug=False)  # Toggle debug mode for Flask and SocketIO
 
-
 if __name__ == '__main__':
     main()
