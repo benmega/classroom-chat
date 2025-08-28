@@ -345,7 +345,7 @@ def test_get_users(client, test_app, sample_users, sample_admin, init_db, auth_h
     with test_app.app_context():
         # Create basic auth credentials
         response = client.get(
-            url_for('admin_bp.get_users'),
+            url_for('admin.get_users'),
             headers=auth_headers
 ***REMOVED***
 
@@ -367,7 +367,7 @@ def test_set_username_proper_case_handling(client, test_app, sample_user,auth_he
         mixed_case_username = "MixedCaseUsername"
 
         response = client.post(
-            url_for('admin_bp.set_username_route'),
+            url_for('admin.set_username_route'),
             data={'user_id': sample_user.id, 'username': mixed_case_username},
             headers=auth_headers
 ***REMOVED***

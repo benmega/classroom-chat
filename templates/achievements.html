@@ -1,0 +1,21 @@
+<!-- templates/achievements.html -->
+
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Achievements</h2>
+<div class="achievements-grid">
+    {% for ach in achievements %}
+        <div class="achievement-card {% if ach.id in user_achievements %}earned{% else %}locked{% endif %}">
+            <strong>{{ ach.name }}</strong>
+            <p>{{ ach.description }}</p>
+            {% if ach.id in user_achievements %}
+                <span class="badge">Earned ✅</span>
+            {% else %}
+                <span class="badge">Locked 🔒</span>
+            {% endif %}
+        </div>
+    {% endfor %}
+</div>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/achievements.css') }}">
+{% endblock %}

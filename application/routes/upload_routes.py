@@ -11,10 +11,10 @@ from application import limiter
 from application.config import Config
 from application.decorators.licensing import premium_required
 
-upload_bp = Blueprint('upload_bp', __name__)
+upload = Blueprint('upload', __name__)
 
 
-@upload_bp.route('/upload_file', methods=['POST'])
+@upload.route('/upload_file', methods=['POST'])
 @limiter.limit("10 per minute; 20 per day")
 @premium_required
 def upload_file():
@@ -67,7 +67,7 @@ def upload_file():
     return jsonify({"message": "File uploaded successfully", "file_path": file_path})
 
 
-@upload_bp.route('/uploads/<filename>')
+@upload.route('/uploads/<filename>')
 @premium_required
 def uploaded_file(filename):
     file_path = os.path.join(Config.UPLOAD_FOLDER, filename)

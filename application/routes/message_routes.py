@@ -10,10 +10,10 @@ from application.models.user import User  # Assuming User model is in applicatio
 
 
 
-message_bp = Blueprint('message_bp', __name__)
+message = Blueprint('message', __name__)
 
 
-@message_bp.route('/send_message', methods=['POST'])
+@message.route('/send_message', methods=['POST'])
 @limiter.limit("20 per minute; 100 per day")
 def send_message():
     session_username = session.get('user', None)  # Get username from the session
@@ -62,7 +62,7 @@ def send_message():
     return jsonify(success=True), 200
 
 
-@message_bp.route('/start_conversation', methods=['POST'])
+@message.route('/start_conversation', methods=['POST'])
 def start_conversation():
     # Get the title from the form (or use a default)
     title = request.form.get('title', 'New Conversation')
@@ -78,7 +78,7 @@ def start_conversation():
     return jsonify({"conversation_id": new_conversation.id, "title": new_conversation.title}), 201
 
 
-@message_bp.route('/set_active_conversation', methods=['POST'])
+@message.route('/set_active_conversation', methods=['POST'])
 def set_active_conversation():
     conversation_id = request.json.get('conversation_id')
 
@@ -92,7 +92,7 @@ def set_active_conversation():
     return jsonify({"message": "Conversation updated", "conversation_id": conversation_id}), 200
 
 
-@message_bp.route('/get_current_conversation', methods=['GET'])
+@message.route('/get_current_conversation', methods=['GET'])
 @limiter.limit("60 per minute")
 def get_current_conversation():
     # Fetch the most recent conversation
@@ -123,7 +123,7 @@ def get_current_conversation():
     return jsonify(conversation=conversation_data)
 
 
-@message_bp.route('/get_historical_conversation', methods=['GET'])
+@message.route('/get_historical_conversation', methods=['GET'])
 def get_historical_conversation():
     conversation_id = session.get('conversation_id')
 
@@ -152,7 +152,7 @@ def get_historical_conversation():
     return jsonify(conversation=conversation_data)
 
 
-@message_bp.route('/end_conversation', methods=['POST'])
+@message.route('/end_conversation', methods=['POST'])
 def end_conversation():
     if 'conversation_id' in session:
         session.pop('conversation_id')
@@ -160,7 +160,7 @@ def end_conversation():
     return jsonify({"error": "No active conversation to end"}), 400
 
 
-@message_bp.route('/get_conversation', methods=['GET'])
+@message.route('/get_conversation', methods=['GET'])
 def get_conversation():
     conversation_id = session.get('conversation_id')
 
@@ -187,12 +187,12 @@ def get_conversation():
     return jsonify(conversation=conversation_data)
 
 
-@message_bp.route('/conversation_history', methods=['GET'])
+@message.route('/conversation_history', methods=['GET'])
 def conversation_history():
     # Ensure the user is logged in
     if 'user' not in session:
         flash('You must be logged in to view your conversation history.', 'error')
-        return redirect(url_for('user_bp.login'))
+        return redirect(url_for('user.login'))
 
     # Fetch the current logged-in user
     username = session['user']
@@ -200,7 +200,7 @@ def conversation_history():
 
     if not user:
         flash('User not found.', 'error')
-        return redirect(url_for('user_bp.login'))
+        return redirect(url_for('user.login'))
 
     # Get all conversations the user participated in
     conversations = (
@@ -214,7 +214,7 @@ def conversation_history():
     return render_template('chat/conversation_history.html', conversations=conversations)
 
 
-@message_bp.route('/api/conversations/<int:user_id>', methods=['GET'])
+@message.route('/api/conversations/<int:user_id>', methods=['GET'])
 def get_conversation_history(user_id):
     conversations = Conversation.query.filter(
         Conversation.users.any(id=user_id)  # Check if the user is part of the conversation
@@ -237,7 +237,7 @@ def get_conversation_history(user_id):
     ])
 
 
-@message_bp.route('/view_conversation/<int:conversation_id>', methods=['GET'])
+@message.route('/view_conversation/<int:conversation_id>', methods=['GET'])
 def view_conversation(conversation_id):
     conversation = Conversation.query.get_or_404(conversation_id)
 

@@ -10,9 +10,9 @@
         <div class="message-card">
           <p class="message-meta">
             <img src="{% if message.user_profile_pic %}
-                        {{ url_for('user_bp.profile_picture', filename=message.user_profile_pic) }}
+                        {{ url_for('user.profile_picture', filename=message.user_profile_pic) }}
                       {% else %}
-                        {{ url_for('user_bp.profile_picture', filename='Default_pfp.jpg') }}
+                        {{ url_for('user.profile_picture', filename='Default_pfp.jpg') }}
                       {% endif %}"
                  alt="{{ message.user_name }}"
                  class="user-profile-pic">
@@ -24,6 +24,6 @@
       {% endfor %}
     </div>
 
-    <a href="{{ url_for('message_bp.conversation_history') }}" class="back-button">Back to History</a>
+    <a href="{{ url_for('message.conversation_history') }}" class="back-button">Back to History</a>
   </div>
 {% endblock %}
