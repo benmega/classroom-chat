@@ -17,7 +17,7 @@
     <!-- Navigation Bar -->
     <header>
         <div id="logo-container">
-            <h1><a class="logo" href="{{ url_for('general_bp.index') }}">Classroom Chat</a></h1>
+            <h1><a class="logo" href="{{ url_for('general.index') }}">Classroom Chat</a></h1>
         </div>
         <nav>
             <ul>
@@ -34,7 +34,7 @@
                 {% if 'user' in session %}
 
                     <li>
-                        <a class="nav-icon" href="{{ url_for('duck_trade_bp.bit_shift') }}">
+                        <a class="nav-icon" href="{{ url_for('duck_trade.bit_shift') }}">
                             <img src="{{ url_for('static', filename='images/bit_shift.png') }}" alt="Bit Shift">
                         </a>
                     </li>
@@ -42,20 +42,21 @@
 
                         <!-- Profile Menu -->
                     <li class="profile-menu">
-                        <img src="{{ url_for('user_bp.profile_picture', filename=user.profile_picture) }}"
+                        <img src="{{ url_for('user.profile_picture', filename=user.profile_picture) }}"
                              alt="Profile Picture"
                              class="profile-menu_img"
                              id="profileToggle">
                         <ul class="dropdown-menu">
-                            <li><a href="{{ url_for('user_bp.profile') }}">Profile</a></li>
-                            <li><a href="{{ url_for('message_bp.conversation_history') }}">History</a></li>
-                            <li><a href="{{ url_for('user_bp.logout') }}">Logout</a></li>
+                            <li><a href="{{ url_for('user.profile') }}">Profile</a></li>
+                            <li><a href="{{ url_for('achievements.achievements_page') }}">Achievements</a></li>
+                            <li><a href="{{ url_for('message.conversation_history') }}">History</a></li>
+                            <li><a href="{{ url_for('user.logout') }}">Logout</a></li>
                         </ul>
                     </li>
 
 
                 {% else %}
-                    <li><a class="nav-button login" href="{{ url_for('user_bp.login') }}">Login</a></li>
+                    <li><a class="nav-button login" href="{{ url_for('user.login') }}">Login</a></li>
                 {% endif %}
             </ul>
         </nav>

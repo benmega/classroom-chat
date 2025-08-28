@@ -26,6 +26,12 @@ class User(db.Model):
     # Relationships
     skills = db.relationship('Skill', backref='user', lazy=True)
     projects = db.relationship('Project', backref='user', lazy=True)
+    achievements = db.relationship(
+        'UserAchievement',
+        backref='user',
+        lazy=True,
+        cascade="all, delete-orphan"
+    )
 
     def __repr__(self):
         return f'<User {self._username}>'
