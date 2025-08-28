@@ -1,11 +1,19 @@
 // messageHandling.js
-const updateInterval = 2000 // Set an interval to update the conversation every 2 seconds
+const updateInterval = 2000; // Update conversation every 2 seconds
 
 export function setupMessagingAndConversation() {
     messageForm.addEventListener('submit', function(e) {
         e.preventDefault();
-        sendMessage();
-        uploadImage();
+
+        // Only try to upload if there's a file selected
+        const fileInput = document.getElementById('file');
+
+        if (fileInput && fileInput.files.length > 0) {
+            uploadFile();
+        } else {
+            sendMessage();
+        }
+
         updateConversation();
     });
     setInterval(updateConversation, updateInterval);
@@ -21,12 +29,11 @@ export function updateConversation() {
         });
 }
 
-
 export function sendMessage() {
     const message = getMessageInput();
 
     if (!message) {
-        showAlert('Message is required.');
+        showAlert('Message is required.', 'warning');
         return;
     }
 
@@ -37,8 +44,8 @@ export function sendMessage() {
         .catch(handleError);
 }
 
+// --- Update conversation helpers ---
 
-// update conversation helper functions
 function fetchCurrentConversation() {
     return fetch('message/get_current_conversation')
         .then(response => {
@@ -58,41 +65,48 @@ function updateChatUI(conversationData) {
         return;
     }
 
-    chatDiv.innerHTML = ''; // Clear previous content
+    chatDiv.innerHTML = '';
 
-    // Ensure sorting is based on timestamp
     conversationData.messages.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
 
-    // Loop through the sorted messages and display each one
     conversationData.messages.forEach(msg => {
-        const messageHTML = formatMessage(msg.user_name, msg.content);
+        const messageHTML = formatMessage(msg.user_name, msg.user_profile_pic, msg.content);
         chatDiv.innerHTML += messageHTML;
     });
 }
 
-
-function formatMessage(username, message) {
-    // Replace \n with <br> first
+function formatMessage(username, profilePicFilename, message) {
+    // Replace line breaks with <br>
     message = message.replace(/\n/g, '<br>');
 
-    // Regular expression to match URLs
+    // Detect and wrap URLs
     const urlRegex = /(https?:\/\/[^\s<]+)|(\bwww\.[^\s<]+(?:\.[^\s<]+)+\b)/g;
-
-    // Replace URLs with anchor tags
     const formattedMessage = message.replace(urlRegex, url => {
         const href = url.startsWith('http') ? url : 'http://' + url;
         return `<a href="${href}" target="_blank">${url}</a>`;
     });
 
-    // Return the formatted message with <br> properly handled
-    return `<p><strong>${username}:</strong> ${formattedMessage}</p>`;
+    // Profile picture fallback
+    const profilePicUrl = `/user/profile_pictures/${profilePicFilename || 'Default_pfp.jpg'}`;
+
+    const isSelf = username === getUsername();
+
+    return `
+        <div class="chat-message ${isSelf ? 'self' : ''}">
+            <img src="${profilePicUrl}" alt="${username}" class="user-profile-pic">
+            <div class="message-bubble">
+                <strong class="username">${username}:</strong>
+                <span class="message-text">${formattedMessage}</span>
+            </div>
+        </div>
+    `;
 }
+
 
 
 function getMessageInput() {
     return document.getElementById('message').value.trim();
 }
-
 
 function getUsername() {
     return document.getElementById('currentUsername').textContent.trim();
@@ -103,7 +117,6 @@ function createRequestParams(data) {
     Object.keys(data).forEach(key => params.append(key, data[key]));
     return params;
 }
-
 
 function sendRequest(url, params) {
     return fetch(url, {
@@ -122,35 +135,42 @@ function sendRequest(url, params) {
     });
 }
 
-
 function handleResponse(data) {
     if (data.success) {
+        clearMessageInput();
         if (data.system_message) {
-            showAlert(data.system_message);
-            if (data.play_sound) {
-                playQuackSound();
+            showAlert(data.system_message, 'success');
+            if (data.quack_count) {
+                playQuacksSequentially(data.quack_count);
             }
-        } else {
-            clearMessageInput();
         }
     } else {
-        showAlert('Error: ' + (data.error || "Something went wrong."));
+        showAlert((data.system_message || data.error || "Something went wrong."), 'error');
     }
 }
 
-// Function to play the quack sound
-function playQuackSound() {
-    let quack = new Audio("/static/sounds/quack.mp3"); // Ensure this file exists
-    quack.play().catch(error => console.error("Error playing sound:", error));
+
+async function playQuacksSequentially(count) {
+    for (let i = 0; i < count; i++) {
+        await playQuackSound();
+    }
 }
 
+function playQuackSound() {
+    return new Promise((resolve, reject) => {
+        const quack = new Audio("/static/sounds/quack.mp3");
+        quack.onended = resolve;
+        quack.onerror = reject;
+        quack.play().catch(reject);
+    });
+}
 
 function handleError(error) {
     console.error('Error:', error);
     if (error && error.message) {
-        showAlert('Error: ' + error.message);
+        showAlert('Error: ' + error.message, 'error');
     } else {
-        showAlert('An unexpected error occurred.');
+        showAlert('An unexpected error occurred.', 'error');
     }
 }
 
@@ -158,14 +178,12 @@ function clearMessageInput() {
     document.getElementById('message').value = '';
 }
 
+// --- Image upload helpers ---
 
-// Image upload helper functions
-export function uploadImage() {
+export function uploadFile() {
     const file = getImageFile();
 
-    if (!file) {
-        return;
-    }
+    if (!file) return;
 
     convertFileToBase64(file)
         .then(dataURL => {
@@ -182,13 +200,12 @@ function createJSONRequestParams(data) {
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify(data),  // Convert the data object to a JSON string
+        body: JSON.stringify(data),
     };
 }
 
 function sendJsonRequest(url, data) {
-    return fetch(url, data)  // No need to re-stringify; data is already JSON
-        .then(response => response.json());
+    return fetch(url, data).then(response => response.json());
 }
 
 function getImageFile() {
@@ -206,21 +223,20 @@ function convertFileToBase64(file) {
 
 function handleUploadResponse(data) {
     if (data.message) {
-        console.log(data.message); // Success message from server
-        alert('Image uploaded successfully.');
-        document.getElementById('file').value = ''; // Clear the file input after upload
+        console.log(data.message);
+        showAlert('File uploaded successfully.', 'success');
+        document.getElementById('file').value = '';
     } else {
-        alert('Error: ' + data.error);
+        showAlert('Error: ' + data.error, 'error');
     }
 }
 
-function showAlert(message) {
-    const iframe = document.createElement("iframe");
-    iframe.style.display = "none";
-    iframe.src = "data:text/plain,";
-    document.body.appendChild(iframe);
-
-    // Use iframe window to override the alert box title
-    iframe.contentWindow.alert("Mr. Mega says\n\n" + message);
-    document.body.removeChild(iframe);
+// --- SweetAlert2 wrapper ---
+function showAlert(message, icon = 'info') {
+    Swal.fire({
+        title: 'Mr. Mega says',
+        text: message,
+        icon: icon,
+        confirmButtonText: 'OK'
+    });
 }

@@ -1,79 +1,157 @@
 .trade-form-section {
-    background: #f9f9f9;
-    padding: 1rem;
+    background: white;
+    padding: 2rem;
     border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    max-width: 100%;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    max-width: 600px;
     margin: 0 auto;
 }
 
-.trade-form {
-    display: grid;
-    grid-template-rows: auto auto auto auto;
-    gap: 1rem;
-    width: 100%;
+.form-heading {
+    font-size: 1.5rem;
+    text-align: center;
+    margin-bottom: 2rem;
+    color: #333;
 }
 
 .form-group {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.5rem;
+    margin-bottom: 1.5rem;
 }
 
-.toggle-container {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
+label {
+    display: block;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+    color: #555;
 }
 
-.ducks-fieldset {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
+input[type="number"] {
+    padding: 0.75rem;
     border: 1px solid #ddd;
-    padding: 1rem;
-    border-radius: 8px;
-    background: #fff;
+    border-radius: 4px;
+    font-size: 1rem;
+    box-sizing: border-box;
+}
+
+input[type="number"]:focus {
+    border-color: #007bff;
+    outline: none;
+}
+
+.digital-ducks-input {
+    width: 200px;
 }
 
 .ducks-grid {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
     gap: 0.5rem;
+    margin-bottom: 1.5rem;
 }
 
-.small-input-group {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 0.25rem;
+.ducks-grid input[type="number"] {
+    width: 100%;
 }
 
 .small-input-group label {
-    font-size: 0.85rem;
+    font-size: 0.9rem;
     text-align: center;
 }
 
-.input-sm {
+.toggle-container {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.toggle-switch {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    position: relative;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+    position: absolute;
+}
+
+.toggle-slider {
+    position: relative;
+    cursor: pointer;
     width: 60px;
-    padding: 0.3rem;
-    font-size: 0.85rem;
-    text-align: center;
+    height: 30px;
+    background-color: #ccc;
+    border-radius: 30px;
+    transition: 0.3s;
+    order: 2;
+}
+
+.toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 22px;
+    width: 22px;
+    left: 4px;
+    top: 4px;
+    background-color: white;
+    border-radius: 50%;
+    transition: 0.3s;
+}
+
+.toggle-switch input:checked + .toggle-slider {
+    background-color: #007bff;
+}
+
+.toggle-switch input:checked + .toggle-slider:before {
+    transform: translateX(26px);
+}
+
+.toggle-text {
+    font-weight: 500;
+    color: #666;
+    white-space: nowrap;
+}
+
+.bit-text {
+    order: 1;
+}
+
+.byte-text {
+    order: 3;
 }
 
 .submit-button {
-    padding: 0.5rem 1rem;
-    font-size: 1rem;
+    width: 100%;
+    padding: 1rem;
+    font-size: 1.1rem;
+    font-weight: 600;
     color: white;
     background: #007bff;
     border: none;
     border-radius: 4px;
     cursor: pointer;
-    transition: background 0.3s ease;
+    transition: background 0.3s;
 }
 
 .submit-button:hover {
     background: #0056b3;
+}
+
+@media (max-width: 600px) {
+    .ducks-grid {
+        grid-template-columns: repeat(7, minmax(60px, 1fr));
+        gap: 0.25rem;
+    }
+
+    .small-input-group label {
+        font-size: 0.8rem;
+    }
+
+    .toggle-container {
+        gap: 0.5rem;
+    }
 }

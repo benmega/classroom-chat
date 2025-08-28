@@ -1,0 +1,1545 @@
+id,username,domain,challenge_name,course_id,course_instance,timestamp
+1,blossomstudent02,codecombat.com,phd-kitty,5632661322961295f9428638,663de608483c9240bb4d8cbf,2025-03-08 07:21:29.953187
+2,blossomstudent02,codecombat.com,pet-quiz,5632661322961295f9428638,663de608483c9240bb4d8cbf,2025-03-08 07:28:06.170895
+3,blossomstudent02,codecombat.com,buddys-name,5632661322961295f9428638,663de608483c9240bb4d8cbf,2025-03-15 06:15:11.678648
+4,ben,www.ozaria.com,ch3m1l2l4b,,,2025-03-18 11:09:53.680786
+5,blossomstudent27,www.ozaria.com,ch3m1l1l1b,,,2025-03-18 11:13:33.717705
+6,test,CodeCombat,Dungeon Escape,,,2025-03-21 16:08:37
+7,test,CodeCombat,Loop Master,,,2025-03-21 16:08:37
+8,test,codecombat.com,Kithgard Gates,560f1a9f22961295f9427742,,2025-03-22 02:44:13
+9,test,codecombat.com,Wakka Maul,560f1a9f22961295f9427742,,2025-03-22 02:44:13
+10,test,codecombat.com,Safe Place,560f1a9f22961295f9427742,,2025-03-22 02:44:13
+11,test,codecombat.com,The Final Kithmaze,560f1a9f22961295f9427742,,2025-03-22 02:44:13
+12,test,codecombat.com,Master Of Names Debug,560f1a9f22961295f9427742,,2025-03-22 02:44:13
+13,test,codecombat.com,Master of Names,560f1a9f22961295f9427742,,2025-03-22 02:44:13
+14,test,codecombat.com,Cupboards of Kithgard B,560f1a9f22961295f9427742,,2025-03-22 02:44:13
+15,test,codecombat.com,Lowly Kithmen,560f1a9f22961295f9427742,,2025-03-22 02:44:13
+16,test,codecombat.com,Cupboards of Kithgard A,560f1a9f22961295f9427742,,2025-03-22 02:44:13
+17,test,codecombat.com,Closing the Distance,560f1a9f22961295f9427742,,2025-03-22 02:44:13
+18,test,codecombat.com,Cupboards of Kithgard,560f1a9f22961295f9427742,,2025-03-22 02:44:13
+19,test,codecombat.com,Known Enemy,560f1a9f22961295f9427742,,2025-03-22 02:44:13
+20,test,codecombat.com,Loop Warehouse,560f1a9f22961295f9427742,,2025-03-22 02:44:13
+21,test,codecombat.com,Dread Door,560f1a9f22961295f9427742,,2025-03-22 02:44:13
+22,test,codecombat.com,The Raised Sword,560f1a9f22961295f9427742,,2025-03-22 02:44:13
+23,test,codecombat.com,Crawlways of Kithgard,560f1a9f22961295f9427742,,2025-03-22 02:44:13
+24,test,codecombat.com,Hack and Dash,560f1a9f22961295f9427742,,2025-03-22 02:44:13
+25,test,codecombat.com,Descending Further,560f1a9f22961295f9427742,,2025-03-22 02:44:13
+26,test,codecombat.com,Haunted Kithmaze,560f1a9f22961295f9427742,,2025-03-22 02:44:13
+27,test,codecombat.com,Forgetful Gemsmith,560f1a9f22961295f9427742,,2025-03-22 02:44:13
+28,test,codecombat.com,Favorable Odds,560f1a9f22961295f9427742,,2025-03-22 02:44:13
+29,test,codecombat.com,Kounter Kithwise,560f1a9f22961295f9427742,,2025-03-22 02:44:13
+30,test,codecombat.com,Fire Dancing,560f1a9f22961295f9427742,,2025-03-22 02:44:13
+31,test,codecombat.com,Riddling Kithmaze,560f1a9f22961295f9427742,,2025-03-22 02:44:13
+32,test,codecombat.com,The Prisoner,560f1a9f22961295f9427742,,2025-03-22 02:44:13
+33,test,codecombat.com,Dungeons of Kithgard,560f1a9f22961295f9427742,,2025-03-22 02:44:13
+34,test,codecombat.com,Radiant Aura,560f1a9f22961295f9427742,,2025-03-22 02:44:13
+35,test,codecombat.com,Gems in the Deep,560f1a9f22961295f9427742,,2025-03-22 02:44:13
+36,test,codecombat.com,Illusory Interruption,560f1a9f22961295f9427742,,2025-03-22 02:44:13
+37,test,codecombat.com,Kithgard Librarian,560f1a9f22961295f9427742,,2025-03-22 02:44:13
+38,test,codecombat.com,Sleep Hour,560f1a9f22961295f9427742,,2025-03-22 02:44:13
+39,test,codecombat.com,Shadow Guard,560f1a9f22961295f9427742,,2025-03-22 02:44:13
+40,test,codecombat.com,True Names,560f1a9f22961295f9427742,,2025-03-22 02:44:13
+41,test,codecombat.com,Dangerous Steps,560f1a9f22961295f9427742,,2025-03-22 02:44:13
+42,test,codecombat.com,Cell Commentary,560f1a9f22961295f9427742,,2025-03-22 02:44:13
+43,test,codecombat.com,Enemy Mine,560f1a9f22961295f9427742,,2025-03-22 02:44:13
+44,test,codecombat.com,Long Steps,560f1a9f22961295f9427742,,2025-03-22 02:44:13
+45,test,codecombat.com,Careful Steps,560f1a9f22961295f9427742,,2025-03-22 02:44:13
+46,test,codecombat.com,JavaScript: Master of Names,5789587aad86a6efb5737020,,2025-03-22 02:56:27
+47,test,codecombat.com,JavaScript: Lost in the Stacks,5789587aad86a6efb5737020,,2025-03-22 02:56:27
+48,test,codecombat.com,JavaScript: Patrol Buster,5789587aad86a6efb5737020,,2025-03-22 02:56:27
+49,test,codecombat.com,JavaScript: Fire Dancing,5789587aad86a6efb5737020,,2025-03-22 02:56:27
+50,test,codecombat.com,JavaScript: Back to Back,5789587aad86a6efb5737020,,2025-03-22 02:56:27
+51,test,codecombat.com,JavaScript: Maniac Munchkins,5789587aad86a6efb5737020,,2025-03-22 02:56:27
+52,test,codecombat.com,JavaScript: True Names,5789587aad86a6efb5737020,,2025-03-22 02:56:27
+53,test,codecombat.com,JavaScript: Stillness in Motion,5789587aad86a6efb5737020,,2025-03-22 02:56:27
+54,test,codecombat.com,JavaScript: A Fine Mint,5789587aad86a6efb5737020,,2025-03-22 02:56:27
+55,test,codecombat.com,JavaScript: Return to Thornbush Farm,5789587aad86a6efb5737020,,2025-03-22 02:56:27
+56,test,codecombat.com,Query Confirmed,5789587aad86a6efb5737020,,2025-03-22 02:56:27
+57,test,codecombat.com,Clickthrough,5789587aad86a6efb5737020,,2025-03-22 02:56:27
+58,test,codecombat.com,Disappearing Act,5789587aad86a6efb5737020,,2025-03-22 02:56:27
+59,test,codecombat.com,Toggulation,5789587aad86a6efb5737020,,2025-03-22 02:56:27
+60,test,codecombat.com,Eventful Selectors,5789587aad86a6efb5737020,,2025-03-22 02:56:27
+61,test,codecombat.com,Sibling Rivalry,5789587aad86a6efb5737020,,2025-03-22 02:56:27
+62,test,codecombat.com,Border Patrol,5789587aad86a6efb5737020,,2025-03-22 02:56:27
+63,test,codecombat.com,Marginal Utility,5789587aad86a6efb5737020,,2025-03-22 02:56:27
+64,test,codecombat.com,Transformative Properties,5789587aad86a6efb5737020,,2025-03-22 02:56:27
+65,test,codecombat.com,Animania,5789587aad86a6efb5737020,,2025-03-22 02:56:27
+66,test,codecombat.com,Precision Coloring,5789587aad86a6efb5737020,,2025-03-22 02:56:27
+67,test,codecombat.com,Quizlet,5789587aad86a6efb5737020,,2025-03-22 02:56:27
+68,blossomstudent30,codecombat.com,Kithgard Gates,560f1a9f22961295f9427742,,2025-03-22 03:01:20
+69,blossomstudent30,codecombat.com,Wakka Maul,560f1a9f22961295f9427742,,2025-03-22 03:01:20
+70,blossomstudent30,codecombat.com,Safe Place,560f1a9f22961295f9427742,,2025-03-22 03:01:20
+71,blossomstudent30,codecombat.com,The Final Kithmaze,560f1a9f22961295f9427742,,2025-03-22 03:01:20
+72,blossomstudent30,codecombat.com,Master Of Names Debug,560f1a9f22961295f9427742,,2025-03-22 03:01:20
+73,blossomstudent30,codecombat.com,Master of Names,560f1a9f22961295f9427742,,2025-03-22 03:01:20
+74,blossomstudent30,codecombat.com,Cupboards of Kithgard B,560f1a9f22961295f9427742,,2025-03-22 03:01:20
+75,blossomstudent30,codecombat.com,Lowly Kithmen,560f1a9f22961295f9427742,,2025-03-22 03:01:20
+76,blossomstudent30,codecombat.com,Cupboards of Kithgard A,560f1a9f22961295f9427742,,2025-03-22 03:01:20
+77,blossomstudent30,codecombat.com,Closing the Distance,560f1a9f22961295f9427742,,2025-03-22 03:01:20
+78,blossomstudent30,codecombat.com,Cupboards of Kithgard,560f1a9f22961295f9427742,,2025-03-22 03:01:20
+79,blossomstudent30,codecombat.com,Known Enemy,560f1a9f22961295f9427742,,2025-03-22 03:01:20
+80,blossomstudent30,codecombat.com,Loop Warehouse,560f1a9f22961295f9427742,,2025-03-22 03:01:20
+81,blossomstudent30,codecombat.com,Dread Door,560f1a9f22961295f9427742,,2025-03-22 03:01:20
+82,blossomstudent30,codecombat.com,The Raised Sword,560f1a9f22961295f9427742,,2025-03-22 03:01:20
+83,blossomstudent30,codecombat.com,Crawlways of Kithgard,560f1a9f22961295f9427742,,2025-03-22 03:01:20
+84,blossomstudent30,codecombat.com,Hack and Dash,560f1a9f22961295f9427742,,2025-03-22 03:01:20
+85,blossomstudent30,codecombat.com,Descending Further,560f1a9f22961295f9427742,,2025-03-22 03:01:20
+86,blossomstudent30,codecombat.com,Haunted Kithmaze,560f1a9f22961295f9427742,,2025-03-22 03:01:20
+87,blossomstudent30,codecombat.com,Forgetful Gemsmith,560f1a9f22961295f9427742,,2025-03-22 03:01:20
+88,blossomstudent30,codecombat.com,Favorable Odds,560f1a9f22961295f9427742,,2025-03-22 03:01:20
+89,blossomstudent30,codecombat.com,Kounter Kithwise,560f1a9f22961295f9427742,,2025-03-22 03:01:20
+90,blossomstudent30,codecombat.com,Fire Dancing,560f1a9f22961295f9427742,,2025-03-22 03:01:20
+91,blossomstudent30,codecombat.com,Riddling Kithmaze,560f1a9f22961295f9427742,,2025-03-22 03:01:20
+92,blossomstudent30,codecombat.com,The Prisoner,560f1a9f22961295f9427742,,2025-03-22 03:01:20
+93,blossomstudent30,codecombat.com,Dungeons of Kithgard,560f1a9f22961295f9427742,,2025-03-22 03:01:20
+94,blossomstudent30,codecombat.com,Radiant Aura,560f1a9f22961295f9427742,,2025-03-22 03:01:20
+95,blossomstudent30,codecombat.com,Gems in the Deep,560f1a9f22961295f9427742,,2025-03-22 03:01:20
+96,blossomstudent30,codecombat.com,Illusory Interruption,560f1a9f22961295f9427742,,2025-03-22 03:01:20
+97,blossomstudent30,codecombat.com,Kithgard Librarian,560f1a9f22961295f9427742,,2025-03-22 03:01:20
+98,blossomstudent30,codecombat.com,Sleep Hour,560f1a9f22961295f9427742,,2025-03-22 03:01:20
+99,blossomstudent30,codecombat.com,Shadow Guard,560f1a9f22961295f9427742,,2025-03-22 03:01:20
+100,blossomstudent30,codecombat.com,True Names,560f1a9f22961295f9427742,,2025-03-22 03:01:20
+101,blossomstudent30,codecombat.com,Dangerous Steps,560f1a9f22961295f9427742,,2025-03-22 03:01:20
+102,blossomstudent30,codecombat.com,Cell Commentary,560f1a9f22961295f9427742,,2025-03-22 03:01:20
+103,blossomstudent30,codecombat.com,Enemy Mine,560f1a9f22961295f9427742,,2025-03-22 03:01:20
+104,blossomstudent30,codecombat.com,Long Steps,560f1a9f22961295f9427742,,2025-03-22 03:01:20
+105,blossomstudent30,codecombat.com,Careful Steps,560f1a9f22961295f9427742,,2025-03-22 03:01:20
+106,blossomstudent19,codecombat.com,Kithgard Gates,560f1a9f22961295f9427742,,2025-03-22 03:44:43
+107,blossomstudent19,codecombat.com,Wakka Maul,560f1a9f22961295f9427742,,2025-03-22 03:44:43
+108,blossomstudent19,codecombat.com,Safe Place,560f1a9f22961295f9427742,,2025-03-22 03:44:43
+109,blossomstudent19,codecombat.com,The Final Kithmaze,560f1a9f22961295f9427742,,2025-03-22 03:44:43
+110,blossomstudent19,codecombat.com,Master Of Names Debug,560f1a9f22961295f9427742,,2025-03-22 03:44:43
+111,blossomstudent19,codecombat.com,Master of Names,560f1a9f22961295f9427742,,2025-03-22 03:44:43
+112,blossomstudent19,codecombat.com,Cupboards of Kithgard B,560f1a9f22961295f9427742,,2025-03-22 03:44:43
+113,blossomstudent19,codecombat.com,Lowly Kithmen,560f1a9f22961295f9427742,,2025-03-22 03:44:43
+114,blossomstudent19,codecombat.com,Cupboards of Kithgard A,560f1a9f22961295f9427742,,2025-03-22 03:44:43
+115,blossomstudent19,codecombat.com,Closing the Distance,560f1a9f22961295f9427742,,2025-03-22 03:44:43
+116,blossomstudent19,codecombat.com,Cupboards of Kithgard,560f1a9f22961295f9427742,,2025-03-22 03:44:43
+117,blossomstudent19,codecombat.com,Known Enemy,560f1a9f22961295f9427742,,2025-03-22 03:44:43
+118,blossomstudent19,codecombat.com,Loop Warehouse,560f1a9f22961295f9427742,,2025-03-22 03:44:43
+119,blossomstudent19,codecombat.com,Dread Door,560f1a9f22961295f9427742,,2025-03-22 03:44:43
+120,blossomstudent19,codecombat.com,The Raised Sword,560f1a9f22961295f9427742,,2025-03-22 03:44:43
+121,blossomstudent19,codecombat.com,Crawlways of Kithgard,560f1a9f22961295f9427742,,2025-03-22 03:44:43
+122,blossomstudent19,codecombat.com,Hack and Dash,560f1a9f22961295f9427742,,2025-03-22 03:44:43
+123,blossomstudent19,codecombat.com,Descending Further,560f1a9f22961295f9427742,,2025-03-22 03:44:43
+124,blossomstudent19,codecombat.com,Haunted Kithmaze,560f1a9f22961295f9427742,,2025-03-22 03:44:43
+125,blossomstudent19,codecombat.com,Forgetful Gemsmith,560f1a9f22961295f9427742,,2025-03-22 03:44:43
+126,blossomstudent19,codecombat.com,Favorable Odds,560f1a9f22961295f9427742,,2025-03-22 03:44:43
+127,blossomstudent19,codecombat.com,Kounter Kithwise,560f1a9f22961295f9427742,,2025-03-22 03:44:43
+128,blossomstudent19,codecombat.com,Fire Dancing,560f1a9f22961295f9427742,,2025-03-22 03:44:43
+129,blossomstudent19,codecombat.com,Riddling Kithmaze,560f1a9f22961295f9427742,,2025-03-22 03:44:43
+130,blossomstudent19,codecombat.com,The Prisoner,560f1a9f22961295f9427742,,2025-03-22 03:44:43
+131,blossomstudent19,codecombat.com,Dungeons of Kithgard,560f1a9f22961295f9427742,,2025-03-22 03:44:43
+132,blossomstudent19,codecombat.com,Radiant Aura,560f1a9f22961295f9427742,,2025-03-22 03:44:43
+133,blossomstudent19,codecombat.com,Gems in the Deep,560f1a9f22961295f9427742,,2025-03-22 03:44:43
+134,blossomstudent19,codecombat.com,Illusory Interruption,560f1a9f22961295f9427742,,2025-03-22 03:44:43
+135,blossomstudent19,codecombat.com,Kithgard Librarian,560f1a9f22961295f9427742,,2025-03-22 03:44:43
+136,blossomstudent19,codecombat.com,Sleep Hour,560f1a9f22961295f9427742,,2025-03-22 03:44:43
+137,blossomstudent19,codecombat.com,Shadow Guard,560f1a9f22961295f9427742,,2025-03-22 03:44:43
+138,blossomstudent19,codecombat.com,True Names,560f1a9f22961295f9427742,,2025-03-22 03:44:43
+139,blossomstudent19,codecombat.com,Dangerous Steps,560f1a9f22961295f9427742,,2025-03-22 03:44:43
+140,blossomstudent19,codecombat.com,Cell Commentary,560f1a9f22961295f9427742,,2025-03-22 03:44:43
+141,blossomstudent19,codecombat.com,Enemy Mine,560f1a9f22961295f9427742,,2025-03-22 03:44:43
+142,blossomstudent19,codecombat.com,Long Steps,560f1a9f22961295f9427742,,2025-03-22 03:44:43
+143,blossomstudent19,codecombat.com,Careful Steps,560f1a9f22961295f9427742,,2025-03-22 03:44:43
+144,blossomstudent19,codecombat.com,sand-mushrooms,56462f935afde0c6fd30fc8c,672edd3e2f9b5d22cf15af22,2025-03-22 03:57:13.590652
+145,blossomstudent19,codecombat.com,mushroom-noise,56462f935afde0c6fd30fc8c,672edd3e2f9b5d22cf15af22,2025-03-22 03:58:05.007324
+146,blossomstudent19,codecombat.com,key-traps,56462f935afde0c6fd30fc8c,672edd3e2f9b5d22cf15af22,2025-03-22 03:58:22.676838
+147,blossomstudent19,codecombat.com,chain-of-command,56462f935afde0c6fd30fc8c,672edd3e2f9b5d22cf15af22,2025-03-22 03:58:35.251509
+148,blossomstudent19,codecombat.com,pet-engineer,56462f935afde0c6fd30fc8c,672edd3e2f9b5d22cf15af22,2025-03-22 03:58:52.197431
+149,blossomstudent19,codecombat.com,pet-translator,56462f935afde0c6fd30fc8c,672edd3e2f9b5d22cf15af22,2025-03-22 04:03:24.758184
+150,blossomstudent19,codecombat.com,pet-adjutant,56462f935afde0c6fd30fc8c,672edd3e2f9b5d22cf15af22,2025-03-22 04:07:06.718950
+151,blossomstudent18,codecombat.com,sarven-road,56462f935afde0c6fd30fc8c,672edd3e2f9b5d22cf15af22,2025-03-22 04:10:05.092904
+152,blossomstudent18,codecombat.com,oasis,56462f935afde0c6fd30fc8c,672edd3e2f9b5d22cf15af22,2025-03-22 04:10:29.991356
+153,blossomstudent18,codecombat.com,the-mighty-sand-yak,56462f935afde0c6fd30fc8c,672edd3e2f9b5d22cf15af22,2025-03-22 04:10:44.406146
+154,blossomstudent18,codecombat.com,gems-or-death,56462f935afde0c6fd30fc8c,672edd3e2f9b5d22cf15af22,2025-03-22 04:11:02.874669
+155,blossomstudent18,codecombat.com,burls-beets-booleans,56462f935afde0c6fd30fc8c,672edd3e2f9b5d22cf15af22,2025-03-22 04:11:43.815043
+156,blossomstudent18,codecombat.com,sarven-gaps,56462f935afde0c6fd30fc8c,672edd3e2f9b5d22cf15af22,2025-03-22 04:14:43.367568
+157,blossomstudent19,codecombat.com,alchemic-power,56462f935afde0c6fd30fc8c,672edd3e2f9b5d22cf15af22,2025-03-22 04:18:48.384888
+158,blossomstudent18,codecombat.com,interception,56462f935afde0c6fd30fc8c,672edd3e2f9b5d22cf15af22,2025-03-22 04:26:50.115644
+159,blossomstudent18,codecombat.com,crossroads,56462f935afde0c6fd30fc8c,672edd3e2f9b5d22cf15af22,2025-03-22 04:27:07.092845
+160,blossomstudent18,codecombat.com,thunderhooves,56462f935afde0c6fd30fc8c,672edd3e2f9b5d22cf15af22,2025-03-22 04:29:33.231012
+161,blossomstudent18,codecombat.com,kithgard-enchanter,56462f935afde0c6fd30fc8c,672edd3e2f9b5d22cf15af22,2025-03-22 04:30:46.296147
+162,blossomstudent18,codecombat.com,Kithgard Gates,560f1a9f22961295f9427742,,2025-03-22 04:30:50
+163,blossomstudent18,codecombat.com,Wakka Maul,560f1a9f22961295f9427742,,2025-03-22 04:30:50
+164,blossomstudent18,codecombat.com,Safe Place,560f1a9f22961295f9427742,,2025-03-22 04:30:50
+165,blossomstudent18,codecombat.com,The Final Kithmaze,560f1a9f22961295f9427742,,2025-03-22 04:30:50
+166,blossomstudent18,codecombat.com,Master Of Names Debug,560f1a9f22961295f9427742,,2025-03-22 04:30:50
+167,blossomstudent18,codecombat.com,Master of Names,560f1a9f22961295f9427742,,2025-03-22 04:30:50
+168,blossomstudent18,codecombat.com,Cupboards of Kithgard B,560f1a9f22961295f9427742,,2025-03-22 04:30:50
+169,blossomstudent18,codecombat.com,Lowly Kithmen,560f1a9f22961295f9427742,,2025-03-22 04:30:50
+170,blossomstudent18,codecombat.com,Cupboards of Kithgard A,560f1a9f22961295f9427742,,2025-03-22 04:30:50
+171,blossomstudent18,codecombat.com,Closing the Distance,560f1a9f22961295f9427742,,2025-03-22 04:30:50
+172,blossomstudent18,codecombat.com,Cupboards of Kithgard,560f1a9f22961295f9427742,,2025-03-22 04:30:50
+173,blossomstudent18,codecombat.com,Known Enemy,560f1a9f22961295f9427742,,2025-03-22 04:30:50
+174,blossomstudent18,codecombat.com,Loop Warehouse,560f1a9f22961295f9427742,,2025-03-22 04:30:50
+175,blossomstudent18,codecombat.com,Dread Door,560f1a9f22961295f9427742,,2025-03-22 04:30:50
+176,blossomstudent18,codecombat.com,The Raised Sword,560f1a9f22961295f9427742,,2025-03-22 04:30:50
+177,blossomstudent18,codecombat.com,Crawlways of Kithgard,560f1a9f22961295f9427742,,2025-03-22 04:30:50
+178,blossomstudent18,codecombat.com,Hack and Dash,560f1a9f22961295f9427742,,2025-03-22 04:30:50
+179,blossomstudent18,codecombat.com,Descending Further,560f1a9f22961295f9427742,,2025-03-22 04:30:50
+180,blossomstudent18,codecombat.com,Haunted Kithmaze,560f1a9f22961295f9427742,,2025-03-22 04:30:50
+181,blossomstudent18,codecombat.com,Forgetful Gemsmith,560f1a9f22961295f9427742,,2025-03-22 04:30:50
+182,blossomstudent18,codecombat.com,Favorable Odds,560f1a9f22961295f9427742,,2025-03-22 04:30:50
+183,blossomstudent18,codecombat.com,Kounter Kithwise,560f1a9f22961295f9427742,,2025-03-22 04:30:50
+184,blossomstudent18,codecombat.com,Fire Dancing,560f1a9f22961295f9427742,,2025-03-22 04:30:50
+185,blossomstudent18,codecombat.com,Riddling Kithmaze,560f1a9f22961295f9427742,,2025-03-22 04:30:50
+186,blossomstudent18,codecombat.com,The Prisoner,560f1a9f22961295f9427742,,2025-03-22 04:30:50
+187,blossomstudent18,codecombat.com,Dungeons of Kithgard,560f1a9f22961295f9427742,,2025-03-22 04:30:50
+188,blossomstudent18,codecombat.com,Radiant Aura,560f1a9f22961295f9427742,,2025-03-22 04:30:50
+189,blossomstudent18,codecombat.com,Gems in the Deep,560f1a9f22961295f9427742,,2025-03-22 04:30:50
+190,blossomstudent18,codecombat.com,Illusory Interruption,560f1a9f22961295f9427742,,2025-03-22 04:30:50
+191,blossomstudent18,codecombat.com,Kithgard Librarian,560f1a9f22961295f9427742,,2025-03-22 04:30:50
+192,blossomstudent18,codecombat.com,Sleep Hour,560f1a9f22961295f9427742,,2025-03-22 04:30:50
+193,blossomstudent18,codecombat.com,Shadow Guard,560f1a9f22961295f9427742,,2025-03-22 04:30:50
+194,blossomstudent18,codecombat.com,True Names,560f1a9f22961295f9427742,,2025-03-22 04:30:50
+195,blossomstudent18,codecombat.com,Dangerous Steps,560f1a9f22961295f9427742,,2025-03-22 04:30:50
+196,blossomstudent18,codecombat.com,Cell Commentary,560f1a9f22961295f9427742,,2025-03-22 04:30:50
+197,blossomstudent18,codecombat.com,Enemy Mine,560f1a9f22961295f9427742,,2025-03-22 04:30:50
+198,blossomstudent18,codecombat.com,Long Steps,560f1a9f22961295f9427742,,2025-03-22 04:30:50
+199,blossomstudent18,codecombat.com,Careful Steps,560f1a9f22961295f9427742,,2025-03-22 04:30:50
+200,blossomstudent18,codecombat.com,minesweeper,56462f935afde0c6fd30fc8c,672edd3e2f9b5d22cf15af22,2025-03-22 04:31:04.040085
+201,blossomstudent19,codecombat.com,dangerous-key,56462f935afde0c6fd30fc8c,672edd3e2f9b5d22cf15af22,2025-03-22 04:32:41.028891
+202,blossomstudent18,codecombat.com,operation-killdeer,56462f935afde0c6fd30fc8c,672edd3e2f9b5d22cf15af22,2025-03-22 04:33:29.829327
+203,ben,codecombat.com,sand-mushrooms,56462f935afde0c6fd30fc8c,672edd3e2f9b5d22cf15af22,2025-03-22 04:44:21.303955
+204,blossomstudent18,codecombat.com,medical-attention,56462f935afde0c6fd30fc8c,672edd3e2f9b5d22cf15af22,2025-03-22 04:46:25.626759
+205,blossomstudent18,codecombat.com,medical-attention,56462f935afde0c6fd30fc8c,672edd3e2f9b5d22cf15af22,2025-03-22 04:46:25.643366
+206,blossomstudent18,codecombat.com,medical-attention,56462f935afde0c6fd30fc8c,672edd3e2f9b5d22cf15af22,2025-03-22 04:46:25.650070
+207,blossomstudent18,codecombat.com,medical-attention,56462f935afde0c6fd30fc8c,672edd3e2f9b5d22cf15af22,2025-03-22 04:46:25.643366
+208,blossomstudent18,codecombat.com,medical-attention,56462f935afde0c6fd30fc8c,672edd3e2f9b5d22cf15af22,2025-03-22 04:46:25.626759
+209,blossomstudent18,codecombat.com,medical-attention,56462f935afde0c6fd30fc8c,672edd3e2f9b5d22cf15af22,2025-03-22 04:46:25.626759
+210,blossomstudent18,codecombat.com,keeping-time,56462f935afde0c6fd30fc8c,672edd3e2f9b5d22cf15af22,2025-03-22 04:49:20.958529
+211,blossomstudent18,codecombat.com,crux-of-the-desert,56462f935afde0c6fd30fc8c,672edd3e2f9b5d22cf15af22,2025-03-22 04:52:36.542393
+212,blossomstudent27,www.ozaria.com,ch3m1l1l2b,,,2025-03-25 10:34:21.315124
+213,blossomstudent48,www.ozaria.com,ch3m1l1l2b,,,2025-03-25 10:39:47.918291
+214,pluem,www.ozaria.com,ch3m1l1l1b,,,2025-03-25 10:42:10.026207
+215,thanhminh,www.ozaria.com,ch3m1l1l5b,,,2025-03-25 10:59:55.390579
+216,blossomstudent48,www.ozaria.com,ch3m1l1l3b,,,2025-03-25 11:00:46.007924
+217,pluem,www.ozaria.com,ch3m1l1l2b,,,2025-03-25 11:05:20.462145
+218,pluem,www.ozaria.com,ch3m1l1l5b,,,2025-03-25 11:08:43.910521
+219,blossomstudent27,www.ozaria.com,ch3m1l1l3b,,,2025-03-25 11:09:51.112868
+220,blossomstudent27,www.ozaria.com,ch3m1l1l5b,,,2025-03-25 11:10:22.934431
+221,blossomstudent06,www.ozaria.com,ch3m1l2l1b,,,2025-03-25 11:14:21.198187
+222,blossomstudent48,www.ozaria.com,ch3m1l1l4b,,,2025-03-25 11:17:59.908119
+223,pluem,www.ozaria.com,ch3m1l1l3b,,,2025-03-25 11:32:54.927557
+224,blossomstudent06,www.ozaria.com,ch3m1l2l2b,,,2025-03-25 11:34:50.801312
+225,ben,www.ozaria.com,ch3m1l1l2b,,,2025-03-25 15:58:57.728559
+226,ben,www.ozaria.com,ch3m1l1l4b,,,2025-03-25 16:13:59.415917
+227,ben,www.ozaria.com,ch3m1l1l5b,,,2025-03-25 16:14:30.024080
+228,blossomstudent01,codecombat.com,air-rescue-service,,,2025-03-29 06:04:03.394593
+229,blossomstudent02,codecombat.com,air-rescue-service,,,2025-03-29 06:10:43.609090
+230,FAH,codecombat.com,friend-and-foe,56462f935afde0c6fd30fc8c,67de58c7f68cba9772c2523f,2025-03-29 06:10:43.749690
+231,blossomstudent01,codecombat.com,the-wizards-door,56462f935afde0c6fd30fc8c,67de58c7f68cba9772c2523f,2025-03-29 06:11:15.457882
+232,blossomstudent01,codecombat.com,the-wizards-haunt,56462f935afde0c6fd30fc8c,67de58c7f68cba9772c2523f,2025-03-29 06:15:43.621704
+233,Blossomstudent05,codecombat.com,air-rescue-service,,,2025-03-29 06:48:43.766463
+234,blossomstudent02,codecombat.com,the-wizards-door,56462f935afde0c6fd30fc8c,67de58c7f68cba9772c2523f,2025-03-29 06:49:44.731909
+235,blossomstudent02,codecombat.com,the-wizards-haunt,56462f935afde0c6fd30fc8c,67de58c7f68cba9772c2523f,2025-03-29 06:55:21.909458
+236,FAH,codecombat.com,deja-brew,56462f935afde0c6fd30fc8c,67de58c7f68cba9772c2523f,2025-03-29 06:55:48.127275
+237,Blossomstudent05,codecombat.com,the-wizards-door,56462f935afde0c6fd30fc8c,67de58c7f68cba9772c2523f,2025-03-29 06:57:59.510355
+238,blossomstudent03,codecombat.com,reward-and-ruination,56462f935afde0c6fd30fc8c,67de58c7f68cba9772c2523f,2025-03-29 07:03:00.076644
+239,blossomstudent01,codecombat.com,the-wizards-plane,56462f935afde0c6fd30fc8c,67de58c7f68cba9772c2523f,2025-03-29 07:03:12.520651
+240,blossomstudent04,codecombat.com,reward-and-ruination,56462f935afde0c6fd30fc8c,67de58c7f68cba9772c2523f,2025-03-29 07:04:45.940441
+241,Blossomstudent05,codecombat.com,the-wizards-haunt,56462f935afde0c6fd30fc8c,67de58c7f68cba9772c2523f,2025-03-29 07:07:15.618605
+242,blossomstudent03,codecombat.com,the-wizards-door,56462f935afde0c6fd30fc8c,67de58c7f68cba9772c2523f,2025-03-29 07:08:28.532291
+243,blossomstudent02,codecombat.com,the-wizards-plane,56462f935afde0c6fd30fc8c,67de58c7f68cba9772c2523f,2025-03-29 07:08:47.454994
+244,blossomstudent02,codecombat.com,time-to-live,,,2025-03-29 07:15:51.577542
+245,blossomstudent02,codecombat.com,game-grove,,,2025-03-29 07:18:08.134564
+246,blossomstudent04,codecombat.com,the-wizards-door,56462f935afde0c6fd30fc8c,67de58c7f68cba9772c2523f,2025-03-29 07:19:39.886243
+247,blossomstudent02,codecombat.com,vorpal-mouse,,,2025-03-29 07:20:24.141998
+248,blossomstudent02,codecombat.com,click-gait,,,2025-03-29 07:22:39.084815
+249,blossomstudent01,www.codecombat.com,ch3m4l1l5b,,,2025-03-29 07:24:31.645071
+250,blossomstudent02,codecombat.com,risk-and-reward,,,2025-03-29 07:24:32.690728
+251,blossomstudent01,codecombat.com,munchkin-swarm,5632661322961295f9428638,663de608483c9240bb4d8cbf,2025-03-29 07:25:14.405473
+252,blossomstudent02,codecombat.com,Hero,,,2025-03-29 07:25:17.825599
+253,blossomstudent01,codecombat.com,silent-village,,,2025-03-29 07:25:48.551078
+254,blossomstudent02,codecombat.com,a-maze-ing,,,2025-03-29 07:25:50.397171
+255,Blossomstudent05,codecombat.com,maniac-munchkins,5632661322961295f9428638,663de608483c9240bb4d8cbf,2025-03-29 07:26:01.988711
+256,blossomstudent01,codecombat.com,village-warder,5632661322961295f9428638,663de608483c9240bb4d8cbf,2025-03-29 07:26:06.996909
+257,blossomstudent03,codecombat.com,defense-of-plainswood,5632661322961295f9428638,663de608483c9240bb4d8cbf,2025-03-29 07:26:26.316368
+258,blossomstudent01,codecombat.com,Kithgard Gates,560f1a9f22961295f9427742,,2025-03-29 07:26:29
+259,blossomstudent01,codecombat.com,Wakka Maul,560f1a9f22961295f9427742,,2025-03-29 07:26:29
+260,blossomstudent01,codecombat.com,Safe Place,560f1a9f22961295f9427742,,2025-03-29 07:26:29
+261,blossomstudent01,codecombat.com,The Final Kithmaze,560f1a9f22961295f9427742,,2025-03-29 07:26:29
+262,blossomstudent01,codecombat.com,Master Of Names Debug,560f1a9f22961295f9427742,,2025-03-29 07:26:29
+263,blossomstudent01,codecombat.com,Master of Names,560f1a9f22961295f9427742,,2025-03-29 07:26:29
+264,blossomstudent01,codecombat.com,Cupboards of Kithgard B,560f1a9f22961295f9427742,,2025-03-29 07:26:29
+265,blossomstudent01,codecombat.com,Lowly Kithmen,560f1a9f22961295f9427742,,2025-03-29 07:26:29
+266,blossomstudent01,codecombat.com,Cupboards of Kithgard A,560f1a9f22961295f9427742,,2025-03-29 07:26:29
+267,blossomstudent01,codecombat.com,Closing the Distance,560f1a9f22961295f9427742,,2025-03-29 07:26:29
+268,blossomstudent01,codecombat.com,Cupboards of Kithgard,560f1a9f22961295f9427742,,2025-03-29 07:26:29
+269,blossomstudent01,codecombat.com,Known Enemy,560f1a9f22961295f9427742,,2025-03-29 07:26:29
+270,blossomstudent01,codecombat.com,Loop Warehouse,560f1a9f22961295f9427742,,2025-03-29 07:26:29
+271,blossomstudent01,codecombat.com,Dread Door,560f1a9f22961295f9427742,,2025-03-29 07:26:29
+272,blossomstudent01,codecombat.com,The Raised Sword,560f1a9f22961295f9427742,,2025-03-29 07:26:29
+273,blossomstudent01,codecombat.com,Crawlways of Kithgard,560f1a9f22961295f9427742,,2025-03-29 07:26:29
+274,blossomstudent01,codecombat.com,Hack and Dash,560f1a9f22961295f9427742,,2025-03-29 07:26:29
+275,blossomstudent01,codecombat.com,Descending Further,560f1a9f22961295f9427742,,2025-03-29 07:26:29
+276,blossomstudent01,codecombat.com,Haunted Kithmaze,560f1a9f22961295f9427742,,2025-03-29 07:26:29
+277,blossomstudent01,codecombat.com,Forgetful Gemsmith,560f1a9f22961295f9427742,,2025-03-29 07:26:29
+278,blossomstudent01,codecombat.com,Favorable Odds,560f1a9f22961295f9427742,,2025-03-29 07:26:29
+279,blossomstudent01,codecombat.com,Kounter Kithwise,560f1a9f22961295f9427742,,2025-03-29 07:26:29
+280,blossomstudent01,codecombat.com,Fire Dancing,560f1a9f22961295f9427742,,2025-03-29 07:26:29
+281,blossomstudent01,codecombat.com,Riddling Kithmaze,560f1a9f22961295f9427742,,2025-03-29 07:26:29
+282,blossomstudent01,codecombat.com,The Prisoner,560f1a9f22961295f9427742,,2025-03-29 07:26:29
+283,blossomstudent01,codecombat.com,Dungeons of Kithgard,560f1a9f22961295f9427742,,2025-03-29 07:26:29
+284,blossomstudent01,codecombat.com,Radiant Aura,560f1a9f22961295f9427742,,2025-03-29 07:26:29
+285,blossomstudent01,codecombat.com,Gems in the Deep,560f1a9f22961295f9427742,,2025-03-29 07:26:29
+286,blossomstudent01,codecombat.com,Illusory Interruption,560f1a9f22961295f9427742,,2025-03-29 07:26:29
+287,blossomstudent01,codecombat.com,Kithgard Librarian,560f1a9f22961295f9427742,,2025-03-29 07:26:29
+288,blossomstudent01,codecombat.com,Sleep Hour,560f1a9f22961295f9427742,,2025-03-29 07:26:29
+289,blossomstudent01,codecombat.com,Shadow Guard,560f1a9f22961295f9427742,,2025-03-29 07:26:29
+290,blossomstudent01,codecombat.com,True Names,560f1a9f22961295f9427742,,2025-03-29 07:26:29
+291,blossomstudent01,codecombat.com,Dangerous Steps,560f1a9f22961295f9427742,,2025-03-29 07:26:29
+292,blossomstudent01,codecombat.com,Cell Commentary,560f1a9f22961295f9427742,,2025-03-29 07:26:29
+293,blossomstudent01,codecombat.com,Enemy Mine,560f1a9f22961295f9427742,,2025-03-29 07:26:29
+294,blossomstudent01,codecombat.com,Long Steps,560f1a9f22961295f9427742,,2025-03-29 07:26:29
+295,blossomstudent01,codecombat.com,Careful Steps,560f1a9f22961295f9427742,,2025-03-29 07:26:29
+296,blossomstudent01,codecombat.com,peasant-protection,5632661322961295f9428638,663de608483c9240bb4d8cbf,2025-03-29 07:26:36.795929
+297,blossomstudent02,codecombat.com,gemtacular,,,2025-03-29 07:26:44.427691
+298,Blossomstudent05,codecombat.com,village-champion,5632661322961295f9428638,663de608483c9240bb4d8cbf,2025-03-29 07:26:44.616809
+299,blossomstudent01,codecombat.com,the-agrippa-defense-b,5632661322961295f9428638,663de608483c9240bb4d8cbf,2025-03-29 07:26:56.038341
+300,blossomstudent53,codecombat.com,kithgard-librarian,560f1a9f22961295f9427742,6778e52383e88a2c7405fd9f,2025-03-29 07:53:33.628322
+301,blossomstudent00,codecombat.com,Kithgard Gates,560f1a9f22961295f9427742,,2025-03-29 07:59:17
+302,blossomstudent00,codecombat.com,Wakka Maul,560f1a9f22961295f9427742,,2025-03-29 07:59:17
+303,blossomstudent00,codecombat.com,Safe Place,560f1a9f22961295f9427742,,2025-03-29 07:59:17
+304,blossomstudent00,codecombat.com,The Final Kithmaze,560f1a9f22961295f9427742,,2025-03-29 07:59:17
+305,blossomstudent00,codecombat.com,Master Of Names Debug,560f1a9f22961295f9427742,,2025-03-29 07:59:17
+306,blossomstudent00,codecombat.com,Master of Names,560f1a9f22961295f9427742,,2025-03-29 07:59:17
+307,blossomstudent00,codecombat.com,Cupboards of Kithgard B,560f1a9f22961295f9427742,,2025-03-29 07:59:17
+308,blossomstudent00,codecombat.com,Lowly Kithmen,560f1a9f22961295f9427742,,2025-03-29 07:59:17
+309,blossomstudent00,codecombat.com,Cupboards of Kithgard A,560f1a9f22961295f9427742,,2025-03-29 07:59:17
+310,blossomstudent00,codecombat.com,Closing the Distance,560f1a9f22961295f9427742,,2025-03-29 07:59:17
+311,blossomstudent00,codecombat.com,Cupboards of Kithgard,560f1a9f22961295f9427742,,2025-03-29 07:59:17
+312,blossomstudent00,codecombat.com,Known Enemy,560f1a9f22961295f9427742,,2025-03-29 07:59:17
+313,blossomstudent00,codecombat.com,Loop Warehouse,560f1a9f22961295f9427742,,2025-03-29 07:59:17
+314,blossomstudent00,codecombat.com,Dread Door,560f1a9f22961295f9427742,,2025-03-29 07:59:17
+315,blossomstudent00,codecombat.com,The Raised Sword,560f1a9f22961295f9427742,,2025-03-29 07:59:17
+316,blossomstudent00,codecombat.com,Crawlways of Kithgard,560f1a9f22961295f9427742,,2025-03-29 07:59:17
+317,blossomstudent00,codecombat.com,Hack and Dash,560f1a9f22961295f9427742,,2025-03-29 07:59:17
+318,blossomstudent00,codecombat.com,Descending Further,560f1a9f22961295f9427742,,2025-03-29 07:59:17
+319,blossomstudent00,codecombat.com,Haunted Kithmaze,560f1a9f22961295f9427742,,2025-03-29 07:59:17
+320,blossomstudent00,codecombat.com,Forgetful Gemsmith,560f1a9f22961295f9427742,,2025-03-29 07:59:17
+321,blossomstudent00,codecombat.com,Favorable Odds,560f1a9f22961295f9427742,,2025-03-29 07:59:17
+322,blossomstudent00,codecombat.com,Kounter Kithwise,560f1a9f22961295f9427742,,2025-03-29 07:59:17
+323,blossomstudent00,codecombat.com,Fire Dancing,560f1a9f22961295f9427742,,2025-03-29 07:59:17
+324,blossomstudent00,codecombat.com,Riddling Kithmaze,560f1a9f22961295f9427742,,2025-03-29 07:59:17
+325,blossomstudent00,codecombat.com,The Prisoner,560f1a9f22961295f9427742,,2025-03-29 07:59:17
+326,blossomstudent00,codecombat.com,Dungeons of Kithgard,560f1a9f22961295f9427742,,2025-03-29 07:59:17
+327,blossomstudent00,codecombat.com,Radiant Aura,560f1a9f22961295f9427742,,2025-03-29 07:59:17
+328,blossomstudent00,codecombat.com,Gems in the Deep,560f1a9f22961295f9427742,,2025-03-29 07:59:17
+329,blossomstudent00,codecombat.com,Illusory Interruption,560f1a9f22961295f9427742,,2025-03-29 07:59:17
+330,blossomstudent00,codecombat.com,Kithgard Librarian,560f1a9f22961295f9427742,,2025-03-29 07:59:17
+331,blossomstudent00,codecombat.com,Sleep Hour,560f1a9f22961295f9427742,,2025-03-29 07:59:17
+332,blossomstudent00,codecombat.com,Shadow Guard,560f1a9f22961295f9427742,,2025-03-29 07:59:17
+333,blossomstudent00,codecombat.com,True Names,560f1a9f22961295f9427742,,2025-03-29 07:59:17
+334,blossomstudent00,codecombat.com,Dangerous Steps,560f1a9f22961295f9427742,,2025-03-29 07:59:17
+335,blossomstudent00,codecombat.com,Cell Commentary,560f1a9f22961295f9427742,,2025-03-29 07:59:17
+336,blossomstudent00,codecombat.com,Enemy Mine,560f1a9f22961295f9427742,,2025-03-29 07:59:17
+337,blossomstudent00,codecombat.com,Long Steps,560f1a9f22961295f9427742,,2025-03-29 07:59:17
+338,blossomstudent00,codecombat.com,Careful Steps,560f1a9f22961295f9427742,,2025-03-29 07:59:17
+339,blossomstudent53,codecombat.com,the-prisoner,560f1a9f22961295f9427742,6778e52383e88a2c7405fd9f,2025-03-29 08:06:23.275181
+340,blossomstudent53,codecombat.com,fire-dancing,560f1a9f22961295f9427742,6778e52383e88a2c7405fd9f,2025-03-29 08:10:39.809579
+341,blossomstudent05,codecombat.com,Kithgard Gates,560f1a9f22961295f9427742,,2025-03-29 08:12:54
+342,blossomstudent05,codecombat.com,Wakka Maul,560f1a9f22961295f9427742,,2025-03-29 08:12:54
+343,blossomstudent05,codecombat.com,Safe Place,560f1a9f22961295f9427742,,2025-03-29 08:12:54
+344,blossomstudent05,codecombat.com,The Final Kithmaze,560f1a9f22961295f9427742,,2025-03-29 08:12:54
+345,blossomstudent05,codecombat.com,Master Of Names Debug,560f1a9f22961295f9427742,,2025-03-29 08:12:54
+346,blossomstudent05,codecombat.com,Master of Names,560f1a9f22961295f9427742,,2025-03-29 08:12:54
+347,blossomstudent05,codecombat.com,Cupboards of Kithgard B,560f1a9f22961295f9427742,,2025-03-29 08:12:54
+348,blossomstudent05,codecombat.com,Lowly Kithmen,560f1a9f22961295f9427742,,2025-03-29 08:12:54
+349,blossomstudent05,codecombat.com,Cupboards of Kithgard A,560f1a9f22961295f9427742,,2025-03-29 08:12:54
+350,blossomstudent05,codecombat.com,Closing the Distance,560f1a9f22961295f9427742,,2025-03-29 08:12:54
+351,blossomstudent05,codecombat.com,Cupboards of Kithgard,560f1a9f22961295f9427742,,2025-03-29 08:12:54
+352,blossomstudent05,codecombat.com,Known Enemy,560f1a9f22961295f9427742,,2025-03-29 08:12:54
+353,blossomstudent05,codecombat.com,Loop Warehouse,560f1a9f22961295f9427742,,2025-03-29 08:12:54
+354,blossomstudent05,codecombat.com,Dread Door,560f1a9f22961295f9427742,,2025-03-29 08:12:54
+355,blossomstudent05,codecombat.com,The Raised Sword,560f1a9f22961295f9427742,,2025-03-29 08:12:54
+356,blossomstudent05,codecombat.com,Crawlways of Kithgard,560f1a9f22961295f9427742,,2025-03-29 08:12:54
+357,blossomstudent05,codecombat.com,Hack and Dash,560f1a9f22961295f9427742,,2025-03-29 08:12:54
+358,blossomstudent05,codecombat.com,Descending Further,560f1a9f22961295f9427742,,2025-03-29 08:12:54
+359,blossomstudent05,codecombat.com,Haunted Kithmaze,560f1a9f22961295f9427742,,2025-03-29 08:12:54
+360,blossomstudent05,codecombat.com,Forgetful Gemsmith,560f1a9f22961295f9427742,,2025-03-29 08:12:54
+361,blossomstudent05,codecombat.com,Favorable Odds,560f1a9f22961295f9427742,,2025-03-29 08:12:54
+362,blossomstudent05,codecombat.com,Kounter Kithwise,560f1a9f22961295f9427742,,2025-03-29 08:12:54
+363,blossomstudent05,codecombat.com,Fire Dancing,560f1a9f22961295f9427742,,2025-03-29 08:12:54
+364,blossomstudent05,codecombat.com,Riddling Kithmaze,560f1a9f22961295f9427742,,2025-03-29 08:12:54
+365,blossomstudent05,codecombat.com,The Prisoner,560f1a9f22961295f9427742,,2025-03-29 08:12:54
+366,blossomstudent05,codecombat.com,Dungeons of Kithgard,560f1a9f22961295f9427742,,2025-03-29 08:12:54
+367,blossomstudent05,codecombat.com,Radiant Aura,560f1a9f22961295f9427742,,2025-03-29 08:12:54
+368,blossomstudent05,codecombat.com,Gems in the Deep,560f1a9f22961295f9427742,,2025-03-29 08:12:54
+369,blossomstudent05,codecombat.com,Illusory Interruption,560f1a9f22961295f9427742,,2025-03-29 08:12:54
+370,blossomstudent05,codecombat.com,Kithgard Librarian,560f1a9f22961295f9427742,,2025-03-29 08:12:54
+371,blossomstudent05,codecombat.com,Sleep Hour,560f1a9f22961295f9427742,,2025-03-29 08:12:54
+372,blossomstudent05,codecombat.com,Shadow Guard,560f1a9f22961295f9427742,,2025-03-29 08:12:54
+373,blossomstudent05,codecombat.com,True Names,560f1a9f22961295f9427742,,2025-03-29 08:12:54
+374,blossomstudent05,codecombat.com,Dangerous Steps,560f1a9f22961295f9427742,,2025-03-29 08:12:54
+375,blossomstudent05,codecombat.com,Cell Commentary,560f1a9f22961295f9427742,,2025-03-29 08:12:54
+376,blossomstudent05,codecombat.com,Enemy Mine,560f1a9f22961295f9427742,,2025-03-29 08:12:54
+377,blossomstudent05,codecombat.com,Long Steps,560f1a9f22961295f9427742,,2025-03-29 08:12:54
+378,blossomstudent05,codecombat.com,Careful Steps,560f1a9f22961295f9427742,,2025-03-29 08:12:54
+379,blossomstudent05,codecombat.com,Picnic Buster,5632661322961295f9428638,,2025-03-29 08:13:25
+380,blossomstudent05,codecombat.com,If-stravaganza,5632661322961295f9428638,,2025-03-29 08:13:25
+381,blossomstudent05,codecombat.com,Patrol Buster,5632661322961295f9428638,,2025-03-29 08:13:25
+382,blossomstudent05,codecombat.com,Village Guard,5632661322961295f9428638,,2025-03-29 08:13:25
+383,blossomstudent05,codecombat.com,Greed Traps,5632661322961295f9428638,,2025-03-29 08:13:25
+384,blossomstudent05,codecombat.com,Backwoods Buddy,5632661322961295f9428638,,2025-03-29 08:13:25
+385,blossomstudent05,codecombat.com,Woodland Cubbies,5632661322961295f9428638,,2025-03-29 08:13:25
+386,blossomstudent05,codecombat.com,Functional Patrol,5632661322961295f9428638,,2025-03-29 08:13:25
+387,blossomstudent05,codecombat.com,Ogre Encampment,5632661322961295f9428638,,2025-03-29 08:13:25
+388,blossomstudent05,codecombat.com,Woodland Cleaver,5632661322961295f9428638,,2025-03-29 08:13:25
+389,blossomstudent05,codecombat.com,Gem Berries,5632661322961295f9428638,,2025-03-29 08:13:25
+390,blossomstudent05,codecombat.com,Closed Crossroad,5632661322961295f9428638,,2025-03-29 08:13:25
+391,blossomstudent05,codecombat.com,Thornbush Farm,5632661322961295f9428638,,2025-03-29 08:13:25
+392,blossomstudent05,codecombat.com,Back to Back,5632661322961295f9428638,,2025-03-29 08:13:25
+393,blossomstudent05,codecombat.com,Buddy's Name,5632661322961295f9428638,,2025-03-29 08:13:25
+394,blossomstudent05,codecombat.com,Elseweyr,5632661322961295f9428638,,2025-03-29 08:13:25
+395,blossomstudent05,codecombat.com,Forest Evasion,5632661322961295f9428638,,2025-03-29 08:13:25
+396,blossomstudent05,codecombat.com,Eagle Eye,5632661322961295f9428638,,2025-03-29 08:13:25
+397,blossomstudent05,codecombat.com,Last Cannon,5632661322961295f9428638,,2025-03-29 08:13:25
+398,blossomstudent05,codecombat.com,Sacred Glade,5632661322961295f9428638,,2025-03-29 08:13:25
+399,blossomstudent05,codecombat.com,Buddy's Name A,5632661322961295f9428638,,2025-03-29 08:13:25
+400,blossomstudent05,codecombat.com,Agrippa Refactored,5632661322961295f9428638,,2025-03-29 08:13:25
+401,blossomstudent05,codecombat.com,One Wrong Step,5632661322961295f9428638,,2025-03-29 08:13:25
+402,blossomstudent05,codecombat.com,Patrol Buster A,5632661322961295f9428638,,2025-03-29 08:13:25
+403,blossomstudent05,codecombat.com,Backwoods Ambush,5632661322961295f9428638,,2025-03-29 08:13:25
+404,blossomstudent05,codecombat.com,Cleanup,5632661322961295f9428638,,2025-03-29 08:13:25
+405,blossomstudent05,codecombat.com,Phd Kitty,5632661322961295f9428638,,2025-03-29 08:13:25
+406,blossomstudent05,codecombat.com,Backwoods Standoff B,5632661322961295f9428638,,2025-03-29 08:13:25
+407,blossomstudent05,codecombat.com,Middle Point,5632661322961295f9428638,,2025-03-29 08:13:25
+408,blossomstudent05,codecombat.com,Backwoods Standoff A,5632661322961295f9428638,,2025-03-29 08:13:25
+409,blossomstudent05,codecombat.com,Backwoods Standoff,5632661322961295f9428638,,2025-03-29 08:13:25
+410,blossomstudent05,codecombat.com,Course: Winding Trail,5632661322961295f9428638,,2025-03-29 08:13:25
+411,blossomstudent05,codecombat.com,Buddy's Name B,5632661322961295f9428638,,2025-03-29 08:13:25
+412,blossomstudent05,codecombat.com,Return to Thornbush Farm A,5632661322961295f9428638,,2025-03-29 08:13:25
+413,blossomstudent05,codecombat.com,Return to Thornbush Farm B,5632661322961295f9428638,,2025-03-29 08:13:25
+414,blossomstudent05,codecombat.com,Pet Quiz,5632661322961295f9428638,,2025-03-29 08:13:25
+415,blossomstudent05,codecombat.com,Return to Thornbush Farm,5632661322961295f9428638,,2025-03-29 08:13:25
+416,blossomstudent05,codecombat.com,Range Finder,5632661322961295f9428638,,2025-03-29 08:13:25
+417,blossomstudent05,codecombat.com,Free Billy,5632661322961295f9428638,,2025-03-29 08:13:25
+418,blossomstudent05,codecombat.com,Timberland Trap,5632661322961295f9428638,,2025-03-29 08:13:25
+419,blossomstudent05,codecombat.com,Peasant Protection,5632661322961295f9428638,,2025-03-29 08:13:25
+420,blossomstudent05,codecombat.com,Defense of Plainswood,5632661322961295f9428638,,2025-03-29 08:13:25
+421,blossomstudent05,codecombat.com,Timely Word,5632661322961295f9428638,,2025-03-29 08:13:25
+422,blossomstudent05,codecombat.com,Go Fetch,5632661322961295f9428638,,2025-03-29 08:13:25
+423,blossomstudent05,codecombat.com,Munchkin Swarm,5632661322961295f9428638,,2025-03-29 08:13:25
+424,blossomstudent05,codecombat.com,Leave it to Cleaver,5632661322961295f9428638,,2025-03-29 08:13:25
+425,blossomstudent05,codecombat.com,Maniac Munchkins,5632661322961295f9428638,,2025-03-29 08:13:25
+426,blossomstudent05,codecombat.com,Forest Fire Dancing,5632661322961295f9428638,,2025-03-29 08:13:25
+427,blossomstudent05,codecombat.com,Stillness in Motion,5632661322961295f9428638,,2025-03-29 08:13:25
+428,blossomstudent05,codecombat.com,Guard Dog,5632661322961295f9428638,,2025-03-29 08:13:25
+429,blossomstudent05,codecombat.com,Brave Ogres,5632661322961295f9428638,,2025-03-29 08:13:25
+430,blossomstudent05,codecombat.com,The Agrippa Defense,5632661322961295f9428638,,2025-03-29 08:13:25
+431,blossomstudent05,codecombat.com,Forest Miners,5632661322961295f9428638,,2025-03-29 08:13:25
+432,blossomstudent05,codecombat.com,The Agrippa Defense B,5632661322961295f9428638,,2025-03-29 08:13:25
+433,blossomstudent05,codecombat.com,Long Road,5632661322961295f9428638,,2025-03-29 08:13:25
+434,blossomstudent05,codecombat.com,The Agrippa Defense A,5632661322961295f9428638,,2025-03-29 08:13:25
+435,blossomstudent05,codecombat.com,Last Guardian,5632661322961295f9428638,,2025-03-29 08:13:25
+436,blossomstudent05,codecombat.com,Dangerous Tree,5632661322961295f9428638,,2025-03-29 08:13:25
+437,blossomstudent05,codecombat.com,Seek-and-Hide,5632661322961295f9428638,,2025-03-29 08:13:25
+438,blossomstudent05,codecombat.com,Village Rover,5632661322961295f9428638,,2025-03-29 08:13:25
+439,blossomstudent05,codecombat.com,Tough Bait,5632661322961295f9428638,,2025-03-29 08:13:25
+440,blossomstudent05,codecombat.com,Forest Jogging,5632661322961295f9428638,,2025-03-29 08:13:25
+441,blossomstudent05,codecombat.com,Silent Village,5632661322961295f9428638,,2025-03-29 08:13:25
+442,blossomstudent05,codecombat.com,Tomb Ghost,5632661322961295f9428638,,2025-03-29 08:13:25
+443,blossomstudent05,codecombat.com,Village Warder,5632661322961295f9428638,,2025-03-29 08:13:25
+444,blossomstudent05,codecombat.com,Tomb Raider,5632661322961295f9428638,,2025-03-29 08:13:25
+445,blossomstudent05,codecombat.com,Village Champion,5632661322961295f9428638,,2025-03-29 08:13:25
+446,blossomstudent05,codecombat.com,Forest Cannon Dancing,5632661322961295f9428638,,2025-03-29 08:13:25
+447,blossomstudent05,codecombat.com,Backwoods Fork,5632661322961295f9428638,,2025-03-29 08:13:25
+448,blossomstudent05,codecombat.com,A Fine Mint,5632661322961295f9428638,,2025-03-29 08:13:25
+449,blossomstudent05,codecombat.com,Sharp Bait,5632661322961295f9428638,,2025-03-29 08:13:25
+450,blossomstudent05,codecombat.com,Power Peak,5632661322961295f9428638,,2025-03-29 08:13:25
+451,blossomstudent05,codecombat.com,Eventful Skirmish,5632661322961295f9428638,,2025-03-29 08:13:25
+452,blossomstudent05,codecombat.com,Hero's Journey,5789587aad86a6efb573701e,,2025-03-29 08:13:32
+453,blossomstudent05,codecombat.com,Click Gait,5789587aad86a6efb573701e,,2025-03-29 08:13:32
+454,blossomstudent05,codecombat.com,Vorpal Mouse,5789587aad86a6efb573701e,,2025-03-29 08:13:32
+455,blossomstudent05,codecombat.com,A-maze-ing,5789587aad86a6efb573701e,,2025-03-29 08:13:32
+456,blossomstudent05,codecombat.com,Crushing It,5789587aad86a6efb573701e,,2025-03-29 08:13:32
+457,blossomstudent05,codecombat.com,Over the Garden Wall,5789587aad86a6efb573701e,,2025-03-29 08:13:32
+458,blossomstudent05,codecombat.com,Jailbreak,5789587aad86a6efb573701e,,2025-03-29 08:13:32
+459,blossomstudent05,codecombat.com,Ranger Danger,5789587aad86a6efb573701e,,2025-03-29 08:13:32
+460,blossomstudent05,codecombat.com,Gemtacular,5789587aad86a6efb573701e,,2025-03-29 08:13:32
+461,blossomstudent05,codecombat.com,Army Training,5789587aad86a6efb573701e,,2025-03-29 08:13:32
+462,blossomstudent05,codecombat.com,Give and Take,5789587aad86a6efb573701e,,2025-03-29 08:13:32
+463,blossomstudent05,codecombat.com,Risk and Reward,5789587aad86a6efb573701e,,2025-03-29 08:13:32
+464,blossomstudent05,codecombat.com,Hedge Magic,5789587aad86a6efb573701e,,2025-03-29 08:13:32
+465,blossomstudent05,codecombat.com,Forest Incursion,5789587aad86a6efb573701e,,2025-03-29 08:13:32
+466,blossomstudent05,codecombat.com,Throwing Fire,5789587aad86a6efb573701e,,2025-03-29 08:13:32
+467,blossomstudent05,codecombat.com,Them Bones,5789587aad86a6efb573701e,,2025-03-29 08:13:32
+468,blossomstudent05,codecombat.com,Time To Live,5789587aad86a6efb573701e,,2025-03-29 08:13:32
+469,blossomstudent05,codecombat.com,Game Grove,5789587aad86a6efb573701e,,2025-03-29 08:13:32
+470,blossomstudent05,codecombat.com,Persistence Pays,5789587aad86a6efb573701e,,2025-03-29 08:13:32
+471,blossomstudent05,codecombat.com,Peasants and Munchkins,5789587aad86a6efb573701e,,2025-03-29 08:13:32
+472,blossomstudent05,codecombat.com,Seeing is Believing,5789587aad86a6efb573701e,,2025-03-29 08:13:32
+473,blossomstudent05,codecombat.com,Behavior Driven Development,5789587aad86a6efb573701e,,2025-03-29 08:13:32
+474,blossomstudent05,codecombat.com,Tabula Rasa,5789587aad86a6efb573701e,,2025-03-29 08:13:32
+475,blossomstudent07,codecombat.com,Kithgard Gates,560f1a9f22961295f9427742,,2025-03-29 08:13:55
+476,blossomstudent07,codecombat.com,Wakka Maul,560f1a9f22961295f9427742,,2025-03-29 08:13:55
+477,blossomstudent07,codecombat.com,Safe Place,560f1a9f22961295f9427742,,2025-03-29 08:13:55
+478,blossomstudent07,codecombat.com,The Final Kithmaze,560f1a9f22961295f9427742,,2025-03-29 08:13:55
+479,blossomstudent07,codecombat.com,Master Of Names Debug,560f1a9f22961295f9427742,,2025-03-29 08:13:55
+480,blossomstudent07,codecombat.com,Master of Names,560f1a9f22961295f9427742,,2025-03-29 08:13:55
+481,blossomstudent07,codecombat.com,Cupboards of Kithgard B,560f1a9f22961295f9427742,,2025-03-29 08:13:55
+482,blossomstudent07,codecombat.com,Lowly Kithmen,560f1a9f22961295f9427742,,2025-03-29 08:13:55
+483,blossomstudent07,codecombat.com,Cupboards of Kithgard A,560f1a9f22961295f9427742,,2025-03-29 08:13:55
+484,blossomstudent07,codecombat.com,Closing the Distance,560f1a9f22961295f9427742,,2025-03-29 08:13:55
+485,blossomstudent07,codecombat.com,Cupboards of Kithgard,560f1a9f22961295f9427742,,2025-03-29 08:13:55
+486,blossomstudent07,codecombat.com,Known Enemy,560f1a9f22961295f9427742,,2025-03-29 08:13:55
+487,blossomstudent07,codecombat.com,Loop Warehouse,560f1a9f22961295f9427742,,2025-03-29 08:13:55
+488,blossomstudent07,codecombat.com,Dread Door,560f1a9f22961295f9427742,,2025-03-29 08:13:55
+489,blossomstudent07,codecombat.com,The Raised Sword,560f1a9f22961295f9427742,,2025-03-29 08:13:55
+490,blossomstudent07,codecombat.com,Crawlways of Kithgard,560f1a9f22961295f9427742,,2025-03-29 08:13:55
+491,blossomstudent07,codecombat.com,Hack and Dash,560f1a9f22961295f9427742,,2025-03-29 08:13:55
+492,blossomstudent07,codecombat.com,Descending Further,560f1a9f22961295f9427742,,2025-03-29 08:13:55
+493,blossomstudent07,codecombat.com,Haunted Kithmaze,560f1a9f22961295f9427742,,2025-03-29 08:13:55
+494,blossomstudent07,codecombat.com,Forgetful Gemsmith,560f1a9f22961295f9427742,,2025-03-29 08:13:55
+495,blossomstudent07,codecombat.com,Favorable Odds,560f1a9f22961295f9427742,,2025-03-29 08:13:55
+496,blossomstudent07,codecombat.com,Kounter Kithwise,560f1a9f22961295f9427742,,2025-03-29 08:13:55
+497,blossomstudent07,codecombat.com,Fire Dancing,560f1a9f22961295f9427742,,2025-03-29 08:13:55
+498,blossomstudent07,codecombat.com,Riddling Kithmaze,560f1a9f22961295f9427742,,2025-03-29 08:13:55
+499,blossomstudent07,codecombat.com,The Prisoner,560f1a9f22961295f9427742,,2025-03-29 08:13:55
+500,blossomstudent07,codecombat.com,Dungeons of Kithgard,560f1a9f22961295f9427742,,2025-03-29 08:13:55
+501,blossomstudent07,codecombat.com,Radiant Aura,560f1a9f22961295f9427742,,2025-03-29 08:13:55
+502,blossomstudent07,codecombat.com,Gems in the Deep,560f1a9f22961295f9427742,,2025-03-29 08:13:55
+503,blossomstudent07,codecombat.com,Illusory Interruption,560f1a9f22961295f9427742,,2025-03-29 08:13:55
+504,blossomstudent07,codecombat.com,Kithgard Librarian,560f1a9f22961295f9427742,,2025-03-29 08:13:55
+505,blossomstudent07,codecombat.com,Sleep Hour,560f1a9f22961295f9427742,,2025-03-29 08:13:55
+506,blossomstudent07,codecombat.com,Shadow Guard,560f1a9f22961295f9427742,,2025-03-29 08:13:55
+507,blossomstudent07,codecombat.com,True Names,560f1a9f22961295f9427742,,2025-03-29 08:13:55
+508,blossomstudent07,codecombat.com,Dangerous Steps,560f1a9f22961295f9427742,,2025-03-29 08:13:55
+509,blossomstudent07,codecombat.com,Cell Commentary,560f1a9f22961295f9427742,,2025-03-29 08:13:55
+510,blossomstudent07,codecombat.com,Enemy Mine,560f1a9f22961295f9427742,,2025-03-29 08:13:55
+511,blossomstudent07,codecombat.com,Long Steps,560f1a9f22961295f9427742,,2025-03-29 08:13:55
+512,blossomstudent07,codecombat.com,Careful Steps,560f1a9f22961295f9427742,,2025-03-29 08:13:55
+513,blossomstudent07,codecombat.com,Picnic Buster,5632661322961295f9428638,,2025-03-29 08:13:58
+514,blossomstudent07,codecombat.com,If-stravaganza,5632661322961295f9428638,,2025-03-29 08:13:58
+515,blossomstudent07,codecombat.com,Patrol Buster,5632661322961295f9428638,,2025-03-29 08:13:58
+516,blossomstudent07,codecombat.com,Village Guard,5632661322961295f9428638,,2025-03-29 08:13:58
+517,blossomstudent07,codecombat.com,Greed Traps,5632661322961295f9428638,,2025-03-29 08:13:58
+518,blossomstudent07,codecombat.com,Backwoods Buddy,5632661322961295f9428638,,2025-03-29 08:13:58
+519,blossomstudent07,codecombat.com,Woodland Cubbies,5632661322961295f9428638,,2025-03-29 08:13:58
+520,blossomstudent07,codecombat.com,Functional Patrol,5632661322961295f9428638,,2025-03-29 08:13:58
+521,blossomstudent07,codecombat.com,Ogre Encampment,5632661322961295f9428638,,2025-03-29 08:13:58
+522,blossomstudent07,codecombat.com,Woodland Cleaver,5632661322961295f9428638,,2025-03-29 08:13:58
+523,blossomstudent07,codecombat.com,Gem Berries,5632661322961295f9428638,,2025-03-29 08:13:58
+524,blossomstudent07,codecombat.com,Closed Crossroad,5632661322961295f9428638,,2025-03-29 08:13:58
+525,blossomstudent07,codecombat.com,Thornbush Farm,5632661322961295f9428638,,2025-03-29 08:13:58
+526,blossomstudent07,codecombat.com,Back to Back,5632661322961295f9428638,,2025-03-29 08:13:58
+527,blossomstudent07,codecombat.com,Buddy's Name,5632661322961295f9428638,,2025-03-29 08:13:58
+528,blossomstudent07,codecombat.com,Elseweyr,5632661322961295f9428638,,2025-03-29 08:13:58
+529,blossomstudent07,codecombat.com,Forest Evasion,5632661322961295f9428638,,2025-03-29 08:13:58
+530,blossomstudent07,codecombat.com,Eagle Eye,5632661322961295f9428638,,2025-03-29 08:13:58
+531,blossomstudent07,codecombat.com,Last Cannon,5632661322961295f9428638,,2025-03-29 08:13:58
+532,blossomstudent07,codecombat.com,Sacred Glade,5632661322961295f9428638,,2025-03-29 08:13:58
+533,blossomstudent07,codecombat.com,Buddy's Name A,5632661322961295f9428638,,2025-03-29 08:13:58
+534,blossomstudent07,codecombat.com,Agrippa Refactored,5632661322961295f9428638,,2025-03-29 08:13:58
+535,blossomstudent07,codecombat.com,One Wrong Step,5632661322961295f9428638,,2025-03-29 08:13:58
+536,blossomstudent07,codecombat.com,Patrol Buster A,5632661322961295f9428638,,2025-03-29 08:13:58
+537,blossomstudent07,codecombat.com,Backwoods Ambush,5632661322961295f9428638,,2025-03-29 08:13:58
+538,blossomstudent07,codecombat.com,Cleanup,5632661322961295f9428638,,2025-03-29 08:13:58
+539,blossomstudent07,codecombat.com,Phd Kitty,5632661322961295f9428638,,2025-03-29 08:13:58
+540,blossomstudent07,codecombat.com,Backwoods Standoff B,5632661322961295f9428638,,2025-03-29 08:13:58
+541,blossomstudent07,codecombat.com,Middle Point,5632661322961295f9428638,,2025-03-29 08:13:58
+542,blossomstudent07,codecombat.com,Backwoods Standoff A,5632661322961295f9428638,,2025-03-29 08:13:58
+543,blossomstudent07,codecombat.com,Backwoods Standoff,5632661322961295f9428638,,2025-03-29 08:13:58
+544,blossomstudent07,codecombat.com,Course: Winding Trail,5632661322961295f9428638,,2025-03-29 08:13:58
+545,blossomstudent07,codecombat.com,Buddy's Name B,5632661322961295f9428638,,2025-03-29 08:13:58
+546,blossomstudent07,codecombat.com,Return to Thornbush Farm A,5632661322961295f9428638,,2025-03-29 08:13:58
+547,blossomstudent07,codecombat.com,Return to Thornbush Farm B,5632661322961295f9428638,,2025-03-29 08:13:58
+548,blossomstudent07,codecombat.com,Pet Quiz,5632661322961295f9428638,,2025-03-29 08:13:58
+549,blossomstudent07,codecombat.com,Return to Thornbush Farm,5632661322961295f9428638,,2025-03-29 08:13:58
+550,blossomstudent07,codecombat.com,Range Finder,5632661322961295f9428638,,2025-03-29 08:13:58
+551,blossomstudent07,codecombat.com,Free Billy,5632661322961295f9428638,,2025-03-29 08:13:58
+552,blossomstudent07,codecombat.com,Timberland Trap,5632661322961295f9428638,,2025-03-29 08:13:58
+553,blossomstudent07,codecombat.com,Peasant Protection,5632661322961295f9428638,,2025-03-29 08:13:58
+554,blossomstudent07,codecombat.com,Defense of Plainswood,5632661322961295f9428638,,2025-03-29 08:13:58
+555,blossomstudent07,codecombat.com,Timely Word,5632661322961295f9428638,,2025-03-29 08:13:58
+556,blossomstudent07,codecombat.com,Go Fetch,5632661322961295f9428638,,2025-03-29 08:13:58
+557,blossomstudent07,codecombat.com,Munchkin Swarm,5632661322961295f9428638,,2025-03-29 08:13:58
+558,blossomstudent07,codecombat.com,Leave it to Cleaver,5632661322961295f9428638,,2025-03-29 08:13:58
+559,blossomstudent07,codecombat.com,Maniac Munchkins,5632661322961295f9428638,,2025-03-29 08:13:58
+560,blossomstudent07,codecombat.com,Forest Fire Dancing,5632661322961295f9428638,,2025-03-29 08:13:58
+561,blossomstudent07,codecombat.com,Stillness in Motion,5632661322961295f9428638,,2025-03-29 08:13:58
+562,blossomstudent07,codecombat.com,Guard Dog,5632661322961295f9428638,,2025-03-29 08:13:58
+563,blossomstudent07,codecombat.com,Brave Ogres,5632661322961295f9428638,,2025-03-29 08:13:58
+564,blossomstudent07,codecombat.com,The Agrippa Defense,5632661322961295f9428638,,2025-03-29 08:13:58
+565,blossomstudent07,codecombat.com,Forest Miners,5632661322961295f9428638,,2025-03-29 08:13:58
+566,blossomstudent07,codecombat.com,The Agrippa Defense B,5632661322961295f9428638,,2025-03-29 08:13:58
+567,blossomstudent07,codecombat.com,Long Road,5632661322961295f9428638,,2025-03-29 08:13:58
+568,blossomstudent07,codecombat.com,The Agrippa Defense A,5632661322961295f9428638,,2025-03-29 08:13:58
+569,blossomstudent07,codecombat.com,Last Guardian,5632661322961295f9428638,,2025-03-29 08:13:58
+570,blossomstudent07,codecombat.com,Dangerous Tree,5632661322961295f9428638,,2025-03-29 08:13:58
+571,blossomstudent07,codecombat.com,Seek-and-Hide,5632661322961295f9428638,,2025-03-29 08:13:58
+572,blossomstudent07,codecombat.com,Village Rover,5632661322961295f9428638,,2025-03-29 08:13:58
+573,blossomstudent07,codecombat.com,Tough Bait,5632661322961295f9428638,,2025-03-29 08:13:58
+574,blossomstudent07,codecombat.com,Forest Jogging,5632661322961295f9428638,,2025-03-29 08:13:58
+575,blossomstudent07,codecombat.com,Silent Village,5632661322961295f9428638,,2025-03-29 08:13:58
+576,blossomstudent07,codecombat.com,Tomb Ghost,5632661322961295f9428638,,2025-03-29 08:13:58
+577,blossomstudent07,codecombat.com,Village Warder,5632661322961295f9428638,,2025-03-29 08:13:58
+578,blossomstudent07,codecombat.com,Tomb Raider,5632661322961295f9428638,,2025-03-29 08:13:58
+579,blossomstudent07,codecombat.com,Village Champion,5632661322961295f9428638,,2025-03-29 08:13:58
+580,blossomstudent07,codecombat.com,Forest Cannon Dancing,5632661322961295f9428638,,2025-03-29 08:13:58
+581,blossomstudent07,codecombat.com,Backwoods Fork,5632661322961295f9428638,,2025-03-29 08:13:58
+582,blossomstudent07,codecombat.com,A Fine Mint,5632661322961295f9428638,,2025-03-29 08:13:58
+583,blossomstudent07,codecombat.com,Sharp Bait,5632661322961295f9428638,,2025-03-29 08:13:58
+584,blossomstudent07,codecombat.com,Power Peak,5632661322961295f9428638,,2025-03-29 08:13:58
+585,blossomstudent07,codecombat.com,Eventful Skirmish,5632661322961295f9428638,,2025-03-29 08:13:58
+586,blossomstudent07,codecombat.com,Hero's Journey,5789587aad86a6efb573701e,,2025-03-29 08:14:02
+587,blossomstudent07,codecombat.com,Click Gait,5789587aad86a6efb573701e,,2025-03-29 08:14:02
+588,blossomstudent07,codecombat.com,Vorpal Mouse,5789587aad86a6efb573701e,,2025-03-29 08:14:02
+589,blossomstudent07,codecombat.com,A-maze-ing,5789587aad86a6efb573701e,,2025-03-29 08:14:02
+590,blossomstudent07,codecombat.com,Crushing It,5789587aad86a6efb573701e,,2025-03-29 08:14:02
+591,blossomstudent07,codecombat.com,Over the Garden Wall,5789587aad86a6efb573701e,,2025-03-29 08:14:02
+592,blossomstudent07,codecombat.com,Jailbreak,5789587aad86a6efb573701e,,2025-03-29 08:14:02
+593,blossomstudent07,codecombat.com,Ranger Danger,5789587aad86a6efb573701e,,2025-03-29 08:14:02
+594,blossomstudent07,codecombat.com,Gemtacular,5789587aad86a6efb573701e,,2025-03-29 08:14:02
+595,blossomstudent07,codecombat.com,Army Training,5789587aad86a6efb573701e,,2025-03-29 08:14:02
+596,blossomstudent07,codecombat.com,Give and Take,5789587aad86a6efb573701e,,2025-03-29 08:14:02
+597,blossomstudent07,codecombat.com,Risk and Reward,5789587aad86a6efb573701e,,2025-03-29 08:14:02
+598,blossomstudent07,codecombat.com,Hedge Magic,5789587aad86a6efb573701e,,2025-03-29 08:14:02
+599,blossomstudent07,codecombat.com,Forest Incursion,5789587aad86a6efb573701e,,2025-03-29 08:14:02
+600,blossomstudent07,codecombat.com,Throwing Fire,5789587aad86a6efb573701e,,2025-03-29 08:14:02
+601,blossomstudent07,codecombat.com,Them Bones,5789587aad86a6efb573701e,,2025-03-29 08:14:02
+602,blossomstudent07,codecombat.com,Time To Live,5789587aad86a6efb573701e,,2025-03-29 08:14:02
+603,blossomstudent07,codecombat.com,Game Grove,5789587aad86a6efb573701e,,2025-03-29 08:14:02
+604,blossomstudent07,codecombat.com,Persistence Pays,5789587aad86a6efb573701e,,2025-03-29 08:14:02
+605,blossomstudent07,codecombat.com,Peasants and Munchkins,5789587aad86a6efb573701e,,2025-03-29 08:14:02
+606,blossomstudent07,codecombat.com,Seeing is Believing,5789587aad86a6efb573701e,,2025-03-29 08:14:02
+607,blossomstudent07,codecombat.com,Behavior Driven Development,5789587aad86a6efb573701e,,2025-03-29 08:14:02
+608,blossomstudent07,codecombat.com,Tabula Rasa,5789587aad86a6efb573701e,,2025-03-29 08:14:02
+609,blossomstudent01,codecombat.com,Kithgard Gates,560f1a9f22961295f9427742,,2025-03-29 08:14:19
+610,blossomstudent01,codecombat.com,Wakka Maul,560f1a9f22961295f9427742,,2025-03-29 08:14:19
+611,blossomstudent01,codecombat.com,Safe Place,560f1a9f22961295f9427742,,2025-03-29 08:14:19
+612,blossomstudent01,codecombat.com,The Final Kithmaze,560f1a9f22961295f9427742,,2025-03-29 08:14:19
+613,blossomstudent01,codecombat.com,Master Of Names Debug,560f1a9f22961295f9427742,,2025-03-29 08:14:19
+614,blossomstudent01,codecombat.com,Master of Names,560f1a9f22961295f9427742,,2025-03-29 08:14:19
+615,blossomstudent01,codecombat.com,Cupboards of Kithgard B,560f1a9f22961295f9427742,,2025-03-29 08:14:19
+616,blossomstudent01,codecombat.com,Lowly Kithmen,560f1a9f22961295f9427742,,2025-03-29 08:14:19
+617,blossomstudent01,codecombat.com,Cupboards of Kithgard A,560f1a9f22961295f9427742,,2025-03-29 08:14:19
+618,blossomstudent01,codecombat.com,Closing the Distance,560f1a9f22961295f9427742,,2025-03-29 08:14:19
+619,blossomstudent01,codecombat.com,Cupboards of Kithgard,560f1a9f22961295f9427742,,2025-03-29 08:14:19
+620,blossomstudent01,codecombat.com,Known Enemy,560f1a9f22961295f9427742,,2025-03-29 08:14:19
+621,blossomstudent01,codecombat.com,Loop Warehouse,560f1a9f22961295f9427742,,2025-03-29 08:14:19
+622,blossomstudent01,codecombat.com,Dread Door,560f1a9f22961295f9427742,,2025-03-29 08:14:19
+623,blossomstudent01,codecombat.com,The Raised Sword,560f1a9f22961295f9427742,,2025-03-29 08:14:19
+624,blossomstudent01,codecombat.com,Crawlways of Kithgard,560f1a9f22961295f9427742,,2025-03-29 08:14:19
+625,blossomstudent01,codecombat.com,Hack and Dash,560f1a9f22961295f9427742,,2025-03-29 08:14:19
+626,blossomstudent01,codecombat.com,Descending Further,560f1a9f22961295f9427742,,2025-03-29 08:14:19
+627,blossomstudent01,codecombat.com,Haunted Kithmaze,560f1a9f22961295f9427742,,2025-03-29 08:14:19
+628,blossomstudent01,codecombat.com,Forgetful Gemsmith,560f1a9f22961295f9427742,,2025-03-29 08:14:19
+629,blossomstudent01,codecombat.com,Favorable Odds,560f1a9f22961295f9427742,,2025-03-29 08:14:19
+630,blossomstudent01,codecombat.com,Kounter Kithwise,560f1a9f22961295f9427742,,2025-03-29 08:14:19
+631,blossomstudent01,codecombat.com,Fire Dancing,560f1a9f22961295f9427742,,2025-03-29 08:14:19
+632,blossomstudent01,codecombat.com,Riddling Kithmaze,560f1a9f22961295f9427742,,2025-03-29 08:14:19
+633,blossomstudent01,codecombat.com,The Prisoner,560f1a9f22961295f9427742,,2025-03-29 08:14:19
+634,blossomstudent01,codecombat.com,Dungeons of Kithgard,560f1a9f22961295f9427742,,2025-03-29 08:14:19
+635,blossomstudent01,codecombat.com,Radiant Aura,560f1a9f22961295f9427742,,2025-03-29 08:14:19
+636,blossomstudent01,codecombat.com,Gems in the Deep,560f1a9f22961295f9427742,,2025-03-29 08:14:19
+637,blossomstudent01,codecombat.com,Illusory Interruption,560f1a9f22961295f9427742,,2025-03-29 08:14:19
+638,blossomstudent01,codecombat.com,Kithgard Librarian,560f1a9f22961295f9427742,,2025-03-29 08:14:19
+639,blossomstudent01,codecombat.com,Sleep Hour,560f1a9f22961295f9427742,,2025-03-29 08:14:19
+640,blossomstudent01,codecombat.com,Shadow Guard,560f1a9f22961295f9427742,,2025-03-29 08:14:19
+641,blossomstudent01,codecombat.com,True Names,560f1a9f22961295f9427742,,2025-03-29 08:14:19
+642,blossomstudent01,codecombat.com,Dangerous Steps,560f1a9f22961295f9427742,,2025-03-29 08:14:19
+643,blossomstudent01,codecombat.com,Cell Commentary,560f1a9f22961295f9427742,,2025-03-29 08:14:19
+644,blossomstudent01,codecombat.com,Enemy Mine,560f1a9f22961295f9427742,,2025-03-29 08:14:19
+645,blossomstudent01,codecombat.com,Long Steps,560f1a9f22961295f9427742,,2025-03-29 08:14:19
+646,blossomstudent01,codecombat.com,Careful Steps,560f1a9f22961295f9427742,,2025-03-29 08:14:19
+647,blossomstudent01,codecombat.com,Picnic Buster,5632661322961295f9428638,,2025-03-29 08:14:26
+648,blossomstudent01,codecombat.com,If-stravaganza,5632661322961295f9428638,,2025-03-29 08:14:26
+649,blossomstudent01,codecombat.com,Patrol Buster,5632661322961295f9428638,,2025-03-29 08:14:26
+650,blossomstudent01,codecombat.com,Village Guard,5632661322961295f9428638,,2025-03-29 08:14:26
+651,blossomstudent01,codecombat.com,Greed Traps,5632661322961295f9428638,,2025-03-29 08:14:26
+652,blossomstudent01,codecombat.com,Backwoods Buddy,5632661322961295f9428638,,2025-03-29 08:14:26
+653,blossomstudent01,codecombat.com,Woodland Cubbies,5632661322961295f9428638,,2025-03-29 08:14:26
+654,blossomstudent01,codecombat.com,Functional Patrol,5632661322961295f9428638,,2025-03-29 08:14:26
+655,blossomstudent01,codecombat.com,Ogre Encampment,5632661322961295f9428638,,2025-03-29 08:14:26
+656,blossomstudent01,codecombat.com,Woodland Cleaver,5632661322961295f9428638,,2025-03-29 08:14:26
+657,blossomstudent01,codecombat.com,Gem Berries,5632661322961295f9428638,,2025-03-29 08:14:26
+658,blossomstudent01,codecombat.com,Closed Crossroad,5632661322961295f9428638,,2025-03-29 08:14:26
+659,blossomstudent01,codecombat.com,Thornbush Farm,5632661322961295f9428638,,2025-03-29 08:14:26
+660,blossomstudent01,codecombat.com,Back to Back,5632661322961295f9428638,,2025-03-29 08:14:26
+661,blossomstudent01,codecombat.com,Buddy's Name,5632661322961295f9428638,,2025-03-29 08:14:26
+662,blossomstudent01,codecombat.com,Elseweyr,5632661322961295f9428638,,2025-03-29 08:14:26
+663,blossomstudent01,codecombat.com,Forest Evasion,5632661322961295f9428638,,2025-03-29 08:14:26
+664,blossomstudent01,codecombat.com,Eagle Eye,5632661322961295f9428638,,2025-03-29 08:14:26
+665,blossomstudent01,codecombat.com,Last Cannon,5632661322961295f9428638,,2025-03-29 08:14:26
+666,blossomstudent01,codecombat.com,Sacred Glade,5632661322961295f9428638,,2025-03-29 08:14:26
+667,blossomstudent01,codecombat.com,Buddy's Name A,5632661322961295f9428638,,2025-03-29 08:14:26
+668,blossomstudent01,codecombat.com,Agrippa Refactored,5632661322961295f9428638,,2025-03-29 08:14:26
+669,blossomstudent01,codecombat.com,One Wrong Step,5632661322961295f9428638,,2025-03-29 08:14:26
+670,blossomstudent01,codecombat.com,Patrol Buster A,5632661322961295f9428638,,2025-03-29 08:14:26
+671,blossomstudent01,codecombat.com,Backwoods Ambush,5632661322961295f9428638,,2025-03-29 08:14:26
+672,blossomstudent01,codecombat.com,Cleanup,5632661322961295f9428638,,2025-03-29 08:14:26
+673,blossomstudent01,codecombat.com,Phd Kitty,5632661322961295f9428638,,2025-03-29 08:14:26
+674,blossomstudent01,codecombat.com,Backwoods Standoff B,5632661322961295f9428638,,2025-03-29 08:14:26
+675,blossomstudent01,codecombat.com,Middle Point,5632661322961295f9428638,,2025-03-29 08:14:26
+676,blossomstudent01,codecombat.com,Backwoods Standoff A,5632661322961295f9428638,,2025-03-29 08:14:26
+677,blossomstudent01,codecombat.com,Backwoods Standoff,5632661322961295f9428638,,2025-03-29 08:14:26
+678,blossomstudent01,codecombat.com,Course: Winding Trail,5632661322961295f9428638,,2025-03-29 08:14:26
+679,blossomstudent01,codecombat.com,Buddy's Name B,5632661322961295f9428638,,2025-03-29 08:14:26
+680,blossomstudent01,codecombat.com,Return to Thornbush Farm A,5632661322961295f9428638,,2025-03-29 08:14:26
+681,blossomstudent01,codecombat.com,Return to Thornbush Farm B,5632661322961295f9428638,,2025-03-29 08:14:26
+682,blossomstudent01,codecombat.com,Pet Quiz,5632661322961295f9428638,,2025-03-29 08:14:26
+683,blossomstudent01,codecombat.com,Return to Thornbush Farm,5632661322961295f9428638,,2025-03-29 08:14:26
+684,blossomstudent01,codecombat.com,Range Finder,5632661322961295f9428638,,2025-03-29 08:14:26
+685,blossomstudent01,codecombat.com,Free Billy,5632661322961295f9428638,,2025-03-29 08:14:26
+686,blossomstudent01,codecombat.com,Timberland Trap,5632661322961295f9428638,,2025-03-29 08:14:26
+687,blossomstudent01,codecombat.com,Peasant Protection,5632661322961295f9428638,,2025-03-29 08:14:26
+688,blossomstudent01,codecombat.com,Defense of Plainswood,5632661322961295f9428638,,2025-03-29 08:14:26
+689,blossomstudent01,codecombat.com,Timely Word,5632661322961295f9428638,,2025-03-29 08:14:26
+690,blossomstudent01,codecombat.com,Go Fetch,5632661322961295f9428638,,2025-03-29 08:14:26
+691,blossomstudent01,codecombat.com,Munchkin Swarm,5632661322961295f9428638,,2025-03-29 08:14:26
+692,blossomstudent01,codecombat.com,Leave it to Cleaver,5632661322961295f9428638,,2025-03-29 08:14:26
+693,blossomstudent01,codecombat.com,Maniac Munchkins,5632661322961295f9428638,,2025-03-29 08:14:26
+694,blossomstudent01,codecombat.com,Forest Fire Dancing,5632661322961295f9428638,,2025-03-29 08:14:26
+695,blossomstudent01,codecombat.com,Stillness in Motion,5632661322961295f9428638,,2025-03-29 08:14:26
+696,blossomstudent01,codecombat.com,Guard Dog,5632661322961295f9428638,,2025-03-29 08:14:26
+697,blossomstudent01,codecombat.com,Brave Ogres,5632661322961295f9428638,,2025-03-29 08:14:26
+698,blossomstudent01,codecombat.com,The Agrippa Defense,5632661322961295f9428638,,2025-03-29 08:14:26
+699,blossomstudent01,codecombat.com,Forest Miners,5632661322961295f9428638,,2025-03-29 08:14:26
+700,blossomstudent01,codecombat.com,The Agrippa Defense B,5632661322961295f9428638,,2025-03-29 08:14:26
+701,blossomstudent01,codecombat.com,Long Road,5632661322961295f9428638,,2025-03-29 08:14:26
+702,blossomstudent01,codecombat.com,The Agrippa Defense A,5632661322961295f9428638,,2025-03-29 08:14:26
+703,blossomstudent01,codecombat.com,Last Guardian,5632661322961295f9428638,,2025-03-29 08:14:26
+704,blossomstudent01,codecombat.com,Dangerous Tree,5632661322961295f9428638,,2025-03-29 08:14:26
+705,blossomstudent01,codecombat.com,Seek-and-Hide,5632661322961295f9428638,,2025-03-29 08:14:26
+706,blossomstudent01,codecombat.com,Village Rover,5632661322961295f9428638,,2025-03-29 08:14:26
+707,blossomstudent01,codecombat.com,Tough Bait,5632661322961295f9428638,,2025-03-29 08:14:26
+708,blossomstudent01,codecombat.com,Forest Jogging,5632661322961295f9428638,,2025-03-29 08:14:26
+709,blossomstudent01,codecombat.com,Silent Village,5632661322961295f9428638,,2025-03-29 08:14:26
+710,blossomstudent01,codecombat.com,Tomb Ghost,5632661322961295f9428638,,2025-03-29 08:14:26
+711,blossomstudent01,codecombat.com,Village Warder,5632661322961295f9428638,,2025-03-29 08:14:26
+712,blossomstudent01,codecombat.com,Tomb Raider,5632661322961295f9428638,,2025-03-29 08:14:26
+713,blossomstudent01,codecombat.com,Village Champion,5632661322961295f9428638,,2025-03-29 08:14:26
+714,blossomstudent01,codecombat.com,Forest Cannon Dancing,5632661322961295f9428638,,2025-03-29 08:14:26
+715,blossomstudent01,codecombat.com,Backwoods Fork,5632661322961295f9428638,,2025-03-29 08:14:26
+716,blossomstudent01,codecombat.com,A Fine Mint,5632661322961295f9428638,,2025-03-29 08:14:26
+717,blossomstudent01,codecombat.com,Sharp Bait,5632661322961295f9428638,,2025-03-29 08:14:26
+718,blossomstudent01,codecombat.com,Power Peak,5632661322961295f9428638,,2025-03-29 08:14:26
+719,blossomstudent01,codecombat.com,Eventful Skirmish,5632661322961295f9428638,,2025-03-29 08:14:26
+720,blossomstudent01,codecombat.com,Hero's Journey,5789587aad86a6efb573701e,,2025-03-29 08:14:32
+721,blossomstudent01,codecombat.com,Click Gait,5789587aad86a6efb573701e,,2025-03-29 08:14:32
+722,blossomstudent01,codecombat.com,Vorpal Mouse,5789587aad86a6efb573701e,,2025-03-29 08:14:32
+723,blossomstudent01,codecombat.com,A-maze-ing,5789587aad86a6efb573701e,,2025-03-29 08:14:32
+724,blossomstudent01,codecombat.com,Crushing It,5789587aad86a6efb573701e,,2025-03-29 08:14:32
+725,blossomstudent01,codecombat.com,Over the Garden Wall,5789587aad86a6efb573701e,,2025-03-29 08:14:32
+726,blossomstudent01,codecombat.com,Jailbreak,5789587aad86a6efb573701e,,2025-03-29 08:14:32
+727,blossomstudent01,codecombat.com,Ranger Danger,5789587aad86a6efb573701e,,2025-03-29 08:14:32
+728,blossomstudent01,codecombat.com,Gemtacular,5789587aad86a6efb573701e,,2025-03-29 08:14:32
+729,blossomstudent01,codecombat.com,Army Training,5789587aad86a6efb573701e,,2025-03-29 08:14:32
+730,blossomstudent01,codecombat.com,Give and Take,5789587aad86a6efb573701e,,2025-03-29 08:14:32
+731,blossomstudent01,codecombat.com,Risk and Reward,5789587aad86a6efb573701e,,2025-03-29 08:14:32
+732,blossomstudent01,codecombat.com,Hedge Magic,5789587aad86a6efb573701e,,2025-03-29 08:14:32
+733,blossomstudent01,codecombat.com,Forest Incursion,5789587aad86a6efb573701e,,2025-03-29 08:14:32
+734,blossomstudent01,codecombat.com,Throwing Fire,5789587aad86a6efb573701e,,2025-03-29 08:14:32
+735,blossomstudent01,codecombat.com,Them Bones,5789587aad86a6efb573701e,,2025-03-29 08:14:32
+736,blossomstudent01,codecombat.com,Time To Live,5789587aad86a6efb573701e,,2025-03-29 08:14:32
+737,blossomstudent01,codecombat.com,Game Grove,5789587aad86a6efb573701e,,2025-03-29 08:14:32
+738,blossomstudent01,codecombat.com,Persistence Pays,5789587aad86a6efb573701e,,2025-03-29 08:14:32
+739,blossomstudent01,codecombat.com,Peasants and Munchkins,5789587aad86a6efb573701e,,2025-03-29 08:14:32
+740,blossomstudent01,codecombat.com,Seeing is Believing,5789587aad86a6efb573701e,,2025-03-29 08:14:32
+741,blossomstudent01,codecombat.com,Behavior Driven Development,5789587aad86a6efb573701e,,2025-03-29 08:14:32
+742,blossomstudent01,codecombat.com,Tabula Rasa,5789587aad86a6efb573701e,,2025-03-29 08:14:32
+743,blossomstudent02,codecombat.com,Kithgard Gates,560f1a9f22961295f9427742,,2025-03-29 08:14:48
+744,blossomstudent02,codecombat.com,Wakka Maul,560f1a9f22961295f9427742,,2025-03-29 08:14:48
+745,blossomstudent02,codecombat.com,Safe Place,560f1a9f22961295f9427742,,2025-03-29 08:14:48
+746,blossomstudent02,codecombat.com,The Final Kithmaze,560f1a9f22961295f9427742,,2025-03-29 08:14:48
+747,blossomstudent02,codecombat.com,Master Of Names Debug,560f1a9f22961295f9427742,,2025-03-29 08:14:48
+748,blossomstudent02,codecombat.com,Master of Names,560f1a9f22961295f9427742,,2025-03-29 08:14:48
+749,blossomstudent02,codecombat.com,Cupboards of Kithgard B,560f1a9f22961295f9427742,,2025-03-29 08:14:48
+750,blossomstudent02,codecombat.com,Lowly Kithmen,560f1a9f22961295f9427742,,2025-03-29 08:14:48
+751,blossomstudent02,codecombat.com,Cupboards of Kithgard A,560f1a9f22961295f9427742,,2025-03-29 08:14:48
+752,blossomstudent02,codecombat.com,Closing the Distance,560f1a9f22961295f9427742,,2025-03-29 08:14:48
+753,blossomstudent02,codecombat.com,Cupboards of Kithgard,560f1a9f22961295f9427742,,2025-03-29 08:14:48
+754,blossomstudent02,codecombat.com,Known Enemy,560f1a9f22961295f9427742,,2025-03-29 08:14:48
+755,blossomstudent02,codecombat.com,Loop Warehouse,560f1a9f22961295f9427742,,2025-03-29 08:14:48
+756,blossomstudent02,codecombat.com,Dread Door,560f1a9f22961295f9427742,,2025-03-29 08:14:48
+757,blossomstudent02,codecombat.com,The Raised Sword,560f1a9f22961295f9427742,,2025-03-29 08:14:48
+758,blossomstudent02,codecombat.com,Crawlways of Kithgard,560f1a9f22961295f9427742,,2025-03-29 08:14:48
+759,blossomstudent02,codecombat.com,Hack and Dash,560f1a9f22961295f9427742,,2025-03-29 08:14:48
+760,blossomstudent02,codecombat.com,Descending Further,560f1a9f22961295f9427742,,2025-03-29 08:14:48
+761,blossomstudent02,codecombat.com,Haunted Kithmaze,560f1a9f22961295f9427742,,2025-03-29 08:14:48
+762,blossomstudent02,codecombat.com,Forgetful Gemsmith,560f1a9f22961295f9427742,,2025-03-29 08:14:48
+763,blossomstudent02,codecombat.com,Favorable Odds,560f1a9f22961295f9427742,,2025-03-29 08:14:48
+764,blossomstudent02,codecombat.com,Kounter Kithwise,560f1a9f22961295f9427742,,2025-03-29 08:14:48
+765,blossomstudent02,codecombat.com,Fire Dancing,560f1a9f22961295f9427742,,2025-03-29 08:14:48
+766,blossomstudent02,codecombat.com,Riddling Kithmaze,560f1a9f22961295f9427742,,2025-03-29 08:14:48
+767,blossomstudent02,codecombat.com,The Prisoner,560f1a9f22961295f9427742,,2025-03-29 08:14:48
+768,blossomstudent02,codecombat.com,Dungeons of Kithgard,560f1a9f22961295f9427742,,2025-03-29 08:14:48
+769,blossomstudent02,codecombat.com,Radiant Aura,560f1a9f22961295f9427742,,2025-03-29 08:14:48
+770,blossomstudent02,codecombat.com,Gems in the Deep,560f1a9f22961295f9427742,,2025-03-29 08:14:48
+771,blossomstudent02,codecombat.com,Illusory Interruption,560f1a9f22961295f9427742,,2025-03-29 08:14:48
+772,blossomstudent02,codecombat.com,Kithgard Librarian,560f1a9f22961295f9427742,,2025-03-29 08:14:48
+773,blossomstudent02,codecombat.com,Sleep Hour,560f1a9f22961295f9427742,,2025-03-29 08:14:48
+774,blossomstudent02,codecombat.com,Shadow Guard,560f1a9f22961295f9427742,,2025-03-29 08:14:48
+775,blossomstudent02,codecombat.com,True Names,560f1a9f22961295f9427742,,2025-03-29 08:14:48
+776,blossomstudent02,codecombat.com,Dangerous Steps,560f1a9f22961295f9427742,,2025-03-29 08:14:48
+777,blossomstudent02,codecombat.com,Cell Commentary,560f1a9f22961295f9427742,,2025-03-29 08:14:48
+778,blossomstudent02,codecombat.com,Enemy Mine,560f1a9f22961295f9427742,,2025-03-29 08:14:48
+779,blossomstudent02,codecombat.com,Long Steps,560f1a9f22961295f9427742,,2025-03-29 08:14:48
+780,blossomstudent02,codecombat.com,Careful Steps,560f1a9f22961295f9427742,,2025-03-29 08:14:48
+781,blossomstudent02,codecombat.com,Picnic Buster,5632661322961295f9428638,,2025-03-29 08:14:54
+782,blossomstudent02,codecombat.com,If-stravaganza,5632661322961295f9428638,,2025-03-29 08:14:54
+783,blossomstudent02,codecombat.com,Patrol Buster,5632661322961295f9428638,,2025-03-29 08:14:54
+784,blossomstudent02,codecombat.com,Village Guard,5632661322961295f9428638,,2025-03-29 08:14:54
+785,blossomstudent02,codecombat.com,Greed Traps,5632661322961295f9428638,,2025-03-29 08:14:54
+786,blossomstudent02,codecombat.com,Backwoods Buddy,5632661322961295f9428638,,2025-03-29 08:14:54
+787,blossomstudent02,codecombat.com,Woodland Cubbies,5632661322961295f9428638,,2025-03-29 08:14:54
+788,blossomstudent02,codecombat.com,Functional Patrol,5632661322961295f9428638,,2025-03-29 08:14:54
+789,blossomstudent02,codecombat.com,Ogre Encampment,5632661322961295f9428638,,2025-03-29 08:14:54
+790,blossomstudent02,codecombat.com,Woodland Cleaver,5632661322961295f9428638,,2025-03-29 08:14:54
+791,blossomstudent02,codecombat.com,Gem Berries,5632661322961295f9428638,,2025-03-29 08:14:54
+792,blossomstudent02,codecombat.com,Closed Crossroad,5632661322961295f9428638,,2025-03-29 08:14:54
+793,blossomstudent02,codecombat.com,Thornbush Farm,5632661322961295f9428638,,2025-03-29 08:14:54
+794,blossomstudent02,codecombat.com,Back to Back,5632661322961295f9428638,,2025-03-29 08:14:54
+795,blossomstudent02,codecombat.com,Buddy's Name,5632661322961295f9428638,,2025-03-29 08:14:54
+796,blossomstudent02,codecombat.com,Elseweyr,5632661322961295f9428638,,2025-03-29 08:14:54
+797,blossomstudent02,codecombat.com,Forest Evasion,5632661322961295f9428638,,2025-03-29 08:14:54
+798,blossomstudent02,codecombat.com,Eagle Eye,5632661322961295f9428638,,2025-03-29 08:14:54
+799,blossomstudent02,codecombat.com,Last Cannon,5632661322961295f9428638,,2025-03-29 08:14:54
+800,blossomstudent02,codecombat.com,Sacred Glade,5632661322961295f9428638,,2025-03-29 08:14:54
+801,blossomstudent02,codecombat.com,Buddy's Name A,5632661322961295f9428638,,2025-03-29 08:14:54
+802,blossomstudent02,codecombat.com,Agrippa Refactored,5632661322961295f9428638,,2025-03-29 08:14:54
+803,blossomstudent02,codecombat.com,One Wrong Step,5632661322961295f9428638,,2025-03-29 08:14:54
+804,blossomstudent02,codecombat.com,Patrol Buster A,5632661322961295f9428638,,2025-03-29 08:14:54
+805,blossomstudent02,codecombat.com,Backwoods Ambush,5632661322961295f9428638,,2025-03-29 08:14:54
+806,blossomstudent02,codecombat.com,Cleanup,5632661322961295f9428638,,2025-03-29 08:14:54
+807,blossomstudent02,codecombat.com,Phd Kitty,5632661322961295f9428638,,2025-03-29 08:14:54
+808,blossomstudent02,codecombat.com,Backwoods Standoff B,5632661322961295f9428638,,2025-03-29 08:14:54
+809,blossomstudent02,codecombat.com,Middle Point,5632661322961295f9428638,,2025-03-29 08:14:54
+810,blossomstudent02,codecombat.com,Backwoods Standoff A,5632661322961295f9428638,,2025-03-29 08:14:54
+811,blossomstudent02,codecombat.com,Backwoods Standoff,5632661322961295f9428638,,2025-03-29 08:14:54
+812,blossomstudent02,codecombat.com,Course: Winding Trail,5632661322961295f9428638,,2025-03-29 08:14:54
+813,blossomstudent02,codecombat.com,Buddy's Name B,5632661322961295f9428638,,2025-03-29 08:14:54
+814,blossomstudent02,codecombat.com,Return to Thornbush Farm A,5632661322961295f9428638,,2025-03-29 08:14:54
+815,blossomstudent02,codecombat.com,Return to Thornbush Farm B,5632661322961295f9428638,,2025-03-29 08:14:54
+816,blossomstudent02,codecombat.com,Pet Quiz,5632661322961295f9428638,,2025-03-29 08:14:54
+817,blossomstudent02,codecombat.com,Return to Thornbush Farm,5632661322961295f9428638,,2025-03-29 08:14:54
+818,blossomstudent02,codecombat.com,Range Finder,5632661322961295f9428638,,2025-03-29 08:14:54
+819,blossomstudent02,codecombat.com,Free Billy,5632661322961295f9428638,,2025-03-29 08:14:54
+820,blossomstudent02,codecombat.com,Timberland Trap,5632661322961295f9428638,,2025-03-29 08:14:54
+821,blossomstudent02,codecombat.com,Peasant Protection,5632661322961295f9428638,,2025-03-29 08:14:54
+822,blossomstudent02,codecombat.com,Defense of Plainswood,5632661322961295f9428638,,2025-03-29 08:14:54
+823,blossomstudent02,codecombat.com,Timely Word,5632661322961295f9428638,,2025-03-29 08:14:54
+824,blossomstudent02,codecombat.com,Go Fetch,5632661322961295f9428638,,2025-03-29 08:14:54
+825,blossomstudent02,codecombat.com,Munchkin Swarm,5632661322961295f9428638,,2025-03-29 08:14:54
+826,blossomstudent02,codecombat.com,Leave it to Cleaver,5632661322961295f9428638,,2025-03-29 08:14:54
+827,blossomstudent02,codecombat.com,Maniac Munchkins,5632661322961295f9428638,,2025-03-29 08:14:54
+828,blossomstudent02,codecombat.com,Forest Fire Dancing,5632661322961295f9428638,,2025-03-29 08:14:54
+829,blossomstudent02,codecombat.com,Stillness in Motion,5632661322961295f9428638,,2025-03-29 08:14:54
+830,blossomstudent02,codecombat.com,Guard Dog,5632661322961295f9428638,,2025-03-29 08:14:54
+831,blossomstudent02,codecombat.com,Brave Ogres,5632661322961295f9428638,,2025-03-29 08:14:54
+832,blossomstudent02,codecombat.com,The Agrippa Defense,5632661322961295f9428638,,2025-03-29 08:14:54
+833,blossomstudent02,codecombat.com,Forest Miners,5632661322961295f9428638,,2025-03-29 08:14:54
+834,blossomstudent02,codecombat.com,The Agrippa Defense B,5632661322961295f9428638,,2025-03-29 08:14:54
+835,blossomstudent02,codecombat.com,Long Road,5632661322961295f9428638,,2025-03-29 08:14:54
+836,blossomstudent02,codecombat.com,The Agrippa Defense A,5632661322961295f9428638,,2025-03-29 08:14:54
+837,blossomstudent02,codecombat.com,Last Guardian,5632661322961295f9428638,,2025-03-29 08:14:54
+838,blossomstudent02,codecombat.com,Dangerous Tree,5632661322961295f9428638,,2025-03-29 08:14:54
+839,blossomstudent02,codecombat.com,Seek-and-Hide,5632661322961295f9428638,,2025-03-29 08:14:54
+840,blossomstudent02,codecombat.com,Village Rover,5632661322961295f9428638,,2025-03-29 08:14:54
+841,blossomstudent02,codecombat.com,Tough Bait,5632661322961295f9428638,,2025-03-29 08:14:54
+842,blossomstudent02,codecombat.com,Forest Jogging,5632661322961295f9428638,,2025-03-29 08:14:54
+843,blossomstudent02,codecombat.com,Silent Village,5632661322961295f9428638,,2025-03-29 08:14:54
+844,blossomstudent02,codecombat.com,Tomb Ghost,5632661322961295f9428638,,2025-03-29 08:14:54
+845,blossomstudent02,codecombat.com,Village Warder,5632661322961295f9428638,,2025-03-29 08:14:54
+846,blossomstudent02,codecombat.com,Tomb Raider,5632661322961295f9428638,,2025-03-29 08:14:54
+847,blossomstudent02,codecombat.com,Village Champion,5632661322961295f9428638,,2025-03-29 08:14:54
+848,blossomstudent02,codecombat.com,Forest Cannon Dancing,5632661322961295f9428638,,2025-03-29 08:14:54
+849,blossomstudent02,codecombat.com,Backwoods Fork,5632661322961295f9428638,,2025-03-29 08:14:54
+850,blossomstudent02,codecombat.com,A Fine Mint,5632661322961295f9428638,,2025-03-29 08:14:54
+851,blossomstudent02,codecombat.com,Sharp Bait,5632661322961295f9428638,,2025-03-29 08:14:54
+852,blossomstudent02,codecombat.com,Power Peak,5632661322961295f9428638,,2025-03-29 08:14:54
+853,blossomstudent02,codecombat.com,Eventful Skirmish,5632661322961295f9428638,,2025-03-29 08:14:54
+854,blossomstudent02,codecombat.com,Hero's Journey,5789587aad86a6efb573701e,,2025-03-29 08:14:57
+855,blossomstudent02,codecombat.com,Click Gait,5789587aad86a6efb573701e,,2025-03-29 08:14:57
+856,blossomstudent02,codecombat.com,Vorpal Mouse,5789587aad86a6efb573701e,,2025-03-29 08:14:57
+857,blossomstudent02,codecombat.com,A-maze-ing,5789587aad86a6efb573701e,,2025-03-29 08:14:57
+858,blossomstudent02,codecombat.com,Crushing It,5789587aad86a6efb573701e,,2025-03-29 08:14:57
+859,blossomstudent02,codecombat.com,Over the Garden Wall,5789587aad86a6efb573701e,,2025-03-29 08:14:57
+860,blossomstudent02,codecombat.com,Jailbreak,5789587aad86a6efb573701e,,2025-03-29 08:14:57
+861,blossomstudent02,codecombat.com,Ranger Danger,5789587aad86a6efb573701e,,2025-03-29 08:14:57
+862,blossomstudent02,codecombat.com,Gemtacular,5789587aad86a6efb573701e,,2025-03-29 08:14:57
+863,blossomstudent02,codecombat.com,Army Training,5789587aad86a6efb573701e,,2025-03-29 08:14:57
+864,blossomstudent02,codecombat.com,Give and Take,5789587aad86a6efb573701e,,2025-03-29 08:14:57
+865,blossomstudent02,codecombat.com,Risk and Reward,5789587aad86a6efb573701e,,2025-03-29 08:14:57
+866,blossomstudent02,codecombat.com,Hedge Magic,5789587aad86a6efb573701e,,2025-03-29 08:14:57
+867,blossomstudent02,codecombat.com,Forest Incursion,5789587aad86a6efb573701e,,2025-03-29 08:14:57
+868,blossomstudent02,codecombat.com,Throwing Fire,5789587aad86a6efb573701e,,2025-03-29 08:14:57
+869,blossomstudent02,codecombat.com,Them Bones,5789587aad86a6efb573701e,,2025-03-29 08:14:57
+870,blossomstudent02,codecombat.com,Time To Live,5789587aad86a6efb573701e,,2025-03-29 08:14:57
+871,blossomstudent02,codecombat.com,Game Grove,5789587aad86a6efb573701e,,2025-03-29 08:14:57
+872,blossomstudent02,codecombat.com,Persistence Pays,5789587aad86a6efb573701e,,2025-03-29 08:14:57
+873,blossomstudent02,codecombat.com,Peasants and Munchkins,5789587aad86a6efb573701e,,2025-03-29 08:14:57
+874,blossomstudent02,codecombat.com,Seeing is Believing,5789587aad86a6efb573701e,,2025-03-29 08:14:57
+875,blossomstudent02,codecombat.com,Behavior Driven Development,5789587aad86a6efb573701e,,2025-03-29 08:14:57
+876,blossomstudent02,codecombat.com,Tabula Rasa,5789587aad86a6efb573701e,,2025-03-29 08:14:57
+877,blossomstudent04,codecombat.com,Kithgard Gates,560f1a9f22961295f9427742,,2025-03-29 08:15:11
+878,blossomstudent04,codecombat.com,Wakka Maul,560f1a9f22961295f9427742,,2025-03-29 08:15:11
+879,blossomstudent04,codecombat.com,Safe Place,560f1a9f22961295f9427742,,2025-03-29 08:15:11
+880,blossomstudent04,codecombat.com,The Final Kithmaze,560f1a9f22961295f9427742,,2025-03-29 08:15:11
+881,blossomstudent04,codecombat.com,Master Of Names Debug,560f1a9f22961295f9427742,,2025-03-29 08:15:11
+882,blossomstudent04,codecombat.com,Master of Names,560f1a9f22961295f9427742,,2025-03-29 08:15:11
+883,blossomstudent04,codecombat.com,Cupboards of Kithgard B,560f1a9f22961295f9427742,,2025-03-29 08:15:11
+884,blossomstudent04,codecombat.com,Lowly Kithmen,560f1a9f22961295f9427742,,2025-03-29 08:15:11
+885,blossomstudent04,codecombat.com,Cupboards of Kithgard A,560f1a9f22961295f9427742,,2025-03-29 08:15:11
+886,blossomstudent04,codecombat.com,Closing the Distance,560f1a9f22961295f9427742,,2025-03-29 08:15:11
+887,blossomstudent04,codecombat.com,Cupboards of Kithgard,560f1a9f22961295f9427742,,2025-03-29 08:15:11
+888,blossomstudent04,codecombat.com,Known Enemy,560f1a9f22961295f9427742,,2025-03-29 08:15:11
+889,blossomstudent04,codecombat.com,Loop Warehouse,560f1a9f22961295f9427742,,2025-03-29 08:15:11
+890,blossomstudent04,codecombat.com,Dread Door,560f1a9f22961295f9427742,,2025-03-29 08:15:11
+891,blossomstudent04,codecombat.com,The Raised Sword,560f1a9f22961295f9427742,,2025-03-29 08:15:11
+892,blossomstudent04,codecombat.com,Crawlways of Kithgard,560f1a9f22961295f9427742,,2025-03-29 08:15:11
+893,blossomstudent04,codecombat.com,Hack and Dash,560f1a9f22961295f9427742,,2025-03-29 08:15:11
+894,blossomstudent04,codecombat.com,Descending Further,560f1a9f22961295f9427742,,2025-03-29 08:15:11
+895,blossomstudent04,codecombat.com,Haunted Kithmaze,560f1a9f22961295f9427742,,2025-03-29 08:15:11
+896,blossomstudent04,codecombat.com,Forgetful Gemsmith,560f1a9f22961295f9427742,,2025-03-29 08:15:11
+897,blossomstudent04,codecombat.com,Favorable Odds,560f1a9f22961295f9427742,,2025-03-29 08:15:11
+898,blossomstudent04,codecombat.com,Kounter Kithwise,560f1a9f22961295f9427742,,2025-03-29 08:15:11
+899,blossomstudent04,codecombat.com,Fire Dancing,560f1a9f22961295f9427742,,2025-03-29 08:15:11
+900,blossomstudent04,codecombat.com,Riddling Kithmaze,560f1a9f22961295f9427742,,2025-03-29 08:15:11
+901,blossomstudent04,codecombat.com,The Prisoner,560f1a9f22961295f9427742,,2025-03-29 08:15:11
+902,blossomstudent04,codecombat.com,Dungeons of Kithgard,560f1a9f22961295f9427742,,2025-03-29 08:15:11
+903,blossomstudent04,codecombat.com,Radiant Aura,560f1a9f22961295f9427742,,2025-03-29 08:15:11
+904,blossomstudent04,codecombat.com,Gems in the Deep,560f1a9f22961295f9427742,,2025-03-29 08:15:11
+905,blossomstudent04,codecombat.com,Illusory Interruption,560f1a9f22961295f9427742,,2025-03-29 08:15:11
+906,blossomstudent04,codecombat.com,Kithgard Librarian,560f1a9f22961295f9427742,,2025-03-29 08:15:11
+907,blossomstudent04,codecombat.com,Sleep Hour,560f1a9f22961295f9427742,,2025-03-29 08:15:11
+908,blossomstudent04,codecombat.com,Shadow Guard,560f1a9f22961295f9427742,,2025-03-29 08:15:11
+909,blossomstudent04,codecombat.com,True Names,560f1a9f22961295f9427742,,2025-03-29 08:15:11
+910,blossomstudent04,codecombat.com,Dangerous Steps,560f1a9f22961295f9427742,,2025-03-29 08:15:11
+911,blossomstudent04,codecombat.com,Cell Commentary,560f1a9f22961295f9427742,,2025-03-29 08:15:11
+912,blossomstudent04,codecombat.com,Enemy Mine,560f1a9f22961295f9427742,,2025-03-29 08:15:11
+913,blossomstudent04,codecombat.com,Long Steps,560f1a9f22961295f9427742,,2025-03-29 08:15:11
+914,blossomstudent04,codecombat.com,Careful Steps,560f1a9f22961295f9427742,,2025-03-29 08:15:11
+915,blossomstudent04,codecombat.com,Picnic Buster,5632661322961295f9428638,,2025-03-29 08:15:17
+916,blossomstudent04,codecombat.com,If-stravaganza,5632661322961295f9428638,,2025-03-29 08:15:17
+917,blossomstudent04,codecombat.com,Patrol Buster,5632661322961295f9428638,,2025-03-29 08:15:17
+918,blossomstudent04,codecombat.com,Village Guard,5632661322961295f9428638,,2025-03-29 08:15:17
+919,blossomstudent04,codecombat.com,Greed Traps,5632661322961295f9428638,,2025-03-29 08:15:17
+920,blossomstudent04,codecombat.com,Backwoods Buddy,5632661322961295f9428638,,2025-03-29 08:15:17
+921,blossomstudent04,codecombat.com,Woodland Cubbies,5632661322961295f9428638,,2025-03-29 08:15:17
+922,blossomstudent04,codecombat.com,Functional Patrol,5632661322961295f9428638,,2025-03-29 08:15:17
+923,blossomstudent04,codecombat.com,Ogre Encampment,5632661322961295f9428638,,2025-03-29 08:15:17
+924,blossomstudent04,codecombat.com,Woodland Cleaver,5632661322961295f9428638,,2025-03-29 08:15:17
+925,blossomstudent04,codecombat.com,Gem Berries,5632661322961295f9428638,,2025-03-29 08:15:17
+926,blossomstudent04,codecombat.com,Closed Crossroad,5632661322961295f9428638,,2025-03-29 08:15:17
+927,blossomstudent04,codecombat.com,Thornbush Farm,5632661322961295f9428638,,2025-03-29 08:15:17
+928,blossomstudent04,codecombat.com,Back to Back,5632661322961295f9428638,,2025-03-29 08:15:17
+929,blossomstudent04,codecombat.com,Buddy's Name,5632661322961295f9428638,,2025-03-29 08:15:17
+930,blossomstudent04,codecombat.com,Elseweyr,5632661322961295f9428638,,2025-03-29 08:15:17
+931,blossomstudent04,codecombat.com,Forest Evasion,5632661322961295f9428638,,2025-03-29 08:15:17
+932,blossomstudent04,codecombat.com,Eagle Eye,5632661322961295f9428638,,2025-03-29 08:15:17
+933,blossomstudent04,codecombat.com,Last Cannon,5632661322961295f9428638,,2025-03-29 08:15:17
+934,blossomstudent04,codecombat.com,Sacred Glade,5632661322961295f9428638,,2025-03-29 08:15:17
+935,blossomstudent04,codecombat.com,Buddy's Name A,5632661322961295f9428638,,2025-03-29 08:15:17
+936,blossomstudent04,codecombat.com,Agrippa Refactored,5632661322961295f9428638,,2025-03-29 08:15:17
+937,blossomstudent04,codecombat.com,One Wrong Step,5632661322961295f9428638,,2025-03-29 08:15:17
+938,blossomstudent04,codecombat.com,Patrol Buster A,5632661322961295f9428638,,2025-03-29 08:15:17
+939,blossomstudent04,codecombat.com,Backwoods Ambush,5632661322961295f9428638,,2025-03-29 08:15:17
+940,blossomstudent04,codecombat.com,Cleanup,5632661322961295f9428638,,2025-03-29 08:15:17
+941,blossomstudent04,codecombat.com,Phd Kitty,5632661322961295f9428638,,2025-03-29 08:15:17
+942,blossomstudent04,codecombat.com,Backwoods Standoff B,5632661322961295f9428638,,2025-03-29 08:15:17
+943,blossomstudent04,codecombat.com,Middle Point,5632661322961295f9428638,,2025-03-29 08:15:17
+944,blossomstudent04,codecombat.com,Backwoods Standoff A,5632661322961295f9428638,,2025-03-29 08:15:17
+945,blossomstudent04,codecombat.com,Backwoods Standoff,5632661322961295f9428638,,2025-03-29 08:15:17
+946,blossomstudent04,codecombat.com,Course: Winding Trail,5632661322961295f9428638,,2025-03-29 08:15:17
+947,blossomstudent04,codecombat.com,Buddy's Name B,5632661322961295f9428638,,2025-03-29 08:15:17
+948,blossomstudent04,codecombat.com,Return to Thornbush Farm A,5632661322961295f9428638,,2025-03-29 08:15:17
+949,blossomstudent04,codecombat.com,Return to Thornbush Farm B,5632661322961295f9428638,,2025-03-29 08:15:17
+950,blossomstudent04,codecombat.com,Pet Quiz,5632661322961295f9428638,,2025-03-29 08:15:17
+951,blossomstudent04,codecombat.com,Return to Thornbush Farm,5632661322961295f9428638,,2025-03-29 08:15:17
+952,blossomstudent04,codecombat.com,Range Finder,5632661322961295f9428638,,2025-03-29 08:15:17
+953,blossomstudent04,codecombat.com,Free Billy,5632661322961295f9428638,,2025-03-29 08:15:17
+954,blossomstudent04,codecombat.com,Timberland Trap,5632661322961295f9428638,,2025-03-29 08:15:17
+955,blossomstudent04,codecombat.com,Peasant Protection,5632661322961295f9428638,,2025-03-29 08:15:17
+956,blossomstudent04,codecombat.com,Defense of Plainswood,5632661322961295f9428638,,2025-03-29 08:15:17
+957,blossomstudent04,codecombat.com,Timely Word,5632661322961295f9428638,,2025-03-29 08:15:17
+958,blossomstudent04,codecombat.com,Go Fetch,5632661322961295f9428638,,2025-03-29 08:15:17
+959,blossomstudent04,codecombat.com,Munchkin Swarm,5632661322961295f9428638,,2025-03-29 08:15:17
+960,blossomstudent04,codecombat.com,Leave it to Cleaver,5632661322961295f9428638,,2025-03-29 08:15:17
+961,blossomstudent04,codecombat.com,Maniac Munchkins,5632661322961295f9428638,,2025-03-29 08:15:17
+962,blossomstudent04,codecombat.com,Forest Fire Dancing,5632661322961295f9428638,,2025-03-29 08:15:17
+963,blossomstudent04,codecombat.com,Stillness in Motion,5632661322961295f9428638,,2025-03-29 08:15:17
+964,blossomstudent04,codecombat.com,Guard Dog,5632661322961295f9428638,,2025-03-29 08:15:17
+965,blossomstudent04,codecombat.com,Brave Ogres,5632661322961295f9428638,,2025-03-29 08:15:17
+966,blossomstudent04,codecombat.com,The Agrippa Defense,5632661322961295f9428638,,2025-03-29 08:15:17
+967,blossomstudent04,codecombat.com,Forest Miners,5632661322961295f9428638,,2025-03-29 08:15:17
+968,blossomstudent04,codecombat.com,The Agrippa Defense B,5632661322961295f9428638,,2025-03-29 08:15:17
+969,blossomstudent04,codecombat.com,Long Road,5632661322961295f9428638,,2025-03-29 08:15:17
+970,blossomstudent04,codecombat.com,The Agrippa Defense A,5632661322961295f9428638,,2025-03-29 08:15:17
+971,blossomstudent04,codecombat.com,Last Guardian,5632661322961295f9428638,,2025-03-29 08:15:17
+972,blossomstudent04,codecombat.com,Dangerous Tree,5632661322961295f9428638,,2025-03-29 08:15:17
+973,blossomstudent04,codecombat.com,Seek-and-Hide,5632661322961295f9428638,,2025-03-29 08:15:17
+974,blossomstudent04,codecombat.com,Village Rover,5632661322961295f9428638,,2025-03-29 08:15:17
+975,blossomstudent04,codecombat.com,Tough Bait,5632661322961295f9428638,,2025-03-29 08:15:17
+976,blossomstudent04,codecombat.com,Forest Jogging,5632661322961295f9428638,,2025-03-29 08:15:17
+977,blossomstudent04,codecombat.com,Silent Village,5632661322961295f9428638,,2025-03-29 08:15:17
+978,blossomstudent04,codecombat.com,Tomb Ghost,5632661322961295f9428638,,2025-03-29 08:15:17
+979,blossomstudent04,codecombat.com,Village Warder,5632661322961295f9428638,,2025-03-29 08:15:17
+980,blossomstudent04,codecombat.com,Tomb Raider,5632661322961295f9428638,,2025-03-29 08:15:17
+981,blossomstudent04,codecombat.com,Village Champion,5632661322961295f9428638,,2025-03-29 08:15:17
+982,blossomstudent04,codecombat.com,Forest Cannon Dancing,5632661322961295f9428638,,2025-03-29 08:15:17
+983,blossomstudent04,codecombat.com,Backwoods Fork,5632661322961295f9428638,,2025-03-29 08:15:17
+984,blossomstudent04,codecombat.com,A Fine Mint,5632661322961295f9428638,,2025-03-29 08:15:17
+985,blossomstudent04,codecombat.com,Sharp Bait,5632661322961295f9428638,,2025-03-29 08:15:17
+986,blossomstudent04,codecombat.com,Power Peak,5632661322961295f9428638,,2025-03-29 08:15:17
+987,blossomstudent04,codecombat.com,Eventful Skirmish,5632661322961295f9428638,,2025-03-29 08:15:17
+988,blossomstudent04,codecombat.com,Hero's Journey,5789587aad86a6efb573701e,,2025-03-29 08:15:21
+989,blossomstudent04,codecombat.com,Click Gait,5789587aad86a6efb573701e,,2025-03-29 08:15:21
+990,blossomstudent04,codecombat.com,Vorpal Mouse,5789587aad86a6efb573701e,,2025-03-29 08:15:21
+991,blossomstudent04,codecombat.com,A-maze-ing,5789587aad86a6efb573701e,,2025-03-29 08:15:21
+992,blossomstudent04,codecombat.com,Crushing It,5789587aad86a6efb573701e,,2025-03-29 08:15:21
+993,blossomstudent04,codecombat.com,Over the Garden Wall,5789587aad86a6efb573701e,,2025-03-29 08:15:21
+994,blossomstudent04,codecombat.com,Jailbreak,5789587aad86a6efb573701e,,2025-03-29 08:15:21
+995,blossomstudent04,codecombat.com,Ranger Danger,5789587aad86a6efb573701e,,2025-03-29 08:15:21
+996,blossomstudent04,codecombat.com,Gemtacular,5789587aad86a6efb573701e,,2025-03-29 08:15:21
+997,blossomstudent04,codecombat.com,Army Training,5789587aad86a6efb573701e,,2025-03-29 08:15:21
+998,blossomstudent04,codecombat.com,Give and Take,5789587aad86a6efb573701e,,2025-03-29 08:15:21
+999,blossomstudent04,codecombat.com,Risk and Reward,5789587aad86a6efb573701e,,2025-03-29 08:15:21
+1000,blossomstudent04,codecombat.com,Hedge Magic,5789587aad86a6efb573701e,,2025-03-29 08:15:21
+1001,blossomstudent04,codecombat.com,Forest Incursion,5789587aad86a6efb573701e,,2025-03-29 08:15:21
+1002,blossomstudent04,codecombat.com,Throwing Fire,5789587aad86a6efb573701e,,2025-03-29 08:15:21
+1003,blossomstudent04,codecombat.com,Them Bones,5789587aad86a6efb573701e,,2025-03-29 08:15:21
+1004,blossomstudent04,codecombat.com,Time To Live,5789587aad86a6efb573701e,,2025-03-29 08:15:21
+1005,blossomstudent04,codecombat.com,Game Grove,5789587aad86a6efb573701e,,2025-03-29 08:15:21
+1006,blossomstudent04,codecombat.com,Persistence Pays,5789587aad86a6efb573701e,,2025-03-29 08:15:21
+1007,blossomstudent04,codecombat.com,Peasants and Munchkins,5789587aad86a6efb573701e,,2025-03-29 08:15:21
+1008,blossomstudent04,codecombat.com,Seeing is Believing,5789587aad86a6efb573701e,,2025-03-29 08:15:21
+1009,blossomstudent04,codecombat.com,Behavior Driven Development,5789587aad86a6efb573701e,,2025-03-29 08:15:21
+1010,blossomstudent04,codecombat.com,Tabula Rasa,5789587aad86a6efb573701e,,2025-03-29 08:15:21
+1011,blossomstudent03,codecombat.com,Kithgard Gates,560f1a9f22961295f9427742,,2025-03-29 08:15:37
+1012,blossomstudent03,codecombat.com,Wakka Maul,560f1a9f22961295f9427742,,2025-03-29 08:15:37
+1013,blossomstudent03,codecombat.com,Safe Place,560f1a9f22961295f9427742,,2025-03-29 08:15:37
+1014,blossomstudent03,codecombat.com,The Final Kithmaze,560f1a9f22961295f9427742,,2025-03-29 08:15:37
+1015,blossomstudent03,codecombat.com,Master Of Names Debug,560f1a9f22961295f9427742,,2025-03-29 08:15:37
+1016,blossomstudent03,codecombat.com,Master of Names,560f1a9f22961295f9427742,,2025-03-29 08:15:37
+1017,blossomstudent03,codecombat.com,Cupboards of Kithgard B,560f1a9f22961295f9427742,,2025-03-29 08:15:37
+1018,blossomstudent03,codecombat.com,Lowly Kithmen,560f1a9f22961295f9427742,,2025-03-29 08:15:37
+1019,blossomstudent03,codecombat.com,Cupboards of Kithgard A,560f1a9f22961295f9427742,,2025-03-29 08:15:37
+1020,blossomstudent03,codecombat.com,Closing the Distance,560f1a9f22961295f9427742,,2025-03-29 08:15:37
+1021,blossomstudent03,codecombat.com,Cupboards of Kithgard,560f1a9f22961295f9427742,,2025-03-29 08:15:37
+1022,blossomstudent03,codecombat.com,Known Enemy,560f1a9f22961295f9427742,,2025-03-29 08:15:37
+1023,blossomstudent03,codecombat.com,Loop Warehouse,560f1a9f22961295f9427742,,2025-03-29 08:15:37
+1024,blossomstudent03,codecombat.com,Dread Door,560f1a9f22961295f9427742,,2025-03-29 08:15:37
+1025,blossomstudent03,codecombat.com,The Raised Sword,560f1a9f22961295f9427742,,2025-03-29 08:15:37
+1026,blossomstudent03,codecombat.com,Crawlways of Kithgard,560f1a9f22961295f9427742,,2025-03-29 08:15:37
+1027,blossomstudent03,codecombat.com,Hack and Dash,560f1a9f22961295f9427742,,2025-03-29 08:15:37
+1028,blossomstudent03,codecombat.com,Descending Further,560f1a9f22961295f9427742,,2025-03-29 08:15:37
+1029,blossomstudent03,codecombat.com,Haunted Kithmaze,560f1a9f22961295f9427742,,2025-03-29 08:15:37
+1030,blossomstudent03,codecombat.com,Forgetful Gemsmith,560f1a9f22961295f9427742,,2025-03-29 08:15:37
+1031,blossomstudent03,codecombat.com,Favorable Odds,560f1a9f22961295f9427742,,2025-03-29 08:15:37
+1032,blossomstudent03,codecombat.com,Kounter Kithwise,560f1a9f22961295f9427742,,2025-03-29 08:15:37
+1033,blossomstudent03,codecombat.com,Fire Dancing,560f1a9f22961295f9427742,,2025-03-29 08:15:37
+1034,blossomstudent03,codecombat.com,Riddling Kithmaze,560f1a9f22961295f9427742,,2025-03-29 08:15:37
+1035,blossomstudent03,codecombat.com,The Prisoner,560f1a9f22961295f9427742,,2025-03-29 08:15:37
+1036,blossomstudent03,codecombat.com,Dungeons of Kithgard,560f1a9f22961295f9427742,,2025-03-29 08:15:37
+1037,blossomstudent03,codecombat.com,Radiant Aura,560f1a9f22961295f9427742,,2025-03-29 08:15:37
+1038,blossomstudent03,codecombat.com,Gems in the Deep,560f1a9f22961295f9427742,,2025-03-29 08:15:37
+1039,blossomstudent03,codecombat.com,Illusory Interruption,560f1a9f22961295f9427742,,2025-03-29 08:15:37
+1040,blossomstudent03,codecombat.com,Kithgard Librarian,560f1a9f22961295f9427742,,2025-03-29 08:15:37
+1041,blossomstudent03,codecombat.com,Sleep Hour,560f1a9f22961295f9427742,,2025-03-29 08:15:37
+1042,blossomstudent03,codecombat.com,Shadow Guard,560f1a9f22961295f9427742,,2025-03-29 08:15:37
+1043,blossomstudent03,codecombat.com,True Names,560f1a9f22961295f9427742,,2025-03-29 08:15:37
+1044,blossomstudent03,codecombat.com,Dangerous Steps,560f1a9f22961295f9427742,,2025-03-29 08:15:37
+1045,blossomstudent03,codecombat.com,Cell Commentary,560f1a9f22961295f9427742,,2025-03-29 08:15:37
+1046,blossomstudent03,codecombat.com,Enemy Mine,560f1a9f22961295f9427742,,2025-03-29 08:15:37
+1047,blossomstudent03,codecombat.com,Long Steps,560f1a9f22961295f9427742,,2025-03-29 08:15:37
+1048,blossomstudent03,codecombat.com,Careful Steps,560f1a9f22961295f9427742,,2025-03-29 08:15:37
+1049,blossomstudent03,codecombat.com,Picnic Buster,5632661322961295f9428638,,2025-03-29 08:15:42
+1050,blossomstudent03,codecombat.com,If-stravaganza,5632661322961295f9428638,,2025-03-29 08:15:42
+1051,blossomstudent03,codecombat.com,Patrol Buster,5632661322961295f9428638,,2025-03-29 08:15:42
+1052,blossomstudent03,codecombat.com,Village Guard,5632661322961295f9428638,,2025-03-29 08:15:42
+1053,blossomstudent03,codecombat.com,Greed Traps,5632661322961295f9428638,,2025-03-29 08:15:42
+1054,blossomstudent03,codecombat.com,Backwoods Buddy,5632661322961295f9428638,,2025-03-29 08:15:42
+1055,blossomstudent03,codecombat.com,Woodland Cubbies,5632661322961295f9428638,,2025-03-29 08:15:42
+1056,blossomstudent03,codecombat.com,Functional Patrol,5632661322961295f9428638,,2025-03-29 08:15:42
+1057,blossomstudent03,codecombat.com,Ogre Encampment,5632661322961295f9428638,,2025-03-29 08:15:42
+1058,blossomstudent03,codecombat.com,Woodland Cleaver,5632661322961295f9428638,,2025-03-29 08:15:42
+1059,blossomstudent03,codecombat.com,Gem Berries,5632661322961295f9428638,,2025-03-29 08:15:42
+1060,blossomstudent03,codecombat.com,Closed Crossroad,5632661322961295f9428638,,2025-03-29 08:15:42
+1061,blossomstudent03,codecombat.com,Thornbush Farm,5632661322961295f9428638,,2025-03-29 08:15:42
+1062,blossomstudent03,codecombat.com,Back to Back,5632661322961295f9428638,,2025-03-29 08:15:42
+1063,blossomstudent03,codecombat.com,Buddy's Name,5632661322961295f9428638,,2025-03-29 08:15:42
+1064,blossomstudent03,codecombat.com,Elseweyr,5632661322961295f9428638,,2025-03-29 08:15:42
+1065,blossomstudent03,codecombat.com,Forest Evasion,5632661322961295f9428638,,2025-03-29 08:15:42
+1066,blossomstudent03,codecombat.com,Eagle Eye,5632661322961295f9428638,,2025-03-29 08:15:42
+1067,blossomstudent03,codecombat.com,Last Cannon,5632661322961295f9428638,,2025-03-29 08:15:42
+1068,blossomstudent03,codecombat.com,Sacred Glade,5632661322961295f9428638,,2025-03-29 08:15:42
+1069,blossomstudent03,codecombat.com,Buddy's Name A,5632661322961295f9428638,,2025-03-29 08:15:42
+1070,blossomstudent03,codecombat.com,Agrippa Refactored,5632661322961295f9428638,,2025-03-29 08:15:42
+1071,blossomstudent03,codecombat.com,One Wrong Step,5632661322961295f9428638,,2025-03-29 08:15:42
+1072,blossomstudent03,codecombat.com,Patrol Buster A,5632661322961295f9428638,,2025-03-29 08:15:42
+1073,blossomstudent03,codecombat.com,Backwoods Ambush,5632661322961295f9428638,,2025-03-29 08:15:42
+1074,blossomstudent03,codecombat.com,Cleanup,5632661322961295f9428638,,2025-03-29 08:15:42
+1075,blossomstudent03,codecombat.com,Phd Kitty,5632661322961295f9428638,,2025-03-29 08:15:42
+1076,blossomstudent03,codecombat.com,Backwoods Standoff B,5632661322961295f9428638,,2025-03-29 08:15:42
+1077,blossomstudent03,codecombat.com,Middle Point,5632661322961295f9428638,,2025-03-29 08:15:42
+1078,blossomstudent03,codecombat.com,Backwoods Standoff A,5632661322961295f9428638,,2025-03-29 08:15:42
+1079,blossomstudent03,codecombat.com,Backwoods Standoff,5632661322961295f9428638,,2025-03-29 08:15:42
+1080,blossomstudent03,codecombat.com,Course: Winding Trail,5632661322961295f9428638,,2025-03-29 08:15:42
+1081,blossomstudent03,codecombat.com,Buddy's Name B,5632661322961295f9428638,,2025-03-29 08:15:42
+1082,blossomstudent03,codecombat.com,Return to Thornbush Farm A,5632661322961295f9428638,,2025-03-29 08:15:42
+1083,blossomstudent03,codecombat.com,Return to Thornbush Farm B,5632661322961295f9428638,,2025-03-29 08:15:42
+1084,blossomstudent03,codecombat.com,Pet Quiz,5632661322961295f9428638,,2025-03-29 08:15:42
+1085,blossomstudent03,codecombat.com,Return to Thornbush Farm,5632661322961295f9428638,,2025-03-29 08:15:42
+1086,blossomstudent03,codecombat.com,Range Finder,5632661322961295f9428638,,2025-03-29 08:15:42
+1087,blossomstudent03,codecombat.com,Free Billy,5632661322961295f9428638,,2025-03-29 08:15:42
+1088,blossomstudent03,codecombat.com,Timberland Trap,5632661322961295f9428638,,2025-03-29 08:15:42
+1089,blossomstudent03,codecombat.com,Peasant Protection,5632661322961295f9428638,,2025-03-29 08:15:42
+1090,blossomstudent03,codecombat.com,Defense of Plainswood,5632661322961295f9428638,,2025-03-29 08:15:42
+1091,blossomstudent03,codecombat.com,Timely Word,5632661322961295f9428638,,2025-03-29 08:15:42
+1092,blossomstudent03,codecombat.com,Go Fetch,5632661322961295f9428638,,2025-03-29 08:15:42
+1093,blossomstudent03,codecombat.com,Munchkin Swarm,5632661322961295f9428638,,2025-03-29 08:15:42
+1094,blossomstudent03,codecombat.com,Leave it to Cleaver,5632661322961295f9428638,,2025-03-29 08:15:42
+1095,blossomstudent03,codecombat.com,Maniac Munchkins,5632661322961295f9428638,,2025-03-29 08:15:42
+1096,blossomstudent03,codecombat.com,Forest Fire Dancing,5632661322961295f9428638,,2025-03-29 08:15:42
+1097,blossomstudent03,codecombat.com,Stillness in Motion,5632661322961295f9428638,,2025-03-29 08:15:42
+1098,blossomstudent03,codecombat.com,Guard Dog,5632661322961295f9428638,,2025-03-29 08:15:42
+1099,blossomstudent03,codecombat.com,Brave Ogres,5632661322961295f9428638,,2025-03-29 08:15:42
+1100,blossomstudent03,codecombat.com,The Agrippa Defense,5632661322961295f9428638,,2025-03-29 08:15:42
+1101,blossomstudent03,codecombat.com,Forest Miners,5632661322961295f9428638,,2025-03-29 08:15:42
+1102,blossomstudent03,codecombat.com,The Agrippa Defense B,5632661322961295f9428638,,2025-03-29 08:15:42
+1103,blossomstudent03,codecombat.com,Long Road,5632661322961295f9428638,,2025-03-29 08:15:42
+1104,blossomstudent03,codecombat.com,The Agrippa Defense A,5632661322961295f9428638,,2025-03-29 08:15:42
+1105,blossomstudent03,codecombat.com,Last Guardian,5632661322961295f9428638,,2025-03-29 08:15:42
+1106,blossomstudent03,codecombat.com,Dangerous Tree,5632661322961295f9428638,,2025-03-29 08:15:42
+1107,blossomstudent03,codecombat.com,Seek-and-Hide,5632661322961295f9428638,,2025-03-29 08:15:42
+1108,blossomstudent03,codecombat.com,Village Rover,5632661322961295f9428638,,2025-03-29 08:15:42
+1109,blossomstudent03,codecombat.com,Tough Bait,5632661322961295f9428638,,2025-03-29 08:15:42
+1110,blossomstudent03,codecombat.com,Forest Jogging,5632661322961295f9428638,,2025-03-29 08:15:42
+1111,blossomstudent03,codecombat.com,Silent Village,5632661322961295f9428638,,2025-03-29 08:15:42
+1112,blossomstudent03,codecombat.com,Tomb Ghost,5632661322961295f9428638,,2025-03-29 08:15:42
+1113,blossomstudent03,codecombat.com,Village Warder,5632661322961295f9428638,,2025-03-29 08:15:42
+1114,blossomstudent03,codecombat.com,Tomb Raider,5632661322961295f9428638,,2025-03-29 08:15:42
+1115,blossomstudent03,codecombat.com,Village Champion,5632661322961295f9428638,,2025-03-29 08:15:42
+1116,blossomstudent03,codecombat.com,Forest Cannon Dancing,5632661322961295f9428638,,2025-03-29 08:15:42
+1117,blossomstudent03,codecombat.com,Backwoods Fork,5632661322961295f9428638,,2025-03-29 08:15:42
+1118,blossomstudent03,codecombat.com,A Fine Mint,5632661322961295f9428638,,2025-03-29 08:15:42
+1119,blossomstudent03,codecombat.com,Sharp Bait,5632661322961295f9428638,,2025-03-29 08:15:42
+1120,blossomstudent03,codecombat.com,Power Peak,5632661322961295f9428638,,2025-03-29 08:15:42
+1121,blossomstudent03,codecombat.com,Eventful Skirmish,5632661322961295f9428638,,2025-03-29 08:15:42
+1122,blossomstudent03,codecombat.com,Hero's Journey,5789587aad86a6efb573701e,,2025-03-29 08:15:45
+1123,blossomstudent03,codecombat.com,Click Gait,5789587aad86a6efb573701e,,2025-03-29 08:15:45
+1124,blossomstudent03,codecombat.com,Vorpal Mouse,5789587aad86a6efb573701e,,2025-03-29 08:15:45
+1125,blossomstudent03,codecombat.com,A-maze-ing,5789587aad86a6efb573701e,,2025-03-29 08:15:45
+1126,blossomstudent03,codecombat.com,Crushing It,5789587aad86a6efb573701e,,2025-03-29 08:15:45
+1127,blossomstudent03,codecombat.com,Over the Garden Wall,5789587aad86a6efb573701e,,2025-03-29 08:15:45
+1128,blossomstudent03,codecombat.com,Jailbreak,5789587aad86a6efb573701e,,2025-03-29 08:15:45
+1129,blossomstudent03,codecombat.com,Ranger Danger,5789587aad86a6efb573701e,,2025-03-29 08:15:45
+1130,blossomstudent03,codecombat.com,Gemtacular,5789587aad86a6efb573701e,,2025-03-29 08:15:45
+1131,blossomstudent03,codecombat.com,Army Training,5789587aad86a6efb573701e,,2025-03-29 08:15:45
+1132,blossomstudent03,codecombat.com,Give and Take,5789587aad86a6efb573701e,,2025-03-29 08:15:45
+1133,blossomstudent03,codecombat.com,Risk and Reward,5789587aad86a6efb573701e,,2025-03-29 08:15:45
+1134,blossomstudent03,codecombat.com,Hedge Magic,5789587aad86a6efb573701e,,2025-03-29 08:15:45
+1135,blossomstudent03,codecombat.com,Forest Incursion,5789587aad86a6efb573701e,,2025-03-29 08:15:45
+1136,blossomstudent03,codecombat.com,Throwing Fire,5789587aad86a6efb573701e,,2025-03-29 08:15:45
+1137,blossomstudent03,codecombat.com,Them Bones,5789587aad86a6efb573701e,,2025-03-29 08:15:45
+1138,blossomstudent03,codecombat.com,Time To Live,5789587aad86a6efb573701e,,2025-03-29 08:15:45
+1139,blossomstudent03,codecombat.com,Game Grove,5789587aad86a6efb573701e,,2025-03-29 08:15:45
+1140,blossomstudent03,codecombat.com,Persistence Pays,5789587aad86a6efb573701e,,2025-03-29 08:15:45
+1141,blossomstudent03,codecombat.com,Peasants and Munchkins,5789587aad86a6efb573701e,,2025-03-29 08:15:45
+1142,blossomstudent03,codecombat.com,Seeing is Believing,5789587aad86a6efb573701e,,2025-03-29 08:15:45
+1143,blossomstudent03,codecombat.com,Behavior Driven Development,5789587aad86a6efb573701e,,2025-03-29 08:15:45
+1144,blossomstudent03,codecombat.com,Tabula Rasa,5789587aad86a6efb573701e,,2025-03-29 08:15:45
+1145,blossomstudent34,codecombat.com,last-guardian,,,2025-03-30 06:40:42.526440
+1146,blossomstudent34,codecombat.com,Kithgard Gates,560f1a9f22961295f9427742,,2025-03-30 06:51:21
+1147,blossomstudent34,codecombat.com,Wakka Maul,560f1a9f22961295f9427742,,2025-03-30 06:51:21
+1148,blossomstudent34,codecombat.com,Safe Place,560f1a9f22961295f9427742,,2025-03-30 06:51:21
+1149,blossomstudent34,codecombat.com,The Final Kithmaze,560f1a9f22961295f9427742,,2025-03-30 06:51:21
+1150,blossomstudent34,codecombat.com,Master Of Names Debug,560f1a9f22961295f9427742,,2025-03-30 06:51:21
+1151,blossomstudent34,codecombat.com,Master of Names,560f1a9f22961295f9427742,,2025-03-30 06:51:21
+1152,blossomstudent34,codecombat.com,Cupboards of Kithgard B,560f1a9f22961295f9427742,,2025-03-30 06:51:21
+1153,blossomstudent34,codecombat.com,Lowly Kithmen,560f1a9f22961295f9427742,,2025-03-30 06:51:21
+1154,blossomstudent34,codecombat.com,Cupboards of Kithgard A,560f1a9f22961295f9427742,,2025-03-30 06:51:21
+1155,blossomstudent34,codecombat.com,Closing the Distance,560f1a9f22961295f9427742,,2025-03-30 06:51:21
+1156,blossomstudent34,codecombat.com,Cupboards of Kithgard,560f1a9f22961295f9427742,,2025-03-30 06:51:21
+1157,blossomstudent34,codecombat.com,Known Enemy,560f1a9f22961295f9427742,,2025-03-30 06:51:21
+1158,blossomstudent34,codecombat.com,Loop Warehouse,560f1a9f22961295f9427742,,2025-03-30 06:51:21
+1159,blossomstudent34,codecombat.com,Dread Door,560f1a9f22961295f9427742,,2025-03-30 06:51:21
+1160,blossomstudent34,codecombat.com,The Raised Sword,560f1a9f22961295f9427742,,2025-03-30 06:51:21
+1161,blossomstudent34,codecombat.com,Crawlways of Kithgard,560f1a9f22961295f9427742,,2025-03-30 06:51:21
+1162,blossomstudent34,codecombat.com,Hack and Dash,560f1a9f22961295f9427742,,2025-03-30 06:51:21
+1163,blossomstudent34,codecombat.com,Descending Further,560f1a9f22961295f9427742,,2025-03-30 06:51:21
+1164,blossomstudent34,codecombat.com,Haunted Kithmaze,560f1a9f22961295f9427742,,2025-03-30 06:51:21
+1165,blossomstudent34,codecombat.com,Forgetful Gemsmith,560f1a9f22961295f9427742,,2025-03-30 06:51:21
+1166,blossomstudent34,codecombat.com,Favorable Odds,560f1a9f22961295f9427742,,2025-03-30 06:51:21
+1167,blossomstudent34,codecombat.com,Kounter Kithwise,560f1a9f22961295f9427742,,2025-03-30 06:51:21
+1168,blossomstudent34,codecombat.com,Fire Dancing,560f1a9f22961295f9427742,,2025-03-30 06:51:21
+1169,blossomstudent34,codecombat.com,Riddling Kithmaze,560f1a9f22961295f9427742,,2025-03-30 06:51:21
+1170,blossomstudent34,codecombat.com,The Prisoner,560f1a9f22961295f9427742,,2025-03-30 06:51:21
+1171,blossomstudent34,codecombat.com,Dungeons of Kithgard,560f1a9f22961295f9427742,,2025-03-30 06:51:21
+1172,blossomstudent34,codecombat.com,Radiant Aura,560f1a9f22961295f9427742,,2025-03-30 06:51:21
+1173,blossomstudent34,codecombat.com,Gems in the Deep,560f1a9f22961295f9427742,,2025-03-30 06:51:21
+1174,blossomstudent34,codecombat.com,Illusory Interruption,560f1a9f22961295f9427742,,2025-03-30 06:51:21
+1175,blossomstudent34,codecombat.com,Kithgard Librarian,560f1a9f22961295f9427742,,2025-03-30 06:51:21
+1176,blossomstudent34,codecombat.com,Sleep Hour,560f1a9f22961295f9427742,,2025-03-30 06:51:21
+1177,blossomstudent34,codecombat.com,Shadow Guard,560f1a9f22961295f9427742,,2025-03-30 06:51:21
+1178,blossomstudent34,codecombat.com,True Names,560f1a9f22961295f9427742,,2025-03-30 06:51:21
+1179,blossomstudent34,codecombat.com,Dangerous Steps,560f1a9f22961295f9427742,,2025-03-30 06:51:21
+1180,blossomstudent34,codecombat.com,Cell Commentary,560f1a9f22961295f9427742,,2025-03-30 06:51:21
+1181,blossomstudent34,codecombat.com,Enemy Mine,560f1a9f22961295f9427742,,2025-03-30 06:51:21
+1182,blossomstudent34,codecombat.com,Long Steps,560f1a9f22961295f9427742,,2025-03-30 06:51:21
+1183,blossomstudent34,codecombat.com,Careful Steps,560f1a9f22961295f9427742,,2025-03-30 06:51:21
+1184,blossomstudent34,codecombat.com,Step Change,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1185,blossomstudent34,codecombat.com,Go Smart,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1186,blossomstudent34,codecombat.com,Go Go Go,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1187,blossomstudent34,codecombat.com,Shiny,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1188,blossomstudent34,codecombat.com,Walk It Off,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1189,blossomstudent34,codecombat.com,Hiker,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1190,blossomstudent34,codecombat.com,Elbow,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1191,blossomstudent34,codecombat.com,Turns,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1192,blossomstudent34,codecombat.com,Steps,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1193,blossomstudent34,codecombat.com,The Gem,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1194,blossomstudent34,codecombat.com,Long Hall,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1195,blossomstudent34,codecombat.com,Two Gems,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1196,blossomstudent34,codecombat.com,Big Gem Square,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1197,blossomstudent34,codecombat.com,X Marks the Spot,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1198,blossomstudent34,codecombat.com,Gem Square,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1199,blossomstudent34,codecombat.com,Go Around,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1200,blossomstudent34,codecombat.com,Gems First,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1201,blossomstudent34,codecombat.com,The Raft,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1202,blossomstudent34,codecombat.com,Snake Maze,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1203,blossomstudent34,codecombat.com,Open Up,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1204,blossomstudent34,codecombat.com,Doors,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1205,blossomstudent34,codecombat.com,Open and Shut,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1206,blossomstudent34,codecombat.com,Just a Scratch,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1207,blossomstudent34,codecombat.com,One Block,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1208,blossomstudent34,codecombat.com,Wise,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1209,blossomstudent34,codecombat.com,Brave,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1210,blossomstudent34,codecombat.com,One at a Time,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1211,blossomstudent34,codecombat.com,Clean Up,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1212,blossomstudent34,codecombat.com,Bad Guys,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1213,blossomstudent34,codecombat.com,Hall Monitor,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1214,blossomstudent34,codecombat.com,Heart Up,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1215,blossomstudent34,codecombat.com,Choose Your Battles,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1216,blossomstudent34,codecombat.com,Tough,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1217,blossomstudent34,codecombat.com,No Keys,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1218,blossomstudent34,codecombat.com,Knock Knock,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1219,blossomstudent34,codecombat.com,Careful,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1220,blossomstudent34,codecombat.com,Airlock,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1221,blossomstudent34,codecombat.com,Spin to Win,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1222,blossomstudent34,codecombat.com,Whirlwind,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1223,blossomstudent34,codecombat.com,Cyclone,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1224,blossomstudent34,codecombat.com,Twister,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1225,blossomstudent34,codecombat.com,Kaboom,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1226,blossomstudent34,codecombat.com,Target Practice,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1227,blossomstudent34,codecombat.com,Hurricane,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1228,blossomstudent34,codecombat.com,Two Big,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1229,blossomstudent34,codecombat.com,Easy Pickings,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1230,blossomstudent34,codecombat.com,Zap Gap,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1231,blossomstudent34,codecombat.com,Zap It,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1232,blossomstudent34,codecombat.com,Hit and Spin,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1233,blossomstudent34,codecombat.com,Vortex,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1234,blossomstudent34,codecombat.com,TNT,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1235,blossomstudent34,codecombat.com,Busy Intersection,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1236,blossomstudent34,codecombat.com,Advantage,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1237,blossomstudent34,codecombat.com,Back Up,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1238,blossomstudent34,codecombat.com,Badder Guy,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1239,blossomstudent34,codecombat.com,Hit Me Up,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1240,blossomstudent34,codecombat.com,Monster,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1241,blossomstudent34,codecombat.com,Lure It,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1242,blossomstudent34,codecombat.com,Tornado,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1243,blossomstudent34,codecombat.com,More Times,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1244,blossomstudent34,codecombat.com,Chain Reaction,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1245,blossomstudent34,codecombat.com,It's a Trap,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1246,blossomstudent34,codecombat.com,Restraint,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1247,blossomstudent34,codecombat.com,Fern,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1248,blossomstudent34,codecombat.com,Smasher,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1249,blossomstudent34,codecombat.com,Grabber,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1250,blossomstudent34,codecombat.com,Zap Master,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1251,blossomstudent34,codecombat.com,Loopy,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1252,blossomstudent34,codecombat.com,Tall Wave,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1253,blossomstudent34,codecombat.com,Square Wave,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1254,blossomstudent34,codecombat.com,Right Up,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1255,blossomstudent34,codecombat.com,Clearing the Way,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1256,blossomstudent34,codecombat.com,Friends,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1257,blossomstudent34,codecombat.com,Regular Path,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1258,blossomstudent34,codecombat.com,Spin Eternally,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1259,blossomstudent34,codecombat.com,Careful Aim,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1260,blossomstudent34,codecombat.com,Scratch Loop,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1261,blossomstudent34,codecombat.com,Down the Line,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1262,blossomstudent34,codecombat.com,Detonations,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1263,blossomstudent34,codecombat.com,If Only,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1264,blossomstudent34,codecombat.com,Seer,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1265,blossomstudent34,codecombat.com,Short and Tall,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1266,blossomstudent34,codecombat.com,Rapid Fire,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1267,blossomstudent34,codecombat.com,Loop Master,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1268,blossomstudent34,codecombat.com,Loop Before,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1269,blossomstudent34,codecombat.com,Crab Nest,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1270,blossomstudent34,codecombat.com,Gem Weave,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1271,blossomstudent34,codecombat.com,Cube Nest,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1272,blossomstudent34,codecombat.com,Lurker,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1273,blossomstudent34,codecombat.com,Loop Middle,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1274,blossomstudent34,codecombat.com,Snack Time,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1275,blossomstudent34,codecombat.com,Dragonfly Nest,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1276,blossomstudent34,codecombat.com,Loot Loop,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1277,blossomstudent34,codecombat.com,Vault,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1278,blossomstudent34,codecombat.com,Loop After,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1279,blossomstudent34,codecombat.com,Double Loop,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1280,blossomstudent34,codecombat.com,Crab Season,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1281,blossomstudent34,codecombat.com,Showdown,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1282,blossomstudent34,codecombat.com,Both Sides,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1283,blossomstudent34,codecombat.com,Look Past It,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1284,blossomstudent34,codecombat.com,Visionary,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1285,blossomstudent34,codecombat.com,Look Alive,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1286,blossomstudent34,codecombat.com,Take That,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1287,blossomstudent34,codecombat.com,Farsight,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1288,blossomstudent34,codecombat.com,Not Equals,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1289,blossomstudent34,codecombat.com,Decisions,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1290,blossomstudent34,codecombat.com,Equals,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1291,blossomstudent34,codecombat.com,Gems Only,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1292,blossomstudent34,codecombat.com,Look Loops,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1293,blossomstudent34,codecombat.com,To and Fro,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1294,blossomstudent34,codecombat.com,Scout,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1295,blossomstudent34,codecombat.com,Strike Force,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1296,blossomstudent34,codecombat.com,Sight Range,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1297,blossomstudent34,codecombat.com,More Equal,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1298,blossomstudent34,codecombat.com,Treasure Finder,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1299,blossomstudent34,codecombat.com,Empty Pot,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1300,blossomstudent34,codecombat.com,Crabs Only,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1301,blossomstudent34,codecombat.com,Eyes Up,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1302,blossomstudent34,codecombat.com,Why Did,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1303,blossomstudent34,codecombat.com,While Time,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1304,blossomstudent34,codecombat.com,No One,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1305,blossomstudent34,codecombat.com,While Loops,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1306,blossomstudent34,codecombat.com,Control Time,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1307,blossomstudent34,codecombat.com,Waits For,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1308,blossomstudent34,codecombat.com,Elimination,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1309,blossomstudent34,codecombat.com,If Master,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1310,blossomstudent34,codecombat.com,Crate Rows,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1311,blossomstudent34,codecombat.com,Zap Until Chicken,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1312,blossomstudent34,codecombat.com,Tunnel Vision,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1313,blossomstudent34,codecombat.com,Whiling Away,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1314,blossomstudent34,codecombat.com,Don't Hit Gems,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1315,blossomstudent34,codecombat.com,Feathers,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1316,blossomstudent34,codecombat.com,To Avoid,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1317,blossomstudent34,codecombat.com,Farmer's Market,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1318,blossomstudent34,codecombat.com,The Chicken,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1319,blossomstudent34,codecombat.com,Cube Conditions,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1320,blossomstudent34,codecombat.com,Eggsplosions,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1321,blossomstudent34,codecombat.com,Cross the Ocean,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1322,blossomstudent34,codecombat.com,Keep Going,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1323,blossomstudent34,codecombat.com,Tireless,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1324,blossomstudent34,codecombat.com,Getting Rich,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1325,blossomstudent34,codecombat.com,Scratch Scratch,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1326,blossomstudent34,codecombat.com,Go the Distance,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1327,blossomstudent34,codecombat.com,Zags,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1328,blossomstudent34,codecombat.com,While Master,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1329,blossomstudent34,codecombat.com,Set to Blast,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1330,blossomstudent34,codecombat.com,Into the Jello,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1331,blossomstudent34,codecombat.com,While Inside,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1332,blossomstudent34,codecombat.com,Buffet,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1333,blossomstudent34,codecombat.com,Healer,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1334,blossomstudent34,codecombat.com,Tough Enough,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1335,blossomstudent34,codecombat.com,Catching Breath,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1336,blossomstudent34,codecombat.com,Double Batch,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1337,blossomstudent34,codecombat.com,Less Than,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1338,blossomstudent34,codecombat.com,Return Distance,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1339,blossomstudent34,codecombat.com,Scattered,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1340,blossomstudent34,codecombat.com,Greater Than,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1341,blossomstudent34,codecombat.com,Vary All,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1342,blossomstudent34,codecombat.com,Greater Hero,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1343,blossomstudent34,codecombat.com,Code Master,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1344,blossomstudent34,codecombat.com,Not My Type,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1345,blossomstudent34,codecombat.com,Type Variables,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1346,blossomstudent34,codecombat.com,Set Your Steps,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1347,blossomstudent34,codecombat.com,Looking Sharp,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1348,blossomstudent34,codecombat.com,Label Your Look,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1349,blossomstudent34,codecombat.com,Zap Smart,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1350,blossomstudent34,codecombat.com,More Variables,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1351,blossomstudent34,codecombat.com,Memory,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1352,blossomstudent34,codecombat.com,Variables,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1353,blossomstudent34,codecombat.com,Variable Spiral,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1354,blossomstudent34,codecombat.com,Look and See,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1355,blossomstudent34,codecombat.com,Step Boxes,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1356,blossomstudent34,codecombat.com,Very Vary,65f32b6c87c07dbeb5ba1936,,2025-03-30 06:51:36
+1357,blossomstudent34,codecombat.com,Hero's Journey,5789587aad86a6efb573701e,,2025-03-30 06:51:48
+1358,blossomstudent34,codecombat.com,Click Gait,5789587aad86a6efb573701e,,2025-03-30 06:51:48
+1359,blossomstudent34,codecombat.com,Vorpal Mouse,5789587aad86a6efb573701e,,2025-03-30 06:51:48
+1360,blossomstudent34,codecombat.com,A-maze-ing,5789587aad86a6efb573701e,,2025-03-30 06:51:48
+1361,blossomstudent34,codecombat.com,Crushing It,5789587aad86a6efb573701e,,2025-03-30 06:51:48
+1362,blossomstudent34,codecombat.com,Over the Garden Wall,5789587aad86a6efb573701e,,2025-03-30 06:51:48
+1363,blossomstudent34,codecombat.com,Jailbreak,5789587aad86a6efb573701e,,2025-03-30 06:51:48
+1364,blossomstudent34,codecombat.com,Ranger Danger,5789587aad86a6efb573701e,,2025-03-30 06:51:48
+1365,blossomstudent34,codecombat.com,Gemtacular,5789587aad86a6efb573701e,,2025-03-30 06:51:48
+1366,blossomstudent34,codecombat.com,Army Training,5789587aad86a6efb573701e,,2025-03-30 06:51:48
+1367,blossomstudent34,codecombat.com,Give and Take,5789587aad86a6efb573701e,,2025-03-30 06:51:48
+1368,blossomstudent34,codecombat.com,Risk and Reward,5789587aad86a6efb573701e,,2025-03-30 06:51:48
+1369,blossomstudent34,codecombat.com,Hedge Magic,5789587aad86a6efb573701e,,2025-03-30 06:51:48
+1370,blossomstudent34,codecombat.com,Forest Incursion,5789587aad86a6efb573701e,,2025-03-30 06:51:48
+1371,blossomstudent34,codecombat.com,Throwing Fire,5789587aad86a6efb573701e,,2025-03-30 06:51:48
+1372,blossomstudent34,codecombat.com,Them Bones,5789587aad86a6efb573701e,,2025-03-30 06:51:48
+1373,blossomstudent34,codecombat.com,Time To Live,5789587aad86a6efb573701e,,2025-03-30 06:51:48
+1374,blossomstudent34,codecombat.com,Game Grove,5789587aad86a6efb573701e,,2025-03-30 06:51:48
+1375,blossomstudent34,codecombat.com,Persistence Pays,5789587aad86a6efb573701e,,2025-03-30 06:51:48
+1376,blossomstudent34,codecombat.com,Peasants and Munchkins,5789587aad86a6efb573701e,,2025-03-30 06:51:48
+1377,blossomstudent34,codecombat.com,Seeing is Believing,5789587aad86a6efb573701e,,2025-03-30 06:51:48
+1378,blossomstudent34,codecombat.com,Behavior Driven Development,5789587aad86a6efb573701e,,2025-03-30 06:51:48
+1379,blossomstudent34,codecombat.com,Tabula Rasa,5789587aad86a6efb573701e,,2025-03-30 06:51:48
+1380,blossomstudent34,codecombat.com,cleanup,,,2025-03-30 06:54:52.583837
+1381,blossomstudent34,codecombat.com,buddys-name-b,5632661322961295f9428638,66efb998c69f7a87b543da64,2025-03-30 07:27:19.864269
+1382,blossomstudent34,codecombat.com,buddys-name-a,5632661322961295f9428638,66efb998c69f7a87b543da64,2025-03-30 07:29:27.839979
+1383,blossomstudent48,www.ozaria.com,ch3m1l1l5b,,,2025-04-01 10:28:03.468875
+1384,blossomstudent48,www.ozaria.com,ch3m1l2l1b,,,2025-04-01 11:02:56.172213
+1385,blossomstudent48,www.ozaria.com,ch3m1l2l2b,,,2025-04-01 11:11:31.773022
+1386,blossomstudent48,www.ozaria.com,ch3m1l2l3b,,,2025-04-01 11:14:30.058368
+1387,blossomstudent48,www.ozaria.com,ch3m1l2l4b,,,2025-04-01 11:19:47.450015
+1388,blossomstudent49,www.ozaria.com,ch3m1l1l4b,,,2025-04-01 11:38:58.968123
+1389,blossomstudent48,www.ozaria.com,ch3m1l2l5b,,,2025-04-01 11:41:08.132841
+1390,blossomstudent17,www.ozaria.com,ch3m4l1l3b,,,2025-04-05 02:52:31.850716
+1391,blossomstudent30,www.ozaria.com,ch3m4l1l1b,,,2025-04-05 03:01:45.373345
+1392,blossomstudent36,www.ozaria.com,ch3m2l2l4b,,,2025-04-05 03:11:41.188383
+1393,blossomstudent18,codecombat.com,hoarding-gold,56462f935afde0c6fd30fc8c,672edd3e2f9b5d22cf15af22,2025-04-05 03:42:01.521593
+1394,blossomstudent23,codecombat.com,ogre-invaders,,,2025-04-05 03:46:08.001097
+1395,blossomstudent08,codecombat.com,star-shower,56462f935afde0c6fd30fc8c,672edd3e2f9b5d22cf15af22,2025-04-05 03:46:45.471086
+1396,blossomstudent18,codecombat.com,decoy-drill,56462f935afde0c6fd30fc8c,672edd3e2f9b5d22cf15af22,2025-04-05 03:47:08.920329
+1397,blossomstudent23,codecombat.com,the-mighty-sand-yak,56462f935afde0c6fd30fc8c,672edd3e2f9b5d22cf15af22,2025-04-05 03:47:45.787381
+1398,blossomstudent23,codecombat.com,oasis,56462f935afde0c6fd30fc8c,672edd3e2f9b5d22cf15af22,2025-04-05 03:48:57.775706
+1399,blossomstudent19,codecombat.com,olympic-race,56462f935afde0c6fd30fc8c,672edd3e2f9b5d22cf15af22,2025-04-05 03:50:16.858625
+1400,blossomstudent23,codecombat.com,sarven-road,56462f935afde0c6fd30fc8c,672edd3e2f9b5d22cf15af22,2025-04-05 03:53:23.390371
+1401,blossomstudent19,codecombat.com,cross-bones,,,2025-04-05 03:55:51.901064
+1402,blossomstudent23,codecombat.com,forest-storm,,,2025-04-05 03:56:55.165167
+1403,blossomstudent08,codecombat.com,forest-shadow,56462f935afde0c6fd30fc8c,672edd3e2f9b5d22cf15af22,2025-04-05 03:57:14.018816
+1404,blossomstudent23,codecombat.com,dried-irrigation,,,2025-04-05 03:58:07.788807
+1405,blossomstudent18,codecombat.com,continuous-alchemy,56462f935afde0c6fd30fc8c,672edd3e2f9b5d22cf15af22,2025-04-05 03:58:19.650551
+1406,blossomstudent08,codecombat.com,warders,,,2025-04-05 04:00:52.839932
+1407,blossomstudent18,codecombat.com,fast-and-furry-ous,56462f935afde0c6fd30fc8c,672edd3e2f9b5d22cf15af22,2025-04-05 04:01:38.817579
+1408,blossomstudent19,codecombat.com,air-rescue-service,,,2025-04-05 04:02:10.067750
+1409,blossomstudent08,codecombat.com,spring-thunder,56462f935afde0c6fd30fc8c,672edd3e2f9b5d22cf15af22,2025-04-05 04:04:19.317902
+1410,blossomstudent23,codecombat.com,crossroads,56462f935afde0c6fd30fc8c,672edd3e2f9b5d22cf15af22,2025-04-05 04:04:41.312808
+1411,blossomstudent23,codecombat.com,sarven-gaps,56462f935afde0c6fd30fc8c,672edd3e2f9b5d22cf15af22,2025-04-05 04:06:24.869136
+1412,blossomstudent08,codecombat.com,teleport-lasso,56462f935afde0c6fd30fc8c,672edd3e2f9b5d22cf15af22,2025-04-05 04:07:00.906727
+1413,blossomstudent18,codecombat.com,sand-mushrooms,56462f935afde0c6fd30fc8c,672edd3e2f9b5d22cf15af22,2025-04-05 04:09:03.372730
+1414,blossomstudent18,codecombat.com,mushroom-noise,56462f935afde0c6fd30fc8c,672edd3e2f9b5d22cf15af22,2025-04-05 04:12:13.505192
+1415,blossomstudent23,codecombat.com,interception,56462f935afde0c6fd30fc8c,672edd3e2f9b5d22cf15af22,2025-04-05 04:12:21.193693
+1416,blossomstudent08,codecombat.com,brawler-hunt,56462f935afde0c6fd30fc8c,672edd3e2f9b5d22cf15af22,2025-04-05 04:12:22.011110
+1417,blossomstudent19,codecombat.com,true-alchemy,,,2025-04-05 04:12:34.862115
+1418,blossomstudent18,codecombat.com,key-traps,56462f935afde0c6fd30fc8c,672edd3e2f9b5d22cf15af22,2025-04-05 04:13:14.260003
+1419,blossomstudent23,codecombat.com,passing-through,56462f935afde0c6fd30fc8c,672edd3e2f9b5d22cf15af22,2025-04-05 04:14:07.596025
+1420,blossomstudent08,codecombat.com,helpful-hunting,,,2025-04-05 04:36:52.121488
+1421,blossomstudent08,codecombat.com,usual-day,56462f935afde0c6fd30fc8c,672edd3e2f9b5d22cf15af22,2025-04-05 04:43:02.820455
+1422,blossomstudent08,codecombat.com,logical-path,56462f935afde0c6fd30fc8c,672edd3e2f9b5d22cf15af22,2025-04-05 04:58:10.243466
+1423,blossomstudent05,codecombat.com,the-wizards-plane,56462f935afde0c6fd30fc8c,67de58c7f68cba9772c2523f,2025-04-05 06:12:52.845525
+1424,blossomstudent03,codecombat.com,the-wizards-haunt,56462f935afde0c6fd30fc8c,67de58c7f68cba9772c2523f,2025-04-05 06:15:15.304334
+1425,blossomstudent05,codecombat.com,true-alchemy,,,2025-04-05 06:44:54.602246
+1426,blossomstudent07,codecombat.com,friend-and-foe,56462f935afde0c6fd30fc8c,67de58c7f68cba9772c2523f,2025-04-05 06:45:14.121742
+1427,blossomstudent07,codecombat.com,deja-brew,56462f935afde0c6fd30fc8c,67de58c7f68cba9772c2523f,2025-04-05 06:47:14.899489
+1428,blossomstudent07,codecombat.com,reward-and-ruination,56462f935afde0c6fd30fc8c,67de58c7f68cba9772c2523f,2025-04-05 06:47:55.304659
+1429,blossomstudent05,codecombat.com,coincrumbs,56462f935afde0c6fd30fc8c,67de58c7f68cba9772c2523f,2025-04-05 06:49:05.660779
+1430,blossomstudent04,codecombat.com,the-wizards-haunt,56462f935afde0c6fd30fc8c,67de58c7f68cba9772c2523f,2025-04-05 06:49:50.098472
+1431,blossomstudent03,codecombat.com,the-wizards-plane,56462f935afde0c6fd30fc8c,67de58c7f68cba9772c2523f,2025-04-05 06:51:16.336670
+1432,blossomstudent16,codecombat.com,free-billy,,,2025-04-06 06:44:49.438165
+1433,blossomstudent16,codecombat.com,a-fine-mint,5632661322961295f9428638,66efb998c69f7a87b543da64,2025-04-06 06:59:18.787131
+1434,blossomstudent48,www.ozaria.com,ch3m1l2l6b,,,2025-04-08 10:30:34.789114
+1435,blossomstudent49,www.ozaria.com,ch3m1l1l5b,,,2025-04-08 10:39:03.914965
+1436,blossomstudent48,www.ozaria.com,ch3m1l2cl1b,,,2025-04-08 11:17:42.083555
+1437,blossomstudent06,www.ozaria.com,ch3m1l2l4b,,,2025-04-08 11:21:56.883154
+1438,blossomstudent48,www.ozaria.com,ch3m2l1l1b,,,2025-04-08 11:29:07.879465
+1439,blossomstudent27,www.ozaria.com,ch3m1l1l4b,,,2025-04-08 11:29:25.469307
+1440,blossomstudent49,www.ozaria.com,ch3m1l2l1b,,,2025-04-08 11:31:14.317746
+1441,blossomstudent48,www.ozaria.com,ch3m2l1l2b,,,2025-04-08 11:34:00.522976
+1442,blossomstudent48,www.ozaria.com,ch3m2l1l3b,,,2025-04-08 11:35:17.839210
+1443,blossomstudent19,codecombat.com,dungeons-of-kithgard,560f1a9f22961295f9427742,630cc1ed3dfad800254437c2,2025-04-19 03:51:10.004956
+1444,blossomstudent18,codecombat.com,chain-of-command,56462f935afde0c6fd30fc8c,672edd3e2f9b5d22cf15af22,2025-04-19 03:53:24.128435
+1445,blossomstudent08,codecombat.com,logical-circle,56462f935afde0c6fd30fc8c,672edd3e2f9b5d22cf15af22,2025-04-19 04:06:40.906908
+1446,blossomstudent05,codecombat.com,rich-and-safe,,,2025-04-19 06:10:25.618245
+1447,blossomstudent05,codecombat.com,backwoods-bombardier,56462f935afde0c6fd30fc8c,67de58c7f68cba9772c2523f,2025-04-19 06:16:53.629008
+1448,blossomstudent05,codecombat.com,timberland-trap,,,2025-04-19 06:17:11.909285
+1449,blossomstudent05,codecombat.com,endangered-burl,56462f935afde0c6fd30fc8c,67de58c7f68cba9772c2523f,2025-04-19 06:52:11.807889
+1450,blossomstudent05,codecombat.com,taunting,56462f935afde0c6fd30fc8c,67de58c7f68cba9772c2523f,2025-04-19 06:59:39.456296
+1451,blossomstudent03,codecombat.com,coincrumbs,56462f935afde0c6fd30fc8c,67de58c7f68cba9772c2523f,2025-04-19 07:00:36.150261
+1452,blossomstudent04,codecombat.com,coincrumbs,56462f935afde0c6fd30fc8c,67de58c7f68cba9772c2523f,2025-04-19 07:02:47.321122
+1453,blossomstudent05,codecombat.com,wrong-type,,,2025-04-19 07:03:13.335235
+1454,blossomstudent03,codecombat.com,white-rabbit,56462f935afde0c6fd30fc8c,67de58c7f68cba9772c2523f,2025-04-19 07:07:12.801894
+1455,blossomstudent05,codecombat.com,burlbole-grove,56462f935afde0c6fd30fc8c,67de58c7f68cba9772c2523f,2025-04-19 07:07:29.322898
+1456,blossomstudent03,codecombat.com,white-rabbit,56462f935afde0c6fd30fc8c,67de58c7f68cba9772c2523fhttps,2025-04-19 07:08:26.286684
+1457,blossomstudent04,codecombat.com,white-rabbit,56462f935afde0c6fd30fc8c,67de58c7f68cba9772c2523f,2025-04-19 07:10:29.639589
+1458,blossomstudent04,codecombat.com,chameleons,56462f935afde0c6fd30fc8c,67de58c7f68cba9772c2523f,2025-04-19 07:15:55.600698
+1459,blossomstudent03,codecombat.com,chameleons,56462f935afde0c6fd30fc8c,67de58c7f68cba9772c2523fhttps,2025-04-19 07:16:12.299234
+1460,blossomstudent03,codecombat.com,chameleons,56462f935afde0c6fd30fc8c,67de58c7f68cba9772c2523f,2025-04-19 07:16:20.909018
+1461,blossomstudent03,codecombat.com,long-steps,,,2025-04-19 07:18:42.592724
+1462,blossomstudent05,codecombat.com,blind-distance,56462f935afde0c6fd30fc8c,67de58c7f68cba9772c2523f,2025-04-19 07:20:02.618027
+1463,blossomstudent03,codecombat.com,the-raised-sword,560f1a9f22961295f9427742,636609502cd169001fa7ba7c,2025-04-19 07:20:50.336999
+1464,blossomstudent05,codecombat.com,forest-jogging,5632661322961295f9428638,663de608483c9240bb4d8cbf,2025-04-19 07:20:51.616359
+1465,blossomstudent03,codecombat.com,crawlways-of-kithgard,560f1a9f22961295f9427742,636609502cd169001fa7ba7c,2025-04-19 07:21:14.974830
+1466,blossomstudent05,codecombat.com,go-fetch,5632661322961295f9428638,663de608483c9240bb4d8cbf,2025-04-19 07:21:45.681565
+1467,blossomstudent03,codecombat.com,cupboards-of-kithgard-b,560f1a9f22961295f9427742,636609502cd169001fa7ba7c,2025-04-19 07:22:10.371035
+1468,blossomstudent05,codecombat.com,eventful-skirmish,,,2025-04-19 07:22:13.256944
+1469,blossomstudent03,codecombat.com,cupboards-of-kithgard-b,560f1a9f22961295f9427742,636609502cd169001fa7ba7chttps,2025-04-19 07:22:14.663922
+1470,blossomstudent03,codecombat.com,kithgard-gates,560f1a9f22961295f9427742,636609502cd169001fa7ba7c,2025-04-19 07:23:14.531864
+1471,blossomstudent03,codecombat.com,kithgard-gates,560f1a9f22961295f9427742,636609502cd169001fa7ba7chttps,2025-04-19 07:23:19.184929
+1472,blossomstudent03,codecombat.com,safe-place,,,2025-04-19 07:23:54.243731
+1473,blossomstudent03,codecombat.com,dungeons-of-kithgard,560f1a9f22961295f9427742,636609502cd169001fa7ba7c,2025-04-19 07:24:56.335203
+1474,blossomstudent03,codecombat.com,dungeons-of-kithgard,560f1a9f22961295f9427742,636609502cd169001fa7ba7chttps,2025-04-19 07:25:00.491721
+1475,blossomstudent03,codecombat.com,kounter-kithwise,560f1a9f22961295f9427742,636609502cd169001fa7ba7c,2025-04-19 07:25:34.764732
+1476,blossomstudent03,codecombat.com,kounter-kithwise,560f1a9f22961295f9427742,636609502cd169001fa7ba7chttps,2025-04-19 07:25:38.399369
+1477,blossomstudent03,codecombat.com,radiant-aura,560f1a9f22961295f9427742,636609502cd169001fa7ba7c,2025-04-19 07:26:43.990632
+1478,blossomstudent03,codecombat.com,radiant-aura,560f1a9f22961295f9427742,636609502cd169001fa7ba7chttps,2025-04-19 07:26:48.293626
+1479,blossomstudent04,codecombat.com,gem-berries,,,2025-04-19 07:27:19.847588
+1480,blossomstudent16,www.ozaria.com,ch3m1l1l1b,,,2025-04-20 06:57:55.665346
+1481,blossomstudent16,www.ozaria.com,ch3m1l1l2b,,,2025-04-20 06:58:53.069439
+1482,blossomstudent34,www.ozaria.com,ch3m1l1l2b,,,2025-04-20 07:02:02.922131
+1483,blossomstudent34,www.ozaria.com,ch3m1l1l1b,,,2025-04-20 07:03:10.711487
+1484,blossomstudent16,www.ozaria.com,ch3m1l1l3b,,,2025-04-20 07:08:11.664218
+1485,blossomstudent16,www.ozaria.com,ch3m1l1l4b,,,2025-04-20 07:16:09.044827
+1486,blossomstudent16,www.ozaria.com,ch3m1l1l5b,,,2025-04-20 07:22:00.609149
+1487,blossomstudent34,www.ozaria.com,ch3m1l1l3b,,,2025-04-20 07:26:54.063379
+1488,blossomstudent06,www.ozaria.com,ch3m1l2l5b,,,2025-04-22 10:22:11.017244
+1489,blossomstudent49,www.ozaria.com,ch3m1l2l2b,,,2025-04-22 10:23:13.780131
+1490,blossomstudent49,www.ozaria.com,ch3m1l2l3b,,,2025-04-22 10:24:10.666690
+1491,blossomstudent49,www.ozaria.com,ch3m1l2l4b,,,2025-04-22 10:26:06.067317
+1492,blossomstudent49,www.ozaria.com,ch3m1l2l5b,,,2025-04-22 10:29:12.719709
+1493,blossomstudent49,www.ozaria.com,ch3m1l2l6b,,,2025-04-22 10:30:54.388142
+1494,blossomstudent49,www.ozaria.com,ch3m1l2cl1b,,,2025-04-22 11:02:28.329588
+1495,blossomstudent06,www.ozaria.com,ch3m1l2l6b,,,2025-04-22 11:04:36.426706
+1496,blossomstudent27,www.ozaria.com,ch3m1l2l1b,,,2025-04-22 11:06:29.169694
+1497,blossomstudent48,www.ozaria.com,ch3m2l1l4b,,,2025-04-22 11:06:35.299171
+1498,blossomstudent49,www.ozaria.com,ch3m2l1l1b,,,2025-04-22 11:07:19.219341
+1499,blossomstudent49,www.ozaria.com,ch3m2l1l2b,,,2025-04-22 11:09:55.735952
+1500,blossomstudent49,www.ozaria.com,ch3m2l1l3b,,,2025-04-22 11:11:34.911327
+1501,blossomstudent27,www.ozaria.com,ch3m1l2l2b,,,2025-04-22 11:17:52.269313
+1502,blossomstudent27,www.ozaria.com,ch3m1l2l3b,,,2025-04-22 11:23:47.863789
+1503,blossomstudent27,www.ozaria.com,ch3m1l2l4b,,,2025-04-22 11:33:06.119811
+1504,blossomstudent06,www.ozaria.com,ch3m1l2cl1b,,,2025-04-22 11:39:03.722896
+1505,blossomstudent30,www.ozaria.com,ch3m4l1l2b,,,2025-04-26 02:07:42.745419
+1506,blossomstudent30,www.ozaria.com,ch3m4l1l3b,,,2025-04-26 02:27:11.551624
+1507,blossomstudent30,www.ozaria.com,ch3m4l1l4b,,,2025-04-26 02:34:14.266009
+1508,blossomstudent30,www.ozaria.com,ch3m4l1l5b,,,2025-04-26 02:48:00.880096
+1509,blossomstudent30,www.ozaria.com,ch3m4l2l1b,,,2025-04-26 02:58:36.642559
+1510,blossomstudent17,www.ozaria.com,ch3m2l2cl1b,,,2025-04-26 03:04:13.072715
+1511,blossomstudent30,www.ozaria.com,ch3m4l2l2b,,,2025-04-26 03:04:45.462416
+1512,blossomstudent17,www.ozaria.com,ch3m4l2l1b,,,2025-04-26 03:05:11.307928
+1513,ben,www.ozaria.com,ch4m3l2l5,,,2025-04-26 03:38:10.255969
+1514,ben,www.ozaria.com,ch4m1l4l4,,,2025-04-26 03:38:33.442451
+1515,blossomstudent08,codecombat.com,logical-conclusion,56462f935afde0c6fd30fc8c,672edd3e2f9b5d22cf15af22,2025-04-26 03:50:51.894470
+1516,blossomstudent19,codecombat.com,gems-in-the-deep,560f1a9f22961295f9427742,630cc1ed3dfad800254437c2,2025-04-26 03:56:14.471360
+1517,blossomstudent08,codecombat.com,nonandor,,,2025-04-26 04:49:04.358931
+1518,blossomstudent08,codecombat.com,the-mighty-sand-yak,56462f935afde0c6fd30fc8c,672edd3e2f9b5d22cf15af22,2025-04-26 04:56:48.924091
+1519,blossomstudent03,codecombat.com,backwoods-bombardier,56462f935afde0c6fd30fc8c,67de58c7f68cba9772c2523f,2025-04-26 06:06:35.340449
+1520,blossomstudent03,codecombat.com,backwoods-bombardier,56462f935afde0c6fd30fc8c,67de58c7f68cba9772c2523fhttps,2025-04-26 06:06:39.501310
+1521,blossomstudent03,codecombat.com,thumb-biter,56462f935afde0c6fd30fc8c,67de58c7f68cba9772c2523f,2025-04-26 06:11:28.610098
+1522,blossomstudent03,codecombat.com,thumb-biter,56462f935afde0c6fd30fc8c,67de58c7f68cba9772c2523fhttps,2025-04-26 06:11:32.394787
+1523,blossomstudent03,codecombat.com,endangered-burl,56462f935afde0c6fd30fc8c,67de58c7f68cba9772c2523f,2025-04-26 06:15:45.055586
+1524,blossomstudent03,codecombat.com,endangered-burl,56462f935afde0c6fd30fc8c,67de58c7f68cba9772c2523fhttps,2025-04-26 06:15:47.925834
+1525,blossomstudent04,codecombat.com,backwoods-bombardier,56462f935afde0c6fd30fc8c,67de58c7f68cba9772c2523f,2025-04-26 06:51:12.956563
+1526,blossomstudent07,codecombat.com,burlbole-grove,56462f935afde0c6fd30fc8c,67de58c7f68cba9772c2523f,2025-04-26 06:52:19.250399
+1527,blossomstudent04,codecombat.com,backwoods-bombardier,56462f935afde0c6fd30fc8c,67de58c7f68cba9772c2523fhttps,2025-04-26 06:52:29.421695
+1528,blossomstudent07,codecombat.com,blind-distance,56462f935afde0c6fd30fc8c,67de58c7f68cba9772c2523f,2025-04-26 06:52:49.819647
+1529,blossomstudent07,codecombat.com,the-wizards-haunt,56462f935afde0c6fd30fc8c,67de58c7f68cba9772c2523f,2025-04-26 06:53:18.994815
+1530,blossomstudent07,codecombat.com,the-wizards-plane,56462f935afde0c6fd30fc8c,67de58c7f68cba9772c2523f,2025-04-26 06:53:56.999209
+1531,blossomstudent03,codecombat.com,taunting,56462f935afde0c6fd30fc8c,67de58c7f68cba9772c2523f,2025-04-26 06:55:53.177723
+1532,blossomstudent03,codecombat.com,taunting,56462f935afde0c6fd30fc8c,67de58c7f68cba9772c2523fhttps,2025-04-26 06:56:03.884484
+1533,blossomstudent03,codecombat.com,taunting,56462f935afde0c6fd30fc8c,,2025-04-26 06:56:11.268057
+1534,blossomstudent05,codecombat.com,wind-correction,,,2025-04-26 06:56:27.158387
+1535,blossomstudent04,codecombat.com,thumb-biter,56462f935afde0c6fd30fc8c,67de58c7f68cba9772c2523f,2025-04-26 06:56:48.803749
+1536,blossomstudent04,codecombat.com,thumb-biter,56462f935afde0c6fd30fc8c,67de58c7f68cba9772c2523fhttps,2025-04-26 06:57:03.594214
+1537,blossomstudent07,codecombat.com,taunting,56462f935afde0c6fd30fc8c,67de58c7f68cba9772c2523f,2025-04-26 06:57:15.588096
+1538,blossomstudent07,codecombat.com,endangered-burl,56462f935afde0c6fd30fc8c,67de58c7f68cba9772c2523f,2025-04-26 06:57:42.578671
+1539,blossomstudent07,codecombat.com,thumb-biter,56462f935afde0c6fd30fc8c,67de58c7f68cba9772c2523f,2025-04-26 06:58:02.824848
+1540,blossomstudent03,codecombat.com,wrong-type,,,2025-04-26 07:01:12.208062
+1541,blossomstudent07,codecombat.com,air-rescue-service,,,2025-04-26 07:06:45.169149
+1542,blossomstudent05,codecombat.com,backwoods-standoff-b,5632661322961295f9428638,663de608483c9240bb4d8cbf,2025-04-26 07:13:54.012169
+1543,blossomstudent04,codecombat.com,endangered-burl,56462f935afde0c6fd30fc8c,67de58c7f68cba9772c2523f,2025-04-26 07:14:35.254631
+1544,blossomstudent04,codecombat.com,endangered-burl,56462f935afde0c6fd30fc8c,67de58c7f68cba9772c2523fhttps,2025-04-26 07:15:19.224726

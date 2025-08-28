@@ -79,9 +79,10 @@ def submit_trade():
             return redirect(url_for('duck_trade_bp.index'))
 
         # Extract trade details
-        digital_ducks = form.digital_ducks.data
-        bit_ducks = [int(request.form.get(f'duck_{i}', 0)) for i in range(7)]
-        byte_ducks = [int(request.form.get(f'byte_duck_{i}', 0)) for i in range(7)]
+        request_data = request.get_json()
+        digital_ducks = int(request_data.get("digital_ducks", 0))
+        bit_ducks = request_data["bit_ducks"]
+        byte_ducks = request_data["byte_ducks"]
 
         trade = DuckTradeLog(
             username=username,

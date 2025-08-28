@@ -5,44 +5,56 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Classroom Chat</title>
-
-    <!-- Link to the base stylesheet -->
+    <link rel="icon" href="{{ url_for('static', filename='images/logo.ico') }}" type="image/x-icon">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
-    <link rel="stylesheet" href="/static/css/variables.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/message.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/variables.css') }}">
 
 </head>
+
 <body>
 
     <!-- Navigation Bar -->
     <header>
         <div id="logo-container">
-            <h1>Classroom Chat</h1>
+            <h1><a class="logo" href="{{ url_for('general_bp.index') }}">Classroom Chat</a></h1>
         </div>
         <nav>
             <ul>
                 {% if user %}
-                <li><a class="digital-ducks">Digital Ducks: {{ user.ducks }}</a></li>
+                    <li>
+                        <a class="digital-ducks">
+                            <span class="label">Digital Ducks:</span>
+                            <span class="count">{{ user.ducks }}</span>
+                        </a>
+                    </li>
+
                 {% endif %}
 
-                <!-- Home Link -->
-                <li><a class="nav-button" href="{{ url_for('general_bp.index') }}">Home</a></li>
-
-
-                <!-- Conversation History Link -->
-                <li><a class="nav-button" href="{{ url_for('message_bp.conversation_history') }}">Conversation History</a></li>
-
                 {% if 'user' in session %}
-                    <!-- Profile Link -->
-                    <li><a class="nav-button profile" href="{{ url_for('user_bp.profile') }}">Profile</a></li>
 
-                    <!-- bit_Pond Link -->
-<!--                    <li><a class="nav-button" href="{{ url_for('duck_trade_bp.index') }}">bit_Pond</a></li>-->
-                    <li><a class="nav-button" href="{{ url_for('duck_trade_bp.bit_shift') }}">bitShift</a></li>
+                    <li>
+                        <a class="nav-icon" href="{{ url_for('duck_trade_bp.bit_shift') }}">
+                            <img src="{{ url_for('static', filename='images/bit_shift.png') }}" alt="Bit Shift">
+                        </a>
+                    </li>
 
-                    <!-- Logout Link (if logged in) -->
-                    <li><a class="nav-button logout" href="{{ url_for('user_bp.logout') }}">Logout</a></li>
+
+                        <!-- Profile Menu -->
+                    <li class="profile-menu">
+                        <img src="{{ url_for('user_bp.profile_picture', filename=user.profile_picture) }}"
+                             alt="Profile Picture"
+                             class="profile-menu_img"
+                             id="profileToggle">
+                        <ul class="dropdown-menu">
+                            <li><a href="{{ url_for('user_bp.profile') }}">Profile</a></li>
+                            <li><a href="{{ url_for('message_bp.conversation_history') }}">History</a></li>
+                            <li><a href="{{ url_for('user_bp.logout') }}">Logout</a></li>
+                        </ul>
+                    </li>
+
+
                 {% else %}
-                    <!-- Login Link (if not logged in) -->
                     <li><a class="nav-button login" href="{{ url_for('user_bp.login') }}">Login</a></li>
                 {% endif %}
             </ul>
@@ -59,8 +71,19 @@
 
     <!-- Footer -->
     <footer>
-        <p>&copy; 2024 Classroom Chat. All Rights Reserved.</p>
+        <p>&copy; 2025 Classroom Chat. All Rights Reserved.</p>
     </footer>
 
 </body>
+<script>
+    document.getElementById("profileToggle").addEventListener("click", function (e) {
+    e.stopPropagation();
+    document.querySelector(".dropdown-menu").classList.toggle("show");
+});
+
+document.addEventListener("click", function () {
+    document.querySelector(".dropdown-menu").classList.remove("show");
+});
+
+</script>
 </html>

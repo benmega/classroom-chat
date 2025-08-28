@@ -5,7 +5,7 @@ from functools import wraps
 from sqlalchemy.sql import func
 from sqlalchemy import cast, Date
 
-from application.extensions import db
+from application.extensions import db, limiter
 from application.models.challenge import Challenge
 from application.models.challenge_log import ChallengeLog
 from application.models.conversation import Conversation
@@ -21,6 +21,11 @@ admin_bp = Blueprint('admin_bp', __name__)
 admin_pass = Config.ADMIN_PASSWORD
 adminUsername = Config.ADMIN_USERNAME
 
+@admin_bp.before_request
+@limiter.limit("5 per second, 50 per minute")
+def before_user_request():
+    # This function is just used for the decorator that handles the rate limiting logic.
+    pass
 
 # --------------------------
 # Authentication Decorators
@@ -137,6 +142,7 @@ def dashboard():
     active_users_count = User.query.filter_by(is_online=True).count()
 
     users = User.query.all()
+    users_sorted = sorted(users, key=lambda u: u.ducks or 0, reverse=True)
     config = Configuration.query.first()
     banned_words = BannedWords.query.all()
 
@@ -144,7 +150,7 @@ def dashboard():
     chart_data = get_duck_transactions_data()
 
     return render_template('admin/admin.html',
-                           users=users,
+                           users=users_sorted,
                            config=config,
                            banned_words=banned_words,
                            total_ducks=total_ducks,
@@ -246,31 +252,6 @@ def reset_password():
     return jsonify({'success': True, 'message': f"Password reset for {username}"})
 
 
-@admin_bp.route('/adjust_ducks', methods=['POST'])
-@local_only
-def adjust_ducks():
-    username = request.form.get('username')
-    amount = request.form.get('amount', type=int)
-
-    if not username or amount is None:
-        return jsonify({
-            'success': False,
-            'message': "Username and amount required"
-        }), 400
-
-    user = User.query.filter_by(username=username).first()
-    if user:
-        user.ducks += amount  # Add or subtract ducks
-        db.session.commit()
-        return jsonify({
-            'success': True,
-            'message': f"Updated {username}'s ducks by {amount}."
-        })
-    else:
-        return jsonify({
-            'success': False,
-            'message': "User not found."
-        }), 404
 
 @admin_bp.route('/create_user', methods=['POST'])
 @local_only
@@ -486,3 +467,55 @@ def trade_action():
         return jsonify({'status': 'success', 'message': 'Trade rejected'})
 
     return jsonify({'status': 'error', 'message': 'Invalid action'}), 400
+
+
+@admin_bp.route('/update_duck_multiplier', methods=['POST'])
+def update_duck_multiplier():
+    data = request.get_json()
+    new_multiplier = data.get('multiplier')
+
+    if new_multiplier is None:
+        return jsonify({'success': False, 'error': 'No multiplier provided'}), 400
+
+    try:
+        new_multiplier = float(new_multiplier)
+
+        config = Configuration.query.first()
+        if config is None:
+            return jsonify({'success': False, 'error': 'Configuration not found'}), 404
+        config.duck_multiplier = new_multiplier
+
+        db.session.commit()
+        return jsonify({'success': True, 'new_multiplier': new_multiplier})
+    except (ValueError, TypeError):
+        return jsonify({'success': False, 'error': 'Invalid multiplier value'}), 400
+    except Exception as e:
+        db.session.rollback() # Rollback in case of other errors
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@admin_bp.route('/adjust_ducks', methods=['POST'])
+@local_only
+def adjust_ducks():
+    username = request.form.get('username')
+    amount = request.form.get('amount', type=float)
+
+    if not username or amount is None:
+        return jsonify({
+            'success': False,
+            'message': "Username and amount required"
+        }), 400
+
+    user = User.query.filter_by(username=username).first()
+    if user:
+        user.ducks += amount  # Add or subtract ducks
+        db.session.commit()
+        return jsonify({
+            'success': True,
+            'message': f"Updated {username}'s ducks by {amount}."
+        })
+    else:
+        return jsonify({
+            'success': False,
+            'message': "User not found."
+        }), 404

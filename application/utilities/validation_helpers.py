@@ -30,7 +30,7 @@ URL_PATTERN = (
 
 
 
-def detect_and_handle_challenge_url(message, username):
+def detect_and_handle_challenge_url(message, username, duck_multiplier=1):
     """Detect and handle a challenge URL in a message."""
     match = _extract_challenge_details(message)
     if match:
@@ -38,7 +38,7 @@ def detect_and_handle_challenge_url(message, username):
         print(log_result)
         if log_result.get("success"):
             try:
-                _update_user_ducks(username, match["challenge_name"])
+                _update_user_ducks(username, match["challenge_name"], duck_multiplier)
             except ValueError as e:
                 return {
                     "handled": True,
@@ -75,14 +75,13 @@ def _log_challenge(details, username):
             username=username,
             domain=details["domain"],
             challenge_name=details["challenge_name"],
-            course_id=details["course_id"],
-            course_instance=details["course_instance"]
+            course_id=details["course_id"]
 ***REMOVED***.first()
 
         if existing_log:
             return {
                 "success": False,
-                "message": "Challenge log already exists",
+                "message": "You already claimed this level!",
                 "timestamp": existing_log.timestamp
             }
 
@@ -110,16 +109,20 @@ def _log_challenge(details, username):
             "message": f"Error logging challenge: {str(e)}"
         }
 
-def _update_user_ducks(username, challenge_name):
+def _update_user_ducks(username, challenge_name, duck_multiplier=1):
     """Update the user's duck count."""
     try:
         user = User.query.filter_by(username=username).first()
         if not user:
             raise ValueError(f"User with username '{username}' not found")
         challenge = Challenge.query.filter(Challenge.slug.ilike(challenge_name)).first()
+        if duck_multiplier >= 1:
+            print(f'duck multiplier of {duck_multiplier} in effect.')
+        duck_reward = challenge.value * duck_multiplier
         if not challenge:
             raise ValueError(f"Challenge '{challenge_name}' not found in the database")
-        user.ducks = round(user.ducks + challenge.value, 4)
+        user.ducks = round(user.ducks + duck_reward, 4)
+        print(f'{username} was granted {duck_reward} duck(s).')
         db.session.commit()
 
     except ValueError:
