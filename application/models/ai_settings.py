@@ -6,7 +6,6 @@ class AISettings(db.Model):
     key = db.Column(db.String(50))
     value = db.Column(db.String(1000))
 
-
 def get_ai_settings():
     default_role = '''
         Answer computer science questions about Python.
@@ -18,11 +17,10 @@ def get_ai_settings():
         'chat_bot_enabled': 'True'
     }
 
-    # Ensure that this function is being called within an app context
-    with db.session.begin():
-        db_settings = AISettings.query.all()  # Query the database for AI settings
-        for setting in db_settings:
-            settings[setting.key] = setting.value
+    # Just query the settings without beginning a new transaction
+    db_settings = AISettings.query.all()
+    for setting in db_settings:
+        settings[setting.key] = setting.value
 
     return {
         'role': settings.get('role', default_role),

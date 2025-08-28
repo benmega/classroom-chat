@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/profile.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/profile_picture_modal.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='lib/cropper.min.css') }}">
+
+<div class="profile-container">
+    <div class="profile-header">
+        <div class="profile-pic-container">
+            <img src="{{ url_for('user_bp.profile_picture', filename=user.profile_picture) }}"
+                 alt="Profile Picture"
+                 class="profile-img"
+                 id="current-profile-img">
+            <button type="button" class="edit-pic-btn" id="edit-pic-trigger">✎</button>
+        </div>
+
+        <!-- Hidden file input -->
+        <input type="file" id="file-input" accept="image/*" style="display:none;">
+
+        <div class="profile-info">
+            <h1>{{ user.username }}</h1>
+            <p class="job-title">Aspiring Coder</p>
+            <p class="location">Classroom 101</p>
+            <p class="digital-ducks">Digital Ducks: {{ user.ducks }}</p>
+        </div>
+
+        <!-- Edit Button -->
+        <a href="{{ url_for('user_bp.edit_profile') }}" class="edit-btn">Edit Profile</a>
+    </div>
+
+    <!-- Modal for cropping -->
+    <div id="crop-modal" class="modal">
+        <div class="modal-content">
+            <button class="close-btn" id="close-modal">&times;</button>
+            <h3>Adjust your profile picture</h3>
+            <img id="preview" alt="Preview">
+            <div class="modal-buttons">
+                <button id="crop-btn">Crop & Save</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="profile-body">
+        <!-- Progress Section -->
+        <div class="progress-section">
+            <h2>Classroom Progress</h2>
+            <div class="activity-card">
+                <h3 class="game-title">CodeCombat</h3>
+
+                {% set completed = user.get_progress("codecombat.com") %}
+                {% set percent = user.get_progress_percent("codecombat.com") %}
+
+                {% if completed %}
+                    <div class="progress-info">
+                        <span class="levels">{{ completed }} Levels Completed</span>
+                        <span class="percent">({{ percent }}%)</span>
+                    </div>
+
+                    <div class="progress-bar">
+                        <div class="progress" style="width: {{ percent }}%;"></div>
+                    </div>
+                {% else %}
+                    <p class="no-progress">No progress yet</p>
+                {% endif %}
+            </div>
+            <div class="activity-card">
+                <h3 class="game-title">Ozaria</h3>
+
+                {% set completed = user.get_progress("www.ozaria.com") %}
+                {% set percent = user.get_progress_percent("www.ozaria.com") %}
+
+                {% if completed %}
+                    <div class="progress-info">
+                        <span class="levels">{{ completed }} Levels Completed</span>
+                        <span class="percent">({{ percent }}%)</span>
+                    </div>
+
+                    <div class="progress-bar">
+                        <div class="progress" style="width: {{ percent }}%;"></div>
+                    </div>
+                {% else %}
+                    <p class="no-progress">No progress yet</p>
+                {% endif %}
+            </div>
+
+        </div>
+
+        <!-- Skills Section -->
+        <div class="skills-section">
+            <h2>Top Skills</h2>
+            <div class="skills">
+                {% for skill in user.skills %}
+                <span class="skill-tag">
+                    {{ skill.name }}
+                    <a href="#" class="remove-skill" data-skill-id="{{ skill.id }}">×</a>
+                </span>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Projects Section -->
+        <div class="projects-section">
+            <h2>Recent Projects</h2>
+            {% for project in user.projects %}
+            <div class="project-entry">
+                <h3>{{ project.name }}</h3>
+                <p>{{ project.description }}</p>
+                <p><a href="{{ project.link }}" target="_blank">View Project</a></p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Scripts -->
+
+<script src="{{ url_for('static', filename='lib/cropper.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/users/profile.js') }}"></script>
+
+
+{% endblock %}

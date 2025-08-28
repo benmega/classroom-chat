@@ -17,7 +17,6 @@
     position: sticky;
     top: 0;
     z-index: 10;
-    width: 100%;
 }
 
 .header-content {
@@ -78,13 +77,7 @@
     box-sizing: border-box;
 }
 
-/* Admin container grid layout */
-.admin-container {
-    width: 100%;
-    max-width: 100%;
-    margin: 0 auto;
-}
-
+/* Admin grid layout */
 .admin-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -175,16 +168,8 @@
     margin-bottom: 8px;
 }
 
-.admin-button:last-child {
-    margin-right: 0;
-}
-
 .admin-button:hover {
     transform: translateY(-2px);
-}
-
-.admin-button.primary {
-    background-color: var(--primary-color);
 }
 
 .admin-button.primary:hover {
@@ -216,11 +201,6 @@
     background-color: var(--highlight-hover);
 }
 
-.admin-button-link {
-    text-decoration: none;
-    display: inline-block;
-}
-
 /* Button group alignment */
 .button-group {
     display: flex;
@@ -240,10 +220,14 @@
     background-color: var(--background-light);
     border-radius: var(--border-radius-small);
     margin-bottom: 5px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
-.user-list li:last-child {
-    margin-bottom: 0;
+.user-ducks {
+    font-weight: bold;
+    color: var(--primary-color-dark);
 }
 
 /* Footer styles */
@@ -253,27 +237,6 @@
     text-align: center;
     padding: 15px;
     margin-top: auto;
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-    .header-content {
-        flex-direction: column;
-        padding: 10px;
-    }
-
-    .admin-header h1 {
-        margin-bottom: 10px;
-    }
-
-    .admin-nav ul {
-        flex-wrap: wrap;
-        justify-content: center;
-    }
-
-    .admin-grid {
-        grid-template-columns: 1fr;
-    }
 }
 
 /* Stats Overview Section */
@@ -342,19 +305,6 @@
     text-decoration: underline;
 }
 
-/* Enhanced user list */
-.user-list li {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.user-ducks {
-    font-weight: bold;
-    color: var(--primary-color-dark);
-}
-
-
 /* Password reset section */
 .password-strength-meter {
     height: 5px;
@@ -416,23 +366,7 @@
     margin: 5px 0 0 0;
 }
 
-/* Badge for pending trades count */
-.badge {
-    display: inline-block;
-    min-width: var(--badge-size);
-    height: var(--badge-size);
-    line-height: var(--badge-size);
-    padding: var(--badge-padding);
-    font-size: var(--badge-font-size);
-    font-weight: bold;
-    color: white;
-    text-align: center;
-    background-color: var(--error-color);
-    border-radius: calc(var(--badge-size) / 2);
-    margin-left: 5px;
-}
-
-/* For responsive rubber duck icons */
+/* Emoji styling */
 .emoji.duck-icon {
     height: var(--duck-icon-size);
     width: auto;
@@ -440,10 +374,30 @@
     object-fit: contain;
 }
 
-/* General emoji styling for JS replacements */
 .emoji {
     height: var(--emoji-size);
     width: auto;
     vertical-align: middle;
     object-fit: contain;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .header-content {
+        flex-direction: column;
+        padding: 10px;
+    }
+
+    .admin-header h1 {
+        margin-bottom: 10px;
+    }
+
+    .admin-nav ul {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .admin-grid {
+        grid-template-columns: 1fr;
+    }
 }

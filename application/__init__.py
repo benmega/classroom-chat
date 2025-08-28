@@ -1,7 +1,10 @@
 import os
+import socket
+
 from flask import Flask, session, g, jsonify
 from datetime import timedelta
 
+from flask_cors import CORS
 from flask_limiter import RateLimitExceeded
 from werkzeug.exceptions import RequestEntityTooLarge
 
@@ -15,8 +18,11 @@ from application.config import DevelopmentConfig, TestingConfig, ProductionConfi
 import logging
 from flask_wtf.csrf import CSRFProtect
 
+from .license_checker import load_license
+
 
 def create_app(config_class=None):
+
     # Configure logging
     logging.basicConfig(level=logging.INFO)
     logger = logging.getLogger(__name__)
@@ -37,14 +43,31 @@ def create_app(config_class=None):
     app = Flask(__name__, template_folder=template_folder, static_folder=static_folder)
     app.config.from_object(config_class)
 
+    # For communication with Tauri
+    CORS(app)
+
     # Configure session timeout
     app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=10)
+    base_dir = os.path.abspath(os.path.dirname(__file__))
+    license_dir = os.path.abspath(os.path.join(base_dir, "..", "license"))
+
+    public_key_path = os.path.join(license_dir, "public_key.pem")
+    license_path = os.path.join(license_dir, "license.lic")
+
+    # Load license (early)
+    license_data = load_license(
+        public_key_path=public_key_path,
+        license_path=license_path
+    )
+    app.config["IS_PREMIUM"] = license_data["is_premium"]
+    app.config["LICENSEE"] = license_data.get("licensee", "Unknown")
 
     # Initialize extensions
     db.init_app(app)
     socketio.init_app(app, cors_allowed_origins="*", async_mode=app.config.get('SOCKETIO_ASYNC_MODE', 'threading'))
     limiter.init_app(app)
 
+    socketio.init_app(app, cors_allowed_origins="*", async_mode='threading') # previously app.config.get('SOCKETIO_ASYNC_MODE', 'threading')
 
     # Initialize CSRF protection
     csrf = CSRFProtect(app)

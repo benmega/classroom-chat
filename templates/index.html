@@ -10,15 +10,49 @@
         <div id="chat"></div>
 
         <form id="messageForm">
-            <textarea  type="text" id="message" name="message" required></textarea>
-            <button type="submit">Send Message</button>
+            <div class="input-row">
+                <label for="file" class="file-button" title="Attach file">
+                    <svg class="file-icon" viewBox="0 0 24 24">
+                        <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
+                    </svg>
+                    <input type="file" id="file" multiple>
+                </label>
+
+                <div class="message-input-container">
+                    <textarea type="text" id="message" name="message" required placeholder="Type your message..."></textarea>
+                </div>
+
+                <button type="submit" class="send-button" title="Send">➤</button>
+            </div>
         </form>
-
-        <input type="file" id="file" multiple>
-
 
     </div>
     <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script type="module" src="{{ url_for('static', filename='js/main.js') }}"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const messageInput = document.getElementById('message');
+    const messageForm = document.getElementById('messageForm');
+
+    messageInput.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') {
+            if (e.ctrlKey || e.metaKey) {
+                // Insert newline
+                const cursorPos = this.selectionStart;
+                const value = this.value;
+                this.value = value.slice(0, cursorPos) + '\n' + value.slice(cursorPos);
+                this.selectionStart = this.selectionEnd = cursorPos + 1;
+                e.preventDefault();
+            } else {
+                // Submit the form
+                e.preventDefault(); // prevent newline
+                messageForm.requestSubmit();
+            }
+        }
+    });
+});
+</script>
 
 {% endblock %}

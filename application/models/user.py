@@ -9,6 +9,10 @@ from application.models.skill import Skill
 
 
 class User(db.Model):
+    @property
+    def username(self):
+        return self._username
+
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
     _username = db.Column("username", db.String(50), unique=True, nullable=False)
@@ -16,7 +20,8 @@ class User(db.Model):
     profile_picture = db.Column(db.String(150), default="Default_pfp.jpg")
     ip_address = db.Column(db.String(45), nullable=True)
     is_online = db.Column(db.Boolean, default=False)
-    ducks = db.Column(db.Integer, nullable=False, default=0)  # Tracks the total ducks earned
+    ducks = db.Column(db.Integer, nullable=False, default=0)
+    nickname = db.Column(db.String(50), nullable=False, default=_username)
 
     # Relationships
     skills = db.relationship('Skill', backref='user', lazy=True)
@@ -53,22 +58,24 @@ class User(db.Model):
         total_challenges = ChallengeLog.query.filter_by(username=self._username, domain=domain).count()
         return total_challenges  # Modify if you want percentages based on predefined thresholds.
 
-    @property
-    def codecombat_progress(self):
+
+    def get_progress_percent(self, domain):
         """Calculate CodeCombat progress as a percentage of completed challenges (rounded for readability)."""
         from application.models.challenge import Challenge
-        total_challenges = Challenge.query.filter_by(domain="codecombat.com").count()
-        completed_challenges = ChallengeLog.query.filter_by(username=self._username, domain="codecombat.com").count()
+        total_challenges = Challenge.query.filter_by(domain=domain).count()
+        completed_challenges = ChallengeLog.query.filter_by(username=self._username, domain=domain).count()
 
-        # Calculate progress percentage and round to 4 significant figures
+
         progress = (completed_challenges / total_challenges) * 100 if total_challenges > 0 else 0
-        return round(progress, 3) if progress >= 10 else round(progress, 2)
+        return int(round(progress, 0))
 
     def add_skill(self, skill_name):
         """Add a skill to the user."""
         new_skill = Skill(name=skill_name, user_id=self.id)
         db.session.add(new_skill)
         db.session.commit()
+
+
 
     def remove_skill(self, skill_id):
         """Remove a skill by ID."""

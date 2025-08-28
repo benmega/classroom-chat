@@ -7,8 +7,8 @@
     --secondary-color-dark: #004d4d; /* Darker blue */
     --background-light: #f5f5f5; /* Light background */
     --background-gradient: linear-gradient(135deg, #f5f5f5, #e0f7fa); /* Gradient */
-    --highlight-color: #FFD700; /* Yellow */
-    --highlight-hover: #FFA500; /* Darker yellow */
+    --highlight-color: #FFF455; /* Bright, high-contrast yellow */
+    --highlight-hover: #FFC107; /* Rich amber for hover */
     --link-color: #0000EE; /* Blue link */
     --visited-link-color: #551A8B; /* Purple link */
     --error-color: #FF6347; /* Tomato red */
@@ -33,7 +33,7 @@
 
     /* Sizes */
     --max-container-width: 1300px;
-    --chat-height: 400px;
+    --chat-height: 60vh;
     --header-padding: 0px 40px;
     --input-padding: 12px;
     --button-padding: 12px 20px;
@@ -58,4 +58,9 @@
     /* Icon sizing */
     --duck-icon-size: 1.5em;
     --emoji-size: 1em;
+
+    /* Nav sizing */
+    --nav-item-size: 44px;   /* square dimension */
+    --nav-font-size: 16px;
+    --nav-padding: 0 16px;
 }

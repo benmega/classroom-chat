@@ -25,7 +25,7 @@ class Config:
     SESSION_TYPE = 'filesystem'
 
     # File upload settings
-    UPLOAD_FOLDER = os.path.join(STATIC_FOLDER, 'uploads')
+    UPLOAD_FOLDER = os.path.join(BASE_DIR, 'userData')
     MAX_CONTENT_LENGTH = 500 * 1024 * 1024  # Max 500MB upload size
     ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
@@ -43,6 +43,7 @@ class DevelopmentConfig(Config):
     SQLALCHEMY_DATABASE_URI = os.getenv('DEV_DATABASE_URI', f'sqlite:///{os.path.join(Config.INSTANCE_FOLDER, "dev_users.db")}')
     # SERVER_NAME = '192.168.1.136:5000' # Is this needed for testing? 3.22.25
     WTF_CSRF_ENABLED = False
+    RATELIMIT_STORAGE_URL = "memory://"
 
 
 class TestingConfig(Config):
@@ -53,7 +54,7 @@ class TestingConfig(Config):
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     # Override or add any test-specific configuration here, e.g., disable logging
     SQLALCHEMY_ECHO = False
-    SERVER_NAME = 'localhost:5000' # TODO Confirm why this was commented out 3.22.25
+    SERVER_NAME = 'localhost:5000'
     WTF_CSRF_ENABLED = False
     RATELIMIT_ENABLED = False
 

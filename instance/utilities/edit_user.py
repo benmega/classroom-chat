@@ -75,9 +75,19 @@ def delete_user(db_path, user_id):
     finally:
         conn.close()
 
+def get_table_columns(db_path, table_name):
+    """
+    Returns a list of column names for the given SQLite table.
+    """
+    with sqlite3.connect(db_path) as conn:
+        cursor = conn.cursor()
+        cursor.execute(f"PRAGMA table_info({table_name})")
+        return [row[1] for row in cursor.fetchall()]  # row[1] is column name
+
 def interactive_edit_user():
     """
     Interactively allows editing user data or deleting a user.
+    Dynamically detects table fields.
     """
     users = list_users(DATABASE_PATH)
     if not users:
@@ -86,7 +96,8 @@ def interactive_edit_user():
 
     print("Available users:")
     for user in users:
-        print(f"ID: {user['id']}, Username: {user['username']}, Ducks: {user['ducks']}, Online: {user['is_online']}")
+        # Print all fields dynamically
+        print(", ".join([f"{k}: {v}" for k, v in user.items()]))
 
     try:
         user_id = int(input("Enter the ID of the user you want to edit or delete: "))
@@ -99,20 +110,27 @@ def interactive_edit_user():
         action = input("What would you like to do? (edit/delete): ").strip().lower()
 
         if action == "edit":
-            print("Fields available for editing: username, ducks, password_hash, is_online")
-            field_name = input("Enter the field you want to edit: ").strip()
+            # Dynamically get editable fields
+            columns = get_table_columns(DATABASE_PATH, "users")
+            print(f"Fields available for editing: {', '.join(columns)}")
 
-            if field_name not in selected_user:
+            field_name = input("Enter the field you want to edit: ").strip()
+            if field_name not in columns:
                 print(f"Invalid field name '{field_name}'. Operation canceled.")
                 return
 
             new_value = input(f"Enter the new value for '{field_name}': ").strip()
-            if field_name == 'ducks':  # Validate integer fields
-                try:
+
+            # Auto-convert numbers where appropriate
+            try:
+                if isinstance(selected_user[field_name], int):
                     new_value = int(new_value)
-                except ValueError:
-                    print("Invalid value. Ducks must be an integer. Operation canceled.")
-                    return
+            except KeyError:
+                print(f"Field '{field_name}' not found in selected user. Operation canceled.")
+                return
+            except ValueError:
+                print(f"Invalid value for '{field_name}'. Expected an integer.")
+                return
 
             if update_user_field(DATABASE_PATH, user_id, field_name, new_value):
                 print(f"User {user_id}'s {field_name} updated successfully to {new_value}.")

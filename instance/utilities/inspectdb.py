@@ -65,9 +65,12 @@ def main():
                 column = input(f"Enter the column name to search in '{table_name}': ")
                 search_value = input("Enter the value to search for: ")
                 results = search_in_table(cursor, table_name, column, search_value)
-                print(f"\nSearch results for '{search_value}' in column '{column}':")
-                for result in results:
-                    print(result)
+                if len(results) == 0:
+                    print("No results found")
+                else:
+                    print(f"\nSearch results for '{search_value}' in column '{column}':")
+                    for result in results:
+                        print(result)
             elif action == "2":
                 custom_query = input("Enter your custom SQL query: ")
                 try:

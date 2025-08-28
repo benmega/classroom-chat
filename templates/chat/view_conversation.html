@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/view_conversation.css') }}">
+  <div class="conversation-container">
+    <h2 class="conversation-title">Conversation: {{ conversation.title }}</h2>
+
+    <div class="messages">
+      {% for message in conversation.messages %}
+        <div class="message-card">
+          <p class="message-meta">
+            <img src="{% if message.user_profile_pic %}
+                        {{ url_for('user_bp.profile_picture', filename=message.user_profile_pic) }}
+                      {% else %}
+                        {{ url_for('user_bp.profile_picture', filename='Default_pfp.jpg') }}
+                      {% endif %}"
+                 alt="{{ message.user_name }}"
+                 class="user-profile-pic">
+
+              <span class="message-timestamp">{{ message.timestamp }}</span>
+          </p>
+          <p class="message-content">{{ message.content }}</p>
+        </div>
+      {% endfor %}
+    </div>
+
+    <a href="{{ url_for('message_bp.conversation_history') }}" class="back-button">Back to History</a>
+  </div>
+{% endblock %}
