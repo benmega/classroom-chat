@@ -13,9 +13,9 @@ class Achievement(db.Model):
     # Generalized requirement fields
     type = db.Column(db.String(64), nullable=False)
     # e.g. "ducks", "challenge", "streak", "custom"
-
     requirement_value = db.Column(db.String(128), nullable=True)
-    # store threshold or identifier, e.g. "100" for ducks, "codecombat-50" for challenges
+
+    reward = db.Column(db.Integer, nullable=False, default=1)
 
     users = db.relationship('UserAchievement', backref='achievement', lazy=True)
 
@@ -25,5 +25,6 @@ class UserAchievement(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     achievement_id = db.Column(db.Integer, db.ForeignKey('achievement.id'), nullable=False)
     earned_at = db.Column(db.DateTime, default=datetime.utcnow)
+
 
     __table_args__ = (db.UniqueConstraint('user_id', 'achievement_id'),)

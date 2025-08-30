@@ -1,6 +1,8 @@
 # application/services/achievement_engine.py
 from application.extensions import db
 from application.models.achievements import Achievement, UserAchievement
+from application.models.user_certificate import UserCertificate
+
 
 def check_achievement(user, achievement):
     """Return True if the user meets the condition for this achievement."""
@@ -14,8 +16,11 @@ def check_achievement(user, achievement):
         return user.get_progress("codecombat.com") >= int(achievement.requirement_value)
 
     elif achievement.type == "custom":
-        # TODO: plug in your own callable registry for custom checks
-        return False
+        # Check if user has submitted a certificate for this achievement
+        cert = UserCertificate.query.filter_by(
+            user_id=user.id, achievement_id=achievement.id
+        ).first()
+        return cert is not None
 
     return False
 
@@ -23,14 +28,19 @@ def check_achievement(user, achievement):
 def evaluate_user(user):
     """Evaluate all achievements for a given user, grant new ones."""
     earned_ids = {ua.achievement_id for ua in user.achievements}
-
     new_awards = []
     for achievement in Achievement.query.all():
         if achievement.id in earned_ids:
             continue
         if check_achievement(user, achievement):
+            # grant achievement
             ua = UserAchievement(user_id=user.id, achievement_id=achievement.id)
             db.session.add(ua)
+            print(f"{user.nickname} just complete {achievement.name}")
+            # grant ducks reward
+            if achievement.reward > 0:
+                user.ducks += achievement.reward
+
             new_awards.append(achievement)
 
     if new_awards:

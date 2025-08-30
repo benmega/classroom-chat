@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Submit Completion Certificate</h2>
+<form method="POST" action="{{ url_for('achievements.submit_certificate') }}">
+    <div class="form-group">
+        <label for="certificate_url">Certificate URL</label>
+        <input type="url" name="certificate_url" id="certificate_url" class="form-control" placeholder="https://codecombat.com/certificates/..." required>
+    </div>
+    <button type="submit" class="btn btn-primary mt-2">Submit</button>
+</form>
+
+{% if message %}
+<p class="mt-2">{{ message }}</p>
+{% endif %}
+{% endblock %}
