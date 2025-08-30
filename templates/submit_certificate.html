@@ -10,7 +10,25 @@
     <button type="submit" class="btn btn-primary mt-2">Submit</button>
 </form>
 
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 {% if message %}
-<p class="mt-2">{{ message }}</p>
+<script>
+    {% if success %}
+    Swal.fire({
+        title: 'Congratulations!',
+        text: '{{ message|escape }}',
+        icon: 'success',
+        confirmButtonText: 'Awesome!'
+    });
+    {% else %}
+    Swal.fire({
+        title: 'Info',
+        text: '{{ message|escape }}',
+        icon: 'info',
+        confirmButtonText: 'Continue'
+    });
+    {% endif %}
+</script>
 {% endif %}
 {% endblock %}
