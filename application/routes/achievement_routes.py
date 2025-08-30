@@ -106,23 +106,23 @@ def submit_certificate():
                     cert = UserCertificate(user_id=current_user.id, achievement_id=achievement.id, url=url)
                     db.session.add(cert)
                     db.session.commit()
-                # # mark as submitted
-                # ua = UserAchievement.query.filter_by(user_id=current_user.id, achievement_id=achievement.id).first()
-                # if not ua:
-                #     ua = UserAchievement(user_id=current_user.id, achievement_id=achievement.id)
-                #     db.session.add(ua)
-                # db.session.commit()
 
                 # update achievement engine
                 new_awards = evaluate_user(current_user)
 
                 if new_awards:
-                    message = f"Certificate submitted! Achievement '{achievement.name}' awarded."
+                    earned_names = ", ".join(a.name for a in new_awards)
+                    message = f"🎉 Congratulations! You earned the achievement(s): {earned_names}."
+                    success = True
+
                 else:
                     message = "Certificate submitted, but no new achievement earned."
+                    success = False
             else:
                 message = "No matching achievement found for this course."
+                success = False
         else:
             message = "Invalid certificate URL."
+            success = False
 
-    return render_template("submit_certificate.html", message=message)
+    return render_template("submit_certificate.html", message=message, success=success)
