@@ -27,6 +27,12 @@
     opacity: 0.6;
 }
 
+.achievement-card.locked img {
+    filter: grayscale(100%) brightness(50%);
+    opacity: 0.6;
+}
+
+
 .badge {
     display: block;
     margin-top: 0.5rem;

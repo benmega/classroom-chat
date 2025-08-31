@@ -1,169 +1,78 @@
-# import sqlite3
-#
-#
-# def update_column_values(db_path, table_name, column_name, transform_function):
-#     """
-#     Update values in a specified column for all rows in a SQLite table using a transformation function.
-#
-#     :param db_path: Path to the SQLite database file.
-#     :param table_name: Name of the table to update.
-#     :param column_name: Name of the column to update.
-#     :param transform_function: A function that takes a value and returns the transformed value.
-#     """
-#     # Connect to the SQLite database
-#     conn = sqlite3.connect(db_path)
-#     cursor = conn.cursor()
-#
-#     try:
-#         # Fetch current values from the specified column
-#         cursor.execute(f"SELECT rowid, {column_name} FROM {table_name}")
-#         rows = cursor.fetchall()
-#
-#         # Apply the transformation function and update the table
-#         for rowid, value in rows:
-#             new_value = transform_function(value)
-#             cursor.execute(f"""
-#                 UPDATE {table_name}
-#                 SET {column_name} = ?
-#                 WHERE rowid = ?
-#             """, (new_value, rowid))
-#
-#         # Commit the changes
-#         conn.commit()
-#         print(f"Updated values in column '{column_name}' of table '{table_name}'.")
-#     except Exception as e:
-#         print("Error occurred:", e)
-#     finally:
-#         conn.close()
-#
-#
-def copy_column_values(db_path, table_name, source_column, target_column):
-    """
-    Copy values from one column to another within a SQLite table.
-
-    :param db_path: Path to the SQLite database file.
-    :param table_name: Name of the table to update.
-    :param source_column: Name of the column to copy from.
-    :param target_column: Name of the column to copy to.
-    """
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-
-    try:
-        cursor.execute(f"""
-            UPDATE {table_name}
-            SET {target_column} = {source_column}
-        """)
-        conn.commit()
-        print(f"Copied '{source_column}' values into '{target_column}' in table '{table_name}'.")
-    except Exception as e:
-        print("Error occurred:", e)
-    finally:
-        conn.close()
-#
-#
-# if __name__ == "__main__":
-#     database_path = r"C:\Users\Ben\PycharmProjects\groupChat2\instance\dev_users.db"
-#
-#     # Copy username into nickname for all rows in the user table
-#     copy_column_values(
-#         db_path=database_path,
-#         table_name="users",
-#         source_column="username",
-#         target_column="nickname"
-#     )
-#
-#
-
 import sqlite3
 
-# Your mapping
-students = {
-    "blossomstudent00": "MegaStudent00",
-    "blossomstudent01": "Phu",
-    "blossomstudent02": "Phat",
-    "blossomstudent03": "Fah",
-    "blossomstudent04": "Like",
-    "blossomstudent05": "Poom",
-    "blossomstudent06": "Thanhminh",
-    "blossomstudent07": "Estelle",
-    "blossomstudent08": "Yuu Yuu",
-    "blossomstudent09": "Bpao",
-    "blossomstudent10": "Pim",
-    "blossomstudent11": "Nymph",
-    "blossomstudent12": "Bunny",
-    "blossomstudent14": "Win",
-    "blossomstudent15": "Saen",
-    "blossomstudent16": "Time",
-    "blossomstudent17": "Anda",
-    "blossomstudent18": "Tepun",
-    "blossomstudent19": "Eugene",
-    "blossomstudent23": "Lee",
-    "blossomstudent24": "Chan",
-    "blossomstudent25": "Suer",
-    "blossomstudent26": "Thames2",
-    "blossomstudent27": "Fuji",
-    "blossomstudent30": "Nont",
-    "blossomstudent31": "Trevi",
-    "blossomstudent32": "Venice",
-    "blossomstudent33": "lookpeach",
-    "blossomstudent34": "Namo",
-    "blossomstudent35": "Jinn",
-    "blossomstudent36": "Indy",
-    "blossomstudent37": "Mike",
-    "blossomstudent38": "Cooper",
-    "blossomstudent39": "Pinjia",
-    "blossomstudent40": "Chuda",
-    "blossomstudent41": "Rawit",
-    "blossomstudent42": "TinTin",
-    "blossomstudent43": "Jerlene",
-    "blossomstudent44": "Phayu",
-    "blossomstudent45": "Reva",
-    "blossomstudent46": "Plawan",
-    "blossomstudent47": "LookBua",
-    "blossomstudent48": "Vin",
-    "blossomstudent49": "Pluem",
-    "blossomstudent50": "Caylor",
-    "blossomstudent51": "Alice",
-    "blossomstudent52": "Trisha",
-    "blossomstudent53": "Shuyana",
-    "blossomstudent54": "Fuji2",
-    "blossomstudent55": "Zhangsu",
-    "blossomstudent56": "Wasu",
-    "blossomstudent57": "MegaStudent57",
-    "blossomstudent58": "Capt",
-    "blossomstudent59": "Jaokhun",
-    "blossomstudent60": "Sky",
-    "blossomstudent61": "Poon",
-    "blossomstudent62": "FujiP",
-    "blossomstudent63": "Teetat",
-    "blossomstudent64": "Shogul"
+# Mapping of achievement slug to new reward value
+reward_updates = {
+    "first-duck": 5,
+    "duck-collector": 20,
+    "duck-hoarder": 40,
+    "duck-millionaire": 75,
+    "first-challenge": 5,
+    "cc-novice": 10,
+    "cc-veteran": 20,
+    "challenge-master": 40,
+    "first-project": 5,
+    "portfolio-builder": 10,
+    "project-master": 10,
+    "chatterbox": 10,
+    "active-user": 10,
+    "marathoner": 15,
+    "trade-initiate": 5,
+    "helpful-peer": 5,
+    "achievement-hunter": 10,
+    "duckling": 10,
+    "flock-builder": 20,
+    "pond-master": 25,
+    "duck-legend": 75,
+    "5-challenges": 10,
+    "10-challenges": 15,
+    "25-challenges": 25,
+    "100-challenges": 50,
+    "first-streak": 5,
+    "3-week-streak": 10,
+    "5-week-streak": 15,
+    "10-week-streak": 25,
+    "25-week-streak": 50,
+    "first-message": 5,
+    "10-messages": 10,
+    "50-messages": 20,
+    "200-messages": 40,
+    "first-help": 5,
+    "5-helps": 10,
+    "20-helps": 20,
+    "50-helps": 40,
+    "3-projects": 10,
+    "10-projects": 15,
+    "25-projects": 25,
+    "560f1a9f22961295f9427742": 10,
+    "5632661322961295f9428638": 20,
+    "56462f935afde0c6fd30fc8c": 40,
+    "56462f935afde0c6fd30fc8d": 60,
+    "569ed916efa72b0ced971447": 80,
+    "5817d673e85d1220db624ca4": 100,
+    "5789587aad86a6efb573701e": 20,
+    "57b621e7ad86a6efb5737e64": 40,
+    "5a0df02b8f2391437740f74f": 60,
+    "65f32b6c87c07dbeb5ba1936": 10,
+    "5789587aad86a6efb573701f": 20,
+    "5789587aad86a6efb5737020": 40
 }
 
-def update_nicknames_from_dict(db_path, table_name, column_name, mapping):
-    """
-    Updates a column's values based on a mapping dictionary.
-    Only updates rows where the current value is a key in the mapping.
-    """
+def update_rewards(db_path, table_name, mapping):
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
 
     try:
-        cursor.execute(f"SELECT rowid, {column_name} FROM {table_name}")
-        rows = cursor.fetchall()
-
         updates = 0
-        for rowid, value in rows:
-            if value in mapping:
-                cursor.execute(f"""
-                    UPDATE {table_name}
-                    SET {column_name} = ?
-                    WHERE rowid = ?
-                """, (mapping[value], rowid))
-                updates += 1
+        for slug, reward in mapping.items():
+            cursor.execute(f"""
+                UPDATE {table_name}
+                SET reward = ?
+                WHERE slug = ?
+            """, (reward, slug))
+            updates += cursor.rowcount  # count only if row exists
 
         conn.commit()
-        print(f"Updated {updates} rows in '{column_name}' of '{table_name}'.")
+        print(f"Updated rewards for {updates} achievements in '{table_name}'.")
     except Exception as e:
         print("Error occurred:", e)
     finally:
@@ -171,13 +80,5 @@ def update_nicknames_from_dict(db_path, table_name, column_name, mapping):
 
 
 if __name__ == "__main__":
-    database_path = r"C:\Users\Ben\PycharmProjects\groupChat2\instance\dev_users.db"
-
-
-    # Then update nicknames from mapping
-    update_nicknames_from_dict(
-        db_path=database_path,
-        table_name="users",
-        column_name="nickname",
-        mapping=students
-    )
+    db_path = r"C:\Users\Ben\PycharmProjects\groupChat2\instance\dev_users.db"
+    update_rewards(db_path, "achievement", reward_updates)

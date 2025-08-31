@@ -2,14 +2,24 @@
 
 {% block content %}
 <h2>Submit Completion Certificate</h2>
-<form method="POST" action="{{ url_for('achievements.submit_certificate') }}">
+<form method="POST" action="{{ url_for('achievements.submit_certificate') }}" enctype="multipart/form-data">
     <div class="form-group">
         <label for="certificate_url">Certificate URL</label>
-        <input type="url" name="certificate_url" id="certificate_url" class="form-control" placeholder="https://codecombat.com/certificates/..." required>
+        <input type="url" name="certificate_url" id="certificate_url"
+               class="form-control"
+               placeholder="https://codecombat.com/certificates/..." required>
     </div>
-    <button type="submit" class="btn btn-primary mt-2">Submit</button>
+
+    <div class="form-group mt-3">
+        <label for="certificate_file">Upload Certificate PDF</label>
+        <input type="file" name="certificate_file" id="certificate_file"
+               class="form-control" accept="application/pdf" required>
+    </div>
+
+    <button type="submit" class="btn btn-primary mt-3">Submit</button>
 </form>
 
+<link rel="stylesheet" href="{{ url_for('static', filename='css/submit_certificate.css') }}">
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 {% if message %}
