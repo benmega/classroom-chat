@@ -8,6 +8,7 @@ from application.models.conversation import Conversation
 from application.models.project import Project
 from application.models.skill import Skill
 from application.models.user import User
+from application.services.achievement_engine import evaluate_user
 from application.utilities.helper_functions import allowed_file
 from application.config import Config
 from PIL import Image
@@ -191,6 +192,10 @@ def edit_profile():
 
             # Commit changes to the database
             db.session.commit()
+
+            # Check for achievements
+            evaluate_user(user)
+
             flash('Profile updated successfully!', 'success')
             return redirect(url_for('user.profile'))
         except Exception as e:
