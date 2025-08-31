@@ -17,11 +17,11 @@ from application.models.banned_words import BannedWords
 from application.config import Config
 from flask import redirect, url_for
 
-admin_bp = Blueprint('admin_bp', __name__)
+admin = Blueprint('admin', __name__)
 admin_pass = Config.ADMIN_PASSWORD
 adminUsername = Config.ADMIN_USERNAME
 
-@admin_bp.before_request
+@admin.before_request
 @limiter.limit("5 per second, 50 per minute")
 def before_user_request():
     # This function is just used for the decorator that handles the rate limiting logic.
@@ -117,13 +117,13 @@ def get_duck_transactions_data():
 
 
 
-@admin_bp.route('/')
+@admin.route('/')
 @local_only
 def base():
-    return redirect(url_for('admin_bp.dashboard'))
+    return redirect(url_for('admin.dashboard'))
 
 
-@admin_bp.route('/dashboard')
+@admin.route('/dashboard')
 @local_only
 def dashboard():
     total_ducks = db.session.query(func.sum(User.ducks)).scalar() or 0
@@ -160,7 +160,7 @@ def dashboard():
                            chart_data=chart_data)
 
 
-@admin_bp.route('/duck_transactions_data')
+@admin.route('/duck_transactions_data')
 @local_only
 def duck_transactions_data():
     chart_data = get_duck_transactions_data()
@@ -171,7 +171,7 @@ def duck_transactions_data():
 # User Management Routes
 # --------------------------
 
-@admin_bp.route('/users', methods=['GET'])
+@admin.route('/users', methods=['GET'])
 @local_only
 def get_users():
     users = User.query.all()
@@ -187,7 +187,7 @@ def get_users():
     return jsonify(users_data)
 
 
-@admin_bp.route('/users/<int:user_id>', methods=['PUT'])
+@admin.route('/users/<int:user_id>', methods=['PUT'])
 @local_only
 def update_user(user_id):
     user = User.query.get(user_id)
@@ -202,13 +202,13 @@ def update_user(user_id):
     return jsonify({"error": "User not found"}), 404
 
 
-@admin_bp.route('/set_username', methods=['POST'])
+@admin.route('/set_username', methods=['POST'])
 @local_only
 def set_username_route():
     return set_username()
 
 
-@admin_bp.route('/verify_password', methods=['POST'])
+@admin.route('/verify_password', methods=['POST'])
 @local_only
 def verify_password():
     password = request.form['password']
@@ -232,7 +232,7 @@ def set_username():
     return jsonify({'success': True})
 
 
-@admin_bp.route('/reset_password', methods=['POST'])
+@admin.route('/reset_password', methods=['POST'])
 @local_only
 def reset_password():
     data = request.json
@@ -253,7 +253,7 @@ def reset_password():
 
 
 
-@admin_bp.route('/create_user', methods=['POST'])
+@admin.route('/create_user', methods=['POST'])
 @local_only
 def create_user():
     username = request.form.get('username', '').strip().lower()
@@ -285,7 +285,7 @@ def create_user():
         print(f"Error: Failed to create user: {e}")
         return jsonify(success=False, message="Internal server error"), 500
 
-@admin_bp.route('/remove_user', methods=['POST'])
+@admin.route('/remove_user', methods=['POST'])
 @local_only
 def remove_user():
     username = request.form.get('username', '').strip().lower()
@@ -309,7 +309,7 @@ def remove_user():
 # System Configuration Routes
 # --------------------------
 
-@admin_bp.route('/toggle-ai', methods=['POST'])
+@admin.route('/toggle-ai', methods=['POST'])
 @local_only
 def toggle_ai():
     config = Configuration.query.first()
@@ -330,7 +330,7 @@ def toggle_ai():
     })
 
 
-@admin_bp.route('/toggle-message-sending', methods=['POST'])
+@admin.route('/toggle-message-sending', methods=['POST'])
 @local_only
 def toggle_message_sending():
     # Retrieve the first configuration entry from the database
@@ -353,7 +353,7 @@ def toggle_message_sending():
     })
 
 
-@admin_bp.route('/clear-partial-history', methods=['POST'])
+@admin.route('/clear-partial-history', methods=['POST'])
 @local_only
 def clear_partial_history():
     try:
@@ -381,7 +381,7 @@ def clear_partial_history():
 # Content Moderation Routes
 # --------------------------
 
-@admin_bp.route('/add-banned-word', methods=['POST'])
+@admin.route('/add-banned-word', methods=['POST'])
 @local_only
 def add_banned_word():
     word = request.form.get('word')
@@ -403,7 +403,7 @@ def add_banned_word():
     })
 
 
-@admin_bp.route('/strike_message/<int:message_id>', methods=['POST'])
+@admin.route('/strike_message/<int:message_id>', methods=['POST'])
 @local_only
 def strike_message(message_id):
     message = Message.query.get(message_id)
@@ -424,21 +424,21 @@ def strike_message(message_id):
 # Trade Management Routes
 # --------------------------
 
-# @admin_bp.route('/trades')
+# @admin.route('/trades')
 # @local_only
 # def trades():
 #     trades = Trade.query.order_by(Trade.timestamp.desc()).all()
 #     return render_template('admin/trades.html', trades=trades)
 
 
-@admin_bp.route('/pending_trades', methods=['GET'])
+@admin.route('/pending_trades', methods=['GET'])
 @local_only
 def pending_trades():
     pend_trades = DuckTradeLog.query.filter_by(status="pending").all()
     return render_template('admin/pending_trades.html', trades=pend_trades)
 
 
-@admin_bp.route('/trade_action', methods=['POST'])
+@admin.route('/trade_action', methods=['POST'])
 @local_only
 def trade_action():
     trade_id = request.form.get('trade_id')
@@ -469,7 +469,7 @@ def trade_action():
     return jsonify({'status': 'error', 'message': 'Invalid action'}), 400
 
 
-@admin_bp.route('/update_duck_multiplier', methods=['POST'])
+@admin.route('/update_duck_multiplier', methods=['POST'])
 def update_duck_multiplier():
     data = request.get_json()
     new_multiplier = data.get('multiplier')
@@ -494,7 +494,7 @@ def update_duck_multiplier():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
-@admin_bp.route('/adjust_ducks', methods=['POST'])
+@admin.route('/adjust_ducks', methods=['POST'])
 @local_only
 def adjust_ducks():
     username = request.form.get('username')
@@ -510,6 +510,9 @@ def adjust_ducks():
     if user:
         user.ducks += amount  # Add or subtract ducks
         db.session.commit()
+        from application.services.achievement_engine import evaluate_user
+        new_awards = evaluate_user(user)
+
         return jsonify({
             'success': True,
             'message': f"Updated {username}'s ducks by {amount}."

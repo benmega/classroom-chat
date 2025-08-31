@@ -22,7 +22,7 @@ from application.models.user import User
 logger = logging.getLogger(__name__)
 
 # Blueprint configuration
-ai_bp = Blueprint('ai_bp', __name__)
+ai = Blueprint('ai', __name__)
 
 # Constants
 AI_TEACHER_USER_ID = 0
@@ -306,7 +306,7 @@ def get_ai_response(user_message: str, username: str, conversation_id: Optional[
         return "Error: Could not process the AI response."
 
 
-@ai_bp.route('/get_ai_response', methods=['POST'])
+@ai.route('/get_ai_response', methods=['POST'])
 def ai_response():
     """
     Flask route to handle AI response requests.

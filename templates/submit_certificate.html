@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Submit Completion Certificate</h2>
+<form method="POST" action="{{ url_for('achievements.submit_certificate') }}">
+    <div class="form-group">
+        <label for="certificate_url">Certificate URL</label>
+        <input type="url" name="certificate_url" id="certificate_url" class="form-control" placeholder="https://codecombat.com/certificates/..." required>
+    </div>
+    <button type="submit" class="btn btn-primary mt-2">Submit</button>
+</form>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+{% if message %}
+<script>
+    {% if success %}
+    Swal.fire({
+        title: 'Congratulations!',
+        text: '{{ message|escape }}',
+        icon: 'success',
+        confirmButtonText: 'Awesome!'
+    });
+    {% else %}
+    Swal.fire({
+        title: 'Info',
+        text: '{{ message|escape }}',
+        icon: 'info',
+        confirmButtonText: 'Continue'
+    });
+    {% endif %}
+</script>
+{% endif %}
+{% endblock %}
