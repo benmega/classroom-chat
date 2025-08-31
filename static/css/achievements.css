@@ -1,0 +1,23 @@
+.achievements-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 1rem;
+}
+.achievement-card {
+    border: 2px solid #ccc;
+    border-radius: 8px;
+    padding: 1rem;
+    text-align: center;
+}
+.achievement-card.earned {
+    border-color: #4caf50;
+    background-color: #e8f5e9;
+}
+.achievement-card.locked {
+    opacity: 0.6;
+}
+.badge {
+    display: block;
+    margin-top: 0.5rem;
+    font-weight: bold;
+}

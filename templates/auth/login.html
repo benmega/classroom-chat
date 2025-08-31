@@ -12,7 +12,7 @@
 <body>
     <div id="login-container">
         <h1>Login to Classroom Chat</h1>
-        <form method="POST" action="{{ url_for('user_bp.login') }}">
+        <form method="POST" action="{{ url_for('user.login') }}">
             {{ form.hidden_tag() }}  <!-- This includes CSRF token -->
 
             <label for="username">Username:</label>
@@ -24,7 +24,7 @@
             {{ form.submit(class="btn btn-primary") }}
         </form>
 
-        <p>Don’t have an account? <a href="{{ url_for('user_bp.signup') }}">Sign up here</a>.</p>
+        <p>Don’t have an account? <a href="{{ url_for('user.signup') }}">Sign up here</a>.</p>
     </div>
 </body>
 </html>

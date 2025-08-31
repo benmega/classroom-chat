@@ -36,7 +36,7 @@
                 formData.append("action", action);
 
                 try {
-                    const response = await fetch("{{ url_for('admin_bp.trade_action') }}", {
+                    const response = await fetch("{{ url_for('admin.trade_action') }}", {
                         method: "POST",
                         body: formData,
                     });
