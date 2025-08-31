@@ -30,7 +30,7 @@
             <div class="stat-content">
                 <h3>Pending Trades</h3>
                 <p class="stat-value">{{ pending_trades_count }}</p>
-                <a href="{{ url_for('admin_bp.pending_trades') }}" class="stat-link">View Details</a>
+                <a href="{{ url_for('admin.pending_trades') }}" class="stat-link">View Details</a>
             </div>
         </div>
 
@@ -209,15 +209,15 @@
     <!-- Pass URLs as data attributes to the JavaScript -->
     <script>
         window.urls = {
-            toggleAiUrl: "{{ url_for('admin_bp.toggle_ai') }}",
-            startConversationUrl: "{{ url_for('message_bp.start_conversation') }}",
-            toggleMessageSendingUrl: "{{ url_for('admin_bp.toggle_message_sending') }}",
-            addBannedWordUrl: "{{ url_for('admin_bp.add_banned_word') }}",
-            adjustDucksUrl: "{{ url_for('admin_bp.adjust_ducks') }}",
-            resetPasswordUrl: "{{ url_for('admin_bp.reset_password') }}",
-            duckTransactionsDataUrl: "{{ url_for('admin_bp.duck_transactions_data') }}",
-            createUserUrl: "{{ url_for('admin_bp.create_user') }}",
-            updateMultiplierUrl: "{{ url_for('admin_bp.update_duck_multiplier') }}",
+            toggleAiUrl: "{{ url_for('admin.toggle_ai') }}",
+            startConversationUrl: "{{ url_for('message.start_conversation') }}",
+            toggleMessageSendingUrl: "{{ url_for('admin.toggle_message_sending') }}",
+            addBannedWordUrl: "{{ url_for('admin.add_banned_word') }}",
+            adjustDucksUrl: "{{ url_for('admin.adjust_ducks') }}",
+            resetPasswordUrl: "{{ url_for('admin.reset_password') }}",
+            duckTransactionsDataUrl: "{{ url_for('admin.duck_transactions_data') }}",
+            createUserUrl: "{{ url_for('admin.create_user') }}",
+            updateMultiplierUrl: "{{ url_for('admin.update_duck_multiplier') }}",
 
         };
 

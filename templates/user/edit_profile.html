@@ -5,7 +5,7 @@
 
 <div class="edit-profile-container">
     <h1>Edit Profile</h1>
-    <form method="POST" action="{{ url_for('user_bp.edit_profile') }}" enctype="multipart/form-data">
+    <form method="POST" action="{{ url_for('user.edit_profile') }}" enctype="multipart/form-data">
          <!-- Hidden Username Field (for accessibility) -->
         <input type="text" name="username" value="{{ user.username }}" style="display:none;" autocomplete="username">
 
@@ -95,7 +95,7 @@
         <!-- Submit and Cancel Buttons -->
         <div class="form-group">
             <button type="submit" class="btn-save">Save Changes</button>
-            <a href="{{ url_for('user_bp.profile') }}" class="btn-cancel">Cancel</a>
+            <a href="{{ url_for('user.profile') }}" class="btn-cancel">Cancel</a>
         </div>
     </form>
 </div>
