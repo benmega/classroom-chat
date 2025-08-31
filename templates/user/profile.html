@@ -8,7 +8,7 @@
 <div class="profile-container">
     <div class="profile-header">
         <div class="profile-pic-container">
-            <img src="{{ url_for('user_bp.profile_picture', filename=user.profile_picture) }}"
+            <img src="{{ url_for('user.profile_picture', filename=user.profile_picture) }}"
                  alt="Profile Picture"
                  class="profile-img"
                  id="current-profile-img">
@@ -26,7 +26,7 @@
         </div>
 
         <!-- Edit Button -->
-        <a href="{{ url_for('user_bp.edit_profile') }}" class="edit-btn">Edit Profile</a>
+        <a href="{{ url_for('user.edit_profile') }}" class="edit-btn">Edit Profile</a>
     </div>
 
     <!-- Modal for cropping -->

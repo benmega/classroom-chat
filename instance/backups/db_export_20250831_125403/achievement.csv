@@ -1,0 +1,54 @@
+id,slug,name,description,type,requirement_value,reward
+1,first-duck,First Duck,Earn your first duck,ducks,1,1
+2,duck-collector,Duck Collector,Earn 50 ducks,ducks,50,1
+3,duck-hoarder,Duck Hoarder,Earn 200 ducks,ducks,200,1
+4,duck-millionaire,Duck Millionaire,Earn 1000 ducks,ducks,1000,1
+5,first-challenge,First Challenge,Complete your first challenge,challenge,1,1
+6,cc-novice,CodeCombat Novice,Complete 10 CodeCombat challenges,challenge,10,1
+7,cc-veteran,CodeCombat Veteran,Complete 50 CodeCombat challenges,challenge,50,1
+8,challenge-master,Challenge Master,Complete 100 challenges,challenge,100,1
+9,first-project,First Project,Add your first project,project,1,1
+10,portfolio-builder,Portfolio Builder,Add 3 projects,project,3,1
+11,project-master,Project Master,Add 5 projects,project,5,1
+12,chatterbox,Chatterbox,Send 20 chat messages,custom,chat-20,1
+13,active-user,Active User,Log in 10 times,custom,login-10,1
+14,marathoner,Marathoner,Stay online for 1 hour in a session,custom,session-60,1
+15,trade-initiate,Trade Initiate,Complete your first duck trade,custom,trade-1,1
+16,helpful-peer,Helpful Peer,Approve a trade,custom,approve-1,1
+17,achievement-hunter,Achievement Hunter,Unlock 5 achievements,custom,achievements-5,1
+18,duckling,Duckling,Earn 10 ducks,ducks,10,1
+19,flock-builder,Flock Builder,Earn 50 ducks,ducks,50,1
+20,pond-master,Pond Master,Earn 100 ducks,ducks,100,1
+21,duck-legend,Duck Legend,Earn 500 ducks (prestige),ducks,500,1
+22,5-challenges,Steady Steps,Complete 5 challenges,progress,5,1
+23,10-challenges,Challenge Conqueror,Complete 10 challenges,progress,10,1
+24,25-challenges,Learning Machine,Complete 25 challenges,progress,25,1
+25,100-challenges,Marathon Learner,Complete 100 challenges (prestige),progress,100,1
+26,first-streak,On the Board,Attend class and complete work 1 week in a row,consistency,1,1
+27,3-week-streak,Triple Play,Keep a 3-week streak going,consistency,3,1
+28,5-week-streak,High Five,Maintain a 5-week streak,consistency,5,1
+29,10-week-streak,Decathlon Learner,Maintain a 10-week streak,consistency,10,1
+30,25-week-streak,Unstoppable,Maintain a 25-week streak (prestige),consistency,25,1
+31,first-message,Hello World,Send your first message in chat,chat,1,1
+32,10-messages,Chatterbox,Send 10 chat messages,chat,10,1
+33,50-messages,Talkative Duck,Send 50 chat messages,chat,50,1
+34,200-messages,Chat Champion,Send 200 chat messages,chat,200,1
+36,first-help,Helper-in-Training,Help a classmate with a challenge,community,1,1
+37,5-helps,Team Player,Help 5 classmates,community,5,1
+38,20-helps,Mentor Duck,Help 20 classmates,community,20,1
+39,50-helps,Classroom Hero,Help 50 classmates (prestige),community,50,1
+40,3-projects,Maker Duck,Log 3 projects,catalog,3,1
+41,10-projects,Builder Extraordinaire,Log 10 projects,catalog,10,1
+42,25-projects,Master Creator,Log 25 projects (prestige),catalog,25,1
+58,560f1a9f22961295f9427742,CS1,Submit completion certificate for CS1,custom,1,1
+59,5632661322961295f9428638,CS2,Submit completion certificate for CS2,custom,1,1
+60,56462f935afde0c6fd30fc8c,CS3,Submit completion certificate for CS3,custom,1,1
+61,56462f935afde0c6fd30fc8d,CS4,Submit completion certificate for CS4,custom,1,1
+62,569ed916efa72b0ced971447,CS5,Submit completion certificate for CS5,custom,1,1
+63,5817d673e85d1220db624ca4,CS6,Submit completion certificate for CS6,custom,1,1
+64,5789587aad86a6efb573701e,GD1,Submit completion certificate for GD1,custom,1,1
+65,57b621e7ad86a6efb5737e64,GD2,Submit completion certificate for GD2,custom,1,1
+66,5a0df02b8f2391437740f74f,GD3,Submit completion certificate for GD3,custom,1,1
+67,65f32b6c87c07dbeb5ba1936,Junior,Submit completion certificate for Junior,custom,1,1
+68,5789587aad86a6efb573701f,WD1,Submit completion certificate for WD1,custom,1,1
+69,5789587aad86a6efb5737020,WD2,Submit completion certificate for WD2,custom,1,1

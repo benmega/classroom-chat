@@ -6,7 +6,7 @@
 <section id="duck-trade-form" class="trade-form-section">
     <h2 class="form-heading">Trade Digital Ducks For Real Ducks!</h2>
 
-    <form id="trade-form" action="{{ url_for('duck_trade_bp.submit_trade') }}" method="post" class="trade-form">
+    <form id="trade-form" action="{{ url_for('duck_trade.submit_trade') }}" method="post" class="trade-form">
         {{ form.hidden_tag() }}
 
         <div class="form-group">

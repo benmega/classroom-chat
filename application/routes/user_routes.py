@@ -3,7 +3,7 @@ import uuid
 
 from flask import Blueprint, jsonify, send_from_directory, current_app, abort
 from flask import render_template, request, redirect, url_for, session, flash
-from application import db
+from application.extensions import db
 from application.models.conversation import Conversation
 from application.models.project import Project
 from application.models.skill import Skill
@@ -15,7 +15,7 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField
 from wtforms.validators import DataRequired
 
-user_bp = Blueprint('user_bp', __name__)
+user = Blueprint('user', __name__)
 
 
 
@@ -33,14 +33,14 @@ class LoginForm(FlaskForm):
     submit = SubmitField('Login', render_kw={"class": "login-button"})
 
 
-@user_bp.route('/get_users', methods=['GET'])
+@user.route('/get_users', methods=['GET'])
 def get_users():
     users = User.query.all()
     users_data = [{'id': user.id, 'username': user.username, 'email': user.email} for user in users]
     return jsonify(users_data)
 
 
-@user_bp.route('/get_user_id', methods=['GET'])
+@user.route('/get_user_id', methods=['GET'])
 def get_user_id():
     user_username = session.get('user')
     if user_username:
@@ -50,7 +50,7 @@ def get_user_id():
     return jsonify({'user_id': None}), 404
 
 
-@user_bp.route('/login', methods=['GET', 'POST'])
+@user.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
 
@@ -83,8 +83,12 @@ def login():
                 session['conversation_id'] = recent_conversation.id
             else:
                 session['conversation_id'] = None  # Or handle new conversation creation
+
+            from application.services.achievement_engine import evaluate_user
+            new_awards = evaluate_user(user) # Check for achievements
+
             flash('Login successful!', 'success')
-            return redirect(url_for('general_bp.index'))
+            return redirect(url_for('general.index'))
 
         else:
             flash('Invalid username or password.', 'error')
@@ -92,7 +96,7 @@ def login():
     return render_template('auth/login.html', form=form)
 
 
-@user_bp.route('/logout')
+@user.route('/logout')
 def logout():
     # Get the current user from the session
     username = session.get('user')
@@ -109,10 +113,10 @@ def logout():
     session.pop('user', None)
 
     flash('You have been logged out.', 'success')
-    return redirect(url_for('user_bp.login'))
+    return redirect(url_for('user.login'))
 
 
-@user_bp.route('/signup', methods=['GET', 'POST'])
+@user.route('/signup', methods=['GET', 'POST'])
 def signup():
     if request.method == 'POST':
         username = request.form.get('username')
@@ -133,13 +137,13 @@ def signup():
         db.session.commit()
 
         flash('Signup successful! Please log in.', 'success')
-        return redirect(url_for('user_bp.login'))
+        return redirect(url_for('user.login'))
 
     # Render the signup page on GET request
     return render_template('auth/signup.html')
 
 
-@user_bp.route('/update_profile', methods=['POST'])
+@user.route('/update_profile', methods=['POST'])
 def update_profile():
     user_id = session.get('user')
     user = User.query.get(user_id)
@@ -151,17 +155,17 @@ def update_profile():
     else:
         flash('User not found!', 'danger')
 
-    return redirect(url_for('user_bp.profile'))
+    return redirect(url_for('user.profile'))
 
 
-@user_bp.route('/edit_profile', methods=['GET', 'POST'])
+@user.route('/edit_profile', methods=['GET', 'POST'])
 def edit_profile():
     user_id = session.get('user')
     user = User.query.filter_by(username=user_id).first()
 
     if not user:
         flash('User not found!', 'danger')
-        return redirect(url_for('user_bp.profile'))
+        return redirect(url_for('user.profile'))
 
     if request.method == 'POST':
         try:
@@ -188,7 +192,7 @@ def edit_profile():
             # Commit changes to the database
             db.session.commit()
             flash('Profile updated successfully!', 'success')
-            return redirect(url_for('user_bp.profile'))
+            return redirect(url_for('user.profile'))
         except Exception as e:
             db.session.rollback()  # Roll back any changes on error
             print(f"Error during profile update: {e}")
@@ -198,7 +202,7 @@ def edit_profile():
 
 
 
-@user_bp.route('/edit_profile_picture', methods=['POST'])
+@user.route('/edit_profile_picture', methods=['POST'])
 def edit_profile_picture():
     user_id = session.get('user')
     user = User.query.filter_by(username=user_id).first()
@@ -222,7 +226,7 @@ def edit_profile_picture():
 
         db.session.commit()
 
-        new_url = url_for('user_bp.profile_picture', filename=filename)
+        new_url = url_for('user.profile_picture', filename=filename)
 
         return jsonify({
             'success': True,
@@ -236,7 +240,7 @@ def edit_profile_picture():
         return jsonify({'success': False, 'error': 'Error updating profile picture.'}), 500
 
 
-@user_bp.route("/remove_skill/<int:skill_id>", methods=["POST"])
+@user.route("/remove_skill/<int:skill_id>", methods=["POST"])
 def remove_skill(skill_id):
     user_id = session.get('user')
     user = User.query.filter_by(username=user_id).first()
@@ -258,7 +262,7 @@ def update_basic_user_info(user):
 
     if password and password != confirm_password:
         flash('Passwords do not match!', 'danger')
-        return redirect(url_for('user_bp.edit_profile'))
+        return redirect(url_for('user.edit_profile'))
 
     if password:
         user.set_password(password)
@@ -307,7 +311,7 @@ def handle_profile_picture_upload(user):
             print("Invalid file type or no file selected.")
 
 
-@user_bp.route('/change_password', methods=['POST'])
+@user.route('/change_password', methods=['POST'])
 def change_password():
     user_id = session.get('user')
     user = User.query.get(user_id)
@@ -325,25 +329,25 @@ def change_password():
         db.session.commit()
         flash('Password updated successfully!', 'success')
 
-    return redirect(url_for('user_bp.profile'))
+    return redirect(url_for('user.profile'))
 
 
-@user_bp.route('/profile', methods=['GET'])
+@user.route('/profile', methods=['GET'])
 def profile():
     user_id = session.get('user')
     if not user_id:
         flash('Please log in to access your profile.', 'warning')
-        return redirect(url_for('user_bp.login'))
+        return redirect(url_for('user.login'))
 
     user = User.query.filter_by(username=user_id).first()
     if not user:
         flash('User not found!', 'danger')
-        return redirect(url_for('user_bp.login'))
+        return redirect(url_for('user.login'))
 
     return render_template('user/profile.html', user=user)
 
 
-@user_bp.route('/delete_profile_picture', methods=['POST'])
+@user.route('/delete_profile_picture', methods=['POST'])
 def delete_profile_picture():
     user_id = session.get('user')
     user = User.query.filter_by(username=user_id).first()
@@ -362,19 +366,19 @@ def delete_profile_picture():
     return redirect(url_for('profile'))
 
 
-@user_bp.route('/upload_profile_picture', methods=['POST'])
+@user.route('/upload_profile_picture', methods=['POST'])
 def upload_profile_picture():
     user_id = session.get('user')
     user = User.query.filter_by(username=user_id).first()
 
     if 'profile_picture' not in request.files:
         flash('No file part', 'error')
-        return redirect(url_for('user_bp.profile'))
+        return redirect(url_for('user.profile'))
 
     file = request.files['profile_picture']
     if file.filename == '':
         flash('No selected file', 'error')
-        return redirect(url_for('user_bp.profile'))
+        return redirect(url_for('user.profile'))
 
     if file and allowed_file(file.filename):
         filename = f"{uuid.uuid4().hex}_{file.filename.rsplit('.', 1)[1].lower()}"
@@ -395,11 +399,11 @@ def upload_profile_picture():
     else:
         flash('Invalid file type', 'error')
 
-    return redirect(url_for('user_bp.profile'))
+    return redirect(url_for('user.profile'))
 
 
 
-@user_bp.route('/profile_pictures/<path:filename>')
+@user.route('/profile_pictures/<path:filename>')
 def profile_picture(filename):
     PROFILE_PICTURE_FOLDER = os.path.join(Config.UPLOAD_FOLDER, 'profile_pictures')
 

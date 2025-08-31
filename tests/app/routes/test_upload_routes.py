@@ -18,7 +18,7 @@ def test_upload_file_valid(client, sample_image_data, test_app, setup_directorie
 
     with test_app.app_context():
         response = client.post(
-            url_for('upload_bp.upload_file'),
+            url_for('upload.upload_file'),
             json=json_data
 ***REMOVED***
 
@@ -32,7 +32,7 @@ def test_upload_file_invalid_json(client, test_app):
     """Test uploading with invalid JSON data."""
     with test_app.app_context():
         response = client.post(
-            url_for('upload_bp.upload_file'),
+            url_for('upload.upload_file'),
             data="invalid_data",
             content_type='application/json'
 ***REMOVED***
@@ -45,7 +45,7 @@ def test_upload_file_no_data(client):
         json_data = {}
 
         response = client.post(
-            url_for('upload_bp.upload_file'),
+            url_for('upload.upload_file'),
             json=json_data
 ***REMOVED***
 
@@ -70,7 +70,7 @@ def test_upload_file_multiple_file_types(client):
             }
 
             response = client.post(
-                url_for('upload_bp.upload_file'),
+                url_for('upload.upload_file'),
                 json=json_data
     ***REMOVED***
 
@@ -93,7 +93,7 @@ def test_uploaded_file(client):
         try:
             # Access the uploaded file with buffering enabled
             response = client.get(
-                url_for('upload_bp.uploaded_file', filename=filename),
+                url_for('upload.uploaded_file', filename=filename),
                 buffered=True
     ***REMOVED***
             assert response.status_code == 200
@@ -105,5 +105,5 @@ def test_uploaded_file(client):
 def test_uploaded_file_not_found(client):
     with client.application.app_context():
         """Test accessing a file that doesn't exist."""
-        response = client.get(url_for('upload_bp.uploaded_file', filename='nonexistent_file.png'))
+        response = client.get(url_for('upload.uploaded_file', filename='nonexistent_file.png'))
         assert response.status_code == 404

@@ -13,7 +13,7 @@ def test_submit_trade_valid(client, sample_user_with_ducks, test_app):
             sess['user'] = sample_user_with_ducks.username  # Set the session user
 
         # Include the CSRF token in the form data for testing
-        response = client.post(url_for('duck_trade_bp.submit_trade'), data={
+        response = client.post(url_for('duck_trade.submit_trade'), data={
             'csrf_token': csrf_token,
             'digital_ducks': 3,
             'bit_duck_selection-bit_ducks-0': 1,
@@ -29,7 +29,7 @@ def test_submit_trade_valid(client, sample_user_with_ducks, test_app):
 def test_submit_trade_insufficient_ducks(client, sample_user_with_ducks, test_app):
     with test_app.app_context():
         csrf_token = secrets.token_hex(32)
-        response = client.post(url_for('duck_trade_bp.submit_trade'), data={
+        response = client.post(url_for('duck_trade.submit_trade'), data={
             'digital_ducks': 100,
             # Data for BitDuckForm (use the nested field format)
             'bit_duck_selection-bit_ducks-0': 100,
@@ -55,14 +55,14 @@ def test_submit_trade_insufficient_ducks(client, sample_user_with_ducks, test_ap
 def test_bit_shift_get(client, test_app):
     with test_app.app_context():
         # Use client to make requests, which will automatically push the app context
-        response = client.get(url_for('duck_trade_bp.bit_shift'))  # Assuming 'duck_trade_bp.bit_shift' is your route
+        response = client.get(url_for('duck_trade.bit_shift'))  # Assuming 'duck_trade.bit_shift' is your route
         assert response.status_code == 200
         assert b'Trade Your Digital Ducks' in response.data
 
 # # Test updating the trade status
 # def test_update_trade_status_valid(client, sample_duck_trade, test_app):
 #     with test_app.app_context():
-#         response = client.post(url_for('duck_trade_bp.update_trade_status'), json={
+#         response = client.post(url_for('duck_trade.update_trade_status'), json={
 #             'trade_id': sample_duck_trade.id,
 #             'status': 'completed'
 #         })
@@ -72,6 +72,6 @@ def test_bit_shift_get(client, test_app):
 # # Test trade logs
 # def test_trade_logs(client, sample_trade, test_app):
 #     with test_app.app_context():
-#         response = client.get(url_for('duck_trade_bp.trade_logs'))
+#         response = client.get(url_for('duck_trade.trade_logs'))
 #         assert response.status_code == 200
 #         assert b'Trade Logs' in response.data
