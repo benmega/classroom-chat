@@ -78,9 +78,13 @@ def create_app(config_class=None):
     # Setup models and configuration
     with app.app_context():
         setup_models()  # Import all models to register them with SQLAlchemy
-        db.create_all()  # Create the database schema if it doesn't exist
-        db.session.commit()
-        ensure_default_configuration()  # Populate default configuration data if needed
+        if not os.path.exists(os.path.join(app.config['INSTANCE_FOLDER'], 'dev_users.db')):
+            db.create_all()  # only create if DB file does not exist
+            ensure_default_configuration()
+
+        # db.create_all()  # Create the database schema if it doesn't exist
+        # db.session.commit()
+        # ensure_default_configuration()  # Populate default configuration data if needed
 
     # Load user for the request lifecycle
     @app.before_request
