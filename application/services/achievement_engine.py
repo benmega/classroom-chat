@@ -13,7 +13,9 @@ def check_achievement(user, achievement):
         return len(user.projects) >= int(achievement.requirement_value)
 
     elif achievement.type == "challenge":
-        return user.get_progress("codecombat.com") >= int(achievement.requirement_value)
+        if not achievement.source:
+            return False
+        return user.get_progress(achievement.source) >= int(achievement.requirement_value)
 
     elif achievement.type == "custom":
         # Check if user has submitted a certificate for this achievement
@@ -39,7 +41,9 @@ def evaluate_user(user):
             print(f"{user.nickname} just complete {achievement.name}")
             # grant ducks reward
             if achievement.reward > 0:
-                user.ducks += achievement.reward
+                # TODO uncomment once feature ready to ship
+                pass
+                # user.ducks += achievement.reward
 
             new_awards.append(achievement)
 

@@ -14,8 +14,8 @@ class Achievement(db.Model):
     type = db.Column(db.String(64), nullable=False)
     # e.g. "ducks", "challenge", "streak", "custom"
     requirement_value = db.Column(db.String(128), nullable=True)
-
     reward = db.Column(db.Integer, nullable=False, default=1)
+    source = db.Column(db.String(255), nullable=True)
 
     users = db.relationship('UserAchievement', backref='achievement', lazy=True)
 

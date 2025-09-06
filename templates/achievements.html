@@ -7,6 +7,8 @@
 <div class="achievements-grid">
     {% for ach in achievements %}
         <div class="achievement-card {% if ach.id in user_achievements %}earned{% else %}locked{% endif %}">
+            <img src="{{ url_for('static', filename='images/achievement_badges/' ~ ach.slug ~ '.png') }}"
+                 alt="{{ ach.name }} badge" class="achievement-badge">
             <strong>{{ ach.name }}</strong>
             <p>{{ ach.description }}</p>
             {% if ach.id in user_achievements %}

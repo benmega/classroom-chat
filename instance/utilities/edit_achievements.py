@@ -38,16 +38,41 @@ def add_achievement():
     print(f"Added achievement '{name}'.")
 
 
-def remove_achievement():
+def remove_achievements():
     list_achievements()
-    id_ = input("Enter ID of achievement to remove: ").strip()
-    achievement = Achievement.query.get(id_)
-    if not achievement:
-        print("Achievement not found.")
+    ids_input = input("Enter IDs of achievements to remove (comma-separated): ").strip()
+    if not ids_input:
+        print("No IDs provided.")
         return
-    db.session.delete(achievement)
-    db.session.commit()
-    print(f"Removed achievement '{achievement.name}'.")
+
+    ids = [id_.strip() for id_ in ids_input.split(",")]
+    removed = 0
+
+    for id_ in ids:
+        achievement = Achievement.query.get(id_)
+        if achievement:
+            db.session.delete(achievement)
+            removed += 1
+            print(f"Removed achievement '{achievement.name}'.")
+        else:
+            print(f"Achievement with ID {id_} not found.")
+
+    if removed:
+        db.session.commit()
+        print(f"Total achievements removed: {removed}")
+    else:
+        print("No achievements were removed.")
+
+# def remove_achievement():
+#     list_achievements()
+#     id_ = input("Enter ID of achievement to remove: ").strip()
+#     achievement = Achievement.query.get(id_)
+#     if not achievement:
+#         print("Achievement not found.")
+#         return
+#     db.session.delete(achievement)
+#     db.session.commit()
+#     print(f"Removed achievement '{achievement.name}'.")
 
 
 def edit_achievement():
@@ -97,7 +122,7 @@ def main():
         elif choice == "3":
             edit_achievement()
         elif choice == "4":
-            remove_achievement()
+            remove_achievements()
         elif choice == "5":
             sys.exit(0)
         else:

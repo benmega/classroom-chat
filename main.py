@@ -7,7 +7,7 @@ app = create_app()
 
 def main():
     socketio.run(app,
-                 host='0.0.0.0',  # previously 0.0.0.0 allows the server to be accessible network-wide
+                 host='0.0.0.0',  # 0.0.0.0 allows the server to be accessible network-wide
                  port=5000,
                  log_output=True,  # Enables or disables the logging output by the server
                  use_reloader=not getattr(sys, 'frozen', False),  # Enable or disable the reloader

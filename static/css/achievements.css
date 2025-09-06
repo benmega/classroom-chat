@@ -1,21 +1,38 @@
 .achievements-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); /* smaller min width for more columns */
     gap: 1rem;
+    width: 100vw; /* take full viewport width */
+    max-width: 100%; /* prevent overflow */
+    padding: 1rem;
+    box-sizing: border-box; /* include padding in width */
 }
+
 .achievement-card {
     border: 2px solid #ccc;
     border-radius: 8px;
     padding: 1rem;
     text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
+
 .achievement-card.earned {
     border-color: #4caf50;
     background-color: #e8f5e9;
 }
+
 .achievement-card.locked {
     opacity: 0.6;
 }
+
+.achievement-card.locked img {
+    filter: grayscale(100%) brightness(50%);
+    opacity: 0.6;
+}
+
+
 .badge {
     display: block;
     margin-top: 0.5rem;
