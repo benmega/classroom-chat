@@ -15,7 +15,7 @@ class Config:
     TEMPLATE_FOLDER = os.path.join(BASE_DIR, 'templates')
 
     # Default database URI configuration
-    SQLALCHEMY_DATABASE_URI = f'sqlite:///{os.path.join(INSTANCE_FOLDER, "test_users.db")}'
+    SQLALCHEMY_DATABASE_URI = f'sqlite:///{os.path.join(INSTANCE_FOLDER, "dev_users.db")}'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ECHO = False  # Log SQL queries, helpful for debugging
 
@@ -40,7 +40,7 @@ class DevelopmentConfig(Config):
 
     DEBUG = True
     # Override database URI for development purposes
-    SQLALCHEMY_DATABASE_URI = os.getenv('DEV_DATABASE_URI', f'sqlite:///{os.path.join(Config.INSTANCE_FOLDER, "test_users.db")}')
+    SQLALCHEMY_DATABASE_URI = os.getenv('DEV_DATABASE_URI', f'sqlite:///{os.path.join(Config.INSTANCE_FOLDER, "dev_users.db")}')
     # SERVER_NAME = '192.168.1.136:5000' # Is this needed for testing? 3.22.25
     WTF_CSRF_ENABLED = False
     RATELIMIT_STORAGE_URL = "memory://"
