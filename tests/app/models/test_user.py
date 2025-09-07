@@ -4,20 +4,20 @@ from sqlalchemy.testing import db
 def test_user_creation(add_sample_user):
     user = add_sample_user('testuser', 'hashed_pwd')
     assert user.username == 'testuser'
-    assert user.ducks == 0
+    assert user.duck_balance == 0
 
 def test_user_duck_update(add_sample_user):
     user = add_sample_user('testuser', 'hashed_pwd')
-    user.ducks += 5
+    user.add_ducks(5)
     # Access the correct `db` instance from your app
     from application import db
     db.session.commit()
-    assert user.ducks == 5
+    assert user.duck_balance == 5
 
 def test_user_creation(add_sample_user, init_db):
     user = add_sample_user('testuser', 'hashed_pwd')
     assert user.username == 'testuser'
-    assert user.ducks == 0
+    assert user.duck_balance == 0
 
 def test_user_query(add_sample_user, init_db):
     user = add_sample_user('testuser', 'hashed_pwd')

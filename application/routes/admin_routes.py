@@ -453,10 +453,10 @@ def trade_action():
         if not user:
             return jsonify({'status': 'error', 'message': 'User not found'}), 404
 
-        if user.ducks < trade.digital_ducks:
+        if user.duck_balance < trade.digital_ducks:
             return jsonify({'status': 'error', 'message': 'Insufficient ducks'}), 400
 
-        user.ducks -= trade.digital_ducks
+        user.duck_balance -= trade.digital_ducks
         trade.approve()
         db.session.commit()
         return jsonify({'status': 'success', 'message': 'Trade approved'})
@@ -508,7 +508,7 @@ def adjust_ducks():
 
     user = User.query.filter_by(username=username).first()
     if user:
-        user.ducks += amount  # Add or subtract ducks
+        user.duck_balance += amount  # Add or subtract ducks
         db.session.commit()
         from application.services.achievement_engine import evaluate_user
         new_awards = evaluate_user(user)

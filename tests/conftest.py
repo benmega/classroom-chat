@@ -325,7 +325,7 @@ def auth_headers(sample_admin):
 def sample_duck_trade(init_db, sample_user):
     """Create a sample duck trade for testing (bound to correct session)."""
     from application.models.duck_trade import DuckTradeLog
-    sample_user.ducks = 100
+    sample_user.duck_balance = 100
     trade = DuckTradeLog(
         username=sample_user.username,
         digital_ducks=1,

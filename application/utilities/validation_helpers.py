@@ -121,7 +121,7 @@ def _update_user_ducks(username, challenge_name, duck_multiplier=1):
         duck_reward = challenge.value * duck_multiplier
         if not challenge:
             raise ValueError(f"Challenge '{challenge_name}' not found in the database")
-        user.ducks = round(user.ducks + duck_reward, 4)
+        user.duck_balance = round(user.duck_balance + duck_reward, 4)
         print(f'{username} was granted {duck_reward} duck(s).')
         db.session.commit()
 

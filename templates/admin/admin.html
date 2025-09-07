@@ -54,7 +54,7 @@
                         {% if user.is_online %}
                         <li>
                             <span class="user-name">{{ user.username }}</span>
-                            <span class="user-ducks">🦆 {{ user.ducks }}</span>
+                            <span class="user-ducks">🦆 {{ user.duck_balance }}</span>
                         </li>
                         {% endif %}
                         {% endfor %}
@@ -97,7 +97,7 @@
                         <label for="duck-username">User:</label>
                         <select id="duck-username" class="admin-select" required>
                             {% for user in users|sort(attribute='username') %}
-                                <option value="{{ user.username }}">{{ user.username }} (🦆 {{ user.ducks }})</option>
+                                <option value="{{ user.username }}">{{ user.username }} (🦆 {{ user.duck_balance }})</option>
                             {% endfor %}
                         </select>
                     </div>

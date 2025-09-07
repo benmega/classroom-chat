@@ -1,3 +1,4 @@
+# TODO align ec2 db
 from sqlalchemy.ext.hybrid import hybrid_property
 
 from application.extensions import db
@@ -20,8 +21,13 @@ class User(db.Model):
     profile_picture = db.Column(db.String(150), default="Default_pfp.jpg")
     ip_address = db.Column(db.String(45), nullable=True)
     is_online = db.Column(db.Boolean, default=False)
-    ducks = db.Column(db.Integer, nullable=False, default=0)
     nickname = db.Column(db.String(50), nullable=False, default=_username)
+
+    # Gamification
+    packets = db.Column(db.Double, nullable=False, default=0)
+    earned_ducks = db.Column(db.Double, nullable=False, default=0)
+    duck_balance = db.Column(db.Double, nullable=False, default=0)
+
 
     # Relationships
     skills = db.relationship('Skill', backref='user', lazy=True)
@@ -102,3 +108,8 @@ class User(db.Model):
         if project and project.user_id == self.id:
             db.session.delete(project)
             db.session.commit()
+
+    def add_ducks(self, amount):
+        self.earned_ducks += amount
+        self.packets += amount
+        self.duck_balance += amount
