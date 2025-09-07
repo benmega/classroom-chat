@@ -3,7 +3,7 @@ import uuid
 
 from flask import Blueprint, jsonify, send_from_directory, current_app, abort
 from flask import render_template, request, redirect, url_for, session, flash
-from application.extensions import db
+from application.extensions import db, limiter
 from application.models.conversation import Conversation
 from application.models.project import Project
 from application.models.skill import Skill
@@ -407,7 +407,7 @@ def upload_profile_picture():
     return redirect(url_for('user.profile'))
 
 
-
+@limiter.limit("50 per minute")
 @user.route('/profile_pictures/<path:filename>')
 def profile_picture(filename):
     PROFILE_PICTURE_FOLDER = os.path.join(Config.UPLOAD_FOLDER, 'profile_pictures')

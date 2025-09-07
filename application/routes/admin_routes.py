@@ -126,7 +126,7 @@ def base():
 @admin.route('/dashboard')
 @local_only
 def dashboard():
-    total_ducks = db.session.query(func.sum(User.ducks)).scalar() or 0
+    total_ducks = db.session.query(func.sum(User.duck_balance)).scalar() or 0
 
     # Calculate ducks earned today using actual challenge completions
     today = datetime.now().date()
@@ -142,7 +142,7 @@ def dashboard():
     active_users_count = User.query.filter_by(is_online=True).count()
 
     users = User.query.all()
-    users_sorted = sorted(users, key=lambda u: u.ducks or 0, reverse=True)
+    users_sorted = sorted(users, key=lambda u: u.duck_balance or 0, reverse=True)
     config = Configuration.query.first()
     banned_words = BannedWords.query.all()
 
