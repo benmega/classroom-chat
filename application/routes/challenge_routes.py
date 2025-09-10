@@ -30,16 +30,20 @@ def submit_challenge():
 
     if request.method == "POST":
         url = request.form.get("url")
-        helpers = request.form.get("helpers", "").strip()
+        helper = request.form.get("helpers", "").strip()
         notes = request.form.get("notes", "").strip()
-
         if not url:
             flash("Challenge URL is required", "error")
             return redirect(url_for("challenge.submit_challenge"))
 
         # Process challenge
         duck_multiplier = config.duck_multiplier
-        challenge_check = detect_and_handle_challenge_url(url, user.username, duck_multiplier)
+        challenge_check = detect_and_handle_challenge_url(url, user.username, duck_multiplier, helper)
+
+        # process notes
+        if notes:
+            print(f"{user.nickname} said {notes}")
+            pass
 
         if challenge_check.get("handled") and challenge_check["details"].get("success"):
             db.session.commit()  # Persist any changes made

@@ -1,4 +1,6 @@
+# TODO add helper to the remote db
 from application.extensions import db
+
 
 class ChallengeLog(db.Model):
     __tablename__ = 'challenge_logs'
@@ -10,6 +12,7 @@ class ChallengeLog(db.Model):
     course_id = db.Column(db.String(100), nullable=True)
     course_instance = db.Column(db.String(100), nullable=True) 
     timestamp = db.Column(db.DateTime, nullable=False, default=db.func.now())
+    helper = db.Column(db.String(100), nullable=True)
 
     def __repr__(self):
         return f"<ChallengeLog(username={self.username}, domain={self.domain}, challenge={self.challenge_name}, timestamp={self.timestamp})>"

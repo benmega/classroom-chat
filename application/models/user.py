@@ -9,6 +9,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from application.models.challenge_log import ChallengeLog
 from application.models.project import Project
 from application.models.skill import Skill
+from application.services.achievement_engine import evaluate_user
 
 
 class User(db.Model):
@@ -115,3 +116,4 @@ class User(db.Model):
         self.earned_ducks += amount
         self.packets += amount
         self.duck_balance += amount
+        evaluate_user(self)

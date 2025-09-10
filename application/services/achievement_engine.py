@@ -27,8 +27,9 @@ def check_achievement(user, achievement):
         # Count how many consecutive weeks with challenges
         "consistency": lambda: _calculate_consistency(user.username),
 
-        # Still undefined
-        "community": lambda: 0,  # TODO separate challenge submission from message sending
+        # Count how many times someone entered them as a helper
+        "community": lambda: db.session.query(func.count(ChallengeLog.id))
+                             .filter(ChallengeLog.helper == user.username).scalar(),
 
         # Still undefined
         "session": lambda: 0,  # TODO add sessionlog table and track login and logouts
