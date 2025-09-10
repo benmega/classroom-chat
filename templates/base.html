@@ -17,8 +17,11 @@
     <!-- Navigation Bar -->
     <header>
         <div id="logo-container">
-            <h1><a class="logo" href="{{ url_for('general.index') }}">Classroom Chat</a></h1>
+            <a href="{{ url_for('general.index') }}" class="logo">
+                <img src="{{ url_for('static', filename='images/logo.ico') }}" alt="Classroom Chat Logo">
+            </a>
         </div>
+
         <nav>
             <ul>
                 {% if user %}
