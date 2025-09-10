@@ -1,4 +1,6 @@
 # TODO align ec2 db
+# TODO update earned_ducks to sum of user challenge rewards. (send challenge and challengelog tables)
+# TODO update packets to sum of user challenge rewards. / 128 (send challenge and challengelog tables)
 from sqlalchemy.ext.hybrid import hybrid_property
 
 from application.extensions import db
