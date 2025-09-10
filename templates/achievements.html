@@ -7,15 +7,20 @@
 <div class="achievements-grid">
     {% for ach in achievements %}
         <div class="achievement-card {% if ach.id in user_achievements %}earned{% else %}locked{% endif %}">
-            <img src="{{ url_for('static', filename='images/achievement_badges/' ~ ach.slug ~ '.png') }}"
-                 alt="{{ ach.name }} badge" class="achievement-badge">
+            <div class="badge-container">
+                <img src="{{ url_for('static', filename='images/achievement_badges/' ~ ach.slug ~ '.png') }}"
+                     alt="{{ ach.name }} badge" class="achievement-badge">
+                {% if ach.id not in user_achievements %}
+                    <div class="overlay">
+                        <span class="lock-icon">🔒</span>
+                    </div>
+                {% endif %}
+            </div>
             <strong>{{ ach.name }}</strong>
-            <p>{{ ach.description }}</p>
-            {% if ach.id in user_achievements %}
-                <span class="badge">Earned ✅</span>
-            {% else %}
-                <span class="badge">Locked 🔒</span>
-            {% endif %}
+            <div class="tooltip">
+                <span class="info-icon">ℹ️</span>
+                <span class="tooltiptext">{{ ach.description }}</span>
+            </div>
         </div>
     {% endfor %}
 </div>

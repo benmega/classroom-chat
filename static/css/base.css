@@ -11,6 +11,10 @@ body {
     padding-top: 0; /* Removed padding-top to eliminate gap */
 }
 
+h2 {
+    text-align: center;
+}
+
 /* Header Styles */
 header {
     display: flex;
@@ -26,6 +30,26 @@ header {
     width: 100%; /* Ensures header spans the entire width */
     box-sizing: border-box; /* Ensures padding doesn't affect width */
 }
+
+/* Logo container */
+#logo-container {
+    display: flex;
+    align-items: center;
+}
+
+/* Logo image */
+#logo-container .logo img {
+    width: 60px; /* Adjust size as needed */
+    height: auto;
+    display: block;
+    object-fit: contain;
+    transition: transform 0.2s ease;
+}
+
+#logo-container .logo img:hover {
+    transform: scale(1.05); /* subtle hover effect */
+}
+
 
 /* Navigation menu */
 
