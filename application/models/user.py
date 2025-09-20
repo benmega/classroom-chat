@@ -12,6 +12,8 @@ from application.models.session_log import SessionLog
 from application.models.skill import Skill
 from application.services.achievement_engine import evaluate_user
 
+def default_nickname(context):
+    return context.get_current_parameters().get("username")
 
 class User(db.Model):
     @property
@@ -25,7 +27,7 @@ class User(db.Model):
     profile_picture = db.Column(db.String(150), default="Default_pfp.jpg")
     ip_address = db.Column(db.String(45), nullable=True)
     is_online = db.Column(db.Boolean, default=False)
-    nickname = db.Column(db.String(50), nullable=False, default=_username)
+    nickname = db.Column(db.String(50), nullable=False, default=default_nickname)
 
     # Gamification
     packets = db.Column(db.Double, nullable=False, default=0)
@@ -62,6 +64,8 @@ class User(db.Model):
         """Check the given password against the stored hash"""
         return check_password_hash(self.password_hash, password)
 
+    def default_nickname(context):
+        return context.get_current_parameters().get("username")
     @classmethod
     def set_online(cls, user_id, online=True):
         """Toggle user online/offline and manage session logs."""

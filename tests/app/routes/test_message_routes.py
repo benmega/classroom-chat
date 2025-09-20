@@ -48,7 +48,7 @@ def test_send_message_inappropriate(client, init_db, sample_user, sample_configu
         response = client.post('/message/send_message', data={'message': 'Poop!'})
 
     print(response.data.decode())  # Output the response content for debugging
-    assert response.status_code == 500
+    assert response.status_code == 403
     assert b'Inappropriate messages are not allowed' in response.data
 
 

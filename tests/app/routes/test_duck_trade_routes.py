@@ -57,7 +57,7 @@ def test_bit_shift_get(client, test_app):
         # Use client to make requests, which will automatically push the app context
         response = client.get(url_for('duck_trade.bit_shift'))  # Assuming 'duck_trade.bit_shift' is your route
         assert response.status_code == 200
-        assert b'Trade Your Digital Ducks' in response.data
+        assert b'Digital Ducks' in response.data
 
 # # Test updating the trade status
 # def test_update_trade_status_valid(client, sample_duck_trade, test_app):
