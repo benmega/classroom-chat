@@ -84,49 +84,6 @@ def _calculate_consistency(username):
     return best_streak
 
 
-# def check_achievement(user, achievement):
-#     """Return True if the user meets the condition for this achievement."""
-#     if achievement.type == "ducks":
-#         return user.earned_ducks >= int(achievement.requirement_value)
-#
-#     elif achievement.type == "project":
-#         return len(user.projects) >= int(achievement.requirement_value)
-#
-#     elif achievement.type in "progress":
-#         if not achievement.source:
-#             return False
-#         return user.get_progress(achievement.source) >= int(achievement.requirement_value)
-#
-#     elif achievement.type == "chat":
-#         messages_sent = 0 # TODO query db
-#         return messages_sent >= int(achievement.requirement_value)
-#
-#     elif achievement.type == "consistency":
-#         weeks_in_a_row = 0 # TODO query db
-#         return weeks_in_a_row >= int(achievement.requirement_value)
-#
-#     elif achievement.type == "community":
-#         help_count = 0 # TODO query db
-#         return help_count >= int(achievement.requirement_value)
-#
-#     elif achievement.type == "session":
-#         streak_count = 0 # TODO query db
-#         return streak_count >= int(achievement.requirement_value)
-#
-#     elif achievement.type == "trade":
-#         trade_count = 0 # TODO query db
-#         return trade_count >= int(achievement.requirement_value)
-#
-#     elif achievement.type == "certificate":
-#         # Check if user has submitted a certificate for this achievement
-#         cert = UserCertificate.query.filter_by(
-#             user_id=user.id, achievement_id=achievement.id
-#         ).first()
-#         return cert is not None
-#
-#     return False
-
-
 def evaluate_user(user):
     """Evaluate all achievements for a given user, grant new ones."""
     earned_ids = {ua.achievement_id for ua in user.achievements}

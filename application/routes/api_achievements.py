@@ -1,0 +1,23 @@
+from flask import Blueprint, session, jsonify
+from application.models.user import User
+from application.services.achievement_engine import evaluate_user
+
+achievements_api = Blueprint("achievements_api", __name__, url_prefix="/api/achievements")
+
+@achievements_api.route("/check", methods=["GET"])
+def check_achievements():
+    user_id = session.get("user")
+    if not user_id:
+        return jsonify({"success": False, "error": "Not logged in"}), 401
+
+    user = User.query.filter_by(username=user_id).first()
+    if not user:
+        return jsonify({"success": False, "error": "User not found"}), 404
+
+    new_awards = evaluate_user(user)
+    payload = [
+        {"id": a.id, "name": a.name, "badge": a.icon_url}  # include whatever fields you need
+        for a in new_awards
+    ]
+
+    return jsonify({"success": True, "new_awards": payload})
