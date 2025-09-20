@@ -8,8 +8,8 @@
     {% for ach in achievements %}
         <div class="achievement-card {% if ach.id in user_achievements %}earned{% else %}locked{% endif %}">
             <div class="badge-container">
-                <img src="{{ url_for('static', filename='images/achievement_badges/' ~ ach.slug ~ '.png') }}"
-                     alt="{{ ach.name }} badge" class="achievement-badge">
+                <img src="{{ url_for('static', filename='images/achievement_badges/optimized/' ~ ach.slug ~ '.webp') }}"
+                     alt="{{ ach.name }} badge" class="achievement-badge" loading="lazy">
                 {% if ach.id not in user_achievements %}
                     <div class="overlay">
                         <span class="lock-icon">🔒</span>

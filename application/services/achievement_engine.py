@@ -1,14 +1,11 @@
 # application/services/achievement_engine.py
 from datetime import datetime
 
-from application.extensions import db
 from application.models.achievements import Achievement, UserAchievement
 from application.models.challenge_log import ChallengeLog
 from application.models.duck_trade import DuckTradeLog
 from application.models.session_log import SessionLog
 from application.models.user_certificate import UserCertificate
-
-
 from sqlalchemy import func
 from application.extensions import db
 from application.models.message import Message
@@ -101,9 +98,7 @@ def evaluate_user(user):
             print(f"{user.nickname} just complete {achievement.name}")
             # grant ducks reward
             if achievement.reward > 0:
-                # TODO uncomment once feature ready to ship
-                pass
-                # user.add_ducks(achievement.reward)
+                user.add_ducks(achievement.reward)
 
             new_awards.append(achievement)
 

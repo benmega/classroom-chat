@@ -2,6 +2,7 @@
 import re
 
 from flask import Blueprint, render_template, jsonify, session, flash, redirect, url_for, request
+from sqlalchemy.orm import joinedload
 
 from application.extensions import db
 from application.models.user import User
@@ -28,7 +29,12 @@ def allowed_file(filename):
 @achievements.route("/")
 def achievements_page():
     user_id = session.get('user')
-    current_user = User.query.filter_by(username=user_id).first()
+    # current_user = User.query.filter_by(username=user_id).first()
+    current_user = (
+        User.query.options(joinedload(User.achievements))
+        .filter_by(username=user_id)
+        .first()
+    )
     if not current_user:
         return jsonify({'success': False, 'error': 'User not found!'}), 404
 
