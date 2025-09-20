@@ -126,7 +126,7 @@ def base():
 @admin.route('/dashboard')
 @local_only
 def dashboard():
-    total_ducks = db.session.query(func.sum(User.ducks)).scalar() or 0
+    total_ducks = db.session.query(func.sum(User.duck_balance)).scalar() or 0
 
     # Calculate ducks earned today using actual challenge completions
     today = datetime.now().date()
@@ -142,7 +142,7 @@ def dashboard():
     active_users_count = User.query.filter_by(is_online=True).count()
 
     users = User.query.all()
-    users_sorted = sorted(users, key=lambda u: u.ducks or 0, reverse=True)
+    users_sorted = sorted(users, key=lambda u: u.duck_balance or 0, reverse=True)
     config = Configuration.query.first()
     banned_words = BannedWords.query.all()
 
@@ -453,10 +453,10 @@ def trade_action():
         if not user:
             return jsonify({'status': 'error', 'message': 'User not found'}), 404
 
-        if user.ducks < trade.digital_ducks:
+        if user.duck_balance < trade.digital_ducks:
             return jsonify({'status': 'error', 'message': 'Insufficient ducks'}), 400
 
-        user.ducks -= trade.digital_ducks
+        user.duck_balance -= trade.digital_ducks
         trade.approve()
         db.session.commit()
         return jsonify({'status': 'success', 'message': 'Trade approved'})
@@ -508,10 +508,8 @@ def adjust_ducks():
 
     user = User.query.filter_by(username=username).first()
     if user:
-        user.ducks += amount  # Add or subtract ducks
+        user.duck_balance += amount
         db.session.commit()
-        from application.services.achievement_engine import evaluate_user
-        new_awards = evaluate_user(user)
 
         return jsonify({
             'success': True,

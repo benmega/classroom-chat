@@ -8,11 +8,20 @@ from application.models.user import User
 from application.models.achievements import Achievement, UserAchievement
 from application.models.user_certificate import UserCertificate
 from application.routes.admin_routes import local_only
-from application.services.achievement_engine import evaluate_user
-from application.services.certificate_service import download_certificate
+import os
+from werkzeug.utils import secure_filename
 
 achievements = Blueprint('achievements', __name__)
 
+CERT_URL_REGEX = r"https://codecombat\.com/certificates/[\w\d]+.*course=([\w\d]+)"
+
+
+
+UPLOAD_FOLDER = "certificates"
+ALLOWED_EXTENSIONS = {"pdf"}
+
+def allowed_file(filename):
+    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
 # Return all achievements with user's status
@@ -61,65 +70,6 @@ def add_achievement():
 
 
 
-CERT_URL_REGEX = r"https://codecombat\.com/certificates/[\w\d]+.*course=([\w\d]+)"
-#
-# @achievements.route("/submit_certificate", methods=["GET", "POST"])
-# def submit_certificate():
-#     success = False
-#     user_id = session.get('user')
-#     current_user = User.query.filter_by(username=user_id).first()
-#     if not current_user:
-#         return jsonify({'success': False, 'error': 'User not found!'}), 404
-#
-#     message = None
-#     if request.method == "POST":
-#         url = request.form.get("certificate_url")
-#         match = re.search(CERT_URL_REGEX, url)
-#         if match:
-#             course_slug = match.group(1)  # course identifier from URL
-#             achievement = Achievement.query.filter_by(slug=course_slug).first()
-#             if achievement:
-#                 cert = UserCertificate.query.filter_by(user_id=current_user.id, achievement_id=achievement.id).first()
-#                 if not cert:
-#                     cert = UserCertificate(user_id=current_user.id, achievement_id=achievement.id, url=url)
-#                     db.session.add(cert)
-#                     db.session.commit()
-#
-#                 saved_file = download_certificate(url, current_user, achievement)
-#                 if saved_file:
-#                     # optionally store saved_file path in DB if needed
-#                     print(f"Certificate saved at {saved_file}.")
-#
-#                 # update achievement engine
-#                 new_awards = evaluate_user(current_user)
-#
-#                 if new_awards:
-#                     earned_names = ", ".join(a.name for a in new_awards)
-#                     message = f"🎉 Congratulations! You earned the achievement(s): {earned_names}."
-#                     success = True
-#
-#                 else:
-#                     message = "Certificate submitted, but no new achievement earned."
-#                     success = False
-#             else:
-#                 message = "No matching achievement found for this course."
-#                 success = False
-#         else:
-#             message = "Invalid certificate URL."
-#             success = False
-#
-#     return render_template("submit_certificate.html", message=message, success=success)
-#
-#
-
-import os
-from werkzeug.utils import secure_filename
-
-UPLOAD_FOLDER = "certificates"
-ALLOWED_EXTENSIONS = {"pdf"}
-
-def allowed_file(filename):
-    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
 @achievements.route("/submit_certificate", methods=["GET", "POST"])
 def submit_certificate():
@@ -134,34 +84,30 @@ def submit_certificate():
         url = request.form.get("certificate_url")
         file = request.files.get("certificate_file")
 
-        # check URL for course slug
+        # check URL
         match = re.search(CERT_URL_REGEX, url or "")
         if not match:
-            message = "Invalid certificate URL."
-            return render_template("submit_certificate.html", message=message, success=False)
+            return render_template("submit_certificate.html", message="Invalid certificate URL.", success=False)
 
         course_slug = match.group(1)
         achievement = Achievement.query.filter_by(slug=course_slug).first()
-
         if not achievement:
-            message = "No matching achievement found for this course."
-            return render_template("submit_certificate.html", message=message, success=False)
+            return render_template("submit_certificate.html", message="No matching achievement found for this course.", success=False)
 
-        # handle file upload
+        # file validation
         if not file or file.filename == "":
-            message = "Certificate file is required."
-            return render_template("submit_certificate.html", message=message, success=False)
+            return render_template("submit_certificate.html", message="Certificate file is required.", success=False)
 
         if not allowed_file(file.filename):
-            message = "Invalid file type. Only PDF is allowed."
-            return render_template("submit_certificate.html", message=message, success=False)
+            return render_template("submit_certificate.html", message="Invalid file type. Only PDF is allowed.", success=False)
 
+        # save file
         os.makedirs(UPLOAD_FOLDER, exist_ok=True)
         filename = secure_filename(f"{current_user.username}_{achievement.slug}.pdf")
         filepath = os.path.join(UPLOAD_FOLDER, filename)
         file.save(filepath)
 
-        # create or update certificate entry
+        # create or update cert entry
         cert = UserCertificate.query.filter_by(
             user_id=current_user.id, achievement_id=achievement.id
         ).first()
@@ -179,14 +125,7 @@ def submit_certificate():
 
         db.session.commit()
 
-        # achievement evaluation
-        new_awards = evaluate_user(current_user)
-        if new_awards:
-            earned_names = ", ".join(a.name for a in new_awards)
-            message = f"🎉 Congratulations! You earned the achievement(s): {earned_names}."
-            success = True
-        else:
-            message = "Certificate submitted. No new achievement earned."
-            success = False
+        # success message
+        message, success = "Certificate submitted successfully.", True
 
     return render_template("submit_certificate.html", message=message, success=success)

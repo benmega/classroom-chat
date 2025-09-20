@@ -17,7 +17,18 @@ export function setupMessagingAndConversation() {
         updateConversation();
     });
     setInterval(updateConversation, updateInterval);
+    startHeartbeat();
 }
+
+function startHeartbeat() {
+    setInterval(() => {
+        fetch('/session/heartbeat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+        }).catch(err => console.error('Heartbeat failed:', err));
+    }, 15000); // every 15s
+}
+
 
 export function updateConversation() {
     fetchCurrentConversation()

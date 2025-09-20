@@ -30,11 +30,11 @@ URL_PATTERN = (
 
 
 
-def detect_and_handle_challenge_url(message, username, duck_multiplier=1):
+def detect_and_handle_challenge_url(message, username, duck_multiplier=1, helper=None):
     """Detect and handle a challenge URL in a message."""
     match = _extract_challenge_details(message)
     if match:
-        log_result = _log_challenge(match, username)
+        log_result = _log_challenge(match, username, helper)
         print(log_result)
         if log_result.get("success"):
             try:
@@ -68,14 +68,16 @@ def _extract_challenge_details(message):
         }
     return None
 
-def _log_challenge(details, username):
+def _log_challenge(details, username, helper=None):
     """Log the challenge details to the database."""
+
     try:
+        print(helper)
         existing_log = ChallengeLog.query.filter_by(
             username=username,
             domain=details["domain"],
             challenge_name=details["challenge_name"],
-            course_id=details["course_id"]
+            course_id=details["course_id"],
         ).first()
 
         if existing_log:
@@ -91,7 +93,8 @@ def _log_challenge(details, username):
             challenge_name=details["challenge_name"],
             course_id=details["course_id"],
             course_instance=details["course_instance"],
-            timestamp=datetime.utcnow()
+            timestamp=datetime.utcnow(),
+            helper=helper
         )
         db.session.add(challenge_log)
         db.session.commit()
@@ -121,7 +124,8 @@ def _update_user_ducks(username, challenge_name, duck_multiplier=1):
         duck_reward = challenge.value * duck_multiplier
         if not challenge:
             raise ValueError(f"Challenge '{challenge_name}' not found in the database")
-        user.ducks = round(user.ducks + duck_reward, 4)
+        # user.duck_balance = round(user.duck_balance + duck_reward, 4)
+        user.add_ducks(duck_reward)
         print(f'{username} was granted {duck_reward} duck(s).')
         db.session.commit()
 

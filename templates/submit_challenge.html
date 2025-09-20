@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Submit a Challenge</h2>
+<form method="POST" action="{{ url_for('challenge.submit_challenge') }}">
+    <div class="form-group">
+        <label for="url">Challenge URL *</label>
+        <input type="url" name="url" id="url"
+               class="form-control"
+               placeholder="https://codecombat.com/play/level/..." required>
+    </div>
+
+    <div class="form-group mt-3">
+        <label for="helpers">Who helped you? (optional)</label>
+        <input type="text" name="helpers" id="helpers"
+               class="form-control"
+               placeholder="blossomstudentXX">
+    </div>
+
+    <div class="form-group mt-3">
+        <label for="notes">Notes (optional)</label>
+        <textarea name="notes" id="notes" rows="3" class="form-control"
+                  placeholder="What did you learn or struggle with?"></textarea>
+    </div>
+
+    <button type="submit" class="btn btn-primary mt-3">Submit</button>
+</form>
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/submit_challenge.css') }}">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+{% if message %}
+<script>
+    {% if success %}
+    Swal.fire({
+        title: 'Congratulations!',
+        text: '{{ message|escape }}',
+        icon: 'success',
+        confirmButtonText: 'Awesome!'
+    });
+    {% else %}
+    Swal.fire({
+        title: 'Info',
+        text: '{{ message|escape }}',
+        icon: 'info',
+        confirmButtonText: 'Continue'
+    });
+    {% endif %}
+</script>
+{% endif %}
+{% endblock %}

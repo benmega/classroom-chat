@@ -64,15 +64,19 @@ def generate_random_slug(length=10):
 def add_sample_user(init_db):
     """Adds a unique user to the database."""
 
-    def _add_user(username, password, ducks=0, profile_picture='Default_pfp.jpg'):
-        # Ensure the username does not exist in the database already
+    def _add_user(username, password, earned_ducks=0, profile_picture='Default_pfp.jpg'):
         existing_user = User.query.filter_by(username=username).first()
         if existing_user:
             db.session.delete(existing_user)
             db.session.commit()
 
-        # Add the new user with optional ducks and profile picture
-        user = User(username=username, password_hash=password, ducks=ducks, profile_picture=profile_picture)
+        user = User(
+            username=username,
+            password_hash=password,
+            earned_ducks=earned_ducks,
+            duck_balance=earned_ducks,  # keep balance in sync at creation
+            profile_picture=profile_picture
+        )
         db.session.add(user)
         db.session.commit()
         return user
@@ -88,7 +92,12 @@ def sample_user_with_ducks(test_app):
         db.create_all()
 
         try:
-            user = User(username='user_with_ducks', password_hash='test_password', ducks=50)
+            user = User(
+                username='user_with_ducks',
+                password_hash='test_password',
+                earned_ducks=50,
+                duck_balance=50
+            )
             db.session.add(user)
             db.session.commit()
             yield user
@@ -128,7 +137,7 @@ def sample_challenge(init_db):
 def sample_user(init_db):
     """Fixture to create a sample user with dynamic data."""
     username = f"user_{uuid.uuid4().hex[:8]}"
-    user = User(username=username, password_hash="hashedpassword", ducks=0)
+    user = User(username=username, password_hash="hashedpassword")
     db.session.add(user)
     db.session.commit()
     return user
@@ -139,7 +148,13 @@ def sample_admin(init_db):
     """Fixture to create a sample admin user with dynamic data."""
     username = TestingConfig.ADMIN_USERNAME
     password = TestingConfig.ADMIN_PASSWORD
-    admin_user = User(username=username, password_hash=password, ducks=0)
+    admin_user = User(
+        username=username,
+        password_hash=password,
+        earned_ducks=0,
+        duck_balance=0
+    )
+
     db.session.add(admin_user)
     db.session.commit()
     return admin_user
@@ -325,7 +340,7 @@ def auth_headers(sample_admin):
 def sample_duck_trade(init_db, sample_user):
     """Create a sample duck trade for testing (bound to correct session)."""
     from application.models.duck_trade import DuckTradeLog
-    sample_user.ducks = 100
+    sample_user.duck_balance = 100
     trade = DuckTradeLog(
         username=sample_user.username,
         digital_ducks=1,

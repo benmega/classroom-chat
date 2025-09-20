@@ -17,27 +17,34 @@
     <!-- Navigation Bar -->
     <header>
         <div id="logo-container">
-            <h1><a class="logo" href="{{ url_for('general.index') }}">Classroom Chat</a></h1>
+            <a href="{{ url_for('general.index') }}" class="logo">
+                <img src="{{ url_for('static', filename='images/logo.ico') }}" alt="Classroom Chat Logo">
+            </a>
         </div>
+
         <nav>
             <ul>
                 {% if user %}
                     <li>
-                        <a class="digital-ducks">
-                            <span class="label">Digital Ducks:</span>
-                            <span class="count">{{ user.ducks }}</span>
+                        <a class="digital-ducks" href="{{ url_for('duck_trade.bit_shift') }}">
+                            <span class="label" >Ducks:</span>
+                            <span class="count">{{ user.duck_balance }}</span>
                         </a>
                     </li>
+
+                    {% if user.packets > 0.001 %}
+                        <li>
+                            <a class="digital-ducks">
+                                <span class="label">Packets:</span>
+                                <span class="count">{{ user.packets|round(5) }}</span>
+                            </a>
+                        </li>
+                    {% endif %}
 
                 {% endif %}
 
                 {% if 'user' in session %}
 
-                    <li>
-                        <a class="nav-icon" href="{{ url_for('duck_trade.bit_shift') }}">
-                            <img src="{{ url_for('static', filename='images/bit_shift.png') }}" alt="Bit Shift">
-                        </a>
-                    </li>
 
 
                         <!-- Profile Menu -->
@@ -50,6 +57,7 @@
                             <li><a href="{{ url_for('user.profile') }}">Profile</a></li>
                             <li><a href="{{ url_for('achievements.achievements_page') }}">Achievements</a></li>
                             <li><a href="{{ url_for('achievements.submit_certificate') }}">Submit Certificate</a></li>
+                            <li><a href="{{ url_for('challenge.submit_challenge') }}">Submit Challenge</a></li>
                             <li><a href="{{ url_for('message.conversation_history') }}">History</a></li>
                             <li><a href="{{ url_for('user.logout') }}">Logout</a></li>
                         </ul>
@@ -77,6 +85,13 @@
     </footer>
 
 </body>
+<script type="module">
+    import { initAchievements } from "{{ url_for('static', filename='js/achievements/achievements.js') }}";
+
+    // Run it once when the page loads
+    initAchievements("{{ session.get('user') }}");
+</script>
+
 <script>
     document.getElementById("profileToggle").addEventListener("click", function (e) {
     e.stopPropagation();

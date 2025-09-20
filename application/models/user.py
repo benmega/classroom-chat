@@ -1,3 +1,6 @@
+# TODO align ec2 db
+# TODO update earned_ducks to sum of user challenge rewards. (send challenge and challengelog tables)
+# TODO update packets to sum of user challenge rewards. / 128 (send challenge and challengelog tables)
 from sqlalchemy.ext.hybrid import hybrid_property
 
 from application.extensions import db
@@ -5,8 +8,11 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 from application.models.challenge_log import ChallengeLog
 from application.models.project import Project
+from application.models.session_log import SessionLog
 from application.models.skill import Skill
 
+def default_nickname(context):
+    return context.get_current_parameters().get("username")
 
 class User(db.Model):
     @property
@@ -20,8 +26,13 @@ class User(db.Model):
     profile_picture = db.Column(db.String(150), default="Default_pfp.jpg")
     ip_address = db.Column(db.String(45), nullable=True)
     is_online = db.Column(db.Boolean, default=False)
-    ducks = db.Column(db.Integer, nullable=False, default=0)
-    nickname = db.Column(db.String(50), nullable=False, default=_username)
+    nickname = db.Column(db.String(50), nullable=False, default=default_nickname)
+
+    # Gamification
+    packets = db.Column(db.Double, nullable=False, default=0)
+    earned_ducks = db.Column(db.Double, nullable=False, default=0)
+    duck_balance = db.Column(db.Double, nullable=False, default=0)
+
 
     # Relationships
     skills = db.relationship('Skill', backref='user', lazy=True)
@@ -52,12 +63,26 @@ class User(db.Model):
         """Check the given password against the stored hash"""
         return check_password_hash(self.password_hash, password)
 
+    def default_nickname(context):
+        return context.get_current_parameters().get("username")
     @classmethod
     def set_online(cls, user_id, online=True):
+        """Toggle user online/offline and manage session logs."""
         user = cls.query.filter_by(id=user_id).first()
-        if user:
-            user.is_online = online
-            db.session.commit()
+        if not user:
+            return
+
+        if online:
+            # Start new session if none active
+            if not SessionLog.query.filter_by(user_id=user.id, end_time=None).first():
+                SessionLog.start_session(user.id)
+            user.is_online = True
+        else:
+            # End the most recent session
+            SessionLog.end_session(user.id)
+            user.is_online = False
+
+        db.session.commit()
 
     def get_progress(self, domain):
         """Calculate progress based on challenges completed for a specific domain."""
@@ -102,3 +127,8 @@ class User(db.Model):
         if project and project.user_id == self.id:
             db.session.delete(project)
             db.session.commit()
+
+    def add_ducks(self, amount):
+        self.earned_ducks += amount
+        self.packets += amount
+        self.duck_balance += amount

@@ -26,10 +26,14 @@
 <script>
     {% if success %}
     Swal.fire({
-        title: 'Congratulations!',
+        title: 'Success',
         text: '{{ message|escape }}',
         icon: 'success',
-        confirmButtonText: 'Awesome!'
+        confirmButtonText: 'OK'
+    }).then(() => {
+        if (window.fetchAchievements) {
+            window.fetchAchievements(); // <-- check instantly
+        }
     });
     {% else %}
     Swal.fire({
@@ -41,4 +45,5 @@
     {% endif %}
 </script>
 {% endif %}
+
 {% endblock %}
