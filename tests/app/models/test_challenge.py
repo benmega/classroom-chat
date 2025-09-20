@@ -17,7 +17,7 @@ def test_complete_challenge(sample_challenge, sample_user):
     sample_challenge.complete_challenge(sample_user)
 
     # Ensure a new log entry is created
-    log_entry = ChallengeLog.query.filter_by(username=sample_user.username).first()
+    log_entry = ChallengeLog.query.filter_by(username=sample_user._username).first()
     assert log_entry is not None
     assert log_entry.challenge_name == sample_challenge.name
     assert log_entry.username == sample_user.username

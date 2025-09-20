@@ -29,22 +29,3 @@ def check_achievements():
     ]
     print(payload)
     return jsonify({"success": True, "new_awards": payload})
-
-# @achievements_api.route("/check", methods=["GET"])
-# def check_achievements():
-#     user_id = session.get("user")
-#     if not user_id:
-#         return jsonify({"success": False, "error": "Not logged in"}), 401
-#
-#     user = User.query.filter_by(username=user_id).first()
-#     if not user:
-#         return jsonify({"success": False, "error": "User not found"}), 404
-#
-#     new_awards = evaluate_user(user)
-#     payload = [
-#         {"id": a.id, "name": a.name, "badge": f"static/images/achievement_badges/{a.slug}.png"}  # include whatever fields you need
-#         # {"id": a.id, "name": a.name}
-#         for a in new_awards
-#     ]
-#     print(payload)
-#     return jsonify({"success": True, "new_awards": payload})
