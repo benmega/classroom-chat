@@ -8,15 +8,11 @@ class Achievement(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     slug = db.Column(db.String(64), unique=True, nullable=False)
     name = db.Column(db.String(128), nullable=False)
-    description = db.Column(db.String(256))
-
-    # Generalized requirement fields
-    type = db.Column(db.String(64), nullable=False)
-    # e.g. "ducks", "challenge", "streak", "custom"
-    requirement_value = db.Column(db.String(128), nullable=True)
+    type = db.Column(db.String(64), nullable=False) # ["ducks","project","progress","chat","consistency","community","session","trade","certificate"]
     reward = db.Column(db.Integer, nullable=False, default=1)
+    description = db.Column(db.String(256), nullable=True)
+    requirement_value = db.Column(db.String(128), nullable=True)
     source = db.Column(db.String(255), nullable=True)
-
     users = db.relationship('UserAchievement', backref='achievement', lazy=True)
 
 class UserAchievement(db.Model):

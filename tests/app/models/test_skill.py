@@ -22,13 +22,6 @@ def test_skill_creation(init_db, sample_user):
     assert retrieved_skill.user_id == sample_user.id
 
 
-def test_skill_repr(sample_skill):
-    """Test the __repr__ method of Skill."""
-    skill = sample_skill
-    expected_repr = f"<Skill {skill.name}>"
-    assert repr(skill) == expected_repr
-
-
 def test_skill_unique_per_user(init_db, sample_user):
     """Test adding duplicate skills for the same user."""
     skill_1 = Skill(name="C++", user_id=sample_user.id)

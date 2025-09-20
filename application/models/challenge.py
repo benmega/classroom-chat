@@ -6,21 +6,20 @@ class Challenge(db.Model):
     __tablename__ = 'challenges'
 
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(255), nullable=False, unique=True)  # Challenge name must be unique
+    name = db.Column(db.String(255), nullable=False, unique=True)
     slug = db.Column(db.String(255), nullable=False, unique=True)
     domain = db.Column(db.String(100), nullable=False)
-    course_id = db.Column(db.String(100), nullable=True)
-    description = db.Column(db.Text, nullable=True)
     difficulty = db.Column(db.String(50), nullable=False, default='medium')
     value = db.Column(db.Integer, nullable=False, default=1)
     is_active = db.Column(db.Boolean, nullable=False, default=True)
     created_at = db.Column(db.DateTime, nullable=False, default=db.func.now())
+    course_id = db.Column(db.String(100), nullable=True)
+    description = db.Column(db.Text, nullable=True)
 
 
     def __repr__(self):
         return f"<Challenge(name={self.name}, domain={self.domain}, difficulty={self.difficulty}, value={self.value})>"
 
-    # Useful methods
     def complete_challenge(self, user):
         """Logs the challenge completion and updates user progress."""
 

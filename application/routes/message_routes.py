@@ -24,30 +24,30 @@ def send_message():
 
     user = get_user(session_username)
     if not user:
-        return jsonify(success=False, error="Unknown User"), 500
+        return jsonify(success=False, error="Unknown User"), 403
 
     # Handle configuration check
     config = Configuration.query.first()
     if not config:
         return jsonify(success=False, error="No Configuration Found"), 500
     if user.username != adminUsername and not config.message_sending_enabled:
-        return jsonify(success=False, error="Non-admin messages are disabled"), 500
+        return jsonify(success=False, error="Non-admin messages are disabled"), 403
 
     # Check for banned words
     if not message_is_appropriate(form_message):
-        return jsonify(success=False, error="Inappropriate messages are not allowed"), 500
+        return jsonify(success=False, error="Inappropriate messages are not allowed"), 403
 
-    # Check for and process CodeCombat URL
-    duck_multiplier = config.duck_multiplier
-    challenge_check = detect_and_handle_challenge_url(form_message, user.username, duck_multiplier)
-    if challenge_check.get("handled"):
-        # Send a congratulatory system message
-        if challenge_check.get("details").get("success"):
-            system_message = f"Congrats {user.username}, on completing a challenge!"
-            return jsonify(success=True, system_message=system_message, quack_count=duck_multiplier), 200
-        else:
-            system_message = challenge_check.get("details").get("message")
-            return jsonify(success=False, system_message=system_message), 200
+    # Check for and process challenge URL
+    # duck_multiplier = config.duck_multiplier
+    # challenge_check = detect_and_handle_challenge_url(form_message, user.username, duck_multiplier)
+    # if challenge_check.get("handled"):
+    #     # Send a congratulatory system message
+    #     if challenge_check.get("details").get("success"):
+    #         system_message = f"Congrats {user.username}, on completing a challenge!"
+    #         return jsonify(success=True, system_message=system_message, quack_count=duck_multiplier), 200
+    #     else:
+    #         system_message = challenge_check.get("details").get("message")
+    #         return jsonify(success=False, system_message=system_message), 200
 
     # Save message to the database
     if not save_message_to_db(user.id, form_message):

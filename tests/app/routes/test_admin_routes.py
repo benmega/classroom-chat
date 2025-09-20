@@ -244,7 +244,7 @@ def test_adjust_ducks(client, auth_headers, sample_user, test_app):
     """Test adjusting a user's duck balance."""
     with test_app.app_context():
         # Get initial duck balance
-        initial_ducks = sample_user.ducks
+        initial_ducks = sample_user.duck_balance
 
         # Test adding ducks
         response = client.post(
@@ -259,11 +259,11 @@ def test_adjust_ducks(client, auth_headers, sample_user, test_app):
 
         # Verify ducks were added
         updated_user = User.query.get(sample_user.id)
-        assert updated_user.ducks == initial_ducks + 50
+        assert updated_user.duck_balance == initial_ducks + 50
 
 def test_trade_action_approve(client, auth_headers, sample_user, sample_duck_trade, test_app, init_db):
     with test_app.app_context():
-        sample_user.ducks = 100
+        sample_user.duck_balance = 100
         db.session.commit()
 
         trade_id = sample_duck_trade.id

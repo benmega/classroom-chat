@@ -1,0 +1,90 @@
+/* Form container */
+form {
+    width: 100%;
+    max-width: 1000px;  /* Allows full-width but keeps it readable */
+    margin: 2rem auto;
+    padding: 1.5rem;
+    border: 2px solid #ccc;
+    border-radius: 12px;
+    background-color: #fefefe;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    box-sizing: border-box;
+}
+
+/* Form headings */
+form h2 {
+    text-align: center;
+    margin-bottom: 1rem;
+    color: #333;
+    font-weight: 700;
+}
+
+/* Form labels */
+form label {
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+    display: block;
+    color: #555;
+}
+
+/* Form inputs and textarea */
+form input[type="url"],
+form input[type="text"],
+form textarea {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    border: 1.5px solid #ccc;
+    border-radius: 8px;
+    font-size: 1rem;
+    box-sizing: border-box;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+form input[type="url"]:focus,
+form input[type="text"]:focus,
+form textarea:focus {
+    border-color: #4caf50;
+    box-shadow: 0 0 4px rgba(76, 175, 80, 0.3);
+    outline: none;
+}
+
+/* Textarea specific */
+form textarea {
+    resize: vertical;
+}
+
+/* Submit button */
+form button[type="submit"] {
+    padding: 0.6rem 1rem;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 8px;
+    border: none;
+    background-color: #4caf50;
+    color: #fff;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.1s;
+}
+
+form button[type="submit"]:hover {
+    background-color: #45a049;
+    transform: translateY(-1px);
+}
+
+/* Optional fields hint */
+form .optional {
+    font-size: 0.875rem;
+    color: #888;
+    margin-left: 0.25rem;
+}
+
+/* Responsive spacing */
+@media (max-width: 600px) {
+    form {
+        margin: 1rem;
+        padding: 1rem;
+    }
+}

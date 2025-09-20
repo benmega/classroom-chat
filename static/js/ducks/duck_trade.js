@@ -85,6 +85,7 @@ function updateLabels() {
                 showToast(result.message || "Trade submitted successfully!", "success");
                 form.reset();
                 updateLabels();
+                fetchAchievements();
             } else {
                 showToast(result.message || "An error occurred.", "error");
             }
