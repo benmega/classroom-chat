@@ -5,6 +5,7 @@ from .api_achievements import achievements_api
 from .challenge_routes import challenge
 from .duck_trade_routes import duck_trade
 from .server_info_routes import server_info
+from .session_routes import session
 from .user_routes import user
 from .ai_routes import ai
 from .admin_routes import admin
@@ -22,6 +23,7 @@ def register_blueprints(app: Flask):
     app.register_blueprint(message, url_prefix='/message')
     app.register_blueprint(duck_trade, url_prefix='/duck_trade')
     app.register_blueprint(achievements, url_prefix='/achievements')
+    app.register_blueprint(session, url_prefix='/session')
     app.register_blueprint(achievements_api)
     app.register_blueprint(challenge)
     app.register_blueprint(general)

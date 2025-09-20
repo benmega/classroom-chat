@@ -1,8 +1,11 @@
 # application/services/achievement_engine.py
+from datetime import datetime
+
 from application.extensions import db
 from application.models.achievements import Achievement, UserAchievement
 from application.models.challenge_log import ChallengeLog
 from application.models.duck_trade import DuckTradeLog
+from application.models.session_log import SessionLog
 from application.models.user_certificate import UserCertificate
 
 
@@ -31,8 +34,8 @@ def check_achievement(user, achievement):
         "community": lambda: db.session.query(func.count(ChallengeLog.id))
                              .filter(ChallengeLog.helper == user.username).scalar(),
 
-        # Still undefined
-        "session": lambda: 0,  # TODO add sessionlog table and track login and logouts
+        # Longest session length in minutes
+        "session": longest_session_seconds,
 
         # Count number of trades (regardless of status)
         "trade": lambda: db.session.query(func.count(DuckTradeLog.id))
@@ -108,3 +111,14 @@ def evaluate_user(user):
         db.session.commit()
 
     return new_awards
+
+def longest_session_seconds():
+    logs = SessionLog.query.all()  # small table, otherwise add filters
+    max_duration = 0
+    now = datetime.utcnow()
+    for log in logs:
+        end = log.end_time or now
+        duration = (end - log.start_time).total_seconds()
+        if duration > max_duration:
+            max_duration = duration
+    return max_duration

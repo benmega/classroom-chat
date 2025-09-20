@@ -8,6 +8,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 from application.models.challenge_log import ChallengeLog
 from application.models.project import Project
+from application.models.session_log import SessionLog
 from application.models.skill import Skill
 from application.services.achievement_engine import evaluate_user
 
@@ -63,10 +64,22 @@ class User(db.Model):
 
     @classmethod
     def set_online(cls, user_id, online=True):
+        """Toggle user online/offline and manage session logs."""
         user = cls.query.filter_by(id=user_id).first()
-        if user:
-            user.is_online = online
-            db.session.commit()
+        if not user:
+            return
+
+        if online:
+            # Start new session if none active
+            if not SessionLog.query.filter_by(user_id=user.id, end_time=None).first():
+                SessionLog.start_session(user.id)
+            user.is_online = True
+        else:
+            # End the most recent session
+            SessionLog.end_session(user.id)
+            user.is_online = False
+
+        db.session.commit()
 
     def get_progress(self, domain):
         """Calculate progress based on challenges completed for a specific domain."""
