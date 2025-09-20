@@ -129,4 +129,4 @@ class User(db.Model):
         self.earned_ducks += amount
         self.packets += amount
         self.duck_balance += amount
-        evaluate_user(self)
+        # evaluate_user(self)

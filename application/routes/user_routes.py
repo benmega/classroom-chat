@@ -85,8 +85,8 @@ def login():
             else:
                 session['conversation_id'] = None  # Or handle new conversation creation
 
-            from application.services.achievement_engine import evaluate_user
-            new_awards = evaluate_user(user) # Check for achievements
+            # from application.services.achievement_engine import evaluate_user
+            # new_awards = evaluate_user(user) # Check for achievements
 
             flash('Login successful!', 'success')
             return redirect(url_for('general.index'))
@@ -194,7 +194,7 @@ def edit_profile():
             db.session.commit()
 
             # Check for achievements
-            evaluate_user(user)
+            # evaluate_user(user)
 
             flash('Profile updated successfully!', 'success')
             return redirect(url_for('user.profile'))

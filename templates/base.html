@@ -85,6 +85,13 @@
     </footer>
 
 </body>
+<script type="module">
+    import { initAchievements } from "{{ url_for('static', filename='js/achievements/achievements.js') }}";
+
+    // Run it once when the page loads
+    initAchievements("{{ session.get('user') }}");
+</script>
+
 <script>
     document.getElementById("profileToggle").addEventListener("click", function (e) {
     e.stopPropagation();

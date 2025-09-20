@@ -511,7 +511,7 @@ def adjust_ducks():
         user.duck_balance += amount  # Add or subtract ducks
         db.session.commit()
         from application.services.achievement_engine import evaluate_user
-        new_awards = evaluate_user(user)
+        # new_awards = evaluate_user(user)
 
         return jsonify({
             'success': True,
