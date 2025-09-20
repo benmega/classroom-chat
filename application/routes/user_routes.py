@@ -8,7 +8,6 @@ from application.models.conversation import Conversation
 from application.models.project import Project
 from application.models.skill import Skill
 from application.models.user import User
-from application.services.achievement_engine import evaluate_user
 from application.utilities.helper_functions import allowed_file
 from application.config import Config
 from PIL import Image
@@ -85,8 +84,6 @@ def login():
             else:
                 session['conversation_id'] = None  # Or handle new conversation creation
 
-            # from application.services.achievement_engine import evaluate_user
-            # new_awards = evaluate_user(user) # Check for achievements
 
             flash('Login successful!', 'success')
             return redirect(url_for('general.index'))
@@ -170,31 +167,17 @@ def edit_profile():
 
     if request.method == 'POST':
         try:
-            # 1. Update basic fields
             update_basic_user_info(user)
-
-            # 2. Remove existing skills and projects safely
             clear_user_skills_and_projects(user)
-
-            # 3. Add new skills
             add_user_skills(user, request.form.getlist('skills[]'))
-
-            # 4. Add new projects
             add_user_projects(
                 user,
                 request.form.getlist('project_names[]'),
                 request.form.getlist('project_descriptions[]'),
                 request.form.getlist('project_links[]'),
             )
-
-            # 5. Handle profile picture upload
             handle_profile_picture_upload(user)
-
-            # Commit changes to the database
             db.session.commit()
-
-            # Check for achievements
-            # evaluate_user(user)
 
             flash('Profile updated successfully!', 'success')
             return redirect(url_for('user.profile'))

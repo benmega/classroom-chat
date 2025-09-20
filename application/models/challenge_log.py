@@ -7,11 +7,11 @@ class ChallengeLog(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(100), nullable=False)
-    domain = db.Column(db.String(100), nullable=False)  # e.g., "CodeCombat", "Ozaria", "Studio.Code"
+    domain = db.Column(db.String(100), nullable=False)  # "CodeCombat", "Ozaria", "Studio.Code"
     challenge_name = db.Column(db.String(255), nullable=False)
-    course_id = db.Column(db.String(100), nullable=True)
-    course_instance = db.Column(db.String(100), nullable=True) 
     timestamp = db.Column(db.DateTime, nullable=False, default=db.func.now())
+    course_id = db.Column(db.String(100), nullable=True)
+    course_instance = db.Column(db.String(100), nullable=True)
     helper = db.Column(db.String(100), nullable=True)
 
     def __repr__(self):

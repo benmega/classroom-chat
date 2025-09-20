@@ -8,8 +8,6 @@ from application.models.user import User
 from application.models.achievements import Achievement, UserAchievement
 from application.models.user_certificate import UserCertificate
 from application.routes.admin_routes import local_only
-# from application.services.achievement_engine import evaluate_user
-# from application.services.certificate_service import download_certificate
 import os
 from werkzeug.utils import secure_filename
 

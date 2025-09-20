@@ -508,10 +508,8 @@ def adjust_ducks():
 
     user = User.query.filter_by(username=username).first()
     if user:
-        user.duck_balance += amount  # Add or subtract ducks
+        user.duck_balance += amount
         db.session.commit()
-        from application.services.achievement_engine import evaluate_user
-        # new_awards = evaluate_user(user)
 
         return jsonify({
             'success': True,

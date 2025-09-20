@@ -15,6 +15,7 @@ def check_achievements():
         return jsonify({"success": False, "error": "User not found"}), 404
 
     new_awards = evaluate_user(user)
+
     payload = [
         {
             "id": a.id,
@@ -27,5 +28,4 @@ def check_achievements():
         }
         for a in new_awards
     ]
-    print(payload)
     return jsonify({"success": True, "new_awards": payload})
