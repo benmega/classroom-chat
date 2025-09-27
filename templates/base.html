@@ -32,7 +32,7 @@
                         </a>
                     </li>
 
-                    {% if user.packets > 0.001 %}
+                    {% if user.packets|float > 0.001 %}
                         <li>
                             <a class="digital-ducks">
                                 <span class="label">Packets:</span>
