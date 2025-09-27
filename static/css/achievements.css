@@ -45,7 +45,7 @@
     width: 100%;
     height: 100%;
     background-repeat: no-repeat;
-    background-image: url("../images/achievement_badges/sprite.png");
+    background-image: url("../images/achievement_badges/sprite.webp");
     background-size: auto; /* let positions work normally */
     display: block;
 }

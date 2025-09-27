@@ -130,5 +130,5 @@ class User(db.Model):
 
     def add_ducks(self, amount):
         self.earned_ducks += amount
-        self.packets += amount
+        self.packets += amount / (2**14)
         self.duck_balance += amount
