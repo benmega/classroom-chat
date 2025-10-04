@@ -132,3 +132,4 @@ class User(db.Model):
         self.earned_ducks += amount
         self.packets += amount / (2**14)
         self.duck_balance += amount
+        db.session.commit()
