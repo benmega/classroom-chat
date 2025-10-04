@@ -5,7 +5,7 @@ import sqlite3
 import shutil
 
 TARGET_DB = r"C:\Users\Ben\PycharmProjects\groupChat2\instance\dev_users.db"
-SOURCE_DB = r"C:\Users\Ben\PycharmProjects\groupChat2\instance\migration\dev_users (new).db"
+SOURCE_DB = r"C:\Users\Ben\PycharmProjects\groupChat2\instance\migration\dev_users (classroom-chat).db"
 
 def replace_table(source_db, target_db, table):
     # Connect to source and target
