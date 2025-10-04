@@ -159,6 +159,10 @@ def _log_challenge(details, username, helper=None):
     Returns:
         dict: Result with success status and message
     """
+    # Patch to catch students attempting to help themselves
+    if helper == username:
+        helper = ""
+
     try:
         # Check if challenge was already claimed
         existing_log = ChallengeLog.query.filter_by(
