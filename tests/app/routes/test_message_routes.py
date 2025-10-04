@@ -21,8 +21,7 @@ def test_send_message(client, init_db, sample_admin):
     from unittest.mock import patch
     with patch('application.routes.message_routes.get_user', return_value=sample_admin), \
             patch('application.routes.message_routes.message_is_appropriate', return_value=True), \
-            patch('application.routes.message_routes.save_message_to_db', return_value=True), \
-            patch('application.routes.message_routes.detect_and_handle_challenge_url', return_value={"handled": False}):
+            patch('application.routes.message_routes.save_message_to_db', return_value=True):
         response = client.post('/message/send_message', data={'message': 'Hello!'})
         print(response.data.decode())  # Output the response content for debugging
         assert response.status_code == 200

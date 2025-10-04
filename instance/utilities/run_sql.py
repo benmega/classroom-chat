@@ -41,8 +41,8 @@ def run_sql2(sql: str):
 if __name__ == "__main__":
     # Example usage: change this line to any SQL you want
     sql = """
-        ALTER TABLE users
-        ADD COLUMN packets DOUBLE NOT NULL DEFAULT 0;
+        UPDATE users
+        SET earned_ducks = MAX(duck_balance, earned_ducks);
 
     """
     run_sql2(sql)

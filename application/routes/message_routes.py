@@ -1,7 +1,9 @@
 from flask import Blueprint, request, jsonify, session, flash, redirect, url_for, render_template
+
+from application.models.banned_words import BannedWords
 from application.models.conversation import Conversation, conversation_users
 from application.utilities.db_helpers import get_user, save_message_to_db
-from application.utilities.validation_helpers import message_is_appropriate, detect_and_handle_challenge_url
+# from application.utilities.validation_helpers import message_is_appropriate
 from application.ai.ai_teacher import get_ai_response, get_or_create_ai_teacher
 from application.models.configuration import Configuration
 from application.extensions import db, limiter
@@ -36,18 +38,6 @@ def send_message():
     # Check for banned words
     if not message_is_appropriate(form_message):
         return jsonify(success=False, error="Inappropriate messages are not allowed"), 403
-
-    # Check for and process challenge URL
-    # duck_multiplier = config.duck_multiplier
-    # challenge_check = detect_and_handle_challenge_url(form_message, user.username, duck_multiplier)
-    # if challenge_check.get("handled"):
-    #     # Send a congratulatory system message
-    #     if challenge_check.get("details").get("success"):
-    #         system_message = f"Congrats {user.username}, on completing a challenge!"
-    #         return jsonify(success=True, system_message=system_message, quack_count=duck_multiplier), 200
-    #     else:
-    #         system_message = challenge_check.get("details").get("message")
-    #         return jsonify(success=False, system_message=system_message), 200
 
     # Save message to the database
     if not save_message_to_db(user.id, form_message):
@@ -258,3 +248,20 @@ def view_conversation(conversation_id):
     }
 
     return render_template('chat/view_conversation.html', conversation=conversation_data)
+
+
+
+# ============================================================================
+# MESSAGE VALIDATION
+# ============================================================================
+
+def message_is_appropriate(message):
+    banned_words = [word.word for word in BannedWords.query.all()]
+    return is_appropriate(message=message, banned_words=banned_words)
+
+def is_appropriate(message, banned_words=None):
+    if banned_words is None:
+        banned_words = []
+    message_lower = message.lower()
+    banned_words = [word.lower() for word in banned_words]
+    return not any(word in message_lower for word in banned_words)
