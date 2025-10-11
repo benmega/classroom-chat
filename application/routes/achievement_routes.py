@@ -59,13 +59,16 @@ def add_achievement():
         name = request.form.get("name")
         slug = request.form.get("slug")
         description = request.form.get("description")
-        duck_req = request.form.get("duck_requirement") or None
+        requirement_value = request.form.get("requirement_value") or None
 
         ach = Achievement(
             name=name,
             slug=slug,
+            type=request.form.get("type"),
+            reward=int(request.form.get("reward") or 1),
             description=description,
-            duck_requirement=int(duck_req) if duck_req else None
+            requirement_value=requirement_value,
+            source=request.form.get("source")
         )
         db.session.add(ach)
         db.session.commit()
