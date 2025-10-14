@@ -20,20 +20,20 @@ challenge = Blueprint("challenge", __name__, url_prefix="/challenge")
 def submit_challenge():
     """Handle challenge submission form."""
     # Validate session
-    session_username = session.get("user", None)
-    if not session_username:
-        flash("No session username found", "error")
-        return redirect(url_for("auth.login"))
+    session_userid = session.get("user", None)
+    if not session_userid:
+        flash("No session user found", "error")
+        return redirect(url_for("user.login"))
 
-    user = get_user(session_username)
+    user = get_user(session_userid)
     if not user:
         flash("Unknown user", "error")
-        return redirect(url_for("auth.login"))
+        return redirect(url_for("user.login"))
 
     config = Configuration.query.first()
     if not config:
         flash("Configuration missing", "error")
-        return redirect(url_for("index"))
+        return redirect(url_for("general.index"))
 
     # Handle GET request
     if request.method != "POST":
@@ -45,8 +45,9 @@ def submit_challenge():
     notes = request.form.get("notes", "").strip()
 
     if not url:
-        flash("Challenge URL is required", "error")
-        return redirect(url_for("challenge.submit_challenge"))
+        return render_template("submit_challenge.html",
+                               success=False,
+                               message="Challenge URL is required")
 
     # Process challenge URL
     duck_multiplier = config.duck_multiplier
@@ -83,10 +84,26 @@ def submit_challenge():
 URL_PATTERN = (
     r"https://(?P<domain>[\w\.-]+)"
     r"(?:/play/level/(?P<challenge_name>[\w-]+)"
-    r"(?:\?.*?&course=(?P<course_id>\w+))?"
-    r"(?:&course-instance=(?P<course_instance>\w+))?"
-    r"|/s/(?P<course_slug>[\w-]+)/lessons/(?P<lesson_id>\d+)/levels/(?P<level_id>\d+))"
+    r"(?:\?(?:.*&)?course=(?P<course_id>[\w-]+))?"
+    r"(?:(?:\?|&)(?:.*&)?course-instance=(?P<course_instance>[\w-]+))?"
+    r"|/s/(?P<slug>[\w-]+)/lessons/(?P<lesson_id>\d+)/levels/(?P<level_id>\d+))"
 )
+
+# URL_PATTERN = (
+#     r"https://(?P[\w\.-]+)"
+#     r"(?:/play/level/(?P[\w-]+)"
+#     r"(?:\?(?:.*&)?course=(?P[\w-]+))?"
+#     r"(?:(?:\?|&)(?:.*&)?course-instance=(?P[\w-]+))?"
+#     r"|/s/(?P[\w-]+)/lessons/(?P\d+)/levels/(?P\d+))"
+# )
+
+# URL_PATTERN = (
+#     r"https://(?P<domain>[\w\.-]+)"
+#     r"(?:/play/level/(?P<challenge_name>[\w-]+)"
+#     r"(?:\?.*?&course=(?P<course_id>\w+))?"
+#     r"(?:&course-instance=(?P<course_instance>\w+))?"
+#     r"|/s/(?P<course_slug>[\w-]+)/lessons/(?P<lesson_id>\d+)/levels/(?P<level_id>\d+))"
+# )
 
 
 def detect_and_handle_challenge_url(message, username, duck_multiplier=1, helper=None):

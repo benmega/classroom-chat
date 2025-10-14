@@ -5,10 +5,12 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/profile_picture_modal.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='lib/cropper.min.css') }}">
 
+
 <div class="profile-container">
     <div class="profile-header">
         <div class="profile-pic-container">
-            <img src="{{ url_for('user.profile_picture', filename=user.profile_picture) }}"
+             {% set pfp_filename = user.profile_picture if user and user.profile_picture else 'Default_pfp.jpg' %}
+            <img src="{{ url_for('user.profile_picture', filename=pfp_filename) }}"
                  alt="Profile Picture"
                  class="profile-img"
                  id="current-profile-img">

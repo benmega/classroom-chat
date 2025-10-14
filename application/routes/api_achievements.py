@@ -14,7 +14,10 @@ def check_achievements():
     if not user:
         return jsonify({"success": False, "error": "User not found"}), 404
 
-    new_awards = evaluate_user(user)
+    try:
+        new_awards = evaluate_user(user)
+    except Exception as e:
+        return jsonify({"success": False, "error": "Failed to evaluate achievements"}), 500
 
     payload = [
         {

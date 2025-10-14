@@ -70,13 +70,17 @@ def submit_trade():
         return redirect(url_for('duck_trade.index'))
 
     try:
-        username = session.get('user')
-        if not username:
+        userid = session.get('user')
+        if not userid:
             error_message = "You must be logged in to submit a trade."
             if is_ajax:
                 return jsonify({'status': 'error', 'message': error_message}), 403
             flash(error_message, "warning")
             return redirect(url_for('duck_trade.index'))
+
+        from application import User
+        user = User.query.filter_by(id=userid).first()
+
 
         # Extract trade details
         request_data = request.get_json()
@@ -85,7 +89,7 @@ def submit_trade():
         byte_ducks = request_data["byte_ducks"]
 
         trade = DuckTradeLog(
-            username=username,
+            username=user.username,
             digital_ducks=digital_ducks,
             bit_ducks=bit_ducks,
             byte_ducks=byte_ducks,

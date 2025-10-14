@@ -8,6 +8,7 @@ from PIL import Image
 import pytest
 
 from application import create_app
+from application.models.achievements import UserAchievement, Achievement
 from application.models.ai_settings import AISettings
 from application.models.banned_words import BannedWords
 from application.models.challenge import Challenge
@@ -354,3 +355,127 @@ def sample_duck_trade(init_db, sample_user):
     # Optional: re-fetch from session to ensure it's not detached
     trade = DuckTradeLog.query.get(trade.id)
     return trade
+
+
+@pytest.fixture
+def sample_achievement(init_db):
+    """Fixture to create a sample achievement."""
+    achievement = Achievement(
+        name="Python Master",
+        slug="python-basics",
+        type="certificate",
+        reward=100,
+        description="Complete the Python basics course",
+        requirement_value="100",
+        source="CodeCombat"
+    )
+    db.session.add(achievement)
+    db.session.commit()
+    return achievement
+
+
+@pytest.fixture
+def sample_user_achievement(init_db, sample_user, sample_achievement):
+    """Fixture to create a user achievement."""
+    user_achievement = UserAchievement(
+        user_id=sample_user.id,
+        achievement_id=sample_achievement.id
+    )
+    db.session.add(user_achievement)
+    db.session.commit()
+    return user_achievement
+
+
+@pytest.fixture
+def sample_ducks_achievement(init_db):
+    """Fixture to create a ducks-based achievement."""
+    achievement = Achievement(
+        name="Duck Collector",
+        slug="duck-collector-50",
+        type="ducks",
+        reward=10,
+        description="Collect 50 ducks",
+        requirement_value="50"
+    )
+    db.session.add(achievement)
+    db.session.commit()
+    return achievement
+
+
+@pytest.fixture
+def sample_chat_achievement(init_db):
+    """Fixture to create a chat-based achievement."""
+    achievement = Achievement(
+        name="First Message",
+        slug="first-message",
+        type="chat",
+        reward=10,
+        description="Send your first message",
+        requirement_value="1"
+    )
+    db.session.add(achievement)
+    db.session.commit()
+    return achievement
+
+
+@pytest.fixture
+def sample_new_achievements(init_db):
+    """Fixture to create sample achievements that would be newly awarded."""
+    achievements = [
+        Achievement(
+            name="First Message",
+            slug="first-message",
+            type="chat",
+            reward=10,
+            description="Send your first message",
+            requirement_value="1"
+***REMOVED***,
+        Achievement(
+            name="Duck Collector",
+            slug="duck-collector-10",
+            type="ducks",
+            reward=25,
+            description="Collect 10 ducks",
+            requirement_value="10"
+***REMOVED***,
+        Achievement(
+            name="Project Starter",
+            slug="project-starter",
+            type="project",
+            reward=50,
+            description="Create your first project",
+            requirement_value="1"
+***REMOVED***
+    ]
+    db.session.add_all(achievements)
+    db.session.commit()
+    return achievements
+
+
+@pytest.fixture
+def sample_multiple_achievements(init_db):
+    """Fixture to create multiple varied achievements for testing."""
+    achievements = [
+        Achievement(
+            id=1,
+            name="Achievement One",
+            slug="achievement-one",
+            type="ducks",
+            reward=10,
+            description="First achievement",
+            requirement_value="10"
+***REMOVED***,
+        Achievement(
+            id=2,
+            name="Achievement Two",
+            slug="achievement-two",
+            type="chat",
+            reward=20,
+            description="Second achievement",
+            requirement_value="5"
+***REMOVED***
+    ]
+    for ach in achievements:
+        db.session.add(ach)
+    db.session.commit()
+    return achievements

@@ -6,47 +6,13 @@ from application import db
 from application.models.achievements import Achievement, UserAchievement
 
 
-@pytest.fixture
-def sample_new_achievements(init_db):
-    """Fixture to create sample achievements that would be newly awarded."""
-    achievements = [
-        Achievement(
-            name="First Message",
-            slug="first-message",
-            type="chat",
-            reward=10,
-            description="Send your first message",
-            requirement_value="1"
-***REMOVED***,
-        Achievement(
-            name="Duck Collector",
-            slug="duck-collector-10",
-            type="ducks",
-            reward=25,
-            description="Collect 10 ducks",
-            requirement_value="10"
-***REMOVED***,
-        Achievement(
-            name="Project Starter",
-            slug="project-starter",
-            type="project",
-            reward=50,
-            description="Create your first project",
-            requirement_value="1"
-***REMOVED***
-    ]
-    db.session.add_all(achievements)
-    db.session.commit()
-    return achievements
-
-
 def test_check_achievements_success(client, init_db, sample_user, sample_new_achievements):
     """Test successful achievement check with new awards."""
     with client.session_transaction() as sess:
         sess['user'] = sample_user.username
 
     # Mock the evaluate_user function to return new achievements
-    with patch('application.routes.achievements_api_routes.evaluate_user') as mock_evaluate:
+    with patch('application.routes.api_achievements.evaluate_user') as mock_evaluate:
         mock_evaluate.return_value = sample_new_achievements
 
         response = client.get('/api/achievements/check')
@@ -73,7 +39,7 @@ def test_check_achievements_no_new_awards(client, init_db, sample_user):
         sess['user'] = sample_user.username
 
     # Mock evaluate_user to return empty list
-    with patch('application.routes.achievements_api_routes.evaluate_user') as mock_evaluate:
+    with patch('application.routes.api_achievements.evaluate_user') as mock_evaluate:
         mock_evaluate.return_value = []
 
         response = client.get('/api/achievements/check')
@@ -110,24 +76,13 @@ def test_check_achievements_user_not_found(client, init_db):
     assert 'User not found' in data['error']
 
 
-def test_check_achievements_badge_url_format(client, init_db, sample_user):
+def test_check_achievements_badge_url_format(client, init_db, sample_user, sample_ducks_achievement):
     """Test that badge URLs are formatted correctly."""
     with client.session_transaction() as sess:
         sess['user'] = sample_user.username
 
-    # Create a specific achievement to test URL formatting
-    achievement = Achievement(
-        name="Test Badge",
-        slug="test-badge-slug",
-        type="ducks",
-        reward=10,
-        description="Test achievement"
-    )
-    db.session.add(achievement)
-    db.session.commit()
-
-    with patch('application.routes.achievements_api_routes.evaluate_user') as mock_evaluate:
-        mock_evaluate.return_value = [achievement]
+    with patch('application.routes.api_achievements.evaluate_user') as mock_evaluate:
+        mock_evaluate.return_value = [sample_ducks_achievement]
 
         response = client.get('/api/achievements/check')
 
@@ -135,39 +90,16 @@ def test_check_achievements_badge_url_format(client, init_db, sample_user):
         data = json.loads(response.data)
 
         badge_url = data['new_awards'][0]['badge']
-        assert '/static/images/achievement_badges/test-badge-slug.png' in badge_url
+        assert '/static/images/achievement_badges/duck-collector-50.png' in badge_url
 
 
-def test_check_achievements_multiple_awards_correct_data(client, init_db, sample_user):
+def test_check_achievements_multiple_awards_correct_data(client, init_db, sample_user, sample_multiple_achievements):
     """Test that multiple achievements return correct data structure."""
     with client.session_transaction() as sess:
         sess['user'] = sample_user.username
 
-    achievements = [
-        Achievement(
-            id=1,
-            name="Achievement One",
-            slug="achievement-one",
-            type="ducks",
-            reward=10,
-            description="First achievement"
-***REMOVED***,
-        Achievement(
-            id=2,
-            name="Achievement Two",
-            slug="achievement-two",
-            type="chat",
-            reward=20,
-            description="Second achievement"
-***REMOVED***
-    ]
-
-    for ach in achievements:
-        db.session.add(ach)
-    db.session.commit()
-
-    with patch('application.routes.achievements_api_routes.evaluate_user') as mock_evaluate:
-        mock_evaluate.return_value = achievements
+    with patch('application.routes.api_achievements.evaluate_user') as mock_evaluate:
+        mock_evaluate.return_value = sample_multiple_achievements
 
         response = client.get('/api/achievements/check')
 
@@ -190,7 +122,7 @@ def test_check_achievements_evaluate_user_called_correctly(client, init_db, samp
     with client.session_transaction() as sess:
         sess['user'] = sample_user.username
 
-    with patch('application.routes.achievements_api_routes.evaluate_user') as mock_evaluate:
+    with patch('application.routes.api_achievements.evaluate_user') as mock_evaluate:
         mock_evaluate.return_value = []
 
         response = client.get('/api/achievements/check')
@@ -204,23 +136,13 @@ def test_check_achievements_evaluate_user_called_correctly(client, init_db, samp
         assert called_user.username == sample_user.username
 
 
-def test_check_achievements_single_award(client, init_db, sample_user):
+def test_check_achievements_single_award(client, init_db, sample_user, sample_chat_achievement):
     """Test achievement check with a single new award."""
     with client.session_transaction() as sess:
         sess['user'] = sample_user.username
 
-    achievement = Achievement(
-        name="Solo Achievement",
-        slug="solo-ach",
-        type="consistency",
-        reward=15,
-        description="Single achievement test"
-    )
-    db.session.add(achievement)
-    db.session.commit()
-
-    with patch('application.routes.achievements_api_routes.evaluate_user') as mock_evaluate:
-        mock_evaluate.return_value = [achievement]
+    with patch('application.routes.api_achievements.evaluate_user') as mock_evaluate:
+        mock_evaluate.return_value = [sample_chat_achievement]
 
         response = client.get('/api/achievements/check')
 
@@ -229,7 +151,7 @@ def test_check_achievements_single_award(client, init_db, sample_user):
 
         assert data['success'] is True
         assert len(data['new_awards']) == 1
-        assert data['new_awards'][0]['name'] == 'Solo Achievement'
+        assert data['new_awards'][0]['name'] == 'First Message'
 
 
 def test_check_achievements_response_structure(client, init_db, sample_user):
@@ -237,18 +159,20 @@ def test_check_achievements_response_structure(client, init_db, sample_user):
     with client.session_transaction() as sess:
         sess['user'] = sample_user.username
 
+    # Create a specific achievement for structure testing
     achievement = Achievement(
         id=999,
         name="Structure Test",
         slug="structure-test",
         type="ducks",
         reward=100,
-        description="Testing response structure"
+        description="Testing response structure",
+        requirement_value="100"
     )
     db.session.add(achievement)
     db.session.commit()
 
-    with patch('application.routes.achievements_api_routes.evaluate_user') as mock_evaluate:
+    with patch('application.routes.api_achievements.evaluate_user') as mock_evaluate:
         mock_evaluate.return_value = [achievement]
 
         response = client.get('/api/achievements/check')
@@ -276,7 +200,7 @@ def test_check_achievements_session_persistence(client, init_db, sample_user):
         sess['user'] = sample_user.username
         sess['test_key'] = 'test_value'
 
-    with patch('application.routes.achievements_api_routes.evaluate_user') as mock_evaluate:
+    with patch('application.routes.api_achievements.evaluate_user') as mock_evaluate:
         mock_evaluate.return_value = []
 
         response = client.get('/api/achievements/check')
@@ -299,12 +223,13 @@ def test_check_achievements_with_special_characters_in_slug(client, init_db, sam
         slug="special-achievement_2024",
         type="progress",
         reward=30,
-        description="Achievement with special slug"
+        description="Achievement with special slug",
+        requirement_value="1"
     )
     db.session.add(achievement)
     db.session.commit()
 
-    with patch('application.routes.achievements_api_routes.evaluate_user') as mock_evaluate:
+    with patch('application.routes.api_achievements.evaluate_user') as mock_evaluate:
         mock_evaluate.return_value = [achievement]
 
         response = client.get('/api/achievements/check')
@@ -321,13 +246,15 @@ def test_check_achievements_evaluate_user_exception_handling(client, init_db, sa
     with client.session_transaction() as sess:
         sess['user'] = sample_user.username
 
-    with patch('application.routes.achievements_api_routes.evaluate_user') as mock_evaluate:
+    with patch('application.routes.api_achievements.evaluate_user') as mock_evaluate:
         mock_evaluate.side_effect = Exception("Evaluation error")
 
-        # The endpoint should handle this gracefully or propagate the error
-        # Adjust based on actual implementation
-        with pytest.raises(Exception):
-            response = client.get('/api/achievements/check')
+        response = client.get('/api/achievements/check')
+
+        assert response.status_code == 500
+        data = json.loads(response.data)
+        assert data['success'] is False
+        assert 'Failed to evaluate achievements' in data['error']
 
 
 def test_check_achievements_content_type(client, init_db, sample_user):
@@ -335,7 +262,7 @@ def test_check_achievements_content_type(client, init_db, sample_user):
     with client.session_transaction() as sess:
         sess['user'] = sample_user.username
 
-    with patch('application.routes.achievements_api_routes.evaluate_user') as mock_evaluate:
+    with patch('application.routes.api_achievements.evaluate_user') as mock_evaluate:
         mock_evaluate.return_value = []
 
         response = client.get('/api/achievements/check')

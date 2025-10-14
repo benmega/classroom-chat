@@ -36,15 +36,15 @@ class LoginForm(FlaskForm):
 @user.route('/get_users', methods=['GET'])
 def get_users():
     users = User.query.all()
-    users_data = [{'id': user.id, 'username': user.username, 'email': user.email} for user in users]
+    users_data = [{'id': user.id, 'username': user.username} for user in users]
     return jsonify(users_data)
 
 
 @user.route('/get_user_id', methods=['GET'])
 def get_user_id():
-    user_username = session.get('user')
-    if user_username:
-        user = User.query.filter_by(username=user_username).first()
+    user_id = session.get('user')
+    if user_id:
+        user = User.query.get(user_id)
         if user:
             return jsonify({'user_id': user.id})
     return jsonify({'user_id': None}), 404
@@ -63,7 +63,7 @@ def login():
 
         # Validate credentials
         if user and user.check_password(password):
-            session['user'] = user.username
+            session['user'] = user.id
             session.permanent = True  # Make the session permanent
             user.set_online(user.id)  # Mark the user as online
 
@@ -97,10 +97,10 @@ def login():
 @user.route('/logout')
 def logout():
     # Get the current user from the session
-    username = session.get('user')
+    user_id = session.get('user')
 
     # Find the user in the database
-    user = User.query.filter_by(username=username).first()
+    user = User.query.get(user_id)
 
     if user:
         # Mark the user as offline
@@ -159,7 +159,7 @@ def update_profile():
 @user.route('/edit_profile', methods=['GET', 'POST'])
 def edit_profile():
     user_id = session.get('user')
-    user = User.query.filter_by(username=user_id).first()
+    user = User.query.get(user_id)
 
     if not user:
         flash('User not found!', 'danger')
@@ -193,7 +193,7 @@ def edit_profile():
 @user.route('/edit_profile_picture', methods=['POST'])
 def edit_profile_picture():
     user_id = session.get('user')
-    user = User.query.filter_by(username=user_id).first()
+    user = User.query.get(user_id)
     if not user:
         return jsonify({'success': False, 'error': 'User not found!'}), 404
 
@@ -231,7 +231,7 @@ def edit_profile_picture():
 @user.route("/remove_skill/<int:skill_id>", methods=["POST"])
 def remove_skill(skill_id):
     user_id = session.get('user')
-    user = User.query.filter_by(username=user_id).first()
+    user = User.query.get(user_id)
     if not user:
         return jsonify({'success': False, 'error': 'User not found!'}), 404
 
@@ -327,7 +327,7 @@ def profile():
         flash('Please log in to access your profile.', 'warning')
         return redirect(url_for('user.login'))
 
-    user = User.query.filter_by(username=user_id).first()
+    user = User.query.get(user_id)
     if not user:
         flash('User not found!', 'danger')
         return redirect(url_for('user.login'))
@@ -338,7 +338,7 @@ def profile():
 @user.route('/delete_profile_picture', methods=['POST'])
 def delete_profile_picture():
     user_id = session.get('user')
-    user = User.query.filter_by(username=user_id).first()
+    user = User.query.get(user_id)
 
     if user.profile_picture:
         # Remove the file from storage
@@ -351,13 +351,13 @@ def delete_profile_picture():
         db.session.commit()
 
     flash('Profile picture removed successfully!', 'success')
-    return redirect(url_for('profile'))
+    return redirect(url_for('user.profile'))
 
 
 @user.route('/upload_profile_picture', methods=['POST'])
 def upload_profile_picture():
     user_id = session.get('user')
-    user = User.query.filter_by(username=user_id).first()
+    user = User.query.get(user_id)
 
     if 'profile_picture' not in request.files:
         flash('No file part', 'error')
