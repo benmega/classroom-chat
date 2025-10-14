@@ -14,8 +14,7 @@ from werkzeug.utils import secure_filename
 
 achievements = Blueprint('achievements', __name__)
 
-CERT_URL_REGEX = r"https://codecombat\.com/certificates/[\w\d]+.*course=([\w\d]+)"
-
+CERT_URL_REGEX = r"https://codecombat\.com/certificates/[\w\d]+\?.*course=([\w\d-]+)"
 
 
 UPLOAD_FOLDER = "certificates"
@@ -112,6 +111,7 @@ def submit_certificate():
 
         # save file
         os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
         filename = secure_filename(f"{current_user.username}_{achievement.slug}.pdf")
         filepath = os.path.join(UPLOAD_FOLDER, filename)
         file.save(filepath)

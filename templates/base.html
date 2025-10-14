@@ -13,7 +13,15 @@
 </head>
 
 <body>
-
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <ul class="flashes">
+        {% for category, message in messages %}
+          <li class="{{ category }}">{{ message }}</li>
+        {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
     <!-- Navigation Bar -->
     <header>
         <div id="logo-container">
@@ -47,9 +55,12 @@
 
 
 
-                        <!-- Profile Menu -->
+                    <!-- Profile Menu -->
+
+                    {% set pfp_filename = user.profile_picture if user and user.profile_picture else 'Default_pfp.jpg' %}
+                    {% set pfp_url = url_for('user.profile_picture', filename=pfp_filename) %}
                     <li class="profile-menu">
-                        <img src="{{ url_for('user.profile_picture', filename=user.profile_picture) }}"
+                        <img src="{{ pfp_url }}"
                              alt="Profile Picture"
                              class="profile-menu_img"
                              id="profileToggle">
@@ -85,6 +96,8 @@
     </footer>
 
 </body>
+
+
 <script type="module">
     import { initAchievements } from "{{ url_for('static', filename='js/achievements/achievements.js') }}";
 

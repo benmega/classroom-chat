@@ -12,11 +12,11 @@ session = Blueprint('session', __name__)
 
 @session.route('/heartbeat', methods=['POST'])
 def heartbeat():
-    username = flask_session.get('user')
-    if not username:
+    userid = flask_session.get('user')
+    if not userid:
         return jsonify(success=False, error="Missing username"), 400
     from application import User # TODO refactor to avoid circular import
-    current_user = User.query.filter_by(username=username).first()
+    current_user = User.query.filter_by(id=userid).first()
     user_id = current_user.id
 
     log = SessionLog.query.filter_by(user_id=user_id, end_time=None) \

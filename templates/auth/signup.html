@@ -11,7 +11,17 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/variables.css') }}">
 </head>
 
+
 <body>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flashes-container">
+        {% for category, message in messages %}
+          <p class="alert alert-{{ category }}">{{ message }}</p>
+        {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
     <div id="signup-container">
         <h1>Sign-Up is Closed</h1>
         <p>New accounts can no longer be created. If you need access, please ask Mr. Mega.</p>

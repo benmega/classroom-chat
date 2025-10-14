@@ -152,7 +152,7 @@ def test_conversation_history(client, init_db, sample_user):
     db.session.commit()
 
     with client.session_transaction() as sess:
-        sess['user'] = sample_user.username
+        sess['user'] = sample_user.id
 
     response = client.get('/message/conversation_history')
     assert response.status_code == 200

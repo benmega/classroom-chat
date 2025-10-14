@@ -1,8 +1,7 @@
 import json
-import os
 import uuid
 from io import BytesIO
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 import pytest
 from PIL import Image
 
@@ -36,7 +35,7 @@ def test_get_users(client, init_db, sample_user):
 def test_get_user_id_authenticated(client, init_db, sample_user):
     """Test getting user ID when authenticated."""
     with client.session_transaction() as sess:
-        sess['user'] = sample_user.username
+        sess['user'] = sample_user.id
 
     response = client.get('/user/get_user_id')
     assert response.status_code == 200
@@ -77,7 +76,7 @@ def test_login_success(client, init_db, sample_user, sample_conversation_for_log
 
     # Verify session was set
     with client.session_transaction() as sess:
-        assert sess.get('user') == sample_user.username
+        assert sess.get('user') == sample_user.id
         assert 'conversation_id' in sess
 
 
@@ -128,7 +127,7 @@ def test_logout(client, init_db, sample_user):
     db.session.commit()
 
     with client.session_transaction() as sess:
-        sess['user'] = sample_user.username
+        sess['user'] = sample_user.id
 
     response = client.get('/user/logout', follow_redirects=True)
 
@@ -182,11 +181,11 @@ def test_signup_duplicate_username(client, init_db, sample_user):
 def test_profile_authenticated(client, init_db, sample_user):
     """Test accessing profile when authenticated."""
     with client.session_transaction() as sess:
-        sess['user'] = sample_user.username
+        sess['user'] = sample_user.id
 
     response = client.get('/user/profile')
     assert response.status_code == 200
-    assert sample_user.username.encode() in response.data
+    assert str(sample_user.id).encode() in response.data
 
 
 def test_profile_not_authenticated(client, init_db):
@@ -199,7 +198,7 @@ def test_profile_not_authenticated(client, init_db):
 def test_edit_profile_get(client, init_db, sample_user):
     """Test GET request to edit profile page."""
     with client.session_transaction() as sess:
-        sess['user'] = sample_user.username
+        sess['user'] = sample_user.id
 
     response = client.get('/user/edit_profile')
     assert response.status_code == 200
@@ -208,7 +207,7 @@ def test_edit_profile_get(client, init_db, sample_user):
 def test_edit_profile_post(client, init_db, sample_user):
     """Test updating profile information."""
     with client.session_transaction() as sess:
-        sess['user'] = sample_user.username
+        sess['user'] = sample_user.id
 
     response = client.post('/user/edit_profile', data={
         'ip_address': '192.168.1.1',
@@ -231,7 +230,7 @@ def test_edit_profile_post(client, init_db, sample_user):
 def test_edit_profile_password_mismatch(client, init_db, sample_user):
     """Test edit profile with mismatched passwords."""
     with client.session_transaction() as sess:
-        sess['user'] = sample_user.username
+        sess['user'] = sample_user.id
 
     response = client.post('/user/edit_profile', data={
         'password': 'newpassword',
@@ -248,7 +247,7 @@ def test_edit_profile_password_mismatch(client, init_db, sample_user):
 def test_edit_profile_picture(client, init_db, sample_user):
     """Test editing profile picture."""
     with client.session_transaction() as sess:
-        sess['user'] = sample_user.username
+        sess['user'] = sample_user.id
 
     # Create a test image
     img = Image.new('RGB', (100, 100), color='red')
@@ -269,7 +268,7 @@ def test_edit_profile_picture(client, init_db, sample_user):
 def test_edit_profile_picture_no_file(client, init_db, sample_user):
     """Test editing profile picture without providing a file."""
     with client.session_transaction() as sess:
-        sess['user'] = sample_user.username
+        sess['user'] = sample_user.id
 
     response = client.post('/user/edit_profile_picture', data={})
 
@@ -282,7 +281,7 @@ def test_edit_profile_picture_no_file(client, init_db, sample_user):
 def test_edit_profile_picture_empty_filename(client, init_db, sample_user):
     """Test editing profile picture with empty filename."""
     with client.session_transaction() as sess:
-        sess['user'] = sample_user.username
+        sess['user'] = sample_user.id
 
     response = client.post('/user/edit_profile_picture', data={
         'profile_picture': (BytesIO(b''), '')
@@ -296,7 +295,7 @@ def test_edit_profile_picture_empty_filename(client, init_db, sample_user):
 def test_upload_profile_picture(client, init_db, sample_user):
     """Test uploading a profile picture."""
     with client.session_transaction() as sess:
-        sess['user'] = sample_user.username
+        sess['user'] = sample_user.id
 
     img = Image.new('RGB', (100, 100), color='blue')
     img_io = BytesIO()
@@ -313,7 +312,7 @@ def test_upload_profile_picture(client, init_db, sample_user):
 def test_upload_profile_picture_invalid_type(client, init_db, sample_user):
     """Test uploading invalid file type as profile picture."""
     with client.session_transaction() as sess:
-        sess['user'] = sample_user.username
+        sess['user'] = sample_user.id
 
     response = client.post('/user/upload_profile_picture', data={
         'profile_picture': (BytesIO(b'test'), 'file.txt')
@@ -330,7 +329,7 @@ def test_delete_profile_picture(client, init_db, sample_user):
     db.session.commit()
 
     with client.session_transaction() as sess:
-        sess['user'] = sample_user.username
+        sess['user'] = sample_user.id
 
     response = client.post('/user/delete_profile_picture', follow_redirects=True)
 
@@ -347,7 +346,7 @@ def test_remove_skill(client, init_db, sample_user):
     db.session.commit()
 
     with client.session_transaction() as sess:
-        sess['user'] = sample_user.username
+        sess['user'] = sample_user.id
 
     response = client.post(f'/user/remove_skill/{skill.id}')
 
@@ -362,7 +361,7 @@ def test_remove_skill(client, init_db, sample_user):
 def test_remove_skill_not_found(client, init_db, sample_user):
     """Test removing non-existent skill."""
     with client.session_transaction() as sess:
-        sess['user'] = sample_user.username
+        sess['user'] = sample_user.id
 
     response = client.post('/user/remove_skill/99999')
     assert response.status_code == 200
@@ -374,7 +373,7 @@ def test_change_password_success(client, init_db, sample_user):
     db.session.commit()
 
     with client.session_transaction() as sess:
-        sess['user'] = sample_user.username
+        sess['user'] = sample_user.id
 
     response = client.post('/user/change_password', data={
         'current_password': 'oldpassword',
@@ -393,7 +392,7 @@ def test_change_password_incorrect_current(client, init_db, sample_user):
     db.session.commit()
 
     with client.session_transaction() as sess:
-        sess['user'] = sample_user.username
+        sess['user'] = sample_user.id
 
     response = client.post('/user/change_password', data={
         'current_password': 'wrongpassword',
@@ -410,7 +409,7 @@ def test_change_password_mismatch(client, init_db, sample_user):
     db.session.commit()
 
     with client.session_transaction() as sess:
-        sess['user'] = sample_user.username
+        sess['user'] = sample_user.id
 
     response = client.post('/user/change_password', data={
         'current_password': 'currentpassword',
@@ -498,13 +497,13 @@ def test_user_model_get_progress(init_db, sample_user):
     assert progress == 3
 
 
-def test_user_model_get_progress_percent(init_db, sample_user, sample_challenge_active):
+def test_user_model_get_progress_percent(init_db, sample_user):
     """Test User model's get_progress_percent method."""
     from application.models.challenge_log import ChallengeLog
     from application.models.challenge import Challenge
 
     # Create additional challenges
-    for i in range(4):
+    for i in range(5):
         challenge = Challenge(
             name=f'Challenge {i}',
             slug=f'challenge-{i}',

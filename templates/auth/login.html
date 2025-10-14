@@ -10,6 +10,15 @@
     <link rel="stylesheet" href="/static/css/variables.css">
 </head>
 <body>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flashes-container">
+        {% for category, message in messages %}
+          <p class="alert alert-{{ category }}">{{ message }}</p>
+        {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
     <div id="login-container">
         <h1>Login to Classroom Chat</h1>
         <form method="POST" action="{{ url_for('user.login') }}">

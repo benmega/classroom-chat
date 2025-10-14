@@ -11,49 +11,6 @@ from application.models.achievements import Achievement, UserAchievement
 from application.models.user_certificate import UserCertificate
 
 
-@pytest.fixture
-def sample_achievement(init_db):
-    """Fixture to create a sample achievement."""
-    achievement = Achievement(
-        name="Python Master",
-        slug="python-basics",
-        type="certificate",
-        reward=100,
-        description="Complete the Python basics course",
-        requirement_value="100",
-        source="CodeCombat"
-    )
-    db.session.add(achievement)
-    db.session.commit()
-    return achievement
-
-
-@pytest.fixture
-def sample_user_achievement(init_db, sample_user, sample_achievement):
-    """Fixture to create a user achievement."""
-    user_achievement = UserAchievement(
-        user_id=sample_user.id,
-        achievement_id=sample_achievement.id
-    )
-    db.session.add(user_achievement)
-    db.session.commit()
-    return user_achievement
-
-
-@pytest.fixture
-def sample_ducks_achievement(init_db):
-    """Fixture to create a ducks-based achievement."""
-    achievement = Achievement(
-        name="Duck Collector",
-        slug="duck-collector-50",
-        type="ducks",
-        reward=10,
-        description="Collect 50 ducks",
-        requirement_value="50"
-    )
-    db.session.add(achievement)
-    db.session.commit()
-    return achievement
 
 
 def test_achievements_page(client, init_db, sample_user, sample_achievement):
@@ -193,30 +150,59 @@ def test_submit_certificate_get(client, init_db, sample_user):
     response = client.get('/achievements/submit_certificate')
     assert response.status_code == 200
 
+from flask import template_rendered
+from contextlib import contextmanager
 
-def test_submit_certificate_valid(client, init_db, sample_user, sample_achievement):
-    """Test submitting a valid certificate."""
+@contextmanager
+def captured_templates(app):
+    recorded = []
+
+    def record(sender, template, context, **extra):
+        recorded.append((template, context))
+
+    template_rendered.connect(record, app)
+    try:
+        yield recorded
+    finally:
+        template_rendered.disconnect(record, app)
+
+
+def test_submit_certificate_valid(client, init_db, sample_user, sample_achievement, test_app):
+    """Test submitting a valid certificate and check message context."""
     with client.session_transaction() as sess:
         sess['user'] = sample_user.username
 
-    # Create a mock PDF file
     pdf_data = b'%PDF-1.4 mock pdf content'
     pdf_file = (BytesIO(pdf_data), f'{sample_user.username}_certificate.pdf')
 
-    response = client.post('/achievements/submit_certificate', data={
-        'certificate_url': f'https://codecombat.com/certificates/abc123?course={sample_achievement.slug}',
-        'certificate_file': pdf_file
-    }, content_type='multipart/form-data')
+    valid_url = f'https://codecombat.com/certificates/abc123?course={sample_achievement.slug}'
+
+    with captured_templates(test_app) as templates:
+        response = client.post(
+            '/achievements/submit_certificate',
+            data={'certificate_url': valid_url, 'certificate_file': pdf_file},
+            content_type='multipart/form-data'
+        )
 
     assert response.status_code == 200
 
-    # Verify certificate was saved
+    # Grab the template context
+    assert templates, "No template was rendered"
+    _, context = templates[0]
+
+    assert context['success'] is True
+    assert context['message'] == "Certificate submitted successfully."
+
+    # Verify certificate in DB
     cert = UserCertificate.query.filter_by(
         user_id=sample_user.id,
         achievement_id=sample_achievement.id
     ).first()
+
     assert cert is not None
-    assert cert.url == f'https://codecombat.com/certificates/abc123?course={sample_achievement.slug}'
+    assert cert.url == valid_url
+    assert cert.file_path.endswith(f"{sample_user.username}_{sample_achievement.slug}.pdf")
+
 
 
 def test_submit_certificate_invalid_url(client, init_db, sample_user):
