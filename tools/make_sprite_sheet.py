@@ -63,7 +63,7 @@ def build_sprite():
         ".badge {\n"
         f"  width: {ICON_SIZE[0]}px;\n"
         f"  height: {ICON_SIZE[1]}px;\n"
-        f"  background-image: url('../images/achievement_badges/sprite.webp');\n"
+        f"  background-image: url('/static/images/achievement_badges/sprite.webp');\n"
         "  background-repeat: no-repeat;\n"
         "  display: inline-block;\n"
         "}\n\n"

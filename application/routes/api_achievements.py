@@ -4,6 +4,7 @@ from application.services.achievement_engine import evaluate_user
 
 achievements_api = Blueprint("achievements_api", __name__, url_prefix="/api/achievements")
 
+
 @achievements_api.route("/check", methods=["GET"])
 def check_achievements():
     user_id = session.get("user")

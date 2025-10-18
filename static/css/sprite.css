@@ -1,7 +1,7 @@
 .badge {
   width: 128px;
   height: 128px;
-  background-image: url('../images/achievement_badges/sprite.webp');
+  background-image: url('/static/images/achievement_badges/sprite.webp');
   background-repeat: no-repeat;
   display: inline-block;
 }

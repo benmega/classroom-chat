@@ -35,19 +35,10 @@
 .badge-container {
     position: relative;
     display: inline-block;
-    width: 120px;   /* fixed cell size */
-    height: 120px;
+    width: 128px;   /* fixed cell size */
+    height: 128px;
     overflow: hidden; /* ensure nothing spills out */
     border-radius: 8px; /* clip badge edges cleanly */
-}
-
-.badge {
-    width: 100%;
-    height: 100%;
-    background-repeat: no-repeat;
-    background-image: url("../images/achievement_badges/sprite.webp");
-    background-size: auto; /* let positions work normally */
-    display: block;
 }
 
 

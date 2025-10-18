@@ -1,5 +1,6 @@
 # routes.py
 import re
+from datetime import datetime
 
 from flask import Blueprint, render_template, jsonify, session, flash, redirect, url_for, request
 from sqlalchemy.orm import joinedload
@@ -162,6 +163,7 @@ def view_certificate(cert_id):
 def admin_certificates():
     certs = (
         db.session.query(UserCertificate)
+        .filter_by(reviewed=False)
         .join(User)
         .join(Achievement)
         .add_entity(User)
@@ -169,3 +171,13 @@ def admin_certificates():
         .all()
     )
     return render_template("admin_certificates.html", certs=certs)
+
+@achievements.route("/admin/certificates/reviewed/<int:cert_id>", methods=["POST"])
+@local_only
+def mark_reviewed(cert_id):
+    cert = UserCertificate.query.get_or_404(cert_id)
+    cert.reviewed = True
+    cert.reviewed_at = datetime.utcnow()
+    db.session.commit()
+    flash("Marked as reviewed.", "success")
+    return redirect(url_for("achievements.admin_certificates"))

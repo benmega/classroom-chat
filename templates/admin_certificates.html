@@ -15,6 +15,15 @@
         <a href="{{ url_for('achievements.view_certificate', cert_id=cert.id) }}" target="_blank" class="btn btn-sm btn-primary">
           View PDF
         </a>
+        <td>
+          {% if not cert.reviewed %}
+          <form action="{{ url_for('achievements.mark_reviewed', cert_id=cert.id) }}" method="post" style="display:inline">
+            <button class="btn btn-sm btn-success">Mark Reviewed</button>
+          </form>
+          {% else %}
+          <span class="text-muted">Reviewed</span>
+          {% endif %}
+        </td>
         {% else %}
         <span>No file</span>
         {% endif %}
