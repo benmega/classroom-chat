@@ -10,7 +10,7 @@ def check_achievements():
     if not user_id:
         return jsonify({"success": False, "error": "Not logged in"}), 401
 
-    user = User.query.filter_by(username=user_id).first()
+    user = User.query.filter_by(id=user_id).first()
     if not user:
         return jsonify({"success": False, "error": "User not found"}), 404
 

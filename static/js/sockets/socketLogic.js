@@ -41,13 +41,13 @@ socket.on('new_message', function(data) {
     }
 });
 
-socket.on('connect', () => {
-    console.log('Connected to general namespace successfully');
-});
-
-socket.on('disconnect', () => {
-    console.log('Disconnected from admin namespace');
-});
+//socket.on('connect', () => {
+//    console.log('Connected to general namespace successfully');
+//});
+//
+//socket.on('disconnect', () => {
+//    console.log('Disconnected from admin namespace');
+//});
 
 socket.on('error', (error) => {
     console.error('Socket error:', error);
