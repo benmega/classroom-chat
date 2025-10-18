@@ -520,3 +520,4 @@ def adjust_ducks():
             'success': False,
             'message': "User not found."
         }), 404
+

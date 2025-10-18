@@ -31,7 +31,7 @@ def achievements_page():
     # current_user = User.query.filter_by(username=user_id).first()
     current_user = (
         User.query.options(joinedload(User.achievements))
-        .filter_by(username=user_id)
+        .filter_by(id=user_id)
         .first()
     )
     if not current_user:
@@ -50,7 +50,7 @@ def achievements_page():
 @local_only
 def add_achievement():
     user_id = session.get('user')
-    current_user = User.query.filter_by(username=user_id).first()
+    current_user = User.query.filter_by(id=user_id).first()
     if not current_user:
         return jsonify({'success': False, 'error': 'User not found!'}), 404
 
@@ -82,9 +82,9 @@ def add_achievement():
 @achievements.route("/submit_certificate", methods=["GET", "POST"])
 def submit_certificate():
     user_id = session.get("user")
-    current_user = User.query.filter_by(username=user_id).first()
+    current_user = User.query.filter_by(id=user_id).first()
     if not current_user:
-        return jsonify({"success": False, "error": "User not found!"}), 404
+        return jsonify({"success": False, "error": "User not found!"}), 400
 
     message, success = None, False
 
@@ -138,3 +138,34 @@ def submit_certificate():
         message, success = "Certificate submitted successfully.", True
 
     return render_template("submit_certificate.html", message=message, success=success)
+
+
+from flask import send_from_directory
+
+@achievements.route("/view_certificate/<int:cert_id>")
+@local_only
+def view_certificate(cert_id):
+    cert = UserCertificate.query.get_or_404(cert_id)
+    full_path = os.path.abspath(cert.file_path)
+    directory = os.path.dirname(full_path)
+    filename = os.path.basename(full_path)
+
+    if not os.path.exists(full_path):
+        flash("Certificate file not found.", "error")
+        return redirect(url_for("achievements.admin_certificates"))
+
+    return send_from_directory(directory, filename, mimetype="application/pdf")
+
+
+@achievements.route("/admin/certificates")
+@local_only
+def admin_certificates():
+    certs = (
+        db.session.query(UserCertificate)
+        .join(User)
+        .join(Achievement)
+        .add_entity(User)
+        .add_entity(Achievement)
+        .all()
+    )
+    return render_template("admin_certificates.html", certs=certs)
