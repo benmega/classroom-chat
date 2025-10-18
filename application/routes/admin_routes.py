@@ -1,6 +1,7 @@
+import os
 import re
 from datetime import datetime, timedelta
-from flask import Blueprint, request, jsonify, render_template
+from flask import Blueprint, request, jsonify, render_template, send_file
 from functools import wraps
 from sqlalchemy.sql import func
 from sqlalchemy import cast, Date
@@ -424,13 +425,6 @@ def strike_message(message_id):
 # Trade Management Routes
 # --------------------------
 
-# @admin.route('/trades')
-# @local_only
-# def trades():
-#     trades = Trade.query.order_by(Trade.timestamp.desc()).all()
-#     return render_template('admin/trades.html', trades=trades)
-
-
 @admin.route('/pending_trades', methods=['GET'])
 @local_only
 def pending_trades():
@@ -521,3 +515,182 @@ def adjust_ducks():
             'message': "User not found."
         }), 404
 
+
+# --------------------------
+# Document Management Routes
+# --------------------------
+@admin.route('/documents-manager')
+@local_only
+def documents_manager():
+    return render_template('admin/admin_documents.html')
+
+@admin.route('/documents', methods=['GET'])
+@local_only
+def list_documents():
+    """List all uploaded documents across all categories"""
+    documents = []
+    # Fix: userData is at project root, not in application folder
+    base_path = os.path.join(os.path.dirname(os.path.dirname(__file__)),'..', 'userData')
+
+    categories = ['image', 'pdf', 'other']
+
+    for category in categories:
+        category_path = os.path.join(base_path, category)
+        if os.path.exists(category_path):
+            for filename in os.listdir(category_path):
+                file_path = os.path.join(category_path, filename)
+                if os.path.isfile(file_path):
+                    file_stats = os.stat(file_path)
+                    documents.append({
+                        'filename': filename,
+                        'category': category,
+                        'path': file_path,
+                        'size': file_stats.st_size,
+                        'size_formatted': format_file_size(file_stats.st_size),
+                        'created': datetime.fromtimestamp(file_stats.st_ctime).isoformat(),
+                        'modified': datetime.fromtimestamp(file_stats.st_mtime).isoformat()
+                    })
+
+    # Sort by creation time (newest first)
+    documents.sort(key=lambda x: x['created'], reverse=True)
+
+    return jsonify({
+        'success': True,
+        'documents': documents,
+        'total': len(documents)
+    })
+
+
+@admin.route('/documents/<category>/<filename>/download', methods=['GET'])
+@local_only
+def download_document(category, filename):
+    """Download a specific document"""
+    if category not in ['image', 'pdf', 'other']:
+        return jsonify({'success': False, 'message': 'Invalid category'}), 400
+
+    # Fix: userData is at project root
+    base_path = os.path.join(os.path.dirname(os.path.dirname(__file__)),'..', 'userData')
+    file_path = os.path.join(base_path, category, filename)
+
+    if not os.path.exists(file_path):
+        return jsonify({'success': False, 'message': 'File not found'}), 404
+
+    # Security check: ensure the path is within userData directory
+    abs_file_path = os.path.abspath(file_path)
+    abs_user_data = os.path.abspath(base_path)
+    if not abs_file_path.startswith(abs_user_data):
+        return jsonify({'success': False, 'message': 'Invalid file path'}), 403
+
+    return send_file(file_path, as_attachment=True, download_name=filename)
+
+
+@admin.route('/documents/<category>/<filename>/view', methods=['GET'])
+@local_only
+def view_document(category, filename):
+    """View a specific document in browser"""
+    if category not in ['image', 'pdf', 'other']:
+        return jsonify({'success': False, 'message': 'Invalid category'}), 400
+
+    # Fix: userData is at project root
+    base_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), '..', 'userData')
+    file_path = os.path.join(base_path, category, filename)
+
+    if not os.path.exists(file_path):
+        print(file_path)
+        return jsonify({'success': False, 'message': 'File not found'}), 404
+
+    # Security check: ensure the path is within userData directory
+    abs_file_path = os.path.abspath(file_path)
+    abs_user_data = os.path.abspath(base_path)
+    if not abs_file_path.startswith(abs_user_data):
+        return jsonify({'success': False, 'message': 'Invalid file path'}), 403
+
+    return send_file(file_path)
+
+
+@admin.route('/delete-document', methods=['POST'])
+@local_only
+def delete_document():
+    """Delete a specific document"""
+    category = request.form.get('category')
+    filename = request.form.get('filename')
+
+    if not category or not filename:
+        return jsonify({'success': False, 'message': 'Category and filename are required'}), 400
+
+    if category not in ['image', 'pdf', 'other']:
+        return jsonify({'success': False, 'message': 'Invalid category'}), 400
+
+    # Fix: userData is at project root
+    base_path = os.path.join(os.path.dirname(os.path.dirname(__file__)),'..', 'userData')
+    file_path = os.path.join(base_path, category, filename)
+
+    if not os.path.exists(file_path):
+        return jsonify({'success': False, 'message': 'File not found'}), 404
+
+    # Security check: ensure the path is within userData directory
+    abs_file_path = os.path.abspath(file_path)
+    abs_user_data = os.path.abspath(base_path)
+    if not abs_file_path.startswith(abs_user_data):
+        return jsonify({'success': False, 'message': 'Invalid file path'}), 403
+
+    try:
+        os.remove(file_path)
+        return jsonify({
+            'success': True,
+            'message': f"'{filename}' has been deleted successfully"
+        })
+    except Exception as e:
+        print(f"Error deleting file: {e}")
+        return jsonify({'success': False, 'message': f'Failed to delete file: {str(e)}'}), 500
+
+
+@admin.route('/documents/stats', methods=['GET'])
+@local_only
+def document_stats():
+    """Get statistics about uploaded documents"""
+    stats = {
+        'total_files': 0,
+        'total_size': 0,
+        'total_size_formatted': '0 B',
+        'by_category': {}
+    }
+
+    # Fix: userData is at project root
+    base_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), '..','userData')
+    categories = ['image', 'pdf', 'other']
+
+    for category in categories:
+        category_path = os.path.join(base_path, category)
+        category_stats = {
+            'count': 0,
+            'size': 0,
+            'size_formatted': '0 B'
+        }
+
+        if os.path.exists(category_path):
+            for filename in os.listdir(category_path):
+                file_path = os.path.join(category_path, filename)
+                if os.path.isfile(file_path):
+                    file_size = os.path.getsize(file_path)
+                    category_stats['count'] += 1
+                    category_stats['size'] += file_size
+                    stats['total_files'] += 1
+                    stats['total_size'] += file_size
+
+        category_stats['size_formatted'] = format_file_size(category_stats['size'])
+        stats['by_category'][category] = category_stats
+
+    stats['total_size_formatted'] = format_file_size(stats['total_size'])
+
+    return jsonify({'success': True, 'stats': stats})
+
+
+# Helper function for formatting file sizes
+def format_file_size(size_bytes):
+    """Format file size in human-readable format"""
+    for unit in ['B', 'KB', 'MB', 'GB', 'TB']:
+        if size_bytes < 1024.0:
+            return f"{size_bytes:.2f} {unit}"
+        size_bytes /= 1024.0
+    return f"{size_bytes:.2f} PB"
