@@ -118,23 +118,3 @@ def submit_trade():
 def bit_shift():
     form = DuckTradeForm()
     return render_template('bit_shift.html', form=form)
-
-#
-# @duck_trade.route('/update_trade_status/<int:trade_id>', methods=['POST'])
-# def update_trade_status(trade_id):
-#     trade = Trade.query.get_or_404(trade_id)
-#     new_status = request.form.get('status')
-#     if new_status not in ['Pending', 'Completed', 'Cancelled']:
-#         flash('Invalid status selected.', 'error')
-#         return redirect(url_for('duck_trade.trade_logs'))
-#
-#     trade.status = new_status
-#     db.session.commit()
-#     flash('Trade status updated successfully.', 'success')
-#     return redirect(url_for('duck_trade.trade_logs'))
-
-
-# @duck_trade.route('/trade_logs')
-# def trade_logs():
-#     trades = Trade.query.order_by(Trade.timestamp.desc()).all()
-#     return render_template('trade_logs.html', trades=trades)
