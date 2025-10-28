@@ -184,7 +184,7 @@ def create_app(config_class=None):
     @app.before_request
     def load_user():
         user_id = session.get('user')
-        g.user = User.query.filter_by(username=user_id).first() if user_id else None
+        g.user = User.query.filter_by(id=user_id).first() if user_id else None
 
     # Inject user into templates
     @app.context_processor

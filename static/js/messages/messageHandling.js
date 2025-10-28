@@ -68,7 +68,7 @@ function fetchCurrentConversation() {
 }
 
 function updateChatUI(conversationData) {
-    console.log(conversationData);
+//    console.log(conversationData);
 
     const chatDiv = document.getElementById('chat');
     if (!chatDiv) {

@@ -17,6 +17,10 @@
                 <ul>
                     <li><a class="admin-nav-button" href="{{ url_for('admin.dashboard') }}">Dashboard</a></li>
                     <li><a class="admin-nav-button" href="{{ url_for('admin.pending_trades') }}">Pending Trades</a></li>
+                    <li><a class="admin-nav-button" href="{{ url_for('achievements.add_achievement') }}">Add Achievement</a></li>
+                    <li><a class="admin-nav-button" href="{{ url_for('achievements.admin_certificates') }}">Certificates</a></li>
+                    <li><a class="admin-nav-button" href="{{ url_for('admin.documents_manager') }}">Documents</a></li>
+                    <li><a href="{{ url_for('admin_advanced.index') }}" target="_blank">Advanced Panel</a></li>
                     <li><a class="admin-nav-button logout" href="{{ url_for('user.logout') }}">Logout</a></li>
                 </ul>
             </nav>

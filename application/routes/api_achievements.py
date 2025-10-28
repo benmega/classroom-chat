@@ -4,17 +4,21 @@ from application.services.achievement_engine import evaluate_user
 
 achievements_api = Blueprint("achievements_api", __name__, url_prefix="/api/achievements")
 
+
 @achievements_api.route("/check", methods=["GET"])
 def check_achievements():
     user_id = session.get("user")
     if not user_id:
         return jsonify({"success": False, "error": "Not logged in"}), 401
 
-    user = User.query.filter_by(username=user_id).first()
+    user = User.query.filter_by(id=user_id).first()
     if not user:
         return jsonify({"success": False, "error": "User not found"}), 404
 
-    new_awards = evaluate_user(user)
+    try:
+        new_awards = evaluate_user(user)
+    except Exception as e:
+        return jsonify({"success": False, "error": "Failed to evaluate achievements"}), 500
 
     payload = [
         {

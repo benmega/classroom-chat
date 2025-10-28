@@ -7,11 +7,11 @@ from flask import request, session
 @socketio.on('connect')
 def handle_connect(auth=None):
     # Check if user is logged in by session
-    user_username = session.get('user')
-    if user_username:
+    user_userid = session.get('user')
+    if user_userid:
         # Find the user by their username stored in the session
-        user = User.query.filter_by(username=user_username).first()
-        print(f'user connected {user_username}')
+        user = User.query.filter_by(id=user_userid).first()
+        print(f'user connected {user_userid}')
     else:
         user_ip = request.remote_addr
         print(f'user connected {user_ip}')
@@ -35,9 +35,9 @@ def handle_connect(auth=None):
 @socketio.on('disconnect')
 def handle_disconnect(auth=None):
     # Check if the user is logged in by session
-    user_username = session.get('user')
-    if user_username:
-        user = User.query.filter_by(username=user_username).first()
+    user_userid = session.get('user')
+    if user_userid:
+        user = User.query.filter_by(id=user_userid).first()
     else:
         user_ip = request.remote_addr
         print(f'user disconnected {user_ip}')

@@ -6,7 +6,7 @@ export function initAchievements(username) {
             if (!res.ok) return;
 
             const data = await res.json();
-            console.log("Fetched achievements:", data.new_awards);
+//            console.log("Fetched achievements:", data.new_awards);
 
             if (!data.success || !data.new_awards.length) return;
 

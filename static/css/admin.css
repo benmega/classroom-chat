@@ -401,3 +401,9 @@
         grid-template-columns: 1fr;
     }
 }
+
+.admin-body .fa,
+.admin-body .nav-link,
+.admin-body table {
+    font-size: 0.9rem;
+}

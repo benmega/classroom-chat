@@ -18,13 +18,13 @@ message = Blueprint('message', __name__)
 @message.route('/send_message', methods=['POST'])
 @limiter.limit("20 per minute; 100 per day")
 def send_message():
-    session_username = session.get('user', None)  # Get username from the session
+    session_userid = session.get('user', None)
     form_message = request.form['message']
 
-    if not session_username:
+    if not session_userid:
         return jsonify(success=False, error="No session username found"), 400
 
-    user = get_user(session_username)
+    user = get_user(session_userid)
     if not user:
         return jsonify(success=False, error="Unknown User"), 403
 
@@ -185,8 +185,8 @@ def conversation_history():
         return redirect(url_for('user.login'))
 
     # Fetch the current logged-in user
-    username = session['user']
-    user = User.query.filter_by(username=username).first()
+    user_id = session['user']
+    user = User.query.filter_by(id=user_id).first()
 
     if not user:
         flash('User not found.', 'error')

@@ -1,0 +1,10 @@
+{% extends "admin/admin_base.html" %}
+
+{% block content %}
+<div class="flask-admin-content">
+    {% if admin_view is not none %}
+        <h2>{{ admin_view.name }}</h2>
+        {% block body %}{% endblock %}
+    {% endif %}
+</div>
+{% endblock %}

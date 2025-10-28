@@ -1,5 +1,6 @@
 # routes.py
 import re
+from datetime import datetime
 
 from flask import Blueprint, render_template, jsonify, session, flash, redirect, url_for, request
 from sqlalchemy.orm import joinedload
@@ -14,8 +15,7 @@ from werkzeug.utils import secure_filename
 
 achievements = Blueprint('achievements', __name__)
 
-CERT_URL_REGEX = r"https://codecombat\.com/certificates/[\w\d]+.*course=([\w\d]+)"
-
+CERT_URL_REGEX = r"https://codecombat\.com/certificates/[\w\d]+\?.*course=([\w\d-]+)"
 
 
 UPLOAD_FOLDER = "certificates"
@@ -32,7 +32,7 @@ def achievements_page():
     # current_user = User.query.filter_by(username=user_id).first()
     current_user = (
         User.query.options(joinedload(User.achievements))
-        .filter_by(username=user_id)
+        .filter_by(id=user_id)
         .first()
     )
     if not current_user:
@@ -51,7 +51,7 @@ def achievements_page():
 @local_only
 def add_achievement():
     user_id = session.get('user')
-    current_user = User.query.filter_by(username=user_id).first()
+    current_user = User.query.filter_by(id=user_id).first()
     if not current_user:
         return jsonify({'success': False, 'error': 'User not found!'}), 404
 
@@ -59,13 +59,16 @@ def add_achievement():
         name = request.form.get("name")
         slug = request.form.get("slug")
         description = request.form.get("description")
-        duck_req = request.form.get("duck_requirement") or None
+        requirement_value = request.form.get("requirement_value") or None
 
         ach = Achievement(
             name=name,
             slug=slug,
+            type=request.form.get("type"),
+            reward=int(request.form.get("reward") or 1),
             description=description,
-            duck_requirement=int(duck_req) if duck_req else None
+            requirement_value=requirement_value,
+            source=request.form.get("source")
         )
         db.session.add(ach)
         db.session.commit()
@@ -80,9 +83,9 @@ def add_achievement():
 @achievements.route("/submit_certificate", methods=["GET", "POST"])
 def submit_certificate():
     user_id = session.get("user")
-    current_user = User.query.filter_by(username=user_id).first()
+    current_user = User.query.filter_by(id=user_id).first()
     if not current_user:
-        return jsonify({"success": False, "error": "User not found!"}), 404
+        return jsonify({"success": False, "error": "User not found!"}), 400
 
     message, success = None, False
 
@@ -109,6 +112,7 @@ def submit_certificate():
 
         # save file
         os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
         filename = secure_filename(f"{current_user.username}_{achievement.slug}.pdf")
         filepath = os.path.join(UPLOAD_FOLDER, filename)
         file.save(filepath)
@@ -135,3 +139,45 @@ def submit_certificate():
         message, success = "Certificate submitted successfully.", True
 
     return render_template("submit_certificate.html", message=message, success=success)
+
+
+from flask import send_from_directory
+
+@achievements.route("/view_certificate/<int:cert_id>")
+@local_only
+def view_certificate(cert_id):
+    cert = UserCertificate.query.get_or_404(cert_id)
+    full_path = os.path.abspath(cert.file_path)
+    directory = os.path.dirname(full_path)
+    filename = os.path.basename(full_path)
+
+    if not os.path.exists(full_path):
+        flash("Certificate file not found.", "error")
+        return redirect(url_for("achievements.admin_certificates"))
+
+    return send_from_directory(directory, filename, mimetype="application/pdf")
+
+
+@achievements.route("/admin/certificates")
+@local_only
+def admin_certificates():
+    certs = (
+        db.session.query(UserCertificate)
+        .filter_by(reviewed=False)
+        .join(User)
+        .join(Achievement)
+        .add_entity(User)
+        .add_entity(Achievement)
+        .all()
+    )
+    return render_template("admin_certificates.html", certs=certs)
+
+@achievements.route("/admin/certificates/reviewed/<int:cert_id>", methods=["POST"])
+@local_only
+def mark_reviewed(cert_id):
+    cert = UserCertificate.query.get_or_404(cert_id)
+    cert.reviewed = True
+    cert.reviewed_at = datetime.utcnow()
+    db.session.commit()
+    flash("Marked as reviewed.", "success")
+    return redirect(url_for("achievements.admin_certificates"))
