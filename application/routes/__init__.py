@@ -9,6 +9,7 @@ from .session_routes import session
 from .user_routes import user
 from .ai_routes import ai
 from .admin_routes import admin
+from .admin_advanced_routes import init_admin
 from .general_routes import general
 from .message_routes import message
 from .upload_routes import upload
@@ -16,6 +17,7 @@ from .achievement_routes import achievements
 
 
 def register_blueprints(app: Flask):
+    init_admin(app)
     app.register_blueprint(user, url_prefix='/user')
     app.register_blueprint(ai, url_prefix='/ai')
     app.register_blueprint(admin, url_prefix='/admin')

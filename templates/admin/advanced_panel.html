@@ -1,0 +1,14 @@
+{% extends "admin/admin_base.html" %}
+
+{% block content %}
+<h2>Advanced Admin Panel</h2>
+<div class="advanced-model-list">
+    <ul>
+        {% for view in admin_advanced._views %}
+            <li>
+                <a href="{{ url_for(view.endpoint + '.index_view') }}">{{ view.name }}</a>
+            </li>
+        {% endfor %}
+    </ul>
+</div>
+{% endblock %}
