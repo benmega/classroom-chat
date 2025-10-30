@@ -10,8 +10,8 @@ limiter = Limiter(key_func=get_remote_address,
                   default_limits=[
                       "10 per second",
                       "50 per minute",
-                      "200 per hour",  # ≈3 messages/minute sustained
-                      "2000 per day"  # ≈20 messages/hour averaged over 24 h
+                      "2000 per hour",
+                      "20000 per day"
                   ])
 db = SQLAlchemy()
 

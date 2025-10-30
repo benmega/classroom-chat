@@ -4,10 +4,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Panel - Classroom Chat</title>
+    <title>{% block title %}Admin Panel - Classroom Chat{% endblock %}</title>
     <link rel="icon" href="{{ url_for('static', filename='images/logo.ico') }}" type="image/x-icon">
+
+    <!-- Bootstrap CSS - required by Flask-Admin -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/4.6.2/css/bootstrap.min.css">
+
+    <!-- Flask-Admin's CSS -->
+    {% block head_css %}{% endblock %}
+    {% block head %}{% endblock %}
+
+    <!-- Your custom CSS - loaded last to override Bootstrap where needed -->
     <link rel="stylesheet" href="/static/css/variables.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+
+    <!-- jQuery - required by Flask-Admin -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+
+    <!-- Bootstrap JS - required by Flask-Admin for tooltips, modals, etc -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/4.6.2/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Moment.js - required by Flask-Admin date pickers -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
 </head>
 <body class="admin-body">
     <header class="admin-header">
@@ -20,7 +38,7 @@
                     <li><a class="admin-nav-button" href="{{ url_for('achievements.add_achievement') }}">Add Achievement</a></li>
                     <li><a class="admin-nav-button" href="{{ url_for('achievements.admin_certificates') }}">Certificates</a></li>
                     <li><a class="admin-nav-button" href="{{ url_for('admin.documents_manager') }}">Documents</a></li>
-                    <li><a href="{{ url_for('admin_advanced.index') }}" target="_blank">Advanced Panel</a></li>
+                    <li><a href="{{ url_for('admin_advanced.index') }}">Advanced Panel</a></li>
                     <li><a class="admin-nav-button logout" href="{{ url_for('user.logout') }}">Logout</a></li>
                 </ul>
             </nav>
@@ -28,11 +46,15 @@
     </header>
 
     <main class="admin-main">
-        {% block content %}{% endblock %}
+        {% block body %}
+            {% block content %}{% endblock %}
+        {% endblock %}
     </main>
 
     <footer class="admin-footer">
         <p>&copy; 2024 Classroom Chat Admin. All Rights Reserved.</p>
     </footer>
+
+    {% block tail %}{% endblock %}
 </body>
 </html>
