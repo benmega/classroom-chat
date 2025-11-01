@@ -393,6 +393,9 @@ def upload_profile_picture():
 @limiter.limit("50 per minute")
 @user.route('/profile_pictures/<path:filename>')
 def profile_picture(filename):
+    if filename == 'Default_pfp.jpg':
+        PROFILE_PICTURE_FOLDER = os.path.join(Config.STATIC_FOLDER, 'images')
+        return send_from_directory(PROFILE_PICTURE_FOLDER, filename)
     PROFILE_PICTURE_FOLDER = os.path.join(Config.UPLOAD_FOLDER, 'profile_pictures')
 
     # prevent path traversal (../../ attacks)

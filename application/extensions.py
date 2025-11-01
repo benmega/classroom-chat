@@ -8,8 +8,8 @@ from flask_apscheduler import APScheduler
 scheduler = APScheduler()
 limiter = Limiter(key_func=get_remote_address,
                   default_limits=[
-                      "10 per second",
-                      "50 per minute",
+                      "50 per second",
+                      "500 per minute",
                       "2000 per hour",
                       "20000 per day"
                   ])
