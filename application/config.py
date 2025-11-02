@@ -32,9 +32,9 @@ class Config:
     # Admin user configuration: Ideally, use hashed passwords in production, not plaintext
     ADMIN_USERNAME = os.getenv('ADMIN_USERNAME', 'admin')  # Use environment variable for flexibility
     ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD', '1234')  # Never store plaintext passwords in code
-
-    # Add any general session or lifetime configuration here
-    # PERMANENT_SESSION_LIFETIME = timedelta(minutes=1)
+    SESSION_COOKIE_SAMESITE = "None"
+    SESSION_COOKIE_SECURE = True
+    SESSION_COOKIE_HTTPONLY = True
 
 class DevelopmentConfig(Config):
 

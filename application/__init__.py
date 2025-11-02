@@ -130,8 +130,8 @@ def create_app(config_class=None):
     app = Flask(__name__, template_folder=template_folder, static_folder=static_folder)
     app.config.from_object(config_class)
 
-    # For communication with Tauri
-    CORS(app)
+    # CORS(app)
+    CORS(app, origins=["https://codecombat.com", "https://www.ozaria.com"], supports_credentials=True)
 
     # Configure session timeout
     app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=10)
