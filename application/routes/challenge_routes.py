@@ -4,6 +4,7 @@ import re
 from datetime import datetime
 
 from flask import Blueprint, request, session, render_template, redirect, url_for, flash
+from flask_cors import cross_origin
 
 from application import Configuration
 from application.extensions import db
@@ -17,6 +18,10 @@ challenge = Blueprint("challenge", __name__, url_prefix="/challenge")
 
 
 @challenge.route("/submit", methods=["GET", "POST"])
+@cross_origin(origins=[
+"https://codecombat.com",
+"https://www.ozaria.com"
+], supports_credentials=True)
 def submit_challenge():
     """Handle challenge submission form."""
     # Validate session
