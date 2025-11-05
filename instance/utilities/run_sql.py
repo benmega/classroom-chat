@@ -39,10 +39,7 @@ def run_sql2(sql: str):
 
 
 if __name__ == "__main__":
-    # Example usage: change this line to any SQL you want
     sql = """
-        UPDATE users
-        SET earned_ducks = MAX(duck_balance, earned_ducks);
-
+        SELECT * FROM challenge_logs WHERE username = "blossomstudent44"
     """
-    run_sql2(sql)
+    run_sql(sql)  # use run_sql for SELECT statements

@@ -100,8 +100,9 @@
     background-color: white;
     border-radius: var(--border-radius-medium);
     box-shadow: var(--box-shadow-light);
-    overflow: hidden;
+    overflow: auto;
     transition: var(--transition-default);
+    max-height: 500px;
 }
 
 .admin-card:hover {

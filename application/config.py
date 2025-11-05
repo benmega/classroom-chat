@@ -32,10 +32,8 @@ class Config:
     # Admin user configuration: Ideally, use hashed passwords in production, not plaintext
     ADMIN_USERNAME = os.getenv('ADMIN_USERNAME', 'admin')  # Use environment variable for flexibility
     ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD', '1234')  # Never store plaintext passwords in code
-    SESSION_COOKIE_SAMESITE = "None"
-    SESSION_COOKIE_SECURE = True
-    SESSION_COOKIE_HTTPONLY = True
-    SESSION_COOKIE_DOMAIN = "benmega.com"
+
+
 
 
 class DevelopmentConfig(Config):
@@ -66,3 +64,7 @@ class ProductionConfig(Config):
     DEBUG = False
     SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL', f'sqlite:///{os.path.join(Config.INSTANCE_FOLDER, "prod_users.db")}')
     SERVER_NAME = '192.168.1.1356:5000'
+    SESSION_COOKIE_SAMESITE = "None"
+    SESSION_COOKIE_SECURE = True
+    SESSION_COOKIE_HTTPONLY = True
+    SESSION_COOKIE_DOMAIN = "benmega.com"

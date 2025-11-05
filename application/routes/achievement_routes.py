@@ -50,10 +50,10 @@ def achievements_page():
 @achievements.route("/add", methods=["GET", "POST"])
 @local_only
 def add_achievement():
-    user_id = session.get('user')
-    current_user = User.query.filter_by(id=user_id).first()
-    if not current_user:
-        return jsonify({'success': False, 'error': 'User not found!'}), 404
+    # user_id = session.get('user')
+    # current_user = User.query.filter_by(id=user_id).first()
+    # if not current_user:
+    #     return jsonify({'success': False, 'error': 'User not found!'}), 404
 
     if request.method == "POST":
         name = request.form.get("name")
@@ -75,7 +75,7 @@ def add_achievement():
         flash(f"Achievement '{name}' added", "success")
         return redirect(url_for("achievements.achievements_page"))
 
-    return render_template("add_achievement.html")
+    return render_template("admin/add_achievement.html")
 
 
 
@@ -170,7 +170,7 @@ def admin_certificates():
         .add_entity(Achievement)
         .all()
     )
-    return render_template("admin_certificates.html", certs=certs)
+    return render_template("admin/admin_certificates.html", certs=certs)
 
 @achievements.route("/admin/certificates/reviewed/<int:cert_id>", methods=["POST"])
 @local_only
