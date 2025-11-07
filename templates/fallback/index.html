@@ -28,5 +28,41 @@
         <h1>We’re Closed</h1>
         <p>Our website is currently unavailable. Please visit us during business hours.</p>
     </div>
+
+    <button id="startServerButton">Launch Server Now</button>
+    <p id="message"></p>
+
+    <script>
+        const API_URL = 'https://arn:aws:execute-api:us-east-1:121212948969:t3agimzfzd/*/POST/server-start';
+        const button = document.getElementById('startServerButton');
+        const message = document.getElementById('message');
+
+        button.addEventListener('click', async () => {
+            button.disabled = true;
+            message.textContent = 'Attempting to launch server... please wait 1-2 minutes and refresh.';
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST', // Use the method you configured (POST or GET)
+                    mode: 'cors'
+                });
+
+                if (response.ok) {
+                    // The API call was successful, even if the server was already running
+                    message.textContent = 'Server launch signal sent successfully! It may take a minute or two to fully start. You can try refreshing the main site in a moment.';
+                } else {
+                    // Handle API error
+                    const errorBody = await response.text();
+                    message.textContent = `Launch failed (Status: ${response.status}). Details: ${errorBody}`;
+                }
+
+            } catch (error) {
+                console.error('Fetch error:', error);
+                message.textContent = 'An error occurred while connecting to the launch service.';
+            } finally {
+                button.disabled = false;
+            }
+        });
+    </script>
 </body>
 </html>
