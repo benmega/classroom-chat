@@ -224,10 +224,7 @@
         window.chartData = {{ chart_data | default({}) | tojson | safe }};
     </script>
 
-    <!-- Include Chart.js for the duck transactions chart -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.1/chart.min.js"></script>
-
-    <!-- Link to external JS files -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="{{ url_for('static', filename='js/admin/admin.js') }}"></script>
     <script src="{{ url_for('static', filename='js/admin/password-manager.js') }}"></script>
