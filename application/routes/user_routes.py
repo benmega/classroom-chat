@@ -96,14 +96,9 @@ def login():
 
 @user.route('/logout')
 def logout():
-    # Get the current user from the session
     user_id = session.get('user')
-
-    # Find the user in the database
     user = User.query.get(user_id)
-
     if user:
-        # Mark the user as offline
         user.set_online(user.id, False)
         db.session.commit()
 
