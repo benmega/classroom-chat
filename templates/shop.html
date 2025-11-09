@@ -1,69 +1,88 @@
-<!--
-     Name: shop.html
-     Type: Jinja2 Template
-     Location: /templates/shop.html
-     Summary: Frontend for listing items and purchasing with dynamic pricing.
--->
+{% extends "base.html" %}
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Duck Shop</title>
-    <style>
-        body { font-family: Arial; }
-        .item {
-            border: 1px solid #ccc;
-            padding: 12px;
-            margin-bottom: 10px;
-        }
-        .name { font-size: 18px; font-weight: bold; }
-        .desc { margin: 6px 0; }
-        .price { font-size: 16px; color: #333; }
-        button { padding: 6px 12px; }
-    </style>
-</head>
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">Duck Shop</h1>
 
-<body>
-    <h1>Duck Shop</h1>
+    <div id="items" class="row">
+        </div>
+</div>
 
-    <div id="items"></div>
+<style>
+    .item {
+        border: 1px solid #ccc;
+        padding: 12px;
+        border-radius: 8px; /* Added for a slightly modern look */
+        background-color: #fff;
+        height: 100%;
+        display: flex; /* Using flex to help with alignment */
+        flex-direction: column;
+    }
+    .name { font-size: 18px; font-weight: bold; }
+    .desc { 
+        margin: 6px 0;
+        flex-grow: 1; /* Makes description fill available space */
+    }
+    .price { font-size: 16px; color: #333; }
+    
+    /* The button will be styled by Bootstrap's .btn class */
+    .item button {
+        margin-top: auto; /* Pushes the button to the bottom */
+    }
+</style>
 
-    <script>
-        async function loadItems() {
-            const res = await fetch("/shop/items");
-            const data = await res.json();
+<script>
+    async function loadItems() {
+        const res = await fetch("/shop/items");
+        const data = await res.json();
 
-            const container = document.getElementById("items");
-            container.innerHTML = "";
+        const container = document.getElementById("items");
+        container.innerHTML = "";
 
-            data.forEach(item => {
-                const div = document.createElement("div");
-                div.className = "item";
+        data.forEach(item => {
+            // Create a wrapper div that will act as the Bootstrap column.
+            // - 'col-12': 100% width on extra-small screens (stacked)
+            // - 'col-md-6': 50% width on medium screens and up (2 columns)
+            // - 'mb-4': Margin-bottom for spacing
+            const col = document.createElement("div");
+            col.className = "col-12 col-md-6 mb-4";
 
-                div.innerHTML = `
+            // Your original item content is placed inside this column wrapper.
+            // I've added 'btn btn-primary' to the button to use Bootstrap styles.
+            col.innerHTML = `
+                <div class="item">
                     <div class="name">${item.name}</div>
                     <div class="desc">${item.description}</div>
                     <div class="price">Price: ${item.price} ducks</div>
-                    <button onclick="purchase(${item.id})">Buy</button>
-                `;
+                    <button onclick="purchase(${item.id})" class="btn btn-primary w-100">Buy</button>
+                </div>
+            `;
 
-                container.appendChild(div);
-            });
-        }
+            container.appendChild(col);
+        });
+    }
 
-        async function purchase(id) {
-            const res = await fetch(`/shop/purchase/${id}`, {
-                method: "POST"
-            });
+    async function purchase(id) {
+        const res = await fetch(`/shop/purchase/${id}`, {
+            method: "POST"
+        });
 
-            const out = await res.json();
-            alert(JSON.stringify(out));
+        const out = await res.json();
+        
+        // This will now trigger the Bootstrap toast messages from base.html
+        // We just need to reload the page to see the flash message.
+        // A more advanced way would be to create a toast dynamically,
+        // but a reload is simplest for now.
+        location.reload(); 
+        
+        // You could also just reload the items if you don't
+        // want the whole page to flash:
+        // loadItems();
+        // alert(JSON.stringify(out)); // This would show the old alert
+    }
 
-            loadItems();
-        }
+    // Load items when the page loads
+    loadItems();
+</script>
 
-        loadItems();
-    </script>
-</body>
-</html>
+{% endblock %}
