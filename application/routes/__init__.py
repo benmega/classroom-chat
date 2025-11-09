@@ -6,6 +6,7 @@ from .challenge_routes import challenge
 from .duck_trade_routes import duck_trade
 from .server_info_routes import server_info
 from .session_routes import session
+from .shop_routes import shop
 from .user_routes import user
 from .ai_routes import ai
 from .admin_routes import admin
@@ -30,5 +31,6 @@ def register_blueprints(app: Flask):
     app.register_blueprint(challenge)
     app.register_blueprint(general)
     app.register_blueprint(server_info)
+    app.register_blueprint(shop, url_prefix='/shop')
 
 
