@@ -3,7 +3,7 @@
 # Location: /routes/shop_routes.py
 # Summary: Dynamic pricing and purchase endpoints using Flask session.
 
-from flask import Blueprint, jsonify, request, session
+from flask import Blueprint, jsonify, request, session, render_template
 from decimal import Decimal, ROUND_HALF_UP
 from application.extensions import db
 from application.models.store_item import StoreItem
@@ -18,6 +18,11 @@ def calculate_price(base_price: float, times_purchased: int) -> float:
     raw = bp * (Decimal("1") + INCREASE_RATE * t)
     rounded = raw.quantize(Decimal("0.0"), rounding=ROUND_HALF_UP)
     return float(rounded)
+
+@shop.route("/")
+def shop_page():
+    return render_template("shop.html")
+
 
 @shop.route("/items", methods=["GET"])
 def list_items():
