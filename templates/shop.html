@@ -1,0 +1,69 @@
+<!--
+     Name: shop.html
+     Type: Jinja2 Template
+     Location: /templates/shop.html
+     Summary: Frontend for listing items and purchasing with dynamic pricing.
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Duck Shop</title>
+    <style>
+        body { font-family: Arial; }
+        .item {
+            border: 1px solid #ccc;
+            padding: 12px;
+            margin-bottom: 10px;
+        }
+        .name { font-size: 18px; font-weight: bold; }
+        .desc { margin: 6px 0; }
+        .price { font-size: 16px; color: #333; }
+        button { padding: 6px 12px; }
+    </style>
+</head>
+
+<body>
+    <h1>Duck Shop</h1>
+
+    <div id="items"></div>
+
+    <script>
+        async function loadItems() {
+            const res = await fetch("/shop/items");
+            const data = await res.json();
+
+            const container = document.getElementById("items");
+            container.innerHTML = "";
+
+            data.forEach(item => {
+                const div = document.createElement("div");
+                div.className = "item";
+
+                div.innerHTML = `
+                    <div class="name">${item.name}</div>
+                    <div class="desc">${item.description}</div>
+                    <div class="price">Price: ${item.price} ducks</div>
+                    <button onclick="purchase(${item.id})">Buy</button>
+                `;
+
+                container.appendChild(div);
+            });
+        }
+
+        async function purchase(id) {
+            const res = await fetch(`/shop/purchase/${id}`, {
+                method: "POST"
+            });
+
+            const out = await res.json();
+            alert(JSON.stringify(out));
+
+            loadItems();
+        }
+
+        loadItems();
+    </script>
+</body>
+</html>
