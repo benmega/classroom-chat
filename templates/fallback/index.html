@@ -37,7 +37,8 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            min-height: 100vh;
+            padding: 20px;
         }
 
         /* Container Styling */
@@ -46,7 +47,7 @@
             border-radius: var(--border-radius-medium);
             box-shadow: var(--box-shadow-medium);
             padding: 40px;
-            width: 400px;
+            width: 450px;
             max-width: 90%;
             text-align: center;
             backdrop-filter: blur(10px);
@@ -132,6 +133,87 @@
             }
         }
 
+        /* Progress Bar Container */
+        #progress-container {
+            display: none;
+            margin-top: 30px;
+        }
+
+        #progress-container.active {
+            display: block;
+        }
+
+        #progress-bar-bg {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 20px;
+            height: 30px;
+            overflow: hidden;
+            position: relative;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        #progress-bar {
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color), var(--primary-color));
+            background-size: 200% 100%;
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s ease;
+            border-radius: 20px;
+            position: relative;
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        #progress-text {
+            margin-top: 10px;
+            font-size: 0.9em;
+            color: var(--text-color);
+            font-weight: 500;
+        }
+
+        #time-remaining {
+            font-size: 1.2em;
+            color: var(--secondary-color);
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        /* Fun Status Message */
+        #fun-status {
+            margin-top: 20px;
+            font-size: 1.1em;
+            color: var(--primary-color);
+            min-height: 30px;
+            font-style: italic;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Server Icon Animation */
+        #server-icon {
+            font-size: 4em;
+            margin: 20px 0;
+            display: none;
+        }
+
+        #server-icon.active {
+            display: block;
+            animation: bounce 1s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
         /* Status Message Styling */
         .status-success {
             color: #28a745;
@@ -175,17 +257,129 @@
 
         <button id="startServerButton">Launch Server Now</button>
         <p id="message"></p>
+
+        <div id="progress-container">
+            <div id="server-icon">🚀</div>
+            <div id="progress-bar-bg">
+                <div id="progress-bar"></div>
+            </div>
+            <div id="progress-text">Starting server...</div>
+            <div id="time-remaining"></div>
+            <div id="fun-status"></div>
+        </div>
     </div>
 
     <script>
         const API_URL = 'https://e5fsaweh7l.execute-api.ap-southeast-1.amazonaws.com/server-start';
         const button = document.getElementById('startServerButton');
         const message = document.getElementById('message');
+        const progressContainer = document.getElementById('progress-container');
+        const progressBar = document.getElementById('progress-bar');
+        const progressText = document.getElementById('progress-text');
+        const timeRemaining = document.getElementById('time-remaining');
+        const funStatus = document.getElementById('fun-status');
+        const serverIcon = document.getElementById('server-icon');
+
+        const TOTAL_TIME = 180; // 3 minutes in seconds
+
+        const funMessages = [
+            "🔌 Plugging in the cables...",
+            "🧹 Dusting off the servers...",
+            "☕ Making coffee for the CPU...",
+            "🔥 Warming up the processors...",
+            "📚 Loading the database dictionaries...",
+            "🎨 Painting the bits and bytes...",
+            "🎵 Teaching the server to sing...",
+            "🧠 Giving the AI a pep talk...",
+            "🚂 All aboard the data train!",
+            "🎯 Calibrating the laser precision...",
+            "🌟 Sprinkling magic server dust...",
+            "🔐 Unlocking the digital vaults...",
+            "🎪 Setting up the circus... I mean servers...",
+            "🧲 Magnetizing the hard drives...",
+            "🎭 Rehearsing the startup routine...",
+            "🍕 Feeding the hungry servers...",
+            "🎸 Tuning the network strings...",
+            "🏗️ Building virtual scaffolding...",
+            "🎨 Coloring inside the lines of code...",
+            "🚀 Initiating countdown sequence...",
+            "🌈 Adding rainbow optimizations...",
+            "🎯 Taking aim at perfection...",
+            "🔮 Consulting the tech oracle...",
+            "🎪 Juggling packets and bits...",
+            "🎬 Lights, camera, server action!",
+            "🧪 Mixing the perfect server potion...",
+            "📡 Beaming up the resources...",
+            "🎼 Composing the startup symphony...",
+            "🏃 Warming up for the race...",
+            "✨ Almost there! Final touches..."
+        ];
+
+        let currentMessageIndex = 0;
+        let progressInterval;
+        let messageInterval;
+        let startTime;
+
+        function updateFunMessage() {
+            funStatus.style.animation = 'none';
+            setTimeout(() => {
+                funStatus.textContent = funMessages[currentMessageIndex];
+                funStatus.style.animation = 'fadeIn 0.5s ease';
+                currentMessageIndex = (currentMessageIndex + 1) % funMessages.length;
+            }, 50);
+        }
+
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        function startProgress() {
+            startTime = Date.now();
+            const endTime = startTime + (TOTAL_TIME * 1000);
+
+            progressContainer.classList.add('active');
+            serverIcon.classList.add('active');
+            updateFunMessage();
+
+            // Update fun message every 6 seconds
+            messageInterval = setInterval(updateFunMessage, 6000);
+
+            // Update progress bar smoothly
+            progressInterval = setInterval(() => {
+                const now = Date.now();
+                const elapsed = (now - startTime) / 1000;
+                const remaining = Math.max(0, TOTAL_TIME - Math.floor(elapsed));
+                const progress = Math.min(100, (elapsed / TOTAL_TIME) * 100);
+
+                progressBar.style.width = progress + '%';
+                timeRemaining.textContent = `Time remaining: ${formatTime(remaining)}`;
+
+                // Update progress text at milestones
+                if (progress < 33) {
+                    progressText.textContent = 'Starting server...';
+                } else if (progress < 66) {
+                    progressText.textContent = 'Loading resources...';
+                } else if (progress < 100) {
+                    progressText.textContent = 'Almost ready...';
+                } else {
+                    progressText.textContent = 'Server ready! Refreshing...';
+                    clearInterval(progressInterval);
+                    clearInterval(messageInterval);
+
+                    // Refresh the page after completion with cache busting
+                    setTimeout(() => {
+                        window.location.href = window.location.href.split('?')[0] + '?t=' + Date.now();
+                    }, 1000);
+                }
+            }, 100);
+        }
 
         button.addEventListener('click', async () => {
             button.disabled = true;
             message.className = 'status-loading';
-            message.textContent = 'Attempting to launch server... please wait 1-2 minutes and refresh.';
+            message.textContent = 'Sending launch signal...';
 
             try {
                 const response = await fetch(API_URL, {
@@ -195,18 +389,21 @@
 
                 if (response.ok) {
                     message.className = 'status-success';
-                    message.textContent = 'Server launch signal sent successfully! It may take a minute or two to fully start. You can try refreshing the main site in a moment.';
+                    message.textContent = 'Server launch signal sent! Please wait while the server starts up...';
+
+                    // Start the 3-minute progress bar
+                    startProgress();
                 } else {
                     const errorBody = await response.text();
                     message.className = 'status-error';
                     message.textContent = `Launch failed (Status: ${response.status}). Details: ${errorBody}`;
+                    button.disabled = false;
                 }
 
             } catch (error) {
                 console.error('Fetch error:', error);
                 message.className = 'status-error';
                 message.textContent = 'An error occurred while connecting to the launch service.';
-            } finally {
                 button.disabled = false;
             }
         });
