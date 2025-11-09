@@ -2,62 +2,209 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>We’re Closed</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>We're Closed - Classroom Chat</title>
+
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap">
+
     <style>
+        /* CSS Variables */
+        :root {
+            --primary-color: #0EB2BB;
+            --primary-color-dark: #006666;
+            --secondary-color: #007BFF;
+            --secondary-color-dark: #004d4d;
+            --background-gradient: linear-gradient(135deg, #f5f5f5, #e0f7fa);
+            --highlight-color: #FFF455;
+            --highlight-hover: #FFC107;
+            --text-color: #333;
+            --border-color: #ccc;
+            --focus-border-color: #0EB2BB;
+            --font-family: 'Roboto', sans-serif;
+            --border-radius-small: 5px;
+            --border-radius-medium: 10px;
+            --box-shadow-medium: 0px 8px 20px rgba(0, 0, 0, 0.2);
+            --input-padding: 12px;
+            --button-padding: 12px 20px;
+            --transition-default: 0.3s ease;
+        }
+
+        /* Body Styling */
         body {
+            font-family: var(--font-family);
+            margin: 0;
+            background: var(--background-gradient);
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background-color: #f8f8f8;
-            color: #333;
+        }
+
+        /* Container Styling */
+        #server-container {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: var(--border-radius-medium);
+            box-shadow: var(--box-shadow-medium);
+            padding: 40px;
+            width: 400px;
+            max-width: 90%;
             text-align: center;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            transition: transform var(--transition-default);
         }
+
+        #server-container:hover {
+            transform: translateY(-10px);
+        }
+
+        /* Heading */
         h1 {
-            font-size: 3em;
+            color: var(--primary-color);
+            margin-bottom: 20px;
+            font-size: 2em;
         }
+
+        /* Paragraph Styling */
         p {
-            font-size: 1.2em;
+            color: var(--text-color);
+            font-size: 1.1em;
+            margin: 15px 0;
+            line-height: 1.6;
+        }
+
+        #message {
+            min-height: 24px;
+            font-weight: 500;
+            margin-top: 20px;
+        }
+
+        /* Button Styling */
+        button {
+            padding: var(--button-padding);
+            background-color: var(--secondary-color);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius-small);
+            font-size: 18px;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: background-color var(--transition-default), box-shadow var(--transition-default);
+            width: 100%;
+            margin-top: 20px;
+            font-weight: bold;
+        }
+
+        button:hover:not(:disabled) {
+            background-color: var(--secondary-color-dark);
+            box-shadow: 0 8px 15px rgba(0, 123, 255, 0.3);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        button:active:not(:disabled)::after {
+            content: "";
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 300%;
+            height: 300%;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
+            animation: rippleEffect 0.6s ease-out;
+        }
+
+        @keyframes rippleEffect {
+            0% {
+                width: 0;
+                height: 0;
+                opacity: 1;
+            }
+            100% {
+                width: 300%;
+                height: 300%;
+                opacity: 0;
+            }
+        }
+
+        /* Status Message Styling */
+        .status-success {
+            color: #28a745;
+        }
+
+        .status-error {
+            color: #dc3545;
+        }
+
+        .status-loading {
+            color: var(--secondary-color);
+        }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 600px) {
+            #server-container {
+                padding: 20px;
+                width: 100%;
+            }
+
+            h1 {
+                font-size: 1.5em;
+            }
+
+            button {
+                font-size: 16px;
+            }
+
+            p {
+                font-size: 1em;
+            }
         }
     </style>
 </head>
+
 <body>
-    <div>
-        <h1>We’re Closed</h1>
+    <div id="server-container">
+        <h1>We're Closed</h1>
         <p>Our website is currently unavailable. Please visit us during business hours.</p>
+        <p>You can launch the server manually using the button below.</p>
+
+        <button id="startServerButton">Launch Server Now</button>
+        <p id="message"></p>
     </div>
 
-    <button id="startServerButton">Launch Server Now</button>
-    <p id="message"></p>
-
     <script>
-        const API_URL = 'https://t3agimzfzd.execute-api.ap-southeast-1.amazonaws.com/prod/server-start';
+        const API_URL = 'https://e5fsaweh7l.execute-api.ap-southeast-1.amazonaws.com/server-start';
         const button = document.getElementById('startServerButton');
         const message = document.getElementById('message');
 
         button.addEventListener('click', async () => {
             button.disabled = true;
+            message.className = 'status-loading';
             message.textContent = 'Attempting to launch server... please wait 1-2 minutes and refresh.';
 
             try {
                 const response = await fetch(API_URL, {
-                    method: 'POST', // Use the method you configured (POST or GET)
+                    method: 'POST',
                     mode: 'cors'
                 });
 
                 if (response.ok) {
-                    // The API call was successful, even if the server was already running
+                    message.className = 'status-success';
                     message.textContent = 'Server launch signal sent successfully! It may take a minute or two to fully start. You can try refreshing the main site in a moment.';
                 } else {
-                    // Handle API error
                     const errorBody = await response.text();
+                    message.className = 'status-error';
                     message.textContent = `Launch failed (Status: ${response.status}). Details: ${errorBody}`;
                 }
 
             } catch (error) {
                 console.error('Fetch error:', error);
+                message.className = 'status-error';
                 message.textContent = 'An error occurred while connecting to the launch service.';
             } finally {
                 button.disabled = false;
