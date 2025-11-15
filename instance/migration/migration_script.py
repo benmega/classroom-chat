@@ -1,5 +1,5 @@
 import sqlite3
-
+# Updated 11.8.25
 DB_PATH = r"C:\Users\Ben\PycharmProjects\groupChat2\instance\dev_users.db"
 
 # Define all desired schema updates here
@@ -10,10 +10,9 @@ MIGRATIONS = {
         ("reviewed_at", "DATETIME", "NULL")
         # Add more columns here, e.g.:
         # ("approved_by", "TEXT", "NULL"),
-    ] # ,
-    # "another_table": [
-    #     # Example: ("created_at", "TEXT", "'2025-01-01'")
-    # ]
+    ] ,
+    "users": [("last_daily_duck", "DATETIME", "NULL")
+    ]
 }
 
 
