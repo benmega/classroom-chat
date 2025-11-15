@@ -1,5 +1,5 @@
 import sqlite3
-
+# Updated 11.8.25
 DB_PATH = r"C:\Users\Ben\PycharmProjects\groupChat2\instance\dev_users.db"
 
 # Required tables
@@ -29,6 +29,10 @@ MIGRATIONS = {
     "user_certificate": [
         ("reviewed", "INTEGER", 0),
         ("reviewed_at", "DATETIME", "NULL")
+        # Add more columns here, e.g.:
+        # ("approved_by", "TEXT", "NULL"),
+    ] ,
+    "users": [("last_daily_duck", "DATETIME", "NULL")
     ]
 }
 

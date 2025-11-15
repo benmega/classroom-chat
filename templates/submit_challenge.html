@@ -25,7 +25,12 @@
 
     <button type="submit" class="btn btn-primary mt-3">Submit</button>
 </form>
-
+<a href="javascript:(function(){const p=new URLSearchParams();p.append('url',window.location.href);p.append('helpers','');p.append('notes','');fetch('https://benmega.com/challenge/submit',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:p,credentials:'include'}).then(r=>r.text()).then(t=>alert(t)).catch(e=>alert('Error submitting challenge: '+e));})();"
+   title="Drag this to your bookmarks bar"
+   onclick="alert('To install, please drag this link to your bookmarks bar.'); return false;"
+   style="padding: 10px 15px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">
+    ➡️ Submit Challenge 🦆
+</a>
 <link rel="stylesheet" href="{{ url_for('static', filename='css/submit_challenge.css') }}">
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 

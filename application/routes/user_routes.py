@@ -67,6 +67,11 @@ def login():
             session.permanent = True  # Make the session permanent
             user.set_online(user.id)  # Mark the user as online
 
+            # Daily welcome duck
+            awarded = user.award_daily_duck(amount=1)
+            if awarded:
+                flash('Welcome duck awarded.', 'success')
+
             # Fetch the most recent conversation
             recent_conversation = (
                 Conversation.query
