@@ -1,5 +1,6 @@
 import json
 import uuid
+from datetime import date
 from io import BytesIO
 from unittest.mock import patch
 import pytest
@@ -601,3 +602,76 @@ def test_helper_functions_add_user_projects(init_db, sample_user):
 
     db.session.refresh(sample_user)
     assert len(sample_user.projects) == 2
+
+def test_login_awards_welcome_duck_first_time(client, init_db, sample_user):
+    sample_user.set_password('testpassword')
+    db.session.commit()
+
+    with client.session_transaction() as sess:
+        sess.clear()
+
+    response = client.post('/user/login', data={
+        'username': sample_user.username,
+        'password': 'testpassword'
+    }, follow_redirects=True)
+
+    db.session.refresh(sample_user)
+    assert response.status_code == 200
+    assert sample_user.earned_ducks >= 1
+    assert sample_user.duck_balance >= 1
+    assert sample_user.last_daily_duck == date.today()
+
+
+def test_login_welcome_duck_not_awarded_twice_same_day(client, init_db, sample_user):
+    sample_user.set_password('testpassword')
+    db.session.commit()
+
+    # First login
+    client.post('/user/login', data={
+        'username': sample_user.username,
+        'password': 'testpassword'
+    }, follow_redirects=True)
+
+    first_duck_count = sample_user.duck_balance
+
+    # Second login same day
+    with client.session_transaction() as sess:
+        sess.clear()
+
+    client.post('/user/login', data={
+        'username': sample_user.username,
+        'password': 'testpassword'
+    }, follow_redirects=True)
+
+    db.session.refresh(sample_user)
+    assert sample_user.duck_balance == first_duck_count
+
+
+def test_login_no_duck_on_failed_login(client, init_db, sample_user):
+    sample_user.set_password('correctpassword')
+    db.session.commit()
+
+    response = client.post('/user/login', data={
+        'username': sample_user.username,
+        'password': 'wrongpassword'
+    }, follow_redirects=True)
+
+    db.session.refresh(sample_user)
+    assert b'Invalid username or password' in response.data
+    assert sample_user.duck_balance == 0
+    assert sample_user.earned_ducks == 0
+    assert sample_user.last_daily_duck is None
+
+
+def test_daily_duck_updates_fields_correctly(init_db, sample_user):
+    sample_user.add_ducks(0)  # ensure clean
+    result = sample_user.award_daily_duck(amount=3)
+
+    assert result is True
+    assert sample_user.earned_ducks == 3
+    assert sample_user.duck_balance == 3
+    assert sample_user.last_daily_duck == date.today()
+
+    # Second call same day should not award
+    result2 = sample_user.award_daily_duck(amount=3)
+    assert result2 is False

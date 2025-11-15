@@ -1,6 +1,5 @@
-# TODO align ec2 db
-# TODO update earned_ducks to sum of user challenge rewards. (send challenge and challengelog tables)
-# TODO update packets to sum of user challenge rewards. / 128 (send challenge and challengelog tables)
+from datetime import date
+
 from sqlalchemy.ext.hybrid import hybrid_property
 
 from application.extensions import db
@@ -32,6 +31,8 @@ class User(db.Model):
     packets = db.Column(db.Double, nullable=False, default=0)
     earned_ducks = db.Column(db.Double, nullable=False, default=0)
     duck_balance = db.Column(db.Double, nullable=False, default=0)
+    last_daily_duck = db.Column(db.Date, nullable=True)
+
 
 
     # Relationships
@@ -133,3 +134,12 @@ class User(db.Model):
         self.packets += amount / (2**14)
         self.duck_balance += amount
         db.session.commit()
+
+    def award_daily_duck(self, amount=1):
+        today = date.today()
+        if self.last_daily_duck != today:
+            self.add_ducks(amount)
+            self.last_daily_duck = today
+            db.session.commit()
+            return True
+        return False
