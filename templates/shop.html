@@ -3,7 +3,6 @@
 {% block content %}
 <div class="container mt-4">
     <h1 class="mb-4">Duck Shop</h1>
-
     <div id="items" class="row">
         </div>
 </div>
@@ -12,76 +11,109 @@
     .item {
         border: 1px solid #ccc;
         padding: 12px;
-        border-radius: 8px; /* Added for a slightly modern look */
+        border-radius: 8px;
         background-color: #fff;
         height: 100%;
-        display: flex; /* Using flex to help with alignment */
+        display: flex;
         flex-direction: column;
     }
     .name { font-size: 18px; font-weight: bold; }
-    .desc { 
+    .desc {
         margin: 6px 0;
-        flex-grow: 1; /* Makes description fill available space */
+        flex-grow: 1;
     }
     .price { font-size: 16px; color: #333; }
-    
-    /* The button will be styled by Bootstrap's .btn class */
     .item button {
-        margin-top: auto; /* Pushes the button to the bottom */
+        margin-top: auto;
     }
 </style>
 
 <script>
+    // --- (createItemElement function is unchanged) ---
+    function createItemElement(item) {
+        const col = document.createElement("div");
+        col.className = "col-12 col-md-6 mb-4";
+        col.innerHTML = `
+            <div class="item">
+                <div class="name">${item.name}</div>
+                <div class="desc">${item.description}</div>
+                <div class="price">Price: ${item.price} ducks</div>
+                <button onclick="purchase(${item.id}, '${item.name}')" class="btn btn-primary w-100">Buy</button>
+            </div>
+        `;
+        return col;
+    }
+
     async function loadItems() {
         const res = await fetch("/shop/items");
-        const data = await res.json();
+        const data = await res.json(); // Data has keys: 'automated', 'custom_info', 'physical'
 
         const container = document.getElementById("items");
         container.innerHTML = "";
 
-        data.forEach(item => {
-            // Create a wrapper div that will act as the Bootstrap column.
-            // - 'col-12': 100% width on extra-small screens (stacked)
-            // - 'col-md-6': 50% width on medium screens and up (2 columns)
-            // - 'mb-4': Margin-bottom for spacing
-            const col = document.createElement("div");
-            col.className = "col-12 col-md-6 mb-4";
+        // --- FIX 1: Changed keys to lowercase ---
+        const groupTitles = {
+            automated: "💎 Instant Perks",
+            custom_info: "🎨 Custom Orders",
+            physical: "📦 Physical Goods & Rentals"
+        };
 
-            // Your original item content is placed inside this column wrapper.
-            // I've added 'btn btn-primary' to the button to use Bootstrap styles.
-            col.innerHTML = `
-                <div class="item">
-                    <div class="name">${item.name}</div>
-                    <div class="desc">${item.description}</div>
-                    <div class="price">Price: ${item.price} ducks</div>
-                    <button onclick="purchase(${item.id})" class="btn btn-primary w-100">Buy</button>
-                </div>
-            `;
+        // --- FIX 2: Changed keys to lowercase ---
+        const groupOrder = ['automated', 'custom_info', 'physical'];
 
-            container.appendChild(col);
-        });
+        for (const key of groupOrder) {
+            // This will now correctly find data['automated'], etc.
+            const items = data[key];
+
+            if (items && items.length > 0) {
+                const titleEl = document.createElement('h2');
+                titleEl.className = 'col-12 mt-3 mb-3';
+                titleEl.textContent = groupTitles[key] || key;
+                container.appendChild(titleEl);
+
+                items.forEach(item => {
+                    const itemEl = createItemElement(item);
+                    container.appendChild(itemEl);
+                });
+            }
+        }
     }
 
-    async function purchase(id) {
+    // --- (purchase function is unchanged) ---
+    async function purchase(id, name) {
+        const message = `Are you sure you want to buy ${name}?`;
+        if (!window.confirm(message)) {
+            return;
+        }
+
         const res = await fetch(`/shop/purchase/${id}`, {
             method: "POST"
         });
 
         const out = await res.json();
-        
-        // This will now trigger the Bootstrap toast messages from base.html
-        // We just need to reload the page to see the flash message.
-        // A more advanced way would be to create a toast dynamically,
-        // but a reload is simplest for now.
-        location.reload(); 
-        
-        // You could also just reload the items if you don't
-        // want the whole page to flash:
-        // loadItems();
-        // alert(JSON.stringify(out)); // This would show the old alert
+
+        if (!res.ok) {
+            alert(out.error || "An unknown error occurred.");
+            return;
+        }
+
+        alert(`Success! Purchased ${out.item} for ${out.price_paid} ducks.`);
+
+        if (out.fulfillment_type === 'custom_info') {
+            alert("You will now be redirected to provide custom details for your order.");
+            window.location.href = `/shop/provide-info/${id}`;
+
+        } else if (out.fulfillment_type === 'automated') {
+            location.reload();
+
+        } else if (out.fulfillment_type === 'physical') {
+            alert("Your order has been placed. Please see an admin to pick up your item.");
+            loadItems();
+        } else {
+            location.reload();
+        }
     }
 
-    // Load items when the page loads
     loadItems();
 </script>
 
