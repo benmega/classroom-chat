@@ -3,13 +3,15 @@ import sqlite3
 DB_PATH = r"C:\Users\Ben\PycharmProjects\groupChat2\instance\dev_users.db"
 
 # Required tables
+# Required tables
 REQUIRED_TABLES = {
     "store_items": """
         CREATE TABLE store_items (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL UNIQUE,
             base_price REAL NOT NULL,
-            description TEXT NOT NULL
+            description TEXT NOT NULL,
+            fulfillment_type TEXT NOT NULL DEFAULT 'physical'
 ***REMOVED***;
     """,
     "user_item_purchases": """
@@ -23,7 +25,6 @@ REQUIRED_TABLES = {
 ***REMOVED***;
     """
 }
-
 # Column migrations
 MIGRATIONS = {
     "user_certificate": [
@@ -37,32 +38,39 @@ MIGRATIONS = {
 }
 
 # Seed data
+# Assuming this script can import the enum from your models
+from application.models.store_item import FulfillmentType
+
+# Seed data
+# (name, description, base_price, fulfillment_type)
 STORE_SEED = [
     ("Custom Print (Random Color)",
      "A token redeemable for one small, pre-approved 3D model printed in the filament currently loaded.",
-     2),
+     2,
+     FulfillmentType.CUSTOM_INFO), # Requires user to specify a model
     ("Custom Print (Chosen Color)",
      "A token redeemable for one small, pre-approved 3D model in a student-chosen available filament color.",
-     3),
-    ("AA Battery", "A fresh pair of AA batteries.", 50),
-    ("AAA Battery", "A fresh pair of AAA batteries.", 50),
-    ("Type C Charger Rental", "A 1-period loan of a USB-C laptop charger.", 1),
-    ("Mouse Rental", "A 1-period loan of an ergonomic or gaming mouse.", 1),
-    ("Debug Assistance", "A 10-minute 1:1 debugging session.", 1),
-    ("Double_Ducks_Day", "A special day where everyone gets a rubber duck.", 500),
-    ("Computer_Cleanup", "Teacher performs full desktop cleanup and optimization.", 2),
-    ("Custom_Wallpaper", "Student chooses a custom desktop wallpaper.", 200),
-    ("Chat_Font", "Temporary custom font in editor or chat for one class.", 100),
-    ("Teacher's Chair", "Use the teacher's ergonomic chair for the period.", 500),
-    ("New Duck Color", "A new 3D-printed debug duck color or design.", 500),
-    ("Skip-a-Level", "Skip one CodeCombat or Ozaria level after a real attempt.", 10),
-    ("Flexible Seating Pass", "Work anywhere in the room for one period.", 20),
-    ("Bathroom Break", "Free restroom pass. Max two per session.", 5),
-    ("Headphones Rental", "A 1-period loan of headphones.", 1),
-    ("DJ_for_15_Mins", "Choose school-appropriate music for 15 minutes.", 20),
-    ("First_To_Leave_Pass", "Dismiss 90 seconds before the bell.", 10),
-    ("Positive_Shout_Out", "Teacher gives a formal positive shout-out.", 5),
-    ("Auto_Challenge_Claimer", "Bookmarklet for claiming CodeCombat/Ozaria levels.", 10),
+     3,
+     FulfillmentType.CUSTOM_INFO), # Requires user to specify model + color
+    ("AA Battery", "A fresh pair of AA batteries.", 50, FulfillmentType.PHYSICAL),
+    ("AAA Battery", "A fresh pair of AAA batteries.", 50, FulfillmentType.PHYSICAL),
+    ("Type C Charger Rental", "A 1-period loan of a USB-C laptop charger.", 1, FulfillmentType.PHYSICAL),
+    ("Mouse Rental", "A 1-period loan of an ergonomic or gaming mouse.", 1, FulfillmentType.PHYSICAL),
+    ("Debug Assistance", "A simple bug fix.", 1, FulfillmentType.PHYSICAL), # Manual admin action
+    ("Double_Ducks_Day", "A special day where everyone gets a double ducks!", 500, FulfillmentType.AUTOMATED),
+    ("Computer_Cleanup", "Teacher performs full desktop cleanup at the end of class.", 2, FulfillmentType.PHYSICAL),
+    ("Custom_Wallpaper", "Choose a custom desktop wallpaper.", 200, FulfillmentType.AUTOMATED), # System grants perk
+    ("Chat_Font", "Custom font in chat.", 100, FulfillmentType.AUTOMATED), # System grants perk
+    ("Teacher's Chair", "Sit in Mr. Mega's chair for the period.", 500, FulfillmentType.PHYSICAL),
+    ("New Duck Color", "A new 3D-printed duck color of your choice!", 500, FulfillmentType.CUSTOM_INFO), # Requires info
+    ("Skip-a-Level", "Skip one CodeCombat or Ozaria level.", 20, FulfillmentType.PHYSICAL), # Manual redemption
+    ("Flexible Seating Pass", "Work anywhere in the room (except Mr. Mega's area) for one period.", 20, FulfillmentType.PHYSICAL),
+    ("Bathroom Break", "Free restroom pass. Max one per student per class.", 5, FulfillmentType.PHYSICAL),
+    ("Headphones Rental", "A 1-period loan of headphones.", 1, FulfillmentType.PHYSICAL),
+    ("DJ_for_15_Mins", "Choose school-appropriate music for 15 minutes.", 20, FulfillmentType.PHYSICAL),
+    ("First_To_Leave_Pass", "No one will leave before you. First come, first serve.", 10, FulfillmentType.PHYSICAL),
+    ("Positive_Shout_Out", "Teacher gives a formal positive shout-out.", 5, FulfillmentType.PHYSICAL),
+    ("Auto_Challenge_Claimer", "Bookmarklet for claiming CodeCombat/Ozaria levels.", 10, FulfillmentType.AUTOMATED) # System grants item
 ]
 
 
@@ -115,9 +123,19 @@ def run_migrations():
 
     # 2. Seed store_items if empty
     if table_exists(conn, "store_items") and table_empty(conn, "store_items"):
+
+        # --- FIX #2 ---
+        # Convert enum objects to their string .value for the database
+        processed_seed = [
+            (name, desc, price, f_type.value)
+            for name, desc, price, f_type in STORE_SEED
+        ]
+
+        # --- FIX #1 ---
+        # Added the 4th placeholder for fulfillment_type
         cursor.executemany(
-            "INSERT INTO store_items (name, description, base_price) VALUES (?, ?, ?);",
-            STORE_SEED
+            "INSERT INTO store_items (name, description, base_price, fulfillment_type) VALUES (?, ?, ?, ?);",
+            processed_seed  # Use the new processed list
 ***REMOVED***
         conn.commit()
         print("Seeded store_items table")
