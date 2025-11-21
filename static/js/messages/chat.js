@@ -1,5 +1,5 @@
 // chat.js
-export function initChat(username) {
+export async function initChat(username) {
     const form = document.getElementById('messageForm');
     const messageInput = document.getElementById('message');
 
