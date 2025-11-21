@@ -20,3 +20,8 @@ def get_local_ip():
 @server_info.route("/ip", methods=["GET"])
 def get_ip():
     return jsonify({"ip": get_local_ip()})
+
+@server_info.route('/health')
+def health_check():
+    # Returns 200 OK and a specific string for Route 53 to find
+    return "SystemHealthy", 200
