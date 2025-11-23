@@ -3,7 +3,7 @@
 from flask import Blueprint, jsonify
 import socket
 
-from application import limiter
+from application.extensions import limiter
 
 server_info = Blueprint("server_info", __name__, url_prefix="/server")
 
