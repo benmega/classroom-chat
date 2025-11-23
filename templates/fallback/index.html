@@ -3,204 +3,111 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>We're Closed - Classroom Chat</title>
+    <title>Classroom Chat is Sleeping</title>
 
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&display=swap" rel="stylesheet"/>
 
     <style>
-        /* CSS Variables */
         :root {
             --primary-color: #0EB2BB;
-            --primary-color-dark: #006666;
             --secondary-color: #007BFF;
-            --secondary-color-dark: #004d4d;
-            --background-gradient: linear-gradient(135deg, #f5f5f5, #e0f7fa);
-            --highlight-color: #FFF455;
-            --highlight-hover: #FFC107;
-            --text-color: #333;
-            --border-color: #ccc;
-            --focus-border-color: #0EB2BB;
-            --font-family: 'Roboto', sans-serif;
-            --border-radius-small: 5px;
-            --border-radius-medium: 10px;
-            --box-shadow-medium: 0px 8px 20px rgba(0, 0, 0, 0.2);
-            --input-padding: 12px;
-            --button-padding: 12px 20px;
-            --transition-default: 0.3s ease;
+            --text-color: #2e2e2e;
+            --highlight: #FFF455;
+            --font: 'Nunito', sans-serif;
         }
 
-        /* Body Styling */
         body {
-            font-family: var(--font-family);
             margin: 0;
-            background: var(--background-gradient);
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            font-family: var(--font);
+            background: linear-gradient(135deg, #f6f8fc, #e0f7fa);
             min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
             padding: 20px;
-        }
-
-        /* Container Styling */
-        #server-container {
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: var(--border-radius-medium);
-            box-shadow: var(--box-shadow-medium);
-            padding: 40px;
-            width: 450px;
-            max-width: 90%;
             text-align: center;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            transition: transform var(--transition-default);
         }
 
-        #server-container:hover {
-            transform: translateY(-10px);
-        }
-
-        /* Heading */
-        h1 {
-            color: var(--primary-color);
-            margin-bottom: 20px;
-            font-size: 2em;
-        }
-
-        /* Paragraph Styling */
-        p {
-            color: var(--text-color);
-            font-size: 1.1em;
-            margin: 15px 0;
-            line-height: 1.6;
-        }
-
-        #message {
-            min-height: 24px;
-            font-weight: 500;
-            margin-top: 20px;
-        }
-
-        /* Button Styling */
-        button {
-            padding: var(--button-padding);
-            background-color: var(--secondary-color);
-            color: white;
-            border: none;
-            border-radius: var(--border-radius-small);
-            font-size: 18px;
-            cursor: pointer;
-            position: relative;
-            overflow: hidden;
-            transition: background-color var(--transition-default), box-shadow var(--transition-default);
+        .main-container {
+            max-width: 580px;
             width: 100%;
-            margin-top: 20px;
-            font-weight: bold;
+        }
+
+        img.duck {
+            width: 200px;
+            height: auto;
+            margin-bottom: 20px;
+            filter: drop-shadow(0 4px 12px rgba(0,0,0,0.1));
+        }
+
+        h1 {
+            font-size: 2.8rem;
+            color: var(--primary-color);
+            font-weight: 800;
+            margin: 0 0 16px 0;
+            line-height: 1.2;
+        }
+
+        .subtitle {
+            font-size: 1.3rem;
+            color: var(--text-color);
+            margin: 0 0 32px 0;
+            opacity: 0.85;
+            font-weight: 400;
+        }
+
+        button {
+            padding: 18px 48px;
+            margin: 0;
+            border: none;
+            font-size: 1.4rem;
+            font-weight: 700;
+            border-radius: 12px;
+            cursor: pointer;
+            color: white;
+            background: linear-gradient(135deg, var(--secondary-color), #0056b3);
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 20px rgba(0, 123, 255, 0.3);
+            width: 100%;
+            max-width: 400px;
         }
 
         button:hover:not(:disabled) {
-            background-color: var(--secondary-color-dark);
-            box-shadow: 0 8px 15px rgba(0, 123, 255, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 28px rgba(0, 123, 255, 0.4);
+        }
+
+        button:active:not(:disabled) {
+            transform: translateY(0);
         }
 
         button:disabled {
-            opacity: 0.6;
+            opacity: 0.5;
             cursor: not-allowed;
+            box-shadow: none;
         }
 
-        button:active:not(:disabled)::after {
-            content: "";
-            position: absolute;
-            left: 50%;
-            top: 50%;
-            transform: translate(-50%, -50%);
-            width: 300%;
-            height: 300%;
-            background: rgba(255, 255, 255, 0.5);
-            border-radius: 50%;
-            animation: rippleEffect 0.6s ease-out;
+        #message {
+            margin-top: 20px;
+            min-height: 28px;
+            font-size: 1.2rem;
+            font-weight: 600;
         }
 
-        @keyframes rippleEffect {
-            0% {
-                width: 0;
-                height: 0;
-                opacity: 1;
-            }
-            100% {
-                width: 300%;
-                height: 300%;
-                opacity: 0;
-            }
-        }
-
-        /* Progress Bar Container */
         #progress-container {
+            margin-top: 40px;
+            width: 100%;
             display: none;
-            margin-top: 30px;
         }
 
         #progress-container.active {
             display: block;
         }
 
-        #progress-bar-bg {
-            background: rgba(255, 255, 255, 0.3);
-            border-radius: 20px;
-            height: 30px;
-            overflow: hidden;
-            position: relative;
-            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-
-        #progress-bar {
-            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color), var(--primary-color));
-            background-size: 200% 100%;
-            height: 100%;
-            width: 0%;
-            transition: width 0.3s ease;
-            border-radius: 20px;
-            position: relative;
-            animation: shimmer 2s infinite;
-        }
-
-        @keyframes shimmer {
-            0% { background-position: 200% 0; }
-            100% { background-position: -200% 0; }
-        }
-
-        #progress-text {
-            margin-top: 10px;
-            font-size: 0.9em;
-            color: var(--text-color);
-            font-weight: 500;
-        }
-
-        #time-remaining {
-            font-size: 1.2em;
-            color: var(--secondary-color);
-            font-weight: bold;
-            margin-top: 10px;
-        }
-
-        /* Fun Status Message */
-        #fun-status {
-            margin-top: 20px;
-            font-size: 1.1em;
-            color: var(--primary-color);
-            min-height: 30px;
-            font-style: italic;
-            animation: fadeIn 0.5s ease;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        /* Server Icon Animation */
         #server-icon {
-            font-size: 4em;
-            margin: 20px 0;
+            font-size: 5rem;
+            margin-bottom: 24px;
             display: none;
         }
 
@@ -210,61 +117,111 @@
         }
 
         @keyframes bounce {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-20px); }
+            0%, 100% {transform: translateY(0);}
+            50% {transform: translateY(-20px);}
         }
 
-        /* Status Message Styling */
-        .status-success {
-            color: #28a745;
+        #progress-bar-bg {
+            background: rgba(0, 0, 0, 0.08);
+            border-radius: 24px;
+            height: 40px;
+            overflow: hidden;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
         }
 
-        .status-error {
-            color: #dc3545;
+        #progress-bar {
+            height: 100%;
+            width: 0%;
+            border-radius: 24px;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color), var(--primary-color));
+            background-size: 200% 100%;
+            animation: shimmer 2s infinite;
+            transition: width 0.3s ease;
         }
 
-        .status-loading {
+        @keyframes shimmer {
+            0% {background-position: 200% 0;}
+            100% {background-position: -200% 0;}
+        }
+
+        #time-remaining {
+            margin-top: 16px;
+            font-size: 2rem;
+            font-weight: 800;
             color: var(--secondary-color);
         }
 
-        /* Mobile Responsiveness */
+        #progress-text {
+            margin-top: 12px;
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--text-color);
+            opacity: 0.8;
+        }
+
+        #fun-status {
+            margin-top: 20px;
+            font-size: 1.35rem;
+            font-style: italic;
+            min-height: 32px;
+            color: var(--primary-color);
+            animation: fadeIn 0.5s ease;
+            font-weight: 600;
+        }
+
+        @keyframes fadeIn {
+            from {opacity: 0; transform: translateY(-5px);}
+            to {opacity: 1; transform: translateY(0);}
+        }
+
+        .status-success {color: #28a745;}
+        .status-error {color: #dc3545;}
+        .status-loading {color: var(--secondary-color);}
+
         @media (max-width: 600px) {
-            #server-container {
-                padding: 20px;
-                width: 100%;
+            img.duck {
+                width: 160px;
             }
 
             h1 {
-                font-size: 1.5em;
+                font-size: 2.2rem;
+            }
+
+            .subtitle {
+                font-size: 1.1rem;
             }
 
             button {
-                font-size: 16px;
+                font-size: 1.2rem;
+                padding: 16px 40px;
             }
 
-            p {
-                font-size: 1em;
+            #time-remaining {
+                font-size: 1.6rem;
             }
         }
     </style>
 </head>
 
 <body>
-    <div id="server-container">
-        <h1>We're Closed</h1>
-        <p>Our website is currently unavailable. Please visit us during business hours.</p>
-        <p>You can launch the server manually using the button below.</p>
+    <div class="main-container">
+        <img class="duck" src="sleeping_duck.gif" alt="Sleeping Duck">
 
-        <button id="startServerButton">Launch Server Now</button>
-        <p id="message"></p>
+        <h1>Classroom Chat is Sleeping</h1>
+
+        <p class="subtitle">Wake it up so students can chat and earn ducks!</p>
+
+        <button id="startServerButton">Wake Up the Classroom Chat</button>
+
+        <div id="message"></div>
 
         <div id="progress-container">
             <div id="server-icon">🚀</div>
             <div id="progress-bar-bg">
                 <div id="progress-bar"></div>
             </div>
-            <div id="progress-text">Starting server...</div>
             <div id="time-remaining"></div>
+            <div id="progress-text">Starting up...</div>
             <div id="fun-status"></div>
         </div>
     </div>
@@ -280,39 +237,22 @@
         const funStatus = document.getElementById('fun-status');
         const serverIcon = document.getElementById('server-icon');
 
-        const TOTAL_TIME = 300; // 5 minutes in seconds
+        const TOTAL_TIME = 300;
 
         const funMessages = [
-            "🔌 Plugging in the cables...",
-            "🧹 Dusting off the servers...",
-            "☕ Making coffee for the CPU...",
-            "🔥 Warming up the processors...",
-            "📚 Loading the database dictionaries...",
-            "🎨 Painting the bits and bytes...",
-            "🎵 Teaching the server to sing...",
-            "🧠 Giving the AI a pep talk...",
-            "🚂 All aboard the data train!",
-            "🎯 Calibrating the laser precision...",
-            "🌟 Sprinkling magic server dust...",
-            "🔐 Unlocking the digital vaults...",
-            "🎪 Setting up the circus... I mean servers...",
-            "🧲 Magnetizing the hard drives...",
-            "🎭 Rehearsing the startup routine...",
-            "🍕 Feeding the hungry servers...",
-            "🎸 Tuning the network strings...",
-            "🏗️ Building virtual scaffolding...",
-            "🎨 Coloring inside the lines of code...",
-            "🚀 Initiating countdown sequence...",
-            "🌈 Adding rainbow optimizations...",
-            "🎯 Taking aim at perfection...",
-            "🔮 Consulting the tech oracle...",
-            "🎪 Juggling packets and bits...",
-            "🎬 Lights, camera, server action!",
-            "🧪 Mixing the perfect server potion...",
-            "📡 Beaming up the resources...",
-            "🎼 Composing the startup symphony...",
-            "🏃 Warming up for the race...",
-            "✨ Almost there! Final touches..."
+            "Plugging in the duck's night light...",
+            "Sharpening virtual pencils...",
+            "Feeding ducks before launch...",
+            "Waking up the sleepy servers...",
+            "Tidying the digital classroom...",
+            "Reviewing yesterday's duck points...",
+            "Loading student high fives...",
+            "Fluffing the duck's pillow...",
+            "Booting the chat desks...",
+            "Rolling out the welcome mat...",
+            "Packing the data lunchboxes...",
+            "Straightening the code bulletin board...",
+            "Almost ready. The duck is stretching!"
         ];
 
         let currentMessageIndex = 0;
@@ -329,55 +269,39 @@
             }, 50);
         }
 
-        function formatTime(seconds) {
-            const mins = Math.floor(seconds / 60);
-            const secs = seconds % 60;
-            return `${mins}:${secs.toString().padStart(2, '0')}`;
+        function formatTime(sec) {
+            const m = Math.floor(sec / 60);
+            const s = sec % 60;
+            return `${m}:${s.toString().padStart(2,'0')}`;
         }
 
         function startProgress() {
             startTime = Date.now();
-            const endTime = startTime + (TOTAL_TIME * 1000);
-
             progressContainer.classList.add('active');
             serverIcon.classList.add('active');
             updateFunMessage();
 
-            // Update fun message every 6 seconds
             messageInterval = setInterval(updateFunMessage, 6000);
 
-            // Update progress bar smoothly
             progressInterval = setInterval(() => {
-                const now = Date.now();
-                const elapsed = (now - startTime) / 1000;
+                const elapsed = (Date.now() - startTime) / 1000;
                 const remaining = Math.max(0, TOTAL_TIME - Math.floor(elapsed));
-                const progress = Math.min(100, (elapsed / TOTAL_TIME) * 100);
+                const pct = Math.min(100, (elapsed / TOTAL_TIME) * 100);
 
-                progressBar.style.width = progress + '%';
-                timeRemaining.textContent = `Time remaining: ${formatTime(remaining)}`;
+                progressBar.style.width = pct + '%';
+                timeRemaining.textContent = formatTime(remaining);
 
-                // Update progress text at milestones
-                if (progress < 33) {
-                    progressText.textContent = 'Starting server...';
-                } else if (progress < 66) {
-                    progressText.textContent = 'Loading resources...';
-                } else if (progress < 100) {
-                    progressText.textContent = 'Almost ready...';
-                } else {
-                    progressText.textContent = 'Server ready! Refreshing...';
+                if (pct < 33) progressText.textContent = 'Warming up...';
+                else if (pct < 66) progressText.textContent = 'Loading resources...';
+                else if (pct < 100) progressText.textContent = 'Almost ready...';
+                else {
+                    progressText.textContent = 'Ready. Refreshing...';
                     clearInterval(progressInterval);
                     clearInterval(messageInterval);
 
-                    // Hard refresh to bypass cache completely
                     setTimeout(() => {
-                        // Force cache clear with multiple techniques
-                        if (window.performance && window.performance.navigation.type === 1) {
-                            window.location.reload(true); // Hard reload
-                        } else {
-                            // Use replace with cache-busting timestamp
-                            const url = window.location.href.split('?')[0];
-                            window.location.replace(url + '?nocache=' + Date.now());
-                        }
+                        const base = window.location.href.split('?')[0];
+                        window.location.replace(base + '?nocache=' + Date.now());
                     }, 1000);
                 }
             }, 100);
@@ -386,31 +310,22 @@
         button.addEventListener('click', async () => {
             button.disabled = true;
             message.className = 'status-loading';
-            message.textContent = 'Sending launch signal...';
+            message.textContent = 'Sending wake up signal...';
 
             try {
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    mode: 'cors'
-                });
-
-                if (response.ok) {
+                const resp = await fetch(API_URL, {method: 'POST', mode: 'cors'});
+                if (resp.ok) {
                     message.className = 'status-success';
-                    message.textContent = 'Server launch signal sent! Please wait while the server starts up...';
-
-                    // Start the 3-minute progress bar
+                    message.textContent = 'Wake up signal sent. Classroom Chat is starting...';
                     startProgress();
                 } else {
-                    const errorBody = await response.text();
                     message.className = 'status-error';
-                    message.textContent = `Launch failed (Status: ${response.status}). Details: ${errorBody}`;
+                    message.textContent = 'Unable to wake the server. Try again soon.';
                     button.disabled = false;
                 }
-
-            } catch (error) {
-                console.error('Fetch error:', error);
+            } catch {
                 message.className = 'status-error';
-                message.textContent = 'An error occurred while connecting to the launch service.';
+                message.textContent = 'Network error while sending the wake up signal.';
                 button.disabled = false;
             }
         });
