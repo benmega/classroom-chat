@@ -34,6 +34,11 @@
             width: 100%;
         }
 
+        /* NEW: hide on start */
+        #sleep-section.hidden {
+            display: none;
+        }
+
         img.duck {
             width: 200px;
             height: auto;
@@ -179,41 +184,25 @@
         .status-loading {color: var(--secondary-color);}
 
         @media (max-width: 600px) {
-            img.duck {
-                width: 160px;
-            }
-
-            h1 {
-                font-size: 2.2rem;
-            }
-
-            .subtitle {
-                font-size: 1.1rem;
-            }
-
-            button {
-                font-size: 1.2rem;
-                padding: 16px 40px;
-            }
-
-            #time-remaining {
-                font-size: 1.6rem;
-            }
+            img.duck {width: 160px;}
+            h1 {font-size: 2.2rem;}
+            .subtitle {font-size: 1.1rem;}
+            button {font-size: 1.2rem; padding: 16px 40px;}
+            #time-remaining {font-size: 1.6rem;}
         }
     </style>
 </head>
 
 <body>
     <div class="main-container">
-        <img class="duck" src="sleeping_duck.gif" alt="Sleeping Duck">
 
-        <h1>Classroom Chat is Sleeping</h1>
-
-        <p class="subtitle">Wake it up so students can chat and earn ducks!</p>
-
-        <button id="startServerButton">Wake Up the Classroom Chat</button>
-
-        <div id="message"></div>
+        <img class="duck" src="/sleeping_duck.gif" alt="Sleeping Duck">
+        <div id="sleep-section">
+            <h1>Classroom Chat is Sleeping</h1>
+            <p class="subtitle">Wake it up so students can chat and earn ducks!</p>
+            <button id="startServerButton">Wake Up the Classroom Chat</button>
+            <div id="message"></div>
+        </div>
 
         <div id="progress-container">
             <div id="server-icon">🚀</div>
@@ -228,6 +217,8 @@
 
     <script>
         const API_URL = 'https://e5fsaweh7l.execute-api.ap-southeast-1.amazonaws.com/server-start';
+
+        const sleepSection = document.getElementById('sleep-section');
         const button = document.getElementById('startServerButton');
         const message = document.getElementById('message');
         const progressContainer = document.getElementById('progress-container');
@@ -296,8 +287,8 @@
             startTime = Date.now();
             progressContainer.classList.add('active');
             serverIcon.classList.add('active');
-            updateFunMessage();
 
+            updateFunMessage();
             messageInterval = setInterval(updateFunMessage, 6000);
 
             progressInterval = setInterval(() => {
@@ -325,6 +316,8 @@
         }
 
         button.addEventListener('click', async () => {
+            sleepSection.classList.add('hidden');  /* NEW: hide instantly */
+
             button.disabled = true;
             message.className = 'status-loading';
             message.textContent = 'Sending wake up signal...';
@@ -336,11 +329,13 @@
                     message.textContent = 'Wake up signal sent. Classroom Chat is starting...';
                     startProgress();
                 } else {
+                    sleepSection.classList.remove('hidden');
                     message.className = 'status-error';
                     message.textContent = 'Unable to wake the server. Try again soon.';
                     button.disabled = false;
                 }
             } catch {
+                sleepSection.classList.remove('hidden');
                 message.className = 'status-error';
                 message.textContent = 'Network error while sending the wake up signal.';
                 button.disabled = false;
