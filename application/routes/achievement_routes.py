@@ -50,11 +50,6 @@ def achievements_page():
 @achievements.route("/add", methods=["GET", "POST"])
 @local_only
 def add_achievement():
-    # user_id = session.get('user')
-    # current_user = User.query.filter_by(id=user_id).first()
-    # if not current_user:
-    #     return jsonify({'success': False, 'error': 'User not found!'}), 404
-
     if request.method == "POST":
         name = request.form.get("name")
         slug = request.form.get("slug")
@@ -78,49 +73,59 @@ def add_achievement():
     return render_template("admin/add_achievement.html")
 
 
-
-
 @achievements.route("/submit_certificate", methods=["GET", "POST"])
 def submit_certificate():
     user_id = session.get("user")
     current_user = User.query.filter_by(id=user_id).first()
     if not current_user:
+        # Check if AJAX request
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify({"success": False, "error": "User not found!"}), 400
         return jsonify({"success": False, "error": "User not found!"}), 400
 
     message, success = None, False
 
     if request.method == "POST":
+        is_xhr = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
         url = request.form.get("certificate_url")
         file = request.files.get("certificate_file")
 
-        # check URL
+        # 1. Check URL
         match = re.search(CERT_URL_REGEX, url or "")
         if not match:
-            return render_template("submit_certificate.html", message="Invalid certificate URL.", success=False)
+            msg = "Invalid certificate URL."
+            if is_xhr: return jsonify({"success": False, "error": msg})
+            return render_template("submit_certificate.html", message=msg, success=False)
 
         course_slug = match.group(1)
         achievement = Achievement.query.filter_by(slug=course_slug).first()
         if not achievement:
-            return render_template("submit_certificate.html", message="No matching achievement found for this course.", success=False)
+            msg = "No matching achievement found for this course."
+            if is_xhr: return jsonify({"success": False, "error": msg})
+            return render_template("submit_certificate.html", message=msg, success=False)
 
-        # file validation
+        # 2. File validation
         if not file or file.filename == "":
-            return render_template("submit_certificate.html", message="Certificate file is required.", success=False)
+            msg = "Certificate file is required."
+            if is_xhr: return jsonify({"success": False, "error": msg})
+            return render_template("submit_certificate.html", message=msg, success=False)
 
         if not allowed_file(file.filename):
-            return render_template("submit_certificate.html", message="Invalid file type. Only PDF is allowed.", success=False)
+            msg = "Invalid file type. Only PDF is allowed."
+            if is_xhr: return jsonify({"success": False, "error": msg})
+            return render_template("submit_certificate.html", message=msg, success=False)
 
-        # save file
+        # 3. Save file
         os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-
         filename = secure_filename(f"{current_user.username}_{achievement.slug}.pdf")
         filepath = os.path.join(UPLOAD_FOLDER, filename)
         file.save(filepath)
 
-        # create or update cert entry
+        # 4. Create or update cert entry
         cert = UserCertificate.query.filter_by(
             user_id=current_user.id, achievement_id=achievement.id
         ).first()
+
         if not cert:
             cert = UserCertificate(
                 user_id=current_user.id,
@@ -135,10 +140,73 @@ def submit_certificate():
 
         db.session.commit()
 
-        # success message
-        message, success = "Certificate submitted successfully.", True
+        # Success return
+        if is_xhr:
+            return jsonify({"success": True, "message": "Certificate submitted successfully."})
 
-    return render_template("submit_certificate.html", message=message, success=success)
+        return render_template("submit_certificate.html", message="Certificate submitted successfully.", success=True)
+
+    return render_template("submit_certificate.html")
+#
+# @achievements.route("/submit_certificate", methods=["GET", "POST"])
+# def submit_certificate():
+#     user_id = session.get("user")
+#     current_user = User.query.filter_by(id=user_id).first()
+#     if not current_user:
+#         return jsonify({"success": False, "error": "User not found!"}), 400
+#
+#     message, success = None, False
+#
+#     if request.method == "POST":
+#         url = request.form.get("certificate_url")
+#         file = request.files.get("certificate_file")
+#
+#         # check URL
+#         match = re.search(CERT_URL_REGEX, url or "")
+#         if not match:
+#             return render_template("submit_certificate.html", message="Invalid certificate URL.", success=False)
+#
+#         course_slug = match.group(1)
+#         achievement = Achievement.query.filter_by(slug=course_slug).first()
+#         if not achievement:
+#             return render_template("submit_certificate.html", message="No matching achievement found for this course.", success=False)
+#
+#         # file validation
+#         if not file or file.filename == "":
+#             return render_template("submit_certificate.html", message="Certificate file is required.", success=False)
+#
+#         if not allowed_file(file.filename):
+#             return render_template("submit_certificate.html", message="Invalid file type. Only PDF is allowed.", success=False)
+#
+#         # save file
+#         os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+#
+#         filename = secure_filename(f"{current_user.username}_{achievement.slug}.pdf")
+#         filepath = os.path.join(UPLOAD_FOLDER, filename)
+#         file.save(filepath)
+#
+#         # create or update cert entry
+#         cert = UserCertificate.query.filter_by(
+#             user_id=current_user.id, achievement_id=achievement.id
+#         ).first()
+#         if not cert:
+#             cert = UserCertificate(
+#                 user_id=current_user.id,
+#                 achievement_id=achievement.id,
+#                 url=url,
+#                 file_path=filepath,
+#             )
+#             db.session.add(cert)
+#         else:
+#             cert.url = url
+#             cert.file_path = filepath
+#
+#         db.session.commit()
+#
+#         # success message
+#         message, success = "Certificate submitted successfully.", True
+#
+#     return render_template("submit_certificate.html", message=message, success=success)
 
 
 from flask import send_from_directory

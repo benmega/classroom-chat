@@ -46,6 +46,16 @@ def test_app():
 def client(test_app):
     return test_app.test_client()
 
+@pytest.fixture
+def logged_in_client(client, sample_user):
+    """A Flask test client that is logged in as sample_user."""
+    with client.session_transaction() as sess:
+        sess['user'] = sample_user.id
+    return client
+
+
+
+
 
 @pytest.fixture
 def init_db(test_app):
@@ -160,6 +170,12 @@ def sample_admin(init_db):
     db.session.commit()
     return admin_user
 
+@pytest.fixture
+def logged_in_admin(client, sample_user):
+    """A Flask test client that is logged in as sample_user."""
+    with client.session_transaction() as sess:
+        sess['user'] = sample_user.id  # Use ID for correctness
+    return client
 
 @pytest.fixture
 def sample_challenge_log(init_db):
@@ -309,22 +325,6 @@ def sample_image_data():
     image_data = base64.b64encode(img_io.read()).decode('utf-8')
     return f"data:image/png;base64,{image_data}"
 
-
-#
-# @pytest.fixture
-# def sample_trade(test_app, sample_user_with_ducks):
-#     with test_app.app_context():
-#         trade = Trade(
-#             user_id=sample_user_with_ducks.id,
-#             digital_ducks=10,
-#             duck_type='bit',
-#             status='pending'
-#         )
-#         db.session.add(trade)
-#         db.session.commit()
-#         yield trade
-#         db.session.delete(trade)
-#         db.session.commit()
 
 @pytest.fixture
 def auth_headers(sample_admin):
