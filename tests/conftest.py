@@ -36,6 +36,10 @@ def setup_directories():
 @pytest.fixture(scope='session')
 def test_app():
     app = create_app(TestingConfig)
+    app.config.update({
+        "TESTING": True,
+        "WTF_CSRF_ENABLED": False
+    })
     with app.app_context():
         db.create_all()
         yield app

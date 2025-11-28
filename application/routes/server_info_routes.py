@@ -1,5 +1,3 @@
-# server_info_routes.py
-
 from flask import Blueprint, jsonify
 import socket
 
@@ -26,5 +24,4 @@ def get_ip():
 @server_info.route('/health')
 @limiter.exempt
 def health_check():
-    # Returns 200 OK and a specific string for Route 53 to find
     return "SystemHealthy", 200

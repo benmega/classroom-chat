@@ -1,5 +1,4 @@
-// messageHandling.js
-const updateInterval = 2000; // Update conversation every 2 seconds
+const updateInterval = 2000;
 
 export function setupMessagingAndConversation() {
     messageForm.addEventListener('submit', function(e) {
@@ -26,7 +25,7 @@ function startHeartbeat() {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
         }).catch(err => console.error('Heartbeat failed:', err));
-    }, 15000); // every 15s
+    }, 15000);
 }
 
 
@@ -55,8 +54,6 @@ export function sendMessage() {
         .catch(handleError);
 }
 
-// --- Update conversation helpers ---
-
 function fetchCurrentConversation() {
     return fetch('message/get_current_conversation')
         .then(response => {
@@ -68,8 +65,6 @@ function fetchCurrentConversation() {
 }
 
 function updateChatUI(conversationData) {
-//    console.log(conversationData);
-
     const chatDiv = document.getElementById('chat');
     if (!chatDiv) {
         console.error('Chat div not found');
@@ -87,17 +82,14 @@ function updateChatUI(conversationData) {
 }
 
 function formatMessage(username, profilePicFilename, message) {
-    // Replace line breaks with <br>
     message = message.replace(/\n/g, '<br>');
 
-    // Detect and wrap URLs
     const urlRegex = /(https?:\/\/[^\s<]+)|(\bwww\.[^\s<]+(?:\.[^\s<]+)+\b)/g;
     const formattedMessage = message.replace(urlRegex, url => {
         const href = url.startsWith('http') ? url : 'http://' + url;
         return `<a href="${href}" target="_blank">${url}</a>`;
     });
 
-    // Profile picture fallback
     const profilePicUrl = `/user/profile_pictures/${profilePicFilename || 'Default_pfp.jpg'}`;
 
     const isSelf = username === getUsername();
@@ -189,8 +181,6 @@ function clearMessageInput() {
     document.getElementById('message').value = '';
 }
 
-// --- Image upload helpers ---
-
 export function uploadFile() {
     const file = getImageFile();
 
@@ -242,7 +232,6 @@ function handleUploadResponse(data) {
     }
 }
 
-// --- SweetAlert2 wrapper ---
 function showAlert(message, icon = 'info') {
     Swal.fire({
         title: 'Mr. Mega says',

@@ -25,12 +25,7 @@ adminUsername = Config.ADMIN_USERNAME
 @admin.before_request
 @limiter.limit("5 per second, 50 per minute")
 def before_user_request():
-    # This function is just used for the decorator that handles the rate limiting logic.
     pass
-
-# --------------------------
-# Authentication Decorators
-# --------------------------
 
 def local_only(f):
     @wraps(f)
@@ -50,13 +45,8 @@ def check_auth(f):
 
     return authenticate_and_execute
 
-
-# --------------------------
-# Utility Functions
-# --------------------------
-
 def update_username(new_username, user_id=None, user_ip=None):
-    if user_id:  # ID takes priority
+    if user_id:
         user = User.query.get(user_id)
     elif user_ip:
         user = User.query.filter_by(ip_address=user_ip).first()
@@ -73,10 +63,8 @@ def get_duck_transactions_data():
     """Generate chart data for duck transactions over the past 7 days"""
     end_date = datetime.now()
 
-    # Create date labels (last 7 days)
     labels = [(end_date - timedelta(days=i)).strftime('%a') for i in range(6, -1, -1)]
 
-    # Calculate ducks earned and spent per day
     earned = []
     spent = []
 
@@ -85,7 +73,6 @@ def get_duck_transactions_data():
         day_start = datetime(day.year, day.month, day.day, 0, 0, 0)
         day_end = datetime(day.year, day.month, day.day, 23, 59, 59)
 
-        # Ducks earned from challenges
         day_earned = db.session.query(
             func.coalesce(func.sum(Challenge.value), 0)
 ***REMOVED***.select_from(ChallengeLog).join(
@@ -94,7 +81,6 @@ def get_duck_transactions_data():
             ChallengeLog.timestamp.between(day_start, day_end)
 ***REMOVED***.scalar() or 0
 
-        # Ducks spent in trades
         day_spent = db.session.query(
             func.coalesce(func.sum(DuckTradeLog.digital_ducks), 0)
 ***REMOVED***.filter(
@@ -112,12 +98,6 @@ def get_duck_transactions_data():
     }
 
 
-# --------------------------
-# Dashboard Routes
-# --------------------------
-
-
-
 @admin.route('/')
 @local_only
 def base():
@@ -129,7 +109,6 @@ def base():
 def dashboard():
     total_ducks = db.session.query(func.sum(User.duck_balance)).scalar() or 0
 
-    # Calculate ducks earned today using actual challenge completions
     today = datetime.now().date()
     ducks_earned_today = db.session.query(
         func.coalesce(func.sum(Challenge.value), 0)
@@ -147,7 +126,6 @@ def dashboard():
     config = Configuration.query.first()
     banned_words = BannedWords.query.all()
 
-    # Get chart data
     chart_data = get_duck_transactions_data()
 
     return render_template('admin/admin.html',
@@ -166,11 +144,6 @@ def dashboard():
 def duck_transactions_data():
     chart_data = get_duck_transactions_data()
     return jsonify(chart_data)
-
-
-# --------------------------
-# User Management Routes
-# --------------------------
 
 @admin.route('/users', methods=['GET'])
 @local_only
@@ -259,14 +232,12 @@ def reset_password():
 def create_user():
     username = request.form.get('username', '').strip().lower()
     password = request.form.get('password', '')
-    ducks    = request.form.get('ducks', type=int)
+    ducks = request.form.get('ducks', type=int)
 
-    # server‑side validation
     if not username or not password or ducks is None or ducks < 0:
         return jsonify(success=False,
                        message="Username, password, and non‑negative ducks required"), 400
 
-    # 3–30 chars, lowercase letters, numbers, underscores
     if not re.fullmatch(r'[a-z0-9_]{3,30}', username):
         return jsonify(success=False,
                        message="Username must be 3–30 chars: lowercase letters, numbers, or underscores only"), 400
@@ -306,24 +277,17 @@ def remove_user():
         print(f"Error deleting user '{username}': {e}")
         return jsonify(success=False, message="Internal server error"), 500
 
-# --------------------------
-# System Configuration Routes
-# --------------------------
-
 @admin.route('/toggle-ai', methods=['POST'])
 @local_only
 def toggle_ai():
     config = Configuration.query.first()
     if config is None:
-        # If no configuration exists, create a default and save it
         config = Configuration(ai_teacher_enabled=False)
         db.session.add(config)
 
-    # Toggle the AI teacher setting
     config.ai_teacher_enabled = not config.ai_teacher_enabled
     db.session.commit()
 
-    # Return JSON response for the frontend
     return jsonify({
         'success': True,
         'message': f"AI Teacher has been {'disabled' if config.ai_teacher_enabled else 'enabled'}",
@@ -334,19 +298,15 @@ def toggle_ai():
 @admin.route('/toggle-message-sending', methods=['POST'])
 @local_only
 def toggle_message_sending():
-    # Retrieve the first configuration entry from the database
     config = Configuration.query.first()
 
     if config is None:
-        # If no configuration exists, initialize with default message sending disabled
         config = Configuration(message_sending_enabled=False)
         db.session.add(config)
     else:
-        # Toggle the message sending setting
         config.message_sending_enabled = not config.message_sending_enabled
     db.session.commit()
 
-    # Return JSON response for the frontend
     return jsonify({
         'success': True,
         'message': f"Message sending has been {'disabled' if config.message_sending_enabled else 'enabled'}",
@@ -358,7 +318,6 @@ def toggle_message_sending():
 @local_only
 def clear_partial_history():
     try:
-        # Example: Clear only conversations older than 30 days
         cutoff_date = datetime.utcnow() - timedelta(days=30)
         conversations_to_delete = Conversation.query.filter(Conversation.created_at < cutoff_date)
         count = conversations_to_delete.count()
@@ -377,16 +336,11 @@ def clear_partial_history():
             'message': "Failed to clear partial history"
         }), 500
 
-
-# --------------------------
-# Content Moderation Routes
-# --------------------------
-
 @admin.route('/add-banned-word', methods=['POST'])
 @local_only
 def add_banned_word():
     word = request.form.get('word')
-    reason = request.form.get('reason', None)  # Optional field
+    reason = request.form.get('reason', None)
 
     if not word:
         return jsonify({'success': False, 'message': 'Word cannot be empty'}), 400
@@ -419,11 +373,6 @@ def strike_message(message_id):
         db.session.rollback()
         print(f"Error striking message: {e}")
         return jsonify(success=False, error="An error occurred while striking the message"), 500
-
-
-# --------------------------
-# Trade Management Routes
-# --------------------------
 
 @admin.route('/pending_trades', methods=['GET'])
 @local_only
@@ -484,7 +433,7 @@ def update_duck_multiplier():
     except (ValueError, TypeError):
         return jsonify({'success': False, 'error': 'Invalid multiplier value'}), 400
     except Exception as e:
-        db.session.rollback() # Rollback in case of other errors
+        db.session.rollback()
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
@@ -516,9 +465,6 @@ def adjust_ducks():
         }), 404
 
 
-# --------------------------
-# Document Management Routes
-# --------------------------
 @admin.route('/documents-manager')
 @local_only
 def documents_manager():
@@ -529,8 +475,7 @@ def documents_manager():
 def list_documents():
     """List all uploaded documents across all categories"""
     documents = []
-    # Fix: userData is at project root, not in application folder
-    base_path = os.path.join(os.path.dirname(os.path.dirname(__file__)),'..', 'userData')
+    base_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), '..', 'userData')
 
     categories = ['image', 'pdf', 'other']
 
@@ -551,7 +496,6 @@ def list_documents():
                         'modified': datetime.fromtimestamp(file_stats.st_mtime).isoformat()
                     })
 
-    # Sort by creation time (newest first)
     documents.sort(key=lambda x: x['created'], reverse=True)
 
     return jsonify({
@@ -568,14 +512,12 @@ def download_document(category, filename):
     if category not in ['image', 'pdf', 'other']:
         return jsonify({'success': False, 'message': 'Invalid category'}), 400
 
-    # Fix: userData is at project root
-    base_path = os.path.join(os.path.dirname(os.path.dirname(__file__)),'..', 'userData')
+    base_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), '..', 'userData')
     file_path = os.path.join(base_path, category, filename)
 
     if not os.path.exists(file_path):
         return jsonify({'success': False, 'message': 'File not found'}), 404
 
-    # Security check: ensure the path is within userData directory
     abs_file_path = os.path.abspath(file_path)
     abs_user_data = os.path.abspath(base_path)
     if not abs_file_path.startswith(abs_user_data):
@@ -591,15 +533,12 @@ def view_document(category, filename):
     if category not in ['image', 'pdf', 'other']:
         return jsonify({'success': False, 'message': 'Invalid category'}), 400
 
-    # Fix: userData is at project root
     base_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), '..', 'userData')
     file_path = os.path.join(base_path, category, filename)
 
     if not os.path.exists(file_path):
-        print(file_path)
         return jsonify({'success': False, 'message': 'File not found'}), 404
 
-    # Security check: ensure the path is within userData directory
     abs_file_path = os.path.abspath(file_path)
     abs_user_data = os.path.abspath(base_path)
     if not abs_file_path.startswith(abs_user_data):
@@ -621,14 +560,12 @@ def delete_document():
     if category not in ['image', 'pdf', 'other']:
         return jsonify({'success': False, 'message': 'Invalid category'}), 400
 
-    # Fix: userData is at project root
-    base_path = os.path.join(os.path.dirname(os.path.dirname(__file__)),'..', 'userData')
+    base_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), '..', 'userData')
     file_path = os.path.join(base_path, category, filename)
 
     if not os.path.exists(file_path):
         return jsonify({'success': False, 'message': 'File not found'}), 404
 
-    # Security check: ensure the path is within userData directory
     abs_file_path = os.path.abspath(file_path)
     abs_user_data = os.path.abspath(base_path)
     if not abs_file_path.startswith(abs_user_data):
@@ -656,8 +593,7 @@ def document_stats():
         'by_category': {}
     }
 
-    # Fix: userData is at project root
-    base_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), '..','userData')
+    base_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), '..', 'userData')
     categories = ['image', 'pdf', 'other']
 
     for category in categories:
@@ -686,7 +622,6 @@ def document_stats():
     return jsonify({'success': True, 'stats': stats})
 
 
-# Helper function for formatting file sizes
 def format_file_size(size_bytes):
     """Format file size in human-readable format"""
     for unit in ['B', 'KB', 'MB', 'GB', 'TB']:

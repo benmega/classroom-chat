@@ -54,25 +54,21 @@ def get_user_id():
 def login():
     form = LoginForm()
 
-    if form.validate_on_submit():  # Automatically handles CSRF
+    if form.validate_on_submit():
         username = form.username.data
         password = form.password.data
 
-        # Find the user by username
         user = User.query.filter_by(username=username).first()
 
-        # Validate credentials
         if user and user.check_password(password):
             session['user'] = user.id
-            session.permanent = True  # Make the session permanent
-            user.set_online(user.id)  # Mark the user as online
+            session.permanent = True
+            user.set_online(user.id)
 
-            # Daily welcome duck
             awarded = user.award_daily_duck(amount=1)
             if awarded:
                 flash('Welcome duck awarded.', 'success')
 
-            # Fetch the most recent conversation
             recent_conversation = (
                 Conversation.query
                 .order_by(Conversation.created_at.desc())
@@ -80,14 +76,13 @@ def login():
     ***REMOVED***
 
             if recent_conversation:
-                # Add the user to the conversation if not already a participant
                 if user not in recent_conversation.users:
                     recent_conversation.users.append(user)
                     db.session.commit()
 
                 session['conversation_id'] = recent_conversation.id
             else:
-                session['conversation_id'] = None  # Or handle new conversation creation
+                session['conversation_id'] = None
 
 
             flash('Login successful!', 'success')
@@ -107,7 +102,6 @@ def logout():
         user.set_online(user.id, False)
         db.session.commit()
 
-    # Clear the session
     session.pop('user', None)
 
     flash('You have been logged out.', 'success')
@@ -120,24 +114,20 @@ def signup():
         username = request.form.get('username')
         password = request.form.get('password')
 
-        # Check if the username already exists
         existing_user = User.query.filter_by(username=username).first()
         if existing_user:
             flash('Username already taken, please choose another.', 'error')
             return render_template('auth/signup.html')
 
-        # Create a new user with the hashed password
         new_user = User(username=username, ip_address=request.remote_addr)
         new_user.set_password(password)
 
-        # Save the new user to the database
         db.session.add(new_user)
         db.session.commit()
 
         flash('Signup successful! Please log in.', 'success')
         return redirect(url_for('user.login'))
 
-    # Render the signup page on GET request
     return render_template('auth/signup.html')
 
 
@@ -182,7 +172,7 @@ def edit_profile():
             flash('Profile updated successfully!', 'success')
             return redirect(url_for('user.profile'))
         except Exception as e:
-            db.session.rollback()  # Roll back any changes on error
+            db.session.rollback()
             print(f"Error during profile update: {e}")
             flash('An error occurred while updating the profile.', 'danger')
 

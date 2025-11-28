@@ -1,5 +1,3 @@
-# challenge_routes.py
-# Blueprint: Handles challenge submissions separate from chat
 import re
 from datetime import datetime
 
@@ -12,7 +10,6 @@ from application.models.challenge import Challenge
 from application.models.challenge_log import ChallengeLog
 from application.utilities.db_helpers import get_user
 from application.models.user import User
-# from application.utilities.validation_helpers import detect_and_handle_challenge_url
 
 challenge = Blueprint("challenge", __name__, url_prefix="/challenge")
 
@@ -24,7 +21,6 @@ challenge = Blueprint("challenge", __name__, url_prefix="/challenge")
 ], supports_credentials=True)
 def submit_challenge():
     """Handle challenge submission form."""
-    # Validate session
     session_userid = session.get("user", None)
     if not session_userid:
         flash("No session user found", "error")
@@ -40,11 +36,9 @@ def submit_challenge():
         flash("Configuration missing", "error")
         return redirect(url_for("general.index"))
 
-    # Handle GET request
     if request.method != "POST":
         return render_template("submit_challenge.html")
 
-    # Handle POST request
     url = request.form.get("url")
     helper = request.form.get("helpers", "").strip()
     notes = request.form.get("notes", "").strip()
@@ -54,17 +48,14 @@ def submit_challenge():
                                success=False,
                                message="Challenge URL is required")
 
-    # Process challenge URL
     duck_multiplier = config.duck_multiplier
     challenge_check = detect_and_handle_challenge_url(
         url, user.username, duck_multiplier, helper
     )
 
-    # Process notes if provided
     if notes:
         print(f"{user.nickname} said: {notes}")
 
-    # Handle successful challenge submission
     if challenge_check.get("handled") and challenge_check["details"].get("success"):
         db.session.commit()
         duck_reward = challenge_check["details"].get("duck_reward", 0)
@@ -75,16 +66,11 @@ def submit_challenge():
             message=f"Congrats {user.username}, you earned {duck_reward} ducks!",
 ***REMOVED***
 
-    # Handle failed challenge submission
     msg = challenge_check.get("details", {}).get(
         "message", "Challenge could not be validated"
     )
     return render_template("submit_challenge.html", success=False, message=msg)
 
-
-# ============================================================================
-# CHALLENGE URL HANDLING
-# ============================================================================
 
 URL_PATTERN = (
     r"https://(?P<domain>[\w\.-]+)"
@@ -93,22 +79,6 @@ URL_PATTERN = (
     r"(?:(?:\?|&)(?:.*&)?course-instance=(?P<course_instance>[\w-]+))?"
     r"|/s/(?P<slug>[\w-]+)/lessons/(?P<lesson_id>\d+)/levels/(?P<level_id>\d+))"
 )
-
-# URL_PATTERN = (
-#     r"https://(?P[\w\.-]+)"
-#     r"(?:/play/level/(?P[\w-]+)"
-#     r"(?:\?(?:.*&)?course=(?P[\w-]+))?"
-#     r"(?:(?:\?|&)(?:.*&)?course-instance=(?P[\w-]+))?"
-#     r"|/s/(?P[\w-]+)/lessons/(?P\d+)/levels/(?P\d+))"
-# )
-
-# URL_PATTERN = (
-#     r"https://(?P<domain>[\w\.-]+)"
-#     r"(?:/play/level/(?P<challenge_name>[\w-]+)"
-#     r"(?:\?.*?&course=(?P<course_id>\w+))?"
-#     r"(?:&course-instance=(?P<course_instance>\w+))?"
-#     r"|/s/(?P<course_slug>[\w-]+)/lessons/(?P<lesson_id>\d+)/levels/(?P<level_id>\d+))"
-# )
 
 
 def detect_and_handle_challenge_url(message, username, duck_multiplier=1, helper=None):
@@ -135,7 +105,6 @@ def detect_and_handle_challenge_url(message, username, duck_multiplier=1, helper
     if not log_result.get("success"):
         return {"handled": True, "details": log_result}
 
-    # Update user ducks if logging was successful
     try:
         duck_reward = _update_user_ducks(username, match["challenge_name"], duck_multiplier)
         log_result["duck_reward"] = duck_reward
@@ -181,12 +150,10 @@ def _log_challenge(details, username, helper=None):
     Returns:
         dict: Result with success status and message
     """
-    # Patch to catch students attempting to help themselves
     if helper == username:
         helper = ""
 
     try:
-        # Check if challenge was already claimed
         existing_log = ChallengeLog.query.filter_by(
             username=username,
             domain=details["domain"],
@@ -201,7 +168,6 @@ def _log_challenge(details, username, helper=None):
                 "timestamp": existing_log.timestamp
             }
 
-        # Create new challenge log
         challenge_log = ChallengeLog(
             username=username,
             domain=details["domain"],
@@ -253,7 +219,6 @@ def _update_user_ducks(username, challenge_name, duck_multiplier=1):
         if not challenge:
             raise ValueError(f"Challenge '{challenge_name}' not found in the database")
 
-        # Calculate duck reward
         duck_reward = challenge.value * duck_multiplier
 
         if duck_multiplier > 1:
@@ -265,7 +230,7 @@ def _update_user_ducks(username, challenge_name, duck_multiplier=1):
         return duck_reward
 
     except ValueError:
-        raise  # Re-raise specific errors for higher-level handling
+        raise
     except Exception as e:
         db.session.rollback()
         raise RuntimeError(f"Error updating user ducks: {e}")

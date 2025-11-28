@@ -1,4 +1,3 @@
-// chat.js
 export function initChat(username) {
     const form = document.getElementById('messageForm');
     const messageInput = document.getElementById('message');
@@ -23,7 +22,6 @@ export function initChat(username) {
         const message = messageInput.value.trim();
         if (!message) return;
         messageInput.value = '';
-        // TODO: emit via socket or fetch API
         console.log(`[Send] ${username}: ${message}`);
     });
 }

@@ -3,7 +3,6 @@
 {% block title %}Admin Dashboard{% endblock %}
 
 {% block content %}
-    <!-- Stats Overview Section -->
     <div class="stats-overview">
         <div class="stat-card">
             <div class="stat-icon">
@@ -206,7 +205,6 @@
         </div>
     </div>
 
-    <!-- Pass URLs as data attributes to the JavaScript -->
     <script>
         window.urls = {
             toggleAiUrl: "{{ url_for('admin.toggle_ai') }}",

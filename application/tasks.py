@@ -4,7 +4,6 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-# Store the app instance globally for the scheduler
 _app_instance = None
 
 
@@ -13,7 +12,7 @@ def set_app_instance(app):
     _app_instance = app
 
 
-@scheduler.task('interval', id='session_cleanup', minutes=1)  # Changed to 1 minute for better performance
+@scheduler.task('interval', id='session_cleanup', minutes=1)
 def scheduled_cleanup():
     try:
         logger.info("Starting scheduled session cleanup")
