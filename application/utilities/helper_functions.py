@@ -2,7 +2,6 @@ from application.config import Config
 
 
 def request_database_commit():
-    # from application.config import Config
     from application import db
     """
     Attempts to commit changes to the database session.
@@ -15,7 +14,7 @@ def request_database_commit():
         return True
     except Exception as e:
         db.session.rollback()
-        print(f"Database error during commit: {e}")  # Optionally log the exception
+        print(f"Database error during commit: {e}")
         return False
 
 def allowed_file(filename):

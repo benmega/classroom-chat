@@ -10,7 +10,6 @@ from wtforms.validators import DataRequired, NumberRange
 from application import db
 from application.models.duck_trade import DuckTradeLog
 
-# Define the blueprint
 duck_trade = Blueprint('duck_trade', __name__, template_folder='templates')
 logging.basicConfig(level=logging.INFO)
 
@@ -19,25 +18,24 @@ logging.basicConfig(level=logging.INFO)
 class BitDuckForm(FlaskForm):
     """Sub-form for Bit Ducks selection."""
     bit_ducks = FieldList(IntegerField('Bit Duck Count',
-                                       default=0,  # Ensure a default value is set
+                                       default=0,
                                        validators=[NumberRange(min=0, message="Count must be non-negative")]),
-                          min_entries=7,  # 7 Bit Ducks for 2^0 to 2^6
+                          min_entries=7,
                           max_entries=7)
 
 
 class ByteDuckForm(FlaskForm):
     """Sub-form for Byte Ducks selection."""
     byte_ducks = FieldList(IntegerField('Byte Duck Count',
-                                        default=0,  # Ensure a default value is set
+                                        default=0,
                                         validators=[NumberRange(min=0, message="Count must be non-negative")]),
-                           min_entries=7,  # 7 Byte Ducks for 2^7 to 2^13
+                           min_entries=7,
                            max_entries=7)
 
 
 
 class DuckTradeForm(FlaskForm):
     """Main form for duck trading."""
-    # hidden_tag = HiddenField()
     digital_ducks = IntegerField('Digital Ducks',
                                  validators=[DataRequired(),
                                              NumberRange(min=1, message="Must trade at least 1 duck")])
@@ -61,7 +59,6 @@ def submit_trade():
     form = DuckTradeForm()
     is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"
 
-    # 1. Validate Form
     if not form.validate_on_submit():
         error_msg = "Error: Check your inputs."
         if is_ajax:
@@ -70,7 +67,6 @@ def submit_trade():
         return redirect(url_for('duck_trade.index'))
 
     try:
-        # 2. Auth Check
         userid = session.get('user')
         if not userid:
             msg = "You must be logged in."
@@ -81,17 +77,13 @@ def submit_trade():
         from application import User
         user = User.query.get(userid)
 
-        # 3. FIX: Safely get data from either JSON or Form
         if is_ajax and request.is_json:
             data = request.get_json()
             d_ducks = int(data.get("digital_ducks", 0))
-            # Assuming JS formats these lists for you
             bit_ducks = data.get("bit_ducks", [])
             byte_ducks = data.get("byte_ducks", [])
         else:
-            # Handle standard HTML form keys (duck_0, duck_1...)
             d_ducks = form.digital_ducks.data
-            # You would need logic here to map duck_0..6 to lists if not using JS
             bit_ducks = []
             byte_ducks = []
 

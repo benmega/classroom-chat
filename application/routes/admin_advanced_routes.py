@@ -1,6 +1,3 @@
-# application/routes/admin_advanced_routes.py
-# Custom Advanced Admin setup with secure access and CSS support
-
 from flask import request, redirect
 from flask_admin import Admin, AdminIndexView, expose
 from flask_admin.contrib.sqla import ModelView
@@ -26,7 +23,6 @@ class AdvancedIndex(AdminIndexView):
     """Custom landing page for advanced admin - renders in admin_base.html"""
     @expose('/')
     def index(self):
-        # Get all registered model views
         model_views = [v for v in self.admin._views if isinstance(v, ModelView)]
         return self.render('admin/advanced_panel.html', views=model_views)
 
@@ -38,10 +34,9 @@ def init_admin(app):
         name="Advanced Admin",
         index_view=AdvancedIndex(url='/admin/advanced', endpoint='admin_advanced'),
         template_mode='bootstrap4',  # Flask-Admin needs a template mode
-        base_template='admin/admin_base.html',  # Use your base template
+        base_template='admin/admin_base.html',
     )
 
-    # Auto-register all SQLAlchemy models
     for mapper in db.Model.registry.mappers:
         model = mapper.class_
         admin.add_view(

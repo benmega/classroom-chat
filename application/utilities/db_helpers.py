@@ -32,7 +32,6 @@ def get_user(identifier):
 
         return user
     except Exception as e:
-        # Log the error if necessary
         abort(500, description=f"An error occurred: {str(e)}")
 
 
@@ -50,29 +49,24 @@ def save_message_to_db(user_id, message, message_type="text"):
               or error details if applicable.
     """
     try:
-        # Retrieve the conversation ID from the session
         conversation_id = session.get('conversation_id')
 
-        # If no active conversation exists, create a new one
         if not conversation_id:
             print("No active conversation found. Creating a new one.")
             conversation = Conversation(
                 title=f"Conversation started by User {user_id} at {datetime.utcnow()}",
             )
             db.session.add(conversation)
-            db.session.commit()  # Generate an ID for the new conversation
+            db.session.commit()
 
-            # Store the new conversation ID in the session
             session['conversation_id'] = conversation.id
             print(f"New conversation created with ID: {conversation.id}")
         else:
-            # Fetch the existing conversation from the database
             conversation = Conversation.query.get(conversation_id)
             if not conversation:
                 print("Error: Active conversation not found in the database.")
                 return {"success": False, "error": "Active conversation not found."}
 
-        # Save the new message
         new_message = Message(
             user_id=user_id,
             conversation_id=conversation.id,

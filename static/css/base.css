@@ -1,21 +1,19 @@
-/* General body styles */
 body {
     font-family: var(--font-family);
     margin: 0;
-    background: var(--background-gradient); /* Same gradient as login */
+    background: var(--background-gradient);
     display: flex;
     flex-direction: column;
     align-items: stretch;
     justify-content: flex-start;
     height: 100vh;
-    padding-top: 0; /* Removed padding-top to eliminate gap */
+    padding-top: 0;
 }
 
 h2 {
     text-align: center;
 }
 
-/* Header Styles */
 header {
     display: flex;
     justify-content: space-between;
@@ -27,19 +25,17 @@ header {
     position: sticky;
     top: 0;
     z-index: 10;
-    width: 100%; /* Ensures header spans the entire width */
-    box-sizing: border-box; /* Ensures padding doesn't affect width */
+    width: 100%;
+    box-sizing: border-box;
 }
 
-/* Logo container */
 #logo-container {
     display: flex;
     align-items: center;
 }
 
-/* Logo image */
 #logo-container .logo img {
-    width: 60px; /* Adjust size as needed */
+    width: 60px;
     height: auto;
     display: block;
     object-fit: contain;
@@ -47,11 +43,8 @@ header {
 }
 
 #logo-container .logo img:hover {
-    transform: scale(1.05); /* subtle hover effect */
+    transform: scale(1.05);
 }
-
-
-/* Navigation menu */
 
 .logo{
     text-decoration: none;
