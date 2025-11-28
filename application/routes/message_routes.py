@@ -3,13 +3,11 @@ from flask import Blueprint, request, jsonify, session, flash, redirect, url_for
 from application.models.banned_words import BannedWords
 from application.models.conversation import Conversation, conversation_users
 from application.utilities.db_helpers import get_user, save_message_to_db
-# from application.utilities.validation_helpers import message_is_appropriate
-from application.ai.ai_teacher import get_ai_response, get_or_create_ai_teacher
+from application.ai.ai_teacher import get_ai_response
 from application.models.configuration import Configuration
 from application.extensions import db, limiter
-from application.routes.admin_routes import adminUsername  # Only if used
-from application.models.user import User  # Assuming User model is in application.models.user
-
+from application.routes.admin_routes import adminUsername
+from application.models.user import User
 
 
 message = Blueprint('message', __name__)
@@ -18,7 +16,7 @@ message = Blueprint('message', __name__)
 @message.route('/send_message', methods=['POST'])
 @limiter.limit("20 per minute; 100 per day")
 def send_message():
-    session_userid = session.get('user', None)
+    session_userid = session.get('user')
     form_message = request.form['message']
 
     if not session_userid:
@@ -28,25 +26,20 @@ def send_message():
     if not user:
         return jsonify(success=False, error="Unknown User"), 403
 
-    # Handle configuration check
     config = Configuration.query.first()
     if not config:
         return jsonify(success=False, error="No Configuration Found"), 500
     if user.username != adminUsername and not config.message_sending_enabled:
         return jsonify(success=False, error="Non-admin messages are disabled"), 403
 
-    # Check for banned words
     if not message_is_appropriate(form_message):
         return jsonify(success=False, error="Inappropriate messages are not allowed"), 403
 
-    # Save message to the database
     if not save_message_to_db(user.id, form_message):
         return jsonify(success=False, error="Database commit failed"), 500
 
-    # Get AI response if Chatbot is enabled
     if config.ai_teacher_enabled:
         ai_response = get_ai_response(form_message, user.username)
-        # save_message_to_db(get_or_create_ai_teacher().id, ai_response)
         return jsonify(success=True, ai_response=ai_response)
 
     return jsonify(success=True), 200
@@ -54,15 +47,12 @@ def send_message():
 
 @message.route('/start_conversation', methods=['POST'])
 def start_conversation():
-    # Get the title from the form (or use a default)
     title = request.form.get('title', 'New Conversation')
 
-    # Create and save the new conversation
     new_conversation = Conversation(title=title)
     db.session.add(new_conversation)
     db.session.commit()
 
-    # Store the new conversation's ID in the session
     session['conversation_id'] = new_conversation.id
 
     return jsonify({"conversation_id": new_conversation.id, "title": new_conversation.title}), 201
@@ -72,12 +62,10 @@ def start_conversation():
 def set_active_conversation():
     conversation_id = request.json.get('conversation_id')
 
-    # Verify the conversation exists
     conversation = Conversation.query.get(conversation_id)
     if not conversation:
         return jsonify({"error": "Conversation not found"}), 404
 
-    # Update the session with the active conversation
     session['conversation_id'] = conversation_id
     return jsonify({"message": "Conversation updated", "conversation_id": conversation_id}), 200
 
@@ -85,16 +73,12 @@ def set_active_conversation():
 @message.route('/get_current_conversation', methods=['GET'])
 @limiter.limit("60 per minute")
 def get_current_conversation():
-    # Fetch the most recent conversation
     conversation = Conversation.query.order_by(Conversation.created_at.desc()).first()
 
     if not conversation:
         return jsonify({"error": "No active conversation available"}), 400
 
-    # Store the new conversation ID in the session
     session['conversation_id'] = conversation.id
-
-    # Prepare the response
 
     conversation_data = {
         "conversation_id": conversation.id,
@@ -124,7 +108,6 @@ def get_historical_conversation():
     if not conversation:
         return jsonify({"error": "Conversation not found"}), 404
 
-    # Prepare the response
     conversation_data = {
         "conversation_id": conversation.id,
         "title": conversation.title,
@@ -157,13 +140,11 @@ def get_conversation():
     if not conversation_id:
         return jsonify({"error": "No active conversation"}), 400
 
-    # Fetch the specific conversation
-    conversation = Conversation.query.filter_by(id=conversation_id).first()
+    conversation = Conversation.query.get(conversation_id)
 
     if not conversation:
         return jsonify({"error": "Conversation not found"}), 404
 
-    # Prepare conversation data
     conversation_data = {
         "conversation_id": conversation.id,
         "title": conversation.title,
@@ -179,12 +160,10 @@ def get_conversation():
 
 @message.route('/conversation_history', methods=['GET'])
 def conversation_history():
-    # Ensure the user is logged in
     if 'user' not in session:
         flash('You must be logged in to view your conversation history.', 'error')
         return redirect(url_for('user.login'))
 
-    # Fetch the current logged-in user
     user_id = session['user']
     user = User.query.filter_by(id=user_id).first()
 
@@ -192,7 +171,6 @@ def conversation_history():
         flash('User not found.', 'error')
         return redirect(url_for('user.login'))
 
-    # Get all conversations the user participated in
     conversations = (
         Conversation.query
         .join(conversation_users)
@@ -207,9 +185,9 @@ def conversation_history():
 @message.route('/api/conversations/<int:user_id>', methods=['GET'])
 def get_conversation_history(user_id):
     conversations = Conversation.query.filter(
-        Conversation.users.any(id=user_id)  # Check if the user is part of the conversation
+        Conversation.users.any(id=user_id)
     ).all()
-    return jsonify([  # Return conversations as JSON data
+    return jsonify([
         {
             "conversation_id": conv.id,
             "title": conv.title,
@@ -231,7 +209,6 @@ def get_conversation_history(user_id):
 def view_conversation(conversation_id):
     conversation = Conversation.query.get_or_404(conversation_id)
 
-    # Prepare the response (same as get_current_conversation, but here it's full)
     conversation_data = {
         "conversation_id": conversation.id,
         "title": conversation.title,
