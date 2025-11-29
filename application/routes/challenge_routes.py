@@ -53,24 +53,30 @@ def submit_challenge():
         url, user.username, duck_multiplier, helper
     )
 
+    if not isinstance(challenge_check, dict):
+        challenge_check = {}
     if notes:
         print(f"{user.nickname} said: {notes}")
 
-    if challenge_check.get("handled") and challenge_check["details"].get("success"):
-        db.session.commit()
-        duck_reward = challenge_check["details"].get("duck_reward", 0)
+    details = challenge_check.get("details") or {}
 
+    # Success path
+    if challenge_check.get("handled") and details.get("success"):
+        db.session.commit()
+        duck_reward = details.get("duck_reward", 0)
         return render_template(
             "submit_challenge.html",
             success=True,
             message=f"Congrats {user.username}, you earned {duck_reward} ducks!",
         )
 
-    msg = challenge_check.get("details", {}).get(
-        "message", "Challenge could not be validated"
-    )
+    # Failure path
+    msg = details.get("message", "Mr. Mega does not recognize this challenge. Are you sure this is the right link?")
     return render_template("submit_challenge.html", success=False, message=msg)
 
+# ============================================================================
+# CHALLENGE URL HANDLING
+# ============================================================================
 
 URL_PATTERN = (
     r"https://(?P<domain>[\w\.-]+)"
