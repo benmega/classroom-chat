@@ -1,3 +1,9 @@
+"""
+File: admin_advanced_routes.py
+Type: py
+Summary: Flask routes for admin advanced routes functionality.
+"""
+
 from flask import request, redirect
 from flask_admin import Admin, AdminIndexView, expose
 from flask_admin.contrib.sqla import ModelView

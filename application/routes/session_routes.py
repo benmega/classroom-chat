@@ -1,3 +1,9 @@
+"""
+File: session_routes.py
+Type: py
+Summary: Flask routes for session routes functionality.
+"""
+
 from flask import Blueprint, jsonify, request, session as flask_session
 from datetime import datetime
 import boto3

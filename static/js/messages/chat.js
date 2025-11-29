@@ -1,3 +1,9 @@
+/*
+File: chat.js
+Type: js
+Summary: Client-side chat input handling and submit-on-enter behavior.
+*/
+
 export function initChat(username) {
     const form = document.getElementById('messageForm');
     const messageInput = document.getElementById('message');

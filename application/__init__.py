@@ -1,3 +1,9 @@
+"""
+File: __init__.py
+Type: py
+Summary: Flask application factory and core app initialization.
+"""
+
 import os
 
 from flask import Flask, session, g, jsonify

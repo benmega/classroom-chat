@@ -1,3 +1,9 @@
+"""
+File: test_skill.py
+Type: py
+Summary: Unit tests for skill model.
+"""
+
 import random
 
 import pytest

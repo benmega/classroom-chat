@@ -1,3 +1,9 @@
+"""
+File: test_api_achievements.py
+Type: py
+Summary: Unit tests for api achievements Flask routes.
+"""
+
 import json
 from unittest.mock import patch
 import pytest

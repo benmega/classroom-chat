@@ -1,3 +1,9 @@
+"""
+File: extensions.py
+Type: py
+Summary: Flask extension instances (DB, SocketIO, limiter, scheduler).
+"""
+
 from flask_sqlalchemy import SQLAlchemy
 from flask_socketio import SocketIO
 # import engineio.async_drivers.threading

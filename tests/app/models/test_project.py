@@ -1,3 +1,9 @@
+"""
+File: test_project.py
+Type: py
+Summary: Unit tests for project model.
+"""
+
 import random
 import string
 

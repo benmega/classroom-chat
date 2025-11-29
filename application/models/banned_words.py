@@ -1,3 +1,9 @@
+"""
+File: banned_words.py
+Type: py
+Summary: SQLAlchemy model for banned words used in moderation.
+"""
+
 from application.extensions import db
 
 class BannedWords(db.Model):

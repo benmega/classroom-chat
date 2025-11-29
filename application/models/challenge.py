@@ -1,3 +1,9 @@
+"""
+File: challenge.py
+Type: py
+Summary: SQLAlchemy model for coding challenges and rewards.
+"""
+
 from application.extensions import db
 from application.models.challenge_log import ChallengeLog
 from sqlalchemy.event import listens_for

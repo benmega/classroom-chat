@@ -1,3 +1,9 @@
+"""
+File: test_challenge_log.py
+Type: py
+Summary: Unit tests for challenge log model.
+"""
+
 import pytest
 from datetime import datetime
 

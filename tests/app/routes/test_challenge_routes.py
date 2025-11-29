@@ -1,3 +1,9 @@
+"""
+File: test_challenge_routes.py
+Type: py
+Summary: Unit tests for challenge routes Flask routes.
+"""
+
 import json
 import re
 from datetime import datetime

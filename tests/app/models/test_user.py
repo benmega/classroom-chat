@@ -1,3 +1,9 @@
+"""
+File: test_user.py
+Type: py
+Summary: Unit tests for user model.
+"""
+
 from sqlalchemy.testing import db
 
 

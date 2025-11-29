@@ -1,3 +1,9 @@
+"""
+File: config.py
+Type: py
+Summary: Configuration classes and settings for different environments.
+"""
+
 import os
 from dotenv import load_dotenv
 

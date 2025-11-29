@@ -1,3 +1,9 @@
+"""
+File: admin_routes.py
+Type: py
+Summary: Flask routes for admin routes functionality.
+"""
+
 import os
 import re
 from datetime import datetime, timedelta

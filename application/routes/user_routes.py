@@ -1,3 +1,9 @@
+"""
+File: user_routes.py
+Type: py
+Summary: Flask routes for user routes functionality.
+"""
+
 import os
 import uuid
 

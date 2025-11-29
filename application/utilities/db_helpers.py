@@ -1,3 +1,9 @@
+"""
+File: db_helpers.py
+Type: py
+Summary: Database helper functions for users, messages, and conversations.
+"""
+
 import uuid
 from datetime import datetime
 

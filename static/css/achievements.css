@@ -1,3 +1,9 @@
+/*
+File: achievements.css
+Type: css
+Summary: Styling for achievements page and badge display.
+*/
+
 .achievements-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));

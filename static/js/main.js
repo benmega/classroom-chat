@@ -1,3 +1,9 @@
+/*
+File: main.js
+Type: js
+Summary: Main frontend bootstrap for sockets, chat, and achievements.
+*/
+
 import { handleUsernameFormSubmission, closeModalLogic, handlePasswordSubmission, setupUsernameLogic } from './users/usernameLogic.js';
 import { socket } from './sockets/socketLogic.js';
 import { setupSocketConnection, setupSocket } from './sockets/socketManager.js';

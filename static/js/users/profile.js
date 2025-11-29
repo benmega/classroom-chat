@@ -1,3 +1,9 @@
+/*
+File: profile.js
+Type: js
+Summary: Profile picture cropping, preview, and upload handling.
+*/
+
 document.addEventListener("DOMContentLoaded", () => {
     if (typeof Cropper === 'undefined') {
         console.warn('Cropper.js not loaded yet, waiting...');

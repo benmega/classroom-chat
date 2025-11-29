@@ -1,3 +1,9 @@
+"""
+File: __init__.py
+Type: py
+Summary: Blueprint registration for application route modules.
+"""
+
 
 from flask import Flask
 

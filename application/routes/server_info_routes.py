@@ -1,3 +1,9 @@
+"""
+File: server_info_routes.py
+Type: py
+Summary: Flask routes for server info routes functionality.
+"""
+
 from flask import Blueprint, jsonify
 import socket
 

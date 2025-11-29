@@ -1,3 +1,9 @@
+"""
+File: general_routes.py
+Type: py
+Summary: Flask routes for general routes functionality.
+"""
+
 from flask import Blueprint, session, redirect, url_for, render_template
 
 general = Blueprint('general', __name__)

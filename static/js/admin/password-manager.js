@@ -1,3 +1,9 @@
+/*
+File: password-manager.js
+Type: js
+Summary: Admin UI for password strength indication and resets.
+*/
+
 document.addEventListener('DOMContentLoaded', () => {
     const newPasswordInput = document.getElementById('new-password');
     const confirmPasswordInput = document.getElementById('confirm-password');

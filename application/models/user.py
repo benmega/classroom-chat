@@ -1,3 +1,9 @@
+"""
+File: user.py
+Type: py
+Summary: SQLAlchemy model for application users and authentication data.
+"""
+
 from datetime import date
 
 from sqlalchemy.ext.hybrid import hybrid_property

@@ -1,3 +1,9 @@
+"""
+File: tasks.py
+Type: py
+Summary: Background scheduler tasks for periodic session cleanup.
+"""
+
 from application.utilities.session_cleanup import close_stale_sessions
 from application.extensions import scheduler
 import logging

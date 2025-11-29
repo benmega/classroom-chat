@@ -1,3 +1,9 @@
+"""
+File: test_achievement_routes.py
+Type: py
+Summary: Unit tests for achievement routes Flask routes.
+"""
+
 import json
 from application.models.achievements import Achievement, UserAchievement
 from application.models.user_certificate import UserCertificate

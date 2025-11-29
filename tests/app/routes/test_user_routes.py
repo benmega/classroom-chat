@@ -1,3 +1,9 @@
+"""
+File: test_user_routes.py
+Type: py
+Summary: Unit tests for user routes Flask routes.
+"""
+
 import json
 import uuid
 from datetime import date
