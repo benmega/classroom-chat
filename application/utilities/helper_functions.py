@@ -1,3 +1,9 @@
+"""
+File: helper_functions.py
+Type: py
+Summary: General utility helpers for file uploads and database commits.
+"""
+
 from application.config import Config
 
 

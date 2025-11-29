@@ -1,3 +1,9 @@
+/*
+File: admin.js
+Type: js
+Summary: Admin panel client-side actions for toggles, users, and trades.
+*/
+
 function postForm(url, data) {
     return fetch(url, {
         method: 'POST',

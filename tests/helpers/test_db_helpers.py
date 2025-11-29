@@ -1,3 +1,9 @@
+"""
+File: test_db_helpers.py
+Type: py
+Summary: Unit tests for db helpers.
+"""
+
 import pytest
 from application.utilities.db_helpers import get_user, save_message_to_db, generate_unique_username
 

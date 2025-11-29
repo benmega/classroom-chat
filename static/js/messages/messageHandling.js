@@ -1,3 +1,9 @@
+/*
+File: messageHandling.js
+Type: js
+Summary: Client-side messaging logic, conversation refresh, and file uploads.
+*/
+
 const updateInterval = 2000;
 
 export function setupMessagingAndConversation() {

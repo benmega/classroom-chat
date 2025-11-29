@@ -1,3 +1,9 @@
+"""
+File: meta.py
+Type: py
+Summary: Project metadata utilities and helper functions.
+"""
+
 import os
 
 def create_directory(path):

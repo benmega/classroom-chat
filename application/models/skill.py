@@ -1,3 +1,9 @@
+"""
+File: skill.py
+Type: py
+Summary: SQLAlchemy model for user skills and tagging.
+"""
+
 from sqlalchemy import UniqueConstraint
 
 from application.extensions import db

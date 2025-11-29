@@ -1,3 +1,9 @@
+"""
+File: test_admin_routes.py
+Type: py
+Summary: Unit tests for admin routes Flask routes.
+"""
+
 import json
 from datetime import datetime, timedelta
 from unittest.mock import patch

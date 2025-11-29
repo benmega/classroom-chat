@@ -1,3 +1,9 @@
+"""
+File: socket_events.py
+Type: py
+Summary: Socket.IO event handlers for user connections and status changes.
+"""
+
 from .extensions import db, socketio
 from .models.user import User
 from flask_socketio import emit

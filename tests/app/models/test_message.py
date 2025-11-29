@@ -1,3 +1,9 @@
+"""
+File: test_message.py
+Type: py
+Summary: Unit tests for message model.
+"""
+
 import random
 import string
 from datetime import datetime

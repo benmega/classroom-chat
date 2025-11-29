@@ -1,3 +1,9 @@
+"""
+File: duck_trade_routes.py
+Type: py
+Summary: Flask routes for duck trade routes functionality.
+"""
+
 import logging
 
 from flask import Blueprint, url_for

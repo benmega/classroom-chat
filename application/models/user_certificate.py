@@ -1,3 +1,9 @@
+"""
+File: user_certificate.py
+Type: py
+Summary: SQLAlchemy model for user-submitted certificates.
+"""
+
 from datetime import datetime
 
 from application.extensions import db

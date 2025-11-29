@@ -1,3 +1,9 @@
+/*
+File: socketLogic.js
+Type: js
+Summary: Socket.IO client bootstrap and connection utilities.
+*/
+
 import config from '../config.js';
 const serverEndpoint = config.serverEndpoint;
 console.log(config.serverEndpoint);

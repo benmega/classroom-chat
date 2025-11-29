@@ -1,3 +1,9 @@
+"""
+File: achievements.py
+Type: py
+Summary: SQLAlchemy model for achievement definitions and metadata.
+"""
+
 from datetime import datetime
 
 from application.extensions import db

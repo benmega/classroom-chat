@@ -1,3 +1,9 @@
+"""
+File: upload_routes.py
+Type: py
+Summary: Flask routes for upload routes functionality.
+"""
+
 import os
 
 from flask import Blueprint, request, jsonify, send_from_directory, abort

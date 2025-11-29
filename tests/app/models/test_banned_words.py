@@ -1,3 +1,9 @@
+"""
+File: test_banned_words.py
+Type: py
+Summary: Unit tests for banned words model.
+"""
+
 from datetime import datetime
 
 import pytest

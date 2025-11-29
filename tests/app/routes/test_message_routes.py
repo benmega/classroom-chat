@@ -1,3 +1,9 @@
+"""
+File: test_message_routes.py
+Type: py
+Summary: Unit tests for message routes Flask routes.
+"""
+
 import json
 
 from application import db, Configuration

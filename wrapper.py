@@ -1,3 +1,9 @@
+"""
+File: wrapper.py
+Type: py
+Summary: Helper wrapper for running the application in different contexts.
+"""
+
 import sys
 import traceback
 from main import main as run_app

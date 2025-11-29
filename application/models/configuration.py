@@ -1,3 +1,9 @@
+"""
+File: configuration.py
+Type: py
+Summary: SQLAlchemy model for global configuration and feature flags.
+"""
+
 from application.extensions import db
 
 

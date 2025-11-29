@@ -1,3 +1,9 @@
+/*
+File: duck_trade.js
+Type: js
+Summary: Duck trade UI logic for validating and submitting duck trades.
+*/
+
 document.addEventListener("DOMContentLoaded", () => {
     const digitalDucksInput = document.getElementById("digital_ducks");
     const duckInputs = document.querySelectorAll(".input-sm");

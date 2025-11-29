@@ -1,3 +1,9 @@
+/*
+File: base.css
+Type: css
+Summary: Global layout, header, navigation, and typography styling.
+*/
+
 body {
     font-family: var(--font-family);
     margin: 0;

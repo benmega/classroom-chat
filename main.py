@@ -1,3 +1,9 @@
+"""
+File: main.py
+Type: py
+Summary: Entry point for starting the Flask application.
+"""
+
 import sys
 
 from application import create_app

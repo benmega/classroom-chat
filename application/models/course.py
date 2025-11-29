@@ -1,3 +1,9 @@
+"""
+File: course.py
+Type: py
+Summary: SQLAlchemy model for course information and mapping.
+"""
+
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 from application.extensions import db

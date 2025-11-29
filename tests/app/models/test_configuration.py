@@ -1,3 +1,9 @@
+"""
+File: test_configuration.py
+Type: py
+Summary: Unit tests for configuration model.
+"""
+
 from application import db
 from application.models.configuration import Configuration
 from application.models.conversation import Conversation

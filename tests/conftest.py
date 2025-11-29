@@ -1,3 +1,9 @@
+"""
+File: conftest.py
+Type: py
+Summary: Pytest configuration and fixtures for the test suite.
+"""
+
 import base64
 import os
 import random

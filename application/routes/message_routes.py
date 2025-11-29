@@ -1,3 +1,9 @@
+"""
+File: message_routes.py
+Type: py
+Summary: Flask routes for message routes functionality.
+"""
+
 from flask import Blueprint, request, jsonify, session, flash, redirect, url_for, render_template
 
 from application.models.banned_words import BannedWords

@@ -1,3 +1,9 @@
+"""
+File: test_duck_trade_routes.py
+Type: py
+Summary: Unit tests for duck trade routes Flask routes.
+"""
+
 import pytest
 from flask import url_for
 import secrets

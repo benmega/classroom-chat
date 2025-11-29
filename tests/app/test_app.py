@@ -1,3 +1,9 @@
+"""
+File: test_app.py
+Type: py
+Summary: Unit tests for app.
+"""
+
 import pytest
 
 from application import create_app

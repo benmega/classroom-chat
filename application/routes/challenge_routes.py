@@ -1,3 +1,9 @@
+"""
+File: challenge_routes.py
+Type: py
+Summary: Flask routes for challenge routes functionality.
+"""
+
 import re
 from datetime import datetime
 

@@ -1,3 +1,9 @@
+/*
+File: edit_profile.css
+Type: css
+Summary: Styling for editing user profile sections and forms.
+*/
+
 .edit-profile-container {
     background: rgba(255, 255, 255, 0.8);
     padding: var(--input-padding);
