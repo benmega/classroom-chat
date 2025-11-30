@@ -32,11 +32,12 @@ Summary: Admin template for reviewing submitted certificates.
                View
             </a>
 
-            <a href="{{ url_for('achievements.view_certificate', cert_id=cert.id) }}"
+            <a href="{{ url_for('achievements.download_certificate', cert_id=cert.id) }}"
                download="{{ user.nickname }}_{{ achievement.name }}.pdf"
                class="btn btn-sm btn-outline-primary">
                Download
             </a>
+
         </div>
         {% else %}
         <span>No file</span>

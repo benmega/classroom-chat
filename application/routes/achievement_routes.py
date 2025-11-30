@@ -2,7 +2,7 @@
 import re
 from datetime import datetime
 
-from flask import Blueprint, render_template, jsonify, session, flash, redirect, url_for, request
+from flask import Blueprint, render_template, jsonify, session, flash, redirect, url_for, request, send_file
 from sqlalchemy.orm import joinedload
 
 from application.extensions import db
@@ -168,6 +168,22 @@ def view_certificate(cert_id):
         filename,
         mimetype="application/pdf",
         as_attachment=False
+    )
+
+@achievements.route("/download_certificate/<int:cert_id>")
+@local_only
+def download_certificate(cert_id):
+
+    cert = UserCertificate.query.get_or_404(cert_id)
+    full_path = os.path.abspath(cert.file_path)
+    cert_user = User.query.filter_by(id=cert.user_id).first()
+    achievement = Achievement.query.filter_by(id=cert.achievement_id).first()
+
+    return send_file(
+        full_path,
+        mimetype="application/pdf",
+        as_attachment=True,
+        download_name=f"{cert_user.nickname}_{achievement.name}.pdf"
     )
 
 
