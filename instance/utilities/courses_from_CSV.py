@@ -46,7 +46,7 @@ def populate_courses_from_csv(folder_path):
                     description=description,
                     is_active=True,
                     default_challenge_value=default_challenge_value
-        ***REMOVED***
+        )
                 courses.append(course)
 
             # Add courses and commit changes

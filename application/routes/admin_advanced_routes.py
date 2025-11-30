@@ -51,7 +51,7 @@ def init_admin(app):
                 db.session,
                 name=model.__name__,
                 endpoint=f"adv_{model.__name__}"
-    ***REMOVED***
-***REMOVED***
+    )
+)
 
     return admin

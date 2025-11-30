@@ -34,7 +34,7 @@ def restore_critical_columns(cur: sqlite3.Cursor, table_name: str, columns: list
         WHERE EXISTS (
             SELECT 1 FROM prod_backup.{table_name}
             WHERE prod_backup.{table_name}.id = main.{table_name}.id
-***REMOVED***
+)
     """)
     print(f"Restored critical columns for {table_name}: {columns}")
 
@@ -62,7 +62,7 @@ def merge_databases(dev_path: str, prod_path: str, backup: bool = True):
         # Step 0: create missing tables
         dev_tables = cur.execute(
             "SELECT name, sql FROM dev.sqlite_master WHERE type='table'"
-***REMOVED***.fetchall()
+).fetchall()
 
         for table_name, create_sql in dev_tables:
             cur.execute(f"SELECT name FROM main.sqlite_master WHERE type='table' AND name='{table_name}'")

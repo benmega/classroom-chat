@@ -99,7 +99,7 @@ def submit_trade():
             bit_ducks=bit_ducks,
             byte_ducks=byte_ducks,
             status="pending"
-***REMOVED***
+)
         db.session.add(trade)
         db.session.commit()
 
@@ -158,7 +158,7 @@ def submit_trade():
 #             bit_ducks=bit_ducks,
 #             byte_ducks=byte_ducks,
 #             status="pending"
-# ***REMOVED***
+# )
 #         db.session.add(trade)
 #         db.session.commit()
 #

@@ -496,7 +496,7 @@ def test_user_model_get_progress(init_db, sample_user):
             username=sample_user.username,
             domain='codecombat.com',
             challenge_name=f'challenge_{i}'
-***REMOVED***
+)
         db.session.add(log)
     db.session.commit()
 
@@ -518,7 +518,7 @@ def test_user_model_get_progress_percent(init_db, sample_user):
             difficulty='medium',
             value=10,
             is_active=True
-***REMOVED***
+)
         db.session.add(challenge)
     db.session.commit()
 

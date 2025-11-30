@@ -48,7 +48,7 @@ def test_message_types(init_db, sample_user, sample_conversation):
             user_id=sample_user.id,
             content=content,
             message_type=msg_type
-***REMOVED***
+)
         db.session.add(message)
         db.session.commit()
 
@@ -103,7 +103,7 @@ def test_dynamic_message_generation(init_db, sample_user, sample_conversation):
             user_id=sample_user.id,
             content=content,
             message_type=msg_type
-***REMOVED***
+)
         db.session.add(message)
     db.session.commit()
 

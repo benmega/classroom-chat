@@ -28,7 +28,7 @@ def add_challenge_logs(username, domain, challenge_names, course_id=None, course
             challenge_name=challenge_name,
             course_id=course_id,
             course_instance=course_instance
-***REMOVED***
+)
         logs.append(log_entry)
 
     try:
@@ -54,7 +54,7 @@ def add_course_challenge_logs(username, domain, course_id):
             db.session.query(Challenge.name)
             .filter(Challenge.course_id == course_id, Challenge.is_active == True)
             .all()
-***REMOVED***
+)
 
         # Convert to a list of challenge names
         challenge_names = [challenge.name for challenge in challenges]

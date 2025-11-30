@@ -79,7 +79,7 @@ def login():
                 Conversation.query
                 .order_by(Conversation.created_at.desc())
                 .first()
-    ***REMOVED***
+    )
 
             if recent_conversation:
                 if user not in recent_conversation.users:
@@ -171,7 +171,7 @@ def edit_profile():
                 request.form.getlist('project_names[]'),
                 request.form.getlist('project_descriptions[]'),
                 request.form.getlist('project_links[]'),
-    ***REMOVED***
+    )
             handle_profile_picture_upload(user)
             db.session.commit()
 

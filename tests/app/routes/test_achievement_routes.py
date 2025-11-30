@@ -380,7 +380,7 @@ def test_achievement_types(init_db):
             reward=10,
             description=desc,
             requirement_value=req_val
-***REMOVED***
+)
         db.session.add(achievement)
 
     db.session.commit()

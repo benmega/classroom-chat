@@ -65,7 +65,7 @@ def heartbeat():
                     },
                 ],
                 Namespace='YourAppName/Activity'
-    ***REMOVED***
+    )
         except Exception as e:
             print(f"Error publishing metric to CloudWatch: {e}")
         # --- END MODIFIED CODE ---

@@ -61,7 +61,7 @@ def save_message_to_db(user_id, message, message_type="text"):
             print("No active conversation found. Creating a new one.")
             conversation = Conversation(
                 title=f"Conversation started by User {user_id} at {datetime.utcnow()}",
-    ***REMOVED***
+    )
             db.session.add(conversation)
             db.session.commit()
 
@@ -78,7 +78,7 @@ def save_message_to_db(user_id, message, message_type="text"):
             conversation_id=conversation.id,
             content=message,
             message_type=message_type,
-***REMOVED***
+)
         db.session.add(new_message)
         db.session.commit()
 
