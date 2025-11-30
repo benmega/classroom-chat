@@ -20,7 +20,7 @@ def update_user_ducks():
             .join(ChallengeLog, Challenge.name == ChallengeLog.challenge_name)
             .filter(ChallengeLog.username == user.username)
             .scalar()
-***REMOVED*** or 0
+) or 0
 
         user.earned_ducks = total_ducks
         user.packets = total_ducks / (2**14)

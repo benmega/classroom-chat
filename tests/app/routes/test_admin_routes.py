@@ -1,3 +1,9 @@
+"""
+File: test_admin_routes.py
+Type: py
+Summary: Unit tests for admin routes Flask routes.
+"""
+
 import json
 from datetime import datetime, timedelta
 from unittest.mock import patch
@@ -74,7 +80,7 @@ def test_verify_password_success(client, test_app,auth_headers):
                     '/admin/verify_password',
                     data={'password': TestingConfig.ADMIN_PASSWORD, 'username': 'verified_username'},
                     headers=auth_headers
-        ***REMOVED***
+        )
 
             assert response.status_code == 200
             data = json.loads(response.data)
@@ -190,7 +196,7 @@ def test_add_banned_word(client, auth_headers, test_app):
             '/admin/add-banned-word',
             data={'word': 'testbadword', 'reason': 'testing purposes'},
             headers=auth_headers
-***REMOVED***
+)
         data = json.loads(response.data)
 
         assert response.status_code == 200
@@ -206,7 +212,7 @@ def test_add_banned_word(client, auth_headers, test_app):
             '/admin/add-banned-word',
             data={'word': 'testbadword'},
             headers=auth_headers
-***REMOVED***
+)
 
         assert response.status_code == 400
 
@@ -251,7 +257,7 @@ def test_adjust_ducks(client, auth_headers, sample_user, test_app):
             '/admin/adjust_ducks',
             data={'username': sample_user.username, 'amount': 50},
             headers=auth_headers
-***REMOVED***
+)
         data = json.loads(response.data)
 
         assert response.status_code == 200
@@ -277,7 +283,7 @@ def test_trade_action_approve(client, auth_headers, sample_user, sample_duck_tra
                 },
                 headers=auth_headers,
                 content_type='application/x-www-form-urlencoded'
-    ***REMOVED***
+    )
 
             data = json.loads(response.data)
             assert response.status_code == 200
@@ -295,7 +301,7 @@ def test_trade_action_reject(client, auth_headers, sample_duck_trade, init_db):
             '/admin/trade_action',
             data={'trade_id': sample_duck_trade.id, 'action': 'reject'},
             headers=auth_headers
-***REMOVED***
+)
 
         data = json.loads(response.data)
         assert response.status_code == 200
@@ -312,7 +318,7 @@ def test_reset_password(client, auth_headers, sample_user, test_app, init_db):
                 '/admin/reset_password',
                 json={'username': sample_user.username, 'new_password': 'newpassword'},
                 headers=auth_headers
-    ***REMOVED***
+    )
             data = json.loads(response.data)
 
             assert response.status_code == 200
@@ -324,7 +330,7 @@ def test_reset_password(client, auth_headers, sample_user, test_app, init_db):
             '/admin/reset_password',
             json={'username': 'nonexistent_user', 'new_password': 'newpassword'},
             headers=auth_headers
-***REMOVED***
+)
 
         assert response.status_code == 404
 
@@ -347,7 +353,7 @@ def test_get_users(client, test_app, sample_users, sample_admin, init_db, auth_h
         response = client.get(
             url_for('admin.get_users'),
             headers=auth_headers
-***REMOVED***
+)
 
         assert response.status_code == 200
         users_data = json.loads(response.data)
@@ -370,7 +376,7 @@ def test_set_username_proper_case_handling(client, test_app, sample_user,auth_he
             url_for('admin.set_username_route'),
             data={'user_id': sample_user.id, 'username': mixed_case_username},
             headers=auth_headers
-***REMOVED***
+)
 
         assert response.status_code == 200
         json_response = json.loads(response.data)

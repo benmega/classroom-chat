@@ -1,3 +1,9 @@
+"""
+File: message.py
+Type: py
+Summary: SQLAlchemy model for chat messages and metadata.
+"""
+
 from datetime import datetime
 
 from sqlalchemy import Enum

@@ -1,3 +1,9 @@
+"""
+File: upload_routes.py
+Type: py
+Summary: Flask routes for upload routes functionality.
+"""
+
 import os
 
 from flask import Blueprint, request, jsonify, send_from_directory, abort
@@ -31,7 +37,6 @@ def upload_file():
     if not data_url:
         return jsonify({"error": "No file data provided"}), 400
 
-    # Determine file type
     header, encoded = data_url.split(",", 1)
     mime_type = header.split(";")[0].split(":")[1]
     data = base64.b64decode(encoded)
@@ -39,27 +44,23 @@ def upload_file():
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
     file_path = None
 
-    # Use mimetypes to guess the file extension
     extension = mimetypes.guess_extension(mime_type) or 'bin'
 
     if mime_type.startswith('image/'):
-        # Handle image files
         directory = 'userData/image'
-        os.makedirs(directory, exist_ok=True)  # Create directory if it doesn't exist
+        os.makedirs(directory, exist_ok=True)
         file_path = f'userData/image/file_{timestamp}{extension}'
         image = Image.open(BytesIO(data))
         image.save(file_path)
     elif mime_type == 'application/pdf':
-        # Handle PDF files
         directory = 'userData/pdf'
-        os.makedirs(directory, exist_ok=True)  # Create directory if it doesn't exist
+        os.makedirs(directory, exist_ok=True)
         file_path = f'userData/pdf/file_{timestamp}{extension}'
         with open(file_path, 'wb') as f:
             f.write(data)
     else:
-        # Handle other file types
         directory = 'userData/other'
-        os.makedirs(directory, exist_ok=True)  # Create directory if it doesn't exist
+        os.makedirs(directory, exist_ok=True)
         file_path = f'userData/other/file_{timestamp}{extension}'
         with open(file_path, 'wb') as f:
             f.write(data)

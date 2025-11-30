@@ -1,31 +1,54 @@
+<!--
+File: admin_certificates.html
+Type: html
+Summary: Admin template for reviewing submitted certificates.
+-->
+
 {% extends "admin/admin_base.html" %}
 {% block content %}
 <h2>Submitted Certificates</h2>
 <table class="table">
   <thead>
-    <tr><th>User</th><th>Achievement</th><th>View</th></tr>
+    <tr>
+      <th>User</th>
+      <th>Nickname</th>
+      <th>Achievement</th>
+      <th>File</th>
+      <th>Status</th>
+    </tr>
   </thead>
   <tbody>
     {% for cert, user, achievement in certs %}
     <tr>
       <td>{{ user.username }}</td>
+      <td>{{ user.nickname }}</td>
       <td>{{ achievement.name }}</td>
       <td>
         {% if cert.file_path %}
-        <a href="{{ url_for('achievements.view_certificate', cert_id=cert.id) }}" target="_blank" class="btn btn-sm btn-primary">
-          View PDF
-        </a>
-        <td>
-          {% if not cert.reviewed %}
-          <form action="{{ url_for('achievements.mark_reviewed', cert_id=cert.id) }}" method="post" style="display:inline">
-            <button class="btn btn-sm btn-success">Mark Reviewed</button>
-          </form>
-          {% else %}
-          <span class="text-muted">Reviewed</span>
-          {% endif %}
-        </td>
+        <div class="btn-group" role="group">
+            <a href="{{ url_for('achievements.view_certificate', cert_id=cert.id) }}"
+               target="_blank"
+               class="btn btn-sm btn-primary">
+               View
+            </a>
+
+            <a href="{{ url_for('achievements.view_certificate', cert_id=cert.id) }}"
+               download="{{ user.nickname }}_{{ achievement.name }}.pdf"
+               class="btn btn-sm btn-outline-primary">
+               Download
+            </a>
+        </div>
         {% else %}
         <span>No file</span>
+        {% endif %}
+      </td>
+      <td>
+        {% if not cert.reviewed %}
+        <form action="{{ url_for('achievements.mark_reviewed', cert_id=cert.id) }}" method="post" style="display:inline">
+          <button class="btn btn-sm btn-success">Mark Reviewed</button>
+        </form>
+        {% else %}
+        <span class="text-muted">Reviewed</span>
         {% endif %}
       </td>
     </tr>

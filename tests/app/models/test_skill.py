@@ -1,3 +1,9 @@
+"""
+File: test_skill.py
+Type: py
+Summary: Unit tests for skill model.
+"""
+
 import random
 
 import pytest
@@ -86,7 +92,7 @@ def test_dynamic_skill_generation(init_db, sample_user):
         skill = Skill(
             name=skill_name,
             user_id=sample_user.id
-***REMOVED***
+)
         db.session.add(skill)
     db.session.commit()
 

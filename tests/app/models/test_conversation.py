@@ -1,3 +1,9 @@
+"""
+File: test_conversation.py
+Type: py
+Summary: Unit tests for conversation model.
+"""
+
 from datetime import datetime
 
 from application import db

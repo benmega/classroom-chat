@@ -1,3 +1,9 @@
+"""
+File: ai_settings.py
+Type: py
+Summary: SQLAlchemy model for AI teacher-related settings.
+"""
+
 from application.extensions import db
 
 

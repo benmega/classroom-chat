@@ -1,3 +1,9 @@
+"""
+File: api_achievements.py
+Type: py
+Summary: Flask routes for api achievements functionality.
+"""
+
 from flask import Blueprint, session, jsonify, url_for
 from application.models.user import User
 from application.services.achievement_engine import evaluate_user
@@ -28,7 +34,7 @@ def check_achievements():
                 "static",
                 filename=f"images/achievement_badges/{a.slug}.png",
                 _external=False
-    ***REMOVED***
+    )
         }
         for a in new_awards
     ]

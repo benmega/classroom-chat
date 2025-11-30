@@ -1,3 +1,9 @@
+"""
+File: conftest.py
+Type: py
+Summary: Pytest configuration and fixtures for the test suite.
+"""
+
 import base64
 import os
 import random
@@ -36,6 +42,10 @@ def setup_directories():
 @pytest.fixture(scope='session')
 def test_app():
     app = create_app(TestingConfig)
+    app.config.update({
+        "TESTING": True,
+        "WTF_CSRF_ENABLED": False
+    })
     with app.app_context():
         db.create_all()
         yield app
@@ -45,6 +55,16 @@ def test_app():
 @pytest.fixture
 def client(test_app):
     return test_app.test_client()
+
+@pytest.fixture
+def logged_in_client(client, sample_user):
+    """A Flask test client that is logged in as sample_user."""
+    with client.session_transaction() as sess:
+        sess['user'] = sample_user.id
+    return client
+
+
+
 
 
 @pytest.fixture
@@ -77,7 +97,7 @@ def add_sample_user(init_db):
             earned_ducks=earned_ducks,
             duck_balance=earned_ducks,  # keep balance in sync at creation
             profile_picture=profile_picture
-***REMOVED***
+)
         db.session.add(user)
         db.session.commit()
         return user
@@ -98,7 +118,7 @@ def sample_user_with_ducks(test_app):
                 password_hash='test_password',
                 earned_ducks=50,
                 duck_balance=50
-    ***REMOVED***
+    )
             db.session.add(user)
             db.session.commit()
             yield user
@@ -160,6 +180,12 @@ def sample_admin(init_db):
     db.session.commit()
     return admin_user
 
+@pytest.fixture
+def logged_in_admin(client, sample_user):
+    """A Flask test client that is logged in as sample_user."""
+    with client.session_transaction() as sess:
+        sess['user'] = sample_user.id  # Use ID for correctness
+    return client
 
 @pytest.fixture
 def sample_challenge_log(init_db):
@@ -310,22 +336,6 @@ def sample_image_data():
     return f"data:image/png;base64,{image_data}"
 
 
-#
-# @pytest.fixture
-# def sample_trade(test_app, sample_user_with_ducks):
-#     with test_app.app_context():
-#         trade = Trade(
-#             user_id=sample_user_with_ducks.id,
-#             digital_ducks=10,
-#             duck_type='bit',
-#             status='pending'
-# ***REMOVED***
-#         db.session.add(trade)
-#         db.session.commit()
-#         yield trade
-#         db.session.delete(trade)
-#         db.session.commit()
-
 @pytest.fixture
 def auth_headers(sample_admin):
     """Create basic auth headers for admin authentication."""
@@ -429,7 +439,7 @@ def sample_new_achievements(init_db):
             reward=10,
             description="Send your first message",
             requirement_value="1"
-***REMOVED***,
+),
         Achievement(
             name="Duck Collector",
             slug="duck-collector-10",
@@ -437,7 +447,7 @@ def sample_new_achievements(init_db):
             reward=25,
             description="Collect 10 ducks",
             requirement_value="10"
-***REMOVED***,
+),
         Achievement(
             name="Project Starter",
             slug="project-starter",
@@ -445,7 +455,7 @@ def sample_new_achievements(init_db):
             reward=50,
             description="Create your first project",
             requirement_value="1"
-***REMOVED***
+)
     ]
     db.session.add_all(achievements)
     db.session.commit()
@@ -464,7 +474,7 @@ def sample_multiple_achievements(init_db):
             reward=10,
             description="First achievement",
             requirement_value="10"
-***REMOVED***,
+),
         Achievement(
             id=2,
             name="Achievement Two",
@@ -473,7 +483,7 @@ def sample_multiple_achievements(init_db):
             reward=20,
             description="Second achievement",
             requirement_value="5"
-***REMOVED***
+)
     ]
     for ach in achievements:
         db.session.add(ach)

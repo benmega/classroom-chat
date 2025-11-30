@@ -51,7 +51,7 @@ def build_sprite():
             f".badge-{slug} {{ "
             f"background-position: -{x}px -{y}px; "
             f"}}"
-***REMOVED***
+)
         css_rules.append(css)
 
     # Save sprite

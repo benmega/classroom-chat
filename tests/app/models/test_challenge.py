@@ -1,3 +1,9 @@
+"""
+File: test_challenge.py
+Type: py
+Summary: Unit tests for challenge model.
+"""
+
 import pytest
 from application import create_app
 from application.extensions import db

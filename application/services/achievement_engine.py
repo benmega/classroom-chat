@@ -42,8 +42,8 @@ def check_achievement(user, achievement):
         "certificate": lambda: (
             1 if UserCertificate.query.filter_by(
                 user_id=user.id, achievement_id=achievement.id
-    ***REMOVED***.first() else 0
-***REMOVED***,
+    ).first() else 0
+),
     }
 
     value = value_getters.get(achievement.type, lambda: 0)()
@@ -75,7 +75,7 @@ def _calculate_consistency(username):
         # Handle year transition
         if (curr_year == prev_year and curr_week == prev_week + 1) or (
             curr_year == prev_year + 1 and prev_week == 52 and curr_week == 1
-***REMOVED***:
+):
             streak += 1
             best_streak = max(best_streak, streak)
         else:

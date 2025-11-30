@@ -1,3 +1,9 @@
+"""
+File: ai_routes.py
+Type: py
+Summary: Flask routes for ai routes functionality.
+"""
+
 from flask import Blueprint, jsonify, request
 from application.ai.ai_teacher import get_ai_response
 from application.decorators.licensing import premium_required

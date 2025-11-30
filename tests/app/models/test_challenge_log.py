@@ -1,3 +1,9 @@
+"""
+File: test_challenge_log.py
+Type: py
+Summary: Unit tests for challenge log model.
+"""
+
 import pytest
 from datetime import datetime
 
@@ -54,7 +60,7 @@ def test_challenge_log_missing_field():
             username="testuser",
             domain="CodeCombat",
             challenge_name=None  # Missing required challenge_name
-***REMOVED***
+)
         db.session.add(challenge_log)
         db.session.commit()
 

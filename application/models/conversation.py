@@ -1,3 +1,9 @@
+"""
+File: conversation.py
+Type: py
+Summary: SQLAlchemy model for chat conversations and relationships.
+"""
+
 from datetime import datetime
 from application.extensions import db
 

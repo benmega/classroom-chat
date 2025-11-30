@@ -1,6 +1,9 @@
-// admin_panel.js – Script for Admin Actions in the Classroom Chat App
+/*
+File: admin.js
+Type: js
+Summary: Admin panel client-side actions for toggles, users, and trades.
+*/
 
-// Utility: POST a form-encoded request
 function postForm(url, data) {
     return fetch(url, {
         method: 'POST',
@@ -9,12 +12,10 @@ function postForm(url, data) {
     }).then(res => res.json());
 }
 
-// Utility: POST without body
 function postEmpty(url) {
-    return fetch(url, { method: 'POST' }).then(res => res.json());
+    return fetch(url, { method: 'POST'     }).then(res => res.json());
 }
 
-// Utility: SweetAlert wrapper with auto-close for non-critical alerts
 function showAlert(message, type = 'info') {
     const autoClose = type !== 'error' && type !== 'warning';
     Swal.fire({
@@ -26,28 +27,24 @@ function showAlert(message, type = 'info') {
     });
 }
 
-// Toggle AI Teacher
 document.getElementById('toggle-ai-button')?.addEventListener('click', () => {
     postEmpty(window.urls.toggleAiUrl)
         .then(data => showAlert(data.message, 'success'))
         .catch(console.error);
 });
 
-// Start a New Conversation
 document.getElementById('start-conversation-button')?.addEventListener('click', () => {
     postForm(window.urls.startConversationUrl, {})
         .then(data => showAlert(`Conversation started: ${data.title}`, 'success'))
         .catch(console.error);
 });
 
-// Toggle Message Sending
 document.getElementById('toggle-message-sending-button')?.addEventListener('click', () => {
     postEmpty(window.urls.toggleMessageSendingUrl)
         .then(data => showAlert(data.message, 'success'))
         .catch(console.error);
 });
 
-// Ban a Word
 document.getElementById('add-banned-word-button')?.addEventListener('click', () => {
     const word = document.getElementById('ban-word').value;
     const reason = document.getElementById('ban-reason').value;
@@ -57,7 +54,6 @@ document.getElementById('add-banned-word-button')?.addEventListener('click', () 
         .catch(console.error);
 });
 
-// Adjust Ducks
 document.getElementById('update-ducks-button')?.addEventListener('click', () => {
     const username = document.getElementById('duck-username').value;
     const amount = document.getElementById('duck-amount').value;
@@ -67,7 +63,6 @@ document.getElementById('update-ducks-button')?.addEventListener('click', () => 
         .catch(console.error);
 });
 
-// Create User
 document.getElementById('create-user-button')?.addEventListener('click', () => {
     const username = document.getElementById('new-username').value.trim();
     const password = document.getElementById('create-password').value;
@@ -94,7 +89,6 @@ document.getElementById('create-user-button')?.addEventListener('click', () => {
         });
 });
 
-// Remove User
 document.getElementById('remove-user-button')?.addEventListener('click', () => {
     const username = document.getElementById('remove-username').value;
     if (!username) return showAlert('Please enter a username', 'warning');
@@ -132,7 +126,6 @@ document.getElementById('remove-user-button')?.addEventListener('click', () => {
     });
 });
 
-// Replace 🦆 with rubber duck image
 function replaceDuckEmojis() {
     document.querySelectorAll('*').forEach(el => {
         el.childNodes.forEach(node => {
@@ -159,7 +152,6 @@ function replaceDuckEmojis() {
 
 document.addEventListener('DOMContentLoaded', replaceDuckEmojis);
 
-// Duck Multiplier Adjustment
 document.getElementById('update-multiplier-button').addEventListener('click', function() {
     const newMultiplier = parseFloat(document.getElementById('duck-multiplier-input').value);
 
@@ -172,7 +164,6 @@ document.getElementById('update-multiplier-button').addEventListener('click', fu
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            // 'X-CSRFToken': getCSRFToken() // If you're using CSRF protection
         },
         body: JSON.stringify({ multiplier: newMultiplier })
     })

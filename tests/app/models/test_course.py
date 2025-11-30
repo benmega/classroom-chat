@@ -1,3 +1,9 @@
+"""
+File: test_course.py
+Type: py
+Summary: Unit tests for course model.
+"""
+
 import pytest
 
 from application import db

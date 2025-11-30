@@ -27,7 +27,7 @@ def sync_duck_balance(source_db, target_db):
             tgt_cur.execute(
                 "UPDATE users SET duck_balance = ? WHERE id = ?",
                 (earned, user_id)
-    ***REMOVED***
+    )
 
         tgt_conn.commit()
         print(f"Updated duck_balance for {len(rows)} users.")

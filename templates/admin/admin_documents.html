@@ -1,4 +1,9 @@
-<!-- templates/admin/documents.html -->
+<!--
+File: admin_documents.html
+Type: html
+Summary: Admin template for managing uploaded documents.
+-->
+
 {% extends "admin/admin_base.html" %}
 
 {% block content %}
@@ -595,7 +600,7 @@
         if (search) {
             filtered = filtered.filter(doc =>
                 doc.filename.toLowerCase().includes(search)
-    ***REMOVED***;
+    );
         }
 
         renderDocuments(filtered);

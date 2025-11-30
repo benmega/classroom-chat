@@ -1,9 +1,12 @@
-// Profile Picture Editor - Fixed Version
+/*
+File: profile.js
+Type: js
+Summary: Profile picture cropping, preview, and upload handling.
+*/
+
 document.addEventListener("DOMContentLoaded", () => {
-    // Check if Cropper is available, if not wait for it to load
     if (typeof Cropper === 'undefined') {
         console.warn('Cropper.js not loaded yet, waiting...');
-        // Wait for Cropper to load
         let checkInterval = setInterval(() => {
             if (typeof Cropper !== 'undefined') {
                 clearInterval(checkInterval);
@@ -18,7 +21,6 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 function initProfileEditor() {
-    // DOM Elements
     const fileInput = document.getElementById("file-input");
     const preview = document.getElementById("preview");
     const modal = document.getElementById("crop-modal");
@@ -27,10 +29,8 @@ function initProfileEditor() {
     const editTrigger = document.getElementById("edit-pic-trigger");
     const currentImg = document.getElementById("current-profile-img");
 
-    // Cropper instance
     let cropper = null;
 
-    // Configuration
     const CONFIG = {
         maxFileSize: 10 * 1024 * 1024, // 10MB
         cropSize: { width: 300, height: 300 },
@@ -38,48 +38,29 @@ function initProfileEditor() {
         uploadEndpoint: '/user/edit_profile_picture'
     };
 
-    /**
-     * Initialize event listeners
-     */
     function init() {
-        // Open file picker when edit button clicked
         editTrigger.addEventListener("click", handleEditClick);
-
-        // Handle file selection
         fileInput.addEventListener("change", handleFileSelect);
-
-        // Modal close events
         closeBtn.addEventListener("click", closeModal);
         modal.addEventListener("click", handleModalClick);
         document.addEventListener("keydown", handleKeyDown);
-
-        // Crop and upload
         cropBtn.addEventListener("click", handleCropAndUpload);
     }
 
-    /**
-     * Handle edit button click
-     */
     function handleEditClick() {
         fileInput.click();
     }
 
-    /**
-     * Handle file selection
-     * @param {Event} e - File input change event
-     */
     function handleFileSelect(e) {
         const file = e.target.files[0];
         if (!file) return;
 
-        // Validate file
         const validation = validateFile(file);
         if (!validation.valid) {
             showError(validation.error);
             return;
         }
 
-        // Read and display file
         const reader = new FileReader();
         reader.onload = (event) => {
             displayImageForCropping(event.target.result);
@@ -90,11 +71,6 @@ function initProfileEditor() {
         reader.readAsDataURL(file);
     }
 
-    /**
-     * Validate selected file
-     * @param {File} file - Selected file
-     * @returns {Object} Validation result
-     */
     function validateFile(file) {
         if (!CONFIG.acceptedTypes.includes(file.type)) {
             return {

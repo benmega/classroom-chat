@@ -3,7 +3,7 @@ from application.extensions import db
 from application.models.session_log import SessionLog
 from datetime import datetime, timedelta
 
-def close_stale_sessions(timeout_minutes=1):
+def close_stale_sessions(timeout_minutes=30):
     print("checking for stale sessions")
     cutoff = datetime.utcnow() - timedelta(minutes=timeout_minutes)
     stale = SessionLog.query.filter(

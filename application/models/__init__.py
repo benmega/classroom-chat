@@ -1,5 +1,10 @@
+"""
+File: __init__.py
+Type: py
+Summary: Model import helper to register all SQLAlchemy models.
+"""
+
 def setup_models():
-    # Import all models to ensure they are registered with SQLAlchemy
     from .configuration import Configuration
     from .ai_settings import AISettings
     from .banned_words import BannedWords

@@ -1,4 +1,9 @@
-# socket_events.py
+"""
+File: socket_events.py
+Type: py
+Summary: Socket.IO event handlers for user connections and status changes.
+"""
+
 from .extensions import db, socketio
 from .models.user import User
 from flask_socketio import emit
@@ -6,25 +11,20 @@ from flask import request, session
 
 @socketio.on('connect')
 def handle_connect(auth=None):
-    # Check if user is logged in by session
     user_userid = session.get('user')
     if user_userid:
-        # Find the user by their username stored in the session
         user = User.query.filter_by(id=user_userid).first()
         print(f'user connected {user_userid}')
     else:
         user_ip = request.remote_addr
         print(f'user connected {user_ip}')
-        # Fallback to IP address-based lookup (for anonymous users or unauthenticated connections)
         user = User.query.filter_by(ip_address=user_ip).first()
 
     if user:
         user.set_online(user.id, True)
-        # db.session.commit()
         emit('user_status_change', {'user_id': user.id, 'is_online': True}, broadcast=True)
     else:
-        # Create a dummy user for anonymous connection if not found in session
-        new_user = User(username=f"guest_{request.remote_addr}", ip_address=request.remote_addr, is_online=True, password_hash = "temp")
+        new_user = User(username=f"guest_{request.remote_addr}", ip_address=request.remote_addr, is_online=True, password_hash="temp")
         db.session.add(new_user)
         db.session.commit()
         emit('user_status_change', {'user_id': new_user.id, 'is_online': True}, broadcast=True)
@@ -34,7 +34,6 @@ def handle_connect(auth=None):
 
 @socketio.on('disconnect')
 def handle_disconnect(auth=None):
-    # Check if the user is logged in by session
     user_userid = session.get('user')
     if user_userid:
         user = User.query.filter_by(id=user_userid).first()
@@ -45,5 +44,4 @@ def handle_disconnect(auth=None):
 
     if user:
         user.set_online(user.id, False)
-        # db.session.commit()
         emit('user_status_change', {'user_id': user.id, 'is_online': False}, broadcast=True)

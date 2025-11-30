@@ -32,7 +32,7 @@ def replace_table(source_db, target_db, table):
         # Insert new rows
         tgt_cur.executemany(
             f"INSERT INTO {table} ({col_list}) VALUES ({placeholders})", rows
-***REMOVED***
+)
         tgt_conn.commit()
         print(f"Replaced {table} with {len(rows)} rows from source.")
     except Exception as e:
