@@ -98,7 +98,6 @@ function updateChatUI(conversationData) {
     }
 }
 
-// Added userId parameter
 function formatMessage(username, profilePicFilename, message, userId) {
     message = message.replace(/\n/g, '<br>');
 

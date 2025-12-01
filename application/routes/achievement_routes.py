@@ -212,7 +212,6 @@ def submit_certificate():
 from flask import send_from_directory
 
 @achievements.route("/view_certificate/<int:cert_id>")
-@local_only
 def view_certificate(cert_id):
     cert = UserCertificate.query.get_or_404(cert_id)
     full_path = os.path.abspath(cert.file_path)
@@ -220,11 +219,10 @@ def view_certificate(cert_id):
     filename = os.path.basename(full_path)
 
     if not os.path.exists(full_path):
-        flash("Certificate file not found.", "error")
-        return redirect(url_for("achievements.admin_certificates"))
+        flash("Certificate file not found on the server.", "error")
+        return "File Not Found", 404  # Returns a 404 status code
 
     return send_from_directory(directory, filename, mimetype="application/pdf")
-
 
 @achievements.route("/admin/certificates")
 @local_only

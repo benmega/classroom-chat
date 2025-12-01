@@ -50,6 +50,19 @@ class User(db.Model):
         lazy=True,
         cascade="all, delete-orphan"
     )
+    certificates = db.relationship(
+        'UserCertificate',
+        backref='user',
+        lazy=True,
+        cascade="all, delete-orphan"
+    )
+    challenge_logs = db.relationship(
+        'ChallengeLog',
+        primaryjoin='User._username == foreign(ChallengeLog.username)',
+        lazy=True,
+        viewonly=True  # Recommended since ChallengeLog.username isn't a foreign key
+    )
+
 
     def __repr__(self):
         return f'<User {self._username}>'

@@ -1,0 +1,496 @@
+/* File: public_profile.css
+   Summary: Styles for the public-facing student dashboard/portfolio.
+   Dependencies: uses variables from variables.css
+*/
+
+/* --- Main Layout --- */
+
+.profile-container {
+    max-width: var(--max-container-width);
+    margin: 0 auto;
+    padding: 20px;
+    box-sizing: border-box;
+    font-family: var(--font-family);
+    animation: fadeUp 0.5s ease-out;
+}
+
+/* --- 1. Hero Section (The Header Card) --- */
+
+.profile-header-card {
+    background: #fff;
+    border-radius: var(--border-radius-medium);
+    box-shadow: var(--box-shadow-medium);
+    overflow: hidden;
+    margin-bottom: 25px;
+    position: relative;
+}
+
+.header-background {
+    height: 140px;
+    /* Gradient using your Primary and Secondary colors */
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+}
+
+.header-content {
+    display: flex;
+    align-items: flex-end;
+    padding: 0 30px 20px;
+    margin-top: -70px; /* Pull content up over the banner */
+    flex-wrap: wrap;
+    gap: 25px;
+    position: relative;
+}
+
+.avatar-wrapper {
+    position: relative;
+    flex-shrink: 0;
+}
+
+.avatar-img {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    border: 5px solid #fff;
+    box-shadow: var(--box-shadow-medium);
+    object-fit: cover;
+    background-color: #fff;
+}
+
+.student-identity {
+    flex: 1;
+    margin-bottom: 10px;
+    min-width: 200px;
+}
+
+.student-name {
+    margin: 0;
+    font-size: 2.2rem;
+    color: var(--text-color);
+    font-weight: 700;
+}
+
+.student-title {
+    margin: 5px 0 10px 0;
+    color: var(--primary-color);
+    font-weight: 500;
+    font-size: 1.1rem;
+}
+
+/* Online/Offline Badge */
+.badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 20px 10px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.badge.online {
+    background-color: #e6fffa;
+    color: #00bfa5; /* Greenish teal */
+    border: 1px solid #b2f5ea;
+}
+
+.badge.offline {
+    background-color: var(--background-light);
+    color: #718096;
+    border: 1px solid var(--border-color);
+}
+
+/* Gamification Stats (Ducks) */
+.duck-stats {
+    display: flex;
+    align-items: center;
+    background: var(--background-light);
+    border-radius: var(--border-radius-medium);
+    padding: 10px 20px;
+    border: 1px solid var(--border-color);
+    margin-bottom: 10px;
+}
+
+.stat-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 80px;
+}
+
+.stat-divider {
+    width: 1px;
+    height: 30px;
+    background: var(--border-color);
+    margin: 0 15px;
+}
+
+.stat-box .label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    color: #666;
+    letter-spacing: 0.5px;
+}
+
+.stat-box .value {
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: var(--text-color);
+}
+
+.stat-box.highlight .value {
+    color: #d69e2e; /* Darker yellow for readability */
+}
+
+/* --- 2. Stats Grid --- */
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+    margin-bottom: 25px;
+}
+
+.grid-card {
+    background: #fff;
+    padding: 20px;
+    border-radius: var(--border-radius-medium);
+    box-shadow: var(--box-shadow-light);
+    display: flex;
+    align-items: center;
+    border-left: 5px solid var(--primary-color);
+    transition: transform var(--transition-default);
+}
+
+.grid-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--box-shadow-medium);
+}
+
+.icon-circle {
+    width: 54px;
+    height: 54px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    margin-right: 15px;
+    background: var(--background-light);
+    flex-shrink: 0;
+}
+
+/* Specific icon colors matching your theme palette */
+.icon-circle.blue { color: var(--secondary-color); background: #e3f2fd; }
+.icon-circle.green { color: var(--strength-strong); background: #e8f5e9; } /* Using strength-strong for green */
+.icon-circle.gold { color: #f6c23e; background: #fffde7; }
+.icon-circle.purple { color: #9c27b0; background: #f3e5f5; }
+
+.card-text h3 {
+    margin: 0;
+    font-size: 1.8rem;
+    color: var(--text-color);
+}
+
+.card-text p {
+    margin: 0;
+    color: #888;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    font-weight: 600;
+}
+
+/* --- 3. Dashboard Grid Layout --- */
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: 1fr 2fr; /* Left column smaller, Right column wider */
+    gap: 25px;
+}
+
+.dashboard-panel {
+    background: #fff;
+    border-radius: var(--border-radius-medium);
+    padding: 25px;
+    margin-bottom: 25px;
+    box-shadow: var(--box-shadow-light);
+    height: fit-content;
+}
+
+.panel-header {
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+}
+
+.panel-header h2 {
+    margin: 0;
+    font-size: 1.3rem;
+    color: var(--primary-color-dark);
+    text-align: left; /* Override global h2 center */
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* --- Progress Bars --- */
+
+.progress-item {
+    margin-bottom: 25px;
+}
+
+.prog-label {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: var(--text-color);
+    font-size: 0.95rem;
+}
+
+.progress-track {
+    height: 12px;
+    background: var(--background-light);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 5px;
+    border: 1px solid #eee;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--secondary-color), var(--primary-color));
+    border-radius: 10px;
+    transition: width 1s ease-in-out;
+}
+
+.ozaria-fill {
+    background: linear-gradient(90deg, #1cc88a, #20c9a6);
+}
+
+.progress-item small {
+    color: #888;
+    font-size: 0.85rem;
+}
+
+/* --- Skills Tags --- */
+
+.skill-cloud {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.skill-tag {
+    background: var(--background-light);
+    color: var(--primary-color-dark);
+    padding: 8px 14px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    border: 1px solid var(--border-color);
+    transition: var(--transition-default);
+}
+
+.skill-tag:hover {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+/* --- Certificates List --- */
+
+.cert-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.cert-item {
+    display: flex;
+    align-items: center;
+    padding: 15px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-medium);
+    background: #fafbfc;
+    transition: var(--transition-default);
+}
+
+.cert-item:hover {
+    border-color: var(--primary-color);
+    background: #fff;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.cert-icon {
+    font-size: 2rem;
+    color: var(--highlight-color);
+    margin-right: 15px;
+    /* Add a slight stroke to yellow icon for visibility on white */
+    text-shadow: 0 0 1px #bcaaa4;
+}
+
+.cert-info h4 {
+    margin: 0 0 5px 0;
+    color: var(--text-color);
+    font-size: 1.1rem;
+}
+
+.cert-date {
+    font-size: 0.85rem;
+    color: #777;
+}
+
+.cert-link {
+    margin-left: auto;
+    padding: 6px 12px;
+    background: rgba(14, 178, 187, 0.1); /* Primary color low opacity */
+    color: var(--primary-color);
+    border-radius: var(--border-radius-small);
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.cert-link:hover {
+    background: var(--primary-color);
+    color: white;
+    text-decoration: none;
+}
+
+/* --- Project Grid --- */
+
+.project-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 20px;
+}
+
+.project-card {
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-medium);
+    padding: 20px;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+    transition: var(--transition-default);
+    position: relative;
+    overflow: hidden;
+}
+
+.project-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--box-shadow-medium);
+    border-color: var(--secondary-color);
+}
+
+.project-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: var(--secondary-color);
+}
+
+.project-header h3 {
+    margin: 0 0 10px 0;
+    color: var(--primary-color-dark);
+    font-size: 1.2rem;
+}
+
+.project-body p {
+    color: #555;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    margin-bottom: 20px;
+    flex-grow: 1;
+}
+
+.btn-project {
+    align-self: flex-start;
+    color: var(--secondary-color);
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.95rem;
+}
+
+.btn-project:hover {
+    color: var(--secondary-color-dark);
+    text-decoration: none;
+    gap: 8px; /* Arrow slide effect */
+}
+
+/* --- Animations --- */
+
+@keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- Responsive Design --- */
+
+@media (max-width: 900px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr; /* Stack columns */
+    }
+}
+
+@media (max-width: 768px) {
+    .header-content {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        margin-top: -50px;
+    }
+
+    .student-identity {
+        margin-bottom: 20px;
+    }
+
+    .duck-stats {
+        width: 100%;
+        justify-content: center;
+        box-sizing: border-box;
+    }
+
+    .grid-card {
+        padding: 15px;
+    }
+}
+
+/* Container for the icon in the list view */
+.cert-icon {
+    width: 48px;   /* The target size you want on screen */
+    height: 48px;
+    margin-right: 15px;
+    position: relative;
+    /* overflow: hidden; */ /* Optional: use if the scaling spills over */
+}
+
+/* Target the inner badge container specifically within the cert-icon */
+.cert-icon .badge-container {
+    /* 1. Force the original size so the sprite coordinates work */
+    width: 128px !important;
+    height: 128px !important;
+
+    /* 2. Scale it down to fit the 48px box */
+    /* Calculation: 48px / 128px = 0.375 */
+    transform: scale(0.375);
+
+    /* 3. Anchor the scaling to the top-left corner */
+    transform-origin: top left;
+
+    /* 4. Remove default margins/padding that might mess up alignment */
+    margin: 0;
+    display: block;
+    border: none; /* Remove border if you don't want the card border in the list */
+    background: transparent; /* Remove background color if set */
+}
+
+/* Optional: Remove the "locked" grayscale effect if you just want to show the badge clearly */
+.cert-icon .badge {
+    filter: none !important;
+    opacity: 1 !important;
+}

@@ -408,10 +408,10 @@ def profile_picture(filename):
 @user.route('/profile/<int:user_id>', methods=['GET'])
 def view_user_profile(user_id):
     # Require login
-    current_id = session.get('user')
-    if not current_id:
-        flash('Please log in to view profiles.', 'warning')
-        return redirect(url_for('user.login'))
+    # current_id = session.get('user')
+    # if not current_id:
+    #     flash('Please log in to view profiles.', 'warning')
+    #     return redirect(url_for('user.login'))
 
     # Get the profile user
     target_profile = User.query.get_or_404(user_id)

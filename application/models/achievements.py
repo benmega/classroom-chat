@@ -21,6 +21,7 @@ class Achievement(db.Model):
     source = db.Column(db.String(255), nullable=True)
     users = db.relationship('UserAchievement', backref='achievement', lazy=True)
 
+
 class UserAchievement(db.Model):
     __tablename__ = 'user_achievement'
     id = db.Column(db.Integer, primary_key=True)
