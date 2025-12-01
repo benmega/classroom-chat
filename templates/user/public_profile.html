@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/profile.css') }}">
+
+<div class="profile-container">
+    <div class="profile-header">
+        <div class="profile-pic-container">
+            {% set pfp_filename = target.profile_picture if target and target.profile_picture else 'Default_pfp.jpg' %}
+            <img src="{{ url_for('user.profile_picture', filename=pfp_filename) }}"
+                 alt="Profile Picture"
+                 class="profile-img"
+                 id="public-profile-img">
+        </div>
+
+        <div class="profile-info">
+            <h1>{{ target.username }}</h1>
+            <p class="job-title">Aspiring Coder</p>
+            <p class="location">Classroom 101</p>
+            <p class="digital-ducks">Digital Ducks: {{ target.duck_balance }}</p>
+        </div>
+    </div>
+
+    <div class="profile-body">
+
+        <!-- Progress Section -->
+        <div class="progress-section">
+            <h2>Classroom Progress</h2>
+
+            <!-- CodeCombat -->
+            <div class="activity-card">
+                <h3 class="game-title">CodeCombat</h3>
+
+                {% set completed = target.get_progress("codecombat.com") %}
+                {% set percent = target.get_progress_percent("codecombat.com") %}
+
+                {% if completed %}
+                    <div class="progress-info">
+                        <span class="levels">{{ completed }} Levels Completed</span>
+                        <span class="percent">({{ percent }}%)</span>
+                    </div>
+
+                    <div class="progress-bar">
+                        <div class="progress" style="width: {{ percent }}%;"></div>
+                    </div>
+                {% else %}
+                    <p class="no-progress">No progress yet</p>
+                {% endif %}
+            </div>
+
+            <!-- Ozaria -->
+            <div class="activity-card">
+                <h3 class="game-title">Ozaria</h3>
+
+                {% set completed = target.get_progress("www.ozaria.com") %}
+                {% set percent = target.get_progress_percent("www.ozaria.com") %}
+
+                {% if completed %}
+                    <div class="progress-info">
+                        <span class="levels">{{ completed }} Levels Completed</span>
+                        <span class="percent">({{ percent }}%)</span>
+                    </div>
+
+                    <div class="progress-bar">
+                        <div class="progress" style="width: {{ percent }}%;"></div>
+                    </div>
+                {% else %}
+                    <p class="no-progress">No progress yet</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Skills Section -->
+        <div class="skills-section">
+            <h2>Top Skills</h2>
+            <div class="skills">
+                {% for skill in target.skills %}
+                <span class="skill-tag">
+                    {{ skill.name }}
+                </span>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Projects Section -->
+        <div class="projects-section">
+            <h2>Recent Projects</h2>
+            {% for project in target.projects %}
+            <div class="project-entry">
+                <h3>{{ project.name }}</h3>
+                <p>{{ project.description }}</p>
+                <p><a href="{{ project.link }}" target="_blank">View Project</a></p>
+            </div>
+            {% endfor %}
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}

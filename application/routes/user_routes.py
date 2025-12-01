@@ -403,3 +403,20 @@ def profile_picture(filename):
         return send_from_directory(PROFILE_PICTURE_FOLDER, safe_path)
     except FileNotFoundError:
         abort(404)
+
+
+@user.route('/profile/<int:user_id>', methods=['GET'])
+def view_user_profile(user_id):
+    # Require login
+    current_id = session.get('user')
+    if not current_id:
+        flash('Please log in to view profiles.', 'warning')
+        return redirect(url_for('user.login'))
+
+    # Get the profile user
+    target_profile = User.query.get_or_404(user_id)
+
+    return render_template(
+        'user/public_profile.html',
+        target=target_profile
+    )
