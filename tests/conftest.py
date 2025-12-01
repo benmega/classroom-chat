@@ -77,7 +77,7 @@ def add_sample_user(init_db):
             earned_ducks=earned_ducks,
             duck_balance=earned_ducks,  # keep balance in sync at creation
             profile_picture=profile_picture
-***REMOVED***
+)
         db.session.add(user)
         db.session.commit()
         return user
@@ -98,7 +98,7 @@ def sample_user_with_ducks(test_app):
                 password_hash='test_password',
                 earned_ducks=50,
                 duck_balance=50
-    ***REMOVED***
+    )
             db.session.add(user)
             db.session.commit()
             yield user
@@ -319,7 +319,7 @@ def sample_image_data():
 #             digital_ducks=10,
 #             duck_type='bit',
 #             status='pending'
-# ***REMOVED***
+# )
 #         db.session.add(trade)
 #         db.session.commit()
 #         yield trade
@@ -429,7 +429,7 @@ def sample_new_achievements(init_db):
             reward=10,
             description="Send your first message",
             requirement_value="1"
-***REMOVED***,
+),
         Achievement(
             name="Duck Collector",
             slug="duck-collector-10",
@@ -437,7 +437,7 @@ def sample_new_achievements(init_db):
             reward=25,
             description="Collect 10 ducks",
             requirement_value="10"
-***REMOVED***,
+),
         Achievement(
             name="Project Starter",
             slug="project-starter",
@@ -445,7 +445,7 @@ def sample_new_achievements(init_db):
             reward=50,
             description="Create your first project",
             requirement_value="1"
-***REMOVED***
+)
     ]
     db.session.add_all(achievements)
     db.session.commit()
@@ -464,7 +464,7 @@ def sample_multiple_achievements(init_db):
             reward=10,
             description="First achievement",
             requirement_value="10"
-***REMOVED***,
+),
         Achievement(
             id=2,
             name="Achievement Two",
@@ -473,7 +473,7 @@ def sample_multiple_achievements(init_db):
             reward=20,
             description="Second achievement",
             requirement_value="5"
-***REMOVED***
+)
     ]
     for ach in achievements:
         db.session.add(ach)

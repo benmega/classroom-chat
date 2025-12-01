@@ -1246,7 +1246,7 @@ def animate_fall(height_meters, fall_time_seconds):
                 y_final,
                 x_center + bread_width // 2,
                 y_final + bread_height
-    ***REMOVED***
+    )
             canvas.itemconfig(timer_label, text=f""Time: {fall_time_seconds:.2f} s"")
             return
 
@@ -1261,7 +1261,7 @@ def animate_fall(height_meters, fall_time_seconds):
             y_pixels,
             x_center + bread_width // 2,
             y_pixels + bread_height
-***REMOVED***
+)
 
         # Update timer
         canvas.itemconfig(timer_label, text=f""Time: {elapsed_s:.2f} s"")

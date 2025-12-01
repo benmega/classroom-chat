@@ -20,7 +20,7 @@ def test_upload_file_valid(client, sample_image_data, test_app, setup_directorie
         response = client.post(
             url_for('upload.upload_file'),
             json=json_data
-***REMOVED***
+)
 
     assert response.status_code == 200
     assert b"File uploaded successfully" in response.data
@@ -35,7 +35,7 @@ def test_upload_file_invalid_json(client, test_app):
             url_for('upload.upload_file'),
             data="invalid_data",
             content_type='application/json'
-***REMOVED***
+)
     assert response.status_code == 400
 
 
@@ -47,7 +47,7 @@ def test_upload_file_no_data(client):
         response = client.post(
             url_for('upload.upload_file'),
             json=json_data
-***REMOVED***
+)
 
         assert response.status_code == 400
         assert b'{"error":"Invalid JSON data"}' in response.data
@@ -72,7 +72,7 @@ def test_upload_file_multiple_file_types(client):
             response = client.post(
                 url_for('upload.upload_file'),
                 json=json_data
-    ***REMOVED***
+    )
 
             assert response.status_code == 200, f"Failed for {mime_type}"
             assert b"File uploaded successfully" in response.data, f"Unexpected response for {mime_type}"
@@ -95,7 +95,7 @@ def test_uploaded_file(client):
             response = client.get(
                 url_for('upload.uploaded_file', filename=filename),
                 buffered=True
-    ***REMOVED***
+    )
             assert response.status_code == 200
             assert response.data == b"fake image data"
         finally:

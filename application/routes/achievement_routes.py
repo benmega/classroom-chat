@@ -69,7 +69,7 @@ def add_achievement():
             description=description,
             requirement_value=requirement_value,
             source=request.form.get("source")
-***REMOVED***
+)
         db.session.add(ach)
         db.session.commit()
         flash(f"Achievement '{name}' added", "success")
@@ -120,14 +120,14 @@ def submit_certificate():
         # create or update cert entry
         cert = UserCertificate.query.filter_by(
             user_id=current_user.id, achievement_id=achievement.id
-***REMOVED***.first()
+).first()
         if not cert:
             cert = UserCertificate(
                 user_id=current_user.id,
                 achievement_id=achievement.id,
                 url=url,
                 file_path=filepath,
-    ***REMOVED***
+    )
             db.session.add(cert)
         else:
             cert.url = url

@@ -182,7 +182,7 @@ def test_submit_certificate_valid(client, init_db, sample_user, sample_achieveme
             '/achievements/submit_certificate',
             data={'certificate_url': valid_url, 'certificate_file': pdf_file},
             content_type='multipart/form-data'
-***REMOVED***
+)
 
     assert response.status_code == 200
 
@@ -361,7 +361,7 @@ def test_achievement_types(init_db):
             reward=10,
             description=desc,
             requirement_value=req_val
-***REMOVED***
+)
         db.session.add(achievement)
 
     db.session.commit()

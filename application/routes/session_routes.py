@@ -75,7 +75,7 @@ def heartbeat():
                     },
                 ],
                 Namespace='YourAppName/Activity'  # Create a custom namespace
-    ***REMOVED***
+    )
         except Exception as e:
             # Don't let a CloudWatch failure break the heartbeat
             print(f"Error publishing metric to CloudWatch: {e}")

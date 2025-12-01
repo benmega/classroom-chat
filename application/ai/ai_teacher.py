@@ -58,7 +58,7 @@ def get_or_create_ai_teacher() -> User:
                 username=AI_TEACHER_USERNAME,
                 ip_address=AI_TEACHER_IP,
                 password_hash="temp"  # AI user doesn't need real auth
-    ***REMOVED***
+    )
             db.session.add(user)
             db.session.commit()
             logger.info("Created AI Teacher user account")
@@ -95,7 +95,7 @@ def get_or_create_conversation(conversation_id: Optional[int], username: str) ->
         # Create new conversation
         conversation = Conversation(
             title=f"Conversation with {username} - {datetime.utcnow().strftime('%Y-%m-%d %H:%M')}"
-***REMOVED***
+)
         db.session.add(conversation)
         db.session.commit()
         logger.info(f"Created new conversation {conversation.id} for user {username}")
@@ -177,7 +177,7 @@ def call_ollama_api(prompt: str, model: str) -> str:
             OLLAMA_API_URL,
             json=payload,
             timeout=REQUEST_TIMEOUT
-***REMOVED***
+)
 
         if not response.ok:
             logger.error(f"Ollama API error: status {response.status_code}, response: {response.text}")

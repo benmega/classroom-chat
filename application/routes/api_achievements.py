@@ -28,7 +28,7 @@ def check_achievements():
                 "static",
                 filename=f"images/achievement_badges/{a.slug}.png",
                 _external=False
-    ***REMOVED***
+    )
         }
         for a in new_awards
     ]

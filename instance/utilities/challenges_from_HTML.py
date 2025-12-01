@@ -117,7 +117,7 @@ def store_challenges(app, challenges, domain, course_id, default_difficulty, def
                         description=challenge["description"],
                         difficulty=default_difficulty,
                         value=default_value
-            ***REMOVED***
+            )
                     db.session.add(new_challenge)
                     print(f"Added new challenge: {new_challenge.name}")
 

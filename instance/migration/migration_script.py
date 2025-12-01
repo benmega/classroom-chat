@@ -12,7 +12,7 @@ REQUIRED_TABLES = {
             base_price REAL NOT NULL,
             description TEXT NOT NULL,
             fulfillment_type TEXT NOT NULL DEFAULT 'physical'
-***REMOVED***;
+);
     """,
     "user_item_purchases": """
         CREATE TABLE user_item_purchases (
@@ -22,7 +22,7 @@ REQUIRED_TABLES = {
             times_purchased INTEGER NOT NULL DEFAULT 0,
             last_purchase DATETIME,
             FOREIGN KEY(item_id) REFERENCES store_items(id)
-***REMOVED***;
+);
     """
 }
 # Column migrations
@@ -136,7 +136,7 @@ def run_migrations():
         cursor.executemany(
             "INSERT INTO store_items (name, description, base_price, fulfillment_type) VALUES (?, ?, ?, ?);",
             processed_seed  # Use the new processed list
-***REMOVED***
+)
         conn.commit()
         print("Seeded store_items table")
     else:

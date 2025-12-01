@@ -39,7 +39,7 @@ def list_items():
             UserItemPurchase,
             (UserItemPurchase.item_id == StoreItem.id)
             & (UserItemPurchase.user_id == user_id)
-***REMOVED***
+)
         .all()
     )
 
@@ -95,7 +95,7 @@ def purchase_item(item_id):
             user_id=user_id,
             item_id=item_id,
             times_purchased=0
-***REMOVED***
+)
         db.session.add(record)
 
     price = calculate_price(item.base_price, record.times_purchased)

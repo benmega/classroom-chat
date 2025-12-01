@@ -90,7 +90,7 @@ def test_dynamic_project_generation(init_db, sample_user):
             description=description,
             link=link,
             user_id=sample_user.id
-***REMOVED***
+)
         db.session.add(project)
     db.session.commit()
 

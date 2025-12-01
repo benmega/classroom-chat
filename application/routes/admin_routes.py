@@ -88,19 +88,19 @@ def get_duck_transactions_data():
         # Ducks earned from challenges
         day_earned = db.session.query(
             func.coalesce(func.sum(Challenge.value), 0)
-***REMOVED***.select_from(ChallengeLog).join(
+).select_from(ChallengeLog).join(
             Challenge, Challenge.slug.ilike(ChallengeLog.challenge_name)
-***REMOVED***.filter(
+).filter(
             ChallengeLog.timestamp.between(day_start, day_end)
-***REMOVED***.scalar() or 0
+).scalar() or 0
 
         # Ducks spent in trades
         day_spent = db.session.query(
             func.coalesce(func.sum(DuckTradeLog.digital_ducks), 0)
-***REMOVED***.filter(
+).filter(
             DuckTradeLog.timestamp.between(day_start, day_end),
             DuckTradeLog.status == 'approved'
-***REMOVED***.scalar() or 0
+).scalar() or 0
 
         earned.append(day_earned)
         spent.append(day_spent)

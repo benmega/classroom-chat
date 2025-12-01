@@ -10,7 +10,7 @@ def sign_license(data: dict, private_key_path: str):
     with open(private_key_path, "rb") as key_file:
         private_key = serialization.load_pem_private_key(
             key_file.read(), password=None, backend=default_backend()
-***REMOVED***
+)
 
     signature = private_key.sign(
         license_json,

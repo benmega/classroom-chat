@@ -33,7 +33,7 @@ def load_license(public_key_path="public_key.pem", license_path="license.lic"):
             license_json,
             padding.PKCS1v15(),
             hashes.SHA256()
-***REMOVED***
+)
         return {
             "is_premium": "premium" in data["license"].get("features", []),
             "licensee": data["license"].get("licensee")

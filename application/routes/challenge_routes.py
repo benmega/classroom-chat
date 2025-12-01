@@ -73,7 +73,7 @@ def submit_challenge():
             "submit_challenge.html",
             success=True,
             message=f"Congrats {user.username}, you earned {duck_reward} ducks!",
-***REMOVED***
+)
 
     # Handle failed challenge submission
     msg = challenge_check.get("details", {}).get(
@@ -192,7 +192,7 @@ def _log_challenge(details, username, helper=None):
             domain=details["domain"],
             challenge_name=details["challenge_name"],
             course_id=details["course_id"],
-***REMOVED***.first()
+).first()
 
         if existing_log:
             return {
@@ -210,7 +210,7 @@ def _log_challenge(details, username, helper=None):
             course_instance=details["course_instance"],
             timestamp=datetime.utcnow(),
             helper=helper
-***REMOVED***
+)
         db.session.add(challenge_log)
         db.session.commit()
 
