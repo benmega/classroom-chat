@@ -507,3 +507,191 @@ Dependencies: uses variables from variables.css
     text-decoration: none;
 }
 .learn-more:hover { text-decoration: underline; }
+
+/* Project Grid Styling */
+.project-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+}
+
+.project-card {
+    background: #fff;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-medium);
+    overflow: hidden;
+    transition: transform 0.2s, box-shadow 0.2s;
+    display: flex;
+    flex-direction: column;
+}
+
+.project-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+
+.project-thumb {
+    height: 140px;
+    background: #2d3748;
+    overflow: hidden;
+    position: relative;
+}
+
+.project-thumb img { width: 100%; height: 100%; object-fit: cover; }
+
+.code-pattern-bg {
+    width: 100%; height: 100%;
+    display: flex; align-items: center; justify-content: center;
+    color: rgba(255,255,255,0.1);
+    font-size: 3rem;
+    background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+}
+
+.project-content { padding: 15px; flex-grow: 1; display: flex; flex-direction: column; }
+.project-content h3 { margin: 0 0 10px 0; color: var(--primary-color-dark); font-size: 1.1rem; }
+.project-excerpt { font-size: 0.9rem; color: #666; margin-bottom: 15px; flex-grow: 1; }
+
+.project-actions { display: flex; gap: 10px; margin-top: auto; }
+
+.btn-play, .btn-details {
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    text-decoration: none;
+    border: none;
+    flex: 1;
+    text-align: center;
+    transition: 0.2s;
+}
+
+.btn-play { background: #e6fffa; color: #00bfa5; border: 1px solid #b2f5ea; }
+.btn-play:hover { background: #b2f5ea; }
+
+.btn-details { background: var(--background-light); color: #555; }
+.btn-details:hover { background: #e2e8f0; }
+
+
+/* MODAL STYLING */
+.project-modal-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.6);
+    z-index: 10000;
+    display: flex; align-items: center; justify-content: center;
+    animation: fadeIn 0.2s ease-out;
+}
+
+.project-modal-content {
+    background: white;
+    width: 90%; max-width: 900px; max-height: 90vh;
+    border-radius: 12px;
+    overflow-y: auto;
+    position: relative;
+    padding: 30px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+.modal-close {
+    position: absolute; top: 15px; right: 20px;
+    font-size: 2rem; background: none; border: none; cursor: pointer; color: #aaa;
+}
+.modal-close:hover { color: #333; }
+
+.modal-header {
+    border-bottom: 1px solid #eee; padding-bottom: 20px; margin-bottom: 20px;
+    display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;
+}
+.modal-header h2 { margin: 0; color: var(--primary-color-dark); }
+
+.btn-play-large {
+    background: var(--secondary-color); color: white;
+    padding: 10px 20px; border-radius: 6px; text-decoration: none; font-weight: bold;
+}
+.btn-play-large:hover { background: var(--secondary-color-dark); }
+
+.modal-body-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 30px;
+}
+
+/* Modal Content Blocks */
+.info-block { margin-bottom: 25px; }
+.info-block h4, .modal-right h4 {
+    color: #4a5568; font-size: 0.9rem; text-transform: uppercase;
+    letter-spacing: 0.05em; border-bottom: 2px solid var(--highlight-color);
+    display: inline-block; padding-bottom: 3px; margin-bottom: 10px;
+}
+
+.teacher-feedback blockquote {
+    background: #fffbeb; /* Light yellow note look */
+    border-left: 4px solid var(--highlight-color);
+    margin: 0; padding: 15px;
+    font-style: italic; color: #4a5568;
+}
+
+.video-link-box {
+    display: flex; align-items: center; gap: 15px;
+    background: #2d3748; color: white; padding: 15px;
+    border-radius: 8px; text-decoration: none; transition: 0.2s;
+}
+.video-link-box:hover { background: #1a202c; transform: scale(1.02); }
+
+/* Code Block Styling */
+.code-block {
+    background: #1e1e1e; color: #d4d4d4;
+    padding: 15px; border-radius: 8px;
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 0.9rem;
+    overflow-x: auto;
+    max-height: 400px;
+    white-space: pre-wrap;
+}
+
+.github-box {
+    text-align: center; padding: 40px;
+    background: #f7fafc; border-radius: 8px; border: 1px dashed #cbd5e0;
+}
+.btn-github {
+    display: inline-block; margin-top: 10px;
+    color: #333; font-weight: bold; text-decoration: none;
+    border-bottom: 2px solid #333;
+}
+
+@media (max-width: 768px) {
+    .modal-body-grid { grid-template-columns: 1fr; }
+}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+/* Update the button styling for generic look */
+.btn-launch {
+    background: #e6fffa; color: #00bfa5; border: 1px solid #b2f5ea;
+    padding: 8px; border-radius: 4px; text-decoration: none; text-align: center;
+}
+.btn-launch-large {
+    background: var(--primary-color); color: white; padding: 10px 20px;
+    border-radius: 6px; text-decoration: none; font-weight: bold;
+}
+
+/* SCROLLABLE CODE CONTAINER */
+.code-scroll-container {
+    background: #1e1e1e; /* VS Code Dark Grey */
+    border-radius: 8px;
+    border: 1px solid #333;
+    max-height: 500px; /* Fixed height! */
+    overflow-y: auto;  /* Adds vertical scrollbar if needed */
+    overflow-x: auto;  /* Adds horizontal scrollbar for long lines */
+    padding: 15px;
+}
+
+/* Custom Scrollbar for Code Block */
+.code-scroll-container::-webkit-scrollbar { width: 8px; height: 8px; }
+.code-scroll-container::-webkit-scrollbar-track { background: #1e1e1e; }
+.code-scroll-container::-webkit-scrollbar-thumb { background: #555; border-radius: 4px; }
+.code-scroll-container::-webkit-scrollbar-thumb:hover { background: #888; }
+
+.code-scroll-container pre { margin: 0; }
+.code-scroll-container code {
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 0.85rem;
+    color: #d4d4d4;
+    white-space: pre; /* Keeps code formatting exact */
+}

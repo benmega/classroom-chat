@@ -211,31 +211,118 @@
             {% endif %}
 
             <div class="dashboard-panel">
-                <div class="panel-header">
-                    <h2><i class="fas fa-laptop-code"></i> Project Portfolio</h2>
-                </div>
-                <div class="project-grid">
-                    {% for project in target.projects %}
-                    <div class="project-card">
-                        <div class="project-header">
-                            <h3>{{ project.name }}</h3>
-                        </div>
-                        <div class="project-body">
-                            <p>{{ project.description }}</p>
-                        </div>
-                        {% if project.link %}
-                        <div class="project-footer">
-                            <a href="{{ project.link }}" target="_blank" class="btn-project">View Project <i class="fas fa-arrow-right"></i></a>
-                        </div>
-                        {% endif %}
+    <div class="panel-header">
+        <h2><i class="fas fa-gamepad"></i> Project Portfolio</h2>
+    </div>
+
+    <div class="project-grid">
+    {% for project in target.projects %}
+    <div class="project-card">
+        <div class="project-thumb">
+            {% if project.image_url %}
+                <img src="{{ project.image_url }}" alt="{{ project.name }}">
+            {% else %}
+                <div class="code-pattern-bg"><i class="fas fa-layer-group"></i></div>
+            {% endif %}
+        </div>
+
+        <div class="project-content">
+            <h3>{{ project.name }}</h3>
+            <p class="project-excerpt">{{ project.description | truncate(80) }}</p>
+
+            <div class="project-actions">
+                {% if project.link %}
+                    <a href="{{ project.link }}" target="_blank" class="btn-launch">
+                        <i class="fas fa-external-link-alt"></i> Demo
+                    </a>
+                {% endif %}
+
+                <button class="btn-details" onclick="openProjectModal('modal-{{ project.id }}')">
+                    <i class="fas fa-file-code"></i> Case Study
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-{{ project.id }}" class="project-modal-overlay" style="display:none;">
+        <div class="project-modal-content">
+            <button class="modal-close" onclick="closeProjectModal('modal-{{ project.id }}')">&times;</button>
+
+            <div class="modal-header">
+                <h2>{{ project.name }}</h2>
+                {% if project.link %}
+                    <a href="{{ project.link }}" target="_blank" class="btn-launch-large">
+                        <i class="fas fa-rocket"></i> Launch Project
+                    </a>
+                {% endif %}
+            </div>
+
+            <div class="modal-body-grid">
+                <div class="modal-left">
+                    <div class="info-block">
+                        <h4>About this Project</h4>
+                        <p>{{ project.description }}</p>
                     </div>
+
+                    {% if project.teacher_comment %}
+                    <div class="info-block teacher-feedback">
+                        <h4>Instructor Feedback</h4>
+                        <blockquote>"{{ project.teacher_comment }}"</blockquote>
+                    </div>
+                    {% endif %}
+
+                    {% if project.video_url %}
+                    <div class="info-block">
+                        <h4>Project Walkthrough</h4>
+                        <a href="{{ project.video_url }}" target="_blank" class="video-link-box">
+                            <i class="fas fa-play-circle fa-2x"></i>
+                            <span>Watch Video Recording</span>
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="modal-right">
+                    <h4>Source Code & Logic</h4>
+                    {% if project.code_snippet %}
+                        <div class="code-scroll-container">
+                            <pre><code>{{ project.code_snippet }}</code></pre>
+                        </div>
+                    {% elif project.github_link %}
+                        <div class="github-box">
+                            <i class="fab fa-github fa-3x"></i>
+                            <p>Code hosted on GitHub</p>
+                            <a href="{{ project.github_link }}" target="_blank" class="btn-github">View Repo</a>
+                        </div>
                     {% else %}
-                    <p class="empty-msg">Projects are currently in development.</p>
-                    {% endfor %}
+                        <p class="no-code">No code preview available.</p>
+                    {% endif %}
                 </div>
             </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+</div>
         </div>
 
     </div>
 </div>
+<script>
+    function openProjectModal(id) {
+        document.getElementById(id).style.display = 'flex';
+        document.body.style.overflow = 'hidden'; // Prevent scrolling background
+    }
+    function closeProjectModal(id) {
+        document.getElementById(id).style.display = 'none';
+        document.body.style.overflow = 'auto'; // Restore scrolling
+    }
+    // Close modal if clicking outside content
+    window.onclick = function(event) {
+        if (event.target.classList.contains('project-modal-overlay')) {
+            event.target.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+    }
+</script>
 {% endblock %}
