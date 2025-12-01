@@ -69,7 +69,63 @@
             </div>
         </div>
     </div>
+    <div class="dashboard-panel">
+    <div class="panel-header">
+        <h2><i class="fas fa-code-branch"></i> Contribution Graph</h2>
+        <span class="sub-header-text">{{ target.challenge_logs | length }} contributions in the last year</span>
+    </div>
 
+    <div class="graph-scroll-container">
+        {% set graph_data = target.get_contribution_data() %}
+
+        <table class="contribution-table">
+            <thead>
+                <tr>
+                    <td style="width: 30px"></td> {% for month in graph_data.months %}
+                        <td class="month-label" colspan="{{ month.colspan }}">{{ month.name }}</td>
+                    {% endfor %}
+                </tr>
+            </thead>
+
+            <tbody>
+                {% set day_labels = ["", "Mon", "", "Wed", "", "Fri", ""] %}
+
+                {% for row_index in range(7) %}
+                <tr class="graph-row">
+                    <td class="day-label">
+                        <span class="sr-only">{{ day_labels[row_index] }}</span>
+                        <span aria-hidden="true">{{ day_labels[row_index] }}</span>
+                    </td>
+
+                    {% for week_data in graph_data.rows[row_index] %}
+                        {% if week_data %}
+                            <td class="day-cell"
+                                data-level="{{ week_data.level }}"
+                                title="{{ week_data.count }} contributions on {{ week_data.date }}">
+                            </td>
+                        {% else %}
+                            <td class="day-cell" data-level="0"></td>
+                        {% endif %}
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="graph-footer">
+        <a href="#" class="learn-more">Learn how we count contributions</a>
+        <div class="legend">
+            <span>Less</span>
+            <div class="day-cell" data-level="0"></div>
+            <div class="day-cell" data-level="1"></div>
+            <div class="day-cell" data-level="2"></div>
+            <div class="day-cell" data-level="3"></div>
+            <div class="day-cell" data-level="4"></div>
+            <span>More</span>
+        </div>
+    </div>
+</div>
     <div class="dashboard-grid">
 
         <div class="column-left">

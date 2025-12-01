@@ -1,9 +1,9 @@
-/* File: public_profile.css
-   Summary: Styles for the public-facing student dashboard/portfolio.
-   Dependencies: uses variables from variables.css
+/*
+File: public_profile.css
+Type: css
+Summary: Styles for the public-facing student dashboard/portfolio.
+Dependencies: uses variables from variables.css
 */
-
-/* --- Main Layout --- */
 
 .profile-container {
     max-width: var(--max-container-width);
@@ -14,28 +14,26 @@
     animation: fadeUp 0.5s ease-out;
 }
 
-/* --- 1. Hero Section (The Header Card) --- */
-
 .profile-header-card {
     background: #fff;
     border-radius: var(--border-radius-medium);
     box-shadow: var(--box-shadow-medium);
-    overflow: hidden;
+    overflow: visible;
     margin-bottom: 25px;
     position: relative;
 }
 
 .header-background {
     height: 140px;
-    /* Gradient using your Primary and Secondary colors */
     background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    border-radius: var(--border-radius-medium) var(--border-radius-medium) 0 0;
 }
 
 .header-content {
     display: flex;
     align-items: flex-end;
     padding: 0 30px 20px;
-    margin-top: -70px; /* Pull content up over the banner */
+    margin-top: -70px;
     flex-wrap: wrap;
     gap: 25px;
     position: relative;
@@ -76,30 +74,6 @@
     font-size: 1.1rem;
 }
 
-/* Online/Offline Badge */
-.badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 20px 10px;
-    border-radius: 20px;
-    font-size: 0.85rem;
-    font-weight: 600;
-}
-
-.badge.online {
-    background-color: #e6fffa;
-    color: #00bfa5; /* Greenish teal */
-    border: 1px solid #b2f5ea;
-}
-
-.badge.offline {
-    background-color: var(--background-light);
-    color: #718096;
-    border: 1px solid var(--border-color);
-}
-
-/* Gamification Stats (Ducks) */
 .duck-stats {
     display: flex;
     align-items: center;
@@ -108,6 +82,7 @@
     padding: 10px 20px;
     border: 1px solid var(--border-color);
     margin-bottom: 10px;
+    box-shadow: var(--box-shadow-light);
 }
 
 .stat-box {
@@ -138,10 +113,8 @@
 }
 
 .stat-box.highlight .value {
-    color: #d69e2e; /* Darker yellow for readability */
+    color: var(--highlight-hover);
 }
-
-/* --- 2. Stats Grid --- */
 
 .stats-grid {
     display: grid;
@@ -179,16 +152,15 @@
     flex-shrink: 0;
 }
 
-/* Specific icon colors matching your theme palette */
 .icon-circle.blue { color: var(--secondary-color); background: #e3f2fd; }
-.icon-circle.green { color: var(--strength-strong); background: #e8f5e9; } /* Using strength-strong for green */
-.icon-circle.gold { color: #f6c23e; background: #fffde7; }
+.icon-circle.green { color: var(--strength-strong); background: #e8f5e9; }
+.icon-circle.gold { color: var(--highlight-hover); background: #fffde7; }
 .icon-circle.purple { color: #9c27b0; background: #f3e5f5; }
 
 .card-text h3 {
     margin: 0;
     font-size: 1.8rem;
-    color: var(--text-color);
+    color: var(--primary-color-dark);
 }
 
 .card-text p {
@@ -199,12 +171,11 @@
     font-weight: 600;
 }
 
-/* --- 3. Dashboard Grid Layout --- */
-
 .dashboard-grid {
     display: grid;
-    grid-template-columns: 1fr 2fr; /* Left column smaller, Right column wider */
+    grid-template-columns: 1fr 2fr;
     gap: 25px;
+    align-items: start;
 }
 
 .dashboard-panel {
@@ -226,13 +197,11 @@
     margin: 0;
     font-size: 1.3rem;
     color: var(--primary-color-dark);
-    text-align: left; /* Override global h2 center */
+    text-align: left;
     display: flex;
     align-items: center;
     gap: 10px;
 }
-
-/* --- Progress Bars --- */
 
 .progress-item {
     margin-bottom: 25px;
@@ -272,8 +241,6 @@
     font-size: 0.85rem;
 }
 
-/* --- Skills Tags --- */
-
 .skill-cloud {
     display: flex;
     flex-wrap: wrap;
@@ -297,8 +264,6 @@
     border-color: var(--primary-color);
 }
 
-/* --- Certificates List --- */
-
 .cert-list {
     display: flex;
     flex-direction: column;
@@ -318,15 +283,31 @@
 .cert-item:hover {
     border-color: var(--primary-color);
     background: #fff;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    box-shadow: var(--box-shadow-light);
 }
 
 .cert-icon {
-    font-size: 2rem;
-    color: var(--highlight-color);
+    width: 48px;
+    height: 48px;
     margin-right: 15px;
-    /* Add a slight stroke to yellow icon for visibility on white */
-    text-shadow: 0 0 1px #bcaaa4;
+    position: relative;
+    flex-shrink: 0;
+}
+
+.cert-icon .badge-container {
+    width: 128px !important;
+    height: 128px !important;
+    transform: scale(0.375);
+    transform-origin: top left;
+    margin: 0;
+    display: block;
+    border: none;
+    background: transparent;
+}
+
+.cert-icon .badge {
+    filter: none !important;
+    opacity: 1 !important;
 }
 
 .cert-info h4 {
@@ -343,7 +324,7 @@
 .cert-link {
     margin-left: auto;
     padding: 6px 12px;
-    background: rgba(14, 178, 187, 0.1); /* Primary color low opacity */
+    background: rgba(14, 178, 187, 0.1);
     color: var(--primary-color);
     border-radius: var(--border-radius-small);
     font-weight: 600;
@@ -355,8 +336,6 @@
     color: white;
     text-decoration: none;
 }
-
-/* --- Project Grid --- */
 
 .project-grid {
     display: grid;
@@ -419,21 +398,17 @@
 .btn-project:hover {
     color: var(--secondary-color-dark);
     text-decoration: none;
-    gap: 8px; /* Arrow slide effect */
+    gap: 8px;
 }
-
-/* --- Animations --- */
 
 @keyframes fadeUp {
     from { opacity: 0; transform: translateY(20px); }
     to { opacity: 1; transform: translateY(0); }
 }
 
-/* --- Responsive Design --- */
-
 @media (max-width: 900px) {
     .dashboard-grid {
-        grid-template-columns: 1fr; /* Stack columns */
+        grid-template-columns: 1fr;
     }
 }
 
@@ -460,37 +435,75 @@
     }
 }
 
-/* Container for the icon in the list view */
-.cert-icon {
-    width: 48px;   /* The target size you want on screen */
-    height: 48px;
-    margin-right: 15px;
-    position: relative;
-    /* overflow: hidden; */ /* Optional: use if the scaling spills over */
+/* Graph Container */
+.graph-scroll-container {
+    overflow-x: auto;
+    padding-bottom: 10px;
 }
 
-/* Target the inner badge container specifically within the cert-icon */
-.cert-icon .badge-container {
-    /* 1. Force the original size so the sprite coordinates work */
-    width: 128px !important;
-    height: 128px !important;
-
-    /* 2. Scale it down to fit the 48px box */
-    /* Calculation: 48px / 128px = 0.375 */
-    transform: scale(0.375);
-
-    /* 3. Anchor the scaling to the top-left corner */
-    transform-origin: top left;
-
-    /* 4. Remove default margins/padding that might mess up alignment */
-    margin: 0;
-    display: block;
-    border: none; /* Remove border if you don't want the card border in the list */
-    background: transparent; /* Remove background color if set */
+.contribution-table {
+    border-spacing: 3px;
+    border-collapse: separate;
+    margin: 0 auto;
 }
 
-/* Optional: Remove the "locked" grayscale effect if you just want to show the badge clearly */
-.cert-icon .badge {
-    filter: none !important;
-    opacity: 1 !important;
+/* Headers */
+.month-label {
+    font-size: 12px;
+    color: #555;
+    text-align: left;
+    padding-bottom: 5px;
 }
+
+.day-label {
+    font-size: 10px;
+    color: #555;
+    padding-right: 5px;
+    vertical-align: middle;
+    height: 10px;
+    line-height: 10px;
+}
+
+/* The Grid Cells */
+.day-cell {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+    background-color: #ebedf0; /* Level 0 */
+    box-sizing: border-box;
+}
+
+.day-cell:hover {
+    outline: 1px solid rgba(0,0,0,0.4);
+    outline-offset: -1px;
+    cursor: pointer;
+}
+
+/* Data Levels (Using your Teal Theme) */
+.day-cell[data-level="0"] { background-color: #ebedf0; }
+.day-cell[data-level="1"] { background-color: #b2ebf2; }
+.day-cell[data-level="2"] { background-color: #4dd0e1; }
+.day-cell[data-level="3"] { background-color: #00bcd4; }
+.day-cell[data-level="4"] { background-color: #006064; }
+
+/* Footer & Legend */
+.graph-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 10px;
+    font-size: 12px;
+    color: #586069;
+}
+
+.graph-footer .legend {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+}
+
+.learn-more {
+    color: #0969da;
+    text-decoration: none;
+}
+.learn-more:hover { text-decoration: underline; }
