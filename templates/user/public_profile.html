@@ -1,0 +1,241 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/public_profile.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/profile.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/achievements.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/sprite.css') }}">
+
+<div class="profile-container">
+
+    <div class="profile-header-card">
+        <div class="header-background"></div>
+
+        <div class="header-content">
+            <div class="avatar-wrapper">
+                {% set pfp = target.profile_picture if target.profile_picture else 'Default_pfp.jpg' %}
+                <img src="{{ url_for('user.profile_picture', filename=pfp) }}"
+                     alt="{{ target.username }}"
+                     class="avatar-img">
+            </div>
+
+            <div class="student-identity">
+                <h1 class="student-name">{{ target.nickname }}</h1>
+                <p class="student-title">{{ target.username}}</p>
+
+            </div>
+
+            <div class="duck-stats">
+                <div class="stat-box">
+                    <span class="label">Lifetime Ducks</span>
+                    <span class="value">{{ target.earned_ducks }}</span>
+                </div>
+                <div class="stat-divider"></div>
+                <div class="stat-box highlight">
+                    <span class="label">Duck Balance</span>
+                    <span class="value"><i class="fas fa-coins"></i> {{ target.duck_balance }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="stats-grid">
+        <div class="grid-card">
+            <div class="icon-circle blue"><i class="fas fa-tasks"></i></div>
+            <div class="card-text">
+                <h3>{{ target.challenge_logs | length }}</h3> <p>Challenges Solved</p>
+            </div>
+        </div>
+        <div class="grid-card">
+            <div class="icon-circle green"><i class="fas fa-project-diagram"></i></div>
+            <div class="card-text">
+                <h3>{{ target.projects | length }}</h3>
+                <p>Projects Built</p>
+            </div>
+        </div>
+        <div class="grid-card">
+            <div class="icon-circle gold"><i class="fas fa-trophy"></i></div>
+            <div class="card-text">
+                <h3>{{ target.certificates | default([]) | length }}</h3>
+                <p>Certificates</p>
+            </div>
+        </div>
+        <div class="grid-card">
+            <div class="icon-circle purple"><i class="fas fa-star"></i></div>
+            <div class="card-text">
+                <h3>{{ target.skills | length }}</h3>
+                <p>Skills Unlocked</p>
+            </div>
+        </div>
+    </div>
+    <div class="dashboard-panel">
+    <div class="panel-header">
+        <h2><i class="fas fa-calendar-alt"></i> Daily Coding Effort</h2>
+        <span class="sub-header-text">{{ target.challenge_logs | length }} challenges solved in the last year</span>
+    </div>
+
+    <div class="graph-scroll-container">
+        {% set graph_data = target.get_contribution_data() %}
+
+        <table class="contribution-table">
+            <thead>
+                <tr>
+                    <td style="width: 30px"></td> {% for month in graph_data.months %}
+                        <td class="month-label" colspan="{{ month.colspan }}">{{ month.name }}</td>
+                    {% endfor %}
+                </tr>
+            </thead>
+
+            <tbody>
+                {% set day_labels = ["", "Mon", "", "Wed", "", "Fri", ""] %}
+
+                {% for row_index in range(7) %}
+                <tr class="graph-row">
+                    <td class="day-label">
+                        <span class="sr-only">{{ day_labels[row_index] }}</span>
+                        <span aria-hidden="true">{{ day_labels[row_index] }}</span>
+                    </td>
+
+                    {% for week_data in graph_data.rows[row_index] %}
+                        {% if week_data %}
+                            <td class="day-cell"
+                                data-level="{{ week_data.level }}"
+                                title="{{ week_data.count }} contributions on {{ week_data.date }}">
+                            </td>
+                        {% else %}
+                            <td class="day-cell" data-level="0"></td>
+                        {% endif %}
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="graph-footer">
+        <a></a>
+        <div class="legend">
+            <span>Less</span>
+            <div class="day-cell" data-level="0"></div>
+            <div class="day-cell" data-level="1"></div>
+            <div class="day-cell" data-level="2"></div>
+            <div class="day-cell" data-level="3"></div>
+            <div class="day-cell" data-level="4"></div>
+            <span>More</span>
+        </div>
+    </div>
+</div>
+    <div class="dashboard-grid">
+
+        <div class="column-left">
+
+            <div class="dashboard-panel">
+                <div class="panel-header">
+                    <h2><i class="fas fa-chart-line"></i> Curriculum Progress</h2>
+                </div>
+
+                {% set cc_levels = target.get_progress("codecombat.com") %}
+                {% set cc_percent = target.get_progress_percent("codecombat.com") %}
+                <div class="progress-item">
+                    <div class="prog-label">
+                        <span>CodeCombat</span>
+                        <span>{{ cc_percent }}%</span>
+                    </div>
+                    <div class="progress-track">
+                        <div class="progress-fill" style="width: {{ cc_percent }}%;"></div>
+                    </div>
+                    <small>{{ cc_levels }} Levels Completed</small>
+                </div>
+
+                {% set oz_levels = target.get_progress("www.ozaria.com") %}
+                {% set oz_percent = target.get_progress_percent("www.ozaria.com") %}
+                <div class="progress-item">
+                    <div class="prog-label">
+                        <span>Ozaria</span>
+                        <span>{{ oz_percent }}%</span>
+                    </div>
+                    <div class="progress-track">
+                        <div class="progress-fill ozaria-fill" style="width: {{ oz_percent }}%;"></div>
+                    </div>
+                    <small>{{ oz_levels }} Levels Completed</small>
+                </div>
+            </div>
+
+            <div class="dashboard-panel">
+                <div class="panel-header">
+                    <h2><i class="fas fa-tools"></i> Technical Skills</h2>
+                </div>
+                <div class="skill-cloud">
+                    {% for skill in target.skills %}
+                        <span class="skill-tag">{{ skill.name }}</span>
+                    {% else %}
+                        <p class="empty-msg">No skills recorded yet.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="column-right">
+
+            {% if target.certificates %}
+            <div class="dashboard-panel">
+                <div class="panel-header">
+                    <h2><i class="fas fa-certificate"></i> Verified Certificates</h2>
+                </div>
+                <div class="cert-list">
+    {% for cert in target.certificates %}
+    <div class="cert-item">
+
+        <div class="cert-icon">
+            {% set achievement_slug = cert.achievement.slug if cert.achievement else 'default' %}
+            <div class="badge-container">
+                <div class="badge badge-{{ achievement_slug }}">&nbsp;</div>
+            </div>
+        </div>
+
+        <div class="cert-info">
+            <h4>{{ cert.achievement.name if cert.achievement else "Course Completion" }}</h4>
+            <span class="cert-date">Awarded: {{ cert.submitted_at.strftime('%b %Y') if cert.submitted_at else 'Recently' }}</span>
+        </div>
+
+        {% if cert.file_path %}
+            <a href="{{ url_for('achievements.view_certificate', cert_id=cert.id) }}"
+               target="_blank"
+               class="cert-link">View File</a>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+            </div>
+            {% endif %}
+
+            <div class="dashboard-panel">
+                <div class="panel-header">
+                    <h2><i class="fas fa-laptop-code"></i> Project Portfolio</h2>
+                </div>
+                <div class="project-grid">
+                    {% for project in target.projects %}
+                    <div class="project-card">
+                        <div class="project-header">
+                            <h3>{{ project.name }}</h3>
+                        </div>
+                        <div class="project-body">
+                            <p>{{ project.description }}</p>
+                        </div>
+                        {% if project.link %}
+                        <div class="project-footer">
+                            <a href="{{ project.link }}" target="_blank" class="btn-project">View Project <i class="fas fa-arrow-right"></i></a>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% else %}
+                    <p class="empty-msg">Projects are currently in development.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

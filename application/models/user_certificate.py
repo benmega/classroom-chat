@@ -19,4 +19,7 @@ class UserCertificate(db.Model):
     reviewed = db.Column(db.Boolean, default=False)
     reviewed_at = db.Column(db.DateTime)
 
+    # Relationships
+    achievement = db.relationship('Achievement', backref='certificates')
+
     __table_args__ = (db.UniqueConstraint("user_id", "achievement_id"),)

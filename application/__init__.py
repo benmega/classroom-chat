@@ -92,6 +92,7 @@ def create_app(config_class=None):
     def inject_user():
         return {'user': g.get('user')}
 
+
     @app.errorhandler(RequestEntityTooLarge)
     def handle_large_request(error):
         return jsonify({'error': 'Request body too large'}), 413

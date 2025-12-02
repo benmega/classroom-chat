@@ -6,7 +6,6 @@ export function initAchievements(username) {
             if (!res.ok) return;
 
             const data = await res.json();
-//            console.log("Fetched achievements:", data.new_awards);
 
             if (!data.success || !data.new_awards.length) return;
 
@@ -16,7 +15,6 @@ export function initAchievements(username) {
         }
     }
 
-    // 👇 expose it globally so templates can call it
     window.fetchAchievements = fetchAchievements;
 
     function ensurePopupContainer() {

@@ -4,7 +4,7 @@ Type: py
 Summary: SQLAlchemy model for application users and authentication data.
 """
 
-from datetime import date
+from datetime import date, timedelta
 
 from sqlalchemy.ext.hybrid import hybrid_property
 
@@ -50,6 +50,19 @@ class User(db.Model):
         lazy=True,
         cascade="all, delete-orphan"
     )
+    certificates = db.relationship(
+        'UserCertificate',
+        backref='user',
+        lazy=True,
+        cascade="all, delete-orphan"
+    )
+    challenge_logs = db.relationship(
+        'ChallengeLog',
+        primaryjoin='User._username == foreign(ChallengeLog.username)',
+        lazy=True,
+        viewonly=True  # Recommended since ChallengeLog.username isn't a foreign key
+    )
+
 
     def __repr__(self):
         return f'<User {self._username}>'
@@ -149,3 +162,83 @@ class User(db.Model):
             db.session.commit()
             return True
         return False
+
+    def get_contribution_data(self):
+        """
+        Prepares data for a GitHub-style contribution graph.
+        Returns: {
+            'months': [{'name': 'Jan', 'colspan': 4}, ...],
+            'rows': [[{date, count, level}, ...], ...] # 7 rows (Sun-Sat)
+        }
+        """
+        # 1. Setup Dates
+        today = date.today()
+        # Align end date to the coming Saturday to complete the grid
+        idx = (today.weekday() + 1) % 7  # 0 = Sun
+        end_date = today + timedelta(days=(6 - idx))
+        start_date = end_date - timedelta(weeks=52)  # Go back 52 weeks
+
+        # 2. Fetch Data
+        logs = self.challenge_logs
+        counts = {}
+        for log in logs:
+            k = log.timestamp.date().isoformat()
+            counts[k] = counts.get(k, 0) + 1
+
+        # 3. Build Grid (7 rows x 53 columns)
+        # grid[weekday][week_index]
+        grid = [[None for _ in range(53)] for _ in range(7)]
+
+        current = start_date
+        week_idx = 0
+
+        # Track months for the header
+        months = []
+        current_month = None
+        current_colspan = 0
+
+        while current <= end_date:
+            weekday = (current.weekday() + 1) % 7  # 0=Sun, 6=Sat
+
+            # Month Logic
+            if weekday == 0:  # Check at start of every week
+                month_name = current.strftime('%b')
+                if month_name != current_month:
+                    if current_month:
+                        months.append({'name': current_month, 'colspan': current_colspan})
+                    current_month = month_name
+                    current_colspan = 0
+                current_colspan += 1
+
+            # Fill Cell Data
+            iso_date = current.isoformat()
+            c = counts.get(iso_date, 0)
+
+            # Determine Level (0-4)
+            if c == 0:
+                level = 0
+            elif c == 1:
+                level = 1
+            elif c <= 3:
+                level = 2
+            elif c <= 6:
+                level = 3
+            else:
+                level = 4
+
+            grid[weekday][week_idx] = {
+                'date': iso_date,
+                'count': c,
+                'level': level
+            }
+
+            if weekday == 6:
+                week_idx += 1
+
+            current += timedelta(days=1)
+
+        # Append final month segment
+        if current_month:
+            months.append({'name': current_month, 'colspan': current_colspan})
+
+        return {'months': months, 'rows': grid}

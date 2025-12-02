@@ -15,7 +15,7 @@ from application.models.session_log import SessionLog
 session = Blueprint('session', __name__)
 
 INSTANCE_ID = "i-03afac811de461a56"
-REGION_NAME = "ap-souteast-1"
+REGION_NAME = "ap-southeast-1"
 
 try:
     response = requests.get('http://169.254.169.254/latest/dynamic/instance-identity/document', timeout=1.0)
