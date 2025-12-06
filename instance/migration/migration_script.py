@@ -1,9 +1,10 @@
 import sqlite3
+import csv
+import os
 
 DB_PATH = r"C:\Users\Ben\PycharmProjects\groupChat2\instance\dev_users.db"
+CSV_PATH = "oldProjects.csv"
 
-# Define all desired schema updates here
-# Each key = table name, value = list of (column_name, type, default_value)
 MIGRATIONS = {
     "achievement": [
         ("icon_class", "VARCHAR(50)", None)
@@ -15,7 +16,7 @@ MIGRATIONS = {
         ("video_url", "VARCHAR(255)", None),
         ("image_url", "VARCHAR(255)", None)
     ],
-    "users": [  # CORRECTED: Changed from "user" to "users"
+    "users": [
         ("is_admin", "BOOLEAN", 0)
     ]
 }
@@ -44,21 +45,69 @@ def promote_user_to_admin(conn, user_id):
     """Sets is_admin = 1 for a specific user ID."""
     cursor = conn.cursor()
     try:
-        # CORRECTED: Target table 'users' instead of 'user'
         cursor.execute(f"UPDATE users SET is_admin = 1 WHERE id = ?", (user_id,))
-
         if cursor.rowcount > 0:
             conn.commit()
             print(f"Successfully promoted User ID {user_id} to Admin.")
         else:
             print(f"User ID {user_id} not found. No admin promoted.")
-
     except sqlite3.Error as e:
         print(f"Error promoting user {user_id}: {e}")
 
 
+def import_csv_data(conn):
+    """Imports project data from adjacent CSV file."""
+    if not os.path.exists(CSV_PATH):
+        print(f"Skipping import: '{CSV_PATH}' not found.")
+        return
+
+    print("Importing projects from CSV...")
+    cursor = conn.cursor()
+
+    try:
+        # Changed to utf-8-sig to handle potential BOM
+        # Removed delimiter='\t' (defaults to comma)
+        with open(CSV_PATH, 'r', encoding='utf-8-sig', newline='') as f:
+            reader = csv.DictReader(f)  # Standard CSV reader
+
+            count = 0
+            for row in reader:
+                name = row.get('name')
+
+                # Skip empty rows
+                if not name or not name.strip():
+                    continue
+
+                cursor.execute("""
+                    INSERT INTO projects (
+                        name, description, link, user_id, 
+                        teacher_comment, code_snippet, github_link, 
+                        video_url, image_url
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """, (
+                    name,
+                    row.get('description'),
+                    row.get('link'),
+                    row.get('user_id'),
+                    row.get('teacher_comment'),
+                    row.get('code_snippet'),
+                    row.get('github_link'),
+                    row.get('video_url'),
+                    row.get('image_url')
+                ))
+                count += 1
+
+            conn.commit()
+            print(f"Successfully imported {count} projects.")
+
+    except Exception as e:
+        print(f"Error importing CSV: {e}")
+        if 'row' in locals():
+            print(f"Failed on row keys: {row.keys()}")
+
+
+
 def run_migrations():
-    """Run all defined migrations on the target database."""
     try:
         conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
@@ -77,16 +126,21 @@ def run_migrations():
 
         for column_name, column_type, default_value in columns:
             if column_exists(conn, table, column_name):
-                print(f"'{table}.{column_name}' already exists — skipped.")
+                # print(f"'{table}.{column_name}' already exists — skipped.")
                 continue
             try:
                 add_column(conn, table, column_name, column_type, default_value)
             except Exception as e:
                 print(f"Error adding '{column_name}' to '{table}':", e)
 
-    # 2. Run Data Updates (Promote Admin)
+    # 2. Run Data Updates
     if "users" in existing_tables:
         promote_user_to_admin(conn, 2)
+
+    # 3. Import CSV Data
+    if "projects" in existing_tables:
+        import_csv_data(conn)
+
 
     conn.close()
     print("Migration complete.")
