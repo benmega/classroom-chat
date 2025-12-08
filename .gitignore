@@ -8,6 +8,5 @@ instance/backups/
 venv/
 .idea/
 userData/
-AWS/
 env/
 certificates/
