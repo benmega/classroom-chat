@@ -240,3 +240,12 @@ class User(db.Model):
             months.append({'name': current_month, 'colspan': current_colspan})
 
         return {'months': months, 'rows': grid}
+
+    def get_completed_levels(self):
+        """
+        Returns a set of level slugs that the user has completed.
+        Used by the skill service to determine Web Dev and other specific course progress.
+        """
+        # We assume the ChallengeLog model has a 'level_slug' column.
+        # Using a set removes duplicates.
+        return {getattr(log, 'level_slug', '') for log in self.challenge_logs}
