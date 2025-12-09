@@ -1,22 +1,26 @@
 import sqlite3
 import os
 
-# Import the new function
+# --- IMPORTS ---
 try:
     from seed_ben import seed_ben_data
 except ImportError:
-    print("Warning: seed_ben.py not found. Skipping seed.")
     seed_ben_data = None
 
 try:
-    from seed_courses import seed_course_instances # <--- Add Import
+    from seed_courses import seed_course_instances
 except ImportError:
     seed_course_instances = None
 
-# ================= CONFIGURATION =================
+try:
+    from seed_logs import seed_challenge_logs  # <--- NEW IMPORT
+except ImportError:
+    seed_challenge_logs = None
 
+# ================= CONFIGURATION =================
 DB_FILENAME = "dev_users.db"
-CSV_FILENAME = "projects.csv"
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_PATH = os.path.join(BASE_DIR, "..", DB_FILENAME)
 
 NEW_COLUMNS = {
     "skills": [
@@ -26,11 +30,8 @@ NEW_COLUMNS = {
     ]
 }
 
+
 # =================================================
-
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DB_PATH = os.path.join(BASE_DIR, "..", DB_FILENAME)
-
 
 def apply_schema_changes(conn):
     """Adds new columns if they are missing."""
@@ -64,16 +65,29 @@ if __name__ == "__main__":
     else:
         try:
             with sqlite3.connect(DB_PATH) as conn:
+                print(f"Connected to {DB_PATH}")
+
                 # 1. Apply Schema Changes
                 apply_schema_changes(conn)
 
+                # 2. Seed Course Instances (Dependencies first)
                 if seed_course_instances:
-                    seed_course_instances(conn)  # <--- Add Call
+                    seed_course_instances(conn)
+                else:
+                    print("Skipping Course Instances (Script not found)")
 
-                # 2. Run the separated seed script
+                # 3. Seed 'Ben' Data
                 if seed_ben_data:
                     seed_ben_data(conn)
+                else:
+                    print("Skipping Ben Data (Script not found)")
 
-                print("Migration Complete.")
+                # 4. Seed Challenge Logs from CSV (NEW)
+                if seed_challenge_logs:
+                    seed_challenge_logs(conn)
+                else:
+                    print("Skipping Challenge Logs (Script not found)")
+
+                print("\nAll Migrations Complete.")
         except Exception as e:
             print(f"Critical Error: {e}")
