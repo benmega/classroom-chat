@@ -13,9 +13,15 @@ except ImportError:
     seed_course_instances = None
 
 try:
-    from seed_logs import seed_challenge_logs  # <--- NEW IMPORT
+    from seed_logs import seed_challenge_logs
 except ImportError:
     seed_challenge_logs = None
+
+try:
+    from cleanup_logs import cleanup_invalid_logs
+except ImportError:
+    prune_orphaned_logs = None
+
 
 # ================= CONFIGURATION =================
 DB_FILENAME = "dev_users.db"
@@ -87,6 +93,12 @@ if __name__ == "__main__":
                     seed_challenge_logs(conn)
                 else:
                     print("Skipping Challenge Logs (Script not found)")
+
+                # 5. Cleanup orphan challenge logs
+                if cleanup_invalid_logs:
+                    cleanup_invalid_logs(conn)
+                else:
+                    print("Skipping Cleanup (Script not found)")
 
                 print("\nAll Migrations Complete.")
         except Exception as e:
