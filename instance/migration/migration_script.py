@@ -110,17 +110,20 @@ if __name__ == "__main__":
                 else:
                     print("Skipping Cleanup (Script not found)")
 
-                # 6. Migrate Challenge Names to Slugs (NEW)
+
+                # 6. Migrate Domains
+                if migrate_codecombat_domains:
+                    migrate_codecombat_domains(conn)
+                else:
+                    print("Skipping Domain Migration (Script not found)")
+
+                # 7. Migrate Challenge Names to Slugs (NEW)
                 if migrate_challenge_names:
                     migrate_challenge_names(conn)
                 else:
                     print("Skipping Challenge Name Migration (Script not found)")
 
-                # 7. Migrate Domains
-                if migrate_codecombat_domains:
-                    migrate_codecombat_domains(conn)
-                else:
-                    print("Skipping Domain Migration (Script not found)")
+
 
                 print("\nAll Migrations Complete.")
         except Exception as e:
