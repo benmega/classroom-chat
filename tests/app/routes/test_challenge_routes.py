@@ -4,10 +4,8 @@ Type: py
 Summary: Unit tests for challenge routes Flask routes.
 """
 
-import json
 import re
-from datetime import datetime
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 import pytest
 
 from application import db
@@ -15,15 +13,16 @@ from application.models.challenge import Challenge
 from application.models.challenge_log import ChallengeLog
 from application.models.configuration import Configuration
 
+# --- FIXTURES ---
 
 @pytest.fixture
 def sample_challenge_active(init_db):
-    """Fixture to create an active challenge."""
+    """Fixture to create an active challenge with known difficulty."""
     challenge = Challenge(
         name="Dungeons of Kithgard",
         slug="dungeons-of-kithgard",
         domain="codecombat.com",
-        difficulty="easy",
+        difficulty="medium",  # Medium = 1.0x multiplier. Base value 10 -> 10 points.
         value=10,
         is_active=True,
         course_id="intro-to-python"
@@ -45,28 +44,50 @@ def sample_configuration_with_multiplier(init_db):
     db.session.commit()
     return config
 
+# --- HELPER TO MOCK RENDER_TEMPLATE ---
+@pytest.fixture
+def mock_render_template(client):
+    """
+    Mocks render_template to return a static string.
+    This prevents TemplateNotFound errors when templates are missing in the test env.
+    """
+    with patch('application.routes.challenge_routes.render_template') as mock:
+        mock.return_value = "Mocked Template Content"
+        yield mock
 
-def test_submit_challenge_get(client, init_db, sample_user, sample_configuration):
+# --- TESTS ---
+
+def test_submit_challenge_get(client, init_db, sample_user, sample_configuration, mock_render_template):
     """Test GET request to challenge submission page."""
     with client.session_transaction() as sess:
         sess['user'] = sample_user.username
 
     response = client.get('/challenge/submit')
+
     assert response.status_code == 200
-    assert b'submit_challenge' in response.data or response.status_code == 200
+    assert b'Mocked Template Content' in response.data
 
 
 def test_submit_challenge_no_session(client, init_db):
     """Test submitting challenge without logged in user."""
+    # Do not follow redirects so we can check the 302 location
     response = client.post('/challenge/submit', data={
         'url': 'https://codecombat.com/play/level/dungeons-of-kithgard'
-    }, follow_redirects=True)
+    }, follow_redirects=False)
 
-    assert response.status_code == 200
-    assert b'No session username found' in response.data or b'login' in response.data
+    # Should redirect to user.login
+    assert response.status_code == 302
+    assert '/login' in response.headers['Location']
+
+    # Check flash message by inspecting the session directly
+    with client.session_transaction() as sess:
+        flashes = sess.get('_flashes', [])
+        # Flashes are list of (category, message)
+        messages = [msg for cat, msg in flashes]
+        assert any("No session username found" in m for m in messages)
 
 
-def test_submit_challenge_no_url(client, init_db, sample_user, sample_configuration):
+def test_submit_challenge_no_url(client, init_db, sample_user, sample_configuration, mock_render_template):
     """Test submitting challenge without URL."""
     with client.session_transaction() as sess:
         sess['user'] = sample_user.username
@@ -77,15 +98,18 @@ def test_submit_challenge_no_url(client, init_db, sample_user, sample_configurat
     }, follow_redirects=True)
 
     assert response.status_code == 200
-    assert b'Challenge URL is required' in response.data
+
+    # Check flash message in session
+    with client.session_transaction() as sess:
+        flashes = sess.get('_flashes', [])
+        messages = [msg for cat, msg in flashes]
+        assert any("Challenge URL is required" in m for m in messages)
 
 
-def test_submit_challenge_success(client, init_db, sample_user, sample_configuration, sample_challenge_active):
+def test_submit_challenge_success(client, init_db, sample_user, sample_configuration, sample_challenge_active, mock_render_template):
     """Test successful challenge submission."""
     with client.session_transaction() as sess:
         sess['user'] = sample_user.username
-
-    initial_ducks = sample_user.duck_balance
 
     with patch('application.routes.challenge_routes.detect_and_handle_challenge_url') as mock_detect:
         mock_detect.return_value = {
@@ -97,19 +121,24 @@ def test_submit_challenge_success(client, init_db, sample_user, sample_configura
             }
         }
 
+        # Follow redirects = True because success redirects to same page
         response = client.post('/challenge/submit', data={
             'url': 'https://codecombat.com/play/level/dungeons-of-kithgard?course=intro-to-python',
             'helpers': '',
             'notes': 'Completed the challenge!'
-        })
+        }, follow_redirects=True)
 
         assert response.status_code == 200
-        assert b'Congrats' in response.data
-        assert b'earned' in response.data
-        assert b'10 ducks' in response.data
+
+        # Check flash messages
+        with client.session_transaction() as sess:
+            flashes = sess.get('_flashes', [])
+            messages = [msg for cat, msg in flashes]
+            assert any("Congrats" in m for m in messages)
+            assert any("10 ducks" in m for m in messages)
 
 
-def test_submit_challenge_failed(client, init_db, sample_user, sample_configuration):
+def test_submit_challenge_failed(client, init_db, sample_user, sample_configuration, mock_render_template):
     """Test failed challenge submission."""
     with client.session_transaction() as sess:
         sess['user'] = sample_user.username
@@ -125,13 +154,17 @@ def test_submit_challenge_failed(client, init_db, sample_user, sample_configurat
 
         response = client.post('/challenge/submit', data={
             'url': 'https://codecombat.com/play/level/invalid-challenge'
-        })
+        }, follow_redirects=True)
 
         assert response.status_code == 200
-        assert b'Challenge could not be validated' in response.data
+
+        with client.session_transaction() as sess:
+            flashes = sess.get('_flashes', [])
+            messages = [msg for cat, msg in flashes]
+            assert any("Challenge could not be validated" in m for m in messages)
 
 
-def test_submit_challenge_with_helper(client, init_db, sample_user, sample_configuration, sample_challenge_active):
+def test_submit_challenge_with_helper(client, init_db, sample_user, sample_configuration, sample_challenge_active, mock_render_template):
     """Test challenge submission with helper information."""
     with client.session_transaction() as sess:
         sess['user'] = sample_user.username
@@ -141,7 +174,8 @@ def test_submit_challenge_with_helper(client, init_db, sample_user, sample_confi
             'handled': True,
             'details': {
                 'success': True,
-                'duck_reward': 10
+                'duck_reward': 10,
+                'message': 'Logged'
             }
         }
 
@@ -149,15 +183,21 @@ def test_submit_challenge_with_helper(client, init_db, sample_user, sample_confi
             'url': 'https://codecombat.com/play/level/dungeons-of-kithgard',
             'helpers': 'friend_user',
             'notes': ''
-        })
+        }, follow_redirects=True)
 
         assert response.status_code == 200
+
         # Verify mock was called with helper
         call_args = mock_detect.call_args
-        assert call_args[0][3] == 'friend_user'  # helper parameter
+
+        # Helper is the 4th argument (index 3) OR a kwarg
+        if 'helper' in call_args.kwargs:
+            assert call_args.kwargs['helper'] == 'friend_user'
+        else:
+            assert call_args.args[3] == 'friend_user'
 
 
-def test_submit_challenge_with_notes(client, init_db, sample_user, sample_configuration, sample_challenge_active):
+def test_submit_challenge_with_notes(client, init_db, sample_user, sample_configuration, sample_challenge_active, mock_render_template):
     """Test challenge submission with notes."""
     with client.session_transaction() as sess:
         sess['user'] = sample_user.username
@@ -167,14 +207,15 @@ def test_submit_challenge_with_notes(client, init_db, sample_user, sample_config
             'handled': True,
             'details': {
                 'success': True,
-                'duck_reward': 10
+                'duck_reward': 10,
+                'message': 'Logged'
             }
         }
 
         response = client.post('/challenge/submit', data={
             'url': 'https://codecombat.com/play/level/dungeons-of-kithgard',
             'notes': 'This challenge was really fun!'
-        })
+        }, follow_redirects=True)
 
         assert response.status_code == 200
 
@@ -223,13 +264,13 @@ def test_detect_and_handle_challenge_url_with_multiplier(init_db, sample_user, s
     """Test challenge URL handling with duck multiplier."""
     from application.routes.challenge_routes import detect_and_handle_challenge_url
 
-    initial_ducks = sample_user.duck_balance
     url = 'https://codecombat.com/play/level/dungeons-of-kithgard'
+    # sample_challenge is 'medium' (1.0). Multiplier is 3. 10 * 1.0 * 3 = 30.
     result = detect_and_handle_challenge_url(url, sample_user.username, duck_multiplier=3)
 
     assert result['handled'] is True
     assert result['details']['success'] is True
-    assert result['details']['duck_reward'] == 30  # 10 * 3
+    assert result['details']['duck_reward'] == 30
 
 
 def test_detect_and_handle_challenge_url_helper_self(init_db, sample_user, sample_challenge_active):
@@ -244,7 +285,7 @@ def test_detect_and_handle_challenge_url_helper_self(init_db, sample_user, sampl
     # Check that helper was removed/ignored
     log = ChallengeLog.query.filter_by(
         username=sample_user.username,
-        challenge_name='dungeons-of-kithgard'
+        challenge_slug='dungeons-of-kithgard'
     ).first()
 
     if log:
@@ -260,7 +301,7 @@ def test_extract_challenge_details_standard_url():
 
     assert result is not None
     assert result['domain'] == 'codecombat.com'
-    assert result['challenge_name'] == 'dungeons-of-kithgard'
+    assert result['challenge_slug'] == 'dungeons-of-kithgard'
     assert result['course_id'] == 'intro-to-python'
     assert result['course_instance'] == 'fall2024'
 
@@ -292,7 +333,7 @@ def test_log_challenge_success(init_db, sample_user):
 
     details = {
         'domain': 'codecombat.com',
-        'challenge_name': 'dungeons-of-kithgard',
+        'challenge_slug': 'dungeons-of-kithgard',
         'course_id': 'intro-to-python',
         'course_instance': 'fall2024'
     }
@@ -305,7 +346,7 @@ def test_log_challenge_success(init_db, sample_user):
     # Verify log was created
     log = ChallengeLog.query.filter_by(
         username=sample_user.username,
-        challenge_name='dungeons-of-kithgard'
+        challenge_slug='dungeons-of-kithgard'
     ).first()
     assert log is not None
 
@@ -316,7 +357,7 @@ def test_log_challenge_duplicate(init_db, sample_user):
 
     details = {
         'domain': 'codecombat.com',
-        'challenge_name': 'test-challenge',
+        'challenge_slug': 'test-challenge',
         'course_id': 'test-course',
         'course_instance': None
     }
@@ -337,7 +378,7 @@ def test_log_challenge_with_helper(init_db, sample_user):
 
     details = {
         'domain': 'codecombat.com',
-        'challenge_name': 'helper-challenge',
+        'challenge_slug': 'helper-challenge',
         'course_id': 'test-course',
         'course_instance': None
     }
@@ -348,7 +389,7 @@ def test_log_challenge_with_helper(init_db, sample_user):
 
     log = ChallengeLog.query.filter_by(
         username=sample_user.username,
-        challenge_name='helper-challenge'
+        challenge_slug='helper-challenge'
     ).first()
     assert log.helper == 'helper_user'
 
@@ -410,7 +451,7 @@ def test_challenge_complete_challenge_method(init_db, sample_user, sample_challe
 
     assert ChallengeLog.query.count() == initial_log_count + 1
     log = ChallengeLog.query.filter_by(username=sample_user.username).first()
-    assert log.challenge_name == sample_challenge_active.name
+    assert log.challenge_slug == sample_challenge_active.slug
 
 
 def test_challenge_scale_value_easy(init_db):
@@ -512,7 +553,7 @@ def test_url_pattern_matches_various_formats():
         assert match is not None, f"Failed to match URL: {url}"
 
 
-def test_submit_challenge_no_configuration(client, init_db, sample_user):
+def test_submit_challenge_no_configuration(client, init_db, sample_user, mock_render_template):
     """Test submitting challenge when configuration is missing."""
     with client.session_transaction() as sess:
         sess['user'] = sample_user.username
@@ -526,4 +567,8 @@ def test_submit_challenge_no_configuration(client, init_db, sample_user):
     }, follow_redirects=True)
 
     assert response.status_code == 200
-    assert b'Configuration missing' in response.data
+
+    with client.session_transaction() as sess:
+        flashes = sess.get('_flashes', [])
+        messages = [msg for cat, msg in flashes]
+        assert any("Configuration missing" in m for m in messages)

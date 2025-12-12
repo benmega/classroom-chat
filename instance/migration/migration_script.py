@@ -20,8 +20,18 @@ except ImportError:
 try:
     from cleanup_logs import cleanup_invalid_logs
 except ImportError:
-    prune_orphaned_logs = None
+    cleanup_invalid_logs = None
 
+# --- NEW IMPORT ---
+try:
+    from migrate_challenge_names import migrate_challenge_names
+except ImportError:
+    migrate_challenge_names = None
+
+try:
+    from migrate_domains import migrate_codecombat_domains
+except ImportError:
+    migrate_codecombat_domains = None
 
 # ================= CONFIGURATION =================
 DB_FILENAME = "dev_users.db"
@@ -88,7 +98,7 @@ if __name__ == "__main__":
                 else:
                     print("Skipping Ben Data (Script not found)")
 
-                # 4. Seed Challenge Logs from CSV (NEW)
+                # 4. Seed Challenge Logs from CSV
                 if seed_challenge_logs:
                     seed_challenge_logs(conn)
                 else:
@@ -99,6 +109,18 @@ if __name__ == "__main__":
                     cleanup_invalid_logs(conn)
                 else:
                     print("Skipping Cleanup (Script not found)")
+
+                # 6. Migrate Challenge Names to Slugs (NEW)
+                if migrate_challenge_names:
+                    migrate_challenge_names(conn)
+                else:
+                    print("Skipping Challenge Name Migration (Script not found)")
+
+                # 7. Migrate Domains
+                if migrate_codecombat_domains:
+                    migrate_codecombat_domains(conn)
+                else:
+                    print("Skipping Domain Migration (Script not found)")
 
                 print("\nAll Migrations Complete.")
         except Exception as e:

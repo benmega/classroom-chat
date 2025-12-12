@@ -66,12 +66,12 @@ def test_course_unique_id_constraint(init_db):
     course1 = Course(
         id="course_123",
         name="Course 1",
-        domain="CodeCombat"
+        domain="codecombat.com"
     )
     course2 = Course(
         id="course_123",  # Duplicate ID
         name="Course 2",
-        domain="CodeCombat"
+        domain="codecombat.com"
     )
 
     db.session.add(course1)

@@ -11,7 +11,7 @@ def add_challenge_logs(username, domain, challenge_names, course_id=None, course
     Adds multiple challenge logs to the database.
 
     :param username: The username of the student completing challenges.
-    :param domain: The platform where the challenge was completed (e.g., CodeCombat, LeetCode).
+    :param domain: The platform where the challenge was completed (e.g., codecombat.com, www.ozaria.com).
     :param challenge_names: A list of challenge names to log.
     :param course_id: (Optional) The course ID associated with the challenges.
     :param course_instance: (Optional) The instance of the course associated with the challenges.
@@ -45,7 +45,7 @@ def add_course_challenge_logs(username, domain, course_id):
     Queries all challenges for a given course_id and logs them for the specified user.
 
     :param username: The username of the student completing challenges.
-    :param domain: The platform where the challenge was completed (e.g., CodeCombat, LeetCode).
+    :param domain: The platform where the challenge was completed (e.g., codecombat.com, www.ozaria.com).
     :param course_id: The course ID associated with the challenges.
     """
     try:

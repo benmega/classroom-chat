@@ -22,14 +22,12 @@ class Challenge(db.Model):
     course_id = db.Column(db.String(100), nullable=True)
     description = db.Column(db.Text, nullable=True)
 
-
     def __repr__(self):
         return f"<Challenge(name={self.name}, domain={self.domain}, difficulty={self.difficulty}, value={self.value})>"
 
     def complete_challenge(self, user):
         """Logs the challenge completion and updates user progress."""
-
-        log = ChallengeLog(username=user.username, domain=self.domain, challenge_name=self.name)
+        log = ChallengeLog(username=user.username, domain=self.domain, challenge_slug=self.slug)
         db.session.add(log)
         db.session.commit()
 

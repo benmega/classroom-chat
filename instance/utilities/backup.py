@@ -9,23 +9,41 @@ from sqlalchemy import inspect, text
 from application import create_app, DevelopmentConfig
 from application.extensions import db
 
+# --- PATH CONFIGURATION ---
+# Calculate paths relative to this script file
+# Script is in: /project/utilities/
+# Backups go to: /project/backups/
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.dirname(CURRENT_DIR)
+BACKUPS_FOLDER = os.path.join(PROJECT_ROOT, 'backups')
+
+def get_output_path(folder_name):
+    """
+    Helper to ensure the output path is inside the backups folder.
+    """
+    return os.path.join(BACKUPS_FOLDER, folder_name)
 
 def export_tables_to_csv(output_dir=None):
     """
     Exports all tables in the database to CSV files.
 
-    :param output_dir: Directory where CSV files will be saved. If None, creates a timestamped directory.
+    :param output_dir: Directory name. If None, creates a timestamped directory.
     :return: Path to the directory containing the exported files
     """
-    # Create output directory if not specified
+    # Create output directory name if not specified
     if output_dir is None:
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        output_dir = f"db_export_{timestamp}"
+        output_dir_name = f"db_export_{timestamp}"
+    else:
+        output_dir_name = output_dir
 
-    # Create directory if it doesn't exist
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
-        print(f"Created output directory: {output_dir}")
+    # resolve absolute path to backups folder
+    full_output_path = get_output_path(output_dir_name)
+
+    # Create directory if it doesn't exist (os.makedirs creates intermediate dirs like 'backups')
+    if not os.path.exists(full_output_path):
+        os.makedirs(full_output_path)
+        print(f"Created output directory: {full_output_path}")
 
     # Get database inspector
     inspector = inspect(db.engine)
@@ -33,7 +51,7 @@ def export_tables_to_csv(output_dir=None):
 
     if not table_names:
         print("No tables found in database.")
-        return output_dir
+        return full_output_path
 
     print(f"Found {len(table_names)} tables in the database.")
     exported_count = 0
@@ -57,7 +75,7 @@ def export_tables_to_csv(output_dir=None):
                 rows.append(row_dict)
 
             # Write to CSV
-            file_path = os.path.join(output_dir, f"{table_name}.csv")
+            file_path = os.path.join(full_output_path, f"{table_name}.csv")
             with open(file_path, 'w', newline='', encoding='utf-8') as csv_file:
                 writer = csv.DictWriter(csv_file, fieldnames=columns)
                 writer.writeheader()
@@ -73,22 +91,27 @@ def export_tables_to_csv(output_dir=None):
             traceback.print_exc()
 
     print(
-        f"\nExport complete! Successfully exported {exported_count} of {len(table_names)} tables to {os.path.abspath(output_dir)}")
-    return output_dir
+        f"\nExport complete! Successfully exported {exported_count} of {len(table_names)} tables to {os.path.abspath(full_output_path)}")
+    return full_output_path
 
 
 def export_to_json(output_dir=None):
     """
     Alternative export format - JSON instead of CSV.
     """
-    # Create output directory if not specified
+    # Create output directory name if not specified
     if output_dir is None:
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        output_dir = f"db_export_json_{timestamp}"
+        output_dir_name = f"db_export_json_{timestamp}"
+    else:
+        output_dir_name = output_dir
+
+    # resolve absolute path to backups folder
+    full_output_path = get_output_path(output_dir_name)
 
     # Create directory if it doesn't exist
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
+    if not os.path.exists(full_output_path):
+        os.makedirs(full_output_path)
 
     inspector = inspect(db.engine)
     table_names = inspector.get_table_names()
@@ -111,7 +134,7 @@ def export_to_json(output_dir=None):
                 rows.append(row_dict)
 
             # Write to JSON file
-            file_path = os.path.join(output_dir, f"{table_name}.json")
+            file_path = os.path.join(full_output_path, f"{table_name}.json")
             with open(file_path, 'w', encoding='utf-8') as json_file:
                 # Handle datetime and other non-serializable types
                 json.dump(rows, json_file, default=str, indent=2)
@@ -121,7 +144,7 @@ def export_to_json(output_dir=None):
         except Exception as e:
             print(f"Error exporting table '{table_name}' to JSON: {str(e)}")
 
-    return output_dir
+    return full_output_path
 
 
 def list_table_structure():
@@ -147,10 +170,15 @@ def export_to_sql(output_dir=None):
     """
     if output_dir is None:
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        output_dir = f"db_export_sql_{timestamp}"
+        output_dir_name = f"db_export_sql_{timestamp}"
+    else:
+        output_dir_name = output_dir
 
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
+    # resolve absolute path to backups folder
+    full_output_path = get_output_path(output_dir_name)
+
+    if not os.path.exists(full_output_path):
+        os.makedirs(full_output_path)
 
     inspector = inspect(db.engine)
     table_names = inspector.get_table_names()
@@ -164,7 +192,7 @@ def export_to_sql(output_dir=None):
             # Get data
             result = db.session.execute(text(f"SELECT * FROM {table_name}"))
 
-            file_path = os.path.join(output_dir, f"{table_name}.sql")
+            file_path = os.path.join(full_output_path, f"{table_name}.sql")
             with open(file_path, 'w', encoding='utf-8') as sql_file:
                 # Write header
                 sql_file.write(f"-- Export of {table_name} table\n")
@@ -212,7 +240,7 @@ def export_to_sql(output_dir=None):
             import traceback
             traceback.print_exc()
 
-    return output_dir
+    return full_output_path
 
 
 def main():
@@ -221,6 +249,7 @@ def main():
 
     with app.app_context():
         print("Welcome to Database Export Tool")
+        print(f"Target Backup Folder: {BACKUPS_FOLDER}")
         print("==============================")
 
         while True:
@@ -234,15 +263,15 @@ def main():
             choice = input("Enter your choice (1-5): ").strip()
 
             if choice == '1':
-                custom_dir = input("Enter output directory name (leave blank for auto-generated): ").strip()
+                custom_dir = input("Enter sub-directory name (leave blank for auto-generated timestamp): ").strip()
                 output_dir = custom_dir if custom_dir else None
                 export_tables_to_csv(output_dir)
             elif choice == '2':
-                custom_dir = input("Enter output directory name (leave blank for auto-generated): ").strip()
+                custom_dir = input("Enter sub-directory name (leave blank for auto-generated timestamp): ").strip()
                 output_dir = custom_dir if custom_dir else None
                 export_to_json(output_dir)
             elif choice == '3':
-                custom_dir = input("Enter output directory name (leave blank for auto-generated): ").strip()
+                custom_dir = input("Enter sub-directory name (leave blank for auto-generated timestamp): ").strip()
                 output_dir = custom_dir if custom_dir else None
                 export_to_sql(output_dir)
             elif choice == '4':
