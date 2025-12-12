@@ -6,7 +6,7 @@ class ChallengeLog(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(100), nullable=False)
-    domain = db.Column(db.String(100), nullable=False)  # "CodeCombat", "Ozaria", "Studio.Code"
+    domain = db.Column(db.String(100), nullable=False)  # "CodeCombat", "www.ozaria.com", "Studio.Code"
     challenge_name = db.Column(db.String(255), nullable=False)
     timestamp = db.Column(db.DateTime, nullable=False, default=db.func.now())
     course_id = db.Column(db.String(100), nullable=True)

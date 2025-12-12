@@ -23,6 +23,8 @@ def check_achievements():
 
     try:
         new_awards = evaluate_user(user)
+        from application.services.skill_service import evaluate_user_skills
+        evaluate_user_skills(user) #TODO separate from achievements
     except Exception as e:
         return jsonify({"success": False, "error": "Failed to evaluate achievements"}), 500
 
