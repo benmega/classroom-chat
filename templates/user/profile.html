@@ -3,6 +3,10 @@
 {% block content %}
 {% set is_owner = (session.get('user') == target.id) or (viewer and viewer.is_admin) %}
 
+{% set cc_levels = target.get_progress("codecombat.com") %}
+{% set oz_levels = target.get_progress("www.ozaria.com") %}
+{% set total_levels = (cc_levels or 0) + (oz_levels or 0) %}
+
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/user_profile.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/sprite.css') }}">
@@ -46,7 +50,7 @@
 
             <div class="student-identity">
                 <h1 class="student-name">{{ target.nickname or target.username }}</h1>
-                <p class="student-title">{{ target.username }} | Aspiring Coder</p>
+                <p class="student-title">{{ target.username }}</p>
                 {% if is_owner %}
                     <div style="margin-top: 5px;">
                         <a href="{{ url_for('user.edit_profile') }}" class="btn-launch" style="padding: 4px 12px; font-size: 0.8rem;">
@@ -56,12 +60,25 @@
                 {% endif %}
             </div>
 
-            <div class="duck-stats">
+            <div class="header-stats">
+                <div class="stat-box">
+                    <span class="label">Levels Solved</span>
+                    <span class="value">{{ total_levels }}</span>
+                </div>
+                <div class="stat-divider"></div>
+
+                <div class="stat-box">
+                    <span class="label">Projects</span>
+                    <span class="value">{{ target.projects|length }}</span>
+                </div>
+                <div class="stat-divider"></div>
+
                 <div class="stat-box">
                     <span class="label">Lifetime Ducks</span>
                     <span class="value">{{ target.earned_ducks }}</span>
                 </div>
                 <div class="stat-divider"></div>
+
                 <div class="stat-box highlight">
                     <span class="label">Duck Balance</span>
                     <span class="value"><i class="fas fa-coins"></i> {{ target.duck_balance }}</span>
@@ -75,29 +92,30 @@
         <div class="column-left">
 
             <div class="dashboard-panel">
-                <div class="panel-header"><h2><i class="fas fa-chart-line"></i> Curriculum</h2></div>
-                {% set cc_levels = target.get_progress("codecombat.com") %}
+                <div class="panel-header"><h2><i class="fas fa-chart-line"></i> Course Progress</h2></div>
                 {% set cc_percent = target.get_progress_percent("codecombat.com") %}
                 <div class="progress-item">
-                    <div class="prog-label"><span>CodeCombat</span><span>{{ cc_percent }}%</span></div>
+                    <div class="prog-label"><span>Python Syntax</span><span>{{ cc_percent }}% Complete</span></div>
                     <div class="progress-track"><div class="progress-fill" style="width: {{ cc_percent }}%;"></div></div>
-                    <small>{{ cc_levels }} Levels</small>
+                    <small>{{ cc_levels }} Levels Completed</small>
                 </div>
-                {% set oz_levels = target.get_progress("www.ozaria.com") %}
+
                 {% set oz_percent = target.get_progress_percent("www.ozaria.com") %}
+                {% if oz_levels > 0 %}
                 <div class="progress-item">
-                    <div class="prog-label"><span>Ozaria</span><span>{{ oz_percent }}%</span></div>
+                    <div class="prog-label"><span>Computer Science Concepts</span><span>{{ oz_percent }}% Complete</span></div>
                     <div class="progress-track"><div class="progress-fill ozaria-fill" style="width: {{ oz_percent }}%;"></div></div>
-                    <small>{{ oz_levels }} Levels</small>
+                    <small>{{ oz_levels }} Levels Completed</small>
                 </div>
+                {% endif %}
             </div>
 
             {% if target.certificates %}
             <div class="dashboard-panel" id="certificates">
-                <div class="panel-header"><h2><i class="fas fa-certificate"></i> Certificates</h2></div>
+                <div class="panel-header"><h2><i class="fas fa-certificate"></i> Certifications</h2></div>
                 <div class="cert-list">
                     {% for cert in target.certificates %}
-                    <div class="cert-item">
+                    <div class="cert-item" {% if cert.file_path %}onclick="window.open('{{ url_for('achievements.view_certificate', cert_id=cert.id) }}', '_blank');"{% endif %}>
                         <div class="cert-icon">
                             {% set achievement_slug = cert.achievement.slug if cert.achievement else 'default' %}
                             <div class="badge-container"><div class="badge badge-{{ achievement_slug }}">&nbsp;</div></div>
@@ -106,7 +124,7 @@
                             <h4>{{ cert.achievement.name if cert.achievement else "Course Completion" }}</h4>
                             <span class="cert-date">{{ cert.submitted_at.strftime('%b %Y') if cert.submitted_at else 'Recently' }}</span>
                             {% if cert.file_path %}
-                                <a href="{{ url_for('achievements.view_certificate', cert_id=cert.id) }}" target="_blank" class="cert-link-simple">
+                                <a href="{{ url_for('achievements.view_certificate', cert_id=cert.id) }}" target="_blank" class="cert-link-simple" onclick="event.stopPropagation();">
                                     <i class="fas fa-file-pdf"></i> View
                                 </a>
                             {% endif %}
@@ -117,42 +135,42 @@
             </div>
             {% endif %}
 
+            {% if target.skills %}
             <div class="dashboard-panel">
-                <div class="panel-header"><h2><i class="fas fa-tools"></i> Skills & Tools</h2></div>
-                <h4 class="skill-category-title">Languages & Tools</h4>
+                <div class="panel-header"><h2><i class="fas fa-tools"></i> Technical Toolbox</h2></div>
+                <h4 class="skill-category-title">Languages & Frameworks</h4>
                 <div class="skill-grid-visual">
                     {% for skill in target.skills if skill.category in ['language', 'tool'] %}
                     <div class="skill-card-visual level-{{ skill.proficiency }}">
                         <i class="{{ skill.icon }} fa-2x"></i>
                         <span>{{ skill.name }}</span>
-                        <div class="star-rating">{% for i in range(skill.proficiency) %}<i class="fas fa-star"></i>{% endfor %}</div>
+                        <div class="star-rating">Level {{ skill.proficiency }}</div>
                     </div>
-                    {% else %}
-                        <p style="color:#888; font-size: 0.9rem; grid-column: 1/-1;">No languages recorded.</p>
                     {% endfor %}
                 </div>
+
+                {% set concepts = target.skills | selectattr("category", "equalto", "concept") | list %}
+                {% if concepts %}
                 <hr style="border-top: 1px dashed #eee; margin: 15px 0;">
-                <h4 class="skill-category-title">Concepts</h4>
+                <h4 class="skill-category-title">Concepts Mastered</h4>
                 <div class="skill-list-concepts">
-                    {% for skill in target.skills if skill.category == 'concept' %}
+                    {% for skill in concepts %}
                     <div class="concept-tag"><i class="fas fa-check-circle"></i> {{ skill.name }}</div>
-                    {% else %}
-                        {% for skill in target.skills if not skill.category %}
-                            <span class="skill-tag">{{ skill.name }}</span>
-                        {% endfor %}
                     {% endfor %}
                 </div>
+                {% endif %}
             </div>
+            {% endif %}
         </div>
 
         <div class="column-right">
 
             <div class="dashboard-panel" id="portfolio">
                 <div class="panel-header" style="justify-content: space-between; align-items: center;">
-                    <h2><i class="fas fa-shapes"></i> Projects</h2>
+                    <h2><i class="fas fa-shapes"></i> Project Portfolio</h2>
                     {% if is_owner %}
                         <a href="{{ url_for('user.new_project') }}" class="btn-launch" style="font-size: 0.8rem;">
-                            <i class="fas fa-plus"></i> New
+                            <i class="fas fa-plus"></i> Add Project
                         </a>
                     {% endif %}
                 </div>
@@ -170,7 +188,9 @@
                                     <div class="play-overlay"><i class="fas fa-play"></i></div>
                                     {% endif %}
                                 {% else %}
-                                    <div class="code-pattern-bg"><i class="fas fa-layer-group"></i></div>
+                                    <div class="code-pattern-bg">
+                                        <i class="fas fa-code"></i>
+                                    </div>
                                 {% endif %}
 
                                 {% if is_owner %}
@@ -185,16 +205,23 @@
 
                             <div class="project-content">
                                 <h3>{{ project.name }}</h3>
-                                <p class="project-excerpt">{{ project.description | truncate(60) }}</p>
+
+                                {% if project.teacher_comment %}
+                                <div class="card-teacher-feedback">
+                                    <i class="fas fa-quote-left"></i> {{ project.teacher_comment | truncate(80) }}
+                                </div>
+                                {% endif %}
+
+                                <p class="project-excerpt">{{ project.description | truncate(100) }}</p>
 
                                 <div class="project-actions">
                                     {% if project.link %}
                                         <a href="{{ project.link }}" target="_blank" class="btn-launch">
-                                            <i class="fas fa-external-link-alt"></i> Demo
+                                            <i class="fas fa-external-link-alt"></i> Live Demo
                                         </a>
                                     {% endif %}
                                     <button class="btn-details js-open-project-modal" data-target="modal-{{ project.id }}">
-                                        Details
+                                        View Details
                                     </button>
                                 </div>
                             </div>
@@ -207,7 +234,7 @@
                                 <div class="modal-action-bar">
                                     {% if project.link %}
                                         <a href="{{ project.link }}" target="_blank" class="btn-action btn-play">
-                                            <i class="fas fa-rocket" style="margin-right: 8px;"></i> Try Live Project
+                                            <i class="fas fa-rocket" style="margin-right: 8px;"></i> Launch Project
                                         </a>
                                     {% endif %}
                                     {% if project.video_url %}
@@ -224,26 +251,33 @@
                                             <p>{{ project.description }}</p>
                                         </div>
                                         {% if project.teacher_comment %}
-                                        <div class="info-block teacher-feedback">
-                                            <h4 style="color: #27ae60; margin-top: 0;"><i class="fas fa-comment-dots"></i> Instructor Feedback</h4>
+                                        <div class="info-block teacher-feedback-modal">
+                                            <h4 style="color: #27ae60; margin-top: 0;"><i class="fas fa-check-circle"></i> Instructor Review</h4>
                                             <blockquote style="margin: 0; font-style: italic; color: #555;">"{{ project.teacher_comment }}"</blockquote>
                                         </div>
                                         {% endif %}
                                     </div>
                                     <div class="modal-right">
-                                        <h4>Code Logic</h4>
+                                        <h4>Technical Implementation</h4>
                                         {% if project.code_snippet %}
-                                            <div class="code-scroll-container">
-                                                <pre><code>{{ project.code_snippet }}</code></pre>
+                                            <div class="code-container">
+                                                <div class="code-header">
+                                                    <span><i class="fas fa-code"></i> Core Logic Preview</span>
+                                                    <small>Python / JavaScript</small>
+                                                </div>
+                                                <div class="code-scroll-container">
+                                                    <pre><code>{{ project.code_snippet }}</code></pre>
+                                                </div>
+                                                <p class="code-context-note">This snippet demonstrates the logic used to control the main functionality of the project.</p>
                                             </div>
                                         {% elif project.github_link %}
                                             <div class="github-box">
                                                 <i class="fab fa-github fa-3x"></i>
-                                                <p>Code hosted on GitHub</p>
-                                                <a href="{{ project.github_link }}" target="_blank" class="btn-github">View Repo</a>
+                                                <p>Full source code available on GitHub</p>
+                                                <a href="{{ project.github_link }}" target="_blank" class="btn-github">View Repository</a>
                                             </div>
                                         {% else %}
-                                            <p class="no-code">No code preview available.</p>
+                                            <p class="no-code">Source code not available for preview.</p>
                                         {% endif %}
                                     </div>
                                 </div>
@@ -253,10 +287,11 @@
                 </div>
             </div>
 
+            {% set graph_data = target.get_contribution_data() %}
+            {% if graph_data and graph_data.months|length > 0 %}
             <div class="dashboard-panel" id="daily-effort">
-                <div class="panel-header"><h2><i class="fas fa-calendar-alt"></i> Activity</h2></div>
+                <div class="panel-header"><h2><i class="fas fa-calendar-alt"></i> Coding Activity</h2></div>
                 <div class="graph-scroll-container">
-                   {% set graph_data = target.get_contribution_data() %}
                    <table class="contribution-table">
                        <thead>
                            <tr>
@@ -298,6 +333,7 @@
                    <span>More</span>
                </div>
            </div>
+           {% endif %}
         </div>
     </div>
 </div>
