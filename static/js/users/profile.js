@@ -1,24 +1,179 @@
 /*
 File: profile.js
 Type: js
-Summary: Profile picture cropping, preview, and upload handling.
+Summary: Handles Profile Picture cropping, Project Modals, Video Lightbox, and Skill management.
 */
 
 document.addEventListener("DOMContentLoaded", () => {
-    if (typeof Cropper === 'undefined') {
-        console.warn('Cropper.js not loaded yet, waiting...');
-        let checkInterval = setInterval(() => {
-            if (typeof Cropper !== 'undefined') {
-                clearInterval(checkInterval);
-                console.log('Cropper.js loaded, initializing profile editor');
-                initProfileEditor();
-            }
-        }, 100);
-        return;
+    // 1. Initialize Profile Picture Editor (if on owner page)
+    if (document.getElementById("edit-pic-trigger")) {
+        if (typeof Cropper === 'undefined') {
+            console.warn('Cropper.js not loaded yet, waiting...');
+            let checkInterval = setInterval(() => {
+                if (typeof Cropper !== 'undefined') {
+                    clearInterval(checkInterval);
+                    initProfileEditor();
+                }
+            }, 100);
+        } else {
+            initProfileEditor();
+        }
     }
 
-    initProfileEditor();
+    // 2. Initialize Project Modals & Video Lightbox
+    initProjectInteractions();
+
+    // 3. Initialize Skill Removal
+    initSkillRemoval();
+
+    // 4. Handle Deep Link Modal Opening
+    initDeepLinkModal();
 });
+
+/* =========================================
+   PROJECT MODAL & VIDEO LIGHTBOX LOGIC
+   ========================================= */
+
+function initProjectInteractions() {
+    // --- Project Modal Logic ---
+    const body = document.body;
+
+    // Open Project Modal (Event Delegation)
+    document.addEventListener('click', (e) => {
+        // Handle Opening Project Modal (Thumbnails and "Case Study" buttons)
+        const trigger = e.target.closest('.js-open-project-modal');
+        if (trigger) {
+            const modalId = trigger.getAttribute('data-target');
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.style.display = 'flex';
+                body.style.overflow = 'hidden'; // Prevent background scrolling
+            }
+        }
+
+        // Handle Closing Project Modal (Close button or Overlay background)
+        if (e.target.classList.contains('project-modal-overlay') || e.target.closest('.js-close-project-modal')) {
+            const modal = e.target.closest('.project-modal-overlay') || e.target.closest('.project-modal-content').parentElement;
+            if (modal) {
+                modal.style.display = 'none';
+                body.style.overflow = 'auto';
+            }
+        }
+    });
+
+    // --- Video Lightbox Logic ---
+    const lightbox = document.getElementById('video-lightbox');
+    const iframe = document.getElementById('lightbox-iframe');
+    const closeVideoBtn = document.querySelector('.js-close-video-lightbox');
+
+    if (lightbox && iframe) {
+        // Open Video
+        document.addEventListener('click', (e) => {
+            const videoTrigger = e.target.closest('.js-open-video-lightbox');
+            if (videoTrigger) {
+                e.preventDefault(); // Prevent default anchor behavior
+                e.stopPropagation(); // Stop bubbling to project modal
+
+                const rawUrl = videoTrigger.getAttribute('data-video-url');
+                if (rawUrl) {
+                    const embedUrl = convertToEmbedUrl(rawUrl);
+                    iframe.src = embedUrl;
+                    lightbox.style.display = 'flex';
+                }
+            }
+        });
+
+        // Close Video Helper
+        const closeVideo = () => {
+            lightbox.style.display = 'none';
+            iframe.src = ""; // Stop playback
+        };
+
+        // Close events
+        if (closeVideoBtn) closeVideoBtn.addEventListener('click', closeVideo);
+
+        lightbox.addEventListener('click', (e) => {
+            if (e.target === lightbox) closeVideo();
+        });
+    }
+}
+
+/**
+ * Helper: Converts YouTube/Vimeo links to Autoplay Embed Links
+ */
+function convertToEmbedUrl(url) {
+    let embedUrl = url;
+
+    // Handle YouTube
+    if (url.includes("youtube.com/watch?v=")) {
+        let videoId = url.split("v=")[1];
+        const ampersandPosition = videoId.indexOf("&");
+        if (ampersandPosition !== -1) {
+            videoId = videoId.substring(0, ampersandPosition);
+        }
+        embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+    }
+    else if (url.includes("youtu.be/")) {
+        const videoId = url.split("youtu.be/")[1];
+        embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+    }
+    // Handle Vimeo
+    else if (url.includes("vimeo.com/")) {
+        const videoId = url.split("vimeo.com/")[1];
+        embedUrl = `https://player.vimeo.com/video/${videoId}?autoplay=1`;
+    }
+
+    return embedUrl;
+}
+
+
+/* =========================================
+   SKILL REMOVAL LOGIC
+   ========================================= */
+
+function initSkillRemoval() {
+    document.addEventListener('click', async function(e) {
+        if (e.target.classList.contains('remove-skill')) {
+            e.preventDefault();
+
+            if(!confirm("Are you sure you want to remove this skill?")) return;
+
+            const skillId = e.target.dataset.skillId;
+            const skillTag = e.target.closest('.skill-tag') || e.target.closest('.skill-card-visual');
+
+            // Note: Since this is an external JS file, we cannot use Jinja's {{ csrf_token() }}.
+            // You must ensure a meta tag exists: <meta name="csrf-token" content="{{ csrf_token() }}">
+            // Or rely on the cookie if your backend is configured that way.
+            const csrfTokenMeta = document.querySelector('meta[name="csrf-token"]');
+            const csrfToken = csrfTokenMeta ? csrfTokenMeta.getAttribute('content') : '';
+
+            try {
+                const response = await fetch(`/user/remove_skill/${skillId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    }
+                });
+
+                if (response.ok) {
+                    if(skillTag) skillTag.remove();
+                    showNotification('Skill removed successfully', 'success');
+                } else {
+                    showNotification('Failed to remove skill', 'error');
+                }
+            } catch (error) {
+                console.error(error);
+                showNotification('Error removing skill', 'error');
+            }
+        }
+    });
+}
+
+
+/* =========================================
+   PROFILE PICTURE EDITOR LOGIC
+   ========================================= */
 
 function initProfileEditor() {
     const fileInput = document.getElementById("file-input");
@@ -28,6 +183,8 @@ function initProfileEditor() {
     const cropBtn = document.getElementById("crop-btn");
     const editTrigger = document.getElementById("edit-pic-trigger");
     const currentImg = document.getElementById("current-profile-img");
+
+    if (!fileInput || !modal) return; // Guard clause
 
     let cropper = null;
 
@@ -78,50 +235,34 @@ function initProfileEditor() {
                 error: 'Please select a valid image file (JPEG, PNG, GIF, or WebP).'
             };
         }
-
         if (file.size > CONFIG.maxFileSize) {
             return {
                 valid: false,
-                error: 'File size must be less than 5MB.'
+                error: 'File size must be less than 10MB.'
             };
         }
-
         return { valid: true };
     }
 
-    /**
-     * Display image in modal for cropping
-     * @param {string} imageSrc - Base64 image source
-     */
     function displayImageForCropping(imageSrc) {
         preview.src = imageSrc;
         modal.style.display = "block";
-
-
-        // Initialize cropper after image loads
         preview.onload = () => {
-
             initializeCropper();
         };
-
         preview.onerror = () => {
             showError('Failed to load the selected image.');
             closeModal();
         };
     }
 
-    /**
-     * Initialize Cropper.js with error handling
-     */
     function initializeCropper() {
-        // Check if Cropper is available
         if (typeof Cropper === 'undefined') {
             console.error('Cropper.js is not loaded');
-            showError('Image editor failed to load. Please refresh the page and try again.');
+            showError('Image editor failed to load. Please refresh and try again.');
             return;
         }
 
-        // Destroy existing cropper if it exists
         if (cropper) {
             cropper.destroy();
             cropper = null;
@@ -129,7 +270,7 @@ function initProfileEditor() {
 
         try {
             cropper = new Cropper(preview, {
-                aspectRatio: 1, // Square crop
+                aspectRatio: 1,
                 viewMode: 2,
                 dragMode: 'move',
                 autoCropArea: 0.8,
@@ -144,9 +285,7 @@ function initProfileEditor() {
                 minCropBoxHeight: 100,
                 background: false,
                 ready() {
-                    // Cropper is ready
                     cropBtn.disabled = false;
-                    console.log('Cropper initialized successfully');
                 },
                 error(err) {
                     console.error('Cropper error:', err);
@@ -155,114 +294,86 @@ function initProfileEditor() {
             });
         } catch (error) {
             console.error('Failed to create Cropper instance:', error);
-            showError('Failed to initialize image editor. Please refresh the page and try again.');
+            showError('Failed to initialize image editor.');
         }
     }
 
-    /**
-     * Close modal and cleanup
-     */
     function closeModal() {
         modal.style.display = "none";
-
-        // Destroy cropper
         if (cropper) {
             cropper.destroy();
             cropper = null;
         }
-
-        // Reset file input and button
         fileInput.value = '';
         resetCropButton();
-
-        // Remove loading state
         modal.classList.remove('loading');
     }
 
-    /**
-     * Handle modal background click
-     * @param {Event} e - Click event
-     */
     function handleModalClick(e) {
         if (e.target === modal) {
             closeModal();
         }
     }
 
-    /**
-     * Handle keyboard events
-     * @param {Event} e - Keyboard event
-     */
     function handleKeyDown(e) {
         if (e.key === "Escape" && modal.style.display === "block") {
             closeModal();
         }
     }
 
-    /**
-     * Handle crop and upload process
-     */
     function handleCropAndUpload() {
         if (!cropper) {
-            showError('Image editor is not ready. Please try again.');
+            showError('Image editor is not ready.');
             return;
         }
-
-        // Set loading state
         setLoadingState(true);
 
         try {
             const canvas = cropper.getCroppedCanvas({
                 width: CONFIG.cropSize.width,
                 height: CONFIG.cropSize.height,
-                minWidth: 200,
-                minHeight: 200,
-                maxWidth: 500,
-                maxHeight: 500,
+                minWidth: 200, minHeight: 200,
+                maxWidth: 500, maxHeight: 500,
                 imageSmoothingEnabled: true,
                 imageSmoothingQuality: 'high'
             });
 
-            if (!canvas) {
-                throw new Error('Failed to crop image');
-            }
+            if (!canvas) throw new Error('Failed to crop image');
 
             canvas.toBlob((blob) => {
                 if (!blob) {
-                    showError('Failed to process image. Please try again.');
+                    showError('Failed to process image.');
                     setLoadingState(false);
                     return;
                 }
-
                 uploadImage(blob);
-            }, "image/jpeg", 0.9); // High quality JPEG
+            }, "image/jpeg", 0.9);
 
         } catch (error) {
             console.error('Cropping error:', error);
-            showError('Failed to crop image. Please try again.');
+            showError('Failed to crop image.');
             setLoadingState(false);
         }
     }
 
-    /**
-     * Upload cropped image to server
-     * @param {Blob} blob - Cropped image blob
-     */
     function uploadImage(blob) {
         const formData = new FormData();
         formData.append("profile_picture", blob, "profile.jpg");
 
+        // Note: Check for CSRF meta tag if required by your Flask setup
+        const csrfTokenMeta = document.querySelector('meta[name="csrf-token"]');
+        const headers = { 'X-Requested-With': 'XMLHttpRequest' };
+        if (csrfTokenMeta) {
+            headers['X-CSRFToken'] = csrfTokenMeta.getAttribute('content');
+        }
+
         fetch(CONFIG.uploadEndpoint, {
             method: "POST",
             body: formData,
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            }
+            headers: headers
         })
         .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
             return response.json();
         })
         .then(data => {
@@ -283,26 +394,15 @@ function initProfileEditor() {
         });
     }
 
-    /**
-     * Update profile image in UI
-     * @param {string} newUrl - New image URL
-     */
     function updateProfileImage(newUrl) {
-        // Add timestamp to avoid cache issues
         const urlWithTimestamp = newUrl + '?t=' + Date.now();
         currentImg.src = urlWithTimestamp;
-
-        // Trigger a re-render to ensure the image updates
         currentImg.style.opacity = '0';
         setTimeout(() => {
             currentImg.style.opacity = '1';
         }, 50);
     }
 
-    /**
-     * Set loading state
-     * @param {boolean} isLoading - Loading state
-     */
     function setLoadingState(isLoading) {
         if (isLoading) {
             cropBtn.disabled = true;
@@ -314,124 +414,71 @@ function initProfileEditor() {
         }
     }
 
-    /**
-     * Reset crop button to default state
-     */
     function resetCropButton() {
         cropBtn.disabled = false;
         cropBtn.textContent = "Crop & Save";
     }
 
-    /**
-     * Show success message
-     * @param {string} message - Success message
-     */
-    function showSuccess(message) {
-        showNotification(message, 'success');
-    }
-
-    /**
-     * Show error message
-     * @param {string} message - Error message
-     */
-    function showError(message) {
-        showNotification(message, 'error');
-    }
-
-    /**
-     * Show notification
-     * @param {string} message - Notification message
-     * @param {string} type - Notification type (success/error)
-     */
-    function showNotification(message, type = 'info') {
-        // Remove existing notifications
-        const existingNotifications = document.querySelectorAll('.notification');
-        existingNotifications.forEach(notification => notification.remove());
-
-        const notification = document.createElement('div');
-        notification.className = `notification notification-${type}`;
-        notification.textContent = message;
-
-        // Styling
-        const styles = {
-            position: 'fixed',
-            top: '20px',
-            right: '20px',
-            padding: '15px 20px',
-            borderRadius: '5px',
-            zIndex: '10000',
-            boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
-            fontSize: '14px',
-            fontWeight: '500',
-            maxWidth: '300px',
-            wordWrap: 'break-word'
-        };
-
-        // Type-specific styles
-        if (type === 'success') {
-            styles.background = '#2ecc71';
-            styles.color = 'white';
-        } else if (type === 'error') {
-            styles.background = '#e74c3c';
-            styles.color = 'white';
-        }
-
-        Object.assign(notification.style, styles);
-
-        document.body.appendChild(notification);
-
-        // Auto remove after 4 seconds
-        setTimeout(() => {
-            if (notification.parentNode) {
-                notification.remove();
-            }
-        }, 4000);
-    }
-
-    /**
-     * Handle skill removal (if needed)
-     */
-    function initSkillRemoval() {
-        document.addEventListener('click', (e) => {
-            if (e.target.classList.contains('remove-skill')) {
-                e.preventDefault();
-                const skillTag = e.target.closest('.skill-tag');
-                if (skillTag && confirm('Remove this skill?')) {
-                    skillTag.remove();
-                    // Here you could also send an AJAX request to update the backend
-                }
-            }
-        });
-    }
-
-    // Initialize everything
     init();
-    initSkillRemoval();
-
-    // Export functions for potential external use
-    window.profileEditor = {
-        closeModal,
-        showSuccess,
-        showError
-    };
 }
 
+/* =========================================
+   UTILITIES
+   ========================================= */
 
-document.addEventListener('click', async function(e) {
-    if (e.target.classList.contains('remove-skill')) {
-        e.preventDefault();
-        const skillId = e.target.dataset.skillId;
+function showSuccess(message) {
+    showNotification(message, 'success');
+}
 
-        const response = await fetch(`/user/remove_skill/${skillId}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': '{{ csrf_token() }}' // if using CSRF
-            }
-        });
+function showError(message) {
+    showNotification(message, 'error');
+}
 
-        if (response.ok) {
-            e.target.parentElement.remove(); // remove from DOM if backend succeeded
+function showNotification(message, type = 'info') {
+    const existingNotifications = document.querySelectorAll('.notification');
+    existingNotifications.forEach(notification => notification.remove());
+
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${type}`;
+    notification.textContent = message;
+
+    const styles = {
+        position: 'fixed', top: '20px', right: '20px',
+        padding: '15px 20px', borderRadius: '5px',
+        zIndex: '10000', boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
+        fontSize: '14px', fontWeight: '500',
+        maxWidth: '300px', wordWrap: 'break-word'
+    };
+
+    if (type === 'success') {
+        styles.background = '#2ecc71'; styles.color = 'white';
+    } else if (type === 'error') {
+        styles.background = '#e74c3c'; styles.color = 'white';
+    }
+
+    Object.assign(notification.style, styles);
+    document.body.appendChild(notification);
+
+    setTimeout(() => {
+        if (notification.parentNode) notification.remove();
+    }, 4000);
+}
+
+function initDeepLinkModal() {
+    const hash = window.location.hash;
+    // Check if the hash matches the pattern #modal-ID
+    if (hash && hash.startsWith('#modal-')) {
+        const modalId = hash.substring(1); // Removes the '#'
+
+        // Use the function defined in initProjectInteractions
+        // The project modal logic should be accessible, or we use direct DOM manipulation
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+
+            // Ensure the page scrolls to the top, as the modal is fixed position
+            window.scrollTo(0, 0);
         }
     }
-});
+}

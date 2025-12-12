@@ -4,7 +4,7 @@
 {% set is_owner = (session.get('user') == target.id) or (viewer and viewer.is_admin) %}
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/public_profile.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/user_profile.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/sprite.css') }}">
 
 {% if is_owner %}
@@ -12,12 +12,9 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='lib/cropper.min.css') }}">
     <style>
         .edit-project-overlay {
-            position: absolute;
-            top: 10px; right: 10px;
-            background: rgba(0, 0, 0, 0.7);
-            color: white;
-            width: 30px; height: 30px;
-            border-radius: 50%;
+            position: absolute; top: 10px; right: 10px;
+            background: rgba(0, 0, 0, 0.7); color: white;
+            width: 30px; height: 30px; border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
             opacity: 0; transition: opacity 0.2s ease;
             text-decoration: none; z-index: 10;
@@ -31,7 +28,6 @@
 
     <div class="profile-header-card">
         <div class="header-background"></div>
-
         <div class="header-content">
             <div class="avatar-wrapper" style="position: relative;">
                 {% set pfp = target.profile_picture if target.profile_picture else 'Default_pfp.jpg' %}
@@ -51,7 +47,6 @@
             <div class="student-identity">
                 <h1 class="student-name">{{ target.nickname or target.username }}</h1>
                 <p class="student-title">{{ target.username }} | Aspiring Coder</p>
-
                 {% if is_owner %}
                     <div style="margin-top: 10px;">
                         <a href="{{ url_for('user.edit_profile') }}" class="btn-launch" style="padding: 5px 15px; font-size: 0.9rem;">
@@ -78,40 +73,25 @@
     <div class="stats-grid">
         <div class="grid-card">
             <div class="icon-circle blue"><i class="fas fa-tasks"></i></div>
-            <div class="card-text">
-                <h3>{{ target.challenge_logs | length }}</h3> <p>Challenges Solved</p>
-            </div>
+            <div class="card-text"><h3>{{ target.challenge_logs | length }}</h3> <p>Challenges Solved</p></div>
         </div>
         <div class="grid-card">
             <div class="icon-circle green"><i class="fas fa-project-diagram"></i></div>
-            <div class="card-text">
-                <h3>{{ target.projects | length }}</h3>
-                <p>Projects Built</p>
-            </div>
+            <div class="card-text"><h3>{{ target.projects | length }}</h3><p>Projects Built</p></div>
         </div>
         <div class="grid-card">
             <div class="icon-circle gold"><i class="fas fa-trophy"></i></div>
-            <div class="card-text">
-                <h3>{{ target.certificates | default([]) | length }}</h3>
-                <p>Certificates</p>
-            </div>
+            <div class="card-text"><h3>{{ target.certificates | default([]) | length }}</h3><p>Certificates</p></div>
         </div>
         <div class="grid-card">
             <div class="icon-circle purple"><i class="fas fa-star"></i></div>
-            <div class="card-text">
-                <h3>{{ target.skills | length }}</h3>
-                <p>Skills Unlocked</p>
-            </div>
+            <div class="card-text"><h3>{{ target.skills | length }}</h3><p>Skills Unlocked</p></div>
         </div>
     </div>
 
     <div class="dashboard-panel">
-        <div class="panel-header">
-            <h2><i class="fas fa-calendar-alt"></i> Daily Coding Effort</h2>
-            <span class="sub-header-text">{{ target.challenge_logs | length }} challenges solved in the last year</span>
-        </div>
-
-        <div class="graph-scroll-container">
+         <div class="panel-header"><h2><i class="fas fa-calendar-alt"></i> Daily Coding Effort</h2></div>
+         <div class="graph-scroll-container">
             {% set graph_data = target.get_contribution_data() %}
             <table class="contribution-table">
                 <thead>
@@ -132,10 +112,7 @@
                         </td>
                         {% for week_data in graph_data.rows[row_index] %}
                             {% if week_data %}
-                                <td class="day-cell"
-                                    data-level="{{ week_data.level }}"
-                                    title="{{ week_data.count }} contributions on {{ week_data.date }}">
-                                </td>
+                                <td class="day-cell" data-level="{{ week_data.level }}" title="{{ week_data.count }} contributions on {{ week_data.date }}"></td>
                             {% else %}
                                 <td class="day-cell" data-level="0"></td>
                             {% endif %}
@@ -145,90 +122,48 @@
                 </tbody>
             </table>
         </div>
-        <div class="graph-footer">
-            <div class="legend">
-                <span>Less</span>
-                <div class="day-cell" data-level="0"></div>
-                <div class="day-cell" data-level="1"></div>
-                <div class="day-cell" data-level="2"></div>
-                <div class="day-cell" data-level="3"></div>
-                <div class="day-cell" data-level="4"></div>
-                <span>More</span>
-            </div>
-        </div>
     </div>
 
     <div class="dashboard-grid">
-
         <div class="column-left">
             <div class="dashboard-panel">
-                <div class="panel-header">
-                    <h2><i class="fas fa-chart-line"></i> Curriculum Progress</h2>
-                </div>
-
+                <div class="panel-header"><h2><i class="fas fa-chart-line"></i> Curriculum Progress</h2></div>
                 {% set cc_levels = target.get_progress("codecombat.com") %}
                 {% set cc_percent = target.get_progress_percent("codecombat.com") %}
                 <div class="progress-item">
-                    <div class="prog-label">
-                        <span>CodeCombat</span>
-                        <span>{{ cc_percent }}%</span>
-                    </div>
-                    <div class="progress-track">
-                        <div class="progress-fill" style="width: {{ cc_percent }}%;"></div>
-                    </div>
+                    <div class="prog-label"><span>CodeCombat</span><span>{{ cc_percent }}%</span></div>
+                    <div class="progress-track"><div class="progress-fill" style="width: {{ cc_percent }}%;"></div></div>
                     <small>{{ cc_levels }} Levels Completed</small>
                 </div>
-
                 {% set oz_levels = target.get_progress("www.ozaria.com") %}
                 {% set oz_percent = target.get_progress_percent("www.ozaria.com") %}
                 <div class="progress-item">
-                    <div class="prog-label">
-                        <span>Ozaria</span>
-                        <span>{{ oz_percent }}%</span>
-                    </div>
-                    <div class="progress-track">
-                        <div class="progress-fill ozaria-fill" style="width: {{ oz_percent }}%;"></div>
-                    </div>
+                    <div class="prog-label"><span>Ozaria</span><span>{{ oz_percent }}%</span></div>
+                    <div class="progress-track"><div class="progress-fill ozaria-fill" style="width: {{ oz_percent }}%;"></div></div>
                     <small>{{ oz_levels }} Levels Completed</small>
                 </div>
             </div>
 
-            <!-- NEW TECHNICAL STACK SECTION -->
             <div class="dashboard-panel">
-                <div class="panel-header">
-                    <h2><i class="fas fa-tools"></i> Technical Stack</h2>
-                </div>
-
-                <!-- 1. Languages & Tools (Big Icons) -->
+                <div class="panel-header"><h2><i class="fas fa-tools"></i> Technical Stack</h2></div>
                 <h4 class="skill-category-title">Languages & Tools</h4>
                 <div class="skill-grid-visual">
                     {% for skill in target.skills if skill.category in ['language', 'tool'] %}
                     <div class="skill-card-visual level-{{ skill.proficiency }}">
                         <i class="{{ skill.icon }} fa-2x"></i>
                         <span>{{ skill.name }}</span>
-                        <!-- Proficiency Stars -->
-                        <div class="star-rating">
-                            {% for i in range(skill.proficiency) %}
-                                <i class="fas fa-star"></i>
-                            {% endfor %}
-                        </div>
+                        <div class="star-rating">{% for i in range(skill.proficiency) %}<i class="fas fa-star"></i>{% endfor %}</div>
                     </div>
                     {% else %}
                         <p style="color:#888; font-size: 0.9rem; grid-column: 1/-1;">No languages recorded.</p>
                     {% endfor %}
                 </div>
-
                 <hr style="border-top: 1px dashed #eee; margin: 15px 0;">
-
-                <!-- 2. Concepts (Clean List) -->
                 <h4 class="skill-category-title">Core Concepts</h4>
                 <div class="skill-list-concepts">
                     {% for skill in target.skills if skill.category == 'concept' %}
-                    <div class="concept-tag">
-                        <i class="fas fa-check-circle"></i> {{ skill.name }}
-                    </div>
+                    <div class="concept-tag"><i class="fas fa-check-circle"></i> {{ skill.name }}</div>
                     {% else %}
-                        {# Fallback for legacy skills #}
                         {% for skill in target.skills if not skill.category %}
                             <span class="skill-tag">{{ skill.name }}</span>
                         {% endfor %}
@@ -238,20 +173,15 @@
         </div>
 
         <div class="column-right">
-
             {% if target.certificates %}
             <div class="dashboard-panel">
-                <div class="panel-header">
-                    <h2><i class="fas fa-certificate"></i> Verified Certificates</h2>
-                </div>
+                <div class="panel-header"><h2><i class="fas fa-certificate"></i> Verified Certificates</h2></div>
                 <div class="cert-list">
                     {% for cert in target.certificates %}
                     <div class="cert-item">
                         <div class="cert-icon">
                             {% set achievement_slug = cert.achievement.slug if cert.achievement else 'default' %}
-                            <div class="badge-container">
-                                <div class="badge badge-{{ achievement_slug }}">&nbsp;</div>
-                            </div>
+                            <div class="badge-container"><div class="badge badge-{{ achievement_slug }}">&nbsp;</div></div>
                         </div>
                         <div class="cert-info">
                             <h4>{{ cert.achievement.name if cert.achievement else "Course Completion" }}</h4>
@@ -279,7 +209,9 @@
                 <div class="project-grid">
                     {% for project in target.projects %}
                         <div class="project-card">
-                            <div class="project-thumb" style="position: relative;">
+                            <div class="project-thumb js-open-project-modal"
+                                 data-target="modal-{{ project.id }}">
+
                                 {% if project.image_url %}
                                     <img src="{{ url_for('static', filename=project.image_url) }}" alt="{{ project.name }}">
                                 {% else %}
@@ -287,7 +219,10 @@
                                 {% endif %}
 
                                 {% if is_owner %}
-                                    <a href="{{ url_for('user.edit_project', project_id=project.id) }}" class="edit-project-overlay" title="Edit Project">
+                                    <a href="{{ url_for('user.edit_project', project_id=project.id) }}"
+                                       class="edit-project-overlay"
+                                       title="Edit Project"
+                                       onclick="event.stopPropagation();">
                                         <i class="fas fa-pencil-alt"></i>
                                     </a>
                                 {% endif %}
@@ -303,7 +238,7 @@
                                             <i class="fas fa-external-link-alt"></i> Demo
                                         </a>
                                     {% endif %}
-                                    <button class="btn-details" onclick="openProjectModal('modal-{{ project.id }}')">
+                                    <button class="btn-details js-open-project-modal" data-target="modal-{{ project.id }}">
                                         <i class="fas fa-file-code"></i> Case Study
                                     </button>
                                 </div>
@@ -311,62 +246,78 @@
                         </div>
 
                         <div id="modal-{{ project.id }}" class="project-modal-overlay" style="display:none;">
-                            <div class="project-modal-content">
-                                <button class="modal-close" onclick="closeProjectModal('modal-{{ project.id }}')">&times;</button>
-                                <div class="modal-header">
-                                    <h2>{{ project.name }}</h2>
-                                    {% if project.link %}
-                                        <a href="{{ project.link }}" target="_blank" class="btn-launch-large">
-                                            <i class="fas fa-rocket"></i> Launch Project
-                                        </a>
-                                    {% endif %}
-                                </div>
-                                <div class="modal-body-grid">
-                                    <div class="modal-left">
-                                        <div class="info-block">
-                                            <h4>About this Project</h4>
-                                            <p>{{ project.description }}</p>
-                                        </div>
+    <div class="project-modal-content">
 
-                                        {% if project.teacher_comment %}
-                                        <div class="info-block teacher-feedback">
-                                            <h4>Instructor Feedback</h4>
-                                            <blockquote>"{{ project.teacher_comment }}"</blockquote>
-                                        </div>
-                                        {% endif %}
+        <button class="modal-close js-close-project-modal">&times;</button>
 
-                                        {% if project.video_url %}
-                                        <div class="info-block">
-                                            <h4>Project Walkthrough</h4>
-                                            <a href="{{ project.video_url }}" target="_blank" class="video-link-box">
-                                                <i class="fas fa-play-circle fa-2x"></i>
-                                                <span>Watch Video Recording</span>
-                                            </a>
-                                        </div>
-                                        {% endif %}
-                                    </div>
-                                    <div class="modal-right">
-                                        <h4>Source Code & Logic</h4>
-                                        {% if project.code_snippet %}
-                                            <div class="code-scroll-container">
-                                                <pre><code>{{ project.code_snippet }}</code></pre>
-                                            </div>
-                                        {% elif project.github_link %}
-                                            <div class="github-box">
-                                                <i class="fab fa-github fa-3x"></i>
-                                                <p>Code hosted on GitHub</p>
-                                                <a href="{{ project.github_link }}" target="_blank" class="btn-github">View Repo</a>
-                                            </div>
-                                        {% else %}
-                                            <p class="no-code">No code preview available.</p>
-                                        {% endif %}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+        <div class="modal-header">
+            <h2>{{ project.name }}</h2>
+        </div>
+
+        <div class="modal-action-bar">
+            {% if project.link %}
+                <a href="{{ project.link }}" target="_blank" class="btn-action btn-play">
+                    <i class="fas fa-rocket" style="margin-right: 8px;"></i> Try Live Project
+                </a>
+            {% endif %}
+
+            {% if project.video_url %}
+                <button class="btn-action btn-watch js-open-video-lightbox"
+                        data-video-url="{{ project.video_url }}">
+                    <i class="fas fa-play-circle" style="margin-right: 8px;"></i> Watch Video Walkthrough
+                </button>
+            {% endif %}
+        </div>
+
+        <div class="modal-body-grid">
+            <div class="modal-left">
+
+
+
+                <div class="info-block">
+                    <h4>About this Project</h4>
+                    <p>{{ project.description }}</p>
+                </div>
+
+                {% if project.teacher_comment %}
+                <div class="info-block teacher-feedback" style="background-color: #f8f9fa; border-left: 4px solid #2ecc71; padding: 15px;">
+                    <h4 style="color: #27ae60; margin-top: 0;"><i class="fas fa-comment-dots"></i> Instructor Feedback</h4>
+                    <blockquote style="margin: 0; font-style: italic; color: #555;">"{{ project.teacher_comment }}"</blockquote>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="modal-right">
+                <h4>Code Logic</h4>
+                {% if project.code_snippet %}
+                    <div class="code-scroll-container">
+                        <pre><code>{{ project.code_snippet }}</code></pre>
+                    </div>
+                {% elif project.github_link %}
+                    <div class="github-box">
+                        <i class="fab fa-github fa-3x"></i>
+                        <p>Code hosted on GitHub</p>
+                        <a href="{{ project.github_link }}" target="_blank" class="btn-github">View Repo</a>
+                    </div>
+                {% else %}
+                    <p class="no-code">No code preview available.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
                     {% endfor %}
                 </div>
             </div>
+        </div>
+    </div>
+</div>
+
+<div id="video-lightbox" class="video-modal-overlay">
+    <div class="video-modal-content" onclick="event.stopPropagation()">
+        <button class="video-close-btn js-close-video-lightbox">&times;</button>
+        <div class="video-wrapper">
+            <iframe id="lightbox-iframe" src="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
         </div>
     </div>
 </div>
@@ -386,34 +337,10 @@
 </div>
 {% endif %}
 
-<script>
-    // Project Modal Logic (Needed for everyone)
-    function openProjectModal(id) {
-        var modal = document.getElementById(id);
-        if (modal) {
-            modal.style.display = 'flex';
-            document.body.style.overflow = 'hidden';
-        }
-    }
-
-    function closeProjectModal(id) {
-        var modal = document.getElementById(id);
-        if (modal) {
-            modal.style.display = 'none';
-            document.body.style.overflow = 'auto';
-        }
-    }
-
-    window.onclick = function(event) {
-        if (event.target.classList.contains('project-modal-overlay')) {
-            event.target.style.display = 'none';
-            document.body.style.overflow = 'auto';
-        }
-    }
-</script>
-
 {% if is_owner %}
     <script src="{{ url_for('static', filename='lib/cropper.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/users/profile.js') }}"></script>
+{% else %}
     <script src="{{ url_for('static', filename='js/users/profile.js') }}"></script>
 {% endif %}
 

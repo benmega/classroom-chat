@@ -231,7 +231,6 @@ Dependencies: uses variables from variables.css
     margin: 0 auto;
 }
 
-/* Graph Headers */
 .month-label {
     font-size: 12px;
     color: #555;
@@ -248,7 +247,6 @@ Dependencies: uses variables from variables.css
     line-height: 10px;
 }
 
-/* The Grid Cells */
 .day-cell {
     width: 10px;
     height: 10px;
@@ -263,14 +261,12 @@ Dependencies: uses variables from variables.css
     cursor: pointer;
 }
 
-/* Data Levels */
 .day-cell[data-level="0"] { background-color: #ebedf0; }
 .day-cell[data-level="1"] { background-color: #b2ebf2; }
 .day-cell[data-level="2"] { background-color: #4dd0e1; }
 .day-cell[data-level="3"] { background-color: #00bcd4; }
 .day-cell[data-level="4"] { background-color: #006064; }
 
-/* Footer & Legend */
 .graph-footer {
     display: flex;
     justify-content: space-between;
@@ -285,12 +281,6 @@ Dependencies: uses variables from variables.css
     align-items: center;
     gap: 3px;
 }
-
-.learn-more {
-    color: #0969da;
-    text-decoration: none;
-}
-.learn-more:hover { text-decoration: underline; }
 
 /* --- 7. Progress & Skills --- */
 
@@ -330,28 +320,87 @@ Dependencies: uses variables from variables.css
     font-size: 0.85rem;
 }
 
-.skill-cloud {
+/* Technical Stack Typography & Grid */
+.skill-category-title {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #888;
+    margin: 10px 0 15px 0;
+    font-weight: 700;
+}
+
+.skill-grid-visual {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.skill-card-visual {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 15px 10px;
+    border-radius: 8px;
+    transition: transform 0.2s, box-shadow 0.2s;
+    background: #fff;
+    border: 2px solid #e2e8f0;
+}
+
+.skill-card-visual:hover {
+    transform: translateY(-3px);
+}
+
+.skill-card-visual i {
+    margin-bottom: 8px;
+    color: var(--primary-color);
+}
+
+.skill-card-visual span {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #4a5568;
+    text-align: center;
+}
+
+.skill-list-concepts {
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
 }
 
-.skill-tag {
-    background: var(--background-light);
-    color: var(--primary-color-dark);
-    padding: 8px 14px;
+.concept-tag {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    color: #4a5568;
+    padding: 6px 12px;
     border-radius: 20px;
     font-size: 0.9rem;
-    font-weight: 500;
-    border: 1px solid var(--border-color);
-    transition: var(--transition-default);
+    display: flex;
+    align-items: center;
+    gap: 6px;
 }
 
-.skill-tag:hover {
-    background: var(--primary-color);
-    color: white;
-    border-color: var(--primary-color);
+.concept-tag i { color: var(--secondary-color); font-size: 0.8rem; }
+.skill-tag { /* Legacy fallback */
+    background: var(--background-light); color: var(--primary-color-dark);
+    padding: 8px 14px; border-radius: 20px;
+    font-size: 0.9rem; font-weight: 500;
 }
+
+/* Gamification Levels */
+.skill-card-visual.level-1 { border-color: #cd7f32; background: linear-gradient(to bottom right, #fff, #fffbf7); }
+.skill-card-visual.level-1 > i { color: #cd7f32; }
+
+.skill-card-visual.level-2 { border-color: #b0c4de; background: linear-gradient(to bottom right, #fff, #f0f4f8); }
+.skill-card-visual.level-2 > i { color: #778899; }
+
+.skill-card-visual.level-3 { border-color: #ffd700; background: linear-gradient(to bottom right, #fff, #fffdf0); box-shadow: 0 0 15px rgba(255, 215, 0, 0.4); transform: scale(1.05); }
+.skill-card-visual.level-3 > i { color: #d4af37; }
+
+.star-rating { margin-top: 5px; font-size: 0.6rem; display: flex; gap: 2px; color: #ffc107; }
 
 /* --- 8. Certificates --- */
 
@@ -378,56 +427,28 @@ Dependencies: uses variables from variables.css
 }
 
 .cert-icon {
-    width: 48px;
-    height: 48px;
-    margin-right: 15px;
-    position: relative;
-    flex-shrink: 0;
+    width: 48px; height: 48px; margin-right: 15px;
+    position: relative; flex-shrink: 0;
 }
 
-/* Specific styling for badges inside cert-icon if using <img> or <i> */
 .cert-icon .badge-container {
-    width: 128px !important;
-    height: 128px !important;
-    transform: scale(0.375);
-    transform-origin: top left;
-    margin: 0;
-    display: block;
-    border: none;
-    background: transparent;
+    width: 128px !important; height: 128px !important;
+    transform: scale(0.375); transform-origin: top left;
+    margin: 0; display: block; border: none; background: transparent;
 }
 
-.cert-icon .badge {
-    filter: none !important;
-    opacity: 1 !important;
-}
+.cert-icon .badge { filter: none !important; opacity: 1 !important; }
 
-.cert-info h4 {
-    margin: 0 0 5px 0;
-    color: var(--text-color);
-    font-size: 1.1rem;
-}
-
-.cert-date {
-    font-size: 0.85rem;
-    color: #777;
-}
+.cert-info h4 { margin: 0 0 5px 0; color: var(--text-color); font-size: 1.1rem; }
+.cert-date { font-size: 0.85rem; color: #777; }
 
 .cert-link {
-    margin-left: auto;
-    padding: 6px 12px;
-    background: rgba(14, 178, 187, 0.1);
-    color: var(--primary-color);
+    margin-left: auto; padding: 6px 12px;
+    background: rgba(14, 178, 187, 0.1); color: var(--primary-color);
     border-radius: var(--border-radius-small);
-    font-weight: 600;
-    font-size: 0.9rem;
+    font-weight: 600; font-size: 0.9rem; text-decoration: none;
 }
-
-.cert-link:hover {
-    background: var(--primary-color);
-    color: white;
-    text-decoration: none;
-}
+.cert-link:hover { background: var(--primary-color); color: white; }
 
 /* --- 9. Project Portfolio (Grid & Cards) --- */
 
@@ -456,103 +477,56 @@ Dependencies: uses variables from variables.css
 }
 
 .project-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 4px;
-    height: 100%;
-    background: var(--secondary-color);
+    content: ''; position: absolute; top: 0; left: 0;
+    width: 4px; height: 100%; background: var(--secondary-color);
 }
 
 .project-thumb {
-    height: 140px;
-    background: #2d3748;
-    overflow: hidden;
-    position: relative;
-    margin-bottom: 15px; /* Spacing between thumb and content */
+    height: 140px; background: #2d3748;
+    overflow: hidden; position: relative;
+    margin-bottom: 15px; cursor: pointer; transition: transform 0.2s;
 }
-
+.project-thumb:active { transform: scale(0.98); }
 .project-thumb img { width: 100%; height: 100%; object-fit: cover; }
 
 .code-pattern-bg {
     width: 100%; height: 100%;
     display: flex; align-items: center; justify-content: center;
-    color: rgba(255,255,255,0.1);
-    font-size: 3rem;
+    color: rgba(255,255,255,0.1); font-size: 3rem;
     background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
 }
 
 .project-content {
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
+    flex-grow: 1; display: flex; flex-direction: column;
 }
 
-.project-content h3 {
-    margin: 0 0 10px 0;
-    color: var(--primary-color-dark);
-    font-size: 1.1rem;
-}
-
+.project-content h3 { margin: 0 0 10px 0; color: var(--primary-color-dark); font-size: 1.1rem; }
 .project-excerpt {
-    font-size: 0.9rem;
-    color: #666;
-    margin: 0 0 15px 0;
-    flex-grow: 1;
-    line-height: 1.5;
+    font-size: 0.9rem; color: #666; margin: 0 0 15px 0;
+    flex-grow: 1; line-height: 1.5;
 }
 
 .project-actions { display: flex; gap: 10px; margin-top: auto; }
 
-/* Buttons in Card */
-.btn-play, .btn-launch, .btn-details {
-    padding: 8px 12px;
-    border-radius: 4px;
-    font-size: 0.85rem;
-    cursor: pointer;
-    text-decoration: none;
-    border: none;
-    flex: 1;
-    text-align: center;
-    transition: 0.2s;
+/* CARD Buttons (Small) */
+.btn-launch, .btn-details {
+    padding: 8px 12px; border-radius: 4px;
+    font-size: 0.85rem; cursor: pointer;
+    text-decoration: none; border: none;
+    flex: 1; text-align: center; transition: 0.2s;
 }
 
-.btn-play, .btn-launch {
-    background: #e6fffa;
-    color: #00bfa5;
-    border: 1px solid #b2f5ea;
-}
-.btn-play:hover, .btn-launch:hover { background: #b2f5ea; }
+.btn-launch { background: #e6fffa; color: #00bfa5; border: 1px solid #b2f5ea; }
+.btn-launch:hover { background: #b2f5ea; }
 
-.btn-details {
-    background: var(--background-light);
-    color: #555;
-}
+.btn-details { background: var(--background-light); color: #555; }
 .btn-details:hover { background: #e2e8f0; }
 
-.btn-project {
-    align-self: flex-start;
-    color: var(--secondary-color);
-    font-weight: 600;
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    font-size: 0.95rem;
-}
-
-.btn-project:hover {
-    color: var(--secondary-color-dark);
-    text-decoration: none;
-    gap: 8px;
-}
-
-/* --- 10. Modals --- */
+/* --- 10. Modals & Action Bar --- */
 
 .project-modal-overlay {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.6);
-    z-index: 10000;
+    background: rgba(0,0,0,0.6); z-index: 10000;
     display: flex; align-items: center; justify-content: center;
     animation: fadeIn 0.2s ease-out;
 }
@@ -560,52 +534,58 @@ Dependencies: uses variables from variables.css
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
 .project-modal-content {
-    background: white;
-    width: 90%;
-    max-width: 1100px; /* UPDATED: Increased from 900px to give code more space */
-    max-height: 90vh;
-    border-radius: 12px;
-    overflow-y: auto;
-    position: relative;
-    padding: 30px;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    background: white; width: 90%; max-width: 1100px;
+    max-height: 90vh; border-radius: 12px;
+    overflow-y: auto; position: relative;
+    padding: 30px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
 }
 
 .modal-close {
-    position: absolute; top: 15px; right: 20px;
-    font-size: 2rem; background: none; border: none; cursor: pointer; color: #aaa;
+    position: absolute; top: 20px; right: 25px; z-index: 10;
+    font-size: 2rem; line-height: 1;
+    background: none; border: none; cursor: pointer; color: #aaa;
 }
 .modal-close:hover { color: #333; }
 
+/* Modal Header (Title Only) */
 .modal-header {
-    border-bottom: 1px solid #eee; padding-bottom: 20px; margin-bottom: 20px;
-    display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;
+    display: block; text-align: left;
+    padding-bottom: 10px; border-bottom: none;
+    margin-bottom: 0; padding-right: 40px;
 }
 .modal-header h2 { margin: 0; color: var(--primary-color-dark); }
 
-.btn-play-large, .btn-launch-large {
-    background: var(--primary-color); color: white;
-    padding: 10px 20px; border-radius: 6px; text-decoration: none; font-weight: bold;
-}
-.btn-play-large:hover, .btn-launch-large:hover {
-    background: var(--secondary-color-dark);
+/* Modal Action Bar (The Big Buttons) */
+.modal-action-bar {
+    display: flex; gap: 15px; flex-wrap: wrap;
+    padding-bottom: 20px; border-bottom: 1px solid #eee; margin-bottom: 20px;
 }
 
+.btn-action {
+    display: inline-flex; align-items: center; justify-content: center;
+    padding: 12px 24px; border-radius: 8px;
+    font-weight: 600; font-size: 1rem;
+    text-decoration: none; cursor: pointer;
+    transition: all 0.2s ease; border: none;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+.btn-action:hover {
+    transform: translateY(-2px); box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+}
+
+/* Action Button Variants */
+.btn-action.btn-play { background: linear-gradient(135deg, #2ecc71, #27ae60); color: white; }
+.btn-action.btn-watch { background: linear-gradient(135deg, #3498db, #2980b9); color: white; }
+
+/* Modal Body Layout */
 .modal-body-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr; /* Equal split */
-    gap: 30px;
-    align-items: start; /* Ensures left/right columns start at the top */
+    display: grid; grid-template-columns: 1fr 1fr; gap: 30px;
+    align-items: start;
 }
 
-/* CRITICAL FIX: min-width: 0 prevents the code block from breaking the grid layout */
-.modal-left, .modal-right {
-    min-width: 0;
-}
+.modal-left, .modal-right { min-width: 0; }
 
-/* Modal Content Blocks */
 .info-block { margin-bottom: 25px; }
-
 .info-block h4, .modal-right h4 {
     color: #4a5568; font-size: 0.9rem; text-transform: uppercase;
     letter-spacing: 0.05em; border-bottom: 2px solid var(--highlight-color);
@@ -613,18 +593,9 @@ Dependencies: uses variables from variables.css
 }
 
 .teacher-feedback blockquote {
-    background: #fffbeb;
-    border-left: 4px solid var(--highlight-color);
-    margin: 0; padding: 15px;
-    font-style: italic; color: #4a5568;
+    background: #fffbeb; border-left: 4px solid var(--highlight-color);
+    margin: 0; padding: 15px; font-style: italic; color: #4a5568;
 }
-
-.video-link-box {
-    display: flex; align-items: center; gap: 15px;
-    background: #2d3748; color: white; padding: 15px;
-    border-radius: 8px; text-decoration: none; transition: 0.2s;
-}
-.video-link-box:hover { background: #1a202c; transform: scale(1.02); }
 
 .github-box {
     text-align: center; padding: 40px;
@@ -639,190 +610,69 @@ Dependencies: uses variables from variables.css
 /* --- 11. Code Display (Scrollable) --- */
 
 .code-scroll-container {
-    background: #1e1e1e; /* Dark theme background */
-    color: #d4d4d4;      /* Light text */
-    border-radius: 8px;
-    border: 1px solid #333;
+    background: #1e1e1e; color: #d4d4d4;
+    border-radius: 8px; border: 1px solid #333;
     padding: 15px;
-
-    /* 1. LIMIT HEIGHT (Vertical Scroll) */
-    max-height: 500px;
-
-    /* 2. HANDLE OVERFLOW (Triggers Scrollbars) */
-    overflow: auto;
-
-    /* 3. LAYOUT SAFETY */
-    width: 100%;
-    max-width: 100%; /* Ensures it never pushes parent container wide */
-    box-sizing: border-box; /* Includes padding in width calculation */
+    max-height: 500px; overflow: auto;
+    width: 100%; box-sizing: border-box;
 }
 
-/* Specific styling for the <pre> tag inside */
 .code-scroll-container pre {
-    margin: 0;
-    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
-    font-size: 0.9rem;
-
-    /* 4. FORCE HORIZONTAL SCROLL */
-    /* 'pre' preserves spaces. We ensure it does NOT wrap text. */
-    white-space: pre;
+    margin: 0; font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    font-size: 0.9rem; white-space: pre;
 }
 
-/* Custom Scrollbar for Code Block */
 .code-scroll-container::-webkit-scrollbar { width: 10px; height: 10px; }
 .code-scroll-container::-webkit-scrollbar-track { background: #1e1e1e; }
 .code-scroll-container::-webkit-scrollbar-thumb { background: #555; border-radius: 5px; }
 .code-scroll-container::-webkit-scrollbar-thumb:hover { background: #777; }
 
-/* Fallback/Legacy Code Block Styling */
-.code-block {
-    background: #1e1e1e; color: #d4d4d4;
-    padding: 15px; border-radius: 8px;
-    font-family: 'Consolas', 'Monaco', monospace;
-    font-size: 0.9rem;
-    overflow-x: auto;
-    max-height: 400px;
-    white-space: pre-wrap;
+/* --- 12. Video Lightbox --- */
+
+.video-modal-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.95);
+    display: none; justify-content: center; align-items: center;
+    z-index: 100000; /* Highest priority */
 }
 
-/* --- 12. Media Queries --- */
+.video-modal-content {
+    position: relative; width: 90%; max-width: 900px;
+    background: #000; border-radius: 8px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.5);
+}
+
+.video-wrapper {
+    position: relative; padding-bottom: 56.25%; /* 16:9 */
+    height: 0; overflow: hidden; border-radius: 8px;
+}
+
+.video-wrapper iframe {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+}
+
+.video-close-btn {
+    position: absolute; top: -40px; right: 0;
+    color: white; font-size: 30px;
+    background: none; border: none; cursor: pointer;
+    z-index: 100001;
+}
+
+/* --- 13. Media Queries --- */
 
 @media (max-width: 900px) {
-    .dashboard-grid {
-        grid-template-columns: 1fr;
-    }
+    .dashboard-grid { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 768px) {
     .header-content {
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
-        margin-top: -50px;
+        flex-direction: column; align-items: center;
+        text-align: center; margin-top: -50px;
     }
-
-    .student-identity {
-        margin-bottom: 20px;
-    }
-
-    .duck-stats {
-        width: 100%;
-        justify-content: center;
-        box-sizing: border-box;
-    }
-
-    .grid-card {
-        padding: 15px;
-    }
-
-    .modal-body-grid {
-        grid-template-columns: 1fr;
-    }
-}
-
-/* --- NEW SKILLS SECTION STYLES --- */
-
-/* Typography */
-.skill-category-title {
-    font-size: 0.85rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: #888;
-    margin: 10px 0 15px 0;
-    font-weight: 700;
-}
-
-/* 1. Visual Grid for Languages */
-.skill-grid-visual {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
-    gap: 15px;
-    margin-bottom: 20px;
-}
-
-.skill-card-visual {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 15px 10px;
-    border-radius: 8px;
-    transition: transform 0.2s, box-shadow 0.2s;
-    background: #fff;
-    border: 2px solid #e2e8f0; /* Default Border */
-}
-
-.skill-card-visual:hover {
-    transform: translateY(-3px);
-}
-
-.skill-card-visual i {
-    margin-bottom: 8px;
-    color: var(--primary-color);
-}
-
-.skill-card-visual span {
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: #4a5568;
-    text-align: center;
-}
-
-/* 2. Concept List */
-.skill-list-concepts {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-}
-
-.concept-tag {
-    background: #fff;
-    border: 1px solid #e2e8f0;
-    color: #4a5568;
-    padding: 6px 12px;
-    border-radius: 20px;
-    font-size: 0.9rem;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-.concept-tag i {
-    color: var(--secondary-color); /* Green/Teal checkmark */
-    font-size: 0.8rem;
-}
-
-/* --- GAMIFICATION LEVELS --- */
-
-/* Level 1: Bronze */
-.skill-card-visual.level-1 {
-    border-color: #cd7f32;
-    background: linear-gradient(to bottom right, #fff, #fffbf7);
-}
-.skill-card-visual.level-1 > i { color: #cd7f32; }
-
-/* Level 2: Silver */
-.skill-card-visual.level-2 {
-    border-color: #b0c4de;
-    background: linear-gradient(to bottom right, #fff, #f0f4f8);
-    box-shadow: 0 4px 6px rgba(176, 196, 222, 0.3);
-}
-.skill-card-visual.level-2 > i { color: #778899; }
-
-/* Level 3: Gold (The "Master" Look) */
-.skill-card-visual.level-3 {
-    border-color: #ffd700;
-    background: linear-gradient(to bottom right, #fff, #fffdf0);
-    box-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
-    transform: scale(1.05);
-}
-.skill-card-visual.level-3 > i { color: #d4af37; }
-
-/* Proficiency Stars */
-.star-rating {
-    margin-top: 5px;
-    font-size: 0.6rem;
-    display: flex;
-    gap: 2px;
-    color: #ffc107;
+    .student-identity { margin-bottom: 20px; }
+    .duck-stats { width: 100%; justify-content: center; box-sizing: border-box; }
+    .grid-card { padding: 15px; }
+    .modal-body-grid { grid-template-columns: 1fr; }
+    .modal-action-bar { flex-direction: column; }
+    .btn-action { width: 100%; }
 }
