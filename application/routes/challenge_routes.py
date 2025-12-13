@@ -1,196 +1,229 @@
 """
 File: challenge_routes.py
 Type: py
-Summary: Routes for handling challenge submissions and logging.
+Summary: Flask routes for challenge routes functionality (Merged Version).
 """
 
 import re
-from urllib.parse import urlparse, parse_qs
-from flask import Blueprint, render_template, request, flash, redirect, url_for, session
+from datetime import datetime
+
+from flask import Blueprint, request, session, render_template, redirect, url_for, flash
+from flask_cors import cross_origin
+
+from application import Configuration
 from application.extensions import db
-from application.models.user import User
-from application.models.challenge_log import ChallengeLog
-from application.models.configuration import Configuration
 from application.models.challenge import Challenge
+from application.models.challenge_log import ChallengeLog
+from application.utilities.db_helpers import get_user
+from application.models.user import User
 
-# Renamed to 'challenge' based on your preference
-challenge = Blueprint('challenge', __name__)
+challenge = Blueprint("challenge", __name__, url_prefix="/challenge")
 
-# Regex pattern for validating CodeCombat URLs
-URL_PATTERN = r'codecombat\.com/(play/level|s/[^/]+/lessons/\d+/levels)/([^/?]+)'
+# Robust pattern from the working version
+URL_PATTERN = (
+    r"https://(?P<domain>[\w\.-]+)"
+    r"(?:/play/(?:ozaria/)?level/(?P<challenge_slug>[\w-]+)"  # Changed group name to challenge_slug
+    r"(?:\?(?:.*&)?course=(?P<course_id>[\w-]+))?"
+    r"(?:(?:\?|&)(?:.*&)?course-instance=(?P<course_instance>[\w-]+))?"
+    r"|/s/(?P<slug>[\w-]+)/lessons/(?P<lesson_id>\d+)/levels/(?P<level_id>\d+))"
+)
 
 
-@challenge.route('/challenge/submit', methods=['GET', 'POST'])
+@challenge.route("/submit", methods=["GET", "POST"])
+@cross_origin(origins=[
+    "https://codecombat.com",
+    "https://www.ozaria.com"
+], supports_credentials=True)
 def submit_challenge():
-    """
-    Handle challenge submission via UI form.
-    """
-    # Ensure user is logged in
-    if 'user' not in session:
-        flash("No session username found. Please login.", "error")
-        # UPDATED: Changed from 'auth_bp.login' to 'user.login' based on your error logs
-        return redirect(url_for('user.login'))
+    """Handle challenge submission form."""
+    session_userid = session.get("user", None)
+    if not session_userid:
+        flash("No session user found", "error")
+        return redirect(url_for("user.login"))
 
-    username = session['user']
+    user = get_user(session_userid)
+    if not user:
+        flash("Unknown user", "error")
+        return redirect(url_for("user.login"))
 
-    if request.method == 'POST':
-        url = request.form.get('url')
-        notes = request.form.get('notes')
-        helpers = request.form.get('helpers')
+    config = Configuration.query.first()
+    if not config:
+        flash("Configuration missing", "error")
+        return redirect(url_for("general.index"))
 
-        if not url:
-            flash("Challenge URL is required.", "error")
-            return render_template('submit_challenge.html')
+    if request.method != "POST":
+        return render_template("submit_challenge.html")
 
-        # Get configuration for duck multiplier
-        config = Configuration.query.first()
-        if not config:
-            flash("Configuration missing. Please contact admin.", "error")
-            return render_template('submit_challenge.html')
+    url = request.form.get("url")
+    helper = request.form.get("helpers", "").strip()
+    notes = request.form.get("notes", "").strip()
 
-        # Process the URL
-        result = detect_and_handle_challenge_url(
-            url,
-            username,
-            duck_multiplier=config.duck_multiplier if config else 1,
-            helper=helpers
+    if not url:
+        return render_template("submit_challenge.html",
+                               success=False,
+                               message="Challenge URL is required")
+
+    duck_multiplier = config.duck_multiplier
+
+    # Process the URL
+    challenge_check = detect_and_handle_challenge_url(
+        url, user.username, duck_multiplier, helper
+    )
+
+    if not isinstance(challenge_check, dict):
+        challenge_check = {}
+
+    if notes:
+        print(f"{user.nickname} said: {notes}")
+
+    details = challenge_check.get("details") or {}
+
+    # Success path
+    if challenge_check.get("handled") and details.get("success"):
+        # Explicit commit to ensure log and user duck updates are saved
+        db.session.commit()
+        duck_reward = details.get("duck_reward", 0)
+        return render_template(
+            "submit_challenge.html",
+            success=True,
+            message=f"Congrats {user.username}, you earned {duck_reward} ducks!",
         )
 
-        if result['handled']:
-            details = result['details']
-            if details['success']:
-                reward = details.get('duck_reward', 0)
-                # UPDATED: Added .get() to avoid KeyError if message is missing
-                msg = details.get('message', 'Challenge logged.')
-                flash(f"Congrats! You earned {reward} ducks! {msg}", "success")
-            else:
-                flash(details.get('message', 'An error occurred.'), "error")
-        else:
-            flash("Invalid URL format. Please ensure it is a valid CodeCombat level URL.", "error")
-
-        # UPDATED: Redirects to the current blueprint endpoint
-        return redirect(url_for('challenge.submit_challenge'))
-
-    return render_template('submit_challenge.html')
+    # Failure path
+    msg = details.get("message", "Mr. Mega does not recognize this challenge. Are you sure this is the right link?")
+    return render_template("submit_challenge.html", success=False, message=msg)
 
 
 def detect_and_handle_challenge_url(message, username, duck_multiplier=1, helper=None):
     """
-    Detects if a message contains a challenge URL and handles the logging/reward logic.
+    Detect and handle a challenge URL in a message.
     """
-    details = _extract_challenge_details(message)
+    match = _extract_challenge_details(message)
+    if not match:
+        return {"handled": False, "details": None}
 
-    if details:
-        # Prevent users from listing themselves as helpers
-        if helper == username:
-            helper = None
+    # Log the challenge attempt (Using new schema)
+    log_result = _log_challenge(match, username, helper)
 
-        log_result = _log_challenge(details, username, helper)
+    if not log_result.get("success"):
+        return {"handled": True, "details": log_result}
 
-        if log_result['success']:
-            try:
-                reward = _update_user_ducks(username,
-                    details['challenge_slug'],
-                    duck_multiplier)
-                log_result['duck_reward'] = reward
-            except Exception as e:
-                print(f"Error awarding ducks: {e}")
-                # Tell the UI something went wrong with the reward specifically
-                log_result['message'] = "Challenge logged, but reward calculation failed (Level not found in DB)."
-                log_result['duck_reward'] = 0
-        return {'handled': True, 'details': log_result}
-
-    return {'handled': False, 'details': None}
+    try:
+        # Calculate rewards
+        duck_reward = _update_user_ducks(username, match["challenge_slug"], duck_multiplier)
+        log_result["duck_reward"] = duck_reward
+        return {"handled": True, "details": log_result}
+    except ValueError as e:
+        return {
+            "handled": True,
+            "details": {
+                "success": False,
+                "message": str(e)
+            }
+        }
 
 
 def _extract_challenge_details(message):
     """
-    Extracts challenge details (slug, course, instance) from a URL string.
+    Extract challenge details from a message using regex.
     """
     match = re.search(URL_PATTERN, message)
-    if match:
-        url_parts = urlparse(message)
-        query_params = parse_qs(url_parts.query)
+    if not match:
+        return None
 
-        # Extract slug from the regex match
-        challenge_slug = match.group(2)
+    # Handle the two different regex groups (standard level vs slug URL)
+    extracted_slug = match.group("challenge_slug") or match.group("slug")
 
-        return {
-            'domain': 'codecombat.com',
-            'challenge_slug': challenge_slug,
-            'course_id': query_params.get('course', [None])[0],
-            'course_instance': query_params.get('course-instance', [None])[0]
-        }
-    return None
+    return {
+        "domain": match.group("domain"),
+        "challenge_slug": extracted_slug,  # Key updated to match DB schema
+        "course_id": match.group("course_id") or None,
+        "course_instance": match.group("course_instance") or None,
+    }
 
 
 def _log_challenge(details, username, helper=None):
     """
-    Logs the challenge attempt in the database, preventing duplicates.
+    Log challenge completion to the database using challenge_slug.
     """
+    if helper == username:
+        helper = ""
+
     try:
-        # Check for duplicate entry using challenge_slug
+        # UPDATED: Query using challenge_slug instead of challenge_name
         existing_log = ChallengeLog.query.filter_by(
             username=username,
-            domain=details['domain'],
-            challenge_slug=details['challenge_slug']
+            domain=details["domain"],
+            challenge_slug=details["challenge_slug"],
+            course_id=details["course_id"],
         ).first()
 
         if existing_log:
             return {
-                'success': False,
-                'message': f"Challenge '{details['challenge_slug']}' already claimed."
+                "success": False,
+                "message": "You already claimed this level!",
+                "timestamp": existing_log.timestamp
             }
 
-        # Create new log entry
-        new_log = ChallengeLog(
+        # UPDATED: Instantiate using challenge_slug
+        challenge_log = ChallengeLog(
             username=username,
-            domain=details['domain'],
-            challenge_slug=details['challenge_slug'],
-            course_id=details['course_id'],
-            course_instance=details['course_instance'],
+            domain=details["domain"],
+            challenge_slug=details["challenge_slug"],
+            course_id=details["course_id"],
+            course_instance=details["course_instance"],
+            timestamp=datetime.utcnow(),
             helper=helper
         )
-
-        db.session.add(new_log)
+        db.session.add(challenge_log)
         db.session.commit()
 
         return {
-            'success': True,
-            'message': 'Challenge logged successfully'
+            "success": True,
+            "message": "Challenge logged successfully",
+            "timestamp": challenge_log.timestamp
         }
 
     except Exception as e:
         db.session.rollback()
-        return {'success': False, 'message': f"Error logging challenge: {str(e)}"}
+        return {
+            "success": False,
+            "message": f"Error logging challenge: {str(e)}"
+        }
 
 
 def _update_user_ducks(username, challenge_slug, duck_multiplier=1):
     """
-    Calculates reward based on challenge difficulty and updates user balance.
+    Update the user's duck count. 
     """
-    user = User.query.filter_by(username=username).first()
-    if not user:
-        raise ValueError(f"User with username {username} not found")
+    try:
+        user = User.query.filter_by(username=username).first()
+        if not user:
+            raise ValueError(f"User with username '{username}' not found")
 
-    # Look up challenge by SLUG
-    challenge = Challenge.query.filter_by(slug=challenge_slug).first()
-
-    # Fallback: check case-insensitive match
-    if not challenge:
+        # UPDATED: Try finding by slug, then try relaxed matching (spaces vs dashes)
         challenge = Challenge.query.filter(Challenge.slug.ilike(challenge_slug)).first()
 
-    if not challenge:
-        raise ValueError(f"Challenge '{challenge_slug}' not found in database.")
+        if not challenge:
+            # Fallback: sometimes URLs have dashes where DB has spaces
+            slug_with_spaces = challenge_slug.replace('-', ' ')
+            challenge = Challenge.query.filter(Challenge.slug.ilike(slug_with_spaces)).first()
 
-    # Calculate reward
-    reward_value = challenge.scale_value(difficulty_multiplier=duck_multiplier)
+        if not challenge:
+            raise ValueError(f"Challenge '{challenge_slug}' not found in the database")
 
-    # Update user balance (using standard attribute access)
-    user.earned_ducks += reward_value
-    user.duck_balance += reward_value
+        duck_reward = challenge.value * duck_multiplier
 
-    db.session.commit()
-    print(f"{username} was granted {reward_value} duck(s).")
+        if duck_multiplier > 1:
+            print(f'Duck multiplier of {duck_multiplier} in effect.')
 
-    return reward_value
+        user.add_ducks(duck_reward)
+        print(f'{username} was granted {duck_reward} duck(s).')
+
+        return duck_reward
+
+    except ValueError:
+        raise
+    except Exception as e:
+        db.session.rollback()
+        raise RuntimeError(f"Error updating user ducks: {e}")
