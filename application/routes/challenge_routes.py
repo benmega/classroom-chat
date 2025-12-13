@@ -40,13 +40,13 @@ def submit_challenge():
 
         if not url:
             flash("Challenge URL is required.", "error")
-            return render_template('challenge/submit_challenge.html')
+            return render_template('submit_challenge.html')
 
         # Get configuration for duck multiplier
         config = Configuration.query.first()
         if not config:
             flash("Configuration missing. Please contact admin.", "error")
-            return render_template('challenge/submit_challenge.html')
+            return render_template('submit_challenge.html')
 
         # Process the URL
         result = detect_and_handle_challenge_url(
@@ -71,7 +71,7 @@ def submit_challenge():
         # UPDATED: Redirects to the current blueprint endpoint
         return redirect(url_for('challenge.submit_challenge'))
 
-    return render_template('challenge/submit_challenge.html')
+    return render_template('submit_challenge.html')
 
 
 def detect_and_handle_challenge_url(message, username, duck_multiplier=1, helper=None):
