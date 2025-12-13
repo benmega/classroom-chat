@@ -88,17 +88,16 @@ def detect_and_handle_challenge_url(message, username, duck_multiplier=1, helper
         log_result = _log_challenge(details, username, helper)
 
         if log_result['success']:
-            # Award ducks
             try:
-                reward = _update_user_ducks(
-                    username,
+                reward = _update_user_ducks(username,
                     details['challenge_slug'],
-                    duck_multiplier
-                )
+                    duck_multiplier)
                 log_result['duck_reward'] = reward
             except Exception as e:
                 print(f"Error awarding ducks: {e}")
-
+                # Tell the UI something went wrong with the reward specifically
+                log_result['message'] = "Challenge logged, but reward calculation failed (Level not found in DB)."
+                log_result['duck_reward'] = 0
         return {'handled': True, 'details': log_result}
 
     return {'handled': False, 'details': None}
