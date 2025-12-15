@@ -7,6 +7,7 @@ Summary: Flask routes for admin advanced routes functionality.
 from flask import request, redirect
 from flask_admin import Admin, AdminIndexView, expose
 from flask_admin.contrib.sqla import ModelView
+from flask_admin.theme import Bootstrap4Theme
 from application import db
 
 
@@ -19,6 +20,7 @@ class SecureModelView(ModelView):
     column_display_pk = True
 
     def is_accessible(self):
+        # Note: In production, consider using current_user.is_admin instead of IP checks
         return request.remote_addr == '127.0.0.1'
 
     def inaccessible_callback(self, name, **kwargs):
@@ -35,14 +37,18 @@ class AdvancedIndex(AdminIndexView):
 
 def init_admin(app):
     """Initialize the advanced admin interface"""
+    # 1. Initialize Admin with the Theme
     admin = Admin(
         app,
         name="Advanced Admin",
         index_view=AdvancedIndex(url='/admin/advanced', endpoint='admin_advanced'),
-        template_mode='bootstrap4',  # Flask-Admin needs a template mode
-        base_template='admin/admin_base.html',
+        theme=Bootstrap4Theme(),
     )
 
+    # 2. Override the base template manually
+    admin.base_template = 'admin/admin_base.html'
+
+    # 3. Register Views
     for mapper in db.Model.registry.mappers:
         model = mapper.class_
         admin.add_view(
@@ -51,7 +57,7 @@ def init_admin(app):
                 db.session,
                 name=model.__name__,
                 endpoint=f"adv_{model.__name__}"
-    )
-)
+            )
+        )
 
     return admin
