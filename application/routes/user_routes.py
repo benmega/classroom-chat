@@ -27,7 +27,7 @@ from application.utilities.helper_functions import allowed_file
 
 user = Blueprint('user', __name__)
 
-S3_UPLOAD_BUCKET = "your-bucket-name-here"
+S3_UPLOAD_BUCKET = "arn:aws:s3:::youtube-upload-source-classroom-chat"
 s3_client = boto3.client('s3')
 
 # --- Decorators ---
