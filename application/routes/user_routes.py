@@ -7,24 +7,28 @@ Summary: Flask routes for user identity, profile management, and project portfol
 import os
 import uuid
 from functools import wraps
-from PIL import Image
 
+import boto3
+from PIL import Image
 from flask import Blueprint, jsonify, send_from_directory, current_app, abort
 from flask import render_template, request, redirect, url_for, session, flash
 from flask_wtf import FlaskForm
+from werkzeug.utils import secure_filename
 from wtforms import StringField, PasswordField, SubmitField
 from wtforms.validators import DataRequired
 
-from application.extensions import db, limiter
 from application.config import Config
-from application.utilities.helper_functions import allowed_file
-
+from application.extensions import db, limiter
 from application.models.conversation import Conversation
 from application.models.project import Project
 from application.models.skill import Skill
 from application.models.user import User
+from application.utilities.helper_functions import allowed_file
 
 user = Blueprint('user', __name__)
+
+S3_UPLOAD_BUCKET = "your-bucket-name-here"
+s3_client = boto3.client('s3')
 
 # --- Decorators ---
 
@@ -226,6 +230,15 @@ def new_project():
                 if filename:
                     new_proj.image_url = f"images/projects/{filename}"
 
+            if 'project_video' in request.files:
+                video_file = request.files['project_video']
+                if video_file.filename != '':
+                    success = handle_video_s3_upload(video_file, user_obj, name)
+                    if success:
+                        flash('Video uploading! It will appear on your project in a few minutes.', 'info')
+                    else:
+                        flash('Invalid video format or upload failed.', 'warning')
+
             db.session.add(new_proj)
             db.session.commit()
             flash('Project created successfully!', 'success')
@@ -276,6 +289,14 @@ def edit_project(project_id):
                     filename = handle_project_image_upload(file)
                     if filename:
                         project.image_url = f"images/projects/{filename}"
+
+            if 'project_video' in request.files:
+                video_file = request.files['project_video']
+                if video_file.filename != '':
+                    # Use current project name for the slug
+                    success = handle_video_s3_upload(video_file, current_user, project.name)
+                    if success:
+                        flash('Video uploading! It will appear on your project in a few minutes.', 'info')
 
             db.session.commit()
             flash('Project updated successfully!', 'success')
@@ -444,3 +465,32 @@ def handle_project_image_upload(file):
 
         return filename
     return None
+
+def handle_video_s3_upload(file, user_obj, project_name):
+    """
+    Renames file to 'username-project-slug.ext' and uploads to S3.
+    """
+    if not file or file.filename == '':
+        return False
+
+    # 1. Generate Filename: "ben-space-invaders.mp4"
+    ext = file.filename.rsplit('.', 1)[1].lower()
+    if ext not in ['mp4', 'mov', 'avi', 'wmv', 'mkv', 'webm']:
+        return False
+
+    # Create slug from project name (Space Invaders -> space-invaders)
+    project_slug = secure_filename(project_name).replace('_', '-').lower()
+    s3_filename = f"{user_obj.username}-{project_slug}.{ext}"
+
+    # 2. Upload to S3
+    try:
+        s3_client.upload_fileobj(
+            file,
+            S3_UPLOAD_BUCKET,
+            s3_filename,
+            ExtraArgs={'ContentType': file.content_type}
+        )
+        return True
+    except Exception as e:
+        print(f"S3 Upload Error: {e}")
+        return False

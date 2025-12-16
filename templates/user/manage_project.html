@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/public_profile.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/user_profile.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/edit_profile.css') }}"> 
 
 <div class="profile-container" style="max-width: 1100px; margin: 40px auto;">
@@ -76,11 +76,18 @@
                         <i class="fab fa-github"></i>
                         <input type="text" name="github_link" value="{{ project.github_link if project else '' }}" placeholder="GitHub Repository URL">
                     </div>
+                </div>
+                <div class="input-with-icon mt-2">
+                    <i class="fas fa-video"></i>
+                    <input type="text" name="video_url" value="{{ project.video_url if project else '' }}" placeholder="YouTube URL (or upload below)">
+                </div>
 
-                    <div class="input-with-icon mt-2">
-                        <i class="fas fa-video"></i>
-                        <input type="text" name="video_url" value="{{ project.video_url if project else '' }}" placeholder="Video Recording URL (YouTube/Cloud)">
-                    </div>
+                <div class="form-group highlight-box mt-2" style="border-color: #ff000040;">
+                    <label><i class="fab fa-youtube"></i> Upload Video to YouTube</label>
+                    <input type="file" name="project_video" accept="video/*" class="file-input">
+                    <small class="hint-text">
+                        MP4/MOV files only. Uploading will process the video and automatically link it here when done (approx 1-5 mins).
+                    </small>
                 </div>
             </div>
 

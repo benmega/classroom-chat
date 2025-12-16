@@ -7,21 +7,25 @@ Summary: Client-side messaging logic, conversation refresh, and file uploads.
 const updateInterval = 2000;
 
 export function setupMessagingAndConversation() {
-    messageForm.addEventListener('submit', function(e) {
-        e.preventDefault();
+    const messageForm = document.getElementById('messageForm'); // Ensure this ID matches your HTML form
+    if (messageForm) {
+        messageForm.addEventListener('submit', function(e) {
+            e.preventDefault();
 
-        // Only try to upload if there's a file selected
-        const fileInput = document.getElementById('file');
+            // Only try to upload if there's a file selected
+            const fileInput = document.getElementById('file');
 
-        if (fileInput && fileInput.files.length > 0) {
-            uploadFile();
-        } else {
-            sendMessage();
-        }
+            if (fileInput && fileInput.files.length > 0) {
+                uploadFile();
+            } else {
+                sendMessage();
+            }
 
-        // updateConversation will now call autoscrollToBottom
-        updateConversation();
-    });
+            // updateConversation will now call autoscrollToBottom
+            updateConversation();
+        });
+    }
+
     setInterval(updateConversation, updateInterval);
     startHeartbeat();
 }
@@ -72,6 +76,7 @@ function fetchCurrentConversation() {
             return response.json();
         });
 }
+
 function updateChatUI(conversationData) {
     const chatDiv = document.getElementById('chat');
     if (!chatDiv) {
@@ -87,8 +92,7 @@ function updateChatUI(conversationData) {
     conversationData.messages.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
 
     conversationData.messages.forEach(msg => {
-        // Pass msg.user_id to the format function
-        // Ensure your backend 'get_current_conversation' endpoint returns 'user_id' in the message objects!
+        // Pass msg.username (handle) to the format function
         const messageHTML = formatMessage(msg.user_name, msg.user_profile_pic, msg.content, msg.username);
         chatDiv.innerHTML += messageHTML;
     });
@@ -97,51 +101,12 @@ function updateChatUI(conversationData) {
         autoscrollToBottom();
     }
 }
-
-Here are the necessary changes to switch from user_id to username for profile links.
-
-1. Python Route Update (routes.py context)
-Update the route definition to accept a string and query the _username column.
-
-Python
-
-@user.route('/profile/<username>', methods=['GET'])
-def view_user_profile(username):
-    # Use _username column for the lookup
-    target_profile = User.query.filter_by(_username=username).first_or_404()
-
-    # Determine who is looking at the page
-    viewer_id = session.get('user')
-    viewer = User.query.get(viewer_id) if viewer_id else None
-
-    return render_template('user/profile.html', target=target_profile, viewer=viewer)
-2. JavaScript Update (messageHandling.js)
-Update the chat UI to construct links using the username instead of the ID.
-
-In updateChatUI: Pass msg.username instead of msg.user_id. (Ensure your backend API returns username in the message object).
-
-JavaScript
-
-function updateChatUI(conversationData) {
-    // ... existing setup code ...
-
-    conversationData.messages.forEach(msg => {
-        // CHANGED: Pass msg.username instead of msg.user_id
-        const messageHTML = formatMessage(msg.user_name, msg.user_profile_pic, msg.content, msg.username);
-        chatDiv.innerHTML += messageHTML;
-    });
-
-    if (isScrolledToBottom) {
-        autoscrollToBottom();
-    }
-}
-In formatMessage: Update the signature and the link construction.
-
-JavaScript
 
 function formatMessage(displayName, profilePicFilename, message, handle) {
+    // Replace newlines with break tags
     message = message.replace(/\n/g, '<br>');
 
+    // Regex to auto-link URLs
     const urlRegex = /(https?:\/\/[^\s<]+)|(\bwww\.[^\s<]+(?:\.[^\s<]+)+\b)/g;
     const formattedMessage = message.replace(urlRegex, url => {
         const href = url.startsWith('http') ? url : 'http://' + url;
@@ -149,6 +114,7 @@ function formatMessage(displayName, profilePicFilename, message, handle) {
     });
 
     const profilePicUrl = `/user/profile_pictures/${profilePicFilename || 'Default_pfp.jpg'}`;
+    // Construct link using the handle (username)
     const profileLink = handle ? `/user/profile/${handle}` : '#';
 
     const isSelf = displayName === getUsername();
@@ -177,14 +143,14 @@ function autoscrollToBottom() {
     }
 }
 
-
-
 function getMessageInput() {
     return document.getElementById('message').value.trim();
 }
 
 function getUsername() {
-    return document.getElementById('currentUsername').textContent.trim();
+    // Ensure this element exists in your HTML
+    const el = document.getElementById('currentUsername');
+    return el ? el.textContent.trim() : '';
 }
 
 function createRequestParams(data) {
@@ -221,7 +187,6 @@ function handleResponse(data) {
     }
 }
 
-
 function handleError(error) {
     console.error('Error:', error);
     if (error && error.message) {
@@ -232,7 +197,8 @@ function handleError(error) {
 }
 
 function clearMessageInput() {
-    document.getElementById('message').value = '';
+    const msgInput = document.getElementById('message');
+    if(msgInput) msgInput.value = '';
 }
 
 export function uploadFile() {
@@ -280,17 +246,22 @@ function handleUploadResponse(data) {
     if (data.message) {
         console.log(data.message);
         showAlert('File uploaded successfully.', 'success');
-        document.getElementById('file').value = '';
+        const fileInput = document.getElementById('file');
+        if(fileInput) fileInput.value = '';
     } else {
         showAlert('Error: ' + data.error, 'error');
     }
 }
 
 function showAlert(message, icon = 'info') {
-    Swal.fire({
-        title: 'Mr. Mega says',
-        text: message,
-        icon: icon,
-        confirmButtonText: 'OK'
-    });
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            title: 'Mr. Mega says',
+            text: message,
+            icon: icon,
+            confirmButtonText: 'OK'
+        });
+    } else {
+        alert(message);
+    }
 }
