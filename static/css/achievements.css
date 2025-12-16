@@ -8,8 +8,6 @@ Summary: Styling for achievements page and badge display.
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
     gap: 1rem;
-    width: 100vw;
-    max-width: 100%;
     padding: 1rem;
     box-sizing: border-box;
 }
@@ -23,7 +21,6 @@ Summary: Styling for achievements page and badge display.
     flex-direction: column;
     align-items: center;
     gap: 0.5rem;
-    position: relative;
 }
 
 .achievement-card.earned {
@@ -32,26 +29,23 @@ Summary: Styling for achievements page and badge display.
 }
 
 .achievement-card.locked {
-    opacity: 1;
+    opacity: 0.6;
 }
 
+/* Badge container */
 .badge-container {
     position: relative;
-    display: inline-block;
     width: 128px;
     height: 128px;
     overflow: hidden;
     border-radius: 8px;
 }
 
-.achievement-card.locked .badge-container {
-    opacity: 0.6;
-}
-
 .achievement-card.locked .badge {
     filter: grayscale(100%) brightness(50%);
 }
 
+/* Lock overlay */
 .overlay {
     position: absolute;
     top: 0;
@@ -71,30 +65,24 @@ Summary: Styling for achievements page and badge display.
     color: white;
 }
 
-.achievement-card.locked strong {
-    opacity: 0.7;
-}
-
-/* Tooltip container - MUST be fully opaque */
+/* Tooltip system - override parent opacity */
 .tooltip {
     position: relative;
     display: inline-block;
-    min-height: 20px;
-    opacity: 1 !important; /* Force full opacity even on locked cards */
+    min-height: 24px;
+    opacity: 1 !important;
 }
 
-/* Info icon - visible emoji */
 .info-icon {
-    font-size: 20px;
+    font-size: 24px;
     cursor: help;
     user-select: none;
     display: inline-block;
-    opacity: 1 !important; /* Ensure it's always visible */
 }
 
-/* Tooltip text - hidden by default */
 .tooltiptext {
     visibility: hidden;
+    opacity: 0;
     position: absolute;
     bottom: 130%;
     left: 50%;
@@ -105,12 +93,10 @@ Summary: Styling for achievements page and badge display.
     border-radius: 6px;
     white-space: nowrap;
     z-index: 99999;
-    opacity: 0;
     transition: opacity 0.2s ease, visibility 0.2s ease;
     pointer-events: none;
 }
 
-/* Arrow for tooltip */
 .tooltiptext::after {
     content: "";
     position: absolute;
@@ -122,7 +108,6 @@ Summary: Styling for achievements page and badge display.
     border-color: #333 transparent transparent transparent;
 }
 
-/* Show tooltip on hover */
 .tooltip:hover .tooltiptext {
     visibility: visible;
     opacity: 1;
