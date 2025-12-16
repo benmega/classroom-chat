@@ -7,30 +7,34 @@ Summary: Pytest configuration and fixtures (Restored + New Helpers).
 import base64
 import os
 import random
+import socket
 import string
+import threading
 import uuid
 from io import BytesIO
 from unittest.mock import patch
+from wsgiref.simple_server import make_server
 
-from PIL import Image
 import pytest
+from PIL import Image
 from flask_login import LoginManager
 
 from application import create_app
+from application.config import TestingConfig
+from application.extensions import db
 from application.models.achievements import UserAchievement, Achievement
 from application.models.ai_settings import AISettings
 from application.models.banned_words import BannedWords
 from application.models.challenge import Challenge
 from application.models.challenge_log import ChallengeLog
 from application.models.configuration import Configuration
-from application.extensions import db
 from application.models.conversation import Conversation
 from application.models.course import Course
 from application.models.message import Message
 from application.models.project import Project
 from application.models.skill import Skill
 from application.models.user import User
-from application.config import TestingConfig
+
 
 # ============================================================================
 # ORIGINAL CORE FIXTURES (RESTORED)
@@ -64,6 +68,67 @@ def test_app():
         yield app
         db.session.remove()
         db.drop_all()
+
+
+# ============================================================================
+# NEW HELPERS & OVERRIDES
+# ============================================================================
+
+# 1. Alias fixture: pytest-flask specifically looks for a fixture named "app"
+@pytest.fixture(scope='session')
+def app(test_app):
+    return test_app
+
+
+# 2. License Fix: Create a dummy license file so the app doesn't complain
+@pytest.fixture(scope="session", autouse=True)
+def create_dummy_license():
+    license_dir = os.path.join(os.getcwd(), 'license')
+    os.makedirs(license_dir, exist_ok=True)
+    license_path = os.path.join(license_dir, 'license.lic')
+
+    # Only create if it doesn't exist
+    if not os.path.exists(license_path):
+        with open(license_path, 'w') as f:
+            f.write("DUMMY_LICENSE_FOR_TESTING")
+
+    yield
+    # Optional: cleanup after tests if you want
+    # if os.path.exists(license_path):
+    #     os.remove(license_path)
+
+
+# 3. OVERRIDE: Custom live_server for Windows compatibility
+@pytest.fixture(scope="session")
+def live_server(test_app):  # <--- CHANGED: Request 'test_app' explicitly
+    """
+    Runs the Flask app in a background thread to avoid Windows
+    multiprocessing pickle errors.
+    """
+    # Find a free port
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.bind(('localhost', 0))
+    port = sock.getsockname()[1]
+    sock.close()
+
+    # Create the server using the Flask app object from test_app fixture
+    server = make_server('localhost', port, test_app)
+
+    # Start the server in a thread
+    thread = threading.Thread(target=server.serve_forever)
+    thread.daemon = True
+    thread.start()
+
+    # Return an object compatible with pytest-flask
+    class ServerInfo:
+        url = f"http://localhost:{port}"
+        app = test_app  # <--- Assign the actual Flask object
+
+    yield ServerInfo()
+
+    # Teardown
+    server.shutdown()
+    thread.join()
 
 @pytest.fixture
 def client(test_app):

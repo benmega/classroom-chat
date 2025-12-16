@@ -20,3 +20,6 @@ flask_apscheduler
 Flask-Admin>=2.0.0
 boto3
 flask_wtf
+playwright
+pytest-flask
+pytest-playwright
