@@ -76,17 +76,18 @@
                         <i class="fab fa-github"></i>
                         <input type="text" name="github_link" value="{{ project.github_link if project else '' }}" placeholder="GitHub Repository URL">
                     </div>
+                    <div class="input-with-icon mt-2">
+                        <i class="fas fa-video"></i>
+                        <input type="text" name="video_url" value="{{ project.video_url if project else '' }}" placeholder="YouTube URL (or upload below)">
+                    </div>
                 </div>
-                <div class="input-with-icon mt-2">
-                    <i class="fas fa-video"></i>
-                    <input type="text" name="video_url" value="{{ project.video_url if project else '' }}" placeholder="YouTube URL (or upload below)">
-                </div>
+
 
                 <div class="form-group highlight-box mt-2" style="border-color: #ff000040;">
                     <label><i class="fab fa-youtube"></i> Upload Video to YouTube</label>
                     <input type="file" name="project_video" accept="video/*" class="file-input">
                     <small class="hint-text">
-                        MP4/MOV files only. Uploading will process the video and automatically link it here when done (approx 1-5 mins).
+                        Uploading will process the video and automatically link it here when done (approx 5-10 mins).
                     </small>
                 </div>
             </div>
