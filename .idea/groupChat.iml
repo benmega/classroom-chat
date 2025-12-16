@@ -7,6 +7,8 @@
       <excludeFolder url="file://$MODULE_DIR$/instance/backups/db_export_20251205_210700" />
       <excludeFolder url="file://$MODULE_DIR$/tests/certificates" />
       <excludeFolder url="file://$MODULE_DIR$/venv" />
+      <excludeFolder url="file://$MODULE_DIR$/instance/backups" />
+      <excludeFolder url="file://$MODULE_DIR$/userData" />
     </content>
     <orderEntry type="jdk" jdkName="Python 3.10" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />

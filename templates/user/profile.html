@@ -95,7 +95,7 @@
                 <div class="panel-header"><h2><i class="fas fa-chart-line"></i> Course Progress</h2></div>
                 {% set cc_percent = target.get_progress_percent("codecombat.com") %}
                 <div class="progress-item">
-                    <div class="prog-label"><span>Python Syntax</span><span>{{ cc_percent }}% Complete</span></div>
+                    <div class="prog-label"><span>Code Combat</span><span>{{ cc_percent }}% Complete</span></div>
                     <div class="progress-track"><div class="progress-fill" style="width: {{ cc_percent }}%;"></div></div>
                     <small>{{ cc_levels }} Levels Completed</small>
                 </div>
@@ -103,7 +103,7 @@
                 {% set oz_percent = target.get_progress_percent("www.ozaria.com") %}
                 {% if oz_levels > 0 %}
                 <div class="progress-item">
-                    <div class="prog-label"><span>Computer Science Concepts</span><span>{{ oz_percent }}% Complete</span></div>
+                    <div class="prog-label"><span>Ozaria</span><span>{{ oz_percent }}% Complete</span></div>
                     <div class="progress-track"><div class="progress-fill ozaria-fill" style="width: {{ oz_percent }}%;"></div></div>
                     <small>{{ oz_levels }} Levels Completed</small>
                 </div>
@@ -137,7 +137,7 @@
 
             {% if target.skills %}
             <div class="dashboard-panel">
-                <div class="panel-header"><h2><i class="fas fa-tools"></i> Technical Toolbox</h2></div>
+                <div class="panel-header"><h2><i class="fas fa-tools"></i> Skills</h2></div>
                 <h4 class="skill-category-title">Languages & Frameworks</h4>
                 <div class="skill-grid-visual">
                     {% for skill in target.skills if skill.category in ['language', 'tool'] %}
@@ -167,7 +167,7 @@
 
             <div class="dashboard-panel" id="portfolio">
                 <div class="panel-header" style="justify-content: space-between; align-items: center;">
-                    <h2><i class="fas fa-shapes"></i> Project Portfolio</h2>
+                    <h2><i class="fas fa-shapes"></i> Projects</h2>
                     {% if is_owner %}
                         <a href="{{ url_for('user.new_project') }}" class="btn-launch" style="font-size: 0.8rem;">
                             <i class="fas fa-plus"></i> Add Project

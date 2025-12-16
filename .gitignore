@@ -9,4 +9,5 @@ venv/
 .idea/
 userData/
 env/
+*.env
 certificates/

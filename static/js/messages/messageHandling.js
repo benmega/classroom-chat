@@ -89,7 +89,7 @@ function updateChatUI(conversationData) {
     conversationData.messages.forEach(msg => {
         // Pass msg.user_id to the format function
         // Ensure your backend 'get_current_conversation' endpoint returns 'user_id' in the message objects!
-        const messageHTML = formatMessage(msg.user_name, msg.user_profile_pic, msg.content, msg.user_id);
+        const messageHTML = formatMessage(msg.user_name, msg.user_profile_pic, msg.content, msg.username);
         chatDiv.innerHTML += messageHTML;
     });
 
@@ -98,7 +98,48 @@ function updateChatUI(conversationData) {
     }
 }
 
-function formatMessage(username, profilePicFilename, message, userId) {
+Here are the necessary changes to switch from user_id to username for profile links.
+
+1. Python Route Update (routes.py context)
+Update the route definition to accept a string and query the _username column.
+
+Python
+
+@user.route('/profile/<username>', methods=['GET'])
+def view_user_profile(username):
+    # Use _username column for the lookup
+    target_profile = User.query.filter_by(_username=username).first_or_404()
+
+    # Determine who is looking at the page
+    viewer_id = session.get('user')
+    viewer = User.query.get(viewer_id) if viewer_id else None
+
+    return render_template('user/profile.html', target=target_profile, viewer=viewer)
+2. JavaScript Update (messageHandling.js)
+Update the chat UI to construct links using the username instead of the ID.
+
+In updateChatUI: Pass msg.username instead of msg.user_id. (Ensure your backend API returns username in the message object).
+
+JavaScript
+
+function updateChatUI(conversationData) {
+    // ... existing setup code ...
+
+    conversationData.messages.forEach(msg => {
+        // CHANGED: Pass msg.username instead of msg.user_id
+        const messageHTML = formatMessage(msg.user_name, msg.user_profile_pic, msg.content, msg.username);
+        chatDiv.innerHTML += messageHTML;
+    });
+
+    if (isScrolledToBottom) {
+        autoscrollToBottom();
+    }
+}
+In formatMessage: Update the signature and the link construction.
+
+JavaScript
+
+function formatMessage(displayName, profilePicFilename, message, handle) {
     message = message.replace(/\n/g, '<br>');
 
     const urlRegex = /(https?:\/\/[^\s<]+)|(\bwww\.[^\s<]+(?:\.[^\s<]+)+\b)/g;
@@ -108,19 +149,17 @@ function formatMessage(username, profilePicFilename, message, userId) {
     });
 
     const profilePicUrl = `/user/profile_pictures/${profilePicFilename || 'Default_pfp.jpg'}`;
+    const profileLink = handle ? `/user/profile/${handle}` : '#';
 
-    // Construct the profile link. If userId is missing, default to #
-    const profileLink = userId ? `/user/profile/${userId}` : '#';
-
-    const isSelf = username === getUsername();
+    const isSelf = displayName === getUsername();
 
     return `
         <div class="chat-message ${isSelf ? 'self' : ''}">
             <a href="${profileLink}">
-                <img src="${profilePicUrl}" alt="${username}" class="user-profile-pic">
+                <img src="${profilePicUrl}" alt="${displayName}" class="user-profile-pic">
             </a>
             <div class="message-bubble">
-                <strong class="username">${username}:</strong>
+                <strong class="username">${displayName}:</strong>
                 <span class="message-text">${formattedMessage}</span>
             </div>
         </div>

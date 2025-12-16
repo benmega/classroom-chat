@@ -52,16 +52,16 @@ Summary: Admin dashboard overview template with stats and controls.
     <div class="admin-container">
         <div class="admin-grid">
             <div class="admin-card">
-                <h2 class="card-title">Users Online</h2>
+                <h2 class="card-title">Users</h2>
                 <div class="card-content">
                     <ul class="user-list">
                         {% for user in users %}
-                        {% if user.is_online %}
-                        <li>
-                            <span class="user-name">{{ user.username }}</span>
-                            <span class="user-ducks">🦆 {{ user.duck_balance }}</span>
-                        </li>
-                        {% endif %}
+                            <li>
+                                <a href="{{ url_for('user.view_user_profile', username=user.username) }}" style="text-decoration: none; color: inherit; display: flex; justify-content: space-between; width: 100%;">
+                                    <span class="user-name">{{ user.username }}</span>
+                                    <span class="user-ducks">🦆 {{ user.duck_balance }}</span>
+                                </a>
+                            </li>
                         {% endfor %}
                     </ul>
                 </div>
