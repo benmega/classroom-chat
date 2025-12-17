@@ -1,0 +1,70 @@
+{% extends 'admin/admin_base.html' %}
+
+{% block title %}Pending Project Reviews{% endblock %}
+
+{% block content %}
+<div class="admin-container">
+    <div class="header-content" style="margin-bottom: 20px;">
+        <h2><i class="fas fa-clipboard-check"></i> Projects Awaiting Feedback</h2>
+        <p>Total Pending: <strong>{{ projects|length }}</strong></p>
+    </div>
+
+    {% if projects|length == 0 %}
+        <div class="admin-card">
+            <div class="card-content" style="text-align: center; padding: 40px;">
+                <h3>🎉 All caught up!</h3>
+                <p>No projects currently need teacher comments.</p>
+            </div>
+        </div>
+    {% else %}
+        <div class="admin-grid">
+            {% for project in projects %}
+            <div class="admin-card">
+                <div class="card-title" style="display: flex; justify-content: space-between; align-items: center;">
+                    <span>{{ project.name }}</span>
+                    <small style="font-size: 0.8rem; opacity: 0.8;">
+                        User ID: {{ project.user_id }} </small>
+                </div>
+                
+                <div class="card-content">
+                    <div style="margin-bottom: 15px; background: #f8f9fa; padding: 10px; border-radius: 4px; font-size: 0.9rem;">
+                        {% if project.image_url %}
+                            <img src="{{ url_for('static', filename=project.image_url) }}" style="width: 100%; height: 120px; object-fit: cover; border-radius: 4px; margin-bottom: 10px;">
+                        {% endif %}
+                        <p><strong>Desc:</strong> {{ project.description }}</p>
+                        
+                        <div style="margin-top: 10px;">
+                            {% if project.link %}
+                                <a href="{{ project.link }}" target="_blank" class="badge badge-primary">Play Game 🔗</a>
+                            {% endif %}
+                            {% if project.github_link %}
+                                <a href="{{ project.github_link }}" target="_blank" class="badge badge-dark">GitHub 🐙</a>
+                            {% endif %}
+                            {% if project.code_snippet %}
+                                <button type="button" class="badge badge-info" onclick="alert(`{{ project.code_snippet|replace('`', '\`') }}`)">View Code</button>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <form action="{{ url_for('admin.save_teacher_comment', project_id=project.id) }}" method="POST">
+                        <div class="form-group">
+                            <label for="comment-{{ project.id }}">Teacher Comment:</label>
+                            <textarea 
+                                id="comment-{{ project.id }}" 
+                                name="teacher_comment" 
+                                class="admin-textarea" 
+                                rows="3" 
+                                placeholder="Great job! I liked how you..." 
+                                required></textarea>
+                        </div>
+                        <button type="submit" class="admin-button highlight" style="width: 100%;">
+                            Post Comment & Approve
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

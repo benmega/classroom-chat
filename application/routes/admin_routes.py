@@ -7,25 +7,25 @@ Summary: Flask routes for admin routes functionality.
 import os
 import re
 from datetime import datetime, timedelta
-from flask import Blueprint, request, jsonify, render_template, send_file, flash, current_app
 from functools import wraps
-from sqlalchemy.sql import func
+
+from flask import Blueprint, request, jsonify, render_template, send_file, flash, current_app
+from flask import redirect, url_for
 from sqlalchemy import cast, Date
+from sqlalchemy.sql import func
 from werkzeug.utils import secure_filename
 
-from application import config
+from application.config import Config
 from application.extensions import db, limiter
+from application.models.banned_words import BannedWords
 from application.models.challenge import Challenge
 from application.models.challenge_log import ChallengeLog
-from application.models.conversation import Conversation
 from application.models.configuration import Configuration
+from application.models.conversation import Conversation
 from application.models.duck_trade import DuckTradeLog
 from application.models.message import Message
 from application.models.project import Project
 from application.models.user import User
-from application.models.banned_words import BannedWords
-from application.config import Config
-from flask import redirect, url_for
 
 admin = Blueprint('admin', __name__)
 admin_pass = Config.ADMIN_PASSWORD
@@ -671,3 +671,24 @@ def edit_project_details(project_id):
         return redirect(url_for('user.view_user_profile', user_id=project.user.id))
 
     return render_template('user/edit_project.html', project=project)
+
+
+@admin.route('/pending-reviews')
+@local_only
+def pending_reviews():
+    # Fetch projects where teacher_comment is NULL or empty string
+    projects = Project.query.filter(
+        (Project.teacher_comment == None) | (Project.teacher_comment == '')
+    ).all()
+
+    return render_template('admin/pending_projects.html', projects=projects)
+
+
+@admin.route('/save-comment/<int:project_id>', methods=['POST'])
+@local_only
+def save_teacher_comment(project_id):
+    project = Project.query.get_or_404(project_id)
+    project.teacher_comment = request.form.get('teacher_comment')
+    db.session.commit()
+    flash(f'Comment saved for {project.name}', 'success')
+    return redirect(url_for('admin.pending_reviews'))
