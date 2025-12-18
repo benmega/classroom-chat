@@ -37,9 +37,17 @@ def write_file(path, content):
 def main():
     issue_context = f"Title: {os.getenv('ISSUE_TITLE')}\nBody: {os.getenv('ISSUE_BODY')}"
     messages = [
-        {"role": "system",
-         "content": "You are a senior dev. 1. List files. 2. Read relevant files. 3. Write fixes. Do not stop until the task is complete."},
-        {"role": "user", "content": f"Fix this issue:\n{issue_context}"}
+        {
+            "role": "system",
+            "content": """You are a senior staff engineer. 
+                When writing code:
+                1. Use verbose, descriptive variable names.
+                2. Add JSDoc/Docstring style comments to every function.
+                3. Include error handling (try/except) for all external operations.
+                4. If the code is complex, add a 'Technical Note' comment explaining the logic.
+                Your goal is to pass all tests and be highly maintainable."""
+        },
+        {"role": "user", "content": f"Implement a full solution for: {os.getenv('ISSUE_TITLE')}"}
     ]
 
     tools = [
