@@ -135,4 +135,13 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     form.addEventListener("submit", handleSubmit);
+
+    // Listen for duck_awarded event and play quack sound
+    socket.on('duck_awarded', function(data) {
+        const reward = data.reward || 1;
+        const audio = new Audio('/static/sounds/quack.mp3');
+        for (let i = 0; i < reward; i++) {
+            setTimeout(() => audio.play(), i * 1000); // Play sound with a delay for each duck
+        }
+    });
 });
