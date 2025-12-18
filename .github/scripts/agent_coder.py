@@ -45,14 +45,14 @@ def main():
     messages = [
         {
             "role": "system",
-            "content": """You are an autonomous staff engineer. 
-            Your workflow: 
-            1. list_files to see structure. 
-            2. read_file to understand context. 
-            3. write_file to implement a VERBOSE, documented solution. 
-            4. run_tests to verify. 
-            If tests FAIL, you must read the error and use write_file again to fix it. 
-            Do not stop until tests PASS or you've tried 3 times to fix them."""
+            "content" : """You are an autonomous staff engineer. 
+            IMPORTANT: You MUST use the 'write_file' tool to implement changes. 
+            Simply describing the changes in text is a FAILURE.
+            1. Use list_files and read_file to understand the code.
+            2. Use write_file to implement the solution.
+            3. Use run_tests to check your work.
+            4. If tests pass, you are done. If they fail, fix them and run again.
+            Always provide verbose, well-documented code."""
         },
         {"role": "user", "content": f"Solve this issue:\n{issue_context}"}
     ]
