@@ -74,9 +74,12 @@ For questions, suggestions, or feedback, contact:
 <<maintainer_email>>
 
 Additional Notes:
-Keep your branches synchronized with the main repository.
-Add clear and concise documentation for all new features or changes.
-Use meaningful commit messages to explain the reasoning behind each change.
+- Keep your branches synchronized with the main repository.
+- Add clear and concise documentation for all new features or changes.
+- Use meaningful commit messages to explain the reasoning behind each change.
+
+Front-end notes:
+- Flash messages (Bootstrap toasts) are positioned in the bottom-right of the viewport to avoid overlaying header/profile icons; see `templates/base.html` and `static/css/base.css` for implementation details.
 
 
 

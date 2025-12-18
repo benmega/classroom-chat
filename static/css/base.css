@@ -379,3 +379,21 @@ header.guest-mode {
     background-color: transparent;
     box-shadow: none;
 }
+
+/* Toast container adjustments to reduce interference with header/profile icons */
+.toast-container {
+    z-index: 1050; /* sits above content but below modals */
+}
+
+@media (max-width: 576px) {
+  .toast-container {
+    right: 0.5rem;
+    bottom: 0.5rem;
+    left: auto;
+    width: calc(100% - 1rem);
+    max-width: 360px;
+  }
+  .toast {
+    width: 100%;
+  }
+}
