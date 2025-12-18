@@ -53,9 +53,13 @@ def send_message():
 
 @message.route('/start_conversation', methods=['POST'])
 def start_conversation():
-    title = request.form.get('title', 'New Conversation')
+    # prefer the model's default title when no explicit title is provided
+    title = request.form.get('title')
 
-    new_conversation = Conversation(title=title)
+    if title and title.strip():
+        new_conversation = Conversation(title=title)
+    else:
+        new_conversation = Conversation()
     db.session.add(new_conversation)
     db.session.commit()
 
@@ -89,16 +93,7 @@ def get_current_conversation():
     conversation_data = {
         "conversation_id": conversation.id,
         "title": conversation.title,
-        "messages": [
-            {
-                "user_id": msg.user_id,
-                "user_name": msg.user.nickname,
-                "user_profile_pic": msg.user.profile_picture,
-                "content": msg.content,
-                "timestamp": msg.created_at,
-            }
-            for msg in conversation.messages
-        ],
+        "messages": [serialize_message(msg) for msg in conversation.messages],
     }
     return jsonify(conversation=conversation_data)
 
@@ -117,16 +112,7 @@ def get_historical_conversation():
     conversation_data = {
         "conversation_id": conversation.id,
         "title": conversation.title,
-        "messages": [
-            {
-                "user_id": msg.user_id,
-                "user_name": msg.user.username,
-                "user_profile_pic": msg.user.profile_picture,
-                "content": msg.content,
-                "timestamp": msg.created_at,
-            }
-            for msg in conversation.messages
-        ],
+        "messages": [serialize_message(msg) for msg in conversation.messages],
     }
     return jsonify(conversation=conversation_data)
 
@@ -154,12 +140,7 @@ def get_conversation():
     conversation_data = {
         "conversation_id": conversation.id,
         "title": conversation.title,
-        "messages": [
-            {"user_id": msg.user_id,
-             "content": msg.content,
-             "timestamp": msg.created_at}
-            for msg in conversation.messages
-        ],
+        "messages": [serialize_message(msg) for msg in conversation.messages],
     }
     return jsonify(conversation=conversation_data)
 
@@ -197,15 +178,7 @@ def get_conversation_history(user_id):
         {
             "conversation_id": conv.id,
             "title": conv.title,
-            "messages": [
-                {
-                    "user_id": msg.user_id,
-                    "content": msg.content,
-                    "message_type": msg.message_type,
-                    "timestamp": msg.timestamp,
-                }
-                for msg in conv.messages if not msg.is_struck
-            ],
+            "messages": [serialize_message(msg) for msg in conv.messages if not msg.is_struck],
         }
         for conv in conversations
     ])
@@ -218,16 +191,7 @@ def view_conversation(conversation_id):
     conversation_data = {
         "conversation_id": conversation.id,
         "title": conversation.title,
-        "messages": [
-            {
-                "user_id": msg.user_id,
-                "user_name": msg.user.username,
-                "user_profile_pic": msg.user.profile_picture,
-                "content": msg.content,
-                "timestamp": msg.created_at,
-            }
-            for msg in conversation.messages
-        ],
+        "messages": [serialize_message(msg) for msg in conversation.messages],
     }
 
     return render_template('chat/view_conversation.html', conversation=conversation_data)
@@ -248,3 +212,27 @@ def is_appropriate(message, banned_words=None):
     message_lower = message.lower()
     banned_words = [word.lower() for word in banned_words]
     return not any(word in message_lower for word in banned_words)
+
+
+# Helper to safely serialize a Message for JSON/templates
+def serialize_message(msg):
+    user = getattr(msg, 'user', None)
+    if user:
+        user_name = getattr(user, 'username', None) or getattr(user, 'nickname', None) or 'Unknown User'
+        profile_pic = getattr(user, 'profile_picture', None)
+    else:
+        user_name = 'Deleted User'
+        profile_pic = None
+
+    timestamp = getattr(msg, 'created_at', None)
+    if timestamp is not None:
+        timestamp = str(timestamp)
+
+    return {
+        'user_id': msg.user_id,
+        'user_name': user_name,
+        'user_profile_pic': profile_pic,
+        'content': msg.content,
+        'timestamp': timestamp,
+        'message_type': getattr(msg, 'message_type', 'text'),
+    }
