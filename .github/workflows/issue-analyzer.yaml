@@ -1,10 +1,12 @@
 name: Issue Analyzer
 on:
   issues:
-    types: [opened]
+    types: [labeled] # Trigger ONLY when a label is added
 
 jobs:
   analyze-issue:
+    # Only run if the specific label 'ai-plan' was added
+    if: github.event.label.name == 'ai-plan'
     runs-on: ubuntu-latest
     permissions:
       issues: write
@@ -27,3 +29,10 @@ jobs:
         with:
           issue-number: ${{ github.event.issue.number }}
           body-path: analysis.txt
+
+      - name: Remove Label
+        # This allows you to re-add the label to trigger the action again
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh issue edit ${{ github.event.issue.number }} --remove-label "ai-plan"
