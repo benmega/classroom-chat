@@ -64,7 +64,7 @@ def login():
     form = LoginForm()
 
     if form.validate_on_submit():
-        username = form.username.data
+        username = form.username.data.lower()  # Convert to lowercase for case-insensitive comparison
         password = form.password.data
 
         user_obj = User.query.filter_by(username=username).first()
@@ -117,7 +117,7 @@ def logout():
 @user.route('/signup', methods=['GET', 'POST'])
 def signup():
     if request.method == 'POST':
-        username = request.form.get('username')
+        username = request.form.get('username').lower()  # Convert to lowercase for storage
         password = request.form.get('password')
 
         existing_user = User.query.filter_by(username=username).first()
