@@ -16,19 +16,17 @@ def list_files():
         files.append(str(path))
     return "\n".join(files)
 
-
 def read_file(path):
+    print(f"DEBUG: Agent is reading {path}") # Add this
     try:
-        with open(path, 'r') as f:
-            return f.read()
-    except Exception as e:
-        return str(e)
-
+        with open(path, 'r') as f: return f.read()
+    except Exception as e: return str(e)
 
 def write_file(path, content):
+    print(f"DEBUG: Agent is WRITING to {path}") # Add this
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, 'w') as f: f.write(content)
-    return f"Successfully updated {path}. ALWAYS run tests next to verify."
+    return f"Successfully updated {path}."
 
 
 def run_tests():
@@ -91,10 +89,16 @@ def main():
 
     # ... after the loop ...
     # Write a summary of the agent's actions to a log file
-    log_content = "\n".join([str(m) for m in messages if m.get("role") != "system"])
+    log_content = ""
+    for m in messages:
+        # If 'm' is an OpenAI object, convert it; if it's already a dict, leave it
+        m_dict = m if isinstance(m, dict) else m.model_dump()
+
+        if m_dict.get("role") != "system":
+            log_content += f"### {m_dict.get('role').upper()}\n{m_dict.get('content') or 'Called Tool'}\n\n"
+
     with open("ai_agent_log.md", "w") as f:
         f.write("# Agent Activity Log\n\n" + log_content)
-    print("Wrote activity log to ai_agent_log.md")
 
 if __name__ == "__main__":
     main()
