@@ -292,8 +292,7 @@ Summary: Main classroom chat landing and conversation page template.
         function startProgress() {
             startTime = Date.now();
             progressContainer.classList.add('active');
-            serverIcon.classList.add('active');
-
+            
             updateFunMessage();
             messageInterval = setInterval(updateFunMessage, 6000);
 
@@ -323,6 +322,7 @@ Summary: Main classroom chat landing and conversation page template.
 
         button.addEventListener('click', async () => {
             sleepSection.classList.add('hidden');  /* NEW: hide instantly */
+            serverIcon.classList.add('active');   /* NEW: show rocket icon instantly */
 
             // NEW: show the rocket and progress bar immediately
             progressContainer.classList.add('active');
@@ -340,12 +340,14 @@ Summary: Main classroom chat landing and conversation page template.
                     startProgress();
                 } else {
                     sleepSection.classList.remove('hidden');
+                    serverIcon.classList.remove('active');  /* NEW: hide rocket icon on failure */
                     message.className = 'status-error';
                     message.textContent = 'Unable to wake the server. Try again soon.';
                     button.disabled = false;
                 }
             } catch {
                 sleepSection.classList.remove('hidden');
+                serverIcon.classList.remove('active');  /* NEW: hide rocket icon on network error */
                 message.className = 'status-error';
                 message.textContent = 'Network error while sending the wake up signal.';
                 button.disabled = false;
