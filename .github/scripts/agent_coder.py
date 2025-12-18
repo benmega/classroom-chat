@@ -1,15 +1,15 @@
 import json
 import os
 import pathlib
+import subprocess
 
 from openai import OpenAI
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 
-# --- TOOL DEFINITIONS ---
+# --- TOOLS ---
 def list_files():
-    """Returns a tree of the repo to help the AI navigate."""
     files = []
     for path in pathlib.Path(".").rglob('*'):
         if any(x in path.parts for x in {'.git', 'venv', '__pycache__', '.github'}): continue
@@ -18,7 +18,6 @@ def list_files():
 
 
 def read_file(path):
-    """Allows the AI to see the content of a specific file."""
     try:
         with open(path, 'r') as f:
             return f.read()
@@ -27,39 +26,48 @@ def read_file(path):
 
 
 def write_file(path, content):
-    """Allows the AI to save its changes to the disk."""
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, 'w') as f: f.write(content)
-    return f"Successfully updated {path}"
+    return f"Successfully updated {path}. ALWAYS run tests next to verify."
 
 
-# --- EXECUTION LOOP ---
+def run_tests():
+    """Runs pytest and returns results. Used for self-correction."""
+    result = subprocess.run(["pytest"], capture_output=True, text=True)
+    output = result.stdout + result.stderr
+    status = "PASSED" if result.returncode == 0 else "FAILED"
+    return f"Test Status: {status}\nOutput:\n{output}"
+
+
+# --- THE SELF-CORRECTING LOOP ---
 def main():
     issue_context = f"Title: {os.getenv('ISSUE_TITLE')}\nBody: {os.getenv('ISSUE_BODY')}"
     messages = [
         {
             "role": "system",
-            "content": """You are a senior staff engineer. 
-                When writing code:
-                1. Use verbose, descriptive variable names.
-                2. Add JSDoc/Docstring style comments to every function.
-                3. Include error handling (try/except) for all external operations.
-                4. If the code is complex, add a 'Technical Note' comment explaining the logic.
-                Your goal is to pass all tests and be highly maintainable."""
+            "content": """You are an autonomous staff engineer. 
+            Your workflow: 
+            1. list_files to see structure. 
+            2. read_file to understand context. 
+            3. write_file to implement a VERBOSE, documented solution. 
+            4. run_tests to verify. 
+            If tests FAIL, you must read the error and use write_file again to fix it. 
+            Do not stop until tests PASS or you've tried 3 times to fix them."""
         },
-        {"role": "user", "content": f"Implement a full solution for: {os.getenv('ISSUE_TITLE')}"}
+        {"role": "user", "content": f"Solve this issue:\n{issue_context}"}
     ]
 
     tools = [
-        {"type": "function", "function": {"name": "list_files", "description": "List all repository files"}},
+        {"type": "function", "function": {"name": "list_files", "description": "List all repo files"}},
         {"type": "function",
          "function": {"name": "read_file", "parameters": {"type": "object", "properties": {"path": {"type": "string"}}},
                       "description": "Read a file"}},
         {"type": "function", "function": {"name": "write_file", "parameters": {"type": "object", "properties": {
-            "path": {"type": "string"}, "content": {"type": "string"}}}, "description": "Write a file"}}
+            "path": {"type": "string"}, "content": {"type": "string"}}}, "description": "Write a file"}},
+        {"type": "function", "function": {"name": "run_tests", "description": "Run the project test suite"}}
     ]
 
-    for _ in range(8):  # Maximum 8 turns to prevent runaway costs
+    for i in range(12):  # Increased turns to allow for fixing mistakes
         response = client.chat.completions.create(model="gpt-4o", messages=messages, tools=tools)
         msg = response.choices[0].message
         messages.append(msg)
@@ -76,6 +84,8 @@ def main():
                 result = read_file(args['path'])
             elif name == "write_file":
                 result = write_file(args['path'], args['content'])
+            elif name == "run_tests":
+                result = run_tests()
 
             messages.append({"role": "tool", "tool_call_id": tool_call.id, "content": result})
 

@@ -22,7 +22,7 @@ jobs:
 
       - name: Post Plan & Hand-off
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.MY_WORKFLOW_TOKEN }}
           ISSUE_NUM: ${{ github.event.issue.number }}
         run: |
           gh issue comment $ISSUE_NUM -F analysis.txt
