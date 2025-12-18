@@ -335,6 +335,19 @@
            </div>
            {% endif %}
         </div>
+
+        <div class="panel-header"><h2><i class="fas fa-sticky-note"></i> Uploaded Notes</h2></div>
+        <div class="notes-list">
+            {% if target.notes_urls %}
+                {% for url in target.notes_urls.split(',') %}
+                    <div class="note-item">
+                        <a href="{{ url }}" target="_blank"><i class="fas fa-file"></i> View Note</a>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p>No notes uploaded yet.</p>
+            {% endif %}
+        </div>
     </div>
 </div>
 

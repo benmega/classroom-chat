@@ -30,6 +30,8 @@ class User(db.Model):
     nickname = db.Column(db.String(50), nullable=False, default=default_nickname)
     is_admin = db.Column(db.Boolean, default=False)
 
+    # New column to store notes' URLs on S3
+    notes_urls = db.Column(db.Text, nullable=True)  # Consider a separate table for normalization if multiple notes
 
     # Gamification
     packets = db.Column(db.Double, nullable=False, default=0)

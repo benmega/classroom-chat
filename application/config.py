@@ -31,7 +31,11 @@ class Config:
     ADMIN_USERNAME = os.getenv('ADMIN_USERNAME', 'admin')
     ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD', '1234')
 
-
+    # AWS Credentials
+    AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
+    AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
+    AWS_REGION = os.getenv('AWS_REGION')
+    S3_BUCKET_NAME = os.getenv('S3_BUCKET_NAME')
 
 
 class DevelopmentConfig(Config):
@@ -52,7 +56,6 @@ class TestingConfig(Config):
 
 
 class ProductionConfig(Config):
-
     DEBUG = False
     SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL', f'sqlite:///{os.path.join(Config.INSTANCE_FOLDER, "prod_users.db")}')
     SERVER_NAME = '192.168.1.1356:5000'
