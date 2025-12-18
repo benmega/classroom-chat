@@ -89,6 +89,12 @@ def main():
 
             messages.append({"role": "tool", "tool_call_id": tool_call.id, "content": result})
 
+    # ... after the loop ...
+    # Write a summary of the agent's actions to a log file
+    log_content = "\n".join([str(m) for m in messages if m.get("role") != "system"])
+    with open("ai_agent_log.md", "w") as f:
+        f.write("# Agent Activity Log\n\n" + log_content)
+    print("Wrote activity log to ai_agent_log.md")
 
 if __name__ == "__main__":
     main()
