@@ -5,10 +5,10 @@ Location: itance/utilities
 Summary: Merge dev.db into prod.db, auto-add missing tables/columns, preserve critical columns configurable per table
 """
 
-import sqlite3
 import shutil
-from pathlib import Path
+import sqlite3
 import sys
+from pathlib import Path
 
 # Configuration: table -> list of critical columns to preserve from prod
 CRITICAL_COLUMNS = {
@@ -24,18 +24,22 @@ def restore_critical_columns(cur: sqlite3.Cursor, table_name: str, columns: list
     if not columns:
         return
 
-    set_clauses = ", ".join([
-        f"{col} = (SELECT {col} FROM prod_backup.{table_name} WHERE prod_backup.{table_name}.id = main.{table_name}.id)"
-        for col in columns
-    ])
-    cur.execute(f"""
+    set_clauses = ", ".join(
+        [
+            f"{col} = (SELECT {col} FROM prod_backup.{table_name} WHERE prod_backup.{table_name}.id = main.{table_name}.id)"
+            for col in columns
+        ]
+    )
+    cur.execute(
+        f"""
         UPDATE main.{table_name}
         SET {set_clauses}
         WHERE EXISTS (
             SELECT 1 FROM prod_backup.{table_name}
             WHERE prod_backup.{table_name}.id = main.{table_name}.id
 )
-    """)
+    """
+    )
     print(f"Restored critical columns for {table_name}: {columns}")
 
 
@@ -62,10 +66,12 @@ def merge_databases(dev_path: str, prod_path: str, backup: bool = True):
         # Step 0: create missing tables
         dev_tables = cur.execute(
             "SELECT name, sql FROM dev.sqlite_master WHERE type='table'"
-).fetchall()
+        ).fetchall()
 
         for table_name, create_sql in dev_tables:
-            cur.execute(f"SELECT name FROM main.sqlite_master WHERE type='table' AND name='{table_name}'")
+            cur.execute(
+                f"SELECT name FROM main.sqlite_master WHERE type='table' AND name='{table_name}'"
+            )
             if not cur.fetchone():
                 print(f"Creating missing table {table_name}")
                 cur.execute(create_sql)
@@ -73,8 +79,18 @@ def merge_databases(dev_path: str, prod_path: str, backup: bool = True):
         # Step 1: merge tables
         for table_name, _ in dev_tables:
             # Find columns in dev and prod
-            dev_cols = [row[1] for row in cur.execute(f"PRAGMA dev.table_info({table_name})").fetchall()]
-            prod_cols = [row[1] for row in cur.execute(f"PRAGMA main.table_info({table_name})").fetchall()]
+            dev_cols = [
+                row[1]
+                for row in cur.execute(
+                    f"PRAGMA dev.table_info({table_name})"
+                ).fetchall()
+            ]
+            prod_cols = [
+                row[1]
+                for row in cur.execute(
+                    f"PRAGMA main.table_info({table_name})"
+                ).fetchall()
+            ]
 
             # Add missing columns to prod
             for col in dev_cols:
@@ -85,10 +101,12 @@ def merge_databases(dev_path: str, prod_path: str, backup: bool = True):
             # Merge data
             print(f"Merging table {table_name}")
             col_list = ",".join(dev_cols)
-            cur.execute(f"""
+            cur.execute(
+                f"""
                 INSERT OR REPLACE INTO main.{table_name} ({col_list})
                 SELECT {col_list} FROM dev.{table_name}
-            """)
+            """
+            )
 
             # Restore critical columns if configured
             if table_name in CRITICAL_COLUMNS:

@@ -1,9 +1,14 @@
 import sqlite3
-from application.config import Config
+
 from sqlalchemy import create_engine
 
-SQLALCHEMY_DATABASE_URI = Config.SQLALCHEMY_DATABASE_URI  # Replace with your actual database URI
+from application.config import Config
+
+SQLALCHEMY_DATABASE_URI = (
+    Config.SQLALCHEMY_DATABASE_URI
+)  # Replace with your actual database URI
 engine = create_engine(SQLALCHEMY_DATABASE_URI)
+
 
 def list_tables(db_path):
     """
@@ -24,6 +29,7 @@ def list_tables(db_path):
     finally:
         conn.close()
 
+
 def drop_table(db_path, table_name, confirm=False):
     """
     Drops a table from the SQLite database.
@@ -37,8 +43,10 @@ def drop_table(db_path, table_name, confirm=False):
     cursor = conn.cursor()
     try:
         if confirm:
-            user_input = input(f"Are you sure you want to drop the table '{table_name}'? (yes/no): ")
-            if user_input.lower() != 'yes':
+            user_input = input(
+                f"Are you sure you want to drop the table '{table_name}'? (yes/no): "
+            )
+            if user_input.lower() != "yes":
                 print("Operation canceled.")
                 return
 
@@ -51,17 +59,21 @@ def drop_table(db_path, table_name, confirm=False):
     finally:
         conn.close()
 
+
 def drop_all():
     """Drops all tables in the database."""
     with engine.connect() as conn:
         conn.execute("DROP TABLE IF EXISTS alembic_version;")
         print("Dropped 'alembic_version' table if it existed.")
 
+
 def interactive_drop_table():
     """
     Interactively prompts the user to select a table to drop.
     """
-    database_path = "C:\\Users\\Ben\\PycharmProjects\\groupChat2\\instance\\dev_users.db"
+    database_path = (
+        "C:\\Users\\Ben\\PycharmProjects\\groupChat2\\instance\\dev_users.db"
+    )
 
     # List all tables
     tables = list_tables(database_path)
@@ -82,6 +94,7 @@ def interactive_drop_table():
             print("Invalid selection. Operation canceled.")
     except ValueError:
         print("Invalid input. Please enter a number.")
+
 
 if __name__ == "__main__":
     interactive_drop_table()

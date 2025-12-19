@@ -4,8 +4,9 @@ Type: py
 Summary: Unit tests for challenge log model.
 """
 
-import pytest
 from datetime import datetime
+
+import pytest
 
 from application.extensions import db
 from application.models.challenge_log import ChallengeLog
@@ -36,7 +37,7 @@ def test_challenge_log_timestamp(init_db):
         domain="LeetCode",
         challenge_slug="leetcode-challenge-slug",
         course_id="54321",
-        course_instance="winter2025"
+        course_instance="winter2025",
     )
     db.session.add(challenge_log)
     db.session.commit()
@@ -67,7 +68,7 @@ def test_challenge_log_missing_field():
         challenge_log = ChallengeLog(
             username="testuser",
             domain="codecombat.com",
-            challenge_slug=None  # Missing required challenge_slug
+            challenge_slug=None,  # Missing required challenge_slug
         )
         db.session.add(challenge_log)
         db.session.commit()
@@ -79,7 +80,7 @@ def test_challenge_log_with_optional_fields(init_db):
     challenge_log = ChallengeLog(
         username="testuser",
         domain="HackerRank",
-        challenge_slug="sample-challenge-slug"
+        challenge_slug="sample-challenge-slug",
         # Missing course_id and course_instance, which are optional
     )
     db.session.add(challenge_log)

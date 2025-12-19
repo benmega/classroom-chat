@@ -19,7 +19,7 @@ def test_message_creation(init_db, sample_user, sample_conversation):
         conversation_id=sample_conversation.id,
         user_id=sample_user.id,
         content=content,
-        message_type="text"
+        message_type="text",
     )
     db.session.add(message)
     db.session.commit()
@@ -47,8 +47,8 @@ def test_message_types(init_db, sample_user, sample_conversation):
             conversation_id=sample_conversation.id,
             user_id=sample_user.id,
             content=content,
-            message_type=msg_type
-)
+            message_type=msg_type,
+        )
         db.session.add(message)
         db.session.commit()
 
@@ -96,14 +96,14 @@ def test_message_soft_delete(sample_message):
 def test_dynamic_message_generation(init_db, sample_user, sample_conversation):
     """Test creating messages with random data to simulate real-world conditions."""
     for _ in range(10):  # Generate 10 random messages
-        content = ''.join(random.choices(string.ascii_letters + string.digits, k=50))
+        content = "".join(random.choices(string.ascii_letters + string.digits, k=50))
         msg_type = random.choice(["text", "link", "code_snippet"])
         message = Message(
             conversation_id=sample_conversation.id,
             user_id=sample_user.id,
             content=content,
-            message_type=msg_type
-)
+            message_type=msg_type,
+        )
         db.session.add(message)
     db.session.commit()
 
