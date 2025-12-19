@@ -21,7 +21,7 @@ class SecureModelView(ModelView):
     column_display_pk = True
 
     def is_accessible(self):
-        return request.remote_addr == '127.0.0.1'
+        return request.remote_addr == "127.0.0.1"
 
     def inaccessible_callback(self, name, **kwargs):
         return redirect("/admin/dashboard")
@@ -30,16 +30,10 @@ class SecureModelView(ModelView):
 class AdvancedIndex(AdminIndexView):
     """Custom landing page for advanced admin"""
 
-    @expose('/')
+    @expose("/")
     def index(self):
-        model_views = [
-            v for v in self.admin._views
-            if isinstance(v, ModelView)
-        ]
-        return self.render(
-            'admin/advanced_panel.html',
-            views=model_views
-        )
+        model_views = [v for v in self.admin._views if isinstance(v, ModelView)]
+        return self.render("admin/advanced_panel.html", views=model_views)
 
 
 def init_admin(app):
@@ -48,20 +42,14 @@ def init_admin(app):
     admin = Admin(
         app,
         name="Advanced Admin",
-        index_view=AdvancedIndex(
-            url='/admin/advanced',
-            endpoint='admin_advanced'
-        ),
+        index_view=AdvancedIndex(url="/admin/advanced", endpoint="admin_advanced"),
     )
 
     for mapper in db.Model.registry.mappers:
         model = mapper.class_
         admin.add_view(
             SecureModelView(
-                model,
-                db.session,
-                name=model.__name__,
-                endpoint=f"adv_{model.__name__}"
+                model, db.session, name=model.__name__, endpoint=f"adv_{model.__name__}"
             )
         )
 

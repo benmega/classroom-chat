@@ -7,6 +7,7 @@ import sqlite3
 
 DB_PATH = r"C:\Users\Ben\PycharmProjects\groupChat2\instance\dev_users.db"
 
+
 def run_sql(sql: str, params: tuple = ()):
     """Run custom SQL on the database and print results."""
     conn = sqlite3.connect(DB_PATH)
@@ -25,11 +26,12 @@ def run_sql(sql: str, params: tuple = ()):
     finally:
         conn.close()
 
+
 def run_sql2(sql: str):
     conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
     try:
-        cur.executescript(sql)   # handles multiple statements + semicolons
+        cur.executescript(sql)  # handles multiple statements + semicolons
         conn.commit()
         print("Success.")
     except Exception as e:

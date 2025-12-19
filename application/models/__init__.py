@@ -4,6 +4,7 @@ Type: py
 Summary: Model import helper to register all SQLAlchemy models.
 """
 
+
 def setup_models():
     from .configuration import Configuration
     from .ai_settings import AISettings

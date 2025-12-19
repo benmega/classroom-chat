@@ -2,10 +2,10 @@
 # Description: Bulk insert achievements from a CSV into the database.
 
 import csv
+
 from application import create_app, DevelopmentConfig
 from application.extensions import db
 from application.models.achievements import Achievement
-
 
 CSV_PATH = r"C:\Users\Ben\OneDrive\Desktop\achievement.csv"
 
@@ -22,7 +22,7 @@ def seed_achievements():
                 "description": row["description"],
                 "type": row["type"],
                 "requirement_value": row["requirement_value"],
-                "source": row.get("source"),   # optional column
+                "source": row.get("source"),  # optional column
                 "reward": int(row.get("reward", 0)),
             }
 

@@ -8,19 +8,24 @@ Summary: Tracks when a user starts and ends a session in the classroom chat.
 """
 
 from datetime import datetime
+
 from application.extensions import db
 
+
 class SessionLog(db.Model):
-    __tablename__ = 'session_logs'
+    __tablename__ = "session_logs"
 
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     start_time = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     end_time = db.Column(db.DateTime, nullable=True)  # set when user goes offline
     last_seen = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
 
     # Relationships
-    user = db.relationship('User', backref=db.backref('session_logs', lazy=True, cascade="all, delete-orphan"))
+    user = db.relationship(
+        "User",
+        backref=db.backref("session_logs", lazy=True, cascade="all, delete-orphan"),
+    )
 
     def __repr__(self):
         return f"<SessionLog user_id={self.user_id} start={self.start_time} end={self.end_time}>"
@@ -43,7 +48,11 @@ class SessionLog(db.Model):
     @classmethod
     def end_session(cls, user_id):
         """Mark the most recent open session as ended."""
-        log = cls.query.filter_by(user_id=user_id, end_time=None).order_by(cls.start_time.desc()).first()
+        log = (
+            cls.query.filter_by(user_id=user_id, end_time=None)
+            .order_by(cls.start_time.desc())
+            .first()
+        )
         if log:
             log.end_time = datetime.utcnow()
             db.session.commit()

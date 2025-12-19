@@ -5,10 +5,13 @@ Summary: Flask routes for api achievements functionality.
 """
 
 from flask import Blueprint, session, jsonify, url_for
+
 from application.models.user import User
 from application.services.achievement_engine import evaluate_user
 
-achievements_api = Blueprint("achievements_api", __name__, url_prefix="/api/achievements")
+achievements_api = Blueprint(
+    "achievements_api", __name__, url_prefix="/api/achievements"
+)
 
 
 @achievements_api.route("/check", methods=["GET"])
@@ -24,9 +27,13 @@ def check_achievements():
     try:
         new_awards = evaluate_user(user)
         from application.services.skill_service import evaluate_user_skills
-        evaluate_user_skills(user) #TODO separate from achievements
+
+        evaluate_user_skills(user)  # TODO separate from achievements
     except Exception as e:
-        return jsonify({"success": False, "error": "Failed to evaluate achievements"}), 500
+        return (
+            jsonify({"success": False, "error": "Failed to evaluate achievements"}),
+            500,
+        )
 
     payload = [
         {
@@ -35,8 +42,8 @@ def check_achievements():
             "badge": url_for(
                 "static",
                 filename=f"images/achievement_badges/{a.slug}.png",
-                _external=False
-    )
+                _external=False,
+            ),
         }
         for a in new_awards
     ]

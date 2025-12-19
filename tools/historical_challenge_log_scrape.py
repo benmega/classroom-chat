@@ -1,9 +1,9 @@
-import requests
 import csv
 import os
 import re
-import json
 import time
+
+import requests
 
 # --------------------------------------------------------------------------------
 # 1. CONFIGURATION
@@ -13,8 +13,8 @@ YOUR_COOKIE = """_ga=GA1.2.1818552674.1665805079; _fbp=fb.1.1665805090786.306764
 
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-    "Cookie": YOUR_COOKIE.replace('\n', ''),
-    "Accept": "application/json"
+    "Cookie": YOUR_COOKIE.replace("\n", ""),
+    "Accept": "application/json",
 }
 
 # ENTER THE TEACHER/OWNER ID HERE
@@ -22,7 +22,7 @@ HEADERS = {
 OWNER_ID = "62d23d975dafd60025f8c520"
 
 
-FILENAME = '../instance/migration/master_challenge_log.csv'
+FILENAME = "../instance/migration/master_challenge_log.csv"
 
 
 # --------------------------------------------------------------------------------
@@ -36,7 +36,7 @@ def fetch_json(url, description):
         return response.json()
     except requests.exceptions.RequestException as e:
         print(f"Error fetching {description}: {e}")
-        if 'response' in locals() and response.status_code == 401:
+        if "response" in locals() and response.status_code == 401:
             print("(!) AUTH ERROR: Cookie expired.")
         return []
 
@@ -44,24 +44,29 @@ def fetch_json(url, description):
 def build_student_map(members_data):
     s_map = {}
     for s in members_data:
-        name = s.get('name', '').strip()
-        if not name: name = s.get('name', 'Unknown')
-        s_map[s['_id']] = name
+        name = s.get("name", "").strip()
+        if not name:
+            name = s.get("name", "Unknown")
+        s_map[s["_id"]] = name
     return s_map
 
 
 def build_level_map(levels_data):
     l_map = {}
     for campaign in levels_data:
-        for level in campaign.get('levels', []):
-            if 'original' in level and 'slug' in level:
-                l_map[level['original']] = level['slug']
+        for level in campaign.get("levels", []):
+            if "original" in level and "slug" in level:
+                l_map[level["original"]] = level["slug"]
     return l_map
 
 
 def get_context(url):
-    domain = "CodeCombat" if "codecombat" in url else "www.ozaria.com" if "ozaria" in url else "Studio.Code"
-    match = re.search(r'/classroom/([a-fA-F0-9]{24})', url)
+    domain = (
+        "CodeCombat"
+        if "codecombat" in url
+        else "www.ozaria.com" if "ozaria" in url else "Studio.Code"
+    )
+    match = re.search(r"/classroom/([a-fA-F0-9]{24})", url)
     instance = match.group(1) if match else None
     return domain, instance
 
@@ -79,8 +84,12 @@ def main(DOMAIN, URL_LEVELS):
         return
 
     # Extract unique classroom IDs to avoid duplicate API calls
-    unique_classrooms = set(item['classroomID'] for item in course_instances if 'classroomID' in item)
-    print(f"Found {len(course_instances)} course instances across {len(unique_classrooms)} unique classrooms.")
+    unique_classrooms = set(
+        item["classroomID"] for item in course_instances if "classroomID" in item
+    )
+    print(
+        f"Found {len(course_instances)} course instances across {len(unique_classrooms)} unique classrooms."
+    )
 
     # 2. Fetch Global Level Data (Once)
     levels_data = fetch_json(URL_LEVELS, "Global Course Data")
@@ -90,11 +99,15 @@ def main(DOMAIN, URL_LEVELS):
 
     # 3. Iterate Through Each Classroom
     for index, class_id in enumerate(unique_classrooms):
-        print(f"\n--- Processing Classroom {index + 1}/{len(unique_classrooms)} (ID: {class_id}) ---")
+        print(
+            f"\n--- Processing Classroom {index + 1}/{len(unique_classrooms)} (ID: {class_id}) ---"
+        )
 
         # Build URLs dynamically
         url_members = f"https://{DOMAIN}/db/classroom/{class_id}/members?project=firstName,lastName,name&memberLimit=100"
-        url_sessions = f"https://{DOMAIN}/db/classroom/{class_id}/member-sessions?memberLimit=100"
+        url_sessions = (
+            f"https://{DOMAIN}/db/classroom/{class_id}/member-sessions?memberLimit=100"
+        )
 
         # Fetch Data
         members_data = fetch_json(url_members, "Members")
@@ -111,21 +124,23 @@ def main(DOMAIN, URL_LEVELS):
         # Process Sessions
         count = 0
         for entry in sessions_data:
-            if not entry.get('state', {}).get('complete', False):
+            if not entry.get("state", {}).get("complete", False):
                 continue
 
-            uid = entry.get('creator')
-            lid = entry.get('level', {}).get('original')
+            uid = entry.get("creator")
+            lid = entry.get("level", {}).get("original")
 
-            all_rows.append({
-                'username': student_map.get(uid, f"Unknown_Student_{uid}"),
-                'domain': domain,
-                'challenge_name': level_map.get(lid, f"Unknown_Level_{lid}"),
-                'timestamp': entry.get('changed', '').replace('Z', ''),
-                'course_id': '',
-                'course_instance': instance,  # This is the Classroom ID
-                'helper': ''
-            })
+            all_rows.append(
+                {
+                    "username": student_map.get(uid, f"Unknown_Student_{uid}"),
+                    "domain": domain,
+                    "challenge_name": level_map.get(lid, f"Unknown_Level_{lid}"),
+                    "timestamp": entry.get("changed", "").replace("Z", ""),
+                    "course_id": "",
+                    "course_instance": instance,  # This is the Classroom ID
+                    "helper": "",
+                }
+            )
             count += 1
         print(f"Added {count} completed levels from this class.")
 
@@ -137,13 +152,21 @@ def main(DOMAIN, URL_LEVELS):
             # Ensure directory exists
             os.makedirs(os.path.dirname(FILENAME), exist_ok=True)
 
-            fields = ['username', 'domain', 'challenge_name', 'timestamp', 'course_id', 'course_instance', 'helper']
+            fields = [
+                "username",
+                "domain",
+                "challenge_name",
+                "timestamp",
+                "course_id",
+                "course_instance",
+                "helper",
+            ]
 
             # Check if the file already exists to avoid duplicate headers
             file_exists = os.path.isfile(FILENAME)
 
             # Open in 'a' (append) mode instead of 'w' (write)
-            with open(FILENAME, 'a', newline='', encoding='utf-8') as f:
+            with open(FILENAME, "a", newline="", encoding="utf-8") as f:
                 writer = csv.DictWriter(f, fieldnames=fields)
 
                 # Only write the header if the file is brand new
@@ -161,4 +184,4 @@ if __name__ == "__main__":
     DOMAINS = ["www.ozaria.com", "codecombat.com"]
     for DOMAIN in DOMAINS:
         URL_LEVELS = f"https://{DOMAIN}/db/classroom-courses-data?language=python"
-        main(DOMAIN,URL_LEVELS)
+        main(DOMAIN, URL_LEVELS)

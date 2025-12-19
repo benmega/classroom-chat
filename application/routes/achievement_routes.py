@@ -1,19 +1,27 @@
-
+import os
 import re
 from datetime import datetime
 
-from flask import Blueprint, render_template, jsonify, session, flash, redirect, url_for, request
+from flask import (
+    Blueprint,
+    render_template,
+    jsonify,
+    session,
+    flash,
+    redirect,
+    url_for,
+    request,
+)
 from sqlalchemy.orm import joinedload
-
-from application.extensions import db
-from application.models.user import User
-from application.models.achievements import Achievement, UserAchievement
-from application.models.user_certificate import UserCertificate
-from application.routes.admin_routes import local_only
-import os
 from werkzeug.utils import secure_filename
 
-achievements = Blueprint('achievements', __name__)
+from application.extensions import db
+from application.models.achievements import Achievement
+from application.models.user import User
+from application.models.user_certificate import UserCertificate
+from application.routes.admin_routes import local_only
+
+achievements = Blueprint("achievements", __name__)
 
 # Updated to allow codecombat.com and ozaria.com (with optional www)
 CERT_URL_REGEX = r"https://(?:www\.)?(?:codecombat|ozaria)\.com/certificates/[\w\d]+\?.*course=([\w\d-]+)"
@@ -22,6 +30,7 @@ CERT_URL_REGEX = r"https://(?:www\.)?(?:codecombat|ozaria)\.com/certificates/[\w
 UPLOAD_FOLDER = "certificates"
 ALLOWED_EXTENSIONS = {"pdf"}
 
+
 def allowed_file(filename):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
@@ -29,22 +38,20 @@ def allowed_file(filename):
 # Return all achievements with user's status
 @achievements.route("/")
 def achievements_page():
-    user_id = session.get('user')
+    user_id = session.get("user")
     # current_user = User.query.filter_by(username=user_id).first()
     current_user = (
-        User.query.options(joinedload(User.achievements))
-        .filter_by(id=user_id)
-        .first()
+        User.query.options(joinedload(User.achievements)).filter_by(id=user_id).first()
     )
     if not current_user:
-        return jsonify({'success': False, 'error': 'User not found!'}), 404
+        return jsonify({"success": False, "error": "User not found!"}), 404
 
     user_achievements = {ua.achievement_id for ua in current_user.achievements}
     all_achievements = Achievement.query.all()
     return render_template(
         "achievements.html",
         achievements=all_achievements,
-        user_achievements=user_achievements
+        user_achievements=user_achievements,
     )
 
 
@@ -64,8 +71,8 @@ def add_achievement():
             reward=int(request.form.get("reward") or 1),
             description=description,
             requirement_value=requirement_value,
-            source=request.form.get("source")
-)
+            source=request.form.get("source"),
+        )
         db.session.add(ach)
         db.session.commit()
         flash(f"Achievement '{name}' added", "success")
@@ -80,14 +87,14 @@ def submit_certificate():
     current_user = User.query.filter_by(id=user_id).first()
     if not current_user:
         # Check if AJAX request
-        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        if request.headers.get("X-Requested-With") == "XMLHttpRequest":
             return jsonify({"success": False, "error": "User not found!"}), 400
         return jsonify({"success": False, "error": "User not found!"}), 400
 
     message, success = None, False
 
     if request.method == "POST":
-        is_xhr = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+        is_xhr = request.headers.get("X-Requested-With") == "XMLHttpRequest"
         url = request.form.get("certificate_url")
         file = request.files.get("certificate_file")
 
@@ -95,26 +102,38 @@ def submit_certificate():
         match = re.search(CERT_URL_REGEX, url or "")
         if not match:
             msg = "Invalid certificate URL."
-            if is_xhr: return jsonify({"success": False, "error": msg})
-            return render_template("submit_certificate.html", message=msg, success=False)
+            if is_xhr:
+                return jsonify({"success": False, "error": msg})
+            return render_template(
+                "submit_certificate.html", message=msg, success=False
+            )
 
         course_slug = match.group(1)
         achievement = Achievement.query.filter_by(slug=course_slug).first()
         if not achievement:
             msg = "No matching achievement found for this course."
-            if is_xhr: return jsonify({"success": False, "error": msg})
-            return render_template("submit_certificate.html", message=msg, success=False)
+            if is_xhr:
+                return jsonify({"success": False, "error": msg})
+            return render_template(
+                "submit_certificate.html", message=msg, success=False
+            )
 
         # 2. File validation
         if not file or file.filename == "":
             msg = "Certificate file is required."
-            if is_xhr: return jsonify({"success": False, "error": msg})
-            return render_template("submit_certificate.html", message=msg, success=False)
+            if is_xhr:
+                return jsonify({"success": False, "error": msg})
+            return render_template(
+                "submit_certificate.html", message=msg, success=False
+            )
 
         if not allowed_file(file.filename):
             msg = "Invalid file type. Only PDF is allowed."
-            if is_xhr: return jsonify({"success": False, "error": msg})
-            return render_template("submit_certificate.html", message=msg, success=False)
+            if is_xhr:
+                return jsonify({"success": False, "error": msg})
+            return render_template(
+                "submit_certificate.html", message=msg, success=False
+            )
 
         # 3. Save file
         os.makedirs(UPLOAD_FOLDER, exist_ok=True)
@@ -125,7 +144,7 @@ def submit_certificate():
         # 4. Create or update cert entry
         cert = UserCertificate.query.filter_by(
             user_id=current_user.id, achievement_id=achievement.id
-).first()
+        ).first()
 
         if not cert:
             cert = UserCertificate(
@@ -133,7 +152,7 @@ def submit_certificate():
                 achievement_id=achievement.id,
                 url=url,
                 file_path=filepath,
-    )
+            )
             db.session.add(cert)
         else:
             cert.url = url
@@ -143,11 +162,19 @@ def submit_certificate():
 
         # Success return
         if is_xhr:
-            return jsonify({"success": True, "message": "Certificate submitted successfully."})
+            return jsonify(
+                {"success": True, "message": "Certificate submitted successfully."}
+            )
 
-        return render_template("submit_certificate.html", message="Certificate submitted successfully.", success=True)
+        return render_template(
+            "submit_certificate.html",
+            message="Certificate submitted successfully.",
+            success=True,
+        )
 
     return render_template("submit_certificate.html")
+
+
 #
 # @achievements.route("/submit_certificate", methods=["GET", "POST"])
 # def submit_certificate():
@@ -212,6 +239,7 @@ def submit_certificate():
 
 from flask import send_from_directory
 
+
 @achievements.route("/view_certificate/<int:cert_id>")
 def view_certificate(cert_id):
     cert = UserCertificate.query.get_or_404(cert_id)
@@ -224,6 +252,7 @@ def view_certificate(cert_id):
         return "File Not Found", 404  # Returns a 404 status code
 
     return send_from_directory(directory, filename, mimetype="application/pdf")
+
 
 @achievements.route("/admin/certificates")
 @local_only
@@ -238,6 +267,7 @@ def admin_certificates():
         .all()
     )
     return render_template("admin/admin_certificates.html", certs=certs)
+
 
 @achievements.route("/admin/certificates/reviewed/<int:cert_id>", methods=["POST"])
 @local_only
