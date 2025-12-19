@@ -15,7 +15,8 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
-          token: ${{ secrets.MY_WORKFLOW_TOKEN }} # Use PAT here to allow recursive triggers
+          token: ${{ secrets.MY_WORKFLOW_TOKEN }} # Allow recursive triggers
+          persist-credentials: false
 
       - name: Setup Python
         uses: actions/setup-python@v4
