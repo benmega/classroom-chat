@@ -1,10 +1,12 @@
 # manage_user_ducks.py
 import sys
+
 from sqlalchemy import func
+
 from application.extensions import db
-from application.models.user import User
 from application.models.challenge import Challenge
 from application.models.challenge_log import ChallengeLog
+from application.models.user import User
 
 
 def update_user_ducks():
@@ -20,13 +22,15 @@ def update_user_ducks():
             .join(ChallengeLog, Challenge.name == ChallengeLog.challenge_name)
             .filter(ChallengeLog.username == user.username)
             .scalar()
-) or 0
+        ) or 0
 
         user.earned_ducks = total_ducks
         user.packets = total_ducks / (2**14)
         updated += 1
 
-        print(f"Updated {user.username}: earned_ducks={user.earned_ducks}, packets={user.packets}")
+        print(
+            f"Updated {user.username}: earned_ducks={user.earned_ducks}, packets={user.packets}"
+        )
 
     db.session.commit()
     print(f"Updated {updated} users.")

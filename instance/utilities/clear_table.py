@@ -1,10 +1,13 @@
 import sqlite3
-from application.config import Config
+
 from sqlalchemy import create_engine
+
+from application.config import Config
 
 SQLALCHEMY_DATABASE_URI = Config.SQLALCHEMY_DATABASE_URI
 engine = create_engine(SQLALCHEMY_DATABASE_URI)
 database_path = "C:\\Users\\Ben\\PycharmProjects\\groupChat2\\instance\\dev_users.db"
+
 
 def clear_table(table_name):
     conn = sqlite3.connect(database_path)
@@ -14,7 +17,9 @@ def clear_table(table_name):
         cursor.execute(f"DELETE FROM {table_name}")
 
         # Try resetting autoincrement counter safely
-        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='sqlite_sequence'")
+        cursor.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='sqlite_sequence'"
+        )
         if cursor.fetchone():
             cursor.execute("DELETE FROM sqlite_sequence WHERE name=?", (table_name,))
 

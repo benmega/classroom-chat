@@ -10,10 +10,10 @@ load_dotenv()
 
 def get_directory_summary(root_dir=".", exclude=None):
     if exclude is None:
-        exclude = {'.git', '__pycache__', '.github', 'node_modules', 'venv', '.env'}
+        exclude = {".git", "__pycache__", ".github", "node_modules", "venv", ".env"}
 
     summary = []
-    for path in sorted(pathlib.Path(root_dir).rglob('*')):
+    for path in sorted(pathlib.Path(root_dir).rglob("*")):
         # Skip excluded directories and files within them
         if any(part in exclude for part in path.parts):
             continue
@@ -54,9 +54,12 @@ def main():
     response = client.chat.completions.create(
         model="gpt-4o",
         messages=[
-            {"role": "system", "content": "You are a senior developer helping organize tasks."},
-            {"role": "user", "content": prompt}
-        ]
+            {
+                "role": "system",
+                "content": "You are a senior developer helping organize tasks.",
+            },
+            {"role": "user", "content": prompt},
+        ],
     )
 
     print(response.choices[0].message.content)

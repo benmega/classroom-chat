@@ -4,9 +4,10 @@ Type: py
 Summary: Background scheduler tasks for periodic session cleanup.
 """
 
-from application.utilities.session_cleanup import close_stale_sessions
-from application.extensions import scheduler
 import logging
+
+from application.extensions import scheduler
+from application.utilities.session_cleanup import close_stale_sessions
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +19,7 @@ def set_app_instance(app):
     _app_instance = app
 
 
-@scheduler.task('interval', id='session_cleanup', minutes=1)
+@scheduler.task("interval", id="session_cleanup", minutes=1)
 def scheduled_cleanup():
     try:
         logger.info("Starting scheduled session cleanup")

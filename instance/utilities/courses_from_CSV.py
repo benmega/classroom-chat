@@ -45,8 +45,8 @@ def populate_courses_from_csv(folder_path):
                     domain=domain,
                     description=description,
                     is_active=True,
-                    default_challenge_value=default_challenge_value
-        )
+                    default_challenge_value=default_challenge_value,
+                )
                 courses.append(course)
 
             # Add courses and commit changes
@@ -60,6 +60,7 @@ def populate_courses_from_csv(folder_path):
     except Exception as e:
         db.session.rollback()
         print(f"An error occurred while processing the CSV file: {e}")
+
 
 if __name__ == "__main__":
     # Initialize Flask app

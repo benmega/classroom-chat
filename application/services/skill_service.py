@@ -2,9 +2,10 @@
 File: skill_service.py
 Summary: Logic to automatically unlock skills based on user progress.
 """
-from application.models.skill import Skill
-from application.models.course_instance import CourseInstance
+
 from application.extensions import db
+from application.models.course_instance import CourseInstance
+from application.models.skill import Skill
 
 # --- PROJECT SPECIFIC SKILL MAP ---
 DEFAULT_PROJECT_SKILLS = {
@@ -12,7 +13,7 @@ DEFAULT_PROJECT_SKILLS = {
     "CS2 Capstone": ["Game Design", "Conditional Logic"],
     "Tabula Rasa": ["Game Design", "Level Building"],
     "Text-Based Adventure": ["Storytelling", "Input Handling"],
-    "Dangerous Skies": ["Physics", "Game Loop"]
+    "Dangerous Skies": ["Physics", "Game Loop"],
 }
 
 
@@ -86,24 +87,51 @@ def evaluate_user_skills(user):
 
     for lang_name, count in language_rules:
         level = 0
-        if count >= 10: level = 1  # Bronze: 10 Challenges
-        if count >= 50: level = 2  # Silver: 50 Challenges
-        if count >= 100: level = 3  # Gold: 100 Challenges
+        if count >= 10:
+            level = 1  # Bronze: 10 Challenges
+        if count >= 50:
+            level = 2  # Silver: 50 Challenges
+        if count >= 100:
+            level = 3  # Gold: 100 Challenges
 
         if level > 0:
-            _award_skill(user, lang_name, "language", _get_icon(lang_name), level, existing_map, new_skills_awarded)
+            _award_skill(
+                user,
+                lang_name,
+                "language",
+                _get_icon(lang_name),
+                level,
+                existing_map,
+                new_skills_awarded,
+            )
 
     # --- 2. GITHUB SKILL (Based on Project Link) ---
     has_github = any(p.github_link for p in user.projects)
     if has_github:
-        _award_skill(user, "Git & GitHub", "tool", "fab fa-github", 1, existing_map, new_skills_awarded)
+        _award_skill(
+            user,
+            "Git & GitHub",
+            "tool",
+            "fab fa-github",
+            1,
+            existing_map,
+            new_skills_awarded,
+        )
 
     # --- 3. PROJECT SPECIFIC SKILLS (Based on Project Name) ---
     for project in user.projects:
         for default_name, skills_list in DEFAULT_PROJECT_SKILLS.items():
             if default_name.lower() in project.name.lower():
                 for skill_name in skills_list:
-                    _award_skill(user, skill_name, "concept", "fas fa-lightbulb", 1, existing_map, new_skills_awarded)
+                    _award_skill(
+                        user,
+                        skill_name,
+                        "concept",
+                        "fas fa-lightbulb",
+                        1,
+                        existing_map,
+                        new_skills_awarded,
+                    )
 
     # --- 4. COMMIT ---
     if new_skills_awarded:
@@ -121,16 +149,14 @@ def _award_skill(user, name, category, icon, level, existing_map, awarded_list):
         return
 
     if level > 1:
-        lower_skills = [s for s in user.skills if s.name == name and s.proficiency < level]
+        lower_skills = [
+            s for s in user.skills if s.name == name and s.proficiency < level
+        ]
         for ls in lower_skills:
             db.session.delete(ls)
 
     new_skill = Skill(
-        name=name,
-        user_id=user.id,
-        category=category,
-        icon=icon,
-        proficiency=level
+        name=name, user_id=user.id, category=category, icon=icon, proficiency=level
     )
     db.session.add(new_skill)
     existing_map.add(rule_key)
@@ -144,6 +170,6 @@ def _get_icon(lang_name):
         "HTML/CSS": "fab fa-html5",
         "Java": "fab fa-java",
         "C++": "fas fa-code",
-        "Git & GitHub": "fab fa-github"
+        "Git & GitHub": "fab fa-github",
     }
     return icons.get(lang_name, "fas fa-code")

@@ -54,8 +54,9 @@ reward_updates = {
     "5a0df02b8f2391437740f74f": 60,
     "65f32b6c87c07dbeb5ba1936": 10,
     "5789587aad86a6efb573701f": 20,
-    "5789587aad86a6efb5737020": 40
+    "5789587aad86a6efb5737020": 40,
 }
+
 
 def update_rewards(db_path, table_name, mapping):
     conn = sqlite3.connect(db_path)
@@ -64,11 +65,14 @@ def update_rewards(db_path, table_name, mapping):
     try:
         updates = 0
         for slug, reward in mapping.items():
-            cursor.execute(f"""
+            cursor.execute(
+                f"""
                 UPDATE {table_name}
                 SET reward = ?
                 WHERE slug = ?
-            """, (reward, slug))
+            """,
+                (reward, slug),
+            )
             updates += cursor.rowcount  # count only if row exists
 
         conn.commit()

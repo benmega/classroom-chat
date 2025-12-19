@@ -4,7 +4,6 @@ Type: py
 Summary: Blueprint registration for application route modules.
 """
 
-
 from flask import Flask
 
 from .achievement_routes import achievements
@@ -25,18 +24,16 @@ from .user_routes import user
 
 def register_blueprints(app: Flask):
     init_admin(app)
-    app.register_blueprint(user, url_prefix='/user')
-    app.register_blueprint(ai, url_prefix='/ai')
-    app.register_blueprint(admin, url_prefix='/admin')
-    app.register_blueprint(upload, url_prefix='/upload')
-    app.register_blueprint(message, url_prefix='/message')
-    app.register_blueprint(duck_trade, url_prefix='/duck_trade')
-    app.register_blueprint(achievements, url_prefix='/achievements')
-    app.register_blueprint(session, url_prefix='/session')
+    app.register_blueprint(user, url_prefix="/user")
+    app.register_blueprint(ai, url_prefix="/ai")
+    app.register_blueprint(admin, url_prefix="/admin")
+    app.register_blueprint(upload, url_prefix="/upload")
+    app.register_blueprint(message, url_prefix="/message")
+    app.register_blueprint(duck_trade, url_prefix="/duck_trade")
+    app.register_blueprint(achievements, url_prefix="/achievements")
+    app.register_blueprint(session, url_prefix="/session")
     app.register_blueprint(achievements_api)
     app.register_blueprint(webhooks_api)
     app.register_blueprint(challenge)
     app.register_blueprint(general)
     app.register_blueprint(server_info)
-
-

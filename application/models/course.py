@@ -4,14 +4,17 @@ Type: py
 Summary: SQLAlchemy model for course information and mapping.
 """
 
-from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
+
 from application.extensions import db
 
-class Course(db.Model):
-    __tablename__ = 'courses'
 
-    id = db.Column(db.String(64), primary_key=True)  # Matches the 'course' query parameter
+class Course(db.Model):
+    __tablename__ = "courses"
+
+    id = db.Column(
+        db.String(64), primary_key=True
+    )  # Matches the 'course' query parameter
     name = db.Column(db.String(255), nullable=False)
     domain = db.Column(db.String(255), nullable=False)
     description = db.Column(db.Text, default="No description provided.")

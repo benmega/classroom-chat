@@ -7,20 +7,21 @@ Summary: SQLAlchemy model for application users and authentication data.
 from datetime import date, timedelta
 
 from sqlalchemy.ext.hybrid import hybrid_property
-
-from application.extensions import db
 from werkzeug.security import generate_password_hash, check_password_hash
 
+from application.extensions import db
 from application.models.challenge_log import ChallengeLog
 from application.models.project import Project
 from application.models.session_log import SessionLog
 from application.models.skill import Skill
 
+
 def default_nickname(context):
     return context.get_current_parameters().get("username")
 
+
 class User(db.Model):
-    __tablename__ = 'users'
+    __tablename__ = "users"
     id = db.Column(db.Integer, primary_key=True)
     _username = db.Column("username", db.String(50), unique=True, nullable=False)
     password_hash = db.Column(db.String(128), nullable=False)
@@ -30,40 +31,30 @@ class User(db.Model):
     nickname = db.Column(db.String(50), nullable=False, default=default_nickname)
     is_admin = db.Column(db.Boolean, default=False)
 
-
     # Gamification
     packets = db.Column(db.Double, nullable=False, default=0)
     earned_ducks = db.Column(db.Double, nullable=False, default=0)
     duck_balance = db.Column(db.Double, nullable=False, default=0)
     last_daily_duck = db.Column(db.Date, nullable=True)
 
-
-
     # Relationships
-    skills = db.relationship('Skill', backref='user', lazy=True)
-    projects = db.relationship('Project', backref='user', lazy=True)
+    skills = db.relationship("Skill", backref="user", lazy=True)
+    projects = db.relationship("Project", backref="user", lazy=True)
     achievements = db.relationship(
-        'UserAchievement',
-        backref='user',
-        lazy=True,
-        cascade="all, delete-orphan"
+        "UserAchievement", backref="user", lazy=True, cascade="all, delete-orphan"
     )
     certificates = db.relationship(
-        'UserCertificate',
-        backref='user',
-        lazy=True,
-        cascade="all, delete-orphan"
+        "UserCertificate", backref="user", lazy=True, cascade="all, delete-orphan"
     )
     challenge_logs = db.relationship(
-        'ChallengeLog',
-        primaryjoin='User._username == foreign(ChallengeLog.username)',
+        "ChallengeLog",
+        primaryjoin="User._username == foreign(ChallengeLog.username)",
         lazy=True,
-        viewonly=True  # Recommended since ChallengeLog.username isn't a foreign key
+        viewonly=True,  # Recommended since ChallengeLog.username isn't a foreign key
     )
 
-
     def __repr__(self):
-        return f'<User {self._username}>'
+        return f"<User {self._username}>"
 
     @hybrid_property
     def username(self):
@@ -83,6 +74,7 @@ class User(db.Model):
 
     def default_nickname(context):
         return context.get_current_parameters().get("username")
+
     @classmethod
     def set_online(cls, user_id, online=True):
         """Toggle user online/offline and manage session logs."""
@@ -104,18 +96,25 @@ class User(db.Model):
 
     def get_progress(self, domain):
         """Calculate progress based on challenges completed for a specific domain."""
-        total_challenges = ChallengeLog.query.filter_by(username=self._username, domain=domain).count()
+        total_challenges = ChallengeLog.query.filter_by(
+            username=self._username, domain=domain
+        ).count()
         return total_challenges  # Modify if you want percentages based on predefined thresholds.
-
 
     def get_progress_percent(self, domain):
         """Calculate CodeCombat progress as a percentage of completed challenges (rounded for readability)."""
         from application.models.challenge import Challenge
+
         total_challenges = Challenge.query.filter_by(domain=domain).count()
-        completed_challenges = ChallengeLog.query.filter_by(username=self._username, domain=domain).count()
+        completed_challenges = ChallengeLog.query.filter_by(
+            username=self._username, domain=domain
+        ).count()
 
-
-        progress = (completed_challenges / total_challenges) * 100 if total_challenges > 0 else 0
+        progress = (
+            (completed_challenges / total_challenges) * 100
+            if total_challenges > 0
+            else 0
+        )
         return int(round(progress, 0))
 
     def add_skill(self, skill_name):
@@ -123,8 +122,6 @@ class User(db.Model):
         new_skill = Skill(name=skill_name, user_id=self.id)
         db.session.add(new_skill)
         db.session.commit()
-
-
 
     def remove_skill(self, skill_id):
         """Remove a skill by ID."""
@@ -135,7 +132,9 @@ class User(db.Model):
 
     def add_project(self, name, description=None, link=None):
         """Add a project to the user."""
-        new_project = Project(name=name, description=description, link=link, user_id=self.id)
+        new_project = Project(
+            name=name, description=description, link=link, user_id=self.id
+        )
         db.session.add(new_project)
         db.session.commit()
 
@@ -200,10 +199,12 @@ class User(db.Model):
 
             # Month Logic
             if weekday == 0:  # Check at start of every week
-                month_name = current.strftime('%b')
+                month_name = current.strftime("%b")
                 if month_name != current_month:
                     if current_month:
-                        months.append({'name': current_month, 'colspan': current_colspan})
+                        months.append(
+                            {"name": current_month, "colspan": current_colspan}
+                        )
                     current_month = month_name
                     current_colspan = 0
                 current_colspan += 1
@@ -224,11 +225,7 @@ class User(db.Model):
             else:
                 level = 4
 
-            grid[weekday][week_idx] = {
-                'date': iso_date,
-                'count': c,
-                'level': level
-            }
+            grid[weekday][week_idx] = {"date": iso_date, "count": c, "level": level}
 
             if weekday == 6:
                 week_idx += 1
@@ -237,9 +234,9 @@ class User(db.Model):
 
         # Append final month segment
         if current_month:
-            months.append({'name': current_month, 'colspan': current_colspan})
+            months.append({"name": current_month, "colspan": current_colspan})
 
-        return {'months': months, 'rows': grid}
+        return {"months": months, "rows": grid}
 
     def get_completed_levels(self):
         """
@@ -248,4 +245,4 @@ class User(db.Model):
         """
         # We assume the ChallengeLog model has a 'level_slug' column.
         # Using a set removes duplicates.
-        return {getattr(log, 'level_slug', '') for log in self.challenge_logs}
+        return {getattr(log, "level_slug", "") for log in self.challenge_logs}

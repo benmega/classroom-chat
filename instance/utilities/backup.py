@@ -1,11 +1,13 @@
 # Filename: export_database_tables.py
 # Description: Script to export all database tables to CSV files in a human-readable format.
 
-import os
 import csv
 import json
+import os
 from datetime import datetime
+
 from sqlalchemy import inspect, text
+
 from application import create_app, DevelopmentConfig
 from application.extensions import db
 
@@ -15,13 +17,15 @@ from application.extensions import db
 # Backups go to: /project/backups/
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.dirname(CURRENT_DIR)
-BACKUPS_FOLDER = os.path.join(PROJECT_ROOT, 'backups')
+BACKUPS_FOLDER = os.path.join(PROJECT_ROOT, "backups")
+
 
 def get_output_path(folder_name):
     """
     Helper to ensure the output path is inside the backups folder.
     """
     return os.path.join(BACKUPS_FOLDER, folder_name)
+
 
 def export_tables_to_csv(output_dir=None):
     """
@@ -76,7 +80,7 @@ def export_tables_to_csv(output_dir=None):
 
             # Write to CSV
             file_path = os.path.join(full_output_path, f"{table_name}.csv")
-            with open(file_path, 'w', newline='', encoding='utf-8') as csv_file:
+            with open(file_path, "w", newline="", encoding="utf-8") as csv_file:
                 writer = csv.DictWriter(csv_file, fieldnames=columns)
                 writer.writeheader()
                 writer.writerows(rows)
@@ -88,10 +92,12 @@ def export_tables_to_csv(output_dir=None):
         except Exception as e:
             print(f"Error exporting table '{table_name}': {str(e)}")
             import traceback
+
             traceback.print_exc()
 
     print(
-        f"\nExport complete! Successfully exported {exported_count} of {len(table_names)} tables to {os.path.abspath(full_output_path)}")
+        f"\nExport complete! Successfully exported {exported_count} of {len(table_names)} tables to {os.path.abspath(full_output_path)}"
+    )
     return full_output_path
 
 
@@ -135,7 +141,7 @@ def export_to_json(output_dir=None):
 
             # Write to JSON file
             file_path = os.path.join(full_output_path, f"{table_name}.json")
-            with open(file_path, 'w', encoding='utf-8') as json_file:
+            with open(file_path, "w", encoding="utf-8") as json_file:
                 # Handle datetime and other non-serializable types
                 json.dump(rows, json_file, default=str, indent=2)
 
@@ -187,16 +193,18 @@ def export_to_sql(output_dir=None):
         try:
             # Get columns
             columns = inspector.get_columns(table_name)
-            column_names = [column['name'] for column in columns]
+            column_names = [column["name"] for column in columns]
 
             # Get data
             result = db.session.execute(text(f"SELECT * FROM {table_name}"))
 
             file_path = os.path.join(full_output_path, f"{table_name}.sql")
-            with open(file_path, 'w', encoding='utf-8') as sql_file:
+            with open(file_path, "w", encoding="utf-8") as sql_file:
                 # Write header
                 sql_file.write(f"-- Export of {table_name} table\n")
-                sql_file.write(f"-- Generated on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n")
+                sql_file.write(
+                    f"-- Generated on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n"
+                )
 
                 # Get column data for each row
                 rows = []
@@ -238,6 +246,7 @@ def export_to_sql(output_dir=None):
         except Exception as e:
             print(f"Error exporting table '{table_name}' to SQL: {str(e)}")
             import traceback
+
             traceback.print_exc()
 
     return full_output_path
@@ -262,21 +271,27 @@ def main():
 
             choice = input("Enter your choice (1-5): ").strip()
 
-            if choice == '1':
-                custom_dir = input("Enter sub-directory name (leave blank for auto-generated timestamp): ").strip()
+            if choice == "1":
+                custom_dir = input(
+                    "Enter sub-directory name (leave blank for auto-generated timestamp): "
+                ).strip()
                 output_dir = custom_dir if custom_dir else None
                 export_tables_to_csv(output_dir)
-            elif choice == '2':
-                custom_dir = input("Enter sub-directory name (leave blank for auto-generated timestamp): ").strip()
+            elif choice == "2":
+                custom_dir = input(
+                    "Enter sub-directory name (leave blank for auto-generated timestamp): "
+                ).strip()
                 output_dir = custom_dir if custom_dir else None
                 export_to_json(output_dir)
-            elif choice == '3':
-                custom_dir = input("Enter sub-directory name (leave blank for auto-generated timestamp): ").strip()
+            elif choice == "3":
+                custom_dir = input(
+                    "Enter sub-directory name (leave blank for auto-generated timestamp): "
+                ).strip()
                 output_dir = custom_dir if custom_dir else None
                 export_to_sql(output_dir)
-            elif choice == '4':
+            elif choice == "4":
                 list_table_structure()
-            elif choice == '5':
+            elif choice == "5":
                 print("Exiting database export tool.")
                 break
             else:
