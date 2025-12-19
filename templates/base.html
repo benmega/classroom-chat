@@ -54,28 +54,26 @@ Summary: Base layout template with header, navigation, and toast messages.
         <nav>
             <ul>
                 {% if user %}
-                    <li>
-                        <a class="digital-ducks" href="{{ url_for('duck_trade.bit_shift') }}">
-                            <span class="label" >Ducks:</span>
-                            <span class="count">{{ user.duck_balance }}</span>
-                        </a>
-                    </li>
-
-                    {% if user.packets|float > 0.001 %}
+                    <div class="user-info">
                         <li>
-                            <a class="digital-ducks">
-                                <span class="label">Packets:</span>
-                                <span class="count">{{ user.packets|round(5) }}</span>
+                            <a class="digital-ducks" href="{{ url_for('duck_trade.bit_shift') }}">
+                                <span class="label" >Ducks:</span>
+                                <span class="count">{{ user.duck_balance }}</span>
                             </a>
                         </li>
-                    {% endif %}
 
+                        {% if user.packets|float > 0.001 %}
+                            <li>
+                                <a class="digital-ducks">
+                                    <span class="label">Packets:</span>
+                                    <span class="count">{{ user.packets|round(5) }}</span>
+                                </a>
+                            </li>
+                        {% endif %}
+                    </div>
                 {% endif %}
 
                 {% if 'user' in session %}
-
-
-
                     {% set pfp_filename = user.profile_picture if user and user.profile_picture else 'Default_pfp.jpg' %}
                     {% set pfp_url = url_for('user.profile_picture', filename=pfp_filename) %}
                     <li class="profile-menu">

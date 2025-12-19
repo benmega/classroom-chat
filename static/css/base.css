@@ -365,7 +365,7 @@ footer {
 }
 
 .achievement-popup::after {
-    content: "🏆"; /* Optional */
+    content: ""; /* Optional */
     margin-left: 8px;
 }
 
@@ -395,5 +395,10 @@ header.guest-mode {
   }
   .toast {
     width: 100%;
+  }
+
+  /* Hide user info on small screens */
+  .user-info {
+    display: none;
   }
 }

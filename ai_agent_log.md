@@ -2,13 +2,14 @@
 
 ### USER
 Solve this issue:
-Title: Case Sensitive Usernames
-Body: usernames appear to be case sensitive whne logging in. This causes confusion and is annoying
+Title: User header Cramped on Mobile 
+Body: The user header (found in base.htm and base.cssl) is very cramped when viewed via mobile. This is most noticeable with the duck and packet counters. These should ideally be collapsed on the Mobile version.
 
 ### ASSISTANT
 Called Tool
 
 ### TOOL
+ai_agent_log.md
 instance
 requirements.txt
 meta.py
@@ -688,777 +689,611 @@ templates/chat/conversation_history.html
 Called Tool
 
 ### TOOL
-"""
-File: user.py
-Type: py
-Summary: SQLAlchemy model for application users and authentication data.
-"""
+<!--
+File: base.html
+Type: html
+Summary: Base layout template with header, navigation, and toast messages.
+-->
 
-from datetime import date, timedelta
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Classroom Chat</title>
+    <link rel="icon" href="{{ url_for('static', filename='images/logo.ico') }}" type="image/x-icon">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/message.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/variables.css') }}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-from sqlalchemy.ext.hybrid import hybrid_property
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('.toast').forEach(toastEl => {
+          new bootstrap.Toast(toastEl).show()
+        })
+      });
+    </script>
 
-from application.extensions import db
-from werkzeug.security import generate_password_hash, check_password_hash
+</head>
 
-from application.models.challenge_log import ChallengeLog
-from application.models.project import Project
-from application.models.session_log import SessionLog
-from application.models.skill import Skill
+    <body>
+    <div class="toast-container position-fixed bottom-0 end-0 p-3" aria-live="polite" aria-atomic="true" style="z-index:1050;">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+          <div class="toast align-items-center text-bg-{{ category or 'primary' }} border-0" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="4000">
+            <div class="d-flex">
+              <div class="toast-body">
+                {{ message }}
+              </div>
+              <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+          </div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+    </div>
+    <header class="{% if 'user' not in session %}guest-mode{% endif %}">
+        <div id="logo-container">
+            <a href="{{ url_for('general.index') }}" class="logo">
+                <img src="{{ url_for('static', filename='images/logo.ico') }}" alt="Classroom Chat Logo">
+            </a>
+        </div>
 
-def default_nickname(context):
-    return context.get_current_parameters().get("username")
+        <nav>
+            <ul>
+                {% if user %}
+                    <li>
+                        <a class="digital-ducks" href="{{ url_for('duck_trade.bit_shift') }}">
+                            <span class="label" >Ducks:</span>
+                            <span class="count">{{ user.duck_balance }}</span>
+                        </a>
+                    </li>
 
-class User(db.Model):
-    __tablename__ = 'users'
-    id = db.Column(db.Integer, primary_key=True)
-    _username = db.Column("username", db.String(50), unique=True, nullable=False)
-    password_hash = db.Column(db.String(128), nullable=False)
-    profile_picture = db.Column(db.String(150), default="Default_pfp.jpg")
-    ip_address = db.Column(db.String(45), nullable=True)
-    is_online = db.Column(db.Boolean, default=False)
-    nickname = db.Column(db.String(50), nullable=False, default=default_nickname)
-    is_admin = db.Column(db.Boolean, default=False)
+                    {% if user.packets|float > 0.001 %}
+                        <li>
+                            <a class="digital-ducks">
+                                <span class="label">Packets:</span>
+                                <span class="count">{{ user.packets|round(5) }}</span>
+                            </a>
+                        </li>
+                    {% endif %}
 
+                {% endif %}
 
-    # Gamification
-    packets = db.Column(db.Double, nullable=False, default=0)
-    earned_ducks = db.Column(db.Double, nullable=False, default=0)
-    duck_balance = db.Column(db.Double, nullable=False, default=0)
-    last_daily_duck = db.Column(db.Date, nullable=True)
-
-
-
-    # Relationships
-    skills = db.relationship('Skill', backref='user', lazy=True)
-    projects = db.relationship('Project', backref='user', lazy=True)
-    achievements = db.relationship(
-        'UserAchievement',
-        backref='user',
-        lazy=True,
-        cascade="all, delete-orphan"
-    )
-    certificates = db.relationship(
-        'UserCertificate',
-        backref='user',
-        lazy=True,
-        cascade="all, delete-orphan"
-    )
-    challenge_logs = db.relationship(
-        'ChallengeLog',
-        primaryjoin='User._username == foreign(ChallengeLog.username)',
-        lazy=True,
-        viewonly=True  # Recommended since ChallengeLog.username isn't a foreign key
-    )
-
-
-    def __repr__(self):
-        return f'<User {self._username}>'
-
-    @hybrid_property
-    def username(self):
-        return self._username
-
-    @username.setter
-    def username(self, value):
-        self._username = value.lower()
-
-    def set_password(self, password):
-        """Generate a hashed password and store it"""
-        self.password_hash = generate_password_hash(password)
-
-    def check_password(self, password):
-        """Check the given password against the stored hash"""
-        return check_password_hash(self.password_hash, password)
-
-    def default_nickname(context):
-        return context.get_current_parameters().get("username")
-    @classmethod
-    def set_online(cls, user_id, online=True):
-        """Toggle user online/offline and manage session logs."""
-        user = cls.query.filter_by(id=user_id).first()
-        if not user:
-            return
-
-        if online:
-            # Start new session if none active
-            if not SessionLog.query.filter_by(user_id=user.id, end_time=None).first():
-                SessionLog.start_session(user.id)
-            user.is_online = True
-        else:
-            # End the most recent session
-            SessionLog.end_session(user.id)
-            user.is_online = False
-
-        db.session.commit()
-
-    def get_progress(self, domain):
-        """Calculate progress based on challenges completed for a specific domain."""
-        total_challenges = ChallengeLog.query.filter_by(username=self._username, domain=domain).count()
-        return total_challenges  # Modify if you want percentages based on predefined thresholds.
-
-
-    def get_progress_percent(self, domain):
-        """Calculate CodeCombat progress as a percentage of completed challenges (rounded for readability)."""
-        from application.models.challenge import Challenge
-        total_challenges = Challenge.query.filter_by(domain=domain).count()
-        completed_challenges = ChallengeLog.query.filter_by(username=self._username, domain=domain).count()
-
-
-        progress = (completed_challenges / total_challenges) * 100 if total_challenges > 0 else 0
-        return int(round(progress, 0))
-
-    def add_skill(self, skill_name):
-        """Add a skill to the user."""
-        new_skill = Skill(name=skill_name, user_id=self.id)
-        db.session.add(new_skill)
-        db.session.commit()
+                {% if 'user' in session %}
 
 
 
-    def remove_skill(self, skill_id):
-        """Remove a skill by ID."""
-        skill = Skill.query.get(skill_id)
-        if skill and skill.user_id == self.id:
-            db.session.delete(skill)
-            db.session.commit()
+                    {% set pfp_filename = user.profile_picture if user and user.profile_picture else 'Default_pfp.jpg' %}
+                    {% set pfp_url = url_for('user.profile_picture', filename=pfp_filename) %}
+                    <li class="profile-menu">
+                        <img src="{{ pfp_url }}"
+                             alt="Profile Picture"
+                             class="profile-menu_img"
+                             id="profileToggle">
+                        <ul class="dropdown-menu">
+                            <li><a href="{{ url_for('user.profile') }}">Profile</a></li>
+                            <li><a href="{{ url_for('achievements.achievements_page') }}">Achievements</a></li>
+                            <li><a href="{{ url_for('achievements.submit_certificate') }}">Submit Certificate</a></li>
+                            <li><a href="{{ url_for('challenge.submit_challenge') }}">Submit Challenge</a></li>
+                            <li><a href="https://benmega.github.io/screen-recorder/">Record Screen</a></li>
+                            <li><a href="{{ url_for('message.conversation_history') }}">History</a></li>
+                            <li><a href="{{ url_for('user.logout') }}">Logout</a></li>
+                        </ul>
+                    </li>
 
-    def add_project(self, name, description=None, link=None):
-        """Add a project to the user."""
-        new_project = Project(name=name, description=description, link=link, user_id=self.id)
-        db.session.add(new_project)
-        db.session.commit()
 
-    def remove_project(self, project_id):
-        """Remove a project by ID."""
-        project = Project.query.get(project_id)
-        if project and project.user_id == self.id:
-            db.session.delete(project)
-            db.session.commit()
+                {% else %}
+                    <li><a class="nav-button login" href="{{ url_for('user.login') }}">Login</a></li>
+                {% endif %}
+            </ul>
+        </nav>
 
-    def add_ducks(self, amount):
-        self.earned_ducks += amount
-        self.packets += amount / (2**14)
-        self.duck_balance += amount
-        db.session.commit()
+    </header>
 
-    def award_daily_duck(self, amount=1):
-        today = date.today()
-        if self.last_daily_duck != today:
-            self.add_ducks(amount)
-            self.last_daily_duck = today
-            db.session.commit()
-            return True
-        return False
+    <main>
+        {% block content %}
+        {% endblock %}
+    </main>
 
-    def get_contribution_data(self):
-        """
-        Prepares data for a GitHub-style contribution graph.
-        Returns: {
-            'months': [{'name': 'Jan', 'colspan': 4}, ...],
-            'rows': [[{date, count, level}, ...], ...] # 7 rows (Sun-Sat)
-        }
-        """
-        # 1. Setup Dates
-        today = date.today()
-        # Align end date to the coming Saturday to complete the grid
-        idx = (today.weekday() + 1) % 7  # 0 = Sun
-        end_date = today + timedelta(days=(6 - idx))
-        start_date = end_date - timedelta(weeks=52)  # Go back 52 weeks
+    <footer>
+        <p>&copy; 2025 Classroom Chat. All Rights Reserved.</p>
+    </footer>
 
-        # 2. Fetch Data
-        logs = self.challenge_logs
-        counts = {}
-        for log in logs:
-            k = log.timestamp.date().isoformat()
-            counts[k] = counts.get(k, 0) + 1
+</body>
+{% if user %}
+    <script type="module">
+        import { initAchievements } from "{{ url_for('static', filename='js/achievements/achievements.js') }}";
 
-        # 3. Build Grid (7 rows x 53 columns)
-        # grid[weekday][week_index]
-        grid = [[None for _ in range(53)] for _ in range(7)]
+        // Run it once when the page loads
+        initAchievements("{{ session.get('user') }}");
+    </script>
+{% endif %}
 
-        current = start_date
-        week_idx = 0
+<script>
+    document.getElementById("profileToggle").addEventListener("click", function (e) {
+    e.stopPropagation();
+    document.querySelector(".dropdown-menu").classList.toggle("show");
+});
 
-        # Track months for the header
-        months = []
-        current_month = None
-        current_colspan = 0
+document.addEventListener("click", function () {
+    document.querySelector(".dropdown-menu").classList.remove("show");
+});
 
-        while current <= end_date:
-            weekday = (current.weekday() + 1) % 7  # 0=Sun, 6=Sat
-
-            # Month Logic
-            if weekday == 0:  # Check at start of every week
-                month_name = current.strftime('%b')
-                if month_name != current_month:
-                    if current_month:
-                        months.append({'name': current_month, 'colspan': current_colspan})
-                    current_month = month_name
-                    current_colspan = 0
-                current_colspan += 1
-
-            # Fill Cell Data
-            iso_date = current.isoformat()
-            c = counts.get(iso_date, 0)
-
-            # Determine Level (0-4)
-            if c == 0:
-                level = 0
-            elif c == 1:
-                level = 1
-            elif c <= 3:
-                level = 2
-            elif c <= 6:
-                level = 3
-            else:
-                level = 4
-
-            grid[weekday][week_idx] = {
-                'date': iso_date,
-                'count': c,
-                'level': level
-            }
-
-            if weekday == 6:
-                week_idx += 1
-
-            current += timedelta(days=1)
-
-        # Append final month segment
-        if current_month:
-            months.append({'name': current_month, 'colspan': current_colspan})
-
-        return {'months': months, 'rows': grid}
-
-    def get_completed_levels(self):
-        """
-        Returns a set of level slugs that the user has completed.
-        Used by the skill service to determine Web Dev and other specific course progress.
-        """
-        # We assume the ChallengeLog model has a 'level_slug' column.
-        # Using a set removes duplicates.
-        return {getattr(log, 'level_slug', '') for log in self.challenge_logs}
+</script>
+</html>
 
 ### TOOL
-"""
-File: user_routes.py
-Type: py
-Summary: Flask routes for user identity, profile management, and project portfolio.
-"""
-
-import os
-import uuid
-from functools import wraps
-
-import boto3
-from PIL import Image
-from flask import Blueprint, jsonify, send_from_directory, current_app, abort
-from flask import render_template, request, redirect, url_for, session, flash
-from flask_wtf import FlaskForm
-from werkzeug.utils import secure_filename
-from wtforms import StringField, PasswordField, SubmitField
-from wtforms.validators import DataRequired
-
-from application.config import Config
-from application.extensions import db, limiter
-from application.models.conversation import Conversation
-from application.models.project import Project
-from application.models.skill import Skill
-from application.models.user import User
-from application.utilities.helper_functions import allowed_file
-
-user = Blueprint('user', __name__)
-
-S3_UPLOAD_BUCKET = "youtube-upload-source-classroom-chat"
-s3_client = boto3.client('s3')
-
-# --- Decorators ---
-
-def require_login(view):
-    @wraps(view)
-    def wrapper(*args, **kwargs):
-        user_id = session.get('user')
-        if not user_id:
-            flash('Please log in to access your profile.', 'warning')
-            return redirect(url_for('user.login'))
-        return view(*args, **kwargs)
-    return wrapper
-
-# --- Forms ---
-
-class LoginForm(FlaskForm):
-    username = StringField(
-        'Username',
-        validators=[DataRequired()],
-        render_kw={"id": "username", "required": "required"}
-    )
-    password = PasswordField(
-        'Password',
-        validators=[DataRequired()],
-        render_kw={"id": "password", "required": "required"}
-    )
-    submit = SubmitField('Login', render_kw={"class": "login-button"})
-
-# --- Auth Routes ---
-
-@user.route('/login', methods=['GET', 'POST'])
-def login():
-    form = LoginForm()
-
-    if form.validate_on_submit():
-        username = form.username.data
-        password = form.password.data
-
-        user_obj = User.query.filter_by(username=username).first()
-
-        if user_obj and user_obj.check_password(password):
-            session['user'] = user_obj.id
-            session.permanent = True
-            user_obj.set_online(user_obj.id)
-
-            awarded = user_obj.award_daily_duck(amount=1)
-            if awarded:
-                flash('Welcome! Daily duck awarded.', 'success')
-
-            # Link to recent conversation or create session context
-            recent_conversation = (
-                Conversation.query
-                .order_by(Conversation.created_at.desc())
-                .first()
-            )
-
-            if recent_conversation:
-                if user_obj not in recent_conversation.users:
-                    recent_conversation.users.append(user_obj)
-                    db.session.commit()
-                session['conversation_id'] = recent_conversation.id
-            else:
-                session['conversation_id'] = None
-
-            flash('Login successful!', 'success')
-            return redirect(url_for('general.index'))
-        else:
-            flash('Invalid username or password.', 'error')
-
-    return render_template('auth/login.html', form=form)
-
-
-@user.route('/logout')
-def logout():
-    user_id = session.get('user')
-    user_obj = User.query.get(user_id)
-    if user_obj:
-        user_obj.set_online(user_obj.id, False)
-        db.session.commit()
-
-    session.pop('user', None)
-    flash('You have been logged out.', 'success')
-    return redirect(url_for('user.login'))
-
-
-@user.route('/signup', methods=['GET', 'POST'])
-def signup():
-    if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
-
-        existing_user = User.query.filter_by(username=username).first()
-        if existing_user:
-            flash('Username already taken, please choose another.', 'error')
-            return render_template('auth/signup.html')
-
-        new_user = User(username=username, ip_address=request.remote_addr)
-        new_user.set_password(password)
-
-        db.session.add(new_user)
-        db.session.commit()
-
-        flash('Signup successful! Please log in.', 'success')
-        return redirect(url_for('user.login'))
-
-    return render_template('auth/signup.html')
-
-
-# --- Profile & Settings Routes ---
-@user.route('/profile', methods=['GET'])
-@require_login
-def profile():
-    user_id = session.get('user')
-    user_obj = User.query.get(user_id)
-    if not user_obj:
-        return redirect(url_for('user.login'))
-
-    # When viewing your own profile, target and viewer are the same
-    return render_template('user/profile.html', target=user_obj, viewer=user_obj)
-
-
-@user.route('/profile/<username>', methods=['GET'])
-def view_user_profile(username):
-    # Use _username column for the lookup
-    target_profile = User.query.filter_by(_username=username).first_or_404()
-
-    # Determine who is looking at the page
-    viewer_id = session.get('user')
-    viewer = User.query.get(viewer_id) if viewer_id else None
-
-    return render_template('user/profile.html', target=target_profile, viewer=viewer)
-
-
-@user.route('/edit_profile', methods=['GET', 'POST'])
-@require_login
-def edit_profile():
-    user_id = session.get('user')
-    user_obj = User.query.get(user_id)
-
-    if request.method == 'POST':
-        try:
-            # 1. Update Basic Info (Password, IP, Online Status)
-            update_basic_user_info(user_obj)
-
-            # 2. Update Skills (Clear and Re-add)
-            clear_user_skills(user_obj)
-            add_user_skills(user_obj, request.form.getlist('skills[]'))
-
-            # 3. Handle Profile Picture (if uploaded via this form)
-            handle_profile_picture_upload(user_obj)
-
-            db.session.commit()
-            flash('Account settings updated successfully!', 'success')
-            return redirect(url_for('user.profile'))
-
-        except Exception as e:
-            db.session.rollback()
-            current_app.logger.error(f"Error during profile update: {e}")
-            flash('An error occurred while updating the profile.', 'danger')
-
-    return render_template('user/edit_profile.html', user=user_obj)
-
-
-# --- Project Management Routes ---
-@user.route('/project/new', methods=['GET', 'POST'])
-@require_login
-def new_project():
-    user_id = session.get('user')
-    user_obj = User.query.get(user_id)
-
-    if request.method == 'POST':
-        action = request.form.get('action')
-
-        if action == 'save':
-            name = request.form.get('name')
-            if not name:
-                flash('Project name is required.', 'error')
-                return render_template('user/manage_project.html', project=None, user=user_obj)
-
-            # SECURITY: Only allow admins to set the teacher_comment
-            teacher_comment = None
-            if getattr(user_obj, 'is_admin', False):
-                teacher_comment = request.form.get('teacher_comment')
-
-            new_proj = Project(
-                name=name,
-                description=request.form.get('description'),
-                link=request.form.get('link'),
-                github_link=request.form.get('github_link'),
-                video_url=request.form.get('video_url'),
-                code_snippet=request.form.get('code_snippet'),
-                teacher_comment=teacher_comment,
-                user_id=user_obj.id
-            )
-
-            # Handle Project Thumbnail Upload
-            if 'project_image' in request.files:
-                filename = handle_project_image_upload(request.files['project_image'])
-                if filename:
-                    new_proj.image_url = f"images/projects/{filename}"
-
-            if 'project_video' in request.files:
-                video_file = request.files['project_video']
-                if video_file.filename != '':
-                    success = handle_video_s3_upload(video_file, user_obj, name)
-                    if success:
-                        flash('Video uploading! It will appear on your project in a few minutes.', 'info')
-                    else:
-                        flash('Invalid video format or upload failed.', 'warning')
-
-            db.session.add(new_proj)
-            db.session.commit()
-            flash('Project created successfully!', 'success')
-            return redirect(url_for('user.profile'))
-
-    # Pass user_obj to template to check is_admin
-    return render_template('user/manage_project.html', project=None, user=user_obj)
-
-
-@user.route('/project/edit/<int:project_id>', methods=['GET', 'POST'])
-@require_login
-def edit_project(project_id):
-    user_id = session.get('user')
-    # Fetch the current user object to check admin status
-    current_user = User.query.get(user_id)
-    project = Project.query.get_or_404(project_id)
-
-    # Security: Ensure ownership (Admins can usually edit anything, but strictly following your code:)
-    if project.user_id != user_id and not getattr(current_user, 'is_admin', False):
-        flash('You do not have permission to edit this project.', 'danger')
-        return redirect(url_for('user.profile'))
-
-    if request.method == 'POST':
-        action = request.form.get('action')
-
-        if action == 'delete':
-            db.session.delete(project)
-            db.session.commit()
-            flash('Project deleted.', 'success')
-            return redirect(url_for('user.profile'))
-
-        elif action == 'save':
-            project.name = request.form.get('name')
-            project.description = request.form.get('description')
-            project.link = request.form.get('link')
-            project.github_link = request.form.get('github_link')
-            project.video_url = request.form.get('video_url')
-            project.code_snippet = request.form.get('code_snippet')
-
-            # SECURITY: Only update teacher_comment if user is admin
-            if getattr(current_user, 'is_admin', False):
-                project.teacher_comment = request.form.get('teacher_comment')
-
-            # Handle Image Replacement
-            if 'project_image' in request.files:
-                file = request.files['project_image']
-                if file and file.filename != '':
-                    filename = handle_project_image_upload(file)
-                    if filename:
-                        project.image_url = f"images/projects/{filename}"
-
-            if 'project_video' in request.files:
-                video_file = request.files['project_video']
-                if video_file.filename != '':
-                    # Use current project name for the slug
-                    success = handle_video_s3_upload(video_file, current_user, project.name)
-                    if success:
-                        flash('Video uploading! It will appear on your project in a few minutes.', 'info')
-
-            db.session.commit()
-            flash('Project updated successfully!', 'success')
-            return redirect(url_for('user.profile'))
-
-    # Pass user=current_user so the template can check permissions
-    return render_template('user/manage_project.html', project=project, user=current_user)
-
-# --- Image & File Handling Routes ---
-
-@user.route('/edit_profile_picture', methods=['POST'])
-@require_login
-def edit_profile_picture():
-    user_id = session.get('user')
-    user_obj = User.query.get(user_id)
-
-    if 'profile_picture' not in request.files:
-        return jsonify({'success': False, 'error': 'No file part'}), 400
-
-    file = request.files['profile_picture']
-    if file.filename == '':
-        return jsonify({'success': False, 'error': 'No selected file'}), 400
-
-    try:
-        # Save as [username]_avatar.png for simplicity, or use UUID
-        filename = f"{user_obj.username}_avatar.png"
-        secure_path = os.path.join(current_app.config['UPLOAD_FOLDER'], 'profile_pictures', filename)
-
-        # Ensure directory exists
-        os.makedirs(os.path.dirname(secure_path), exist_ok=True)
-
-        img = Image.open(file)
-        img.save(secure_path)
-
-        user_obj.profile_picture = filename
-        db.session.commit()
-
-        new_url = url_for('user.profile_picture', filename=filename)
-        return jsonify({'success': True, 'new_url': new_url})
-
-    except Exception as e:
-        db.session.rollback()
-        current_app.logger.error(f"Error updating profile picture: {e}")
-        return jsonify({'success': False, 'error': 'Server error.'}), 500
-
-
-@user.route('/delete_profile_picture', methods=['POST'])
-@require_login
-def delete_profile_picture():
-    user_id = session.get('user')
-    user_obj = User.query.get(user_id)
-
-    if user_obj.profile_picture:
-        filepath = os.path.join(Config.UPLOAD_FOLDER, 'profile_pictures', user_obj.profile_picture)
-        if os.path.exists(filepath):
-            os.remove(filepath)
-
-        user_obj.profile_picture = None
-        db.session.commit()
-
-    flash('Profile picture removed.', 'success')
-    return redirect(url_for('user.profile'))
-
-
-@limiter.limit("50 per minute")
-@user.route('/profile_pictures/<path:filename>')
-def profile_picture(filename):
-    if filename == 'Default_pfp.jpg':
-        PROFILE_PICTURE_FOLDER = os.path.join(Config.STATIC_FOLDER, 'images')
-        return send_from_directory(PROFILE_PICTURE_FOLDER, filename)
-
-    PROFILE_PICTURE_FOLDER = os.path.join(Config.UPLOAD_FOLDER, 'profile_pictures')
-
-    safe_path = os.path.normpath(filename)
-    if os.path.isabs(safe_path) or safe_path.startswith(".."):
-        abort(400)
-
-    try:
-        return send_from_directory(PROFILE_PICTURE_FOLDER, safe_path)
-    except FileNotFoundError:
-        abort(404)
-
-
-# --- API / Utility Routes ---
-
-@user.route('/get_users', methods=['GET'])
-def get_users():
-    users = User.query.all()
-    users_data = [{'id': u.id, 'username': u.username} for u in users]
-    return jsonify(users_data)
-
-
-@user.route('/get_user_id', methods=['GET'])
-def get_user_id():
-    user_id = session.get('user')
-    if user_id:
-        return jsonify({'user_id': user_id})
-    return jsonify({'user_id': None}), 404
-
-
-@user.route("/remove_skill/<int:skill_id>", methods=["POST"])
-@require_login
-def remove_skill(skill_id):
-    user_id = session.get('user')
-    user_obj = User.query.get(user_id)
-    user_obj.remove_skill(skill_id)
-    return jsonify(success=True)
-
-
-# --- Helper Functions ---
-
-def update_basic_user_info(user_obj):
-    """Updates basic user settings (IP, Online Status, Password)."""
-    ip_address = request.form.get('ip_address')
-    user_obj.ip_address = ip_address if ip_address else user_obj.ip_address
-    user_obj.is_online = request.form.get('is_online') == 'true'
-
-    password = request.form.get('password')
-    confirm_password = request.form.get('confirm_password')
-
-    if password:
-        if password != confirm_password:
-            flash('Passwords do not match!', 'danger')
-            return redirect(url_for('user.edit_profile'))
-        user_obj.set_password(password)
-
-def clear_user_skills(user_obj):
-    """Clears all skills for the user."""
-    with db.session.no_autoflush:
-        for skill in user_obj.skills:
-            db.session.delete(skill)
-
-def add_user_skills(user_obj, skills):
-    """Adds new skills to the user."""
-    user_obj.skills = []
-    for skill_name in skills:
-        skill_name = skill_name.strip()
-        if skill_name:
-            user_obj.skills.append(Skill(name=skill_name))
-
-def handle_profile_picture_upload(user_obj):
-    """Handles uploading and saving a user profile picture."""
-    if 'profile_picture' in request.files:
-        file = request.files['profile_picture']
-        if file and allowed_file(file.filename):
-            filename = f"{uuid.uuid4().hex}.{file.filename.rsplit('.', 1)[1].lower()}"
-            filepath = os.path.join(Config.UPLOAD_FOLDER, 'profile_pictures', filename)
-
-            os.makedirs(os.path.dirname(filepath), exist_ok=True)
-            file.save(filepath)
-
-            user_obj.profile_picture = filename
-
-def handle_project_image_upload(file):
-    """
-    Saves a project image and returns the filename.
-    Assumes storage in static/images/projects/
-    """
-    if file and allowed_file(file.filename):
-        filename = f"{uuid.uuid4().hex}.{file.filename.rsplit('.', 1)[1].lower()}"
-        # Adjust path as per your static folder structure
-        upload_path = os.path.join(Config.STATIC_FOLDER, 'images', 'projects')
-
-        os.makedirs(upload_path, exist_ok=True)
-        file.save(os.path.join(upload_path, filename))
-
-        return filename
-    return None
-
-def handle_video_s3_upload(file, user_obj, project_name):
-    """
-    Renames file to 'username-project-slug.ext' and uploads to S3.
-    """
-    if not file or file.filename == '':
-        return False
-
-    # 1. Generate Filename: "ben-space-invaders.mp4"
-    ext = file.filename.rsplit('.', 1)[1].lower()
-    if ext not in ['mp4', 'mov', 'avi', 'wmv', 'mkv', 'webm']:
-        return False
-
-    # Create slug from project name (Space Invaders -> space-invaders)
-    project_slug = secure_filename(project_name).replace('_', '-').lower()
-    s3_filename = f"{user_obj.username}-{project_slug}.{ext}"
-
-    # 2. Upload to S3
-    try:
-        s3_client.upload_fileobj(
-            file,
-            S3_UPLOAD_BUCKET,
-            s3_filename,
-            ExtraArgs={'ContentType': file.content_type}
-        )
-        return True
-    except Exception as e:
-        print(f"S3 Upload Error: {e}")
-        return False
+/*
+File: base.css
+Type: css
+Summary: Global layout, header, navigation, and typography styling.
+*/
+
+body {
+    font-family: var(--font-family);
+    margin: 0;
+    background: var(--background-gradient);
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    height: 100vh;
+    padding-top: 0;
+}
+
+h2 {
+    text-align: center;
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--header-padding);
+    background-color: var(--primary-color);
+    color: white;
+    box-shadow: var(--box-shadow-light);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+#logo-container {
+    display: flex;
+    align-items: center;
+}
+
+#logo-container .logo img {
+    width: 60px;
+    height: auto;
+    display: block;
+    object-fit: contain;
+    transition: transform 0.2s ease;
+}
+
+#logo-container .logo img:hover {
+    transform: scale(1.05);
+}
+
+.logo{
+    text-decoration: none;
+    color: inherit;
+}
+
+nav ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    gap: 20px;
+}
+
+.nav-button {
+    font-size: var(--font-size-medium);
+    color: white;
+    text-decoration: none;
+    padding: 12px 18px;
+    border-radius: var(--border-radius-medium);
+    background-color: var(--primary-color-dark);
+    transition: var(--transition-default);
+}
+
+.nav-button:hover {
+    background-color: var(--secondary-color-dark);
+    transform: scale(1.1);
+}
+
+.nav-button:active {
+    transform: scale(0.98);
+}
+
+.nav-icon {
+    display: inline-block;
+    width: 40px; /* adjust size */
+    height: 40px;
+    border-radius: var(--border-radius-medium);
+    overflow: hidden;
+    transition: var(--transition-default);
+}
+
+.nav-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.nav-icon:hover {
+    transform: scale(1.1);
+}
+
+.nav-icon:active {
+    transform: scale(0.98);
+}
+
+
+nav ul li.profile-pic {
+    width: 40px;
+    height: 40px;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+
+.profile-menu_img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    display: block;
+    border: 2px solid #000; /* black border */
+}
+
+
+.profile-menu {
+    position: relative;
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+}
+
+.dropdown-menu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: #ffffff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    list-style: none;
+    margin: 6px 0 0 0;
+    padding: 4px 0;
+    min-width: 200px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    opacity: 0;
+    transform: translateY(-10px);
+}
+
+.dropdown-menu.show {
+    display: block;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.dropdown-menu li a {
+    display: block;
+    padding: 10px 16px;
+    text-decoration: none;
+    color: #333333;
+    font-weight: 500;
+    transition: background-color 0.2s ease, color 0.2s ease;
+    border-radius: 6px;
+}
+
+.dropdown-menu li a:hover {
+    background-color: #e6f7ff; /* soft blue hover */
+    color: #0056b3; /* darker text for contrast */
+}
+
+
+/* Styling for Digital Duck Label */
+.digital-ducks {
+    font-size: 1.2em;
+    padding-left: 20px;
+    color: inherit;
+    text-decoration: none;
+}
+
+.digital-ducks .label {
+    font-weight: normal;
+    color: var(--highlight-color);
+}
+
+.digital-ducks .count {
+    font-weight: bold;
+    color: var(--highlight-color);
+}
+
+.digital-ducks:hover .label,
+.digital-ducks:hover .count {
+    color: var(--highlight-hover);
+    text-decoration: underline;
+}
+
+
+.gradient-heading {
+    background: var(--logo-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    color: transparent;
+}
+
+
+/* Button styles (general) */
+button {
+    padding: var(--button-padding);
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: var(--border-radius-small);
+    font-size: var(--font-size-large);
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: var(--transition-default);
+}
+
+button:hover {
+    background-color: var(--primary-color-dark);
+    box-shadow: var(--button-hover-shadow);
+}
+
+button:active::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 300%;
+    height: 300%;
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 50%;
+    animation: rippleEffect var(--ripple-duration) ease-out;
+}
+
+/* Ripple effect animation */
+@keyframes rippleEffect {
+    0% {
+        width: 0;
+        height: 0;
+        opacity: 1;
+    }
+    100% {
+        width: 300%;
+        height: 300%;
+        opacity: 0;
+    }
+}
+
+
+/* Styling for links */
+a {
+    color: var(--link-color);
+    text-decoration: none;
+    transition: var(--transition-default);
+}
+
+a:hover {
+    color: var(--highlight-hover);
+    text-decoration: underline;
+}
+
+
+nav ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px; /* smaller so items align cleanly */
+}
+
+/* Text nav buttons */
+.nav-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: var(--nav-item-size);
+    font-size: var(--nav-font-size);
+    color: white;
+    text-decoration: none;
+    padding: var(--nav-padding);
+    border-radius: var(--border-radius-medium);
+    background-color: var(--primary-color-dark);
+    transition: var(--transition-default);
+    box-sizing: border-box;
+}
+
+/* Icon nav items */
+.nav-icon,
+nav ul li.profile-pic,
+.profile-menu {
+    width: var(--nav-item-size);
+    height: var(--nav-item-size);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.nav-icon img,
+.profile-menu_img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+}
+
+footer {
+    text-align: center;
+    width: 100%;
+}
+
+
+/* Achievement Popup */
+/* Container */
+#achievement-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px; /* space between popups */
+    z-index: 9999;
+    pointer-events: none; /* clicks pass through */
+}
+
+/* Popup */
+.achievement-popup {
+    background: rgba(255, 255, 255, 0.95);
+    border-left: 4px solid var(--highlight-color);
+    padding: 12px 16px;
+    border-radius: 12px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.15);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    font-family: var(--font-family);
+    font-weight: 500;
+    color: #333;
+    pointer-events: auto; /* allow hover effect */
+}
+
+.achievement-popup.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.achievement-popup img {
+    width: 40px;
+    height: 40px;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 2px solid var(--highlight-color);
+}
+
+.achievement-popup::after {
+    content: "🏆"; /* Optional */
+    margin-left: 8px;
+}
+
+.achievement-popup:hover {
+    transform: scale(1.05);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+}
+
+/* Header becomes invisible (transparent) but keeps buttons visible */
+header.guest-mode {
+    background-color: transparent;
+    box-shadow: none;
+}
+
+/* Toast container adjustments to reduce interference with header/profile icons */
+.toast-container {
+    z-index: 1050; /* sits above content but below modals */
+}
+
+@media (max-width: 576px) {
+  .toast-container {
+    right: 0.5rem;
+    bottom: 0.5rem;
+    left: auto;
+    width: calc(100% - 1rem);
+    max-width: 360px;
+  }
+  .toast {
+    width: 100%;
+  }
+}
 
 ### ASSISTANT
-To address the case sensitivity issue with usernames during login, we need to ensure that any username provided by a user is converted to lowercase both during registration and login processes.
+To address the issue of the "User header Cramped on Mobile", we need to modify the `base.html` and `base.css` files to ensure that the duck and packet counters are collapsed on mobile devices.
 
-Here's how we can implement the necessary changes:
+### Plan:
+1. **Modify `base.html`** to wrap the duck and packet counters in a container (div) that can be easily targeted for styling adjustments.
+2. **Edit `base.css`** to add media queries for mobile responsiveness, specifically targeting the newly wrapped container, so that the duck and packet information collapses on smaller screens.
 
-1. **Change in Model**: 
-   - The user model already normalizes usernames to lowercase when setting the `username` using the `setter`. We ensure this property is set during user creation.
+### Implementation Steps:
 
-2. **Login Process**: 
-   - During login, before querying the database for a `User`, convert the provided username to lowercase.
+1. **Update `base.html`**
+   - Add a container `<div class="user-info">` around the duck and packet list items to make it easier to apply specific styles for mobile devices.
 
-3. **Registration Process**:
-   - When a user signs up, ensure the username is stored in lowercase, which our current model appears to already do.
+2. **Edit `base.css`**
+   - Use a media query targeting devices with a max-width of 576px to hide or collapse the `.user-info` class on mobile devices, ensuring the cramped content is addressed.
 
-I will implement the necessary changes below.
+Let's implement this solution.
+
+```html
+<!-- Modification in base.html -->
+<header class="{% if 'user' not in session %}guest-mode{% endif %}">
+    <div id="logo-container">
+        <a href="{{ url_for('general.index') }}" class="logo">
+            <img src="{{ url_for('static', filename='images/logo.ico') }}" alt="Classroom Chat Logo">
+        </a>
+    </div>
+
+    <nav>
+        <ul>
+            {% if user %}
+                <!-- Add container for easier styling -->
+                <div class="user-info">
+                    <li>
+                        <a class="digital-ducks" href="{{ url_for('duck_trade.bit_shift') }}">
+                            <span class="label">Ducks:</span>
+                            <span class="count">{{ user.duck_balance }}</span>
+                        </a>
+                    </li>
+    
+                    {% if user.packets|float > 0.001 %}
+                        <li>
+                            <a class="digital-ducks">
+                                <span class="label">Packets:</span>
+                                <span class="count">{{ user.packets|round(5) }}</span>
+                            </a>
+                        </li>
+                    {% endif %}
+                </div>
+            {% endif %}
+```
+
+```css
+/* Modification in base.css */
+/* Hide user-info on mobile devices */
+@media (max-width: 576px) {
+    .user-info {
+        display: none; /* Collapse the user information container on mobile */
+    }
+}
+```
+
+Now, let's write the changes to the files.
 
 ### TOOL
-Successfully updated application/routes/user_routes.py.
+Successfully updated templates/base.html.
 
-### ASSISTANT
-Called Tool
+### TOOL
+Successfully updated static/css/base.css.
 
 ### TOOL
 Test Status: PASSED
@@ -1508,7 +1343,7 @@ tests/app/models/test_course.py::test_course_is_active_flag
     retrieved_course = Course.query.get(course.id)
 
 tests/app/models/test_course.py::test_course_unique_id_constraint
-  /home/runner/work/classroom-chat/classroom-chat/tests/app/models/test_course.py:82: SAWarning: New instance <Course at 0x7f3bd1c491e0> with identity key (<class 'application.models.course.Course'>, ('course_123',), None) conflicts with persistent instance <Course at 0x7f3bd1c4a3e0>
+  /home/runner/work/classroom-chat/classroom-chat/tests/app/models/test_course.py:82: SAWarning: New instance <Course at 0x7f8ac7e73d90> with identity key (<class 'application.models.course.Course'>, ('course_123',), None) conflicts with persistent instance <Course at 0x7f8ac7e73400>
     db.session.commit()
 
 tests/app/models/test_course.py::test_course_deletion
@@ -1679,10 +1514,16 @@ tests/helpers/test_db_helpers.py::test_get_user_by_id
 
 
 ### ASSISTANT
-The changes to ensure usernames are handled in a case-insensitive manner during login and registration were successfully implemented. All tests have passed, confirming that the application works as expected. Here is a brief summary of what was done:
+The issue with the "User header Cramped on Mobile" has been resolved successfully. Here's a summary of the changes made:
 
-- Updated the login route to convert the input username to lowercase before querying the database.
-- Ensured the registration process stores the username in lowercase to maintain consistency.
+1. **HTML Update**:
+   - Wrapped the duck and packet counters within a `<div class="user-info">` container in `base.html`. This allows for easier targeting of styles specifically for mobile displays.
 
-No further actions are required as all tests have passed successfully. This completes the solution to the case sensitivity issue with usernames.
+2. **CSS Update**:
+   - Added a media query to `base.css` that targets devices with a max-width of 576px. This query hides the `.user-info` container, thus collapsing the duck and packet counters on mobile devices to prevent cramped displays.
+
+3. **Testing**:
+   - All tests passed successfully, confirming that the changes did not introduce any errors or regressions.
+
+The website should now display the user header more effectively on mobile devices by collapsing the duck and packet counters to reduce cramping.
 
