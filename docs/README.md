@@ -1,5 +1,7 @@
 # Classroom Chat and Duck System
 
+![Linting Status](https://github.com/your-repo/your-project/actions/workflows/lint.yml/badge.svg)
+
 ## Overview
 Classroom Chat is a web-based application designed to enhance student interaction and engagement during class. It features real-time chat functionality, challenge tracking, and a gamified reward system called "Ducks." Students can complete challenges to earn ducks, which are displayed on their profiles and the leaderboard.
 
