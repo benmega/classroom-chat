@@ -84,13 +84,13 @@ Summary: Base layout template with header, navigation, and toast messages.
                              class="profile-menu_img"
                              id="profileToggle">
                         <ul class="dropdown-menu">
-                            <li><a href="{{ url_for('user.profile') }}">Profile</a></li>
-                            <li><a href="{{ url_for('achievements.achievements_page') }}">Achievements</a></li>
-                            <li><a href="{{ url_for('achievements.submit_certificate') }}">Submit Certificate</a></li>
-                            <li><a href="{{ url_for('challenge.submit_challenge') }}">Submit Challenge</a></li>
-                            <li><a href="https://benmega.github.io/screen-recorder/">Record Screen</a></li>
-                            <li><a href="{{ url_for('message.conversation_history') }}">History</a></li>
-                            <li><a href="{{ url_for('user.logout') }}">Logout</a></li>
+                            <li><a href="{{ url_for('user.profile') }}"><i class="bi bi-person"></i> Profile</a></li>
+                            <li><a href="{{ url_for('achievements.achievements_page') }}"><i class="bi bi-trophy"></i> Achievements</a></li>
+                            <li><a href="{{ url_for('achievements.submit_certificate') }}"><i class="bi bi-clipboard-check"></i> Certificate</a></li>
+                            <li><a href="{{ url_for('challenge.submit_challenge') }}"><i class="bi bi-pencil-square"></i> Challenge</a></li>
+                            <li><a href="https://benmega.github.io/screen-recorder/"><i class="bi bi-camera-video"></i> Record</a></li>
+                            <li><a href="{{ url_for('message.conversation_history') }}"><i class="bi bi-clock-history"></i> History</a></li>
+                            <li><a href="{{ url_for('user.logout') }}"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
                         </ul>
                     </li>
 
