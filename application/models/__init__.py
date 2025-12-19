@@ -4,6 +4,7 @@ Type: py
 Summary: Model import helper to register all SQLAlchemy models.
 """
 
+
 def setup_models():
     from .configuration import Configuration
     from .ai_settings import AISettings
@@ -17,3 +18,6 @@ def setup_models():
     from .skill import Skill
     from .user import User
     from .duck_trade import DuckTradeLog
+    from .achievements import Achievement  # Correct the class name here
+
+setup_models()
