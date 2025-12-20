@@ -28,6 +28,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // 4. Handle Deep Link Modal Opening
     initDeepLinkModal();
+
+    // 5. Initialize Profile Interactions
+    initProfileInteractions();
 });
 
 /* =========================================
@@ -126,6 +129,33 @@ function convertToEmbedUrl(url) {
     return embedUrl;
 }
 
+/* =========================================
+   PROFILE LINK & INTERACTION LOGIC
+   ========================================= */
+
+function initProfileInteractions() {
+    // Add Listeners to Profile Links
+    document.querySelectorAll('a.profile-link').forEach(link => {
+        link.addEventListener('click', function (e) {
+            e.preventDefault(); // Prevent default link navigation
+            const profileUrl = link.getAttribute('href');
+            fetch(profileUrl)
+                .then(response => response.text())
+                .then(html => {
+                    // Assuming there's a container to display profile data
+                    document.querySelector('#profile-details-container').innerHTML = html;
+                    // You may want to process additional initialization once new profile content loads
+                    processProfileContent();
+                })
+                .catch(err => console.error('Failed to load profile:', err));
+        });
+    });
+}
+
+function processProfileContent() {
+    // Process newly loaded profile content here as required
+    // Initialize modals, interactions etc.
+}
 
 /* =========================================
    SKILL REMOVAL LOGIC
