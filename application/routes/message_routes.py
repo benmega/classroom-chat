@@ -31,7 +31,7 @@ message = Blueprint("message", __name__)
 @limiter.limit("20 per minute; 100 per day")
 def send_message():
     session_userid = session.get("user")
-    form_message = request.form["message"]
+    form_message = request.form.get("message")  # Use get to handle missing message
 
     if not session_userid:
         return jsonify(success=False, error="No session username found"), 400
@@ -46,7 +46,11 @@ def send_message():
     if user.username != adminUsername and not config.message_sending_enabled:
         return jsonify(success=False, error="Non-admin messages are disabled"), 403
 
-    if not message_is_appropriate(form_message):
+    # Adjust handling for only file uploads
+    if not form_message and request.files.get("file"):
+        form_message = "Sent a file."
+
+    if not form_message or not message_is_appropriate(form_message):
         return (
             jsonify(success=False, error="Inappropriate messages are not allowed"),
             403,

@@ -206,9 +206,13 @@ export function uploadFile() {
 
     if (!file) return;
 
+    // Use the file name in the message section if no text is entered
+    const messageInput = document.getElementById('message');
+    const message = messageInput.value ? messageInput.value.trim() : `Sending file: ${file.name}`;
+
     convertFileToBase64(file)
         .then(dataURL => {
-            const params = createJSONRequestParams({ file: dataURL });
+            const params = createJSONRequestParams({ file: dataURL, message: message });
             return sendJsonRequest('/upload/upload_file', params);
         })
         .then(handleUploadResponse)
