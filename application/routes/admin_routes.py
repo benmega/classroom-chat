@@ -50,7 +50,7 @@ def local_only(f):
     @wraps(f)
     def wrapper(*args, **kwargs):
         if request.remote_addr != "127.0.0.1":
-            return jsonify({"error": "Forbidden – local requests only"}), 403
+            return render_template("error/nice_try.html"), 403
         return f(*args, **kwargs)
 
     return wrapper
@@ -284,7 +284,7 @@ def create_user():
         return (
             jsonify(
                 success=False,
-                message="Username, password, and non‑negative ducks required",
+                message="Username, password, and non0negative ducks required",
             ),
             400,
         )
@@ -293,7 +293,7 @@ def create_user():
         return (
             jsonify(
                 success=False,
-                message="Username must be 3–30 chars: lowercase letters, numbers, or underscores only",
+                message="Username must be 30 chars: lowercase letters, numbers, or underscores only",
             ),
             400,
         )

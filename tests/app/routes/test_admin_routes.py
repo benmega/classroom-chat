@@ -24,7 +24,7 @@ def test_get_users_requires_auth(client, sample_user):
     client.environ_base = {"REMOTE_ADDR": sample_user.ip_address}
     response = client.get("/admin/users")
     assert response.status_code == 403
-    assert b"Forbidden" in response.data
+    assert b"Nice Try" in response.data  # Updated check to match new page content
 
 
 def test_get_users_with_auth(client, auth_headers, sample_users):
