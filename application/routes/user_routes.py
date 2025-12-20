@@ -178,15 +178,13 @@ def edit_profile():
 
     if request.method == "POST":
         try:
-            # 1. Update Basic Info (Password, IP, Online Status)
-            update_basic_user_info(user_obj)
+            # 1. Update Basic Info (Password only; remove IP, Online Status handling)
+            update_user_password(user_obj)
 
-            # 2. Update Skills (Clear and Re-add)
-            clear_user_skills(user_obj)
-            add_user_skills(user_obj, request.form.getlist("skills[]"))
-
-            # 3. Handle Profile Picture (if uploaded via this form)
+            # 2. Handle Profile Picture (if uploaded via this form)
             handle_profile_picture_upload(user_obj)
+
+            # Recalculate user's skills here if needed using internal logic, not user input
 
             db.session.commit()
             flash("Account settings updated successfully!", "success")
@@ -198,6 +196,24 @@ def edit_profile():
             flash("An error occurred while updating the profile.", "danger")
 
     return render_template("user/edit_profile.html", user=user_obj)
+
+
+# --- Skills Management ---
+
+def clear_user_skills(user_obj):
+    """Clears all skills for the user (internal method)."""
+    with db.session.no_autoflush:
+        for skill in user_obj.skills:
+            db.session.delete(skill)
+
+
+def add_user_skills(user_obj, skills):
+    """Adds new skills to the user based on internal logic, not user input."""
+    user_obj.skills = []
+    for skill_name in skills:
+        skill_name = skill_name.strip()
+        if skill_name:
+            user_obj.skills.append(Skill(name=skill_name))
 
 
 # --- Project Management Routes ---
@@ -437,11 +453,14 @@ def remove_skill(skill_id):
 
 
 def update_basic_user_info(user_obj):
-    """Updates basic user settings (IP, Online Status, Password)."""
+    """Former function to update IP and Online status from form input, now deprecated."""
     ip_address = request.form.get("ip_address")
     user_obj.ip_address = ip_address if ip_address else user_obj.ip_address
     user_obj.is_online = request.form.get("is_online") == "true"
 
+
+def update_user_password(user_obj):
+    """Update user's password from form input."""
     password = request.form.get("password")
     confirm_password = request.form.get("confirm_password")
 
@@ -452,21 +471,7 @@ def update_basic_user_info(user_obj):
         user_obj.set_password(password)
 
 
-def clear_user_skills(user_obj):
-    """Clears all skills for the user."""
-    with db.session.no_autoflush:
-        for skill in user_obj.skills:
-            db.session.delete(skill)
-
-
-def add_user_skills(user_obj, skills):
-    """Adds new skills to the user."""
-    user_obj.skills = []
-    for skill_name in skills:
-        skill_name = skill_name.strip()
-        if skill_name:
-            user_obj.skills.append(Skill(name=skill_name))
-
+# Kept clear_user_skills and add_user_skills for potential future automated skills updates related functions.
 
 def handle_profile_picture_upload(user_obj):
     """Handles uploading and saving a user profile picture."""
