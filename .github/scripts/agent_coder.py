@@ -116,15 +116,5 @@ def main():
 
             messages.append({"role": "tool", "tool_call_id": tool_call.id, "content": result})
 
-    # Log generation
-    log_content = ""
-    for m in messages:
-        m_dict = m if isinstance(m, dict) else m.model_dump()
-        if m_dict.get("role") != "system":
-            log_content += f"### {m_dict.get('role').upper()}\n{m_dict.get('content') or 'Tool Action'}\n\n"
-    with open("ai_agent_log.md", "w") as f:
-        f.write("# Agent Activity Log\n\n" + log_content)
-
-
 if __name__ == "__main__":
     main()
