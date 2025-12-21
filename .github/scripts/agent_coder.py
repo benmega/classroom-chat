@@ -37,27 +37,21 @@ def run_tests():
 
 
 def get_discussion_context():
-    """Fetches all comments and the body of the issue or PR for full context."""
     obj_number = os.getenv("OBJ_NUMBER")
     is_pr = os.getenv("IS_PR") == "true"
     cmd_type = "pr" if is_pr else "issue"
-
     try:
-        # Fetch body and all comments/reviews
         result = subprocess.run(
             ["gh", cmd_type, "view", obj_number, "--json", "body,comments,reviews"],
             capture_output=True, text=True
         )
         data = json.loads(result.stdout)
-
         context = f"Main Description: {data.get('body')}\n\nComments:\n"
         for comment in data.get("comments", []):
             context += f"- {comment['author']['login']}: {comment['body']}\n"
-
         if is_pr:
             for review in data.get("reviews", []):
                 context += f"- REVIEW ({review['state']}) by {review['author']['login']}: {review['body']}\n"
-
         return context
     except Exception as e:
         return f"Error fetching discussion: {str(e)}"
@@ -71,14 +65,15 @@ def main():
             "role": "system",
             "content": f"""You are an autonomous staff engineer. 
             You are currently working on a {obj_type}.
-            1. Use 'get_discussion_context' FIRST to see the latest feedback and requirements.
-            2. Use 'list_files' and 'read_file' to understand the code.
-            3. Use 'write_file' to implement/fix the solution.
-            4. Use 'run_tests' to verify.
-            If this is a PR, you are iterating on your previous work. Do not start over; fix what was requested."""
+
+            STRICT RULES:
+            1. Use 'get_discussion_context' FIRST to see feedback.
+            2. You MUST use 'write_file' to implement the actual fix in the source code. 
+            3. Do not just report your plan. If you do not call 'write_file', your task is a FAILURE.
+            4. If tests fail, you must fix the code and run 'write_file' again.
+            5. If this is a PR, edit the existing files to address the review comments."""
         },
-        {"role": "user",
-         "content": f"Title: {os.getenv('ISSUE_TITLE')}\nPlease solve the request described in this {obj_type}."}
+        {"role": "user", "content": f"Title: {os.getenv('ISSUE_TITLE')}\nSolve the request in this {obj_type}."}
     ]
 
     tools = [
@@ -102,7 +97,6 @@ def main():
         for tool_call in msg.tool_calls:
             name = tool_call.function.name
             args = json.loads(tool_call.function.arguments)
-
             if name == "list_files":
                 result = list_files()
             elif name == "read_file":
@@ -113,8 +107,8 @@ def main():
                 result = run_tests()
             elif name == "get_discussion_context":
                 result = get_discussion_context()
-
             messages.append({"role": "tool", "tool_call_id": tool_call.id, "content": result})
+
 
 if __name__ == "__main__":
     main()
