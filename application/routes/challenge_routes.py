@@ -14,8 +14,8 @@ from application import Configuration
 from application.extensions import db
 from application.models.challenge import Challenge
 from application.models.challenge_log import ChallengeLog
-from application.utilities.db_helpers import get_user
 from application.models.user import User
+from application.utilities.db_helpers import get_user
 
 challenge = Blueprint("challenge", __name__, url_prefix="/challenge")
 
@@ -30,10 +30,10 @@ URL_PATTERN = (
 
 
 @challenge.route("/submit", methods=["GET", "POST"])
-@cross_origin(origins=[
-    "https://codecombat.com",
-    "https://www.ozaria.com"
-], supports_credentials=True)
+@cross_origin(
+    origins=["https://codecombat.com", "https://www.ozaria.com"],
+    supports_credentials=True,
+)
 def submit_challenge():
     """Handle challenge submission form."""
     session_userid = session.get("user", None)
@@ -59,9 +59,9 @@ def submit_challenge():
     notes = request.form.get("notes", "").strip()
 
     if not url:
-        return render_template("submit_challenge.html",
-                               success=False,
-                               message="Challenge URL is required")
+        return render_template(
+            "submit_challenge.html", success=False, message="Challenge URL is required"
+        )
 
     duck_multiplier = config.duck_multiplier
 
@@ -90,7 +90,10 @@ def submit_challenge():
         )
 
     # Failure path
-    msg = details.get("message", "Mr. Mega does not recognize this challenge. Are you sure this is the right link?")
+    msg = details.get(
+        "message",
+        "Mr. Mega does not recognize this challenge. Are you sure this is the right link?",
+    )
     return render_template("submit_challenge.html", success=False, message=msg)
 
 
@@ -110,17 +113,13 @@ def detect_and_handle_challenge_url(message, username, duck_multiplier=1, helper
 
     try:
         # Calculate rewards
-        duck_reward = _update_user_ducks(username, match["challenge_slug"], duck_multiplier)
+        duck_reward = _update_user_ducks(
+            username, match["challenge_slug"], duck_multiplier
+        )
         log_result["duck_reward"] = duck_reward
         return {"handled": True, "details": log_result}
     except ValueError as e:
-        return {
-            "handled": True,
-            "details": {
-                "success": False,
-                "message": str(e)
-            }
-        }
+        return {"handled": True, "details": {"success": False, "message": str(e)}}
 
 
 def _extract_challenge_details(message):
@@ -162,7 +161,7 @@ def _log_challenge(details, username, helper=None):
             return {
                 "success": False,
                 "message": "You already claimed this level!",
-                "timestamp": existing_log.timestamp
+                "timestamp": existing_log.timestamp,
             }
 
         # UPDATED: Instantiate using challenge_slug
@@ -173,7 +172,7 @@ def _log_challenge(details, username, helper=None):
             course_id=details["course_id"],
             course_instance=details["course_instance"],
             timestamp=datetime.utcnow(),
-            helper=helper
+            helper=helper,
         )
         db.session.add(challenge_log)
         db.session.commit()
@@ -181,20 +180,17 @@ def _log_challenge(details, username, helper=None):
         return {
             "success": True,
             "message": "Challenge logged successfully",
-            "timestamp": challenge_log.timestamp
+            "timestamp": challenge_log.timestamp,
         }
 
     except Exception as e:
         db.session.rollback()
-        return {
-            "success": False,
-            "message": f"Error logging challenge: {str(e)}"
-        }
+        return {"success": False, "message": f"Error logging challenge: {str(e)}"}
 
 
 def _update_user_ducks(username, challenge_slug, duck_multiplier=1):
     """
-    Update the user's duck count. 
+    Update the user's duck count.
     """
     try:
         user = User.query.filter_by(username=username).first()
@@ -206,8 +202,10 @@ def _update_user_ducks(username, challenge_slug, duck_multiplier=1):
 
         if not challenge:
             # Fallback: sometimes URLs have dashes where DB has spaces
-            slug_with_spaces = challenge_slug.replace('-', ' ')
-            challenge = Challenge.query.filter(Challenge.slug.ilike(slug_with_spaces)).first()
+            slug_with_spaces = challenge_slug.replace("-", " ")
+            challenge = Challenge.query.filter(
+                Challenge.slug.ilike(slug_with_spaces)
+            ).first()
 
         if not challenge:
             raise ValueError(f"Challenge '{challenge_slug}' not found in the database")
@@ -215,10 +213,10 @@ def _update_user_ducks(username, challenge_slug, duck_multiplier=1):
         duck_reward = challenge.value * duck_multiplier
 
         if duck_multiplier > 1:
-            print(f'Duck multiplier of {duck_multiplier} in effect.')
+            print(f"Duck multiplier of {duck_multiplier} in effect.")
 
         user.add_ducks(duck_reward)
-        print(f'{username} was granted {duck_reward} duck(s).')
+        print(f"{username} was granted {duck_reward} duck(s).")
 
         return duck_reward
 

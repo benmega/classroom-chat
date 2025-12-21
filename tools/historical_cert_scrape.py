@@ -1,7 +1,8 @@
-import requests
 import csv
 import os
 import time
+
+import requests
 
 # --------------------------------------------------------------------------------
 # 1. CONFIGURATION
@@ -10,12 +11,12 @@ YOUR_COOKIE = """__stripe_mid=1ebd10bd-7567-4df5-816f-79a9b780842852846f; _fbp=f
 
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-    "Cookie": YOUR_COOKIE.replace('\n', ''),
-    "Accept": "application/json"
+    "Cookie": YOUR_COOKIE.replace("\n", ""),
+    "Accept": "application/json",
 }
 
 OWNER_ID = "62d23d975dafd60025f8c520"
-FILENAME = '../instance/migration/certificate_log.csv'
+FILENAME = "../instance/migration/certificate_log.csv"
 
 
 # --------------------------------------------------------------------------------
@@ -36,14 +37,14 @@ def build_student_map(members_data):
     s_map = {}
     for s in members_data:
         # Some objects use 'name', others 'firstName'/'lastName'
-        name = s.get('name', '').strip()
+        name = s.get("name", "").strip()
         if not name:
-            f = s.get('firstName', '')
-            l = s.get('lastName', '')
+            f = s.get("firstName", "")
+            l = s.get("lastName", "")
             name = f"{f} {l}".strip()
         if not name:
             name = "Unknown Student"
-        s_map[s['_id']] = name
+        s_map[s["_id"]] = name
     return s_map
 
 
@@ -51,8 +52,8 @@ def build_course_name_map(levels_data):
     # Maps Course ID -> Course Name (e.g., "560f1a9f..." -> "Introduction to Computer Science")
     c_map = {}
     for course in levels_data:
-        if '_id' in course and 'name' in course:
-            c_map[course['_id']] = course['name']
+        if "_id" in course and "name" in course:
+            c_map[course["_id"]] = course["name"]
     return c_map
 
 
@@ -72,10 +73,10 @@ def main(DOMAIN, URL_LEVELS):
     # Create a map of Classroom ID -> Classroom Name
     classroom_map = {}
     for item in teacher_instances:
-        if 'classroomID' in item and 'classroomName' in item:
-            classroom_map[item['classroomID']] = item['classroomName']
-        elif 'classroomID' in item:
-            classroom_map[item['classroomID']] = "Unknown Class Name"
+        if "classroomID" in item and "classroomName" in item:
+            classroom_map[item["classroomID"]] = item["classroomName"]
+        elif "classroomID" in item:
+            classroom_map[item["classroomID"]] = "Unknown Class Name"
 
     unique_classrooms = list(classroom_map.keys())
     print(f"Found {len(unique_classrooms)} unique classrooms.")
@@ -89,7 +90,9 @@ def main(DOMAIN, URL_LEVELS):
     # 3. Iterate Through Each Classroom
     for index, class_id in enumerate(unique_classrooms):
         class_name = classroom_map.get(class_id, class_id)
-        print(f"\n--- Processing {index + 1}/{len(unique_classrooms)}: {class_name} ---")
+        print(
+            f"\n--- Processing {index + 1}/{len(unique_classrooms)}: {class_name} ---"
+        )
 
         # A. Fetch Students (Members)
         url_members = f"https://{DOMAIN}/db/classroom/{class_id}/members?project=firstName,lastName,name"
@@ -102,18 +105,20 @@ def main(DOMAIN, URL_LEVELS):
 
         # B. Fetch Student Course Progress (Course Instances)
         # This endpoint returns the status of every course for every student in this specific classroom
-        url_student_instances = f"https://{DOMAIN}/db/course_instance?classroomID={class_id}"
+        url_student_instances = (
+            f"https://{DOMAIN}/db/course_instance?classroomID={class_id}"
+        )
         student_instances = fetch_json(url_student_instances, "Course Progress")
 
         count = 0
         for entry in student_instances:
             # We only want COMPLETED courses
-            if not entry.get('complete'):
+            if not entry.get("complete"):
                 continue
 
-            user_id = entry.get('userID')
-            course_id = entry.get('courseID')
-            instance_id = entry.get('_id')  # The ID of this completion record
+            user_id = entry.get("userID")
+            course_id = entry.get("courseID")
+            instance_id = entry.get("_id")  # The ID of this completion record
 
             # If the user is not in our member list (e.g. deleted user), skip
             student_name = student_map.get(user_id)
@@ -125,14 +130,16 @@ def main(DOMAIN, URL_LEVELS):
             # We add query params just to be safe, though the ID is usually sufficient
             cert_url = f"https://{DOMAIN}/certificates/{instance_id}?class={class_id}&course={course_id}"
 
-            all_rows.append({
-                'student_name': student_name,
-                'class_name': class_name,
-                'course_name': course_name_map.get(course_id, "Unknown Course"),
-                'certificate_url': cert_url,
-                'domain': DOMAIN,
-                'completion_date': entry.get('updated', '').replace('Z', '')
-            })
+            all_rows.append(
+                {
+                    "student_name": student_name,
+                    "class_name": class_name,
+                    "course_name": course_name_map.get(course_id, "Unknown Course"),
+                    "certificate_url": cert_url,
+                    "domain": DOMAIN,
+                    "completion_date": entry.get("updated", "").replace("Z", ""),
+                }
+            )
             count += 1
 
         print(f"Found {count} certificates in this class.")
@@ -141,11 +148,18 @@ def main(DOMAIN, URL_LEVELS):
     # 4. Save to CSV
     if all_rows:
         os.makedirs(os.path.dirname(FILENAME), exist_ok=True)
-        fields = ['student_name', 'class_name', 'course_name', 'certificate_url', 'domain', 'completion_date']
+        fields = [
+            "student_name",
+            "class_name",
+            "course_name",
+            "certificate_url",
+            "domain",
+            "completion_date",
+        ]
 
         # Append mode
         file_exists = os.path.isfile(FILENAME)
-        with open(FILENAME, 'a', newline='', encoding='utf-8') as f:
+        with open(FILENAME, "a", newline="", encoding="utf-8") as f:
             writer = csv.DictWriter(f, fieldnames=fields)
             if not file_exists:
                 writer.writeheader()

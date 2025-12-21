@@ -3,9 +3,9 @@
 # Location: tools/
 # Summary: Packs all achievement badge images into one sprite sheet and writes CSS mapping.
 
-import os
-from pathlib import Path
 from math import ceil, sqrt
+from pathlib import Path
+
 from PIL import Image
 
 # Project root assumed one level up from this script
@@ -21,8 +21,13 @@ CSS_PATH = PROJECT_ROOT / "static" / "css" / "sprite.css"
 # Target icon size
 ICON_SIZE = (128, 128)
 
+
 def build_sprite():
-    files = [f for f in BADGE_DIR.iterdir() if f.suffix.lower() in (".png", ".jpg", ".jpeg", ".webp")]
+    files = [
+        f
+        for f in BADGE_DIR.iterdir()
+        if f.suffix.lower() in (".png", ".jpg", ".jpeg", ".webp")
+    ]
     files.sort()
 
     if not files:
@@ -47,11 +52,7 @@ def build_sprite():
         sheet.paste(img, (x, y), img)
 
         slug = file.stem
-        css = (
-            f".badge-{slug} {{ "
-            f"background-position: -{x}px -{y}px; "
-            f"}}"
-)
+        css = f".badge-{slug} {{ " f"background-position: -{x}px -{y}px; " f"}}"
         css_rules.append(css)
 
     # Save sprite
@@ -72,6 +73,7 @@ def build_sprite():
     with open(CSS_PATH, "w", encoding="utf-8") as f:
         f.write(css_header + "\n".join(css_rules))
     print(f"CSS saved to {CSS_PATH}")
+
 
 if __name__ == "__main__":
     build_sprite()

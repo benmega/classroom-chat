@@ -23,6 +23,7 @@ NEW_COLUMNS = {
 
 # =================================================
 
+
 def apply_schema_changes(conn):
     """Adds new columns if they are missing."""
     cursor = conn.cursor()
@@ -30,7 +31,8 @@ def apply_schema_changes(conn):
     existing_tables = {row[0] for row in cursor.fetchall()}
 
     for table, columns in NEW_COLUMNS.items():
-        if table not in existing_tables: continue
+        if table not in existing_tables:
+            continue
 
         for col_name, col_type, default_val in columns:
             cursor.execute(f"PRAGMA table_info({table});")
@@ -40,7 +42,11 @@ def apply_schema_changes(conn):
                 try:
                     sql = f"ALTER TABLE {table} ADD COLUMN {col_name} {col_type}"
                     if default_val is not None:
-                        val = f"'{default_val}'" if isinstance(default_val, str) else default_val
+                        val = (
+                            f"'{default_val}'"
+                            if isinstance(default_val, str)
+                            else default_val
+                        )
                         sql += f" DEFAULT {val}"
                     cursor.execute(sql)
                     print(f"Schema: Added '{col_name}' to '{table}'")
@@ -65,9 +71,6 @@ if __name__ == "__main__":
                     cleanup_invalid_logs(conn)
                 else:
                     print("Skipping Cleanup (Script not found)")
-
-
-
 
                 print("\nAll Migrations Complete.")
         except Exception as e:

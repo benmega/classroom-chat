@@ -4,12 +4,14 @@ Type: py
 Summary: Flask routes for server info routes functionality.
 """
 
-from flask import Blueprint, jsonify
 import socket
+
+from flask import Blueprint, jsonify
 
 from application.extensions import limiter
 
 server_info = Blueprint("server_info", __name__, url_prefix="/server")
+
 
 def get_local_ip():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -23,11 +25,13 @@ def get_local_ip():
         s.close()
     return IP
 
+
 @server_info.route("/ip", methods=["GET"])
 def get_ip():
     return jsonify({"ip": get_local_ip()})
 
-@server_info.route('/health')
+
+@server_info.route("/health")
 @limiter.exempt
 def health_check():
     return "SystemHealthy", 200

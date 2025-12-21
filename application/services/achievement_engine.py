@@ -1,14 +1,15 @@
 # application/services/achievement_engine.py
 from datetime import datetime
 
+from sqlalchemy import func
+
+from application.extensions import db
 from application.models.achievements import Achievement, UserAchievement
 from application.models.challenge_log import ChallengeLog
 from application.models.duck_trade import DuckTradeLog
+from application.models.message import Message
 from application.models.session_log import SessionLog
 from application.models.user_certificate import UserCertificate
-from sqlalchemy import func
-from application.extensions import db
-from application.models.message import Message
 
 
 def check_achievement(user, achievement):
@@ -18,32 +19,33 @@ def check_achievement(user, achievement):
     value_getters = {
         "ducks": lambda: user.earned_ducks,
         "project": lambda: len(user.projects),
-        "progress": lambda: user.get_progress(achievement.source) if achievement.source else 0,
-
+        "progress": lambda: (
+            user.get_progress(achievement.source) if achievement.source else 0
+        ),
         # Count all messages sent by the user
         "chat": lambda: db.session.query(func.count(Message.id))
-                           .filter(Message.user_id == user.id).scalar(),
-
+        .filter(Message.user_id == user.id)
+        .scalar(),
         # Count how many consecutive weeks with challenges
         "consistency": lambda: _calculate_consistency(user.username),
-
         # Count how many times someone entered them as a helper
         "community": lambda: db.session.query(func.count(ChallengeLog.id))
-                             .filter(ChallengeLog.helper == user.username).scalar(),
-
+        .filter(ChallengeLog.helper == user.username)
+        .scalar(),
         # Longest session length in minutes
         "session": lambda: longest_session_minutes(user.id),
-
         # Count number of trades (regardless of status)
         "trade": lambda: db.session.query(func.count(DuckTradeLog.id))
-                             .filter(DuckTradeLog.username == user.username).scalar(),
-
+        .filter(DuckTradeLog.username == user.username)
+        .scalar(),
         # Certificate submitted or not
         "certificate": lambda: (
-            1 if UserCertificate.query.filter_by(
+            1
+            if UserCertificate.query.filter_by(
                 user_id=user.id, achievement_id=achievement.id
-    ).first() else 0
-),
+            ).first()
+            else 0
+        ),
     }
 
     value = value_getters.get(achievement.type, lambda: 0)()
@@ -75,7 +77,7 @@ def _calculate_consistency(username):
         # Handle year transition
         if (curr_year == prev_year and curr_week == prev_week + 1) or (
             curr_year == prev_year + 1 and prev_week == 52 and curr_week == 1
-):
+        ):
             streak += 1
             best_streak = max(best_streak, streak)
         else:

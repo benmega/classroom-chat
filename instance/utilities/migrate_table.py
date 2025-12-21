@@ -1,11 +1,12 @@
 # replace_achievements.py
 # Summary: Clears achievements table in target DB and replaces it with rows from source DB.
 
-import sqlite3
 import shutil
+import sqlite3
 
 TARGET_DB = r"C:\Users\Ben\PycharmProjects\groupChat2\instance\dev_users.db"
 SOURCE_DB = r"C:\Users\Ben\PycharmProjects\groupChat2\instance\migration\dev_users (classroom-chat).db"
+
 
 def replace_table(source_db, target_db, table):
     # Connect to source and target
@@ -32,7 +33,7 @@ def replace_table(source_db, target_db, table):
         # Insert new rows
         tgt_cur.executemany(
             f"INSERT INTO {table} ({col_list}) VALUES ({placeholders})", rows
-)
+        )
         tgt_conn.commit()
         print(f"Replaced {table} with {len(rows)} rows from source.")
     except Exception as e:
@@ -40,6 +41,7 @@ def replace_table(source_db, target_db, table):
     finally:
         src_conn.close()
         tgt_conn.close()
+
 
 if __name__ == "__main__":
     # Backup target first

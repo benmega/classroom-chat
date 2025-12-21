@@ -1,5 +1,6 @@
 # --- HELPERS ---
 
+
 def login(page, base_url, username, password):
     """
     Helper to handle login.
@@ -16,6 +17,7 @@ def login(page, base_url, username, password):
 
     # 4. Wait for redirect to the homepage
     page.wait_for_url(f"{base_url}/")
+
 
 #
 # # --- TESTS ---

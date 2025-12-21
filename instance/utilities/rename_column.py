@@ -1,5 +1,6 @@
 import sqlite3
 
+
 def get_tables(db_path):
     """Return a list of all tables in the database."""
     conn = sqlite3.connect(db_path)
@@ -9,6 +10,7 @@ def get_tables(db_path):
     conn.close()
     return tables
 
+
 def get_columns(db_path, table_name):
     """Return a list of column names in the given table."""
     conn = sqlite3.connect(db_path)
@@ -17,6 +19,7 @@ def get_columns(db_path, table_name):
     columns = [row[1] for row in cursor.fetchall()]
     conn.close()
     return columns
+
 
 def rename_column(db_path, table_name, old_name, new_name):
     """Rename a column in the given table."""
@@ -32,9 +35,12 @@ def rename_column(db_path, table_name, old_name, new_name):
     finally:
         conn.close()
 
+
 if __name__ == "__main__":
     # Path to your database
-    database_path = "C:\\Users\\Ben\\PycharmProjects\\groupChat2\\instance\\dev_users.db"
+    database_path = (
+        "C:\\Users\\Ben\\PycharmProjects\\groupChat2\\instance\\dev_users.db"
+    )
 
     # Get tables
     tables = get_tables(database_path)

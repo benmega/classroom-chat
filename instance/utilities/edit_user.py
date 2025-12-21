@@ -1,7 +1,7 @@
 import sqlite3
-from application.config import Config
 
 DATABASE_PATH = "C:\\Users\\Ben\\PycharmProjects\\groupChat2\\instance\\dev_users.db"  # Update this if needed
+
 
 def list_users(db_path):
     """
@@ -24,6 +24,7 @@ def list_users(db_path):
         return []
     finally:
         conn.close()
+
 
 def update_user_field(db_path, user_id, field_name, new_value):
     """
@@ -51,6 +52,7 @@ def update_user_field(db_path, user_id, field_name, new_value):
     finally:
         conn.close()
 
+
 def delete_user(db_path, user_id):
     """
     Deletes a user from the database.
@@ -75,6 +77,7 @@ def delete_user(db_path, user_id):
     finally:
         conn.close()
 
+
 def get_table_columns(db_path, table_name):
     """
     Returns a list of column names for the given SQLite table.
@@ -83,6 +86,7 @@ def get_table_columns(db_path, table_name):
         cursor = conn.cursor()
         cursor.execute(f"PRAGMA table_info({table_name})")
         return [row[1] for row in cursor.fetchall()]  # row[1] is column name
+
 
 def interactive_edit_user():
     """
@@ -101,7 +105,7 @@ def interactive_edit_user():
 
     try:
         user_id = int(input("Enter the ID of the user you want to edit or delete: "))
-        selected_user = next((u for u in users if u['id'] == user_id), None)
+        selected_user = next((u for u in users if u["id"] == user_id), None)
         if not selected_user:
             print("Invalid user ID. Operation canceled.")
             return
@@ -126,19 +130,27 @@ def interactive_edit_user():
                 if isinstance(selected_user[field_name], int):
                     new_value = int(new_value)
             except KeyError:
-                print(f"Field '{field_name}' not found in selected user. Operation canceled.")
+                print(
+                    f"Field '{field_name}' not found in selected user. Operation canceled."
+                )
                 return
             except ValueError:
                 print(f"Invalid value for '{field_name}'. Expected an integer.")
                 return
 
             if update_user_field(DATABASE_PATH, user_id, field_name, new_value):
-                print(f"User {user_id}'s {field_name} updated successfully to {new_value}.")
+                print(
+                    f"User {user_id}'s {field_name} updated successfully to {new_value}."
+                )
             else:
                 print("Failed to update the user.")
 
         elif action == "delete":
-            confirmation = input(f"Are you sure you want to delete user ID {user_id}? (yes/no): ").strip().lower()
+            confirmation = (
+                input(f"Are you sure you want to delete user ID {user_id}? (yes/no): ")
+                .strip()
+                .lower()
+            )
             if confirmation == "yes":
                 if delete_user(DATABASE_PATH, user_id):
                     print(f"User {user_id} deleted successfully.")
@@ -151,6 +163,7 @@ def interactive_edit_user():
             print("Invalid action. Operation canceled.")
     except ValueError:
         print("Invalid input. Please enter a number.")
+
 
 def delete_multiple_users(db_path, user_ids):
     """
@@ -177,6 +190,7 @@ def delete_multiple_users(db_path, user_ids):
     finally:
         conn.close()
 
+
 def interactive_delete_multiple_users():
     """
     Interactively allows deleting multiple users from the database.
@@ -188,17 +202,31 @@ def interactive_delete_multiple_users():
 
     print("Available users:")
     for user in users:
-        print(f"ID: {user['id']}, Username: {user['username']}, Ducks: {user['ducks']}, Online: {user['is_online']}")
+        print(
+            f"ID: {user['id']}, Username: {user['username']}, Ducks: {user['ducks']}, Online: {user['is_online']}"
+        )
 
     try:
-        ids_to_delete = input("Enter the IDs of users you want to delete, separated by commas: ")
-        user_ids = [int(user_id.strip()) for user_id in ids_to_delete.split(",") if user_id.strip().isdigit()]
+        ids_to_delete = input(
+            "Enter the IDs of users you want to delete, separated by commas: "
+        )
+        user_ids = [
+            int(user_id.strip())
+            for user_id in ids_to_delete.split(",")
+            if user_id.strip().isdigit()
+        ]
 
         if not user_ids:
             print("No valid IDs entered. Operation canceled.")
             return
 
-        confirmation = input(f"Are you sure you want to delete the following users: {user_ids}? (yes/no): ").strip().lower()
+        confirmation = (
+            input(
+                f"Are you sure you want to delete the following users: {user_ids}? (yes/no): "
+            )
+            .strip()
+            .lower()
+        )
         if confirmation == "yes":
             if delete_multiple_users(DATABASE_PATH, user_ids):
                 print(f"Users with IDs {user_ids} deleted successfully.")
@@ -209,10 +237,11 @@ def interactive_delete_multiple_users():
     except ValueError:
         print("Invalid input. Please enter valid user IDs separated by commas.")
 
+
 if __name__ == "__main__":
-    action = input('edit a single user (1) or delete multiple (2)?')
+    action = input("edit a single user (1) or delete multiple (2)?")
     while action != "1" and action != "2":
-        action = input('edit a single user (1) or delete multiple (2)?')
+        action = input("edit a single user (1) or delete multiple (2)?")
     if action == "1":
         interactive_edit_user()
     elif action == "2":

@@ -1,5 +1,6 @@
 import sqlite3
 
+
 def get_tables(db_path):
     """Fetches and returns a list of all tables in the database."""
     conn = sqlite3.connect(db_path)
@@ -9,6 +10,7 @@ def get_tables(db_path):
     conn.close()
     return tables
 
+
 def get_columns(db_path, table_name):
     """Fetches and returns a list of columns in a given table."""
     conn = sqlite3.connect(db_path)
@@ -17,6 +19,7 @@ def get_columns(db_path, table_name):
     columns = [row[1] for row in cursor.fetchall()]
     conn.close()
     return columns
+
 
 def determine_column_type(default_value):
     """Determines the SQLite column type based on the given default value."""
@@ -32,6 +35,7 @@ def determine_column_type(default_value):
         return "TEXT", "NULL"
     else:
         raise ValueError("Unsupported default value type.")
+
 
 def add_column(db_path, table_name, column_name, default_value=None):
     """Adds a new column to the given table with a default value."""
@@ -53,9 +57,12 @@ def add_column(db_path, table_name, column_name, default_value=None):
     finally:
         conn.close()
 
+
 if __name__ == "__main__":
     # Path to your database
-    database_path = "C:\\Users\\Ben\\PycharmProjects\\groupChat2\\instance\\dev_users.db"
+    database_path = (
+        "C:\\Users\\Ben\\PycharmProjects\\groupChat2\\instance\\dev_users.db"
+    )
 
     # Get tables
     tables = get_tables(database_path)
