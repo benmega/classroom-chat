@@ -29,7 +29,6 @@ Acceptance Criteria
 Called Tool
 
 ### TOOL
-ai_agent_log.md
 instance
 requirements.txt
 meta.py
@@ -777,15 +776,15 @@ tests/test_toast_position.py .                                           [100%]
 
 =============================== warnings summary ===============================
 tests/app/models/test_configuration.py::test_configuration_update
-  /home/runner/work/classroom-chat/classroom-chat/tests/app/models/test_configuration.py:51: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+  /home/runner/work/classroom-chat/classroom-chat/tests/app/models/test_configuration.py:54: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
     updated_config = Configuration.query.get(config.id)
 
 tests/app/models/test_conversation.py::test_conversation_deletion_cascade
-  /home/runner/work/classroom-chat/classroom-chat/tests/app/models/test_conversation.py:76: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+  /home/runner/work/classroom-chat/classroom-chat/tests/app/models/test_conversation.py:87: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
     assert Conversation.query.get(conversation.id) is None
 
 tests/app/models/test_course.py::test_course_is_active_flag
-  /home/runner/work/classroom-chat/classroom-chat/tests/app/models/test_course.py:61: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+  /home/runner/work/classroom-chat/classroom-chat/tests/app/models/test_course.py:65: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
     retrieved_course = Course.query.get(course.id)
 
 tests/app/models/test_course.py::test_course_unique_id_constraint
@@ -809,84 +808,84 @@ tests/app/models/test_message.py::test_message_soft_delete
     deleted_message = Message.query.get(message.id)
 
 tests/app/models/test_project.py::test_project_update
-  /home/runner/work/classroom-chat/classroom-chat/tests/app/models/test_project.py:71: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+  /home/runner/work/classroom-chat/classroom-chat/tests/app/models/test_project.py:65: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
     updated_project = Project.query.get(project.id)
 
 tests/app/models/test_project.py::test_project_deletion
-  /home/runner/work/classroom-chat/classroom-chat/tests/app/models/test_project.py:83: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+  /home/runner/work/classroom-chat/classroom-chat/tests/app/models/test_project.py:77: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
     deleted_project = Project.query.get(project.id)
 
 tests/app/models/test_skill.py::test_skill_update
-  /home/runner/work/classroom-chat/classroom-chat/tests/app/models/test_skill.py:70: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+  /home/runner/work/classroom-chat/classroom-chat/tests/app/models/test_skill.py:67: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
     updated_skill = Skill.query.get(skill.id)
 
 tests/app/models/test_skill.py::test_skill_deletion
-  /home/runner/work/classroom-chat/classroom-chat/tests/app/models/test_skill.py:80: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+  /home/runner/work/classroom-chat/classroom-chat/tests/app/models/test_skill.py:77: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
     deleted_skill = Skill.query.get(skill.id)
 
 tests/app/routes/test_achievement_routes.py::test_submit_certificate_update_existing
-  /home/runner/work/classroom-chat/classroom-chat/tests/app/routes/test_achievement_routes.py:291: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+  /home/runner/work/classroom-chat/classroom-chat/tests/app/routes/test_achievement_routes.py:360: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
     updated_cert = UserCertificate.query.get(old_id)
 
 tests/app/routes/test_admin_routes.py::test_set_username_route
 tests/app/routes/test_admin_routes.py::test_set_username_proper_case_handling
-  /home/runner/work/classroom-chat/classroom-chat/application/routes/admin_routes.py:59: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+  /home/runner/work/classroom-chat/classroom-chat/application/routes/admin_routes.py:76: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
     user = User.query.get(user_id)
 
 tests/app/routes/test_admin_routes.py::test_set_username_route
-  /home/runner/work/classroom-chat/classroom-chat/tests/app/routes/test_admin_routes.py:53: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+  /home/runner/work/classroom-chat/classroom-chat/tests/app/routes/test_admin_routes.py:57: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
     updated = User.query.get(sample_user.id)
 
 tests/app/routes/test_admin_routes.py::test_clear_partial_history
-  /home/runner/work/classroom-chat/classroom-chat/tests/app/routes/test_admin_routes.py:183: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+  /home/runner/work/classroom-chat/classroom-chat/tests/app/routes/test_admin_routes.py:195: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
     assert Conversation.query.get(old_id) is None
 
 tests/app/routes/test_admin_routes.py::test_clear_partial_history
-  /home/runner/work/classroom-chat/classroom-chat/tests/app/routes/test_admin_routes.py:184: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+  /home/runner/work/classroom-chat/classroom-chat/tests/app/routes/test_admin_routes.py:196: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
     assert Conversation.query.get(new_id) is not None
 
 tests/app/routes/test_admin_routes.py::test_strike_message
 tests/app/routes/test_admin_routes.py::test_strike_message
-  /home/runner/work/classroom-chat/classroom-chat/application/routes/admin_routes.py:373: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+  /home/runner/work/classroom-chat/classroom-chat/application/routes/admin_routes.py:431: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
     message = Message.query.get(message_id)
 
 tests/app/routes/test_admin_routes.py::test_strike_message
-  /home/runner/work/classroom-chat/classroom-chat/tests/app/routes/test_admin_routes.py:237: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+  /home/runner/work/classroom-chat/classroom-chat/tests/app/routes/test_admin_routes.py:246: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
     struck_message = Message.query.get(sample_message.id)
 
 tests/app/routes/test_admin_routes.py::test_adjust_ducks
-  /home/runner/work/classroom-chat/classroom-chat/tests/app/routes/test_admin_routes.py:267: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+  /home/runner/work/classroom-chat/classroom-chat/tests/app/routes/test_admin_routes.py:273: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
     updated_user = User.query.get(sample_user.id)
 
 tests/app/routes/test_admin_routes.py::test_trade_action_approve
 tests/app/routes/test_admin_routes.py::test_trade_action_reject
-  /home/runner/work/classroom-chat/classroom-chat/tests/conftest.py:409: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+  /home/runner/work/classroom-chat/classroom-chat/tests/conftest.py:437: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
     trade = DuckTradeLog.query.get(trade.id)
 
 tests/app/routes/test_admin_routes.py::test_trade_action_approve
 tests/app/routes/test_admin_routes.py::test_trade_action_reject
-  /home/runner/work/classroom-chat/classroom-chat/application/routes/admin_routes.py:399: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+  /home/runner/work/classroom-chat/classroom-chat/application/routes/admin_routes.py:463: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
     trade = DuckTradeLog.query.get(trade_id)
 
 tests/app/routes/test_admin_routes.py::test_set_username_proper_case_handling
-  /home/runner/work/classroom-chat/classroom-chat/tests/app/routes/test_admin_routes.py:386: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+  /home/runner/work/classroom-chat/classroom-chat/tests/app/routes/test_admin_routes.py:390: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
     updated_user = User.query.get(sample_user.id)
 
 tests/app/routes/test_duck_trade_routes.py::test_submit_trade_valid
-  /home/runner/work/classroom-chat/classroom-chat/application/routes/duck_trade_routes.py:84: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+  /home/runner/work/classroom-chat/classroom-chat/application/routes/duck_trade_routes.py:105: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
     user = User.query.get(userid)
 
 tests/app/routes/test_message_routes.py::test_set_active_conversation
 tests/app/routes/test_message_routes.py::test_set_active_conversation_not_found
-  /home/runner/work/classroom-chat/classroom-chat/application/routes/message_routes.py:75: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+  /home/runner/work/classroom-chat/classroom-chat/application/routes/message_routes.py:91: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
     conversation = Conversation.query.get(conversation_id)
 
 tests/app/routes/test_message_routes.py::test_get_historical_conversation
-  /home/runner/work/classroom-chat/classroom-chat/application/routes/message_routes.py:108: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+  /home/runner/work/classroom-chat/classroom-chat/application/routes/message_routes.py:129: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
     conversation = Conversation.query.get(conversation_id)
 
 tests/app/routes/test_message_routes.py::test_get_conversation
-  /home/runner/work/classroom-chat/classroom-chat/application/routes/message_routes.py:135: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+  /home/runner/work/classroom-chat/classroom-chat/application/routes/message_routes.py:156: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
     conversation = Conversation.query.get(conversation_id)
 
 tests/app/routes/test_message_routes.py::test_view_conversation
@@ -896,7 +895,7 @@ tests/app/routes/test_user_routes.py::test_delete_project
     rv = self.get(ident)
 
 tests/app/routes/test_user_routes.py::test_logout
-  /home/runner/work/classroom-chat/classroom-chat/application/routes/user_routes.py:107: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+  /home/runner/work/classroom-chat/classroom-chat/application/routes/user_routes.py:113: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
     user_obj = User.query.get(user_id)
 
 tests/app/routes/test_user_routes.py::test_profile_authenticated
@@ -907,19 +906,23 @@ tests/app/routes/test_user_routes.py::test_new_project_post
 tests/app/routes/test_user_routes.py::test_edit_project_post
 tests/app/routes/test_user_routes.py::test_delete_project
 tests/app/routes/test_user_routes.py::test_delete_profile_picture
-  /home/runner/work/classroom-chat/classroom-chat/application/routes/user_routes.py:145: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+  /home/runner/work/classroom-chat/classroom-chat/application/routes/user_routes.py:153: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
     user_obj = User.query.get(user_id)
 
 tests/app/routes/test_user_routes.py::test_edit_profile_get
 tests/app/routes/test_user_routes.py::test_edit_profile_post
 tests/app/routes/test_user_routes.py::test_edit_profile_change_password
 tests/app/routes/test_user_routes.py::test_edit_profile_password_mismatch
-  /home/runner/work/classroom-chat/classroom-chat/application/routes/user_routes.py:169: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+  /home/runner/work/classroom-chat/classroom-chat/application/routes/user_routes.py:177: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
     user_obj = User.query.get(user_id)
 
 tests/app/routes/test_user_routes.py::test_new_project_post
-  /home/runner/work/classroom-chat/classroom-chat/application/routes/user_routes.py:200: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+  /home/runner/work/classroom-chat/classroom-chat/application/routes/user_routes.py:208: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
     user_obj = User.query.get(user_id)
+
+tests/app/routes/test_user_routes.py::test_new_project_post
+  /home/runner/work/classroom-chat/classroom-chat/application/routes/user_routes.py:217: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+    target_user = User.query.get(target_user_id)
 
 tests/app/routes/test_user_routes.py::test_edit_project_post
 tests/app/routes/test_user_routes.py::test_delete_project
@@ -927,7 +930,7 @@ tests/app/routes/test_user_routes.py::test_delete_project
     current_user = User.query.get(user_id)
 
 tests/app/routes/test_user_routes.py::test_delete_project
-  /home/runner/work/classroom-chat/classroom-chat/tests/app/routes/test_user_routes.py:335: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+  /home/runner/work/classroom-chat/classroom-chat/tests/app/routes/test_user_routes.py:366: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
     assert Project.query.get(project.id) is None
 
 tests/app/routes/test_user_routes.py::test_edit_profile_picture_api
@@ -944,11 +947,11 @@ tests/app/routes/test_user_routes.py::test_remove_skill
     user_obj = User.query.get(user_id)
 
 tests/app/routes/test_user_routes.py::test_remove_skill
-  /home/runner/work/classroom-chat/classroom-chat/application/models/user.py:131: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+  /home/runner/work/classroom-chat/classroom-chat/application/models/user.py:128: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
     skill = Skill.query.get(skill_id)
 
 tests/app/routes/test_user_routes.py::test_remove_skill
-  /home/runner/work/classroom-chat/classroom-chat/tests/app/routes/test_user_routes.py:423: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+  /home/runner/work/classroom-chat/classroom-chat/tests/app/routes/test_user_routes.py:458: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
     assert Skill.query.get(skill.id) is None
 
 tests/helpers/test_db_helpers.py::test_get_user_by_id

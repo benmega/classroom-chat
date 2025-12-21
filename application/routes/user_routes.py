@@ -218,21 +218,29 @@ def new_project():
                     "user/manage_project.html", project=None, user=user_obj
                 )
 
-            # SECURITY: Only allow admins to set the teacher_comment
-            teacher_comment = None
-            if getattr(user_obj, "is_admin", False):
-                teacher_comment = request.form.get("teacher_comment")
+            # Check if user is an admin and act accordingly
+            target_user_id = user_id  # default to current user
+            if getattr(user_obj, 'is_admin', False):
+                target_user_id = request.form.get('student_id') or user_id
 
+            # Ensure valid student ID is provided
+            target_user = User.query.get(target_user_id)
+            if not target_user:
+                flash('Invalid student selection.', 'error')
+                return render_template('user/manage_project.html', project=None, user=user_obj)
+
+            # Create the project, assigned under the student
             new_proj = Project(
                 name=name,
-                description=request.form.get("description"),
-                link=request.form.get("link"),
-                github_link=request.form.get("github_link"),
-                video_url=request.form.get("video_url"),
-                code_snippet=request.form.get("code_snippet"),
-                teacher_comment=teacher_comment,
-                user_id=user_obj.id,
+                description=request.form.get('description'),
+                link=request.form.get('link'),
+                github_link=request.form.get('github_link'),
+                video_url=request.form.get('video_url'),
+                code_snippet=request.form.get('code_snippet'),
+                teacher_comment=request.form.get('teacher_comment') if getattr(user_obj, 'is_admin', False) else None,
+                user_id=target_user.id  # Assign to the selected student
             )
+
 
             # Handle Project Thumbnail Upload
             if "project_image" in request.files:
@@ -257,8 +265,9 @@ def new_project():
             flash("Project created successfully!", "success")
             return redirect(url_for("user.profile"))
 
-    # Pass user_obj to template to check is_admin
-    return render_template("user/manage_project.html", project=None, user=user_obj)
+    # Pass the user_obj and potentially list of students if the user is an admin
+    student_list = User.query.all() if getattr(user_obj, 'is_admin', False) else None
+    return render_template('user/manage_project.html', project=None, user=user_obj, students=student_list)
 
 
 @user.route("/project/edit/<int:project_id>", methods=["GET", "POST"])

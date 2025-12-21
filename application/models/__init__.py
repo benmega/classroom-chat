@@ -18,3 +18,6 @@ def setup_models():
     from .skill import Skill
     from .user import User
     from .duck_trade import DuckTradeLog
+    from .achievements import Achievement  # Correct the class name here
+
+setup_models()
