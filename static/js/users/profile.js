@@ -96,6 +96,28 @@ function initProjectInteractions() {
             if (e.target === lightbox) closeVideo();
         });
     }
+
+    // Profile Description Modal Logic
+    document.addEventListener('click', (e) => {
+        const profileDescTrigger = e.target.closest('.js-open-profile-description');
+        if (profileDescTrigger) {
+            const modalId = profileDescTrigger.getAttribute('data-target');
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.style.display = 'flex';
+                body.style.overflow = 'hidden'; // Prevent background scrolling
+            }
+        }
+
+        // Close Profile Modal
+        if (e.target.classList.contains('profile-modal-overlay') || e.target.closest('.js-close-profile-modal')) {
+            const modal = e.target.closest('.profile-modal-overlay') || e.target.closest('.profile-modal-content').parentElement;
+            if (modal) {
+                modal.style.display = 'none';
+                body.style.overflow = 'auto';
+            }
+        }
+    });
 }
 
 /**

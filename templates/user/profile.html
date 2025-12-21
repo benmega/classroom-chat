@@ -51,6 +51,11 @@
             <div class="student-identity">
                 <h1 class="student-name">{{ target.nickname or target.username }}</h1>
                 <p class="student-title">{{ target.username }}</p>
+                {% if target.description %}
+                    <button class="btn-launch js-open-profile-description" style="margin-top: 5px;" data-target="profile-description-modal">
+                        View Profile Description
+                    </button>
+                {% endif %}
                 {% if is_owner %}
                     <div style="margin-top: 5px;">
                         <a href="{{ url_for('user.edit_profile') }}" class="btn-launch" style="padding: 4px 12px; font-size: 0.8rem;">
@@ -344,6 +349,14 @@
         <div class="video-wrapper">
             <iframe id="lightbox-iframe" src="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
         </div>
+    </div>
+</div>
+
+<div id="profile-description-modal" class="profile-modal-overlay" style="display: none;">
+    <div class="profile-modal-content">
+        <button class="modal-close js-close-profile-modal">&times;</button>
+        <h2>Profile Description</h2>
+        <p>{{ target.description }}</p>
     </div>
 </div>
 
