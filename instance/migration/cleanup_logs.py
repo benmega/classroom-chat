@@ -4,9 +4,8 @@ Type: py
 Summary: Removes ChallengeLogs that have invalid domains or lack a corresponding Challenge.
 """
 
-import sqlite3
+ALLOWED_DOMAINS = ("CodeCombat", "www.ozaria.com", "codecombat.com")
 
-ALLOWED_DOMAINS = ('CodeCombat', 'www.ozaria.com', 'codecombat.com')
 
 def cleanup_invalid_logs(conn):
     """
@@ -19,10 +18,14 @@ def cleanup_invalid_logs(conn):
 
     try:
         # Check if tables exist
-        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='challenges';")
+        cursor.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='challenges';"
+        )
         has_challenges = cursor.fetchone()
 
-        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='challenge_logs';")
+        cursor.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='challenge_logs';"
+        )
         has_logs = cursor.fetchone()
 
         if not (has_challenges and has_logs):
@@ -39,7 +42,9 @@ def cleanup_invalid_logs(conn):
         domain_deleted_count = cursor.rowcount
 
         if domain_deleted_count > 0:
-            print(f"Cleanup: Removed {domain_deleted_count} logs with invalid domains (Allowed: {ALLOWED_DOMAINS}).")
+            print(
+                f"Cleanup: Removed {domain_deleted_count} logs with invalid domains (Allowed: {ALLOWED_DOMAINS})."
+            )
         else:
             print("Cleanup: No invalid domains found.")
 
@@ -58,7 +63,9 @@ def cleanup_invalid_logs(conn):
         orphans_deleted_count = cursor.rowcount
 
         if orphans_deleted_count > 0:
-            print(f"Cleanup: Removed {orphans_deleted_count} orphaned log entries (Challenge not found).")
+            print(
+                f"Cleanup: Removed {orphans_deleted_count} orphaned log entries (Challenge not found)."
+            )
         else:
             print("Cleanup: No orphaned logs found.")
 

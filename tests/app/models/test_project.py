@@ -18,10 +18,7 @@ def test_project_creation(init_db, sample_user):
     link = "https://testproject.com"
 
     project = Project(
-        name=name,
-        description=description,
-        link=link,
-        user_id=sample_user.id
+        name=name, description=description, link=link, user_id=sample_user.id
     )
     db.session.add(project)
     db.session.commit()
@@ -43,10 +40,7 @@ def test_project_repr(sample_project):
 
 def test_project_optional_fields(init_db, sample_user):
     """Test creating a project without optional fields."""
-    project = Project(
-        name="Minimal Project",
-        user_id=sample_user.id
-    )
+    project = Project(name="Minimal Project", user_id=sample_user.id)
     db.session.add(project)
     db.session.commit()
 
@@ -87,16 +81,15 @@ def test_project_deletion(sample_project):
 def test_dynamic_project_generation(init_db, sample_user):
     """Test creating projects with random data to simulate real-world conditions."""
     for _ in range(10):  # Generate 10 random projects
-        name = ''.join(random.choices(string.ascii_letters, k=10))
-        description = ''.join(random.choices(string.ascii_letters + string.digits, k=50))
+        name = "".join(random.choices(string.ascii_letters, k=10))
+        description = "".join(
+            random.choices(string.ascii_letters + string.digits, k=50)
+        )
         link = f"http://{''.join(random.choices(string.ascii_lowercase, k=5))}.com"
 
         project = Project(
-            name=name,
-            description=description,
-            link=link,
-            user_id=sample_user.id
-)
+            name=name, description=description, link=link, user_id=sample_user.id
+        )
         db.session.add(project)
     db.session.commit()
 

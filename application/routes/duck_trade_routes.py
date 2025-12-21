@@ -16,51 +16,65 @@ from wtforms.validators import DataRequired, NumberRange
 from application import db
 from application.models.duck_trade import DuckTradeLog
 
-duck_trade = Blueprint('duck_trade', __name__, template_folder='templates')
+duck_trade = Blueprint("duck_trade", __name__, template_folder="templates")
 logging.basicConfig(level=logging.INFO)
-
 
 
 class BitDuckForm(FlaskForm):
     """Sub-form for Bit Ducks selection."""
-    bit_ducks = FieldList(IntegerField('Bit Duck Count',
-                                       default=0,
-                                       validators=[NumberRange(min=0, message="Count must be non-negative")]),
-                          min_entries=7,
-                          max_entries=7)
+
+    bit_ducks = FieldList(
+        IntegerField(
+            "Bit Duck Count",
+            default=0,
+            validators=[NumberRange(min=0, message="Count must be non-negative")],
+        ),
+        min_entries=7,
+        max_entries=7,
+    )
 
 
 class ByteDuckForm(FlaskForm):
     """Sub-form for Byte Ducks selection."""
-    byte_ducks = FieldList(IntegerField('Byte Duck Count',
-                                        default=0,
-                                        validators=[NumberRange(min=0, message="Count must be non-negative")]),
-                           min_entries=7,
-                           max_entries=7)
 
+    byte_ducks = FieldList(
+        IntegerField(
+            "Byte Duck Count",
+            default=0,
+            validators=[NumberRange(min=0, message="Count must be non-negative")],
+        ),
+        min_entries=7,
+        max_entries=7,
+    )
 
 
 class DuckTradeForm(FlaskForm):
     """Main form for duck trading."""
-    digital_ducks = IntegerField('Digital Ducks',
-                                 validators=[DataRequired(),
-                                             NumberRange(min=1, message="Must trade at least 1 duck")])
+
+    digital_ducks = IntegerField(
+        "Digital Ducks",
+        validators=[
+            DataRequired(),
+            NumberRange(min=1, message="Must trade at least 1 duck"),
+        ],
+    )
     bit_duck_selection = FormField(BitDuckForm)
     byte_duck_selection = FormField(ByteDuckForm)
-    submit = SubmitField('Submit Request')
+    submit = SubmitField("Submit Request")
 
 
 def to_binary(costs_dict):
     """Convert dictionary values to binary."""
     return {key: str(bin(value))[2:] for key, value in costs_dict.items()}
 
-@duck_trade.route('/')
+
+@duck_trade.route("/")
 def index():
     form = DuckTradeForm()
-    return render_template('bit_shift.html', form=form)
+    return render_template("bit_shift.html", form=form)
 
 
-@duck_trade.route('/submit_trade', methods=['POST'])
+@duck_trade.route("/submit_trade", methods=["POST"])
 def submit_trade():
     form = DuckTradeForm()
     is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"
@@ -68,19 +82,26 @@ def submit_trade():
     if not form.validate_on_submit():
         error_msg = "Error: Check your inputs."
         if is_ajax:
-            return jsonify({'status': 'error', 'message': error_msg, 'errors': form.errors}), 400
+            return (
+                jsonify(
+                    {"status": "error", "message": error_msg, "errors": form.errors}
+                ),
+                400,
+            )
         flash(error_msg, "danger")
-        return redirect(url_for('duck_trade.index'))
+        return redirect(url_for("duck_trade.index"))
 
     try:
-        userid = session.get('user')
+        userid = session.get("user")
         if not userid:
             msg = "You must be logged in."
-            if is_ajax: return jsonify({'status': 'error', 'message': msg}), 403
+            if is_ajax:
+                return jsonify({"status": "error", "message": msg}), 403
             flash(msg, "warning")
-            return redirect(url_for('duck_trade.index'))
+            return redirect(url_for("duck_trade.index"))
 
         from application import User
+
         user = User.query.get(userid)
 
         if is_ajax and request.is_json:
@@ -98,8 +119,8 @@ def submit_trade():
             digital_ducks=d_ducks,
             bit_ducks=bit_ducks,
             byte_ducks=byte_ducks,
-            status="pending"
-)
+            status="pending",
+        )
         db.session.add(trade)
         db.session.commit()
 
@@ -107,18 +128,20 @@ def submit_trade():
 
         # 4. The AJAX response contains the message, YOUR JS MUST DISPLAY THIS
         if is_ajax:
-            return jsonify({'status': 'success', 'message': msg})
+            return jsonify({"status": "success", "message": msg})
 
         flash(msg, "success")
-        return redirect(url_for('duck_trade.index'))
+        return redirect(url_for("duck_trade.index"))
 
     except Exception as e:
         db.session.rollback()
         # logging.error(f"Trade Error: {e}")
         if is_ajax:
-            return jsonify({'status': 'error', 'message': "Server Error"}), 500
+            return jsonify({"status": "error", "message": "Server Error"}), 500
         flash("An unexpected error occurred.", "danger")
-        return redirect(url_for('duck_trade.index'))
+        return redirect(url_for("duck_trade.index"))
+
+
 # @duck_trade.route('/submit_trade', methods=['POST'])
 # def submit_trade():
 #     form = DuckTradeForm()
@@ -178,7 +201,7 @@ def submit_trade():
 #         return redirect(url_for('duck_trade.index'))
 
 
-@duck_trade.route('/bit_shift', methods=['GET'])
+@duck_trade.route("/bit_shift", methods=["GET"])
 def bit_shift():
     form = DuckTradeForm()
-    return render_template('bit_shift.html', form=form)
+    return render_template("bit_shift.html", form=form)

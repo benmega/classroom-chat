@@ -4,6 +4,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent
 PLACEHOLDER = "Summary: Python module summary."
 
+
 def summarize(path: Path) -> str:
     """Return a brief, human-readable summary based on file location/name."""
     name = path.stem
@@ -71,7 +72,9 @@ def summarize(path: Path) -> str:
             if name == "__init__":
                 return "Utility package initialization for database and helpers."
             if name == "db_helpers":
-                return "Database helper functions for users, messages, and conversations."
+                return (
+                    "Database helper functions for users, messages, and conversations."
+                )
             if name == "helper_functions":
                 return "General utility helpers for file uploads and database commits."
             if name == "session_cleanup":
@@ -81,7 +84,9 @@ def summarize(path: Path) -> str:
             if name == "__init__":
                 return "AI module initialization for teacher-related features."
             if name == "ai_teacher":
-                return "AI teacher logic for generating responses and managing sessions."
+                return (
+                    "AI teacher logic for generating responses and managing sessions."
+                )
             return f"AI-related helpers for {nice(name)}."
         if name == "__init__":
             return "Flask application factory and core app initialization."
@@ -240,6 +245,7 @@ def summarize(path: Path) -> str:
     # ---- fallback for anything else ----
     return f"{ext} file for {nice(name)}."
 
+
 def update_file(path: Path) -> bool:
     """Replace placeholder summary in one file. Return True if modified."""
     try:
@@ -260,16 +266,28 @@ def update_file(path: Path) -> bool:
     path.write_text(new_text, encoding="utf-8")
     return True
 
+
 def main():
     modified = []
     for dirpath, dirnames, filenames in os.walk(ROOT):
         dirnames[:] = [
-            d for d in dirnames
-            if d not in {"venv", ".git", "__pycache__", "instance", "userData", ".pytest_cache"}
+            d
+            for d in dirnames
+            if d
+            not in {
+                "venv",
+                ".git",
+                "__pycache__",
+                "instance",
+                "userData",
+                ".pytest_cache",
+            }
         ]
         for filename in filenames:
             # Only touch files that are likely to have headers
-            if not any(filename.endswith(ext) for ext in (".py", ".js", ".ts", ".html", ".css")):
+            if not any(
+                filename.endswith(ext) for ext in (".py", ".js", ".ts", ".html", ".css")
+            ):
                 continue
             path = Path(dirpath) / filename
             if update_file(path):
@@ -278,6 +296,7 @@ def main():
     print("Updated summaries in files:")
     for m in modified:
         print("  -", m)
+
 
 if __name__ == "__main__":
     main()

@@ -1,7 +1,8 @@
 from application.extensions import db
 
+
 class ChallengeLog(db.Model):
-    __tablename__ = 'challenge_logs'
+    __tablename__ = "challenge_logs"
 
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(100), nullable=False)

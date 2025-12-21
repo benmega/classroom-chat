@@ -1,8 +1,8 @@
 # manage_achievements.py
 import sys
+
 from application.extensions import db
 from application.models.achievements import Achievement
-from datetime import datetime
 
 
 def list_achievements():
@@ -11,7 +11,9 @@ def list_achievements():
         print("No achievements found.")
         return
     for a in achievements:
-        print(f"{a.id}: slug='{a.slug}', name='{a.name}', type='{a.type}', requirement='{a.requirement_value}'")
+        print(
+            f"{a.id}: slug='{a.slug}', name='{a.name}', type='{a.type}', requirement='{a.requirement_value}'"
+        )
 
 
 def add_achievement():
@@ -31,7 +33,7 @@ def add_achievement():
         name=name,
         description=description,
         type=type_,
-        requirement_value=requirement_value
+        requirement_value=requirement_value,
     )
     db.session.add(achievement)
     db.session.commit()
@@ -63,6 +65,7 @@ def remove_achievements():
     else:
         print("No achievements were removed.")
 
+
 # def remove_achievement():
 #     list_achievements()
 #     id_ = input("Enter ID of achievement to remove: ").strip()
@@ -88,7 +91,9 @@ def edit_achievement():
     name = input(f"Name [{achievement.name}]: ").strip()
     description = input(f"Description [{achievement.description}]: ").strip()
     type_ = input(f"Type [{achievement.type}]: ").strip()
-    requirement_value = input(f"Requirement value [{achievement.requirement_value}]: ").strip()
+    requirement_value = input(
+        f"Requirement value [{achievement.requirement_value}]: "
+    ).strip()
 
     if slug:
         achievement.slug = slug

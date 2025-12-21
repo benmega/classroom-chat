@@ -27,7 +27,9 @@ def get_metadata():
             print("Columns:")
             for col in columns:
                 cid, name, col_type, notnull, dflt_value, pk = col
-                print(f"  {name} ({col_type}), NOT NULL={bool(notnull)}, PK={bool(pk)}, Default={dflt_value}")
+                print(
+                    f"  {name} ({col_type}), NOT NULL={bool(notnull)}, PK={bool(pk)}, Default={dflt_value}"
+                )
 
             # Get indexes
             cur.execute(f"PRAGMA index_list({table});")
@@ -36,7 +38,9 @@ def get_metadata():
                 print("Indexes:")
                 for idx in indexes:
                     seq, name, unique, origin, partial = idx
-                    print(f"  {name}, Unique={bool(unique)}, Origin={origin}, Partial={bool(partial)}")
+                    print(
+                        f"  {name}, Unique={bool(unique)}, Origin={origin}, Partial={bool(partial)}"
+                    )
             print("-" * 40)
 
     except Exception as e:

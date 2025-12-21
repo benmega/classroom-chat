@@ -5,24 +5,23 @@ AI Teacher Blueprint for handling AI chat interactions using local LLM via Ollam
 
 import logging
 from datetime import datetime
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional
 
 import requests
 from flask import Blueprint, jsonify, request
 from sqlalchemy.exc import SQLAlchemyError
 
 from application import db, limiter
-from application.config import Config
-from application.utilities.db_helpers import save_message_to_db
 from application.models.ai_settings import get_ai_settings
 from application.models.conversation import Conversation
 from application.models.user import User
+from application.utilities.db_helpers import save_message_to_db
 
 # Configure logging
 logger = logging.getLogger(__name__)
 
 # Blueprint configuration
-ai = Blueprint('ai', __name__)
+ai = Blueprint("ai", __name__)
 
 # Constants
 AI_TEACHER_USER_ID = 0
@@ -36,6 +35,7 @@ REQUEST_TIMEOUT = 30  # seconds
 
 class AITeacherError(Exception):
     """Custom exception for AI Teacher operations."""
+
     pass
 
 
@@ -57,8 +57,8 @@ def get_or_create_ai_teacher() -> User:
                 id=AI_TEACHER_USER_ID,
                 username=AI_TEACHER_USERNAME,
                 ip_address=AI_TEACHER_IP,
-                password_hash="temp"  # AI user doesn't need real auth
-    )
+                password_hash="temp",  # AI user doesn't need real auth
+            )
             db.session.add(user)
             db.session.commit()
             logger.info("Created AI Teacher user account")
@@ -71,7 +71,9 @@ def get_or_create_ai_teacher() -> User:
         raise AITeacherError("Failed to create AI Teacher user") from e
 
 
-def get_or_create_conversation(conversation_id: Optional[int], username: str) -> Conversation:
+def get_or_create_conversation(
+    conversation_id: Optional[int], username: str
+) -> Conversation:
     """
     Get existing conversation or create a new one.
 
@@ -87,7 +89,9 @@ def get_or_create_conversation(conversation_id: Optional[int], username: str) ->
     """
     try:
         if conversation_id:
-            conversation = db.session.query(Conversation).filter_by(id=conversation_id).first()
+            conversation = (
+                db.session.query(Conversation).filter_by(id=conversation_id).first()
+            )
             if not conversation:
                 raise AITeacherError("Conversation not found")
             return conversation
@@ -95,7 +99,7 @@ def get_or_create_conversation(conversation_id: Optional[int], username: str) ->
         # Create new conversation
         conversation = Conversation(
             title=f"Conversation with {username} - {datetime.utcnow().strftime('%Y-%m-%d %H:%M')}"
-)
+        )
         db.session.add(conversation)
         db.session.commit()
         logger.info(f"Created new conversation {conversation.id} for user {username}")
@@ -121,13 +125,15 @@ def build_conversation_history(conversation: Conversation) -> List[Dict[str, str
     return [
         {
             "role": "assistant" if message.user_id == AI_TEACHER_USER_ID else "user",
-            "content": message.content
+            "content": message.content,
         }
         for message in conversation.messages
     ]
 
 
-def format_prompt(user_message: str, conversation_history: List[Dict[str, str]], max_words: int) -> str:
+def format_prompt(
+    user_message: str, conversation_history: List[Dict[str, str]], max_words: int
+) -> str:
     """
     Format the prompt for the local LLM.
 
@@ -139,7 +145,9 @@ def format_prompt(user_message: str, conversation_history: List[Dict[str, str]],
     Returns:
         Formatted prompt string
     """
-    prompt_parts = [f"system: You are an AI teacher. Keep all responses under {max_words} words.\n"]
+    prompt_parts = [
+        f"system: You are an AI teacher. Keep all responses under {max_words} words.\n"
+    ]
 
     # Add conversation history
     for msg in conversation_history:
@@ -167,21 +175,17 @@ def call_ollama_api(prompt: str, model: str) -> str:
         AITeacherError: If API call fails
     """
     try:
-        payload = {
-            "model": model,
-            "prompt": prompt,
-            "stream": False
-        }
+        payload = {"model": model, "prompt": prompt, "stream": False}
 
-        response = requests.post(
-            OLLAMA_API_URL,
-            json=payload,
-            timeout=REQUEST_TIMEOUT
-)
+        response = requests.post(OLLAMA_API_URL, json=payload, timeout=REQUEST_TIMEOUT)
 
         if not response.ok:
-            logger.error(f"Ollama API error: status {response.status_code}, response: {response.text}")
-            raise AITeacherError(f"Ollama API returned status code {response.status_code}")
+            logger.error(
+                f"Ollama API error: status {response.status_code}, response: {response.text}"
+            )
+            raise AITeacherError(
+                f"Ollama API returned status code {response.status_code}"
+            )
 
         data = response.json()
         ai_response = data.get("response", "").strip()
@@ -212,15 +216,15 @@ def trim_response_to_word_limit(response: str, max_words: int) -> str:
     """
     words = response.split()
     if len(words) > max_words:
-        return ' '.join(words[:max_words]) + "..."
+        return " ".join(words[:max_words]) + "..."
     return response
 
 
 def get_local_llm_response(
-        user_message: str,
-        conversation_history: List[Dict[str, str]],
-        model: str = DEFAULT_MODEL,
-        max_words: int = DEFAULT_MAX_WORDS
+    user_message: str,
+    conversation_history: List[Dict[str, str]],
+    model: str = DEFAULT_MODEL,
+    max_words: int = DEFAULT_MAX_WORDS,
 ) -> str:
     """
     Generate a response from the local LLM and save it to the database.
@@ -248,7 +252,9 @@ def get_local_llm_response(
         ai_response = trim_response_to_word_limit(ai_response, max_words)
 
         # Save AI response to database
-        save_result = save_message_to_db(user_id=AI_TEACHER_USER_ID, message=ai_response)
+        save_result = save_message_to_db(
+            user_id=AI_TEACHER_USER_ID, message=ai_response
+        )
         if isinstance(save_result, str):  # Error occurred
             raise AITeacherError(f"Failed to save AI response: {save_result}")
 
@@ -263,7 +269,9 @@ def get_local_llm_response(
 
 
 @limiter.limit("1 per minute; 10 per day")
-def get_ai_response(user_message: str, username: str, conversation_id: Optional[int] = None) -> str:
+def get_ai_response(
+    user_message: str, username: str, conversation_id: Optional[int] = None
+) -> str:
     """
     Main function to get AI response for a user message.
 
@@ -278,7 +286,7 @@ def get_ai_response(user_message: str, username: str, conversation_id: Optional[
     try:
         # Check AI settings
         ai_settings = get_ai_settings()
-        if not ai_settings.get('chat_bot_enabled', False):
+        if not ai_settings.get("chat_bot_enabled", False):
             return "The AI chatbot is currently disabled."
 
         # Ensure AI teacher user exists
@@ -288,7 +296,9 @@ def get_ai_response(user_message: str, username: str, conversation_id: Optional[
         conversation = get_or_create_conversation(conversation_id, username)
 
         # Save user message
-        save_result = save_message_to_db(user_id=None, message=user_message)  # Assuming None for regular users
+        save_result = save_message_to_db(
+            user_id=None, message=user_message
+        )  # Assuming None for regular users
         if isinstance(save_result, str):  # Error occurred
             return f"Error saving message: {save_result}"
 
@@ -306,7 +316,7 @@ def get_ai_response(user_message: str, username: str, conversation_id: Optional[
         return "Error: Could not process the AI response."
 
 
-@ai.route('/get_ai_response', methods=['POST'])
+@ai.route("/get_ai_response", methods=["POST"])
 def ai_response():
     """
     Flask route to handle AI response requests.
@@ -316,15 +326,15 @@ def ai_response():
     """
     try:
         # Validate request data
-        if not request.form.get('message'):
+        if not request.form.get("message"):
             return jsonify(success=False, error="Message is required"), 400
 
-        if not request.form.get('username'):
+        if not request.form.get("username"):
             return jsonify(success=False, error="Username is required"), 400
 
-        user_message = request.form['message'].strip()
-        username = request.form['username'].strip()
-        conversation_id = request.form.get('conversation_id')
+        user_message = request.form["message"].strip()
+        username = request.form["username"].strip()
+        conversation_id = request.form.get("conversation_id")
 
         # Convert conversation_id to int if provided
         if conversation_id:

@@ -1,12 +1,14 @@
 # Filename: update_challenge_logs.py
 # Description: Script to bulk insert challenge logs into the database.
-from application import create_app, ProductionConfig, DevelopmentConfig
+from application import create_app, DevelopmentConfig
 from application.extensions import db
 from application.models.challenge import Challenge
 from application.models.challenge_log import ChallengeLog
 
 
-def add_challenge_logs(username, domain, challenge_names, course_id=None, course_instance=None):
+def add_challenge_logs(
+    username, domain, challenge_names, course_id=None, course_instance=None
+):
     """
     Adds multiple challenge logs to the database.
 
@@ -27,8 +29,8 @@ def add_challenge_logs(username, domain, challenge_names, course_id=None, course
             domain=domain,
             challenge_name=challenge_name,
             course_id=course_id,
-            course_instance=course_instance
-)
+            course_instance=course_instance,
+        )
         logs.append(log_entry)
 
     try:
@@ -54,7 +56,7 @@ def add_course_challenge_logs(username, domain, course_id):
             db.session.query(Challenge.name)
             .filter(Challenge.course_id == course_id, Challenge.is_active == True)
             .all()
-)
+        )
 
         # Convert to a list of challenge names
         challenge_names = [challenge.name for challenge in challenges]
@@ -66,7 +68,9 @@ def add_course_challenge_logs(username, domain, course_id):
         # Call add_challenge_logs with the retrieved challenges
         try:
             add_challenge_logs(username, domain, challenge_names, course_id=course_id)
-            print(f"Successfully logged {len(challenge_names)} challenges for {username}.")
+            print(
+                f"Successfully logged {len(challenge_names)} challenges for {username}."
+            )
         except Exception as e:
             print(f"Error while logging challenges: {e}")
 
@@ -100,13 +104,20 @@ def userSelectDomain():
         except ValueError:
             print("Invalid input. Please enter a number.")
 
+
 def userSelectCourse(domain):
     """
     Queries the database for all unique courses associated with a given domain and lets the user select one.
     Returns the selected course_id as a string.
     """
     from application.models.course import Course
-    courses = db.session.query(Course.id, Course.name).filter(Course.domain == domain).distinct().all()
+
+    courses = (
+        db.session.query(Course.id, Course.name)
+        .filter(Course.domain == domain)
+        .distinct()
+        .all()
+    )
 
     if not courses:
         print(f"No courses found for domain: {domain}")
@@ -143,9 +154,14 @@ def main():
 
             add_course_challenge_logs(username, domain, course_id)
 
-            another = input("Would you like to add another submission? (y/n) -> ").strip().lower()
-            if another != 'y':
+            another = (
+                input("Would you like to add another submission? (y/n) -> ")
+                .strip()
+                .lower()
+            )
+            if another != "y":
                 break
+
 
 if __name__ == "__main__":
     main()

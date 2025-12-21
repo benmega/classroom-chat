@@ -1,12 +1,13 @@
-import csv
+import logging
+
 from application import create_app
 from application.extensions import db
 from application.models.user import User
-from sqlalchemy.exc import SQLAlchemyError
-import logging
 
 # Configure logging
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
 
 import csv
 import logging
@@ -16,15 +17,15 @@ from sqlalchemy.exc import SQLAlchemyError
 def insert_users_from_csv(csv_file_path, overwrite=True):
     try:
         # Open the CSV file with 'utf-8-sig' encoding to handle BOM
-        with open(csv_file_path, mode='r', encoding='utf-8-sig') as file:
+        with open(csv_file_path, mode="r", encoding="utf-8-sig") as file:
             csv_reader = csv.DictReader(file)
             users_to_insert = []
             existing_users = {user.username: user for user in User.query.all()}
 
             for row in csv_reader:
-                username = row.get('username', '').strip()
-                password = row.get('password', '').strip()
-                ip_address = row.get('ip_address', None)
+                username = row.get("username", "").strip()
+                password = row.get("password", "").strip()
+                ip_address = row.get("ip_address", None)
 
                 if not username or not password:
                     logging.warning(f"Row skipped: Missing required fields. Row: {row}")
@@ -108,5 +109,5 @@ def insert_users_from_csv(csv_file_path, overwrite=True):
 if __name__ == "__main__":
     app = create_app()
     with app.app_context():
-        csv_file_path = '../usersFromExcel.csv'
+        csv_file_path = "../usersFromExcel.csv"
         insert_users_from_csv(csv_file_path)

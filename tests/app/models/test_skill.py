@@ -15,10 +15,7 @@ from application.models.skill import Skill
 def test_skill_creation(init_db, sample_user):
     """Test creating a skill."""
     name = "JavaScript"
-    skill = Skill(
-        name=name,
-        user_id=sample_user.id
-    )
+    skill = Skill(name=name, user_id=sample_user.id)
     db.session.add(skill)
     db.session.commit()
 
@@ -83,16 +80,22 @@ def test_skill_deletion(sample_skill):
 
 def test_dynamic_skill_generation(init_db, sample_user):
     """Test creating skills with random data to simulate real-world conditions."""
-    skill_names = ["Python", "JavaScript", "Java", "Ruby", "Go", "Swift", "Rust", "Kotlin"]
+    skill_names = [
+        "Python",
+        "JavaScript",
+        "Java",
+        "Ruby",
+        "Go",
+        "Swift",
+        "Rust",
+        "Kotlin",
+    ]
 
     # Generate unique skill names
     unique_skills = set(random.choices(skill_names, k=10))
 
     for skill_name in unique_skills:
-        skill = Skill(
-            name=skill_name,
-            user_id=sample_user.id
-)
+        skill = Skill(name=skill_name, user_id=sample_user.id)
         db.session.add(skill)
     db.session.commit()
 
@@ -100,5 +103,3 @@ def test_dynamic_skill_generation(init_db, sample_user):
     skills = Skill.query.filter_by(user_id=sample_user.id).all()
     assert len(skills) == len(unique_skills)
     assert all(isinstance(skill, Skill) for skill in skills)
-
-

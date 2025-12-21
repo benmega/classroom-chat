@@ -1,11 +1,12 @@
 # sync_duck_balance.py
 # Summary: Copies earned_ducks from source DB to duck_balance in target DB by user ID.
 
-import sqlite3
 import shutil
+import sqlite3
 
 TARGET_DB = r"C:\Users\Ben\PycharmProjects\groupChat2\instance\dev_users.db"
 SOURCE_DB = r"C:\Users\Ben\PycharmProjects\groupChat2\instance\migration\dev_users (classroom-chat).db"
+
 
 def sync_duck_balance(source_db, target_db):
     # Backup target
@@ -25,9 +26,8 @@ def sync_duck_balance(source_db, target_db):
         # Update target DB
         for user_id, earned in rows:
             tgt_cur.execute(
-                "UPDATE users SET duck_balance = ? WHERE id = ?",
-                (earned, user_id)
-    )
+                "UPDATE users SET duck_balance = ? WHERE id = ?", (earned, user_id)
+            )
 
         tgt_conn.commit()
         print(f"Updated duck_balance for {len(rows)} users.")
@@ -36,6 +36,7 @@ def sync_duck_balance(source_db, target_db):
     finally:
         src_conn.close()
         tgt_conn.close()
+
 
 if __name__ == "__main__":
     sync_duck_balance(SOURCE_DB, TARGET_DB)
