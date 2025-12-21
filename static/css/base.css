@@ -128,28 +128,57 @@ nav ul li.profile-pic {
 
 .profile-menu {
     position: relative;
-    width: 40px;
-    height: 40px;
+    width: auto;
+    height: auto;
     cursor: pointer;
+}
+
+.profile-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 6px;
+    border-radius: 8px;
+    background: transparent;
+    border: none;
+    color: inherit;
+}
+
+.profile-toggle:focus {
+    outline: 2px solid rgba(0,0,0,0.12);
+    outline-offset: 2px;
+}
+
+.profile-icon svg {
+    display: block;
+    width: 18px;
+    height: 18px;
+    color: #000; /* black outline */
+}
+
+.profile-icon svg path,
+.profile-icon svg circle {
+    stroke: currentColor;
+    fill: none;
 }
 
 .dropdown-menu {
     display: none;
     position: absolute;
-    top: 100%;
+    top: calc(100% + 6px);
     right: 0;
     background: #ffffff;
     border: 1px solid #e0e0e0;
     border-radius: 8px;
     list-style: none;
-    margin: 6px 0 0 0;
+    margin: 0;
     padding: 4px 0;
-    min-width: 200px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    min-width: 180px;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
     z-index: 1000;
-    transition: opacity 0.2s ease, transform 0.2s ease;
+    transition: opacity 0.18s ease, transform 0.18s ease;
     opacity: 0;
-    transform: translateY(-10px);
+    transform: translateY(-8px);
 }
 
 .dropdown-menu.show {
@@ -371,7 +400,7 @@ footer {
 }
 
 .achievement-popup::after {
-    content: "🏆"; /* Optional */
+    content: ""; /* Optional */
     margin-left: 8px;
 }
 
@@ -401,5 +430,10 @@ header.guest-mode {
   }
   .toast {
     width: 100%;
+  }
+
+  /* Hide user info on small screens */
+  .user-info {
+    display: none;
   }
 }

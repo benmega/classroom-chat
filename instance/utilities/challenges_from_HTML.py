@@ -1,17 +1,18 @@
+import csv
+import os
+import tkinter as tk
+import warnings
+from tkinter import filedialog
+from urllib.parse import urlparse, parse_qs
+
+from bs4 import BeautifulSoup
+
 from application import db, create_app, ProductionConfig, DevelopmentConfig
 from application.models.challenge import Challenge
-import os
-import csv
-from bs4 import BeautifulSoup
-from urllib.parse import urlparse, parse_qs
-import tkinter as tk
-from tkinter import filedialog
 
-
-from bs4 import BeautifulSoup
-from urllib.parse import urlparse, parse_qs
-import warnings
-warnings.filterwarnings("ignore", message="Using the in-memory storage for tracking rate limits")
+warnings.filterwarnings(
+    "ignore", message="Using the in-memory storage for tracking rate limits"
+)
 
 
 def get_challenge_data(domain, soup):
@@ -33,11 +34,17 @@ def get_challenge_data(domain, soup):
             name = elem.get("data-level-name")
             slug = elem.get("data-level-slug")
             description = elem.find("div", class_="level-description")
-            challenge_data.append({
-                "name": name,
-                "slug": slug,
-                "description": description.text.strip() if description else "No description provided."
-            })
+            challenge_data.append(
+                {
+                    "name": name,
+                    "slug": slug,
+                    "description": (
+                        description.text.strip()
+                        if description
+                        else "No description provided."
+                    ),
+                }
+            )
 
     elif "studio.code.org" in domain:
         challenge_elements = soup.find_all("a", class_="progress-bubble-link")
@@ -48,11 +55,9 @@ def get_challenge_data(domain, soup):
             #     slug = slug.split("/")[-1]  # Extract last part of the URL
             # else:
             slug = name
-            challenge_data.append({
-                "name": name,
-                "slug": slug,
-                "description": "No description provided."
-            })
+            challenge_data.append(
+                {"name": name, "slug": slug, "description": "No description provided."}
+            )
 
     elif "ozaria.com" in domain:
         challenge_elements = soup.find_all("a", class_="level-dot-link")
@@ -60,18 +65,28 @@ def get_challenge_data(domain, soup):
             name = elem.get("title")
             slug = elem.get("href")
             if slug:
-                slug = urlparse(slug).path.split("/")[-1]  # Extract last part of the path
-            challenge_data.append({
-                "name": name,
-                "slug": slug,
-                "description": "No description provided."
-            })
+                slug = urlparse(slug).path.split("/")[
+                    -1
+                ]  # Extract last part of the path
+            challenge_data.append(
+                {"name": name, "slug": slug, "description": "No description provided."}
+            )
 
     return challenge_data
 
+
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
-def store_challenges(app, challenges, domain, course_id, default_difficulty, default_value, replace_existing=True):
+
+def store_challenges(
+    app,
+    challenges,
+    domain,
+    course_id,
+    default_difficulty,
+    default_value,
+    replace_existing=True,
+):
     """
     Stores extracted challenge data into the database, optionally replacing existing entries.
 
@@ -95,18 +110,24 @@ def store_challenges(app, challenges, domain, course_id, default_difficulty, def
                 slug = challenge["slug"].strip()
 
                 # Check for existing challenge
-                existing_challenge = Challenge.query.filter_by(name=name, domain=domain).first()
+                existing_challenge = Challenge.query.filter_by(
+                    name=name, domain=domain
+                ).first()
 
                 if existing_challenge:
                     if replace_existing:
-                        existing_challenge.slug = slug or existing_challenge.slug  # Avoid empty slugs
+                        existing_challenge.slug = (
+                            slug or existing_challenge.slug
+                        )  # Avoid empty slugs
                         existing_challenge.course_id = course_id
                         existing_challenge.description = challenge["description"]
                         existing_challenge.difficulty = default_difficulty
                         existing_challenge.value = default_value
                         print(f"Updated existing challenge: {existing_challenge.name}")
                     else:
-                        print(f"Skipping existing challenge (exists): {existing_challenge.name}")
+                        print(
+                            f"Skipping existing challenge (exists): {existing_challenge.name}"
+                        )
                         continue
                 else:
                     new_challenge = Challenge(
@@ -116,8 +137,8 @@ def store_challenges(app, challenges, domain, course_id, default_difficulty, def
                         course_id=course_id,
                         description=challenge["description"],
                         difficulty=default_difficulty,
-                        value=default_value
-            )
+                        value=default_value,
+                    )
                     db.session.add(new_challenge)
                     print(f"Added new challenge: {new_challenge.name}")
 
@@ -125,16 +146,22 @@ def store_challenges(app, challenges, domain, course_id, default_difficulty, def
 
             except IntegrityError as e:
                 db.session.rollback()  # Prevent corruption of DB state
-                print(f"ERROR: Integrity error for challenge '{challenge.get('name', 'UNKNOWN')}': {e}")
+                print(
+                    f"ERROR: Integrity error for challenge '{challenge.get('name', 'UNKNOWN')}': {e}"
+                )
                 continue  # Skip to the next challenge
 
             except SQLAlchemyError as e:
                 db.session.rollback()  # Rollback on unexpected database errors
-                print(f"ERROR: Database error for challenge '{challenge.get('name', 'UNKNOWN')}': {e}")
+                print(
+                    f"ERROR: Database error for challenge '{challenge.get('name', 'UNKNOWN')}': {e}"
+                )
                 continue  # Skip to the next challenge
 
             except Exception as e:
-                print(f"ERROR: Unexpected error for challenge '{challenge.get('name', 'UNKNOWN')}': {e}")
+                print(
+                    f"ERROR: Unexpected error for challenge '{challenge.get('name', 'UNKNOWN')}': {e}"
+                )
                 continue  # Skip to the next challenge
 
         db.session.commit()  # Commit all successfully processed challenges
@@ -143,8 +170,9 @@ def store_challenges(app, challenges, domain, course_id, default_difficulty, def
     return count
 
 
-
-def parse_and_store_challenges(app, url, html_content, default_difficulty="medium", default_value=1):
+def parse_and_store_challenges(
+    app, url, html_content, default_difficulty="medium", default_value=1
+):
     """
     Parses HTML to extract challenge data and stores it in the database.
 
@@ -175,13 +203,12 @@ def parse_and_store_challenges(app, url, html_content, default_difficulty="mediu
         return False
 
     # Store extracted challenges
-    count = store_challenges(app, challenges, domain, course_id, default_difficulty, default_value)
+    count = store_challenges(
+        app, challenges, domain, course_id, default_difficulty, default_value
+    )
 
     print(f"{count} challenges imported successfully.")
     return count > 0
-
-
-
 
 
 def process_html_files_with_csv(app, folder_path):
@@ -250,7 +277,9 @@ def process_html_files_with_csv(app, folder_path):
                 html_content = file.read()
 
             # Call the parse_and_store_challenges function with the correct values
-            result = parse_and_store_challenges(app, url, html_content, difficulty, challenge_value)
+            result = parse_and_store_challenges(
+                app, url, html_content, difficulty, challenge_value
+            )
 
             if result:
                 print(f"Successfully processed: {html_file}")
@@ -260,11 +289,11 @@ def process_html_files_with_csv(app, folder_path):
             print(f"An error occurred while processing {html_file}: {e}")
 
 
-
 def select_folder():
     """Opens a dialog for the user to select a folder and returns the selected path."""
     tk.Tk().withdraw()  # Hide the root window
     return filedialog.askdirectory()
+
 
 def main():
     print("Select environment:")
@@ -275,7 +304,9 @@ def main():
     if choice == "1":
         config = DevelopmentConfig
     elif choice == "2":
-        confirm = input("⚠️  You selected PRODUCTION. Type 'yes' to confirm: ").strip().lower()
+        confirm = (
+            input("⚠️  You selected PRODUCTION. Type 'yes' to confirm: ").strip().lower()
+        )
         if confirm != "yes":
             print("Aborted.")
             return
@@ -287,6 +318,7 @@ def main():
     app = create_app(config)
     folder_path = select_folder()
     process_html_files_with_csv(app, folder_path)
+
 
 if __name__ == "__main__":
     main()

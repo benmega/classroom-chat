@@ -55,17 +55,17 @@ def save_message_to_db(user_id, message, message_type="text"):
               or error details if applicable.
     """
     try:
-        conversation_id = session.get('conversation_id')
+        conversation_id = session.get("conversation_id")
 
         if not conversation_id:
             print("No active conversation found. Creating a new one.")
             conversation = Conversation(
                 title=f"Conversation started by User {user_id} at {datetime.utcnow()}",
-    )
+            )
             db.session.add(conversation)
             db.session.commit()
 
-            session['conversation_id'] = conversation.id
+            session["conversation_id"] = conversation.id
             print(f"New conversation created with ID: {conversation.id}")
         else:
             conversation = Conversation.query.get(conversation_id)
@@ -78,12 +78,18 @@ def save_message_to_db(user_id, message, message_type="text"):
             conversation_id=conversation.id,
             content=message,
             message_type=message_type,
-)
+        )
         db.session.add(new_message)
         db.session.commit()
 
-        print(f"Message saved with ID: {new_message.id} in conversation ID: {conversation.id}")
-        return {"success": True, "message_id": new_message.id, "conversation_id": conversation.id}
+        print(
+            f"Message saved with ID: {new_message.id} in conversation ID: {conversation.id}"
+        )
+        return {
+            "success": True,
+            "message_id": new_message.id,
+            "conversation_id": conversation.id,
+        }
 
     except Exception as e:
         print(f"Error saving message to database: {e}")

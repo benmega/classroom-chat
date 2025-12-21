@@ -22,12 +22,14 @@ def summarize_table(cursor, table_name, limit=5):
 
 def search_in_table(cursor, table_name, column, search_value):
     """Search for specific entries in a table."""
-    cursor.execute(f"SELECT * FROM {table_name} WHERE {column} LIKE ?", (f"%{search_value}%",))
+    cursor.execute(
+        f"SELECT * FROM {table_name} WHERE {column} LIKE ?", (f"%{search_value}%",)
+    )
     return cursor.fetchall()
 
 
 def main():
-    db_path = '../dev_users.db'  # Adjust your database path as needed
+    db_path = "../dev_users.db"  # Adjust your database path as needed
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
 
@@ -60,7 +62,9 @@ def main():
 
         # Search or custom SQL
         while True:
-            action = input("\nChoose an action: (1) Search (2) Run custom SQL (3) Exit: ")
+            action = input(
+                "\nChoose an action: (1) Search (2) Run custom SQL (3) Exit: "
+            )
             if action == "1":
                 column = input(f"Enter the column name to search in '{table_name}': ")
                 search_value = input("Enter the value to search for: ")
@@ -68,7 +72,9 @@ def main():
                 if len(results) == 0:
                     print("No results found")
                 else:
-                    print(f"\nSearch results for '{search_value}' in column '{column}':")
+                    print(
+                        f"\nSearch results for '{search_value}' in column '{column}':"
+                    )
                     for result in results:
                         print(result)
             elif action == "2":

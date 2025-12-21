@@ -4,23 +4,22 @@ Type: py
 Summary: Flask routes for upload routes functionality.
 """
 
-import os
-
-from flask import Blueprint, request, jsonify, send_from_directory, abort
 import base64
-from io import BytesIO
-from PIL import Image
-from datetime import datetime
 import mimetypes
+import os
+from datetime import datetime
+from io import BytesIO
+
+from PIL import Image
+from flask import Blueprint, request, jsonify, send_from_directory, abort
 
 from application import limiter
 from application.config import Config
-from application.decorators.licensing import premium_required
 
-upload = Blueprint('upload', __name__)
+upload = Blueprint("upload", __name__)
 
 
-@upload.route('/upload_file', methods=['POST'])
+@upload.route("/upload_file", methods=["POST"])
 @limiter.limit("10 per minute; 20 per day")
 # @premium_required
 def upload_file():
@@ -32,7 +31,7 @@ def upload_file():
     if not json_data:
         return jsonify({"error": "Invalid JSON data"}), 400
 
-    data_url = json_data.get('file')
+    data_url = json_data.get("file")
 
     if not data_url:
         return jsonify({"error": "No file data provided"}), 400
@@ -41,34 +40,34 @@ def upload_file():
     mime_type = header.split(";")[0].split(":")[1]
     data = base64.b64decode(encoded)
 
-    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     file_path = None
 
-    extension = mimetypes.guess_extension(mime_type) or 'bin'
+    extension = mimetypes.guess_extension(mime_type) or "bin"
 
-    if mime_type.startswith('image/'):
-        directory = 'userData/image'
+    if mime_type.startswith("image/"):
+        directory = "userData/image"
         os.makedirs(directory, exist_ok=True)
-        file_path = f'userData/image/file_{timestamp}{extension}'
+        file_path = f"userData/image/file_{timestamp}{extension}"
         image = Image.open(BytesIO(data))
         image.save(file_path)
-    elif mime_type == 'application/pdf':
-        directory = 'userData/pdf'
+    elif mime_type == "application/pdf":
+        directory = "userData/pdf"
         os.makedirs(directory, exist_ok=True)
-        file_path = f'userData/pdf/file_{timestamp}{extension}'
-        with open(file_path, 'wb') as f:
+        file_path = f"userData/pdf/file_{timestamp}{extension}"
+        with open(file_path, "wb") as f:
             f.write(data)
     else:
-        directory = 'userData/other'
+        directory = "userData/other"
         os.makedirs(directory, exist_ok=True)
-        file_path = f'userData/other/file_{timestamp}{extension}'
-        with open(file_path, 'wb') as f:
+        file_path = f"userData/other/file_{timestamp}{extension}"
+        with open(file_path, "wb") as f:
             f.write(data)
 
     return jsonify({"message": "File uploaded successfully", "file_path": file_path})
 
 
-@upload.route('/uploads/<filename>')
+@upload.route("/uploads/<filename>")
 # @premium_required
 def uploaded_file(filename):
     file_path = os.path.join(Config.UPLOAD_FOLDER, filename)

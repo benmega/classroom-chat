@@ -1,6 +1,7 @@
-import os
 import csv
+import os
 import sys
+
 from docx import Document
 
 
@@ -21,7 +22,7 @@ def extract_info_from_docx(file_path):
     # Get filename remainder
     filename = os.path.basename(file_path)
     if filename.startswith("Comments - "):
-        name_remainder = filename[len("Comments - "):]
+        name_remainder = filename[len("Comments - ") :]
         # Remove extension if desired, otherwise keep it.
         # Keeping extension for accuracy based on prompt "remainder of the name"
     else:
@@ -36,7 +37,7 @@ def extract_info_from_docx(file_path):
         "teachers_comment": "",
         "game_link": "",
         "student_code": "",
-        "additional_content": ""
+        "additional_content": "",
     }
 
     # Indices of paragraphs that have been assigned to a specific category
@@ -88,7 +89,9 @@ def extract_info_from_docx(file_path):
     # 5. Additional Content (Anything not marked as used)
     additional_lines = []
     for i, text in enumerate(all_paragraphs):
-        if i not in used_indices and text.strip():  # Check if not used and not just empty whitespace
+        if (
+            i not in used_indices and text.strip()
+        ):  # Check if not used and not just empty whitespace
             additional_lines.append(text)
 
     data["additional_content"] = "\n".join(additional_lines)
@@ -111,13 +114,18 @@ def main():
         "Teacher's Comment",
         "Game Link",
         "Student Code",
-        "Additional Content"
+        "Additional Content",
     ]
 
     found_count = 0
 
-    with open(output_csv, mode='w', newline='', encoding='utf-8') as f:
-        writer = csv.DictWriter(f, fieldnames=[h.lower().replace(" ", "_").replace("'", "") for h in csv_headers])
+    with open(output_csv, mode="w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(
+            f,
+            fieldnames=[
+                h.lower().replace(" ", "_").replace("'", "") for h in csv_headers
+            ],
+        )
 
         # Map headers to the keys used in the data dictionary
         # This mapping is slightly manual to match the specific keys in extract_info_from_docx
@@ -136,16 +144,18 @@ def main():
                     extracted_data = extract_info_from_docx(file_path)
 
                     if extracted_data:
-                        writer.writerow([
-                            extracted_data["file_path"],
-                            extracted_data["full_content"],
-                            extracted_data["name_remainder"],
-                            extracted_data["project_description"],
-                            extracted_data["teachers_comment"],
-                            extracted_data["game_link"],
-                            extracted_data["student_code"],
-                            extracted_data["additional_content"]
-                        ])
+                        writer.writerow(
+                            [
+                                extracted_data["file_path"],
+                                extracted_data["full_content"],
+                                extracted_data["name_remainder"],
+                                extracted_data["project_description"],
+                                extracted_data["teachers_comment"],
+                                extracted_data["game_link"],
+                                extracted_data["student_code"],
+                                extracted_data["additional_content"],
+                            ]
+                        )
                         found_count += 1
 
     print(f"\nDone! Processed {found_count} files.")

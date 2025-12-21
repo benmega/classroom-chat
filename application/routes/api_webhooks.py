@@ -37,42 +37,60 @@ def youtube_callback():
     # Example: "ben-space-invaders.mp4" -> user: "ben", project: "space-invaders"
     try:
         clean_name = os.path.splitext(filename)[0]  # Remove .mp4
-        parts = clean_name.split('-', 1)
+        parts = clean_name.split("-", 1)
 
         if len(parts) < 2:
-            return jsonify({"success": False, "error": "Filename format must be username-project-name"}), 400
+            return (
+                jsonify(
+                    {
+                        "success": False,
+                        "error": "Filename format must be username-project-name",
+                    }
+                ),
+                400,
+            )
 
         username_raw = parts[0]
         project_slug = parts[1]
 
         # Convert slug back to likely DB format: "game-dev-1" -> "game dev 1"
-        project_name_guess = project_slug.replace('-', ' ')
+        project_name_guess = project_slug.replace("-", " ")
     except Exception as e:
         return jsonify({"success": False, "error": f"Parsing failed: {str(e)}"}), 400
 
     # 4. Database Lookup
-    user = User.query.filter(func.lower(User.username) == func.lower(username_raw)).first()
+    user = User.query.filter(
+        func.lower(User.username) == func.lower(username_raw)
+    ).first()
     if not user:
-        return jsonify({"success": False, "error": f"User '{username_raw}' not found"}), 404
+        return (
+            jsonify({"success": False, "error": f"User '{username_raw}' not found"}),
+            404,
+        )
 
     # Try to find project (Case insensitive match)
     project = Project.query.filter(
         Project.user_id == user.id,
-        func.lower(Project.name) == func.lower(project_name_guess)
+        func.lower(Project.name) == func.lower(project_name_guess),
     ).first()
 
     if not project:
         # Fallback: Try exact slug match if project names are stored as slugs
         project = Project.query.filter(
             Project.user_id == user.id,
-            func.lower(Project.name) == func.lower(project_slug)
+            func.lower(Project.name) == func.lower(project_slug),
         ).first()
 
     if not project:
-        return jsonify({
-            "success": False,
-            "error": f"Project '{project_name_guess}' not found for user '{user.username}'"
-        }), 404
+        return (
+            jsonify(
+                {
+                    "success": False,
+                    "error": f"Project '{project_name_guess}' not found for user '{user.username}'",
+                }
+            ),
+            404,
+        )
 
     # 5. Update Record
     try:
@@ -82,12 +100,14 @@ def youtube_callback():
 
         db.session.commit()
 
-        return jsonify({
-            "success": True,
-            "message": f"Updated project {project.id}",
-            "video": project.video_url,
-            "image": project.image_url
-        })
+        return jsonify(
+            {
+                "success": True,
+                "message": f"Updated project {project.id}",
+                "video": project.video_url,
+                "image": project.image_url,
+            }
+        )
     except Exception as e:
         db.session.rollback()
         return jsonify({"success": False, "error": str(e)}), 500
