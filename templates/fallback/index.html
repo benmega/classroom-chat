@@ -324,6 +324,10 @@ Summary: Main classroom chat landing and conversation page template.
         button.addEventListener('click', async () => {
             sleepSection.classList.add('hidden');  /* NEW: hide instantly */
 
+            // NEW: show the rocket and progress bar immediately
+            progressContainer.classList.add('active');
+            serverIcon.classList.add('active');
+
             button.disabled = true;
             message.className = 'status-loading';
             message.textContent = 'Sending wake up signal...';

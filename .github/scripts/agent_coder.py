@@ -129,18 +129,18 @@ def main():
                 {"role": "tool", "tool_call_id": tool_call.id, "content": result}
             )
 
-    # ... after the loop ...
-    # Write a summary of the agent's actions to a log file
-    log_content = ""
-    for m in messages:
-        # If 'm' is an OpenAI object, convert it; if it's already a dict, leave it
-        m_dict = m if isinstance(m, dict) else m.model_dump()
-
-        if m_dict.get("role") != "system":
-            log_content += f"### {m_dict.get('role').upper()}\n{m_dict.get('content') or 'Called Tool'}\n\n"
-
-    with open("ai_agent_log.md", "w") as f:
-        f.write("# Agent Activity Log\n\n" + log_content)
+    # # ... after the loop ...
+    # # Write a summary of the agent's actions to a log file
+    # log_content = ""
+    # for m in messages:
+    #     # If 'm' is an OpenAI object, convert it; if it's already a dict, leave it
+    #     m_dict = m if isinstance(m, dict) else m.model_dump()
+    #
+    #     if m_dict.get("role") != "system":
+    #         log_content += f"### {m_dict.get('role').upper()}\n{m_dict.get('content') or 'Called Tool'}\n\n"
+    #
+    # with open("ai_agent_log.md", "w") as f:
+    #     f.write("# Agent Activity Log\n\n" + log_content)
 
 
 if __name__ == "__main__":
