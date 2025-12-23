@@ -14,3 +14,4 @@ certificates/
 *.iml
 *.ipr
 *.iws
+.venv/
