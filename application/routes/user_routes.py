@@ -508,31 +508,60 @@ def handle_project_image_upload(file):
     return None
 
 
-def handle_video_s3_upload(file, user_obj, project_name):
+def handle_video_s3_upload(file, user_obj, project_name, project_id):
     """
-    Renames file to 'username-project-slug.ext' and uploads to S3.
+    Renames file and uploads to S3 with project_id in metadata.
     """
     if not file or file.filename == "":
         return False
 
-    # 1. Generate Filename: "ben-space-invaders.mp4"
     ext = file.filename.rsplit(".", 1)[1].lower()
     if ext not in ["mp4", "mov", "avi", "wmv", "mkv", "webm"]:
         return False
 
-    # Create slug from project name (Space Invaders -> space-invaders)
     project_slug = secure_filename(project_name).replace("_", "-").lower()
     s3_filename = f"{user_obj.username}-{project_slug}.{ext}"
 
-    # 2. Upload to S3
     try:
         s3_client.upload_fileobj(
             file,
             S3_UPLOAD_BUCKET,
             s3_filename,
-            ExtraArgs={"ContentType": file.content_type},
+            ExtraArgs={
+                "ContentType": file.content_type,
+                "Metadata": {"project_id": str(project_id)} # Crucial for Lambda
+            },
         )
         return True
     except Exception as e:
         print(f"S3 Upload Error: {e}")
         return False
+#
+# def handle_video_s3_upload(file, user_obj, project_name):
+#     """
+#     Renames file to 'username-project-slug.ext' and uploads to S3.
+#     """
+#     if not file or file.filename == "":
+#         return False
+#
+#     # 1. Generate Filename: "ben-space-invaders.mp4"
+#     ext = file.filename.rsplit(".", 1)[1].lower()
+#     if ext not in ["mp4", "mov", "avi", "wmv", "mkv", "webm"]:
+#         return False
+#
+#     # Create slug from project name (Space Invaders -> space-invaders)
+#     project_slug = secure_filename(project_name).replace("_", "-").lower()
+#     s3_filename = f"{user_obj.username}-{project_slug}.{ext}"
+#
+#     # 2. Upload to S3
+#     try:
+#         s3_client.upload_fileobj(
+#             file,
+#             S3_UPLOAD_BUCKET,
+#             s3_filename,
+#             ExtraArgs={"ContentType": file.content_type},
+#         )
+#         return True
+#     except Exception as e:
+#         print(f"S3 Upload Error: {e}")
+#         return False
