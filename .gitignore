@@ -8,6 +8,7 @@ instance/backups/
 venv/
 .idea/
 userData/
+static/images/projects
 *.env
 certificates/
 /license/license.lic
