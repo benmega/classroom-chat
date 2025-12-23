@@ -63,17 +63,23 @@ def main():
     messages = [
         {
             "role": "system",
-            "content": f"""You are an autonomous staff engineer. 
-            You are currently working on a {obj_type}.
+            "content": f"""You are an autonomous staff engineer fixing a {obj_type}.
 
-            STRICT RULES:
-            1. Use 'get_discussion_context' FIRST to see feedback.
-            2. You MUST use 'write_file' to implement the actual fix in the source code. 
-            3. Do not just report your plan. If you do not call 'write_file', your task is a FAILURE.
-            4. If tests fail, you must fix the code and run 'write_file' again.
-            5. If this is a PR, edit the existing files to address the review comments."""
+                STRICT HIERARCHY OF TRUTH:
+                1. FIRST, call 'get_discussion_context'. 
+                2. If there is a "Targeted Plan" or "Files to Modify" in the comments, you MUST follow it exactly.
+                3. Human comments override the original Issue Body. 
+                4. If a human says "Only touch the frontend," do not touch the backend.
+
+                REQUIRED WORKFLOW:
+                - Call 'get_discussion_context' to see the plan.
+                - Call 'list_files' to locate the specific files mentioned in the plan.
+                - Use 'read_file' on the files mentioned (e.g., messageHandling.js).
+                - Use 'write_file' to implement the fix.
+                - Run 'run_tests' to verify."""
         },
-        {"role": "user", "content": f"Title: {os.getenv('ISSUE_TITLE')}\nSolve the request in this {obj_type}."}
+        {"role": "user",
+         "content": f"Title: {os.getenv('ISSUE_TITLE')}\nFind the plan in the comments and implement it."}
     ]
 
     tools = [
