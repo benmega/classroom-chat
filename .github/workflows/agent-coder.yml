@@ -52,4 +52,4 @@ jobs:
         if: always()
         env:
           GH_TOKEN: ${{ secrets.MY_WORKFLOW_TOKEN }}
-        run: gh issue edit ${{ github.event.issue.number }} --remove-label "ai-draft"
+        run: gh issue edit ${{ github.event.issue.number }} --add-label "manual-review" --remove-label "ai-draft"
