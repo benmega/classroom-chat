@@ -1,40 +1,44 @@
 import os
 import pathlib
 
-from dotenv import load_dotenv
 from openai import OpenAI
 
-load_dotenv()
+
+def get_directory_summary(root_dir=".", exclude=None):
+    """Provides the full file tree so the architect knows where files live."""
+    exclude = exclude or {".git", "__pycache__", ".github", "node_modules", "venv"}
+    summary = []
+    for path in sorted(pathlib.Path(root_dir).rglob("*")):
+        if any(part in exclude for part in path.parts): continue
+        depth = len(path.parts) - 1
+        summary.append(f"{'  ' * depth}- {path.name}{'/' if path.is_dir() else ''}")
+    return "\n".join(summary)
 
 
-def get_file_headers(root_dir=".", limit=15):
-    """Reads the first few lines of JS and Python files to understand their purpose."""
+def get_file_headers(root_dir=".", limit=50):
+    """Reads the first 10 lines of key files to provide code context."""
     context = []
-    extensions = {'.js', '.py', '.html'}
-
+    extensions = {'.js', '.py', '.html', '.css'}
     for path in pathlib.Path(root_dir).rglob("*"):
         if path.suffix in extensions and not any(part.startswith('.') for part in path.parts):
             try:
                 with open(path, 'r', encoding='utf-8') as f:
-                    # Get first 10 lines (usually contains your file summaries)
                     header = "".join([f.readline() for _ in range(10)])
                     context.append(f"FILE: {path}\nCONTENT SUMMARY:\n{header}\n---")
             except:
                 continue
-    return "\n".join(context[:50])  # Limit to stay within context window
+    return "\n".join(context[:limit])
 
 
 def main():
-    api_key = os.getenv("OPENAI_API_KEY")
-    client = OpenAI(api_key=api_key)
+    client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-    issue_title = os.getenv("ISSUE_TITLE", "Profile link broken in chat")
-    issue_body = os.getenv("ISSUE_BODY",
-                           "User icon clickable link to profile is broken. Admin says check messagehandling.js")
-
-    # NEW: Get actual file metadata
+    # Context Gathering
+    repo_structure = get_directory_summary()
     file_metadata = get_file_headers()
-    repo_structure = ""  # Keep your existing directory summary here
+
+    issue_title = os.getenv("ISSUE_TITLE", "No Title")
+    issue_body = os.getenv("ISSUE_BODY", "No Description")
 
     system_prompt = """You are a Senior System Architect. Your goal is to triage GitHub issues with surgical precision.
 
@@ -45,18 +49,27 @@ def main():
     4. CLASSIFY SIZE: Identify if the issue is 'XS' (one line fix), 'S' (one file), 'M' (multiple files), or 'L' (architectural)."""
 
     user_prompt = f"""
-    Analyze the issue and provide:
-    1. **Size Estimate**: [XS/S/M/L] and why.
-    2. **Root Cause Analysis**: Hypothesize exactly why it's failing based on the file headers.
-    3. **Targeted Plan**: Step-by-step for the coding agent.
-    4. **Files to Modify**: Exact list of files.
+    Analyze the following issue and provide a Targeted Implementation Plan.
 
     ### ISSUE:
     Title: {issue_title}
     Description: {issue_body}
 
-    ### FILE CONTEXT (First 10 lines of key files):
+    ### REPO STRUCTURE:
+    {repo_structure}
+
+    ### FILE CONTEXT (First 10 lines):
     {file_metadata}
+
+    ### OUTPUT FORMAT:
+    1. **Size Estimate**: [XS/S/M/L] and why.
+    2. **Root Cause Analysis**: Hypothesize exactly why it's failing.
+
+    ---PLAN---
+    (Provide a numbered list of steps for the coding agent)
+
+    ---FILES TO EXAMINE---
+    (List the exact file paths to be modified)
     """
 
     response = client.chat.completions.create(
@@ -66,7 +79,6 @@ def main():
             {"role": "user", "content": user_prompt},
         ],
     )
-
     print(response.choices[0].message.content)
 
 

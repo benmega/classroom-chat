@@ -9,89 +9,119 @@ client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 
 # --- TOOLS ---
+
 def list_files():
+    """Locate files in the repository."""
     files = []
     for path in pathlib.Path(".").rglob('*'):
         if any(x in path.parts for x in {'.git', 'venv', '__pycache__', '.github'}): continue
-        files.append(str(path))
+        if path.is_file(): files.append(str(path))
     return "\n".join(files)
 
 
-def read_file(path):
+def search_code(query):
+    """Search for specific strings or patterns using grep."""
     try:
-        with open(path, 'r') as f:
-            return f.read()
+        result = subprocess.run(["grep", "-rnI", query, "."], capture_output=True, text=True)
+        return result.stdout[:2000]
     except Exception as e:
         return str(e)
 
 
-def write_file(path, content):
-    os.makedirs(os.path.dirname(path), exist_ok=True)
-    with open(path, 'w') as f: f.write(content)
-    return f"Successfully updated {path}."
+def read_file(path):
+    """Read file with line numbers for precise patching."""
+    try:
+        with open(path, "r") as f:
+            lines = f.readlines()
+            return "".join([f"{i + 1}: {line}" for i, line in enumerate(lines)])
+    except Exception as e:
+        return str(e)
+
+
+def patch_file(path, start_line, end_line, new_content):
+    """Replace a specific range of lines. Prevents accidental code deletion."""
+    try:
+        with open(path, "r") as f:
+            lines = f.readlines()
+
+        # Adjust for 1-based indexing
+        lines[int(start_line) - 1: int(end_line)] = [new_content + "\n"]
+
+        with open(path, "w") as f:
+            f.writelines(lines)
+        return f"Updated {path} from line {start_line} to {end_line}."
+    except Exception as e:
+        return str(e)
 
 
 def run_tests():
+    """Execute pytest and return results."""
     result = subprocess.run(["pytest"], capture_output=True, text=True)
-    return f"Test Status: {'PASSED' if result.returncode == 0 else 'FAILED'}\nOutput:\n{result.stdout + result.stderr}"
+    return f"STDOUT: {result.stdout}\nSTDERR: {result.stderr}\nCode: {result.returncode}"
 
 
 def get_discussion_context():
-    obj_number = os.getenv("OBJ_NUMBER")
+    """Fetch full context including comments and reviews from GitHub."""
+    obj_num = os.getenv("OBJ_NUMBER")
     is_pr = os.getenv("IS_PR") == "true"
-    cmd_type = "pr" if is_pr else "issue"
+    cmd = "pr" if is_pr else "issue"
     try:
         result = subprocess.run(
-            ["gh", cmd_type, "view", obj_number, "--json", "body,comments,reviews"],
+            ["gh", cmd, "view", obj_num, "--json", "body,comments,reviews"],
             capture_output=True, text=True
         )
         data = json.loads(result.stdout)
         context = f"Main Description: {data.get('body')}\n\nComments:\n"
-        for comment in data.get("comments", []):
-            context += f"- {comment['author']['login']}: {comment['body']}\n"
+        for c in data.get("comments", []):
+            context += f"- {c['author']['login']}: {c['body']}\n"
         if is_pr:
-            for review in data.get("reviews", []):
-                context += f"- REVIEW ({review['state']}) by {review['author']['login']}: {review['body']}\n"
+            for r in data.get("reviews", []):
+                context += f"- REVIEW ({r['state']}) by {r['author']['login']}: {r['body']}\n"
         return context
     except Exception as e:
         return f"Error fetching discussion: {str(e)}"
 
 
 # --- MAIN LOOP ---
+
 def main():
     obj_type = "Pull Request" if os.getenv("IS_PR") == "true" else "Issue"
+    plan_context = os.getenv("ISSUE_PLAN", "No plan provided.")
+
     messages = [
         {
             "role": "system",
             "content": f"""You are an autonomous staff engineer fixing a {obj_type}.
 
-                STRICT HIERARCHY OF TRUTH:
-                1. FIRST, call 'get_discussion_context'. 
-                2. If there is a "Targeted Plan" or "Files to Modify" in the comments, you MUST follow it exactly.
-                3. Human comments override the original Issue Body. 
-                4. If a human says "Only touch the frontend," do not touch the backend.
+            STRICT HIERARCHY OF TRUTH:
+            1. Call 'get_discussion_context' first.
+            2. Follow any "Targeted Plan" in comments exactly.
+            3. Human comments override the original Issue/PR body.
 
-                REQUIRED WORKFLOW:
-                - Call 'get_discussion_context' to see the plan.
-                - Call 'list_files' to locate the specific files mentioned in the plan.
-                - Use 'read_file' on the files mentioned (e.g., messageHandling.js).
-                - Use 'write_file' to implement the fix.
-                - Run 'run_tests' to verify."""
+            REQUIRED WORKFLOW:
+            1) Search/List files to locate the problem.
+            2) Read files with line numbers.
+            3) Patch only the necessary lines (do not overwrite whole files).
+            4) Run tests to verify the fix."""
         },
         {"role": "user",
-         "content": f"Title: {os.getenv('ISSUE_TITLE')}\nFind the plan in the comments and implement it."}
+         "content": f"Title: {os.getenv('ISSUE_TITLE')}\nArchitect Plan: {plan_context}\n\nImplement the fix."}
     ]
 
     tools = [
         {"type": "function", "function": {"name": "list_files", "description": "List all repo files"}},
+        {"type": "function", "function": {"name": "search_code",
+                                          "parameters": {"type": "object", "properties": {"query": {"type": "string"}}},
+                                          "description": "Grep search"}},
         {"type": "function",
          "function": {"name": "read_file", "parameters": {"type": "object", "properties": {"path": {"type": "string"}}},
-                      "description": "Read a file"}},
-        {"type": "function", "function": {"name": "write_file", "parameters": {"type": "object", "properties": {
-            "path": {"type": "string"}, "content": {"type": "string"}}}, "description": "Write a file"}},
-        {"type": "function", "function": {"name": "run_tests", "description": "Run the project test suite"}},
+                      "description": "Read with line numbers"}},
+        {"type": "function", "function": {"name": "patch_file", "parameters": {"type": "object", "properties": {
+            "path": {"type": "string"}, "start_line": {"type": "integer"}, "end_line": {"type": "integer"},
+            "new_content": {"type": "string"}}}, "description": "Replace lines"}},
+        {"type": "function", "function": {"name": "run_tests", "description": "Run pytest"}},
         {"type": "function",
-         "function": {"name": "get_discussion_context", "description": "Get all comments and review feedback"}}
+         "function": {"name": "get_discussion_context", "description": "Get latest GH comments/reviews"}}
     ]
 
     for _ in range(12):
@@ -101,18 +131,20 @@ def main():
         if not msg.tool_calls: break
 
         for tool_call in msg.tool_calls:
-            name = tool_call.function.name
-            args = json.loads(tool_call.function.arguments)
+            name, args = tool_call.function.name, json.loads(tool_call.function.arguments)
             if name == "list_files":
                 result = list_files()
+            elif name == "search_code":
+                result = search_code(args["query"])
             elif name == "read_file":
-                result = read_file(args['path'])
-            elif name == "write_file":
-                result = write_file(args['path'], args['content'])
+                result = read_file(args["path"])
+            elif name == "patch_file":
+                result = patch_file(args["path"], args["start_line"], args["end_line"], args["new_content"])
             elif name == "run_tests":
                 result = run_tests()
             elif name == "get_discussion_context":
                 result = get_discussion_context()
+
             messages.append({"role": "tool", "tool_call_id": tool_call.id, "content": result})
 
 
