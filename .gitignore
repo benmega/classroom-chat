@@ -11,3 +11,6 @@ userData/
 *.env
 certificates/
 /license/license.lic
+*.iml
+*.ipr
+*.iws
