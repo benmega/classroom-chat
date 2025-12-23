@@ -31,10 +31,13 @@ message = Blueprint("message", __name__)
 @limiter.limit("20 per minute; 100 per day")
 def send_message():
     session_userid = session.get("user")
-    form_message = request.form["message"]
+    form_message = request.form["message"].strip()
 
     if not session_userid:
         return jsonify(success=False, error="No session username found"), 400
+
+    if not form_message:
+        return jsonify(success=False, error="Message content cannot be empty"), 400
 
     user = get_user(session_userid)
     if not user:

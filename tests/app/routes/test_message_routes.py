@@ -38,6 +38,23 @@ def test_send_message(client, init_db, sample_admin):
         assert b"success" in response.data
 
 
+def test_send_empty_message(client, init_db, sample_admin):
+    """Test sending an empty message."""
+    # Set up session for user
+    with client.session_transaction() as sess:
+        sess["user"] = sample_admin.username
+
+    # Mock dependencies
+    from unittest.mock import patch
+
+    with patch(
+        "application.routes.message_routes.get_user", return_value=sample_admin
+    ):
+        response = client.post("/message/send_message", data={"message": " "})
+        assert response.status_code == 400
+        assert b"Message content cannot be empty" in response.data
+
+
 def test_send_message_no_session(client):
     """Test sending message with no active session."""
     response = client.post("/message/send_message", data={"message": "Hello!"})
