@@ -1,32 +1,30 @@
 /*
 File: messageHandling.js
 Type: js
-Summary: Client-side messaging logic, conversation refresh, and file uploads.
+Summary: Client-side messaging, conversation refresh, and uploads.
 */
 
-const updateInterval = 2000;
+const UPDATE_INTERVAL_MS = 2000;
+const HEARTBEAT_INTERVAL_MS = 15000;
 
 export function setupMessagingAndConversation() {
-    const messageForm = document.getElementById('messageForm'); // Ensure this ID matches your HTML form
-    if (messageForm) {
-        messageForm.addEventListener('submit', function(e) {
-            e.preventDefault();
+    const messageForm = document.getElementById('messageForm');
+    if (!messageForm) return;
 
-            // Only try to upload if there's a file selected
-            const fileInput = document.getElementById('file');
+    messageForm.addEventListener('submit', e => {
+        e.preventDefault();
 
-            if (fileInput && fileInput.files.length > 0) {
-                uploadFile();
-            } else {
-                sendMessage();
-            }
+        const fileInput = document.getElementById('file');
+        if (fileInput?.files?.length) {
+            uploadFile();
+        } else {
+            sendMessage();
+        }
 
-            // updateConversation will now call autoscrollToBottom
-            updateConversation();
-        });
-    }
+        updateConversation();
+    });
 
-    setInterval(updateConversation, updateInterval);
+    setInterval(updateConversation, UPDATE_INTERVAL_MS);
     startHeartbeat();
 }
 
@@ -36,23 +34,17 @@ function startHeartbeat() {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
         }).catch(err => console.error('Heartbeat failed:', err));
-    }, 15000);
+    }, HEARTBEAT_INTERVAL_MS);
 }
-
 
 export function updateConversation() {
     fetchCurrentConversation()
-        .then(data => {
-            updateChatUI(data.conversation);
-        })
-        .catch(error => {
-            console.error('Failed to fetch conversation:', error);
-        });
+        .then(data => updateChatUI(data.conversation))
+        .catch(err => console.error('Failed to fetch conversation:', err));
 }
 
 export function sendMessage() {
     const message = getMessageInput();
-
     if (!message) {
         showAlert('Message is required.', 'warning');
         return;
@@ -63,113 +55,102 @@ export function sendMessage() {
     sendRequest('message/send_message', params)
         .then(handleResponse)
         .catch(handleError);
-    // Add autoscroll after sending a message to see the new message immediately
+
     autoscrollToBottom();
 }
 
 function fetchCurrentConversation() {
-    return fetch('message/get_current_conversation')
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return response.json();
-        });
+    return fetch('message/get_current_conversation').then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+        return response.json();
+    });
 }
 
 function updateChatUI(conversationData) {
     const chatDiv = document.getElementById('chat');
-    if (!chatDiv) {
-        console.error('Chat div not found');
-        return;
-    }
+    if (!chatDiv) return;
 
-    // Check if the user is already near the bottom before updating
-    const isScrolledToBottom = chatDiv.scrollHeight - chatDiv.clientHeight <= chatDiv.scrollTop + 1;
+    const wasAtBottom =
+        chatDiv.scrollHeight - chatDiv.clientHeight <= chatDiv.scrollTop + 1;
 
     chatDiv.innerHTML = '';
 
-    conversationData.messages.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+    conversationData.messages
+        .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
+        .forEach(msg => {
+            chatDiv.innerHTML += formatMessage({
+                nickname: msg.nickname,
+                username: msg.username,
+                profilePic: msg.user_profile_pic,
+                content: msg.content,
+            });
+        });
 
-    conversationData.messages.forEach(msg => {
-        // Pass msg.username (handle) to the format function
-        const messageHTML = formatMessage(msg.user_name, msg.user_profile_pic, msg.content, msg.username);
-        chatDiv.innerHTML += messageHTML;
-    });
-
-    if (isScrolledToBottom) {
+    if (wasAtBottom) {
         autoscrollToBottom();
     }
 }
 
-function formatMessage(displayName, profilePicFilename, message, handle) {
-    // Replace newlines with break tags
-    message = message.replace(/\n/g, '<br>');
+function formatMessage({ nickname, username, profilePic, content }) {
+    const formattedText = linkify(content.replace(/\n/g, '<br>'));
 
-    // Regex to auto-link URLs
-    const urlRegex = /(https?:\/\/[^\s<]+)|(\bwww\.[^\s<]+(?:\.[^\s<]+)+\b)/g;
-    const formattedMessage = message.replace(urlRegex, url => {
-        const href = url.startsWith('http') ? url : 'http://' + url;
-        return `<a href="${href}" target="_blank">${url}</a>`;
-    });
-
-    const profilePicUrl = `/user/profile_pictures/${profilePicFilename || 'Default_pfp.jpg'}`;
-    // Construct link using the handle (username)
-    const profileLink = handle ? `/user/profile/${handle}` : '#';
-
-    const isSelf = displayName === getUsername();
+    const profilePicUrl = `/user/profile_pictures/${profilePic || 'Default_pfp.jpg'}`;
+    const profileLink = username ? `/user/profile/${username}` : '#';
+    const isSelf = username === getUsername();
 
     return `
         <div class="chat-message ${isSelf ? 'self' : ''}">
             <a href="${profileLink}">
-                <img src="${profilePicUrl}" alt="${displayName}" class="user-profile-pic">
+                <img src="${profilePicUrl}" alt="${nickname}" class="user-profile-pic">
             </a>
             <div class="message-bubble">
-                <strong class="username">${displayName}:</strong>
-                <span class="message-text">${formattedMessage}</span>
+                <strong class="username">${nickname}:</strong>
+                <span class="message-text">${formattedText}</span>
             </div>
         </div>
     `;
 }
 
-/**
- * Scrolls the chat container to the bottom.
- */
+function linkify(text) {
+    const urlRegex = /(https?:\/\/[^\s<]+)|(\bwww\.[^\s<]+(?:\.[^\s<]+)+\b)/g;
+    return text.replace(urlRegex, url => {
+        const href = url.startsWith('http') ? url : `http://${url}`;
+        return `<a href="${href}" target="_blank">${url}</a>`;
+    });
+}
+
 function autoscrollToBottom() {
     const chatDiv = document.getElementById('chat');
     if (chatDiv) {
-        // Scroll the element's content to the maximum possible position
         chatDiv.scrollTop = chatDiv.scrollHeight;
     }
 }
 
 function getMessageInput() {
-    return document.getElementById('message').value.trim();
+    return document.getElementById('message')?.value.trim() || '';
 }
 
 function getUsername() {
-    // Ensure this element exists in your HTML
-    const el = document.getElementById('currentUsername');
-    return el ? el.textContent.trim() : '';
+    return document.getElementById('currentUsername')?.textContent.trim() || '';
 }
 
 function createRequestParams(data) {
     const params = new URLSearchParams();
-    Object.keys(data).forEach(key => params.append(key, data[key]));
+    Object.entries(data).forEach(([k, v]) => params.append(k, v));
     return params;
 }
 
 function sendRequest(url, params) {
     return fetch(url, {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: params
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: params,
     }).then(response => {
         if (!response.ok) {
-            return response.json().then(errorData => {
-                throw errorData;
+            return response.json().then(err => {
+                throw err;
             });
         }
         return response.json();
@@ -182,35 +163,32 @@ function handleResponse(data) {
         if (data.system_message) {
             showAlert(data.system_message, 'success');
         }
-    } else {
-        showAlert((data.system_message || data.error || "Something went wrong."), 'error');
+        return;
     }
+    showAlert(data.system_message || data.error || 'Something went wrong.', 'error');
 }
 
 function handleError(error) {
-    console.error('Error:', error);
-    if (error && error.message) {
-        showAlert('Error: ' + error.message, 'error');
-    } else {
-        showAlert('An unexpected error occurred.', 'error');
-    }
+    console.error(error);
+    showAlert(
+        error?.message ? `Error: ${error.message}` : 'An unexpected error occurred.',
+        'error'
+    );
 }
 
 function clearMessageInput() {
-    const msgInput = document.getElementById('message');
-    if(msgInput) msgInput.value = '';
+    const input = document.getElementById('message');
+    if (input) input.value = '';
 }
 
 export function uploadFile() {
-    const file = getImageFile();
-
+    const file = document.getElementById('file')?.files?.[0];
     if (!file) return;
 
     convertFileToBase64(file)
-        .then(dataURL => {
-            const params = createJSONRequestParams({ file: dataURL });
-            return sendJsonRequest('/upload/upload_file', params);
-        })
+        .then(dataURL =>
+            sendJsonRequest('/upload/upload_file', createJSONRequestParams({ file: dataURL }))
+        )
         .then(handleUploadResponse)
         .catch(handleError);
 }
@@ -218,19 +196,13 @@ export function uploadFile() {
 function createJSONRequestParams(data) {
     return {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
     };
 }
 
-function sendJsonRequest(url, data) {
-    return fetch(url, data).then(response => response.json());
-}
-
-function getImageFile() {
-    return document.getElementById('file').files[0];
+function sendJsonRequest(url, options) {
+    return fetch(url, options).then(r => r.json());
 }
 
 function convertFileToBase64(file) {
@@ -243,14 +215,14 @@ function convertFileToBase64(file) {
 }
 
 function handleUploadResponse(data) {
-    if (data.message) {
-        console.log(data.message);
-        showAlert('File uploaded successfully.', 'success');
-        const fileInput = document.getElementById('file');
-        if(fileInput) fileInput.value = '';
-    } else {
-        showAlert('Error: ' + data.error, 'error');
+    if (!data.message) {
+        showAlert(`Error: ${data.error}`, 'error');
+        return;
     }
+
+    showAlert('File uploaded successfully.', 'success');
+    const fileInput = document.getElementById('file');
+    if (fileInput) fileInput.value = '';
 }
 
 function showAlert(message, icon = 'info') {
@@ -258,8 +230,8 @@ function showAlert(message, icon = 'info') {
         Swal.fire({
             title: 'Mr. Mega says',
             text: message,
-            icon: icon,
-            confirmButtonText: 'OK'
+            icon,
+            confirmButtonText: 'OK',
         });
     } else {
         alert(message);

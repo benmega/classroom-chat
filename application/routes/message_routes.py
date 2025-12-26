@@ -245,14 +245,12 @@ def is_appropriate(message, banned_words=None):
 def serialize_message(msg):
     user = getattr(msg, "user", None)
     if user:
-        user_name = (
-            getattr(user, "username", None)
-            or getattr(user, "nickname", None)
-            or "Unknown User"
-        )
+        username = getattr(user, "username", None)
+        nickname = getattr(user, "nickname", None)
         profile_pic = getattr(user, "profile_picture", None)
     else:
-        user_name = "Deleted User"
+        username = None
+        nickname = "Deleted User"
         profile_pic = None
 
     timestamp = getattr(msg, "created_at", None)
@@ -261,7 +259,8 @@ def serialize_message(msg):
 
     return {
         "user_id": msg.user_id,
-        "user_name": user_name,
+        "username": username,  # handle
+        "nickname": nickname,  # display name
         "user_profile_pic": profile_pic,
         "content": msg.content,
         "timestamp": timestamp,
