@@ -9,7 +9,16 @@ const HEARTBEAT_INTERVAL_MS = 15000;
 
 export function setupMessagingAndConversation() {
     const messageForm = document.getElementById('messageForm');
-    if (!messageForm) return;
+    const messageInput = document.getElementById('message'); // Select the textarea
+    if (!messageForm || !messageInput) return;
+
+    // Handle Enter and Shift+Enter
+    messageInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault(); // Prevent default newline
+            messageForm.requestSubmit(); // Trigger the submit event
+        }
+    });
 
     messageForm.addEventListener('submit', e => {
         e.preventDefault();
@@ -222,7 +231,7 @@ function handleUploadResponse(data) {
 
     showAlert('File uploaded successfully.', 'success');
     const fileInput = document.getElementById('file');
-    if (fileInput) fileInput.value = '';
+    if (fileInput) fileInput.value = '';f
 }
 
 function showAlert(message, icon = 'info') {
