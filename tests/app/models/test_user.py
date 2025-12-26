@@ -21,14 +21,8 @@ def test_user_duck_update(add_sample_user):
     assert user.duck_balance == 5
 
 
-def test_user_creation(add_sample_user, init_db):
-    user = add_sample_user("testuser", "hashed_pwd")
-    assert user.username == "testuser"
-    assert user.duck_balance == 0
-
-
 def test_user_query(add_sample_user, init_db):
-    user = add_sample_user("testuser", "hashed_pwd")
+    add_sample_user("testuser", "hashed_pwd")
     from application.models.user import User
     from application import db
 

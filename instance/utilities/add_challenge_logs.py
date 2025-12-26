@@ -54,7 +54,7 @@ def add_course_challenge_logs(username, domain, course_id):
         # Query all active challenges for the given course_id
         challenges = (
             db.session.query(Challenge.name)
-            .filter(Challenge.course_id == course_id, Challenge.is_active == True)
+            .filter(Challenge.course_id == course_id, Challenge.is_active)
             .all()
         )
 

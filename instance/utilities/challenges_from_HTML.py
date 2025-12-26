@@ -6,6 +6,7 @@ from tkinter import filedialog
 from urllib.parse import urlparse, parse_qs
 
 from bs4 import BeautifulSoup
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
 from application import db, create_app, ProductionConfig, DevelopmentConfig
 from application.models.challenge import Challenge
@@ -73,9 +74,6 @@ def get_challenge_data(domain, soup):
             )
 
     return challenge_data
-
-
-from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
 
 def store_challenges(

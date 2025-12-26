@@ -105,7 +105,7 @@ def test_verify_password_success(client, test_app, auth_headers):
                 if user:
                     db.session.delete(user)
                     db.session.commit()
-            except:
+            except Exception:
                 pass  # If cleanup fails, don't crash the test
 
 

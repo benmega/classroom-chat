@@ -133,7 +133,7 @@ def submit_trade():
         flash(msg, "success")
         return redirect(url_for("duck_trade.index"))
 
-    except Exception as e:
+    except Exception:
         db.session.rollback()
         # logging.error(f"Trade Error: {e}")
         if is_ajax:
