@@ -4,6 +4,8 @@ Type: py
 Summary: Project metadata utilities and helper functions.
 """
 
+import os
+
 
 def create_directory(path):
     if not os.path.exists(path):
@@ -14,12 +16,9 @@ def create_directory(path):
 
 
 def create_file(path):
-    with open(path, "w") as file:
+    with open(path, "w"):
         pass
     print(f"File created: {path}")
-
-
-import os
 
 
 def print_directory_structure(startpath, exclude=[]):

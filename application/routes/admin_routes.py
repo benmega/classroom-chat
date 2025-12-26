@@ -760,14 +760,14 @@ def manage_projects():
 
     # 2. Always calculate pending count for the UI tab label
     pending_count = Project.query.filter(
-        (Project.teacher_comment == None) | (Project.teacher_comment == "")
+        (Project.teacher_comment is None) | (Project.teacher_comment == "")
     ).count()
 
     # 3. Build the query based on filter
     query = Project.query
     if filter_type == "pending":
         query = query.filter(
-            (Project.teacher_comment == None) | (Project.teacher_comment == "")
+            (Project.teacher_comment is None) | (Project.teacher_comment == "")
         )
 
     # 4. Fetch results (Newest first)
