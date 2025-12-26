@@ -53,7 +53,7 @@ def test_challenge_log_repr(sample_challenge_log):
     repr_output = repr(challenge_log)
 
     # Check that the username in the repr_output starts with 'user_'
-    assert repr_output.startswith(f"<ChallengeLog(username=user_")
+    assert repr_output.startswith("<ChallengeLog(username=user_")
     assert "domain=codecombat.com" in repr_output
 
     # UPDATED: The new __repr__ returns 'slug=' instead of 'challenge='

@@ -11,6 +11,7 @@ from flask import (
     redirect,
     url_for,
     request,
+    send_from_directory,
 )
 from sqlalchemy.orm import joinedload
 from werkzeug.utils import secure_filename
@@ -91,7 +92,7 @@ def submit_certificate():
             return jsonify({"success": False, "error": "User not found!"}), 400
         return jsonify({"success": False, "error": "User not found!"}), 400
 
-    message, success = None, False
+    _message, _success = None, False
 
     if request.method == "POST":
         is_xhr = request.headers.get("X-Requested-With") == "XMLHttpRequest"
@@ -235,9 +236,6 @@ def submit_certificate():
 #         message, success = "Certificate submitted successfully.", True
 #
 #     return render_template("submit_certificate.html", message=message, success=success)
-
-
-from flask import send_from_directory
 
 
 @achievements.route("/view_certificate/<int:cert_id>")
