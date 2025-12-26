@@ -14,11 +14,10 @@ def create_directory(path):
         print(f"Directory already exists: {path}")
 
 def create_file(path):
-    with open(path, 'w') as file:
+    with open(path, 'w'):
         pass
     print(f"File created: {path}")
 
-import os
 
 def print_directory_structure(startpath, exclude=[]):
     for root, dirs, files in os.walk(startpath):

@@ -2,12 +2,12 @@
 import re
 from datetime import datetime
 
-from flask import Blueprint, render_template, jsonify, session, flash, redirect, url_for, request
+from flask import Blueprint, render_template, jsonify, session, flash, redirect, url_for, request, send_from_directory
 from sqlalchemy.orm import joinedload
 
 from application.extensions import db
 from application.models.user import User
-from application.models.achievements import Achievement, UserAchievement
+from application.models.achievements import Achievement
 from application.models.user_certificate import UserCertificate
 from application.routes.admin_routes import local_only
 import os
@@ -83,7 +83,7 @@ def submit_certificate():
             return jsonify({"success": False, "error": "User not found!"}), 400
         return jsonify({"success": False, "error": "User not found!"}), 400
 
-    message, success = None, False
+    _message, _success = None, False
 
     if request.method == "POST":
         is_xhr = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
@@ -94,25 +94,29 @@ def submit_certificate():
         match = re.search(CERT_URL_REGEX, url or "")
         if not match:
             msg = "Invalid certificate URL."
-            if is_xhr: return jsonify({"success": False, "error": msg})
+            if is_xhr:
+                return jsonify({"success": False, "error": msg})
             return render_template("submit_certificate.html", message=msg, success=False)
 
         course_slug = match.group(1)
         achievement = Achievement.query.filter_by(slug=course_slug).first()
         if not achievement:
             msg = "No matching achievement found for this course."
-            if is_xhr: return jsonify({"success": False, "error": msg})
+            if is_xhr:
+                return jsonify({"success": False, "error": msg})
             return render_template("submit_certificate.html", message=msg, success=False)
 
         # 2. File validation
         if not file or file.filename == "":
             msg = "Certificate file is required."
-            if is_xhr: return jsonify({"success": False, "error": msg})
+            if is_xhr:
+                return jsonify({"success": False, "error": msg})
             return render_template("submit_certificate.html", message=msg, success=False)
 
         if not allowed_file(file.filename):
             msg = "Invalid file type. Only PDF is allowed."
-            if is_xhr: return jsonify({"success": False, "error": msg})
+            if is_xhr:
+                return jsonify({"success": False, "error": msg})
             return render_template("submit_certificate.html", message=msg, success=False)
 
         # 3. Save file
@@ -208,8 +212,6 @@ def submit_certificate():
 #
 #     return render_template("submit_certificate.html", message=message, success=success)
 
-
-from flask import send_from_directory
 
 @achievements.route("/view_certificate/<int:cert_id>")
 @local_only

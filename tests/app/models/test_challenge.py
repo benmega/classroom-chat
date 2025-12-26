@@ -5,7 +5,6 @@ Summary: Unit tests for challenge model.
 """
 
 import pytest
-from application import create_app
 from application.extensions import db
 from application.models.challenge import Challenge
 from application.models.challenge_log import ChallengeLog

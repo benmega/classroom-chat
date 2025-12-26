@@ -165,7 +165,7 @@ def test_submit_certificate_valid(logged_in_client, init_db, sample_achievement)
         data = response.get_json()
         if data:
             assert data.get('success') is True or data.get('status') == 'success'
-    except:
+    except Exception:
         # Fallback if backend strictly returns HTML: Check for a unique success indicator
         assert b"success" in response.data.lower() or b"submitted" in response.data.lower()
 

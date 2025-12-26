@@ -6,10 +6,9 @@ from bs4 import BeautifulSoup
 from urllib.parse import urlparse, parse_qs
 import tkinter as tk
 from tkinter import filedialog
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
 
-from bs4 import BeautifulSoup
-from urllib.parse import urlparse, parse_qs
 import warnings
 warnings.filterwarnings("ignore", message="Using the in-memory storage for tracking rate limits")
 
@@ -69,7 +68,6 @@ def get_challenge_data(domain, soup):
 
     return challenge_data
 
-from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
 def store_challenges(app, challenges, domain, course_id, default_difficulty, default_value, replace_existing=True):
     """

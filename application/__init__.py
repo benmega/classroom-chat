@@ -18,7 +18,7 @@ from application.extensions import db, socketio, limiter, scheduler
 from application.models import setup_models
 from application.routes import register_blueprints
 from application.models.user import User
-from . import socket_events
+from . import socket_events as socket_events  # noqa: F401 - needed for side effects
 from application.config import DevelopmentConfig, TestingConfig, ProductionConfig
 import logging
 from flask_wtf.csrf import CSRFProtect
@@ -69,7 +69,7 @@ def create_app(config_class=None):
     limiter.init_app(app)
     scheduler.init_app(app)
 
-    csrf = CSRFProtect(app)
+    CSRFProtect(app)
     register_blueprints(app)
 
     from . import tasks

@@ -1,6 +1,6 @@
 # Filename: update_challenge_logs.py
 # Description: Script to bulk insert challenge logs into the database.
-from application import create_app, ProductionConfig, DevelopmentConfig
+from application import create_app, DevelopmentConfig
 from application.extensions import db
 from application.models.challenge import Challenge
 from application.models.challenge_log import ChallengeLog
@@ -52,7 +52,7 @@ def add_course_challenge_logs(username, domain, course_id):
         # Query all active challenges for the given course_id
         challenges = (
             db.session.query(Challenge.name)
-            .filter(Challenge.course_id == course_id, Challenge.is_active == True)
+            .filter(Challenge.course_id == course_id, Challenge.is_active)
             .all()
         )
 

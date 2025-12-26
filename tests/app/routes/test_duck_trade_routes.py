@@ -4,7 +4,6 @@ Type: py
 Summary: Unit tests for duck trade routes Flask routes.
 """
 
-import pytest
 from flask import url_for
 import secrets
 

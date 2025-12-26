@@ -4,7 +4,7 @@ Type: py
 Summary: Flask routes for session routes functionality.
 """
 
-from flask import Blueprint, jsonify, request, session as flask_session
+from flask import Blueprint, jsonify, session as flask_session
 from datetime import datetime
 import boto3
 import requests

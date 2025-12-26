@@ -117,7 +117,7 @@ def test_login_adds_user_to_conversation(client, init_db, sample_user, sample_co
     sample_user.set_password('testpassword')
     db.session.commit()
 
-    response = client.post('/user/login', data={
+    client.post('/user/login', data={
         'username': sample_user.username,
         'password': 'testpassword'
     }, follow_redirects=True)
@@ -382,7 +382,7 @@ def test_change_password_success(client, init_db, sample_user):
     with client.session_transaction() as sess:
         sess['user'] = sample_user.id
 
-    response = client.post('/user/change_password', data={
+    client.post('/user/change_password', data={
         'current_password': 'oldpassword',
         'new_password': 'newpassword',
         'confirm_password': 'newpassword'
@@ -433,7 +433,7 @@ def test_profile_picture_endpoint(client, init_db):
     # You might want to mock send_from_directory
     with patch('application.routes.user_routes.send_from_directory') as mock_send:
         mock_send.return_value = 'file_content'
-        response = client.get('/user/profile_pictures/test.png')
+        client.get('/user/profile_pictures/test.png')
         assert mock_send.called
 
 

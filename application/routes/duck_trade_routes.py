@@ -76,7 +76,8 @@ def submit_trade():
         userid = session.get('user')
         if not userid:
             msg = "You must be logged in."
-            if is_ajax: return jsonify({'status': 'error', 'message': msg}), 403
+            if is_ajax:
+                return jsonify({'status': 'error', 'message': msg}), 403
             flash(msg, "warning")
             return redirect(url_for('duck_trade.index'))
 
@@ -112,7 +113,7 @@ def submit_trade():
         flash(msg, "success")
         return redirect(url_for('duck_trade.index'))
 
-    except Exception as e:
+    except Exception:
         db.session.rollback()
         # logging.error(f"Trade Error: {e}")
         if is_ajax:

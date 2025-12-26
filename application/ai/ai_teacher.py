@@ -5,14 +5,13 @@ AI Teacher Blueprint for handling AI chat interactions using local LLM via Ollam
 
 import logging
 from datetime import datetime
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional
 
 import requests
 from flask import Blueprint, jsonify, request
 from sqlalchemy.exc import SQLAlchemyError
 
 from application import db, limiter
-from application.config import Config
 from application.utilities.db_helpers import save_message_to_db
 from application.models.ai_settings import get_ai_settings
 from application.models.conversation import Conversation

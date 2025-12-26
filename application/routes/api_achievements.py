@@ -23,7 +23,7 @@ def check_achievements():
 
     try:
         new_awards = evaluate_user(user)
-    except Exception as e:
+    except Exception:
         return jsonify({"success": False, "error": "Failed to evaluate achievements"}), 500
 
     payload = [

@@ -7,7 +7,7 @@ def close_stale_sessions(timeout_minutes=1):
     print("checking for stale sessions")
     cutoff = datetime.utcnow() - timedelta(minutes=timeout_minutes)
     stale = SessionLog.query.filter(
-        SessionLog.end_time == None,
+        SessionLog.end_time is None,
         SessionLog.last_seen < cutoff
     ).all()
 

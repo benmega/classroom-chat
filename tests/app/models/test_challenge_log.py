@@ -47,7 +47,7 @@ def test_challenge_log_repr(sample_challenge_log):
     repr_output = repr(challenge_log)
 
     # Check that the username in the repr_output starts with 'user_' (indicating it's a dynamically generated UUID)
-    assert repr_output.startswith(f"<ChallengeLog(username=user_")  # Checking that the output has the user_ prefix
+    assert repr_output.startswith("<ChallengeLog(username=user_")  # Checking that the output has the user_ prefix
     assert "domain=CodeCombat" in repr_output
     assert "challenge=" in repr_output
     assert "timestamp=" in repr_output

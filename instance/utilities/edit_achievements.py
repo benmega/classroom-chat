@@ -2,7 +2,6 @@
 import sys
 from application.extensions import db
 from application.models.achievements import Achievement
-from datetime import datetime
 
 
 def list_achievements():

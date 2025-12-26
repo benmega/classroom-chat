@@ -5,13 +5,8 @@ Summary: Unit tests for upload routes Flask routes.
 """
 
 import os
-import time
 
-import pytest
-import base64
-from io import BytesIO
 from flask import url_for
-from application import create_app, db
 from application.config import Config
 
 

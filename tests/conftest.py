@@ -29,7 +29,6 @@ from application.models.skill import Skill
 # from application.models.trade import Trade
 from application.models.user import User
 from application.config import TestingConfig
-from sqlalchemy import inspect
 
 @pytest.fixture(scope="module", autouse=True)
 def setup_directories():

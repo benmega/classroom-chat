@@ -3,7 +3,6 @@
 # Location: tools/
 # Summary: Packs all achievement badge images into one sprite sheet and writes CSS mapping.
 
-import os
 from pathlib import Path
 from math import ceil, sqrt
 from PIL import Image

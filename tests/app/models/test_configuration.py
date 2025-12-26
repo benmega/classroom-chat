@@ -37,7 +37,6 @@ def test_configuration_default_values(init_db):
 
 def test_configuration_query(sample_configuration):
     """Test querying Configuration entries."""
-    config = sample_configuration
     retrieved_config = Configuration.query.filter_by(ai_teacher_enabled=True).first()
     assert retrieved_config is not None
     assert retrieved_config.message_sending_enabled is True

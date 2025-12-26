@@ -1,16 +1,12 @@
 import csv
+import logging
 from application import create_app
 from application.extensions import db
 from application.models.user import User
 from sqlalchemy.exc import SQLAlchemyError
-import logging
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
-
-import csv
-import logging
-from sqlalchemy.exc import SQLAlchemyError
 
 
 def insert_users_from_csv(csv_file_path, overwrite=True):

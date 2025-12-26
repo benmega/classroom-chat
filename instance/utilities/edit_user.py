@@ -1,5 +1,4 @@
 import sqlite3
-from application.config import Config
 
 DATABASE_PATH = "C:\\Users\\Ben\\PycharmProjects\\groupChat2\\instance\\dev_users.db"  # Update this if needed
 
