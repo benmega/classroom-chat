@@ -188,7 +188,8 @@ nav ul li.profile-pic {
 }
 
 .dropdown-menu li a {
-    display: block;
+    display: flex; /* Ensure icon and text align correctly */
+    align-items: center; /* Vertically center icons */
     padding: 10px 16px;
     text-decoration: none;
     color: #333333;
@@ -197,11 +198,16 @@ nav ul li.profile-pic {
     border-radius: 6px;
 }
 
+.dropdown-menu li a i {
+    margin-right: 8px; /* Space between icon and text */
+    font-size: 1.2em; /* Ensure the icon is always visible */
+    color: black; /* Ensure icon is black, matching the requested style */
+}
+
 .dropdown-menu li a:hover {
     background-color: #e6f7ff; /* soft blue hover */
     color: #0056b3; /* darker text for contrast */
 }
-
 
 /* Styling for Digital Duck Label */
 .digital-ducks {

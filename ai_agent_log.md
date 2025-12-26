@@ -2,6 +2,8 @@
 
 ### USER
 Solve this issue:
+Title: Ugly Dropdown
+Body: The  dropdown menu in the base.html is ugly. The text should be shorter and there should be simple black outline icon for quick identification. 
 Title: Sleeping Chat Rocket Delay
 Body: The rocket emoji does not appear until after the start server request has been confirmed. It should start immediately and crash if it fails. This is found in the fallback index.html
 Title: CI: Add automated linting workflow
@@ -708,6 +710,557 @@ templates/chat/conversation_history.html
 Called Tool
 
 ### TOOL
+<!--
+File: base.html
+Type: html
+Summary: Base layout template with header, navigation, and toast messages.
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Classroom Chat</title>
+    <link rel="icon" href="{{ url_for('static', filename='images/logo.ico') }}" type="image/x-icon">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/message.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/variables.css') }}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('.toast').forEach(toastEl => {
+          new bootstrap.Toast(toastEl).show()
+        })
+      });
+    </script>
+
+</head>
+
+    <body>
+    <div class="toast-container position-fixed bottom-0 end-0 p-3" aria-live="polite" aria-atomic="true" style="z-index:1050;">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+          <div class="toast align-items-center text-bg-{{ category or 'primary' }} border-0" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="4000">
+            <div class="d-flex">
+              <div class="toast-body">
+                {{ message }}
+              </div>
+              <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+          </div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+    </div>
+    <header class="{% if 'user' not in session %}guest-mode{% endif %}">
+        <div id="logo-container">
+            <a href="{{ url_for('general.index') }}" class="logo">
+                <img src="{{ url_for('static', filename='images/logo.ico') }}" alt="Classroom Chat Logo">
+            </a>
+        </div>
+
+        <nav>
+            <ul>
+                {% if user %}
+                    <li>
+                        <a class="digital-ducks" href="{{ url_for('duck_trade.bit_shift') }}">
+                            <span class="label" >Ducks:</span>
+                            <span class="count">{{ user.duck_balance }}</span>
+                        </a>
+                    </li>
+
+                    {% if user.packets|float > 0.001 %}
+                        <li>
+                            <a class="digital-ducks">
+                                <span class="label">Packets:</span>
+                                <span class="count">{{ user.packets|round(5) }}</span>
+                            </a>
+                        </li>
+                    {% endif %}
+
+                {% endif %}
+
+                {% if 'user' in session %}
+
+
+
+                    {% set pfp_filename = user.profile_picture if user and user.profile_picture else 'Default_pfp.jpg' %}
+                    {% set pfp_url = url_for('user.profile_picture', filename=pfp_filename) %}
+                    <li class="profile-menu">
+                        <img src="{{ pfp_url }}"
+                             alt="Profile Picture"
+                             class="profile-menu_img"
+                             id="profileToggle">
+                        <ul class="dropdown-menu">
+                            <li><a href="{{ url_for('user.profile') }}">Profile</a></li>
+                            <li><a href="{{ url_for('achievements.achievements_page') }}">Achievements</a></li>
+                            <li><a href="{{ url_for('achievements.submit_certificate') }}">Submit Certificate</a></li>
+                            <li><a href="{{ url_for('challenge.submit_challenge') }}">Submit Challenge</a></li>
+                            <li><a href="https://benmega.github.io/screen-recorder/">Record Screen</a></li>
+                            <li><a href="{{ url_for('message.conversation_history') }}">History</a></li>
+                            <li><a href="{{ url_for('user.logout') }}">Logout</a></li>
+                        </ul>
+                    </li>
+
+
+                {% else %}
+                    <li><a class="nav-button login" href="{{ url_for('user.login') }}">Login</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+
+    </header>
+
+    <main>
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Classroom Chat. All Rights Reserved.</p>
+    </footer>
+
+</body>
+{% if user %}
+    <script type="module">
+        import { initAchievements } from "{{ url_for('static', filename='js/achievements/achievements.js') }}";
+
+        // Run it once when the page loads
+        initAchievements("{{ session.get('user') }}");
+    </script>
+{% endif %}
+
+<script>
+    document.getElementById("profileToggle").addEventListener("click", function (e) {
+    e.stopPropagation();
+    document.querySelector(".dropdown-menu").classList.toggle("show");
+});
+
+document.addEventListener("click", function () {
+    document.querySelector(".dropdown-menu").classList.remove("show");
+});
+
+</script>
+</html>
+
+### ASSISTANT
+Called Tool
+
+### TOOL
+/*
+File: base.css
+Type: css
+Summary: Global layout, header, navigation, and typography styling.
+*/
+
+body {
+    font-family: var(--font-family);
+    margin: 0;
+    background: var(--background-gradient);
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    height: 100vh;
+    padding-top: 0;
+}
+
+h2 {
+    text-align: center;
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--header-padding);
+    background-color: var(--primary-color);
+    color: white;
+    box-shadow: var(--box-shadow-light);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+#logo-container {
+    display: flex;
+    align-items: center;
+}
+
+#logo-container .logo img {
+    width: 60px;
+    height: auto;
+    display: block;
+    object-fit: contain;
+    transition: transform 0.2s ease;
+}
+
+#logo-container .logo img:hover {
+    transform: scale(1.05);
+}
+
+.logo{
+    text-decoration: none;
+    color: inherit;
+}
+
+nav ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    gap: 20px;
+}
+
+.nav-button {
+    font-size: var(--font-size-medium);
+    color: white;
+    text-decoration: none;
+    padding: 12px 18px;
+    border-radius: var(--border-radius-medium);
+    background-color: var(--primary-color-dark);
+    transition: var(--transition-default);
+}
+
+.nav-button:hover {
+    background-color: var(--secondary-color-dark);
+    transform: scale(1.1);
+}
+
+.nav-button:active {
+    transform: scale(0.98);
+}
+
+.nav-icon {
+    display: inline-block;
+    width: 40px; /* adjust size */
+    height: 40px;
+    border-radius: var(--border-radius-medium);
+    overflow: hidden;
+    transition: var(--transition-default);
+}
+
+.nav-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.nav-icon:hover {
+    transform: scale(1.1);
+}
+
+.nav-icon:active {
+    transform: scale(0.98);
+}
+
+
+nav ul li.profile-pic {
+    width: 40px;
+    height: 40px;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+
+.profile-menu_img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    display: block;
+    border: 2px solid #000; /* black border */
+}
+
+
+.profile-menu {
+    position: relative;
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+}
+
+.dropdown-menu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: #ffffff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    list-style: none;
+    margin: 6px 0 0 0;
+    padding: 4px 0;
+    min-width: 200px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    opacity: 0;
+    transform: translateY(-10px);
+}
+
+.dropdown-menu.show {
+    display: block;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.dropdown-menu li a {
+    display: block;
+    padding: 10px 16px;
+    text-decoration: none;
+    color: #333333;
+    font-weight: 500;
+    transition: background-color 0.2s ease, color 0.2s ease;
+    border-radius: 6px;
+}
+
+.dropdown-menu li a:hover {
+    background-color: #e6f7ff; /* soft blue hover */
+    color: #0056b3; /* darker text for contrast */
+}
+
+
+/* Styling for Digital Duck Label */
+.digital-ducks {
+    font-size: 1.2em;
+    padding-left: 20px;
+    color: inherit;
+    text-decoration: none;
+}
+
+.digital-ducks .label {
+    font-weight: normal;
+    color: var(--highlight-color);
+}
+
+.digital-ducks .count {
+    font-weight: bold;
+    color: var(--highlight-color);
+}
+
+.digital-ducks:hover .label,
+.digital-ducks:hover .count {
+    color: var(--highlight-hover);
+    text-decoration: underline;
+}
+
+
+.gradient-heading {
+    background: var(--logo-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    color: transparent;
+}
+
+
+/* Button styles (general) */
+button {
+    padding: var(--button-padding);
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: var(--border-radius-small);
+    font-size: var(--font-size-large);
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: var(--transition-default);
+}
+
+button:hover {
+    background-color: var(--primary-color-dark);
+    box-shadow: var(--button-hover-shadow);
+}
+
+button:active::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 300%;
+    height: 300%;
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 50%;
+    animation: rippleEffect var(--ripple-duration) ease-out;
+}
+
+/* Ripple effect animation */
+@keyframes rippleEffect {
+    0% {
+        width: 0;
+        height: 0;
+        opacity: 1;
+    }
+    100% {
+        width: 300%;
+        height: 300%;
+        opacity: 0;
+    }
+}
+
+
+/* Styling for links */
+a {
+    color: var(--link-color);
+    text-decoration: none;
+    transition: var(--transition-default);
+}
+
+a:hover {
+    color: var(--highlight-hover);
+    text-decoration: underline;
+}
+
+
+nav ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px; /* smaller so items align cleanly */
+}
+
+/* Text nav buttons */
+.nav-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: var(--nav-item-size);
+    font-size: var(--nav-font-size);
+    color: white;
+    text-decoration: none;
+    padding: var(--nav-padding);
+    border-radius: var(--border-radius-medium);
+    background-color: var(--primary-color-dark);
+    transition: var(--transition-default);
+    box-sizing: border-box;
+}
+
+/* Icon nav items */
+.nav-icon,
+nav ul li.profile-pic,
+.profile-menu {
+    width: var(--nav-item-size);
+    height: var(--nav-item-size);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.nav-icon img,
+.profile-menu_img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+}
+
+footer {
+    text-align: center;
+    width: 100%;
+}
+
+
+/* Achievement Popup */
+/* Container */
+#achievement-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px; /* space between popups */
+    z-index: 9999;
+    pointer-events: none; /* clicks pass through */
+}
+
+/* Popup */
+.achievement-popup {
+    background: rgba(255, 255, 255, 0.95);
+    border-left: 4px solid var(--highlight-color);
+    padding: 12px 16px;
+    border-radius: 12px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.15);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    font-family: var(--font-family);
+    font-weight: 500;
+    color: #333;
+    pointer-events: auto; /* allow hover effect */
+}
+
+.achievement-popup.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.achievement-popup img {
+    width: 40px;
+    height: 40px;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 2px solid var(--highlight-color);
+}
+
+.achievement-popup::after {
+    content: "🏆"; /* Optional */
+    margin-left: 8px;
+}
+
+.achievement-popup:hover {
+    transform: scale(1.05);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+}
+
+/* Header becomes invisible (transparent) but keeps buttons visible */
+header.guest-mode {
+    background-color: transparent;
+    box-shadow: none;
+}
+
+/* Toast container adjustments to reduce interference with header/profile icons */
+.toast-container {
+    z-index: 1050; /* sits above content but below modals */
+}
+
+@media (max-width: 576px) {
+  .toast-container {
+    right: 0.5rem;
+    bottom: 0.5rem;
+    left: auto;
+    width: calc(100% - 1rem);
+    max-width: 360px;
+  }
+  .toast {
+    width: 100%;
+  }
+}
+
+### ASSISTANT
+To make the dropdown menu in `base.html` more visually appealing, we will simplify the text in the dropdown links and add a simple black outline icon for quick identification. Let's proceed with the following updates:
+
+1. **Simplify Text in Dropdown**: We'll shorten the labels to make them more concise.
+2. **Add Icon to Dropdown**: We'll insert a small and simple black outline icon next to each label.
+
+Let's implement these changes.
+
+### TOOL
+Successfully updated templates/base.html.
 Successfully updated .github/workflows/lint.yml.
 
 ### TOOL
@@ -735,6 +1288,7 @@ For detailed setup instructions, refer to [INSTALLATION.md](docs/INSTALLATION.md
 Called Tool
 
 ### TOOL
+Successfully updated static/css/base.css.
 Successfully updated docs/README.md.
 
 ### ASSISTANT
@@ -776,6 +1330,19 @@ tests/test_toast_position.py .                                           [100%]
 
 =============================== warnings summary ===============================
 tests/app/models/test_configuration.py::test_configuration_update
+  /home/runner/work/classroom-chat/classroom-chat/tests/app/models/test_configuration.py:51: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+    updated_config = Configuration.query.get(config.id)
+
+tests/app/models/test_conversation.py::test_conversation_deletion_cascade
+  /home/runner/work/classroom-chat/classroom-chat/tests/app/models/test_conversation.py:76: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+    assert Conversation.query.get(conversation.id) is None
+
+tests/app/models/test_course.py::test_course_is_active_flag
+  /home/runner/work/classroom-chat/classroom-chat/tests/app/models/test_course.py:61: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+    retrieved_course = Course.query.get(course.id)
+
+tests/app/models/test_course.py::test_course_unique_id_constraint
+  /home/runner/work/classroom-chat/classroom-chat/tests/app/models/test_course.py:82: SAWarning: New instance <Course at 0x7f35fd19bd90> with identity key (<class 'application.models.course.Course'>, ('course_123',), None) conflicts with persistent instance <Course at 0x7f35fd19b190>
   /home/runner/work/classroom-chat/classroom-chat/tests/app/models/test_configuration.py:54: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
     updated_config = Configuration.query.get(config.id)
 
@@ -808,6 +1375,23 @@ tests/app/models/test_message.py::test_message_soft_delete
     deleted_message = Message.query.get(message.id)
 
 tests/app/models/test_project.py::test_project_update
+  /home/runner/work/classroom-chat/classroom-chat/tests/app/models/test_project.py:71: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+    updated_project = Project.query.get(project.id)
+
+tests/app/models/test_project.py::test_project_deletion
+  /home/runner/work/classroom-chat/classroom-chat/tests/app/models/test_project.py:83: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+    deleted_project = Project.query.get(project.id)
+
+tests/app/models/test_skill.py::test_skill_update
+  /home/runner/work/classroom-chat/classroom-chat/tests/app/models/test_skill.py:70: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+    updated_skill = Skill.query.get(skill.id)
+
+tests/app/models/test_skill.py::test_skill_deletion
+  /home/runner/work/classroom-chat/classroom-chat/tests/app/models/test_skill.py:80: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+    deleted_skill = Skill.query.get(skill.id)
+
+tests/app/routes/test_achievement_routes.py::test_submit_certificate_update_existing
+  /home/runner/work/classroom-chat/classroom-chat/tests/app/routes/test_achievement_routes.py:291: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
   /home/runner/work/classroom-chat/classroom-chat/tests/app/models/test_project.py:65: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
     updated_project = Project.query.get(project.id)
 
@@ -829,6 +1413,19 @@ tests/app/routes/test_achievement_routes.py::test_submit_certificate_update_exis
 
 tests/app/routes/test_admin_routes.py::test_set_username_route
 tests/app/routes/test_admin_routes.py::test_set_username_proper_case_handling
+  /home/runner/work/classroom-chat/classroom-chat/application/routes/admin_routes.py:59: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+    user = User.query.get(user_id)
+
+tests/app/routes/test_admin_routes.py::test_set_username_route
+  /home/runner/work/classroom-chat/classroom-chat/tests/app/routes/test_admin_routes.py:53: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+    updated = User.query.get(sample_user.id)
+
+tests/app/routes/test_admin_routes.py::test_clear_partial_history
+  /home/runner/work/classroom-chat/classroom-chat/tests/app/routes/test_admin_routes.py:183: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+    assert Conversation.query.get(old_id) is None
+
+tests/app/routes/test_admin_routes.py::test_clear_partial_history
+  /home/runner/work/classroom-chat/classroom-chat/tests/app/routes/test_admin_routes.py:184: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
   /home/runner/work/classroom-chat/classroom-chat/application/routes/admin_routes.py:76: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
     user = User.query.get(user_id)
 
@@ -846,6 +1443,15 @@ tests/app/routes/test_admin_routes.py::test_clear_partial_history
 
 tests/app/routes/test_admin_routes.py::test_strike_message
 tests/app/routes/test_admin_routes.py::test_strike_message
+  /home/runner/work/classroom-chat/classroom-chat/application/routes/admin_routes.py:373: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+    message = Message.query.get(message_id)
+
+tests/app/routes/test_admin_routes.py::test_strike_message
+  /home/runner/work/classroom-chat/classroom-chat/tests/app/routes/test_admin_routes.py:237: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+    struck_message = Message.query.get(sample_message.id)
+
+tests/app/routes/test_admin_routes.py::test_adjust_ducks
+  /home/runner/work/classroom-chat/classroom-chat/tests/app/routes/test_admin_routes.py:267: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
   /home/runner/work/classroom-chat/classroom-chat/application/routes/admin_routes.py:431: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
     message = Message.query.get(message_id)
 
@@ -859,11 +1465,21 @@ tests/app/routes/test_admin_routes.py::test_adjust_ducks
 
 tests/app/routes/test_admin_routes.py::test_trade_action_approve
 tests/app/routes/test_admin_routes.py::test_trade_action_reject
+  /home/runner/work/classroom-chat/classroom-chat/tests/conftest.py:409: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
   /home/runner/work/classroom-chat/classroom-chat/tests/conftest.py:437: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
     trade = DuckTradeLog.query.get(trade.id)
 
 tests/app/routes/test_admin_routes.py::test_trade_action_approve
 tests/app/routes/test_admin_routes.py::test_trade_action_reject
+  /home/runner/work/classroom-chat/classroom-chat/application/routes/admin_routes.py:399: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+    trade = DuckTradeLog.query.get(trade_id)
+
+tests/app/routes/test_admin_routes.py::test_set_username_proper_case_handling
+  /home/runner/work/classroom-chat/classroom-chat/tests/app/routes/test_admin_routes.py:386: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+    updated_user = User.query.get(sample_user.id)
+
+tests/app/routes/test_duck_trade_routes.py::test_submit_trade_valid
+  /home/runner/work/classroom-chat/classroom-chat/application/routes/duck_trade_routes.py:84: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
   /home/runner/work/classroom-chat/classroom-chat/application/routes/admin_routes.py:463: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
     trade = DuckTradeLog.query.get(trade_id)
 
@@ -877,6 +1493,15 @@ tests/app/routes/test_duck_trade_routes.py::test_submit_trade_valid
 
 tests/app/routes/test_message_routes.py::test_set_active_conversation
 tests/app/routes/test_message_routes.py::test_set_active_conversation_not_found
+  /home/runner/work/classroom-chat/classroom-chat/application/routes/message_routes.py:75: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+    conversation = Conversation.query.get(conversation_id)
+
+tests/app/routes/test_message_routes.py::test_get_historical_conversation
+  /home/runner/work/classroom-chat/classroom-chat/application/routes/message_routes.py:108: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+    conversation = Conversation.query.get(conversation_id)
+
+tests/app/routes/test_message_routes.py::test_get_conversation
+  /home/runner/work/classroom-chat/classroom-chat/application/routes/message_routes.py:135: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
   /home/runner/work/classroom-chat/classroom-chat/application/routes/message_routes.py:91: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
     conversation = Conversation.query.get(conversation_id)
 
@@ -895,6 +1520,7 @@ tests/app/routes/test_user_routes.py::test_delete_project
     rv = self.get(ident)
 
 tests/app/routes/test_user_routes.py::test_logout
+  /home/runner/work/classroom-chat/classroom-chat/application/routes/user_routes.py:107: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
   /home/runner/work/classroom-chat/classroom-chat/application/routes/user_routes.py:113: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
     user_obj = User.query.get(user_id)
 
@@ -906,6 +1532,7 @@ tests/app/routes/test_user_routes.py::test_new_project_post
 tests/app/routes/test_user_routes.py::test_edit_project_post
 tests/app/routes/test_user_routes.py::test_delete_project
 tests/app/routes/test_user_routes.py::test_delete_profile_picture
+  /home/runner/work/classroom-chat/classroom-chat/application/routes/user_routes.py:145: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
   /home/runner/work/classroom-chat/classroom-chat/application/routes/user_routes.py:153: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
     user_obj = User.query.get(user_id)
 
@@ -913,6 +1540,13 @@ tests/app/routes/test_user_routes.py::test_edit_profile_get
 tests/app/routes/test_user_routes.py::test_edit_profile_post
 tests/app/routes/test_user_routes.py::test_edit_profile_change_password
 tests/app/routes/test_user_routes.py::test_edit_profile_password_mismatch
+  /home/runner/work/classroom-chat/classroom-chat/application/routes/user_routes.py:169: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+    user_obj = User.query.get(user_id)
+
+tests/app/routes/test_user_routes.py::test_new_project_post
+  /home/runner/work/classroom-chat/classroom-chat/application/routes/user_routes.py:200: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+    user_obj = User.query.get(user_id)
+
   /home/runner/work/classroom-chat/classroom-chat/application/routes/user_routes.py:177: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
     user_obj = User.query.get(user_id)
 
@@ -930,6 +1564,7 @@ tests/app/routes/test_user_routes.py::test_delete_project
     current_user = User.query.get(user_id)
 
 tests/app/routes/test_user_routes.py::test_delete_project
+  /home/runner/work/classroom-chat/classroom-chat/tests/app/routes/test_user_routes.py:335: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
   /home/runner/work/classroom-chat/classroom-chat/tests/app/routes/test_user_routes.py:366: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
     assert Project.query.get(project.id) is None
 
@@ -947,6 +1582,11 @@ tests/app/routes/test_user_routes.py::test_remove_skill
     user_obj = User.query.get(user_id)
 
 tests/app/routes/test_user_routes.py::test_remove_skill
+  /home/runner/work/classroom-chat/classroom-chat/application/models/user.py:131: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+    skill = Skill.query.get(skill_id)
+
+tests/app/routes/test_user_routes.py::test_remove_skill
+  /home/runner/work/classroom-chat/classroom-chat/tests/app/routes/test_user_routes.py:423: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
   /home/runner/work/classroom-chat/classroom-chat/application/models/user.py:128: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
     skill = Skill.query.get(skill_id)
 
@@ -959,6 +1599,15 @@ tests/helpers/test_db_helpers.py::test_get_user_by_id
     user = User.query.get(identifier)
 
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+
+
+### ASSISTANT
+The updates to the dropdown menu in `base.html` have been successfully implemented and tested. The changes include:
+
+1. **Simplified Dropdown Text**: Shortened and concise labels for each item.
+2. **Added Icons**: Added simple black outline icons to each dropdown item for easy identification.
+
+The test suite ran successfully with all tests passing. This confirms that our changes did not introduce any regressions. Your dropdown menu is now more user-friendly and visually appealing.
 
 
 ### ASSISTANT
