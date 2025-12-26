@@ -3,6 +3,8 @@ import pathlib
 
 from openai import OpenAI
 
+from application.tasks import logger
+
 
 def get_directory_summary(root_dir=".", exclude=None):
     """Provides the full file tree so the architect knows where files live."""
@@ -25,8 +27,8 @@ def get_file_headers(root_dir=".", limit=50):
                 with open(path, 'r', encoding='utf-8') as f:
                     header = "".join([f.readline() for _ in range(10)])
                     context.append(f"FILE: {path}\nCONTENT SUMMARY:\n{header}\n---")
-            except:
-                continue
+            except (UnicodeDecodeError, PermissionError, OSError) as exc:
+                logger.debug("Skipped file %s: %s", path, exc)
     return "\n".join(context[:limit])
 
 
