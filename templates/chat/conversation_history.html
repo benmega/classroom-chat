@@ -4,27 +4,37 @@ Type: html
 Summary: Template listing conversations a user has participated in.
 -->
 
-{% extends "base.html" %}
+{% extends "base.html" %} {% block content %}
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/conversation_history.css') }}"
+/>
+<div class="history-container">
+  <h2>Your Conversation History</h2>
 
-{% block content %}
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/conversation_history.css') }}">
-  <div class="history-container">
-    <h2>Your Conversation History</h2>
-
-    {% if conversations %}
-      <div class="conversation-list">
-        {% for conversation in conversations %}
-          <div class="conversation-card">
-            <div class="conversation-header">
-              <strong>{{ conversation.title }}</strong>
-              <small class="date">Started on: {{ conversation.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</small>
-            </div>
-            <a class="view-btn" href="{{ url_for('message.view_conversation', conversation_id=conversation.id) }}">View Conversation</a>
-          </div>
-        {% endfor %}
+  {% if conversations %}
+  <div class="conversation-list">
+    {% for conversation in conversations %}
+    <div class="conversation-card">
+      <div class="conversation-header">
+        <strong>{{ conversation.title }}</strong>
+        <small class="date"
+          >Started on: {{ conversation.created_at.strftime('%Y-%m-%d %H:%M:%S')
+          }}</small
+        >
       </div>
-    {% else %}
-      <p class="no-conversations">You haven't participated in any conversations yet.</p>
-    {% endif %}
+      <a
+        class="view-btn"
+        href="{{ url_for('message.view_conversation', conversation_id=conversation.id) }}"
+        >View Conversation</a
+      >
+    </div>
+    {% endfor %}
   </div>
+  {% else %}
+  <p class="no-conversations">
+    You haven't participated in any conversations yet.
+  </p>
+  {% endif %}
+</div>
 {% endblock %}

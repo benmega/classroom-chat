@@ -1,32 +1,39 @@
 <!-- templates/achievements.html -->
 
-{% extends "base.html" %}
-
-{% block content %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/achievements.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/sprite.css') }}">
+{% extends "base.html" %} {% block content %}
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/achievements.css') }}"
+/>
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/sprite.css') }}"
+/>
 <h2>Achievements</h2>
 <div class="achievements-grid">
+  {% for ach in achievements %}
 
-    {% for ach in achievements %}
+  <div
+    class="achievement-card {% if ach.id in user_achievements %}earned{% else %}locked{% endif %}"
+  >
+    <div class="badge-container">
+      <div class="badge badge-{{ ach.slug }}">&nbsp;</div>
+      {% if ach.id not in user_achievements %}
+      <div class="overlay">
+        <span class="lock-icon">🔒</span>
+      </div>
+      {% endif %}
+    </div>
 
-        <div class="achievement-card {% if ach.id in user_achievements %}earned{% else %}locked{% endif %}">
-            <div class="badge-container">
-                <div class="badge badge-{{ ach.slug }}">&nbsp;</div>
-                {% if ach.id not in user_achievements %}
-                    <div class="overlay">
-                        <span class="lock-icon">🔒</span>
-                    </div>
-                {% endif %}
-            </div>
-
-            <strong>{{ ach.name }}</strong>
-            <div class="tooltip">
-                <span class="info-icon">ℹ️</span>
-                <span class="tooltiptext">{{ ach.description }} - {{ ach.reward }} ducks</span>
-            </div>
-        </div>
-    {% endfor %}
+    <strong>{{ ach.name }}</strong>
+    <div class="tooltip">
+      <span class="info-icon">ℹ️</span>
+      <span class="tooltiptext"
+        >{{ ach.description }} - {{ ach.reward }} ducks</span
+      >
+    </div>
+  </div>
+  {% endfor %}
 </div>
 
 {% endblock %}

@@ -1,47 +1,82 @@
 <!-- templates/admin/trades.html -->
-{% extends 'admin/admin_base.html' %}
-{% block content %}
+{% extends 'admin/admin_base.html' %} {% block content %}
 <h1>Trade Logs</h1>
 <table>
-    <thead>
-        <tr>
-            <th>ID</th>
-            <th>User</th>
-            <th>Digital Ducks Traded</th>
-            <th>Duck Breakdown</th>
-            <th>Duck Type</th>
-            <th>Timestamp</th>
-            <th>Status</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for trade in trades %}
-        <tr>
-            <td>{{ trade.id }}</td>
-            <td>{{ trade.user.username }}</td>
-            <td>{{ trade.digital_ducks_traded }}</td>
-            <td>
-                {% for duck_type, count in trade.duck_breakdown.items() if count > 0 %}
-                {{ duck_type }}: {{ count }}<br>
-                {% endfor %}
-            </td>
-            <td>{{ trade.duck_type }}</td>
-            <td>{{ trade.timestamp }}</td>
-            <td>{{ trade.status }}</td>
-            <td>
-                <form method="POST" action="{{ url_for('update_trade_status', trade_id=trade.id) }}">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <select name="status">
-                        <option value="Pending" {% if trade.status == 'Pending' %}selected{% endif %}>Pending</option>
-                        <option value="Completed" {% if trade.status == 'Completed' %}selected{% endif %}>Completed</option>
-                        <option value="Cancelled" {% if trade.status == 'Cancelled' %}selected{% endif %}>Cancelled</option>
-                    </select>
-                    <button type="submit">Update</button>
-                </form>
-            </td>
-        </tr>
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>User</th>
+      <th>Digital Ducks Traded</th>
+      <th>Duck Breakdown</th>
+      <th>Duck Type</th>
+      <th>Timestamp</th>
+      <th>Status</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for trade in trades %}
+    <tr>
+      <td>{{ trade.id }}</td>
+      <td>{{ trade.user.username }}</td>
+      <td>{{ trade.digital_ducks_traded }}</td>
+      <td>
+        {% for duck_type, count in trade.duck_breakdown.items() if count > 0 %}
+        {{ duck_type }}: {{ count }}<br />
         {% endfor %}
-    </tbody>
+      </td>
+      <td>{{ trade.duck_type }}</td>
+      <td>{{ trade.timestamp }}</td>
+      <td>{{ trade.status }}</td>
+      <td>
+        <form
+          method="POST"
+          action="{{ url_for('update_trade_status', trade_id=trade.id) }}"
+        >
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+          <select name="status">
+            <option
+              value="Pending"
+              {%
+              if
+              trade.status=""
+              ="Pending"
+              %}selected{%
+              endif
+              %}
+            >
+              Pending
+            </option>
+            <option
+              value="Completed"
+              {%
+              if
+              trade.status=""
+              ="Completed"
+              %}selected{%
+              endif
+              %}
+            >
+              Completed
+            </option>
+            <option
+              value="Cancelled"
+              {%
+              if
+              trade.status=""
+              ="Cancelled"
+              %}selected{%
+              endif
+              %}
+            >
+              Cancelled
+            </option>
+          </select>
+          <button type="submit">Update</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
 </table>
 {% endblock %}

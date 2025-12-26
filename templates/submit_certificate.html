@@ -4,85 +4,104 @@ Type: html
 Summary: Template for submitting certificates as achievements.
 -->
 
-{% extends "base.html" %}
-
-{% block content %}
+{% extends "base.html" %} {% block content %}
 <h2>Submit Completion Certificate</h2>
 <form id="certificateForm" enctype="multipart/form-data">
-    <div class="form-group">
-        <label for="certificate_url">Certificate URL</label>
-        <input type="url" name="certificate_url" id="certificate_url"
-               class="form-control"
-               placeholder="https://codecombat.com/certificates/..." required>
-    </div>
+  <div class="form-group">
+    <label for="certificate_url">Certificate URL</label>
+    <input
+      type="url"
+      name="certificate_url"
+      id="certificate_url"
+      class="form-control"
+      placeholder="https://codecombat.com/certificates/..."
+      required
+    />
+  </div>
 
-    <div class="form-group mt-3">
-        <label for="certificate_file">Upload Certificate PDF</label>
-        <input type="file" name="certificate_file" id="certificate_file"
-               class="form-control" accept="application/pdf" required>
-    </div>
+  <div class="form-group mt-3">
+    <label for="certificate_file">Upload Certificate PDF</label>
+    <input
+      type="file"
+      name="certificate_file"
+      id="certificate_file"
+      class="form-control"
+      accept="application/pdf"
+      required
+    />
+  </div>
 
-    <div class="progress mt-3" style="display:none; height: 20px;">
-        <div id="progressBar" class="progress-bar" role="progressbar" style="width: 0%;">
-            0%
-        </div>
+  <div class="progress mt-3" style="display: none; height: 20px">
+    <div
+      id="progressBar"
+      class="progress-bar"
+      role="progressbar"
+      style="width: 0%"
+    >
+      0%
     </div>
+  </div>
 
-    <button type="submit" class="btn btn-primary mt-3">Submit</button>
+  <button type="submit" class="btn btn-primary mt-3">Submit</button>
 </form>
 
-<link rel="stylesheet" href="{{ url_for('static', filename='css/submit_certificate.css') }}">
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/submit_certificate.css') }}"
+/>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
-document.getElementById('certificateForm').addEventListener('submit', function (e) {
-    e.preventDefault();
-    const form = e.target;
-    const data = new FormData(form);
-    const xhr = new XMLHttpRequest();
-    const progressBar = document.getElementById('progressBar');
-    const progressContainer = document.querySelector('.progress');
+  document
+    .getElementById("certificateForm")
+    .addEventListener("submit", function (e) {
+      e.preventDefault();
+      const form = e.target;
+      const data = new FormData(form);
+      const xhr = new XMLHttpRequest();
+      const progressBar = document.getElementById("progressBar");
+      const progressContainer = document.querySelector(".progress");
 
-    xhr.upload.addEventListener('progress', function (e) {
+      xhr.upload.addEventListener("progress", function (e) {
         if (e.lengthComputable) {
-            const percent = Math.round((e.loaded / e.total) * 100);
-            progressContainer.style.display = 'block';
-            progressBar.style.width = percent + '%';
-            progressBar.textContent = percent + '%';
+          const percent = Math.round((e.loaded / e.total) * 100);
+          progressContainer.style.display = "block";
+          progressBar.style.width = percent + "%";
+          progressBar.textContent = percent + "%";
         }
-    });
+      });
 
-    xhr.onload = function () {
+      xhr.onload = function () {
         if (xhr.status === 200) {
-            Swal.fire({
-                title: 'Success',
-                text: 'Certificate uploaded successfully.',
-                icon: 'success'
-            }).then(() => {
-                if (window.fetchAchievements) window.fetchAchievements();
-                form.reset();
-                progressContainer.style.display = 'none';
-                progressBar.style.width = '0%';
-            });
+          Swal.fire({
+            title: "Success",
+            text: "Certificate uploaded successfully.",
+            icon: "success",
+          }).then(() => {
+            if (window.fetchAchievements) window.fetchAchievements();
+            form.reset();
+            progressContainer.style.display = "none";
+            progressBar.style.width = "0%";
+          });
         } else {
-            Swal.fire({
-                title: 'Error',
-                text: 'Upload failed. Please try again.',
-                icon: 'error'
-            });
+          Swal.fire({
+            title: "Error",
+            text: "Upload failed. Please try again.",
+            icon: "error",
+          });
         }
-    };
+      };
 
-    xhr.onerror = function () {
+      xhr.onerror = function () {
         Swal.fire({
-            title: 'Error',
-            text: 'Network error during upload.',
-            icon: 'error'
+          title: "Error",
+          text: "Network error during upload.",
+          icon: "error",
         });
-    };
+      };
 
-    xhr.open('POST', "{{ url_for('achievements.submit_certificate') }}");
-    xhr.send(data);
-});
+      xhr.open("POST", "{{ url_for('achievements.submit_certificate') }}");
+      xhr.send(data);
+    });
 </script>
 {% endblock %}

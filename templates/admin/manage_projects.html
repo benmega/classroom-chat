@@ -1,366 +1,478 @@
-{% extends 'admin/admin_base.html' %}
+{% extends 'admin/admin_base.html' %} {% block head_css %}
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/user_profile.css') }}"
+/>
+<style>
+  /* --- Flat Design System --- */
+  :root {
+    --bg-page: #f0f2f5;
+    --bg-card: #ffffff;
+    --border-color: #e2e8f0;
+    --text-primary: #1a202c;
+    --text-secondary: #718096;
+    --text-accent: #3182ce;
+    --success: #38a169;
+    --danger: #e53e3e;
+    --code-bg: #2d3748;
+  }
 
-{% block head_css %}
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/user_profile.css') }}">
-    <style>
-        /* --- Flat Design System --- */
-        :root {
-            --bg-page: #f0f2f5;
-            --bg-card: #ffffff;
-            --border-color: #e2e8f0;
-            --text-primary: #1a202c;
-            --text-secondary: #718096;
-            --text-accent: #3182ce;
-            --success: #38a169;
-            --danger: #e53e3e;
-            --code-bg: #2d3748;
-        }
+  body {
+    background-color: var(--bg-page);
+    color: var(--text-primary);
+  }
 
-        body {
-            background-color: var(--bg-page);
-            color: var(--text-primary);
-        }
+  /* --- Full Width Container Override --- */
+  .admin-container {
+    max-width: 98% !important; /* Force full width */
+    margin: 0 auto;
+    padding: 20px;
+  }
 
-        /* --- Full Width Container Override --- */
-        .admin-container {
-            max-width: 98% !important; /* Force full width */
-            margin: 0 auto;
-            padding: 20px;
-        }
+  .page-header {
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
 
-        .page-header {
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
+  .filter-bar {
+    display: inline-flex;
+    background: white;
+    padding: 4px;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+  }
 
-        .filter-bar {
-            display: inline-flex;
-            background: white;
-            padding: 4px;
-            border-radius: 6px;
-            border: 1px solid var(--border-color);
-        }
+  .filter-tab {
+    padding: 6px 16px;
+    border-radius: 4px;
+    text-decoration: none;
+    color: var(--text-secondary);
+    font-weight: 600;
+    font-size: 0.9rem;
+  }
+  .filter-tab.active {
+    background: var(--text-primary);
+    color: white;
+  }
+  .filter-tab:hover:not(.active) {
+    background: #edf2f7;
+    text-decoration: none;
+  }
 
-        .filter-tab {
-            padding: 6px 16px;
-            border-radius: 4px;
-            text-decoration: none;
-            color: var(--text-secondary);
-            font-weight: 600;
-            font-size: 0.9rem;
-        }
-        .filter-tab.active { background: var(--text-primary); color: white; }
-        .filter-tab:hover:not(.active) { background: #edf2f7; text-decoration: none; }
+  /* --- Horizontal Card Layout --- */
+  .project-card {
+    display: flex;
+    flex-direction: row; /* Horizontal Layout */
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    margin-bottom: 20px;
+    height: 380px; /* Fixed height for uniform dashboard rows */
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  }
 
-        /* --- Horizontal Card Layout --- */
-        .project-card {
-            display: flex;
-            flex-direction: row; /* Horizontal Layout */
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            margin-bottom: 20px;
-            height: 380px; /* Fixed height for uniform dashboard rows */
-            overflow: hidden;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-        }
+  /* --- Section 1: Sidebar (Identity & Thumb) --- */
+  .card-sidebar {
+    width: 240px;
+    flex-shrink: 0;
+    border-right: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    background: #fcfcfc;
+  }
 
-        /* --- Section 1: Sidebar (Identity & Thumb) --- */
-        .card-sidebar {
-            width: 240px;
-            flex-shrink: 0;
-            border-right: 1px solid var(--border-color);
-            display: flex;
-            flex-direction: column;
-            background: #fcfcfc;
-        }
+  .sidebar-header {
+    padding: 15px;
+    border-bottom: 1px solid var(--border-color);
+  }
+  .project-name {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    line-height: 1.2;
+    margin-bottom: 4px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .user-nick {
+    color: var(--text-accent);
+    font-weight: 600;
+    font-size: 0.9rem;
+  }
 
-        .sidebar-header {
-            padding: 15px;
-            border-bottom: 1px solid var(--border-color);
-        }
-        .project-name {
-            font-size: 1.1rem;
-            font-weight: 800;
-            color: var(--text-primary);
-            line-height: 1.2;
-            margin-bottom: 4px;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-        .user-nick { color: var(--text-accent); font-weight: 600; font-size: 0.9rem; }
+  .sidebar-thumb {
+    height: 140px; /* Small Thumbnail */
+    position: relative;
+    background: #edf2f7;
+    border-bottom: 1px solid var(--border-color);
+  }
+  .thumb-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
 
-        .sidebar-thumb {
-            height: 140px; /* Small Thumbnail */
-            position: relative;
-            background: #edf2f7;
-            border-bottom: 1px solid var(--border-color);
-        }
-        .thumb-img { width: 100%; height: 100%; object-fit: cover; }
+  .sidebar-links {
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    overflow-y: auto;
+  }
+  .btn-link {
+    padding: 6px 10px;
+    font-size: 0.8rem;
+    background: white;
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    border-radius: 4px;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s;
+  }
+  .btn-link:hover {
+    background: #edf2f7;
+    color: var(--text-primary);
+    border-color: #cbd5e0;
+    text-decoration: none;
+  }
 
-        .sidebar-links {
-            padding: 15px;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            overflow-y: auto;
-        }
-        .btn-link {
-            padding: 6px 10px;
-            font-size: 0.8rem;
-            background: white;
-            border: 1px solid var(--border-color);
-            color: var(--text-secondary);
-            border-radius: 4px;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.2s;
-        }
-        .btn-link:hover { background: #edf2f7; color: var(--text-primary); border-color: #cbd5e0; text-decoration: none; }
+  /* --- Section 2: Code (The Main Space Taker) --- */
+  .card-code-area {
+    flex: 1; /* Takes all remaining space */
+    display: flex;
+    flex-direction: column;
+    min-width: 0; /* Prevents flex overflow issues */
+    background: var(--code-bg);
+  }
 
-        /* --- Section 2: Code (The Main Space Taker) --- */
-        .card-code-area {
-            flex: 1; /* Takes all remaining space */
-            display: flex;
-            flex-direction: column;
-            min-width: 0; /* Prevents flex overflow issues */
-            background: var(--code-bg);
-        }
+  .code-title {
+    padding: 8px 15px;
+    background: #1a202c;
+    color: #a0aec0;
+    font-size: 0.75rem;
+    font-weight: bold;
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid #4a5568;
+    display: flex;
+    justify-content: space-between;
+  }
 
-        .code-title {
-            padding: 8px 15px;
-            background: #1a202c;
-            color: #a0aec0;
-            font-size: 0.75rem;
-            font-weight: bold;
-            letter-spacing: 0.05em;
-            border-bottom: 1px solid #4a5568;
-            display: flex;
-            justify-content: space-between;
-        }
+  .code-scroller {
+    flex: 1;
+    overflow: auto;
+    padding: 15px;
+  }
+  .code-scroller pre {
+    margin: 0;
+    font-family: "Consolas", "Monaco", monospace;
+    font-size: 0.9rem;
+    color: #e2e8f0;
+    white-space: pre-wrap;
+  }
 
-        .code-scroller {
-            flex: 1;
-            overflow: auto;
-            padding: 15px;
-        }
-        .code-scroller pre {
-            margin: 0;
-            font-family: 'Consolas', 'Monaco', monospace;
-            font-size: 0.9rem;
-            color: #e2e8f0;
-            white-space: pre-wrap;
-        }
+  /* Empty Code State */
+  .no-code-state {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #718096;
+    background: #f7fafc;
+    flex-direction: column;
+  }
 
-        /* Empty Code State */
-        .no-code-state {
-            flex: 1;
+  /* --- Section 3: Feedback & Actions (Right Pane) --- */
+  .card-feedback-area {
+    width: 380px; /* Fixed width for review panel */
+    flex-shrink: 0;
+    border-left: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    background: #fff;
+  }
+
+  .feedback-form {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding: 20px;
+  }
+
+  .feedback-label {
+    font-weight: 700;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .feedback-input {
+    flex: 1; /* Expands to fill vertical space */
+    width: 100%;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: 15px;
+    font-size: 0.95rem;
+    resize: none;
+    margin-bottom: 20px;
+    background: #fcfcfc;
+  }
+  .feedback-input:focus {
+    outline: none;
+    border-color: var(--text-accent);
+    background: #fff;
+  }
+
+  .action-row {
+    display: flex;
+    gap: 10px;
+    height: 45px;
+  }
+
+  .btn-reject {
+    flex: 1;
+    background: white;
+    border: 1px solid var(--danger);
+    color: var(--danger);
+    border-radius: 4px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-reject:hover {
+    background: #fff5f5;
+  }
+
+  .btn-approve {
+    flex: 2;
+    background: var(--success);
+    border: 1px solid var(--success);
+    color: white;
+    border-radius: 4px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-approve:hover {
+    background: #2f855a;
+    border-color: #2f855a;
+  }
+
+  /* --- Responsive Collapse --- */
+  @media (max-width: 1100px) {
+    .project-card {
+      flex-direction: column;
+      height: auto;
+    }
+    .card-sidebar {
+      width: 100%;
+      border-right: none;
+      border-bottom: 1px solid var(--border-color);
+      flex-direction: row;
+      align-items: center;
+    }
+    .sidebar-thumb {
+      width: 100px;
+      height: 80px;
+      border-bottom: none;
+      border-right: 1px solid var(--border-color);
+    }
+    .sidebar-header {
+      flex: 1;
+      border-bottom: none;
+    }
+    .sidebar-links {
+      display: none;
+    } /* Hide links on mobile view to save space */
+    .card-code-area {
+      height: 300px;
+    }
+    .card-feedback-area {
+      width: 100%;
+      border-left: none;
+      border-top: 1px solid var(--border-color);
+    }
+    .feedback-input {
+      height: 120px;
+    }
+  }
+</style>
+{% endblock %} {% block title %}Manage Projects{% endblock %} {% block content
+%}
+<div class="admin-container">
+  <div class="page-header">
+    <h2 style="margin: 0; color: var(--text-primary); font-weight: 800">
+      Review Queue
+    </h2>
+
+    <div class="filter-bar">
+      <a
+        href="?filter=pending"
+        class="filter-tab {{ 'active' if filter_type == 'pending' else '' }}"
+      >
+        Pending ({{ pending_count }})
+      </a>
+      <a
+        href="?filter=all"
+        class="filter-tab {{ 'active' if filter_type == 'all' else '' }}"
+      >
+        All Projects
+      </a>
+    </div>
+  </div>
+
+  {% if projects|length == 0 %}
+  <div
+    style="
+      text-align: center;
+      padding: 100px;
+      background: white;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+    "
+  >
+    <h3 style="color: var(--text-secondary)">No projects found.</h3>
+  </div>
+  {% else %} {% for project in projects %}
+  <div class="project-card">
+    <div class="card-sidebar">
+      <div class="sidebar-thumb">
+        {% if project.image_url %}
+        <img
+          src="{{ url_for('static', filename=project.image_url) }}"
+          class="thumb-img"
+          alt="Project"
+        />
+        {% else %}
+        <div
+          style="
+            height: 100%;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #718096;
-            background: #f7fafc;
-            flex-direction: column;
-        }
-
-        /* --- Section 3: Feedback & Actions (Right Pane) --- */
-        .card-feedback-area {
-            width: 380px; /* Fixed width for review panel */
-            flex-shrink: 0;
-            border-left: 1px solid var(--border-color);
-            display: flex;
-            flex-direction: column;
-            background: #fff;
-        }
-
-        .feedback-form {
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-            padding: 20px;
-        }
-
-        .feedback-label {
-            font-weight: 700;
-            font-size: 0.8rem;
-            color: var(--text-secondary);
-            text-transform: uppercase;
-            margin-bottom: 10px;
-        }
-
-        .feedback-input {
-            flex: 1; /* Expands to fill vertical space */
-            width: 100%;
-            border: 1px solid var(--border-color);
-            border-radius: 4px;
-            padding: 15px;
-            font-size: 0.95rem;
-            resize: none;
-            margin-bottom: 20px;
-            background: #fcfcfc;
-        }
-        .feedback-input:focus { outline: none; border-color: var(--text-accent); background: #fff; }
-
-        .action-row {
-            display: flex;
-            gap: 10px;
-            height: 45px;
-        }
-
-        .btn-reject {
-            flex: 1;
-            background: white;
-            border: 1px solid var(--danger);
-            color: var(--danger);
-            border-radius: 4px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .btn-reject:hover { background: #fff5f5; }
-
-        .btn-approve {
-            flex: 2;
-            background: var(--success);
-            border: 1px solid var(--success);
-            color: white;
-            border-radius: 4px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .btn-approve:hover { background: #2f855a; border-color: #2f855a; }
-
-        /* --- Responsive Collapse --- */
-        @media (max-width: 1100px) {
-            .project-card { flex-direction: column; height: auto; }
-            .card-sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--border-color); flex-direction: row; align-items: center; }
-            .sidebar-thumb { width: 100px; height: 80px; border-bottom: none; border-right: 1px solid var(--border-color); }
-            .sidebar-header { flex: 1; border-bottom: none; }
-            .sidebar-links { display: none; } /* Hide links on mobile view to save space */
-            .card-code-area { height: 300px; }
-            .card-feedback-area { width: 100%; border-left: none; border-top: 1px solid var(--border-color); }
-            .feedback-input { height: 120px; }
-        }
-    </style>
-{% endblock %}
-
-{% block title %}Manage Projects{% endblock %}
-
-{% block content %}
-<div class="admin-container">
-
-    <div class="page-header">
-        <h2 style="margin: 0; color: var(--text-primary); font-weight: 800;">Review Queue</h2>
-
-        <div class="filter-bar">
-            <a href="?filter=pending" class="filter-tab {{ 'active' if filter_type == 'pending' else '' }}">
-                Pending ({{ pending_count }})
-            </a>
-            <a href="?filter=all" class="filter-tab {{ 'active' if filter_type == 'all' else '' }}">
-                All Projects
-            </a>
+            color: #cbd5e0;
+          "
+        >
+          <i class="fas fa-image fa-2x"></i>
         </div>
-    </div>
+        {% endif %}
+      </div>
 
-    {% if projects|length == 0 %}
-        <div style="text-align: center; padding: 100px; background: white; border: 1px solid var(--border-color); border-radius: 8px;">
-            <h3 style="color: var(--text-secondary);">No projects found.</h3>
+      <div class="sidebar-header">
+        <div class="project-name" title="{{ project.name }}">
+          {{ project.name if project.name else 'Untitled' }}
         </div>
-    {% else %}
+        <div class="user-nick">{{ project.user.nickname }}</div>
+        <small style="color: var(--text-secondary)"
+          >@{{ project.user.username }}</small
+        >
+      </div>
 
-{% for project in projects %}
-<div class="project-card">
+      <div class="sidebar-links">
+        <a
+          href="{{ url_for('user.edit_project', project_id=project.id) }}"
+          class="btn-link"
+          style="
+            border-color: var(--text-accent);
+            color: var(--text-accent);
+            font-weight: bold;
+          "
+        >
+          <i class="fas fa-edit"></i> Edit Project Details
+        </a>
 
-    <div class="card-sidebar">
-        <div class="sidebar-thumb">
-            {% if project.image_url %}
-                <img src="{{ url_for('static', filename=project.image_url) }}" class="thumb-img" alt="Project">
-            {% else %}
-                <div style="height:100%; display:flex; align-items:center; justify-content:center; color:#cbd5e0;">
-                    <i class="fas fa-image fa-2x"></i>
-                </div>
-            {% endif %}
-        </div>
+        <hr
+          style="
+            margin: 5px 0;
+            border: 0;
+            border-top: 1px solid var(--border-color);
+          "
+        />
 
-        <div class="sidebar-header">
-            <div class="project-name" title="{{ project.name }}">{{ project.name if project.name else 'Untitled' }}</div>
-            <div class="user-nick">{{ project.user.nickname }}</div>
-            <small style="color: var(--text-secondary);">@{{ project.user.username }}</small>
-        </div>
-
-        <div class="sidebar-links">
-            <a href="{{ url_for('user.edit_project', project_id=project.id) }}" class="btn-link" style="border-color: var(--text-accent); color: var(--text-accent); font-weight: bold;">
-                <i class="fas fa-edit"></i> Edit Project Details
-            </a>
-
-            <hr style="margin: 5px 0; border: 0; border-top: 1px solid var(--border-color);">
-
-            {% if project.link %}
-            <a href="{{ project.link }}" target="_blank" class="btn-link">
-                <i class="fas fa-play-circle" style="color: var(--text-accent);"></i> Play Game
-            </a>
-            {% endif %}
-            {% if project.github_link %}
-            <a href="{{ project.github_link }}" target="_blank" class="btn-link">
-                <i class="fab fa-github"></i> GitHub
-            </a>
-            {% endif %}
-        </div>
+        {% if project.link %}
+        <a href="{{ project.link }}" target="_blank" class="btn-link">
+          <i class="fas fa-play-circle" style="color: var(--text-accent)"></i>
+          Play Game
+        </a>
+        {% endif %} {% if project.github_link %}
+        <a href="{{ project.github_link }}" target="_blank" class="btn-link">
+          <i class="fab fa-github"></i> GitHub
+        </a>
+        {% endif %}
+      </div>
     </div>
 
     {% if project.code_snippet %}
     <div class="card-code-area">
-        <div class="code-title">
-            <span>CODE SNAPSHOT (READ ONLY)</span>
-            <span><i class="fas fa-code"></i></span>
-        </div>
-        <div class="code-scroller">
-            <pre>{{ project.code_snippet }}</pre>
-        </div>
+      <div class="code-title">
+        <span>CODE SNAPSHOT (READ ONLY)</span>
+        <span><i class="fas fa-code"></i></span>
+      </div>
+      <div class="code-scroller">
+        <pre>{{ project.code_snippet }}</pre>
+      </div>
     </div>
     {% else %}
     <div class="no-code-state">
-        <i class="fas fa-code-branch" style="font-size: 3rem; margin-bottom: 15px; opacity: 0.3;"></i>
-        <span>No Code Provided</span>
+      <i
+        class="fas fa-code-branch"
+        style="font-size: 3rem; margin-bottom: 15px; opacity: 0.3"
+      ></i>
+      <span>No Code Provided</span>
     </div>
     {% endif %}
 
     <div class="card-feedback-area">
-        <form action="{{ url_for('admin.handle_project_review', project_id=project.id) }}" method="POST" class="feedback-form">
-            <input type="hidden" name="filter_context" value="{{ filter_type }}">
+      <form
+        action="{{ url_for('admin.handle_project_review', project_id=project.id) }}"
+        method="POST"
+        class="feedback-form"
+      >
+        <input type="hidden" name="filter_context" value="{{ filter_type }}" />
 
-            <label class="feedback-label" for="comment-{{ project.id }}">Teacher Feedback</label>
-            <textarea
-                id="comment-{{ project.id }}"
-                name="teacher_comment"
-                class="feedback-input"
-                placeholder="Type feedback here..."
-            >{{ project.teacher_comment if project.teacher_comment else '' }}</textarea>
+        <label class="feedback-label" for="comment-{{ project.id }}"
+          >Teacher Feedback</label
+        >
+        <textarea
+          id="comment-{{ project.id }}"
+          name="teacher_comment"
+          class="feedback-input"
+          placeholder="Type feedback here..."
+        >
+{{ project.teacher_comment if project.teacher_comment else '' }}</textarea
+        >
 
-            <div class="action-row">
-                <button type="submit" name="action" value="reject" class="btn-reject" title="Return for Revision">
-                    <i class="fas fa-undo"></i> Return
-                </button>
-                <button type="submit" name="action" value="approve" class="btn-approve">
-                    <i class="fas fa-check"></i>
-                    {% if project.teacher_comment %}Update{% else %}Approve{% endif %}
-                </button>
-            </div>
-        </form>
+        <div class="action-row">
+          <button
+            type="submit"
+            name="action"
+            value="reject"
+            class="btn-reject"
+            title="Return for Revision"
+          >
+            <i class="fas fa-undo"></i> Return
+          </button>
+          <button
+            type="submit"
+            name="action"
+            value="approve"
+            class="btn-approve"
+          >
+            <i class="fas fa-check"></i>
+            {% if project.teacher_comment %}Update{% else %}Approve{% endif %}
+          </button>
+        </div>
+      </form>
     </div>
-
-</div>
-{% endfor %}
-
-
-    {% endif %}
-
+  </div>
+  {% endfor %} {% endif %}
 </div>
 {% endblock %}

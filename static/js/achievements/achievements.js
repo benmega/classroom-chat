@@ -1,49 +1,49 @@
 // achievements.js
 export function initAchievements(username) {
-    async function fetchAchievements() {
-        try {
-            const res = await fetch("/api/achievements/check");
-            if (!res.ok) return;
+  async function fetchAchievements() {
+    try {
+      const res = await fetch("/api/achievements/check");
+      if (!res.ok) return;
 
-            const data = await res.json();
+      const data = await res.json();
 
-            if (!data.success || !data.new_awards.length) return;
+      if (!data.success || !data.new_awards.length) return;
 
-            data.new_awards.forEach(a => showAchievement(a.name, a.badge));
-        } catch (err) {
-            console.error("Error fetching achievements:", err);
-        }
+      data.new_awards.forEach((a) => showAchievement(a.name, a.badge));
+    } catch (err) {
+      console.error("Error fetching achievements:", err);
     }
+  }
 
-    window.fetchAchievements = fetchAchievements;
+  window.fetchAchievements = fetchAchievements;
 
-    function ensurePopupContainer() {
-        let container = document.getElementById("achievement-container");
-        if (!container) {
-            container = document.createElement("div");
-            container.id = "achievement-container";
-            document.body.appendChild(container);
-        }
-        return container;
+  function ensurePopupContainer() {
+    let container = document.getElementById("achievement-container");
+    if (!container) {
+      container = document.createElement("div");
+      container.id = "achievement-container";
+      document.body.appendChild(container);
     }
+    return container;
+  }
 
-    function showAchievement(name, badge) {
-        const container = ensurePopupContainer();
+  function showAchievement(name, badge) {
+    const container = ensurePopupContainer();
 
-        const popup = document.createElement("div");
-        popup.className = "achievement-popup";
-        popup.innerHTML = `<img src="${badge}" width="32"> ${name}`;
+    const popup = document.createElement("div");
+    popup.className = "achievement-popup";
+    popup.innerHTML = `<img src="${badge}" width="32"> ${name}`;
 
-        container.appendChild(popup);
+    container.appendChild(popup);
 
-        setTimeout(() => popup.classList.add("show"), 500);
-        setTimeout(() => {
-            popup.classList.remove("show");
-            setTimeout(() => popup.remove(), 1000);
-        }, 8000);
-    }
+    setTimeout(() => popup.classList.add("show"), 500);
+    setTimeout(() => {
+      popup.classList.remove("show");
+      setTimeout(() => popup.remove(), 1000);
+    }, 8000);
+  }
 
-    // Initial fetch + optional polling
-    fetchAchievements();
-    setInterval(fetchAchievements, 10000);
+  // Initial fetch + optional polling
+  fetchAchievements();
+  setInterval(fetchAchievements, 10000);
 }

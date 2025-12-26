@@ -1,277 +1,344 @@
-{% extends 'base.html' %}
+{% extends 'base.html' %} {% block content %}
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/user_profile.css') }}"
+/>
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/edit_profile.css') }}"
+/>
 
-{% block content %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/user_profile.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/edit_profile.css') }}"> 
+<div class="profile-container" style="max-width: 1100px; margin: 40px auto">
+  <div class="dashboard-panel">
+    <div class="panel-header">
+      <h2>
+        <i class="fas fa-project-diagram"></i>
+        {% if project %}Edit Project: {{ project.name }}{% else %}Create New
+        Project{% endif %}
+      </h2>
+    </div>
 
-<div class="profile-container" style="max-width: 1100px; margin: 40px auto;">
-
-    <div class="dashboard-panel">
-        <div class="panel-header">
-            <h2>
-                <i class="fas fa-project-diagram"></i>
-                {% if project %}Edit Project: {{ project.name }}{% else %}Create New Project{% endif %}
-            </h2>
+    <form method="POST" enctype="multipart/form-data" class="project-form-grid">
+      <div class="form-column-left">
+        <div class="form-group">
+          <label for="name">Project Name <span class="required">*</span></label>
+          <input
+            type="text"
+            id="name"
+            name="name"
+            value="{{ project.name if project else '' }}"
+            required
+            placeholder="e.g. Space Invaders Clone"
+          />
         </div>
 
-        <form method="POST" enctype="multipart/form-data" class="project-form-grid">
+        <div class="form-group">
+          <label for="description">About this Project</label>
+          <textarea
+            id="description"
+            name="description"
+            rows="5"
+            placeholder="Describe what the project does and what you learned..."
+          >
+{{ project.description if project else '' }}</textarea
+          >
+        </div>
 
-            <div class="form-column-left">
+        {% if user.is_admin %}
+        <div class="form-group">
+          <label for="student_id">Assign to Student</label>
+          <select name="student_id" required>
+            <option value="">Select Student</option>
+            {% for student in students %}
+            <option value="{{ student.id }}">{{ student.username }}</option>
+            {% endfor %}
+          </select>
+        </div>
 
-                <div class="form-group">
-                    <label for="name">Project Name <span class="required">*</span></label>
-                    <input type="text" id="name" name="name"
-                           value="{{ project.name if project else '' }}" required
-                           placeholder="e.g. Space Invaders Clone">
-                </div>
+        <div class="form-group">
+          <label for="teacher_comment">Teacher Comment (Admin Only)</label>
+          <textarea
+            class="form-control"
+            id="teacher_comment"
+            name="teacher_comment"
+            rows="3"
+          >
+{{ project.teacher_comment if project else '' }}</textarea
+          >
+        </div>
+        {% else %} {% if project and project.teacher_comment %}
+        <div class="form-group">
+          <label>Teacher Comment</label>
+          <div class="alert alert-info">{{ project.teacher_comment }}</div>
+        </div>
+        {% endif %} {% endif %}
+        <div class="form-group highlight-box">
+          <label><i class="fas fa-image"></i> Project Thumbnail</label>
 
-                <div class="form-group">
-                    <label for="description">About this Project</label>
-                    <textarea id="description" name="description" rows="5"
-                              placeholder="Describe what the project does and what you learned...">{{ project.description if project else '' }}</textarea>
-                </div>
+          {% if project and project.image_url %}
+          <div class="current-image-preview">
+            <img
+              src="{{ url_for('static', filename=project.image_url) }}"
+              alt="Current Thumbnail"
+            />
+            <span>Current Image</span>
+          </div>
+          {% endif %}
 
-                {% if user.is_admin %}
-                    <div class="form-group">
-                        <label for="student_id">Assign to Student</label>
-                        <select name="student_id" required>
-                            <option value="">Select Student</option>
-                            {% for student in students %}
-                                <option value="{{ student.id }}">{{ student.username }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
+          <input
+            type="file"
+            name="project_image"
+            accept="image/*"
+            class="file-input"
+          />
+          <small class="hint-text"
+            >Upload a screenshot or cover image (PNG/JPG).</small
+          >
+        </div>
 
-                    <div class="form-group">
-                        <label for="teacher_comment">Teacher Comment (Admin Only)</label>
-                        <textarea
-                            class="form-control"
-                            id="teacher_comment"
-                            name="teacher_comment"
-                            rows="3">{{ project.teacher_comment if project else '' }}</textarea>
-                    </div>
-                {% else %}
-                    {% if project and project.teacher_comment %}
-                        <div class="form-group">
-                            <label>Teacher Comment</label>
-                            <div class="alert alert-info">
-                                {{ project.teacher_comment }}
-                            </div>
-                        </div>
-                    {% endif %}
-                {% endif %}
-                <div class="form-group highlight-box">
-                    <label><i class="fas fa-image"></i> Project Thumbnail</label>
+        <div class="form-group">
+          <label>External Links</label>
 
-                    {% if project and project.image_url %}
-                        <div class="current-image-preview">
-                            <img src="{{ url_for('static', filename=project.image_url) }}" alt="Current Thumbnail">
-                            <span>Current Image</span>
-                        </div>
-                    {% endif %}
+          <div class="input-with-icon">
+            <i class="fas fa-rocket"></i>
+            <input
+              type="text"
+              name="link"
+              value="{{ project.link if project else '' }}"
+              placeholder="Playable Demo Link (https://...)"
+            />
+          </div>
 
-                    <input type="file" name="project_image" accept="image/*" class="file-input">
-                    <small class="hint-text">Upload a screenshot or cover image (PNG/JPG).</small>
-                </div>
+          <div class="input-with-icon mt-2">
+            <i class="fab fa-github"></i>
+            <input
+              type="text"
+              name="github_link"
+              value="{{ project.github_link if project else '' }}"
+              placeholder="GitHub Repository URL"
+            />
+          </div>
+          <div class="input-with-icon mt-2">
+            <i class="fas fa-video"></i>
+            <input
+              type="text"
+              name="video_url"
+              value="{{ project.video_url if project else '' }}"
+              placeholder="YouTube URL (or upload below)"
+            />
+          </div>
+        </div>
 
-                <div class="form-group">
-                    <label>External Links</label>
+        <div
+          class="form-group highlight-box mt-2"
+          style="border-color: #ff000040"
+        >
+          <label><i class="fab fa-youtube"></i> Upload Video to YouTube</label>
+          <input
+            type="file"
+            name="project_video"
+            accept="video/*"
+            class="file-input"
+          />
+          <small class="hint-text">
+            Uploading will process the video and automatically link it here when
+            done (approx 5-10 mins).
+          </small>
+        </div>
+      </div>
 
-                    <div class="input-with-icon">
-                        <i class="fas fa-rocket"></i>
-                        <input type="text" name="link" value="{{ project.link if project else '' }}" placeholder="Playable Demo Link (https://...)">
-                    </div>
+      <div class="form-column-right">
+        <div class="form-group code-editor-container">
+          <label for="code_snippet">Code Highlight / Logic</label>
+          <p class="help-text">
+            Paste the most interesting function or class from your project here.
+          </p>
+          <textarea
+            id="code_snippet"
+            name="code_snippet"
+            class="code-textarea"
+            placeholder="def my_cool_function():&#10;    return 'Hello World'"
+          >
+{{ project.code_snippet if project else '' }}</textarea
+          >
+        </div>
+      </div>
 
-                    <div class="input-with-icon mt-2">
-                        <i class="fab fa-github"></i>
-                        <input type="text" name="github_link" value="{{ project.github_link if project else '' }}" placeholder="GitHub Repository URL">
-                    </div>
-                    <div class="input-with-icon mt-2">
-                        <i class="fas fa-video"></i>
-                        <input type="text" name="video_url" value="{{ project.video_url if project else '' }}" placeholder="YouTube URL (or upload below)">
-                    </div>
-                </div>
+      <div class="form-footer">
+        <a href="{{ url_for('user.profile') }}" class="btn-cancel">Cancel</a>
 
+        {% if project %}
+        <button
+          type="submit"
+          name="action"
+          value="delete"
+          class="btn-delete"
+          onclick="
+            return confirm(
+              'Are you sure you want to delete this project? This cannot be undone.',
+            );
+          "
+        >
+          <i class="fas fa-trash"></i> Delete Project
+        </button>
+        {% endif %}
 
-                <div class="form-group highlight-box mt-2" style="border-color: #ff000040;">
-                    <label><i class="fab fa-youtube"></i> Upload Video to YouTube</label>
-                    <input type="file" name="project_video" accept="video/*" class="file-input">
-                    <small class="hint-text">
-                        Uploading will process the video and automatically link it here when done (approx 5-10 mins).
-                    </small>
-                </div>
-            </div>
-
-            <div class="form-column-right">
-                <div class="form-group code-editor-container">
-                    <label for="code_snippet">Code Highlight / Logic</label>
-                    <p class="help-text">Paste the most interesting function or class from your project here.</p>
-                    <textarea id="code_snippet" name="code_snippet"
-                              class="code-textarea"
-                              placeholder="def my_cool_function():&#10;    return 'Hello World'">{{ project.code_snippet if project else '' }}</textarea>
-                </div>
-            </div>
-
-            <div class="form-footer">
-                <a href="{{ url_for('user.profile') }}" class="btn-cancel">Cancel</a>
-
-                {% if project %}
-                <button type="submit" name="action" value="delete" class="btn-delete" onclick="return confirm('Are you sure you want to delete this project? This cannot be undone.');">
-                    <i class="fas fa-trash"></i> Delete Project
-                </button>
-                {% endif %}
-
-                <button type="submit" name="action" value="save" class="btn-save">
-                    <i class="fas fa-save"></i> {% if project %}Save Changes{% else %}Create Project{% endif %}
-                </button>
-            </div>
-
-        </form>
-    </div>
+        <button type="submit" name="action" value="save" class="btn-save">
+          <i class="fas fa-save"></i> {% if project %}Save Changes{% else
+          %}Create Project{% endif %}
+        </button>
+      </div>
+    </form>
+  </div>
 </div>
 
 <style>
-    /* Layout Grid */
+  /* Layout Grid */
+  .project-form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    padding: 20px;
+  }
+
+  /* Column Styles */
+  .form-column-left {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .form-column-right {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Code Editor Styling */
+  .code-editor-container {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .code-textarea {
+    flex-grow: 1;
+    font-family: "Consolas", "Monaco", monospace;
+    background: #2d2d2d;
+    color: #f8f8f2;
+    padding: 15px;
+    border-radius: 5px;
+    border: 1px solid #444;
+    line-height: 1.5;
+    min-height: 400px; /* Ensure valid height on mobile */
+    resize: vertical;
+  }
+
+  /* Input Improvements */
+  .input-with-icon {
+    position: relative;
+  }
+  .input-with-icon i {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6c757d;
+  }
+  .input-with-icon input {
+    padding-left: 40px !important;
+  }
+  .mt-2 {
+    margin-top: 10px;
+  }
+
+  /* Image Upload Box */
+  .highlight-box {
+    background: #fff;
+    padding: 15px;
+    border: 2px dashed #dee2e6;
+    border-radius: 6px;
+  }
+  .current-image-preview {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+  }
+  .current-image-preview img {
+    height: 60px;
+    width: 100px;
+    object-fit: cover;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+  }
+  .current-image-preview span {
+    font-size: 0.85rem;
+    color: #666;
+    font-style: italic;
+  }
+  .file-input {
+    padding: 5px 0;
+  }
+  .hint-text {
+    display: block;
+    font-size: 0.8rem;
+    color: #888;
+    margin-top: 5px;
+  }
+
+  /* Footer Actions */
+  .form-footer {
+    grid-column: 1 / -1;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 15px;
+    border-top: 1px solid #eee;
+    padding-top: 20px;
+    margin-top: 10px;
+  }
+
+  .btn-delete {
+    background-color: #ff6b6b;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-right: auto; /* Push to left */
+    font-weight: 500;
+    transition: background 0.2s;
+  }
+  .btn-delete:hover {
+    background-color: #fa5252;
+  }
+
+  /* Responsive */
+  @media (max-width: 900px) {
     .project-form-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 30px;
-        padding: 20px;
+      grid-template-columns: 1fr;
     }
-
-    /* Column Styles */
-    .form-column-left {
-        display: flex;
-        flex-direction: column;
-        gap: 15px;
-    }
-
-    .form-column-right {
-        background: #f8f9fa;
-        padding: 20px;
-        border-radius: 8px;
-        border: 1px solid #e9ecef;
-        display: flex;
-        flex-direction: column;
-    }
-
-    /* Code Editor Styling */
-    .code-editor-container {
-        height: 100%;
-        display: flex;
-        flex-direction: column;
-    }
-
     .code-textarea {
-        flex-grow: 1;
-        font-family: 'Consolas', 'Monaco', monospace;
-        background: #2d2d2d;
-        color: #f8f8f2;
-        padding: 15px;
-        border-radius: 5px;
-        border: 1px solid #444;
-        line-height: 1.5;
-        min-height: 400px; /* Ensure valid height on mobile */
-        resize: vertical;
+      min-height: 300px;
     }
-
-    /* Input Improvements */
-    .input-with-icon {
-        position: relative;
-    }
-    .input-with-icon i {
-        position: absolute;
-        left: 12px;
-        top: 50%;
-        transform: translateY(-50%);
-        color: #6c757d;
-    }
-    .input-with-icon input {
-        padding-left: 40px !important;
-    }
-    .mt-2 { margin-top: 10px; }
-
-    /* Image Upload Box */
-    .highlight-box {
-        background: #fff;
-        padding: 15px;
-        border: 2px dashed #dee2e6;
-        border-radius: 6px;
-    }
-    .current-image-preview {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        margin-bottom: 10px;
-        padding-bottom: 10px;
-        border-bottom: 1px solid #eee;
-    }
-    .current-image-preview img {
-        height: 60px;
-        width: 100px;
-        object-fit: cover;
-        border-radius: 4px;
-        border: 1px solid #ddd;
-    }
-    .current-image-preview span {
-        font-size: 0.85rem;
-        color: #666;
-        font-style: italic;
-    }
-    .file-input {
-        padding: 5px 0;
-    }
-    .hint-text {
-        display: block;
-        font-size: 0.8rem;
-        color: #888;
-        margin-top: 5px;
-    }
-
-    /* Footer Actions */
-    .form-footer {
-        grid-column: 1 / -1;
-        display: flex;
-        justify-content: flex-end;
-        align-items: center;
-        gap: 15px;
-        border-top: 1px solid #eee;
-        padding-top: 20px;
-        margin-top: 10px;
-    }
-
     .btn-delete {
-        background-color: #ff6b6b;
-        color: white;
-        border: none;
-        padding: 10px 20px;
-        border-radius: 5px;
-        cursor: pointer;
-        margin-right: auto; /* Push to left */
-        font-weight: 500;
-        transition: background 0.2s;
+      margin-right: 0; /* Stack buttons normally on mobile */
     }
-    .btn-delete:hover { background-color: #fa5252; }
-
-    /* Responsive */
-    @media (max-width: 900px) {
-        .project-form-grid {
-            grid-template-columns: 1fr;
-        }
-        .code-textarea {
-            min-height: 300px;
-        }
-        .btn-delete {
-            margin-right: 0; /* Stack buttons normally on mobile */
-        }
-        .form-footer {
-            flex-direction: column-reverse; /* Save button on top */
-            width: 100%;
-        }
-        .form-footer button, .form-footer a {
-            width: 100%;
-            text-align: center;
-        }
+    .form-footer {
+      flex-direction: column-reverse; /* Save button on top */
+      width: 100%;
     }
+    .form-footer button,
+    .form-footer a {
+      width: 100%;
+      text-align: center;
+    }
+  }
 </style>
 {% endblock %}

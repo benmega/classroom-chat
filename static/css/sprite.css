@@ -1,86 +1,242 @@
 .badge {
   width: 128px;
   height: 128px;
-  background-image: url('/static/images/achievement_badges/sprite.webp');
+  background-image: url("/static/images/achievement_badges/sprite.webp");
   background-repeat: no-repeat;
   display: inline-block;
 }
 
-.badge-10-messages { background-position: -0px -0px; }
-.badge-10-projects { background-position: -128px -0px; }
-.badge-10-week-streak { background-position: -256px -0px; }
-.badge-100-helps { background-position: -384px -0px; }
-.badge-20-helps { background-position: -512px -0px; }
-.badge-200-messages { background-position: -640px -0px; }
-.badge-25-projects { background-position: -768px -0px; }
-.badge-25-week-streak { background-position: -896px -0px; }
-.badge-3-projects { background-position: -1024px -0px; }
-.badge-3-week-streak { background-position: -0px -128px; }
-.badge-5-helps { background-position: -128px -128px; }
-.badge-5-week-streak { background-position: -256px -128px; }
-.badge-50-helps { background-position: -384px -128px; }
-.badge-50-messages { background-position: -512px -128px; }
-.badge-560f1a9f22961295f9427742 { background-position: -640px -128px; }
-.badge-5632661322961295f9428638 { background-position: -768px -128px; }
-.badge-56462f935afde0c6fd30fc8c { background-position: -896px -128px; }
-.badge-56462f935afde0c6fd30fc8d { background-position: -1024px -128px; }
-.badge-569ed916efa72b0ced971447 { background-position: -0px -256px; }
-.badge-5789587aad86a6efb573701e { background-position: -128px -256px; }
-.badge-5789587aad86a6efb573701f { background-position: -256px -256px; }
-.badge-5789587aad86a6efb5737020 { background-position: -384px -256px; }
-.badge-57b621e7ad86a6efb5737e64 { background-position: -512px -256px; }
-.badge-5817d673e85d1220db624ca4 { background-position: -640px -256px; }
-.badge-5a0df02b8f2391437740f74f { background-position: -768px -256px; }
-.badge-5d41d731a8d1836b5aa3cba1 { background-position: -896px -256px; }
-.badge-5d8a57abe8919b28d5113af1 { background-position: -1024px -256px; }
-.badge-5e27600d1c9d440000ac3ee7 { background-position: -0px -384px; }
-.badge-5f0cb0b7a2492bba0b3520df { background-position: -128px -384px; }
-.badge-65f32b6c87c07dbeb5ba1936 { background-position: -256px -384px; }
-.badge-achievement-hunter { background-position: -384px -384px; }
-.badge-active-user { background-position: -512px -384px; }
-.badge-cc-novice { background-position: -640px -384px; }
-.badge-cc-veteran { background-position: -768px -384px; }
-.badge-chatterbox { background-position: -896px -384px; }
-.badge-codecombat-10-levels { background-position: -1024px -384px; }
-.badge-codecombat-100-levels { background-position: -0px -512px; }
-.badge-codecombat-200-levels { background-position: -128px -512px; }
-.badge-codecombat-25-levels { background-position: -256px -512px; }
-.badge-codecombat-300-levels { background-position: -384px -512px; }
-.badge-codecombat-400-levels { background-position: -512px -512px; }
-.badge-codecombat-5-levels { background-position: -640px -512px; }
-.badge-codecombat-50-levels { background-position: -768px -512px; }
-.badge-codecombat-500-levels { background-position: -896px -512px; }
-.badge-codecombat-570-levels { background-position: -1024px -512px; }
-.badge-codecombat-first-level { background-position: -0px -640px; }
-.badge-dedication { background-position: -128px -640px; }
-.badge-duck-collector { background-position: -256px -640px; }
-.badge-duck-hoarder { background-position: -384px -640px; }
-.badge-duck-legend { background-position: -512px -640px; }
-.badge-duck-millionaire { background-position: -640px -640px; }
-.badge-duckling { background-position: -768px -640px; }
-.badge-experienced-trader { background-position: -896px -640px; }
-.badge-first-duck { background-position: -1024px -640px; }
-.badge-first-help { background-position: -0px -768px; }
-.badge-first-message { background-position: -128px -768px; }
-.badge-first-project { background-position: -256px -768px; }
-.badge-first-streak { background-position: -384px -768px; }
-.badge-flock-builder { background-position: -512px -768px; }
-.badge-helpful-peer { background-position: -640px -768px; }
-.badge-marathoner { background-position: -768px -768px; }
-.badge-master-trader { background-position: -896px -768px; }
-.badge-ozaria-10-levels { background-position: -1024px -768px; }
-.badge-ozaria-100-levels { background-position: -0px -896px; }
-.badge-ozaria-150-levels { background-position: -128px -896px; }
-.badge-ozaria-200-levels { background-position: -256px -896px; }
-.badge-ozaria-25-levels { background-position: -384px -896px; }
-.badge-ozaria-265-levels { background-position: -512px -896px; }
-.badge-ozaria-5-levels { background-position: -640px -896px; }
-.badge-ozaria-50-levels { background-position: -768px -896px; }
-.badge-ozaria-first-challenge { background-position: -896px -896px; }
-.badge-ozaria-first-level { background-position: -1024px -896px; }
-.badge-pond-master { background-position: -0px -1024px; }
-.badge-portfolio-builder { background-position: -128px -1024px; }
-.badge-project-master { background-position: -256px -1024px; }
-.badge-sprite { background-position: -384px -1024px; }
-.badge-trade-initiate { background-position: -512px -1024px; }
-.badge-you-there { background-position: -640px -1024px; }
+.badge-10-messages {
+  background-position: -0px -0px;
+}
+.badge-10-projects {
+  background-position: -128px -0px;
+}
+.badge-10-week-streak {
+  background-position: -256px -0px;
+}
+.badge-100-helps {
+  background-position: -384px -0px;
+}
+.badge-20-helps {
+  background-position: -512px -0px;
+}
+.badge-200-messages {
+  background-position: -640px -0px;
+}
+.badge-25-projects {
+  background-position: -768px -0px;
+}
+.badge-25-week-streak {
+  background-position: -896px -0px;
+}
+.badge-3-projects {
+  background-position: -1024px -0px;
+}
+.badge-3-week-streak {
+  background-position: -0px -128px;
+}
+.badge-5-helps {
+  background-position: -128px -128px;
+}
+.badge-5-week-streak {
+  background-position: -256px -128px;
+}
+.badge-50-helps {
+  background-position: -384px -128px;
+}
+.badge-50-messages {
+  background-position: -512px -128px;
+}
+.badge-560f1a9f22961295f9427742 {
+  background-position: -640px -128px;
+}
+.badge-5632661322961295f9428638 {
+  background-position: -768px -128px;
+}
+.badge-56462f935afde0c6fd30fc8c {
+  background-position: -896px -128px;
+}
+.badge-56462f935afde0c6fd30fc8d {
+  background-position: -1024px -128px;
+}
+.badge-569ed916efa72b0ced971447 {
+  background-position: -0px -256px;
+}
+.badge-5789587aad86a6efb573701e {
+  background-position: -128px -256px;
+}
+.badge-5789587aad86a6efb573701f {
+  background-position: -256px -256px;
+}
+.badge-5789587aad86a6efb5737020 {
+  background-position: -384px -256px;
+}
+.badge-57b621e7ad86a6efb5737e64 {
+  background-position: -512px -256px;
+}
+.badge-5817d673e85d1220db624ca4 {
+  background-position: -640px -256px;
+}
+.badge-5a0df02b8f2391437740f74f {
+  background-position: -768px -256px;
+}
+.badge-5d41d731a8d1836b5aa3cba1 {
+  background-position: -896px -256px;
+}
+.badge-5d8a57abe8919b28d5113af1 {
+  background-position: -1024px -256px;
+}
+.badge-5e27600d1c9d440000ac3ee7 {
+  background-position: -0px -384px;
+}
+.badge-5f0cb0b7a2492bba0b3520df {
+  background-position: -128px -384px;
+}
+.badge-65f32b6c87c07dbeb5ba1936 {
+  background-position: -256px -384px;
+}
+.badge-achievement-hunter {
+  background-position: -384px -384px;
+}
+.badge-active-user {
+  background-position: -512px -384px;
+}
+.badge-cc-novice {
+  background-position: -640px -384px;
+}
+.badge-cc-veteran {
+  background-position: -768px -384px;
+}
+.badge-chatterbox {
+  background-position: -896px -384px;
+}
+.badge-codecombat-10-levels {
+  background-position: -1024px -384px;
+}
+.badge-codecombat-100-levels {
+  background-position: -0px -512px;
+}
+.badge-codecombat-200-levels {
+  background-position: -128px -512px;
+}
+.badge-codecombat-25-levels {
+  background-position: -256px -512px;
+}
+.badge-codecombat-300-levels {
+  background-position: -384px -512px;
+}
+.badge-codecombat-400-levels {
+  background-position: -512px -512px;
+}
+.badge-codecombat-5-levels {
+  background-position: -640px -512px;
+}
+.badge-codecombat-50-levels {
+  background-position: -768px -512px;
+}
+.badge-codecombat-500-levels {
+  background-position: -896px -512px;
+}
+.badge-codecombat-570-levels {
+  background-position: -1024px -512px;
+}
+.badge-codecombat-first-level {
+  background-position: -0px -640px;
+}
+.badge-dedication {
+  background-position: -128px -640px;
+}
+.badge-duck-collector {
+  background-position: -256px -640px;
+}
+.badge-duck-hoarder {
+  background-position: -384px -640px;
+}
+.badge-duck-legend {
+  background-position: -512px -640px;
+}
+.badge-duck-millionaire {
+  background-position: -640px -640px;
+}
+.badge-duckling {
+  background-position: -768px -640px;
+}
+.badge-experienced-trader {
+  background-position: -896px -640px;
+}
+.badge-first-duck {
+  background-position: -1024px -640px;
+}
+.badge-first-help {
+  background-position: -0px -768px;
+}
+.badge-first-message {
+  background-position: -128px -768px;
+}
+.badge-first-project {
+  background-position: -256px -768px;
+}
+.badge-first-streak {
+  background-position: -384px -768px;
+}
+.badge-flock-builder {
+  background-position: -512px -768px;
+}
+.badge-helpful-peer {
+  background-position: -640px -768px;
+}
+.badge-marathoner {
+  background-position: -768px -768px;
+}
+.badge-master-trader {
+  background-position: -896px -768px;
+}
+.badge-ozaria-10-levels {
+  background-position: -1024px -768px;
+}
+.badge-ozaria-100-levels {
+  background-position: -0px -896px;
+}
+.badge-ozaria-150-levels {
+  background-position: -128px -896px;
+}
+.badge-ozaria-200-levels {
+  background-position: -256px -896px;
+}
+.badge-ozaria-25-levels {
+  background-position: -384px -896px;
+}
+.badge-ozaria-265-levels {
+  background-position: -512px -896px;
+}
+.badge-ozaria-5-levels {
+  background-position: -640px -896px;
+}
+.badge-ozaria-50-levels {
+  background-position: -768px -896px;
+}
+.badge-ozaria-first-challenge {
+  background-position: -896px -896px;
+}
+.badge-ozaria-first-level {
+  background-position: -1024px -896px;
+}
+.badge-pond-master {
+  background-position: -0px -1024px;
+}
+.badge-portfolio-builder {
+  background-position: -128px -1024px;
+}
+.badge-project-master {
+  background-position: -256px -1024px;
+}
+.badge-sprite {
+  background-position: -384px -1024px;
+}
+.badge-trade-initiate {
+  background-position: -512px -1024px;
+}
+.badge-you-there {
+  background-position: -640px -1024px;
+}

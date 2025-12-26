@@ -4,145 +4,224 @@ Type: html
 Summary: Base layout template with header, navigation, and toast messages.
 -->
 
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Classroom Chat</title>
-    <link rel="icon" href="{{ url_for('static', filename='images/logo.ico') }}" type="image/x-icon">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/message.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/variables.css') }}">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link
+      rel="icon"
+      href="{{ url_for('static', filename='images/logo.ico') }}"
+      type="image/x-icon"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/base.css') }}"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/message.css') }}"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/variables.css') }}"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
-      document.addEventListener('DOMContentLoaded', () => {
-        document.querySelectorAll('.toast').forEach(toastEl => {
-          new bootstrap.Toast(toastEl).show()
-        })
+      document.addEventListener("DOMContentLoaded", () => {
+        document.querySelectorAll(".toast").forEach((toastEl) => {
+          new bootstrap.Toast(toastEl).show();
+        });
       });
     </script>
+  </head>
 
-</head>
-
-    <body>
-    <div class="toast-container position-fixed bottom-0 end-0 p-3" aria-live="polite" aria-atomic="true" style="z-index:1050;">
-      {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-          {% for category, message in messages %}
-          <div class="toast align-items-center text-bg-{{ category or 'primary' }} border-0" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="4000">
-            <div class="d-flex">
-              <div class="toast-body">
-                {{ message }}
-              </div>
-              <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-            </div>
-          </div>
-          {% endfor %}
-        {% endif %}
-      {% endwith %}
+  <body>
+    <div
+      class="toast-container position-fixed bottom-0 end-0 p-3"
+      aria-live="polite"
+      aria-atomic="true"
+      style="z-index: 1050"
+    >
+      {% with messages = get_flashed_messages(with_categories=true) %} {% if
+      messages %} {% for category, message in messages %}
+      <div
+        class="toast align-items-center text-bg-{{ category or 'primary' }} border-0"
+        role="alert"
+        aria-live="assertive"
+        aria-atomic="true"
+        data-bs-delay="4000"
+      >
+        <div class="d-flex">
+          <div class="toast-body">{{ message }}</div>
+          <button
+            type="button"
+            class="btn-close btn-close-white me-2 m-auto"
+            data-bs-dismiss="toast"
+          ></button>
+        </div>
+      </div>
+      {% endfor %} {% endif %} {% endwith %}
     </div>
     <header class="{% if 'user' not in session %}guest-mode{% endif %}">
-        <div id="logo-container">
-            <a href="{{ url_for('general.index') }}" class="logo">
-                <img src="{{ url_for('static', filename='images/logo.ico') }}" alt="Classroom Chat Logo">
-            </a>
-        </div>
+      <div id="logo-container">
+        <a href="{{ url_for('general.index') }}" class="logo">
+          <img
+            src="{{ url_for('static', filename='images/logo.ico') }}"
+            alt="Classroom Chat Logo"
+          />
+        </a>
+      </div>
 
-        <nav>
-            <ul>
-                {% if user %}
-                    <div class="user-info">
-                        <li>
-                            <a class="digital-ducks" href="{{ url_for('duck_trade.bit_shift') }}">
-                                <span class="label" >Ducks:</span>
-                                <span class="count">{{ user.duck_balance }}</span>
-                            </a>
-                        </li>
+      <nav>
+        <ul>
+          {% if user %}
+          <div class="user-info">
+            <li>
+              <a
+                class="digital-ducks"
+                href="{{ url_for('duck_trade.bit_shift') }}"
+              >
+                <span class="label">Ducks:</span>
+                <span class="count">{{ user.duck_balance }}</span>
+              </a>
+            </li>
 
-                        {% if user.packets|float > 0.001 %}
-                            <li>
-                                <a class="digital-ducks">
-                                    <span class="label">Packets:</span>
-                                    <span class="count">{{ user.packets|round(5) }}</span>
-                                </a>
-                            </li>
-                        {% endif %}
-                    </div>
-                {% endif %}
-
-                {% if 'user' in session %}
-                    {% set pfp_filename = user.profile_picture if user and user.profile_picture else 'Default_pfp.jpg' %}
-                    {% set pfp_url = url_for('user.profile_picture', filename=pfp_filename) %}
-                    <li class="profile-menu">
-                        <button class="profile-toggle" id="profileToggle" aria-haspopup="true" aria-expanded="false" title="Account">
-                            <img src="{{ pfp_url }}"
-                                 alt="Profile Picture"
-                                 class="profile-menu_img">
-                            <span class="profile-icon" aria-hidden="true">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                            </span>
-                        </button>
-                        <ul class="dropdown-menu">
-                            <li><a href="{{ url_for('user.profile') }}"><i class="bi bi-person-circle"></i> Profile</a></li>
-                            <li><a href="{{ url_for('achievements.achievements_page') }}"><i class="bi bi-award"></i> Achievements</a></li>
-                            <li><a href="{{ url_for('achievements.submit_certificate') }}"><i class="bi bi-patch-check"></i> Certificate</a></li>
-                            <li><a href="{{ url_for('challenge.submit_challenge') }}"><i class="bi bi-lightning-charge"></i> Challenge</a></li>
-                            <li><a href="https://benmega.github.io/screen-recorder/"><i class="bi bi-record-circle"></i> Record</a></li>
-                            <li><a href="{{ url_for('message.conversation_history') }}"><i class="bi bi-chat-right-text"></i> History</a></li>
-                            <li><a href="{{ url_for('user.logout') }}"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
-                        </ul>
-                    </li>
-
-
-                {% else %}
-                    <li><a class="nav-button login" href="{{ url_for('user.login') }}">Login</a></li>
-                {% endif %}
+            {% if user.packets|float > 0.001 %}
+            <li>
+              <a class="digital-ducks">
+                <span class="label">Packets:</span>
+                <span class="count">{{ user.packets|round(5) }}</span>
+              </a>
+            </li>
+            {% endif %}
+          </div>
+          {% endif %} {% if 'user' in session %} {% set pfp_filename =
+          user.profile_picture if user and user.profile_picture else
+          'Default_pfp.jpg' %} {% set pfp_url = url_for('user.profile_picture',
+          filename=pfp_filename) %}
+          <li class="profile-menu">
+            <button
+              class="profile-toggle"
+              id="profileToggle"
+              aria-haspopup="true"
+              aria-expanded="false"
+              title="Account"
+            >
+              <img
+                src="{{ pfp_url }}"
+                alt="Profile Picture"
+                class="profile-menu_img"
+              />
+              <span class="profile-icon" aria-hidden="true">
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.6"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                  <circle cx="12" cy="7" r="4" />
+                </svg>
+              </span>
+            </button>
+            <ul class="dropdown-menu">
+              <li>
+                <a href="{{ url_for('user.profile') }}"
+                  ><i class="bi bi-person-circle"></i> Profile</a
+                >
+              </li>
+              <li>
+                <a href="{{ url_for('achievements.achievements_page') }}"
+                  ><i class="bi bi-award"></i> Achievements</a
+                >
+              </li>
+              <li>
+                <a href="{{ url_for('achievements.submit_certificate') }}"
+                  ><i class="bi bi-patch-check"></i> Certificate</a
+                >
+              </li>
+              <li>
+                <a href="{{ url_for('challenge.submit_challenge') }}"
+                  ><i class="bi bi-lightning-charge"></i> Challenge</a
+                >
+              </li>
+              <li>
+                <a href="https://benmega.github.io/screen-recorder/"
+                  ><i class="bi bi-record-circle"></i> Record</a
+                >
+              </li>
+              <li>
+                <a href="{{ url_for('message.conversation_history') }}"
+                  ><i class="bi bi-chat-right-text"></i> History</a
+                >
+              </li>
+              <li>
+                <a href="{{ url_for('user.logout') }}"
+                  ><i class="bi bi-box-arrow-right"></i> Logout</a
+                >
+              </li>
             </ul>
-        </nav>
+          </li>
 
+          {% else %}
+          <li>
+            <a class="nav-button login" href="{{ url_for('user.login') }}"
+              >Login</a
+            >
+          </li>
+          {% endif %}
+        </ul>
+      </nav>
     </header>
 
-    <main>
-        {% block content %}
-        {% endblock %}
-    </main>
+    <main>{% block content %} {% endblock %}</main>
 
     <footer>
-        <p>&copy; 2025 Classroom Chat. All Rights Reserved.</p>
+      <p>&copy; 2025 Classroom Chat. All Rights Reserved.</p>
     </footer>
+  </body>
+  {% if user %}
+  <script type="module">
+    import { initAchievements } from "{{ url_for('static', filename='js/achievements/achievements.js') }}";
 
-</body>
-{% if user %}
-    <script type="module">
-        import { initAchievements } from "{{ url_for('static', filename='js/achievements/achievements.js') }}";
+    // Run it once when the page loads
+    initAchievements("{{ session.get('user') }}");
+  </script>
+  {% endif %}
 
-        // Run it once when the page loads
-        initAchievements("{{ session.get('user') }}");
-    </script>
-{% endif %}
-
-<script>
+  <script>
     (function () {
-        const toggle = document.getElementById("profileToggle");
-        if (!toggle) return;
+      const toggle = document.getElementById("profileToggle");
+      if (!toggle) return;
 
-        const menu = document.querySelector(".dropdown-menu");
-        toggle.addEventListener("click", function (e) {
-            e.stopPropagation();
-            menu.classList.toggle("show");
-            const expanded = menu.classList.contains('show');
-            toggle.setAttribute('aria-expanded', expanded);
-        });
+      const menu = document.querySelector(".dropdown-menu");
+      toggle.addEventListener("click", function (e) {
+        e.stopPropagation();
+        menu.classList.toggle("show");
+        const expanded = menu.classList.contains("show");
+        toggle.setAttribute("aria-expanded", expanded);
+      });
 
-        document.addEventListener("click", function () {
-            if (menu.classList.contains('show')) menu.classList.remove("show");
-            toggle.setAttribute('aria-expanded', 'false');
-        });
+      document.addEventListener("click", function () {
+        if (menu.classList.contains("show")) menu.classList.remove("show");
+        toggle.setAttribute("aria-expanded", "false");
+      });
     })();
-
-</script>
+  </script>
 </html>

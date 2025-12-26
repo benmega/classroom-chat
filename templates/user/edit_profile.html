@@ -1,74 +1,125 @@
-{% extends 'base.html' %}
-
-{% block content %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/edit_profile.css') }}">
+{% extends 'base.html' %} {% block content %}
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/edit_profile.css') }}"
+/>
 
 <div class="edit-profile-container">
-    <div class="header-section">
-        <h1>Account Settings</h1>
-        <p>Manage your login details and public identity.</p>
+  <div class="header-section">
+    <h1>Account Settings</h1>
+    <p>Manage your login details and public identity.</p>
+  </div>
+
+  <form
+    method="POST"
+    action="{{ url_for('user.edit_profile') }}"
+    enctype="multipart/form-data"
+  >
+    <input
+      type="text"
+      name="username"
+      value="{{ user.username }}"
+      style="display: none"
+      autocomplete="username"
+    />
+
+    <div class="panel-section">
+      <h3><i class="fas fa-lock"></i> Security</h3>
+
+      <div class="form-group">
+        <label for="password">New Password</label>
+        <div class="password-container">
+          <input
+            type="password"
+            id="password"
+            name="password"
+            placeholder="Leave blank to keep current"
+            autocomplete="new-password"
+          />
+          <button type="button" class="toggle-password" data-target="password">
+            👁️
+          </button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="confirm_password">Confirm New Password</label>
+        <div class="password-container">
+          <input
+            type="password"
+            id="confirm_password"
+            name="confirm_password"
+            placeholder="Re-enter password"
+            autocomplete="new-password"
+          />
+          <button
+            type="button"
+            class="toggle-password"
+            data-target="confirm_password"
+          >
+            👁️
+          </button>
+        </div>
+      </div>
     </div>
 
-    <form method="POST" action="{{ url_for('user.edit_profile') }}" enctype="multipart/form-data">
-         <input type="text" name="username" value="{{ user.username }}" style="display:none;" autocomplete="username">
-
-        <div class="panel-section">
-            <h3><i class="fas fa-lock"></i> Security</h3>
-
-            <div class="form-group">
-                <label for="password">New Password</label>
-                <div class="password-container">
-                    <input type="password" id="password" name="password" placeholder="Leave blank to keep current" autocomplete="new-password">
-                    <button type="button" class="toggle-password" data-target="password">👁️</button>
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label for="confirm_password">Confirm New Password</label>
-                <div class="password-container">
-                    <input type="password" id="confirm_password" name="confirm_password" placeholder="Re-enter password" autocomplete="new-password">
-                    <button type="button" class="toggle-password" data-target="confirm_password">👁️</button>
-                </div>
-            </div>
+    <div class="panel-section">
+      <h3><i class="fas fa-wifi"></i> Status & Location</h3>
+      <div class="form-row">
+        <div class="form-group half">
+          <label for="is_online">Online Status</label>
+          <select id="is_online" name="is_online">
+            <option value="true" {% if user.is_online %}selected{% endif %}>
+              Online
+            </option>
+            <option
+              value="false"
+              {%
+              if
+              not
+              user.is_online
+              %}selected{%
+              endif
+              %}
+            >
+              Offline
+            </option>
+          </select>
         </div>
-
-        <div class="panel-section">
-            <h3><i class="fas fa-wifi"></i> Status & Location</h3>
-            <div class="form-row">
-                <div class="form-group half">
-                    <label for="is_online">Online Status</label>
-                    <select id="is_online" name="is_online">
-                        <option value="true" {% if user.is_online %}selected{% endif %}>Online</option>
-                        <option value="false" {% if not user.is_online %}selected{% endif %}>Offline</option>
-                    </select>
-                </div>
-                <div class="form-group half">
-                    <label for="ip_address">IP Address</label>
-                    <input type="text" id="ip_address" name="ip_address" value="{{ user.ip_address }}">
-                </div>
-            </div>
+        <div class="form-group half">
+          <label for="ip_address">IP Address</label>
+          <input
+            type="text"
+            id="ip_address"
+            name="ip_address"
+            value="{{ user.ip_address }}"
+          />
         </div>
+      </div>
+    </div>
 
-        <div class="panel-section">
-            <h3><i class="fas fa-star"></i> Skills</h3>
-            <div class="form-group">
-                <div id="skills-container" class="skills-wrapper">
-                    {% for skill in user.skills %}
-                    <div class="skill-entry">
-                        <input type="text" name="skills[]" value="{{ skill.name }}">
-                        <button type="button" class="remove-skill">&times;</button>
-                    </div>
-                    {% endfor %}
-                </div>
-                <button type="button" id="add-skill" class="btn-secondary">+ Add Skill</button>
-            </div>
+    <div class="panel-section">
+      <h3><i class="fas fa-star"></i> Skills</h3>
+      <div class="form-group">
+        <div id="skills-container" class="skills-wrapper">
+          {% for skill in user.skills %}
+          <div class="skill-entry">
+            <input type="text" name="skills[]" value="{{ skill.name }}" />
+            <button type="button" class="remove-skill">&times;</button>
+          </div>
+          {% endfor %}
         </div>
+        <button type="button" id="add-skill" class="btn-secondary">
+          + Add Skill
+        </button>
+      </div>
+    </div>
 
-        <div class="form-actions">
-            <a href="{{ url_for('user.profile') }}" class="btn-cancel">Cancel</a>
-            <button type="submit" class="btn-save">Save Changes</button>
-        </div>
-    </form>
+    <div class="form-actions">
+      <a href="{{ url_for('user.profile') }}" class="btn-cancel">Cancel</a>
+      <button type="submit" class="btn-save">Save Changes</button>
+    </div>
+  </form>
 </div>
 
 <script src="{{ url_for('static', filename='js/users/edit_profile.js') }}"></script>

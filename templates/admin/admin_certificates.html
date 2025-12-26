@@ -4,8 +4,7 @@ Type: html
 Summary: Admin template for reviewing submitted certificates.
 -->
 
-{% extends "admin/admin_base.html" %}
-{% block content %}
+{% extends "admin/admin_base.html" %} {% block content %}
 <h2>Submitted Certificates</h2>
 <table class="table">
   <thead>
@@ -26,18 +25,21 @@ Summary: Admin template for reviewing submitted certificates.
       <td>
         {% if cert.file_path %}
         <div class="btn-group" role="group">
-            <a href="{{ url_for('achievements.view_certificate', cert_id=cert.id) }}"
-               target="_blank"
-               class="btn btn-sm btn-primary">
-               View
-            </a>
+          <a
+            href="{{ url_for('achievements.view_certificate', cert_id=cert.id) }}"
+            target="_blank"
+            class="btn btn-sm btn-primary"
+          >
+            View
+          </a>
 
-            <a href="{{ url_for('achievements.download_certificate', cert_id=cert.id) }}"
-               download="{{ user.nickname }}_{{ achievement.name }}.pdf"
-               class="btn btn-sm btn-outline-primary">
-               Download
-            </a>
-
+          <a
+            href="{{ url_for('achievements.download_certificate', cert_id=cert.id) }}"
+            download="{{ user.nickname }}_{{ achievement.name }}.pdf"
+            class="btn btn-sm btn-outline-primary"
+          >
+            Download
+          </a>
         </div>
         {% else %}
         <span>No file</span>
@@ -45,7 +47,11 @@ Summary: Admin template for reviewing submitted certificates.
       </td>
       <td>
         {% if not cert.reviewed %}
-        <form action="{{ url_for('achievements.mark_reviewed', cert_id=cert.id) }}" method="post" style="display:inline">
+        <form
+          action="{{ url_for('achievements.mark_reviewed', cert_id=cert.id) }}"
+          method="post"
+          style="display: inline"
+        >
           <button class="btn btn-sm btn-success">Mark Reviewed</button>
         </form>
         {% else %}

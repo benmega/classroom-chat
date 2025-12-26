@@ -5,126 +5,132 @@ Summary: Styling for editing user profile sections and forms.
 */
 
 .edit-profile-container {
-    background: rgba(255, 255, 255, 0.8);
-    padding: var(--input-padding);
-    border-radius: var(--border-radius-medium);
-    box-shadow: var(--box-shadow-medium);
-    width: 100vw; /* Full width */
-    max-width: none; /* No restriction on width */
-    margin: 0 auto; /* Center horizontally */
-    box-sizing: border-box; /* Include padding in width calculation */
+  background: rgba(255, 255, 255, 0.8);
+  padding: var(--input-padding);
+  border-radius: var(--border-radius-medium);
+  box-shadow: var(--box-shadow-medium);
+  width: 100vw; /* Full width */
+  max-width: none; /* No restriction on width */
+  margin: 0 auto; /* Center horizontally */
+  box-sizing: border-box; /* Include padding in width calculation */
 }
 
 .edit-profile-container h1 {
-    text-align: center;
-    margin-bottom: 20px;
-    font-size: 28px;
-    color: var(--text-color);
+  text-align: center;
+  margin-bottom: 20px;
+  font-size: 28px;
+  color: var(--text-color);
 }
 
 .form-group {
-    margin-bottom: 20px;
+  margin-bottom: 20px;
 }
 
 .form-group label {
-    display: block;
-    font-weight: bold;
-    margin-bottom: 8px;
-    color: var(--text-color);
+  display: block;
+  font-weight: bold;
+  margin-bottom: 8px;
+  color: var(--text-color);
 }
 
 .form-group input {
-    width: 100%;
-    padding: var(--input-padding);
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius-small);
-    font-size: 16px;
-    box-sizing: border-box;
+  width: 100%;
+  padding: var(--input-padding);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-small);
+  font-size: 16px;
+  box-sizing: border-box;
 }
 
-#skills-container, #projects-container {
-    margin-top: 15px;
+#skills-container,
+#projects-container {
+  margin-top: 15px;
 }
 
-.skill-entry, .project-entry {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-    margin-bottom: 10px;
+.skill-entry,
+.project-entry {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 10px;
 }
 
-.remove-skill, .remove-project {
-    background-color: var(--error-color);
-    color: white;
-    padding: 5px 10px;
-    border: none;
-    border-radius: var(--border-radius-small);
-    cursor: pointer;
+.remove-skill,
+.remove-project {
+  background-color: var(--error-color);
+  color: white;
+  padding: 5px 10px;
+  border: none;
+  border-radius: var(--border-radius-small);
+  cursor: pointer;
 }
 
-.remove-skill:hover, .remove-project:hover {
-    background-color: var(--error-color-dark);
+.remove-skill:hover,
+.remove-project:hover {
+  background-color: var(--error-color-dark);
 }
 
-#add-skill, #add-project {
-    background-color: var(--secondary-color);
-    color: white;
-    padding: 8px 15px;
-    border: none;
-    border-radius: var(--border-radius-small);
-    cursor: pointer;
-    display: inline-block;
-    margin-top: 10px;
+#add-skill,
+#add-project {
+  background-color: var(--secondary-color);
+  color: white;
+  padding: 8px 15px;
+  border: none;
+  border-radius: var(--border-radius-small);
+  cursor: pointer;
+  display: inline-block;
+  margin-top: 10px;
 }
 
-#add-skill:hover, #add-project:hover {
-    background-color: var(--secondary-color-dark);
+#add-skill:hover,
+#add-project:hover {
+  background-color: var(--secondary-color-dark);
 }
 
 .btn-save {
-    background-color: #4caf50;
-    color: white;
-    padding: var(--button-padding);
-    border: none;
-    border-radius: var(--border-radius-small);
-    cursor: pointer;
-    font-size: 16px;
+  background-color: #4caf50;
+  color: white;
+  padding: var(--button-padding);
+  border: none;
+  border-radius: var(--border-radius-small);
+  cursor: pointer;
+  font-size: 16px;
 }
 
 .btn-cancel {
-    background-color: var(--error-color);
-    color: white;
-    padding: var(--button-padding);
-    text-decoration: none;
-    border-radius: var(--border-radius-small);
-    margin-left: 15px;
-    font-size: 16px;
-    display: inline-block;
-    text-align: center;
+  background-color: var(--error-color);
+  color: white;
+  padding: var(--button-padding);
+  text-decoration: none;
+  border-radius: var(--border-radius-small);
+  margin-left: 15px;
+  font-size: 16px;
+  display: inline-block;
+  text-align: center;
 }
 
 .btn-save:hover {
-    background-color: #388e3c;
+  background-color: #388e3c;
 }
 
 .btn-cancel:hover {
-    background-color: var(--error-color-dark);
+  background-color: var(--error-color-dark);
 }
 
 .password-container {
-    display: flex;
-    align-items: center;
+  display: flex;
+  align-items: center;
 }
 
 .password-container input {
-    flex-grow: 1;
-    margin-right: 5px;
+  flex-grow: 1;
+  margin-right: 5px;
 }
 
 .toggle-password {
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-size: 1.2rem;
-    padding: 5px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.2rem;
+  padding: 5px;
 }

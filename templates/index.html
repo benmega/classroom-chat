@@ -4,32 +4,44 @@ Type: html
 Summary: Main classroom chat landing and conversation page template.
 -->
 
-{% extends "base.html" %}
-
-{% block content %}
+{% extends "base.html" %} {% block content %}
 <div id="container">
-    <div id="currentUsername" data-username="{{ username }}" style="display:none;"></div>
-    <div id="chat"></div>
+  <div
+    id="currentUsername"
+    data-username="{{ username }}"
+    style="display: none"
+  ></div>
+  <div id="chat"></div>
 
-    <form id="messageForm">
-        <div class="input-row">
-            <label for="file" class="file-button" title="Attach file">
-                <svg class="file-icon" viewBox="0 0 24 24">
-                    <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
-                </svg>
-                <input type="file" id="file" multiple>
-            </label>
+  <form id="messageForm">
+    <div class="input-row">
+      <label for="file" class="file-button" title="Attach file">
+        <svg class="file-icon" viewBox="0 0 24 24">
+          <path
+            d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"
+          />
+        </svg>
+        <input type="file" id="file" multiple />
+      </label>
 
-            <div class="message-input-container">
-                <textarea id="message" name="message" required placeholder="Type your message..."></textarea>
-            </div>
+      <div class="message-input-container">
+        <textarea
+          id="message"
+          name="message"
+          required
+          placeholder="Type your message..."
+        ></textarea>
+      </div>
 
-            <button type="submit" class="send-button" title="Send">➤</button>
-        </div>
-    </form>
+      <button type="submit" class="send-button" title="Send">➤</button>
+    </div>
+  </form>
 </div>
 
 <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script type="module" src="{{ url_for('static', filename='js/main.js') }}"></script>
+<script
+  type="module"
+  src="{{ url_for('static', filename='js/main.js') }}"
+></script>
 {% endblock %}

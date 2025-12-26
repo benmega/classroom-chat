@@ -4,20 +4,18 @@ Type: html
 Summary: Advanced admin panel landing page template.
 -->
 
-{% extends "admin/admin_base.html" %}
-
-{% block content %}
+{% extends "admin/admin_base.html" %} {% block content %}
 <section class="advanced-content">
-    <h2>Database Management</h2>
-    <p>Select a model to view and edit:</p>
-    <ul class="model-list">
-        {% for view in views %}
-            <li>
-                <a href="{{ url_for(view.endpoint + '.index_view') }}">
-                    {{ view.name }}
-                </a>
-            </li>
-        {% endfor %}
-    </ul>
+  <h2>Database Management</h2>
+  <p>Select a model to view and edit:</p>
+  <ul class="model-list">
+    {% for view in views %}
+    <li>
+      <a href="{{ url_for(view.endpoint + '.index_view') }}">
+        {{ view.name }}
+      </a>
+    </li>
+    {% endfor %}
+  </ul>
 </section>
 {% endblock %}

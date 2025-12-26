@@ -1,108 +1,265 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Classroom Chat is Sleeping</title>
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&display=swap" rel="stylesheet"/>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&display=swap"
+      rel="stylesheet"
+    />
     <style>
-        :root { --primary-color: #0EB2BB; --secondary-color: #007BFF; --text-color: #2e2e2e; --font: 'Nunito', sans-serif; }
-        body { margin: 0; font-family: var(--font); background: linear-gradient(135deg, #f6f8fc, #e0f7fa); min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center; }
-        .main-container { max-width: 580px; width: 100%; }
-        #sleep-section.hidden { display: none; }
-        img.duck { width: 200px; height: auto; margin-bottom: 20px; filter: drop-shadow(0 4px 12px rgba(0,0,0,0.1)); }
-        h1 { font-size: 2.8rem; color: var(--primary-color); font-weight: 800; margin: 0 0 16px 0; line-height: 1.2; }
-        .subtitle { font-size: 1.3rem; color: var(--text-color); margin: 0 0 32px 0; opacity: 0.85; }
-        button { padding: 18px 48px; border: none; font-size: 1.4rem; font-weight: 700; border-radius: 12px; cursor: pointer; color: white; background: linear-gradient(135deg, var(--secondary-color), #0056b3); transition: all 0.3s ease; box-shadow: 0 4px 20px rgba(0, 123, 255, 0.3); width: 100%; max-width: 400px; }
-        button:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 28px rgba(0, 123, 255, 0.4); }
-        button:disabled { opacity: 0.5; cursor: not-allowed; }
-        #message { margin-top: 20px; min-height: 28px; font-size: 1.2rem; font-weight: 600; }
-        #progress-container { margin-top: 40px; width: 100%; display: none; }
-        #progress-container.active { display: block; }
-        #server-icon { font-size: 5rem; margin-bottom: 24px; display: none; }
-        #server-icon.active { display: block; animation: bounce 1s infinite; }
-        @keyframes bounce { 0%, 100% {transform: translateY(0);} 50% {transform: translateY(-20px);} }
-        #progress-bar-bg { background: rgba(0, 0, 0, 0.08); border-radius: 24px; height: 40px; overflow: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1); }
-        #progress-bar { height: 100%; width: 0%; border-radius: 24px; background: linear-gradient(90deg, var(--primary-color), var(--secondary-color), var(--primary-color)); background-size: 200% 100%; animation: shimmer 2s infinite; transition: width 0.3s ease; }
-        @keyframes shimmer { 0% {background-position: 200% 0;} 100% {background-position: -200% 0;} }
-        #time-remaining { margin-top: 16px; font-size: 2rem; font-weight: 800; color: var(--secondary-color); }
-        #progress-text { margin-top: 12px; font-size: 1.3rem; font-weight: 600; color: var(--text-color); opacity: 0.8; }
-        #fun-status { margin-top: 20px; font-size: 1.35rem; font-style: italic; min-height: 32px; color: var(--primary-color); font-weight: 600; }
-        .status-error {color: #dc3545;}
-        .status-loading {color: var(--secondary-color);}
+      :root {
+        --primary-color: #0eb2bb;
+        --secondary-color: #007bff;
+        --text-color: #2e2e2e;
+        --font: "Nunito", sans-serif;
+      }
+      body {
+        margin: 0;
+        font-family: var(--font);
+        background: linear-gradient(135deg, #f6f8fc, #e0f7fa);
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        text-align: center;
+      }
+      .main-container {
+        max-width: 580px;
+        width: 100%;
+      }
+      #sleep-section.hidden {
+        display: none;
+      }
+      img.duck {
+        width: 200px;
+        height: auto;
+        margin-bottom: 20px;
+        filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.1));
+      }
+      h1 {
+        font-size: 2.8rem;
+        color: var(--primary-color);
+        font-weight: 800;
+        margin: 0 0 16px 0;
+        line-height: 1.2;
+      }
+      .subtitle {
+        font-size: 1.3rem;
+        color: var(--text-color);
+        margin: 0 0 32px 0;
+        opacity: 0.85;
+      }
+      button {
+        padding: 18px 48px;
+        border: none;
+        font-size: 1.4rem;
+        font-weight: 700;
+        border-radius: 12px;
+        cursor: pointer;
+        color: white;
+        background: linear-gradient(135deg, var(--secondary-color), #0056b3);
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 20px rgba(0, 123, 255, 0.3);
+        width: 100%;
+        max-width: 400px;
+      }
+      button:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 28px rgba(0, 123, 255, 0.4);
+      }
+      button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      #message {
+        margin-top: 20px;
+        min-height: 28px;
+        font-size: 1.2rem;
+        font-weight: 600;
+      }
+      #progress-container {
+        margin-top: 40px;
+        width: 100%;
+        display: none;
+      }
+      #progress-container.active {
+        display: block;
+      }
+      #server-icon {
+        font-size: 5rem;
+        margin-bottom: 24px;
+        display: none;
+      }
+      #server-icon.active {
+        display: block;
+        animation: bounce 1s infinite;
+      }
+      @keyframes bounce {
+        0%,
+        100% {
+          transform: translateY(0);
+        }
+        50% {
+          transform: translateY(-20px);
+        }
+      }
+      #progress-bar-bg {
+        background: rgba(0, 0, 0, 0.08);
+        border-radius: 24px;
+        height: 40px;
+        overflow: hidden;
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+      #progress-bar {
+        height: 100%;
+        width: 0%;
+        border-radius: 24px;
+        background: linear-gradient(
+          90deg,
+          var(--primary-color),
+          var(--secondary-color),
+          var(--primary-color)
+        );
+        background-size: 200% 100%;
+        animation: shimmer 2s infinite;
+        transition: width 0.3s ease;
+      }
+      @keyframes shimmer {
+        0% {
+          background-position: 200% 0;
+        }
+        100% {
+          background-position: -200% 0;
+        }
+      }
+      #time-remaining {
+        margin-top: 16px;
+        font-size: 2rem;
+        font-weight: 800;
+        color: var(--secondary-color);
+      }
+      #progress-text {
+        margin-top: 12px;
+        font-size: 1.3rem;
+        font-weight: 600;
+        color: var(--text-color);
+        opacity: 0.8;
+      }
+      #fun-status {
+        margin-top: 20px;
+        font-size: 1.35rem;
+        font-style: italic;
+        min-height: 32px;
+        color: var(--primary-color);
+        font-weight: 600;
+      }
+      .status-error {
+        color: #dc3545;
+      }
+      .status-loading {
+        color: var(--secondary-color);
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="main-container">
-        <img class="duck" src="sleeping_duck.gif" alt="Sleeping Duck">
-        <div id="sleep-section">
-            <h1>Classroom Chat is Sleeping</h1>
-            <p class="subtitle">Wake it up so students can chat and earn ducks!</p>
-            <button id="startServerButton">Wake Up the Classroom Chat</button>
-            <div id="message"></div>
-        </div>
-        <div id="server-icon">🚀</div>
-        <div id="progress-container">
-            <div id="progress-bar-bg"><div id="progress-bar"></div></div>
-            <div id="time-remaining"></div>
-            <div id="progress-text">Starting up...</div>
-            <div id="fun-status"></div>
-        </div>
+      <img class="duck" src="sleeping_duck.gif" alt="Sleeping Duck" />
+      <div id="sleep-section">
+        <h1>Classroom Chat is Sleeping</h1>
+        <p class="subtitle">Wake it up so students can chat and earn ducks!</p>
+        <button id="startServerButton">Wake Up the Classroom Chat</button>
+        <div id="message"></div>
+      </div>
+      <div id="server-icon">🚀</div>
+      <div id="progress-container">
+        <div id="progress-bar-bg"><div id="progress-bar"></div></div>
+        <div id="time-remaining"></div>
+        <div id="progress-text">Starting up...</div>
+        <div id="fun-status"></div>
+      </div>
     </div>
     <script>
-        const API_URL = 'https://e5fsaweh7l.execute-api.ap-southeast-1.amazonaws.com/server-start';
-        const TOTAL_TIME = 300;
-        const sleepSection = document.getElementById('sleep-section'), button = document.getElementById('startServerButton'), message = document.getElementById('message'), progressContainer = document.getElementById('progress-container'), progressBar = document.getElementById('progress-bar'), progressText = document.getElementById('progress-text'), timeRemaining = document.getElementById('time-remaining'), funStatus = document.getElementById('fun-status'), serverIcon = document.getElementById('server-icon');
+      const API_URL =
+        "https://e5fsaweh7l.execute-api.ap-southeast-1.amazonaws.com/server-start";
+      const TOTAL_TIME = 300;
+      const sleepSection = document.getElementById("sleep-section"),
+        button = document.getElementById("startServerButton"),
+        message = document.getElementById("message"),
+        progressContainer = document.getElementById("progress-container"),
+        progressBar = document.getElementById("progress-bar"),
+        progressText = document.getElementById("progress-text"),
+        timeRemaining = document.getElementById("time-remaining"),
+        funStatus = document.getElementById("fun-status"),
+        serverIcon = document.getElementById("server-icon");
 
-        const funMessages = ["🔌 Plugging in...", "🧹 Dusting off...", "☕ Making coffee...", "🔥 Warming up...", "📚 Loading DB...", "🎨 Painting bits...", "🧠 Pep talk...", "🚀 Initializing...", "✨ Final touches..."];
-        let currentMessageIndex = 0, progressInterval, messageInterval, startTime;
+      const funMessages = [
+        "🔌 Plugging in...",
+        "🧹 Dusting off...",
+        "☕ Making coffee...",
+        "🔥 Warming up...",
+        "📚 Loading DB...",
+        "🎨 Painting bits...",
+        "🧠 Pep talk...",
+        "🚀 Initializing...",
+        "✨ Final touches...",
+      ];
+      let currentMessageIndex = 0,
+        progressInterval,
+        messageInterval,
+        startTime;
 
-        function updateFunMessage() {
-            funStatus.textContent = funMessages[currentMessageIndex];
-            currentMessageIndex = (currentMessageIndex + 1) % funMessages.length;
+      function updateFunMessage() {
+        funStatus.textContent = funMessages[currentMessageIndex];
+        currentMessageIndex = (currentMessageIndex + 1) % funMessages.length;
+      }
+
+      function formatTime(sec) {
+        return `${Math.floor(sec / 60)}:${(sec % 60).toString().padStart(2, "0")}`;
+      }
+
+      function startProgress() {
+        startTime = Date.now();
+        progressContainer.classList.add("active");
+        updateFunMessage();
+        messageInterval = setInterval(updateFunMessage, 6000);
+        progressInterval = setInterval(() => {
+          const elapsed = (Date.now() - startTime) / 1000;
+          const remaining = Math.max(0, TOTAL_TIME - Math.floor(elapsed));
+          const pct = Math.min(100, (elapsed / TOTAL_TIME) * 100);
+          progressBar.style.width = pct + "%";
+          timeRemaining.textContent = formatTime(remaining);
+          if (pct >= 100) {
+            clearInterval(progressInterval);
+            window.location.replace(
+              window.location.href.split("?")[0] + "?nocache=" + Date.now(),
+            );
+          }
+        }, 100);
+      }
+
+      button.addEventListener("click", async () => {
+        sleepSection.classList.add("hidden");
+        serverIcon.classList.add("active");
+        button.disabled = true;
+        message.className = "status-loading";
+        message.textContent = "Sending wake up signal...";
+
+        try {
+          const resp = await fetch(API_URL, { method: "POST", mode: "cors" });
+          if (!resp.ok) throw new Error();
+          startProgress();
+        } catch {
+          sleepSection.classList.remove("hidden");
+          serverIcon.classList.remove("active");
+          message.className = "status-error";
+          message.textContent = "Error waking server. Try again soon.";
+          button.disabled = false;
         }
-
-        function formatTime(sec) {
-            return `${Math.floor(sec / 60)}:${(sec % 60).toString().padStart(2,'0')}`;
-        }
-
-        function startProgress() {
-            startTime = Date.now();
-            progressContainer.classList.add('active');
-            updateFunMessage();
-            messageInterval = setInterval(updateFunMessage, 6000);
-            progressInterval = setInterval(() => {
-                const elapsed = (Date.now() - startTime) / 1000;
-                const remaining = Math.max(0, TOTAL_TIME - Math.floor(elapsed));
-                const pct = Math.min(100, (elapsed / TOTAL_TIME) * 100);
-                progressBar.style.width = pct + '%';
-                timeRemaining.textContent = formatTime(remaining);
-                if (pct >= 100) {
-                    clearInterval(progressInterval);
-                    window.location.replace(window.location.href.split('?')[0] + '?nocache=' + Date.now());
-                }
-            }, 100);
-        }
-
-        button.addEventListener('click', async () => {
-            sleepSection.classList.add('hidden');
-            serverIcon.classList.add('active');
-            button.disabled = true;
-            message.className = 'status-loading';
-            message.textContent = 'Sending wake up signal...';
-
-            try {
-                const resp = await fetch(API_URL, {method: 'POST', mode: 'cors'});
-                if (!resp.ok) throw new Error();
-                startProgress();
-            } catch {
-                sleepSection.classList.remove('hidden');
-                serverIcon.classList.remove('active');
-                message.className = 'status-error';
-                message.textContent = 'Error waking server. Try again soon.';
-                button.disabled = false;
-            }
-        });
+      });
     </script>
-</body>
+  </body>
 </html>

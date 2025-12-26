@@ -1,79 +1,80 @@
-
 /* bit_Pond Container */
 #bit-pond-container {
-    margin: 20px auto;
-    text-align: center;
-    background: rgba(255, 255, 255, 0.4);
-    border-radius: 10px;
-    padding: 20px;
-    width: 90%;
-    max-width: 800px;
-    box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.2);
+  margin: 20px auto;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.4);
+  border-radius: 10px;
+  padding: 20px;
+  width: 90%;
+  max-width: 800px;
+  box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.2);
 }
 
 #bit-pond-container h2 {
-    font-size: 28px;
-    color: #0EB2BB;
-    margin-bottom: 10px;
+  font-size: 28px;
+  color: #0eb2bb;
+  margin-bottom: 10px;
 }
 
 #bit-pond-container p {
-    font-size: 18px;
-    color: #333;
-    margin-bottom: 20px;
+  font-size: 18px;
+  color: #333;
+  margin-bottom: 20px;
 }
 
 #bit-pond-items {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 20px;
 }
 
 .bit-pond-item {
-    background: rgba(255, 255, 255, 0.8);
-    border: 1px solid rgba(0, 0, 0, 0.1);
-    border-radius: 8px;
-    width: 200px;
-    padding: 15px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    text-align: left;
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  width: 200px;
+  padding: 15px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
+  text-align: left;
 }
 
 .bit-pond-item:hover {
-    transform: scale(1.05);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+  transform: scale(1.05);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
 }
 
 .bit-pond-item h3 {
-    font-size: 20px;
-    color: #0EB2BB;
-    margin-bottom: 5px;
+  font-size: 20px;
+  color: #0eb2bb;
+  margin-bottom: 5px;
 }
 
 .item-desc {
-    font-size: 16px;
-    color: #555;
-    margin-bottom: 15px;
+  font-size: 16px;
+  color: #555;
+  margin-bottom: 15px;
 }
 
 .purchase-button {
-    background-color: #FFD700;
-    color: #333;
-    border: none;
-    border-radius: 5px;
-    padding: 10px 15px;
-    font-size: 16px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
+  background-color: #ffd700;
+  color: #333;
+  border: none;
+  border-radius: 5px;
+  padding: 10px 15px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
 }
 
 .purchase-button:hover {
-    background-color: #FFA500;
+  background-color: #ffa500;
 }
 
 .purchase-button:disabled {
-    background-color: #ccc;
-    cursor: not-allowed;
+  background-color: #ccc;
+  cursor: not-allowed;
 }
