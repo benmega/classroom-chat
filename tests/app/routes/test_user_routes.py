@@ -128,7 +128,7 @@ def test_login_adds_user_to_conversation(
     sample_user.set_password("testpassword")
     db.session.commit()
 
-    response = client.post(
+    client.post(
         "/user/login",
         data={"username": sample_user.username, "password": "testpassword"},
         follow_redirects=True,
@@ -428,7 +428,7 @@ def test_profile_picture_endpoint(client, init_db):
     # Mock send_from_directory since we don't have actual files
     with patch("application.routes.user_routes.send_from_directory") as mock_send:
         mock_send.return_value = "file_content"
-        response = client.get("/user/profile_pictures/test.png")
+        client.get("/user/profile_pictures/test.png")
         assert mock_send.called
 
 

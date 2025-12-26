@@ -39,9 +39,9 @@ def build_student_map(members_data):
         # Some objects use 'name', others 'firstName'/'lastName'
         name = s.get("name", "").strip()
         if not name:
-            f = s.get("firstName", "")
-            l = s.get("lastName", "")
-            name = f"{f} {l}".strip()
+            first_name = s.get("firstName", "")
+            last_name = s.get("lastName", "")
+            name = f"{first_name} {last_name}".strip()
         if not name:
             name = "Unknown Student"
         s_map[s["_id"]] = name

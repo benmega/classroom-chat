@@ -21,7 +21,7 @@ from application.models import setup_models
 from application.models.configuration import Configuration
 from application.models.user import User
 from application.routes import register_blueprints
-from . import socket_events
+from . import socket_events as socket_events  # noqa: F401 - needed for side effects
 from .license_checker import load_license
 
 
@@ -77,7 +77,7 @@ def create_app(config_class=None):
     limiter.init_app(app)
     scheduler.init_app(app)
 
-    csrf = CSRFProtect(app)
+    CSRFProtect(app)
     register_blueprints(app)
 
     from . import tasks

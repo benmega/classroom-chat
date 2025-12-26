@@ -327,7 +327,7 @@ def test_detect_and_handle_challenge_url_helper_self(
     from application.routes.challenge_routes import detect_and_handle_challenge_url
 
     url = "https://codecombat.com/play/level/dungeons-of-kithgard"
-    result = detect_and_handle_challenge_url(
+    detect_and_handle_challenge_url(
         url, sample_user.username, duck_multiplier=1, helper=sample_user.username
     )
 

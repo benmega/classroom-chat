@@ -26,7 +26,7 @@ def test_get_ai_settings_with_db_values(test_app, sample_ai_settings):
         settings = get_ai_settings()
     assert settings["role"] == "Custom AI role"
     assert settings["username"] == "AI Teacher"
-    assert settings["chat_bot_enabled"] == True
+    assert settings["chat_bot_enabled"]
 
 
 def test_get_ai_settings_with_defaults(init_db):
