@@ -24,3 +24,4 @@ playwright
 pytest-flask
 pytest-playwright
 openai
+ruff
