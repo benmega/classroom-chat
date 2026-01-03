@@ -59,7 +59,7 @@ echo "Starting deploy..."
 cd "$APP_DIR"
 echo "Updating code..."
 run git fetch origin
-run git reset --hard origin/main
+run git reset --hard origin/master
 
 # -------------------------
 # Dependency verification
