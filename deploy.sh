@@ -10,7 +10,7 @@ set -euo pipefail
 # Configuration
 # -------------------------
 APP_DIR="$HOME/classroom-chat"
-MIGRATIONS_DIR="$APP_DIR/migration"
+MIGRATIONS_DIR="$APP_DIR/instance/migration"
 SERVICE_NAME="gunicorn-benmega"
 
 # Use Virtual Environment path
