@@ -11,7 +11,7 @@ def cleanup_invalid_logs(conn):
     """
     Performs cleanup on the challenge_logs table:
     1. Removes logs with domains not in the allowed list.
-    2. Removes logs where the challenge_name does not exist in the challenges table.
+    2. Removes logs where the challenge_slug does not exist in the challenges table.
     """
     cursor = conn.cursor()
     print("\n--- Cleaning Up Challenge Logs ---")
@@ -52,10 +52,10 @@ def cleanup_invalid_logs(conn):
         # Remove logs where challenge_name isn't in the challenges table
         query_orphans = """
                 DELETE FROM challenge_logs
-                WHERE challenge_name NOT IN (
+                WHERE challenge_slug NOT IN (
                     SELECT name FROM challenges
                 )
-                AND challenge_name NOT IN (
+                AND challenge_slug NOT IN (
                     SELECT slug FROM challenges
                 );
             """
