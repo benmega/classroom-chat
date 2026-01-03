@@ -28,8 +28,13 @@ from application.utilities.helper_functions import allowed_file
 user = Blueprint("user", __name__)
 
 S3_UPLOAD_BUCKET = "youtube-upload-source-classroom-chat"
-s3_client = boto3.client("s3")
 
+s3_client = boto3.client(
+    "s3",
+    aws_access_key_id=os.environ.get("AWS_ACCESS_KEY_ID"),
+    aws_secret_access_key=os.environ.get("AWS_SECRET_ACCESS_KEY"),
+    region_name=os.environ.get("AWS_REGION", "ap-southeast-1"),
+)
 # --- Decorators ---
 
 
@@ -251,7 +256,7 @@ def new_project():
             if "project_video" in request.files:
                 video_file = request.files["project_video"]
                 if video_file.filename != "":
-                    success = handle_video_s3_upload(video_file, user_obj, name)
+                    success = handle_video_s3_upload(video_file, user_obj, name, project_id=new_proj.id)
                     if success:
                         flash(
                             "Video uploading! It will appear on your project in a few minutes.",
@@ -317,7 +322,7 @@ def edit_project(project_id):
                 if video_file.filename != "":
                     # Use current project name for the slug
                     success = handle_video_s3_upload(
-                        video_file, current_user, project.name
+                        video_file, current_user, project.name, project_id=project.id
                     )
                     if success:
                         flash(
@@ -509,27 +514,33 @@ def handle_project_image_upload(file):
 
 
 def handle_video_s3_upload(file, user_obj, project_name, project_id):
-    """
-    Renames file and uploads to S3 with project_id in metadata.
-    """
-    if not file or file.filename == "":
+    if not file or not getattr(file, "filename", ""):
+        return False
+
+    if "." not in file.filename:
         return False
 
     ext = file.filename.rsplit(".", 1)[1].lower()
-    if ext not in ["mp4", "mov", "avi", "wmv", "mkv", "webm"]:
+    allowed_exts = {"mp4", "mov", "avi", "wmv", "mkv", "webm"}
+    if ext not in allowed_exts:
         return False
 
     project_slug = secure_filename(project_name).replace("_", "-").lower()
     s3_filename = f"{user_obj.username}-{project_slug}.{ext}"
 
     try:
+        # Ensure full file is uploaded even if it was previously read
+        file.seek(0)
+
         s3_client.upload_fileobj(
             file,
             S3_UPLOAD_BUCKET,
             s3_filename,
             ExtraArgs={
-                "ContentType": file.content_type,
-                "Metadata": {"project_id": str(project_id)} # Crucial for Lambda
+                "ContentType": file.content_type or "video/mp4",
+                "Metadata": {
+                    "project-id": str(project_id)
+                }
             },
         )
         return True
