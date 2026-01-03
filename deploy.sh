@@ -16,7 +16,7 @@ SERVICE_NAME="gunicorn-benmega"
 # Use Virtual Environment path
 VENV_PATH="$APP_DIR/venv"
 PYTHON_BIN="$VENV_PATH/bin/python3"
-PIP_BIN="$VENV_PATH/bin/pip"
+PIP_CMD=("$PYTHON_BIN" -m pip)
 REQUIREMENTS_FILE="$APP_DIR/requirements.txt"
 
 # Database Configuration
@@ -66,7 +66,7 @@ run git reset --hard origin/deploy-gunicorn
 # -------------------------
 if [[ -f "$REQUIREMENTS_FILE" ]]; then
     echo "Updating dependencies in virtual environment..."
-    run "$PIP_BIN" install -r "$REQUIREMENTS_FILE"
+    run "${PIP_CMD[@]}" install -r "$REQUIREMENTS_FILE"
 fi
 
 # -------------------------
