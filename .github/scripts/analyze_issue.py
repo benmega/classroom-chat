@@ -1,9 +1,11 @@
+import logging
 import os
 import pathlib
 
 from openai import OpenAI
 
-from application.tasks import logger
+logger = logging.getLogger(__name__)
+
 
 
 def get_directory_summary(root_dir=".", exclude=None):
