@@ -246,6 +246,8 @@ def new_project():
                 user_id=target_user.id  # Assign to the selected student
             )
 
+            db.session.add(new_proj)
+            db.session.flush()
 
             # Handle Project Thumbnail Upload
             if "project_image" in request.files:
