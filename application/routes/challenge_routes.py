@@ -14,6 +14,7 @@ from application import Configuration
 from application.extensions import db
 from application.models.challenge import Challenge
 from application.models.challenge_log import ChallengeLog
+from application.models.course_instance import CourseInstance
 from application.models.user import User
 from application.utilities.db_helpers import get_user
 
@@ -105,7 +106,6 @@ def detect_and_handle_challenge_url(message, username, duck_multiplier=1, helper
     if not match:
         return {"handled": False, "details": None}
 
-    # Log the challenge attempt (Using new schema)
     log_result = _log_challenge(match, username, helper)
 
     if not log_result.get("success"):
@@ -149,13 +149,26 @@ def _log_challenge(details, username, helper=None):
         helper = ""
 
     try:
-        # UPDATED: Query using challenge_slug instead of challenge_name
-        existing_log = ChallengeLog.query.filter_by(
-            username=username,
-            domain=details["domain"],
-            challenge_slug=details["challenge_slug"],
-            course_id=details["course_id"],
-        ).first()
+        # 1. Base filters that always apply
+        filters = {
+            "username": username,
+            "domain": details["domain"],
+            "challenge_slug": details["challenge_slug"],
+            "course_id": details["course_id"],
+        }
+
+        # 2. Check if course_instance is provided and exists in the DB
+        instance_id = details.get("course_instance")
+        if instance_id:
+            instance_exists = db.session.query(
+                CourseInstance.query.filter_by(id=instance_id).exists()
+            ).scalar()
+
+            if instance_exists:
+                filters["course_instance"] = instance_id
+
+        # 3. Query using the dynamic filters
+        existing_log = ChallengeLog.query.filter_by(**filters).first()
 
         if existing_log:
             return {
@@ -164,13 +177,13 @@ def _log_challenge(details, username, helper=None):
                 "timestamp": existing_log.timestamp,
             }
 
-        # UPDATED: Instantiate using challenge_slug
+        # 4. Create new log
         challenge_log = ChallengeLog(
             username=username,
             domain=details["domain"],
             challenge_slug=details["challenge_slug"],
             course_id=details["course_id"],
-            course_instance=details["course_instance"],
+            course_instance=instance_id,  # Keep the ID even if not used for filtering
             timestamp=datetime.utcnow(),
             helper=helper,
         )
