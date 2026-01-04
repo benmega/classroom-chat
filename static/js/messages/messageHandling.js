@@ -231,7 +231,7 @@ function handleUploadResponse(data) {
 
     showAlert('File uploaded successfully.', 'success');
     const fileInput = document.getElementById('file');
-    if (fileInput) fileInput.value = '';f
+    if (fileInput) fileInput.value = '';
 }
 
 function showAlert(message, icon = 'info') {
