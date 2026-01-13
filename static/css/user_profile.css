@@ -672,3 +672,32 @@ Summary: Styles for the student dashboard/portfolio.
     .project-grid { grid-template-columns: 1fr; }
     .cert-list { grid-template-columns: 1fr; } /* Stack certs on small screens */
 }
+
+.note-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.note-item img {
+    width: 100%;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 5px;
+    border: 1px solid #eee;
+    transition: transform 0.2s;
+}
+
+.note-item img:hover {
+    transform: scale(1.05);
+    border-color: #007bff;
+    cursor: zoom-in;
+}
+
+.no-data-msg {
+    color: #888;
+    font-size: 0.9rem;
+    font-style: italic;
+    padding: 10px 0;
+}

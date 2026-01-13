@@ -328,6 +328,33 @@
                </div>
            </div>
            {% endif %}
+
+            <div class="dashboard-panel" id="notebook-panel">
+            <div class="panel-header" style="justify-content: space-between; align-items: center;">
+                <h2><i class="fas fa-sticky-note"></i> Notebook</h2>
+                {% if is_owner %}
+                    <button class="btn-launch" id="upload-note-btn" style="font-size: 0.8rem; padding: 4px 10px;">
+                        <i class="fas fa-upload"></i> Add
+                    </button>
+                    <input type="file" id="note-file-input" accept="image/*" style="display:none;">
+                {% endif %}
+            </div>
+
+            <div class="note-grid" id="note-grid-container">
+                {% if target.notes %}
+                    {% for note in target.notes %}
+                    <div class="note-item">
+                        <a href="{{ note.url }}" target="_blank">
+                            <img src="{{ note.url }}" alt="Note">
+                        </a>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="no-data-msg">No notes uploaded yet.</p>
+                {% endif %}
+            </div>
+        </div>
+
         </div>
     </div>
 </div>
