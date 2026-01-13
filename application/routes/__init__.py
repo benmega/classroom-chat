@@ -6,6 +6,7 @@ Summary: Blueprint registration for application route modules.
 
 from flask import Flask
 
+from application.routes.notes_routes import notes
 from .achievement_routes import achievements
 from .admin_advanced_routes import init_admin
 from .admin_routes import admin
@@ -32,6 +33,7 @@ def register_blueprints(app: Flask):
     app.register_blueprint(duck_trade, url_prefix="/duck_trade")
     app.register_blueprint(achievements, url_prefix="/achievements")
     app.register_blueprint(session, url_prefix="/session")
+    app.register_blueprint(notes, url_prefix="/notes")
     app.register_blueprint(achievements_api)
     app.register_blueprint(webhooks_api)
     app.register_blueprint(challenge)

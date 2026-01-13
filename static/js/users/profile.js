@@ -28,6 +28,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // 4. Handle Deep Link Modal Opening
     initDeepLinkModal();
+
+    // 5. Initialize Note Upload
+    initNoteUpload();
 });
 
 /* =========================================
@@ -481,4 +484,65 @@ function initDeepLinkModal() {
             window.scrollTo(0, 0);
         }
     }
+}
+
+
+
+
+/* =========================================
+   NOTEBOOK UPLOAD LOGIC
+   ========================================= */
+
+function initNoteUpload() {
+    const uploadBtn = document.getElementById('upload-note-btn');
+    const fileInput = document.getElementById('note-file-input');
+    const gridContainer = document.getElementById('note-grid-container');
+
+    if (!uploadBtn || !fileInput) return;
+
+    // Trigger file selection
+    uploadBtn.addEventListener('click', () => fileInput.click());
+
+    // Handle File Change
+    fileInput.addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        // Basic Validation
+        if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+            showNotification('Invalid file type. Please upload an image.', 'error');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('note_image', file);
+
+        // UI Feedback
+        uploadBtn.disabled = true;
+        uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+        try {
+            const response = await fetch('/notes/upload_note', {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                showNotification('Note uploaded successfully!', 'success');
+                // Reload to show the new note (or dynamically append image if URL returned)
+                setTimeout(() => window.location.reload(), 1000);
+            } else {
+                showNotification(data.error || 'Upload failed.', 'error');
+            }
+        } catch (error) {
+            console.error(error);
+            showNotification('An error occurred during upload.', 'error');
+        } finally {
+            uploadBtn.disabled = false;
+            uploadBtn.innerHTML = '<i class="fas fa-upload"></i> Add';
+            fileInput.value = ''; // Reset input
+        }
+    });
 }
