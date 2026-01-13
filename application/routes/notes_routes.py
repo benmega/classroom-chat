@@ -7,13 +7,13 @@ from application.models.note import Note
 from application.models.user import User
 from application.utilities.helper_functions import allowed_file
 
-notes = Blueprint("notes", __name__)
+notes_bp = Blueprint("notes", __name__)
 
 S3_NOTES_BUCKET = "classroom-chat-student-notes"
 s3_client = boto3.client("s3")
 
 
-@notes.route("/upload_note", methods=["POST"])
+@notes_bp.route("/upload_note", methods=["POST"])
 def upload_note():
     user_id = session.get("user")
     if not user_id:
