@@ -1,7 +1,7 @@
 /*
 File: profile.js
 Type: js
-Summary: Handles Profile Picture cropping, Project Modals, Video Lightbox, and Skill management.
+Summary: Handles Profile Picture cropping, Project Modals, Video Lightbox, Skill management, and Note Uploads (Camera & File).
 */
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -29,7 +29,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // 4. Handle Deep Link Modal Opening
     initDeepLinkModal();
 
-    // 5. Initialize Note Upload
+    // 5. Initialize Note Upload (Camera & File)
     initNoteUpload();
 });
 
@@ -146,7 +146,6 @@ function initSkillRemoval() {
 
             // Note: Since this is an external JS file, we cannot use Jinja's {{ csrf_token() }}.
             // You must ensure a meta tag exists: <meta name="csrf-token" content="{{ csrf_token() }}">
-            // Or rely on the cookie if your backend is configured that way.
             const csrfTokenMeta = document.querySelector('meta[name="csrf-token"]');
             const csrfToken = csrfTokenMeta ? csrfTokenMeta.getAttribute('content') : '';
 
@@ -363,7 +362,6 @@ function initProfileEditor() {
         const formData = new FormData();
         formData.append("profile_picture", blob, "profile.jpg");
 
-        // Note: Check for CSRF meta tag if required by your Flask setup
         const csrfTokenMeta = document.querySelector('meta[name="csrf-token"]');
         const headers = { 'X-Requested-With': 'XMLHttpRequest' };
         if (csrfTokenMeta) {
@@ -472,40 +470,33 @@ function initDeepLinkModal() {
     // Check if the hash matches the pattern #modal-ID
     if (hash && hash.startsWith('#modal-')) {
         const modalId = hash.substring(1); // Removes the '#'
-
-        // Use the function defined in initProjectInteractions
-        // The project modal logic should be accessible, or we use direct DOM manipulation
         const modal = document.getElementById(modalId);
         if (modal) {
             modal.style.display = 'flex';
             document.body.style.overflow = 'hidden';
-
-            // Ensure the page scrolls to the top, as the modal is fixed position
             window.scrollTo(0, 0);
         }
     }
 }
 
 
-
-
 /* =========================================
-   NOTEBOOK UPLOAD LOGIC
+   NOTEBOOK UPLOAD LOGIC (UPDATED)
    ========================================= */
 
 function initNoteUpload() {
+    // Elements for Standard Upload
     const uploadBtn = document.getElementById('upload-note-btn');
     const fileInput = document.getElementById('note-file-input');
-    const gridContainer = document.getElementById('note-grid-container');
 
-    if (!uploadBtn || !fileInput) return;
+    // Elements for Camera Upload
+    const camBtn = document.getElementById('camera-note-btn');
+    const camInput = document.getElementById('camera-note-input');
 
-    // Trigger file selection
-    uploadBtn.addEventListener('click', () => fileInput.click());
+    if (!uploadBtn && !camBtn) return;
 
-    // Handle File Change
-    fileInput.addEventListener('change', async (e) => {
-        const file = e.target.files[0];
+    // --- Shared Upload Handler ---
+    const handleNoteUpload = async (file, buttonElement) => {
         if (!file) return;
 
         // Basic Validation
@@ -517,9 +508,12 @@ function initNoteUpload() {
         const formData = new FormData();
         formData.append('note_image', file);
 
-        // UI Feedback
-        uploadBtn.disabled = true;
-        uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        // UI Feedback: Disable button and show spinner on the triggered button
+        const originalContent = buttonElement ? buttonElement.innerHTML : '';
+        if (buttonElement) {
+            buttonElement.disabled = true;
+            buttonElement.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        }
 
         try {
             const response = await fetch('/notes/upload_note', {
@@ -531,7 +525,6 @@ function initNoteUpload() {
 
             if (data.success) {
                 showNotification('Note uploaded successfully!', 'success');
-                // Reload to show the new note (or dynamically append image if URL returned)
                 setTimeout(() => window.location.reload(), 1000);
             } else {
                 showNotification(data.error || 'Upload failed.', 'error');
@@ -540,9 +533,36 @@ function initNoteUpload() {
             console.error(error);
             showNotification('An error occurred during upload.', 'error');
         } finally {
-            uploadBtn.disabled = false;
-            uploadBtn.innerHTML = '<i class="fas fa-upload"></i> Add';
-            fileInput.value = ''; // Reset input
+            // Reset UI
+            if (buttonElement) {
+                buttonElement.disabled = false;
+                buttonElement.innerHTML = originalContent;
+            }
+            // Clear inputs so change event fires again for same file
+            if (fileInput) fileInput.value = '';
+            if (camInput) camInput.value = '';
         }
-    });
+    };
+
+    // --- 1. Standard File Upload Logic ---
+    if (uploadBtn && fileInput) {
+        uploadBtn.addEventListener('click', () => fileInput.click());
+
+        fileInput.addEventListener('change', (e) => {
+            if(e.target.files.length > 0) {
+                handleNoteUpload(e.target.files[0], uploadBtn);
+            }
+        });
+    }
+
+    // --- 2. Camera Upload Logic ---
+    if (camBtn && camInput) {
+        camBtn.addEventListener('click', () => camInput.click());
+
+        camInput.addEventListener('change', (e) => {
+            if(e.target.files.length > 0) {
+                handleNoteUpload(e.target.files[0], camBtn);
+            }
+        });
+    }
 }
