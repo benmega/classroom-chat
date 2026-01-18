@@ -28,10 +28,13 @@ from application.models.ai_settings import AISettings
 from application.models.banned_words import BannedWords
 from application.models.challenge import Challenge
 from application.models.challenge_log import ChallengeLog
+from application.models.classroom import Classroom
 from application.models.configuration import Configuration
 from application.models.conversation import Conversation
 from application.models.course import Course
+from application.models.course_instance import CourseInstance
 from application.models.message import Message
+from application.models.note import Note
 from application.models.project import Project
 from application.models.skill import Skill
 from application.models.user import User
@@ -627,3 +630,40 @@ def mock_render_template(client):
         "application.routes.challenge_routes.render_template", side_effect=side_effect
     ) as mock:
         yield mock
+
+
+
+@pytest.fixture
+def sample_classroom(init_db):
+    """Creates a standard classroom."""
+    classroom = Classroom(
+        id="678b56dc12345",  # Simulating the MongoDB/JSON ID format
+        name="Sat1030 CS 4 PY",
+        language="python"
+    )
+    db.session.add(classroom)
+    db.session.commit()
+    return classroom
+
+@pytest.fixture
+def sample_course_instance(init_db, sample_classroom, sample_course):
+    """Creates a course instance linked to a classroom and a course."""
+    instance = CourseInstance(
+        id="inst_987654321",
+        classroom_id=sample_classroom.id,
+        course_id=sample_course.id
+    )
+    db.session.add(instance)
+    db.session.commit()
+    return instance
+
+@pytest.fixture
+def sample_note(init_db, sample_user):
+    """Creates a sample note entry without actual S3 upload."""
+    note = Note(
+        user_id=sample_user.id,
+        filename=f"notes/{sample_user.username}/test_image.png"
+    )
+    db.session.add(note)
+    db.session.commit()
+    return note

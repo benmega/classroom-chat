@@ -53,6 +53,9 @@ class User(db.Model):
         viewonly=True,  # Recommended since ChallengeLog.username isn't a foreign key
     )
 
+    notes = db.relationship('Note', back_populates='user', cascade='all, delete-orphan',
+                            order_by='desc(Note.created_at)')
+
     def __repr__(self):
         return f"<User {self._username}>"
 
