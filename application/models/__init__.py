@@ -21,6 +21,6 @@ def setup_models():
     from .user import User  # noqa: F401
     from .duck_trade import DuckTradeLog  # noqa: F401
     from .achievements import Achievement  # noqa: F401
-    from .note import Note
+    from .note import Note # noqa: F401
 
 setup_models()

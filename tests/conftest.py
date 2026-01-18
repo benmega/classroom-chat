@@ -28,10 +28,13 @@ from application.models.ai_settings import AISettings
 from application.models.banned_words import BannedWords
 from application.models.challenge import Challenge
 from application.models.challenge_log import ChallengeLog
+from application.models.classroom import Classroom
 from application.models.configuration import Configuration
 from application.models.conversation import Conversation
 from application.models.course import Course
+from application.models.course_instance import CourseInstance
 from application.models.message import Message
+from application.models.note import Note
 from application.models.project import Project
 from application.models.skill import Skill
 from application.models.user import User
@@ -629,11 +632,6 @@ def mock_render_template(client):
         yield mock
 
 
-# conftest.py additions
-
-from application.models.classroom import Classroom
-from application.models.course_instance import CourseInstance
-from application.models.note import Note
 
 @pytest.fixture
 def sample_classroom(init_db):

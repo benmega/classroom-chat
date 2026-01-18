@@ -46,7 +46,7 @@ def handle_note_s3_upload(file, user_obj):
     """
     Returns the S3 Key (filename) on success, None on failure.
     """
-    ext = file.filename.rsplit(".", 1)[1].lower()
+    # ext = file.filename.rsplit(".", 1)[1].lower()
     # Path structure: notes/username/secure_filename
     s3_key = f"notes/{user_obj.username}/{secure_filename(file.filename)}"
 
