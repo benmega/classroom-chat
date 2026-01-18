@@ -2,6 +2,7 @@ import boto3
 from flask import Blueprint, request, jsonify, session, current_app
 from werkzeug.utils import secure_filename
 
+from application import limiter
 from application.extensions import db
 from application.models.note import Note
 from application.models.user import User
@@ -12,8 +13,8 @@ notes_bp = Blueprint("notes", __name__)
 S3_NOTES_BUCKET = "classroom-chat-student-notes"
 s3_client = boto3.client("s3")
 
-
 @notes_bp.route("/upload_note", methods=["POST"])
+@limiter.limit("20 per day")
 def upload_note():
     user_id = session.get("user")
     if not user_id:
