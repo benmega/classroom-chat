@@ -726,3 +726,35 @@ Summary: Styles for the student dashboard/portfolio.
     padding: 12px 30px;
     box-shadow: 0 4px 10px rgba(0, 191, 165, 0.3);
 }
+
+/* Note Delete Button Overlay */
+.note-item {
+    position: relative;
+}
+
+.delete-note-btn {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: rgba(220, 53, 69, 0.85);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    width: 25px;
+    height: 25px;
+    font-size: 0.75rem;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.2s, background 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.note-item:hover .delete-note-btn {
+    opacity: 1;
+}
+
+.delete-note-btn:hover {
+    background: rgb(220, 53, 69);
+}

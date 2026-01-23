@@ -613,3 +613,41 @@ function initNoteUpload() {
         });
     }
 }
+
+document.addEventListener('click', async (e) => {
+    const deleteBtn = e.target.closest('.delete-note-btn');
+    if (!deleteBtn) return;
+
+    if (!confirm("Are you sure you want to delete this note? This cannot be undone.")) return;
+
+    const noteId = deleteBtn.getAttribute('data-note-id');
+    const noteItem = deleteBtn.closest('.note-item');
+
+    // Disable button and show spinner
+    deleteBtn.disabled = true;
+    deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+    try {
+        const response = await fetch(`/notes/delete/${noteId}`, { method: 'POST' });
+        const data = await response.json();
+
+        if (data.success) {
+            noteItem.remove(); // Remove image from UI instantly
+            showNotification('Note deleted successfully', 'success');
+
+            // Show "No notes" message if that was the last one
+            const grid = document.getElementById('note-grid-container');
+            if (grid.querySelectorAll('.note-item').length === 0) {
+                grid.innerHTML = '<p class="no-data-msg">No notes uploaded yet.</p>';
+            }
+        } else {
+            showNotification(data.error || 'Failed to delete note', 'error');
+            deleteBtn.innerHTML = '<i class="fas fa-trash-alt"></i>';
+            deleteBtn.disabled = false;
+        }
+    } catch (error) {
+        showNotification('An error occurred.', 'error');
+        deleteBtn.innerHTML = '<i class="fas fa-trash-alt"></i>';
+        deleteBtn.disabled = false;
+    }
+});
