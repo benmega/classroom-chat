@@ -391,6 +391,23 @@
 </div>
 {% endif %}
 
+
+{% if is_owner %}
+<div id="camera-modal" class="modal" style="display:none;">
+    <div class="modal-content">
+        <button class="close-btn" id="close-camera-modal">&times;</button>
+        <h3>Scan Note</h3>
+        <div style="text-align: center; margin: 15px 0;">
+            <video id="webcam-stream" autoplay playsinline></video>
+        </div>
+        <div class="modal-buttons">
+            <button id="snap-btn" class="btn-launch">Capture & Upload</button>
+        </div>
+    </div>
+</div>
+<canvas id="temp-canvas" style="display:none;"></canvas>
+{% endif %}
+
 {% if is_owner %}
     <script src="{{ url_for('static', filename='lib/cropper.min.js') }}"></script>
     <script src="{{ url_for('static', filename='js/users/profile.js') }}"></script>

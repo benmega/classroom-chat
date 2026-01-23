@@ -557,11 +557,58 @@ function initNoteUpload() {
 
     // --- 2. Camera Upload Logic ---
     if (camBtn && camInput) {
-        camBtn.addEventListener('click', () => camInput.click());
+        const video = document.getElementById('webcam-stream');
+        const canvas = document.getElementById('temp-canvas');
+        const camModal = document.getElementById('camera-modal');
+        const closeCamBtn = document.getElementById('close-camera-modal');
+        let mediaStream = null;
 
-        camInput.addEventListener('change', (e) => {
-            if(e.target.files.length > 0) {
-                handleNoteUpload(e.target.files[0], camBtn);
+        // Helper to stop camera & close modal
+        const closeCameraModal = () => {
+            if (mediaStream) {
+                mediaStream.getTracks().forEach(track => track.stop());
+                mediaStream = null;
+            }
+            camModal.style.display = 'none';
+        };
+
+        closeCamBtn.addEventListener('click', closeCameraModal);
+
+        camBtn.addEventListener('click', async () => {
+            // Mobile: use native camera
+            if (/Mobi|Android/i.test(navigator.userAgent)) {
+                camInput.click();
+                return;
+            }
+
+            // Desktop: Open Modal and start stream
+            try {
+                mediaStream = await navigator.mediaDevices.getUserMedia({ video: true });
+                video.srcObject = mediaStream;
+                camModal.style.display = 'block';
+
+                document.getElementById('snap-btn').onclick = () => {
+                    // 1. Visual Flash Effect
+                    video.style.transition = 'opacity 0.1s ease-out';
+                    video.style.opacity = 0;
+                    setTimeout(() => video.style.opacity = 1, 150);
+
+                    // 2. Capture Canvas
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    canvas.getContext('2d').drawImage(video, 0, 0);
+
+                    // 3. Create File with Unique Timestamp
+                    canvas.toBlob((blob) => {
+                        const uniqueFilename = `webcam_${Date.now()}.jpg`; // <-- Fixes the overwrite bug
+                        const file = new File([blob], uniqueFilename, { type: "image/jpeg" });
+
+                        handleNoteUpload(file, camBtn);
+                        closeCameraModal();
+                    }, 'image/jpeg');
+                };
+            } catch (err) {
+                showNotification('Camera access denied or not found.', 'error');
             }
         });
     }

@@ -701,3 +701,28 @@ Summary: Styles for the student dashboard/portfolio.
     font-style: italic;
     padding: 10px 0;
 }
+
+/* --- 14. Camera Modal Enhancements --- */
+
+#camera-modal .modal-content {
+    width: 100%;       /* Add this to override the fixed 600px width */
+    max-width: 800px;  /* Now it can grow up to 800px */
+    text-align: center;
+}
+
+#webcam-stream {
+    width: 100%;
+    max-width: 720px;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    background: #000;
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    transform: scaleX(-1); /* Mirrors the video */
+}
+
+#snap-btn {
+    font-size: 1.1rem;
+    padding: 12px 30px;
+    box-shadow: 0 4px 10px rgba(0, 191, 165, 0.3);
+}
