@@ -349,21 +349,21 @@
     </div>
 
     <div class="note-grid" id="note-grid-container">
-    {% if target.notes %}
-        {% for note in target.notes %}
-        <div class="note-item" style="position: relative;">
-            <img src="{{ note.url }}" alt="Note" class="js-open-slideshow" data-index="{{ loop.index0 }}" data-url="{{ note.url }}" style="cursor: pointer;">
-            {% if is_owner %}
-            <button class="delete-note-btn" data-note-id="{{ note.id }}" title="Delete Note">
-                <i class="fas fa-trash-alt"></i>
-            </button>
-            {% endif %}
-        </div>
-        {% endfor %}
-    {% else %}
-        <p class="no-data-msg">No notes uploaded yet.</p>
-    {% endif %}
-</div>
+        {% if target.notes %}
+            {% for note in target.notes %}
+            <div class="note-item" style="position: relative;">
+                <img src="{{ note.url }}" alt="Note" class="js-open-slideshow" data-index="{{ loop.index0 }}" data-url="{{ note.url }}" style="cursor: pointer;">
+                {% if is_owner %}
+                <button class="delete-note-btn" data-note-id="{{ note.id }}" title="Delete Note">
+                    <i class="fas fa-trash-alt"></i>
+                </button>
+                {% endif %}
+            </div>
+            {% endfor %}
+        {% else %}
+            <p class="no-data-msg">No notes uploaded yet.</p>
+        {% endif %}
+    </div>
 
     <div id="slideshow-lightbox" class="video-modal-overlay" style="display: none; z-index: 10000; justify-content: center; align-items: center;">
         <div style="position: relative; max-width: 90%; max-height: 90vh; display: flex; align-items: center;">
