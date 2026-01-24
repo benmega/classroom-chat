@@ -1,7 +1,7 @@
 /*
 File: profile.js
 Type: js
-Summary: Handles Profile Picture cropping, Project Modals, Video Lightbox, and Skill management.
+Summary: Handles Profile Picture cropping, Project Modals, Video Lightbox, Skill management, and Note Uploads (Camera & File).
 */
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -29,8 +29,11 @@ document.addEventListener("DOMContentLoaded", () => {
     // 4. Handle Deep Link Modal Opening
     initDeepLinkModal();
 
-    // 5. Initialize Note Upload
+    // 5. Initialize Note Upload (Camera & File)
     initNoteUpload();
+
+    // 6. Slide show
+    initNoteSlideshow();
 });
 
 /* =========================================
@@ -146,7 +149,6 @@ function initSkillRemoval() {
 
             // Note: Since this is an external JS file, we cannot use Jinja's {{ csrf_token() }}.
             // You must ensure a meta tag exists: <meta name="csrf-token" content="{{ csrf_token() }}">
-            // Or rely on the cookie if your backend is configured that way.
             const csrfTokenMeta = document.querySelector('meta[name="csrf-token"]');
             const csrfToken = csrfTokenMeta ? csrfTokenMeta.getAttribute('content') : '';
 
@@ -363,7 +365,6 @@ function initProfileEditor() {
         const formData = new FormData();
         formData.append("profile_picture", blob, "profile.jpg");
 
-        // Note: Check for CSRF meta tag if required by your Flask setup
         const csrfTokenMeta = document.querySelector('meta[name="csrf-token"]');
         const headers = { 'X-Requested-With': 'XMLHttpRequest' };
         if (csrfTokenMeta) {
@@ -472,40 +473,33 @@ function initDeepLinkModal() {
     // Check if the hash matches the pattern #modal-ID
     if (hash && hash.startsWith('#modal-')) {
         const modalId = hash.substring(1); // Removes the '#'
-
-        // Use the function defined in initProjectInteractions
-        // The project modal logic should be accessible, or we use direct DOM manipulation
         const modal = document.getElementById(modalId);
         if (modal) {
             modal.style.display = 'flex';
             document.body.style.overflow = 'hidden';
-
-            // Ensure the page scrolls to the top, as the modal is fixed position
             window.scrollTo(0, 0);
         }
     }
 }
 
 
-
-
 /* =========================================
-   NOTEBOOK UPLOAD LOGIC
+   NOTEBOOK UPLOAD LOGIC (UPDATED)
    ========================================= */
 
 function initNoteUpload() {
+    // Elements for Standard Upload
     const uploadBtn = document.getElementById('upload-note-btn');
     const fileInput = document.getElementById('note-file-input');
-    const gridContainer = document.getElementById('note-grid-container');
 
-    if (!uploadBtn || !fileInput) return;
+    // Elements for Camera Upload
+    const camBtn = document.getElementById('camera-note-btn');
+    const camInput = document.getElementById('camera-note-input');
 
-    // Trigger file selection
-    uploadBtn.addEventListener('click', () => fileInput.click());
+    if (!uploadBtn && !camBtn) return;
 
-    // Handle File Change
-    fileInput.addEventListener('change', async (e) => {
-        const file = e.target.files[0];
+    // --- Shared Upload Handler ---
+    const handleNoteUpload = async (file, buttonElement) => {
         if (!file) return;
 
         // Basic Validation
@@ -517,9 +511,12 @@ function initNoteUpload() {
         const formData = new FormData();
         formData.append('note_image', file);
 
-        // UI Feedback
-        uploadBtn.disabled = true;
-        uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        // UI Feedback: Disable button and show spinner on the triggered button
+        const originalContent = buttonElement ? buttonElement.innerHTML : '';
+        if (buttonElement) {
+            buttonElement.disabled = true;
+            buttonElement.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        }
 
         try {
             const response = await fetch('/notes/upload_note', {
@@ -531,7 +528,6 @@ function initNoteUpload() {
 
             if (data.success) {
                 showNotification('Note uploaded successfully!', 'success');
-                // Reload to show the new note (or dynamically append image if URL returned)
                 setTimeout(() => window.location.reload(), 1000);
             } else {
                 showNotification(data.error || 'Upload failed.', 'error');
@@ -540,9 +536,164 @@ function initNoteUpload() {
             console.error(error);
             showNotification('An error occurred during upload.', 'error');
         } finally {
-            uploadBtn.disabled = false;
-            uploadBtn.innerHTML = '<i class="fas fa-upload"></i> Add';
-            fileInput.value = ''; // Reset input
+            // Reset UI
+            if (buttonElement) {
+                buttonElement.disabled = false;
+                buttonElement.innerHTML = originalContent;
+            }
+            // Clear inputs so change event fires again for same file
+            if (fileInput) fileInput.value = '';
+            if (camInput) camInput.value = '';
+        }
+    };
+
+    // --- 1. Standard File Upload Logic ---
+    if (uploadBtn && fileInput) {
+        uploadBtn.addEventListener('click', () => fileInput.click());
+
+        fileInput.addEventListener('change', (e) => {
+            if(e.target.files.length > 0) {
+                handleNoteUpload(e.target.files[0], uploadBtn);
+            }
+        });
+    }
+
+    // --- 2. Camera Upload Logic ---
+    if (camBtn && camInput) {
+        const video = document.getElementById('webcam-stream');
+        const canvas = document.getElementById('temp-canvas');
+        const camModal = document.getElementById('camera-modal');
+        const closeCamBtn = document.getElementById('close-camera-modal');
+        let mediaStream = null;
+
+        // Helper to stop camera & close modal
+        const closeCameraModal = () => {
+            if (mediaStream) {
+                mediaStream.getTracks().forEach(track => track.stop());
+                mediaStream = null;
+            }
+            camModal.style.display = 'none';
+        };
+
+        closeCamBtn.addEventListener('click', closeCameraModal);
+
+        camBtn.addEventListener('click', async () => {
+            // Mobile: use native camera
+            if (/Mobi|Android/i.test(navigator.userAgent)) {
+                camInput.click();
+                return;
+            }
+
+            // Desktop: Open Modal and start stream
+            try {
+                mediaStream = await navigator.mediaDevices.getUserMedia({ video: true });
+                video.srcObject = mediaStream;
+                camModal.style.display = 'block';
+
+                document.getElementById('snap-btn').onclick = () => {
+                    // 1. Visual Flash Effect
+                    video.style.transition = 'opacity 0.1s ease-out';
+                    video.style.opacity = 0;
+                    setTimeout(() => video.style.opacity = 1, 150);
+
+                    // 2. Capture Canvas
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    canvas.getContext('2d').drawImage(video, 0, 0);
+
+                    // 3. Create File with Unique Timestamp
+                    canvas.toBlob((blob) => {
+                        const uniqueFilename = `webcam_${Date.now()}.jpg`; // <-- Fixes the overwrite bug
+                        const file = new File([blob], uniqueFilename, { type: "image/jpeg" });
+
+                        handleNoteUpload(file, camBtn);
+                        closeCameraModal();
+                    }, 'image/jpeg');
+                };
+            } catch (err) {
+                showNotification('Camera access denied or not found.', 'error');
+            }
+        });
+    }
+}
+
+document.addEventListener('click', async (e) => {
+    const deleteBtn = e.target.closest('.delete-note-btn');
+    if (!deleteBtn) return;
+
+    if (!confirm("Are you sure you want to delete this note? This cannot be undone.")) return;
+
+    const noteId = deleteBtn.getAttribute('data-note-id');
+    const noteItem = deleteBtn.closest('.note-item');
+
+    // Disable button and show spinner
+    deleteBtn.disabled = true;
+    deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+    try {
+        const response = await fetch(`/notes/delete/${noteId}`, { method: 'POST' });
+        const data = await response.json();
+
+        if (data.success) {
+            noteItem.remove(); // Remove image from UI instantly
+            showNotification('Note deleted successfully', 'success');
+
+            // Show "No notes" message if that was the last one
+            const grid = document.getElementById('note-grid-container');
+            if (grid.querySelectorAll('.note-item').length === 0) {
+                grid.innerHTML = '<p class="no-data-msg">No notes uploaded yet.</p>';
+            }
+        } else {
+            showNotification(data.error || 'Failed to delete note', 'error');
+            deleteBtn.innerHTML = '<i class="fas fa-trash-alt"></i>';
+            deleteBtn.disabled = false;
+        }
+    } catch (error) {
+        showNotification('An error occurred.', 'error');
+        deleteBtn.innerHTML = '<i class="fas fa-trash-alt"></i>';
+        deleteBtn.disabled = false;
+    }
+});
+
+/* =========================================
+   NOTE SLIDESHOW LOGIC
+   ========================================= */
+function initNoteSlideshow() {
+    const lightbox = document.getElementById('slideshow-lightbox');
+    const imgEl = document.getElementById('slideshow-img');
+    const images = Array.from(document.querySelectorAll('.js-open-slideshow'));
+    let currentIndex = 0;
+
+    if (!lightbox || images.length === 0) return;
+
+    const showImage = (index) => {
+        currentIndex = (index + images.length) % images.length; // Loop around
+        imgEl.src = images[currentIndex].getAttribute('data-url');
+        lightbox.style.display = 'flex';
+    };
+
+    // Open Slideshow
+    document.addEventListener('click', (e) => {
+        if (e.target.classList.contains('js-open-slideshow')) {
+            showImage(parseInt(e.target.getAttribute('data-index')));
+        }
+    });
+
+    // Navigation
+    document.getElementById('next-slide').onclick = (e) => { e.stopPropagation(); showImage(currentIndex + 1); };
+    document.getElementById('prev-slide').onclick = (e) => { e.stopPropagation(); showImage(currentIndex - 1); };
+
+    // Close
+    const closeLightbox = () => lightbox.style.display = 'none';
+    document.querySelector('.js-close-slideshow').onclick = closeLightbox;
+    lightbox.onclick = (e) => { if (e.target === lightbox) closeLightbox(); };
+
+    // Keyboard support
+    document.addEventListener('keydown', (e) => {
+        if (lightbox.style.display !== 'none') {
+            if (e.key === 'ArrowRight') showImage(currentIndex + 1);
+            if (e.key === 'ArrowLeft') showImage(currentIndex - 1);
+            if (e.key === 'Escape') closeLightbox();
         }
     });
 }

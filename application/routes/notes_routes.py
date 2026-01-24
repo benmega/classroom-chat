@@ -1,10 +1,14 @@
+from urllib.parse import urlparse
+
 import boto3
 from flask import Blueprint, request, jsonify, session, current_app
 from werkzeug.utils import secure_filename
 
+from application import limiter
 from application.extensions import db
 from application.models.note import Note
 from application.models.user import User
+from application.utilities.db_helpers import get_user
 from application.utilities.helper_functions import allowed_file
 
 notes_bp = Blueprint("notes", __name__)
@@ -12,8 +16,8 @@ notes_bp = Blueprint("notes", __name__)
 S3_NOTES_BUCKET = "classroom-chat-student-notes"
 s3_client = boto3.client("s3")
 
-
 @notes_bp.route("/upload_note", methods=["POST"])
+@limiter.limit("20 per day")
 def upload_note():
     user_id = session.get("user")
     if not user_id:
@@ -65,3 +69,38 @@ def handle_note_s3_upload(file, user_obj):
     except Exception as e:
         current_app.logger.error(f"Note S3 Upload Error: {e}")
         return None
+
+
+
+
+@notes_bp.route('/delete/<int:note_id>', methods=['POST'])
+def delete_note(note_id):
+    note = Note.query.get_or_404(note_id)
+
+    # Security check: Ensure the user owns the note (or is admin)
+    user_id = session.get("user")
+    if not user_id:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    current_user= get_user(user_id)
+    if note.user_id != current_user.id and not current_user.is_admin:
+        return jsonify({'success': False, 'error': 'Unauthorized'}), 403
+
+    try:
+
+
+        # Extract the S3 object key from the URL
+        parsed_url = urlparse(note.url)
+        object_key = parsed_url.path.lstrip('/')
+
+        s3_client.delete_object(Bucket=S3_NOTES_BUCKET, Key=object_key)
+
+        # 2. Delete from Database
+        db.session.delete(note)
+        db.session.commit()
+
+        return jsonify({'success': True})
+
+    except Exception as e:
+        print(f"Error deleting note: {e}")
+        return jsonify({'success': False, 'error': 'Failed to delete from server.'}), 500
