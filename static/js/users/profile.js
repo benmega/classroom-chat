@@ -31,6 +31,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // 5. Initialize Note Upload (Camera & File)
     initNoteUpload();
+
+    // 6. Slide show
+    initNoteSlideshow();
 });
 
 /* =========================================
@@ -651,3 +654,46 @@ document.addEventListener('click', async (e) => {
         deleteBtn.disabled = false;
     }
 });
+
+/* =========================================
+   NOTE SLIDESHOW LOGIC
+   ========================================= */
+function initNoteSlideshow() {
+    const lightbox = document.getElementById('slideshow-lightbox');
+    const imgEl = document.getElementById('slideshow-img');
+    const images = Array.from(document.querySelectorAll('.js-open-slideshow'));
+    let currentIndex = 0;
+
+    if (!lightbox || images.length === 0) return;
+
+    const showImage = (index) => {
+        currentIndex = (index + images.length) % images.length; // Loop around
+        imgEl.src = images[currentIndex].getAttribute('data-url');
+        lightbox.style.display = 'flex';
+    };
+
+    // Open Slideshow
+    document.addEventListener('click', (e) => {
+        if (e.target.classList.contains('js-open-slideshow')) {
+            showImage(parseInt(e.target.getAttribute('data-index')));
+        }
+    });
+
+    // Navigation
+    document.getElementById('next-slide').onclick = (e) => { e.stopPropagation(); showImage(currentIndex + 1); };
+    document.getElementById('prev-slide').onclick = (e) => { e.stopPropagation(); showImage(currentIndex - 1); };
+
+    // Close
+    const closeLightbox = () => lightbox.style.display = 'none';
+    document.querySelector('.js-close-slideshow').onclick = closeLightbox;
+    lightbox.onclick = (e) => { if (e.target === lightbox) closeLightbox(); };
+
+    // Keyboard support
+    document.addEventListener('keydown', (e) => {
+        if (lightbox.style.display !== 'none') {
+            if (e.key === 'ArrowRight') showImage(currentIndex + 1);
+            if (e.key === 'ArrowLeft') showImage(currentIndex - 1);
+            if (e.key === 'Escape') closeLightbox();
+        }
+    });
+}
