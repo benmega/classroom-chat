@@ -20,8 +20,9 @@ def test_upload_note_no_file(logged_in_client):
     assert response.status_code == 400
     assert b"No file provided" in response.data
 
-@patch(f"{ROUTE_MODULE_PATH}.s3_client")
-def test_upload_note_success(mock_s3_client, logged_in_client, sample_user, init_db):
+@patch(f"{ROUTE_MODULE_PATH}.get_s3_client")
+def test_upload_note_success(mock_get_s3_client, logged_in_client, sample_user, init_db):
+    mock_s3_client = mock_get_s3_client.return_value
     mock_s3_client.upload_fileobj.return_value = None
 
     # 1. Ensure user exists in DB
@@ -54,8 +55,9 @@ def test_upload_note_success(mock_s3_client, logged_in_client, sample_user, init
     assert uploaded_note is not None
     assert f"notes/{sample_user.username}/" in uploaded_note.filename
 
-@patch(f"{ROUTE_MODULE_PATH}.s3_client")
-def test_upload_note_s3_failure(mock_s3_client, logged_in_client, sample_user, init_db):
+@patch(f"{ROUTE_MODULE_PATH}.get_s3_client")
+def test_upload_note_s3_failure(mock_get_s3_client, logged_in_client, sample_user, init_db):
+    mock_s3_client = mock_get_s3_client.return_value
     mock_s3_client.upload_fileobj.side_effect = Exception("AWS Down")
 
     # 1. Ensure user exists in DB
