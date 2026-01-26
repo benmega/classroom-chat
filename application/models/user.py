@@ -4,8 +4,10 @@ Type: py
 Summary: SQLAlchemy model for application users and authentication data.
 """
 
+import re
 from datetime import date, timedelta
 
+from sqlalchemy import event
 from sqlalchemy.ext.hybrid import hybrid_property
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -29,6 +31,7 @@ class User(db.Model):
     ip_address = db.Column(db.String(45), nullable=True)
     is_online = db.Column(db.Boolean, default=False)
     nickname = db.Column(db.String(50), nullable=False, default=default_nickname)
+    slug = db.Column(db.String(100), unique=True, nullable=True)
     is_admin = db.Column(db.Boolean, default=False)
 
     # Gamification
@@ -66,6 +69,27 @@ class User(db.Model):
     @username.setter
     def username(self, value):
         self._username = value.lower()
+
+    def generate_slug(self):
+        """Generate a unique kebab-case slug from the user's nickname."""
+        # Use nickname if available, otherwise fall back to username
+        source = self.nickname if self.nickname else self._username
+        # Convert to lowercase and replace spaces/underscores with hyphens
+        base_slug = re.sub(r'[_\s]+', '-', source.lower())
+        # Remove any characters that aren't alphanumeric or hyphens
+        base_slug = re.sub(r'[^a-z0-9-]', '', base_slug)
+        # Remove leading/trailing hyphens and collapse multiple hyphens
+        base_slug = re.sub(r'-+', '-', base_slug).strip('-')
+
+        # Ensure uniqueness by appending a number if necessary
+        slug = base_slug
+        counter = 1
+        while User.query.filter_by(slug=slug).first() is not None:
+            slug = f"{base_slug}-{counter}"
+            counter += 1
+
+        self.slug = slug
+        return slug
 
     def set_password(self, password):
         """Generate a hashed password and store it"""
@@ -249,3 +273,11 @@ class User(db.Model):
         # We assume the ChallengeLog model has a 'level_slug' column.
         # Using a set removes duplicates.
         return {getattr(log, "level_slug", "") for log in self.challenge_logs}
+
+
+# SQLAlchemy event listener to auto-generate slug for new users
+@event.listens_for(User, 'before_insert')
+def receive_before_insert(mapper, connection, target):
+    """Auto-generate slug before inserting a new user if not already set."""
+    if not target.slug:
+        target.generate_slug()

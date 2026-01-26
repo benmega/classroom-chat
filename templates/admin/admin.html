@@ -57,7 +57,7 @@ Summary: Admin dashboard overview template with stats and controls.
                     <ul class="user-list">
                         {% for user in users %}
                             <li>
-                                <a href="{{ url_for('user.view_user_profile', username=user.username) }}" style="text-decoration: none; color: inherit; display: flex; justify-content: space-between; width: 100%;">
+                                <a href="{{ url_for('user.view_user_profile', slug=user.slug) }}" style="text-decoration: none; color: inherit; display: flex; justify-content: space-between; width: 100%;">
                                     <span class="user-name">{{ user.username }}</span>
                                     <span class="user-ducks">🦆 {{ user.duck_balance }}</span>
                                 </a>

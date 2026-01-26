@@ -94,6 +94,7 @@ function updateChatUI(conversationData) {
                 username: msg.username,
                 profilePic: msg.user_profile_pic,
                 content: msg.content,
+                slug: msg.slug,
             });
         });
 
@@ -102,11 +103,11 @@ function updateChatUI(conversationData) {
     }
 }
 
-function formatMessage({ nickname, username, profilePic, content }) {
+function formatMessage({ nickname, username, profilePic, content, slug }) {
     const formattedText = linkify(content.replace(/\n/g, '<br>'));
 
     const profilePicUrl = `/user/profile_pictures/${profilePic || 'Default_pfp.jpg'}`;
-    const profileLink = username ? `/user/profile/${username}` : '#';
+    const profileLink = slug ? `/user/profile/${slug}` : '#';
     const isSelf = username === getUsername();
 
     return `

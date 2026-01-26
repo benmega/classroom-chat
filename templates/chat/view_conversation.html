@@ -16,7 +16,7 @@ Summary: Template for viewing a single conversation and its messages.
             <div class="message-card">
               <p class="message-meta">
 
-                <a href="{{ url_for('user.view_user_profile', username=message.username) }}">
+                <a href="{{ url_for('user.view_user_profile', slug=message.slug) }}">
                     <img src="{% if message.user_profile_pic %}
                                 {{ url_for('user.profile_picture', filename=message.user_profile_pic) }}
                               {% else %}

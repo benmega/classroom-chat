@@ -163,10 +163,10 @@ def profile():
     return render_template("user/profile.html", target=user_obj, viewer=user_obj)
 
 
-@user.route("/profile/<username>", methods=["GET"])
-def view_user_profile(username):
-    # Use _username column for the lookup
-    target_profile = User.query.filter_by(_username=username).first_or_404()
+@user.route("/profile/<slug>", methods=["GET"])
+def view_user_profile(slug):
+    # Use slug column for the lookup
+    target_profile = User.query.filter_by(slug=slug).first_or_404()
 
     # Determine who is looking at the page
     viewer_id = session.get("user")
