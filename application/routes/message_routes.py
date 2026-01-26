@@ -248,10 +248,12 @@ def serialize_message(msg):
         username = getattr(user, "username", None)
         nickname = getattr(user, "nickname", None)
         profile_pic = getattr(user, "profile_picture", None)
+        slug = getattr(user, "slug", None)
     else:
         username = None
         nickname = "Deleted User"
         profile_pic = None
+        slug = None
 
     timestamp = getattr(msg, "created_at", None)
     if timestamp is not None:
@@ -262,6 +264,7 @@ def serialize_message(msg):
         "username": username,  # handle
         "nickname": nickname,  # display name
         "user_profile_pic": profile_pic,
+        "slug": slug,
         "content": msg.content,
         "timestamp": timestamp,
         "message_type": getattr(msg, "message_type", "text"),
