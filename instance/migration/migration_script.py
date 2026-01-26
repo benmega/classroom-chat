@@ -12,6 +12,9 @@ DB_PATH = os.path.join(BASE_DIR, "..", DB_FILENAME)
 NEW_COLUMNS = {
     "projects": [
         ("video_transcript", "TEXT", None),
+    ],
+    "users": [
+        ("slug", "TEXT", None),  # Added this line
     ]
 }
 
