@@ -63,7 +63,6 @@ class ProductionConfig(Config):
         "DATABASE_URL",
         f'sqlite:///{os.path.join(Config.INSTANCE_FOLDER, "prod_users.db")}',
     )
-    SERVER_NAME = "192.168.1.1356:5000"
     SESSION_COOKIE_SAMESITE = "None"
     SESSION_COOKIE_SECURE = True
     SESSION_COOKIE_HTTPONLY = True
