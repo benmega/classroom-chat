@@ -72,8 +72,10 @@ class User(db.Model):
 
     def generate_slug(self):
         """Generate a unique kebab-case slug from the user's nickname."""
+        # Use nickname if available, otherwise fall back to username
+        source = self.nickname if self.nickname else self._username
         # Convert to lowercase and replace spaces/underscores with hyphens
-        base_slug = re.sub(r'[_\s]+', '-', self.nickname.lower())
+        base_slug = re.sub(r'[_\s]+', '-', source.lower())
         # Remove any characters that aren't alphanumeric or hyphens
         base_slug = re.sub(r'[^a-z0-9-]', '', base_slug)
         # Remove leading/trailing hyphens and collapse multiple hyphens
