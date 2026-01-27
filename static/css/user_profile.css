@@ -1,10 +1,39 @@
 /*
 File: user_profile.css
 Type: css
-Summary: Styles for the student dashboard/portfolio.
+Summary: Styles for the student dashboard/portfolio with mobile support
 */
 
-/* --- 1. Main Layout & Animation --- */
+/* =================================================================
+   1. ANIMATIONS & KEYFRAMES
+   ================================================================= */
+
+@keyframes fadeUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* Prevent horizontal scroll on mobile */
+@media (max-width: 768px) {
+    html {
+        overflow-x: hidden;
+    }
+}
+
+/* =================================================================
+   2. MAIN LAYOUT
+   ================================================================= */
 
 .profile-container {
     max-width: var(--max-container-width);
@@ -15,12 +44,9 @@ Summary: Styles for the student dashboard/portfolio.
     animation: fadeUp 0.5s ease-out;
 }
 
-@keyframes fadeUp {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-/* --- 2. Profile Header Card --- */
+/* =================================================================
+   3. PROFILE HEADER CARD
+   ================================================================= */
 
 .profile-header-card {
     background: #fff;
@@ -82,7 +108,9 @@ Summary: Styles for the student dashboard/portfolio.
     font-size: 1.1rem;
 }
 
-/* --- 3. Header Stats (Levels | Projects | Ducks) --- */
+/* =================================================================
+   4. HEADER STATS
+   ================================================================= */
 
 .header-stats {
     display: flex;
@@ -129,13 +157,17 @@ Summary: Styles for the student dashboard/portfolio.
     color: var(--highlight-hover);
 }
 
-/* --- 5. Dashboard Grid Structure --- */
+/* =================================================================
+   5. DASHBOARD GRID
+   ================================================================= */
 
 .dashboard-grid {
     display: grid;
     grid-template-columns: 1fr 2fr;
     gap: 20px;
     align-items: start;
+    /* Safety for grid blowout */
+    max-width: 100%;
 }
 
 .dashboard-panel {
@@ -146,6 +178,11 @@ Summary: Styles for the student dashboard/portfolio.
     box-shadow: var(--box-shadow-light);
     height: fit-content;
     scroll-margin-top: 20px;
+
+    /* CRITICAL FIXES FOR CAROUSELS: */
+    min-width: 0; /* Allows the panel to shrink smaller than its content */
+    max-width: 100%; /* Ensures it never exceeds parent */
+    box-sizing: border-box;
 }
 
 .panel-header {
@@ -164,7 +201,9 @@ Summary: Styles for the student dashboard/portfolio.
     gap: 8px;
 }
 
-/* --- 6. Heatmap / Contribution Graph --- */
+/* =================================================================
+   6. CONTRIBUTION HEATMAP
+   ================================================================= */
 
 .graph-scroll-container {
     overflow-x: auto;
@@ -223,9 +262,13 @@ Summary: Styles for the student dashboard/portfolio.
     gap: 3px;
 }
 
-/* --- 7. Progress & Skills --- */
+/* =================================================================
+   7. PROGRESS BARS & SKILLS
+   ================================================================= */
 
-.progress-item { margin-bottom: 20px; }
+.progress-item {
+    margin-bottom: 20px;
+}
 
 .prog-label {
     display: flex;
@@ -261,12 +304,14 @@ Summary: Styles for the student dashboard/portfolio.
     font-size: 0.8rem;
 }
 
+/* Skill Categories */
+
 .skill-category-title {
     font-size: 0.8rem;
     text-transform: uppercase;
     letter-spacing: 0.5px;
     color: #888;
-    margin: 10px 0 10px 0;
+    margin: 10px 0;
     font-weight: 700;
 }
 
@@ -306,6 +351,41 @@ Summary: Styles for the student dashboard/portfolio.
     text-align: center;
 }
 
+/* Skill Levels */
+
+.skill-card-visual.level-1 {
+    border-bottom: 3px solid #cd7f32;
+}
+
+.skill-card-visual.level-1 > i {
+    color: #cd7f32;
+}
+
+.skill-card-visual.level-2 {
+    border-bottom: 3px solid #b0c4de;
+}
+
+.skill-card-visual.level-2 > i {
+    color: #778899;
+}
+
+.skill-card-visual.level-3 {
+    border-bottom: 3px solid #ffd700;
+}
+
+.skill-card-visual.level-3 > i {
+    color: #d4af37;
+}
+
+.star-rating {
+    margin-top: 4px;
+    font-size: 0.7rem;
+    color: #666;
+    font-weight: 500;
+}
+
+/* Concept Tags */
+
 .skill-list-concepts {
     display: flex;
     flex-wrap: wrap;
@@ -324,30 +404,32 @@ Summary: Styles for the student dashboard/portfolio.
     gap: 6px;
 }
 
-.concept-tag i { color: var(--secondary-color); font-size: 0.75rem; }
+.concept-tag i {
+    color: var(--secondary-color);
+    font-size: 0.75rem;
+}
 
-.skill-card-visual.level-1 { border-bottom: 3px solid #cd7f32; }
-.skill-card-visual.level-1 > i { color: #cd7f32; }
+/* =================================================================
+   8. CERTIFICATES
+   ================================================================= */
 
-.skill-card-visual.level-2 { border-bottom: 3px solid #b0c4de; }
-.skill-card-visual.level-2 > i { color: #778899; }
-
-.skill-card-visual.level-3 { border-bottom: 3px solid #ffd700; }
-.skill-card-visual.level-3 > i { color: #d4af37; }
-
-.star-rating { margin-top: 4px; font-size: 0.7rem; color: #666; font-weight: 500;}
-
-/* --- 8. Certificates (Restored to 2-Column Box Layout) --- */
+.cert-list-container {
+    max-height: 520px; /* Approximately 3 rows of certificates */
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 5px;
+    scroll-behavior: smooth;
+}
 
 .cert-list {
     display: grid;
-    grid-template-columns: 1fr 1fr; /* Strict 2 columns */
+    grid-template-columns: repeat(2, 1fr);
     gap: 15px;
 }
 
 .cert-item {
     display: flex;
-    flex-direction: column; /* Stacked: Image on top, text below */
+    flex-direction: column;
     align-items: center;
     text-align: center;
     padding: 15px;
@@ -366,10 +448,9 @@ Summary: Styles for the student dashboard/portfolio.
 }
 
 .cert-icon {
-    width: 80px; /* Restored larger size */
+    width: 80px;
     height: 80px;
     margin-bottom: 10px;
-    margin-right: 0;
     position: relative;
     flex-shrink: 0;
 }
@@ -377,12 +458,17 @@ Summary: Styles for the student dashboard/portfolio.
 .cert-icon .badge-container {
     width: 128px !important;
     height: 128px !important;
-    transform: scale(0.625); /* Scale back up for 80px */
+    transform: scale(0.625);
     transform-origin: top left;
-    margin: 0; display: block; border: none; background: transparent;
+    margin: 0;
+    display: block;
+    border: none;
+    background: transparent;
 }
 
-.cert-info { width: 100%; }
+.cert-info {
+    width: 100%;
+}
 
 .cert-info h4 {
     margin: 5px 0;
@@ -406,13 +492,26 @@ Summary: Styles for the student dashboard/portfolio.
     text-decoration: none;
     font-weight: 600;
 }
-.cert-link-simple:hover { text-decoration: underline; }
 
-/* --- 9. Project Portfolio --- */
+.cert-link-simple:hover {
+    text-decoration: underline;
+}
+
+/* =================================================================
+   9. PROJECT PORTFOLIO
+   ================================================================= */
+
+.project-list-container {
+    max-height: 900px; /* Approximately 3 rows of projects */
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 5px;
+    scroll-behavior: smooth;
+}
 
 .project-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(2, 1fr);
     gap: 20px;
 }
 
@@ -435,44 +534,82 @@ Summary: Styles for the student dashboard/portfolio.
 }
 
 .project-card::before {
-    content: ''; position: absolute; top: 0; left: 0;
-    width: 100%; height: 4px;
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
     background: var(--secondary-color);
 }
 
 .project-thumb {
     height: 140px;
     background: #f1f5f9;
-    overflow: hidden; position: relative;
-    margin-bottom: 12px; cursor: pointer; transition: transform 0.2s;
+    overflow: hidden;
+    position: relative;
+    margin-bottom: 12px;
+    cursor: pointer;
+    transition: transform 0.2s;
     border-radius: 4px;
     border: 1px solid #eee;
 }
-.project-thumb:active { transform: scale(0.98); }
-.project-thumb img { width: 100%; height: 100%; object-fit: cover; opacity: 0.95; transition: opacity 0.2s; }
-.project-thumb:hover img { opacity: 1; }
+
+.project-thumb:active {
+    transform: scale(0.98);
+}
+
+.project-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.95;
+    transition: opacity 0.2s;
+}
+
+.project-thumb:hover img {
+    opacity: 1;
+}
 
 .play-overlay {
-    position: absolute; top: 50%; left: 50%;
+    position: absolute;
+    top: 50%;
+    left: 50%;
     transform: translate(-50%, -50%);
-    color: white; font-size: 2rem;
-    opacity: 0.8; text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    color: white;
+    font-size: 2rem;
+    opacity: 0.8;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
     pointer-events: none;
 }
-.project-thumb:hover .play-overlay { transform: translate(-50%, -50%) scale(1.1); opacity: 1; }
+
+.project-thumb:hover .play-overlay {
+    transform: translate(-50%, -50%) scale(1.1);
+    opacity: 1;
+}
 
 .code-pattern-bg {
-    width: 100%; height: 100%;
-    display: flex; align-items: center; justify-content: center;
-    color: #cbd5e0; font-size: 3rem;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #cbd5e0;
+    font-size: 3rem;
     background: #f7fafc;
 }
 
 .project-content {
-    flex-grow: 1; display: flex; flex-direction: column;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
 }
 
-.project-content h3 { margin: 0 0 8px 0; color: var(--primary-color-dark); font-size: 1.1rem; }
+.project-content h3 {
+    margin: 0 0 8px 0;
+    color: var(--primary-color-dark);
+    font-size: 1.1rem;
+}
 
 .card-teacher-feedback {
     background: #f0fff4;
@@ -486,191 +623,378 @@ Summary: Styles for the student dashboard/portfolio.
 }
 
 .project-excerpt {
-    font-size: 0.9rem; color: #555; margin: 0 0 15px 0;
-    flex-grow: 1; line-height: 1.5;
+    font-size: 0.9rem;
+    color: #555;
+    margin: 0 0 15px 0;
+    flex-grow: 1;
+    line-height: 1.5;
 }
 
-.project-actions { display: flex; gap: 8px; margin-top: auto; }
+.project-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: auto;
+}
 
-.btn-launch, .btn-details {
-    padding: 8px 12px; border-radius: 4px;
-    font-size: 0.85rem; cursor: pointer;
-    text-decoration: none; border: none;
-    flex: 1; text-align: center; transition: 0.2s;
-    display: inline-flex; align-items: center; justify-content: center; gap: 5px;
+.btn-launch,
+.btn-details {
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    text-decoration: none;
+    border: none;
+    flex: 1;
+    text-align: center;
+    transition: 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
     font-weight: 500;
 }
 
-.btn-launch { background: #e6fffa; color: #00bfa5; border: 1px solid #b2f5ea; }
-.btn-launch:hover { background: #b2f5ea; }
+.btn-launch {
+    background: #e6fffa;
+    color: #00bfa5;
+    border: 1px solid #b2f5ea;
+}
 
-.btn-details { background: #f7fafc; color: #4a5568; border: 1px solid #e2e8f0; }
-.btn-details:hover { background: #e2e8f0; }
+.btn-launch:hover {
+    background: #b2f5ea;
+}
 
-/* --- 10. Modals & Action Bar --- */
+.btn-details {
+    background: #f7fafc;
+    color: #4a5568;
+    border: 1px solid #e2e8f0;
+}
 
+.btn-details:hover {
+    background: #e2e8f0;
+}
+
+/* =================================================================
+   10. MODALS
+   ================================================================= */
+
+.project-modal-overlay,
 .project-modal-overlay {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.6); z-index: 10000;
-    display: flex; align-items: center; justify-content: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     animation: fadeIn 0.2s ease-out;
 }
 
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.video-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.95);
+    z-index: 100000;
+    display: none; /* Hidden by default */
+    align-items: center;
+    justify-content: center;
+}
 
 .project-modal-content {
-    background: white; width: 90%; max-width: 1000px;
-    max-height: 85vh; border-radius: 12px;
-    overflow-y: auto; position: relative;
-    padding: 30px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    background: white;
+    width: 90%;
+    max-width: 1000px;
+    max-height: 85vh;
+    border-radius: 12px;
+    overflow-y: auto;
+    position: relative;
+    padding: 30px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
 }
 
-.modal-close {
-    position: absolute; top: 20px; right: 25px; z-index: 10;
-    font-size: 2rem; line-height: 1;
-    background: none; border: none; cursor: pointer; color: #aaa;
+.modal-close,
+.video-close-btn {
+    position: absolute;
+    top: 20px;
+    right: 25px;
+    z-index: 10;
+    font-size: 2rem;
+    line-height: 1;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #aaa;
 }
-.modal-close:hover { color: #333; }
+
+.modal-close:hover,
+.video-close-btn:hover {
+    color: #333;
+}
+
+.video-close-btn {
+    top: -35px;
+    right: 0;
+    color: white;
+    font-size: 24px;
+    z-index: 100001;
+}
 
 .modal-header {
-    display: block; text-align: left;
-    padding-bottom: 10px; border-bottom: none;
-    margin-bottom: 0; padding-right: 40px;
+    display: block;
+    text-align: left;
+    padding-bottom: 10px;
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-right: 40px;
 }
-.modal-header h2 { margin: 0; color: var(--primary-color-dark); font-size: 1.8rem; }
+
+.modal-header h2 {
+    margin: 0;
+    color: var(--primary-color-dark);
+    font-size: 1.8rem;
+}
 
 .modal-action-bar {
-    display: flex; gap: 12px; flex-wrap: wrap;
-    padding-bottom: 25px; border-bottom: 1px solid #eee; margin-bottom: 25px;
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding-bottom: 25px;
+    border-bottom: 1px solid #eee;
+    margin-bottom: 25px;
 }
 
 .btn-action {
-    display: inline-flex; align-items: center; justify-content: center;
-    padding: 12px 24px; border-radius: 6px;
-    font-weight: 600; font-size: 1rem;
-    text-decoration: none; cursor: pointer;
-    transition: all 0.2s ease; border: none;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-}
-.btn-action:hover {
-    transform: translateY(-2px); box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 24px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 1rem;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
-.btn-action.btn-play { background: #2ecc71; color: white; }
-.btn-action.btn-watch { background: #3498db; color: white; }
+.btn-action:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+}
+
+.btn-action.btn-play {
+    background: #2ecc71;
+    color: white;
+}
+
+.btn-action.btn-watch {
+    background: #3498db;
+    color: white;
+}
 
 .modal-body-grid {
-    display: grid; grid-template-columns: 1fr 1fr; gap: 40px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
     align-items: start;
 }
 
-.modal-left, .modal-right { min-width: 0; }
+.modal-left,
+.modal-right {
+    min-width: 0;
+}
 
-.info-block { margin-bottom: 25px; }
-.info-block h4, .modal-right h4 {
-    color: #4a5568; font-size: 0.9rem; text-transform: uppercase;
-    letter-spacing: 0.05em; border-bottom: 2px solid var(--highlight-color);
-    display: inline-block; padding-bottom: 5px; margin-bottom: 12px;
+.info-block {
+    margin-bottom: 25px;
+}
+
+.info-block h4,
+.modal-right h4 {
+    color: #4a5568;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-bottom: 2px solid var(--highlight-color);
+    display: inline-block;
+    padding-bottom: 5px;
+    margin-bottom: 12px;
     font-weight: 700;
 }
 
 .teacher-feedback-modal blockquote {
-    background: #f0fff4; border-left: 4px solid #27ae60;
-    margin: 0; padding: 15px; font-style: italic; color: #2d3748; font-size: 1rem;
-    line-height: 1.6; border-radius: 4px;
+    background: #f0fff4;
+    border-left: 4px solid #27ae60;
+    margin: 0;
+    padding: 15px;
+    font-style: italic;
+    color: #2d3748;
+    font-size: 1rem;
+    line-height: 1.6;
+    border-radius: 4px;
 }
 
 .github-box {
-    text-align: center; padding: 30px;
-    background: #f7fafc; border-radius: 8px; border: 1px dashed #cbd5e0;
+    text-align: center;
+    padding: 30px;
+    background: #f7fafc;
+    border-radius: 8px;
+    border: 1px dashed #cbd5e0;
 }
+
 .btn-github {
-    display: inline-block; margin-top: 10px;
-    color: #333; font-weight: bold; text-decoration: none;
+    display: inline-block;
+    margin-top: 10px;
+    color: #333;
+    font-weight: bold;
+    text-decoration: none;
     border-bottom: 2px solid #333;
 }
 
-/* --- 11. Code Display --- */
-
-.code-container {
-    border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;
-}
-
-.code-header {
-    background: #f7fafc; padding: 8px 12px; border-bottom: 1px solid #e2e8f0;
-    display: flex; justify-content: space-between; align-items: center;
-    font-size: 0.85rem; color: #4a5568; font-weight: 600;
-}
-
-.code-scroll-container {
-    background: #2d3748; color: #e2e8f0;
-    padding: 15px;
-    max-height: 400px; overflow: auto;
-    width: 100%; box-sizing: border-box;
-}
-
-.code-scroll-container pre {
-    margin: 0; font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
-    font-size: 0.85rem; white-space: pre;
-}
-
-.code-context-note {
-    font-size: 0.85rem; color: #666; background: #fff;
-    padding: 10px; margin: 0; border-top: 1px solid #e2e8f0;
-    font-style: italic;
-}
-
-/* --- 12. Video Lightbox --- */
-
-.video-modal-overlay {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0, 0, 0, 0.95);
-    display: none; justify-content: center; align-items: center;
-    z-index: 100000;
-}
+/* Video Modal */
 
 .video-modal-content {
-    position: relative; width: 90%; max-width: 900px;
-    background: #000; border-radius: 8px;
-    box-shadow: 0 0 20px rgba(0,0,0,0.5);
+    position: relative;
+    width: 90%;
+    max-width: 900px;
+    background: #000;
+    border-radius: 8px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
 }
 
 .video-wrapper {
-    position: relative; padding-bottom: 56.25%;
-    height: 0; overflow: hidden; border-radius: 8px;
+    position: relative;
+    padding-bottom: 56.25%;
+    height: 0;
+    overflow: hidden;
+    border-radius: 8px;
 }
 
 .video-wrapper iframe {
-    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
 }
 
-.video-close-btn {
-    position: absolute; top: -35px; right: 0;
-    color: white; font-size: 24px;
-    background: none; border: none; cursor: pointer;
-    z-index: 100001;
+/* Camera Modal */
+
+#camera-modal .modal-content {
+    width: 100%;
+    max-width: 800px;
+    text-align: center;
 }
 
-/* --- 13. Media Queries --- */
-
-@media (max-width: 900px) {
-    .dashboard-grid { grid-template-columns: 1fr; }
-    /* Keep 2 columns for certificates if possible, otherwise stack */
-    .cert-list { grid-template-columns: 1fr 1fr; }
+#webcam-stream {
+    width: 100%;
+    max-width: 720px;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    background: #000;
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    transform: scaleX(-1);
 }
 
-@media (max-width: 768px) {
-    .header-content {
-        flex-direction: column; align-items: center;
-        text-align: center; margin-top: -40px;
-    }
-    .student-identity { margin-bottom: 15px; }
-    .header-stats { width: 100%; justify-content: center; box-sizing: border-box; }
-    .modal-body-grid { grid-template-columns: 1fr; }
-    .modal-action-bar { flex-direction: column; }
-    .btn-action { width: 100%; }
-    .project-grid { grid-template-columns: 1fr; }
-    .cert-list { grid-template-columns: 1fr; } /* Stack certs on small screens */
+#snap-btn {
+    font-size: 1.1rem;
+    padding: 12px 30px;
+    box-shadow: 0 4px 10px rgba(0, 191, 165, 0.3);
+}
+
+/* =================================================================
+   11. CODE DISPLAY
+   ================================================================= */
+
+.code-container {
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.code-header {
+    background: #f7fafc;
+    padding: 8px 12px;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.85rem;
+    color: #4a5568;
+    font-weight: 600;
+}
+
+.code-scroll-container {
+    background: #2d3748;
+    color: #e2e8f0;
+    padding: 15px;
+    max-height: 400px;
+    overflow: auto;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.code-scroll-container pre {
+    margin: 0;
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    font-size: 0.85rem;
+    white-space: pre;
+}
+
+.code-context-note {
+    font-size: 0.85rem;
+    color: #666;
+    background: #fff;
+    padding: 10px;
+    margin: 0;
+    border-top: 1px solid #e2e8f0;
+    font-style: italic;
+}
+
+/* =================================================================
+   12. NOTES & IMAGES
+   ================================================================= */
+
+.note-list-container {
+    max-height: 290px; /* Approximately 3 rows of notes */
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 5px;
+    scroll-behavior: smooth;
+}
+
+/* Custom scrollbar styling for containers */
+.cert-list-container::-webkit-scrollbar,
+.project-list-container::-webkit-scrollbar,
+.note-list-container::-webkit-scrollbar {
+    width: 8px;
+}
+
+.cert-list-container::-webkit-scrollbar-track,
+.project-list-container::-webkit-scrollbar-track,
+.note-list-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.cert-list-container::-webkit-scrollbar-thumb,
+.project-list-container::-webkit-scrollbar-thumb,
+.note-list-container::-webkit-scrollbar-thumb {
+    background: #cbd5e0;
+    border-radius: 4px;
+}
+
+.cert-list-container::-webkit-scrollbar-thumb:hover,
+.project-list-container::-webkit-scrollbar-thumb:hover,
+.note-list-container::-webkit-scrollbar-thumb:hover {
+    background: #a0aec0;
 }
 
 .note-grid {
@@ -678,6 +1002,10 @@ Summary: Styles for the student dashboard/portfolio.
     grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
     gap: 10px;
     margin-top: 15px;
+}
+
+.note-item {
+    position: relative;
 }
 
 .note-item img {
@@ -693,43 +1021,6 @@ Summary: Styles for the student dashboard/portfolio.
     transform: scale(1.05);
     border-color: #007bff;
     cursor: zoom-in;
-}
-
-.no-data-msg {
-    color: #888;
-    font-size: 0.9rem;
-    font-style: italic;
-    padding: 10px 0;
-}
-
-/* --- 14. Camera Modal Enhancements --- */
-
-#camera-modal .modal-content {
-    width: 100%;       /* Add this to override the fixed 600px width */
-    max-width: 800px;  /* Now it can grow up to 800px */
-    text-align: center;
-}
-
-#webcam-stream {
-    width: 100%;
-    max-width: 720px;
-    aspect-ratio: 16 / 9;
-    object-fit: cover;
-    background: #000;
-    border-radius: 12px;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-    transform: scaleX(-1); /* Mirrors the video */
-}
-
-#snap-btn {
-    font-size: 1.1rem;
-    padding: 12px 30px;
-    box-shadow: 0 4px 10px rgba(0, 191, 165, 0.3);
-}
-
-/* Note Delete Button Overlay */
-.note-item {
-    position: relative;
 }
 
 .delete-note-btn {
@@ -757,4 +1048,568 @@ Summary: Styles for the student dashboard/portfolio.
 
 .delete-note-btn:hover {
     background: rgb(220, 53, 69);
+}
+
+.no-data-msg {
+    color: #888;
+    font-size: 0.9rem;
+    font-style: italic;
+    padding: 10px 0;
+}
+
+/* =================================================================
+   13. RESPONSIVE DESIGN - TABLET (768px - 1024px)
+   ================================================================= */
+
+@media (max-width: 1024px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .modal-body-grid {
+        gap: 30px;
+    }
+
+    .project-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+/* =================================================================
+   14. RESPONSIVE DESIGN - MOBILE (up to 768px)
+   ================================================================= */
+
+@media (max-width: 768px) {
+    /* Container & Spacing */
+    .profile-container {
+        padding: 10px;
+        overflow-x: hidden;
+    }
+
+    body {
+        overflow-x: hidden;
+        width: 100%;
+    }
+
+    /* Header Adjustments */
+    .header-background {
+        height: 80px;
+    }
+
+    .header-content {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        margin-top: -40px;
+        padding: 0 15px 15px;
+        gap: 15px;
+    }
+
+    .avatar-img {
+        width: 100px;
+        height: 100px;
+    }
+
+    .student-identity {
+        margin-bottom: 10px;
+        min-width: auto;
+        width: 100%;
+    }
+
+    .student-name {
+        font-size: 1.5rem;
+    }
+
+    .student-title {
+        font-size: 1rem;
+    }
+
+    /* Stats */
+    .header-stats {
+        width: 100%;
+        justify-content: center;
+        flex-wrap: wrap;
+        padding: 10px;
+    }
+
+    .stat-box {
+        min-width: 60px;
+    }
+
+    .stat-box .label {
+        font-size: 0.65rem;
+    }
+
+    .stat-box .value {
+        font-size: 1.1rem;
+    }
+
+    /* Dashboard Grid */
+    .dashboard-grid {
+        grid-template-columns: 1fr; /* Stack vertically */
+        display: flex; /* Switch to flex on mobile to avoid grid complexity */
+        flex-direction: column;
+        width: 100%;
+        overflow: hidden; /* Stop page from scrolling right */
+    }
+
+    .dashboard-panel {
+        width: 100%;
+        max-width: 100vw; /* Hard limit */
+        padding: 15px;
+        margin-bottom: 15px;
+        box-sizing: border-box;
+    }
+
+    .panel-header h2 {
+        font-size: 1.1rem;
+    }
+
+    /* Skills Grid */
+    .skill-grid-visual {
+        grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+        gap: 10px;
+    }
+
+    .skill-card-visual {
+        padding: 10px 6px;
+    }
+
+    .skill-card-visual i {
+        font-size: 1.5rem;
+    }
+
+    .skill-card-visual span {
+        font-size: 0.8rem;
+    }
+
+    /* HORIZONTAL CAROUSEL FIXES
+       Applied to: Certificates, Projects, Notes
+    */
+
+    /* Shared Container Styles */
+    .cert-list-container,
+    .project-list-container,
+    .note-list-container {
+        display: block; /* Reset from flex if inherited */
+        width: 100%;
+        max-height: none;
+        overflow-y: hidden;
+        overflow-x: auto;
+        padding-bottom: 15px; /* Space for scrollbar */
+        padding-right: 0;
+
+        /* Smooth Scrolling */
+        -webkit-overflow-scrolling: touch;
+        scroll-behavior: smooth;
+
+        /* Snapping */
+        scroll-snap-type: x mandatory;
+        scroll-padding-left: 0;
+
+        /* Prevent scroll chaining */
+        overscroll-behavior-x: contain;
+    }
+
+    /* Shared List/Grid Styles (The tracks) */
+    .cert-list,
+    .project-grid,
+    .note-grid {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        width: auto; /* Let flex items dictate width */
+        padding-right: 20px; /* Right padding ensures last item isn't cut off */
+        box-sizing: border-box;
+    }
+
+    .cert-list-container,
+    .project-list-container,
+    .note-list-container {
+        display: flex; /* Ensures parent sees width */
+        width: 100%;
+        max-width: 100%;
+        overflow-x: auto;
+        overflow-y: hidden;
+
+        /* Chrome Mobile Touch Improvements */
+        -webkit-overflow-scrolling: touch;
+        scroll-snap-type: x mandatory;
+        overscroll-behavior-x: contain; /* Prevents swiping page back/forward */
+        touch-action: pan-x; /* Explicitly tell Chrome this area pans X */
+
+        padding-bottom: 15px;
+        margin-bottom: -15px; /* Pull bottom margin up to hide scrollbar visual if needed */
+    }
+
+    /* The Tracks */
+    .cert-list,
+    .project-grid,
+    .note-grid {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        gap: 15px;
+        width: max-content; /* Ensure the track is as long as the items */
+        padding-right: 20px;
+    }
+
+    /* The Items - Rigid Sizing */
+    .cert-item,
+    .project-card,
+    .note-item {
+        flex: 0 0 auto; /* Don't grow, don't shrink, strictly auto */
+        scroll-snap-align: start;
+        margin-right: 0;
+    }
+
+    /* Specific Widths */
+    .cert-item { width: 280px; }
+    .project-card { width: 300px; }
+    .note-item { width: 120px; }
+
+    /* Hide Scrollbar for cleaner UI on Chrome/Safari */
+    .cert-list-container::-webkit-scrollbar,
+    .project-list-container::-webkit-scrollbar,
+    .note-list-container::-webkit-scrollbar {
+        display: none;
+    }
+
+    /* --- Certificates Specifics --- */
+    .cert-list {
+        gap: 15px;
+    }
+
+    .cert-item {
+        flex: 0 0 auto; /* Rigid sizing */
+        width: 280px;
+        scroll-snap-align: start;
+        margin: 0;
+    }
+
+    .cert-icon {
+        width: 70px;
+        height: 70px;
+    }
+
+    .cert-info h4 {
+        font-size: 0.9rem;
+    }
+
+    /* --- Projects Specifics --- */
+    .project-grid {
+        gap: 15px;
+    }
+
+    .project-card {
+        flex: 0 0 auto; /* Rigid sizing */
+        width: 300px;
+        scroll-snap-align: start;
+        margin: 0;
+    }
+
+    .project-thumb {
+        height: 120px;
+    }
+
+    .play-overlay {
+        font-size: 1.5rem;
+    }
+
+    .code-pattern-bg {
+        font-size: 2.5rem;
+    }
+
+    /* --- Notes Specifics --- */
+    .note-grid {
+        gap: 10px;
+    }
+
+    .note-item {
+        flex: 0 0 auto; /* Rigid sizing */
+        width: 120px;
+        scroll-snap-align: start;
+    }
+
+    .note-item img {
+        width: 120px;
+        height: 120px;
+    }
+
+    /* Modals */
+    .project-modal-content {
+        width: 95%;
+        padding: 20px;
+        max-height: 90vh;
+    }
+
+    .modal-close {
+        top: 15px;
+        right: 15px;
+        font-size: 1.5rem;
+    }
+
+    .modal-header {
+        padding-right: 35px;
+    }
+
+    .modal-header h2 {
+        font-size: 1.4rem;
+    }
+
+    .modal-action-bar {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .btn-action {
+        width: 100%;
+        font-size: 0.95rem;
+        padding: 12px 20px;
+    }
+
+    .modal-body-grid {
+        grid-template-columns: 1fr;
+        gap: 25px;
+    }
+
+    /* Video Modal */
+    .video-modal-content {
+        width: 95%;
+    }
+
+    .video-close-btn {
+        top: -30px;
+        font-size: 20px;
+    }
+
+    /* Camera Modal */
+    #camera-modal .modal-content {
+        max-width: 95%;
+    }
+
+    #webcam-stream {
+        max-width: 100%;
+    }
+
+    #snap-btn {
+        font-size: 1rem;
+        padding: 10px 24px;
+    }
+
+    /* Code Display */
+    .code-scroll-container {
+        padding: 12px;
+        max-height: 300px;
+    }
+
+    .code-scroll-container pre {
+        font-size: 0.75rem;
+    }
+}
+
+/* =================================================================
+   15. RESPONSIVE DESIGN - SMALL MOBILE (up to 480px)
+   ================================================================= */
+
+@media (max-width: 480px) {
+    .profile-container {
+        padding: 8px;
+    }
+
+    .student-name {
+        font-size: 1.3rem;
+    }
+
+    .student-title {
+        font-size: 0.9rem;
+    }
+
+    .header-stats {
+        gap: 3px;
+        padding: 8px;
+    }
+
+    .stat-box {
+        min-width: 50px;
+        padding: 0 3px;
+    }
+
+    .stat-divider {
+        height: 20px;
+        margin: 0 3px;
+    }
+
+    .stat-box .label {
+        font-size: 0.6rem;
+    }
+
+    .stat-box .value {
+        font-size: 1rem;
+    }
+
+    .dashboard-panel {
+        padding: 12px;
+    }
+
+    .panel-header h2 {
+        font-size: 1rem;
+    }
+
+    /* Horizontal List Item Sizing Adjustments */
+    .project-card {
+        width: 260px; /* Slightly narrower on small screens */
+    }
+
+    .cert-item {
+        width: 240px;
+    }
+
+    .note-item,
+    .note-item img {
+        width: 100px;
+    }
+
+    /* General Typography & Spacing */
+    .skill-grid-visual {
+        grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+        gap: 8px;
+    }
+
+    .skill-card-visual {
+        padding: 8px 4px;
+    }
+
+    .skill-card-visual i {
+        font-size: 1.3rem;
+    }
+
+    .skill-card-visual span {
+        font-size: 0.75rem;
+    }
+
+    .concept-tag {
+        font-size: 0.8rem;
+        padding: 4px 8px;
+    }
+
+    .project-thumb {
+        height: 100px;
+    }
+
+    .project-content h3 {
+        font-size: 1rem;
+    }
+
+    .project-excerpt {
+        font-size: 0.85rem;
+    }
+
+    .btn-launch,
+    .btn-details {
+        font-size: 0.8rem;
+        padding: 7px 10px;
+    }
+
+    .modal-header h2 {
+        font-size: 1.2rem;
+    }
+
+    .btn-action {
+        font-size: 0.9rem;
+        padding: 10px 18px;
+    }
+
+    .info-block h4,
+    .modal-right h4 {
+        font-size: 0.85rem;
+    }
+
+    .code-scroll-container pre {
+        font-size: 0.7rem;
+    }
+
+    .delete-note-btn {
+        width: 22px;
+        height: 22px;
+        font-size: 0.7rem;
+    }
+}
+
+/* =================================================================
+   16. RESPONSIVE DESIGN - LANDSCAPE MOBILE
+   ================================================================= */
+
+@media (max-width: 768px) and (orientation: landscape) {
+    .header-content {
+        flex-direction: row;
+        align-items: flex-end;
+        text-align: left;
+    }
+
+    .student-identity {
+        text-align: left;
+    }
+
+    .modal-body-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .project-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* =================================================================
+   17. TOUCH DEVICE OPTIMIZATIONS
+   ================================================================= */
+
+@media (hover: none) and (pointer: coarse) {
+    /* Increase touch targets */
+    .btn-action,
+    .btn-launch,
+    .btn-details {
+        min-height: 44px;
+    }
+
+    .modal-close,
+    .video-close-btn {
+        min-width: 44px;
+        min-height: 44px;
+    }
+
+    .delete-note-btn {
+        opacity: 0.7;
+    }
+
+    /* Remove hover effects on touch devices */
+    .skill-card-visual:hover,
+    .cert-item:hover,
+    .project-card:hover {
+        transform: none;
+    }
+
+    .btn-action:hover {
+        transform: none;
+    }
+
+    /* Show scrollbar hint for carousels */
+    .cert-list-container::-webkit-scrollbar,
+    .project-list-container::-webkit-scrollbar,
+    .note-list-container::-webkit-scrollbar {
+        height: 6px;
+    }
+
+    .cert-list-container::-webkit-scrollbar-track,
+    .project-list-container::-webkit-scrollbar-track,
+    .note-list-container::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 3px;
+    }
+
+    .cert-list-container::-webkit-scrollbar-thumb,
+    .project-list-container::-webkit-scrollbar-thumb,
+    .note-list-container::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 3px;
+    }
 }
