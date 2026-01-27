@@ -2,7 +2,7 @@
 File: user_profile_optimized.css
 Type: css
 Summary: Optimized styles for student dashboard/portfolio with mobile support
-Optimization: Reduced from ~1400 lines to ~900 lines by consolidating duplicates
+Optimization: Fixed column sizing to prevent overflow
 */
 
 /* =================================================================
@@ -152,15 +152,24 @@ Optimization: Reduced from ~1400 lines to ~900 lines by consolidating duplicates
 }
 
 /* =================================================================
-   5. DASHBOARD GRID & PANELS
+   5. DASHBOARD GRID & PANELS - FIXED FOR OVERFLOW
    ================================================================= */
 
 .dashboard-grid {
     display: grid;
-    grid-template-columns: 1fr 2fr;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
     gap: 20px;
     align-items: start;
     max-width: 100%;
+    width: 100%;
+}
+
+.column-left,
+.column-right {
+    min-width: 0;
+    max-width: 100%;
+    width: 100%;
+    overflow: hidden;
 }
 
 .dashboard-panel {
@@ -173,7 +182,9 @@ Optimization: Reduced from ~1400 lines to ~900 lines by consolidating duplicates
     scroll-margin-top: 20px;
     min-width: 0;
     max-width: 100%;
+    width: 100%;
     box-sizing: border-box;
+    overflow: hidden;
 }
 
 .panel-header {
@@ -199,6 +210,7 @@ Optimization: Reduced from ~1400 lines to ~900 lines by consolidating duplicates
 .graph-scroll-container {
     overflow-x: auto;
     padding-bottom: 5px;
+    max-width: 100%;
 }
 
 .contribution-table {
@@ -409,8 +421,8 @@ Optimization: Reduced from ~1400 lines to ~900 lines by consolidating duplicates
 .note-list-container {
     overflow-y: auto;
     overflow-x: hidden;
-    padding-right: 5px;
     scroll-behavior: smooth;
+    max-width: 100%;
 }
 
 .cert-list-container {
@@ -458,8 +470,9 @@ Optimization: Reduced from ~1400 lines to ~900 lines by consolidating duplicates
 
 .cert-list {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     gap: 15px;
+    max-width: 100%;
 }
 
 .cert-item {
@@ -473,6 +486,7 @@ Optimization: Reduced from ~1400 lines to ~900 lines by consolidating duplicates
     background: #fafbfc;
     transition: var(--transition-default);
     cursor: pointer;
+    min-width: 0;
 }
 
 .cert-item:hover {
@@ -538,8 +552,9 @@ Optimization: Reduced from ~1400 lines to ~900 lines by consolidating duplicates
 
 .project-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: 20px;
+    max-width: 100%;
 }
 
 .project-card {
@@ -552,6 +567,7 @@ Optimization: Reduced from ~1400 lines to ~900 lines by consolidating duplicates
     transition: var(--transition-default);
     position: relative;
     overflow: hidden;
+    min-width: 0;
 }
 
 .project-card:hover {
@@ -630,12 +646,15 @@ Optimization: Reduced from ~1400 lines to ~900 lines by consolidating duplicates
     flex-grow: 1;
     display: flex;
     flex-direction: column;
+    min-width: 0;
 }
 
 .project-content h3 {
     margin: 0 0 8px 0;
     color: var(--primary-color-dark);
     font-size: 1.1rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .card-teacher-feedback {
