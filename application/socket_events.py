@@ -9,6 +9,7 @@ from flask_socketio import emit
 
 from .extensions import db, socketio
 from .models.user import User
+from .models.message import Message  # Assuming this class handles messages
 
 
 @socketio.on("connect")
@@ -63,4 +64,22 @@ def handle_disconnect(auth=None):
             "user_status_change",
             {"user_id": user.id, "is_online": False},
             broadcast=True,
+        )
+
+
+@socketio.on("send_message")
+def handle_send_message(data):
+    # Assuming data contains the message content and sender_id
+    message_content = data.get('content')
+    sender_id = session.get("user")
+    if sender_id:
+        new_message = Message(content=message_content, sender_id=sender_id)
+        db.session.add(new_message)
+        db.session.commit()
+
+        # Emit new message event
+        emit(
+            "new_message",
+            {"message": message_content, "sender_id": sender_id},
+            broadcast=True
         )

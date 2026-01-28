@@ -34,6 +34,12 @@ export async function setupSocketConnection() {
         }
     });
 
+    // Listen for new messages
+    socket.on('new_message', (data) => {
+        console.log('New message received:', data);
+        showAlert('New message from ' + data.sender_id + ': ' + data.message, 'info');
+    });
+
     return socket;
 }
 
@@ -44,5 +50,18 @@ export async function setupSocket() {
         return socket;
     } catch (error) {
         console.error('Failed to set up socket connection:', error);
+    }
+}
+
+function showAlert(message, icon = 'info') {
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            title: 'Notification',
+            text: message,
+            icon: icon,
+            confirmButtonText: 'OK'
+        });
+    } else {
+        alert(message);
     }
 }
