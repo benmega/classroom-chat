@@ -26,7 +26,7 @@ class User(db.Model):
     __tablename__ = "users"
     id = db.Column(db.Integer, primary_key=True)
     _username = db.Column("username", db.String(50), unique=True, nullable=False)
-    password_hash = db.Column(db.String(128), nullable=False)
+    password_hash = db.Column(db.String(200), nullable=False)
     profile_picture = db.Column(db.String(150), default="Default_pfp.jpg")
     ip_address = db.Column(db.String(45), nullable=True)
     is_online = db.Column(db.Boolean, default=False)
