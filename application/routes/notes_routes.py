@@ -39,7 +39,7 @@ def get_s3_client():
 
 
 @notes_bp.route("/upload_note", methods=["POST"])
-@limiter.limit("20 per day")
+@limiter.limit("200 per day")
 def upload_note():
     user_id = session.get("user")
     if not user_id:
