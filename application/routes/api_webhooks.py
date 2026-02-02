@@ -62,7 +62,6 @@ def transcribe_callback():
         return jsonify({"success": False, "error": "Project not found"}), 404
 
     try:
-        # Assuming your migration added 'video_transcript' to the Project model
         project.video_transcript = transcript
         db.session.commit()
         return jsonify({"success": True, "message": "Transcript updated"})
