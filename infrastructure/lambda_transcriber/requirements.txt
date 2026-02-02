@@ -1,0 +1,6 @@
+openai-whisper
+setuptools-rust
+boto3
+requests
+flask
+gunicorn

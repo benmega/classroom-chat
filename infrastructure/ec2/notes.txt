@@ -1,0 +1,2 @@
+how to ssh in
+ssh -i ~/.ssh/test-key.pem -L 8000:localhost:8000 ubuntu@blossom.benmega.com
