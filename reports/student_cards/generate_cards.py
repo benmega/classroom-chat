@@ -141,6 +141,10 @@ app = create_app()
 
 if __name__ == "__main__":
     with app.app_context():
-        # Using a list slice [:20] to test with just 20 users first if you have many
-        all_students = User.query.filter_by(is_admin=False).all()
+        all_students = User.query.filter(
+            User.is_admin == False,
+            User.earned_ducks != 0,
+            ~User.nickname.startswith("blossomstudent")
+        ).all()
+
         create_pdf(all_students)
