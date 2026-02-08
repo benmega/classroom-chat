@@ -1,0 +1,2 @@
+backup prod
+scp -i ~/.ssh/test-key.pem ubuntu@blossom.benmega.com:classroom-chat/instance/dev_users.db "/mnt/c/Users/Acer/PycharmProjects/classroom-chat/instance/backups/"

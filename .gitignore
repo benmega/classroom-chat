@@ -10,7 +10,7 @@ venv/
 userData/
 static/images/projects/
 *.env
-certificates/
+reports/certificates/
 /license/license.lic
 *.iml
 *.ipr
