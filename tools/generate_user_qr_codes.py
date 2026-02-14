@@ -12,7 +12,6 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 
 import qrcode
 from application import create_app
-from application.extensions import db
 from application.models.user import User
 
 
