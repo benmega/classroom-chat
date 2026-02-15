@@ -12,6 +12,7 @@ from flask import Flask, session, g, jsonify
 from flask_cors import CORS
 from flask_limiter import RateLimitExceeded
 from flask_wtf.csrf import CSRFProtect
+from sqlalchemy import inspect
 from werkzeug.exceptions import RequestEntityTooLarge
 from werkzeug.middleware.proxy_fix import ProxyFix
 
@@ -85,12 +86,14 @@ def create_app(config_class=None):
     tasks.set_app_instance(app)
 
     with app.app_context():
-        setup_models()
-        if not os.path.exists(
-            os.path.join(app.config["INSTANCE_FOLDER"], "dev_users.db")
-        ):
+        setup_models()  # Ensures models are loaded
+
+        # Check the DB directly. If the 'user' table doesn't exist, we need to initialize.
+        inspector = inspect(db.engine)
+        if not inspector.has_table("user"):  # specific table name depends on your User model
             db.create_all()
             ensure_default_configuration()
+            logger.info("Database initialized for the first time.")
 
         scheduler.start()
 
