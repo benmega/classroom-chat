@@ -86,15 +86,20 @@ Summary: Base layout template with header, navigation, and toast messages.
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                             </span>
                         </button>
-                        <ul class="dropdown-menu">
-                            <li><a href="{{ url_for('user.profile') }}"><i class="bi bi-person-circle"></i> Profile</a></li>
-                            <li><a href="{{ url_for('achievements.achievements_page') }}"><i class="bi bi-award"></i> Achievements</a></li>
-                            <li><a href="{{ url_for('achievements.submit_certificate') }}"><i class="bi bi-patch-check"></i> Certificate</a></li>
-                            <li><a href="{{ url_for('challenge.submit_challenge') }}"><i class="bi bi-lightning-charge"></i> Challenge</a></li>
-                            <li><a href="https://benmega.github.io/screen-recorder/"><i class="bi bi-record-circle"></i> Record</a></li>
-                            <li><a href="{{ url_for('message.conversation_history') }}"><i class="bi bi-chat-right-text"></i> History</a></li>
-                            <li><a href="{{ url_for('user.logout') }}"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
-                        </ul>
+                            <ul class="dropdown-menu">
+                                <li><a href="{{ url_for('user.profile') }}"><i class="bi bi-person-circle"></i> Profile</a></li>
+
+                                {% if user.is_admin %}
+                                    <li><a href="{{ url_for('admin.dashboard') }}"><i class="bi bi-speedometer2"></i> Admin Panel</a></li>
+                                {% endif %}
+
+                                <li><a href="{{ url_for('achievements.achievements_page') }}"><i class="bi bi-award"></i> Achievements</a></li>
+                                <li><a href="{{ url_for('achievements.submit_certificate') }}"><i class="bi bi-patch-check"></i> Certificate</a></li>
+                                <li><a href="{{ url_for('challenge.submit_challenge') }}"><i class="bi bi-lightning-charge"></i> Challenge</a></li>
+                                <li><a href="https://benmega.github.io/screen-recorder/"><i class="bi bi-record-circle"></i> Record</a></li>
+                                <li><a href="{{ url_for('message.conversation_history') }}"><i class="bi bi-chat-right-text"></i> History</a></li>
+                                <li><a href="{{ url_for('user.logout') }}"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
+                            </ul>
                     </li>
 
 

@@ -560,3 +560,79 @@
         grid-template-columns: 1fr;
     }
 }
+
+/* Admin-specific styles */
+.admin-body {
+    font-family: var(--font-family);
+    background: var(--background-gradient);
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ========== HEADER ========== */
+.admin-header {
+    background-color: var(--primary-color);
+    color: white;
+    box-shadow: var(--box-shadow-light);
+    position: sticky;
+    top: 0;
+    z-index: 1000; /* Increased z-index so menu floats over content */
+}
+
+/* New container specifically for the navbar content */
+.header-container {
+    max-width: var(--max-container-width);
+    margin: 0 auto;
+    padding: 10px 20px;
+}
+
+/* Override Bootstrap navbar-brand to match your design */
+.navbar-brand {
+    font-size: 1.5rem !important;
+    color: white !important;
+}
+
+/* ========== NAVIGATION BUTTONS ========== */
+/* We keep the button look, but let Bootstrap handle layout */
+.admin-nav-button {
+    display: inline-block;
+    padding: 8px 16px !important; /* Force padding over bootstrap nav-link default */
+    background-color: var(--primary-color-dark);
+    color: white !important;
+    text-decoration: none;
+    border-radius: var(--border-radius-small);
+    transition: var(--transition-default);
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+.admin-nav-button:hover {
+    background-color: var(--secondary-color-dark);
+    transform: translateY(-2px);
+    color: white !important;
+}
+
+.admin-nav-button.logout {
+    background-color: var(--error-color);
+}
+
+.admin-nav-button.logout:hover {
+    background-color: var(--error-color-dark);
+}
+
+/* ========== MAIN CONTENT ========== */
+.admin-main {
+    flex: 1;
+    padding: 30px 20px;
+    max-width: var(--max-container-width);
+    width: 100%;
+    margin: 0 auto;
+    box-sizing: border-box;
+    background-color: white;
+    border-radius: var(--border-radius-medium);
+    box-shadow: var(--box-shadow-light);
+    margin-top: 20px; /* Added slight separation from header */
+}
