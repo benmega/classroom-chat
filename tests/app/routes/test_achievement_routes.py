@@ -107,20 +107,18 @@ def test_add_achievement_post(client, init_db, sample_admin):
     with client.session_transaction() as sess:
         sess["user"] = sample_admin.id
 
-    # Patch 'local_only' to allow the test client request
-    with patch("application.routes.achievement_routes.local_only", lambda f: f):
-        response = client.post(
-            "/achievements/add",
-            data={
-                "name": "JavaScript Expert",
-                "slug": "javascript-advanced",
-                "description": "Complete advanced JavaScript course",
-                "requirement_value": "150",
-                "type": "certificate",
-                "reward": "10",
-            },
-            follow_redirects=True,
-        )
+    response = client.post(
+        "/achievements/add",
+        data={
+            "name": "JavaScript Expert",
+            "slug": "javascript-advanced",
+            "description": "Complete advanced JavaScript course",
+            "requirement_value": "150",
+            "type": "certificate",
+            "reward": "10",
+        },
+        follow_redirects=True,
+    )
 
     assert response.status_code == 200
 
@@ -136,19 +134,18 @@ def test_add_achievement_no_requirement(client, init_db, sample_admin):
     with client.session_transaction() as sess:
         sess["user"] = sample_admin.id
 
-    with patch("application.routes.achievement_routes.local_only", lambda f: f):
-        response = client.post(
-            "/achievements/add",
-            data={
-                "name": "Quick Starter",
-                "slug": "quick-start",
-                "description": "Complete the tutorial",
-                "requirement_value": "",
-                "type": "progress",
-                "reward": "5",
-            },
-            follow_redirects=True,
-        )
+    response = client.post(
+        "/achievements/add",
+        data={
+            "name": "Quick Starter",
+            "slug": "quick-start",
+            "description": "Complete the tutorial",
+            "requirement_value": "",
+            "type": "progress",
+            "reward": "5",
+        },
+        follow_redirects=True,
+    )
 
     assert response.status_code == 200
     ach = Achievement.query.filter_by(slug="quick-start").first()
@@ -160,7 +157,6 @@ def test_add_achievement_no_user(client, init_db):
     """Test adding achievement without logged in user/admin privileges."""
     initial_count = Achievement.query.count()
 
-    # Pass a non-local IP to trigger the 403 Forbidden
     response = client.post(
         "/achievements/add",
         data={
@@ -175,7 +171,7 @@ def test_add_achievement_no_user(client, init_db):
     # Ensure the achievement was NOT added
     final_count = Achievement.query.count()
     assert final_count == initial_count
-    assert response.status_code == 403
+    assert response.status_code == 401
 
 
 def test_submit_certificate_get(client, init_db, sample_user, mock_render_template):
@@ -395,10 +391,9 @@ def test_add_achievement_get(client, init_db, sample_admin, mock_render_template
     with client.session_transaction() as sess:
         sess["user"] = sample_admin.id
 
-    with patch("application.routes.achievement_routes.local_only", lambda f: f):
-        response = client.get("/achievements/add")
-        assert response.status_code == 200
-        assert b"Mocked Template Content" in response.data
+    response = client.get("/achievements/add")
+    assert response.status_code == 200
+    assert b"Mocked Template Content" in response.data
 
 
 def test_user_achievement_uniqueness(init_db, sample_user, sample_achievement):
