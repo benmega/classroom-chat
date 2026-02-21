@@ -16,7 +16,7 @@ from flask import (
     render_template,
     send_file,
     flash,
-    current_app,
+    current_app, session,
 )
 from flask import redirect, url_for
 from sqlalchemy import cast, Date
@@ -46,30 +46,51 @@ def before_user_request():
     pass
 
 
-def local_only(f):
+# def local_only(f):
+#     @wraps(f)
+#     def wrapper(*args, **kwargs):
+#         if request.remote_addr != "127.0.0.1":
+#             return render_template("error/nice_try.html"), 403
+#         return f(*args, **kwargs)
+#
+#     return wrapper
+#
+#
+# def check_auth(f):
+#     @wraps(f)
+#     def authenticate_and_execute(*args, **kwargs):
+#         auth = request.authorization
+#         if not auth or not (auth.password == admin_pass):
+#             return (
+#                 jsonify({"error": "Unauthorized"}),
+#                 401,
+#                 {"WWW-Authenticate": 'Basic realm="Login Required"'},
+#             )
+#         return f(*args, **kwargs)
+#
+#     return authenticate_and_execute
+
+def admin_only(f):
     @wraps(f)
     def wrapper(*args, **kwargs):
-        if request.remote_addr != "127.0.0.1":
+        # 1. Get ID from session
+        user_id = session.get("user")
+
+        if not user_id:
+            # Not logged in
+            return render_template("error/nice_try.html"), 401
+
+        # 2. Check DB for Admin Status
+        # We query only the necessary field (is_admin) for efficiency
+        user = User.query.get(user_id)
+
+        if not user or not user.is_admin:
+            # User exists but is not an admin (or invalid ID)
             return render_template("error/nice_try.html"), 403
+
         return f(*args, **kwargs)
 
     return wrapper
-
-
-def check_auth(f):
-    @wraps(f)
-    def authenticate_and_execute(*args, **kwargs):
-        auth = request.authorization
-        if not auth or not (auth.password == admin_pass):
-            return (
-                jsonify({"error": "Unauthorized"}),
-                401,
-                {"WWW-Authenticate": 'Basic realm="Login Required"'},
-            )
-        return f(*args, **kwargs)
-
-    return authenticate_and_execute
-
 
 def update_username(new_username, user_id=None, user_ip=None):
     if user_id:
@@ -125,13 +146,13 @@ def get_duck_transactions_data():
 
 
 @admin.route("/")
-@local_only
+@admin_only
 def base():
     return redirect(url_for("admin.dashboard"))
 
 
 @admin.route("/dashboard")
-@local_only
+@admin_only
 def dashboard():
     total_ducks = db.session.query(func.sum(User.duck_balance)).scalar() or 0
 
@@ -168,14 +189,14 @@ def dashboard():
 
 
 @admin.route("/duck_transactions_data")
-@local_only
+@admin_only
 def duck_transactions_data():
     chart_data = get_duck_transactions_data()
     return jsonify(chart_data)
 
 
 @admin.route("/users", methods=["GET"])
-@local_only
+@admin_only
 def get_users():
     users = User.query.all()
     users_data = []
@@ -201,7 +222,7 @@ def get_users():
 
 
 @admin.route("/users/<int:user_id>", methods=["PUT"])
-@local_only
+@admin_only
 def update_user(user_id):
     user = User.query.get(user_id)
     if user:
@@ -216,13 +237,13 @@ def update_user(user_id):
 
 
 @admin.route("/set_username", methods=["POST"])
-@local_only
+@admin_only
 def set_username_route():
     return set_username()
 
 
 @admin.route("/verify_password", methods=["POST"])
-@local_only
+@admin_only
 def verify_password():
     password = request.form["password"]
     if password == admin_pass:
@@ -249,7 +270,7 @@ def set_username():
 
 
 @admin.route("/reset_password", methods=["POST"])
-@local_only
+@admin_only
 def reset_password():
     data = request.json
     username = data.get("username")
@@ -274,7 +295,7 @@ def reset_password():
 
 
 @admin.route("/create_user", methods=["POST"])
-@local_only
+@admin_only
 def create_user():
     username = request.form.get("username", "").strip().lower()
     password = request.form.get("password", "")
@@ -316,7 +337,7 @@ def create_user():
 
 
 @admin.route("/remove_user", methods=["POST"])
-@local_only
+@admin_only
 def remove_user():
     username = request.form.get("username", "").strip().lower()
     if not username:
@@ -337,7 +358,7 @@ def remove_user():
 
 
 @admin.route("/toggle-ai", methods=["POST"])
-@local_only
+@admin_only
 def toggle_ai():
     config = Configuration.query.first()
     if config is None:
@@ -357,7 +378,7 @@ def toggle_ai():
 
 
 @admin.route("/toggle-message-sending", methods=["POST"])
-@local_only
+@admin_only
 def toggle_message_sending():
     config = Configuration.query.first()
 
@@ -378,7 +399,7 @@ def toggle_message_sending():
 
 
 @admin.route("/clear-partial-history", methods=["POST"])
-@local_only
+@admin_only
 def clear_partial_history():
     try:
         cutoff_date = datetime.utcnow() - timedelta(days=30)
@@ -405,7 +426,7 @@ def clear_partial_history():
 
 
 @admin.route("/add-banned-word", methods=["POST"])
-@local_only
+@admin_only
 def add_banned_word():
     word = request.form.get("word")
     reason = request.form.get("reason", None)
@@ -426,7 +447,7 @@ def add_banned_word():
 
 
 @admin.route("/strike_message/<int:message_id>", methods=["POST"])
-@local_only
+@admin_only
 def strike_message(message_id):
     message = Message.query.get(message_id)
     if not message:
@@ -448,14 +469,14 @@ def strike_message(message_id):
 
 
 @admin.route("/pending_trades", methods=["GET"])
-@local_only
+@admin_only
 def pending_trades():
     pend_trades = DuckTradeLog.query.filter_by(status="pending").all()
     return render_template("admin/pending_trades.html", trades=pend_trades)
 
 
 @admin.route("/trade_action", methods=["POST"])
-@local_only
+@admin_only
 def trade_action():
     trade_id = request.form.get("trade_id")
     action = request.form.get("action")
@@ -511,7 +532,7 @@ def update_duck_multiplier():
 
 
 @admin.route("/adjust_ducks", methods=["POST"])
-@local_only
+@admin_only
 def adjust_ducks():
     username = request.form.get("username")
     amount = request.form.get("amount", type=float)
@@ -535,13 +556,13 @@ def adjust_ducks():
 
 
 @admin.route("/documents-manager")
-@local_only
+@admin_only
 def documents_manager():
     return render_template("admin/admin_documents.html")
 
 
 @admin.route("/documents", methods=["GET"])
-@local_only
+@admin_only
 def list_documents():
     """List all uploaded documents across all categories"""
     documents = []
@@ -580,7 +601,7 @@ def list_documents():
 
 
 @admin.route("/documents/<category>/<filename>/download", methods=["GET"])
-@local_only
+@admin_only
 def download_document(category, filename):
     """Download a specific document"""
     if category not in ["image", "pdf", "other"]:
@@ -603,7 +624,7 @@ def download_document(category, filename):
 
 
 @admin.route("/documents/<category>/<filename>/view", methods=["GET"])
-@local_only
+@admin_only
 def view_document(category, filename):
     """View a specific document in browser"""
     if category not in ["image", "pdf", "other"]:
@@ -626,7 +647,7 @@ def view_document(category, filename):
 
 
 @admin.route("/delete-document", methods=["POST"])
-@local_only
+@admin_only
 def delete_document():
     """Delete a specific document"""
     category = request.form.get("category")
@@ -670,7 +691,7 @@ def delete_document():
 
 
 @admin.route("/documents/stats", methods=["GET"])
-@local_only
+@admin_only
 def document_stats():
     """Get statistics about uploaded documents"""
     stats = {
@@ -753,7 +774,7 @@ def edit_project_details(project_id):
 
 # Renamed from 'pending_reviews' to 'manage_projects' to reflect the new capabilities
 @admin.route("/manage-projects")
-@local_only
+@admin_only
 def manage_projects():
     # 1. Get filter type from URL (default to 'pending')
     filter_type = request.args.get("filter", "pending")
@@ -784,7 +805,7 @@ def manage_projects():
 
 # Renamed to handle both Approval and Rejection logic
 @admin.route("/handle-project-review/<int:project_id>", methods=["POST"])
-@local_only
+@admin_only
 def handle_project_review(project_id):
     project = Project.query.get_or_404(project_id)
 

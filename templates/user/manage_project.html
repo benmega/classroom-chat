@@ -32,15 +32,17 @@
                 </div>
 
                 {% if user.is_admin %}
-                    <div class="form-group">
-                        <label for="student_id">Assign to Student</label>
-                        <select name="student_id" required>
-                            <option value="">Select Student</option>
-                            {% for student in students %}
-                                <option value="{{ student.id }}">{{ student.username }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
+                    {% if students %}
+                        <div class="form-group">
+                            <label for="student_id">Assign to Student</label>
+                            <select name="student_id" required>
+                                <option value="">Select Student</option>
+                                {% for student in students %}
+                                    <option value="{{ student.id }}">{{ student.username }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    {%  endif %}
 
                     <div class="form-group">
                         <label for="teacher_comment">Teacher Comment (Admin Only)</label>
