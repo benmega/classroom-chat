@@ -4,15 +4,15 @@ Type: py
 Summary: Flask routes for admin advanced routes functionality.
 """
 
-from flask import request, redirect
+from flask import session, render_template
 from flask_admin import Admin, AdminIndexView, expose
 from flask_admin.contrib.sqla import ModelView
 
-from application import db
+from application import db, User
 
 
 class SecureModelView(ModelView):
-    """Restrict access to localhost only"""
+    """Restrict access to Admins only"""
 
     can_create = True
     can_edit = True
@@ -21,14 +21,31 @@ class SecureModelView(ModelView):
     column_display_pk = True
 
     def is_accessible(self):
-        return request.remote_addr == "127.0.0.1"
+        user_id = session.get("user")
+        if not user_id:
+            return False
+
+        user = User.query.get(user_id)
+        return user and user.is_admin
 
     def inaccessible_callback(self, name, **kwargs):
-        return redirect("/admin/dashboard")
+        # unauthorized access
+        return render_template("error/nice_try.html"), 403
 
 
 class AdvancedIndex(AdminIndexView):
     """Custom landing page for advanced admin"""
+
+    def is_accessible(self):
+        user_id = session.get("user")
+        if not user_id:
+            return False
+
+        user = User.query.get(user_id)
+        return user and user.is_admin
+
+    def inaccessible_callback(self, name, **kwargs):
+        return render_template("error/nice_try.html"), 403
 
     @expose("/")
     def index(self):

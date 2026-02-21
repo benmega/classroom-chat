@@ -266,7 +266,7 @@ def sample_admin(init_db):
     username = TestingConfig.ADMIN_USERNAME
     password = TestingConfig.ADMIN_PASSWORD
     admin_user = User(
-        username=username, password_hash=password, earned_ducks=0, duck_balance=0
+        username=username, password_hash=password, earned_ducks=0, duck_balance=0, is_admin=True
     )
     db.session.add(admin_user)
     db.session.commit()

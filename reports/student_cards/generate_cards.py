@@ -1,11 +1,13 @@
 import io
 import os
+
 import qrcode
 from PIL import Image
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.units import inch
 from reportlab.lib.utils import ImageReader
 from reportlab.pdfgen import canvas
+
 from application import create_app
 from application.models.user import User
 
@@ -142,7 +144,7 @@ app = create_app()
 if __name__ == "__main__":
     with app.app_context():
         all_students = User.query.filter(
-            User.is_admin == False,
+            not User.is_admin,
             User.earned_ducks != 0,
             ~User.nickname.startswith("blossomstudent")
         ).all()

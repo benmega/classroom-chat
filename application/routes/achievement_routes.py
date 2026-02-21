@@ -20,7 +20,7 @@ from application.extensions import db
 from application.models.achievements import Achievement
 from application.models.user import User
 from application.models.user_certificate import UserCertificate
-from application.routes.admin_routes import local_only
+from application.routes.admin_routes import admin_only
 
 achievements = Blueprint("achievements", __name__)
 
@@ -57,7 +57,7 @@ def achievements_page():
 
 
 @achievements.route("/add", methods=["GET", "POST"])
-@local_only
+@admin_only
 def add_achievement():
     if request.method == "POST":
         name = request.form.get("name")
@@ -190,7 +190,7 @@ def view_certificate(cert_id):
 
 
 @achievements.route("/admin/certificates")
-@local_only
+@admin_only
 def admin_certificates():
     certs = (
         db.session.query(UserCertificate)
@@ -205,7 +205,7 @@ def admin_certificates():
 
 
 @achievements.route("/admin/certificates/reviewed/<int:cert_id>", methods=["POST"])
-@local_only
+@admin_only
 def mark_reviewed(cert_id):
     cert = UserCertificate.query.get_or_404(cert_id)
     cert.reviewed = True
