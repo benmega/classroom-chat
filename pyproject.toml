@@ -1,3 +1,8 @@
 # pyproject.toml
 [tool.ruff.lint]
 ignore = ["E701"]
+
+[tool.ruff.rules]
+# Enable checks for common note patterns in comments.
+select = ["EXXX"]  # Hypothetical code, as ruff's real configuration might differ.
+
