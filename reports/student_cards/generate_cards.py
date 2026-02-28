@@ -1,5 +1,7 @@
 import io
 import os
+from datetime import datetime, timezone
+from datetime import timedelta
 
 import qrcode
 from PIL import Image
@@ -141,12 +143,18 @@ def create_pdf(users):
 
 app = create_app()
 
+
+
+
 if __name__ == "__main__":
     with app.app_context():
+        # Calculate 90 days ago in UTC
+        ninety_days_ago = datetime.now(timezone.utc) - timedelta(days=90)
+
         all_students = User.query.filter(
-            not User.is_admin,
-            User.earned_ducks != 0,
-            ~User.nickname.startswith("blossomstudent")
+            User.is_admin == False,
+            ~User.nickname.startswith("blossomstudent"),
+            User.last_daily_duck > ninety_days_ago
         ).all()
 
         create_pdf(all_students)
