@@ -19,12 +19,12 @@ from flask import (
     current_app, session,
 )
 from flask import redirect, url_for
-from sqlalchemy import cast, Date
-from sqlalchemy.sql import func
+from sqlalchemy import func, cast, Date, or_
 from werkzeug.utils import secure_filename
 
 from application.config import Config
 from application.extensions import db, limiter
+from application.models.achievements import Achievement, UserAchievement
 from application.models.banned_words import BannedWords
 from application.models.challenge import Challenge
 from application.models.challenge_log import ChallengeLog
@@ -151,26 +151,49 @@ def base():
     return redirect(url_for("admin.dashboard"))
 
 
+
 @admin.route("/dashboard")
 @admin_only
 def dashboard():
     total_ducks = db.session.query(func.sum(User.duck_balance)).scalar() or 0
 
+    # Determine start of the current week (Monday)
     today = datetime.now().date()
-    ducks_earned_today = (
-        db.session.query(func.coalesce(func.sum(Challenge.value), 0))
+    start_of_week = today - timedelta(days=today.weekday())
+
+    config = Configuration.query.first()
+    multiplier = config.duck_multiplier if config and config.duck_multiplier else 1.0
+
+    # 1. Sum ducks earned from Challenges this week (with dash/space handling & multiplier)
+    challenge_ducks = (
+        db.session.query(func.coalesce(func.sum(Challenge.value * multiplier), 0))
         .select_from(ChallengeLog)
-        .join(Challenge, Challenge.slug.ilike(ChallengeLog.challenge_slug))
-        .filter(cast(ChallengeLog.timestamp, Date) == today)
-        .scalar()
+        .join(Challenge, or_(
+            Challenge.slug.ilike(ChallengeLog.challenge_slug),
+            Challenge.slug.ilike(func.replace(ChallengeLog.challenge_slug, '-', ' '))
+        ))
+        .filter(cast(ChallengeLog.timestamp, Date) >= start_of_week)
+        .scalar() or 0
     )
+
+    # 2. Sum ducks earned from Achievements this week
+    achievement_ducks = (
+        db.session.query(func.coalesce(func.sum(Achievement.reward), 0))
+        .select_from(UserAchievement)
+        .join(Achievement, Achievement.id == UserAchievement.achievement_id)
+        .filter(cast(UserAchievement.earned_at, Date) >= start_of_week)
+        .scalar() or 0
+    )
+
+
+    ducks_earned_this_week = challenge_ducks + achievement_ducks
+    print(ducks_earned_this_week)
 
     pending_trades_count = DuckTradeLog.query.filter_by(status="pending").count()
     active_users_count = User.query.filter_by(is_online=True).count()
 
     users = User.query.all()
     users_sorted = sorted(users, key=lambda u: u.duck_balance or 0, reverse=True)
-    config = Configuration.query.first()
     banned_words = BannedWords.query.all()
 
     chart_data = get_duck_transactions_data()
@@ -181,12 +204,11 @@ def dashboard():
         config=config,
         banned_words=banned_words,
         total_ducks=total_ducks,
-        ducks_earned_today=ducks_earned_today,
+        ducks_earned_this_week=ducks_earned_this_week,
         pending_trades_count=pending_trades_count,
         active_users_count=active_users_count,
         chart_data=chart_data,
     )
-
 
 @admin.route("/duck_transactions_data")
 @admin_only
