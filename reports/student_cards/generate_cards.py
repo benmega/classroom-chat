@@ -152,7 +152,7 @@ if __name__ == "__main__":
         ninety_days_ago = datetime.now(timezone.utc) - timedelta(days=90)
 
         all_students = User.query.filter(
-            User.is_admin == False,
+            not User.is_admin,
             ~User.nickname.startswith("blossomstudent"),
             User.last_daily_duck > ninety_days_ago
         ).all()
