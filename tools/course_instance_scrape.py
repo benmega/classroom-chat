@@ -51,9 +51,9 @@ def fetch_json(url, description, cookie_string):
 # 3. MAIN EXECUTION
 # --------------------------------------------------------------------------------
 def process_domain(domain):
-    print(f"\n========================================================")
+    print("\n========================================================")
     print(f"Processing '{domain}'...")
-    print(f"========================================================")
+    print("========================================================")
 
     # 1. Grab the manual cookie string from our config dictionary
     cookie_string = MANUAL_COOKIES.get(domain, "")
@@ -86,10 +86,10 @@ def process_domain(domain):
         url = f"https://{domain}/db/course_instance?classroomID={cid}"
 
         # Fetch data from API
-        instances_data = fetch_json(url, f"Course Instances", cookie_string)
+        instances_data = fetch_json(url, "Course Instances", cookie_string)
 
         if not instances_data:
-            print(f"  -> No data found.")
+            print("  -> No data found.")
             continue
 
         # Prepare rows to match the SQLAlchemy CourseInstance model
