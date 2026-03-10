@@ -1,188 +1,60 @@
 import csv
 import os
 import tkinter as tk
-import warnings
 from tkinter import filedialog
 from urllib.parse import urlparse, parse_qs
 
 from bs4 import BeautifulSoup
-from sqlalchemy.exc import IntegrityError, SQLAlchemyError
-
-from application import db, create_app, ProductionConfig, DevelopmentConfig
-from application.models.challenge import Challenge
-
-warnings.filterwarnings(
-    "ignore", message="Using the in-memory storage for tracking rate limits"
-)
 
 
 def get_challenge_data(domain, soup):
     """
     Extracts challenge data from the parsed HTML based on the domain.
-
-    Args:
-        domain (str): The domain of the challenge platform.
-        soup (BeautifulSoup): Parsed HTML content.
-
-    Returns:
-        list of dict: A list of challenge data dictionaries.
     """
     challenge_data = []
 
     if "codecombat.com" in domain:
         challenge_elements = soup.find_all("div", class_="level-info-container")
         for elem in challenge_elements:
-            name = elem.get("data-level-name")
-            slug = elem.get("data-level-slug")
+            name = elem.get("data-level-name", "")
+            slug = elem.get("data-level-slug", "")
             description = elem.find("div", class_="level-description")
-            challenge_data.append(
-                {
-                    "name": name,
-                    "slug": slug,
-                    "description": (
-                        description.text.strip()
-                        if description
-                        else "No description provided."
-                    ),
-                }
-            )
+            challenge_data.append({
+                "name": name,
+                "slug": slug,
+                "description": description.text.strip() if description else "No description provided."
+            })
 
     elif "studio.code.org" in domain:
         challenge_elements = soup.find_all("a", class_="progress-bubble-link")
         for elem in challenge_elements:
-            name = elem.get("title")
-            # slug = elem.get("href")
-            # if slug:
-            #     slug = slug.split("/")[-1]  # Extract last part of the URL
-            # else:
+            name = elem.get("title", "")
             slug = name
-            challenge_data.append(
-                {"name": name, "slug": slug, "description": "No description provided."}
-            )
+            challenge_data.append({
+                "name": name,
+                "slug": slug,
+                "description": "No description provided."
+            })
 
     elif "ozaria.com" in domain:
         challenge_elements = soup.find_all("a", class_="level-dot-link")
         for elem in challenge_elements:
-            name = elem.get("title")
-            slug = elem.get("href")
+            name = elem.get("title", "")
+            slug = elem.get("href", "")
             if slug:
-                slug = urlparse(slug).path.split("/")[
-                    -1
-                ]  # Extract last part of the path
-            challenge_data.append(
-                {"name": name, "slug": slug, "description": "No description provided."}
-            )
+                slug = urlparse(slug).path.split("/")[-1]
+            challenge_data.append({
+                "name": name,
+                "slug": slug,
+                "description": "No description provided."
+            })
 
     return challenge_data
 
 
-def store_challenges(
-    app,
-    challenges,
-    domain,
-    course_id,
-    default_difficulty,
-    default_value,
-    replace_existing=True,
-):
+def extract_challenges_from_html(url, html_content, difficulty, challenge_value):
     """
-    Stores extracted challenge data into the database, optionally replacing existing entries.
-
-    Args:
-        app: The Flask application instance.
-        challenges (list): A list of extracted challenge data.
-        domain (str): The domain of the challenge platform.
-        course_id (str): The course identifier.
-        default_difficulty (str): Default difficulty for challenges.
-        default_value (int): Default point value for challenges.
-        replace_existing (bool, optional): Whether to replace existing challenges. Defaults to True.
-
-    Returns:
-        int: Number of challenges successfully stored or updated.
-    """
-    count = 0
-    with app.app_context():
-        for challenge in challenges:
-            try:
-                name = challenge["name"].strip()
-                slug = challenge["slug"].strip()
-
-                # Check for existing challenge
-                existing_challenge = Challenge.query.filter_by(
-                    name=name, domain=domain
-                ).first()
-
-                if existing_challenge:
-                    if replace_existing:
-                        existing_challenge.slug = (
-                            slug or existing_challenge.slug
-                        )  # Avoid empty slugs
-                        existing_challenge.course_id = course_id
-                        existing_challenge.description = challenge["description"]
-                        existing_challenge.difficulty = default_difficulty
-                        existing_challenge.value = default_value
-                        print(f"Updated existing challenge: {existing_challenge.name}")
-                    else:
-                        print(
-                            f"Skipping existing challenge (exists): {existing_challenge.name}"
-                        )
-                        continue
-                else:
-                    new_challenge = Challenge(
-                        name=name,
-                        slug=slug,
-                        domain=domain,
-                        course_id=course_id,
-                        description=challenge["description"],
-                        difficulty=default_difficulty,
-                        value=default_value,
-                    )
-                    db.session.add(new_challenge)
-                    print(f"Added new challenge: {new_challenge.name}")
-
-                count += 1
-
-            except IntegrityError as e:
-                db.session.rollback()  # Prevent corruption of DB state
-                print(
-                    f"ERROR: Integrity error for challenge '{challenge.get('name', 'UNKNOWN')}': {e}"
-                )
-                continue  # Skip to the next challenge
-
-            except SQLAlchemyError as e:
-                db.session.rollback()  # Rollback on unexpected database errors
-                print(
-                    f"ERROR: Database error for challenge '{challenge.get('name', 'UNKNOWN')}': {e}"
-                )
-                continue  # Skip to the next challenge
-
-            except Exception as e:
-                print(
-                    f"ERROR: Unexpected error for challenge '{challenge.get('name', 'UNKNOWN')}': {e}"
-                )
-                continue  # Skip to the next challenge
-
-        db.session.commit()  # Commit all successfully processed challenges
-
-    print(f"Successfully processed {count} challenges.")
-    return count
-
-
-def parse_and_store_challenges(
-    app, url, html_content, default_difficulty="medium", default_value=1
-):
-    """
-    Parses HTML to extract challenge data and stores it in the database.
-
-    Args:
-        app: The Flask application instance.
-        url (str): The URL of the challenge page.
-        html_content (str): The HTML content of the page.
-        default_difficulty (str, optional): Default difficulty level for challenges.
-        default_value (int, optional): Default point value for challenges.
-
-    Returns:
-        bool: True if challenges were imported, False otherwise.
+    Parses HTML, extracts challenge data, and enriches it with URL and CSV metadata.
     """
     soup = BeautifulSoup(html_content, "html.parser")
 
@@ -190,52 +62,51 @@ def parse_and_store_challenges(
     parsed_url = urlparse(url)
     domain = parsed_url.netloc
     query_params = parse_qs(parsed_url.query)
+
     course_id = query_params.get("course", [""])[0]
     if not course_id:
-        course_id = parsed_url.path.split("/")[-1]  # Extract last part of the path
+        course_id = parsed_url.path.split("/")[-1]
 
-    # Get challenge data
+        # Get raw challenge data
     challenges = get_challenge_data(domain, soup)
-    if not challenges:
-        print("Unsupported domain or no challenges found.")
-        return False
 
-    # Store extracted challenges
-    count = store_challenges(
-        app, challenges, domain, course_id, default_difficulty, default_value
-    )
+    # Enrich and format for the final CSV
+    enriched_challenges = []
+    for challenge in challenges:
+        enriched_challenges.append({
+            "name": challenge.get("name", "").strip(),
+            "slug": challenge.get("slug", "").strip(),
+            "domain": domain,
+            "course_id": course_id,
+            "description": challenge.get("description", ""),
+            "difficulty": difficulty,
+            "value": challenge_value
+        })
 
-    print(f"{count} challenges imported successfully.")
-    return count > 0
+    return enriched_challenges
 
 
-def process_html_files_with_csv(app, folder_path):
+def process_files_and_generate_seed(folder_path):
     """
-    Processes each HTML file in the specified folder by retrieving the corresponding URL
-    and challenge details from a CSV file and calling the parse_and_store_challenges function.
-
-    Args:
-        app: Application context.
-        folder_path (str): Path to the folder containing HTML files and the CSV file.
-
-    Returns:
-        None
+    Processes HTML/CSV files in the folder and outputs a master seed data CSV.
     """
-    # Define the expected CSV file path
-    csv_file_path = ""
+    output_filename = "seed_data_output.csv"
+    input_csv_path = None
+
+    # Find the input CSV (ignore the output CSV if it already exists from a previous run)
     for file in os.listdir(folder_path):
-        if file.lower().endswith(".csv"):
-            csv_file_path = os.path.join(folder_path, file)
+        if file.lower().endswith(".csv") and file.lower() != output_filename:
+            input_csv_path = os.path.join(folder_path, file)
+            break
 
-    # Check if the CSV file exists
-    if not os.path.exists(csv_file_path):
-        print(f"CSV file not found in folder: {csv_file_path}")
+    if not input_csv_path:
+        print("❌ No input CSV found in the folder.")
         return
 
-    # Load the URL mappings and challenge details from the CSV file
-    file_data = {}  # Dictionary to store file-related data
+    # Load URL mappings from the input CSV
+    file_data = {}
     try:
-        with open(csv_file_path, mode="r", encoding="utf-8") as csv_file:
+        with open(input_csv_path, mode="r", encoding="utf-8") as csv_file:
             csv_reader = csv.DictReader(csv_file)
             for row in csv_reader:
                 file_name = row["File Name"]
@@ -245,77 +116,74 @@ def process_html_files_with_csv(app, folder_path):
                     "challenge_value": row["challenge_value"],
                 }
     except Exception as e:
-        print(f"An error occurred while reading the CSV file: {e}")
+        print(f"❌ Error reading input CSV: {e}")
         return
 
-    # List all HTML files in the folder
+    # Process HTML files
     html_files = [f for f in os.listdir(folder_path) if f.endswith(".html")]
-
     if not html_files:
-        print("No HTML files found in the specified folder.")
+        print("❌ No HTML files found in the specified folder.")
         return
 
-    # Process each HTML file
+    all_seed_data = []
+
     for html_file in html_files:
         file_path = os.path.join(folder_path, html_file)
         file_info = file_data.get(html_file)
 
         if not file_info:
-            print(f"No data found for file: {html_file}")
+            print(f"⚠️  Skipping {html_file}: No corresponding entry in input CSV.")
             continue
 
-        url = file_info["url"]
-        difficulty = file_info["difficulty"]
-        challenge_value = file_info["challenge_value"]
-
-        print(f"\nProcessing file: {html_file}")
         try:
-            # Read the HTML content from the file
             with open(file_path, "r", encoding="utf-8") as file:
                 html_content = file.read()
 
-            # Call the parse_and_store_challenges function with the correct values
-            result = parse_and_store_challenges(
-                app, url, html_content, difficulty, challenge_value
+            extracted_data = extract_challenges_from_html(
+                url=file_info["url"],
+                html_content=html_content,
+                difficulty=file_info["difficulty"],
+                challenge_value=file_info["challenge_value"]
             )
 
-            if result:
-                print(f"Successfully processed: {html_file}")
-            else:
-                print(f"Could not process: {html_file}")
+            all_seed_data.extend(extracted_data)
+            print(f"✅ Extracted {len(extracted_data)} challenges from {html_file}")
+
         except Exception as e:
-            print(f"An error occurred while processing {html_file}: {e}")
+            print(f"❌ Error processing {html_file}: {e}")
+
+    # Generate the final output CSV
+    if all_seed_data:
+        output_path = os.path.join(folder_path, output_filename)
+        headers = ["name", "slug", "domain", "course_id", "description", "difficulty", "value"]
+
+        try:
+            with open(output_path, mode="w", encoding="utf-8", newline="") as out_file:
+                writer = csv.DictWriter(out_file, fieldnames=headers)
+                writer.writeheader()
+                writer.writerows(all_seed_data)
+            print(f"\n🎉 Success! Seed data saved to: {output_path}")
+        except Exception as e:
+            print(f"❌ Error writing output CSV: {e}")
+    else:
+        print("\n⚠️  No challenges were extracted. Output CSV was not created.")
 
 
 def select_folder():
-    """Opens a dialog for the user to select a folder and returns the selected path."""
-    tk.Tk().withdraw()  # Hide the root window
+    """Opens a dialog for the user to select a folder."""
+    tk.Tk().withdraw()
     return filedialog.askdirectory()
 
 
 def main():
-    print("Select environment:")
-    print("1. Development")
-    print("2. Production")
-    choice = input("Enter 1 or 2: ").strip()
-
-    if choice == "1":
-        config = DevelopmentConfig
-    elif choice == "2":
-        confirm = (
-            input("⚠️  You selected PRODUCTION. Type 'yes' to confirm: ").strip().lower()
-        )
-        if confirm != "yes":
-            print("Aborted.")
-            return
-        config = ProductionConfig
-    else:
-        print("Invalid selection. Aborted.")
-        return
-
-    app = create_app(config)
+    print("Select the folder containing your HTML files and input CSV.")
     folder_path = select_folder()
-    process_html_files_with_csv(app, folder_path)
+
+    if folder_path:
+        print(f"\nProcessing folder: {folder_path}\n" + "-" * 40)
+        process_files_and_generate_seed(folder_path)
+    else:
+        print("No folder selected. Aborted.")
 
 
 if __name__ == "__main__":

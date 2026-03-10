@@ -3,14 +3,19 @@ import os
 import re
 import sqlite3
 
+# Import the new seeding module
+from seed_challenges import seed_challenges_data
+
 # ================= CONFIGURATION =================
 DB_FILENAME = "dev_users.db"
 SEED_FILENAME = "course_instances_seed.csv"
+CHALLENGES_SEED_FILENAME = "level_seed_data.csv"  # Added config for new seed
 
 # Resolve absolute paths based on the location of this script
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "..", DB_FILENAME)
 SEED_FILE_PATH = os.path.join(BASE_DIR, SEED_FILENAME)
+CHALLENGES_SEED_PATH = os.path.join(BASE_DIR, CHALLENGES_SEED_FILENAME)  # Added path
 
 NEW_COLUMNS = {
     "projects": [
@@ -198,6 +203,10 @@ def seed_course_instances(conn):
         conn.rollback()
         print(f"Seed Error: {e}")
 
+# Added wrapper for the new challenges seed
+def seed_challenges(conn):
+    """Wrapper to call the imported seed_challenges module."""
+    seed_challenges_data(conn, CHALLENGES_SEED_PATH)
 
 # ================= RUNNER =================
 
@@ -213,6 +222,7 @@ def run_migrations():
         populate_user_slugs,
         migrate_classrooms_and_instances,
         seed_course_instances,
+        seed_challenges, # Added new step to the pipeline
     ]
 
     try:

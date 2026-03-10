@@ -23,7 +23,7 @@ challenge = Blueprint("challenge", __name__, url_prefix="/challenge")
 # Robust pattern from the working version
 URL_PATTERN = (
     r"https://(?P<domain>[\w\.-]+)"
-    r"(?:/play/(?:ozaria/)?level/(?P<challenge_slug>[\w-]+)"  # Changed group name to challenge_slug
+    r"(?:/play/(?:ozaria/)?level/(?P<challenge_slug>[\w-]+)"
     r"(?:\?(?:.*&)?course=(?P<course_id>[\w-]+))?"
     r"(?:(?:\?|&)(?:.*&)?course-instance=(?P<course_instance>[\w-]+))?"
     r"|/s/(?P<slug>[\w-]+)/lessons/(?P<lesson_id>\d+)/levels/(?P<level_id>\d+))"
@@ -149,41 +149,59 @@ def _log_challenge(details, username, helper=None):
         helper = ""
 
     try:
-        # 1. Base filters that always apply
+        # 1. Grab the ID from the URL. (CodeCombat often puts the instance ID in the 'course' param)
+        provided_id = details.get("course_instance") or details.get("course_id")
+
+        if not provided_id:
+            return {"success": False, "message": "No course instance provided in the URL."}
+
+        # 2. Verify the CourseInstance exists.
+        course_instance = CourseInstance.query.filter_by(id=provided_id).first()
+        if not course_instance:
+            return {"success": False, "message": "Invalid course instance ID. Nice try!"}
+
+        # Get the parent course ID mapped to this instance
+        actual_course_id = course_instance.course_id
+
+        # 3. Verify the Challenge exists AND belongs to the parent course
+        challenge_slug = details["challenge_slug"]
+
+        # Match the slug (handling potential space/dash mismatches)
+        challenge = Challenge.query.filter(
+            (Challenge.slug.ilike(challenge_slug)) |
+            (Challenge.slug.ilike(challenge_slug.replace("-", " ")))
+        ).first()
+
+        if not challenge:
+            return {"success": False, "message": "Challenge not found in the database."}
+
+        # The ultimate validation: Does this challenge actually belong to this course?
+        if challenge.course_id != actual_course_id:
+            return {"success": False, "message": "This challenge does not belong to the specified course."}
+
+        # 4. Tighten uniqueness check: SAME user, SAME challenge, SAME course instance
         filters = {
             "username": username,
-            "domain": details["domain"],
-            "challenge_slug": details["challenge_slug"],
-            "course_id": details["course_id"],
+            "challenge_slug": challenge.slug,  # Using the canonical slug from the DB
+            "course_instance": course_instance.id  # Strictly checking the instance, not the course
         }
 
-        # 2. Check if course_instance is provided and exists in the DB
-        instance_id = details.get("course_instance")
-        if instance_id:
-            instance_exists = db.session.query(
-                CourseInstance.query.filter_by(id=instance_id).exists()
-            ).scalar()
-
-            if instance_exists:
-                filters["course_instance"] = instance_id
-
-        # 3. Query using the dynamic filters
         existing_log = ChallengeLog.query.filter_by(**filters).first()
 
         if existing_log:
             return {
                 "success": False,
-                "message": "You already claimed this level!",
+                "message": "You already claimed this level for this specific course instance!",
                 "timestamp": existing_log.timestamp,
             }
 
-        # 4. Create new log
+        # 5. Create new log with the strictly validated data
         challenge_log = ChallengeLog(
             username=username,
             domain=details["domain"],
-            challenge_slug=details["challenge_slug"],
-            course_id=details["course_id"],
-            course_instance=instance_id,  # Keep the ID even if not used for filtering
+            challenge_slug=challenge.slug,
+            course_id=actual_course_id,  # Verified parent course ID
+            course_instance=course_instance.id,  # Verified instance ID
             timestamp=datetime.utcnow(),
             helper=helper,
         )
