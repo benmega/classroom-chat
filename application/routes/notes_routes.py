@@ -1,5 +1,3 @@
-from urllib.parse import urlparse
-
 import boto3
 from botocore.exceptions import BotoCoreError, MissingDependencyException
 from flask import Blueprint, request, jsonify, session, current_app
@@ -98,7 +96,6 @@ def handle_note_s3_upload(s3_client, file, user_obj):
         current_app.logger.error(f"Note S3 Upload Error: {e}")
         return None
 
-
 @notes_bp.route("/delete/<int:note_id>", methods=["POST"])
 def delete_note(note_id):
     note = Note.query.get_or_404(note_id)
@@ -114,22 +111,15 @@ def delete_note(note_id):
 
     s3_client = get_s3_client()
     if s3_client is None:
-        return (
-            jsonify(
-                {
-                    "success": False,
-                    "error": "Notes delete is temporarily unavailable (S3 is not configured on this server).",
-                }
-            ),
-            503,
-        )
+        return jsonify({
+            "success": False,
+            "error": "Notes delete is temporarily unavailable (S3 is not configured on this server)."
+        }), 503
 
     try:
-        # Extract the S3 object key from the URL
-        parsed_url = urlparse(note.url)
-        object_key = parsed_url.path.lstrip("/")
-
-        s3_client.delete_object(Bucket=S3_NOTES_BUCKET, Key=object_key)
+        # Use note.filename directly instead of parsing note.url
+        # Assuming note.filename contains "notes/username/filename.ext"
+        s3_client.delete_object(Bucket=S3_NOTES_BUCKET, Key=note.filename)
 
         # 2. Delete from Database
         db.session.delete(note)
@@ -138,8 +128,6 @@ def delete_note(note_id):
         return jsonify({"success": True})
 
     except Exception as e:
-        print(f"Error deleting note: {e}")
-        return (
-            jsonify({"success": False, "error": "Failed to delete from server."}),
-            500,
-        )
+        # Tip: Use current_app.logger to get this exception in your prod server logs!
+        current_app.logger.error(f"Error deleting note {note_id}: {str(e)}")
+        return jsonify({"success": False, "error": "Failed to delete from server."}), 500
