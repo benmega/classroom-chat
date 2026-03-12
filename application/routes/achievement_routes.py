@@ -226,7 +226,7 @@ def download_certificate(cert_id):
         return redirect(request.referrer or url_for('achievements.achievements_page'))
 
     # Helper to construct a nice filename for the download
-    download_name = f"{cert.user.username}_{cert.achievement.slug}.pdf"
+    download_name = f"{cert.user.nickname}_{cert.achievement.name}.pdf"
 
     return send_from_directory(
         directory,

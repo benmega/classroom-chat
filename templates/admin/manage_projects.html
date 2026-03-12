@@ -312,6 +312,11 @@
                 <i class="fab fa-github"></i> GitHub
             </a>
             {% endif %}
+            {% if project.video_url %}
+            <a href="{{ project.video_url }}" target="_blank" class="btn-link">
+                <i class="fas fa-video"></i> Watch Video
+            </a>
+            {% endif %}
         </div>
     </div>
 
@@ -329,6 +334,18 @@
     <div class="no-code-state">
         <i class="fas fa-code-branch" style="font-size: 3rem; margin-bottom: 15px; opacity: 0.3;"></i>
         <span>No Code Provided</span>
+    </div>
+    {% endif %}
+
+    {% if project.video_transcript %}
+    <div class="card-code-area">
+        <div class="code-title">
+            <span>VIDEO TRANSCRIPT</span>
+            <span><i class="fas fa-closed-captioning"></i></span>
+        </div>
+        <div class="code-scroller">
+            <pre style="white-space: pre-wrap; line-height: 1.6;">{{ project.video_transcript }}</pre>
+        </div>
     </div>
     {% endif %}
 
