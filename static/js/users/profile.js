@@ -621,6 +621,9 @@ document.addEventListener('click', async (e) => {
     const deleteBtn = e.target.closest('.delete-note-btn');
     if (!deleteBtn) return;
 
+    // 1. Prevent the browser from navigating via GET
+    e.preventDefault();
+
     if (!confirm("Are you sure you want to delete this note? This cannot be undone.")) return;
 
     const noteId = deleteBtn.getAttribute('data-note-id');
@@ -630,15 +633,26 @@ document.addEventListener('click', async (e) => {
     deleteBtn.disabled = true;
     deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
 
+    // 2. Grab the CSRF token
+    const csrfTokenMeta = document.querySelector('meta[name="csrf-token"]');
+    const csrfToken = csrfTokenMeta ? csrfTokenMeta.getAttribute('content') : '';
+
     try {
-        const response = await fetch(`/notes/delete/${noteId}`, { method: 'POST' });
+        // 3. Include the CSRF header in the POST request
+        const response = await fetch(`/notes/delete/${noteId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            }
+        });
+
         const data = await response.json();
 
         if (data.success) {
-            noteItem.remove(); // Remove image from UI instantly
+            noteItem.remove();
             showNotification('Note deleted successfully', 'success');
 
-            // Show "No notes" message if that was the last one
             const grid = document.getElementById('note-grid-container');
             if (grid.querySelectorAll('.note-item').length === 0) {
                 grid.innerHTML = '<p class="no-data-msg">No notes uploaded yet.</p>';
