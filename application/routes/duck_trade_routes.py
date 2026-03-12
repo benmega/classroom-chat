@@ -101,8 +101,17 @@ def submit_trade():
             return redirect(url_for("duck_trade.index"))
 
         from application import User
-
         user = User.query.get(userid)
+
+        # --- NEW CODE: Check for existing pending trades ---
+        existing_trade = DuckTradeLog.query.filter_by(username=user.username, status="pending").first()
+        if existing_trade:
+            msg = "You already have a pending trade. Please wait for it to be processed."
+            if is_ajax:
+                return jsonify({"status": "error", "message": msg}), 400
+            flash(msg, "warning")
+            return redirect(url_for("duck_trade.index"))
+        # ---------------------------------------------------
 
         if is_ajax and request.is_json:
             data = request.get_json()
@@ -126,7 +135,6 @@ def submit_trade():
 
         msg = "Trade submitted for approval."
 
-        # 4. The AJAX response contains the message, YOUR JS MUST DISPLAY THIS
         if is_ajax:
             return jsonify({"status": "success", "message": msg})
 
@@ -135,70 +143,10 @@ def submit_trade():
 
     except Exception:
         db.session.rollback()
-        # logging.error(f"Trade Error: {e}")
         if is_ajax:
             return jsonify({"status": "error", "message": "Server Error"}), 500
         flash("An unexpected error occurred.", "danger")
         return redirect(url_for("duck_trade.index"))
-
-
-# @duck_trade.route('/submit_trade', methods=['POST'])
-# def submit_trade():
-#     form = DuckTradeForm()
-#
-#     # Determine if it's an AJAX request
-#     is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"
-#
-#     if not form.validate_on_submit():
-#         error_message = "There was an error with your trade submission. Please check your inputs."
-#         if is_ajax:
-#             return jsonify({'status': 'error', 'message': error_message, 'errors': form.errors}), 400
-#         flash(error_message, "danger")
-#         return redirect(url_for('duck_trade.index'))
-#
-#     try:
-#         userid = session.get('user')
-#         if not userid:
-#             error_message = "You must be logged in to submit a trade."
-#             if is_ajax:
-#                 return jsonify({'status': 'error', 'message': error_message}), 403
-#             flash(error_message, "warning")
-#             return redirect(url_for('duck_trade.index'))
-#
-#         from application import User
-#         user = User.query.filter_by(id=userid).first()
-#
-#
-#         # Extract trade details
-#         request_data = request.get_json()
-#         digital_ducks = int(request_data.get("digital_ducks", 0))
-#         bit_ducks = request_data["bit_ducks"]
-#         byte_ducks = request_data["byte_ducks"]
-#
-#         trade = DuckTradeLog(
-#             username=user.username,
-#             digital_ducks=digital_ducks,
-#             bit_ducks=bit_ducks,
-#             byte_ducks=byte_ducks,
-#             status="pending"
-# )
-#         db.session.add(trade)
-#         db.session.commit()
-#
-#         success_message = "Your trade has been submitted for admin approval."
-#         if is_ajax:
-#             return jsonify({'status': 'success', 'message': success_message})
-#
-#         flash(success_message, "success")
-#         return redirect(url_for('duck_trade.index'))
-#
-#     except Exception as e:
-#         db.session.rollback()
-#         error_message = "An unexpected error occurred. Please try again."
-#         if is_ajax:
-#             return jsonify({'status': 'error', 'message': error_message}), 500
-#         flash(error_message, "danger")
-#         return redirect(url_for('duck_trade.index'))
 
 
 @duck_trade.route("/bit_shift", methods=["GET"])
