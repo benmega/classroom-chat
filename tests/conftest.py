@@ -56,9 +56,6 @@ def setup_directories():
 @pytest.fixture(scope="session")
 def test_app():
     app = create_app(TestingConfig)
-
-    # --- CRITICAL FIX ---
-    # Overwrite the in-memory DB with a file-based DB so threads can share it
     app.config.update(
         {
             "TESTING": True,
