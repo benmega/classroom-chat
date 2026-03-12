@@ -128,6 +128,17 @@ def delete_note(note_id):
         return jsonify({"success": True})
 
     except Exception as e:
-        # Tip: Use current_app.logger to get this exception in your prod server logs!
-        current_app.logger.error(f"Error deleting note {note_id}: {str(e)}")
-        return jsonify({"success": False, "error": "Failed to delete from server."}), 500
+
+        error_details = str(e)
+
+        current_app.logger.error(f"Error deleting note {note_id}: {error_details}")
+
+        # This will pop up the exact Python error on your screen
+
+        return jsonify({
+
+            "success": False,
+
+            "error": f"Crash: {error_details}"
+
+        }), 500
