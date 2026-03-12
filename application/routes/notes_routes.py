@@ -96,6 +96,7 @@ def handle_note_s3_upload(s3_client, file, user_obj):
         current_app.logger.error(f"Note S3 Upload Error: {e}")
         return None
 
+
 @notes_bp.route("/delete/<int:note_id>", methods=["POST"])
 def delete_note(note_id):
     note = Note.query.get_or_404(note_id)
@@ -118,7 +119,6 @@ def delete_note(note_id):
 
     try:
         # Use note.filename directly instead of parsing note.url
-        # Assuming note.filename contains "notes/username/filename.ext"
         s3_client.delete_object(Bucket=S3_NOTES_BUCKET, Key=note.filename)
 
         # 2. Delete from Database
@@ -128,17 +128,11 @@ def delete_note(note_id):
         return jsonify({"success": True})
 
     except Exception as e:
+        # Log the sensitive details securely to your server
+        current_app.logger.error(f"Error deleting note {note_id}: {str(e)}")
 
-        error_details = str(e)
-
-        current_app.logger.error(f"Error deleting note {note_id}: {error_details}")
-
-        # This will pop up the exact Python error on your screen
-
+        # Return a safe, generic message to the frontend
         return jsonify({
-
             "success": False,
-
-            "error": f"Crash: {error_details}"
-
+            "error": "Failed to delete the note from the server."
         }), 500
