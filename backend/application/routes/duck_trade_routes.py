@@ -16,7 +16,7 @@ from wtforms.validators import DataRequired, NumberRange
 from application import db
 from application.models.duck_trade import DuckTradeLog
 
-duck_trade = Blueprint("duck_trade", __name__, template_folder="templates")
+duck_trade = Blueprint("duck_trade", __name__)
 logging.basicConfig(level=logging.INFO)
 
 

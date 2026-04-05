@@ -7,7 +7,9 @@ import sqlite3
 from seed_challenges import seed_challenges_data
 
 # ================= CONFIGURATION =================
-DB_FILENAME = "dev_users.db"
+DB_FILENAME = (
+    "prod_users.db" if os.getenv("FLASK_ENV") == "production" else "dev_users.db"
+)
 SEED_FILENAME = "course_instances_seed.csv"
 CHALLENGES_SEED_FILENAME = "level_seed_data.csv"  # Added config for new seed
 

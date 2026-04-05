@@ -14,13 +14,13 @@ MIGRATIONS_DIR="$APP_DIR/backend/instance/migration"
 SERVICE_NAME="gunicorn-benmega"
 
 # Use Virtual Environment path
-VENV_PATH="$APP_DIR/venv"
+VENV_PATH="$APP_DIR/backend/venv"
 PYTHON_BIN="$VENV_PATH/bin/python3"
 PIP_CMD=("$PYTHON_BIN" -m pip)
 REQUIREMENTS_FILE="$APP_DIR/backend/requirements.txt"
 
 # Database Configuration
-DB_FILE="$APP_DIR/backend/instance/app.db" # Updated to a generic name
+DB_FILE="$APP_DIR/backend/instance/prod_users.db" # Updated to reflect Production DB name
 BACKUP_DIR="$APP_DIR/backend/instance/backups"
 TIMESTAMP="$(date +%Y%m%d_%H%M%S)"
 DB_BACKUP_FILE="$BACKUP_DIR/pre_deploy_$TIMESTAMP.db"

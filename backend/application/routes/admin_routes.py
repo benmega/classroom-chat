@@ -588,9 +588,7 @@ def documents_manager():
 def list_documents():
     """List all uploaded documents across all categories"""
     documents = []
-    base_path = os.path.join(
-        os.path.dirname(os.path.dirname(__file__)), "..", "userData"
-    )
+    base_path = current_app.config["UPLOAD_FOLDER"]
 
     categories = ["image", "pdf", "other"]
 
@@ -629,9 +627,7 @@ def download_document(category, filename):
     if category not in ["image", "pdf", "other"]:
         return jsonify({"success": False, "message": "Invalid category"}), 400
 
-    base_path = os.path.join(
-        os.path.dirname(os.path.dirname(__file__)), "..", "userData"
-    )
+    base_path = current_app.config["UPLOAD_FOLDER"]
     file_path = os.path.join(base_path, category, filename)
 
     if not os.path.exists(file_path):
@@ -686,9 +682,7 @@ def delete_document():
     if category not in ["image", "pdf", "other"]:
         return jsonify({"success": False, "message": "Invalid category"}), 400
 
-    base_path = os.path.join(
-        os.path.dirname(os.path.dirname(__file__)), "..", "userData"
-    )
+    base_path = current_app.config["UPLOAD_FOLDER"]
     file_path = os.path.join(base_path, category, filename)
 
     if not os.path.exists(file_path):
@@ -723,9 +717,7 @@ def document_stats():
         "by_category": {},
     }
 
-    base_path = os.path.join(
-        os.path.dirname(os.path.dirname(__file__)), "..", "userData"
-    )
+    base_path = current_app.config["UPLOAD_FOLDER"]
     categories = ["image", "pdf", "other"]
 
     for category in categories:

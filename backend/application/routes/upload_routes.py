@@ -46,21 +46,21 @@ def upload_file():
     extension = mimetypes.guess_extension(mime_type) or "bin"
 
     if mime_type.startswith("image/"):
-        directory = "userData/image"
+        directory = os.path.join(Config.UPLOAD_FOLDER, "image")
         os.makedirs(directory, exist_ok=True)
-        file_path = f"userData/image/file_{timestamp}{extension}"
+        file_path = os.path.join(directory, f"file_{timestamp}{extension}")
         image = Image.open(BytesIO(data))
         image.save(file_path)
     elif mime_type == "application/pdf":
-        directory = "userData/pdf"
+        directory = os.path.join(Config.UPLOAD_FOLDER, "pdf")
         os.makedirs(directory, exist_ok=True)
-        file_path = f"userData/pdf/file_{timestamp}{extension}"
+        file_path = os.path.join(directory, f"file_{timestamp}{extension}")
         with open(file_path, "wb") as f:
             f.write(data)
     else:
-        directory = "userData/other"
+        directory = os.path.join(Config.UPLOAD_FOLDER, "other")
         os.makedirs(directory, exist_ok=True)
-        file_path = f"userData/other/file_{timestamp}{extension}"
+        file_path = os.path.join(directory, f"file_{timestamp}{extension}")
         with open(file_path, "wb") as f:
             f.write(data)
 
