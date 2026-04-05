@@ -10,7 +10,7 @@ with open('wrapper.py', 'w') as f:
     f.write('''\
 import sys
 import traceback
-from main import main as run_app
+from backend.main import main as run_app
 
 def main():
     try:
@@ -29,29 +29,29 @@ if __name__ == "__main__":
 flask_imports = collect_submodules('flask')
 sqlalchemy_imports = collect_submodules('sqlalchemy')
 jinja2_imports = collect_submodules('jinja2')
-socketio_imports = collect_submodules('flask_socketio') if os.path.exists('application/sockets') else []
+socketio_imports = collect_submodules('flask_socketio') if os.path.exists('backend/application/sockets') else []
 
 def collect_directory_datas(source_dir):
     result = []
     for root, dirs, files in os.walk(source_dir):
         for file in files:
             source_path = os.path.join(root, file)
-            dest_dir = os.path.join(os.path.basename(source_dir), os.path.relpath(root, source_dir))
+            dest_dir = os.path.join(source_dir, os.path.relpath(root, source_dir))
             result.append((source_path, dest_dir))
     return result
 
-static_files = collect_directory_datas('static')
-template_files = collect_directory_datas('templates')
-application_files = collect_directory_datas('application')
-license_files = collect_directory_datas('license') if os.path.exists('license') else []
-instance_files = collect_directory_datas('instance') if os.path.exists('instance') else []
+static_files = collect_directory_datas('frontend/static')
+template_files = collect_directory_datas('frontend/templates')
+application_files = collect_directory_datas('backend/application')
+license_files = collect_directory_datas('backend/license') if os.path.exists('backend/license') else []
+instance_files = collect_directory_datas('backend/instance') if os.path.exists('backend/instance') else []
 
 all_datas = static_files + template_files + application_files + license_files + instance_files
 
 # --- Step 3: PyInstaller Analysis ---
 a = Analysis(
     ['wrapper.py'],
-    pathex=[os.path.dirname(os.path.abspath('main.py'))],
+    pathex=[os.path.dirname(os.path.abspath('backend/main.py'))],
     binaries=[],
     datas=all_datas,
     hiddenimports=[
@@ -94,7 +94,7 @@ exe = EXE(
     strip=False,
     upx=True,
     console=True,
-    icon='static/images/logo.ico',
+    icon='frontend/static/images/logo.ico',
 )
 
 coll = COLLECT(
