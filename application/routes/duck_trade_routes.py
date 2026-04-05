@@ -133,8 +133,15 @@ def submit_trade():
         db.session.add(trade)
         db.session.commit()
 
-        msg = "Trade submitted for approval."
+        # --- NEW: Trigger SSE Notification ---
+        notification = json.dumps({
+            "type": "new_trade",
+            "message": f"New trade pending from {user.username} for {d_ducks} digital ducks."
+        })
+        announcer.announce(notification)
+        # -------------------------------------
 
+        msg = "Trade submitted for approval."
         if is_ajax:
             return jsonify({"status": "success", "message": msg})
 

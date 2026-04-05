@@ -73,7 +73,7 @@ def test_submit_trade_one_pending_limit(client, sample_user_with_ducks, test_app
 
         # Try to submit a second trade
         response = client.post(
-            url_for("duck_trade.submit_trade"),
+            url_for("duck_tr ade.submit_trade"),
             data=form_data,
             follow_redirects=True,
         )
