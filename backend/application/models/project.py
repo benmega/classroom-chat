@@ -28,3 +28,18 @@ class Project(db.Model):
 
     def __repr__(self):
         return f"<Project {self.name}>"
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "description": self.description,
+            "link": self.link,
+            "user_id": self.user_id,
+            "teacher_comment": self.teacher_comment,
+            "code_snippet": self.code_snippet,
+            "github_link": self.github_link,
+            "video_url": self.video_url,
+            "video_transcript": self.video_transcript,
+            "image_url": self.image_url
+        }

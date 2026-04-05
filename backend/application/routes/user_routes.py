@@ -24,6 +24,8 @@ from application.models.project import Project
 from application.models.skill import Skill
 from application.models.user import User
 from application.utilities.helper_functions import allowed_file
+from application.decorators.api_response import api_response
+
 
 user = Blueprint("user", __name__)
 
@@ -72,14 +74,19 @@ class LoginForm(FlaskForm):
 
 @user.route("/login", methods=["GET", "POST"])
 def login():
-    form = LoginForm()
+    if request.is_json:
+        data = request.get_json()
+        username = data.get("username", "").lower()
+        password = data.get("password", "")
+    else:
+        if form.validate_on_submit():
+            username = form.username.data.lower()
+            password = form.password.data
+        else:
+            username = None
+            password = None
 
-    if form.validate_on_submit():
-        username = (
-            form.username.data.lower()
-        )  # Convert to lowercase for case-insensitive comparison
-        password = form.password.data
-
+    if username and password:
         user_obj = User.query.filter_by(username=username).first()
 
         if user_obj and user_obj.check_password(password):
@@ -88,9 +95,7 @@ def login():
             user_obj.set_online(user_obj.id)
 
             awarded = user_obj.award_daily_duck(amount=1)
-            if awarded:
-                flash("Welcome! Daily duck awarded.", "success")
-
+            
             # Link to recent conversation or create session context
             recent_conversation = Conversation.query.order_by(
                 Conversation.created_at.desc()
@@ -104,66 +109,76 @@ def login():
             else:
                 session["conversation_id"] = None
 
+            if request.is_json:
+                return {"user": user_obj.to_dict(), "awarded_duck": awarded}, 200
+            
             flash("Login successful!", "success")
+            if awarded:
+                flash("Welcome! Daily duck awarded.", "success")
             return redirect(url_for("general.index"))
         else:
+            if request.is_json:
+                return "Invalid username or password.", 401
             flash("Invalid username or password.", "error")
 
+    if request.is_json:
+        return "Authentication required.", 400
     return render_template("auth/login.html", form=form)
+
+
+@user.route("/api/auth/status")
+@api_response
+def auth_status():
+    user_id = session.get("user")
+    if user_id:
+        user_obj = User.query.get(user_id)
+        if user_obj:
+            return {"logged_in": True, "user": user_obj.to_dict()}
+    return {"logged_in": False}, 200
+
 
 
 @user.route("/logout")
 def logout():
     user_id = session.get("user")
-    user_obj = User.query.get(user_id)
-    if user_obj:
-        user_obj.set_online(user_obj.id, False)
-        db.session.commit()
+    if user_id:
+        User.set_online(user_id, False)
 
     session.pop("user", None)
+    if request.is_json:
+        return jsonify({"status": "success", "message": "Logged out"}), 200
     flash("You have been logged out.", "success")
     return redirect(url_for("user.login"))
 
 
+
+
 @user.route("/signup", methods=["GET", "POST"])
+@api_response
 def signup():
-    if request.method == "POST":
-        username = request.form.get(
-            "username"
-        ).lower()  # Convert to lowercase for storage
-        password = request.form.get("password")
+    return "Account registration is currently disabled.", 403
 
-        existing_user = User.query.filter_by(username=username).first()
-        if existing_user:
-            flash("Username already taken, please choose another.", "error")
-            return render_template("auth/signup.html")
-
-        new_user = User(username=username, ip_address=request.remote_addr)
-        new_user.set_password(password)
-
-        db.session.add(new_user)
-        db.session.commit()
-
-        flash("Signup successful! Please log in.", "success")
-        return redirect(url_for("user.login"))
-
-    return render_template("auth/signup.html")
 
 
 # --- Profile & Settings Routes ---
 @user.route("/profile", methods=["GET"])
 @require_login
+@api_response
 def profile():
     user_id = session.get("user")
     user_obj = User.query.get(user_id)
     if not user_obj:
-        return redirect(url_for("user.login"))
+        return "User not found", 404
 
+    if request.accept_mimetypes.best == "application/json" or request.is_json:
+        return {"target": user_obj.to_dict(), "viewer": user_obj.to_dict()}
+    
     # When viewing your own profile, target and viewer are the same
     return render_template("user/profile.html", target=user_obj, viewer=user_obj)
 
 
 @user.route("/profile/<slug>", methods=["GET"])
+@api_response
 def view_user_profile(slug):
     # Use slug column for the lookup
     target_profile = User.query.filter_by(slug=slug).first_or_404()
@@ -172,215 +187,276 @@ def view_user_profile(slug):
     viewer_id = session.get("user")
     viewer = User.query.get(viewer_id) if viewer_id else None
 
+    if request.accept_mimetypes.best == "application/json" or request.is_json:
+        return {
+            "target": target_profile.to_dict(),
+            "viewer": viewer.to_dict() if viewer else None
+        }
+
     return render_template("user/profile.html", target=target_profile, viewer=viewer)
+
 
 
 @user.route("/edit_profile", methods=["GET", "POST"])
 @require_login
+@api_response
 def edit_profile():
     user_id = session.get("user")
     user_obj = User.query.get(user_id)
 
     if request.method == "POST":
         try:
+            data = request.get_json() if request.is_json else request.form
             # 1. Update Basic Info (Password, IP, Online Status)
-            update_basic_user_info(user_obj)
+            update_basic_user_info(user_obj, data)
 
             # 2. Update Skills (Clear and Re-add)
             clear_user_skills(user_obj)
-            add_user_skills(user_obj, request.form.getlist("skills[]"))
+            add_user_skills(user_obj, data.getlist("skills[]") if hasattr(data, 'getlist') else data.get("skills", []))
 
-            # 3. Handle Profile Picture (if uploaded via this form)
-            handle_profile_picture_upload(user_obj)
+            # 3. Handle Profile Picture (if uploaded via this form, currently only form-data)
+            if not request.is_json:
+                handle_profile_picture_upload(user_obj)
 
             db.session.commit()
+            if request.is_json:
+                return {"message": "Account settings updated successfully!"}, 200
+            
             flash("Account settings updated successfully!", "success")
             return redirect(url_for("user.profile"))
 
         except Exception as e:
             db.session.rollback()
             current_app.logger.error(f"Error during profile update: {e}")
+            if request.is_json:
+                return "An error occurred while updating the profile.", 500
             flash("An error occurred while updating the profile.", "danger")
 
+    if request.accept_mimetypes.best == "application/json" or request.is_json:
+        return {"user": user_obj.to_dict()}
     return render_template("user/edit_profile.html", user=user_obj)
+
 
 
 # --- Project Management Routes ---
 @user.route("/project/new", methods=["GET", "POST"])
 @require_login
+@api_response
 def new_project():
     user_id = session.get("user")
     user_obj = User.query.get(user_id)
 
     if request.method == "POST":
-        action = request.form.get("action")
+        data = request.form # Using form because of file uploads
+        name = data.get("name")
+        
+        if not name:
+            return "Project name is required.", 400
 
-        if action == "save":
-            name = request.form.get("name")
-            if not name:
-                flash("Project name is required.", "error")
-                return render_template(
-                    "user/manage_project.html", project=None, user=user_obj
-                )
+        target_user_id = user_id
+        if getattr(user_obj, 'is_admin', False):
+            target_user_id = data.get('student_id') or user_id
 
-            # Check if user is an admin and act accordingly
-            target_user_id = user_id  # default to current user
-            if getattr(user_obj, 'is_admin', False):
-                target_user_id = request.form.get('student_id') or user_id
+        target_user = User.query.get(target_user_id)
+        if not target_user:
+            return 'Invalid student selection.', 400
 
-            # Ensure valid student ID is provided
-            target_user = User.query.get(target_user_id)
-            if not target_user:
-                flash('Invalid student selection.', 'error')
-                return render_template('user/manage_project.html', project=None, user=user_obj)
+        new_proj = Project(
+            name=name,
+            description=data.get('description'),
+            link=data.get('link'),
+            github_link=data.get('github_link'),
+            video_url=data.get('video_url'),
+            code_snippet=data.get('code_snippet'),
+            teacher_comment=data.get('teacher_comment') if getattr(user_obj, 'is_admin', False) else None,
+            user_id=target_user.id
+        )
 
-            # Create the project, assigned under the student
-            new_proj = Project(
-                name=name,
-                description=request.form.get('description'),
-                link=request.form.get('link'),
-                github_link=request.form.get('github_link'),
-                video_url=request.form.get('video_url'),
-                code_snippet=request.form.get('code_snippet'),
-                teacher_comment=request.form.get('teacher_comment') if getattr(user_obj, 'is_admin', False) else None,
-                user_id=target_user.id  # Assign to the selected student
-            )
+        db.session.add(new_proj)
+        db.session.flush()
 
-            db.session.add(new_proj)
-            db.session.flush()
+        if "project_image" in request.files:
+            filename = handle_project_image_upload(request.files["project_image"])
+            if filename:
+                new_proj.image_url = f"images/projects/{filename}"
 
-            # Handle Project Thumbnail Upload
-            if "project_image" in request.files:
-                filename = handle_project_image_upload(request.files["project_image"])
-                if filename:
-                    new_proj.image_url = f"images/projects/{filename}"
+        if "project_video" in request.files:
+            video_file = request.files["project_video"]
+            if video_file.filename != "":
+                handle_video_s3_upload(video_file, user_obj, name, project_id=new_proj.id)
 
-            if "project_video" in request.files:
-                video_file = request.files["project_video"]
-                if video_file.filename != "":
-                    success = handle_video_s3_upload(video_file, user_obj, name, project_id=new_proj.id)
-                    if success:
-                        flash(
-                            "Video uploading! It will appear on your project in a few minutes.",
-                            "info",
-                        )
-                    else:
-                        flash("Invalid video format or upload failed.", "warning")
+        db.session.commit()
+        
+        if request.is_json or request.headers.get("X-Requested-With") == "XMLHttpRequest":
+            return {"message": "Project created successfully!", "project_id": new_proj.id}
+        
+        flash("Project created successfully!", "success")
+        return redirect(url_for("user.profile"))
 
-            db.session.add(new_proj)
-            db.session.commit()
-            flash("Project created successfully!", "success")
-            return redirect(url_for("user.profile"))
+    # GET logic
+    if request.is_json or request.accept_mimetypes.accept_json:
+        student_list = [u.to_dict() for u in User.query.all()] if getattr(user_obj, 'is_admin', False) else None
+        return {"students": student_list}
 
-    # Pass the user_obj and potentially list of students if the user is an admin
     student_list = User.query.all() if getattr(user_obj, 'is_admin', False) else None
     return render_template('user/manage_project.html', project=None, user=user_obj, students=student_list)
 
 
 @user.route("/project/edit/<int:project_id>", methods=["GET", "POST"])
 @require_login
+@api_response
 def edit_project(project_id):
     user_id = session.get("user")
-    # Fetch the current user object to check admin status
     current_user = User.query.get(user_id)
     project = Project.query.get_or_404(project_id)
 
-    # Security: Ensure ownership (Admins can usually edit anything, but strictly following your code:)
     if project.user_id != user_id and not getattr(current_user, "is_admin", False):
+        if request.is_json or request.accept_mimetypes.accept_json:
+            return "You do not have permission to edit this project.", 403
         flash("You do not have permission to edit this project.", "danger")
         return redirect(url_for("user.profile"))
 
     if request.method == "POST":
-        action = request.form.get("action")
+        data = request.form # Using form because of file uploads
+        action = data.get("action")
 
         if action == "delete":
             db.session.delete(project)
             db.session.commit()
+            if request.is_json or request.headers.get("X-Requested-With") == "XMLHttpRequest":
+                return {"message": "Project deleted successfully."}
             flash("Project deleted.", "success")
             return redirect(url_for("user.profile"))
 
-        elif action == "save":
-            project.name = request.form.get("name")
-            project.description = request.form.get("description")
-            project.link = request.form.get("link")
-            project.github_link = request.form.get("github_link")
-            project.video_url = request.form.get("video_url")
-            project.code_snippet = request.form.get("code_snippet")
+        # Default action is save
+        project.name = data.get("name")
+        project.description = data.get("description")
+        project.link = data.get("link")
+        project.github_link = data.get("github_link")
+        project.video_url = data.get("video_url")
+        project.code_snippet = data.get("code_snippet")
 
-            # SECURITY: Only update teacher_comment if user is admin
-            if getattr(current_user, "is_admin", False):
-                project.teacher_comment = request.form.get("teacher_comment")
+        if getattr(current_user, "is_admin", False):
+            project.teacher_comment = data.get("teacher_comment")
 
-            # Handle Image Replacement
-            if "project_image" in request.files:
-                file = request.files["project_image"]
-                if file and file.filename != "":
-                    filename = handle_project_image_upload(file)
-                    if filename:
-                        project.image_url = f"images/projects/{filename}"
+        if "project_image" in request.files:
+            file = request.files["project_image"]
+            if file and file.filename != "":
+                filename = handle_project_image_upload(file)
+                if filename:
+                    project.image_url = f"images/projects/{filename}"
 
-            if "project_video" in request.files:
-                video_file = request.files["project_video"]
-                if video_file.filename != "":
-                    # Use current project name for the slug
-                    success = handle_video_s3_upload(
-                        video_file, current_user, project.name, project_id=project.id
-                    )
-                    if success:
-                        flash(
-                            "Video uploading! It will appear on your project in a few minutes.",
-                            "info",
-                        )
+        if "project_video" in request.files:
+            video_file = request.files["project_video"]
+            if video_file.filename != "":
+                handle_video_s3_upload(video_file, current_user, project.name, project_id=project.id)
 
-            db.session.commit()
-            flash("Project updated successfully!", "success")
-            return redirect(url_for("user.profile"))
+        db.session.commit()
+        
+        if request.is_json or request.headers.get("X-Requested-With") == "XMLHttpRequest":
+            return {"message": "Project updated successfully!", "project": project.to_dict()}
+            
+        flash("Project updated successfully!", "success")
+        return redirect(url_for("user.profile"))
 
-    # Pass user=current_user so the template can check permissions
-    return render_template(
-        "user/manage_project.html", project=project, user=current_user
-    )
+    # GET logic
+    if request.is_json or request.accept_mimetypes.accept_json:
+        return {"project": project.to_dict()}
+        
+    return render_template("user/manage_project.html", project=project, user=current_user)
 
 
 # --- Image & File Handling Routes ---
 
 
-@user.route("/edit_profile_picture", methods=["POST"])
+@user.route("/api/profile-picture", methods=["POST"])
 @require_login
-def edit_profile_picture():
+@api_response
+def api_edit_profile_picture():
     user_id = session.get("user")
     user_obj = User.query.get(user_id)
 
     if "profile_picture" not in request.files:
-        return jsonify({"success": False, "error": "No file part"}), 400
+        return "No file part in request", 400
 
     file = request.files["profile_picture"]
     if file.filename == "":
-        return jsonify({"success": False, "error": "No selected file"}), 400
+        return "No file selected", 400
+
+    if not allowed_file(file.filename):
+        return "Invalid file format. Allowed: " + ", ".join(Config.ALLOWED_EXTENSIONS), 400
+
+    # Limit size to 5MB
+    file.seek(0, os.SEEK_END)
+    file_size = file.tell()
+    file.seek(0)
+    if file_size > 5 * 1024 * 1024:
+        return "File too large. Maximum size is 5MB.", 400
 
     try:
-        # Save as [username]_avatar.png for simplicity, or use UUID
-        filename = f"{user_obj.username}_avatar.png"
+        filename = f"{uuid.uuid4().hex}.{file.filename.rsplit('.', 1)[1].lower()}"
         secure_path = os.path.join(
             current_app.config["UPLOAD_FOLDER"], "profile_pictures", filename
         )
 
-        # Ensure directory exists
         os.makedirs(os.path.dirname(secure_path), exist_ok=True)
-
+        
+        # Open and resize/save with PIL for consistency
         img = Image.open(file)
         img.save(secure_path)
+
+        # Cleanup old image if it exists
+        if user_obj.profile_picture:
+            old_path = os.path.join(current_app.config["UPLOAD_FOLDER"], "profile_pictures", user_obj.profile_picture)
+            if os.path.exists(old_path):
+                os.remove(old_path)
 
         user_obj.profile_picture = filename
         db.session.commit()
 
         new_url = url_for("user.profile_picture", filename=filename)
-        return jsonify({"success": True, "new_url": new_url})
+        return {"new_url": new_url, "filename": filename}
 
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"Error updating profile picture: {e}")
-        return jsonify({"success": False, "error": "Server error."}), 500
+        return "Server error during image processing.", 500
+
+
+@user.route("/api/project-image", methods=["POST"])
+@require_login
+@api_response
+def api_upload_project_image():
+    if "project_image" not in request.files:
+        return "No image part in request", 400
+
+    file = request.files["project_image"]
+    if file.filename == "":
+        return "No file selected", 400
+
+    if not allowed_file(file.filename):
+        return "Invalid file format.", 400
+
+    # Limit size to 10MB for projects
+    file.seek(0, os.SEEK_END)
+    file_size = file.tell()
+    file.seek(0)
+    if file_size > 10 * 1024 * 1024:
+        return "File too large. Maximum size is 10MB.", 400
+
+    try:
+        filename = handle_project_image_upload(file)
+        if not filename:
+            return "Failed to process image.", 500
+        
+        # We don't link to a specific project yet, just return the URL/filename
+        # The frontend will send the filename back when saving the project form
+        new_url = url_for('static', filename=f'images/projects/{filename}')
+        return {"new_url": new_url, "filename": filename}
+
+    except Exception as e:
+        current_app.logger.error(f"Error uploading project image: {e}")
+        return "Server error during image upload.", 500
 
 
 @user.route("/delete_profile_picture", methods=["POST"])
@@ -452,20 +528,21 @@ def remove_skill(skill_id):
 # --- Helper Functions ---
 
 
-def update_basic_user_info(user_obj):
+def update_basic_user_info(user_obj, data):
     """Updates basic user settings (IP, Online Status, Password)."""
-    ip_address = request.form.get("ip_address")
+    ip_address = data.get("ip_address")
     user_obj.ip_address = ip_address if ip_address else user_obj.ip_address
-    user_obj.is_online = request.form.get("is_online") == "true"
+    user_obj.is_online = data.get("is_online") == "true" or data.get("is_online") is True
 
-    password = request.form.get("password")
-    confirm_password = request.form.get("confirm_password")
+    password = data.get("password")
+    confirm_password = data.get("confirm_password")
 
     if password:
         if password != confirm_password:
-            flash("Passwords do not match!", "danger")
-            return redirect(url_for("user.edit_profile"))
+            return False  # Or raise an exception
         user_obj.set_password(password)
+    return True
+
 
 
 def clear_user_skills(user_obj):

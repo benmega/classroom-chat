@@ -16,3 +16,12 @@ class BannedWords(db.Model):
 
     def __repr__(self):
         return f"<BannedWords {self.word}>"
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "word": self.word,
+            "added_on": self.added_on.isoformat() if self.added_on else None,
+            "reason": self.reason,
+            "active": self.active
+        }

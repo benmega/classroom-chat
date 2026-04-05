@@ -67,4 +67,13 @@ class ProductionConfig(Config):
     SESSION_COOKIE_SAMESITE = "None"
     SESSION_COOKIE_SECURE = True
     SESSION_COOKIE_HTTPONLY = True
-    SESSION_COOKIE_DOMAIN = "benmega.com"
+    # Build folders for Vite
+    TEMPLATE_FOLDER = os.path.join(Config.BASE_DIR, "frontend", "dist")
+    STATIC_FOLDER = os.path.join(Config.BASE_DIR, "frontend", "dist")
+
+    CORS_ORIGINS = [
+        "https://codecombat.com",
+        "https://www.ozaria.com",
+        "https://benmega.com",
+        "https://www.benmega.com",
+    ]

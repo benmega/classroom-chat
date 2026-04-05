@@ -62,6 +62,16 @@ run git fetch origin
 run git reset --hard origin/deploy-gunicorn
 
 # -------------------------
+# Frontend build
+# -------------------------
+echo "Building frontend..."
+(
+    cd "$APP_DIR/frontend"
+    run npm install
+    run npm run build
+)
+
+# -------------------------
 # Dependency verification
 # -------------------------
 if [[ -f "$REQUIREMENTS_FILE" ]]; then

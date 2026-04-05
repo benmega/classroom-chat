@@ -7,7 +7,7 @@ Summary: Flask routes for challenge routes functionality (Merged Version).
 import re
 from datetime import datetime
 
-from flask import Blueprint, request, session, render_template, redirect, url_for, flash
+from flask import Blueprint, request, session, render_template, redirect, url_for, flash, jsonify
 from flask_cors import cross_origin
 
 from application import Configuration
@@ -39,6 +39,8 @@ def submit_challenge():
     """Handle challenge submission form."""
     session_userid = session.get("user", None)
     if not session_userid:
+        if request.is_json or request.accept_mimetypes.accept_json:
+            return {"success": False, "message": "Please log in to the Classroom Chat app first."}, 401
         flash("No session user found", "error")
         return redirect(url_for("user.login"))
 
@@ -53,15 +55,27 @@ def submit_challenge():
         return redirect(url_for("general.index"))
 
     if request.method != "POST":
+        if request.is_json or request.accept_mimetypes.accept_json:
+            return jsonify({"status": "ready"})
         return render_template("submit_challenge.html")
 
-    url = request.form.get("url")
-    helper = request.form.get("helpers", "").strip()
-    notes = request.form.get("notes", "").strip()
+    # Handle both Form and JSON data
+    if request.is_json:
+        data = request.get_json()
+        url = data.get("url")
+        helper = data.get("helpers", "").strip()
+        notes = data.get("notes", "").strip()
+    else:
+        url = request.form.get("url")
+        helper = request.form.get("helpers", "").strip()
+        notes = request.form.get("notes", "").strip()
 
     if not url:
+        msg = "Challenge URL is required"
+        if request.is_json or request.accept_mimetypes.accept_json:
+            return jsonify({"success": False, "message": msg}), 400
         return render_template(
-            "submit_challenge.html", success=False, message="Challenge URL is required"
+            "submit_challenge.html", success=False, message=msg
         )
 
     duck_multiplier = config.duck_multiplier
@@ -84,10 +98,20 @@ def submit_challenge():
         # Explicit commit to ensure log and user duck updates are saved
         db.session.commit()
         duck_reward = details.get("duck_reward", 0)
+        message = f"Congrats {user.username}, you earned {duck_reward} ducks!"
+        
+        if request.is_json or request.accept_mimetypes.accept_json:
+            return jsonify({
+                "success": True, 
+                "message": message, 
+                "duck_reward": duck_reward,
+                "quack_count": duck_reward # Matches the quack logic in the original template
+            })
+
         return render_template(
             "submit_challenge.html",
             success=True,
-            message=f"Congrats {user.username}, you earned {duck_reward} ducks!",
+            message=message,
         )
 
     # Failure path
@@ -95,6 +119,10 @@ def submit_challenge():
         "message",
         "Mr. Mega does not recognize this challenge. Are you sure this is the right link?",
     )
+    
+    if request.is_json or request.accept_mimetypes.accept_json:
+        return jsonify({"success": False, "message": msg}), 400
+
     return render_template("submit_challenge.html", success=False, message=msg)
 
 
@@ -158,7 +186,7 @@ def _log_challenge(details, username, helper=None):
         # 2. Verify the CourseInstance exists.
         course_instance = CourseInstance.query.filter_by(id=provided_id).first()
         if not course_instance:
-            return {"success": False, "message": "Invalid course instance ID. Nice try!"}
+            return {"success": False, "message": "This level doesn't seem to be part of a valid course instance."}
 
         # Get the parent course ID mapped to this instance
         actual_course_id = course_instance.course_id
@@ -173,7 +201,7 @@ def _log_challenge(details, username, helper=None):
         ).first()
 
         if not challenge:
-            return {"success": False, "message": "Challenge not found in the database."}
+            return {"success": False, "message": f"Couldn't identify challenge '{challenge_slug}'. Check the link and try again."}
 
         # The ultimate validation: Does this challenge actually belong to this course?
         if challenge.course_id != actual_course_id:

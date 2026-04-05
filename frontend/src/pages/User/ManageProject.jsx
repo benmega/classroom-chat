@@ -1,0 +1,288 @@
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Save, Trash2, X, Upload, Link as LinkIcon, Video, Code, MessageSquare, User as UserIcon } from 'lucide-react';
+import client from '../../api/client';
+import toast from 'react-hot-toast';
+import useAuthStore from '../../store/useAuthStore';
+import './ManageProject.css';
+
+const ManageProject = () => {
+    const { projectId } = useParams();
+    const navigate = useNavigate();
+    const { user: currentUser } = useAuthStore();
+    
+    const [projectData, setProjectData] = useState({
+        name: '',
+        description: '',
+        link: '',
+        github_link: '',
+        video_url: '',
+        code_snippet: '',
+        teacher_comment: '',
+        student_id: ''
+    });
+    
+    const [students, setStudents] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [isSaving, setIsSaving] = useState(false);
+    const [projectImage, setProjectImage] = useState(null);
+    const [imagePreview, setImagePreview] = useState(null);
+    const [projectVideo, setProjectVideo] = useState(null);
+
+    useEffect(() => {
+        const fetchData = async () => {
+            setIsLoading(true);
+            try {
+                // Fetch students if admin
+                if (currentUser?.is_admin) {
+                    const studentRes = await client.get('/user/project/new');
+                    setStudents(studentRes.data.data.students || []);
+                }
+
+                if (projectId) {
+                    const response = await client.get(`/user/project/edit/${projectId}`);
+                    if (response.data.status === 'success') {
+                        const p = response.data.data.project;
+                        setProjectData({
+                            name: p.name || '',
+                            description: p.description || '',
+                            link: p.link || '',
+                            github_link: p.github_link || '',
+                            video_url: p.video_url || '',
+                            code_snippet: p.code_snippet || '',
+                            teacher_comment: p.teacher_comment || '',
+                            student_id: p.user_id || ''
+                        });
+                        if (p.image_url) {
+                            setImagePreview(`/static/${p.image_url}`);
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Error fetching project data:', error);
+                toast.error('Failed to load project details.');
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchData();
+    }, [projectId, currentUser]);
+
+    const handleInputChange = (e) => {
+        const { name, value } = e.target;
+        setProjectData(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleFileChange = (e) => {
+        const { name, files } = e.target;
+        if (files && files[0]) {
+            if (name === 'project_image') {
+                setProjectImage(files[0]);
+                setImagePreview(URL.createObjectURL(files[0]));
+            } else if (name === 'project_video') {
+                setProjectVideo(files[0]);
+            }
+        }
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setIsSaving(true);
+
+        const formData = new FormData();
+        Object.entries(projectData).forEach(([key, value]) => {
+            if (value !== undefined && value !== null) {
+                formData.append(key, value);
+            }
+        });
+
+        if (projectImage) formData.append('project_image', projectImage);
+        if (projectVideo) formData.append('project_video', projectVideo);
+
+        try {
+            const url = projectId ? `/user/project/edit/${projectId}` : '/user/project/new';
+            const response = await client.post(url, formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+
+            if (response.data.status === 'success') {
+                toast.success(projectId ? 'Project updated!' : 'Project created!');
+                navigate('/profile');
+            } else {
+                toast.error(response.data.error || 'Failed to save project.');
+            }
+        } catch (error) {
+            console.error('Save error:', error);
+            toast.error(error.response?.data?.error || 'An error occurred.');
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const handleDelete = async () => {
+        if (!window.confirm('Are you sure you want to delete this project?')) return;
+        
+        setIsSaving(true);
+        try {
+            const formData = new FormData();
+            formData.append('action', 'delete');
+            const response = await client.post(`/user/project/edit/${projectId}`, formData);
+            if (response.data.status === 'success') {
+                toast.success('Project deleted.');
+                navigate('/profile');
+            }
+        } catch (error) {
+            toast.error('Failed to delete project.');
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    if (isLoading) return <div className="loading-container">Loading...</div>;
+
+    return (
+        <div className="manage-project-page">
+            <div className="manage-project-container">
+                <div className="manage-header">
+                    <h2>{projectId ? `Edit Project: ${projectData.name}` : 'Create New Project'}</h2>
+                    <p>{projectId ? 'Refine your work and update details.' : 'Showcase your coding masterpiece to the world.'}</p>
+                </div>
+
+                <form onSubmit={handleSubmit} className="project-grid-form">
+                    <div className="form-column">
+                        <section className="form-section card">
+                            <h3 className="section-title">Core Details</h3>
+                            <div className="form-group">
+                                <label>Project Name *</label>
+                                <input 
+                                    type="text" 
+                                    name="name" 
+                                    value={projectData.name} 
+                                    onChange={handleInputChange} 
+                                    required 
+                                    placeholder="e.g. My Awesome Game"
+                                    className="form-control"
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label>Description</label>
+                                <textarea 
+                                    name="description" 
+                                    value={projectData.description} 
+                                    onChange={handleInputChange} 
+                                    rows="4"
+                                    placeholder="Tell the story of your project..."
+                                    className="form-control"
+                                />
+                            </div>
+
+                            {currentUser?.is_admin && (
+                                <>
+                                    <div className="form-group">
+                                        <label>Assign to Student</label>
+                                        <select 
+                                            name="student_id" 
+                                            value={projectData.student_id} 
+                                            onChange={handleInputChange}
+                                            className="form-control"
+                                            required
+                                        >
+                                            <option value="">Select Student</option>
+                                            {students.map(s => (
+                                                <option key={s.id} value={s.id}>{s.username}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div className="form-group">
+                                        <label>Teacher Comment (Admin Only)</label>
+                                        <textarea 
+                                            name="teacher_comment" 
+                                            value={projectData.teacher_comment} 
+                                            onChange={handleInputChange} 
+                                            rows="2"
+                                            className="form-control admin-textarea"
+                                        />
+                                    </div>
+                                </>
+                            )}
+                        </section>
+
+                        <section className="form-section card">
+                            <h3 className="section-title">Media & Links</h3>
+                            <div className="form-group">
+                                <label>Project Thumbnail</label>
+                                <div className="thumbnail-upload">
+                                    {imagePreview && <img src={imagePreview} alt="Preview" className="thumbnail-preview" />}
+                                    <label className="file-upload-btn">
+                                        <Upload size={18} /> {imagePreview ? 'Change Image' : 'Upload Image'}
+                                        <input type="file" name="project_image" onChange={handleFileChange} accept="image/*" hidden />
+                                    </label>
+                                </div>
+                            </div>
+                            <div className="form-group">
+                                <label><LinkIcon size={16} /> Demo Link (URL)</label>
+                                <input 
+                                    type="url" 
+                                    name="link" 
+                                    value={projectData.link} 
+                                    onChange={handleInputChange} 
+                                    placeholder="https://..."
+                                    className="form-control"
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label><Video size={16} /> Video Presentation</label>
+                                <input 
+                                    type="text" 
+                                    name="video_url" 
+                                    value={projectData.video_url} 
+                                    onChange={handleInputChange} 
+                                    placeholder="YouTube/Vimeo URL"
+                                    className="form-control"
+                                />
+                                <div className="video-file-upload">
+                                    <label className="file-upload-btn secondary">
+                                        <Video size={18} /> {projectVideo ? 'Video Selected' : 'Upload Video File'}
+                                        <input type="file" name="project_video" onChange={handleFileChange} accept="video/*" hidden />
+                                    </label>
+                                    {projectVideo && <span className="file-name">{projectVideo.name}</span>}
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+
+                    <div className="form-column">
+                        <section className="form-section card code-section">
+                            <h3 className="section-title"><Code size={18} /> Code Highlight</h3>
+                            <p className="hint">Paste the most interesting logic or function from your project here.</p>
+                            <textarea 
+                                name="code_snippet" 
+                                value={projectData.code_snippet} 
+                                onChange={handleInputChange} 
+                                className="form-control code-editor"
+                                placeholder="def my_awesome_logic():\n    pass"
+                            />
+                        </section>
+                    </div>
+
+                    <div className="form-footer">
+                        <button type="button" onClick={() => navigate('/profile')} className="btn-cancel">
+                            Cancel
+                        </button>
+                        {projectId && (
+                            <button type="button" onClick={handleDelete} className="btn-delete">
+                                <Trash2 size={18} /> Delete
+                            </button>
+                        )}
+                        <button type="submit" disabled={isSaving} className="btn-save">
+                            <Save size={18} /> {isSaving ? 'Saving...' : (projectId ? 'Update Project' : 'Create Project')}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    );
+};
+
+export default ManageProject;

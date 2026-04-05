@@ -1,0 +1,103 @@
+.admin-header {
+    background-color: #343a40;
+    color: white;
+    padding: 10px 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.admin-header .navbar-brand {
+    color: white;
+    font-weight: bold;
+    font-size: 1.25rem;
+    text-decoration: none;
+}
+
+.admin-header nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.admin-header .nav-item.dropdown {
+    position: relative;
+    list-style: none;
+}
+
+.admin-header .profile-menu_img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid rgba(255,255,255,0.2);
+    cursor: pointer;
+}
+
+.admin-header .dropdown-menu {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    background: #ffffff;
+    border: none;
+    border-radius: 8px;
+    list-style: none;
+    margin: 0;
+    padding: 8px 0;
+    min-width: 220px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 1000;
+    display: none;
+    flex-direction: column;
+}
+
+.admin-header .dropdown-menu.show {
+    display: flex;
+}
+
+.admin-header .dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 20px;
+    text-decoration: none;
+    color: #333;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+
+.admin-header .dropdown-item svg {
+    width: 18px;
+    height: 18px;
+    opacity: 0.8;
+}
+
+.admin-header .dropdown-item:hover {
+    background-color: #f8f9fa;
+    color: #007bff;
+}
+
+.admin-header .dropdown-divider {
+    height: 1px;
+    background-color: #e9ecef;
+    margin: 8px 0;
+}
+
+.admin-main {
+    flex: 1;
+    padding: 30px;
+    background-color: #f4f6f9;
+    min-height: calc(100vh - 120px);
+}
+
+.admin-footer {
+    text-align: center;
+    padding: 20px;
+    background-color: #fff;
+    border-top: 1px solid #dee2e6;
+    color: #6c757d;
+}
+
+@media (max-width: 991px) {
+    .admin-main {
+        padding: 15px;
+    }
+}

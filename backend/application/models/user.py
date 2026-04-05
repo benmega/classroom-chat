@@ -62,6 +62,39 @@ class User(db.Model):
     def __repr__(self):
         return f"<User {self._username}>"
 
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "username": self.username,
+            "nickname": self.nickname,
+            "profile_picture": self.profile_picture,
+            "profile_picture_url": f"/user/profile_pictures/{self.profile_picture}" if self.profile_picture else "/static/images/Default_pfp.jpg",
+            "is_online": self.is_online,
+            "is_admin": self.is_admin,
+            "slug": self.slug,
+            
+            # Gamification
+            "duck_balance": self.duck_balance,
+            "earned_ducks": self.earned_ducks,
+            "packets": self.packets,
+            
+            # Progress counters for profile headers
+            "total_levels": self.get_progress("codecombat.com") + self.get_progress("www.ozaria.com"),
+            "cc_levels": self.get_progress("codecombat.com"),
+            "oz_levels": self.get_progress("www.ozaria.com"),
+            "cc_percent": self.get_progress_percent("codecombat.com"),
+            "oz_percent": self.get_progress_percent("www.ozaria.com"),
+            
+            # Relationships (serialized)
+            "skills": [s.to_dict() if hasattr(s, 'to_dict') else {"id": s.id, "name": s.name} for s in self.skills],
+            "projects": [p.to_dict() if hasattr(p, 'to_dict') else {"id": p.id, "name": p.name} for p in self.projects],
+            "certificates": [c.to_dict() if hasattr(c, 'to_dict') else {"id": c.id} for c in self.certificates],
+            "achievements": [a.to_dict() if hasattr(a, 'to_dict') else {"id": a.id} for a in self.achievements],
+            "notes": [n.to_dict() if hasattr(n, 'to_dict') else {"id": n.id, "url": f"/notes/view/{n.id}"} for n in self.notes],
+            "contribution_data": self.get_contribution_data()
+        }
+
+
     @hybrid_property
     def username(self):
         return self._username

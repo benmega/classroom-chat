@@ -18,6 +18,7 @@ from flask import (
     flash,
     current_app, session,
 )
+from application.decorators.api_response import api_response
 from flask import redirect, url_for
 from sqlalchemy import func, cast, Date, or_
 from werkzeug.utils import secure_filename
@@ -73,23 +74,19 @@ def before_user_request():
 def admin_only(f):
     @wraps(f)
     def wrapper(*args, **kwargs):
-        # 1. Get ID from session
         user_id = session.get("user")
-
         if not user_id:
-            # Not logged in
+            if request.is_json or request.accept_mimetypes.accept_json:
+                return jsonify({"error": "Authentication required"}), 401
             return render_template("error/nice_try.html"), 401
 
-        # 2. Check DB for Admin Status
-        # We query only the necessary field (is_admin) for efficiency
         user = User.query.get(user_id)
-
         if not user or not user.is_admin:
-            # User exists but is not an admin (or invalid ID)
+            if request.is_json or request.accept_mimetypes.accept_json:
+                return jsonify({"error": "Admin access required"}), 403
             return render_template("error/nice_try.html"), 403
 
         return f(*args, **kwargs)
-
     return wrapper
 
 def update_username(new_username, user_id=None, user_ip=None):
@@ -187,7 +184,6 @@ def dashboard():
 
 
     ducks_earned_this_week = challenge_ducks + achievement_ducks
-    print(ducks_earned_this_week)
 
     pending_trades_count = DuckTradeLog.query.filter_by(status="pending").count()
     active_users_count = User.query.filter_by(is_online=True).count()
@@ -197,6 +193,21 @@ def dashboard():
     banned_words = BannedWords.query.all()
 
     chart_data = get_duck_transactions_data()
+
+    if request.is_json or request.accept_mimetypes.accept_json:
+        return jsonify({
+            "status": "success",
+            "data": {
+                "total_ducks": total_ducks,
+                "ducks_earned_this_week": ducks_earned_this_week,
+                "pending_trades_count": pending_trades_count,
+                "active_users_count": active_users_count,
+                "users": [u.to_dict() for u in users_sorted],
+                "config": config.to_dict() if config else None,
+                "banned_words": [bw.to_dict() for bw in banned_words],
+                "chart_data": chart_data
+            }
+        })
 
     return render_template(
         "admin/admin.html",
@@ -494,6 +505,22 @@ def strike_message(message_id):
 @admin_only
 def pending_trades():
     pend_trades = DuckTradeLog.query.filter_by(status="pending").all()
+    
+    if request.is_json or request.accept_mimetypes.accept_json:
+        return jsonify({
+            "status": "success",
+            "data": {
+                "trades": [{
+                    "id": t.id,
+                    "username": t.username,
+                    "digital_ducks": t.digital_ducks,
+                    "bit_ducks": t.bit_ducks,
+                    "byte_ducks": t.byte_ducks,
+                    "timestamp": t.timestamp.isoformat() if t.timestamp else None
+                } for t in pend_trades]
+            }
+        })
+
     return render_template("admin/pending_trades.html", trades=pend_trades)
 
 
@@ -577,10 +604,31 @@ def adjust_ducks():
         return jsonify({"success": False, "message": "User not found."}), 404
 
 
-@admin.route("/documents-manager")
+@admin.route("/advanced-panel")
 @admin_only
-def documents_manager():
-    return render_template("admin/admin_documents.html")
+def advanced_panel():
+    # In a real scenario, these come from the Flask-Admin instance
+    # We'll provide a curated list for the React frontend
+    admin_views = [
+        {"name": "Users", "endpoint": "user"},
+        {"name": "Projects", "endpoint": "project"},
+        {"name": "Achievements", "endpoint": "achievement"},
+        {"name": "Duck Trade Logs", "endpoint": "ducktradelog"},
+        {"name": "Configuration", "endpoint": "configuration"},
+        {"name": "Banned Words", "endpoint": "bannedwords"},
+        {"name": "Messages", "endpoint": "message"},
+        {"name": "Conversations", "endpoint": "conversation"},
+    ]
+
+    if request.is_json or request.accept_mimetypes.accept_json:
+        return jsonify({
+            "status": "success",
+            "data": {
+                "views": admin_views
+            }
+        })
+
+    return render_template("admin/advanced_panel.html", views=admin_views)
 
 
 @admin.route("/documents", methods=["GET"])
@@ -789,26 +837,34 @@ def edit_project_details(project_id):
 # Renamed from 'pending_reviews' to 'manage_projects' to reflect the new capabilities
 @admin.route("/manage-projects")
 @admin_only
+@api_response
 def manage_projects():
     # 1. Get filter type from URL (default to 'pending')
     filter_type = request.args.get("filter", "pending")
 
     # 2. Always calculate pending count for the UI tab label
     pending_count = Project.query.filter(
-        (Project.teacher_comment is None) or (Project.teacher_comment == "")
+        (Project.teacher_comment == None) | (Project.teacher_comment == "")
     ).count()
 
     # 3. Build the query based on filter
     query = Project.query
     if filter_type == "pending":
         query = query.filter(
-            (Project.teacher_comment is None) or (Project.teacher_comment == "")
+            (Project.teacher_comment == None) | (Project.teacher_comment == "")
         )
 
     # 4. Fetch results (Newest first)
     projects = query.order_by(Project.id.desc()).all()
 
-    # Ensure you are rendering the NEW template name
+    if request.is_json or request.accept_mimetypes.accept_json:
+        return {
+            "projects": [p.to_dict() for p in projects],
+            "filter_type": filter_type,
+            "pending_count": pending_count,
+            "total_count": Project.query.count()
+        }
+
     return render_template(
         "admin/manage_projects.html",
         projects=projects,
@@ -820,26 +876,31 @@ def manage_projects():
 # Renamed to handle both Approval and Rejection logic
 @admin.route("/handle-project-review/<int:project_id>", methods=["POST"])
 @admin_only
+@api_response
 def handle_project_review(project_id):
     project = Project.query.get_or_404(project_id)
 
-    action = request.form.get("action")  # 'approve' or 'reject'
-    comment = request.form.get("teacher_comment")  # The text content
-    filter_context = request.form.get(
-        "filter_context", "pending"
-    )  # To redirect back to same tab
+    if request.is_json:
+        data = request.get_json()
+        action = data.get("action")
+        comment = data.get("teacher_comment")
+        filter_context = data.get("filter_context", "pending")
+    else:
+        action = request.form.get("action")
+        comment = request.form.get("teacher_comment")
+        filter_context = request.form.get("filter_context", "pending")
 
     if action == "reject":
-        # Clearing the comment effectively marks it as "Pending" again
         project.teacher_comment = None
-        flash(f'Project "{project.name}" marked for revision.', "warning")
-
+        msg = f'Project "{project.name}" marked for revision.'
     elif action == "approve":
-        # Update the comment
         project.teacher_comment = comment
-        flash(f'Feedback published for "{project.name}".', "success")
+        msg = f'Feedback published for "{project.name}".'
 
     db.session.commit()
 
-    # Redirect back to the list, preserving the user's current filter tab
+    if request.is_json or request.headers.get("X-Requested-With") == "XMLHttpRequest":
+        return {"message": msg, "project": project.to_dict()}
+
+    flash(msg, "success" if action == "approve" else "warning")
     return redirect(url_for("admin.manage_projects", filter=filter_context))

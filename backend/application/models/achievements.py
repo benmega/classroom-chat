@@ -22,6 +22,19 @@ class Achievement(db.Model):
     requirement_value = db.Column(db.String(128), nullable=True)
     source = db.Column(db.String(255), nullable=True)
     users = db.relationship("UserAchievement", backref="achievement", lazy=True)
+    
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "slug": self.slug,
+            "name": self.name,
+            "type": self.type,
+            "reward": self.reward,
+            "description": self.description,
+            "requirement_value": self.requirement_value,
+            "source": self.source
+        }
+
 
 
 class UserAchievement(db.Model):
@@ -34,3 +47,11 @@ class UserAchievement(db.Model):
     earned_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     __table_args__ = (db.UniqueConstraint("user_id", "achievement_id"),)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "achievement_id": self.achievement_id,
+            "achievement": self.achievement.to_dict() if self.achievement else None,
+            "earned_at": self.earned_at.isoformat() if self.earned_at else None
+        }

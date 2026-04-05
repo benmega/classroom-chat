@@ -27,3 +27,14 @@ class DuckTradeLog(db.Model):
     def reject(self):
         self.status = "rejected"
         db.session.commit()
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "username": self.username,
+            "digital_ducks": self.digital_ducks,
+            "bit_ducks": self.bit_ducks,
+            "byte_ducks": self.byte_ducks,
+            "status": self.status,
+            "timestamp": self.timestamp.isoformat() if self.timestamp else None
+        }

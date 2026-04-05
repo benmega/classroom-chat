@@ -1,0 +1,207 @@
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--header-padding, 10px 20px);
+    background-color: var(--primary-color, #007bff);
+    color: white;
+    box-shadow: var(--box-shadow-light, 0 2px 4px rgba(0,0,0,0.1));
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+header.guest-mode {
+    background-color: transparent;
+    box-shadow: none;
+}
+
+#logo-container {
+    display: flex;
+    align-items: center;
+}
+
+#logo-container .logo img {
+    width: 60px;
+    height: auto;
+    display: block;
+    object-fit: contain;
+    transition: transform 0.2s ease;
+}
+
+#logo-container .logo img:hover {
+    transform: scale(1.05);
+}
+
+.logo {
+    text-decoration: none;
+    color: inherit;
+}
+
+nav ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.user-info {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+}
+
+.digital-ducks {
+    font-size: 1.1rem;
+    color: inherit;
+    text-decoration: none;
+    display: flex;
+    gap: 5px;
+}
+
+.digital-ducks .label {
+    font-weight: normal;
+    color: var(--highlight-color, #ffda44);
+}
+
+.digital-ducks .count {
+    font-weight: bold;
+    color: var(--highlight-color, #ffda44);
+}
+
+.digital-ducks:hover .label,
+.digital-ducks:hover .count {
+    color: var(--highlight-hover, #ffe688);
+    text-decoration: underline;
+}
+
+.profile-menu {
+    position: relative;
+}
+
+.profile-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 6px;
+    border-radius: 8px;
+    background: transparent;
+    border: none;
+    color: inherit;
+    cursor: pointer;
+}
+
+.profile-toggle:focus {
+    outline: 2px solid rgba(255, 255, 255, 0.3);
+    outline-offset: 2px;
+}
+
+.profile-menu_img {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #fff;
+}
+
+.profile-icon svg {
+    display: block;
+    width: 18px;
+    height: 18px;
+    color: white;
+}
+
+.profile-icon svg path,
+.profile-icon svg circle {
+    stroke: currentColor;
+    fill: none;
+}
+
+.dropdown-menu {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    list-style: none;
+    margin: 0;
+    padding: 8px;
+    min-width: 200px;
+    box-shadow: var(--shadow-lg);
+    z-index: 1000;
+    display: none;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.dropdown-menu.show {
+    display: flex;
+}
+
+.dropdown-menu li a {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    text-decoration: none;
+    color: #1e293b;
+    font-weight: 500;
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+    border-radius: 8px;
+}
+
+.dropdown-menu li a:hover {
+    background-color: #f1f5f9;
+    color: var(--primary-color);
+}
+
+.dropdown-menu li a svg {
+    width: 18px;
+    height: 18px;
+    opacity: 0.8;
+}
+
+.nav-button {
+    font-size: 1rem;
+    color: white;
+    text-decoration: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    background-color: rgba(255, 255, 255, 0.1);
+    transition: all 0.2s ease;
+}
+
+.nav-button:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+    transform: translateY(-1px);
+}
+
+main {
+    flex: 1;
+    width: 100%;
+    max-width: var(--max-container-width, 1200px);
+    margin: 0 auto;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+footer {
+    text-align: center;
+    padding: 20px;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    border-top: 1px solid var(--border-subtle);
+    margin-top: 40px;
+}
+
+@media (max-width: 768px) {
+    .user-info {
+        display: none;
+    }
+}

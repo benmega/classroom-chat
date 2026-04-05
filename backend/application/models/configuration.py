@@ -12,3 +12,11 @@ class Configuration(db.Model):
     ai_teacher_enabled = db.Column(db.Boolean, default=False)
     message_sending_enabled = db.Column(db.Boolean, default=False)
     duck_multiplier = db.Column(db.Float, default=1)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "ai_teacher_enabled": self.ai_teacher_enabled,
+            "message_sending_enabled": self.message_sending_enabled,
+            "duck_multiplier": self.duck_multiplier
+        }

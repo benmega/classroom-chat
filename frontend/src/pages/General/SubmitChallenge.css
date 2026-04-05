@@ -1,0 +1,124 @@
+.submit-challenge-page {
+    padding: 3rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 80vh;
+}
+
+.form-card {
+    background: white;
+    padding: 3rem;
+    border-radius: 24px;
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--border-subtle);
+    max-width: 600px;
+    width: 100%;
+}
+
+.form-title {
+    font-size: 2.25rem;
+    text-align: center;
+    margin-bottom: 2.5rem;
+    color: var(--text-primary);
+    font-weight: 800;
+}
+
+.challenge-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+}
+
+.form-control {
+    width: 100%;
+    padding: 12px 16px;
+    border-radius: 12px;
+    border: 1px solid var(--border-subtle);
+    font-size: 1rem;
+    background: #f8fafc;
+    transition: all 0.2s;
+    font-family: inherit;
+}
+
+.form-control:focus {
+    border-color: var(--primary-color);
+    background: white;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+    outline: none;
+}
+
+textarea.form-control {
+    resize: vertical;
+    min-height: 100px;
+}
+
+.submit-button {
+    width: 100%;
+    padding: 1.25rem;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: white;
+    background: var(--primary-color);
+    border: none;
+    border-radius: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.4);
+    margin-top: 1rem;
+}
+
+.submit-button:hover:not(:disabled) {
+    background: var(--primary-color-dark, #2563eb);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.4);
+}
+
+.submit-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.bookmarklet-container {
+    margin-top: 2.5rem;
+    padding: 1.5rem;
+    background: #f1f5f9;
+    border-radius: 16px;
+    text-align: center;
+}
+
+.bookmarklet-hint {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-bottom: 1rem;
+    line-height: 1.5;
+}
+
+.bookmarklet-btn {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: var(--primary-color);
+    color: white;
+    text-decoration: none;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    transition: transform 0.2s;
+    cursor: grab;
+}
+
+.bookmarklet-btn:hover {
+    transform: scale(1.05);
+}
+
+.bookmarklet-btn:active {
+    cursor: grabbing;
+}

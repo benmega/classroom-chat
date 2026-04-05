@@ -197,7 +197,7 @@ function initProfileEditor() {
         maxFileSize: 10 * 1024 * 1024, // 10MB
         cropSize: { width: 300, height: 300 },
         acceptedTypes: ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'],
-        uploadEndpoint: '/user/edit_profile_picture'
+        uploadEndpoint: '/user/api/profile-picture'
     };
 
     function init() {
@@ -377,16 +377,22 @@ function initProfileEditor() {
             headers: headers
         })
         .then(response => {
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            if (!response.ok) {
+                // If it's a 400 error, the body will have the error message in the envelope
+                return response.json().then(data => {
+                    throw new Error(data.error || `HTTP error! status: ${response.status}`);
+                });
+            }
             return response.json();
         })
-        .then(data => {
-            if (data.success && data.new_url) {
-                updateProfileImage(data.new_url);
+        .then(payload => {
+            // New structure: { status: 'success', data: { new_url, ... } }
+            if (payload.status === 'success' && payload.data?.new_url) {
+                updateProfileImage(payload.data.new_url);
                 closeModal();
                 showSuccess('Profile picture updated successfully!');
             } else {
-                throw new Error(data.error || 'Upload failed');
+                throw new Error(payload.error || 'Upload failed');
             }
         })
         .catch(error => {

@@ -49,6 +49,16 @@ def achievements_page():
 
     user_achievements = {ua.achievement_id for ua in current_user.achievements}
     all_achievements = Achievement.query.all()
+
+    if request.is_json or request.accept_mimetypes.accept_json:
+        return jsonify({
+            "status": "success",
+            "data": {
+                "achievements": [a.to_dict() for a in all_achievements],
+                "user_achievements": list(user_achievements)
+            }
+        })
+
     return render_template(
         "achievements.html",
         achievements=all_achievements,
@@ -60,22 +70,48 @@ def achievements_page():
 @admin_only
 def add_achievement():
     if request.method == "POST":
-        name = request.form.get("name")
-        slug = request.form.get("slug")
-        description = request.form.get("description")
-        requirement_value = request.form.get("requirement_value") or None
+        if request.is_json:
+            data = request.get_json()
+        else:
+            data = request.form
+
+        name = data.get("name")
+        slug = data.get("slug")
+        description = data.get("description")
+        achievement_type = data.get("type", "ducks")
+        reward = int(data.get("reward") or 1)
+        requirement_value = data.get("requirement_value") or None
+        source = data.get("source")
+
+        if not name or not slug:
+            if request.is_json:
+                return jsonify({"status": "error", "message": "Name and Slug are required."}), 400
+            flash("Name and Slug are required.", "error")
+            return render_template("admin/add_achievement.html")
+
+        # Check for existing slug
+        existing = Achievement.query.filter_by(slug=slug).first()
+        if existing:
+            if request.is_json:
+                return jsonify({"status": "error", "message": "Achievement with this slug already exists."}), 400
+            flash("Achievement with this slug already exists.", "error")
+            return render_template("admin/add_achievement.html")
 
         ach = Achievement(
             name=name,
             slug=slug,
-            type=request.form.get("type"),
-            reward=int(request.form.get("reward") or 1),
+            type=achievement_type,
+            reward=reward,
             description=description,
             requirement_value=requirement_value,
-            source=request.form.get("source"),
+            source=source,
         )
         db.session.add(ach)
         db.session.commit()
+
+        if request.is_json or request.headers.get("X-Requested-With") == "XMLHttpRequest":
+            return jsonify({"status": "success", "message": f"Achievement '{name}' added successfully!"})
+
         flash(f"Achievement '{name}' added", "success")
         return redirect(url_for("achievements.achievements_page"))
 
@@ -192,15 +228,23 @@ def view_certificate(cert_id):
 @achievements.route("/admin/certificates")
 @admin_only
 def admin_certificates():
+    # Only show unreviewed certificates by default, matching the template
     certs = (
         db.session.query(UserCertificate)
         .filter_by(reviewed=False)
         .join(User)
         .join(Achievement)
-        .add_entity(User)
-        .add_entity(Achievement)
         .all()
     )
+    
+    if request.is_json or request.accept_mimetypes.accept_json:
+        return jsonify({
+            "status": "success",
+            "data": {
+                "certificates": [c.to_dict() for c in certs]
+            }
+        })
+
     return render_template("admin/admin_certificates.html", certs=certs)
 
 
@@ -211,7 +255,13 @@ def mark_reviewed(cert_id):
     cert.reviewed = True
     cert.reviewed_at = datetime.utcnow()
     db.session.commit()
-    flash("Marked as reviewed.", "success")
+    
+    msg = "Certificate marked as reviewed."
+    
+    if request.is_json or request.headers.get("X-Requested-With") == "XMLHttpRequest":
+        return jsonify({"status": "success", "message": msg})
+        
+    flash(msg, "success")
     return redirect(url_for("achievements.admin_certificates"))
 
 @achievements.route("/download_certificate/<int:cert_id>")

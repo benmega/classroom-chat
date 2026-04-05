@@ -9,8 +9,11 @@ from flask import Blueprint, session, redirect, url_for, render_template
 general = Blueprint("general", __name__)
 
 
-@general.route("/")
-def index():
-    if "user" not in session:
-        return redirect(url_for("user.login"))
+@general.route("/", defaults={"path": ""}, endpoint="index")
+@general.route("/<path:path>")
+def index(path):
+    """
+    Catch-all route to serve the React index.html for client-side routing.
+    In production, this allows React Router to take over for non-API paths.
+    """
     return render_template("index.html")

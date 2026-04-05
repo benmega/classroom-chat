@@ -22,7 +22,7 @@ from application.models import setup_models
 from application.models.configuration import Configuration
 from application.models.user import User
 from application.routes import register_blueprints
-from . import socket_events as socket_events  # noqa: F401 - needed for side effects
+
 from .license_checker import load_license
 
 
@@ -47,11 +47,13 @@ def create_app(config_class=None):
     app = Flask(__name__, template_folder=template_folder, static_folder=static_folder)
     app.config.from_object(config_class)
 
+    cors_origins = getattr(config_class, "CORS_ORIGINS", ["http://localhost:5173"])
     CORS(
         app,
-        origins=["https://codecombat.com", "https://www.ozaria.com"],
+        origins=cors_origins,
         supports_credentials=True,
     )
+
     # x_for=1 tells Flask to trust the first X-Forwarded-For header
     app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_port=1)
 
@@ -77,6 +79,8 @@ def create_app(config_class=None):
     )
     limiter.init_app(app)
     scheduler.init_app(app)
+
+    from . import socket_events as socket_events  # noqa: F401 - needed for side effects
 
     CSRFProtect(app)
     register_blueprints(app)

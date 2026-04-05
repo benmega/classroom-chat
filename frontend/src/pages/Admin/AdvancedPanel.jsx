@@ -1,0 +1,129 @@
+import { useNavigate } from 'react-router-dom';
+import client from '../../api/client';
+import toast from 'react-hot-toast';
+import './AdvancedPanel.css';
+
+const AdvancedPanel = () => {
+    const navigate = useNavigate();
+    const [views, setViews] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+
+    const fetchViews = async () => {
+        setIsLoading(true);
+        try {
+            const response = await client.get('/admin/advanced-panel');
+            if (response.data.status === 'success') {
+                setViews(response.data.data.views);
+            }
+        } catch (error) {
+            toast.error('Failed to load advanced panel views.');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchViews();
+    }, []);
+
+    if (isLoading) return <div className="admin-loading">Loading Advanced Panel...</div>;
+
+    return (
+        <div className="admin-advanced-panel">
+            <header className="page-header">
+                <button onClick={() => navigate('/admin')} className="back-btn">
+                    <ArrowLeft size={20} /> Back to Dashboard
+                </button>
+                <h1>Advanced Database Management</h1>
+                <p>Direct access to backend model controllers and system utilities.</p>
+            </header>
+
+            <div className="advanced-grid">
+                <section className="model-links-section card">
+                    <div className="section-header">
+                        <Database size={24} />
+                        <h2>Model Views</h2>
+                    </div>
+                    <p className="section-desc">Select a database model to view, create, or edit raw records via the Flask-Admin interface.</p>
+                    
+                    <div className="model-list">
+                        {views.length > 0 ? (
+                            views.map((view, idx) => (
+                                <a 
+                                    key={idx}
+                                    href={`/admin/${view.endpoint}`} 
+                                    className="model-item"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                >
+                                    <div className="model-name">
+                                        <Layers size={18} />
+                                        <span>{view.name}</span>
+                                    </div>
+                                    <ExternalLink size={16} className="ext-icon" />
+                                </a>
+                            ))
+                        ) : (
+                            <div className="empty-state">No models registered.</div>
+                        )}
+                    </div>
+                </section>
+
+                <div className="utility-stack">
+                    <section className="utility-card card">
+                        <div className="utility-icon warning"><ShieldAlert size={20} /></div>
+                        <div className="utility-content">
+                            <h3>System Logs</h3>
+                            <p>View real-time server output and error traces.</p>
+                            <button className="btn-utility" onClick={() => toast.error('Legacy log viewer disabled.')}>
+                                Open Log Viewer
+                            </button>
+                        </div>
+                    </section>
+
+                    <section className="utility-card card">
+                        <div className="utility-icon primary"><Terminal size={20} /></div>
+                        <div className="utility-content">
+                            <h3>API Documentation</h3>
+                            <p>Browse available endpoints and request schemas.</p>
+                            <button className="btn-utility" onClick={() => window.open('/api/docs', '_blank')}>
+                                View Swagger
+                            </button>
+                        </div>
+                    </section>
+
+                    <section className="utility-card card">
+                        <div className="utility-icon secondary"><Activity size={20} /></div>
+                        <div className="utility-content">
+                            <h3>Server Performance</h3>
+                            <p>Monitor memory usage and active DB connections.</p>
+                            <button className="btn-utility" onClick={() => navigate('/admin/dashboard')}>
+                                View Stats
+                            </button>
+                        </div>
+                    </section>
+                </div>
+            </div>
+            
+            <div className="danger-zone">
+                <div className="danger-header">
+                    <ShieldAlert size={20} />
+                    <h3>Danger Zone</h3>
+                </div>
+                <div className="danger-content">
+                    <div className="danger-item">
+                        <div className="text">
+                            <h4>Clear All History</h4>
+                            <p>Permanently deletes all message and conversation history. This cannot be undone.</p>
+                        </div>
+                        <button className="btn-danger" onClick={() => toast('Security confirmation required.')}>
+                            Purge History
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+export default AdvancedPanel;
