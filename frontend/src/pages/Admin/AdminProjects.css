@@ -1,8 +1,4 @@
-.admin-projects-page {
-    padding: 2rem;
-    max-width: 1400px;
-    margin: 0 auto;
-}
+/* Layout handled by AdminLayout.css */
 
 .page-header {
     display: flex;

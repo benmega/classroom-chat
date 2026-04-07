@@ -140,37 +140,37 @@ def submit_certificate():
         if not match:
             msg = "Invalid certificate URL."
             if is_xhr:
-                return jsonify({"success": False, "error": msg})
+                return jsonify({"success": False, "error": msg}), 400
             return render_template(
                 "submit_certificate.html", message=msg, success=False
-            )
+            ), 400
 
         course_slug = match.group(1)
         achievement = Achievement.query.filter_by(slug=course_slug).first()
         if not achievement:
             msg = "No matching achievement found for this course."
             if is_xhr:
-                return jsonify({"success": False, "error": msg})
+                return jsonify({"success": False, "error": msg}), 400
             return render_template(
                 "submit_certificate.html", message=msg, success=False
-            )
+            ), 400
 
         # 2. File validation
         if not file or file.filename == "":
             msg = "Certificate file is required."
             if is_xhr:
-                return jsonify({"success": False, "error": msg})
+                return jsonify({"success": False, "error": msg}), 400
             return render_template(
                 "submit_certificate.html", message=msg, success=False
-            )
+            ), 400
 
         if not allowed_file(file.filename):
             msg = "Invalid file type. Only PDF is allowed."
             if is_xhr:
-                return jsonify({"success": False, "error": msg})
+                return jsonify({"success": False, "error": msg}), 400
             return render_template(
                 "submit_certificate.html", message=msg, success=False
-            )
+            ), 400
 
         # 3. Save file
         os.makedirs(UPLOAD_FOLDER, exist_ok=True)

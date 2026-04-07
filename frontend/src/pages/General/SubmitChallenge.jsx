@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
 import useAuthStore from '../../store/useAuthStore';
@@ -10,6 +10,13 @@ const SubmitChallenge = () => {
     const [helpers, setHelpers] = useState('');
     const [notes, setNotes] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const bookmarkletRef = useRef(null);
+
+    useEffect(() => {
+        if (bookmarkletRef.current) {
+            bookmarkletRef.current.setAttribute('href', bookmarkletCode);
+        }
+    }, [bookmarkletCode]);
 
     const playQuackSound = () => {
         return new Promise((resolve) => {
@@ -161,7 +168,7 @@ const SubmitChallenge = () => {
                     <div className="bookmarklet-container">
                         <p className="bookmarklet-hint">Pro Tip: Drag this button to your bookmarks bar to submit challenges instantly from CodeCombat/Ozaria!</p>
                         <a 
-                            href={bookmarkletCode}
+                            ref={bookmarkletRef}
                             className="bookmarklet-btn"
                             onClick={(e) => {
                                 alert('To install, please drag this link to your bookmarks bar.');

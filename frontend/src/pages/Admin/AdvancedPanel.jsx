@@ -1,4 +1,18 @@
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { 
+    ArrowLeft, 
+    Database, 
+    Layers, 
+    ExternalLink, 
+    ShieldAlert, 
+    Terminal, 
+    Activity, 
+    Trash2, 
+    FileText, 
+    Code, 
+    BarChart3 
+} from 'lucide-react';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
 import './AdvancedPanel.css';
@@ -76,7 +90,7 @@ const AdvancedPanel = () => {
                             <h3>System Logs</h3>
                             <p>View real-time server output and error traces.</p>
                             <button className="btn-utility" onClick={() => toast.error('Legacy log viewer disabled.')}>
-                                Open Log Viewer
+                                <FileText size={16} /> Open Log Viewer
                             </button>
                         </div>
                     </section>
@@ -87,7 +101,7 @@ const AdvancedPanel = () => {
                             <h3>API Documentation</h3>
                             <p>Browse available endpoints and request schemas.</p>
                             <button className="btn-utility" onClick={() => window.open('/api/docs', '_blank')}>
-                                View Swagger
+                                <Code size={16} /> View Swagger
                             </button>
                         </div>
                     </section>
@@ -98,7 +112,7 @@ const AdvancedPanel = () => {
                             <h3>Server Performance</h3>
                             <p>Monitor memory usage and active DB connections.</p>
                             <button className="btn-utility" onClick={() => navigate('/admin/dashboard')}>
-                                View Stats
+                                <BarChart3 size={16} /> View Stats
                             </button>
                         </div>
                     </section>
@@ -117,7 +131,7 @@ const AdvancedPanel = () => {
                             <p>Permanently deletes all message and conversation history. This cannot be undone.</p>
                         </div>
                         <button className="btn-danger" onClick={() => toast('Security confirmation required.')}>
-                            Purge History
+                            <Trash2 size={18} /> Purge History
                         </button>
                     </div>
                 </div>

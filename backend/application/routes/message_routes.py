@@ -64,13 +64,25 @@ def send_message():
 
 @message.route("/start_conversation", methods=["POST"])
 def start_conversation():
-    # prefer the model's default title when no explicit title is provided
-    title = request.form.get("title")
+    # Attempt to get JSON data, otherwise fallback to form data
+    if request.is_json:
+        data = request.get_json()
+        title = data.get("title")
+    else:
+        title = request.form.get("title")
 
     if title and title.strip():
         new_conversation = Conversation(title=title)
     else:
         new_conversation = Conversation()
+    
+    # Add the current user to the conversation automatically
+    user_id = session.get("user")
+    if user_id:
+        user = User.query.get(user_id)
+        if user:
+            new_conversation.users.append(user)
+
     db.session.add(new_conversation)
     db.session.commit()
 
@@ -193,7 +205,11 @@ def conversation_history():
 
 @message.route("/api/conversations/<int:user_id>", methods=["GET"])
 def get_conversation_history(user_id):
-    conversations = Conversation.query.filter(Conversation.users.any(id=user_id)).all()
+    conversations = (
+        Conversation.query.filter(Conversation.users.any(id=user_id))
+        .order_by(Conversation.created_at.desc())
+        .all()
+    )
     return jsonify(
         [
             {

@@ -16,6 +16,7 @@ import Achievements from './pages/General/Achievements';
 import BitShift from './pages/General/BitShift';
 import SubmitCertificate from './pages/General/SubmitCertificate';
 import SubmitChallenge from './pages/General/SubmitChallenge';
+import History from './pages/General/History';
 import EditProfile from './pages/User/EditProfile';
 import ManageProject from './pages/User/ManageProject';
 import AdminDashboard from './pages/Admin/AdminDashboard';
@@ -24,7 +25,10 @@ import AdminCertificates from './pages/Admin/AdminCertificates';
 import AdminAchievements from './pages/Admin/AdminAchievements';
 import AdminDocuments from './pages/Admin/AdminDocuments';
 import PendingTrades from './pages/Admin/PendingTrades';
+import PendingUsers from './pages/Admin/PendingUsers';
 import AdvancedPanel from './pages/Admin/AdvancedPanel';
+import AccessDenied from './pages/Error/AccessDenied';
+
 
 const ProtectedRoute = ({ children, adminOnly = false }) => {
   const { isAuthenticated, user, isLoading } = useAuthStore();
@@ -52,7 +56,8 @@ const ProtectedRoute = ({ children, adminOnly = false }) => {
     </div>
   );
   if (!isAuthenticated) return <Navigate to="/login" />;
-  if (adminOnly && !user?.is_admin) return <Navigate to="/" />;
+  if (adminOnly && !user?.is_admin) return <AccessDenied />;
+
   
   return children;
 };
@@ -92,6 +97,7 @@ function App() {
       <Routes>
         {/* Auth Routes */}
         <Route path="/login" element={isAuthenticated ? <Navigate to="/" /> : <Login />} />
+        <Route path="/signup" element={isAuthenticated ? <Navigate to="/" /> : <Signup />} />
 
 
         {/* User Routes (Wrapped in Layout) */}
@@ -143,6 +149,14 @@ function App() {
           </ProtectedRoute>
         } />
 
+        <Route path="/history" element={
+          <ProtectedRoute>
+            <Layout>
+              <History />
+            </Layout>
+          </ProtectedRoute>
+        } />
+
         <Route path="/settings" element={
           <ProtectedRoute>
             <Layout>
@@ -179,6 +193,7 @@ function App() {
                 <Route path="add-achievement" element={<AdminAchievements />} />
                 <Route path="documents" element={<AdminDocuments />} />
                 <Route path="pending-trades" element={<PendingTrades />} />
+                <Route path="pending-users" element={<PendingUsers />} />
                 <Route path="advanced" element={<AdvancedPanel />} />
               </Routes>
             </AdminLayout>

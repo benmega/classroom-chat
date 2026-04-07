@@ -25,6 +25,7 @@ NEW_COLUMNS = {
     ],
     "users": [
         ("slug", "TEXT", None),
+        ("is_approved", "BOOLEAN", 1),
     ]
 }
 

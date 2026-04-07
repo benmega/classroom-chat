@@ -6,8 +6,14 @@ Summary: Socket.IO client bootstrap and connection utilities.
 
 import config from '../config.js';
 const serverEndpoint = config.serverEndpoint;
-console.log(config.serverEndpoint);
-export const socket = io.connect(serverEndpoint);
+console.log("Connecting legacy socket to:", serverEndpoint);
+export const socket = io.connect(serverEndpoint, {
+    transports: ['polling', 'websocket'],
+    reconnection: true,
+    reconnectionAttempts: 10,
+    reconnectionDelay: 2000,
+    forceNew: true
+});
 
 
 

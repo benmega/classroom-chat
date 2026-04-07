@@ -30,7 +30,8 @@ class SecureModelView(ModelView):
 
     def inaccessible_callback(self, name, **kwargs):
         # unauthorized access
-        return render_template("error/nice_try.html"), 403
+        return render_template("index.html")
+
 
 
 class AdvancedIndex(AdminIndexView):
@@ -45,7 +46,8 @@ class AdvancedIndex(AdminIndexView):
         return user and user.is_admin
 
     def inaccessible_callback(self, name, **kwargs):
-        return render_template("error/nice_try.html"), 403
+        return render_template("index.html")
+
 
     @expose("/")
     def index(self):

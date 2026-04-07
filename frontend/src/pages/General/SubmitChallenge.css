@@ -1,15 +1,15 @@
 .submit-challenge-page {
-    padding: 3rem;
+    padding: 2rem 1rem;
     display: flex;
     justify-content: center;
-    align-items: center;
-    min-height: 80vh;
+    align-items: flex-start;
+    min-height: auto;
 }
 
 .form-card {
     background: white;
-    padding: 3rem;
-    border-radius: 24px;
+    padding: 2rem;
+    border-radius: 20px;
     box-shadow: var(--shadow-lg);
     border: 1px solid var(--border-subtle);
     max-width: 600px;
@@ -17,9 +17,9 @@
 }
 
 .form-title {
-    font-size: 2.25rem;
+    font-size: 1.75rem;
     text-align: center;
-    margin-bottom: 2.5rem;
+    margin-bottom: 1.5rem;
     color: var(--text-primary);
     font-weight: 800;
 }
@@ -27,7 +27,7 @@
 .challenge-form {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+    gap: 1.25rem;
 }
 
 .form-group label {
@@ -63,17 +63,17 @@ textarea.form-control {
 
 .submit-button {
     width: 100%;
-    padding: 1.25rem;
-    font-size: 1.2rem;
+    padding: 1rem;
+    font-size: 1.1rem;
     font-weight: 700;
     color: white;
     background: var(--primary-color);
     border: none;
-    border-radius: 14px;
+    border-radius: 12px;
     cursor: pointer;
     transition: all 0.2s ease;
     box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.4);
-    margin-top: 1rem;
+    margin-top: 0.5rem;
 }
 
 .submit-button:hover:not(:disabled) {
@@ -88,8 +88,8 @@ textarea.form-control {
 }
 
 .bookmarklet-container {
-    margin-top: 2.5rem;
-    padding: 1.5rem;
+    margin-top: 1.5rem;
+    padding: 1.25rem;
     background: #f1f5f9;
     border-radius: 16px;
     text-align: center;
@@ -121,4 +121,24 @@ textarea.form-control {
 
 .bookmarklet-btn:active {
     cursor: grabbing;
+}
+
+@media (max-height: 800px) {
+    .submit-challenge-page {
+        padding: 1rem;
+    }
+    .form-card {
+        padding: 1.5rem;
+    }
+    .form-title {
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+    }
+    .challenge-form {
+        gap: 1rem;
+    }
+    .bookmarklet-container {
+        margin-top: 1rem;
+        padding: 1rem;
+    }
 }

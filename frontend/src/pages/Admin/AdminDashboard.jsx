@@ -17,6 +17,7 @@ import {
     ArrowUpCircle,
     X
 } from 'lucide-react';
+import DuckIcon from '../../components/common/DuckIcon';
 import {
     Chart as ChartJS,
     CategoryScale,
@@ -29,9 +30,11 @@ import {
     Filler
 } from 'chart.js';
 import { Line } from 'react-chartjs-2';
+import { useNavigate } from 'react-router-dom';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
 import './AdminDashboard.css';
+import SmartImage from '../../components/common/SmartImage';
 
 ChartJS.register(
     CategoryScale,
@@ -62,6 +65,7 @@ const Modal = ({ isOpen, onClose, title, children }) => {
 };
 
 const AdminDashboard = () => {
+    const navigate = useNavigate();
     const [dashboardData, setDashboardData] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
@@ -75,6 +79,7 @@ const AdminDashboard = () => {
     const [formLoading, setFormLoading] = useState(false);
     const [newWord, setNewWord] = useState('');
     const [banReason, setBanReason] = useState('');
+    const [formErrors, setFormErrors] = useState({});
 
     const fetchDashboardData = async () => {
         setIsRefreshing(true);
@@ -95,6 +100,10 @@ const AdminDashboard = () => {
     useEffect(() => {
         fetchDashboardData();
     }, []);
+
+    useEffect(() => {
+        setFormErrors({});
+    }, [activeModal]);
 
     const handleToggleAI = async () => {
         try {
@@ -155,10 +164,33 @@ const AdminDashboard = () => {
 
     const handleCreateUser = async (e) => {
         e.preventDefault();
-        const data = new FormData(e.target);
+        const formData = new FormData(e.target);
+        const username = formData.get('username');
+        const password = formData.get('password');
+        
+        // Custom Validation
+        const errors = {};
+        if (!username) {
+            errors.username = 'Username is required';
+        } else if (!/^[a-z0-9_]{3,30}$/.test(username)) {
+            errors.username = '3-30 chars, lowercase, numbers, or underscores.';
+        }
+        
+        if (!password) {
+            errors.password = 'Initial password is required';
+        } else if (password.length < 6) {
+            errors.password = 'Password must be at least 6 characters.';
+        }
+        
+        if (Object.keys(errors).length > 0) {
+            setFormErrors(errors);
+            return;
+        }
+        
+        setFormErrors({});
         setFormLoading(true);
         try {
-            const response = await client.post('/admin/create_user', data);
+            const response = await client.post('/admin/create_user', formData);
             if (response.data.success) {
                 toast.success(response.data.message);
                 setActiveModal(null);
@@ -173,10 +205,23 @@ const AdminDashboard = () => {
 
     const handleAdjustDucks = async (e) => {
         e.preventDefault();
-        const data = new FormData(e.target);
+        const formData = new FormData(e.target);
+        
+        // Custom Validation
+        const errors = {};
+        if (!formData.get('amount')) {
+            errors.amount = 'Adjustment amount is required';
+        }
+        
+        if (Object.keys(errors).length > 0) {
+            setFormErrors(errors);
+            return;
+        }
+
+        setFormErrors({});
         setFormLoading(true);
         try {
-            const response = await client.post('/admin/adjust_ducks', data);
+            const response = await client.post('/admin/adjust_ducks', formData);
             if (response.data.success) {
                 toast.success(response.data.message);
                 setActiveModal(null);
@@ -191,11 +236,24 @@ const AdminDashboard = () => {
 
     const handleResetPassword = async (e) => {
         e.preventDefault();
-        const data = Object.fromEntries(new FormData(e.target));
-        if (data.new_password !== data.confirm_password) {
-            toast.error('Passwords do not match.');
+        const formData = new FormData(e.target);
+        const data = Object.fromEntries(formData);
+        
+        // Custom Validation
+        const errors = {};
+        if (!data.new_password) errors.new_password = 'New password is required';
+        if (!data.confirm_password) errors.confirm_password = 'Confirmation is required';
+        
+        if (data.new_password && data.confirm_password && data.new_password !== data.confirm_password) {
+            errors.confirm_password = 'Passwords do not match';
+        }
+        
+        if (Object.keys(errors).length > 0) {
+            setFormErrors(errors);
             return;
         }
+
+        setFormErrors({});
         setFormLoading(true);
         try {
             const response = await client.post('/admin/reset_password', {
@@ -322,7 +380,7 @@ const AdminDashboard = () => {
 
             <div className="stats-grid">
                 <div className="stat-card">
-                    <div className="stat-icon ducks"><Coins size={24} /></div>
+                    <div className="stat-icon ducks"><DuckIcon size={32} color="white" /></div>
                     <div className="stat-info">
                         <span className="stat-label">Total Ducks In Circulation</span>
                         <span className="stat-value">{total_ducks.toLocaleString()}</span>
@@ -340,6 +398,13 @@ const AdminDashboard = () => {
                     <div className="stat-info">
                         <span className="stat-label">Pending Trades</span>
                         <span className="stat-value">{pending_trades_count}</span>
+                    </div>
+                </div>
+                <div className="stat-card clickable" onClick={() => navigate('/admin/pending-users')}>
+                    <div className="stat-icon approval"><Users size={24} /></div>
+                    <div className="stat-info">
+                        <span className="stat-label">System Approvals</span>
+                        <span className="stat-value">{dashboardData.pending_users_count || 0}</span>
                     </div>
                 </div>
                 <div className="stat-card">
@@ -396,14 +461,18 @@ const AdminDashboard = () => {
                                         <tr key={u.id}>
                                             <td>
                                                 <div className="user-cell">
-                                                    <img src={u.profile_picture ? `/user/profile_pictures/${u.profile_picture}` : "/static/images/Default_pfp.jpg"} alt="" />
+                                                    <SmartImage 
+                                                        src={u.profile_picture ? `/user/profile_pictures/${u.profile_picture}` : ''} 
+                                                        alt="" 
+                                                        fallbackType="avatar"
+                                                    />
                                                     <div>
                                                         <div className="u-name">{u.nickname || u.username}</div>
                                                         <div className="u-handle">@{u.username}</div>
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td><span className="duck-pill">{u.duck_balance} Ducks</span></td>
+                                            <td><span className="duck-pill">{u.duck_balance?.toLocaleString(undefined, { maximumFractionDigits: 3 })} Ducks</span></td>
                                             <td>{u.cc_levels + u.oz_levels}</td>
                                             <td>
                                                 <span className={`status-pill ${u.is_online ? 'online' : 'offline'}`}>
@@ -447,6 +516,10 @@ const AdminDashboard = () => {
                     <div className="quick-actions card">
                         <h3>⚡ Quick Actions</h3>
                         <div className="action-buttons">
+                            <button className="action-item" onClick={() => navigate('/admin/pending-users')}>
+                                <div className="icon approval"><Shield size={20} /></div>
+                                <span>User Approvals</span>
+                            </button>
                             <button className="action-item" onClick={() => setActiveModal('create')}>
                                 <div className="icon"><UserPlus size={20} /></div>
                                 <span>Create User</span>
@@ -456,7 +529,7 @@ const AdminDashboard = () => {
                                 <span>New Conversation</span>
                             </button>
                             <button className="action-item" onClick={() => setActiveModal('adjust')}>
-                                <div className="icon warning"><Coins size={20} /></div>
+                                <div className="icon warning"><DuckIcon size={24} color="#92400e" /></div>
                                 <span>Adjust Wealth</span>
                             </button>
                         </div>
@@ -523,15 +596,24 @@ const AdminDashboard = () => {
 
             {/* Modals */}
             <Modal isOpen={activeModal === 'create'} onClose={() => setActiveModal(null)} title="Create New User">
-                <form onSubmit={handleCreateUser} className="admin-form">
-                    <div className="form-group">
+                <form onSubmit={handleCreateUser} className="admin-form" noValidate>
+                    <div className={`form-group ${formErrors.username ? 'has-error' : ''}`}>
                         <label>Username</label>
-                        <input type="text" name="username" required placeholder="lowercas_only" pattern="[a-z0-9_]{3,30}" />
-                        <small>3-30 chars, lowercase, numbers, or underscores.</small>
+                        <input 
+                            type="text" 
+                            name="username" 
+                            placeholder="lowercas_only" 
+                        />
+                        {formErrors.username ? (
+                            <span className="error-message">{formErrors.username}</span>
+                        ) : (
+                            <small>3-30 chars, lowercase, numbers, or underscores.</small>
+                        )}
                     </div>
-                    <div className="form-group">
+                    <div className={`form-group ${formErrors.password ? 'has-error' : ''}`}>
                         <label>Initial Password</label>
-                        <input type="password" name="password" required />
+                        <input type="password" name="password" />
+                        {formErrors.password && <span className="error-message">{formErrors.password}</span>}
                     </div>
                     <div className="form-group">
                         <label>Starting Duck Balance</label>
@@ -544,21 +626,25 @@ const AdminDashboard = () => {
             </Modal>
 
             <Modal isOpen={activeModal === 'adjust'} onClose={() => { setActiveModal(null); setModalUser(null); }} title="Adjust Duck Balance">
-                <form onSubmit={handleAdjustDucks} className="admin-form">
+                <form onSubmit={handleAdjustDucks} className="admin-form" noValidate>
                     <div className="form-group">
                         <label>User</label>
                         {modalUser ? (
                             <input type="text" name="username" value={modalUser.username} readOnly className="readonly" />
                         ) : (
-                            <select name="username" required>
-                                {users.map(u => <option key={u.id} value={u.username}>{u.username} (🦆 {u.duck_balance})</option>)}
+                            <select name="username">
+                                {users.map(u => <option key={u.id} value={u.username}>{u.username} (🦆 {u.duck_balance?.toLocaleString(undefined, { maximumFractionDigits: 3 })})</option>)}
                             </select>
                         )}
                     </div>
-                    <div className="form-group">
+                    <div className={`form-group ${formErrors.amount ? 'has-error' : ''}`}>
                         <label>Adjustment Amount</label>
-                        <input type="number" name="amount" step="any" required placeholder="e.g. 10 or -5" />
-                        <small>Positive to add, negative to subtract.</small>
+                        <input type="number" name="amount" step="any" placeholder="e.g. 10 or -5" />
+                        {formErrors.amount ? (
+                            <span className="error-message">{formErrors.amount}</span>
+                        ) : (
+                            <small>Positive to add, negative to subtract.</small>
+                        )}
                     </div>
                     <button type="submit" className="btn-primary" disabled={formLoading}>
                         {formLoading ? 'Applying...' : 'Apply Adjustment'}
@@ -567,18 +653,20 @@ const AdminDashboard = () => {
             </Modal>
 
             <Modal isOpen={activeModal === 'reset'} onClose={() => { setActiveModal(null); setModalUser(null); }} title="Reset User Password">
-                <form onSubmit={handleResetPassword} className="admin-form">
+                <form onSubmit={handleResetPassword} className="admin-form" noValidate>
                     <div className="form-group">
                         <label>User</label>
                         <input type="text" name="username" value={modalUser?.username || ''} readOnly className="readonly" />
                     </div>
-                    <div className="form-group">
+                    <div className={`form-group ${formErrors.new_password ? 'has-error' : ''}`}>
                         <label>New Password</label>
-                        <input type="password" name="new_password" required />
+                        <input type="password" name="new_password" />
+                        {formErrors.new_password && <span className="error-message">{formErrors.new_password}</span>}
                     </div>
-                    <div className="form-group">
+                    <div className={`form-group ${formErrors.confirm_password ? 'has-error' : ''}`}>
                         <label>Confirm Password</label>
-                        <input type="password" name="confirm_password" required />
+                        <input type="password" name="confirm_password" />
+                        {formErrors.confirm_password && <span className="error-message">{formErrors.confirm_password}</span>}
                     </div>
                     <button type="submit" className="btn-warning" disabled={formLoading}>
                         {formLoading ? 'Resetting...' : 'Reset Password'}

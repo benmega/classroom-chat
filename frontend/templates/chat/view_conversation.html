@@ -9,7 +9,7 @@ Summary: Template for viewing a single conversation and its messages.
 {% block content %}
   <link rel="stylesheet" href="{{ url_for('static', filename='css/view_conversation.css') }}">
   <div class="conversation-container">
-    <h2 class="conversation-title">Conversation: {{ conversation.title }}</h2>
+    <h2 class="conversation-title">Conversation: {{ conversation.title | format_convo_title }}</h2>
 
     <div class="messages">
           {% for message in conversation.messages %}

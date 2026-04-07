@@ -1,93 +1,168 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Home, LogOut } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { NavLink, Link, useNavigate, useLocation } from 'react-router-dom';
+import { 
+    Home, 
+    LogOut, 
+    Shield, 
+    LayoutDashboard, 
+    BarChart3, 
+    FolderKanban, 
+    Trophy, 
+    FileCheck, 
+    FileText, 
+    ShieldAlert, 
+    Users,
+    Menu,
+    X,
+    ChevronLeft,
+    ChevronRight
+} from 'lucide-react';
 import useAuthStore from '../../store/useAuthStore';
 import './AdminLayout.css';
+import SmartImage from '../common/SmartImage';
 
 const AdminLayout = ({ children }) => {
     const { user, logout, isAuthenticated } = useAuthStore();
-    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-    const dropdownRef = useRef(null);
+    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const navigate = useNavigate();
-
-    const toggleDropdown = (e) => {
-        e.stopPropagation();
-        setIsDropdownOpen(!isDropdownOpen);
-    };
-
-    useEffect(() => {
-        const handleClickOutside = (event) => {
-            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-                setIsDropdownOpen(false);
-            }
-        };
-
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, []);
+    const location = useLocation();
 
     const handleLogout = async () => {
         await logout();
         navigate('/login');
     };
 
+    const toggleSidebar = () => setIsSidebarCollapsed(!isSidebarCollapsed);
+    const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
+
+    // Close mobile menu on route change
+    useEffect(() => {
+        setIsMobileMenuOpen(false);
+    }, [location.pathname]);
+
     if (!isAuthenticated || !user?.is_admin) {
         return (
-            <div style={{ padding: '50px', textAlign: 'center' }}>
-                <h1>Access Denied</h1>
-                <p>You do not have permission to view this page.</p>
-                <Link to="/">Go Home</Link>
+            <div className="access-denied-container">
+                <div className="access-denied-card">
+                    <Shield size={64} color="#ef4444" />
+                    <h1>Access Denied</h1>
+                    <p>You do not have administrative permission to view this page. Restricted area.</p>
+                    <Link to="/" className="btn-back">
+                        <Home size={18} /> Back to Site
+                    </Link>
+                </div>
             </div>
         );
     }
 
+    const navItems = [
+        { path: '/admin', label: 'Dashboard', icon: LayoutDashboard, end: true },
+        { path: '/admin/pending-users', label: 'User Approvals', icon: Users },
+        { path: '/admin/pending-trades', label: 'Pending Trades', icon: BarChart3, badge: true },
+        { path: '/admin/projects', label: 'Projects', icon: FolderKanban },
+        { path: '/admin/add-achievement', label: 'Achievements', icon: Trophy },
+        { path: '/admin/certificates', label: 'Certificates', icon: FileCheck },
+        { path: '/admin/documents', label: 'Assets & Documents', icon: FileText },
+        { path: '/admin/advanced', label: 'Advanced Panel', icon: ShieldAlert },
+    ];
+
     return (
-        <div className="admin-wrapper">
-            <header className="admin-header">
-                <div className="header-container">
-                    <nav>
-                        <Link className="navbar-brand" to="/admin">
-                            Admin Dashboard
-                        </Link>
+        <div className={`admin-app-container ${isSidebarCollapsed ? 'collapsed' : ''} ${isMobileMenuOpen ? 'mobile-open' : ''}`}>
+            {/* Mobile Overlay */}
+            <div className="mobile-overlay" onClick={toggleMobileMenu}></div>
 
-                        <div className="nav-item dropdown" ref={dropdownRef}>
-                            <button 
-                                className="profile-toggle" 
-                                onClick={toggleDropdown}
-                                style={{ background: 'transparent', border: 'none', padding: 0 }}
-                                aria-haspopup="true" 
-                                aria-expanded={isDropdownOpen}
-                            >
-                                <img 
-                                    src={user?.profile_picture ? `/user/profile_pictures/${user.profile_picture}` : "/static/images/Default_pfp.jpg"} 
-                                    alt="Profile" 
-                                    className="profile-menu_img" 
-                                />
-                            </button>
-                            <ul className={`dropdown-menu ${isDropdownOpen ? 'show' : ''}`}>
-                                <li><Link className="dropdown-item" to="/admin/pending-trades">Pending Trades</Link></li>
-                                <li><Link className="dropdown-item" to="/admin/projects">Manage Projects</Link></li>
-                                <li><Link className="dropdown-item" to="/admin/add-achievement">Add Achievement</Link></li>
-                                <li><Link className="dropdown-item" to="/admin/certificates">Certificates</Link></li>
-                                <li><Link className="dropdown-item" to="/admin/documents">Documents</Link></li>
-                                <li><Link className="dropdown-item" to="/admin/advanced">Advanced Panel</Link></li>
-                                <div className="dropdown-divider"></div>
-                                <li><Link className="dropdown-item" to="/"><Home size={18} /> Back to Site</Link></li>
-                                <div className="dropdown-divider"></div>
-                                <li><a className="dropdown-item" onClick={handleLogout} style={{ cursor: 'pointer' }}><LogOut size={18} /> Logout</a></li>
-                            </ul>
-                        </div>
-                    </nav>
+            {/* Sidebar */}
+            <aside className="admin-sidebar">
+                <div className="sidebar-header">
+                    <Link className="sidebar-brand" to="/admin">
+                        <Shield className="brand-icon" size={28} />
+                        <span className="brand-text">Admin HQ</span>
+                    </Link>
+                    <button className="sidebar-toggle-btn desktop-only" onClick={toggleSidebar} aria-label="Toggle Sidebar">
+                        {isSidebarCollapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
+                    </button>
+                    <button className="mobile-close-btn mobile-only" onClick={toggleMobileMenu}>
+                        <X size={24} />
+                    </button>
                 </div>
-            </header>
 
-            <main className="admin-main">
-                {children}
-            </main>
+                <nav className="sidebar-nav">
+                    <div className="nav-group">
+                        <span className="nav-group-label">Management</span>
+                        {navItems.map((item) => (
+                            <NavLink 
+                                key={item.path} 
+                                to={item.path} 
+                                end={item.end}
+                                className={({ isActive }) => `nav-item ${isActive || (item.path !== '/admin' && location.pathname.startsWith(item.path)) ? 'active' : ''}`}
+                                title={item.label}
+                            >
+                                <item.icon size={22} className="nav-icon" />
+                                <span className="nav-label">{item.label}</span>
+                                {item.badge && (
+                                    <span className="nav-badge">NEW</span>
+                                )}
+                            </NavLink>
+                        ))}
+                    </div>
 
-            <footer className="admin-footer">
-                <p>&copy; {new Date().getFullYear()} Classroom Chat Admin. All Rights Reserved.</p>
-            </footer>
+                    <div className="nav-group secondary">
+                        <span className="nav-group-label">System</span>
+                        <NavLink to="/" className="nav-item">
+                            <Home size={20} className="nav-icon" />
+                            <span className="nav-label">Back to Site</span>
+                        </NavLink>
+                        <button onClick={handleLogout} className="nav-item logout-btn">
+                            <LogOut size={20} className="nav-icon" />
+                            <span className="nav-label">Logout</span>
+                        </button>
+                    </div>
+                </nav>
+
+                <div className="sidebar-user">
+                    <SmartImage 
+                        src={user?.profile_picture ? `/user/profile_pictures/${user.profile_picture}` : ''} 
+                        alt="Profile" 
+                        className="user-avatar" 
+                        fallbackType="avatar"
+                    />
+                    <div className="user-info">
+                        <span className="user-name">{user?.nickname || user?.username}</span>
+                        <span className="user-role">Administrator</span>
+                    </div>
+                </div>
+            </aside>
+
+            {/* Main Content Area */}
+            <div className="admin-main-wrapper">
+                <header className="admin-top-bar">
+                    <div className="top-bar-left">
+                        <button className="hamburger-btn mobile-only" onClick={toggleMobileMenu}>
+                            <Menu size={24} />
+                        </button>
+                        <h2 className="page-title">
+                            {navItems.find(item => 
+                                item.end ? item.path === location.pathname : location.pathname.startsWith(item.path)
+                            )?.label || 'Administration'}
+                        </h2>
+                    </div>
+                    <div className="top-bar-right">
+                        <div className="system-status">
+                            <span className="status-dot online"></span>
+                            <span className="status-text">System Live</span>
+                        </div>
+                    </div>
+                </header>
+
+                <main className="admin-body">
+                    {children}
+                </main>
+
+                <footer className="admin-site-footer">
+                    <p>&copy; {new Date().getFullYear()} Classroom Chat. <span>Version 2.4.0 (Alpha)</span></p>
+                </footer>
+            </div>
         </div>
     );
 };

@@ -59,7 +59,7 @@ Summary: Base layout template with header, navigation, and toast messages.
                         <li>
                             <a class="digital-ducks" href="{{ url_for('duck_trade.bit_shift') }}">
                                 <span class="label" >Ducks:</span>
-                                <span class="count">{{ user.duck_balance }}</span>
+                                <span class="count">{{ user.duck_balance|format_number }}</span>
                             </a>
                         </li>
 
@@ -67,7 +67,7 @@ Summary: Base layout template with header, navigation, and toast messages.
                             <li>
                                 <a class="digital-ducks">
                                     <span class="label">Packets:</span>
-                                    <span class="count">{{ user.packets|round(5) }}</span>
+                                    <span class="count">{{ user.packets|format_number(5) }}</span>
                                 </a>
                             </li>
                         {% endif %}

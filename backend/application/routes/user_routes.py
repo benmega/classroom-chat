@@ -74,6 +74,7 @@ class LoginForm(FlaskForm):
 
 @user.route("/login", methods=["GET", "POST"])
 def login():
+    form = LoginForm()
     if request.is_json:
         data = request.get_json()
         username = data.get("username", "").lower()
@@ -90,9 +91,15 @@ def login():
         user_obj = User.query.filter_by(username=username).first()
 
         if user_obj and user_obj.check_password(password):
+            if not user_obj.is_approved and not user_obj.is_admin:
+                if request.is_json:
+                    return {"error": "Your account is awaiting admin approval.", "is_approved": False}, 403
+                flash("Your account is awaiting admin approval.", "warning")
+                return redirect(url_for("user.login"))
+
             session["user"] = user_obj.id
             session.permanent = True
-            user_obj.set_online(user_obj.id)
+            User.set_online(user_obj.id)
 
             awarded = user_obj.award_daily_duck(amount=1)
             
@@ -153,10 +160,33 @@ def logout():
 
 
 
-@user.route("/signup", methods=["GET", "POST"])
+@user.route("/signup", methods=["POST"])
 @api_response
 def signup():
-    return "Account registration is currently disabled.", 403
+    data = request.get_json()
+    username = data.get("username", "").strip().lower()
+    password = data.get("password", "")
+
+    if not username or not password:
+        return "Username and password are required.", 400
+
+    if not re.fullmatch(r"[a-z0-9_]{3,30}", username):
+        return "Username must be 3-30 chars: lowercase letters, numbers, or underscores only.", 400
+
+    if User.query.filter_by(username=username).first():
+        return "Username already exists.", 409
+
+    try:
+        new_user = User(username=username, is_approved=False)
+        new_user.set_password(password)
+        db.session.add(new_user)
+        db.session.commit()
+        return {"message": "Account created! Awaiting admin approval."}, 201
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error during signup: {e}")
+        return "An error occurred during registration.", 500
+
 
 
 
@@ -506,6 +536,39 @@ def get_users():
     users = User.query.all()
     users_data = [{"id": u.id, "username": u.username} for u in users]
     return jsonify(users_data)
+
+
+@user.route("/api/users/search", methods=["GET"])
+@api_response
+def search_users():
+    query = request.args.get("q", "").strip()
+    if not query:
+        return {"users": []}
+
+    # Search by username or nickname (case-insensitive)
+    users = (
+        User.query.filter(
+            db.or_(
+                User._username.ilike(f"%{query}%"),
+                User.nickname.ilike(f"%{query}%")
+            )
+        )
+        .limit(10)
+        .all()
+    )
+
+    return {
+        "users": [
+            {
+                "id": u.id,
+                "username": u.username,
+                "nickname": u.nickname,
+                "slug": u.slug,
+                "profile_picture_url": f"/user/profile_pictures/{u.profile_picture}" if u.profile_picture else "/static/images/Default_pfp.jpg",
+            }
+            for u in users
+        ]
+    }
 
 
 @user.route("/get_user_id", methods=["GET"])

@@ -14,6 +14,7 @@ import {
 import client from '../../api/client';
 import toast from 'react-hot-toast';
 import './AdminProjects.css';
+import SmartImage from '../../components/common/SmartImage';
 
 const AdminProjects = () => {
     const [projects, setProjects] = useState([]);
@@ -105,7 +106,12 @@ const AdminProjects = () => {
                             </div>
 
                             {selectedProject.image_url && (
-                                <img src={`/static/${selectedProject.image_url}`} alt="Preview" className="review-preview-img" />
+                                <SmartImage 
+                                    src={`/static/${selectedProject.image_url}`} 
+                                    alt="Preview" 
+                                    className="review-preview-img" 
+                                    fallbackType="project"
+                                />
                             )}
                         </div>
 
@@ -190,7 +196,11 @@ const AdminProjects = () => {
                             }}>
                                 <div className="p-thumb">
                                     {p.image_url ? (
-                                        <img src={`/static/${p.image_url}`} alt="" />
+                                        <SmartImage 
+                                            src={`/static/${p.image_url}`} 
+                                            alt="" 
+                                            fallbackType="project"
+                                        />
                                     ) : (
                                         <div className="no-img"><Clock size={32} /></div>
                                     )}

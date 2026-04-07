@@ -5,6 +5,7 @@ import client from '../../api/client';
 import toast from 'react-hot-toast';
 import useAuthStore from '../../store/useAuthStore';
 import './ManageProject.css';
+import SmartImage from '../../components/common/SmartImage';
 
 const ManageProject = () => {
     const { projectId } = useParams();
@@ -213,7 +214,14 @@ const ManageProject = () => {
                             <div className="form-group">
                                 <label>Project Thumbnail</label>
                                 <div className="thumbnail-upload">
-                                    {imagePreview && <img src={imagePreview} alt="Preview" className="thumbnail-preview" />}
+                                    {imagePreview && (
+                                        <SmartImage 
+                                            src={imagePreview} 
+                                            alt="Preview" 
+                                            className="thumbnail-preview" 
+                                            fallbackType="project"
+                                        />
+                                    )}
                                     <label className="file-upload-btn">
                                         <Upload size={18} /> {imagePreview ? 'Change Image' : 'Upload Image'}
                                         <input type="file" name="project_image" onChange={handleFileChange} accept="image/*" hidden />

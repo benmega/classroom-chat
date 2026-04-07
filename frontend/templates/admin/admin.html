@@ -11,12 +11,10 @@ Summary: Admin dashboard overview template with stats and controls.
 {% block content %}
     <div class="stats-overview">
         <div class="stat-card">
-            <div class="stat-icon">
-                <img src="/static/images/rubber_duck.png" alt="Rubber Duck" class="emoji duck-icon">
-            </div>
+            <div class="stat-icon">🦆</div>
             <div class="stat-content">
                 <h3>Total Ducks</h3>
-                <p class="stat-value">{{ total_ducks }}</p>
+                <p class="stat-value">{{ total_ducks|format_number }}</p>
                 <p class="stat-label">In Circulation</p>
             </div>
         </div>
@@ -25,7 +23,7 @@ Summary: Admin dashboard overview template with stats and controls.
             <div class="stat-icon">📈</div>
             <div class="stat-content">
                 <h3>Ducks Earned</h3>
-                <p class="stat-value">{{ ducks_earned_this_week }}</p>
+                <p class="stat-value">{{ ducks_earned_this_week|format_number }}</p>
                 <p class="stat-label">This Week</p>
             </div>
         </div>
@@ -59,7 +57,7 @@ Summary: Admin dashboard overview template with stats and controls.
                             <li>
                                 <a href="{{ url_for('user.view_user_profile', slug=user.slug) }}" style="text-decoration: none; color: inherit; display: flex; justify-content: space-between; width: 100%;">
                                     <span class="user-name">{{ user.username }}</span>
-                                    <span class="user-ducks">🦆 {{ user.duck_balance }}</span>
+                                    <span class="user-ducks">🦆 {{ user.duck_balance|format_number }}</span>
                                 </a>
                             </li>
                         {% endfor %}
@@ -102,7 +100,7 @@ Summary: Admin dashboard overview template with stats and controls.
                         <label for="duck-username">User:</label>
                         <select id="duck-username" class="admin-select" required>
                             {% for user in users|sort(attribute='username') %}
-                                <option value="{{ user.username }}">{{ user.username }} (🦆 {{ user.duck_balance }})</option>
+                                <option value="{{ user.username }}">{{ user.username }} (🦆 {{ user.duck_balance|format_number }})</option>
                             {% endfor %}
                         </select>
                     </div>

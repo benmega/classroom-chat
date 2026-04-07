@@ -6,7 +6,7 @@ Summary: Flask application factory and core app initialization.
 
 import logging
 import os
-from datetime import timedelta
+from datetime import timedelta, datetime
 
 from flask import Flask, session, g, jsonify
 from flask_cors import CORS
@@ -47,7 +47,16 @@ def create_app(config_class=None):
     app = Flask(__name__, template_folder=template_folder, static_folder=static_folder)
     app.config.from_object(config_class)
 
-    cors_origins = getattr(config_class, "CORS_ORIGINS", ["http://localhost:5173"])
+    cors_origins = getattr(config_class, "CORS_ORIGINS", [
+        "http://localhost:5173",
+        "http://localhost:5174",
+        "http://localhost:5175",
+        "http://localhost:8000",
+        "http://127.0.0.1:5173",
+        "http://127.0.0.1:5174",
+        "http://127.0.0.1:5175",
+        "http://127.0.0.1:8000",
+    ])
     CORS(
         app,
         origins=cors_origins,
@@ -72,9 +81,11 @@ def create_app(config_class=None):
     app.config["LICENSEE"] = license_data.get("licensee", "Unknown")
 
     db.init_app(app)
+    # cors_allowed_origins must match cors_origins exactly — using "*" alongside
+    # withCredentials:true on the client causes browsers to block the handshake.
     socketio.init_app(
         app,
-        cors_allowed_origins="*",
+        cors_allowed_origins=cors_origins,
         async_mode=app.config.get("SOCKETIO_ASYNC_MODE", "threading"),
     )
     limiter.init_app(app)
@@ -100,6 +111,34 @@ def create_app(config_class=None):
             logger.info("Database initialized for the first time.")
 
         scheduler.start()
+
+    @app.template_filter("format_number")
+    def format_number(value, precision=3):
+        try:
+            if value is None:
+                return "0"
+            f_val = float(value)
+            # Format with commas and specified precision
+            formatted = "{:,.{precision}f}".format(f_val, precision=precision)
+            # Remove trailing zeros and decimal point if it's a whole number
+            if "." in formatted:
+                formatted = formatted.rstrip("0").rstrip(".")
+            return formatted
+        except (ValueError, TypeError):
+            return value
+
+    @app.template_filter("format_convo_title")
+    def format_convo_title(title):
+        if title and "Conversation started by User" in title and " at " in title:
+            try:
+                parts = title.split(" at ")
+                if len(parts) >= 2:
+                    date_str = parts[1].split(".")[0]
+                    dt = datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S")
+                    return f"Chat on {dt.strftime('%B %d, %Y')}"
+            except Exception:
+                pass
+        return title
 
     @app.before_request
     def load_user():

@@ -11,7 +11,12 @@ export async function setupSocketConnection() {
     const socket = io.connect(serverEndpoint, {
         auth: {
             user_id: user_id  // Pass user_id obtained from the server
-        }
+        },
+        transports: ['polling', 'websocket'],
+        reconnection: true,
+        reconnectionAttempts: 10,
+        reconnectionDelay: 2000,
+        forceNew: true
     });
 
     // Setting up listeners

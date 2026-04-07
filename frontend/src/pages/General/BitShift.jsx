@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Coins, Package, ArrowRightLeft, CreditCard } from 'lucide-react';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
 import useAuthStore from '../../store/useAuthStore';
@@ -55,28 +56,42 @@ const BitShift = () => {
 
     return (
         <div className="bit-shift-page">
-            <section className="trade-form-section">
-                <h2 className="form-heading">Trade Digital Ducks For Real Ducks!</h2>
+            <section className="trade-form-section glass-panel animate-fade-in">
+                <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+                    <div className="brand-logo animate-float">
+                        <ArrowRightLeft size={40} color="white" />
+                    </div>
+                </div>
+                <h2 className="form-heading">Duck Exchange</h2>
+                <p className="form-subheading">
+                    Convert your earned digital ducks into physical classroom assets. 
+                    Power the classroom ecosystem with your contributions!
+                </p>
 
                 <form onSubmit={handleSubmit} className="trade-form">
                     <div className="form-group main-input">
                         <label htmlFor="digital_ducks">Digital Ducks to Trade</label>
-                        <input 
-                            type="number" 
-                            id="digital_ducks" 
-                            value={digitalDucks}
-                            onChange={(e) => setDigitalDucks(parseInt(e.target.value) || 0)}
-                            className="form-control digital-ducks-input" 
-                            min="0" 
-                            max={user?.duck_balance || 0}
-                            required 
-                        />
-                        <span className="balance-info">Available: {user?.duck_balance || 0}</span>
+                        <div style={{ position: 'relative' }}>
+                            <input 
+                                type="number" 
+                                id="digital_ducks" 
+                                value={digitalDucks}
+                                onChange={(e) => setDigitalDucks(parseInt(e.target.value) || 0)}
+                                className="digital-ducks-input" 
+                                min="0" 
+                                max={user?.duck_balance || 0}
+                                required 
+                            />
+                        </div>
+                        <div className="balance-info">
+                            <Coins size={18} />
+                            <span>Wallet Balance: {user?.duck_balance?.toLocaleString(undefined, { maximumFractionDigits: 3 }) || 0}</span>
+                        </div>
                     </div>
 
                     <div className="ducks-grid">
                         {duckCounts.map((count, i) => (
-                            <div key={i} className="form-group small-input-group">
+                            <div key={i} className="small-input-group">
                                 <label htmlFor={`duck_${i}`} className="duck-label">
                                     {(Math.pow(2, i)).toString(2)}b
                                 </label>
@@ -85,7 +100,7 @@ const BitShift = () => {
                                     id={`duck_${i}`}
                                     value={count}
                                     onChange={(e) => handleDuckCountChange(i, e.target.value)}
-                                    className="form-control input-sm" 
+                                    className="input-sm" 
                                     min="0" 
                                     max="10" 
                                 />
@@ -95,20 +110,29 @@ const BitShift = () => {
 
                     <div className="toggle-container">
                         <div className="toggle-switch">
-                            <input 
-                                type="checkbox" 
-                                id="duck-type-toggle" 
-                                checked={isByteMode}
-                                onChange={() => setIsByteMode(!isByteMode)}
-                            />
-                            <label htmlFor="duck-type-toggle" className="toggle-slider"></label>
                             <span className={`toggle-text bit-text ${!isByteMode ? 'active' : ''}`}>bit</span>
+                            <div style={{ position: 'relative', display: 'inline-block' }}>
+                                <input 
+                                    type="checkbox" 
+                                    id="duck-type-toggle" 
+                                    checked={isByteMode}
+                                    onChange={() => setIsByteMode(!isByteMode)}
+                                    style={{ display: 'none' }}
+                                />
+                                <label htmlFor="duck-type-toggle" className="toggle-slider"></label>
+                            </div>
                             <span className={`toggle-text byte-text ${isByteMode ? 'active' : ''}`}>Byte</span>
                         </div>
                     </div>
 
-                    <button type="submit" className="submit-button" disabled={isLoading}>
-                        {isLoading ? 'Processing...' : 'Submit Trade Request'}
+                    <button type="submit" className="submit-button btn-premium" disabled={isLoading}>
+                        {isLoading ? (
+                            'Processing Exchange...'
+                        ) : (
+                            <>
+                                <CreditCard size={24} /> Submit Exchange Request
+                            </>
+                        )}
                     </button>
                 </form>
             </section>

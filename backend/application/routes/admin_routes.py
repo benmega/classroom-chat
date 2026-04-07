@@ -78,13 +78,15 @@ def admin_only(f):
         if not user_id:
             if request.is_json or request.accept_mimetypes.accept_json:
                 return jsonify({"error": "Authentication required"}), 401
-            return render_template("error/nice_try.html"), 401
+            return render_template("index.html")
+
 
         user = User.query.get(user_id)
         if not user or not user.is_admin:
             if request.is_json or request.accept_mimetypes.accept_json:
                 return jsonify({"error": "Admin access required"}), 403
-            return render_template("error/nice_try.html"), 403
+            return render_template("index.html")
+
 
         return f(*args, **kwargs)
     return wrapper
@@ -106,6 +108,8 @@ def update_username(new_username, user_id=None, user_ip=None):
 def get_duck_transactions_data():
     """Generate chart data for duck transactions over the past 7 days"""
     end_date = datetime.now()
+    config = Configuration.query.first()
+    multiplier = config.duck_multiplier if config and config.duck_multiplier else 1.0
 
     labels = [(end_date - timedelta(days=i)).strftime("%a") for i in range(6, -1, -1)]
 
@@ -117,27 +121,39 @@ def get_duck_transactions_data():
         day_start = datetime(day.year, day.month, day.day, 0, 0, 0)
         day_end = datetime(day.year, day.month, day.day, 23, 59, 59)
 
-        day_earned = (
-            db.session.query(func.coalesce(func.sum(Challenge.value), 0))
+        # 1. Challenge earnings (with multiplier and robust slug matching)
+        day_challenge_earned = (
+            db.session.query(func.coalesce(func.sum(Challenge.value * multiplier), 0))
             .select_from(ChallengeLog)
-            .join(Challenge, Challenge.slug.ilike(ChallengeLog.challenge_slug))
+            .join(Challenge, or_(
+                Challenge.slug.ilike(ChallengeLog.challenge_slug),
+                Challenge.slug.ilike(func.replace(ChallengeLog.challenge_slug, '-', ' '))
+            ))
             .filter(ChallengeLog.timestamp.between(day_start, day_end))
-            .scalar()
-            or 0
+            .scalar() or 0
         )
 
+        # 2. Achievement earnings
+        day_achievement_earned = (
+            db.session.query(func.coalesce(func.sum(Achievement.reward), 0))
+            .select_from(UserAchievement)
+            .join(Achievement, Achievement.id == UserAchievement.achievement_id)
+            .filter(UserAchievement.earned_at.between(day_start, day_end))
+            .scalar() or 0
+        )
+
+        # 3. Duck Trade spending (approved trades)
         day_spent = (
             db.session.query(func.coalesce(func.sum(DuckTradeLog.digital_ducks), 0))
             .filter(
                 DuckTradeLog.timestamp.between(day_start, day_end),
                 DuckTradeLog.status == "approved",
             )
-            .scalar()
-            or 0
+            .scalar() or 0
         )
 
-        earned.append(day_earned)
-        spent.append(day_spent)
+        earned.append(float(day_challenge_earned + day_achievement_earned))
+        spent.append(float(day_spent))
 
     return {"labels": labels, "earned": earned, "spent": spent}
 
@@ -186,6 +202,7 @@ def dashboard():
     ducks_earned_this_week = challenge_ducks + achievement_ducks
 
     pending_trades_count = DuckTradeLog.query.filter_by(status="pending").count()
+    pending_users_count = User.query.filter_by(is_approved=False, is_admin=False).count()
     active_users_count = User.query.filter_by(is_online=True).count()
 
     users = User.query.all()
@@ -201,6 +218,7 @@ def dashboard():
                 "total_ducks": total_ducks,
                 "ducks_earned_this_week": ducks_earned_this_week,
                 "pending_trades_count": pending_trades_count,
+                "pending_users_count": pending_users_count,
                 "active_users_count": active_users_count,
                 "users": [u.to_dict() for u in users_sorted],
                 "config": config.to_dict() if config else None,
@@ -226,6 +244,35 @@ def dashboard():
 def duck_transactions_data():
     chart_data = get_duck_transactions_data()
     return jsonify(chart_data)
+
+
+@admin.route("/pending_users", methods=["GET"])
+@admin_only
+@api_response
+def pending_users():
+    pending = User.query.filter_by(is_approved=False, is_admin=False).all()
+    return {"users": [u.to_dict() for u in pending]}
+
+
+@admin.route("/approve_user/<int:user_id>", methods=["POST"])
+@admin_only
+@api_response
+def approve_user(user_id):
+    user_obj = User.query.get_or_404(user_id)
+    user_obj.is_approved = True
+    db.session.commit()
+    return {"message": f"User {user_obj.username} approved successfully."}
+
+
+@admin.route("/reject_user/<int:user_id>", methods=["POST"])
+@admin_only
+@api_response
+def reject_user(user_id):
+    user_obj = User.query.get_or_404(user_id)
+    username = user_obj.username
+    db.session.delete(user_obj)
+    db.session.commit()
+    return {"message": f"User {username} rejected and removed."}
 
 
 @admin.route("/users", methods=["GET"])

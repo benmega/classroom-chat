@@ -17,13 +17,19 @@ import {
     FileText,
     CheckCircle,
     Calendar,
-    StickyNote
+    StickyNote,
+    Coins,
+    BarChart,
+    Rocket,
+    Signal
 } from 'lucide-react';
 import client from '../../api/client';
 import useAuthStore from '../../store/useAuthStore';
 import toast from 'react-hot-toast';
 import './Profile.css';
 import '../../assets/css/sprite.css'; 
+import SmartImage from '../../components/common/SmartImage';
+import DuckIcon from '../../components/common/DuckIcon';
 
 // Internal components
 const LayersIcon = ({ size }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>;
@@ -157,10 +163,11 @@ const Profile = () => {
                 <div className="header-background"></div>
                 <div className="header-content">
                     <div className="avatar-wrapper">
-                        <img 
-                            src={target.profile_picture_url || '/static/images/Default_pfp.jpg'} 
+                        <SmartImage 
+                            src={target.profile_picture_url} 
                             alt={target.username} 
                             className="avatar-img"
+                            fallbackType="avatar"
                         />
                         {isOwner && (
                             <button className="edit-pic-btn" onClick={() => navigate('/settings')}>
@@ -181,32 +188,35 @@ const Profile = () => {
 
                     <div className="header-stats">
                         <div className="stat-box">
+                            <div className="stat-icon"><DuckIcon size={20} color="currentColor" /></div>
                             <span className="label">Ducks</span>
-                            <span className="value">{target.duck_balance?.toLocaleString() || 0}</span>
+                            <span className="value">{target.duck_balance?.toLocaleString(undefined, { maximumFractionDigits: 3 }) || 0}</span>
                         </div>
-                        <div className="stat-divider"></div>
+                        
                         <div className="stat-box">
+                            <div className="stat-icon"><BarChart size={20} /></div>
                             <span className="label">Levels</span>
                             <span className="value">{target.total_levels || 0}</span>
                         </div>
-                        <div className="stat-divider"></div>
+                        
                         <div className="stat-box">
+                            <div className="stat-icon"><Rocket size={20} /></div>
                             <span className="label">Projects</span>
                             <span className="value">{target.projects?.length || 0}</span>
                         </div>
+                        
                         {target.packets > 0 && (
-                            <>
-                                <div className="stat-divider"></div>
-                                <div className="stat-box">
-                                    <span className="label">Packets</span>
-                                    <span className="value">{Number(target.packets).toFixed(4)}</span>
-                                </div>
-                            </>
+                            <div className="stat-box">
+                                <div className="stat-icon"><Signal size={20} /></div>
+                                <span className="label">Packets</span>
+                                <span className="value">{Number(target.packets).toLocaleString(undefined, { maximumFractionDigits: 5 })}</span>
+                            </div>
                         )}
-                        <div className="stat-divider"></div>
+                        
                         <div className="stat-box highlight">
+                            <div className="stat-icon"><DuckIcon size={20} color="currentColor" /></div>
                             <span className="label">Lifetime</span>
-                            <span className="value">{target.earned_ducks?.toLocaleString() || 0}</span>
+                            <span className="value">{target.earned_ducks?.toLocaleString(undefined, { maximumFractionDigits: 3 }) || 0}</span>
                         </div>
                     </div>
                 </div>
@@ -319,7 +329,11 @@ const Profile = () => {
                                 <div key={project.id} className="project-card">
                                     <div className="project-thumb" onClick={() => setSelectedProject(project)}>
                                         {project.image_url ? (
-                                            <img src={`/static/${project.image_url}`} alt={project.name} />
+                                            <SmartImage 
+                                                src={`/static/${project.image_url}`} 
+                                                alt={project.name} 
+                                                fallbackType="project"
+                                            />
                                         ) : (
                                             <div className="code-placeholder"><Code size={32} /></div>
                                         )}
@@ -369,7 +383,12 @@ const Profile = () => {
                         <div className="note-grid">
                             {target.notes?.map((note, idx) => (
                                 <div key={note.id} className="note-item">
-                                    <img src={note.url} alt="Note" onClick={() => setSlideshowIndex(idx)} />
+                                    <SmartImage 
+                                        src={note.url} 
+                                        alt="Note" 
+                                        onClick={() => setSlideshowIndex(idx)} 
+                                        fallbackType="project"
+                                    />
                                     {isOwner && (
                                         <button className="delete-note" onClick={() => handleDeleteNote(note.id)}>
                                             <Trash2 size={14} />
@@ -426,7 +445,11 @@ const Profile = () => {
                         <ChevronLeft size={48} />
                     </button>
                     <div className="slide-content" onClick={e => e.stopPropagation()}>
-                        <img src={target.notes[slideshowIndex].url} alt="Note full view" />
+                        <SmartImage 
+                            src={target.notes[slideshowIndex].url} 
+                            alt="Note full view" 
+                            fallbackType="project"
+                        />
                     </div>
                     <button className="nav-slide next" onClick={(e) => { e.stopPropagation(); setSlideshowIndex(i => i < target.notes.length - 1 ? i + 1 : 0); }}>
                         <ChevronRight size={48} />

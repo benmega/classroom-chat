@@ -33,6 +33,7 @@ class User(db.Model):
     nickname = db.Column(db.String(50), nullable=False, default=default_nickname)
     slug = db.Column(db.String(100), unique=True, nullable=True)
     is_admin = db.Column(db.Boolean, default=False)
+    is_approved = db.Column(db.Boolean, default=False)
 
     # Gamification
     packets = db.Column(db.Double, nullable=False, default=0)
@@ -71,6 +72,7 @@ class User(db.Model):
             "profile_picture_url": f"/user/profile_pictures/{self.profile_picture}" if self.profile_picture else "/static/images/Default_pfp.jpg",
             "is_online": self.is_online,
             "is_admin": self.is_admin,
+            "is_approved": self.is_approved,
             "slug": self.slug,
             
             # Gamification

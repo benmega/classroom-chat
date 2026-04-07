@@ -16,7 +16,7 @@ Summary: Template listing conversations a user has participated in.
         {% for conversation in conversations %}
           <div class="conversation-card">
             <div class="conversation-header">
-              <strong>{{ conversation.title }}</strong>
+              <strong>{{ conversation.title | format_convo_title }}</strong>
               <small class="date">Started on: {{ conversation.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</small>
             </div>
             <a class="view-btn" href="{{ url_for('message.view_conversation', conversation_id=conversation.id) }}">View Conversation</a>

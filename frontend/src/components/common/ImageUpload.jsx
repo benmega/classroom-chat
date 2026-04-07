@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import axios from '../../api/client';
 import { Upload, X, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 import './ImageUpload.css';
+import SmartImage from './SmartImage';
 
 /**
  * ImageUpload Component
@@ -116,7 +117,12 @@ const ImageUpload = ({
         
         {preview ? (
           <div className="image-preview-overlay">
-            <img src={preview} alt="Upload preview" className="preview-img" />
+            <SmartImage 
+              src={preview} 
+              alt="Upload preview" 
+              className="preview-img" 
+              fallbackType="project"
+            />
             <div className="preview-controls">
               {!isUploading && (
                 <button 

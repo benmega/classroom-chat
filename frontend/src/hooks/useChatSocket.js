@@ -1,74 +1,114 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { io } from 'socket.io-client';
 
-const SOCKET_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const getSocketUrl = () => {
+  if (import.meta.env.VITE_API_URL) return import.meta.env.VITE_API_URL;
+  const { hostname, protocol, origin } = window.location;
+  // If running in Vite dev server (usually 5173), connect to backend on 8000
+  if (origin.includes(':5173')) {
+    return `${protocol}//${hostname}:8000`;
+  }
+  // Otherwise default to the same origin (production or Flask-served)
+  return origin;
+};
+
+const SOCKET_URL = getSocketUrl();
+
+// Singleton socket instance — lives for the lifetime of the app,
+// not re-created on every component mount.
+let _socket = null;
+
+const getSocket = () => {
+  if (!_socket || _socket.disconnected) {
+    _socket = io(SOCKET_URL, {
+      withCredentials: true,
+      // Prefer WebSocket from the start to avoid the polling→upgrade
+      // handshake that can produce "Invalid frame header" errors when
+      // the connection is torn down mid-upgrade.
+      transports: ['websocket', 'polling'],
+      reconnection: true,
+      reconnectionAttempts: 10,
+      reconnectionDelay: 2000,
+    });
+  }
+  return _socket;
+};
 
 /**
- * Custom hook to manage Socket.io chat connectivity and events
- * @param {Function} onMessageReceived - Callback for when 'message_received' is emitted from the backend
+ * Custom hook to manage Socket.io chat connectivity and events.
+ * Uses a singleton socket and a stable ref for the callback to
+ * prevent reconnect loops on every re-render.
+ *
+ * @param {Function} onMessageReceived - Callback for 'message_received' events
  */
 const useChatSocket = (onMessageReceived) => {
   const socketRef = useRef(null);
   const [isConnected, setIsConnected] = useState(false);
+  // Keep the callback in a ref so we never need to re-subscribe
+  // (which would force the socket to reconnect).
+  const callbackRef = useRef(onMessageReceived);
+  callbackRef.current = onMessageReceived;
 
   useEffect(() => {
-    // Initialize socket connection with credentials for session/cookie support
-    const socket = io(SOCKET_URL, {
-      withCredentials: true,
-      transports: ['websocket', 'polling'],
-      reconnectionAttempts: 5,
-      reconnectionDelay: 1000,
-    });
-
+    const socket = getSocket();
     socketRef.current = socket;
 
-    socket.on('connect', () => {
-      setIsConnected(true);
-      console.log('Socket.io connected');
-    });
+    // Sync initial state
+    setIsConnected(socket.connected);
 
-    socket.on('disconnect', (reason) => {
+    const onConnect = () => {
+      setIsConnected(true);
+      console.log('Socket.io connected:', socket.id);
+    };
+
+    const onDisconnect = (reason) => {
       setIsConnected(false);
       console.log('Socket.io disconnected:', reason);
-    });
+    };
 
-    socket.on('connect_error', (error) => {
-      console.error('Socket.io connection error:', error);
+    const onConnectError = (error) => {
+      console.error('Socket.io connection error:', error.message);
       setIsConnected(false);
-    });
+    };
 
-    // Listen for incoming messages
-    if (onMessageReceived) {
-      socket.on('message_received', (data) => {
-        onMessageReceived(data);
-      });
-    }
-
-    // Cleanup on unmount
-    return () => {
-      if (socket) {
-        socket.disconnect();
+    const onMessage = (data) => {
+      if (callbackRef.current) {
+        callbackRef.current(data);
       }
     };
-  }, [onMessageReceived]);
+
+    socket.on('connect', onConnect);
+    socket.on('disconnect', onDisconnect);
+    socket.on('connect_error', onConnectError);
+    socket.on('message_received', onMessage);
+
+    // Cleanup: remove only our listeners, don't disconnect the socket
+    // (it's shared and should persist across page navigations).
+    return () => {
+      socket.off('connect', onConnect);
+      socket.off('disconnect', onDisconnect);
+      socket.off('connect_error', onConnectError);
+      socket.off('message_received', onMessage);
+    };
+  }, []); // Empty deps — socket is set up once, callback is accessed via ref
 
   /**
    * Emit 'send_message' event to the server
    * @param {Object} messageData - The message object containing content, etc.
    */
   const sendMessage = useCallback((messageData) => {
-    if (socketRef.current && isConnected) {
-      // Ensure we hit the 'send_message' event defined on the backend
-      socketRef.current.emit('send_message', messageData);
+    const socket = socketRef.current;
+    if (socket && socket.connected) {
+      socket.emit('send_message', messageData);
     } else {
       console.warn('Socket not connected. Message not sent:', messageData);
     }
-  }, [isConnected]);
+  }, []);
 
-  return { 
-    isConnected, 
+  return {
+    isConnected,
     sendMessage,
-    socket: socketRef.current 
+    socket: socketRef.current,
   };
 };
 

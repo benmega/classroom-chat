@@ -126,31 +126,9 @@ document.getElementById('remove-user-button')?.addEventListener('click', () => {
     });
 });
 
-function replaceDuckEmojis() {
-    document.querySelectorAll('*').forEach(el => {
-        el.childNodes.forEach(node => {
-            if (node.nodeType === Node.TEXT_NODE && node.nodeValue.includes('🦆')) {
-                const parts = node.nodeValue.split('🦆');
-                const fragment = document.createDocumentFragment();
 
-                parts.forEach((text, idx) => {
-                    fragment.appendChild(document.createTextNode(text));
-                    if (idx < parts.length - 1) {
-                        const img = document.createElement('img');
-                        img.src = '/static/images/rubber_duck.png';
-                        img.alt = 'Rubber Duck';
-                        img.className = 'emoji';
-                        fragment.appendChild(img);
-                    }
-                });
+// Duck emojis 🦆 are rendered natively — no image replacement needed.
 
-                el.replaceChild(fragment, node);
-            }
-        });
-    });
-}
-
-document.addEventListener('DOMContentLoaded', replaceDuckEmojis);
 
 document.getElementById('update-multiplier-button').addEventListener('click', function() {
     const newMultiplier = parseFloat(document.getElementById('duck-multiplier-input').value);

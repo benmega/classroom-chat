@@ -1,8 +1,4 @@
-.admin-documents-page {
-    padding: 2.5rem;
-    max-width: 1400px;
-    margin: 0 auto;
-}
+/* Layout handled by AdminLayout.css */
 
 .page-header {
     margin-bottom: 2.5rem;

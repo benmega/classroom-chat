@@ -60,7 +60,7 @@ def save_message_to_db(user_id, message, message_type="text"):
         if not conversation_id:
             print("No active conversation found. Creating a new one.")
             conversation = Conversation(
-                title=f"Conversation started by User {user_id} at {datetime.utcnow()}",
+                title=f"Conversation started on {datetime.utcnow().strftime('%B %d, %Y')}",
             )
             db.session.add(conversation)
             db.session.commit()

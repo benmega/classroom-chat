@@ -5,6 +5,7 @@ import client from '../../api/client';
 import toast from 'react-hot-toast';
 import useAuthStore from '../../store/useAuthStore';
 import './EditProfile.css';
+import SmartImage from '../../components/common/SmartImage';
 
 const EditProfile = () => {
     const { user, checkAuth } = useAuthStore();
@@ -82,7 +83,12 @@ const EditProfile = () => {
                 <form onSubmit={handleSave} className="settings-form">
                     <section className="profile-pic-section">
                         <div className="avatar-wrapper">
-                            <img src={previewUrl} alt="Profile Preview" className="preview-avatar" />
+                            <SmartImage 
+                                src={previewUrl} 
+                                alt="Profile Preview" 
+                                className="preview-avatar" 
+                                fallbackType="avatar"
+                            />
                             <label htmlFor="pfp-upload" className="upload-overlay">
                                 <Camera size={24} />
                                 <span>Change Photo</span>

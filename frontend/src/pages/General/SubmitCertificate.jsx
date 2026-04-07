@@ -8,22 +8,51 @@ const SubmitCertificate = () => {
     const [certificateFile, setCertificateFile] = useState(null);
     const [uploadProgress, setUploadProgress] = useState(0);
     const [isUploading, setIsUploading] = useState(false);
+    const [errors, setErrors] = useState({});
+
+    // Matches https://www.codecombat.com/certificates/[id]?course=[slug]
+    const CERT_URL_PATTERN = /^https:\/\/(?:www\.)?(?:codecombat|ozaria)\.com\/certificates\/[\w\d]+\?.*course=[\w\d-]+.*$/;
 
     const handleFileChange = (e) => {
         const file = e.target.files[0];
-        if (file && file.type === 'application/pdf') {
-            setCertificateFile(file);
-        } else {
-            toast.error('Please select a valid PDF file.');
-            e.target.value = null;
+        if (file) {
+            if (file.type === 'application/pdf') {
+                setCertificateFile(file);
+                // Clear file error if it exists
+                setErrors(prev => {
+                    const newErrors = { ...prev };
+                    delete newErrors.file;
+                    return newErrors;
+                });
+            } else {
+                toast.error('Please select a valid PDF file.');
+                e.target.value = null;
+                setCertificateFile(null);
+            }
         }
+    };
+
+    const validateForm = () => {
+        const newErrors = {};
+
+        if (!certificateUrl.trim()) {
+            newErrors.url = 'Certificate URL is required.';
+        } else if (!CERT_URL_PATTERN.test(certificateUrl.trim())) {
+            newErrors.url = 'Please enter a valid CodeCombat or Ozaria certificate URL (e.g., https://codecombat.com/certificates/...)';
+        }
+
+        if (!certificateFile) {
+            newErrors.file = 'Certificate PDF file is required.';
+        }
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         
-        if (!certificateFile) {
-            toast.error('Please select a certificate PDF to upload.');
+        if (!validateForm()) {
             return;
         }
 
@@ -73,14 +102,23 @@ const SubmitCertificate = () => {
                     <div className="form-group">
                         <label htmlFor="certificate_url">Certificate URL</label>
                         <input 
-                            type="url" 
+                            type="text" 
                             id="certificate_url"
                             value={certificateUrl}
-                            onChange={(e) => setCertificateUrl(e.target.value)}
+                            onChange={(e) => {
+                                setCertificateUrl(e.target.value);
+                                if (errors.url) {
+                                    setErrors(prev => {
+                                        const newErrors = { ...prev };
+                                        delete newErrors.url;
+                                        return newErrors;
+                                    });
+                                }
+                            }}
                             placeholder="https://codecombat.com/certificates/..." 
-                            required 
-                            className="form-control"
+                            className={`form-control ${errors.url ? 'is-invalid' : ''}`}
                         />
+                        {errors.url && <div className="error-message">{errors.url}</div>}
                     </div>
 
                     <div className="form-group">
@@ -91,13 +129,13 @@ const SubmitCertificate = () => {
                                 id="certificate_file"
                                 onChange={handleFileChange}
                                 accept="application/pdf" 
-                                required 
                                 className="file-input"
                             />
-                            <div className="file-dummy">
+                            <div className={`file-dummy ${errors.file ? 'is-invalid' : ''}`}>
                                 {certificateFile ? certificateFile.name : 'Choose a PDF file...'}
                             </div>
                         </div>
+                        {errors.file && <div className="error-message">{errors.file}</div>}
                     </div>
 
                     {isUploading && (

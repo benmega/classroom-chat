@@ -1,8 +1,4 @@
-.admin-achievements-page {
-    padding: 3rem;
-    max-width: 1200px;
-    margin: 0 auto;
-}
+/* Layout handled by AdminLayout.css */
 
 .page-header {
     margin-bottom: 3.5rem;

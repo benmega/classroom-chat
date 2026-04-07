@@ -32,7 +32,7 @@ class Conversation(db.Model):
     title = db.Column(
         db.String(100),
         nullable=False,
-        default=lambda: f"New Conversation {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')}",
+        default=lambda: f"New Chat on {datetime.utcnow().strftime('%B %d, %Y')}",
     )
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
