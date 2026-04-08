@@ -8,7 +8,7 @@
 }
 
 .page-header h1 {
-    font-size: 2.25rem;
+    font-size: clamp(1.8rem, 4vw, 2.25rem);
     font-weight: 800;
     color: #1e293b;
     margin-bottom: 0.5rem;
@@ -199,7 +199,8 @@
     color: #64748b;
     font-weight: 600;
     cursor: pointer;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
 }
 
 .review-grid {

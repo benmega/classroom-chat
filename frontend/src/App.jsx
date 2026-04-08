@@ -24,9 +24,12 @@ import AdminProjects from './pages/Admin/AdminProjects';
 import AdminCertificates from './pages/Admin/AdminCertificates';
 import AdminAchievements from './pages/Admin/AdminAchievements';
 import AdminDocuments from './pages/Admin/AdminDocuments';
+import Users from './pages/Admin/Users';
+import Analytics from './pages/Admin/Analytics';
 import PendingTrades from './pages/Admin/PendingTrades';
 import PendingUsers from './pages/Admin/PendingUsers';
 import AdvancedPanel from './pages/Admin/AdvancedPanel';
+import AdminSettings from './pages/Admin/AdminSettings';
 import AccessDenied from './pages/Error/AccessDenied';
 
 
@@ -190,11 +193,14 @@ function App() {
                 <Route path="dashboard" element={<AdminDashboard />} />
                 <Route path="projects" element={<AdminProjects />} />
                 <Route path="certificates" element={<AdminCertificates />} />
+                <Route path="users" element={<Users />} />
+                <Route path="analytics" element={<Analytics />} />
                 <Route path="add-achievement" element={<AdminAchievements />} />
                 <Route path="documents" element={<AdminDocuments />} />
                 <Route path="pending-trades" element={<PendingTrades />} />
                 <Route path="pending-users" element={<PendingUsers />} />
                 <Route path="advanced" element={<AdvancedPanel />} />
+                <Route path="settings" element={<AdminSettings />} />
               </Routes>
             </AdminLayout>
           </ProtectedRoute>

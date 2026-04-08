@@ -5,6 +5,7 @@ Summary: Flask routes for user identity, profile management, and project portfol
 """
 
 import os
+import re
 import uuid
 from functools import wraps
 
@@ -18,7 +19,7 @@ from wtforms import StringField, PasswordField, SubmitField
 from wtforms.validators import DataRequired
 
 from application.config import Config
-from application.extensions import db, limiter
+from application.extensions import db, limiter, csrf
 from application.models.conversation import Conversation
 from application.models.project import Project
 from application.models.skill import Skill
@@ -72,6 +73,7 @@ class LoginForm(FlaskForm):
 # --- Auth Routes ---
 
 
+@csrf.exempt
 @user.route("/login", methods=["GET", "POST"])
 def login():
     form = LoginForm()
@@ -160,6 +162,7 @@ def logout():
 
 
 
+@csrf.exempt
 @user.route("/signup", methods=["POST"])
 @api_response
 def signup():
@@ -512,20 +515,24 @@ def delete_profile_picture():
 @limiter.limit("50 per minute")
 @user.route("/profile_pictures/<path:filename>")
 def profile_picture(filename):
+    static_images_folder = os.path.join(Config.STATIC_FOLDER, "images")
+    
     if filename == "Default_pfp.jpg":
-        PROFILE_PICTURE_FOLDER = os.path.join(Config.STATIC_FOLDER, "images")
-        return send_from_directory(PROFILE_PICTURE_FOLDER, filename)
+        return send_from_directory(static_images_folder, filename)
 
-    PROFILE_PICTURE_FOLDER = os.path.join(Config.UPLOAD_FOLDER, "profile_pictures")
-
+    upload_folder = os.path.join(Config.UPLOAD_FOLDER, "profile_pictures")
     safe_path = os.path.normpath(filename)
+    
     if os.path.isabs(safe_path) or safe_path.startswith(".."):
         abort(400)
 
-    try:
-        return send_from_directory(PROFILE_PICTURE_FOLDER, safe_path)
-    except FileNotFoundError:
-        abort(404)
+    full_path = os.path.join(upload_folder, safe_path)
+    
+    if os.path.exists(full_path) and os.path.isfile(full_path):
+        return send_from_directory(upload_folder, safe_path)
+    else:
+        # Fallback to default if not found on disk
+        return send_from_directory(static_images_folder, "Default_pfp.jpg")
 
 
 # --- API / Utility Routes ---

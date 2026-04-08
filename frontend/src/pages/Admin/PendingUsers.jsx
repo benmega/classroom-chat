@@ -23,7 +23,7 @@ const PendingUsers = () => {
     const fetchPendingUsers = async () => {
         setIsLoading(true);
         try {
-            const response = await client.get('/admin/pending_users');
+            const response = await client.get('/api/admin/pending_users');
             if (response.data.status === 'success') {
                 setUsers(response.data.data.users);
             }
@@ -41,7 +41,7 @@ const PendingUsers = () => {
     const handleApprove = async (userId) => {
         setIsProcessing(userId);
         try {
-            const response = await client.post(`/admin/approve_user/${userId}`);
+            const response = await client.post(`/api/admin/approve_user/${userId}`);
             if (response.data.status === 'success') {
                 toast.success(response.data.data.message);
                 setUsers(prev => prev.filter(u => u.id !== userId));
@@ -58,7 +58,7 @@ const PendingUsers = () => {
         
         setIsProcessing(userId);
         try {
-            const response = await client.post(`/admin/reject_user/${userId}`);
+            const response = await client.post(`/api/admin/reject_user/${userId}`);
             if (response.data.status === 'success') {
                 toast.success(response.data.data.message);
                 setUsers(prev => prev.filter(u => u.id !== userId));

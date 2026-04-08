@@ -130,8 +130,11 @@
 .header-stats {
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
+    justify-content: center;
     gap: 1.5rem;
-    padding: 0.5rem;
+    padding: 1.5rem 0.5rem;
+    width: 100%;
 }
 
 .stat-box {
@@ -139,8 +142,10 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    min-width: 110px;
-    padding: 1.25rem 1rem;
+    min-width: 100px;
+    flex: 1 1 100px;
+    max-width: 140px;
+    padding: 1.25rem 0.75rem;
     background: var(--bg-tertiary);
     border-radius: var(--radius-lg);
     border: 1px solid var(--border-subtle);
@@ -168,19 +173,24 @@
 }
 
 .stat-box .label {
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     font-weight: 800;
     color: var(--text-muted);
     text-transform: uppercase;
     letter-spacing: 0.1em;
     margin-bottom: 0.25rem;
+    white-space: nowrap;
 }
 
 .stat-box .value {
-    font-size: 1.5rem;
+    font-size: 1.25rem;
     font-weight: 800;
     color: var(--text-primary);
     font-family: var(--font-heading);
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .stat-box.highlight {
@@ -212,6 +222,27 @@
     padding: 2rem;
     margin-bottom: 2rem;
     box-shadow: var(--shadow-soft);
+    max-height: 600px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-subtle) transparent;
+}
+
+.dashboard-panel::-webkit-scrollbar {
+    width: 6px;
+}
+
+.dashboard-panel::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.dashboard-panel::-webkit-scrollbar-thumb {
+    background: var(--border-subtle);
+    border-radius: 10px;
+}
+
+.dashboard-panel::-webkit-scrollbar-thumb:hover {
+    background: var(--text-muted);
 }
 
 .panel-header {
@@ -362,14 +393,19 @@
 
 @media (max-width: 1100px) {
     .dashboard-grid { grid-template-columns: 1fr; }
-    .header-content { flex-direction: column; align-items: center; text-align: center; }
-    .header-stats { gap: 1.5rem; width: 100%; justify-content: center; }
+    .header-content { flex-direction: column; align-items: center; text-align: center; padding: 0 1.5rem 2.5rem; }
+    .header-stats { gap: 1rem; width: 100%; justify-content: center; }
 }
 
 @media (max-width: 768px) {
     .modal-body { grid-template-columns: 1fr; }
-    .header-content { padding: 0 2rem 2.5rem; }
+    .header-content { padding: 0 1rem 2.5rem; }
     .student-name { font-size: 2.2rem; }
+    .header-stats { gap: 0.75rem; }
+    .stat-box { 
+        min-width: 130px; 
+        flex: 0 1 auto; 
+    }
 }
 /* Coding Activity Graph */
 .activity-visual {

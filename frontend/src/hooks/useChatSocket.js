@@ -3,13 +3,7 @@ import { io } from 'socket.io-client';
 
 const getSocketUrl = () => {
   if (import.meta.env.VITE_API_URL) return import.meta.env.VITE_API_URL;
-  const { hostname, protocol, origin } = window.location;
-  // If running in Vite dev server (usually 5173), connect to backend on 8000
-  if (origin.includes(':5173')) {
-    return `${protocol}//${hostname}:8000`;
-  }
-  // Otherwise default to the same origin (production or Flask-served)
-  return origin;
+  return window.location.origin;
 };
 
 const SOCKET_URL = getSocketUrl();

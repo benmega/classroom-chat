@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Save, Trash2, X, Upload, Link as LinkIcon, Video, Code, MessageSquare, User as UserIcon } from 'lucide-react';
+import AccessDenied from '../Error/AccessDenied';
+import NotFound from '../Error/NotFound';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
 import useAuthStore from '../../store/useAuthStore';
@@ -29,6 +31,7 @@ const ManageProject = () => {
     const [projectImage, setProjectImage] = useState(null);
     const [imagePreview, setImagePreview] = useState(null);
     const [projectVideo, setProjectVideo] = useState(null);
+    const [error, setError] = useState(null);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -61,7 +64,13 @@ const ManageProject = () => {
                 }
             } catch (error) {
                 console.error('Error fetching project data:', error);
-                toast.error('Failed to load project details.');
+                if (error.response?.status === 403) {
+                    setError('forbidden');
+                } else if (error.response?.status === 404) {
+                    setError('not_found');
+                } else {
+                    toast.error('Failed to load project details.');
+                }
             } finally {
                 setIsLoading(false);
             }
@@ -141,6 +150,9 @@ const ManageProject = () => {
     };
 
     if (isLoading) return <div className="loading-container">Loading...</div>;
+
+    if (error === 'forbidden') return <AccessDenied />;
+    if (error === 'not_found') return <NotFound message="The project you are looking for does not exist or you do not have permission to view it." />;
 
     return (
         <div className="manage-project-page">

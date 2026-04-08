@@ -28,12 +28,16 @@ const AdminDocuments = () => {
         setIsLoading(true);
         try {
             const [docsRes, statsRes] = await Promise.all([
-                client.get('/admin/documents'),
-                client.get('/admin/documents/stats')
+                client.get('/api/admin/documents'),
+                client.get('/api/admin/documents/stats')
             ]);
             
-            if (docsRes.data.success) setDocuments(docsRes.data.documents);
-            if (statsRes.data.success) setStats(statsRes.data.stats);
+            if (docsRes.data.status === 'success') {
+                setDocuments(docsRes.data.data.documents);
+            }
+            if (statsRes.data.status === 'success') {
+                setStats(statsRes.data.data.stats);
+            }
             
         } catch (error) {
             toast.error('Failed to load document data.');
@@ -54,9 +58,9 @@ const AdminDocuments = () => {
             formData.append('category', category);
             formData.append('filename', filename);
             
-            const response = await client.post('/admin/delete-document', formData);
-            if (response.data.success) {
-                toast.success(response.data.message);
+            const response = await client.post('/api/admin/delete-document', formData);
+            if (response.data.status === 'success') {
+                toast.success(response.data.message || 'File deleted successfully');
                 fetchData();
             }
         } catch (error) {
@@ -150,7 +154,7 @@ const AdminDocuments = () => {
                             <div className="doc-actions">
                                 <div className="primary-actions">
                                     <a 
-                                        href={`/admin/documents/${doc.category}/${doc.filename}/view`} 
+                                        href={`/api/admin/documents/${doc.category}/${doc.filename}/view`} 
                                         target="_blank" 
                                         rel="noopener noreferrer"
                                         className="action-btn"
@@ -159,7 +163,7 @@ const AdminDocuments = () => {
                                         <Eye size={18} />
                                     </a>
                                     <a 
-                                        href={`/admin/documents/${doc.category}/${doc.filename}/download`} 
+                                        href={`/api/admin/documents/${doc.category}/${doc.filename}/download`} 
                                         className="action-btn"
                                         title="Download"
                                     >

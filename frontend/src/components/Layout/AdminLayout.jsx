@@ -1,17 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink, Link, useNavigate, useLocation } from 'react-router-dom';
-import { 
-    Home, 
-    LogOut, 
-    Shield, 
-    LayoutDashboard, 
-    BarChart3, 
-    FolderKanban, 
-    Trophy, 
-    FileCheck, 
-    FileText, 
-    ShieldAlert, 
+import {
+    Home,
+    LogOut,
+    Shield,
+    LayoutDashboard,
+    BarChart3,
+    FolderKanban,
+    Trophy,
+    FileCheck,
+    FileText,
+    ShieldAlert,
     Users,
+    Settings,
     Menu,
     X,
     ChevronLeft,
@@ -58,9 +59,13 @@ const AdminLayout = ({ children }) => {
 
     const navItems = [
         { path: '/admin', label: 'Dashboard', icon: LayoutDashboard, end: true },
-        { path: '/admin/pending-users', label: 'User Approvals', icon: Users },
-        { path: '/admin/pending-trades', label: 'Pending Trades', icon: BarChart3, badge: true },
+        { path: '/admin/users', label: 'Users', icon: Users },
+        { path: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
+        { path: '/admin/pending-users', label: 'User Approvals', icon: Users, badge: true },
+        { path: '/admin/pending-trades', label: 'Pending Trades', icon: BarChart3 },
         { path: '/admin/projects', label: 'Projects', icon: FolderKanban },
+        { path: '/admin/settings', label: 'Settings', icon: Settings },
+
         { path: '/admin/add-achievement', label: 'Achievements', icon: Trophy },
         { path: '/admin/certificates', label: 'Certificates', icon: FileCheck },
         { path: '/admin/documents', label: 'Assets & Documents', icon: FileText },
@@ -91,9 +96,9 @@ const AdminLayout = ({ children }) => {
                     <div className="nav-group">
                         <span className="nav-group-label">Management</span>
                         {navItems.map((item) => (
-                            <NavLink 
-                                key={item.path} 
-                                to={item.path} 
+                            <NavLink
+                                key={item.path}
+                                to={item.path}
                                 end={item.end}
                                 className={({ isActive }) => `nav-item ${isActive || (item.path !== '/admin' && location.pathname.startsWith(item.path)) ? 'active' : ''}`}
                                 title={item.label}
@@ -121,10 +126,10 @@ const AdminLayout = ({ children }) => {
                 </nav>
 
                 <div className="sidebar-user">
-                    <SmartImage 
-                        src={user?.profile_picture ? `/user/profile_pictures/${user.profile_picture}` : ''} 
-                        alt="Profile" 
-                        className="user-avatar" 
+                    <SmartImage
+                        src={user?.profile_picture ? `/user/profile_pictures/${user.profile_picture}` : ''}
+                        alt="Profile"
+                        className="user-avatar"
                         fallbackType="avatar"
                     />
                     <div className="user-info">
@@ -142,16 +147,10 @@ const AdminLayout = ({ children }) => {
                             <Menu size={24} />
                         </button>
                         <h2 className="page-title">
-                            {navItems.find(item => 
+                            {navItems.find(item =>
                                 item.end ? item.path === location.pathname : location.pathname.startsWith(item.path)
                             )?.label || 'Administration'}
                         </h2>
-                    </div>
-                    <div className="top-bar-right">
-                        <div className="system-status">
-                            <span className="status-dot online"></span>
-                            <span className="status-text">System Live</span>
-                        </div>
                     </div>
                 </header>
 

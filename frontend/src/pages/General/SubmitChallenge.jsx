@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
 import useAuthStore from '../../store/useAuthStore';
+import UserSearchInput from '../../components/common/UserSearchInput';
 import './SubmitChallenge.css';
 
 const SubmitChallenge = () => {
@@ -11,69 +12,6 @@ const SubmitChallenge = () => {
     const [notes, setNotes] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const bookmarkletRef = useRef(null);
-
-    useEffect(() => {
-        if (bookmarkletRef.current) {
-            bookmarkletRef.current.setAttribute('href', bookmarkletCode);
-        }
-    }, [bookmarkletCode]);
-
-    const playQuackSound = () => {
-        return new Promise((resolve) => {
-            const quack = new Audio('/static/sounds/quack.mp3');
-            quack.onended = resolve;
-            quack.onerror = (err) => {
-                console.warn('Audio play error:', err);
-                resolve();
-            };
-            quack.play().catch((err) => {
-                console.warn('Autoplay prevented:', err);
-                resolve();
-            });
-        });
-    };
-
-    const playQuacksSequentially = async (count) => {
-        for (let i = 0; i < count; i++) {
-            await playQuackSound();
-        }
-    };
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        
-        setIsSubmitting(true);
-        try {
-            const response = await client.post('/challenge/submit', {
-                url,
-                helpers,
-                notes
-            }, {
-                headers: { 'X-Requested-With': 'XMLHttpRequest' }
-            });
-
-            if (response.data.success) {
-                toast.success(response.data.message || 'Challenge submitted successfully!');
-                
-                // Play quacks
-                if (response.data.quack_count > 0) {
-                    playQuacksSequentially(response.data.quack_count);
-                }
-
-                setUrl('');
-                setHelpers('');
-                setNotes('');
-                checkAuth(); // Refresh user balance
-            } else {
-                toast.error(response.data.message || 'Submission failed.');
-            }
-        } catch (error) {
-            console.error('Submission error:', error);
-            toast.error(error.response?.data?.message || 'An error occurred during submission.');
-        } finally {
-            setIsSubmitting(false);
-        }
-    };
 
     const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:8000';
     const fullApiUrl = apiBase.startsWith('http') ? apiBase : (window.location.origin + apiBase);
@@ -119,6 +57,44 @@ const SubmitChallenge = () => {
         });
     })();`.replace(/\n\s+/g, ''); // Compact for bookmarklet use
 
+    useEffect(() => {
+        if (bookmarkletRef.current) {
+            bookmarkletRef.current.setAttribute('href', bookmarkletCode);
+        }
+    }, [bookmarkletCode]);
+
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        
+        setIsSubmitting(true);
+        try {
+            const response = await client.post('/challenge/submit', {
+                url,
+                helpers,
+                notes
+            }, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            });
+
+            if (response.data.success) {
+                toast.success(response.data.message || 'Challenge submitted successfully!');
+                
+                setUrl('');
+                setHelpers('');
+                setNotes('');
+                checkAuth(); // Refresh user balance
+            } else {
+                toast.error(response.data.message || 'Submission failed.');
+            }
+        } catch (error) {
+            console.error('Submission error:', error);
+            toast.error(error.response?.data?.message || 'An error occurred during submission.');
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
     return (
         <div className="submit-challenge-page">
             <div className="form-card">
@@ -139,13 +115,14 @@ const SubmitChallenge = () => {
 
                     <div className="form-group">
                         <label htmlFor="helpers">Who helped you? (optional)</label>
-                        <input 
-                            type="text" 
+                        <UserSearchInput 
                             id="helpers"
                             value={helpers}
-                            onChange={(e) => setHelpers(e.target.value)}
-                            placeholder="Username of the person who helped" 
+                            onChange={setHelpers}
+                            onSelect={(u) => setHelpers(u.username)}
+                            placeholder="Search for users who helped..." 
                             className="form-control"
+                            showIcon={false}
                         />
                     </div>
 
@@ -185,3 +162,4 @@ const SubmitChallenge = () => {
 };
 
 export default SubmitChallenge;
+

@@ -56,15 +56,36 @@ const Chat = () => {
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
-  // Define callback for incoming messages via Socket.io
   const onMessageReceived = useCallback((data) => {
-    // Only add if it's for the current logic (we could filter by conversation_id if needed)
+    setConversations(prevConvs => {
+      let updated = false;
+      const nextConvs = prevConvs.map(conv => {
+        if (conv.conversation_id === data.conversation_id) {
+          const msgExists = conv.messages?.some(m => 
+            (m.content === data.content && m.username === data.username && Math.abs(new Date(m.timestamp) - new Date(data.timestamp)) < 1000)
+          );
+          if (msgExists) return conv;
+          updated = true;
+          return {
+            ...conv,
+            messages: [...(conv.messages || []), data]
+          };
+        }
+        return conv;
+      });
+      return updated ? nextConvs : prevConvs;
+    });
+
     setMessages(prev => {
-      // Avoid duplicates if we already have it (e.g. from optimistic update)
       const exists = prev.some(m => 
         (m.content === data.content && m.username === data.username && Math.abs(new Date(m.timestamp) - new Date(data.timestamp)) < 1000)
       );
       if (exists) return prev;
+      
+      // Ensure we only add the message to the active view if it belongs there
+      if (prev.length > 0 && prev[0].conversation_id && prev[0].conversation_id !== data.conversation_id) {
+         return prev;
+      }
       return [...prev, data];
     });
   }, []);

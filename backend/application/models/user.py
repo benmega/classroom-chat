@@ -5,9 +5,10 @@ Summary: SQLAlchemy model for application users and authentication data.
 """
 
 import re
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime
 
-from sqlalchemy import event
+from sqlalchemy import event, or_, cast, Date, func
+from sqlalchemy.orm import foreign
 from sqlalchemy.ext.hybrid import hybrid_property
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -34,6 +35,7 @@ class User(db.Model):
     slug = db.Column(db.String(100), unique=True, nullable=True)
     is_admin = db.Column(db.Boolean, default=False)
     is_approved = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     # Gamification
     packets = db.Column(db.Double, nullable=False, default=0)
@@ -53,8 +55,8 @@ class User(db.Model):
     challenge_logs = db.relationship(
         "ChallengeLog",
         primaryjoin="User._username == foreign(ChallengeLog.username)",
-        lazy=True,
-        viewonly=True,  # Recommended since ChallengeLog.username isn't a foreign key
+        lazy="dynamic",
+        viewonly=True,
     )
 
     notes = db.relationship('Note', back_populates='user', cascade='all, delete-orphan',
@@ -64,7 +66,7 @@ class User(db.Model):
         return f"<User {self._username}>"
 
     def to_dict(self):
-        return {
+        d = {
             "id": self.id,
             "username": self.username,
             "nickname": self.nickname,
@@ -95,6 +97,10 @@ class User(db.Model):
             "notes": [n.to_dict() if hasattr(n, 'to_dict') else {"id": n.id, "url": f"/notes/view/{n.id}"} for n in self.notes],
             "contribution_data": self.get_contribution_data()
         }
+        # Explicit defensive safety check
+        for field in ['password_hash', 'salt', 'ip_address']:
+            d.pop(field, None)
+        return d
 
 
     @hybrid_property
@@ -238,7 +244,7 @@ class User(db.Model):
         start_date = end_date - timedelta(weeks=52)  # Go back 52 weeks
 
         # 2. Fetch Data
-        logs = self.challenge_logs
+        logs = self.challenge_logs.all()
         counts = {}
         for log in logs:
             k = log.timestamp.date().isoformat()

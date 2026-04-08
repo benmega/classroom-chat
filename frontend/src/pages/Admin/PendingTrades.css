@@ -29,8 +29,9 @@
     color: #64748b;
     font-weight: 600;
     cursor: pointer;
-    margin-bottom: 2rem;
+    margin-bottom: 1rem;
     transition: color 0.2s;
+    font-size: 0.9rem;
 }
 
 .back-btn:hover {

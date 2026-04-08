@@ -25,7 +25,7 @@ const AdvancedPanel = () => {
     const fetchViews = async () => {
         setIsLoading(true);
         try {
-            const response = await client.get('/admin/advanced-panel');
+            const response = await client.get('/api/admin/advanced-panel');
             if (response.data.status === 'success') {
                 setViews(response.data.data.views);
             }
@@ -65,7 +65,7 @@ const AdvancedPanel = () => {
                             views.map((view, idx) => (
                                 <a 
                                     key={idx}
-                                    href={`/admin/${view.endpoint}`} 
+                                    href={`/api/admin/advanced/${view.endpoint}/`} 
                                     className="model-item"
                                     target="_blank"
                                     rel="noopener noreferrer"

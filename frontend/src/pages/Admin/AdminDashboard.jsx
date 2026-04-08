@@ -84,7 +84,7 @@ const AdminDashboard = () => {
     const fetchDashboardData = async () => {
         setIsRefreshing(true);
         try {
-            const response = await client.get('/admin/dashboard');
+            const response = await client.get('/api/admin/dashboard');
             if (response.data.status === 'success') {
                 setDashboardData(response.data.data);
             }
@@ -107,7 +107,7 @@ const AdminDashboard = () => {
 
     const handleToggleAI = async () => {
         try {
-            const response = await client.post('/admin/toggle-ai');
+            const response = await client.post('/api/admin/toggle-ai');
             if (response.data.success) {
                 toast.success(response.data.message);
                 fetchDashboardData();
@@ -119,7 +119,7 @@ const AdminDashboard = () => {
 
     const handleToggleMessages = async () => {
         try {
-            const response = await client.post('/admin/toggle-message-sending');
+            const response = await client.post('/api/admin/toggle-message-sending');
             if (response.data.success) {
                 toast.success(response.data.message);
                 fetchDashboardData();
@@ -131,7 +131,7 @@ const AdminDashboard = () => {
 
     const handleUpdateMultiplier = async (val) => {
         try {
-            const response = await client.post('/admin/update_duck_multiplier', { multiplier: val });
+            const response = await client.post('/api/admin/update_duck_multiplier', { multiplier: val });
             if (response.data.success) {
                 toast.success('Multiplier updated!');
                 fetchDashboardData();
@@ -150,7 +150,7 @@ const AdminDashboard = () => {
             formData.append('word', newWord);
             formData.append('reason', banReason);
             
-            const response = await client.post('/admin/add-banned-word', formData);
+            const response = await client.post('/api/admin/add-banned-word', formData);
             if (response.data.success) {
                 toast.success(response.data.message);
                 setNewWord('');
@@ -190,7 +190,7 @@ const AdminDashboard = () => {
         setFormErrors({});
         setFormLoading(true);
         try {
-            const response = await client.post('/admin/create_user', formData);
+            const response = await client.post('/api/admin/create_user', formData);
             if (response.data.success) {
                 toast.success(response.data.message);
                 setActiveModal(null);
@@ -221,7 +221,7 @@ const AdminDashboard = () => {
         setFormErrors({});
         setFormLoading(true);
         try {
-            const response = await client.post('/admin/adjust_ducks', formData);
+            const response = await client.post('/api/admin/adjust_ducks', formData);
             if (response.data.success) {
                 toast.success(response.data.message);
                 setActiveModal(null);
@@ -256,7 +256,7 @@ const AdminDashboard = () => {
         setFormErrors({});
         setFormLoading(true);
         try {
-            const response = await client.post('/admin/reset_password', {
+            const response = await client.post('/api/admin/reset_password', {
                 username: data.username,
                 new_password: data.new_password
             });
@@ -294,7 +294,7 @@ const AdminDashboard = () => {
         try {
             const formData = new FormData();
             formData.append('username', username);
-            const response = await client.post('/admin/remove_user', formData);
+            const response = await client.post('/api/admin/remove_user', formData);
             if (response.data.success) {
                 toast.success(response.data.message);
                 fetchDashboardData();

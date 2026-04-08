@@ -8,7 +8,8 @@ from flask import session, render_template
 from flask_admin import Admin, AdminIndexView, expose
 from flask_admin.contrib.sqla import ModelView
 
-from application import db, User
+from application.extensions import db
+from application.models.user import User
 
 
 class SecureModelView(ModelView):
@@ -20,6 +21,10 @@ class SecureModelView(ModelView):
     can_view_details = True
     column_display_pk = True
 
+    def __init__(self, model, session, *args, **kwargs):
+        self.column_exclude_list = [c for c in ['password_hash', 'ip_address'] if hasattr(model, c)]
+        super(SecureModelView, self).__init__(model, session, *args, **kwargs)
+
     def is_accessible(self):
         user_id = session.get("user")
         if not user_id:
@@ -30,7 +35,7 @@ class SecureModelView(ModelView):
 
     def inaccessible_callback(self, name, **kwargs):
         # unauthorized access
-        return render_template("index.html")
+        return "Admin access required.", 403
 
 
 
@@ -46,7 +51,7 @@ class AdvancedIndex(AdminIndexView):
         return user and user.is_admin
 
     def inaccessible_callback(self, name, **kwargs):
-        return render_template("index.html")
+        return "Admin access required.", 403
 
 
     @expose("/")
@@ -61,7 +66,8 @@ def init_admin(app):
     admin = Admin(
         app,
         name="Advanced Admin",
-        index_view=AdvancedIndex(url="/admin/advanced", endpoint="admin_advanced"),
+        url="/api/admin/advanced",
+        index_view=AdvancedIndex(name="Overview", url="/api/admin/advanced"),
     )
 
     for mapper in db.Model.registry.mappers:

@@ -36,7 +36,7 @@ from application.models.message import Message
 from application.models.project import Project
 from application.models.user import User
 
-admin = Blueprint("admin", __name__)
+admin = Blueprint("admin_api", __name__)
 admin_pass = Config.ADMIN_PASSWORD
 adminUsername = Config.ADMIN_USERNAME
 
@@ -158,15 +158,13 @@ def get_duck_transactions_data():
     return {"labels": labels, "earned": earned, "spent": spent}
 
 
-@admin.route("/")
-@admin_only
-def base():
-    return redirect(url_for("admin.dashboard"))
+
 
 
 
 @admin.route("/dashboard")
 @admin_only
+@api_response
 def dashboard():
     total_ducks = db.session.query(func.sum(User.duck_balance)).scalar() or 0
 
@@ -211,33 +209,20 @@ def dashboard():
 
     chart_data = get_duck_transactions_data()
 
-    if request.is_json or request.accept_mimetypes.accept_json:
-        return jsonify({
-            "status": "success",
-            "data": {
-                "total_ducks": total_ducks,
-                "ducks_earned_this_week": ducks_earned_this_week,
-                "pending_trades_count": pending_trades_count,
-                "pending_users_count": pending_users_count,
-                "active_users_count": active_users_count,
-                "users": [u.to_dict() for u in users_sorted],
-                "config": config.to_dict() if config else None,
-                "banned_words": [bw.to_dict() for bw in banned_words],
-                "chart_data": chart_data
-            }
-        })
-
-    return render_template(
-        "admin/admin.html",
-        users=users_sorted,
-        config=config,
-        banned_words=banned_words,
-        total_ducks=total_ducks,
-        ducks_earned_this_week=ducks_earned_this_week,
-        pending_trades_count=pending_trades_count,
-        active_users_count=active_users_count,
-        chart_data=chart_data,
-    )
+    return {
+        "status": "success",
+        "data": {
+            "total_ducks": total_ducks,
+            "ducks_earned_this_week": ducks_earned_this_week,
+            "pending_trades_count": pending_trades_count,
+            "pending_users_count": pending_users_count,
+            "active_users_count": active_users_count,
+            "users": [u.to_dict() for u in users_sorted],
+            "config": config.to_dict() if config else None,
+            "banned_words": [bw.to_dict() for bw in banned_words],
+            "chart_data": chart_data
+        }
+    }
 
 @admin.route("/duck_transactions_data")
 @admin_only
@@ -279,26 +264,17 @@ def reject_user(user_id):
 @admin_only
 def get_users():
     users = User.query.all()
-    users_data = []
-    for user in users:
-        user_dict = {
-            column.name: getattr(user, column.name) for column in user.__table__.columns
-        }
-        user_dict["skills"] = [
-            {"id": skill.id, "name": skill.name} for skill in user.skills
-        ]
-        user_dict["projects"] = [
-            {
-                "id": project.id,
-                "name": project.name,
-                "description": project.description,
-                "link": project.link,
-            }
-            for project in user.projects
-        ]
-        users_data.append(user_dict)
+    # Ensure we use to_dict() and don't leak raw objects
+    user_data = []
+    for u in users:
+        d = u.to_dict()
+        # Explicit safety check: remove sensitive fields if they somehow slipped in
+        for field in ['password_hash', 'salt', 'ip_address']:
+            d.pop(field, None)
+        user_data.append(d)
+        
+    return jsonify(user_data)
 
-    return jsonify(users_data)
 
 
 @admin.route("/users/<int:user_id>", methods=["PUT"])
@@ -550,25 +526,20 @@ def strike_message(message_id):
 
 @admin.route("/pending_trades", methods=["GET"])
 @admin_only
+@api_response
 def pending_trades():
     pend_trades = DuckTradeLog.query.filter_by(status="pending").all()
     
-    if request.is_json or request.accept_mimetypes.accept_json:
-        return jsonify({
-            "status": "success",
-            "data": {
-                "trades": [{
-                    "id": t.id,
-                    "username": t.username,
-                    "digital_ducks": t.digital_ducks,
-                    "bit_ducks": t.bit_ducks,
-                    "byte_ducks": t.byte_ducks,
-                    "timestamp": t.timestamp.isoformat() if t.timestamp else None
-                } for t in pend_trades]
-            }
-        })
+    trades_list = [{
+        "id": t.id,
+        "username": t.username,
+        "digital_ducks": t.digital_ducks,
+        "bit_ducks": t.bit_ducks,
+        "byte_ducks": t.byte_ducks,
+        "timestamp": t.timestamp.isoformat() if t.timestamp else None
+    } for t in pend_trades]
 
-    return render_template("admin/pending_trades.html", trades=pend_trades)
+    return {"trades": trades_list}
 
 
 @admin.route("/trade_action", methods=["POST"])
@@ -653,33 +624,29 @@ def adjust_ducks():
 
 @admin.route("/advanced-panel")
 @admin_only
+@api_response
 def advanced_panel():
     # In a real scenario, these come from the Flask-Admin instance
     # We'll provide a curated list for the React frontend
     admin_views = [
-        {"name": "Users", "endpoint": "user"},
-        {"name": "Projects", "endpoint": "project"},
-        {"name": "Achievements", "endpoint": "achievement"},
-        {"name": "Duck Trade Logs", "endpoint": "ducktradelog"},
-        {"name": "Configuration", "endpoint": "configuration"},
-        {"name": "Banned Words", "endpoint": "bannedwords"},
-        {"name": "Messages", "endpoint": "message"},
-        {"name": "Conversations", "endpoint": "conversation"},
+        {"name": "Users", "endpoint": "adv_User"},
+        {"name": "Projects", "endpoint": "adv_Project"},
+        {"name": "Achievements", "endpoint": "adv_Achievement"},
+        {"name": "Challenges", "endpoint": "adv_Challenge"},
+        {"name": "Duck Trade Logs", "endpoint": "adv_DuckTradeLog"},
+        {"name": "Configuration", "endpoint": "adv_Configuration"},
+        {"name": "Banned Words", "endpoint": "adv_BannedWords"},
+        {"name": "Messages", "endpoint": "adv_Message"},
+        {"name": "Conversations", "endpoint": "adv_Conversation"},
+        {"name": "Challenge Logs", "endpoint": "adv_ChallengeLog"}
     ]
-
-    if request.is_json or request.accept_mimetypes.accept_json:
-        return jsonify({
-            "status": "success",
-            "data": {
-                "views": admin_views
-            }
-        })
-
-    return render_template("admin/advanced_panel.html", views=admin_views)
+    
+    return {"views": admin_views}
 
 
 @admin.route("/documents", methods=["GET"])
 @admin_only
+@api_response
 def list_documents():
     """List all uploaded documents across all categories"""
     documents = []
@@ -712,7 +679,7 @@ def list_documents():
 
     documents.sort(key=lambda x: x["created"], reverse=True)
 
-    return jsonify({"success": True, "documents": documents, "total": len(documents)})
+    return {"documents": documents, "total": len(documents)}
 
 
 @admin.route("/documents/<category>/<filename>/download", methods=["GET"])
@@ -803,6 +770,7 @@ def delete_document():
 
 @admin.route("/documents/stats", methods=["GET"])
 @admin_only
+@api_response
 def document_stats():
     """Get statistics about uploaded documents"""
     stats = {
@@ -834,7 +802,7 @@ def document_stats():
 
     stats["total_size_formatted"] = format_file_size(stats["total_size"])
 
-    return jsonify({"success": True, "stats": stats})
+    return {"stats": stats}
 
 
 def format_file_size(size_bytes):

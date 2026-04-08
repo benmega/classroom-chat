@@ -21,6 +21,7 @@ from application.models.achievements import Achievement
 from application.models.user import User
 from application.models.user_certificate import UserCertificate
 from application.routes.admin_routes import admin_only
+from application.decorators.api_response import api_response
 
 achievements = Blueprint("achievements", __name__)
 
@@ -227,6 +228,7 @@ def view_certificate(cert_id):
 
 @achievements.route("/admin/certificates")
 @admin_only
+@api_response
 def admin_certificates():
     # Only show unreviewed certificates by default, matching the template
     certs = (
@@ -237,15 +239,7 @@ def admin_certificates():
         .all()
     )
     
-    if request.is_json or request.accept_mimetypes.accept_json:
-        return jsonify({
-            "status": "success",
-            "data": {
-                "certificates": [c.to_dict() for c in certs]
-            }
-        })
-
-    return render_template("admin/admin_certificates.html", certs=certs)
+    return {"certificates": [c.to_dict() for c in certs]}
 
 
 @achievements.route("/admin/certificates/reviewed/<int:cert_id>", methods=["POST"])

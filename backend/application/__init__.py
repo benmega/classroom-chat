@@ -11,13 +11,12 @@ from datetime import timedelta, datetime
 from flask import Flask, session, g, jsonify
 from flask_cors import CORS
 from flask_limiter import RateLimitExceeded
-from flask_wtf.csrf import CSRFProtect
 from sqlalchemy import inspect
 from werkzeug.exceptions import RequestEntityTooLarge
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 from application.config import DevelopmentConfig, TestingConfig, ProductionConfig
-from application.extensions import db, socketio, limiter, scheduler
+from application.extensions import db, socketio, limiter, scheduler, csrf
 from application.models import setup_models
 from application.models.configuration import Configuration
 from application.models.user import User
@@ -93,7 +92,7 @@ def create_app(config_class=None):
 
     from . import socket_events as socket_events  # noqa: F401 - needed for side effects
 
-    CSRFProtect(app)
+    csrf.init_app(app)
     register_blueprints(app)
 
     from . import tasks
@@ -105,7 +104,7 @@ def create_app(config_class=None):
 
         # Check the DB directly. If the 'user' table doesn't exist, we need to initialize.
         inspector = inspect(db.engine)
-        if not inspector.has_table("user"):  # specific table name depends on your User model
+        if not inspector.has_table("users"):  # specific table name depends on your User model
             db.create_all()
             ensure_default_configuration()
             logger.info("Database initialized for the first time.")

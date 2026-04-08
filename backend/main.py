@@ -22,7 +22,7 @@ def main():
             sys, "frozen", False
         ),  # Enable or disable the reloader
         allow_unsafe_werkzeug=True,
-        debug=False,
+        debug=True,
     )  # Toggle debug mode for Flask and SocketIO
 
 

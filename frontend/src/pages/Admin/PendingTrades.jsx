@@ -23,7 +23,7 @@ const PendingTrades = () => {
     const fetchTrades = async () => {
         setIsLoading(true);
         try {
-            const response = await client.get('/admin/pending_trades');
+            const response = await client.get('/api/admin/pending_trades');
             if (response.data.status === 'success') {
                 setTrades(response.data.data.trades);
             }
@@ -45,7 +45,7 @@ const PendingTrades = () => {
         formData.append('action', action);
 
         try {
-            const response = await client.post('/admin/trade_action', formData);
+            const response = await client.post('/api/admin/trade_action', formData);
             if (response.data.status === 'success') {
                 toast.success(response.data.message);
                 setTrades(prev => prev.filter(t => t.id !== tradeId));

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Coins, Package, ArrowRightLeft, CreditCard } from 'lucide-react';
+import { Package, ArrowRightLeft, CreditCard } from 'lucide-react';
+import DuckIcon from '../../components/Icons/DuckIcon';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
 import useAuthStore from '../../store/useAuthStore';
@@ -11,18 +12,34 @@ const BitShift = () => {
     const [duckCounts, setDuckCounts] = useState(Array(7).fill(0));
     const [isByteMode, setIsByteMode] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+    const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
+
+    // Auto math check: sum of (count × 2^i) must equal the decimal input
+    // In Byte mode, each unit is worth 8 times as much (1 Byte = 8 bits)
+    const multiplier = isByteMode ? 8 : 1;
+    const binaryTotal = duckCounts.reduce((sum, count, i) => sum + count * Math.pow(2, i) * multiplier, 0);
+    const mathCheckPassed = digitalDucks > 0 && binaryTotal === digitalDucks;
+    const mathCheckMismatch = digitalDucks > 0 && binaryTotal !== digitalDucks;
 
     const handleDuckCountChange = (index, value) => {
+        setHasAttemptedSubmit(false);
         const newCounts = [...duckCounts];
         newCounts[index] = Math.max(0, Math.min(10, parseInt(value) || 0));
+        setHasAttemptedSubmit(false);
         setDuckCounts(newCounts);
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        
+        setHasAttemptedSubmit(true);
+
         if (digitalDucks < 1) {
             toast.error('Must trade at least 1 duck.');
+            return;
+        }
+
+        if (!mathCheckPassed) {
+            toast.error(`Binary total (${binaryTotal}) must equal the decimal amount (${digitalDucks}).`);
             return;
         }
 
@@ -42,6 +59,7 @@ const BitShift = () => {
                 toast.success(response.data.message || 'Trade submitted for approval.');
                 setDigitalDucks(0);
                 setDuckCounts(Array(7).fill(0));
+                setHasAttemptedSubmit(false);
                 checkAuth(); // Refresh user balance
             } else {
                 toast.error(response.data.message || 'Trade failed.');
@@ -62,61 +80,74 @@ const BitShift = () => {
                         <ArrowRightLeft size={40} color="white" />
                     </div>
                 </div>
-                <h2 className="form-heading">Duck Exchange</h2>
-                <p className="form-subheading">
-                    Convert your earned digital ducks into physical classroom assets. 
-                    Power the classroom ecosystem with your contributions!
-                </p>
+                <h2 className="form-heading">Bit Shift</h2>
 
                 <form onSubmit={handleSubmit} className="trade-form">
                     <div className="form-group main-input">
-                        <label htmlFor="digital_ducks">Digital Ducks to Trade</label>
                         <div style={{ position: 'relative' }}>
-                            <input 
-                                type="number" 
-                                id="digital_ducks" 
+                            <input
+                                type="number"
+                                id="digital_ducks"
                                 value={digitalDucks}
-                                onChange={(e) => setDigitalDucks(parseInt(e.target.value) || 0)}
-                                className="digital-ducks-input" 
-                                min="0" 
+                                onChange={(e) => {
+                                    setDigitalDucks(parseInt(e.target.value) || 0);
+                                    setHasAttemptedSubmit(false);
+                                }}
+                                className="digital-ducks-input"
+                                min="0"
                                 max={user?.duck_balance || 0}
-                                required 
+                                required
                             />
                         </div>
                         <div className="balance-info">
-                            <Coins size={18} />
-                            <span>Wallet Balance: {user?.duck_balance?.toLocaleString(undefined, { maximumFractionDigits: 3 }) || 0}</span>
+                            <DuckIcon size={18} />
+                            <span>Cache balance: {user?.duck_balance?.toLocaleString(undefined, { maximumFractionDigits: 3 }) || 0}</span>
                         </div>
                     </div>
 
                     <div className="ducks-grid">
-                        {duckCounts.map((count, i) => (
+                        {[6, 5, 4, 3, 2, 1, 0].map((i) => (
                             <div key={i} className="small-input-group">
                                 <label htmlFor={`duck_${i}`} className="duck-label">
-                                    {(Math.pow(2, i)).toString(2)}b
+                                    {(Math.pow(2, i)).toString(2)}{isByteMode ? 'B' : 'b'}
                                 </label>
-                                <input 
-                                    type="number" 
+                                <input
+                                    type="number"
                                     id={`duck_${i}`}
-                                    value={count}
+                                    value={duckCounts[i]}
                                     onChange={(e) => handleDuckCountChange(i, e.target.value)}
-                                    className="input-sm" 
-                                    min="0" 
-                                    max="10" 
+                                    className="input-sm"
+                                    min="0"
+                                    max="10"
                                 />
                             </div>
                         ))}
                     </div>
 
+                    {/* Live math check indicator — only shown on incorrect attempt */}
+                    {hasAttemptedSubmit && mathCheckMismatch && (
+                        <div className="math-check-banner mismatch">
+                            <span className="math-check-equation">
+                                <strong className="binary-value">{binaryTotal.toString(2)}<sub>2</sub></strong>
+                                {' '}≠{' '}
+                                <span className="decimal-value">{digitalDucks}<sub>10</sub></span>
+                            </span>
+                            <span className="math-check-status">✗ Mismatch</span>
+                        </div>
+                    )}
+
                     <div className="toggle-container">
                         <div className="toggle-switch">
                             <span className={`toggle-text bit-text ${!isByteMode ? 'active' : ''}`}>bit</span>
                             <div style={{ position: 'relative', display: 'inline-block' }}>
-                                <input 
-                                    type="checkbox" 
-                                    id="duck-type-toggle" 
+                                <input
+                                    type="checkbox"
+                                    id="duck-type-toggle"
                                     checked={isByteMode}
-                                    onChange={() => setIsByteMode(!isByteMode)}
+                                    onChange={() => {
+                                        setIsByteMode(!isByteMode);
+                                        setHasAttemptedSubmit(false);
+                                    }}
                                     style={{ display: 'none' }}
                                 />
                                 <label htmlFor="duck-type-toggle" className="toggle-slider"></label>

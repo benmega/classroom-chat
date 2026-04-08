@@ -58,7 +58,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin-bottom: 2rem;
+    margin-bottom: 1.25rem;
 }
 
 .form-group.main-input label {
@@ -121,20 +121,29 @@
 .ducks-grid {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    gap: 1.25rem;
-    margin-bottom: 2rem;
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+    justify-content: center;
 }
 
-@media (max-width: 600px) {
+@media (max-width: 768px) {
     .ducks-grid {
         grid-template-columns: repeat(4, 1fr);
         gap: 0.75rem;
     }
 }
 
-@media (max-width: 400px) {
+@media (max-width: 500px) {
     .ducks-grid {
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.6rem;
+    }
+}
+
+@media (max-width: 360px) {
+    .ducks-grid {
+        grid-template-columns: repeat(1, 1fr);
+        gap: 0.5rem;
     }
 }
 
@@ -142,13 +151,14 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+    min-width: 0; /* Prevents long labels from breaking grid */
 }
 
 .duck-label {
-    font-size: 1rem;
+    font-size: 0.85rem;
     font-weight: 800;
     color: var(--text-secondary);
-    margin-bottom: 1rem;
+    margin-bottom: 0.5rem;
     font-family: var(--font-heading);
 }
 
@@ -176,10 +186,87 @@
     box-shadow: var(--shadow-md) !important;
 }
 
+@media (max-width: 500px) {
+    .input-sm {
+        padding: 0.8rem 0.4rem !important;
+        font-size: 1.1rem !important;
+    }
+}
+
+/* Math check banner */
+.math-check-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1.25rem;
+    border-radius: var(--radius-lg);
+    margin-bottom: 1.25rem;
+    font-size: 1rem;
+    font-weight: 700;
+    border: 2px solid transparent;
+    transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.math-check-banner.neutral {
+    background: var(--bg-tertiary);
+    border-color: var(--border-subtle);
+    color: var(--text-muted);
+}
+
+.math-check-banner.match {
+    background: rgba(34, 197, 94, 0.12);
+    border-color: #22c55e;
+    color: #16a34a;
+    box-shadow: 0 0 16px rgba(34, 197, 94, 0.2);
+}
+
+.math-check-banner.mismatch {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: #ef4444;
+    color: #dc2626;
+    box-shadow: 0 0 16px rgba(239, 68, 68, 0.15);
+    animation: shake 0.35s ease;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25%       { transform: translateX(-4px); }
+    75%       { transform: translateX(4px); }
+}
+
+.math-check-equation {
+    font-size: 1.1rem;
+    letter-spacing: 0.01em;
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+}
+
+.math-check-equation strong {
+    font-size: 1.25rem;
+    font-family: var(--font-heading);
+}
+
+.binary-value {
+    font-family: 'Courier New', Courier, monospace !important;
+    font-size: 1.3rem !important;
+    letter-spacing: 0.08em;
+}
+
+.decimal-value {
+    font-size: 1.3rem !important;
+}
+
+.math-check-status {
+    font-size: 1.1rem;
+    font-weight: 900;
+    letter-spacing: 0.03em;
+}
+
 .toggle-container {
     display: flex;
     justify-content: center;
-    margin-bottom: 2rem;
+    margin-bottom: 1.25rem;
 }
 
 .toggle-switch {
