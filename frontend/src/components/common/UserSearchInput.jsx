@@ -31,7 +31,7 @@ const UserSearchInput = ({
         if (value !== undefined && value !== query) {
             setQuery(value || '');
         }
-    }, [value]);
+    }, [value, query]);
 
     useEffect(() => {
         const fetchResults = async () => {

@@ -2,11 +2,11 @@
 
 .chat-container {
     display: flex;
-    height: calc(100vh - 120px); /* Adjust based on header/footer */
+    height: 100%;
     overflow: hidden;
-    margin: -2rem; /* Offset Layout padding */
     background: var(--bg-primary);
     position: relative;
+    border: none;
 }
 
 .chat-sidebar {
@@ -30,18 +30,46 @@
 }
 
 .chat-header {
-    padding: 0.75rem 1rem;
     background: var(--bg-primary);
     border-bottom: 1px solid var(--border-subtle);
+    min-height: 64px;
+    display: flex;
+    align-items: center;
+}
+
+.chat-header-content {
+    max-width: 1400px;
+    margin: 0 auto;
+    width: 100%;
+    padding: 0.5rem 2rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    min-height: 64px;
+}
+
+@media (max-width: 800px) {
+    .chat-header-content {
+        padding: 0 1rem;
+        min-height: 72px; /* Standardize with AdminLayout and Layout */
+    }
+}
+
+@media (max-width: 400px) {
+    .chat-header-content {
+        padding: 0.5rem 0.75rem;
+    }
 }
 
 .chat-messages {
     flex: 1;
     overflow-y: auto;
+    padding: 0;
+}
+
+.chat-messages-inner {
+    max-width: 900px;
+    margin: 0 auto;
+    width: 100%;
     padding: 1rem;
     display: flex;
     flex-direction: column;
@@ -49,26 +77,118 @@
 }
 
 .chat-input-area {
-    padding: 1rem;
     background: var(--bg-primary);
     border-top: 1px solid var(--border-subtle);
+}
+
+.chat-input-content {
+    max-width: 900px;
+    margin: 0 auto;
+    width: 100%;
+    padding: var(--spacing-md);
 }
 
 .mobile-menu-toggle {
     display: none;
     background: none;
     border: none;
-    padding: 8px;
+    padding: var(--spacing-sm);
     color: var(--text-secondary);
-    margin-right: 8px;
+    margin-right: var(--spacing-sm);
     cursor: pointer;
+    align-items: center;
+    justify-content: center;
+}
+
+.chat-input-form {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    background: var(--bg-tertiary);
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-subtle);
+    transition: var(--transition-fast);
+}
+
+.chat-input-form:focus-within {
+    background: white;
+    border-color: var(--primary-color);
+    box-shadow: var(--shadow-glow);
+}
+
+.chat-input-field {
+    flex: 1;
+    background: none;
+    border: none;
+    padding: var(--spacing-sm) 0;
+    outline: none;
+    font-size: var(--font-md);
+    color: var(--text-primary);
+    font-family: inherit;
+}
+
+.chat-send-btn {
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    padding: var(--spacing-sm);
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition-bounce);
+}
+
+.chat-send-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-glow);
+    filter: brightness(1.1);
+}
+
+.chat-send-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+
+.chat-sidebar-footer {
+    padding: 1rem;
+    border-top: 1px solid var(--border-subtle);
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    background: var(--bg-primary);
+    margin-top: auto;
+}
+
+.sidebar-footer-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0.75rem 1rem;
+    text-decoration: none;
+    color: var(--text-secondary);
+    font-weight: 600;
+    font-size: var(--font-sm);
+    border-radius: 8px;
+    transition: all 0.2s;
+}
+
+.sidebar-footer-item:hover {
+    background: var(--bg-tertiary);
+    color: var(--primary-color);
 }
 
 /* Mobile Responsive Adjustments */
-@media (max-width: 768px) {
+@media (max-width: 800px) {
+    .header-icon-container {
+        display: none !important;
+    }
+
+
     .chat-container {
-        margin: -1rem; /* Smaller offset on mobile */
-        height: calc(100vh - 100px);
+        height: 100%;
     }
 
     .chat-sidebar {
@@ -110,6 +230,9 @@
 
 @media (max-width: 500px) {
     .chat-container {
-        margin: -0.5rem;
+        border-radius: 0;
+        border-left: none;
+        border-right: none;
     }
 }
+

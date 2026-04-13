@@ -39,7 +39,7 @@ const AdminDocuments = () => {
                 setStats(statsRes.data.data.stats);
             }
             
-        } catch (error) {
+        } catch {
             toast.error('Failed to load document data.');
         } finally {
             setIsLoading(false);
@@ -63,7 +63,7 @@ const AdminDocuments = () => {
                 toast.success(response.data.message || 'File deleted successfully');
                 fetchData();
             }
-        } catch (error) {
+        } catch {
             toast.error('Failed to delete document.');
         }
     };

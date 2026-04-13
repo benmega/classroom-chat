@@ -90,7 +90,7 @@ Summary: Base layout template with header, navigation, and toast messages.
                                 <li><a href="{{ url_for('user.profile') }}"><i class="bi bi-person-circle"></i> Profile</a></li>
 
                                 {% if user.is_admin %}
-                                    <li><a href="{{ url_for('admin.dashboard') }}"><i class="bi bi-speedometer2"></i> Admin Panel</a></li>
+                                    <li><a href="{{ url_for('admin_api.dashboard') }}"><i class="bi bi-speedometer2"></i> Admin Panel</a></li>
                                 {% endif %}
 
                                 <li><a href="{{ url_for('achievements.achievements_page') }}"><i class="bi bi-award"></i> Achievements</a></li>

@@ -26,7 +26,7 @@ const AdminCertificates = () => {
             if (response.data.status === 'success') {
                 setCertificates(response.data.data.certificates);
             }
-        } catch (error) {
+        } catch {
             toast.error('Failed to load certificates.');
         } finally {
             setIsLoading(false);
@@ -44,7 +44,7 @@ const AdminCertificates = () => {
                 toast.success(response.data.message);
                 setCertificates(prev => prev.filter(c => c.id !== certId));
             }
-        } catch (error) {
+        } catch {
             toast.error('Failed to mark as reviewed.');
         }
     };

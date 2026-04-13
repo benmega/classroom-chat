@@ -10,7 +10,10 @@
     --accent-glow: rgba(250, 204, 21, 0.4);
     
     --success-color: #10B981;
+    --success-dark: #059669;
     --error-color: #EF4444;
+    --error-light: #FCA5A5;
+    --error-subtle: #FEF2F2;
     --warning-color: #F59E0B;
     
     /* Neutral - Deep & Sophisticated */
@@ -23,6 +26,8 @@
     --border-subtle: #E2E8F0;
     --border-rich: #94A3B8;
     --border-strong: #475569;
+    --slate-800: #1E293B;
+    --blue-600: #2563EB;
 
     /* Gradients - Deep & Dynamic */
     --gradient-primary: linear-gradient(135deg, #0EB2BB 0%, #6366F1 100%);
@@ -46,9 +51,34 @@
     --glass-border: rgba(255, 255, 255, 0.8);
     --glass-blur: blur(16px);
 
-    /* Typography */
+    /* Typography - Standardized Scale */
+    --font-xs: 0.75rem;   /* 12px */
+    --font-sm: 0.875rem;  /* 14px */
+    --font-md: 1rem;      /* 16px */
+    --font-lg: 1.125rem;  /* 18px */
+    --font-xl: 1.25rem;   /* 20px */
+    --font-2xl: 1.5rem;   /* 24px */
+    --font-3xl: 1.875rem; /* 30px */
+    --font-4xl: 2.25rem;  /* 36px */
+
     --font-heading: 'Outfit', 'Inter', system-ui, sans-serif;
     --font-body: 'Inter', system-ui, sans-serif;
+
+    /* Spacing & Sizes - Standardized */
+    --spacing-xs: 0.25rem; /* 4px */
+    --spacing-sm: 0.5rem;  /* 8px */
+    --spacing-md: 1rem;    /* 16px */
+    --spacing-lg: 1.5rem;  /* 24px */
+    --spacing-xl: 2rem;    /* 32px */
+
+    /* Button Tokens */
+    --btn-padding-sm: 6px 12px;
+    --btn-padding-md: 10px 20px;
+    --btn-padding-lg: 14px 28px;
+    
+    --btn-font-sm: var(--font-sm);
+    --btn-font-md: var(--font-md);
+    --btn-font-lg: var(--font-lg);
 
     /* Borders & Spacing */
     --radius-sm: 8px;

@@ -10,9 +10,9 @@ const NotFound = ({ message = "The page or resource you are looking for doesn't 
       justifyContent: 'center',
       alignItems: 'center',
       minHeight: '100vh',
-      backgroundColor: '#0f172a',
-      color: '#f8fafc',
-      fontFamily: 'Inter, system-ui, sans-serif',
+      backgroundColor: 'var(--text-primary)',
+      color: 'var(--bg-secondary)',
+      fontFamily: 'var(--font-body)',
       padding: '2rem',
       textAlign: 'center'
     }}>
@@ -48,7 +48,7 @@ const NotFound = ({ message = "The page or resource you are looking for doesn't 
           fontWeight: '800',
           marginBottom: '1rem',
           letterSpacing: '-0.025em',
-          background: 'linear-gradient(to bottom right, #ffffff, #94a3b8)',
+          background: 'linear-gradient(to bottom right, white, var(--text-muted))',
           WebkitBackgroundClip: 'text',
           WebkitTextFillColor: 'transparent'
         }}>
@@ -59,14 +59,14 @@ const NotFound = ({ message = "The page or resource you are looking for doesn't 
             fontSize: '1.5rem',
             fontWeight: '600',
             marginBottom: '1rem',
-            color: '#e2e8f0'
+            color: 'var(--border-subtle)'
         }}>
             Resource Not Found
         </h2>
         
         <p style={{
           fontSize: '1.125rem',
-          color: '#94a3b8',
+          color: 'var(--text-muted)',
           marginBottom: '2.5rem',
           lineHeight: '1.6'
         }}>
@@ -83,22 +83,22 @@ const NotFound = ({ message = "The page or resource you are looking for doesn't 
             alignItems: 'center',
             justifyContent: 'center',
             gap: '0.75rem',
-            backgroundColor: '#3b82f6',
+            backgroundColor: 'var(--primary-color)',
             color: 'white',
             padding: '0.875rem 1.5rem',
             borderRadius: '1rem',
             textDecoration: 'none',
             fontWeight: '600',
             transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-            boxShadow: '0 10px 15px -3px rgba(59, 130, 246, 0.3)'
+            boxShadow: 'var(--shadow-md)'
           }}
           onMouseEnter={(e) => {
               e.target.style.transform = 'translateY(-2px)';
-              e.target.style.backgroundColor = '#2563eb';
+              e.target.style.backgroundColor = 'var(--blue-600)';
           }}
           onMouseLeave={(e) => {
               e.target.style.transform = 'translateY(0)';
-              e.target.style.backgroundColor = '#3b82f6';
+              e.target.style.backgroundColor = 'var(--primary-color)';
           }}
           >
             <Home size={20} />
@@ -113,10 +113,10 @@ const NotFound = ({ message = "The page or resource you are looking for doesn't 
               justifyContent: 'center',
               gap: '0.75rem',
               backgroundColor: 'rgba(30, 41, 59, 0.5)',
-              color: '#cbd5e1',
+              color: 'var(--text-muted)',
               padding: '0.875rem 1.5rem',
               borderRadius: '1rem',
-              border: '1px solid #334155',
+              border: '1px solid var(--border-strong)',
               cursor: 'pointer',
               fontWeight: '500',
               transition: 'all 0.2s ease',

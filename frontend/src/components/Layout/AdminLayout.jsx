@@ -19,13 +19,14 @@ import {
     ChevronRight
 } from 'lucide-react';
 import useAuthStore from '../../store/useAuthStore';
+import { useSidebar } from '../../context/SidebarContext';
 import './AdminLayout.css';
 import SmartImage from '../common/SmartImage';
 
 const AdminLayout = ({ children }) => {
     const { user, logout, isAuthenticated } = useAuthStore();
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const { isSidebarOpen, toggleSidebar, setSidebarOpen } = useSidebar();
     const navigate = useNavigate();
     const location = useLocation();
 
@@ -34,13 +35,12 @@ const AdminLayout = ({ children }) => {
         navigate('/login');
     };
 
-    const toggleSidebar = () => setIsSidebarCollapsed(!isSidebarCollapsed);
-    const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
+    const toggleSidebarDesktop = () => setIsSidebarCollapsed(!isSidebarCollapsed);
 
     // Close mobile menu on route change
     useEffect(() => {
-        setIsMobileMenuOpen(false);
-    }, [location.pathname]);
+        setSidebarOpen(false);
+    }, [location.pathname, setSidebarOpen]);
 
     if (!isAuthenticated || !user?.is_admin) {
         return (
@@ -73,9 +73,9 @@ const AdminLayout = ({ children }) => {
     ];
 
     return (
-        <div className={`admin-app-container ${isSidebarCollapsed ? 'collapsed' : ''} ${isMobileMenuOpen ? 'mobile-open' : ''}`}>
+        <div className={`admin-app-container ${isSidebarCollapsed ? 'collapsed' : ''} ${isSidebarOpen ? 'mobile-open' : ''}`}>
             {/* Mobile Overlay */}
-            <div className="mobile-overlay" onClick={toggleMobileMenu}></div>
+            <div className="mobile-overlay" onClick={() => setSidebarOpen(false)}></div>
 
             {/* Sidebar */}
             <aside className="admin-sidebar">
@@ -84,10 +84,10 @@ const AdminLayout = ({ children }) => {
                         <Shield className="brand-icon" size={28} />
                         <span className="brand-text">Admin HQ</span>
                     </Link>
-                    <button className="sidebar-toggle-btn desktop-only" onClick={toggleSidebar} aria-label="Toggle Sidebar">
+                    <button className="sidebar-toggle-btn desktop-only" onClick={toggleSidebarDesktop} aria-label="Toggle Sidebar">
                         {isSidebarCollapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
                     </button>
-                    <button className="mobile-close-btn mobile-only" onClick={toggleMobileMenu}>
+                    <button className="mobile-close-btn mobile-only" onClick={() => setSidebarOpen(false)}>
                         <X size={24} />
                     </button>
                 </div>
@@ -143,7 +143,7 @@ const AdminLayout = ({ children }) => {
             <div className="admin-main-wrapper">
                 <header className="admin-top-bar">
                     <div className="top-bar-left">
-                        <button className="hamburger-btn mobile-only" onClick={toggleMobileMenu}>
+                        <button className="hamburger-toggle mobile-only" onClick={toggleSidebar}>
                             <Menu size={24} />
                         </button>
                         <h2 className="page-title">

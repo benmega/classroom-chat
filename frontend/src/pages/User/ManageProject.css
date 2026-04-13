@@ -2,7 +2,7 @@
     padding: 3rem;
     display: flex;
     justify-content: center;
-    background: #f8fafc;
+    background: var(--bg-secondary);
     min-height: 100vh;
 }
 
@@ -52,7 +52,7 @@
     display: flex;
     align-items: center;
     gap: 12px;
-    border-bottom: 2px solid #f1f5f9;
+    border-bottom: 2px solid var(--bg-tertiary);
     padding-bottom: 12px;
 }
 
@@ -74,7 +74,7 @@
     border-radius: 12px;
     border: 1px solid var(--border-subtle);
     font-size: 1rem;
-    background: #f8fafc;
+    background: var(--bg-secondary);
     transition: all 0.2s;
     font-family: inherit;
 }
@@ -91,8 +91,8 @@ textarea.form-control {
 }
 
 .admin-textarea {
-    border-color: #fca5a5;
-    background: #fef2f2;
+    border-color: var(--error-light);
+    background: var(--error-subtle);
 }
 
 .thumbnail-upload {
@@ -116,7 +116,7 @@ textarea.form-control {
     justify-content: center;
     gap: 10px;
     padding: 10px 20px;
-    background: #f1f5f9;
+    background: var(--bg-tertiary);
     color: var(--text-primary);
     border: 2px dashed var(--border-subtle);
     border-radius: 12px;
@@ -126,13 +126,13 @@ textarea.form-control {
 }
 
 .file-upload-btn:hover {
-    background: #e2e8f0;
+    background: var(--border-subtle);
     border-color: var(--primary-color);
 }
 
 .file-upload-btn.secondary {
     background: #fff;
-    border: 2px solid #e2e8f0;
+    border: 2px solid var(--border-subtle);
 }
 
 .video-file-upload {
@@ -157,8 +157,8 @@ textarea.form-control {
     flex-grow: 1;
     min-height: 500px;
     font-family: 'Consolas', 'Monaco', monospace;
-    background: #1e293b !important;
-    color: #f8fafc;
+    background: var(--slate-800) !important;
+    color: var(--bg-secondary);
     padding: 20px;
     border-radius: 12px;
     line-height: 1.6;
@@ -199,9 +199,9 @@ textarea.form-control {
     display: flex;
     align-items: center;
     gap: 8px;
-    background: #fef2f2;
-    color: #dc2626;
-    border: 1px solid #fee2e2;
+    background: var(--error-subtle);
+    color: var(--error-color);
+    border: 1px solid var(--error-light);
     padding: 12px 24px;
     border-radius: 12px;
     font-weight: 600;
@@ -231,7 +231,7 @@ textarea.form-control {
 }
 
 .btn-save:hover:not(:disabled) {
-    background: #2563eb;
+    background: var(--blue-600);
     transform: translateY(-2px);
     box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.4);
 }

@@ -17,10 +17,10 @@
 
 .admin-app-container {
     display: flex;
-    min-height: 100vh;
+    height: 100vh;
     background-color: var(--admin-bg);
     color: var(--admin-text);
-    overflow-x: hidden;
+    overflow: hidden;
 }
 
 /* Sidebar Styling */
@@ -266,8 +266,9 @@
     transition: var(--transition-standard);
     display: flex;
     flex-direction: column;
-    min-height: 100vh;
+    height: 100vh;
     background: var(--admin-bg);
+    overflow: hidden;
 }
 
 .admin-app-container.collapsed .admin-main-wrapper {
@@ -293,11 +294,22 @@
     gap: 1rem;
 }
 
-.hamburger-btn {
+.admin-top-bar .hamburger-toggle {
     background: transparent;
     border: none;
     cursor: pointer;
     color: var(--admin-text);
+    padding: 8px;
+    margin-left: -8px; /* Offset to match global layout */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    transition: background 0.2s;
+}
+
+.admin-top-bar .hamburger-toggle:hover {
+    background: rgba(0, 0, 0, 0.05);
 }
 
 .page-title {
@@ -345,6 +357,7 @@
     max-width: 1600px;
     width: 100%;
     margin: 0 auto;
+    overflow-y: auto;
 }
 
 .admin-site-footer {
@@ -412,15 +425,6 @@
     transform: translateY(-2px);
 }
 
-/* Responsive Handling - Lowered breakpoint to 800px for persistent sidebar on smaller desktops */
-.desktop-only {
-    display: flex;
-}
-
-.mobile-only {
-    display: none;
-}
-
 @media (max-width: 800px) {
     .admin-sidebar {
         transform: translateX(-100%);
@@ -443,14 +447,6 @@
         background: rgba(15, 23, 42, 0.6);
         backdrop-filter: blur(4px);
         z-index: 999;
-    }
-
-    .desktop-only {
-        display: none !important;
-    }
-
-    .mobile-only {
-        display: flex;
     }
 
     .sidebar-header {

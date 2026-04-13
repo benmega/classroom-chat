@@ -8,8 +8,8 @@
     align-items: center;
     background: var(--bg-tertiary);
     border: 1px solid var(--border-subtle);
-    border-radius: 12px;
-    padding: 0.4rem 1rem;
+    border-radius: var(--radius-full);
+    padding: var(--spacing-sm) var(--spacing-md);
     transition: var(--transition-smooth);
     box-shadow: var(--shadow-soft);
 }
@@ -36,10 +36,10 @@
     border: none !important;
     outline: none !important;
     width: 100%;
-    font-size: 0.95rem;
+    font-size: var(--font-md);
     font-weight: 600;
     color: var(--text-primary);
-    padding: 8px 0;
+    padding: 4px 0;
     box-shadow: none !important;
 }
 

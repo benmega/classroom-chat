@@ -143,23 +143,23 @@ def evaluate_user_skills(user):
 
 def _award_skill(user, name, category, icon, level, existing_map, awarded_list):
     """Helper to handle the add/upgrade logic safely."""
-    rule_key = f"{name}-{level}"
-
-    if rule_key in existing_map:
-        return
-
-    if level > 1:
-        lower_skills = [
-            s for s in user.skills if s.name == name and s.proficiency < level
-        ]
-        for ls in lower_skills:
-            db.session.delete(ls)
+    # Check if the user already has this skill at any level
+    existing_skill = next((s for s in user.skills if s.name == name), None)
+    
+    if existing_skill:
+        if existing_skill.proficiency >= level:
+            return # Already have it at this level or higher
+        # Otherwise, delete the old one to upgrade
+        db.session.delete(existing_skill)
+    elif level > 1:
+        # Also clean up any lower proficiencies just in case they were multiple (though shouldn't happen)
+        for s in [s for s in user.skills if s.name == name and s.proficiency < level]:
+            db.session.delete(s)
 
     new_skill = Skill(
         name=name, user_id=user.id, category=category, icon=icon, proficiency=level
     )
     db.session.add(new_skill)
-    existing_map.add(rule_key)
     awarded_list.append(f"{name} (Lvl {level})")
 
 

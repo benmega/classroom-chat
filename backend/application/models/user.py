@@ -7,7 +7,7 @@ Summary: SQLAlchemy model for application users and authentication data.
 import re
 from datetime import date, timedelta, datetime
 
-from sqlalchemy import event, or_, cast, Date, func
+from sqlalchemy import event, or_
 from sqlalchemy.orm import foreign
 from sqlalchemy.ext.hybrid import hybrid_property
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -313,7 +313,7 @@ class User(db.Model):
         """
         # We assume the ChallengeLog model has a 'level_slug' column.
         # Using a set removes duplicates.
-        return {getattr(log, "level_slug", "") for log in self.challenge_logs}
+        return {getattr(log, "challenge_slug", "") for log in self.challenge_logs}
 
 
 # SQLAlchemy event listener to auto-generate slug for new users

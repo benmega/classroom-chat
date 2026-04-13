@@ -26,4 +26,4 @@ limiter = Limiter(
 )
 db = SQLAlchemy()
 
-socketio = SocketIO(async_mode="threading")
+socketio = SocketIO()

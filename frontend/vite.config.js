@@ -20,7 +20,7 @@ export default defineConfig({
       '/ai': 'http://localhost:8000',
       '/api/admin': 'http://localhost:8000',
       '/duck_trade': 'http://localhost:8000',
-      '/achievements': 'http://localhost:8000',
+      '/api/achievements': 'http://localhost:8000',
       '/notes': 'http://localhost:8000',
       '/server': 'http://localhost:8000',
       '/socket.io': {

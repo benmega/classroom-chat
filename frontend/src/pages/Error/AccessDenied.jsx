@@ -10,9 +10,9 @@ const AccessDenied = () => {
       justifyContent: 'center',
       alignItems: 'center',
       minHeight: '100vh',
-      backgroundColor: '#0f172a',
-      color: '#f8fafc',
-      fontFamily: 'Inter, system-ui, sans-serif',
+      backgroundColor: 'var(--text-primary)',
+      color: 'var(--bg-secondary)',
+      fontFamily: 'var(--font-body)',
       padding: '2rem',
       textAlign: 'center'
     }}>
@@ -44,7 +44,7 @@ const AccessDenied = () => {
           fontWeight: '800',
           marginBottom: '1rem',
           letterSpacing: '-0.025em',
-          background: 'linear-gradient(to right, #f8fafc, #94a3b8)',
+          background: 'linear-gradient(to right, white, var(--text-muted))',
           WebkitBackgroundClip: 'text',
           WebkitTextFillColor: 'transparent'
         }}>
@@ -53,7 +53,7 @@ const AccessDenied = () => {
         
         <p style={{
           fontSize: '1.125rem',
-          color: '#94a3b8',
+          color: 'var(--text-muted)',
           marginBottom: '2rem',
           lineHeight: '1.6'
         }}>
@@ -71,17 +71,17 @@ const AccessDenied = () => {
             alignItems: 'center',
             justifyContent: 'center',
             gap: '0.75rem',
-            backgroundColor: '#3b82f6',
+            backgroundColor: 'var(--primary-color)',
             color: 'white',
             padding: '0.75rem 1.5rem',
             borderRadius: '0.75rem',
             textDecoration: 'none',
             fontWeight: '600',
             transition: 'all 0.2s ease',
-            boxShadow: '0 4px 6px -1px rgba(59, 130, 246, 0.3)'
+            boxShadow: 'var(--shadow-md)'
           }}
-          onMouseEnter={(e) => e.target.style.backgroundColor = '#2563eb'}
-          onMouseLeave={(e) => e.target.style.backgroundColor = '#3b82f6'}
+          onMouseEnter={(e) => e.target.style.backgroundColor = 'var(--blue-600)'}
+          onMouseLeave={(e) => e.target.style.backgroundColor = 'var(--primary-color)'}
           >
             <Home size={20} />
             Return Home
@@ -95,21 +95,21 @@ const AccessDenied = () => {
               justifyContent: 'center',
               gap: '0.75rem',
               backgroundColor: 'transparent',
-              color: '#94a3b8',
+              color: 'var(--text-muted)',
               padding: '0.75rem 1.5rem',
               borderRadius: '0.75rem',
-              border: '1px solid #334155',
+              border: '1px solid var(--border-strong)',
               cursor: 'pointer',
               fontWeight: '500',
               transition: 'all 0.2s ease'
             }}
             onMouseEnter={(e) => {
-              e.target.style.borderColor = '#475569';
-              e.target.style.color = '#f8fafc';
+              e.target.style.borderColor = 'var(--text-muted)';
+              e.target.style.color = 'var(--bg-secondary)';
             }}
             onMouseLeave={(e) => {
-              e.target.style.borderColor = '#334155';
-              e.target.style.color = '#94a3b8';
+              e.target.style.borderColor = 'var(--border-strong)';
+              e.target.style.color = 'var(--text-muted)';
             }}
           >
             <ArrowLeft size={20} />

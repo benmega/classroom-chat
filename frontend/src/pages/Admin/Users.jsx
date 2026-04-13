@@ -343,8 +343,26 @@ const Users = () => {
             <Modal isOpen={activeModal === 'adjust'} onClose={() => { setActiveModal(null); setModalUser(null); }} title="Adjust Economy">
                 <form onSubmit={handleAdjustDucks} className="admin-form">
                     <div className="form-group">
-                        <label>Target User</label>
-                        <input type="text" name="username" value={modalUser?.username || ''} readOnly className="readonly" />
+                        <label>Target Student</label>
+                        {modalUser ? (
+                            <div className="user-badge-display">
+                                <SmartImage 
+                                    src={modalUser.profile_picture ? `/user/profile_pictures/${modalUser.profile_picture}` : ''} 
+                                    alt="" 
+                                    className="avatar-small"
+                                    fallbackType="avatar"
+                                />
+                                <div className="user-info-text">
+                                    <span className="user-nickname">{modalUser.nickname || modalUser.username}</span>
+                                    <span className="user-handle" style={{ whiteSpace: 'normal', overflow: 'visible', textOverflow: 'clip', maxWidth: 'none' }}>
+                                        @{modalUser.username}
+                                    </span>
+                                </div>
+                                <input type="hidden" name="username" value={modalUser.username} />
+                            </div>
+                        ) : (
+                            <input type="text" name="username" placeholder="Type @username..." required />
+                        )}
                     </div>
                     <div className="form-group">
                         <label>Duck Adjustment</label>

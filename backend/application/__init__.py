@@ -85,7 +85,7 @@ def create_app(config_class=None):
     socketio.init_app(
         app,
         cors_allowed_origins=cors_origins,
-        async_mode=app.config.get("SOCKETIO_ASYNC_MODE", "threading"),
+        async_mode=app.config.get("SOCKETIO_ASYNC_MODE"),
     )
     limiter.init_app(app)
     scheduler.init_app(app)

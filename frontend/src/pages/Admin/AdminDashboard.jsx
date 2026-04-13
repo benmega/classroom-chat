@@ -112,7 +112,7 @@ const AdminDashboard = () => {
                 toast.success(response.data.message);
                 fetchDashboardData();
             }
-        } catch (error) {
+        } catch {
             toast.error('Failed to toggle AI.');
         }
     };
@@ -124,7 +124,7 @@ const AdminDashboard = () => {
                 toast.success(response.data.message);
                 fetchDashboardData();
             }
-        } catch (error) {
+        } catch {
             toast.error('Failed to toggle messaging.');
         }
     };
@@ -136,7 +136,7 @@ const AdminDashboard = () => {
                 toast.success('Multiplier updated!');
                 fetchDashboardData();
             }
-        } catch (error) {
+        } catch {
             toast.error('Failed to update multiplier.');
         }
     };
@@ -281,7 +281,7 @@ const AdminDashboard = () => {
                 toast.success('New conversation started!');
                 setActiveModal(null);
             }
-        } catch (error) {
+        } catch {
             toast.error('Failed to start conversation.');
         } finally {
             setFormLoading(false);
@@ -324,11 +324,11 @@ const AdminDashboard = () => {
     );
 
     const chartConfig = {
-        labels: chart_data.labels,
+        labels: chart_data?.labels || [],
         datasets: [
             {
                 label: 'Ducks Earned',
-                data: chart_data.earned,
+                data: chart_data?.earned || [],
                 borderColor: '#10b981',
                 backgroundColor: 'rgba(16, 185, 129, 0.1)',
                 fill: true,
@@ -338,7 +338,7 @@ const AdminDashboard = () => {
             },
             {
                 label: 'Ducks Spent',
-                data: chart_data.spent,
+                data: chart_data?.spent || [],
                 borderColor: '#ef4444',
                 backgroundColor: 'rgba(239, 68, 68, 0.1)',
                 fill: true,
@@ -540,20 +540,20 @@ const AdminDashboard = () => {
                         <div className="setting-item">
                             <div className="setting-info">
                                 <span>AI Teacher</span>
-                                <small>{config.ai_teacher_enabled ? 'Enabled' : 'Disabled'}</small>
+                                <small>{config?.ai_teacher_enabled ? 'Enabled' : 'Disabled'}</small>
                             </div>
                             <label className="switch">
-                                <input type="checkbox" checked={config.ai_teacher_enabled} onChange={handleToggleAI} />
+                                <input type="checkbox" checked={config?.ai_teacher_enabled || false} onChange={handleToggleAI} />
                                 <span className="slider"></span>
                             </label>
                         </div>
                         <div className="setting-item">
                             <div className="setting-info">
                                 <span>Public Messaging</span>
-                                <small>{config.message_sending_enabled ? 'Enabled' : 'Disabled'}</small>
+                                <small>{config?.message_sending_enabled ? 'Enabled' : 'Disabled'}</small>
                             </div>
                             <label className="switch">
-                                <input type="checkbox" checked={config.message_sending_enabled} onChange={handleToggleMessages} />
+                                <input type="checkbox" checked={config?.message_sending_enabled || false} onChange={handleToggleMessages} />
                                 <span className="slider"></span>
                             </label>
                         </div>
@@ -563,7 +563,7 @@ const AdminDashboard = () => {
                                 <input 
                                     type="number" 
                                     step="0.1" 
-                                    defaultValue={config.duck_multiplier} 
+                                    defaultValue={config?.duck_multiplier || 1.0} 
                                     onBlur={(e) => handleUpdateMultiplier(e.target.value)}
                                 />
                                 <RefreshCw size={14} />
@@ -586,7 +586,7 @@ const AdminDashboard = () => {
                             {banned_words.slice(0, 12).map(word => (
                                 <div key={word.id} className="word-chip">
                                     {word.word}
-                                    <button className="remove-word"><Trash2 size={12} /></button>
+                                    {/* Delete functionality removed as it is not yet implemented on the backend */}
                                 </div>
                             ))}
                         </div>
@@ -628,12 +628,31 @@ const AdminDashboard = () => {
             <Modal isOpen={activeModal === 'adjust'} onClose={() => { setActiveModal(null); setModalUser(null); }} title="Adjust Duck Balance">
                 <form onSubmit={handleAdjustDucks} className="admin-form" noValidate>
                     <div className="form-group">
-                        <label>User</label>
+                        <label>Target User</label>
                         {modalUser ? (
-                            <input type="text" name="username" value={modalUser.username} readOnly className="readonly" />
+                            <div className="user-badge-display">
+                                <SmartImage 
+                                    src={modalUser.profile_picture ? `/user/profile_pictures/${modalUser.profile_picture}` : ''} 
+                                    alt="" 
+                                    className="avatar-small"
+                                    fallbackType="avatar"
+                                />
+                                <div className="user-info-text">
+                                    <span className="user-nickname">{modalUser.nickname || modalUser.username}</span>
+                                    <span className="user-handle" style={{ whiteSpace: 'normal', overflow: 'visible', textOverflow: 'clip', maxWidth: 'none' }}>
+                                        @{modalUser.username}
+                                    </span>
+                                </div>
+                                <input type="hidden" name="username" value={modalUser.username} />
+                            </div>
                         ) : (
-                            <select name="username">
-                                {users.map(u => <option key={u.id} value={u.username}>{u.username} (🦆 {u.duck_balance?.toLocaleString(undefined, { maximumFractionDigits: 3 })})</option>)}
+                            <select name="username" className="admin-select">
+                                <option value="">Select a user...</option>
+                                {users.map(u => (
+                                    <option key={u.id} value={u.username}>
+                                        {u.username} (Balance: 🦆 {u.duck_balance?.toFixed(1)})
+                                    </option>
+                                ))}
                             </select>
                         )}
                     </div>

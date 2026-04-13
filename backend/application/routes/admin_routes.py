@@ -210,18 +210,15 @@ def dashboard():
     chart_data = get_duck_transactions_data()
 
     return {
-        "status": "success",
-        "data": {
-            "total_ducks": total_ducks,
-            "ducks_earned_this_week": ducks_earned_this_week,
-            "pending_trades_count": pending_trades_count,
-            "pending_users_count": pending_users_count,
-            "active_users_count": active_users_count,
-            "users": [u.to_dict() for u in users_sorted],
-            "config": config.to_dict() if config else None,
-            "banned_words": [bw.to_dict() for bw in banned_words],
-            "chart_data": chart_data
-        }
+        "total_ducks": total_ducks,
+        "ducks_earned_this_week": ducks_earned_this_week,
+        "pending_trades_count": pending_trades_count,
+        "pending_users_count": pending_users_count,
+        "active_users_count": active_users_count,
+        "users": [u.to_dict() for u in users_sorted],
+        "config": config.to_dict() if config else None,
+        "banned_words": [bw.to_dict() for bw in banned_words],
+        "chart_data": chart_data
     }
 
 @admin.route("/duck_transactions_data")
@@ -612,9 +609,8 @@ def adjust_ducks():
 
     user = User.query.filter_by(username=username).first()
     if user:
-        user.duck_balance += amount
-        db.session.commit()
-
+        user.add_ducks(amount)
+        # Note: add_ducks already calls db.session.commit()
         return jsonify(
             {"success": True, "message": f"Updated {username}'s ducks by {amount}."}
         )

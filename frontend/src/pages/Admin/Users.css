@@ -297,6 +297,43 @@
     opacity: 0.8;
 }
 
+.user-badge-display {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+}
+
+.user-badge-display .avatar-small {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    object-fit: cover;
+}
+
+.user-info-text {
+    display: flex;
+    flex-direction: column;
+}
+
+.user-nickname {
+    font-weight: 700;
+    color: #1e293b;
+    font-size: 0.95rem;
+}
+
+.user-handle {
+    font-size: 0.8rem;
+    color: #64748b;
+}
+
+.admin-select {
+    cursor: pointer;
+}
+
 @media (max-width: 1024px) {
     .page-header {
         flex-direction: column;

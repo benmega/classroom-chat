@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { User, Lock, UserPlus, Zap } from 'lucide-react';
+import { User, Lock, UserPlus, Zap, CheckCircle } from 'lucide-react';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
 import './Auth.css';
@@ -10,7 +10,7 @@ const Signup = () => {
     const [password, setPassword] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
-    const navigate = useNavigate();
+    // const navigate = useNavigate();
 
     const handleSubmit = async (e) => {
         e.preventDefault();

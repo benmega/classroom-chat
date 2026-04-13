@@ -1,14 +1,8 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
-import { BrowserRouter } from 'react-router-dom';
 import Login from './Login';
-
-// Mock useAuthStore
-vi.mock('../../store/useAuthStore', () => ({
-  default: () => ({
-    login: vi.fn(),
-  }),
-}));
+import { renderWithProviders } from '../../test/test-utils';
+import toast from 'react-hot-toast';
 
 // Mock react-hot-toast
 vi.mock('react-hot-toast', () => ({
@@ -20,11 +14,7 @@ vi.mock('react-hot-toast', () => ({
 
 describe('Login Component', () => {
   it('renders login form correctly', () => {
-    render(
-      <BrowserRouter>
-        <Login />
-      </BrowserRouter>
-    );
+    renderWithProviders(<Login />);
 
     expect(screen.getByPlaceholderText(/Username/i)).toBeInTheDocument();
     expect(screen.getByPlaceholderText(/Password/i)).toBeInTheDocument();
@@ -32,11 +22,7 @@ describe('Login Component', () => {
   });
 
   it('updates input values on change', () => {
-    render(
-      <BrowserRouter>
-        <Login />
-      </BrowserRouter>
-    );
+    renderWithProviders(<Login />);
 
     const usernameInput = screen.getByPlaceholderText(/Username/i);
     const passwordInput = screen.getByPlaceholderText(/Password/i);
@@ -46,5 +32,37 @@ describe('Login Component', () => {
 
     expect(usernameInput.value).toBe('testuser');
     expect(passwordInput.value).toBe('password123');
+  });
+
+  it('shows success toast and navigates on successful login', async () => {
+    renderWithProviders(<Login />);
+
+    const usernameInput = screen.getByPlaceholderText(/Username/i);
+    const passwordInput = screen.getByPlaceholderText(/Password/i);
+    const loginButton = screen.getByRole('button', { name: /Login/i });
+
+    fireEvent.change(usernameInput, { target: { value: 'testuser' } });
+    fireEvent.change(passwordInput, { target: { value: 'password123' } });
+    fireEvent.click(loginButton);
+
+    await waitFor(() => {
+      expect(toast.success).toHaveBeenCalledWith('Login successful!');
+    });
+  });
+
+  it('shows error toast on invalid credentials', async () => {
+    renderWithProviders(<Login />);
+
+    const usernameInput = screen.getByPlaceholderText(/Username/i);
+    const passwordInput = screen.getByPlaceholderText(/Password/i);
+    const loginButton = screen.getByRole('button', { name: /Login/i });
+
+    fireEvent.change(usernameInput, { target: { value: 'wronguser' } });
+    fireEvent.change(passwordInput, { target: { value: 'wrongpass' } });
+    fireEvent.click(loginButton);
+
+    await waitFor(() => {
+      expect(toast.error).toHaveBeenCalled();
+    });
   });
 });

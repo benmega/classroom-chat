@@ -1,11 +1,11 @@
 .auth-page {
-    min-height: 100vh;
+    height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 2rem;
     position: relative;
-    overflow: hidden;
+    overflow-y: auto;
     background: var(--bg-secondary);
     background-image: var(--gradient-mesh);
 }
@@ -185,6 +185,8 @@
     font-weight: 700;
     margin-left: 0.5rem;
     transition: var(--transition-fast);
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
 }
 
 .auth-link:hover {
@@ -208,7 +210,7 @@
     height: 20px;
     border: 2px solid rgba(255, 255, 255, 0.3);
     border-radius: 50%;
-    border-top-color: #fff;
+    border-top-color: white;
     animation: spin 0.8s linear infinite;
 }
 
@@ -227,7 +229,7 @@
 }
 
 .success-icon {
-    color: #10b981;
+    color: var(--success-color);
     background: rgba(16, 185, 129, 0.1);
     padding: 12px;
     border-radius: 20px;
@@ -239,7 +241,7 @@
     font-weight: 800;
     color: var(--text-primary);
     margin: 0;
-    background: linear-gradient(135deg, #10b981, #059669);
+    background: linear-gradient(135deg, var(--success-color), var(--success-dark));
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;

@@ -2,6 +2,13 @@
     padding: 2rem;
     max-width: 1200px;
     margin: 0 auto;
+    width: 100%;
+}
+
+@media (max-width: 600px) {
+    .achievements-page {
+        padding: 1rem 0.5rem;
+    }
 }
 
 .page-title {
@@ -14,24 +21,34 @@
 
 .achievements-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: 2rem;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 1rem;
     padding: 1rem;
+    width: 100%;
+}
+
+@media (max-width: 480px) {
+    .achievements-grid {
+        grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+        gap: 1rem;
+        padding: 0.5rem;
+    }
 }
 
 .achievement-card {
-    background: white;
+    background: var(--bg-card, white);
     border: 2px solid var(--border-subtle);
-    border-radius: 16px;
-    padding: 1.5rem;
+    border-radius: 12px;
+    padding: 1.25rem;
     text-align: center;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 1rem;
-    transition: all 0.3s ease;
+    gap: 0.75rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow: var(--shadow-sm);
     position: relative;
+    overflow: hidden;
 }
 
 .achievement-card:hover {
@@ -41,12 +58,14 @@
 }
 
 .achievement-card.earned {
-    border-color: #28a745;
-    background-color: #f8fff9;
+    border-color: #4caf50;
+    background-color: #f0fdf4;
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.15);
 }
 
 .achievement-card.locked {
-    background-color: #f8fafc;
+    background-color: #f1f5f9;
+    opacity: 0.8;
 }
 
 .badge-container {
@@ -58,8 +77,8 @@
 }
 
 .achievement-card.locked .badge {
-    filter: grayscale(100%) blur(1px);
-    opacity: 0.5;
+    filter: grayscale(100%) brightness(50%);
+    opacity: 0.6;
 }
 
 .overlay {
@@ -68,16 +87,16 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(15, 23, 42, 0.1);
+    background: rgba(0, 0, 0, 0.4);
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 12px;
+    border-radius: inherit;
+    pointer-events: none;
 }
 
 .lock-icon {
-    font-size: 2.5rem;
-    color: var(--text-muted);
+    font-size: 3rem;
 }
 
 .achievement-name {
@@ -93,13 +112,17 @@
 }
 
 .info-icon {
-    font-size: 1.25rem;
-    color: var(--text-muted);
-    transition: color 0.2s;
+    font-size: 1.5rem;
+    cursor: help;
+    user-select: none;
+    display: inline-block;
+    opacity: 0.7;
+    transition: opacity 0.2s, transform 0.2s;
 }
 
 .tooltip:hover .info-icon {
-    color: var(--primary-color);
+    opacity: 1;
+    transform: scale(1.1);
 }
 
 .tooltiptext {

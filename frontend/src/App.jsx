@@ -3,6 +3,8 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { Toaster } from 'react-hot-toast';
 import { Loader2 } from 'lucide-react';
 import useAuthStore from './store/useAuthStore';
+import { SidebarProvider } from './context/SidebarContext';
+
 
 import Layout from './components/Layout/Layout';
 import AdminLayout from './components/Layout/AdminLayout';
@@ -44,9 +46,9 @@ const ProtectedRoute = ({ children, adminOnly = false }) => {
       justifyContent: 'center', 
       alignItems: 'center', 
       height: '100vh', 
-      background: '#0f172a', 
-      color: '#f8fafc',
-      fontFamily: 'Inter, system-ui, Avenir, Helvetica, Arial, sans-serif'
+      background: 'var(--text-primary)', 
+      color: 'var(--bg-secondary)',
+      fontFamily: 'var(--font-body)'
     }}>
         <Loader2 style={{ animation: 'spin 1s linear infinite' }} size={64} strokeWidth={1.5} color="#3b82f6" />
         <div style={{ textAlign: 'center' }}>
@@ -70,29 +72,30 @@ function App() {
 
   useEffect(() => {
     checkAuth();
-  }, []);
+  }, [checkAuth]);
 
   return (
     <Router>
-      <Toaster 
+      <SidebarProvider>
+        <Toaster 
         position="bottom-right"
         toastOptions={{
             duration: 4000,
             style: {
-                background: '#333',
-                color: '#fff',
-                borderRadius: '10px',
+                background: 'var(--text-primary)',
+                color: 'white',
+                borderRadius: 'var(--radius-md)',
                 padding: '12px 20px',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                boxShadow: 'var(--shadow-lg)',
             },
             success: {
                 style: {
-                    background: '#28a745',
+                    background: 'var(--success-color)',
                 },
             },
             error: {
                 style: {
-                    background: '#dc3545',
+                    background: 'var(--error-color)',
                 },
             },
         }}
@@ -209,6 +212,7 @@ function App() {
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
+      </SidebarProvider>
     </Router>
   );
 }

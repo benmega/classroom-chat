@@ -1,16 +1,20 @@
-# React + Vite
+## Testing
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This project uses Vitest for unit/integration testing and Playwright for end-to-end (E2E) testing.
 
-Currently, two official plugins are available:
+### Unit & Integration Tests (Vitest)
+Unit tests are located alongside components and stores (e.g., `ComponentName.test.jsx`). We use [MSW (Mock Service Worker)](https://mswjs.io/) to mock backend API calls.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **Run tests:** `npm run test`
+- **Watch mode:** `npm run test -- --watch`
 
-## React Compiler
+### End-to-End Tests (Playwright)
+E2E tests are located in the `tests-e2e/` directory. They simulate real user interactions in a browser.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **Run tests:** `npm run test:e2e`
+- **UI Mode:** `npm run test:e2e:ui`
 
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+To install browsers (first time only):
+```bash
+npx playwright install
+```

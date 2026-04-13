@@ -41,14 +41,18 @@ const useChatSocket = (onMessageReceived) => {
   // Keep the callback in a ref so we never need to re-subscribe
   // (which would force the socket to reconnect).
   const callbackRef = useRef(onMessageReceived);
-  callbackRef.current = onMessageReceived;
+  useEffect(() => {
+    callbackRef.current = onMessageReceived;
+  }, [onMessageReceived]);
 
   useEffect(() => {
     const socket = getSocket();
     socketRef.current = socket;
 
     // Sync initial state
-    setIsConnected(socket.connected);
+    if (socket.connected !== isConnected) {
+      setIsConnected(socket.connected);
+    }
 
     const onConnect = () => {
       setIsConnected(true);
@@ -102,7 +106,7 @@ const useChatSocket = (onMessageReceived) => {
   return {
     isConnected,
     sendMessage,
-    socket: socketRef.current,
+    socket: getSocket(),
   };
 };
 

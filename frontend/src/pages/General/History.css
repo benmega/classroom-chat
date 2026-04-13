@@ -267,3 +267,9 @@
         height: 40px;
     }
 }
+
+@media (max-width: 500px) {
+    .history-stats {
+        grid-template-columns: 1fr;
+    }
+}

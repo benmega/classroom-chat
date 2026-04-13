@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
     CheckCircle, 
     XCircle, 
@@ -26,7 +26,7 @@ const AdminProjects = () => {
     const [teacherComment, setTeacherComment] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const fetchProjects = async () => {
+    const fetchProjects = useCallback(async () => {
         setIsLoading(true);
         try {
             const response = await client.get(`/admin/manage-projects?filter=${filter}`);
@@ -37,16 +37,16 @@ const AdminProjects = () => {
                     total: response.data.data.total_count
                 });
             }
-        } catch (error) {
+        } catch {
             toast.error('Failed to load projects.');
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [filter]);
 
     useEffect(() => {
         fetchProjects();
-    }, [filter]);
+    }, [fetchProjects]);
 
     const handleReview = async (projectId, action) => {
         if (action === 'approve' && !teacherComment.trim()) {
@@ -68,7 +68,7 @@ const AdminProjects = () => {
                 setTeacherComment('');
                 fetchProjects();
             }
-        } catch (error) {
+        } catch {
             toast.error('Failed to update project.');
         } finally {
             setIsSubmitting(false);

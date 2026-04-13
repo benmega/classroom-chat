@@ -44,7 +44,7 @@
     border-radius: 12px;
     border: 1px solid var(--border-subtle);
     font-size: 1rem;
-    background: #f8fafc;
+    background: var(--bg-secondary);
     transition: all 0.2s;
     font-family: inherit;
 }
@@ -77,7 +77,7 @@ textarea.form-control {
 }
 
 .submit-button:hover:not(:disabled) {
-    background: var(--primary-color-dark, #2563eb);
+    background: var(--primary-color-dark, var(--blue-600));
     transform: translateY(-2px);
     box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.4);
 }
@@ -90,7 +90,7 @@ textarea.form-control {
 .bookmarklet-container {
     margin-top: 1.5rem;
     padding: 1.25rem;
-    background: #f1f5f9;
+    background: var(--bg-tertiary);
     border-radius: 16px;
     text-align: center;
 }

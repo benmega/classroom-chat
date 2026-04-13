@@ -12,7 +12,7 @@ const Achievements = () => {
     useEffect(() => {
         const fetchAchievements = async () => {
             try {
-                const response = await client.get('/achievements/');
+                const response = await client.get('/api/achievements/');
                 const { achievements, user_achievements } = response.data.data;
                 setAchievements(achievements);
                 setUserAchievements(user_achievements);
@@ -43,14 +43,14 @@ const Achievements = () => {
                                 <div className={`badge badge-${ach.slug}`}>&nbsp;</div>
                                 {!isEarned && (
                                     <div className="overlay">
-                                        <span className="lock-icon">Lock</span>
+                                        <span className="lock-icon">🔒</span>
                                     </div>
                                 )}
                             </div>
 
                             <strong className="achievement-name">{ach.name}</strong>
                             <div className="tooltip">
-                                <span className="info-icon">Info</span>
+                                <span className="info-icon">ℹ️</span>
                                 <span className="tooltiptext">
                                     {ach.description} - {ach.reward} ducks
                                 </span>

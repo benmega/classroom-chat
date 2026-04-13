@@ -29,7 +29,7 @@ const AdvancedPanel = () => {
             if (response.data.status === 'success') {
                 setViews(response.data.data.views);
             }
-        } catch (error) {
+        } catch {
             toast.error('Failed to load advanced panel views.');
         } finally {
             setIsLoading(false);

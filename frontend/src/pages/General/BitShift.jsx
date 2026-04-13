@@ -167,6 +167,12 @@ const BitShift = () => {
                     </button>
                 </form>
             </section>
+            
+            <div className="binary-joke-container animate-fade-in" style={{ animationDelay: '0.4s' }}>
+                <p className="binary-joke">
+                    "There are 10 types of people in the world: those who understand binary, and those who don't."
+                </p>
+            </div>
         </div>
     );
 };

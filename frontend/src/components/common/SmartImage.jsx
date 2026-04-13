@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 
 /**
  * SmartImage component handles broken images by falling back to curated defaults.
@@ -17,14 +17,13 @@ const SmartImage = ({
   style = {},
   ...props 
 }) => {
-  const [imgSrc, setImgSrc] = useState(src);
   const [hasError, setHasError] = useState(false);
+  const [prevSrc, setPrevSrc] = useState(src);
 
-  // Update internal src if prop changes
-  useEffect(() => {
-    setImgSrc(src);
+  if (src !== prevSrc) {
+    setPrevSrc(src);
     setHasError(false);
-  }, [src]);
+  }
 
   const getFallback = () => {
     if (fallbackType === 'avatar') {
@@ -35,13 +34,11 @@ const SmartImage = ({
 
   const handleError = () => {
     if (!hasError) {
-      setImgSrc(getFallback());
       setHasError(true);
     }
   };
 
-  // Immediate fallback if src is completely missing
-  const finalSrc = !src ? getFallback() : imgSrc;
+  const finalSrc = !src || hasError ? getFallback() : src;
 
   return (
     <img 
