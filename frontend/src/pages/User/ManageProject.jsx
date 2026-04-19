@@ -37,29 +37,30 @@ const ManageProject = () => {
         const fetchData = async () => {
             setIsLoading(true);
             try {
-                // Fetch students if admin
-                if (currentUser?.is_admin) {
-                    const studentRes = await client.get('/user/project/new');
+                // Parallelize API calls
+                const [studentRes, projectRes] = await Promise.all([
+                    currentUser?.is_admin ? client.get('/user/project/new') : Promise.resolve(null),
+                    projectId ? client.get(`/user/project/edit/${projectId}`) : Promise.resolve(null)
+                ]);
+
+                if (studentRes) {
                     setStudents(studentRes.data.data.students || []);
                 }
 
-                if (projectId) {
-                    const response = await client.get(`/user/project/edit/${projectId}`);
-                    if (response.data.status === 'success') {
-                        const p = response.data.data.project;
-                        setProjectData({
-                            name: p.name || '',
-                            description: p.description || '',
-                            link: p.link || '',
-                            github_link: p.github_link || '',
-                            video_url: p.video_url || '',
-                            code_snippet: p.code_snippet || '',
-                            teacher_comment: p.teacher_comment || '',
-                            student_id: p.user_id || ''
-                        });
-                        if (p.image_url) {
-                            setImagePreview(`/static/${p.image_url}`);
-                        }
+                if (projectRes && projectRes.data.status === 'success') {
+                    const p = projectRes.data.data.project;
+                    setProjectData({
+                        name: p.name || '',
+                        description: p.description || '',
+                        link: p.link || '',
+                        github_link: p.github_link || '',
+                        video_url: p.video_url || '',
+                        code_snippet: p.code_snippet || '',
+                        teacher_comment: p.teacher_comment || '',
+                        student_id: p.user_id || ''
+                    });
+                    if (p.image_url) {
+                        setImagePreview(`/static/${p.image_url}`);
                     }
                 }
             } catch (error) {
@@ -79,9 +80,33 @@ const ManageProject = () => {
         fetchData();
     }, [projectId, currentUser]);
 
+    // Initial resize of textareas once data is loaded
+    useEffect(() => {
+        if (!isLoading) {
+            // Use a small timeout to ensure DOM is rendered
+            const timer = setTimeout(() => {
+                const textareas = document.querySelectorAll('textarea');
+                textareas.forEach(textarea => {
+                    adjustTextareaHeight(textarea);
+                });
+            }, 100);
+            return () => clearTimeout(timer);
+        }
+    }, [isLoading, projectData.description, projectData.teacher_comment, projectData.code_snippet]);
+
+    const adjustTextareaHeight = (target) => {
+        if (!target) return;
+        target.style.height = 'auto';
+        target.style.height = `${target.scrollHeight}px`;
+    };
+
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setProjectData(prev => ({ ...prev, [name]: value }));
+        
+        if (e.target.tagName.toLowerCase() === 'textarea') {
+            adjustTextareaHeight(e.target);
+        }
     };
 
     const handleFileChange = (e) => {
@@ -118,6 +143,16 @@ const ManageProject = () => {
 
             if (response.data.status === 'success') {
                 toast.success(projectId ? 'Project updated!' : 'Project created!');
+                
+                // If admin, redirect back to the student's profile if possible
+                if (currentUser?.is_admin && projectData.student_id) {
+                    const student = students.find(s => String(s.id) === String(projectData.student_id));
+                    if (student?.slug) {
+                        navigate(`/profile/${student.slug}`);
+                        return;
+                    }
+                }
+                
                 navigate('/profile');
             } else {
                 toast.error(response.data.error || 'Failed to save project.');
@@ -140,6 +175,16 @@ const ManageProject = () => {
             const response = await client.post(`/user/project/edit/${projectId}`, formData);
             if (response.data.status === 'success') {
                 toast.success('Project deleted.');
+                
+                // If admin, redirect back to the student's profile if possible
+                if (currentUser?.is_admin && projectData.student_id) {
+                    const student = students.find(s => String(s.id) === String(projectData.student_id));
+                    if (student?.slug) {
+                        navigate(`/profile/${student.slug}`);
+                        return;
+                    }
+                }
+
                 navigate('/profile');
             }
         } catch (error) {
@@ -180,14 +225,14 @@ const ManageProject = () => {
                             </div>
                             <div className="form-group">
                                 <label>Description</label>
-                                <textarea 
-                                    name="description" 
-                                    value={projectData.description} 
-                                    onChange={handleInputChange} 
-                                    rows="4"
-                                    placeholder="Tell the story of your project..."
-                                    className="form-control"
-                                />
+                                    <textarea 
+                                        name="description" 
+                                        value={projectData.description} 
+                                        onChange={handleInputChange} 
+                                        rows="6"
+                                        placeholder="Tell the story of your project..."
+                                        className="form-control"
+                                    />
                             </div>
 
                             {currentUser?.is_admin && (
@@ -213,7 +258,7 @@ const ManageProject = () => {
                                             name="teacher_comment" 
                                             value={projectData.teacher_comment} 
                                             onChange={handleInputChange} 
-                                            rows="2"
+                                            rows="4"
                                             className="form-control admin-textarea"
                                         />
                                     </div>

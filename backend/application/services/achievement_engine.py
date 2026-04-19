@@ -30,13 +30,13 @@ def check_achievement(user, achievement):
         "consistency": lambda: _calculate_consistency(user.username),
         # Count how many times someone entered them as a helper
         "community": lambda: db.session.query(func.count(ChallengeLog.id))
-        .filter(ChallengeLog.helper == user.username)
+        .filter(func.lower(ChallengeLog.helper) == user.username.lower())
         .scalar(),
         # Longest session length in minutes
         "session": lambda: longest_session_minutes(user.id),
         # Count number of trades (regardless of status)
         "trade": lambda: db.session.query(func.count(DuckTradeLog.id))
-        .filter(DuckTradeLog.username == user.username)
+        .filter(func.lower(DuckTradeLog.username) == user.username.lower())
         .scalar(),
         # Certificate submitted or not
         "certificate": lambda: (
@@ -52,13 +52,50 @@ def check_achievement(user, achievement):
     return value >= requirement
 
 
+def get_achievement_progress(user, achievement):
+    """Return (current_value, requirement_value) for progress tracking."""
+    try:
+        requirement = int(achievement.requirement_value)
+    except (ValueError, TypeError):
+        requirement = 0
+
+    value_getters = {
+        "ducks": lambda: user.earned_ducks,
+        "project": lambda: len(user.projects),
+        "progress": lambda: (
+            user.get_progress(achievement.source) if achievement.source else 0
+        ),
+        "chat": lambda: db.session.query(func.count(Message.id))
+        .filter(Message.user_id == user.id)
+        .scalar(),
+        "consistency": lambda: _calculate_consistency(user.username),
+        "community": lambda: db.session.query(func.count(ChallengeLog.id))
+        .filter(func.lower(ChallengeLog.helper) == user.username.lower())
+        .scalar(),
+        "session": lambda: longest_session_minutes(user.id),
+        "trade": lambda: db.session.query(func.count(DuckTradeLog.id))
+        .filter(func.lower(DuckTradeLog.username) == user.username.lower())
+        .scalar(),
+        "certificate": lambda: (
+            1
+            if UserCertificate.query.filter_by(
+                user_id=user.id, achievement_id=achievement.id
+            ).first()
+            else 0
+        ),
+    }
+
+    value = value_getters.get(achievement.type, lambda: 0)()
+    return value, requirement
+
+
 def _calculate_consistency(username):
     """
     Count how many consecutive weeks the user has challenge logs.
     """
     logs = (
         db.session.query(ChallengeLog.timestamp)
-        .filter(ChallengeLog.username == username)
+        .filter(func.lower(ChallengeLog.username) == username.lower())
         .order_by(ChallengeLog.timestamp.asc())
         .all()
     )

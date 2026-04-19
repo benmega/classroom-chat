@@ -1,9 +1,3 @@
-"""
-File: __init__.py
-Type: py
-Summary: Flask application factory and core app initialization.
-"""
-
 import logging
 import os
 from datetime import timedelta, datetime
@@ -27,7 +21,24 @@ from .license_checker import load_license
 
 def create_app(config_class=None):
     # Configure logging
-    logging.basicConfig(level=logging.INFO)
+    log_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    
+    # Console Handler
+    console_handler = logging.StreamHandler()
+    console_handler.setFormatter(log_formatter)
+    
+    # File Handler
+    log_dir = os.path.join(os.path.abspath(os.path.dirname(os.path.dirname(__file__))), "instance")
+    if not os.path.exists(log_dir):
+        os.makedirs(log_dir)
+    file_handler = logging.FileHandler(os.path.join(log_dir, "app.log"))
+    file_handler.setFormatter(log_formatter)
+    
+    root_logger = logging.getLogger()
+    root_logger.setLevel(logging.INFO)
+    root_logger.addHandler(console_handler)
+    root_logger.addHandler(file_handler)
+    
     logger = logging.getLogger(__name__)
 
     # Dynamically select config if not explicitly passed
@@ -65,7 +76,6 @@ def create_app(config_class=None):
     # x_for=1 tells Flask to trust the first X-Forwarded-For header
     app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_port=1)
 
-    # Configure session timeout
     app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(minutes=10)
     base_dir = os.path.abspath(os.path.dirname(__file__))
     license_dir = os.path.abspath(os.path.join(base_dir, "..", "license"))
@@ -100,7 +110,7 @@ def create_app(config_class=None):
     tasks.set_app_instance(app)
 
     with app.app_context():
-        setup_models()  # Ensures models are loaded
+        setup_models()
 
         # Check the DB directly. If the 'user' table doesn't exist, we need to initialize.
         inspector = inspect(db.engine)

@@ -158,11 +158,30 @@
     transition: all 0.2s;
 }
 
-.btn-approve { background: var(--primary-color); color: white; }
-.btn-approve:hover:not(:disabled) { background: #2563eb; }
+.btn-approve { 
+    background: var(--primary-color); 
+    color: white;
+    box-shadow: 0 4px 14px rgba(14, 178, 187, 0.3);
+}
 
-.btn-reject { background: #fef2f2; color: #dc2626; border: 1px solid #fee2e2; }
-.btn-reject:hover:not(:disabled) { background: #fee2e2; }
+.btn-approve:hover:not(:disabled) { 
+    background: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(14, 178, 187, 0.4);
+}
+
+.btn-reject { 
+    background: rgba(239, 68, 68, 0.08); 
+    color: #ef4444; 
+    border: 1px solid rgba(239, 68, 68, 0.15); 
+}
+
+.btn-reject:hover:not(:disabled) { 
+    background: #ef4444;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+}
 
 .btn-approve:disabled, .btn-reject:disabled {
     opacity: 0.5;

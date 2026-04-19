@@ -78,4 +78,5 @@ def init_admin(app):
             )
         )
 
+    app.extensions['flask_admin_instance'] = admin
     return admin

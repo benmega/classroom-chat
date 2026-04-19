@@ -43,7 +43,7 @@ const Login = () => {
             <div className="auth-container">
                 <div className="auth-header">
                     <div className="brand-logo">
-                        <Zap size={40} fill="white" />
+                        <img src="/images/logo.ico" alt="Classroom Chat Logo" />
                     </div>
                     <h1 className="auth-title">Welcome Back</h1>
                     <p className="auth-subtitle">Continue your classroom journey</p>

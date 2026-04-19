@@ -1,9 +1,3 @@
-"""
-File: user_routes.py
-Type: py
-Summary: Flask routes for user identity, profile management, and project portfolio.
-"""
-
 import os
 import re
 import uuid
@@ -38,8 +32,6 @@ s3_client = boto3.client(
     aws_secret_access_key=os.environ.get("AWS_SECRET_ACCESS_KEY"),
     region_name=os.environ.get("AWS_REGION", "ap-southeast-1"),
 )
-# --- Decorators ---
-
 
 def require_login(view):
     @wraps(view)
@@ -52,8 +44,6 @@ def require_login(view):
 
     return wrapper
 
-
-# --- Forms ---
 
 
 class LoginForm(FlaskForm):
@@ -69,8 +59,6 @@ class LoginForm(FlaskForm):
     )
     submit = SubmitField("Login", render_kw={"class": "login-button"})
 
-
-# --- Auth Routes ---
 
 
 @csrf.exempt
@@ -104,6 +92,8 @@ def login():
             User.set_online(user_obj.id)
 
             awarded = user_obj.award_daily_duck(amount=1)
+            if awarded:
+                db.session.commit()
             
             # Link to recent conversation or create session context
             recent_conversation = Conversation.query.order_by(
@@ -193,7 +183,7 @@ def signup():
 
 
 
-# --- Profile & Settings Routes ---
+
 @user.route("/profile", methods=["GET"])
 @require_login
 @api_response
@@ -252,18 +242,12 @@ def edit_profile():
                 handle_profile_picture_upload(user_obj)
 
             db.session.commit()
-            if request.is_json:
-                return {"message": "Account settings updated successfully!"}, 200
-            
-            flash("Account settings updated successfully!", "success")
-            return redirect(url_for("user.profile"))
+            return {"message": "Account settings updated successfully!"}, 200
 
         except Exception as e:
             db.session.rollback()
             current_app.logger.error(f"Error during profile update: {e}")
-            if request.is_json:
-                return "An error occurred while updating the profile.", 500
-            flash("An error occurred while updating the profile.", "danger")
+            return "An error occurred while updating the profile.", 500
 
     if request.accept_mimetypes.best == "application/json" or request.is_json:
         return {"user": user_obj.to_dict()}
@@ -271,7 +255,7 @@ def edit_profile():
 
 
 
-# --- Project Management Routes ---
+
 @user.route("/project/new", methods=["GET", "POST"])
 @require_login
 @api_response
@@ -320,15 +304,11 @@ def new_project():
 
         db.session.commit()
         
-        if request.is_json or request.headers.get("X-Requested-With") == "XMLHttpRequest":
-            return {"message": "Project created successfully!", "project_id": new_proj.id}
-        
-        flash("Project created successfully!", "success")
-        return redirect(url_for("user.profile"))
+        return {"message": "Project created successfully!", "project_id": new_proj.id}
 
     # GET logic
     if request.is_json or request.accept_mimetypes.accept_json:
-        student_list = [u.to_dict() for u in User.query.all()] if getattr(user_obj, 'is_admin', False) else None
+        student_list = [{"id": u.id, "username": u.username, "slug": u.slug} for u in User.query.all()] if getattr(user_obj, 'is_admin', False) else None
         return {"students": student_list}
 
     student_list = User.query.all() if getattr(user_obj, 'is_admin', False) else None
@@ -344,10 +324,7 @@ def edit_project(project_id):
     project = Project.query.get_or_404(project_id)
 
     if project.user_id != user_id and not getattr(current_user, "is_admin", False):
-        if request.is_json or request.accept_mimetypes.accept_json:
-            return "You do not have permission to edit this project.", 403
-        flash("You do not have permission to edit this project.", "danger")
-        return redirect(url_for("user.profile"))
+        return "You do not have permission to edit this project.", 403
 
     if request.method == "POST":
         data = request.form # Using form because of file uploads
@@ -356,10 +333,7 @@ def edit_project(project_id):
         if action == "delete":
             db.session.delete(project)
             db.session.commit()
-            if request.is_json or request.headers.get("X-Requested-With") == "XMLHttpRequest":
-                return {"message": "Project deleted successfully."}
-            flash("Project deleted.", "success")
-            return redirect(url_for("user.profile"))
+            return {"message": "Project deleted successfully."}
 
         # Default action is save
         project.name = data.get("name")
@@ -371,6 +345,14 @@ def edit_project(project_id):
 
         if getattr(current_user, "is_admin", False):
             project.teacher_comment = data.get("teacher_comment")
+            
+            # Allow admin to reassign student
+            new_student_id = data.get("student_id")
+            if new_student_id:
+                target_user = User.query.get(new_student_id)
+                if not target_user:
+                    return "Invalid student selection.", 400
+                project.user_id = target_user.id
 
         if "project_image" in request.files:
             file = request.files["project_image"]
@@ -386,11 +368,7 @@ def edit_project(project_id):
 
         db.session.commit()
         
-        if request.is_json or request.headers.get("X-Requested-With") == "XMLHttpRequest":
-            return {"message": "Project updated successfully!", "project": project.to_dict()}
-            
-        flash("Project updated successfully!", "success")
-        return redirect(url_for("user.profile"))
+        return {"message": "Project updated successfully!", "project": project.to_dict()}
 
     # GET logic
     if request.is_json or request.accept_mimetypes.accept_json:
@@ -398,8 +376,6 @@ def edit_project(project_id):
         
     return render_template("user/manage_project.html", project=project, user=current_user)
 
-
-# --- Image & File Handling Routes ---
 
 
 @user.route("/api/profile-picture", methods=["POST"])
@@ -535,8 +511,6 @@ def profile_picture(filename):
         return send_from_directory(static_images_folder, "Default_pfp.jpg")
 
 
-# --- API / Utility Routes ---
-
 
 @user.route("/get_users", methods=["GET"])
 def get_users():
@@ -595,14 +569,16 @@ def remove_skill(skill_id):
     return jsonify(success=True)
 
 
-# --- Helper Functions ---
-
 
 def update_basic_user_info(user_obj, data):
-    """Updates basic user settings (IP, Online Status, Password)."""
+    """Updates basic user settings (IP, Online Status, Password, Bio)."""
     ip_address = data.get("ip_address")
     user_obj.ip_address = ip_address if ip_address else user_obj.ip_address
     user_obj.is_online = data.get("is_online") == "true" or data.get("is_online") is True
+    
+    # Update bio if provided
+    if "bio" in data:
+        user_obj.bio = data.get("bio")
 
     password = data.get("password")
     confirm_password = data.get("confirm_password")
@@ -692,6 +668,16 @@ def handle_video_s3_upload(file, user_obj, project_name, project_id):
                 }
             },
         )
+        
+        # Update project video URL
+        project = Project.query.get(project_id)
+        if project:
+            region = os.environ.get("AWS_REGION", "ap-southeast-1")
+            video_url = f"https://{S3_UPLOAD_BUCKET}.s3.{region}.amazonaws.com/{s3_filename}"
+            project.video_url = video_url
+            db.session.commit()
+            return video_url
+            
         return True
     except Exception as e:
         print(f"S3 Upload Error: {e}")

@@ -43,6 +43,12 @@ const Users = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [isRefreshing, setIsRefreshing] = useState(false);
     
+    // Pagination state
+    const [page, setPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [totalUsers, setTotalUsers] = useState(0);
+    const [perPage, setPerPage] = useState(50);
+    
     // Modal States
     const [modalUser, setModalUser] = useState(null);
     const [activeModal, setActiveModal] = useState(null); // 'create', 'adjust', 'reset'
@@ -51,11 +57,23 @@ const Users = () => {
     const [formLoading, setFormLoading] = useState(false);
     const [formErrors, setFormErrors] = useState({});
 
-    const fetchUsers = async () => {
+    const fetchUsers = async (targetPage = page) => {
         setIsRefreshing(true);
         try {
-            const response = await client.get('/api/admin/users');
-            setUsers(response.data);
+            const response = await client.get(`/api/admin/users?page=${targetPage}&per_page=50`);
+            const data = response.data;
+            
+            // Handle both old (array) and new (paginated object) response formats for robustness
+            if (Array.isArray(data)) {
+                setUsers(data);
+                setTotalUsers(data.length);
+                setTotalPages(1);
+            } else {
+                setUsers(data.users || []);
+                setTotalUsers(data.total || 0);
+                setTotalPages(data.pages || 1);
+                setPage(data.current_page || 1);
+            }
         } catch (error) {
             console.error('Error fetching users:', error);
             toast.error('Failed to load users list.');
@@ -104,6 +122,7 @@ const Users = () => {
         const formData = new FormData(e.target);
         
         setFormLoading(true);
+        console.log(`Sending duck adjustment for user: ${formData.get('username')}, amount: ${formData.get('amount')}`);
         try {
             const response = await client.post('/api/admin/adjust_ducks', formData);
             if (response.data.success) {
@@ -137,6 +156,7 @@ const Users = () => {
             if (response.data.success) {
                 toast.success(response.data.message);
                 setActiveModal(null);
+                fetchUsers(page); // Stay on current page
             }
         } catch (error) {
             toast.error(error.response?.data?.message || 'Failed to reset password.');
@@ -211,7 +231,7 @@ const Users = () => {
             <div className="users-stats-row">
                 <div className="stat-mini-card">
                     <span className="label">Total Users</span>
-                    <span className="value">{users.length}</span>
+                    <span className="value">{totalUsers || users.length}</span>
                 </div>
                 <div className="stat-mini-card">
                     <span className="label">Online Now</span>
@@ -315,6 +335,32 @@ const Users = () => {
                         )}
                     </tbody>
                 </table>
+                
+                {/* Pagination Controls */}
+                <div className="pagination-container">
+                    <div className="pagination-info">
+                        Showing <strong>{(page - 1) * 50 + 1}-{Math.min(page * 50, totalUsers)}</strong> of <strong>{totalUsers}</strong> users
+                    </div>
+                    <div className="pagination-controls">
+                        <button 
+                            className="pagination-btn" 
+                            onClick={() => fetchUsers(page - 1)}
+                            disabled={page <= 1 || isRefreshing}
+                        >
+                            <ChevronLeft size={16} /> Previous
+                        </button>
+                        <div className="pagination-pages">
+                            <span className="page-indicator">Page <strong>{page}</strong> of {totalPages}</span>
+                        </div>
+                        <button 
+                            className="pagination-btn" 
+                            onClick={() => fetchUsers(page + 1)}
+                            disabled={page >= totalPages || isRefreshing}
+                        >
+                            Next <ChevronLeft size={16} style={{ transform: 'rotate(180deg)' }} />
+                        </button>
+                    </div>
+                </div>
             </div>
 
             {/* Modals - Reused from Dashboard Logic */}
@@ -354,7 +400,7 @@ const Users = () => {
                                 />
                                 <div className="user-info-text">
                                     <span className="user-nickname">{modalUser.nickname || modalUser.username}</span>
-                                    <span className="user-handle" style={{ whiteSpace: 'normal', overflow: 'visible', textOverflow: 'clip', maxWidth: 'none' }}>
+                                                                         <span className="user-handle" style={{ whiteSpace: 'normal', overflow: 'visible', textOverflow: 'clip', maxWidth: 'none', display: 'block', wordBreak: 'break-all' }}>
                                         @{modalUser.username}
                                     </span>
                                 </div>

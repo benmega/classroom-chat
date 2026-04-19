@@ -41,13 +41,14 @@ def get_user(identifier):
         abort(500, description=f"An error occurred: {str(e)}")
 
 
-def save_message_to_db(user_id, message, message_type="text"):
+def save_message_to_db(user_id, message, conversation_id=None, message_type="text"):
     """
     Saves a message to the database, creating a new conversation if needed.
 
     Args:
         user_id (int): The ID of the user sending the message.
         message (str): The content of the message.
+        conversation_id (int, optional): The ID of the conversation.
         message_type (str): The type of message (default is "text").
 
     Returns:
@@ -55,23 +56,37 @@ def save_message_to_db(user_id, message, message_type="text"):
               or error details if applicable.
     """
     try:
-        conversation_id = session.get("conversation_id")
+        if not conversation_id:
+            conversation_id = session.get("conversation_id")
 
         if not conversation_id:
             print("No active conversation found. Creating a new one.")
             conversation = Conversation(
                 title=f"Conversation started on {datetime.utcnow().strftime('%B %d, %Y')}",
+                creator_id=user_id,
             )
             db.session.add(conversation)
-            db.session.commit()
-
+            db.session.flush() # Get the ID before committing
+            
             session["conversation_id"] = conversation.id
             print(f"New conversation created with ID: {conversation.id}")
         else:
             conversation = Conversation.query.get(conversation_id)
             if not conversation:
-                print("Error: Active conversation not found in the database.")
-                return {"success": False, "error": "Active conversation not found."}
+                print(f"Error: Conversation ID {conversation_id} not found in the database. Creating a new one.")
+                conversation = Conversation(
+                    title=f"Conversation started on {datetime.utcnow().strftime('%B %d, %Y')}",
+                    creator_id=user_id,
+                )
+                db.session.add(conversation)
+                db.session.flush()
+                session["conversation_id"] = conversation.id
+
+        # Ensure the user is associated with this conversation
+        user = User.query.get(user_id)
+        if user and user not in conversation.users:
+            conversation.users.append(user)
+            db.session.add(conversation)
 
         new_message = Message(
             user_id=user_id,
@@ -83,7 +98,7 @@ def save_message_to_db(user_id, message, message_type="text"):
         db.session.commit()
 
         print(
-            f"Message saved with ID: {new_message.id} in conversation ID: {conversation.id}"
+            f"Message saved with ID: {new_message.id} in conversation ID: {conversation.id} for user {user_id}"
         )
         return {
             "success": True,

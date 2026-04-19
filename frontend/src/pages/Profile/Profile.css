@@ -47,6 +47,10 @@
     cursor: pointer;
     overflow: hidden;
     border-radius: 50%;
+    width: 140px;
+    height: 140px;
+    border: 4px solid var(--bg-primary);
+    box-shadow: 0 8px 20px rgba(0, 1, 3, 0.1);
 }
 
 .avatar-wrapper:hover .upload-overlay {
@@ -74,67 +78,49 @@
 }
 
 .avatar-img {
-    width: 140px;
-    height: 140px;
-    border-radius: 50%; /* Back to circular */
-    border: 5px solid var(--bg-primary);
-    box-shadow: var(--shadow-md);
+    width: 100%;
+    height: 100%;
     object-fit: cover;
     background: var(--bg-tertiary);
     transition: var(--transition-smooth);
 }
 
 .avatar-wrapper:hover .avatar-img {
-    transform: scale(1.05);
+    transform: scale(1.02);
 }
 
-.edit-pic-btn {
-    position: absolute;
-    bottom: 5px;
-    right: 5px;
-    width: 38px;
-    height: 38px;
-    background: var(--primary-color);
-    color: white;
-    border: 3px solid var(--bg-primary);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: var(--transition-fast);
-    box-shadow: var(--shadow-sm);
-    z-index: 10;
-}
 
-.edit-pic-btn:hover {
-    background: var(--primary-dark);
-    transform: scale(1.1);
-}
 
 /* Crop Modal Specifics */
 .crop-modal-content {
     max-width: 500px !important;
+    padding-top: 20px !important; /* Reduced from 40px */
 }
 
 .crop-area {
     width: 100%;
-    max-height: 400px;
-    min-height: 300px;
-    background: #000;
+    height: 350px;
+    background: #0f172a; /* Solid dark background for better focus */
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: 20px 0;
+    margin: 15px 0;
     overflow: hidden;
+    border-radius: var(--radius-md);
 }
 
 .modal-footer {
     display: flex;
     justify-content: flex-end;
     gap: 12px;
-    padding-top: 20px;
+    padding: 20px 0 10px; /* Adjusted padding */
+    margin-top: 10px;
     border-top: 1px solid var(--border-subtle);
+}
+
+/* Specific adjustment for crop modal buttons area */
+.crop-modal-content .modal-footer {
+    padding-bottom: 30px; /* Extra padding at bottom as requested */
 }
 
 .student-identity {
@@ -156,6 +142,19 @@
     color: var(--primary-color);
     font-weight: 600;
     font-size: 1.1rem;
+}
+
+
+.bio-panel-content {
+    padding: 5px 0;
+}
+
+.bio-text {
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    line-height: 1.7;
+    white-space: pre-wrap;
+    margin: 0;
 }
 
 .btn-settings {
@@ -515,14 +514,14 @@
 }
 
 .card-teacher-feedback {
-    background: #f0fff4;
-    border-left: 3px solid #10b981;
+    background: var(--bg-secondary);
+    border-left: 3px solid var(--success-color);
     padding: 8px 10px;
     margin-bottom: 12px;
     font-size: 0.8rem;
-    color: #166534;
+    color: var(--success-color);
     font-style: italic;
-    border-radius: 0 4px 4px 0;
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
     display: flex;
     align-items: flex-start;
     gap: 6px;
@@ -620,7 +619,7 @@
 }
 
 .cert-item:hover {
-    background: white;
+    background: var(--bg-primary);
     border-color: var(--primary-color);
     transform: translateY(-2px);
     box-shadow: var(--shadow-md);
@@ -800,16 +799,14 @@
 }
 
 .rows-container {
-    display: grid;
-    grid-template-rows: repeat(7, 1fr);
-    gap: 3px;
-    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
 }
 
 .graph-row {
-    display: grid;
-    grid-template-columns: repeat(53, 1fr);
-    gap: 3px !important;
+    display: flex;
+    gap: 2px;
 }
 
 .graph-cell {
@@ -819,33 +816,125 @@
     background: var(--bg-tertiary);
 }
 
-.graph-cell.level-0 { background: var(--bg-tertiary); }
-.graph-cell.level-1 { background: #dcfce7; }
-.graph-cell.level-2 { background: #86efac; }
-.graph-cell.level-3 { background: #22c55e; }
-.graph-cell.level-4 { background: #15803d; }
+.graph-cell.level-1 { background: #bae6fd; }
+.graph-cell.level-2 { background: #7dd3fc; }
+.graph-cell.level-3 { background: #38bdf8; }
+.graph-cell.level-4 { background: #0284c7; }
+
+.graph-footer {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 12px;
+    font-size: 11px;
+    color: var(--text-muted);
+    justify-content: flex-end;
+}
+
+.footer-cells {
+    display: flex;
+    gap: 2px;
+}
 
 /* =================================================================
-   10. MODALS
+   MODALS
    ================================================================= */
-.modal-overlay {
-    background: rgba(0, 0, 0, 0.75);
+.modal-overlay, .slideshow-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(15, 23, 42, 0.8);
     backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 30px;
+    animation: fadeIn var(--transition-fast);
 }
 
-.project-modal {
-    border-radius: var(--radius-md);
+.close-modal, .close-slideshow {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 40px;
+    height: 40px;
+    background: var(--bg-primary);
+    border: none;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+    cursor: pointer;
+    box-shadow: var(--shadow-md);
+    z-index: 1010;
+    transition: var(--transition-fast);
+}
+
+.close-modal:hover, .close-slideshow:hover {
+    color: var(--error-color);
+    transform: rotate(90deg) scale(1.1);
+    background: var(--bg-primary);
+    box-shadow: var(--shadow-lg);
+}
+
+.close-slideshow {
+    top: 30px;
+    right: 30px;
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+.close-slideshow:hover {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+}
+
+.modal-content {
+    background: var(--bg-primary);
+    border-radius: var(--radius-lg);
+    width: 100%;
+    max-width: 900px;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
     box-shadow: var(--shadow-xl);
+    padding-top: 20px; /* Reduced from 40px to fix spacing issue */
 }
 
-.project-modal header {
-    padding: 2.5rem 2.5rem 1.5rem;
+.project-modal .modal-header {
+    padding: 1rem 2.5rem;
+    margin-bottom: 2rem;
 }
 
 .modal-body {
     padding: 0 2.5rem 2.5rem;
     gap: 2.5rem;
     grid-template-columns: 1fr 340px;
+    display: grid; /* Ensure grid is active */
+}
+
+.video-spotlight {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    background: #000;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    margin-bottom: 2rem;
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--border-subtle);
+}
+
+.video-spotlight iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
 }
 
 .code-snippet {

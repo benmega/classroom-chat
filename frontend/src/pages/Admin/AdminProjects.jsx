@@ -29,7 +29,7 @@ const AdminProjects = () => {
     const fetchProjects = useCallback(async () => {
         setIsLoading(true);
         try {
-            const response = await client.get(`/admin/manage-projects?filter=${filter}`);
+            const response = await client.get(`/api/admin/manage-projects?filter=${filter}`);
             if (response.data.status === 'success') {
                 setProjects(response.data.data.projects);
                 setCounts({
@@ -56,7 +56,7 @@ const AdminProjects = () => {
 
         setIsSubmitting(true);
         try {
-            const response = await client.post(`/admin/handle-project-review/${projectId}`, {
+            const response = await client.post(`/api/admin/handle-project-review/${projectId}`, {
                 action,
                 teacher_comment: teacherComment,
                 filter_context: filter

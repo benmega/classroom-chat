@@ -74,6 +74,35 @@ const Layout = ({ children }) => {
         // Update the ref for next comparison
         prevDuckBalanceRef.current = user.duck_balance;
     }, [user?.duck_balance, user]);
+    // --- Heartbeat ---
+    useEffect(() => {
+        if (!isAuthenticated || !user) return;
+
+        const HEARTBEAT_INTERVAL = 30000; // 30 seconds
+        
+        const sendHeartbeat = async () => {
+            try {
+                // We use the imported client or a direct fetch if preferred.
+                // client from useAuthStore (via useAuthStore.js) is preferred if available.
+                // Since this file doesn't import client directly, I'll use fetch or import it if I can.
+                // But wait, the file already imports useAuthStore.
+                // I'll use a direct fetch for simplicity if I don't want to mess with imports,
+                // but let's check if I can import client.
+                await fetch('/session/heartbeat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                });
+            } catch (err) {
+                console.error('Heartbeat failed:', err);
+            }
+        };
+
+        // Send initial heartbeat
+        sendHeartbeat();
+
+        const interval = setInterval(sendHeartbeat, HEARTBEAT_INTERVAL);
+        return () => clearInterval(interval);
+    }, [isAuthenticated, user]);
     // ----------------------------------------------
 
     useEffect(() => {
@@ -111,7 +140,7 @@ const Layout = ({ children }) => {
                     )}
                     <div id="logo-container">
                         <Link to="/" className="logo">
-                            <img src="/images/logo.svg" alt="Classroom Chat Logo" />
+                            <img src="/images/logo.ico" alt="Classroom Chat Logo" />
                         </Link>
                     </div>
 
@@ -240,7 +269,7 @@ const Layout = ({ children }) => {
             <aside className={`mobile-sidebar ${isSidebarOpen ? 'open' : ''}`}>
                 <div className="sidebar-header">
                     <div className="sidebar-logo">
-                        <img src="/images/logo.svg" alt="Logo" />
+                        <img src="/images/logo.ico" alt="Logo" />
                     </div>
                     <button className="sidebar-close" onClick={() => setSidebarOpen(false)}>
                         <X size={24} />

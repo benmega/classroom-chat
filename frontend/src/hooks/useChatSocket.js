@@ -3,7 +3,7 @@ import { io } from 'socket.io-client';
 
 const getSocketUrl = () => {
   if (import.meta.env.VITE_API_URL) return import.meta.env.VITE_API_URL;
-  return window.location.origin;
+  return import.meta.env.MODE === 'development' ? 'http://localhost:8000' : window.location.origin;
 };
 
 const SOCKET_URL = getSocketUrl();

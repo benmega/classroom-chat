@@ -9,7 +9,7 @@ from application.extensions import db
 
 class DuckTradeLog(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80), db.ForeignKey("users.username"), nullable=False)
+    username = db.Column(db.String(80), db.ForeignKey("users.username"), nullable=False, index=True)
     digital_ducks = db.Column(db.Integer, nullable=False)
     bit_ducks = db.Column(
         db.JSON, nullable=False
@@ -17,8 +17,8 @@ class DuckTradeLog(db.Model):
     byte_ducks = db.Column(
         db.JSON, nullable=False
     )  # Store as JSON instead of PickleType
-    status = db.Column(db.String(20), default="pending")  # pending, approved, rejected
-    timestamp = db.Column(db.DateTime, nullable=False, default=db.func.now())
+    status = db.Column(db.String(20), default="pending", index=True)  # pending, approved, rejected
+    timestamp = db.Column(db.DateTime, nullable=False, default=db.func.now(), index=True)
 
     def approve(self):
         self.status = "approved"

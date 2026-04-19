@@ -1,11 +1,4 @@
-/*
-File: profile.js
-Type: js
-Summary: Handles Profile Picture cropping, Project Modals, Video Lightbox, Skill management, and Note Uploads (Camera & File).
-*/
-
 document.addEventListener("DOMContentLoaded", () => {
-    // 1. Initialize Profile Picture Editor (if on owner page)
     if (document.getElementById("edit-pic-trigger")) {
         if (typeof Cropper === 'undefined') {
             console.warn('Cropper.js not loaded yet, waiting...');
@@ -20,25 +13,14 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // 2. Initialize Project Modals & Video Lightbox
     initProjectInteractions();
-
-    // 3. Initialize Skill Removal
     initSkillRemoval();
-
-    // 4. Handle Deep Link Modal Opening
     initDeepLinkModal();
-
-    // 5. Initialize Note Upload (Camera & File)
     initNoteUpload();
-
-    // 6. Slide show
     initNoteSlideshow();
 });
 
-/* =========================================
-   PROJECT MODAL & VIDEO LIGHTBOX LOGIC
-   ========================================= */
+// --- Project Modal & Video Lightbox Logic ---
 
 function initProjectInteractions() {
     // --- Project Modal Logic ---
@@ -133,9 +115,7 @@ function convertToEmbedUrl(url) {
 }
 
 
-/* =========================================
-   SKILL REMOVAL LOGIC
-   ========================================= */
+// --- Skill Removal Logic ---
 
 function initSkillRemoval() {
     document.addEventListener('click', async function(e) {
@@ -176,9 +156,7 @@ function initSkillRemoval() {
 }
 
 
-/* =========================================
-   PROFILE PICTURE EDITOR LOGIC
-   ========================================= */
+// --- Profile Picture Editor Logic ---
 
 function initProfileEditor() {
     const fileInput = document.getElementById("file-input");
@@ -489,9 +467,7 @@ function initDeepLinkModal() {
 }
 
 
-/* =========================================
-   NOTEBOOK UPLOAD LOGIC (UPDATED)
-   ========================================= */
+// --- Notebook Upload Logic ---
 
 function initNoteUpload() {
     // Elements for Standard Upload
@@ -675,9 +651,7 @@ document.addEventListener('click', async (e) => {
     }
 });
 
-/* =========================================
-   NOTE SLIDESHOW LOGIC
-   ========================================= */
+// --- Note Slideshow Logic ---
 function initNoteSlideshow() {
     const lightbox = document.getElementById('slideshow-lightbox');
     const imgEl = document.getElementById('slideshow-img');

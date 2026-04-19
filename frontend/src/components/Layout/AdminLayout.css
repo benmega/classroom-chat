@@ -67,9 +67,13 @@
     font-family: 'Outfit', sans-serif;
 }
 
-.brand-icon {
+.brand-icon,
+.brand-logo-img {
     color: var(--admin-primary);
     flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    object-fit: contain;
 }
 
 .brand-text {

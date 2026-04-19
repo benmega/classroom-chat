@@ -1,13 +1,7 @@
-"""
-File: skill_service.py
-Summary: Logic to automatically unlock skills based on user progress.
-"""
-
 from application.extensions import db
-from application.models.course_instance import CourseInstance
 from application.models.skill import Skill
 
-# --- PROJECT SPECIFIC SKILL MAP ---
+# Project Specific Skill Map
 DEFAULT_PROJECT_SKILLS = {
     "CS1 Capstone": ["Turtle Graphics", "Drawing"],
     "CS2 Capstone": ["Game Design", "Conditional Logic"],
@@ -19,10 +13,26 @@ DEFAULT_PROJECT_SKILLS = {
 
 def get_challenge_counts_by_language(user):
     """
-    Scans user's challenge logs and groups them by language.
-    Uses CourseInstance to determine the language for each log.
+    Scans user's challenge logs and groups them by language/domain.
+    Uses the 'domain' field on ChallengeLog directly — no join required.
     """
     counts = {"Python": 0, "JavaScript": 0, "C++": 0, "Java": 0, "HTML/CSS": 0}
+
+    # Domain → language name aliases
+    DOMAIN_ALIASES = {
+        "python": "Python",
+        "javascript": "JavaScript",
+        "js": "JavaScript",
+        "cpp": "C++",
+        "c++": "C++",
+        "java": "Java",
+        "html": "HTML/CSS",
+        "html/css": "HTML/CSS",
+        "css": "HTML/CSS",
+        "web": "HTML/CSS",
+        "wd1": "HTML/CSS",
+        "wd2": "HTML/CSS",
+    }
 
     # 1. Check Course Progress for WD1/WD2 (Legacy/Special handling)
     for level_slug in user.get_completed_levels():
@@ -30,36 +40,21 @@ def get_challenge_counts_by_language(user):
             counts["HTML/CSS"] += 1
             counts["JavaScript"] += 1
 
-    # 2. Map Challenge Logs to Languages via CourseInstance
-    # Get all logs for the user
-    logs = user.challenge_logs
-
-    # Extract unique Course Instance IDs from logs to minimize DB queries
-    instance_ids = {log.course_instance for log in logs if log.course_instance}
-
-    # Fetch all relevant CourseInstance records in one query
-    instances = CourseInstance.query.filter(CourseInstance.id.in_(instance_ids)).all()
-
-    # Create a lookup map: { instance_id: language_name }
-    instance_lang_map = {inst.id: inst.language for inst in instances}
-
-    # Iterate logs and tally counts
-    for log in logs:
-        # Skip if no instance ID or instance not found in DB
-        if not log.course_instance or log.course_instance not in instance_lang_map:
+    # 2. Tally challenge logs using the domain field directly
+    for log in user.challenge_logs:
+        domain = (log.domain or "").strip().lower()
+        if not domain:
             continue
 
-        lang = instance_lang_map[log.course_instance]
+        # Direct match first
+        if domain in counts:
+            counts[domain] += 1
+            continue
 
-        # Normalize or direct match the language to our counts keys
-        if lang in counts:
-            counts[lang] += 1
-
-        # Handle potential aliases if necessary (example)
-        elif lang == "JS":
-            counts["JavaScript"] += 1
-        elif lang == "Cpp":
-            counts["C++"] += 1
+        # Alias match
+        mapped = DOMAIN_ALIASES.get(domain)
+        if mapped and mapped in counts:
+            counts[mapped] += 1
 
     return counts
 
@@ -76,7 +71,7 @@ def evaluate_user_skills(user):
     # Pre-calculate counts
     counts = get_challenge_counts_by_language(user)
 
-    # --- 1. LANGUAGE BADGES (Based on Challenge Counts) ---
+    # Language Badges (Based on Challenge Counts)
     language_rules = [
         ("Python", counts["Python"]),
         ("JavaScript", counts["JavaScript"]),
@@ -105,7 +100,7 @@ def evaluate_user_skills(user):
                 new_skills_awarded,
             )
 
-    # --- 2. GITHUB SKILL (Based on Project Link) ---
+    # GitHub Skill (Based on Project Link)
     has_github = any(p.github_link for p in user.projects)
     if has_github:
         _award_skill(
@@ -118,7 +113,7 @@ def evaluate_user_skills(user):
             new_skills_awarded,
         )
 
-    # --- 3. PROJECT SPECIFIC SKILLS (Based on Project Name) ---
+    # Project Specific Skills (Based on Project Name)
     for project in user.projects:
         for default_name, skills_list in DEFAULT_PROJECT_SKILLS.items():
             if default_name.lower() in project.name.lower():
@@ -133,7 +128,7 @@ def evaluate_user_skills(user):
                         new_skills_awarded,
                     )
 
-    # --- 4. COMMIT ---
+    # Commit changes
     if new_skills_awarded:
         db.session.commit()
         return new_skills_awarded

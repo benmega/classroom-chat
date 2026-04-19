@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Camera, Save, X, Lock, User as UserIcon } from 'lucide-react';
+import { Save, X, Lock, User as UserIcon } from 'lucide-react';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
 import useAuthStore from '../../store/useAuthStore';
@@ -12,6 +12,7 @@ const EditProfile = () => {
     const navigate = useNavigate();
     
     const [nickname, setNickname] = useState('');
+    const [bio, setBio] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [isSaving, setIsSaving] = useState(false);
@@ -21,6 +22,7 @@ const EditProfile = () => {
     useEffect(() => {
         if (user) {
             setNickname(user.nickname || user.username);
+            setBio(user.bio || '');
             setPreviewUrl(user.profile_picture ? `/user/profile_pictures/${user.profile_picture}` : '/static/images/Default_pfp.jpg');
         }
     }, [user]);
@@ -55,6 +57,7 @@ const EditProfile = () => {
             // 2. Handle Basic Info
             const payload = {
                 nickname,
+                bio,
                 password: password || undefined,
                 confirm_password: confirmPassword || undefined
             };
@@ -90,7 +93,6 @@ const EditProfile = () => {
                                 fallbackType="avatar"
                             />
                             <label htmlFor="pfp-upload" className="upload-overlay">
-                                <Camera size={24} />
                                 <span>Change Photo</span>
                                 <input type="file" id="pfp-upload" hidden onChange={handleFileChange} accept="image/*" />
                             </label>
@@ -113,6 +115,20 @@ const EditProfile = () => {
                                     placeholder="Enter your nickname" 
                                     className="form-control" 
                                 />
+                            </div>
+                            <div className="form-group">
+                                <label>About Me</label>
+                                <textarea 
+                                    value={bio}
+                                    onChange={(e) => setBio(e.target.value)}
+                                    placeholder="Tell us about yourself..." 
+                                    className="form-control" 
+                                    rows="4"
+                                    maxLength="500"
+                                />
+                                <small className="char-count" style={{ display: 'block', textAlign: 'right', fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+                                    {bio?.length || 0}/500
+                                </small>
                             </div>
                         </section>
 

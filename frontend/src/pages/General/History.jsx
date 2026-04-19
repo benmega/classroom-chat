@@ -21,7 +21,10 @@ const History = () => {
 
     useEffect(() => {
         const fetchHistory = async () => {
-            if (!user?.id) return;
+            if (!user?.id) {
+                setIsLoading(false);
+                return;
+            }
             try {
                 const response = await client.get(`/message/api/conversations/${user.id}`);
                 const historyData = response.data.data || response.data;
@@ -66,8 +69,8 @@ const History = () => {
     }
 
     return (
-        <div className="history-page">
-            <div className="history-header">
+        <div className="history-page container animate-fade-in">
+            <div className="history-header glass-panel">
                 <div className="header-info">
                     <h1>Activity History</h1>
                     <p>Track your past conversations and classroom interactions.</p>
@@ -84,12 +87,12 @@ const History = () => {
             </div>
 
             <div className="history-stats">
-                <div className="stat-card">
+                <div className="stat-card glass-panel">
                     <MessageSquare size={24} />
                     <div className="stat-value">{conversations.length}</div>
                     <div className="stat-label">Total Chats</div>
                 </div>
-                <div className="stat-card">
+                <div className="stat-card glass-panel">
                     <Clock size={24} />
                     <div className="stat-value">
                         {conversations.length > 0 ? 
@@ -129,11 +132,11 @@ const History = () => {
                         </div>
                     ))
                 ) : (
-                    <div className="empty-history">
+                    <div className="empty-history card-premium">
                         <MessageSquare size={48} />
                         <h3>No Conversations Found</h3>
                         <p>You haven't participated in any conversations yet or your search matched nothing.</p>
-                        <button onClick={() => navigate('/')} className="start-btn">Start a Conversation</button>
+                        <button onClick={() => navigate('/')} className="btn-premium">Start a Conversation</button>
                     </div>
                 )}
             </div>

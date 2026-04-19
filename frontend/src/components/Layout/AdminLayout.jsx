@@ -81,7 +81,7 @@ const AdminLayout = ({ children }) => {
             <aside className="admin-sidebar">
                 <div className="sidebar-header">
                     <Link className="sidebar-brand" to="/admin">
-                        <Shield className="brand-icon" size={28} />
+                        <img src="/images/logo.ico" alt="Admin HQ Logo" className="brand-logo-img" />
                         <span className="brand-text">Admin HQ</span>
                     </Link>
                     <button className="sidebar-toggle-btn desktop-only" onClick={toggleSidebarDesktop} aria-label="Toggle Sidebar">

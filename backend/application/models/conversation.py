@@ -34,6 +34,7 @@ class Conversation(db.Model):
         nullable=False,
         default=lambda: f"New Chat on {datetime.utcnow().strftime('%B %d, %Y')}",
     )
+    creator_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     # Relationships
@@ -44,7 +45,11 @@ class Conversation(db.Model):
         lazy="selectin",
     )
     messages = db.relationship(
-        "Message", backref="conversation", lazy="joined", cascade="all, delete-orphan"
+        "Message", 
+        backref="conversation", 
+        lazy="joined", 
+        cascade="all, delete-orphan",
+        order_by="Message.created_at.asc()"
     )
 
     def __repr__(self):

@@ -1,21 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { 
     Users, 
-    Coins, 
     TrendingUp, 
-    Clock, 
     Settings, 
     AlertTriangle, 
-    Trash2, 
     Search,
     RefreshCw,
     Shield,
     Plus,
     UserPlus,
-    Key,
     MessageSquare,
-    ArrowUpCircle,
-    X
 } from 'lucide-react';
 import DuckIcon from '../../components/common/DuckIcon';
 import {
@@ -34,7 +28,16 @@ import { useNavigate } from 'react-router-dom';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
 import './AdminDashboard.css';
-import SmartImage from '../../components/common/SmartImage';
+
+// Extracted Components
+import AdminStats from '../../components/admin/AdminStats';
+import UserTable from '../../components/admin/UserTable';
+import { 
+    CreateUserModal, 
+    AdjustDucksModal, 
+    ResetPasswordModal, 
+    StartConversationModal 
+} from '../../components/admin/AdminModals';
 
 ChartJS.register(
     CategoryScale,
@@ -46,23 +49,6 @@ ChartJS.register(
     Legend,
     Filler
 );
-
-const Modal = ({ isOpen, onClose, title, children }) => {
-    if (!isOpen) return null;
-    return (
-        <div className="admin-modal-overlay" onClick={onClose}>
-            <div className="admin-modal-content" onClick={e => e.stopPropagation()}>
-                <div className="modal-header">
-                    <h3>{title}</h3>
-                    <button onClick={onClose} className="close-btn"><X size={20} /></button>
-                </div>
-                <div className="modal-body">
-                    {children}
-                </div>
-            </div>
-        </div>
-    );
-};
 
 const AdminDashboard = () => {
     const navigate = useNavigate();
@@ -168,7 +154,6 @@ const AdminDashboard = () => {
         const username = formData.get('username');
         const password = formData.get('password');
         
-        // Custom Validation
         const errors = {};
         if (!username) {
             errors.username = 'Username is required';
@@ -207,7 +192,6 @@ const AdminDashboard = () => {
         e.preventDefault();
         const formData = new FormData(e.target);
         
-        // Custom Validation
         const errors = {};
         if (!formData.get('amount')) {
             errors.amount = 'Adjustment amount is required';
@@ -239,7 +223,6 @@ const AdminDashboard = () => {
         const formData = new FormData(e.target);
         const data = Object.fromEntries(formData);
         
-        // Custom Validation
         const errors = {};
         if (!data.new_password) errors.new_password = 'New password is required';
         if (!data.confirm_password) errors.confirm_password = 'Confirmation is required';
@@ -308,10 +291,6 @@ const AdminDashboard = () => {
     if (!dashboardData) return <div className="admin-error">Error loading dashboard.</div>;
 
     const { 
-        total_ducks, 
-        ducks_earned_this_week, 
-        pending_trades_count, 
-        active_users_count, 
         users, 
         config, 
         banned_words, 
@@ -378,43 +357,7 @@ const AdminDashboard = () => {
                 </button>
             </div>
 
-            <div className="stats-grid">
-                <div className="stat-card">
-                    <div className="stat-icon ducks"><DuckIcon size={32} color="white" /></div>
-                    <div className="stat-info">
-                        <span className="stat-label">Total Ducks In Circulation</span>
-                        <span className="stat-value">{total_ducks.toLocaleString()}</span>
-                    </div>
-                </div>
-                <div className="stat-card">
-                    <div className="stat-icon week"><TrendingUp size={24} /></div>
-                    <div className="stat-info">
-                        <span className="stat-label">Earned This Week</span>
-                        <span className="stat-value">{ducks_earned_this_week.toLocaleString()}</span>
-                    </div>
-                </div>
-                <div className="stat-card">
-                    <div className="stat-icon pending"><Clock size={24} /></div>
-                    <div className="stat-info">
-                        <span className="stat-label">Pending Trades</span>
-                        <span className="stat-value">{pending_trades_count}</span>
-                    </div>
-                </div>
-                <div className="stat-card clickable" onClick={() => navigate('/admin/pending-users')}>
-                    <div className="stat-icon approval"><Users size={24} /></div>
-                    <div className="stat-info">
-                        <span className="stat-label">System Approvals</span>
-                        <span className="stat-value">{dashboardData.pending_users_count || 0}</span>
-                    </div>
-                </div>
-                <div className="stat-card">
-                    <div className="stat-icon active"><Users size={24} /></div>
-                    <div className="stat-info">
-                        <span className="stat-label">Online Users</span>
-                        <span className="stat-value">{active_users_count}</span>
-                    </div>
-                </div>
-            </div>
+            <AdminStats stats={dashboardData} onApprovalClick={() => navigate('/admin/pending-users')} />
 
             <div className="dashboard-layout">
                 <div className="main-content">
@@ -429,13 +372,16 @@ const AdminDashboard = () => {
 
                     <div className="user-management card">
                         <div className="card-header">
-                            <h3><Users size={20} /> User Management</h3>
+                            <div className="title-group">
+                                <h3><Users size={20} /> User Management</h3>
+                                <span className="user-count-badge">Total: {dashboardData.total_users_count || users.length}</span>
+                            </div>
                             <div className="header-actions">
                                 <div className="search-box">
                                     <Search size={18} />
                                     <input 
                                         type="text" 
-                                        placeholder="Search users..." 
+                                        placeholder="Search top results..." 
                                         value={searchTerm}
                                         onChange={(e) => setSearchTerm(e.target.value)}
                                     />
@@ -443,72 +389,23 @@ const AdminDashboard = () => {
                                 <button className="add-user-btn" onClick={() => setActiveModal('create')}>
                                     <Plus size={18} /> Create User
                                 </button>
+                                <button className="view-all-btn" onClick={() => navigate('/admin/users')}>
+                                    Directory
+                                </button>
                             </div>
                         </div>
-                        <div className="table-responsive">
-                            <table className="admin-table">
-                                <thead>
-                                    <tr>
-                                        <th>User</th>
-                                        <th>Balance</th>
-                                        <th>Levels</th>
-                                        <th>Status</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {filteredUsers.slice(0, 10).map(u => (
-                                        <tr key={u.id}>
-                                            <td>
-                                                <div className="user-cell">
-                                                    <SmartImage 
-                                                        src={u.profile_picture ? `/user/profile_pictures/${u.profile_picture}` : ''} 
-                                                        alt="" 
-                                                        fallbackType="avatar"
-                                                    />
-                                                    <div>
-                                                        <div className="u-name">{u.nickname || u.username}</div>
-                                                        <div className="u-handle">@{u.username}</div>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td><span className="duck-pill">{u.duck_balance?.toLocaleString(undefined, { maximumFractionDigits: 3 })} Ducks</span></td>
-                                            <td>{u.cc_levels + u.oz_levels}</td>
-                                            <td>
-                                                <span className={`status-pill ${u.is_online ? 'online' : 'offline'}`}>
-                                                    {u.is_online ? 'Online' : 'Offline'}
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <div className="action-btns">
-                                                    <button 
-                                                        className="icon-btn adjust" 
-                                                        title="Adjust Ducks"
-                                                        onClick={() => { setModalUser(u); setActiveModal('adjust'); }}
-                                                    >
-                                                        <ArrowUpCircle size={16} />
-                                                    </button>
-                                                    <button 
-                                                        className="icon-btn pass" 
-                                                        title="Reset Password"
-                                                        onClick={() => { setModalUser(u); setActiveModal('reset'); }}
-                                                    >
-                                                        <Key size={16} />
-                                                    </button>
-                                                    <button 
-                                                        className="icon-btn delete" 
-                                                        title="Delete User"
-                                                        onClick={() => handleRemoveUser(u.username)}
-                                                    >
-                                                        <Trash2 size={16} />
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
+                        <UserTable 
+                            users={filteredUsers} 
+                            onAdjustDucks={(u) => { setModalUser(u); setActiveModal('adjust'); }}
+                            onResetPassword={(u) => { setModalUser(u); setActiveModal('reset'); }}
+                            onRemoveUser={handleRemoveUser}
+                        />
+                        {dashboardData.total_users_count > 10 && (
+                            <div className="table-footer">
+                                <p>Showing 10 of {dashboardData.total_users_count} total users.</p>
+                                <button onClick={() => navigate('/admin/users')} className="text-btn">View full directory →</button>
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -584,129 +481,50 @@ const AdminDashboard = () => {
                         </form>
                         <div className="words-list">
                             {banned_words.slice(0, 12).map(word => (
-                                <div key={word.id} className="word-chip">
-                                    {word.word}
-                                    {/* Delete functionality removed as it is not yet implemented on the backend */}
-                                </div>
+                                <div key={word.id} className="word-chip">{word.word}</div>
                             ))}
                         </div>
                     </div>
                 </div>
             </div>
 
-            {/* Modals */}
-            <Modal isOpen={activeModal === 'create'} onClose={() => setActiveModal(null)} title="Create New User">
-                <form onSubmit={handleCreateUser} className="admin-form" noValidate>
-                    <div className={`form-group ${formErrors.username ? 'has-error' : ''}`}>
-                        <label>Username</label>
-                        <input 
-                            type="text" 
-                            name="username" 
-                            placeholder="lowercas_only" 
-                        />
-                        {formErrors.username ? (
-                            <span className="error-message">{formErrors.username}</span>
-                        ) : (
-                            <small>3-30 chars, lowercase, numbers, or underscores.</small>
-                        )}
-                    </div>
-                    <div className={`form-group ${formErrors.password ? 'has-error' : ''}`}>
-                        <label>Initial Password</label>
-                        <input type="password" name="password" />
-                        {formErrors.password && <span className="error-message">{formErrors.password}</span>}
-                    </div>
-                    <div className="form-group">
-                        <label>Starting Duck Balance</label>
-                        <input type="number" name="ducks" defaultValue="0" min="0" />
-                    </div>
-                    <button type="submit" className="btn-primary" disabled={formLoading}>
-                        {formLoading ? 'Creating...' : 'Create User'}
-                    </button>
-                </form>
-            </Modal>
+            <CreateUserModal 
+                isOpen={activeModal === 'create'} 
+                onClose={() => setActiveModal(null)} 
+                onSubmit={handleCreateUser} 
+                formErrors={formErrors} 
+                loading={formLoading} 
+            />
 
-            <Modal isOpen={activeModal === 'adjust'} onClose={() => { setActiveModal(null); setModalUser(null); }} title="Adjust Duck Balance">
-                <form onSubmit={handleAdjustDucks} className="admin-form" noValidate>
-                    <div className="form-group">
-                        <label>Target User</label>
-                        {modalUser ? (
-                            <div className="user-badge-display">
-                                <SmartImage 
-                                    src={modalUser.profile_picture ? `/user/profile_pictures/${modalUser.profile_picture}` : ''} 
-                                    alt="" 
-                                    className="avatar-small"
-                                    fallbackType="avatar"
-                                />
-                                <div className="user-info-text">
-                                    <span className="user-nickname">{modalUser.nickname || modalUser.username}</span>
-                                    <span className="user-handle" style={{ whiteSpace: 'normal', overflow: 'visible', textOverflow: 'clip', maxWidth: 'none' }}>
-                                        @{modalUser.username}
-                                    </span>
-                                </div>
-                                <input type="hidden" name="username" value={modalUser.username} />
-                            </div>
-                        ) : (
-                            <select name="username" className="admin-select">
-                                <option value="">Select a user...</option>
-                                {users.map(u => (
-                                    <option key={u.id} value={u.username}>
-                                        {u.username} (Balance: 🦆 {u.duck_balance?.toFixed(1)})
-                                    </option>
-                                ))}
-                            </select>
-                        )}
-                    </div>
-                    <div className={`form-group ${formErrors.amount ? 'has-error' : ''}`}>
-                        <label>Adjustment Amount</label>
-                        <input type="number" name="amount" step="any" placeholder="e.g. 10 or -5" />
-                        {formErrors.amount ? (
-                            <span className="error-message">{formErrors.amount}</span>
-                        ) : (
-                            <small>Positive to add, negative to subtract.</small>
-                        )}
-                    </div>
-                    <button type="submit" className="btn-primary" disabled={formLoading}>
-                        {formLoading ? 'Applying...' : 'Apply Adjustment'}
-                    </button>
-                </form>
-            </Modal>
+            <AdjustDucksModal 
+                isOpen={activeModal === 'adjust'} 
+                onClose={() => { setActiveModal(null); setModalUser(null); }} 
+                onSubmit={handleAdjustDucks} 
+                user={modalUser} 
+                users={users} 
+                formErrors={formErrors} 
+                loading={formLoading} 
+            />
 
-            <Modal isOpen={activeModal === 'reset'} onClose={() => { setActiveModal(null); setModalUser(null); }} title="Reset User Password">
-                <form onSubmit={handleResetPassword} className="admin-form" noValidate>
-                    <div className="form-group">
-                        <label>User</label>
-                        <input type="text" name="username" value={modalUser?.username || ''} readOnly className="readonly" />
-                    </div>
-                    <div className={`form-group ${formErrors.new_password ? 'has-error' : ''}`}>
-                        <label>New Password</label>
-                        <input type="password" name="new_password" />
-                        {formErrors.new_password && <span className="error-message">{formErrors.new_password}</span>}
-                    </div>
-                    <div className={`form-group ${formErrors.confirm_password ? 'has-error' : ''}`}>
-                        <label>Confirm Password</label>
-                        <input type="password" name="confirm_password" />
-                        {formErrors.confirm_password && <span className="error-message">{formErrors.confirm_password}</span>}
-                    </div>
-                    <button type="submit" className="btn-warning" disabled={formLoading}>
-                        {formLoading ? 'Resetting...' : 'Reset Password'}
-                    </button>
-                </form>
-            </Modal>
+            <ResetPasswordModal 
+                isOpen={activeModal === 'reset'} 
+                onClose={() => { setActiveModal(null); setModalUser(null); }} 
+                onSubmit={handleResetPassword} 
+                user={modalUser} 
+                formErrors={formErrors} 
+                loading={formLoading} 
+            />
 
-            <Modal isOpen={activeModal === 'startConv'} onClose={() => setActiveModal(null)} title="Start New Conversation">
-                <form onSubmit={handleStartConversation} className="admin-form">
-                    <div className="form-group">
-                        <label>Conversation Topic (Optional)</label>
-                        <input type="text" name="title" placeholder="Leave empty for default..." />
-                    </div>
-                    <button type="submit" className="btn-primary" disabled={formLoading}>
-                        {formLoading ? 'Starting...' : 'Start Conversation'}
-                    </button>
-                </form>
-            </Modal>
+            <StartConversationModal 
+                isOpen={activeModal === 'startConv'} 
+                onClose={() => setActiveModal(null)} 
+                onSubmit={handleStartConversation} 
+                loading={formLoading} 
+            />
         </div>
     );
 };
 
 export default AdminDashboard;
+
 

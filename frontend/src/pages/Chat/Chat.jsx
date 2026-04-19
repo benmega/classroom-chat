@@ -1,29 +1,25 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { 
   Send, 
-  Paperclip, 
-  Search, 
-  MoreVertical, 
-  User as UserIcon, 
   MessageSquare,
-  Clock,
-  PlusCircle,
   Hash,
-  X,
   Menu,
-  Shield
+  Smile,
+  X
 } from 'lucide-react';
+import EmojiPicker from 'emoji-picker-react';
 import { useSidebar } from '../../context/SidebarContext';
 import './Chat.css';
 
-import SmartImage from '../../components/common/SmartImage';
 import toast from 'react-hot-toast';
 import useAuthStore from '../../store/useAuthStore';
 import client from '../../api/client';
 import useChatSocket from '../../hooks/useChatSocket';
-import Linkify from '../../components/common/Linkify';
 
+// Extracted Components
+import ChatSidebar from '../../components/chat/ChatSidebar';
+import ChatMessage from '../../components/chat/ChatMessage';
 
 const formatConversationTitle = (title) => {
   if (!title) return 'Conversation';
@@ -31,7 +27,7 @@ const formatConversationTitle = (title) => {
     const parts = title.split(' at ');
     if (parts.length >= 2) {
       const datePart = parts[1].split('.')[0];
-      const date = new Date(datePart.replace(' ', 'T')); // Standardize for JS Date
+      const date = new Date(datePart.replace(' ', 'T'));
       if (!isNaN(date)) {
         return `Chat on ${date.toLocaleDateString([], { month: 'long', day: 'numeric', year: 'numeric' })}`;
       }
@@ -54,7 +50,8 @@ const Chat = () => {
   const [isCreating, setIsCreating] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const { isSidebarOpen, setSidebarOpen, toggleSidebar } = useSidebar();
-
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const emojiPickerRef = useRef(null);
 
   const onMessageReceived = useCallback((data) => {
     setConversations(prevConvs => {
@@ -82,7 +79,6 @@ const Chat = () => {
       );
       if (exists) return prev;
       
-      // Ensure we only add the message to the active view if it belongs there
       if (prev.length > 0 && prev[0].conversation_id && prev[0].conversation_id !== data.conversation_id) {
          return prev;
       }
@@ -97,13 +93,13 @@ const Chat = () => {
       if (!user?.id) return;
       try {
         const response = await client.get(`/message/api/conversations/${user.id}`);
-        // Assuming it's wrapped in { status, data, error } by the api_response decorator
         const historyData = response.data.data || response.data; 
         setConversations(historyData);
-        if (historyData.length > 0) {
-          setActiveConversation(historyData[0]);
-          setMessages(historyData[0].messages || []);
-        }
+        // Do not auto-select first conversation to allow welcome message to show
+        // if (historyData.length > 0) {
+        //   setActiveConversation(historyData[0]);
+        //   setMessages(historyData[0].messages || []);
+        // }
       } catch {
         console.error('Failed to load conversation history');
       } finally {
@@ -138,22 +134,35 @@ const Chat = () => {
     e.preventDefault();
     if (!newMessage.trim() || !activeConversation) return;
 
-    // Use Socket.io to send the message
     sendMessage({
       content: newMessage,
       conversation_id: activeConversation.conversation_id
     });
 
     setNewMessage('');
+    setShowEmojiPicker(false);
   };
 
+  const onEmojiClick = (emojiData) => {
+    setNewMessage(prev => prev + emojiData.emoji);
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (emojiPickerRef.current && !emojiPickerRef.current.contains(event.target)) {
+        setShowEmojiPicker(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const handleSelectConversation = (conv) => {
     setActiveConversation(conv);
     setMessages(conv.messages || []);
-    setSidebarOpen(false); // Close sidebar on mobile after selection
   };
-
 
   const handleCreateConversation = async (e) => {
     e.preventDefault();
@@ -189,136 +198,22 @@ const Chat = () => {
 
   return (
     <div className="chat-container">
-      {/* Sidebar Overlay (Mobile) */}
-      <div 
-        className={`sidebar-overlay ${isSidebarOpen ? 'open' : ''}`} 
-        onClick={() => setSidebarOpen(false)}
-      ></div>
+      <ChatSidebar 
+        user={user}
+        isSidebarOpen={isSidebarOpen}
+        setSidebarOpen={setSidebarOpen}
+        conversations={conversations}
+        activeConversation={activeConversation}
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+        handleSelectConversation={handleSelectConversation}
+        setIsModalOpen={setIsModalOpen}
+        formatConversationTitle={formatConversationTitle}
+      />
 
-      {/* Sidebar */}
-      <aside className={`chat-sidebar ${isSidebarOpen ? 'open' : ''}`}>
-        <div style={{ padding: '1rem', borderBottom: '1px solid var(--border-subtle)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-             <h2 style={{ fontSize: 'var(--font-xl)' }}>Messages</h2>
-             <div style={{ display: 'flex', gap: '8px' }}>
-                <button 
-                  className="mobile-menu-toggle"
-                  onClick={() => setSidebarOpen(false)}
-                >
-                  <X size={20} />
-                </button>
-
-                {user?.is_admin && (
-                  <button 
-                    onClick={() => setIsModalOpen(true)}
-                    style={{ 
-                      background: 'none', 
-                      border: 'none', 
-                      color: 'var(--text-secondary)',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      padding: '4px',
-                      borderRadius: '4px',
-                      transition: 'background 0.2s'
-                    }}
-                    onMouseOver={(e) => e.currentTarget.style.background = 'var(--bg-tertiary)'}
-                    onMouseOut={(e) => e.currentTarget.style.background = 'none'}
-                  >
-                    <PlusCircle size={20} />
-                  </button>
-                )}
-             </div>
-          </div>
-          <div style={{ position: 'relative' }}>
-            <input 
-              type="text" 
-              placeholder="Search conversations..." 
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              style={{ 
-                width: '100%', 
-                padding: '8px 12px 8px 36px', 
-                borderRadius: '8px', 
-                border: '1px solid var(--border-subtle)',
-                background: 'var(--bg-tertiary)',
-                fontSize: 'var(--font-sm)'
-              }} 
-            />
-            <Search size={16} color="var(--text-muted)" style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)' }} />
-          </div>
-        </div>
-
-        <div style={{ flex: 1, overflowY: 'auto' }}>
-          {conversations
-            .filter(conv => (conv.title || 'Conversation').toLowerCase().includes(searchTerm.toLowerCase()))
-            .length > 0 ? (
-            conversations
-              .filter(conv => (conv.title || 'Conversation').toLowerCase().includes(searchTerm.toLowerCase()))
-              .map((conv) => (
-                <div 
-                  key={conv.conversation_id} 
-                  onClick={() => handleSelectConversation(conv)}
-                  style={{ 
-                    padding: '0.75rem 1rem', 
-                    cursor: 'pointer',
-                    background: activeConversation?.conversation_id === conv.conversation_id ? 'var(--bg-tertiary)' : 'transparent',
-                    borderLeft: activeConversation?.conversation_id === conv.conversation_id ? '4px solid var(--primary-color)' : '4px solid transparent',
-                    transition: 'background 0.2s',
-                    display: 'flex',
-                    gap: '10px'
-                  }}
-                >
-                  <div style={{ 
-                    width: '40px', 
-                    height: '40px', 
-                    borderRadius: '12px', 
-                    background: 'var(--accent-color)', 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    justifyContent: 'center',
-                    opacity: 0.15
-                  }}>
-                    <Hash size={24} color="var(--accent-color)" />
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
-                       <h4 style={{ fontSize: 'var(--font-md)', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
-                         {formatConversationTitle(conv.title)}
-                       </h4>
-                       <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', flexShrink: 0 }}>
-                         {conv.messages?.[conv.messages.length - 1]?.timestamp ? 
-                           new Date(conv.messages[conv.messages.length - 1].timestamp).toLocaleDateString([], { month: 'short', day: 'numeric' }) : 
-                           ''}
-                       </span>
-                     </div>
-                     <p style={{ fontSize: 'var(--font-sm)', color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                       {conv.messages?.[conv.messages.length - 1]?.content || 'No messages yet'}
-                     </p>
-                  </div>
-                </div>
-              ))
-          ) : (
-            <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>
-              <p style={{ fontSize: '0.875rem' }}>No conversations found</p>
-            </div>
-          )}
-        </div>
-
-        {/* Sidebar Footer (Navigation links for mobile) */}
-        <div className="chat-sidebar-footer mobile-only">
-          <Link to="/profile" className="sidebar-footer-item"><UserIcon size={18} /> Profile</Link>
-          <Link to="/history" className="sidebar-footer-item"><MessageSquare size={18} /> History</Link>
-          {user?.is_admin && <Link to="/admin" className="sidebar-footer-item"><Shield size={18} /> Admin</Link>}
-        </div>
-      </aside>
-
-      {/* Chat Window */}
       <div className="chat-window">
         {activeConversation ? (
           <>
-            {/* Chat Header */}
             <div className="chat-header">
               <div className="chat-header-content">
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
@@ -337,97 +232,30 @@ const Chat = () => {
                     <p style={{ fontSize: '0.75rem', color: 'var(--primary-color)', fontWeight: 600 }}>Active Now</p>
                   </div>
                 </div>
-                {/* Search, Clock, and MoreVertical buttons removed as they are currently non-functional */}
-
               </div>
             </div>
 
-            {/* Messages Area */}
             <div 
               ref={scrollRef}
               className="chat-messages"
             >
               <div className="chat-messages-inner">
-                {messages.map((msg, index) => {
-                  const isUser = msg.user_id === user.id;
-                  return (
-                    <div 
-                      key={msg.id || index} 
-                      style={{ 
-                        display: 'flex', 
-                        flexDirection: 'column',
-                        alignItems: isUser ? 'flex-end' : 'flex-start',
-                        gap: '4px',
-                        minWidth: 0,
-                        width: '100%'
-                      }}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'flex-end', gap: '8px', flexDirection: isUser ? 'row-reverse' : 'row' }}>
-                      <Link 
-                        to={msg.slug ? `/profile/${msg.slug}` : '#'} 
-                        style={{ 
-                          textDecoration: 'none', 
-                          cursor: msg.slug ? 'pointer' : 'default',
-                          display: 'flex'
-                        }}
-                      >
-                        <div style={{ 
-                          width: '32px', 
-                          height: '32px', 
-                          borderRadius: '8px', 
-                          background: msg.is_ai ? 'var(--highlight-hover)' : 'var(--bg-tertiary)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontSize: '0.75rem',
-                          fontWeight: 700,
-                          overflow: 'hidden'
-                        }}>
-                          {msg.user_profile_pic ? (
-                            <SmartImage 
-                              src={`/user/profile_pictures/${msg.user_profile_pic}`} 
-                              alt={msg.nickname} 
-                              style={{ width: '100%', height: '100%' }} 
-                              fallbackType="avatar"
-                            />
-                          ) : (
-                            <UserIcon size={16} />
-                          )}
-                        </div>
-                      </Link>
-                        <div style={{ 
-                          maxWidth: 'min(80%, 650px)',
-                          padding: '0.6rem 1rem',
-                          borderRadius: isUser ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
-                          background: isUser ? 'var(--primary-color)' : 'var(--bg-primary)',
-                          color: isUser ? 'white' : 'var(--text-primary)',
-                          boxShadow: 'var(--shadow-sm)',
-                           fontSize: 'var(--font-md)',
-                          lineHeight: '1.5',
-                          overflowWrap: 'anywhere',
-                          wordBreak: 'break-word'
-                        }}>
-                          <Linkify text={msg.content} isUserMessage={isUser} />
-                        </div>
-                      </div>
-                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: isUser ? '0 40px 0 0' : '0 0 0 40px' }}>
-                        {msg.nickname || 'Unknown'} • {msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Just now'}
-                      </span>
-                    </div>
-                  );
-                })}
+                {messages.map((msg, index) => (
+                  <ChatMessage 
+                    key={msg.id || index}
+                    msg={msg}
+                    user={user}
+                  />
+                ))}
               </div>
             </div>
 
-            {/* Message Input */}
             <div className="chat-input-area">
               <div className="chat-input-content">
                 <form 
                   onSubmit={handleSendMessage}
                   className="chat-input-form"
                 >
-                  {/* Attachment functionality not yet implemented - icon removed to reduce distraction */}
-
                   <input 
                     type="text" 
                     value={newMessage}
@@ -435,7 +263,28 @@ const Chat = () => {
                     placeholder="Type your message..." 
                     className="chat-input-field"
                   />
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)', position: 'relative' }} ref={emojiPickerRef}>
+                    <button
+                      type="button"
+                      className="chat-icon-btn"
+                      onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                      title="Add emoji"
+                    >
+                      <Smile size={20} color={showEmojiPicker ? "var(--primary-color)" : "var(--text-secondary)"} />
+                    </button>
+                    
+                    {showEmojiPicker && (
+                      <div className="emoji-picker-container">
+                        <EmojiPicker 
+                          onEmojiClick={onEmojiClick}
+                          autoFocusSearch={false}
+                          theme="auto"
+                          width={320}
+                          height={400}
+                        />
+                      </div>
+                    )}
+
                     <button 
                       type="submit"
                       disabled={!newMessage.trim()}
@@ -449,27 +298,49 @@ const Chat = () => {
             </div>
           </>
         ) : (
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', position: 'relative' }}>
-             <div style={{ 
-               width: '80px', 
-               height: '80px', 
-               borderRadius: '24px', 
+          <div className="animate-fade-in" style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', position: 'relative', padding: '2rem' }}>
+             <button 
+               className="hamburger-toggle welcome-toggle" 
+               onClick={toggleSidebar}
+               aria-label="Toggle Sidebar"
+               style={{ position: 'absolute', top: '1.5rem', left: '1rem' }}
+             >
+               <Menu size={24} />
+             </button>
+             <div className="animate-float" style={{ 
+               width: '100px', 
+               height: '100px', 
+               borderRadius: '30px', 
                background: 'var(--bg-tertiary)', 
                display: 'flex', 
                alignItems: 'center', 
                justifyContent: 'center',
-               marginBottom: '1.5rem'
+               marginBottom: '2rem',
+               boxShadow: 'var(--shadow-lg)',
+               border: '1px solid var(--border-subtle)'
              }}>
-               <MessageSquare size={40} />
+               <MessageSquare size={48} color="var(--primary-color)" />
              </div>
 
-             <h2 style={{ color: 'var(--text-primary)' }}>Welcome to ClassroomChat</h2>
-             <p>Select a conversation from the sidebar to start chatting.</p>
+             <h2 style={{ 
+               fontSize: 'var(--font-4xl)', 
+               fontWeight: 800, 
+               letterSpacing: '-0.025em',
+               marginBottom: '1rem',
+               background: 'var(--gradient-primary)',
+               WebkitBackgroundClip: 'text',
+               WebkitTextFillColor: 'transparent',
+               textAlign: 'center'
+             }}>
+               Welcome back, {user?.nickname || user?.username || 'Student'}!
+             </h2>
+             <p style={{ fontSize: 'var(--font-lg)', color: 'var(--text-secondary)', textAlign: 'center', maxWidth: '400px' }}>
+               Pick a channel or conversation from the sidebar to start collaborating with your classmates.
+             </p>
           </div>
         )}
       </div>
 
-      {/* New Conversation Modal */}
       {isModalOpen && (
         <div style={{
           position: 'fixed',
@@ -513,51 +384,24 @@ const Chat = () => {
                   onChange={(e) => setNewConversationTitle(e.target.value)}
                   placeholder="e.g. # General, # Homework-Help" 
                   autoFocus
-                  style={{ 
-                    width: '100%', 
-                    padding: '12px', 
-                    borderRadius: '8px', 
-                    border: '1px solid var(--border-subtle)',
-                    background: 'var(--bg-tertiary)',
-                    color: 'var(--text-primary)',
-                    fontSize: '1rem',
-                    outline: 'none'
-                  }} 
+                  className="form-control"
+                  style={{ width: '100%' }}
                 />
               </div>
               <div style={{ display: 'flex', gap: '12px' }}>
                 <button 
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  style={{ 
-                    flex: 1,
-                    padding: '12px', 
-                    borderRadius: '8px', 
-                    border: '1px solid var(--border-subtle)',
-                    background: 'none',
-                    color: 'var(--text-primary)',
-                    fontSize: '1rem',
-                    fontWeight: 600,
-                    cursor: 'pointer'
-                  }}
+                  className="btn-secondary"
+                  style={{ flex: 1 }}
                 >
                   Cancel
                 </button>
                 <button 
                   type="submit"
                   disabled={isCreating || !newConversationTitle.trim()}
-                  style={{ 
-                    flex: 2,
-                    padding: '12px', 
-                    borderRadius: '8px', 
-                    border: 'none',
-                    background: 'var(--primary-color)',
-                    color: 'white',
-                    fontSize: '1rem',
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                    opacity: (isCreating || !newConversationTitle.trim()) ? 0.6 : 1
-                  }}
+                  className="btn-primary"
+                  style={{ flex: 2 }}
                 >
                   {isCreating ? 'Creating...' : 'Create Conversation'}
                 </button>
@@ -571,3 +415,4 @@ const Chat = () => {
 };
 
 export default Chat;
+

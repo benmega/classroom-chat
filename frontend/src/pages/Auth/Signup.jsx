@@ -36,7 +36,7 @@ const Signup = () => {
             <div className="auth-container">
                 <div className="auth-header">
                     <div className="brand-logo">
-                        <Zap size={40} fill="white" />
+                        <img src="/images/logo.ico" alt="Classroom Chat Logo" />
                     </div>
                     <h1 className="auth-title">Create Account</h1>
                     <p className="auth-subtitle">Join our elite classroom community</p>

@@ -4,141 +4,308 @@
     justify-content: center;
     align-items: flex-start;
     min-height: auto;
+    animation: fadeIn var(--transition-smooth);
 }
 
 .form-card {
-    background: white;
-    padding: 2rem;
-    border-radius: 20px;
-    box-shadow: var(--shadow-lg);
-    border: 1px solid var(--border-subtle);
-    max-width: 600px;
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    padding: 2.5rem;
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-rich);
+    border: 1px solid var(--glass-border);
+    max-width: 700px;
     width: 100%;
+    position: relative;
+    overflow: hidden;
+    transition: var(--transition-smooth);
+}
+
+.form-card:hover {
+    background: var(--glass-bg-hover);
+    box-shadow: var(--shadow-glow), var(--shadow-rich);
+    border-color: var(--primary-color);
+}
+
+/* Accent line matching Premium standard */
+.form-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 6px;
+    background: var(--gradient-primary);
+    z-index: 10;
+}
+
+.form-header {
+    text-align: center;
+    margin-bottom: 2.5rem;
+    position: relative;
 }
 
 .form-title {
-    font-size: 1.75rem;
-    text-align: center;
-    margin-bottom: 1.5rem;
+    font-size: 2.25rem;
+    margin-bottom: 0.5rem;
     color: var(--text-primary);
-    font-weight: 800;
+    font-weight: 900;
+    letter-spacing: -0.05em;
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.form-description {
+    color: var(--text-secondary);
+    font-size: 1rem;
+    font-weight: 500;
+    opacity: 0.9;
 }
 
 .challenge-form {
     display: flex;
     flex-direction: column;
-    gap: 1.25rem;
+    gap: 1.5rem;
 }
 
 .form-group label {
     display: block;
-    font-weight: 600;
-    margin-bottom: 0.5rem;
-    color: var(--text-secondary);
-    font-size: 0.95rem;
+    font-weight: 700;
+    margin-bottom: 0.75rem;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.input-with-icon {
+    position: relative;
+    display: flex;
+    align-items: center;
 }
 
 .form-control {
     width: 100%;
-    padding: 12px 16px;
-    border-radius: 12px;
-    border: 1px solid var(--border-subtle);
-    font-size: 1rem;
-    background: var(--bg-secondary);
-    transition: all 0.2s;
+    padding: 14px 18px;
+    border-radius: var(--radius-md);
+    border: 2px solid var(--border-rich);
+    font-size: 1.05rem;
+    background: var(--bg-primary);
+    transition: var(--transition-bounce);
     font-family: inherit;
+    color: var(--text-primary);
+    box-shadow: var(--shadow-inner);
+}
+
+.main-url-input {
+    padding-right: 120px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+.input-accessory {
+    position: absolute;
+    right: 16px;
+    pointer-events: none;
+}
+
+.required-tag {
+    background: var(--primary-light);
+    color: var(--primary-color);
+    font-size: 0.75rem;
+    font-weight: 800;
+    padding: 4px 12px;
+    border-radius: var(--radius-full);
+    text-transform: uppercase;
+    border: 1px solid var(--primary-alpha);
 }
 
 .form-control:focus {
     border-color: var(--primary-color);
-    background: white;
-    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+    box-shadow: var(--shadow-glow);
     outline: none;
+    transform: translateY(-2px);
+    background: white;
 }
 
-textarea.form-control {
-    resize: vertical;
-    min-height: 100px;
+/* Optional Section Styling */
+.optional-section {
+    border-radius: var(--radius-lg);
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-subtle);
+    overflow: hidden;
+    transition: var(--transition-smooth);
+}
+
+.toggle-optional {
+    width: 100%;
+    padding: 1.25rem;
+    background: none;
+    border: none;
+    text-align: left;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: var(--transition-fast);
+}
+
+.toggle-optional:hover {
+    color: var(--primary-color);
+    background: rgba(0, 0, 0, 0.02);
+}
+
+.optional-content {
+    padding: 0 1.25rem 1.5rem;
+    display: none;
+    flex-direction: column;
+    gap: 1.5rem;
+    animation: fadeIn 0.4s ease-out;
+}
+
+.is-expanded .optional-content {
+    display: flex;
+}
+
+.is-expanded {
+    background: white;
+    border-color: var(--primary-color);
+    box-shadow: var(--shadow-md);
 }
 
 .submit-button {
     width: 100%;
-    padding: 1rem;
-    font-size: 1.1rem;
-    font-weight: 700;
+    padding: 1.15rem;
+    font-size: 1.25rem;
+    font-weight: 800;
     color: white;
-    background: var(--primary-color);
+    background: var(--gradient-primary);
     border: none;
-    border-radius: 12px;
+    border-radius: var(--radius-lg);
     cursor: pointer;
-    transition: all 0.2s ease;
-    box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.4);
+    transition: var(--transition-bounce);
+    box-shadow: var(--shadow-lg);
     margin-top: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
 }
 
 .submit-button:hover:not(:disabled) {
-    background: var(--primary-color-dark, var(--blue-600));
-    transform: translateY(-2px);
-    box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.4);
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-glow), var(--shadow-xl);
+    filter: brightness(1.1);
 }
 
-.submit-button:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
+.submit-button:active:not(:disabled) {
+    transform: translateY(-2px);
+}
+
+.btn-loading {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.spinner {
+    animation: rotate 2s linear infinite;
+    width: 24px;
+    height: 24px;
+}
+
+.spinner .path {
+    stroke: white;
+    stroke-linecap: round;
+    animation: dash 1.5s ease-in-out infinite;
+}
+
+@keyframes rotate {
+    100% { transform: rotate(360deg); }
+}
+
+@keyframes dash {
+    0% { stroke-dasharray: 1, 150; stroke-dashoffset: 0; }
+    50% { stroke-dasharray: 90, 150; stroke-dashoffset: -35; }
+    100% { stroke-dasharray: 90, 150; stroke-dashoffset: -124; }
 }
 
 .bookmarklet-container {
     margin-top: 1.5rem;
-    padding: 1.25rem;
+    padding: 2rem;
     background: var(--bg-tertiary);
-    border-radius: 16px;
+    border-radius: var(--radius-lg);
     text-align: center;
+    border: 2px dashed var(--border-rich);
+    transition: var(--transition-smooth);
 }
 
-.bookmarklet-hint {
-    font-size: 0.85rem;
+.bookmarklet-container:hover {
+    border-color: var(--primary-color);
+    background: var(--primary-light);
+}
+
+.bookmarklet-header h3 {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.bookmarklet-header p {
+    font-size: 0.9rem;
     color: var(--text-secondary);
-    margin-bottom: 1rem;
-    line-height: 1.5;
+    margin-bottom: 1.5rem;
+    font-weight: 500;
 }
 
 .bookmarklet-btn {
-    display: inline-block;
-    padding: 10px 20px;
-    background-color: var(--primary-color);
-    color: white;
+    display: inline-flex;
+    align-items: center;
+    padding: 12px 28px;
+    background: white;
+    color: var(--text-primary);
     text-decoration: none;
-    border-radius: 10px;
-    font-weight: 700;
-    font-size: 0.95rem;
-    transition: transform 0.2s;
+    border-radius: var(--radius-md);
+    font-weight: 800;
+    font-size: 1rem;
+    transition: var(--transition-bounce);
     cursor: grab;
+    border: 2px solid var(--border-subtle);
+    box-shadow: var(--shadow-md);
 }
 
 .bookmarklet-btn:hover {
-    transform: scale(1.05);
+    transform: scale(1.05) rotate(-1deg);
+    box-shadow: var(--shadow-lg), var(--shadow-glow);
+    border-color: var(--primary-color);
+    color: var(--primary-color);
 }
 
-.bookmarklet-btn:active {
-    cursor: grabbing;
+@media (max-width: 768px) {
+    .form-card {
+        padding: 1.5rem;
+    }
+    .form-title {
+        font-size: 1.75rem;
+    }
 }
 
-@media (max-height: 800px) {
+@media (max-height: 850px) {
     .submit-challenge-page {
         padding: 1rem;
     }
     .form-card {
         padding: 1.5rem;
     }
-    .form-title {
-        font-size: 1.5rem;
-        margin-bottom: 1rem;
-    }
-    .challenge-form {
-        gap: 1rem;
-    }
-    .bookmarklet-container {
-        margin-top: 1rem;
-        padding: 1rem;
+    .form-header {
+        margin-bottom: 1.5rem;
     }
 }

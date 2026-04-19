@@ -20,3 +20,15 @@ Low - This is a minor aesthetic preference to reduce UI clutter and improve the 
 
 ## Screenshots
 ![Chat Messages](file:///C:/Users/Ben/.gemini/antigravity/brain/75d33641-9ec4-45c3-9fba-7a3056ed822c/.system_generated/click_feedback/click_feedback_1776004112493.png)
+
+## Root Cause
+The chat message timestamps were rendered in the JSX with standard inline styles that didn't account for user interaction (hover). There were no CSS classes defined to handle the conditional visibility based on hover state.
+
+## Resolution
+1.  Created `.chat-message-group` and `.chat-message-timestamp` classes in `Chat.css`.
+2.  Implemented conditional visibility (`opacity: 0`, `visibility: hidden`) for timestamps, becoming visible on container hover.
+3.  Refactored `Chat.jsx` message rendering to use these classes instead of static inline styles.
+
+## Changed Files
+- `frontend/src/pages/Chat/Chat.css`
+- `frontend/src/pages/Chat/Chat.jsx`

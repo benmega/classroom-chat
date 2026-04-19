@@ -22,9 +22,9 @@ const AdminCertificates = () => {
     const fetchCertificates = async () => {
         setIsLoading(true);
         try {
-            const response = await client.get('/achievements/admin/certificates');
-            if (response.data.status === 'success') {
-                setCertificates(response.data.data.certificates);
+            const response = await client.get('/api/achievements/admin/certificates');
+            if (response.data.status === 'success' || response.data.certificates) {
+                setCertificates(response.data.certificates || response.data.data.certificates);
             }
         } catch {
             toast.error('Failed to load certificates.');
@@ -39,7 +39,7 @@ const AdminCertificates = () => {
 
     const handleMarkReviewed = async (certId) => {
         try {
-            const response = await client.post(`/achievements/admin/certificates/reviewed/${certId}`);
+            const response = await client.post(`/api/achievements/admin/certificates/reviewed/${certId}`);
             if (response.data.status === 'success') {
                 toast.success(response.data.message);
                 setCertificates(prev => prev.filter(c => c.id !== certId));
@@ -118,7 +118,7 @@ const AdminCertificates = () => {
                             <div className="cert-footer">
                                 <div className="file-actions">
                                     <a 
-                                        href={`/achievements/view_certificate/${cert.id}`} 
+                                        href={`/api/achievements/view_certificate/${cert.id}`} 
                                         target="_blank" 
                                         rel="noopener noreferrer"
                                         className="btn-view"
@@ -126,7 +126,7 @@ const AdminCertificates = () => {
                                         <Eye size={16} /> View PDF
                                     </a>
                                     <a 
-                                        href={`/achievements/download_certificate/${cert.id}`} 
+                                        href={`/api/achievements/download_certificate/${cert.id}`} 
                                         className="btn-download"
                                     >
                                         <Download size={16} />

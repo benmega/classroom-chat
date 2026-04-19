@@ -458,12 +458,13 @@ footer {
     }
 }
 
-/* User Search Styles */
 /* Header-specific User Search Styles (Layout & Sizing only) */
 .user-search-container {
     position: relative;
-    width: 300px;
+    width: 100%;
+    max-width: 320px;
     margin: 0 1.5rem;
+    flex-grow: 1;
 }
 
 .user-search-container .search-input-wrapper-common {
@@ -472,7 +473,8 @@ footer {
 
 .user-search-container .search-input-wrapper-common:focus-within,
 .user-search-container .search-input-wrapper-common.active {
-    width: 320px;
+    max-width: 360px;
+    box-shadow: var(--shadow-glow);
 }
 
 @media (max-width: 768px) {

@@ -16,11 +16,15 @@ import {
 import client from '../../api/client';
 import toast from 'react-hot-toast';
 import './AdvancedPanel.css';
+import { X } from 'lucide-react';
 
 const AdvancedPanel = () => {
     const navigate = useNavigate();
     const [views, setViews] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [logs, setLogs] = useState('');
+    const [showLogModal, setShowLogModal] = useState(false);
+    const [isFetchingLogs, setIsFetchingLogs] = useState(false);
 
     const fetchViews = async () => {
         setIsLoading(true);
@@ -33,6 +37,22 @@ const AdvancedPanel = () => {
             toast.error('Failed to load advanced panel views.');
         } finally {
             setIsLoading(false);
+        }
+    };
+
+    const fetchLogs = async () => {
+        setIsFetchingLogs(true);
+        try {
+            const response = await client.get('/api/admin/logs');
+            if (response.data.status === 'success') {
+                setLogs(response.data.data.logs || 'No logs found.');
+                setShowLogModal(true);
+            }
+        } catch (err) {
+            toast.error('Failed to fetch system logs.');
+            console.error(err);
+        } finally {
+            setIsFetchingLogs(false);
         }
     };
 
@@ -89,8 +109,12 @@ const AdvancedPanel = () => {
                         <div className="utility-content">
                             <h3>System Logs</h3>
                             <p>View real-time server output and error traces.</p>
-                            <button className="btn-utility" onClick={() => toast.error('Legacy log viewer disabled.')}>
-                                <FileText size={16} /> Open Log Viewer
+                            <button 
+                                className="btn-utility" 
+                                onClick={fetchLogs}
+                                disabled={isFetchingLogs}
+                            >
+                                <FileText size={16} /> {isFetchingLogs ? 'Fetching...' : 'Open Log Viewer'}
                             </button>
                         </div>
                     </section>
@@ -100,7 +124,7 @@ const AdvancedPanel = () => {
                         <div className="utility-content">
                             <h3>API Documentation</h3>
                             <p>Browse available endpoints and request schemas.</p>
-                            <button className="btn-utility" onClick={() => window.open('/api/docs', '_blank')}>
+                            <button className="btn-utility" onClick={() => window.open('/api/docs/', '_blank')}>
                                 <Code size={16} /> View Swagger
                             </button>
                         </div>
@@ -134,8 +158,31 @@ const AdvancedPanel = () => {
                             <Trash2 size={18} /> Purge History
                         </button>
                     </div>
-                </div>
             </div>
+            </div>
+
+            {showLogModal && (
+                <div className="log-modal-overlay">
+                    <div className="log-modal glass-panel animate-fade-in">
+                        <div className="log-modal-header">
+                            <div className="title-group">
+                                <Terminal size={20} />
+                                <h3>System Logs</h3>
+                            </div>
+                            <button className="close-btn" onClick={() => setShowLogModal(false)}>
+                                <X size={20} />
+                            </button>
+                        </div>
+                        <div className="log-content">
+                            <pre>{logs}</pre>
+                        </div>
+                        <div className="log-modal-footer">
+                            <button className="btn-secondary" onClick={() => setShowLogModal(false)}>Close</button>
+                            <button className="btn-premium" onClick={fetchLogs}>Refresh</button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

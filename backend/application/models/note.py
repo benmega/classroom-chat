@@ -22,6 +22,32 @@ class Note(db.Model):
 
     @property
     def url(self):
-        BUCKET_NAME = "classroom-chat-student-notes" # Ensure this matches your bucket
-        REGION = "ap-southeast-1" # Updated based on your logs
-        return f"https://{BUCKET_NAME}.s3.{REGION}.amazonaws.com/{self.filename}"
+        if not self.filename:
+            return ""
+        
+        # If it's a full URL already
+        if self.filename.startswith("http"):
+            return self.filename
+            
+        # If it contains slashes, it's likely an S3 key (e.g. notes/username/file.png)
+        if "/" in self.filename:
+            BUCKET_NAME = "classroom-chat-student-notes" 
+            REGION = "ap-southeast-1" 
+            return f"https://{BUCKET_NAME}.s3.{REGION}.amazonaws.com/{self.filename}"
+            
+        # Otherwise, assume it's a local file in the notes upload directory
+        from flask import url_for
+        try:
+            # Use _external=True to return an absolute URL if possible
+            return url_for('notes.serve_note', filename=self.filename, _external=True)
+        except Exception:
+            # Fallback if url_for fails (e.g. outside request context)
+            return f"/notes/view/{self.filename}"
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "filename": self.filename,
+            "url": self.url,
+            "created_at": self.created_at.isoformat() if self.created_at else None
+        }

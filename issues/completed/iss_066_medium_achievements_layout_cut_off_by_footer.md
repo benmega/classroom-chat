@@ -20,3 +20,13 @@ Medium - Visual polish issue that makes the application feel less premium and sl
 
 ## Screenshots
 ![Achievements Layout Issue](file:///C:/Users/Ben/.gemini/antigravity/brain/f6577acb-c2e9-484a-867c-f71784390afc/.tempmediaStorage/media_f6577acb-c2e9-484a-867c-f71784390afc_1776012477308.png)
+
+## Resolution
+- Increased the bottom padding of the `.achievements-page` container from `2rem` to `6rem`.
+- This ensures that even on tall viewports or when the grid is full, there is enough space before the sticky/fixed footer.
+
+## Root Cause
+Insufficient bottom padding on the main container allowed the footer to overlap with the content grid on certain resolutions.
+
+## Changed Files
+- `frontend/src/pages/General/Achievements.css`

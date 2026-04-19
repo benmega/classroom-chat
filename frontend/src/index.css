@@ -173,21 +173,24 @@ input {
 
 /* Scrollbar styling - Sleek & Modern */
 ::-webkit-scrollbar {
-  width: 10px;
+  width: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--bg-secondary);
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--border-rich);
-  border-radius: 20px;
-  border: 3px solid var(--bg-secondary);
+  background: var(--text-muted);
+  opacity: 0.3;
+  border-radius: var(--radius-full);
+  border: 2px solid transparent;
+  background-clip: content-box;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--text-muted);
+  background: var(--primary-color);
+  background-clip: content-box;
 }
 
 /* Animations */

@@ -30,3 +30,12 @@ def allowed_file(filename):
         "." in filename
         and filename.rsplit(".", 1)[1].lower() in Config.ALLOWED_EXTENSIONS
     )
+
+
+def format_file_size(size_bytes):
+    """Format file size in human-readable format"""
+    for unit in ["B", "KB", "MB", "GB", "TB"]:
+        if size_bytes < 1024.0:
+            return f"{size_bytes:.2f} {unit}"
+        size_bytes /= 1024.0
+    return f"{size_bytes:.2f} PB"

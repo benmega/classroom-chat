@@ -17,9 +17,10 @@ This workflow uses the global `Solve Issues` skill to systematically address pen
     - Apply the fix using `replace_file_content` or `multi_replace_file_content`.
     - **Linting**: Check the terminal output of `npm run dev` or `python main.py`. Fix any new warnings or lint errors introduced by your change.
 5.  **Verify**: 
-    - Use the `Login Automation` skill or the `/login` workflow if authentication is required. 
+    - **Authentication**: Use the `@[/login]` workflow (default: navigate to `http://localhost:8000/dev-login?role=admin`, then go to `http://localhost:5173/` to confirm access).
+    - **CAUTION**: Port **8000** is the backend shortcut. Port **5173** is the React app. Do NOT use the standard `/login` form unless the task explicitly tests that feature. Do NOT guess passwords.
     - **UI Verification**: Use `browser_subagent` to confirm the fix at `http://localhost:5173`.
-    - **Visual Regression**: If shared styles or core components were modified, check at least one "neighboring" page to ensure no new regressions were introduced.
+    - **Visual Regression**: If shared styles or core components were modified, check at least one "neighbouring" page to ensure no new regressions were introduced.
     - **Evidence**: Capture a screenshot of the fix and mention its path in the summary.
 6.  **Archive**: 
     // turbo
@@ -34,7 +35,7 @@ This workflow uses the global `Solve Issues` skill to systematically address pen
 9.  **Summary**: Report the fixed issue, the steps taken, and any newly created follow-up issues to the user.
 
 ## Handling Roadblocks
-- **Credential Failures**: If the credentials in `Login Automation` don't work, do not try random passwords. Report the failure to the user and stop.
+- **Dev-Login Failures**: The default authentication path is `http://localhost:8000/dev-login?role=admin` (backend, port 8000). If it fails (e.g. 403, 404, server error), do NOT try random passwords or the standard login form. Report the failure and stop.
 - **Scope Creep**: If solving one issue reveals a much larger architectural flaw, fix the immediate bug and log the architectural concern as a new issue.
 - **Tool Failures**: 
     - **Selector Change**: If a browser subagent fails repeatedly on a selector, check the current DOM one last time, then log the issue as "UI Test Blocked: Selector Change" for human review.

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Package, ArrowRightLeft, CreditCard } from 'lucide-react';
 import DuckIcon from '../../components/Icons/DuckIcon';
 import client from '../../api/client';
@@ -9,24 +9,32 @@ import './BitShift.css';
 const BitShift = () => {
     const { user, checkAuth } = useAuthStore();
     const [digitalDucks, setDigitalDucks] = useState(0);
-    const [duckCounts, setDuckCounts] = useState(Array(7).fill(0));
+    const [duckCounts, setDuckCounts] = useState(Array(8).fill(0));
     const [isByteMode, setIsByteMode] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
 
     // Auto math check: sum of (count × 2^i) must equal the decimal input
-    // In Byte mode, each unit is worth 8 times as much (1 Byte = 8 bits)
-    const multiplier = isByteMode ? 8 : 1;
-    const binaryTotal = duckCounts.reduce((sum, count, i) => sum + count * Math.pow(2, i) * multiplier, 0);
-    const mathCheckPassed = digitalDucks > 0 && binaryTotal === digitalDucks;
-    const mathCheckMismatch = digitalDucks > 0 && binaryTotal !== digitalDucks;
+    // In Byte mode, 1 Byte = 128 ducks (as per reviewer requirements)
+    const multiplier = useMemo(() => isByteMode ? 128 : 1, [isByteMode]);
+    const binaryTotal = useMemo(() => 
+        duckCounts.reduce((sum, count, i) => sum + count * Math.pow(2, i) * multiplier, 0),
+    [duckCounts, multiplier]);
+    
+    const mathCheckPassed = useMemo(() => digitalDucks > 0 && binaryTotal === digitalDucks, [digitalDucks, binaryTotal]);
+    const mathCheckMismatch = useMemo(() => digitalDucks > 0 && binaryTotal !== digitalDucks, [digitalDucks, binaryTotal]);
 
-    const handleDuckCountChange = (index, value) => {
-        setHasAttemptedSubmit(false);
-        const newCounts = [...duckCounts];
-        newCounts[index] = Math.max(0, Math.min(10, parseInt(value) || 0));
-        setHasAttemptedSubmit(false);
-        setDuckCounts(newCounts);
+    const handleDuckToggle = (index) => {
+        setDuckCounts(prev => {
+            const newCounts = [...prev];
+            newCounts[index] = newCounts[index] === 0 ? 1 : 0;
+            
+            // Auto-sync digital ducks value to the new binary total
+            const newBinaryTotal = newCounts.reduce((sum, count, i) => sum + count * Math.pow(2, i) * multiplier, 0);
+            setDigitalDucks(newBinaryTotal);
+            
+            return newCounts;
+        });
     };
 
     const handleSubmit = async (e) => {
@@ -58,7 +66,7 @@ const BitShift = () => {
             if (response.data.status === 'success') {
                 toast.success(response.data.message || 'Trade submitted for approval.');
                 setDigitalDucks(0);
-                setDuckCounts(Array(7).fill(0));
+                setDuckCounts(Array(8).fill(0));
                 setHasAttemptedSubmit(false);
                 checkAuth(); // Refresh user balance
             } else {
@@ -75,12 +83,35 @@ const BitShift = () => {
     return (
         <div className="bit-shift-page">
             <section className="trade-form-section glass-panel animate-fade-in">
-                <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-                    <div className="brand-logo animate-float">
-                        <ArrowRightLeft size={40} color="white" />
+                <div className="toggle-wrapper">
+                    <div className="toggle-switch compact">
+                        <span className={`toggle-text bit-text ${!isByteMode ? 'active' : ''}`}>bit</span>
+                        <div style={{ position: 'relative', display: 'inline-block' }}>
+                            <input
+                                type="checkbox"
+                                id="duck-type-toggle"
+                                checked={isByteMode}
+                                onChange={() => {
+                                    setIsByteMode(prev => !prev);
+                                    // Reset state on mode toggle to avoid confusion with mismatched values
+                                    setDuckCounts(Array(8).fill(0));
+                                    setDigitalDucks(0);
+                                    setHasAttemptedSubmit(false);
+                                }}
+                                style={{ display: 'none' }}
+                            />
+                            <label htmlFor="duck-type-toggle" className="toggle-slider"></label>
+                        </div>
+                        <span className={`toggle-text byte-text ${isByteMode ? 'active' : ''}`}>Byte</span>
                     </div>
                 </div>
-                <h2 className="form-heading">Bit Shift</h2>
+
+                <div className="header-container">
+                    <div className="brand-logo-mini animate-float">
+                        <ArrowRightLeft size={24} color="var(--primary-color)" />
+                    </div>
+                    <h2 className="form-heading">Bit Shift</h2>
+                </div>
 
                 <form onSubmit={handleSubmit} className="trade-form">
                     <div className="form-group main-input">
@@ -90,8 +121,10 @@ const BitShift = () => {
                                 id="digital_ducks"
                                 value={digitalDucks}
                                 onChange={(e) => {
-                                    setDigitalDucks(parseInt(e.target.value) || 0);
-                                    setHasAttemptedSubmit(false);
+                                    const val = parseInt(e.target.value) || 0;
+                                    setDigitalDucks(val);
+                                    // Only reset flag if value is cleared
+                                    if (val === 0) setHasAttemptedSubmit(false);
                                 }}
                                 className="digital-ducks-input"
                                 min="0"
@@ -100,74 +133,55 @@ const BitShift = () => {
                             />
                         </div>
                         <div className="balance-info">
-                            <DuckIcon size={18} />
-                            <span>Cache balance: {user?.duck_balance?.toLocaleString(undefined, { maximumFractionDigits: 3 }) || 0}</span>
+                            <DuckIcon size={16} />
+                            <span>Cache: {user?.duck_balance?.toLocaleString(undefined, { maximumFractionDigits: 3 }) || 0}</span>
                         </div>
                     </div>
 
                     <div className="ducks-grid">
-                        {[6, 5, 4, 3, 2, 1, 0].map((i) => (
+                        {[7, 6, 5, 4, 3, 2, 1, 0].map((i) => (
                             <div key={i} className="small-input-group">
-                                <label htmlFor={`duck_${i}`} className="duck-label">
-                                    {(Math.pow(2, i)).toString(2)}{isByteMode ? 'B' : 'b'}
+                                <label className="duck-label">
+                                    {(Math.pow(2, i)).toString(2).padStart(i + 1, '0')}{isByteMode ? 'B' : 'b'}
+                                    <span style={{ fontSize: '0.7rem', opacity: 0.7, marginLeft: '4px' }}>({Math.pow(2, i) * multiplier})</span>
                                 </label>
-                                <input
-                                    type="number"
+                                <button
+                                    type="button"
                                     id={`duck_${i}`}
-                                    value={duckCounts[i]}
-                                    onChange={(e) => handleDuckCountChange(i, e.target.value)}
-                                    className="input-sm"
-                                    min="0"
-                                    max="10"
-                                />
+                                    onClick={() => handleDuckToggle(i)}
+                                    className={`bit-toggle ${duckCounts[i] === 1 ? 'active' : ''}`}
+                                    aria-pressed={duckCounts[i] === 1}
+                                >
+                                    {duckCounts[i]}
+                                </button>
                             </div>
                         ))}
                     </div>
 
                     {/* Live math check indicator — only shown on incorrect attempt */}
-                    {hasAttemptedSubmit && mathCheckMismatch && (
-                        <div className="math-check-banner mismatch">
+                    {(hasAttemptedSubmit || digitalDucks > 0) && (
+                        <div className={`math-check-banner ${mathCheckMismatch ? 'mismatch' : 'match'}`}>
                             <span className="math-check-equation">
-                                <strong className="binary-value">{binaryTotal.toString(2)}<sub>2</sub></strong>
-                                {' '}≠{' '}
-                                <span className="decimal-value">{digitalDucks}<sub>10</sub></span>
+                                <strong className="binary-value">{(binaryTotal / multiplier).toString(2)}<sub>2</sub> {isByteMode ? 'B' : 'b'}</strong>
+                                {' '}={' '}
+                                <span className="decimal-value">{binaryTotal}<sub>10</sub> ducks</span>
                             </span>
-                            <span className="math-check-status">✗ Mismatch</span>
+                            <span className="math-check-status">{mathCheckMismatch ? '✗ Mismatch' : '✓ Match'}</span>
                         </div>
                     )}
 
-                    <div className="toggle-container">
-                        <div className="toggle-switch">
-                            <span className={`toggle-text bit-text ${!isByteMode ? 'active' : ''}`}>bit</span>
-                            <div style={{ position: 'relative', display: 'inline-block' }}>
-                                <input
-                                    type="checkbox"
-                                    id="duck-type-toggle"
-                                    checked={isByteMode}
-                                    onChange={() => {
-                                        setIsByteMode(!isByteMode);
-                                        setHasAttemptedSubmit(false);
-                                    }}
-                                    style={{ display: 'none' }}
-                                />
-                                <label htmlFor="duck-type-toggle" className="toggle-slider"></label>
-                            </div>
-                            <span className={`toggle-text byte-text ${isByteMode ? 'active' : ''}`}>Byte</span>
-                        </div>
-                    </div>
-
                     <button type="submit" className="submit-button btn-premium" disabled={isLoading}>
                         {isLoading ? (
-                            'Processing Exchange...'
+                            'Processing...'
                         ) : (
                             <>
-                                <CreditCard size={24} /> Submit Exchange Request
+                                <CreditCard size={20} /> Submit Exchange
                             </>
                         )}
                     </button>
                 </form>
             </section>
-            
+
             <div className="binary-joke-container animate-fade-in" style={{ animationDelay: '0.4s' }}>
                 <p className="binary-joke">
                     "There are 10 types of people in the world: those who understand binary, and those who don't."

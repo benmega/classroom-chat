@@ -8,7 +8,7 @@
 .trade-form-section {
     background: var(--glass-bg);
     backdrop-filter: var(--glass-blur);
-    padding: 2.5rem 2rem;
+    padding: 1.5rem;
     border-radius: var(--radius-xl);
     box-shadow: var(--shadow-rich);
     border: 1px solid var(--glass-border);
@@ -34,9 +34,9 @@
 }
 
 .form-heading {
-    font-size: 2.25rem;
+    font-size: 1.75rem;
     text-align: center;
-    margin-bottom: 0.75rem;
+    margin: 0;
     color: var(--text-primary);
     font-weight: 800;
     letter-spacing: -0.04em;
@@ -58,7 +58,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin-bottom: 1.25rem;
+    margin-bottom: 1rem;
 }
 
 .form-group.main-input label {
@@ -69,12 +69,12 @@
 }
 
 .digital-ducks-input {
-    width: 280px;
-    padding: 1rem 1.5rem !important;
-    font-size: 2rem !important;
+    width: 220px;
+    padding: 0.5rem 1rem !important;
+    font-size: 1.5rem !important;
     font-weight: 800 !important;
     text-align: center;
-    border: 3px solid var(--border-rich) !important;
+    border: 2px solid var(--border-rich) !important;
     border-radius: var(--radius-lg) !important;
     background: white !important;
     color: var(--primary-color) !important;
@@ -95,18 +95,18 @@
 }
 
 .balance-info {
-    font-size: 1rem;
+    font-size: 0.85rem;
     color: var(--primary-dark);
     background: var(--primary-light);
-    padding: 0.6rem 1.8rem;
+    padding: 0.4rem 1.2rem;
     border-radius: var(--radius-full);
     font-weight: 700;
-    margin-top: 1.5rem;
-    border: 2px solid rgba(14, 178, 187, 0.2);
+    margin-top: 0.75rem;
+    border: 1px solid rgba(14, 178, 187, 0.2);
     box-shadow: var(--shadow-sm);
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: 0.5rem;
     transition: var(--transition-smooth);
 }
 
@@ -120,9 +120,9 @@
 
 .ducks-grid {
     display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 0.75rem;
-    margin-bottom: 1.25rem;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 0.5rem;
+    margin-bottom: 1rem;
     justify-content: center;
 }
 
@@ -162,35 +162,48 @@
     font-family: var(--font-heading);
 }
 
-.input-sm {
+.bit-toggle {
     width: 100%;
-    padding: 1.2rem 0.5rem !important;
+    padding: 0.8rem 0.4rem;
     text-align: center;
-    font-weight: 800 !important;
-    font-size: 1.25rem !important;
-    border: 3px solid var(--border-rich) !important;
-    border-radius: var(--radius-md) !important;
-    background: white !important;
-    transition: var(--transition-fast) !important;
-    box-shadow: var(--shadow-sm) !important;
+    font-weight: 900;
+    font-size: 1.25rem;
+    font-family: 'Courier New', Courier, monospace;
+    border: 2px solid var(--border-rich);
+    border-radius: var(--radius-md);
+    background: white;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: var(--transition-bounce);
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    user-select: none;
 }
 
-.input-sm:hover {
-    border-color: var(--secondary-color) !important;
+.bit-toggle:hover {
+    border-color: var(--primary-alpha);
+    background: var(--bg-tertiary);
     transform: translateY(-2px);
+    color: var(--primary-color);
 }
 
-.input-sm:focus {
-    border-color: var(--secondary-color) !important;
-    background: var(--secondary-light) !important;
-    box-shadow: var(--shadow-md) !important;
+.bit-toggle.active {
+    background: var(--gradient-primary);
+    border-color: transparent;
+    color: white;
+    box-shadow: var(--shadow-glow-primary);
+    transform: scale(1.05);
 }
 
-@media (max-width: 500px) {
-    .input-sm {
-        padding: 0.8rem 0.4rem !important;
-        font-size: 1.1rem !important;
-    }
+.bit-toggle.active:hover {
+    filter: brightness(1.1);
+    transform: scale(1.1) translateY(-2px);
+}
+
+.bit-toggle:active {
+    transform: scale(0.95);
 }
 
 /* Math check banner */
@@ -263,10 +276,59 @@
     letter-spacing: 0.03em;
 }
 
-.toggle-container {
+.toggle-wrapper {
+    position: absolute;
+    top: 1.5rem;
+    right: 1.5rem;
+    z-index: 10;
+}
+
+.toggle-switch.compact {
+    gap: 0.75rem;
+    padding: 6px 16px;
+    background: rgba(255, 255, 255, 0.5);
+    backdrop-filter: blur(4px);
+}
+
+.toggle-switch.compact .toggle-slider {
+    width: 48px;
+    height: 24px;
+}
+
+.toggle-switch.compact .toggle-slider:before {
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    top: 3px;
+}
+
+.toggle-switch.compact input:checked + .toggle-slider:before {
+    transform: translateX(24px);
+}
+
+.toggle-switch.compact .toggle-text {
+    font-size: 0.9rem;
+    text-transform: none;
+}
+
+.header-container {
     display: flex;
+    flex-direction: row;
+    align-items: center;
     justify-content: center;
+    gap: 0.75rem;
     margin-bottom: 1.25rem;
+}
+
+.brand-logo-mini {
+    background: var(--primary-light);
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--primary-alpha);
 }
 
 .toggle-switch {
@@ -328,8 +390,8 @@
 
 .submit-button {
     width: 100%;
-    padding: 1.25rem !important;
-    font-size: 1.25rem !important;
+    padding: 1rem !important;
+    font-size: 1.15rem !important;
     font-weight: 800 !important;
     color: white;
     background: var(--gradient-primary);
@@ -341,7 +403,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 1rem;
+    gap: 0.75rem;
 }
 
 .submit-button:hover:not(:disabled) {
@@ -406,8 +468,8 @@
 }
 
 .binary-joke-container {
-    margin-top: 3.5rem;
-    padding: 2.5rem 1rem;
+    margin-top: 2rem;
+    padding: 1.5rem 1rem;
     text-align: center;
     border-top: 1px dashed var(--glass-border);
     position: relative;
@@ -429,7 +491,7 @@
 }
 
 .binary-joke::before {
-    content: "/* byte of wisdom */";
+    content: "/* bit of wisdom */";
     display: block;
     font-size: 0.75rem;
     color: var(--primary-color);

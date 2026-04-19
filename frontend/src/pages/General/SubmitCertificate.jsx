@@ -64,7 +64,7 @@ const SubmitCertificate = () => {
         setUploadProgress(0);
 
         try {
-            const response = await client.post('/achievements/submit_certificate', formData, {
+            const response = await client.post('/api/achievements/submit_certificate', formData, {
                 headers: { 
                     'Content-Type': 'multipart/form-data',
                     'X-Requested-With': 'XMLHttpRequest'

@@ -5,10 +5,10 @@ class ChallengeLog(db.Model):
     __tablename__ = "challenge_logs"
 
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(100), nullable=False)
+    username = db.Column(db.String(100), nullable=False, index=True)
     domain = db.Column(db.String(100), nullable=False)
     challenge_slug = db.Column(db.String(255), nullable=False)
-    timestamp = db.Column(db.DateTime, nullable=False, default=db.func.now())
+    timestamp = db.Column(db.DateTime, nullable=False, default=db.func.now(), index=True)
     course_id = db.Column(db.String(100), nullable=True)
     course_instance = db.Column(db.String(100), nullable=True)
     helper = db.Column(db.String(100), nullable=True)

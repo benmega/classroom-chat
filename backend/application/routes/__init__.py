@@ -4,7 +4,11 @@ Type: py
 Summary: Blueprint registration for application route modules.
 """
 
+import os
+
 from flask import Flask
+from flask_swagger_ui import get_swaggerui_blueprint
+
 
 from application.routes.notes_routes import notes_bp
 from .achievement_routes import achievements
@@ -39,3 +43,20 @@ def register_blueprints(app: Flask):
     app.register_blueprint(challenge)
     app.register_blueprint(general)
     app.register_blueprint(server_info)
+
+    # ── Swagger UI ───────────────────────────────────────────────────────────
+    SWAGGER_URL = '/api/docs'
+    API_URL = '/static/swagger.json'
+    swaggerui_blueprint = get_swaggerui_blueprint(
+        SWAGGER_URL,
+        API_URL,
+        config={'app_name': "Classroom Chat API"}
+    )
+    app.register_blueprint(swaggerui_blueprint, url_prefix=SWAGGER_URL)
+
+    # ── Development-only shortcut ────────────────────────────────────────────
+    # /dev-login is never registered in production; the blueprint itself also
+    # enforces its own guards, providing defence-in-depth.
+    if os.getenv("FLASK_ENV", "development").lower() != "production":
+        from .dev_login_routes import dev_login
+        app.register_blueprint(dev_login)

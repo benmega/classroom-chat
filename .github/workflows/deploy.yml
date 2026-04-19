@@ -16,7 +16,17 @@ jobs:
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
+            # 1. Navigate to project directory
             cd /path/to/your/project/root
+
+            # 2. Update the code
             git pull origin deploy-gunicorn
+
+            # 3. Inject Production Environment Variables
+            # We create a fresh .env file using secrets stored in GitHub
+            echo "FLASK_ENV=${{ secrets.FLASK_ENV }}" > .env
+            echo "DEBUG=${{ secrets.DEBUG }}" >> .env
+
+            # 4. Set permissions and execute the deployment script
             chmod +x ./classroom-chat/deploy.sh
             ./classroom-chat/deploy.sh

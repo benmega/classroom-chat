@@ -59,6 +59,17 @@ const PendingTrades = () => {
         }
     };
 
+    const formatBits = (bits) => {
+        if (!bits || !Array.isArray(bits)) return 'N/A';
+        // Ensure 8 bits, pad with 0 at the end (since it's LSB first in the array)
+        const paddedBits = [...bits];
+        while (paddedBits.length < 8) {
+            paddedBits.push(0);
+        }
+        // Reverse to show MSB on the left and join with spaces
+        return paddedBits.reverse().join(' ');
+    };
+
     if (isLoading) return <div className="admin-loading">Loading Trades...</div>;
 
     return (
@@ -70,7 +81,7 @@ const PendingTrades = () => {
                 <h1>Pending Duck Trades</h1>
                 <p>Approve or reject physical duck redemption requests.</p>
             </header>
-
+ 
             <div className="trades-list">
                 {trades.length > 0 ? (
                     trades.map(trade => (
@@ -92,7 +103,7 @@ const PendingTrades = () => {
                                     <Hash size={14} /> ID: {trade.id}
                                 </div>
                             </div>
-
+ 
                             <div className="trade-details">
                                 <div className="detail-item total">
                                     <span className="label">Digital Ducks</span>
@@ -101,11 +112,11 @@ const PendingTrades = () => {
                                 <div className="detail-grid">
                                     <div className="detail-item">
                                         <span className="label">Bit Ducks</span>
-                                        <span className="value">{trade.bit_ducks}</span>
+                                        <span className="value font-mono">{formatBits(trade.bit_ducks)}</span>
                                     </div>
                                     <div className="detail-item">
                                         <span className="label">Byte Ducks</span>
-                                        <span className="value">{trade.byte_ducks}</span>
+                                        <span className="value font-mono">{formatBits(trade.byte_ducks)}</span>
                                     </div>
                                 </div>
                             </div>

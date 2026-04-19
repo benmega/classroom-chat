@@ -9,7 +9,6 @@ import { SidebarProvider } from './context/SidebarContext';
 import Layout from './components/Layout/Layout';
 import AdminLayout from './components/Layout/AdminLayout';
 
-// Pages
 import Login from './pages/Auth/Login';
 import Signup from './pages/Auth/Signup';
 import Profile from './pages/Profile/index';
@@ -33,6 +32,9 @@ import PendingUsers from './pages/Admin/PendingUsers';
 import AdvancedPanel from './pages/Admin/AdvancedPanel';
 import AdminSettings from './pages/Admin/AdminSettings';
 import AccessDenied from './pages/Error/AccessDenied';
+// Development-only shortcut page — Vite's tree-shaking removes this module
+// from production builds because it is only referenced inside the DEV guard below.
+import DevLogin from './pages/Auth/DevLogin';
 
 
 const ProtectedRoute = ({ children, adminOnly = false }) => {
@@ -78,35 +80,59 @@ function App() {
     <Router>
       <SidebarProvider>
         <Toaster 
-        position="bottom-right"
-        toastOptions={{
-            duration: 4000,
-            style: {
-                background: 'var(--text-primary)',
-                color: 'white',
-                borderRadius: 'var(--radius-md)',
-                padding: '12px 20px',
-                boxShadow: 'var(--shadow-lg)',
-            },
-            success: {
+            position="bottom-right"
+            gutter={12}
+            containerStyle={{
+                top: 40,
+                left: 40,
+                bottom: 40,
+                right: 40,
+            }}
+            toastOptions={{
+                duration: 4500,
                 style: {
-                    background: 'var(--success-color)',
+                    background: '#1e293b',
+                    color: '#ffffff',
+                    borderRadius: '12px',
+                    padding: '16px 24px',
+                    boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+                    fontSize: '0.95rem',
+                    fontWeight: '600',
+                    maxWidth: '420px',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
                 },
-            },
-            error: {
-                style: {
-                    background: 'var(--error-color)',
+                success: {
+                    style: {
+                        background: '#10b981',
+                        border: '1px solid #059669',
+                    },
+                    iconTheme: {
+                        primary: '#ffffff',
+                        secondary: '#10b981',
+                    },
                 },
-            },
-        }}
-      />
+                error: {
+                    style: {
+                        background: '#ef4444',
+                        border: '1px solid #dc2626',
+                    },
+                    iconTheme: {
+                        primary: '#ffffff',
+                        secondary: '#ef4444',
+                    },
+                },
+            }}
+        />
       <Routes>
-        {/* Auth Routes */}
         <Route path="/login" element={isAuthenticated ? <Navigate to="/" /> : <Login />} />
         <Route path="/signup" element={isAuthenticated ? <Navigate to="/" /> : <Signup />} />
 
+        {/* Development-only shortcut — guarded so browsers in production never see this route */}
+        {import.meta.env.DEV && (
+          <Route path="/dev-login" element={<DevLogin />} />
+        )}
 
-        {/* User Routes (Wrapped in Layout) */}
+
         <Route path="/" element={
           <ProtectedRoute>
             <Layout>
@@ -187,7 +213,6 @@ function App() {
           </ProtectedRoute>
         } />
 
-        {/* Admin Routes (Wrapped in AdminLayout) */}
         <Route path="/admin/*" element={
           <ProtectedRoute adminOnly={true}>
             <AdminLayout>

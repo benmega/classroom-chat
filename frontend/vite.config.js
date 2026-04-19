@@ -23,6 +23,8 @@ export default defineConfig({
       '/api/achievements': 'http://localhost:8000',
       '/notes': 'http://localhost:8000',
       '/server': 'http://localhost:8000',
+      '/api/dev-login': 'http://localhost:8000',
+      '/api/docs': 'http://localhost:8000',
       '/socket.io': {
         target: 'http://localhost:8000',
         ws: true,

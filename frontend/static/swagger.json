@@ -1,0 +1,60 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Classroom Chat API",
+    "description": "API documentation for the Classroom Chat backend service.",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8000",
+      "description": "Local Development Server"
+    }
+  ],
+  "paths": {
+    "/user/login": {
+      "post": {
+        "summary": "User Login",
+        "tags": ["Authentication"],
+        "responses": {
+          "200": { "description": "Successful login" }
+        }
+      }
+    },
+    "/user/api/auth/status": {
+      "get": {
+        "summary": "Check Auth Status",
+        "tags": ["Authentication"],
+        "responses": {
+          "200": { "description": "Current user profile" }
+        }
+      }
+    },
+    "/api/admin/dashboard": {
+      "get": {
+        "summary": "Admin Dashboard Stats",
+        "tags": ["Admin"],
+        "responses": {
+          "200": { "description": "System statistics" }
+        }
+      }
+    },
+    "/message/api/conversations/{user_id}": {
+      "get": {
+        "summary": "Get Conversations",
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "tags": ["Messaging"],
+        "responses": {
+          "200": { "description": "List of threads" }
+        }
+      }
+    }
+  }
+}

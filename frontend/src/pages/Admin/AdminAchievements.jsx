@@ -29,7 +29,7 @@ const AdminAchievements = () => {
         setIsSubmitting(true);
 
         try {
-            const response = await client.post('/achievements/add', formData);
+            const response = await client.post('/api/achievements/add', formData);
             if (response.data.status === 'success') {
                 toast.success(response.data.message);
                 navigate('/admin');

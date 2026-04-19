@@ -14,14 +14,9 @@ import {
     ChevronLeft, 
     ChevronRight,
     X,
-    FileText,
     CheckCircle,
     Calendar,
     StickyNote,
-    Coins,
-    BarChart,
-    Rocket,
-    Signal
 } from 'lucide-react';
 import client from '../../api/client';
 import useAuthStore from '../../store/useAuthStore';
@@ -29,82 +24,45 @@ import toast from 'react-hot-toast';
 import './Profile.css';
 import '../../assets/css/sprite.css'; 
 import SmartImage from '../../components/common/SmartImage';
-import DuckIcon from '../../components/common/DuckIcon';
+import ContributionGraph from '../../components/profile/ContributionGraph';
+import { formatLargeNumber } from '../../utils/formatters';
 
 // Internal components
 const LayersIcon = ({ size }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>;
 const ActivityIcon = ({ size }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>;
 
-const ContributionGraph = ({ data }) => {
-    if (!data || !data.rows) return <div className="no-data">No activity data available.</div>;
-
-    const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    
-    return (
-        <div className="contribution-container">
-            <div className="graph-header">
-                {data.months?.map((m, i) => (
-                    <span key={i} className="month-label" style={{ gridColumn: `span ${m.colspan}` }}>
-                        {m.name}
-                    </span>
-                ))}
-            </div>
-            <div className="graph-grid">
-                <div className="weekday-labels">
-                    {weekdays.map((d, i) => (
-                        <span key={i} className="weekday-label">{i % 2 === 1 ? d : ''}</span>
-                    ))}
-                </div>
-                <div className="rows-container">
-                    {data.rows.map((row, rIdx) => (
-                        <div key={rIdx} className="graph-row">
-                            {row.map((cell, cIdx) => (
-                                <div 
-                                    key={cIdx} 
-                                    className={`graph-cell level-${cell?.level || 0}`}
-                                    title={`${cell?.count || 0} activity on ${cell?.date || 'unknown'}`}
-                                ></div>
-                            ))}
-                        </div>
-                    ))}
-                </div>
-            </div>
-            <div className="graph-footer">
-                <span>Less</span>
-                <div className="footer-cells">
-                    <div className="graph-cell level-0"></div>
-                    <div className="graph-cell level-1"></div>
-                    <div className="graph-cell level-2"></div>
-                    <div className="graph-cell level-3"></div>
-                    <div className="graph-cell level-4"></div>
-                </div>
-                <span>More</span>
-            </div>
-        </div>
-    );
-};
-
-const formatLargeNumber = (num) => {
-    if (num === null || num === undefined) return '0';
-    const val = Number(num);
-    if (isNaN(val)) return '0';
-    
-    if (val < 10000) {
-        return val.toLocaleString(undefined, { maximumFractionDigits: 0 });
+const getYoutubeEmbedUrl = (url) => {
+    if (!url) return null;
+    try {
+        // Robust regex to capture video IDs from various YouTube URL formats (watch, embed, v, shorts, live, youtu.be)
+        const ytRegex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/|youtube\.com\/shorts\/|youtube\.com\/live\/)([^"&?\/\s]{11})/i;
+        const ytMatch = url.match(ytRegex);
+        const ytId = ytMatch ? ytMatch[1] : null;
+        
+        if (ytId) {
+            return `https://www.youtube.com/embed/${ytId}?rel=0`;
+        }
+        
+        // Handle Vimeo
+        if (url.includes('vimeo.com')) {
+            const vimeoRegex = /vimeo\.com\/(?:video\/)?(\d+)/;
+            const vimeoMatch = url.match(vimeoRegex);
+            if (vimeoMatch) {
+                return `https://player.vimeo.com/video/${vimeoMatch[1]}`;
+            }
+        }
+        
+        return null;
+    } catch (e) {
+        console.error("Error parsing video URL:", e);
+        return null;
     }
-    
-    const formatter = new Intl.NumberFormat('en-US', {
-        notation: 'compact',
-        compactDisplay: 'short',
-        maximumFractionDigits: 1
-    });
-    return formatter.format(val);
 };
 
 const Profile = () => {
     const { slug } = useParams();
     const navigate = useNavigate();
-    const { user: _currentUser } = useAuthStore();
+    const { checkAuth } = useAuthStore();
     const [profileData, setProfileData] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [selectedProject, setSelectedProject] = useState(null);
@@ -158,7 +116,7 @@ const Profile = () => {
         }
     };
 
-    const handleFileUpload = async (event, _type) => {
+    const handleFileUpload = async (event) => {
         const file = event.target.files[0];
         if (!file) return;
 
@@ -169,7 +127,7 @@ const Profile = () => {
             const response = await client.post('/notes/upload', formData);
             if (response.data.status === 'success') {
                 toast.success('Note uploaded!');
-                fetchProfile(); // Refresh to show new note
+                fetchProfile();
             }
         } catch {
             toast.error('Upload failed.');
@@ -223,7 +181,6 @@ const Profile = () => {
                         toast.success('Profile picture updated!');
                         setIsCropping(false);
                         fetchProfile();
-                        // Update global auth state if it's the current user's profile
                         if (profileData.viewer?.id === profileData.target?.id) {
                             checkAuth();
                         }
@@ -243,18 +200,15 @@ const Profile = () => {
         }
     };
 
-    // Load Cropper.js dynamically
     useEffect(() => {
         if (isCropping) {
             const loadCropper = async () => {
                 if (typeof window.Cropper === 'undefined') {
-                    // Load CSS
                     const link = document.createElement('link');
                     link.rel = 'stylesheet';
                     link.href = '/static/lib/cropper.min.css';
                     document.head.appendChild(link);
 
-                    // Load JS
                     const script = document.createElement('script');
                     script.src = '/static/lib/cropper.min.js';
                     script.async = true;
@@ -266,7 +220,6 @@ const Profile = () => {
             };
 
             const initCropper = () => {
-                // Small delay to ensure image is in DOM
                 setTimeout(() => {
                     if (cropImgRef.current) {
                         cropperRef.current = new window.Cropper(cropImgRef.current, {
@@ -305,7 +258,6 @@ const Profile = () => {
 
     return (
         <div className="profile-page">
-            {/* Header Section */}
             <div className="profile-header-card">
                 <div className="header-background"></div>
                 <div className="profile-header-content">
@@ -319,7 +271,6 @@ const Profile = () => {
                         {isOwner && (
                             <>
                                 <div className="upload-overlay">
-                                    <Camera size={24} />
                                     <span>Change Photo</span>
                                 </div>
                                 <input 
@@ -329,9 +280,6 @@ const Profile = () => {
                                     accept="image/*" 
                                     onChange={handlePfpChange} 
                                 />
-                                <button className="edit-pic-btn" onClick={(e) => { e.stopPropagation(); pfpInputRef.current?.click(); }}>
-                                    <Camera size={18} />
-                                </button>
                             </>
                         )}
                     </div>
@@ -387,8 +335,18 @@ const Profile = () => {
             </div>
 
             <div className="dashboard-grid">
-                {/* Left Column: Progress & Skills */}
                 <div className="column-left">
+                    {target.bio && (
+                        <section className="dashboard-panel">
+                            <div className="panel-header">
+                                <h2><User size={20} /> About Me</h2>
+                            </div>
+                            <div className="bio-panel-content">
+                                <p className="bio-text">{target.bio}</p>
+                            </div>
+                        </section>
+                    )}
+
                     <section className="dashboard-panel">
                         <div className="panel-header">
                             <h2><ActivityIcon size={20} /> Course Progress</h2>
@@ -429,7 +387,7 @@ const Profile = () => {
                         <div className="cert-list-container">
                             <div className="cert-list">
                                 {target.certificates.map(cert => (
-                                    <div key={cert.id} className="cert-item" onClick={() => cert.file_path && window.open(`/admin/certificates/view/${cert.id}`, '_blank')}>
+                                    <div key={cert.id} className="cert-item" onClick={() => cert.file_path && window.open(`/api/achievements/view_certificate/${cert.id}`, '_blank')}>
                                         <div className="cert-icon">
                                             <div className={`badge badge-${cert.achievement?.slug || 'default'}`}></div>
                                         </div>
@@ -485,7 +443,6 @@ const Profile = () => {
                     )}
                 </div>
 
-                {/* Right Column: Projects & Activity */}
                 <div className="column-right">
                     <section className="dashboard-panel">
                         <div className="panel-header between">
@@ -538,7 +495,6 @@ const Profile = () => {
                                 </div>
                     </section>
 
-                    {/* Contribution Graph Placeholder */}
                     <section className="dashboard-panel">
                         <div className="panel-header">
                             <h2><Calendar size={20} /> Coding Activity</h2>
@@ -548,7 +504,6 @@ const Profile = () => {
                         </div>
                     </section>
 
-                    {/* Notebook Section */}
                     <section className="dashboard-panel">
                         <div className="panel-header between">
                             <h2><StickyNote size={20} /> Digital Notebook</h2>
@@ -584,7 +539,6 @@ const Profile = () => {
                 </div>
             </div>
 
-            {/* Project Modal */}
             {selectedProject && (
                 <div className="modal-overlay" onClick={() => setSelectedProject(null)}>
                     <div className="modal-content project-modal" onClick={e => e.stopPropagation()}>
@@ -598,6 +552,28 @@ const Profile = () => {
                         </div>
                         <div className="modal-body">
                             <div className="modal-main">
+                                {selectedProject.video_url && (
+                                    <div className="video-spotlight">
+                                        {getYoutubeEmbedUrl(selectedProject.video_url) ? (
+                                            <iframe 
+                                                src={getYoutubeEmbedUrl(selectedProject.video_url)} 
+                                                title="Project Video Presentation"
+                                                frameBorder="0"
+                                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                                allowFullScreen
+                                            ></iframe>
+                                        ) : (
+                                            <video 
+                                                src={selectedProject.video_url} 
+                                                controls 
+                                                className="direct-video-player"
+                                                poster={selectedProject.image_url ? `/static/${selectedProject.image_url}` : null}
+                                            >
+                                                Your browser does not support the video tag.
+                                            </video>
+                                        )}
+                                    </div>
+                                )}
                                 <h3>Description</h3>
                                 <p>{selectedProject.description}</p>
                                 {selectedProject.teacher_comment && (
@@ -620,7 +596,6 @@ const Profile = () => {
                 </div>
             )}
 
-            {/* Slideshow Lightbox */}
             {slideshowIndex !== null && (
                 <div className="slideshow-overlay" onClick={() => setSlideshowIndex(null)}>
                     <button className="close-slideshow"><X size={32} /></button>
@@ -640,7 +615,6 @@ const Profile = () => {
                 </div>
             )}
 
-            {/* Crop Modal */}
             {isCropping && (
                 <div className="modal-overlay crop-modal-overlay">
                     <div className="modal-content crop-modal-content">

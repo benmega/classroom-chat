@@ -1,9 +1,3 @@
-"""
-File: user.py
-Type: py
-Summary: SQLAlchemy model for application users and authentication data.
-"""
-
 import re
 from datetime import date, timedelta, datetime
 
@@ -35,6 +29,7 @@ class User(db.Model):
     slug = db.Column(db.String(100), unique=True, nullable=True)
     is_admin = db.Column(db.Boolean, default=False)
     is_approved = db.Column(db.Boolean, default=False)
+    bio = db.Column(db.String(500), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     # Gamification
@@ -66,6 +61,22 @@ class User(db.Model):
         return f"<User {self._username}>"
 
     def to_dict(self):
+        d = self.to_dict_summary()
+        
+        # Relationships (serialized) - Expensive, only for single user view
+        d["skills"] = [s.to_dict() if hasattr(s, 'to_dict') else {"id": s.id, "name": s.name} for s in self.skills]
+        d["projects"] = [p.to_dict() if hasattr(p, 'to_dict') else {"id": p.id, "name": p.name} for p in self.projects]
+        d["certificates"] = [c.to_dict() if hasattr(c, 'to_dict') else {"id": c.id} for c in self.certificates]
+        d["achievements"] = [a.to_dict() if hasattr(a, 'to_dict') else {"id": a.id} for a in self.achievements]
+        d["notes"] = [n.to_dict() if hasattr(n, 'to_dict') else {"id": n.id, "url": f"/notes/view/{n.filename}"} for n in self.notes]
+        
+        # Grid data - Extremely expensive
+        d["contribution_data"] = self.get_contribution_data()
+        
+        return d
+
+    def to_dict_summary(self):
+        """Lighter dictionary for list views, avoids expensive queries/processing."""
         d = {
             "id": self.id,
             "username": self.username,
@@ -75,6 +86,7 @@ class User(db.Model):
             "is_online": self.is_online,
             "is_admin": self.is_admin,
             "is_approved": self.is_approved,
+            "bio": self.bio,
             "slug": self.slug,
             
             # Gamification
@@ -82,20 +94,12 @@ class User(db.Model):
             "earned_ducks": self.earned_ducks,
             "packets": self.packets,
             
-            # Progress counters for profile headers
+            # Progress counters for profile headers - Still slightly expensive but better than full logs
             "total_levels": self.get_progress("codecombat.com") + self.get_progress("www.ozaria.com"),
             "cc_levels": self.get_progress("codecombat.com"),
             "oz_levels": self.get_progress("www.ozaria.com"),
             "cc_percent": self.get_progress_percent("codecombat.com"),
             "oz_percent": self.get_progress_percent("www.ozaria.com"),
-            
-            # Relationships (serialized)
-            "skills": [s.to_dict() if hasattr(s, 'to_dict') else {"id": s.id, "name": s.name} for s in self.skills],
-            "projects": [p.to_dict() if hasattr(p, 'to_dict') else {"id": p.id, "name": p.name} for p in self.projects],
-            "certificates": [c.to_dict() if hasattr(c, 'to_dict') else {"id": c.id} for c in self.certificates],
-            "achievements": [a.to_dict() if hasattr(a, 'to_dict') else {"id": a.id} for a in self.achievements],
-            "notes": [n.to_dict() if hasattr(n, 'to_dict') else {"id": n.id, "url": f"/notes/view/{n.id}"} for n in self.notes],
-            "contribution_data": self.get_contribution_data()
         }
         # Explicit defensive safety check
         for field in ['password_hash', 'salt', 'ip_address']:
@@ -162,6 +166,8 @@ class User(db.Model):
 
         db.session.commit()
 
+    _total_challenges_cache = {}
+
     def get_progress(self, domain):
         """Calculate progress based on challenges completed for a specific domain."""
         total_challenges = ChallengeLog.query.filter_by(
@@ -173,7 +179,10 @@ class User(db.Model):
         """Calculate CodeCombat progress as a percentage of completed challenges (rounded for readability)."""
         from application.models.challenge import Challenge
 
-        total_challenges = Challenge.query.filter_by(domain=domain).count()
+        if domain not in self._total_challenges_cache:
+            self._total_challenges_cache[domain] = Challenge.query.filter_by(domain=domain).count()
+        
+        total_challenges = self._total_challenges_cache[domain]
         completed_challenges = ChallengeLog.query.filter_by(
             username=self._username, domain=domain
         ).count()
@@ -217,14 +226,14 @@ class User(db.Model):
         self.earned_ducks += amount
         self.packets += amount / (2**14)
         self.duck_balance += amount
-        db.session.commit()
+        # Removed db.session.commit() to allow route-level transaction control
 
     def award_daily_duck(self, amount=1):
         today = date.today()
         if self.last_daily_duck != today:
             self.add_ducks(amount)
             self.last_daily_duck = today
-            db.session.commit()
+            # Note: The caller must commit the session
             return True
         return False
 
@@ -236,22 +245,19 @@ class User(db.Model):
             'rows': [[{date, count, level}, ...], ...] # 7 rows (Sun-Sat)
         }
         """
-        # 1. Setup Dates
-        today = date.today()
         # Align end date to the coming Saturday to complete the grid
+        today = date.today()
         idx = (today.weekday() + 1) % 7  # 0 = Sun
         end_date = today + timedelta(days=(6 - idx))
-        start_date = end_date - timedelta(weeks=52)  # Go back 52 weeks
+        start_date = end_date - timedelta(weeks=52)
 
-        # 2. Fetch Data
         logs = self.challenge_logs.all()
         counts = {}
         for log in logs:
             k = log.timestamp.date().isoformat()
             counts[k] = counts.get(k, 0) + 1
 
-        # 3. Build Grid (7 rows x 53 columns)
-        # grid[weekday][week_index]
+        # grid[weekday][week_index] (7 rows x 53 columns)
         grid = [[None for _ in range(53)] for _ in range(7)]
 
         current = start_date
@@ -265,7 +271,6 @@ class User(db.Model):
         while current <= end_date:
             weekday = (current.weekday() + 1) % 7  # 0=Sun, 6=Sat
 
-            # Month Logic
             if weekday == 0:  # Check at start of every week
                 month_name = current.strftime("%b")
                 if month_name != current_month:

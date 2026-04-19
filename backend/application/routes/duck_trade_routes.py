@@ -29,8 +29,8 @@ class BitDuckForm(FlaskForm):
             default=0,
             validators=[NumberRange(min=0, message="Count must be non-negative")],
         ),
-        min_entries=7,
-        max_entries=7,
+        min_entries=8,
+        max_entries=8,
     )
 
 
@@ -43,8 +43,8 @@ class ByteDuckForm(FlaskForm):
             default=0,
             validators=[NumberRange(min=0, message="Count must be non-negative")],
         ),
-        min_entries=7,
-        max_entries=7,
+        min_entries=8,
+        max_entries=8,
     )
 
 

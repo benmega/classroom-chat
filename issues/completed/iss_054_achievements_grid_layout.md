@@ -19,3 +19,15 @@ The Achievements page displays all items in a single vertical column, even on la
 - Change the achievement list layout from a single column to a responsive grid.
 - Use `display: grid` with `grid-template-columns: repeat(auto-fill, minmax(300px, 1fr))` to automatically adjust columns based on screen width.
 - Adjust card padding and font sizes to ensure they look proportional on larger screens.
+
+## Resolution
+- Performed a visual audit and found that while a grid was present, it was using a small `minmax(150px, 1fr)` which led to many small columns on desktop, looking non-premium.
+- Updated `Achievements.css` to use `minmax(280px, 1fr)` for a more substantial card size on desktop.
+- Increased card padding to `2rem` and title font size to `1.3rem` for better proportions.
+- Added responsive media queries for tablets (768px) and mobile (480px).
+
+## Root Cause
+The initial implementation used a very small minimum width for grid items, which didn't utilize desktop space effectively and felt underdeveloped.
+
+## Changed Files
+- `frontend/src/pages/General/Achievements.css`

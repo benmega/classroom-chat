@@ -18,10 +18,9 @@
     align-items: center;
     gap: 0.5rem;
     padding: 0.6rem 1rem;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    color: var(--text);
+    background: var(--bg-primary);
+    border: 1px solid var(--border-subtle);
+    color: var(--text-primary);
     font-weight: 500;
     cursor: pointer;
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
@@ -29,7 +28,7 @@
 }
 
 .back-btn:hover {
-    background: var(--hover);
+    background: var(--bg-tertiary);
     transform: translateX(-4px);
     box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
@@ -38,14 +37,14 @@
     font-size: clamp(1.8rem, 5vw, 2.5rem);
     font-weight: 800;
     margin-bottom: 0.5rem;
-    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
 }
 
 .header-content p {
-    color: var(--text-muted);
+    color: var(--text-secondary);
     font-size: 1.1rem;
 }
 
@@ -56,8 +55,8 @@
 }
 
 .user-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
+    background: var(--bg-primary);
+    border: 1px solid var(--border-subtle);
     border-radius: 20px;
     padding: 1.75rem;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -89,7 +88,7 @@
 .avatar-placeholder {
     width: 52px;
     height: 52px;
-    background: linear-gradient(135deg, var(--primary-faint), var(--secondary-faint));
+    background: var(--primary-light);
     border-radius: 14px;
     display: flex;
     align-items: center;
@@ -143,11 +142,11 @@
 }
 
 .detail-row .label {
-    color: var(--text-muted);
+    color: var(--text-secondary);
 }
 
 .detail-row .value {
-    color: var(--text);
+    color: var(--text-primary);
     font-weight: 500;
 }
 
@@ -173,14 +172,15 @@
 }
 
 .btn-approve {
-    background: var(--primary);
+    background: var(--primary-color);
     color: white;
+    box-shadow: 0 4px 14px rgba(14, 178, 187, 0.3);
 }
 
 .btn-approve:hover:not(:disabled) {
     background: var(--primary-dark);
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px var(--primary-faint);
+    box-shadow: 0 6px 20px rgba(14, 178, 187, 0.4);
 }
 
 .btn-reject {
@@ -203,8 +203,8 @@ button:disabled {
 
 .empty-state-card {
     grid-column: 1 / -1;
-    background: var(--surface);
-    border: 1px dashed var(--border);
+    background: var(--bg-primary);
+    border: 1px dashed var(--border-subtle);
     border-radius: 24px;
     padding: 5rem 2rem;
     display: flex;
@@ -219,7 +219,7 @@ button:disabled {
 .empty-icon-wrapper {
     width: 100px;
     height: 100px;
-    background: var(--surface-light);
+    background: var(--bg-secondary);
     border-radius: 30px;
     display: flex;
     align-items: center;

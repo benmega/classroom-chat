@@ -9,14 +9,14 @@ ROUTE_MODULE_PATH = "application.routes.notes_routes"
 
 def test_upload_note_no_auth(client):
     """Ensure unauthorized users cannot upload notes."""
-    # UPDATED URL: /notes/upload_note
-    response = client.post("/notes/upload_note")
+    # UPDATED URL: /notes/upload
+    response = client.post("/notes/upload")
     assert response.status_code == 401
 
 def test_upload_note_no_file(logged_in_client):
     """Ensure a 400 error if no file is part of the request."""
-    # UPDATED URL: /notes/upload_note
-    response = logged_in_client.post("/notes/upload_note", data={})
+    # UPDATED URL: /notes/upload
+    response = logged_in_client.post("/notes/upload", data={})
     assert response.status_code == 400
     assert b"No file provided" in response.data
 
@@ -42,7 +42,7 @@ def test_upload_note_success(mock_get_s3_client, logged_in_client, sample_user, 
     }
 
     response = logged_in_client.post(
-        "/notes/upload_note",
+        "/notes/upload",
         data=data,
         content_type="multipart/form-data"
     )
@@ -75,7 +75,7 @@ def test_upload_note_s3_failure(mock_get_s3_client, logged_in_client, sample_use
     }
 
     response = logged_in_client.post(
-        "/notes/upload_note",
+        "/notes/upload",
         data=data,
         content_type="multipart/form-data"
     )

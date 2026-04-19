@@ -26,5 +26,6 @@ def setup_models():
     from .course_instance import CourseInstance  # noqa: F401
     from .session_log import SessionLog  # noqa: F401
     from .user_certificate import UserCertificate  # noqa: F401
+    from .duck_transaction import DuckTransaction  # noqa: F401
 
 setup_models()

@@ -21,7 +21,6 @@ from application.models.banned_words import BannedWords
 from application.models.configuration import Configuration
 from application.models.conversation import Conversation, conversation_users
 from application.models.user import User
-from application.routes.admin_routes import adminUsername
 from application.utilities.db_helpers import get_user, save_message_to_db
 
 message = Blueprint("message", __name__)
@@ -43,7 +42,7 @@ def send_message():
     config = Configuration.query.first()
     if not config:
         return jsonify(success=False, error="No Configuration Found"), 500
-    if user.username != adminUsername and not config.message_sending_enabled:
+    if not user.is_admin and not config.message_sending_enabled:
         return jsonify(success=False, error="Non-admin messages are disabled"), 403
 
     if not message_is_appropriate(form_message):
@@ -52,7 +51,8 @@ def send_message():
             403,
         )
 
-    if not save_message_to_db(user.id, form_message):
+    conversation_id = request.form.get("conversation_id")
+    if not save_message_to_db(user.id, form_message, conversation_id=conversation_id):
         return jsonify(success=False, error="Database commit failed"), 500
 
     if config.ai_teacher_enabled:
@@ -64,6 +64,14 @@ def send_message():
 
 @message.route("/start_conversation", methods=["POST"])
 def start_conversation():
+    user_id = session.get("user")
+    if not user_id:
+        return jsonify({"error": "Unauthorized"}), 401
+    
+    user = User.query.get(user_id)
+    if not user or not user.is_admin:
+        return jsonify({"error": "Only admins can create conversations"}), 403
+
     # Attempt to get JSON data, otherwise fallback to form data
     if request.is_json:
         data = request.get_json()
@@ -72,16 +80,12 @@ def start_conversation():
         title = request.form.get("title")
 
     if title and title.strip():
-        new_conversation = Conversation(title=title)
+        new_conversation = Conversation(title=title, creator_id=user.id)
     else:
-        new_conversation = Conversation()
+        new_conversation = Conversation(creator_id=user.id)
     
     # Add the current user to the conversation automatically
-    user_id = session.get("user")
-    if user_id:
-        user = User.query.get(user_id)
-        if user:
-            new_conversation.users.append(user)
+    new_conversation.users.append(user)
 
     db.session.add(new_conversation)
     db.session.commit()
@@ -191,9 +195,25 @@ def conversation_history():
         flash("User not found.", "error")
         return redirect(url_for("user.login"))
 
+    # 1. Join for participated conversations
+    participated_ids = [c.id for c in Conversation.query.filter(Conversation.users.any(id=user_id)).all()]
+
+    # 2. Get the absolute latest conversation
+    absolute_latest = Conversation.query.order_by(Conversation.created_at.desc()).first()
+    
+    # 3. Check if the latest one is admin-created
+    latest_is_admin_created = False
+    if absolute_latest and absolute_latest.creator_id:
+        creator = User.query.get(absolute_latest.creator_id)
+        if creator and creator.is_admin:
+            latest_is_admin_created = True
+
+    query_filter = Conversation.id.in_(participated_ids)
+    if latest_is_admin_created:
+        query_filter = (Conversation.id.in_(participated_ids)) | (Conversation.id == absolute_latest.id)
+
     conversations = (
-        Conversation.query.join(conversation_users)
-        .filter(conversation_users.c.user_id == user.id)
+        Conversation.query.filter(query_filter)
         .order_by(Conversation.created_at.desc())
         .all()
     )
@@ -205,11 +225,29 @@ def conversation_history():
 
 @message.route("/api/conversations/<int:user_id>", methods=["GET"])
 def get_conversation_history(user_id):
+    # 1. Join for participated conversations
+    participated_ids = [c.id for c in Conversation.query.filter(Conversation.users.any(id=user_id)).all()]
+
+    # 2. Get the absolute latest conversation
+    absolute_latest = Conversation.query.order_by(Conversation.created_at.desc()).first()
+    
+    # 3. Check if the latest one is admin-created
+    latest_is_admin_created = False
+    if absolute_latest and absolute_latest.creator_id:
+        creator = User.query.get(absolute_latest.creator_id)
+        if creator and creator.is_admin:
+            latest_is_admin_created = True
+
+    query_filter = Conversation.id.in_(participated_ids)
+    if latest_is_admin_created:
+        query_filter = (Conversation.id.in_(participated_ids)) | (Conversation.id == absolute_latest.id)
+
     conversations = (
-        Conversation.query.filter(Conversation.users.any(id=user_id))
+        Conversation.query.filter(query_filter)
         .order_by(Conversation.created_at.desc())
         .all()
     )
+
     return jsonify(
         [
             {
@@ -273,7 +311,7 @@ def serialize_message(msg):
 
     timestamp = getattr(msg, "created_at", None)
     if timestamp is not None:
-        timestamp = str(timestamp)
+        timestamp = timestamp.isoformat()
 
     return {
         "user_id": msg.user_id,

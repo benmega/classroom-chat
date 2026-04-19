@@ -20,7 +20,7 @@ from application.extensions import db
 from application.models.achievements import Achievement
 from application.models.user import User
 from application.models.user_certificate import UserCertificate
-from application.routes.admin_routes import admin_only
+from application.decorators.admin_required import admin_only
 from application.decorators.api_response import api_response
 
 achievements = Blueprint("achievements", __name__)
@@ -37,28 +37,55 @@ def allowed_file(filename):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
-# Return all achievements with user's status
-@achievements.route("/")
-def achievements_page():
+# API for the achievements data
+@achievements.route("/all")
+def get_achievements_json():
+    """API endpoint to get all achievements and user's earned ones"""
     user_id = session.get("user")
-    # current_user = User.query.filter_by(username=user_id).first()
-    current_user = (
-        User.query.options(joinedload(User.achievements)).filter_by(id=user_id).first()
-    )
+    current_user = User.query.options(
+        joinedload(User.achievements)
+    ).filter_by(id=user_id).first()
+    
     if not current_user:
         return jsonify({"success": False, "error": "User not found!"}), 404
 
+    # Automatically check for new achievements when visiting the page
+    from application.services.achievement_engine import evaluate_user, get_achievement_progress
+    evaluate_user(current_user)
+
     user_achievements = {ua.achievement_id for ua in current_user.achievements}
     all_achievements = Achievement.query.all()
+    
+    achievements_data = []
+    for a in all_achievements:
+        d = a.to_dict()
+        curr, req = get_achievement_progress(current_user, a)
+        d["current_progress"] = int(curr) if isinstance(curr, (int, float)) else curr
+        d["requirement_value"] = req
+        achievements_data.append(d)
 
-    if request.is_json or request.accept_mimetypes.accept_json:
-        return jsonify({
-            "status": "success",
-            "data": {
-                "achievements": [a.to_dict() for a in all_achievements],
-                "user_achievements": list(user_achievements)
-            }
-        })
+    return jsonify({
+        "status": "success",
+        "data": {
+            "achievements": achievements_data,
+            "user_achievements": list(user_achievements)
+        }
+    })
+
+
+# Legacy SSR page for achievements
+@achievements.route("/view")
+def achievements_page():
+    user_id = session.get("user")
+    current_user = User.query.options(
+        joinedload(User.achievements)
+    ).filter_by(id=user_id).first()
+    
+    if not current_user:
+        return "User not found", 404
+
+    user_achievements = {ua.achievement_id for ua in current_user.achievements}
+    all_achievements = Achievement.query.all()
 
     return render_template(
         "achievements.html",
