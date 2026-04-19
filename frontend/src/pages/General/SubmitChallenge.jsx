@@ -16,7 +16,6 @@ const SubmitChallenge = () => {
 
     const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:8000';
     const fullApiUrl = apiBase.startsWith('http') ? apiBase : (window.location.origin + apiBase);
-    
     // Improved bookmarklet code
     const bookmarkletCode = `javascript:(function(){
         const url = window.location.href;
@@ -25,7 +24,6 @@ const SubmitChallenge = () => {
             return;
         }
         
-        console.log('Submitting challenge to ${fullApiUrl}...');
         const p=new URLSearchParams();
         p.append('url', url);
         p.append('helpers', '');

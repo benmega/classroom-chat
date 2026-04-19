@@ -121,34 +121,6 @@ def create_app(config_class=None):
 
         scheduler.start()
 
-    @app.template_filter("format_number")
-    def format_number(value, precision=3):
-        try:
-            if value is None:
-                return "0"
-            f_val = float(value)
-            # Format with commas and specified precision
-            formatted = "{:,.{precision}f}".format(f_val, precision=precision)
-            # Remove trailing zeros and decimal point if it's a whole number
-            if "." in formatted:
-                formatted = formatted.rstrip("0").rstrip(".")
-            return formatted
-        except (ValueError, TypeError):
-            return value
-
-    @app.template_filter("format_convo_title")
-    def format_convo_title(title):
-        if title and "Conversation started by User" in title and " at " in title:
-            try:
-                parts = title.split(" at ")
-                if len(parts) >= 2:
-                    date_str = parts[1].split(".")[0]
-                    dt = datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S")
-                    return f"Chat on {dt.strftime('%B %d, %Y')}"
-            except Exception:
-                pass
-        return title
-
     @app.before_request
     def load_user():
         user_id = session.get("user")

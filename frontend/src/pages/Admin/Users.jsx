@@ -7,34 +7,19 @@ import {
     Key, 
     Trash2, 
     RefreshCw,
-    X,
     Shield,
-    Smartphone,
-    Monitor,
     ChevronLeft
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
 import SmartImage from '../../components/common/SmartImage';
+import { 
+    CreateUserModal, 
+    AdjustDucksModal, 
+    ResetPasswordModal 
+} from '../../components/admin/AdminModals';
 import './Users.css';
-
-const Modal = ({ isOpen, onClose, title, children }) => {
-    if (!isOpen) return null;
-    return (
-        <div className="admin-modal-overlay" onClick={onClose}>
-            <div className="admin-modal-content" onClick={e => e.stopPropagation()}>
-                <div className="modal-header">
-                    <h3>{title}</h3>
-                    <button onClick={onClose} className="close-btn"><X size={20} /></button>
-                </div>
-                <div className="modal-body">
-                    {children}
-                </div>
-            </div>
-        </div>
-    );
-};
 
 const Users = () => {
     const navigate = useNavigate();
@@ -47,7 +32,6 @@ const Users = () => {
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [totalUsers, setTotalUsers] = useState(0);
-    const [perPage, setPerPage] = useState(50);
     
     // Modal States
     const [modalUser, setModalUser] = useState(null);
@@ -63,7 +47,6 @@ const Users = () => {
             const response = await client.get(`/api/admin/users?page=${targetPage}&per_page=50`);
             const data = response.data;
             
-            // Handle both old (array) and new (paginated object) response formats for robustness
             if (Array.isArray(data)) {
                 setUsers(data);
                 setTotalUsers(data.length);
@@ -102,6 +85,7 @@ const Users = () => {
             return;
         }
         
+        setFormErrors({});
         setFormLoading(true);
         try {
             const response = await client.post('/api/admin/create_user', formData);
@@ -121,8 +105,13 @@ const Users = () => {
         e.preventDefault();
         const formData = new FormData(e.target);
         
+        if (!formData.get('amount')) {
+            setFormErrors({ amount: 'Adjustment amount is required' });
+            return;
+        }
+
+        setFormErrors({});
         setFormLoading(true);
-        console.log(`Sending duck adjustment for user: ${formData.get('username')}, amount: ${formData.get('amount')}`);
         try {
             const response = await client.post('/api/admin/adjust_ducks', formData);
             if (response.data.success) {
@@ -142,11 +131,19 @@ const Users = () => {
         const formData = new FormData(e.target);
         const data = Object.fromEntries(formData);
         
-        if (data.new_password !== data.confirm_password) {
-            toast.error('Passwords do not match.');
+        const errors = {};
+        if (!data.new_password) errors.new_password = 'New password is required';
+        if (!data.confirm_password) errors.confirm_password = 'Confirmation is required';
+        if (data.new_password && data.confirm_password && data.new_password !== data.confirm_password) {
+            errors.confirm_password = 'Passwords do not match';
+        }
+
+        if (Object.keys(errors).length > 0) {
+            setFormErrors(errors);
             return;
         }
 
+        setFormErrors({});
         setFormLoading(true);
         try {
             const response = await client.post('/api/admin/reset_password', {
@@ -156,7 +153,7 @@ const Users = () => {
             if (response.data.success) {
                 toast.success(response.data.message);
                 setActiveModal(null);
-                fetchUsers(page); // Stay on current page
+                fetchUsers(page);
             }
         } catch (error) {
             toast.error(error.response?.data?.message || 'Failed to reset password.');
@@ -336,7 +333,6 @@ const Users = () => {
                     </tbody>
                 </table>
                 
-                {/* Pagination Controls */}
                 <div className="pagination-container">
                     <div className="pagination-info">
                         Showing <strong>{(page - 1) * 50 + 1}-{Math.min(page * 50, totalUsers)}</strong> of <strong>{totalUsers}</strong> users
@@ -363,83 +359,32 @@ const Users = () => {
                 </div>
             </div>
 
-            {/* Modals - Reused from Dashboard Logic */}
-            <Modal isOpen={activeModal === 'create'} onClose={() => setActiveModal(null)} title="Create New Account">
-                <form onSubmit={handleCreateUser} className="admin-form">
-                    <div className="form-group">
-                        <label>Username</label>
-                        <input type="text" name="username" placeholder="lowercas_only" required />
-                        {formErrors.username && <span className="error">{formErrors.username}</span>}
-                    </div>
-                    <div className="form-group">
-                        <label>Initial Password</label>
-                        <input type="password" name="password" required />
-                        {formErrors.password && <span className="error">{formErrors.password}</span>}
-                    </div>
-                    <div className="form-group">
-                        <label>Initial Duck Balance</label>
-                        <input type="number" name="ducks" defaultValue="0" min="0" />
-                    </div>
-                    <button type="submit" className="submit-btn" disabled={formLoading}>
-                        {formLoading ? 'Creating...' : 'Create User Account'}
-                    </button>
-                </form>
-            </Modal>
+            <CreateUserModal 
+                isOpen={activeModal === 'create'} 
+                onClose={() => setActiveModal(null)} 
+                onSubmit={handleCreateUser} 
+                formErrors={formErrors} 
+                loading={formLoading} 
+            />
 
-            <Modal isOpen={activeModal === 'adjust'} onClose={() => { setActiveModal(null); setModalUser(null); }} title="Adjust Economy">
-                <form onSubmit={handleAdjustDucks} className="admin-form">
-                    <div className="form-group">
-                        <label>Target Student</label>
-                        {modalUser ? (
-                            <div className="user-badge-display">
-                                <SmartImage 
-                                    src={modalUser.profile_picture ? `/user/profile_pictures/${modalUser.profile_picture}` : ''} 
-                                    alt="" 
-                                    className="avatar-small"
-                                    fallbackType="avatar"
-                                />
-                                <div className="user-info-text">
-                                    <span className="user-nickname">{modalUser.nickname || modalUser.username}</span>
-                                                                         <span className="user-handle" style={{ whiteSpace: 'normal', overflow: 'visible', textOverflow: 'clip', maxWidth: 'none', display: 'block', wordBreak: 'break-all' }}>
-                                        @{modalUser.username}
-                                    </span>
-                                </div>
-                                <input type="hidden" name="username" value={modalUser.username} />
-                            </div>
-                        ) : (
-                            <input type="text" name="username" placeholder="Type @username..." required />
-                        )}
-                    </div>
-                    <div className="form-group">
-                        <label>Duck Adjustment</label>
-                        <input type="number" name="amount" step="any" placeholder="e.g. 10 or -5" required />
-                        <small>Positive to award, negative to penalize.</small>
-                    </div>
-                    <button type="submit" className="submit-btn" disabled={formLoading}>
-                        {formLoading ? 'Processing...' : 'Apply Duck Adjustment'}
-                    </button>
-                </form>
-            </Modal>
+            <AdjustDucksModal 
+                isOpen={activeModal === 'adjust'} 
+                onClose={() => { setActiveModal(null); setModalUser(null); }} 
+                onSubmit={handleAdjustDucks} 
+                user={modalUser} 
+                users={users} 
+                formErrors={formErrors} 
+                loading={formLoading} 
+            />
 
-            <Modal isOpen={activeModal === 'reset'} onClose={() => { setActiveModal(null); setModalUser(null); }} title="Force Password Reset">
-                <form onSubmit={handleResetPassword} className="admin-form">
-                    <div className="form-group">
-                        <label>User</label>
-                        <input type="text" name="username" value={modalUser?.username || ''} readOnly className="readonly" />
-                    </div>
-                    <div className="form-group">
-                        <label>New Password</label>
-                        <input type="password" name="new_password" required />
-                    </div>
-                    <div className="form-group">
-                        <label>Confirm New Password</label>
-                        <input type="password" name="confirm_password" required />
-                    </div>
-                    <button type="submit" className="submit-btn danger" disabled={formLoading}>
-                        {formLoading ? 'Resetting...' : 'Update Password'}
-                    </button>
-                </form>
-            </Modal>
+            <ResetPasswordModal 
+                isOpen={activeModal === 'reset'} 
+                onClose={() => { setActiveModal(null); setModalUser(null); }} 
+                onSubmit={handleResetPassword} 
+                user={modalUser} 
+                formErrors={formErrors} 
+                loading={formLoading} 
+            />
         </div>
     );
 };

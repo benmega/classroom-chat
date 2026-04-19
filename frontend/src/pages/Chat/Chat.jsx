@@ -9,7 +9,7 @@ import {
   X
 } from 'lucide-react';
 import EmojiPicker from 'emoji-picker-react';
-import { useSidebar } from '../../context/SidebarContext';
+import useSidebar from '../../hooks/useSidebar';
 import './Chat.css';
 
 import toast from 'react-hot-toast';
@@ -95,11 +95,6 @@ const Chat = () => {
         const response = await client.get(`/message/api/conversations/${user.id}`);
         const historyData = response.data.data || response.data; 
         setConversations(historyData);
-        // Do not auto-select first conversation to allow welcome message to show
-        // if (historyData.length > 0) {
-        //   setActiveConversation(historyData[0]);
-        //   setMessages(historyData[0].messages || []);
-        // }
       } catch {
         console.error('Failed to load conversation history');
       } finally {

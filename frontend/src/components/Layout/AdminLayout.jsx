@@ -19,7 +19,7 @@ import {
     ChevronRight
 } from 'lucide-react';
 import useAuthStore from '../../store/useAuthStore';
-import { useSidebar } from '../../context/SidebarContext';
+import useSidebar from '../../hooks/useSidebar';
 import './AdminLayout.css';
 import SmartImage from '../common/SmartImage';
 

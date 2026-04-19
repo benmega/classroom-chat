@@ -8,14 +8,13 @@ from application.config import Config
 
 
 def request_database_commit():
-    from application import db
-
     """
     Attempts to commit changes to the database session.
 
     Returns:
     bool: True if the commit was successful, False if an exception occurred.
     """
+    from application import db
     try:
         db.session.commit()
         return True

@@ -19728,3 +19728,172 @@ WHERE users_1.id IN (?) ORDER BY messages_1.created_at ASC]
 2026-04-19 22:57:44,504 - application.tasks - INFO - Starting scheduled session cleanup
 2026-04-19 22:57:44,511 - application.tasks - INFO - No stale sessions found
 2026-04-19 22:57:44,511 - apscheduler.executors.default - INFO - Job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-19 22:58:44 +07)" executed successfully
+2026-04-19 22:58:30,517 - apscheduler.executors.default - INFO - Running job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-19 22:59:30 +07)" (scheduled at 2026-04-19 22:58:30.512602+07:00)
+2026-04-19 22:58:30,520 - application.tasks - INFO - Starting scheduled session cleanup
+2026-04-19 22:58:30,545 - application.tasks - INFO - No stale sessions found
+2026-04-19 22:58:30,549 - apscheduler.executors.default - INFO - Job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-19 22:59:30 +07)" executed successfully
+2026-04-19 22:58:44,505 - apscheduler.executors.default - INFO - Running job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-19 22:59:44 +07)" (scheduled at 2026-04-19 22:58:44.493686+07:00)
+2026-04-19 22:58:44,507 - application.tasks - INFO - Starting scheduled session cleanup
+2026-04-19 22:58:44,631 - application.tasks - INFO - No stale sessions found
+2026-04-19 22:58:44,631 - apscheduler.executors.default - INFO - Job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-19 22:59:44 +07)" executed successfully
+2026-04-19 22:59:30,515 - apscheduler.executors.default - INFO - Running job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-19 23:00:30 +07)" (scheduled at 2026-04-19 22:59:30.512602+07:00)
+2026-04-19 22:59:30,517 - application.tasks - INFO - Starting scheduled session cleanup
+2026-04-19 22:59:30,522 - application.tasks - INFO - No stale sessions found
+2026-04-19 22:59:30,526 - apscheduler.executors.default - INFO - Job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-19 23:00:30 +07)" executed successfully
+2026-04-19 22:59:44,505 - apscheduler.executors.default - INFO - Running job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-19 23:00:44 +07)" (scheduled at 2026-04-19 22:59:44.493686+07:00)
+2026-04-19 22:59:44,507 - application.tasks - INFO - Starting scheduled session cleanup
+2026-04-19 22:59:44,523 - application.tasks - INFO - No stale sessions found
+2026-04-19 22:59:44,524 - apscheduler.executors.default - INFO - Job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-19 23:00:44 +07)" executed successfully
+2026-04-19 23:00:30,523 - apscheduler.executors.default - INFO - Running job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-19 23:01:30 +07)" (scheduled at 2026-04-19 23:00:30.512602+07:00)
+2026-04-19 23:00:30,524 - application.tasks - INFO - Starting scheduled session cleanup
+2026-04-19 23:00:30,526 - application.tasks - INFO - No stale sessions found
+2026-04-19 23:00:30,527 - apscheduler.executors.default - INFO - Job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-19 23:01:30 +07)" executed successfully
+2026-04-19 23:00:44,510 - apscheduler.executors.default - INFO - Running job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-19 23:01:44 +07)" (scheduled at 2026-04-19 23:00:44.493686+07:00)
+2026-04-19 23:00:44,525 - application.tasks - INFO - Starting scheduled session cleanup
+2026-04-19 23:00:44,532 - application.tasks - INFO - No stale sessions found
+2026-04-19 23:00:44,542 - apscheduler.executors.default - INFO - Job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-19 23:01:44 +07)" executed successfully
+2026-04-19 23:01:30,565 - apscheduler.executors.default - INFO - Running job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-19 23:02:30 +07)" (scheduled at 2026-04-19 23:01:30.512602+07:00)
+2026-04-19 23:01:30,599 - application.tasks - INFO - Starting scheduled session cleanup
+2026-04-19 23:01:31,183 - application.tasks - INFO - No stale sessions found
+2026-04-19 23:01:31,192 - apscheduler.executors.default - INFO - Job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-19 23:02:30 +07)" executed successfully
+2026-04-19 23:01:44,501 - apscheduler.executors.default - INFO - Running job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-19 23:02:44 +07)" (scheduled at 2026-04-19 23:01:44.493686+07:00)
+2026-04-19 23:01:44,505 - application.tasks - INFO - Starting scheduled session cleanup
+2026-04-19 23:01:46,039 - application.tasks - INFO - No stale sessions found
+2026-04-19 23:01:46,057 - apscheduler.executors.default - INFO - Job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-19 23:02:44 +07)" executed successfully
+2026-04-19 23:02:30,521 - apscheduler.executors.default - INFO - Running job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-19 23:03:30 +07)" (scheduled at 2026-04-19 23:02:30.512602+07:00)
+2026-04-19 23:02:30,523 - application.tasks - INFO - Starting scheduled session cleanup
+2026-04-19 23:02:30,899 - application.tasks - INFO - No stale sessions found
+2026-04-19 23:02:30,899 - apscheduler.executors.default - INFO - Job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-19 23:03:30 +07)" executed successfully
+2026-04-19 23:02:37,869 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Ben\\AntiGravity\\classroom-chat\\backend\\application\\models\\user.py', reloading
+2026-04-19 23:02:39,021 - werkzeug - INFO -  * Restarting with stat
+2026-04-19 23:11:23,017 - application - INFO - Configuring app for environment: development
+2026-04-19 23:11:24,507 - apscheduler.scheduler - INFO - Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2026-04-19 23:11:24,527 - apscheduler.scheduler - INFO - Added job "scheduled_cleanup" to job store "default"
+2026-04-19 23:11:24,528 - apscheduler.scheduler - INFO - Scheduler started
+2026-04-19 23:11:24,539 - werkzeug - INFO -  * Restarting with stat
+2026-04-19 23:11:31,631 - application - INFO - Configuring app for environment: development
+2026-04-19 23:11:32,308 - apscheduler.scheduler - INFO - Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2026-04-19 23:11:32,311 - apscheduler.scheduler - INFO - Added job "scheduled_cleanup" to job store "default"
+2026-04-19 23:11:32,312 - apscheduler.scheduler - INFO - Scheduler started
+2026-04-19 23:11:32,319 - werkzeug - WARNING -  * Debugger is active!
+2026-04-19 23:11:32,322 - werkzeug - INFO -  * Debugger PIN: 135-229-167
+2026-04-19 23:12:24,517 - apscheduler.executors.default - INFO - Running job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-19 23:12:24 +07)" (scheduled at 2026-04-19 23:12:24.506092+07:00)
+2026-04-19 23:12:24,519 - application.tasks - INFO - Starting scheduled session cleanup
+2026-04-19 23:12:24,690 - application.tasks - INFO - No stale sessions found
+2026-04-19 23:12:24,691 - apscheduler.executors.default - INFO - Job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-19 23:13:24 +07)" executed successfully
+2026-04-19 23:12:32,319 - apscheduler.executors.default - INFO - Running job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-19 23:12:32 +07)" (scheduled at 2026-04-19 23:12:32.308940+07:00)
+2026-04-19 23:12:32,319 - application.tasks - INFO - Starting scheduled session cleanup
+2026-04-19 23:12:32,491 - application.tasks - INFO - No stale sessions found
+2026-04-19 23:12:32,491 - apscheduler.executors.default - INFO - Job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-19 23:13:32 +07)" executed successfully
+2026-04-19 23:13:24,514 - apscheduler.executors.default - INFO - Running job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-19 23:14:24 +07)" (scheduled at 2026-04-19 23:13:24.506092+07:00)
+2026-04-19 23:13:24,515 - application.tasks - INFO - Starting scheduled session cleanup
+2026-04-19 23:13:24,672 - application.tasks - INFO - No stale sessions found
+2026-04-19 23:13:24,673 - apscheduler.executors.default - INFO - Job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-19 23:14:24 +07)" executed successfully
+2026-04-19 23:13:32,315 - apscheduler.executors.default - INFO - Running job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-19 23:14:32 +07)" (scheduled at 2026-04-19 23:13:32.308940+07:00)
+2026-04-19 23:13:32,316 - application.tasks - INFO - Starting scheduled session cleanup
+2026-04-19 23:13:32,764 - application.tasks - INFO - No stale sessions found
+2026-04-19 23:13:32,764 - apscheduler.executors.default - INFO - Job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-19 23:14:32 +07)" executed successfully
+2026-04-19 23:14:24,510 - apscheduler.executors.default - INFO - Running job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-19 23:15:24 +07)" (scheduled at 2026-04-19 23:14:24.506092+07:00)
+2026-04-19 23:14:24,511 - application.tasks - INFO - Starting scheduled session cleanup
+2026-04-19 23:14:24,821 - application.tasks - INFO - No stale sessions found
+2026-04-19 23:14:24,821 - apscheduler.executors.default - INFO - Job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-19 23:15:24 +07)" executed successfully
+2026-04-19 23:14:32,313 - apscheduler.executors.default - INFO - Running job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-19 23:15:32 +07)" (scheduled at 2026-04-19 23:14:32.308940+07:00)
+2026-04-19 23:14:32,314 - application.tasks - INFO - Starting scheduled session cleanup
+2026-04-19 23:14:32,720 - application.tasks - INFO - No stale sessions found
+2026-04-19 23:14:32,720 - apscheduler.executors.default - INFO - Job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-19 23:15:32 +07)" executed successfully
+2026-04-19 23:15:24,508 - apscheduler.executors.default - INFO - Running job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-19 23:16:24 +07)" (scheduled at 2026-04-19 23:15:24.506092+07:00)
+2026-04-19 23:15:24,509 - application.tasks - INFO - Starting scheduled session cleanup
+2026-04-19 23:15:24,685 - application.tasks - INFO - No stale sessions found
+2026-04-19 23:15:24,685 - apscheduler.executors.default - INFO - Job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-19 23:16:24 +07)" executed successfully
+2026-04-19 23:15:32,319 - apscheduler.executors.default - INFO - Running job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-19 23:16:32 +07)" (scheduled at 2026-04-19 23:15:32.308940+07:00)
+2026-04-19 23:15:32,319 - application.tasks - INFO - Starting scheduled session cleanup
+2026-04-19 23:15:32,773 - application.tasks - INFO - No stale sessions found
+2026-04-19 23:15:32,774 - apscheduler.executors.default - INFO - Job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-19 23:16:32 +07)" executed successfully
+2026-04-19 23:16:24,517 - apscheduler.executors.default - INFO - Running job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-19 23:17:24 +07)" (scheduled at 2026-04-19 23:16:24.506092+07:00)
+2026-04-19 23:16:24,518 - application.tasks - INFO - Starting scheduled session cleanup
+2026-04-19 23:16:24,672 - application.tasks - INFO - No stale sessions found
+2026-04-19 23:16:24,673 - apscheduler.executors.default - INFO - Job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-19 23:17:24 +07)" executed successfully
+2026-04-19 23:16:32,311 - apscheduler.executors.default - INFO - Running job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-19 23:17:32 +07)" (scheduled at 2026-04-19 23:16:32.308940+07:00)
+2026-04-19 23:16:32,312 - application.tasks - INFO - Starting scheduled session cleanup
+2026-04-19 23:16:32,506 - application.tasks - INFO - No stale sessions found
+2026-04-19 23:16:32,507 - apscheduler.executors.default - INFO - Job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-19 23:17:32 +07)" executed successfully
+2026-04-19 23:17:24,517 - apscheduler.executors.default - INFO - Running job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-19 23:18:24 +07)" (scheduled at 2026-04-19 23:17:24.506092+07:00)
+2026-04-19 23:17:24,518 - application.tasks - INFO - Starting scheduled session cleanup
+2026-04-19 23:17:24,811 - application.tasks - INFO - No stale sessions found
+2026-04-19 23:17:24,812 - apscheduler.executors.default - INFO - Job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-19 23:18:24 +07)" executed successfully
+2026-04-19 23:17:32,311 - apscheduler.executors.default - INFO - Running job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-19 23:18:32 +07)" (scheduled at 2026-04-19 23:17:32.308940+07:00)
+2026-04-19 23:17:32,311 - application.tasks - INFO - Starting scheduled session cleanup
+2026-04-19 23:17:32,467 - application.tasks - INFO - No stale sessions found
+2026-04-19 23:17:32,468 - apscheduler.executors.default - INFO - Job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-19 23:18:32 +07)" executed successfully
+2026-04-19 23:18:24,517 - apscheduler.executors.default - INFO - Running job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-19 23:19:24 +07)" (scheduled at 2026-04-19 23:18:24.506092+07:00)
+2026-04-19 23:18:24,517 - application.tasks - INFO - Starting scheduled session cleanup
+2026-04-19 23:18:24,525 - application.tasks - INFO - No stale sessions found
+2026-04-19 23:18:24,526 - apscheduler.executors.default - INFO - Job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-19 23:19:24 +07)" executed successfully
+2026-04-19 23:18:32,319 - apscheduler.executors.default - INFO - Running job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-19 23:19:32 +07)" (scheduled at 2026-04-19 23:18:32.308940+07:00)
+2026-04-19 23:18:32,320 - application.tasks - INFO - Starting scheduled session cleanup
+2026-04-19 23:18:32,325 - application.tasks - INFO - No stale sessions found
+2026-04-19 23:18:32,325 - apscheduler.executors.default - INFO - Job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-19 23:19:32 +07)" executed successfully
+2026-04-19 23:19:24,520 - apscheduler.executors.default - INFO - Running job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-19 23:20:24 +07)" (scheduled at 2026-04-19 23:19:24.506092+07:00)
+2026-04-19 23:19:24,520 - application.tasks - INFO - Starting scheduled session cleanup
+2026-04-19 23:19:24,629 - application.tasks - INFO - No stale sessions found
+2026-04-19 23:19:24,629 - apscheduler.executors.default - INFO - Job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-19 23:20:24 +07)" executed successfully
+2026-04-19 23:19:32,318 - apscheduler.executors.default - INFO - Running job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-19 23:20:32 +07)" (scheduled at 2026-04-19 23:19:32.308940+07:00)
+2026-04-19 23:19:32,319 - application.tasks - INFO - Starting scheduled session cleanup
+2026-04-19 23:19:32,496 - application.tasks - INFO - No stale sessions found
+2026-04-19 23:19:32,496 - apscheduler.executors.default - INFO - Job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-19 23:20:32 +07)" executed successfully
+2026-04-19 23:20:24,521 - apscheduler.executors.default - INFO - Running job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-19 23:21:24 +07)" (scheduled at 2026-04-19 23:20:24.506092+07:00)
+2026-04-19 23:20:24,521 - application.tasks - INFO - Starting scheduled session cleanup
+2026-04-19 23:20:24,569 - application.tasks - INFO - No stale sessions found
+2026-04-19 23:20:24,569 - apscheduler.executors.default - INFO - Job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-19 23:21:24 +07)" executed successfully
+2026-04-19 23:20:32,314 - apscheduler.executors.default - INFO - Running job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-19 23:21:32 +07)" (scheduled at 2026-04-19 23:20:32.308940+07:00)
+2026-04-19 23:20:32,314 - application.tasks - INFO - Starting scheduled session cleanup
+2026-04-19 23:20:32,361 - application.tasks - INFO - No stale sessions found
+2026-04-19 23:20:32,362 - apscheduler.executors.default - INFO - Job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-19 23:21:32 +07)" executed successfully
+2026-04-19 23:21:24,521 - apscheduler.executors.default - INFO - Running job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-19 23:22:24 +07)" (scheduled at 2026-04-19 23:21:24.506092+07:00)
+2026-04-19 23:21:24,521 - application.tasks - INFO - Starting scheduled session cleanup
+2026-04-19 23:21:24,564 - application.tasks - INFO - No stale sessions found
+2026-04-19 23:21:24,565 - apscheduler.executors.default - INFO - Job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-19 23:22:24 +07)" executed successfully
+2026-04-19 23:21:32,315 - apscheduler.executors.default - INFO - Running job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-19 23:22:32 +07)" (scheduled at 2026-04-19 23:21:32.308940+07:00)
+2026-04-19 23:21:32,316 - application.tasks - INFO - Starting scheduled session cleanup
+2026-04-19 23:21:32,361 - application.tasks - INFO - No stale sessions found
+2026-04-19 23:21:32,361 - apscheduler.executors.default - INFO - Job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-19 23:22:32 +07)" executed successfully
+2026-04-19 23:22:24,519 - apscheduler.executors.default - INFO - Running job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-19 23:23:24 +07)" (scheduled at 2026-04-19 23:22:24.506092+07:00)
+2026-04-19 23:22:24,519 - application.tasks - INFO - Starting scheduled session cleanup
+2026-04-19 23:22:24,616 - application.tasks - INFO - No stale sessions found
+2026-04-19 23:22:24,617 - apscheduler.executors.default - INFO - Job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-19 23:23:24 +07)" executed successfully
+2026-04-19 23:22:32,322 - apscheduler.executors.default - INFO - Running job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-19 23:23:32 +07)" (scheduled at 2026-04-19 23:22:32.308940+07:00)
+2026-04-19 23:22:32,323 - application.tasks - INFO - Starting scheduled session cleanup
+2026-04-19 23:22:32,367 - application.tasks - INFO - No stale sessions found
+2026-04-19 23:22:32,367 - apscheduler.executors.default - INFO - Job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-19 23:23:32 +07)" executed successfully
+2026-04-19 23:23:24,509 - apscheduler.executors.default - INFO - Running job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-19 23:24:24 +07)" (scheduled at 2026-04-19 23:23:24.506092+07:00)
+2026-04-19 23:23:24,509 - application.tasks - INFO - Starting scheduled session cleanup
+2026-04-19 23:23:24,561 - application.tasks - INFO - No stale sessions found
+2026-04-19 23:23:24,562 - apscheduler.executors.default - INFO - Job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-19 23:24:24 +07)" executed successfully
+2026-04-19 23:23:32,312 - apscheduler.executors.default - INFO - Running job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-19 23:24:32 +07)" (scheduled at 2026-04-19 23:23:32.308940+07:00)
+2026-04-19 23:23:32,312 - application.tasks - INFO - Starting scheduled session cleanup
+2026-04-19 23:23:32,357 - application.tasks - INFO - No stale sessions found
+2026-04-19 23:23:32,357 - apscheduler.executors.default - INFO - Job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-19 23:24:32 +07)" executed successfully
+2026-04-19 23:23:49,681 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Ben\\AntiGravity\\classroom-chat\\backend\\application\\__init__.py', reloading
+2026-04-19 23:23:50,054 - werkzeug - INFO -  * Restarting with stat
+2026-04-19 23:23:57,476 - application - INFO - Configuring app for environment: development
+2026-04-19 23:23:58,094 - apscheduler.scheduler - INFO - Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2026-04-19 23:23:58,100 - apscheduler.scheduler - INFO - Added job "scheduled_cleanup" to job store "default"
+2026-04-19 23:23:58,100 - apscheduler.scheduler - INFO - Scheduler started
+2026-04-19 23:23:58,106 - werkzeug - WARNING -  * Debugger is active!
+2026-04-19 23:23:58,109 - werkzeug - INFO -  * Debugger PIN: 135-229-167
+2026-04-19 23:24:23,714 - apscheduler.scheduler - INFO - Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2026-04-19 23:24:23,729 - application - INFO - Database initialized for the first time.
+2026-04-19 23:24:23,729 - apscheduler.scheduler - INFO - Added job "scheduled_cleanup" to job store "default"
+2026-04-19 23:24:23,729 - apscheduler.scheduler - INFO - Scheduler started
+2026-04-19 23:24:24,520 - apscheduler.executors.default - INFO - Running job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-19 23:25:24 +07)" (scheduled at 2026-04-19 23:24:24.506092+07:00)
+2026-04-19 23:24:24,520 - application.tasks - INFO - Starting scheduled session cleanup
+2026-04-19 23:24:24,574 - application.tasks - INFO - No stale sessions found
+2026-04-19 23:24:24,577 - apscheduler.executors.default - INFO - Job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-19 23:25:24 +07)" executed successfully
+2026-04-19 23:24:52,677 - apscheduler.scheduler - INFO - Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2026-04-19 23:24:52,694 - application - INFO - Database initialized for the first time.
+2026-04-19 23:24:52,694 - apscheduler.scheduler - INFO - Added job "scheduled_cleanup" to job store "default"
+2026-04-19 23:24:52,694 - apscheduler.scheduler - INFO - Scheduler started
+2026-04-19 23:24:58,096 - apscheduler.executors.default - INFO - Running job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-19 23:25:58 +07)" (scheduled at 2026-04-19 23:24:58.094034+07:00)
+2026-04-19 23:24:58,096 - application.tasks - INFO - Starting scheduled session cleanup
+2026-04-19 23:24:58,154 - application.tasks - INFO - No stale sessions found
+2026-04-19 23:24:58,155 - apscheduler.executors.default - INFO - Job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-19 23:25:58 +07)" executed successfully

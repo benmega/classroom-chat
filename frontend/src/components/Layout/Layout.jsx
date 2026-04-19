@@ -15,7 +15,7 @@ import {
     Menu,
     X
 } from 'lucide-react';
-import { useSidebar } from '../../context/SidebarContext';
+import useSidebar from '../../hooks/useSidebar';
 
 import './Layout.css';
 import SmartImage from '../common/SmartImage';

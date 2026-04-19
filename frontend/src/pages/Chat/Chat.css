@@ -337,7 +337,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    marginBottom: 0.5rem;
+    margin-bottom: 0.5rem;
 }
 
 .sidebar-header h2 {
@@ -443,7 +443,7 @@
 
 .conv-title {
     font-size: var(--font-md);
-    fontWeight: 600;
+    font-weight: 600;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -451,13 +451,13 @@
 }
 
 .conv-date {
-    fontSize: 0.75rem;
+    font-size: 0.75rem;
     color: var(--text-muted);
-    flexShrink: 0;
+    flex-shrink: 0;
 }
 
 .conv-last-msg {
-    fontSize: var(--font-sm);
+    font-size: var(--font-sm);
     color: var(--text-secondary);
     overflow: hidden;
     text-overflow: ellipsis;
@@ -466,7 +466,7 @@
 
 .empty-search {
     padding: 2rem;
-    textAlign: center;
+    text-align: center;
     color: var(--text-muted);
 }
 
@@ -504,22 +504,22 @@
 }
 
 .message-bubble {
-    maxWidth: min(80%, 650px);
+    max-width: min(80%, 650px);
     padding: 0.6rem 1rem;
-    borderRadius: 18px 18px 4px 18px;
+    border-radius: 18px 18px 4px 18px;
     background: var(--bg-primary);
     color: var(--text-primary);
-    boxShadow: var(--shadow-sm);
-    fontSize: var(--font-md);
-    lineHeight: 1.5;
-    overflowWrap: anywhere;
+    box-shadow: var(--shadow-sm);
+    font-size: var(--font-md);
+    line-height: 1.5;
+    overflow-wrap: anywhere;
     wordBreak: break-word;
 }
 
 .chat-message-group.user .message-bubble {
     background: var(--primary-color);
     color: white;
-    borderRadius: 18px 18px 18px 4px;
+    border-radius: 18px 18px 18px 4px;
 }
 
 .chat-message-group.other .message-bubble {
@@ -527,5 +527,5 @@
 }
 
 /* Corrected bubble points */
-.chat-message-group.user .message-bubble { borderRadius: 18px 18px 4px 18px; }
-.chat-message-group.other .message-bubble { borderRadius: 18px 18px 18px 4px; }
+.chat-message-group.user .message-bubble { border-radius: 18px 18px 4px 18px; }
+.chat-message-group.other .message-bubble { border-radius: 18px 18px 18px 4px; }

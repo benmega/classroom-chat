@@ -106,7 +106,6 @@ class User(db.Model):
             d.pop(field, None)
         return d
 
-
     @hybrid_property
     def username(self):
         return self._username
@@ -143,9 +142,6 @@ class User(db.Model):
     def check_password(self, password):
         """Check the given password against the stored hash"""
         return check_password_hash(self.password_hash, password)
-
-    def default_nickname(context):
-        return context.get_current_parameters().get("username")
 
     @classmethod
     def set_online(cls, user_id, online=True):

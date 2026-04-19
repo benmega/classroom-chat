@@ -1,6 +1,6 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useState, useContext } from 'react';
 
-const SidebarContext = createContext();
+export const SidebarContext = createContext();
 
 export const SidebarProvider = ({ children }) => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -15,7 +15,6 @@ export const SidebarProvider = ({ children }) => {
     );
 };
 
-// TODO: Split context and provider into separate files to fix Fast Refresh lint warning
 export const useSidebar = () => {
     const context = useContext(SidebarContext);
     if (!context) {
@@ -23,3 +22,5 @@ export const useSidebar = () => {
     }
     return context;
 };
+
+export default useSidebar;
