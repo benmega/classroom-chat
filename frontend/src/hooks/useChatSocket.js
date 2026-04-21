@@ -3,26 +3,28 @@ import { io } from 'socket.io-client';
 
 const getSocketUrl = () => {
   if (import.meta.env.VITE_API_URL) return import.meta.env.VITE_API_URL;
-  return import.meta.env.MODE === 'development' ? 'http://localhost:8000' : window.location.origin;
+  
+  // Use same origin in both dev and prod to leverage Vite proxy/same-host serving.
+  // Vite is configured to proxy /socket.io in vite.config.js
+  return `${window.location.protocol}//${window.location.hostname}${window.location.port ? `:${window.location.port}` : ''}`;
 };
 
 const SOCKET_URL = getSocketUrl();
 
-// Singleton socket instance — lives for the lifetime of the app,
-// not re-created on every component mount.
+// Singleton socket instance
 let _socket = null;
 
 const getSocket = () => {
-  if (!_socket || _socket.disconnected) {
+  if (!_socket) {
     _socket = io(SOCKET_URL, {
       withCredentials: true,
-      // Prefer WebSocket from the start to avoid the polling→upgrade
-      // handshake that can produce "Invalid frame header" errors when
-      // the connection is torn down mid-upgrade.
-      transports: ['websocket', 'polling'],
+      // Polling first then upgrade is more reliable through proxies.
+      transports: ['polling', 'websocket'],
       reconnection: true,
-      reconnectionAttempts: 10,
-      reconnectionDelay: 2000,
+      reconnectionAttempts: Infinity,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
+      timeout: 20000,
     });
   }
   return _socket;

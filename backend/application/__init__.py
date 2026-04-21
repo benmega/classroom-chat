@@ -17,6 +17,9 @@ from application.models.user import User
 from application.routes import register_blueprints
 
 from .license_checker import load_license
+from application.utilities.helper_functions import format_number
+from flask_wtf.csrf import generate_csrf
+
 
 
 def create_app(config_class=None):
@@ -57,10 +60,18 @@ def create_app(config_class=None):
     app = Flask(__name__, template_folder=template_folder, static_folder=static_folder)
     app.config.from_object(config_class)
 
+    # In production, TEMPLATE_FOLDER points to the built frontend/dist.
+    # We add frontend/templates as a fallback so Flask-Admin templates are still found.
+    from jinja2 import ChoiceLoader, FileSystemLoader
+    app.jinja_loader = ChoiceLoader([
+        app.jinja_loader,
+        FileSystemLoader(os.path.join(app.config.get('BASE_DIR', ''), 'frontend', 'templates'))
+    ])
+
     cors_origins = getattr(config_class, "CORS_ORIGINS", [
-        "http://localhost:5173",
-        "http://localhost:5174",
-        "http://localhost:5175",
+        "",
+        "",
+        "",
         "http://localhost:8000",
         "http://127.0.0.1:5173",
         "http://127.0.0.1:5174",
@@ -146,6 +157,17 @@ def create_app(config_class=None):
             ),
             429,
         )
+
+    @app.template_filter('format_number')
+    def format_number_filter(value, precision=0):
+        return format_number(value, precision)
+
+    @app.after_request
+    def set_csrf_cookie(response):
+        # We set the CSRF cookie so the frontend (Axios) can read it and send it back in headers.
+        # This is safe because it's only accessible to our own frontend via SameSite=Lax/Strict.
+        response.set_cookie('csrf_token', generate_csrf())
+        return response
 
     return app
 

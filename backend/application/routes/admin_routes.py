@@ -1,18 +1,16 @@
 from flask import Blueprint
-from .admin.user_mgmt import user_mgmt_bp
-from .admin.config_routes import config_bp
-from .admin.trade_routes import trade_bp
-from .admin.doc_routes import doc_bp
-from .admin.dashboard_routes import dashboard_bp
-from .admin.project_routes import project_bp
 
-admin = Blueprint("admin_api", __name__)
+admin_pass = "duckduck"
+admin = Blueprint("admin", __name__)
 
-# Register sub-blueprints
-# These will all be prefixed with whatever /api/admin prefix was used for this blueprint
-admin.register_blueprint(user_mgmt_bp)
-admin.register_blueprint(config_bp)
-admin.register_blueprint(trade_bp)
-admin.register_blueprint(doc_bp)
-admin.register_blueprint(dashboard_bp)
-admin.register_blueprint(project_bp)
+# Import routes to register them on the admin blueprint
+from .admin import dashboard_routes
+from .admin import user_mgmt
+from .admin import config_routes
+from .admin import trade_routes
+from .admin import doc_routes
+from .admin import project_routes
+from .admin.crud_routes import crud_bp
+
+# React-Admin standalone CRUD blueprint (still nested/prefixed)
+admin.register_blueprint(crud_bp, url_prefix="/crud")

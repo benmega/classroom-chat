@@ -37,10 +37,11 @@ class User(db.Model):
     earned_ducks = db.Column(db.Double, nullable=False, default=0)
     duck_balance = db.Column(db.Double, nullable=False, default=0)
     last_daily_duck = db.Column(db.Date, nullable=True)
+    last_achievement_evaluation = db.Column(db.DateTime, nullable=True)
 
     # Relationships
-    skills = db.relationship("Skill", backref="user", lazy=True)
-    projects = db.relationship("Project", backref="user", lazy=True)
+    skills = db.relationship("Skill", backref="user", lazy=True, cascade="all, delete-orphan")
+    projects = db.relationship("Project", backref="user", lazy=True, cascade="all, delete-orphan")
     achievements = db.relationship(
         "UserAchievement", backref="user", lazy=True, cascade="all, delete-orphan"
     )
@@ -75,8 +76,20 @@ class User(db.Model):
         
         return d
 
+    def to_dict_auth(self):
+        """Ultra-lightweight dictionary for frequent auth status checks."""
+        return {
+            "id": self.id,
+            "username": self.username,
+            "nickname": self.nickname,
+            "profile_picture_url": f"/user/profile_pictures/{self.profile_picture}" if self.profile_picture else "/static/images/Default_pfp.jpg",
+            "is_admin": self.is_admin,
+            "is_approved": self.is_approved,
+            "slug": self.slug
+        }
+
     def to_dict_summary(self):
-        """Lighter dictionary for list views, avoids expensive queries/processing."""
+        """Lighter dictionary for list views, avoids extremely expensive processing."""
         d = {
             "id": self.id,
             "username": self.username,
@@ -94,16 +107,13 @@ class User(db.Model):
             "earned_ducks": self.earned_ducks,
             "packets": self.packets,
             
-            # Progress counters for profile headers - Still slightly expensive but better than full logs
+            # Progress counters - cached or slightly expensive but necessary for some views
             "total_levels": self.get_progress("codecombat.com") + self.get_progress("www.ozaria.com"),
             "cc_levels": self.get_progress("codecombat.com"),
             "oz_levels": self.get_progress("www.ozaria.com"),
             "cc_percent": self.get_progress_percent("codecombat.com"),
             "oz_percent": self.get_progress_percent("www.ozaria.com"),
         }
-        # Explicit defensive safety check
-        for field in ['password_hash', 'salt', 'ip_address']:
-            d.pop(field, None)
         return d
 
     @hybrid_property

@@ -25,6 +25,11 @@ const AdvancedPanel = () => {
     const [logs, setLogs] = useState('');
     const [showLogModal, setShowLogModal] = useState(false);
     const [isFetchingLogs, setIsFetchingLogs] = useState(false);
+    
+    // In production, the API is served from the same origin as the frontend.
+    // In development, we fallback to the known Flask port (8000).
+    const apiBaseUrl = import.meta.env.VITE_API_URL || 
+                      (import.meta.env.DEV ? 'http://localhost:8000' : window.location.origin);
 
     const fetchViews = async () => {
         setIsLoading(true);
@@ -76,16 +81,16 @@ const AdvancedPanel = () => {
                 <section className="model-links-section card">
                     <div className="section-header">
                         <Database size={24} />
-                        <h2>Model Views</h2>
+                        <h2>Model Views (Legacy SSR)</h2>
                     </div>
-                    <p className="section-desc">Select a database model to view, create, or edit raw records via the Flask-Admin interface.</p>
+                    <p className="section-desc">Traditional server-rendered database management. For modern headless management, use the <strong>Headless CRUD</strong> utility below.</p>
                     
                     <div className="model-list">
                         {views.length > 0 ? (
                             views.map((view, idx) => (
                                 <a 
                                     key={idx}
-                                    href={`/api/admin/advanced/${view.endpoint}/`} 
+                                    href={`${apiBaseUrl}/api/admin/advanced/${view.endpoint}/`} 
                                     className="model-item"
                                     target="_blank"
                                     rel="noopener noreferrer"
@@ -119,12 +124,23 @@ const AdvancedPanel = () => {
                         </div>
                     </section>
 
+                    <section className="utility-card card premium-card">
+                        <div className="utility-icon premium"><Layers size={20} /></div>
+                        <div className="utility-content">
+                            <h3>Headless Database Management</h3>
+                            <p>Manage all database records via the new React-based headless interface.</p>
+                            <button className="btn-premium" onClick={() => navigate('/admin/advanced-crud')}>
+                                <Activity size={16} /> Open Headless CRUD
+                            </button>
+                        </div>
+                    </section>
+
                     <section className="utility-card card">
                         <div className="utility-icon primary"><Terminal size={20} /></div>
                         <div className="utility-content">
                             <h3>API Documentation</h3>
                             <p>Browse available endpoints and request schemas.</p>
-                            <button className="btn-utility" onClick={() => window.open('/api/docs/', '_blank')}>
+                            <button className="btn-utility" onClick={() => window.open(`${apiBaseUrl}/api/docs/`, '_blank')}>
                                 <Code size={16} /> View Swagger
                             </button>
                         </div>

@@ -12,7 +12,6 @@ from flask import (
     flash,
     redirect,
     url_for,
-    render_template,
 )
 
 from application.ai.ai_teacher import get_ai_response
@@ -22,6 +21,7 @@ from application.models.configuration import Configuration
 from application.models.conversation import Conversation, conversation_users
 from application.models.user import User
 from application.utilities.db_helpers import get_user, save_message_to_db
+from sqlalchemy.orm import joinedload, selectinload
 
 message = Blueprint("message", __name__)
 
@@ -120,7 +120,11 @@ def set_active_conversation():
 @message.route("/get_current_conversation", methods=["GET"])
 @limiter.limit("60 per minute")
 def get_current_conversation():
-    conversation = Conversation.query.order_by(Conversation.created_at.desc()).first()
+    conversation = (
+        Conversation.query.options(joinedload(Conversation.messages))
+        .order_by(Conversation.created_at.desc())
+        .first()
+    )
 
     if not conversation:
         return jsonify({"error": "No active conversation available"}), 400
@@ -169,7 +173,7 @@ def get_conversation():
     if not conversation_id:
         return jsonify({"error": "No active conversation"}), 400
 
-    conversation = Conversation.query.get(conversation_id)
+    conversation = Conversation.query.options(joinedload(Conversation.messages)).get(conversation_id)
 
     if not conversation:
         return jsonify({"error": "Conversation not found"}), 404
@@ -185,15 +189,17 @@ def get_conversation():
 @message.route("/conversation_history", methods=["GET"])
 def conversation_history():
     if "user" not in session:
-        flash("You must be logged in to view your conversation history.", "error")
-        return redirect(url_for("user.login"))
+        if request.is_json or request.accept_mimetypes.accept_json:
+            return {"error": "Authentication required"}, 401
+        return redirect("/login")
 
     user_id = session["user"]
     user = User.query.filter_by(id=user_id).first()
 
     if not user:
-        flash("User not found.", "error")
-        return redirect(url_for("user.login"))
+        if request.is_json or request.accept_mimetypes.accept_json:
+            return {"error": "User not found"}, 404
+        return redirect("/login")
 
     # 1. Join for participated conversations
     participated_ids = [c.id for c in Conversation.query.filter(Conversation.users.any(id=user_id)).all()]
@@ -214,13 +220,24 @@ def conversation_history():
 
     conversations = (
         Conversation.query.filter(query_filter)
+        .options(selectinload(Conversation.messages))
         .order_by(Conversation.created_at.desc())
         .all()
     )
 
-    return render_template(
-        "chat/conversation_history.html", conversations=conversations
-    )
+    if request.is_json or request.accept_mimetypes.accept_json:
+        return jsonify(
+            [
+                {
+                    "conversation_id": conv.id,
+                    "title": conv.title,
+                    "created_at": conv.created_at.isoformat() if conv.created_at else None,
+                }
+                for conv in conversations
+            ]
+        )
+
+    return redirect("/chat/history")
 
 
 @message.route("/api/conversations/<int:user_id>", methods=["GET"])
@@ -244,6 +261,7 @@ def get_conversation_history(user_id):
 
     conversations = (
         Conversation.query.filter(query_filter)
+        .options(selectinload(Conversation.messages))
         .order_by(Conversation.created_at.desc())
         .all()
     )
@@ -272,9 +290,10 @@ def view_conversation(conversation_id):
         "messages": [serialize_message(msg) for msg in conversation.messages],
     }
 
-    return render_template(
-        "chat/view_conversation.html", conversation=conversation_data
-    )
+    if request.is_json or request.accept_mimetypes.accept_json:
+        return jsonify(conversation_data)
+
+    return redirect(f"/chat/view/{conversation_id}")
 
 
 # ============================================================================

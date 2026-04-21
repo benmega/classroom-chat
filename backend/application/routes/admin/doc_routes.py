@@ -5,9 +5,10 @@ from application.decorators.api_response import api_response
 from application.decorators.admin_required import admin_only
 from application.utilities.helper_functions import format_file_size
 
-doc_bp = Blueprint("admin_doc", __name__)
+from ..admin_routes import admin
 
-@doc_bp.route("/documents", methods=["GET"])
+
+@admin.route("/documents", methods=["GET"])
 @admin_only
 @api_response
 def list_documents():
@@ -35,7 +36,7 @@ def list_documents():
     documents.sort(key=lambda x: x["created"], reverse=True)
     return {"documents": documents, "total": len(documents)}
 
-@doc_bp.route("/documents/<category>/<filename>/download", methods=["GET"])
+@admin.route("/documents/<category>/<filename>/download", methods=["GET"])
 @admin_only
 def download_document(category, filename):
     if category not in ["image", "pdf", "other"]:
@@ -54,7 +55,7 @@ def download_document(category, filename):
 
     return send_file(file_path, as_attachment=True, download_name=filename)
 
-@doc_bp.route("/documents/<category>/<filename>/view", methods=["GET"])
+@admin.route("/documents/<category>/<filename>/view", methods=["GET"])
 @admin_only
 def view_document(category, filename):
     if category not in ["image", "pdf", "other"]:
@@ -73,7 +74,7 @@ def view_document(category, filename):
 
     return send_file(file_path)
 
-@doc_bp.route("/delete-document", methods=["POST"])
+@admin.route("/delete-document", methods=["POST"])
 @admin_only
 def delete_document():
     category = request.form.get("category")
@@ -102,7 +103,7 @@ def delete_document():
     except Exception as e:
         return jsonify({"success": False, "message": f"Failed to delete file: {str(e)}"}), 500
 
-@doc_bp.route("/documents/stats", methods=["GET"])
+@admin.route("/documents/stats", methods=["GET"])
 @admin_only
 @api_response
 def document_stats():

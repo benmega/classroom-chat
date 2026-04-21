@@ -228,16 +228,24 @@ const Profile = () => {
 
             <div className="dashboard-grid">
                 <div className="column-left">
-                    {target.bio && (
-                        <section className="dashboard-panel">
+                    {(target.bio || isOwner) ? (
+                        <section className="dashboard-panel bio-section">
                             <div className="panel-header">
                                 <h2><User size={20} /> About Me</h2>
                             </div>
                             <div className="bio-panel-content">
-                                <p className="bio-text">{target.bio}</p>
+                                {target.bio ? (
+                                    <p className="bio-text">{target.bio}</p>
+                                ) : (
+                                    <p className="bio-placeholder">
+                                        {isOwner 
+                                            ? "You haven't added a biography yet. Click 'Edit Profile' to tell your classmates about yourself!" 
+                                            : "This student hasn't shared a biography yet."}
+                                    </p>
+                                )}
                             </div>
                         </section>
-                    )}
+                    ) : null}
 
                     <CourseProgress target={target} />
                     

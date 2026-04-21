@@ -113,6 +113,26 @@ const Analytics = () => {
         }]
     };
 
+    const handleExport = async () => {
+        try {
+            const response = await client.get('/api/admin/export/transactions', {
+                responseType: 'blob'
+            });
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            const filename = `duck_transactions_${new Date().toISOString().slice(0, 19).replace(/[:T]/g, '_')}.csv`;
+            link.setAttribute('download', filename);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            toast.success('Transaction history exported.');
+        } catch (error) {
+            console.error('Export failed:', error);
+            toast.error('Failed to export transaction data.');
+        }
+    };
+
     return (
         <div className="admin-analytics-page">
             <header className="page-header">
@@ -134,7 +154,7 @@ const Analytics = () => {
                     <button className="icon-btn" onClick={fetchAnalytics} disabled={isRefreshing}>
                         <RefreshCw size={20} className={isRefreshing ? 'spinning' : ''} />
                     </button>
-                    <button className="primary-btn">
+                    <button className="primary-btn" onClick={handleExport}>
                         <Download size={18} /> Export CSV
                     </button>
                 </div>

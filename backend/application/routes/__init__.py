@@ -28,10 +28,10 @@ from .user_routes import user
 
 
 def register_blueprints(app: Flask):
+    app.register_blueprint(admin_api_bp, url_prefix="/api/admin")
     init_admin(app)
     app.register_blueprint(user, url_prefix="/user")
     app.register_blueprint(ai, url_prefix="/ai")
-    app.register_blueprint(admin_api_bp, url_prefix="/api/admin")
     app.register_blueprint(upload, url_prefix="/upload")
     app.register_blueprint(message, url_prefix="/message")
     app.register_blueprint(duck_trade, url_prefix="/duck_trade")

@@ -7,7 +7,7 @@ Summary: Flask routes for challenge routes functionality (Merged Version).
 import re
 from datetime import datetime
 
-from flask import Blueprint, request, session, render_template, redirect, url_for, flash, jsonify
+from flask import Blueprint, request, session, redirect, url_for, flash, jsonify
 from flask_cors import cross_origin
 
 from application import Configuration
@@ -57,7 +57,7 @@ def submit_challenge():
     if request.method != "POST":
         if request.is_json or request.accept_mimetypes.accept_json:
             return jsonify({"status": "ready"})
-        return render_template("submit_challenge.html")
+        return redirect("/challenges/submit")
 
     # Handle both Form and JSON data
     if request.is_json:
@@ -72,11 +72,7 @@ def submit_challenge():
 
     if not url:
         msg = "Challenge URL is required"
-        if request.is_json or request.accept_mimetypes.accept_json:
-            return jsonify({"success": False, "message": msg}), 400
-        return render_template(
-            "submit_challenge.html", success=False, message=msg
-        )
+        return jsonify({"success": False, "message": msg}), 400
 
     duck_multiplier = config.duck_multiplier
 
@@ -100,19 +96,12 @@ def submit_challenge():
         duck_reward = details.get("duck_reward", 0)
         message = f"Congrats {user.username}, you earned {duck_reward} ducks!"
         
-        if request.is_json or request.accept_mimetypes.accept_json:
-            return jsonify({
-                "success": True, 
-                "message": message, 
-                "duck_reward": duck_reward,
-                "quack_count": duck_reward # Matches the quack logic in the original template
-            })
-
-        return render_template(
-            "submit_challenge.html",
-            success=True,
-            message=message,
-        )
+        return jsonify({
+            "success": True, 
+            "message": message, 
+            "duck_reward": duck_reward,
+            "quack_count": duck_reward 
+        })
 
     # Failure path
     msg = details.get(
@@ -120,10 +109,7 @@ def submit_challenge():
         "Mr. Mega does not recognize this challenge. Are you sure this is the right link?",
     )
     
-    if request.is_json or request.accept_mimetypes.accept_json:
-        return jsonify({"success": False, "message": msg}), 400
-
-    return render_template("submit_challenge.html", success=False, message=msg)
+    return jsonify({"success": False, "message": msg}), 400
 
 
 def detect_and_handle_challenge_url(message, username, duck_multiplier=1, helper=None):

@@ -21,6 +21,7 @@ import client from '../../api/client';
 import toast from 'react-hot-toast';
 import './Achievements.css';
 import '../../assets/css/sprite.css'; 
+import Skeleton from '../../components/common/Skeleton';
 
 const StatCard = ({ icon: Icon, label, value, subtext, color }) => (
     <div className={`ach-stat-card ${color}`}>
@@ -109,59 +110,77 @@ const Achievements = () => {
 
     if (isLoading) {
         return (
-            <div className="ach-loading-container">
-                <div className="ach-loader"></div>
-                <p>Curating your achievements...</p>
+            <div className="achievements-page">
+                <div className="ach-controls card">
+                    <div className="header-container">
+                        <Skeleton height="44px" width="44px" borderRadius="12px" />
+                        <Skeleton height="44px" width="300px" />
+                    </div>
+                    <Skeleton height="40px" />
+                </div>
+                <div className="achievements-grid">
+                    {[1, 2, 3, 4, 5, 6].map(i => (
+                        <div key={i} className="achievement-card locked">
+                            <Skeleton height="120px" className="skeleton-card" />
+                            <div className="ach-info">
+                                <Skeleton height="20px" width="70%" className="skeleton-title" />
+                                <Skeleton height="15px" width="90%" />
+                                <Skeleton height="15px" width="40%" />
+                            </div>
+                        </div>
+                    ))}
+                </div>
             </div>
         );
     }
 
     return (
         <div className="achievements-page">
-            <header className="ach-header">
-                <div className="ach-header-content">
-                    <div className="ach-title-row">
-                        <h1>Hall of Achievements</h1>
-                        {stats && (
-                            <div className="ach-header-stats">
-                                <div className="ach-header-stat">
-                                    <Award size={18} />
-                                    <span><strong>{stats.earnedCount}</strong> of {stats.totalPossible} Badges</span>
-                                </div>
-                                <div className="ach-header-progress-bar">
-                                    <div className="progress-track">
-                                        <div className="progress-fill" style={{ width: `${stats.percent}%` }}></div>
-                                    </div>
-                                    <span className="percent">{stats.percent}%</span>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                    <p>Master new skills and unlock badges to earn ducks and climb the community leaderboard.</p>
-                </div>
-            </header>
-
             <div className="ach-controls card">
-                <div className="search-box">
-                    <Search size={20} />
-                    <input 
-                        type="text" 
-                        placeholder="Search badges by name or requirement..." 
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                    />
+                <div className="ach-upper-controls">
+                    <div className="ach-brand">
+                        <Award size={32} />
+                        <div>
+                            <h1>Hall of Achievements</h1>
+                            <p>Track your progress and earn badges.</p>
+                        </div>
+                    </div>
+
+                    {stats && (
+                        <div className="ach-global-stats">
+                            <div className="ach-progress-info">
+                                <span className="stat-text"><strong>{stats.earnedCount}</strong> / {stats.totalPossible} Badges</span>
+                                <span className="percent">{stats.percent}%</span>
+                            </div>
+                            <div className="progress-track-outer">
+                                <div className="progress-fill-outer" style={{ width: `${stats.percent}%` }}></div>
+                            </div>
+                        </div>
+                    )}
                 </div>
-                <div className="filter-scroll">
-                    {categories.map(cat => (
-                        <button 
-                            key={cat.id}
-                            className={`filter-chip ${selectedType === cat.id ? 'active' : ''}`}
-                            onClick={() => setSelectedType(cat.id)}
-                        >
-                            {cat.label}
-                            <span className="count">{cat.count}</span>
-                        </button>
-                    ))}
+
+                <div className="ach-lower-controls">
+                    <div className="search-box">
+                        <Search size={20} />
+                        <input 
+                            type="text" 
+                            placeholder="Search badges..." 
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                    </div>
+                    <div className="filter-scroll">
+                        {categories.map(cat => (
+                            <button 
+                                key={cat.id}
+                                className={`filter-chip ${selectedType === cat.id ? 'active' : ''}`}
+                                onClick={() => setSelectedType(cat.id)}
+                            >
+                                {cat.label}
+                                <span className="count">{cat.count}</span>
+                            </button>
+                        ))}
+                    </div>
                 </div>
             </div>
 

@@ -16,7 +16,7 @@ class SessionLog(db.Model):
     __tablename__ = "session_logs"
 
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False, index=True)
     start_time = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     end_time = db.Column(db.DateTime, nullable=True)  # set when user goes offline
     last_seen = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)

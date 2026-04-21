@@ -121,6 +121,7 @@ const PendingUsers = () => {
 
                             <div className="user-actions">
                                 <button 
+                                    type="button"
                                     className="btn-reject"
                                     onClick={() => handleReject(user.id)}
                                     disabled={isProcessing === user.id}
@@ -129,6 +130,7 @@ const PendingUsers = () => {
                                     <Trash2 size={18} /> Reject
                                 </button>
                                 <button 
+                                    type="button"
                                     className="btn-approve"
                                     onClick={() => handleApprove(user.id)}
                                     disabled={isProcessing === user.id}

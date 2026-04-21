@@ -14,7 +14,7 @@ const SubmitChallenge = () => {
     const [showOptional, setShowOptional] = useState(false);
     const bookmarkletRef = useRef(null);
 
-    const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+    const apiBase = import.meta.env.VITE_API_URL || '';
     const fullApiUrl = apiBase.startsWith('http') ? apiBase : (window.location.origin + apiBase);
     // Improved bookmarklet code
     const bookmarkletCode = `javascript:(function(){

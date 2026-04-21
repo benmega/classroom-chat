@@ -9,7 +9,10 @@ import {
     Filter,
     Search,
     ChevronRight,
-    ArrowLeft
+    ArrowLeft,
+    Code,
+    Video,
+    Github
 } from 'lucide-react';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
@@ -100,20 +103,45 @@ const AdminProjects = () => {
                                 )}
                                 {selectedProject.github_link && (
                                     <a href={selectedProject.github_link} target="_blank" rel="noopener noreferrer" className="project-link github">
-                                        <ExternalLink size={18} /> GitHub Repo
+                                        <Github size={18} /> GitHub Repo
+                                    </a>
+                                )}
+                                {selectedProject.video_url && (
+                                    <a href={selectedProject.video_url} target="_blank" rel="noopener noreferrer" className="project-link video">
+                                        <Video size={18} /> Watch Recording
                                     </a>
                                 )}
                             </div>
 
-                            {selectedProject.image_url && (
-                                <SmartImage 
-                                    src={`/static/${selectedProject.image_url}`} 
-                                    alt="Preview" 
-                                    className="review-preview-img" 
-                                    fallbackType="project"
-                                />
-                            )}
-                        </div>
+                                {selectedProject.image_url && (
+                                    <SmartImage 
+                                        src={`/static/${selectedProject.image_url}`} 
+                                        alt="Preview" 
+                                        className="review-preview-img" 
+                                        fallbackType="project"
+                                    />
+                                )}
+
+                                <div className="extra-context-section">
+                                    {selectedProject.code_snippet && (
+                                        <div className="context-block">
+                                            <h4><Code size={18} /> Code Snippet</h4>
+                                            <pre className="code-view">
+                                                <code>{selectedProject.code_snippet}</code>
+                                            </pre>
+                                        </div>
+                                    )}
+
+                                    {selectedProject.video_transcript && (
+                                        <div className="context-block">
+                                            <h4><Video size={18} /> Video Transcript</h4>
+                                            <div className="transcript-view">
+                                                {selectedProject.video_transcript}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
 
                         <div className="review-actions-panel">
                             <h3 className="section-title"><MessageSquare size={18} /> Teacher Feedback</h3>
@@ -185,7 +213,18 @@ const AdminProjects = () => {
             </div>
 
             {isLoading ? (
-                <div className="loading-state">Loading projects...</div>
+                <div className="projects-list-grid">
+                    {[1, 2, 3, 4, 5, 6].map(i => (
+                        <div key={i} className="admin-project-card">
+                            <Skeleton height="180px" borderRadius="12px 12px 0 0" />
+                            <div className="p-content" style={{ padding: '20px' }}>
+                                <Skeleton height="24px" width="70%" className="skeleton-title" />
+                                <Skeleton height="16px" width="40%" />
+                                <Skeleton height="40px" width="100%" style={{ marginTop: '15px' }} />
+                            </div>
+                        </div>
+                    ))}
+                </div>
             ) : (
                 <div className="projects-list-grid">
                     {filteredProjects.length > 0 ? (

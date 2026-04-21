@@ -48,6 +48,49 @@
                 width: 100%;
             }
         }
+
+        /* Modern Toggle Switch for Checkboxes */
+        .admin-body input[type="checkbox"] {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 44px;
+            height: 22px;
+            background: #cbd5e1;
+            border-radius: 22px;
+            position: relative;
+            cursor: pointer;
+            transition: background 0.3s;
+            vertical-align: middle;
+            border: none;
+            outline: none;
+            margin: 0;
+        }
+
+        .admin-body input[type="checkbox"]:checked {
+            background: #3b82f6;
+        }
+
+        .admin-body input[type="checkbox"]::after {
+            content: "";
+            width: 18px;
+            height: 18px;
+            background: white;
+            border-radius: 50%;
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            transition: transform 0.3s;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+
+        .admin-body input[type="checkbox"]:checked::after {
+            transform: translateX(22px);
+        }
+
+        /* Fix for Flask-Admin specific alignment */
+        .admin-body .form-group input[type="checkbox"] {
+            display: inline-block;
+        }
     </style>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
@@ -60,7 +103,7 @@
         <nav class="navbar navbar-expand-lg navbar-dark p-0">
 
             <a class="navbar-brand font-weight-bold" href="/admin">
-                Admin Dashboard
+                Admin HQ
             </a>
 
             <div class="navbar-collapse" id="adminNavbar">
@@ -77,18 +120,18 @@
                             <div class="dropdown-menu dropdown-menu-right" aria-labelledby="profileDropdown">
                                 <a class="dropdown-item" href="/admin/pending-trades">Pending Trades</a>
                                 <a class="dropdown-item" href="/admin/projects">Manage Projects</a>
-                                <a class="dropdown-item" href="{{ url_for('achievements.add_achievement') }}">Add Achievement</a>
-                                <a class="dropdown-item" href="{{ url_for('achievements.admin_certificates') }}">Certificates</a>
+                                <a class="dropdown-item" href="/admin/add-achievement">Add Achievement</a>
+                                <a class="dropdown-item" href="/admin/certificates">Certificates</a>
                                 <a class="dropdown-item" href="/admin/documents">Documents</a>
-                                <a class="dropdown-item" href="/api/admin/advanced">Advanced Panel</a>
+                                <a class="dropdown-item" href="/admin/advanced">Advanced Panel</a>
 
                                 <div class="dropdown-divider"></div>
 
-                                <a class="dropdown-item" href="{{ url_for('general.index') }}">
+                                <a class="dropdown-item" href="/">
                                     <i class="bi bi-house-door"></i> Back to Site
                                 </a>
                                 <div class="dropdown-divider"></div>
-                                <a class="dropdown-item" href="{{ url_for('user.logout') }}">
+                                <a class="dropdown-item" href="/logout">
                                     <i class="bi bi-box-arrow-right"></i> Logout
                                 </a>
                             </div>

@@ -8,7 +8,7 @@ export const CreateUserModal = ({ isOpen, onClose, onSubmit, formErrors, loading
         <form onSubmit={onSubmit} className="admin-form" noValidate>
             <div className={`form-group ${formErrors.username ? 'has-error' : ''}`}>
                 <label>Username</label>
-                <input type="text" name="username" placeholder="lowercas_only" />
+                <input type="text" name="username" placeholder="lowercase_only" />
                 {formErrors.username ? (
                     <span className="error-message">{formErrors.username}</span>
                 ) : (

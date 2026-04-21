@@ -4,7 +4,6 @@ from datetime import datetime
 
 from flask import (
     Blueprint,
-    render_template,
     jsonify,
     session,
     flash,
@@ -50,8 +49,22 @@ def get_achievements_json():
         return jsonify({"success": False, "error": "User not found!"}), 404
 
     # Automatically check for new achievements when visiting the page
-    from application.services.achievement_engine import evaluate_user, get_achievement_progress
+    from application.services.achievement_engine import evaluate_user, get_achievement_progress, longest_session_minutes, _calculate_consistency
+    from application.models.message import Message
+    from application.models.challenge_log import ChallengeLog
+    from application.models.duck_trade import DuckTradeLog
+    from sqlalchemy import func
+
     evaluate_user(current_user)
+
+    # Pre-calculate stats for speed
+    stats = {
+        "chat_count": db.session.query(func.count(Message.id)).filter(Message.user_id == current_user.id).scalar(),
+        "consistency_streak": _calculate_consistency(current_user.username),
+        "community_count": db.session.query(func.count(ChallengeLog.id)).filter(func.lower(ChallengeLog.helper) == current_user.username.lower()).scalar(),
+        "max_session": longest_session_minutes(current_user.id),
+        "trade_count": db.session.query(func.count(DuckTradeLog.id)).filter(func.lower(DuckTradeLog.username) == current_user.username.lower()).scalar()
+    }
 
     user_achievements = {ua.achievement_id for ua in current_user.achievements}
     all_achievements = Achievement.query.all()
@@ -59,7 +72,7 @@ def get_achievements_json():
     achievements_data = []
     for a in all_achievements:
         d = a.to_dict()
-        curr, req = get_achievement_progress(current_user, a)
+        curr, req = get_achievement_progress(current_user, a, stats=stats)
         d["current_progress"] = int(curr) if isinstance(curr, (int, float)) else curr
         d["requirement_value"] = req
         achievements_data.append(d)
@@ -76,22 +89,10 @@ def get_achievements_json():
 # Legacy SSR page for achievements
 @achievements.route("/view")
 def achievements_page():
-    user_id = session.get("user")
-    current_user = User.query.options(
-        joinedload(User.achievements)
-    ).filter_by(id=user_id).first()
-    
-    if not current_user:
-        return "User not found", 404
+    if request.is_json or request.accept_mimetypes.accept_json:
+        return redirect(url_for("achievements.get_achievements_json"))
 
-    user_achievements = {ua.achievement_id for ua in current_user.achievements}
-    all_achievements = Achievement.query.all()
-
-    return render_template(
-        "achievements.html",
-        achievements=all_achievements,
-        user_achievements=user_achievements,
-    )
+    return redirect("/achievements")
 
 
 @achievements.route("/add", methods=["GET", "POST"])
@@ -112,18 +113,12 @@ def add_achievement():
         source = data.get("source")
 
         if not name or not slug:
-            if request.is_json:
-                return jsonify({"status": "error", "message": "Name and Slug are required."}), 400
-            flash("Name and Slug are required.", "error")
-            return render_template("admin/add_achievement.html")
+            return jsonify({"status": "error", "message": "Name and Slug are required."}), 400
 
         # Check for existing slug
         existing = Achievement.query.filter_by(slug=slug).first()
         if existing:
-            if request.is_json:
-                return jsonify({"status": "error", "message": "Achievement with this slug already exists."}), 400
-            flash("Achievement with this slug already exists.", "error")
-            return render_template("admin/add_achievement.html")
+            return jsonify({"status": "error", "message": "Achievement with this slug already exists."}), 400
 
         ach = Achievement(
             name=name,
@@ -137,13 +132,9 @@ def add_achievement():
         db.session.add(ach)
         db.session.commit()
 
-        if request.is_json or request.headers.get("X-Requested-With") == "XMLHttpRequest":
-            return jsonify({"status": "success", "message": f"Achievement '{name}' added successfully!"})
+        return jsonify({"status": "success", "message": f"Achievement '{name}' added successfully!"})
 
-        flash(f"Achievement '{name}' added", "success")
-        return redirect(url_for("achievements.achievements_page"))
-
-    return render_template("admin/add_achievement.html")
+    return redirect("/admin/achievements/add")
 
 
 @achievements.route("/submit_certificate", methods=["GET", "POST"])
@@ -151,54 +142,28 @@ def submit_certificate():
     user_id = session.get("user")
     current_user = User.query.filter_by(id=user_id).first()
     if not current_user:
-        # Check if AJAX request
-        if request.headers.get("X-Requested-With") == "XMLHttpRequest":
-            return jsonify({"success": False, "error": "User not found!"}), 400
         return jsonify({"success": False, "error": "User not found!"}), 400
 
-    _message, _success = None, False
-
     if request.method == "POST":
-        is_xhr = request.headers.get("X-Requested-With") == "XMLHttpRequest"
         url = request.form.get("certificate_url")
         file = request.files.get("certificate_file")
 
         # 1. Check URL
         match = re.search(CERT_URL_REGEX, url or "")
         if not match:
-            msg = "Invalid certificate URL."
-            if is_xhr:
-                return jsonify({"success": False, "error": msg}), 400
-            return render_template(
-                "submit_certificate.html", message=msg, success=False
-            ), 400
+            return jsonify({"success": False, "error": "Invalid certificate URL."}), 400
 
         course_slug = match.group(1)
         achievement = Achievement.query.filter_by(slug=course_slug).first()
         if not achievement:
-            msg = "No matching achievement found for this course."
-            if is_xhr:
-                return jsonify({"success": False, "error": msg}), 400
-            return render_template(
-                "submit_certificate.html", message=msg, success=False
-            ), 400
+            return jsonify({"success": False, "error": "No matching achievement found for this course."}), 400
 
         # 2. File validation
         if not file or file.filename == "":
-            msg = "Certificate file is required."
-            if is_xhr:
-                return jsonify({"success": False, "error": msg}), 400
-            return render_template(
-                "submit_certificate.html", message=msg, success=False
-            ), 400
+            return jsonify({"success": False, "error": "Certificate file is required."}), 400
 
         if not allowed_file(file.filename):
-            msg = "Invalid file type. Only PDF is allowed."
-            if is_xhr:
-                return jsonify({"success": False, "error": msg}), 400
-            return render_template(
-                "submit_certificate.html", message=msg, success=False
-            ), 400
+            return jsonify({"success": False, "error": "Invalid file type. Only PDF is allowed."}), 400
 
         # 3. Save file
         os.makedirs(UPLOAD_FOLDER, exist_ok=True)
@@ -226,18 +191,13 @@ def submit_certificate():
         db.session.commit()
 
         # Success return
-        if is_xhr:
-            return jsonify(
-                {"success": True, "message": "Certificate submitted successfully."}
-            )
-
-        return render_template(
-            "submit_certificate.html",
-            message="Certificate submitted successfully.",
-            success=True,
+        return jsonify(
+            {"success": True, "message": "Certificate submitted successfully."}
         )
 
-    return render_template("submit_certificate.html")
+    if request.is_json or request.accept_mimetypes.accept_json:
+        return jsonify({"status": "ready"})
+    return redirect("/achievements/submit")
 
 @achievements.route("/view_certificate/<int:cert_id>")
 def view_certificate(cert_id):

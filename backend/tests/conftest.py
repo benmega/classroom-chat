@@ -255,7 +255,8 @@ def sample_challenge(init_db):
 @pytest.fixture
 def sample_user(init_db):
     username = f"user_{uuid.uuid4().hex[:8]}"
-    user = User(username=username, password_hash="hashedpassword")
+    user = User(username=username, is_approved=True)
+    user.set_password("hashedpassword")  # Use set_password for proper hashing
     db.session.add(user)
     db.session.commit()
     return user

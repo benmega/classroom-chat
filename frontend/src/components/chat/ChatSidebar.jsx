@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Search, PlusCircle, Hash, X, User as UserIcon, MessageSquare, Shield } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -14,29 +14,34 @@ const ChatSidebar = ({
     setIsModalOpen,
     formatConversationTitle 
 }) => {
-    const filteredConversations = conversations.filter(conv => {
-        const searchLower = (searchTerm || '').toLowerCase();
-        if (!searchLower) return true;
+    const filteredConversations = useMemo(() => {
+        const searchLower = (searchTerm || '').trim().toLowerCase();
+        if (!searchLower) return conversations;
 
-        // Match title
-        const titleMatch = (conv.title || 'Conversation').toLowerCase().includes(searchLower);
-        
-        // Match formatted title
-        const formattedTitleMatch = formatConversationTitle(conv.title).toLowerCase().includes(searchLower);
-        
-        // Match any message content
-        const messageMatch = conv.messages?.some(msg => 
-            (msg.content || '').toLowerCase().includes(searchLower)
-        );
-        
-        // Match any participant name
-        const participantMatch = conv.messages?.some(msg => 
-            (msg.nickname || '').toLowerCase().includes(searchLower) || 
-            (msg.username || '').toLowerCase().includes(searchLower)
-        );
-        
-        return titleMatch || formattedTitleMatch || messageMatch || participantMatch;
-    });
+        const results = conversations.filter(conv => {
+            // Match title
+            const titleMatch = (conv.title || '').toLowerCase().includes(searchLower);
+            
+            // Match formatted title
+            const formattedTitleMatch = formatConversationTitle(conv.title).toLowerCase().includes(searchLower);
+            
+            // Match any message content
+            const messageMatch = conv.messages?.some(msg => 
+                (msg.content || '').toLowerCase().includes(searchLower)
+            );
+            
+            // Match any participant name (including sender attribution)
+            const participantMatch = conv.messages?.some(msg => 
+                (msg.nickname || '').toLowerCase().includes(searchLower) || 
+                (msg.username || '').toLowerCase().includes(searchLower)
+            );
+            
+            return titleMatch || formattedTitleMatch || messageMatch || participantMatch;
+        });
+
+        console.debug(`[ChatSearch] Term: "${searchLower}", Results: ${results.length}/${conversations.length}`);
+        return results;
+    }, [conversations, searchTerm, formatConversationTitle]);
 
     return (
         <>

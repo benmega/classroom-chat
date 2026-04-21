@@ -200,6 +200,19 @@ input {
   to { opacity: 1; transform: translateY(0); }
 }
 
+@keyframes premiumPageEntry {
+  0% {
+    opacity: 0;
+    transform: translateY(15px) scale(0.99);
+    filter: blur(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
 @keyframes float {
   0% { transform: translateY(0px); }
   50% { transform: translateY(-10px); }
@@ -208,6 +221,10 @@ input {
 
 .animate-fade-in {
   animation: fadeIn var(--transition-smooth);
+}
+
+.animate-page-entry {
+  animation: premiumPageEntry 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .animate-float {
@@ -221,6 +238,8 @@ input[type="password"],
 input[type="email"],
 textarea,
 select {
+  display: block;
+  width: 100%;
   padding: 0.75rem 1.25rem;
   border-radius: var(--radius-md);
   border: 2px solid var(--border-rich);

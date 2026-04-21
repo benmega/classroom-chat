@@ -154,7 +154,7 @@ const AdminLayout = ({ children }) => {
                     </div>
                 </header>
 
-                <main className="admin-body">
+                <main key={location.pathname} className="admin-body animate-page-entry">
                     {children}
                 </main>
 

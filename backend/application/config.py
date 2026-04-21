@@ -36,6 +36,9 @@ class Config:
     ADMIN_USERNAME = os.getenv("ADMIN_USERNAME", "admin")
     ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "1234")
 
+    # SocketIO configuration
+    SOCKETIO_ASYNC_MODE = "eventlet"
+
 
 class DevelopmentConfig(Config):
     DEBUG = True
@@ -67,11 +70,14 @@ class ProductionConfig(Config):
     SESSION_COOKIE_SAMESITE = "None"
     SESSION_COOKIE_SECURE = True
     SESSION_COOKIE_HTTPONLY = True
+    WTF_CSRF_ENABLED = True
+    WTF_CSRF_TIME_LIMIT = None  # Sessions are short, don't expire tokens separately
+
     # Build folders for Vite
     TEMPLATE_FOLDER = os.path.join(Config.BASE_DIR, "frontend", "dist")
     STATIC_FOLDER = os.path.join(Config.BASE_DIR, "frontend", "dist")
 
-    CORS_ORIGINS = [
+    CORS_ORIGINS = os.getenv("CORS_ORIGINS", "").split(",") if os.getenv("CORS_ORIGINS") else [
         "https://codecombat.com",
         "https://www.ozaria.com",
         "https://benmega.com",

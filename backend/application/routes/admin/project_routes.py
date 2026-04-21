@@ -3,9 +3,10 @@ from application.extensions import db
 from application.models.project import Project
 from application.decorators.admin_required import admin_only
 
-project_bp = Blueprint("admin_project", __name__)
+from ..admin_routes import admin
 
-@project_bp.route("/manage-projects", methods=["GET"])
+
+@admin.route("/manage-projects", methods=["GET"])
 @admin_only
 def manage_projects():
     filter_type = request.args.get("filter", "pending")
@@ -33,7 +34,7 @@ def manage_projects():
         }
     })
 
-@project_bp.route("/handle-project-review/<int:project_id>", methods=["POST"])
+@admin.route("/handle-project-review/<int:project_id>", methods=["POST"])
 @admin_only
 def handle_project_review(project_id):
     project = Project.query.get_or_404(project_id)

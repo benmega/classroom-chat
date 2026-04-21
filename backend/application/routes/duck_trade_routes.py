@@ -7,7 +7,7 @@ Summary: Flask routes for duck trade routes functionality.
 import logging
 
 from flask import Blueprint, url_for
-from flask import request, jsonify, render_template
+from flask import request, jsonify
 from flask import session, flash, redirect
 from flask_wtf import FlaskForm
 from wtforms import IntegerField, FieldList, FormField, SubmitField
@@ -70,8 +70,9 @@ def to_binary(costs_dict):
 
 @duck_trade.route("/")
 def index():
-    form = DuckTradeForm()
-    return render_template("bit_shift.html", form=form)
+    if request.is_json or request.accept_mimetypes.accept_json:
+        return jsonify({"message": "Duck trade endpoint. Use /submit_trade POST for actions."})
+    return redirect("/trade")
 
 
 @duck_trade.route("/submit_trade", methods=["POST"])
@@ -89,7 +90,7 @@ def submit_trade():
                 400,
             )
         flash(error_msg, "danger")
-        return redirect(url_for("duck_trade.index"))
+        return redirect("/trade")
 
     try:
         userid = session.get("user")
@@ -98,7 +99,7 @@ def submit_trade():
             if is_ajax:
                 return jsonify({"status": "error", "message": msg}), 403
             flash(msg, "warning")
-            return redirect(url_for("duck_trade.index"))
+            return redirect("/trade")
 
         from application import User
         user = User.query.get(userid)
@@ -110,7 +111,7 @@ def submit_trade():
             if is_ajax:
                 return jsonify({"status": "error", "message": msg}), 400
             flash(msg, "warning")
-            return redirect(url_for("duck_trade.index"))
+            return redirect("/trade")
         # ---------------------------------------------------
 
         if is_ajax and request.is_json:
@@ -139,7 +140,7 @@ def submit_trade():
             return jsonify({"status": "success", "message": msg})
 
         flash(msg, "success")
-        return redirect(url_for("duck_trade.index"))
+        return redirect("/trade")
 
     except Exception:
         db.session.rollback()
@@ -151,5 +152,6 @@ def submit_trade():
 
 @duck_trade.route("/bit_shift", methods=["GET"])
 def bit_shift():
-    form = DuckTradeForm()
-    return render_template("bit_shift.html", form=form)
+    if request.is_json or request.accept_mimetypes.accept_json:
+        return jsonify({"message": "Bit Shift interface has migrated to React."})
+    return redirect("/trade")

@@ -20,6 +20,7 @@ import {
     ResetPasswordModal 
 } from '../../components/admin/AdminModals';
 import './Users.css';
+import Skeleton from '../../components/common/Skeleton';
 
 const Users = () => {
     const navigate = useNavigate();
@@ -184,9 +185,18 @@ const Users = () => {
     );
 
     if (isLoading) return (
-        <div className="admin-loading-container">
-            <div className="admin-loader"></div>
-            <p>Loading User Directory...</p>
+        <div className="admin-users-page">
+            <header className="page-header">
+                <Skeleton height="40px" width="300px" className="skeleton-title" />
+                <Skeleton height="20px" width="500px" />
+            </header>
+            <div className="users-table-container card">
+                {[1, 2, 3, 4, 5].map(i => (
+                    <div key={i} style={{ padding: '20px', borderBottom: '1px solid #eee' }}>
+                        <Skeleton height="60px" />
+                    </div>
+                ))}
+            </div>
         </div>
     );
 

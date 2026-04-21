@@ -81,12 +81,12 @@ def test_login_success(client, init_db, sample_user, sample_conversation_for_log
 
     response = client.post(
         "/user/login",
-        data={"username": sample_user.username, "password": "testpassword123"},
-        follow_redirects=True,
+        json={"username": sample_user.username, "password": "testpassword123"},
     )
 
     assert response.status_code == 200
-    assert b"Login successful" in response.data or response.status_code == 200
+    assert b"user" in response.data
+    assert b"awarded_duck" in response.data
 
     # Verify session was set
     with client.session_transaction() as sess:
@@ -174,12 +174,11 @@ def test_signup_success(client, init_db):
 
     response = client.post(
         "/user/signup",
-        data={"username": username, "password": "newpassword123"},
-        follow_redirects=True,
+        json={"username": username, "password": "newpassword123"},
     )
 
-    assert response.status_code == 200
-    assert b"Signup successful" in response.data
+    assert response.status_code == 201
+    assert b"Account created" in response.data
 
     # Verify user was created
     user = User.query.filter_by(username=username.lower()).first()
@@ -191,12 +190,11 @@ def test_signup_duplicate_username(client, init_db, sample_user):
     """Test signup with existing username."""
     response = client.post(
         "/user/signup",
-        data={"username": sample_user.username, "password": "password123"},
-        follow_redirects=True,
+        json={"username": sample_user.username, "password": "password123"},
     )
 
-    assert response.status_code == 200
-    assert b"Username already taken" in response.data
+    assert response.status_code == 409
+    assert b"Username already exists" in response.data
 
 
 # --- Profile Tests ---
@@ -286,15 +284,14 @@ def test_edit_profile_password_mismatch(client, init_db, sample_user):
 
     response = client.post(
         "/user/edit_profile",
-        data={
+        json={
             "password": "newpassword",
             "confirm_password": "differentpassword",
-            "skills[]": [],
-        },
-        follow_redirects=True,
+        }
     )
 
     assert b"Passwords do not match" in response.data
+    assert response.status_code == 400
 
 
 # --- Project Route Tests (New) ---
@@ -381,14 +378,13 @@ def test_edit_profile_picture_api(client, init_db, sample_user):
     img_io.seek(0)
 
     response = client.post(
-        "/user/edit_profile_picture",
+        "/user/api/profile-picture",
         data={"profile_picture": (img_io, "test_image.png")},
         content_type="multipart/form-data",
     )
 
     assert response.status_code == 200
-    data = json.loads(response.data)
-    assert data["success"] is True
+    data = json.loads(response.data)["data"]
     assert "new_url" in data
 
 
@@ -397,12 +393,10 @@ def test_edit_profile_picture_no_file(client, init_db, sample_user):
     with client.session_transaction() as sess:
         sess["user"] = sample_user.id
 
-    response = client.post("/user/edit_profile_picture", data={})
+    response = client.post("/user/api/profile-picture", data={})
 
     assert response.status_code == 400
-    data = json.loads(response.data)
-    assert data["success"] is False
-    assert "No file part" in data["error"]
+    assert b"No file part" in response.data
 
 
 def test_delete_profile_picture(client, init_db, sample_user):
@@ -510,8 +504,7 @@ def test_daily_duck_logic(client, init_db, sample_user):
     # First login
     client.post(
         "/user/login",
-        data={"username": sample_user.username, "password": "testpassword"},
-        follow_redirects=True,
+        json={"username": sample_user.username, "password": "testpassword"},
     )
 
     db.session.refresh(sample_user)
@@ -525,9 +518,23 @@ def test_daily_duck_logic(client, init_db, sample_user):
 
     client.post(
         "/user/login",
-        data={"username": sample_user.username, "password": "testpassword"},
-        follow_redirects=True,
+        json={"username": sample_user.username, "password": "testpassword"},
     )
 
     db.session.refresh(sample_user)
     assert sample_user.duck_balance == initial_balance
+
+
+def test_pfp_integrity_cleanup(init_db, sample_user):
+    """Test the cleanup of missing profile picture files."""
+    from application.utilities.helper_functions import cleanup_missing_user_pfps
+    
+    # Set a custom PFP that doesn't exist on disk
+    sample_user.profile_picture = "missing_image.png"
+    db.session.commit()
+    
+    fixed_count = cleanup_missing_user_pfps()
+    
+    db.session.refresh(sample_user)
+    assert fixed_count == 1
+    assert sample_user.profile_picture == "Default_pfp.jpg"

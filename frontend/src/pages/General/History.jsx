@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import client from '../../api/client';
 import useAuthStore from '../../store/useAuthStore';
+import Skeleton from '../../components/common/Skeleton';
 import './History.css';
 
 const History = () => {
@@ -61,9 +62,25 @@ const History = () => {
 
     if (isLoading) {
         return (
-            <div className="history-loading">
-                <div className="loader"></div>
-                <p>Loading your activity history...</p>
+            <div className="history-page container">
+                <div className="history-header glass-panel">
+                    <Skeleton height="40px" width="300px" className="skeleton-title" />
+                    <Skeleton height="20px" width="450px" />
+                </div>
+                <div className="history-list">
+                    {[1, 2, 3, 4, 5].map(i => (
+                        <div key={i} className="history-card" style={{ cursor: 'default' }}>
+                            <div className="card-icon">
+                                <Skeleton height="24px" width="24px" borderRadius="50%" />
+                            </div>
+                            <div className="card-content" style={{ flex: 1 }}>
+                                <Skeleton height="20px" width="60%" className="skeleton-title" />
+                                <Skeleton height="16px" width="90%" />
+                                <Skeleton height="14px" width="30%" style={{ marginTop: '10px' }} />
+                            </div>
+                        </div>
+                    ))}
+                </div>
             </div>
         );
     }

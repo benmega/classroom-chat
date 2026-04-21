@@ -256,7 +256,7 @@ const Layout = ({ children }) => {
                 </div>
             </header>
 
-            <main className={isChatPage ? 'main-full' : ''}>
+            <main key={location.pathname} className={`${isChatPage ? 'main-full' : ''} animate-page-entry`}>
                 {children}
             </main>
             

@@ -9,7 +9,7 @@ const useAuthStore = create((set) => ({
   checkAuth: async () => {
     set({ isLoading: true });
     try {
-      const response = await client.get('/user/api/auth/status');
+      const response = await client.get('/user/api/auth/status', { timeout: 10000 });
       if (response.data.data.logged_in) {
         set({ user: response.data.data.user, isAuthenticated: true });
       } else {

@@ -4,7 +4,7 @@ Type: py
 Summary: Flask routes for admin advanced routes functionality.
 """
 
-from flask import session, render_template
+from flask import session
 from flask_admin import Admin, AdminIndexView, expose
 from flask_admin.contrib.sqla import ModelView
 
@@ -67,7 +67,8 @@ def init_admin(app):
         app,
         name="Advanced Admin",
         url="/api/admin/advanced",
-        index_view=AdvancedIndex(name="Overview", url="/api/admin/advanced"),
+        index_view=AdvancedIndex(name="Overview", url="/api/admin/advanced", endpoint="advanced_index"),
+        endpoint="advanced_admin_bp",
     )
 
     for mapper in db.Model.registry.mappers:

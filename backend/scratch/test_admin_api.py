@@ -4,6 +4,7 @@ from flask import url_for
 import json
 
 app = create_app()
+print(f"Database URI: {app.config['SQLALCHEMY_DATABASE_URI']}")
 with app.app_context():
     u = User.query.filter_by(_username='ben').first()
     with app.test_client() as client:

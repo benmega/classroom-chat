@@ -12,9 +12,15 @@ from application.models.session_log import SessionLog
 from application.models.user_certificate import UserCertificate
 
 
-def check_achievement(user, achievement):
+def check_achievement(user, achievement, stats=None):
     """Return True if the user meets the condition for this achievement."""
-    requirement = int(achievement.requirement_value)
+    if stats is None:
+        stats = {}
+        
+    try:
+        requirement = int(achievement.requirement_value)
+    except (ValueError, TypeError):
+        requirement = 0
 
     value_getters = {
         "ducks": lambda: user.earned_ducks,
@@ -23,19 +29,19 @@ def check_achievement(user, achievement):
             user.get_progress(achievement.source) if achievement.source else 0
         ),
         # Count all messages sent by the user
-        "chat": lambda: db.session.query(func.count(Message.id))
+        "chat": lambda: stats.get("chat_count") if "chat_count" in stats else db.session.query(func.count(Message.id))
         .filter(Message.user_id == user.id)
         .scalar(),
         # Count how many consecutive weeks with challenges
-        "consistency": lambda: _calculate_consistency(user.username),
+        "consistency": lambda: stats.get("consistency_streak") if "consistency_streak" in stats else _calculate_consistency(user.username),
         # Count how many times someone entered them as a helper
-        "community": lambda: db.session.query(func.count(ChallengeLog.id))
+        "community": lambda: stats.get("community_count") if "community_count" in stats else db.session.query(func.count(ChallengeLog.id))
         .filter(func.lower(ChallengeLog.helper) == user.username.lower())
         .scalar(),
         # Longest session length in minutes
-        "session": lambda: longest_session_minutes(user.id),
+        "session": lambda: stats.get("max_session") if "max_session" in stats else longest_session_minutes(user.id),
         # Count number of trades (regardless of status)
-        "trade": lambda: db.session.query(func.count(DuckTradeLog.id))
+        "trade": lambda: stats.get("trade_count") if "trade_count" in stats else db.session.query(func.count(DuckTradeLog.id))
         .filter(func.lower(DuckTradeLog.username) == user.username.lower())
         .scalar(),
         # Certificate submitted or not
@@ -52,8 +58,11 @@ def check_achievement(user, achievement):
     return value >= requirement
 
 
-def get_achievement_progress(user, achievement):
+def get_achievement_progress(user, achievement, stats=None):
     """Return (current_value, requirement_value) for progress tracking."""
+    if stats is None:
+        stats = {}
+    
     try:
         requirement = int(achievement.requirement_value)
     except (ValueError, TypeError):
@@ -65,15 +74,15 @@ def get_achievement_progress(user, achievement):
         "progress": lambda: (
             user.get_progress(achievement.source) if achievement.source else 0
         ),
-        "chat": lambda: db.session.query(func.count(Message.id))
+        "chat": lambda: stats.get("chat_count") if "chat_count" in stats else db.session.query(func.count(Message.id))
         .filter(Message.user_id == user.id)
         .scalar(),
-        "consistency": lambda: _calculate_consistency(user.username),
-        "community": lambda: db.session.query(func.count(ChallengeLog.id))
+        "consistency": lambda: stats.get("consistency_streak") if "consistency_streak" in stats else _calculate_consistency(user.username),
+        "community": lambda: stats.get("community_count") if "community_count" in stats else db.session.query(func.count(ChallengeLog.id))
         .filter(func.lower(ChallengeLog.helper) == user.username.lower())
         .scalar(),
-        "session": lambda: longest_session_minutes(user.id),
-        "trade": lambda: db.session.query(func.count(DuckTradeLog.id))
+        "session": lambda: stats.get("max_session") if "max_session" in stats else longest_session_minutes(user.id),
+        "trade": lambda: stats.get("trade_count") if "trade_count" in stats else db.session.query(func.count(DuckTradeLog.id))
         .filter(func.lower(DuckTradeLog.username) == user.username.lower())
         .scalar(),
         "certificate": lambda: (
@@ -123,26 +132,48 @@ def _calculate_consistency(username):
     return best_streak
 
 
-def evaluate_user(user):
-    """Evaluate all achievements for a given user, grant new ones."""
+def evaluate_user(user, force=False):
+    """Evaluate all achievements for a given user with 1-hour throttling."""
+    now = datetime.utcnow()
+    
+    # Throttle: Only evaluate once every 60 minutes unless forced
+    if not force and user.last_achievement_evaluation:
+        elapsed = (now - user.last_achievement_evaluation).total_seconds()
+        if elapsed < 3600:  # 60 minutes
+            return []
+
+    # Pre-calculate common stats for the entire evaluation pass
+    # This avoids N extra queries inside the loop below.
+    from application.models.duck_trade import DuckTradeLog
+    stats = {
+        "chat_count": db.session.query(func.count(Message.id)).filter(Message.user_id == user.id).scalar(),
+        "consistency_streak": _calculate_consistency(user.username),
+        "community_count": db.session.query(func.count(ChallengeLog.id)).filter(func.lower(ChallengeLog.helper) == user.username.lower()).scalar(),
+        "max_session": longest_session_minutes(user.id),
+        "trade_count": db.session.query(func.count(DuckTradeLog.id)).filter(func.lower(DuckTradeLog.username) == user.username.lower()).scalar()
+    }
+
     earned_ids = {ua.achievement_id for ua in user.achievements}
     new_awards = []
-    for achievement in Achievement.query.all():
+    
+    # Optimization: Only query definitions once
+    all_achievements = Achievement.query.all()
+    
+    for achievement in all_achievements:
         if achievement.id in earned_ids:
             continue
-        if check_achievement(user, achievement):
-            # grant achievement
+        if check_achievement(user, achievement, stats=stats):
             ua = UserAchievement(user_id=user.id, achievement_id=achievement.id)
             db.session.add(ua)
-            print(f"{user.nickname} just complete {achievement.name}")
             # grant ducks reward
             if achievement.reward > 0:
                 user.add_ducks(achievement.reward)
 
             new_awards.append(achievement)
 
-    if new_awards:
-        db.session.commit()
+    # Always update the last evaluation timestamp if we successfully ran
+    user.last_achievement_evaluation = now
+    db.session.commit()
 
     return new_awards
 

@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, Response
 from sqlalchemy import func, case
 from application.extensions import db
 from application.models.user import User
@@ -12,9 +12,10 @@ from application.decorators.admin_required import admin_only
 from flask import Blueprint, jsonify, current_app
 from flask_admin.contrib.sqla import ModelView
 
-dashboard_bp = Blueprint("admin_dashboard", __name__)
+from ..admin_routes import admin
 
-@dashboard_bp.route("/dashboard", methods=["GET"])
+
+@admin.route("/dashboard", methods=["GET"])
 @admin_only
 @api_response
 def dashboard_data():
@@ -73,7 +74,7 @@ def dashboard_data():
         }
     }
 
-@dashboard_bp.route("/stats", methods=["GET"])
+@admin.route("/stats", methods=["GET"])
 @admin_only
 @api_response
 def admin_stats():
@@ -88,7 +89,7 @@ def admin_stats():
         "timestamp": datetime.utcnow().isoformat()
     }
 
-@dashboard_bp.route("/advanced-panel", methods=["GET"])
+@admin.route("/advanced-panel", methods=["GET"])
 @admin_only
 @api_response
 def advanced_panel():
@@ -154,7 +155,7 @@ def advanced_panel():
         print(f"Error in advanced_panel: {str(e)}")
         return {"views": [], "error": str(e)}, 500
 
-@dashboard_bp.route("/logs", methods=["GET"])
+@admin.route("/logs", methods=["GET"])
 @admin_only
 @api_response
 def get_logs():
@@ -173,3 +174,37 @@ def get_logs():
             return {"logs": "".join(last_lines)}
     except Exception as e:
         return {"error": f"Failed to read logs: {str(e)}"}, 500
+@admin.route("/export/transactions", methods=["GET"])
+@admin_only
+def export_transactions():
+    """Generates and serves a CSV file of all duck transactions."""
+    import csv
+    import io
+    
+    transactions = DuckTransaction.query.order_by(DuckTransaction.timestamp.desc()).all()
+    
+    def generate():
+        data = io.StringIO()
+        writer = csv.writer(data)
+        
+        # Header
+        writer.writerow(['ID', 'User', 'Amount', 'Reason', 'Timestamp'])
+        yield data.getvalue()
+        data.seek(0)
+        data.truncate(0)
+        
+        for tx in transactions:
+            writer.writerow([
+                tx.id,
+                tx.user.username if tx.user else 'System',
+                tx.amount,
+                tx.reason,
+                tx.timestamp.isoformat() if tx.timestamp else ''
+            ])
+            yield data.getvalue()
+            data.seek(0)
+            data.truncate(0)
+            
+    response = Response(generate(), mimetype='text/csv')
+    response.headers.set("Content-Disposition", "attachment", filename=f"duck_transactions_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv")
+    return response

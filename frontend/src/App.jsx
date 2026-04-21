@@ -31,6 +31,7 @@ import PendingTrades from './pages/Admin/PendingTrades';
 import PendingUsers from './pages/Admin/PendingUsers';
 import AdvancedPanel from './pages/Admin/AdvancedPanel';
 import AdminSettings from './pages/Admin/AdminSettings';
+import AdminCRUD from './admin/AdminPanel';
 import AccessDenied from './pages/Error/AccessDenied';
 // Development-only shortcut page — Vite's tree-shaking removes this module
 // from production builds because it is only referenced inside the DEV guard below.
@@ -228,6 +229,7 @@ function App() {
                 <Route path="pending-trades" element={<PendingTrades />} />
                 <Route path="pending-users" element={<PendingUsers />} />
                 <Route path="advanced" element={<AdvancedPanel />} />
+                <Route path="advanced-crud/*" element={<AdminCRUD />} />
                 <Route path="settings" element={<AdminSettings />} />
               </Routes>
             </AdminLayout>

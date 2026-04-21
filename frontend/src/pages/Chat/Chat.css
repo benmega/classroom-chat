@@ -494,8 +494,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    fontSize: 0.75rem;
-    fontWeight: 700;
+    font-size: 0.75rem;
+    font-weight: 700;
     overflow: hidden;
 }
 
@@ -513,7 +513,7 @@
     font-size: var(--font-md);
     line-height: 1.5;
     overflow-wrap: anywhere;
-    wordBreak: break-word;
+    word-break: break-word;
 }
 
 .chat-message-group.user .message-bubble {
@@ -523,7 +523,7 @@
 }
 
 .chat-message-group.other .message-bubble {
-    borderRadius: 18px 18px 4px 18px; /* Corrected: bubble should point based on side */
+    border-radius: 18px 18px 18px 4px; /* Corrected: bubble should point based on side */
 }
 
 /* Corrected bubble points */

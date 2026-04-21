@@ -28,6 +28,7 @@ import { useNavigate } from 'react-router-dom';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
 import './AdminDashboard.css';
+import Skeleton from '../../components/common/Skeleton';
 
 // Extracted Components
 import AdminStats from '../../components/admin/AdminStats';
@@ -287,7 +288,23 @@ const AdminDashboard = () => {
         }
     };
 
-    if (isLoading) return <div className="admin-loading">Loading Dashboard...</div>;
+    if (isLoading) return (
+        <div className="admin-dashboard">
+            <div className="dashboard-header">
+                <Skeleton height="40px" width="300px" className="skeleton-title" />
+            </div>
+            <div className="dashboard-layout">
+                <div className="main-content">
+                    <Skeleton height="350px" className="skeleton-card" />
+                    <Skeleton height="500px" className="skeleton-card" style={{ marginTop: '20px' }} />
+                </div>
+                <div className="side-content">
+                    <Skeleton height="200px" className="skeleton-card" />
+                    <Skeleton height="250px" className="skeleton-card" style={{ marginTop: '20px' }} />
+                </div>
+            </div>
+        </div>
+    );
     if (!dashboardData) return <div className="admin-error">Error loading dashboard.</div>;
 
     const { 
@@ -309,21 +326,39 @@ const AdminDashboard = () => {
                 label: 'Ducks Earned',
                 data: chart_data?.earned || [],
                 borderColor: '#10b981',
-                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                backgroundColor: (context) => {
+                    const ctx = context.chart.ctx;
+                    const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+                    gradient.addColorStop(0, 'rgba(16, 185, 129, 0.4)');
+                    gradient.addColorStop(1, 'rgba(16, 185, 129, 0.0)');
+                    return gradient;
+                },
                 fill: true,
-                tension: 0.4,
-                pointRadius: 4,
-                pointHoverRadius: 6,
+                tension: 0.5,
+                pointRadius: 6,
+                pointHoverRadius: 8,
+                pointBackgroundColor: '#fff',
+                pointBorderColor: '#10b981',
+                pointBorderWidth: 3,
             },
             {
                 label: 'Ducks Spent',
                 data: chart_data?.spent || [],
                 borderColor: '#ef4444',
-                backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                backgroundColor: (context) => {
+                    const ctx = context.chart.ctx;
+                    const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+                    gradient.addColorStop(0, 'rgba(239, 68, 68, 0.3)');
+                    gradient.addColorStop(1, 'rgba(239, 68, 68, 0.0)');
+                    return gradient;
+                },
                 fill: true,
-                tension: 0.4,
-                pointRadius: 4,
-                pointHoverRadius: 6,
+                tension: 0.5,
+                pointRadius: 6,
+                pointHoverRadius: 8,
+                pointBackgroundColor: '#fff',
+                pointBorderColor: '#ef4444',
+                pointBorderWidth: 3,
             }
         ]
     };
@@ -332,12 +367,36 @@ const AdminDashboard = () => {
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
-            legend: { position: 'top', labels: { usePointStyle: true, font: { weight: '600' } } },
-            tooltip: { padding: 12, borderRadius: 8, titleFont: { size: 14 } }
+            legend: { 
+                position: 'top', 
+                align: 'end',
+                labels: { 
+                    usePointStyle: true, 
+                    boxWidth: 8,
+                    padding: 20,
+                    font: { size: 13, weight: '700', family: "'Outfit', sans-serif" } 
+                } 
+            },
+            tooltip: { 
+                backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                padding: 16, 
+                borderRadius: 16, 
+                titleFont: { size: 14, family: "'Outfit', sans-serif" },
+                bodyFont: { size: 13, family: "'Inter', sans-serif" },
+                displayColors: true,
+                usePointStyle: true
+            }
         },
         scales: {
-            y: { beginAtZero: true, grid: { color: '#f1f5f9' } },
-            x: { grid: { display: false } }
+            y: { 
+                beginAtZero: true, 
+                grid: { color: 'rgba(241, 245, 249, 0.5)', drawBorder: false },
+                ticks: { font: { weight: '600' }, color: '#64748b' }
+            },
+            x: { 
+                grid: { display: false },
+                ticks: { font: { weight: '600' }, color: '#64748b' }
+            }
         }
     };
 

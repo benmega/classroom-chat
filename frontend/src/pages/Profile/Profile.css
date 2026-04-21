@@ -157,6 +157,14 @@
     margin: 0;
 }
 
+.bio-placeholder {
+    color: var(--text-muted);
+    font-style: italic;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    margin: 0;
+}
+
 .btn-settings {
     display: inline-flex;
     align-items: center;

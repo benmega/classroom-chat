@@ -40,9 +40,9 @@ class Achievement(db.Model):
 class UserAchievement(db.Model):
     __tablename__ = "user_achievement"
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False, index=True)
     achievement_id = db.Column(
-        db.Integer, db.ForeignKey("achievement.id"), nullable=False
+        db.Integer, db.ForeignKey("achievement.id"), nullable=False, index=True
     )
     earned_at = db.Column(db.DateTime, default=datetime.utcnow)
 

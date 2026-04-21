@@ -5,9 +5,10 @@ from application.models.duck_trade import DuckTradeLog
 from application.decorators.api_response import api_response
 from application.decorators.admin_required import admin_only
 
-trade_bp = Blueprint("admin_trade", __name__)
+from ..admin_routes import admin
 
-@trade_bp.route("/pending_trades", methods=["GET"])
+
+@admin.route("/pending_trades", methods=["GET"])
 @admin_only
 @api_response
 def pending_trades():
@@ -24,7 +25,7 @@ def pending_trades():
 
     return {"trades": trades_list}
 
-@trade_bp.route("/trade_action", methods=["POST"])
+@admin.route("/trade_action", methods=["POST"])
 @admin_only
 def trade_action():
     trade_id = request.form.get("trade_id")

@@ -6,7 +6,7 @@ from functools import wraps
 import boto3
 from PIL import Image
 from flask import Blueprint, jsonify, send_from_directory, current_app, abort
-from flask import render_template, request, redirect, url_for, session, flash
+from flask import request, redirect, url_for, session, flash
 from flask_wtf import FlaskForm
 from werkzeug.utils import secure_filename
 from wtforms import StringField, PasswordField, SubmitField
@@ -38,7 +38,9 @@ def require_login(view):
     def wrapper(*args, **kwargs):
         user_id = session.get("user")
         if not user_id:
-            flash("Please log in to access your profile.", "warning")
+            if request.is_json or request.accept_mimetypes.accept_json:
+                return jsonify({"error": "Authentication required. Please log in."}), 401
+            flash("Please log in to access this page.", "warning")
             return redirect(url_for("user.login"))
         return view(*args, **kwargs)
 
@@ -120,20 +122,24 @@ def login():
                 return "Invalid username or password.", 401
             flash("Invalid username or password.", "error")
 
-    if request.is_json:
-        return "Authentication required.", 400
-    return render_template("auth/login.html", form=form)
+    if request.is_json or request.accept_mimetypes.accept_json:
+        return {"error": "Authentication required."}, 401
+    return redirect("/login")
 
 
 @user.route("/api/auth/status")
 @api_response
 def auth_status():
-    user_id = session.get("user")
-    if user_id:
-        user_obj = User.query.get(user_id)
-        if user_obj:
-            return {"logged_in": True, "user": user_obj.to_dict()}
-    return {"logged_in": False}, 200
+    try:
+        user_id = session.get("user")
+        if user_id:
+            user_obj = User.query.get(user_id)
+            if user_obj:
+                return {"logged_in": True, "user": user_obj.to_dict_auth()}
+        return {"logged_in": False}, 200
+    except Exception as e:
+        current_app.logger.error(f"Auth status error: {str(e)}", exc_info=True)
+        return {"logged_in": False, "error": "Internal server error during auth check"}, 500
 
 
 
@@ -147,7 +153,7 @@ def logout():
     if request.is_json:
         return jsonify({"status": "success", "message": "Logged out"}), 200
     flash("You have been logged out.", "success")
-    return redirect(url_for("user.login"))
+    return redirect("/login")
 
 
 
@@ -196,8 +202,7 @@ def profile():
     if request.accept_mimetypes.best == "application/json" or request.is_json:
         return {"target": user_obj.to_dict(), "viewer": user_obj.to_dict()}
     
-    # When viewing your own profile, target and viewer are the same
-    return render_template("user/profile.html", target=user_obj, viewer=user_obj)
+    return redirect("/profile")
 
 
 @user.route("/profile/<slug>", methods=["GET"])
@@ -216,7 +221,7 @@ def view_user_profile(slug):
             "viewer": viewer.to_dict() if viewer else None
         }
 
-    return render_template("user/profile.html", target=target_profile, viewer=viewer)
+    return redirect(f"/profile/{slug}")
 
 
 
@@ -231,7 +236,8 @@ def edit_profile():
         try:
             data = request.get_json() if request.is_json else request.form
             # 1. Update Basic Info (Password, IP, Online Status)
-            update_basic_user_info(user_obj, data)
+            if not update_basic_user_info(user_obj, data):
+                return {"error": "Passwords do not match."}, 400
 
             # 2. Update Skills (Clear and Re-add)
             clear_user_skills(user_obj)
@@ -251,7 +257,7 @@ def edit_profile():
 
     if request.accept_mimetypes.best == "application/json" or request.is_json:
         return {"user": user_obj.to_dict()}
-    return render_template("user/edit_profile.html", user=user_obj)
+    return redirect("/edit-profile")
 
 
 
@@ -311,8 +317,7 @@ def new_project():
         student_list = [{"id": u.id, "username": u.username, "slug": u.slug} for u in User.query.all()] if getattr(user_obj, 'is_admin', False) else None
         return {"students": student_list}
 
-    student_list = User.query.all() if getattr(user_obj, 'is_admin', False) else None
-    return render_template('user/manage_project.html', project=None, user=user_obj, students=student_list)
+    return redirect("/project/new")
 
 
 @user.route("/project/edit/<int:project_id>", methods=["GET", "POST"])
@@ -374,7 +379,7 @@ def edit_project(project_id):
     if request.is_json or request.accept_mimetypes.accept_json:
         return {"project": project.to_dict()}
         
-    return render_template("user/manage_project.html", project=project, user=current_user)
+    return redirect(f"/project/edit/{project_id}")
 
 
 
@@ -485,7 +490,7 @@ def delete_profile_picture():
         db.session.commit()
 
     flash("Profile picture removed.", "success")
-    return redirect(url_for("user.profile"))
+    return redirect("/profile")
 
 
 @limiter.limit("50 per minute")
