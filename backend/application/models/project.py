@@ -4,7 +4,7 @@ Type: py
 Summary: SQLAlchemy model for user projects and portfolio items.
 """
 
-from application.extensions import db
+from ..extensions import db
 
 
 class Project(db.Model):

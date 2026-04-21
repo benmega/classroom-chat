@@ -9,7 +9,7 @@ Summary: Tracks when a user starts and ends a session in the classroom chat.
 
 from datetime import datetime
 
-from application.extensions import db
+from ..extensions import db
 
 
 class SessionLog(db.Model):

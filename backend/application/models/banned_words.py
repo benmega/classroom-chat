@@ -4,7 +4,7 @@ Type: py
 Summary: SQLAlchemy model for banned words used in moderation.
 """
 
-from application.extensions import db
+from ..extensions import db
 
 
 class BannedWords(db.Model):

@@ -6,11 +6,11 @@ from sqlalchemy.orm import foreign
 from sqlalchemy.ext.hybrid import hybrid_property
 from werkzeug.security import generate_password_hash, check_password_hash
 
-from application.extensions import db
-from application.models.challenge_log import ChallengeLog
-from application.models.project import Project
-from application.models.session_log import SessionLog
-from application.models.skill import Skill
+from ..extensions import db
+from .challenge_log import ChallengeLog
+from .project import Project
+from .session_log import SessionLog
+from .skill import Skill
 
 
 def default_nickname(context):
@@ -183,7 +183,7 @@ class User(db.Model):
 
     def get_progress_percent(self, domain):
         """Calculate CodeCombat progress as a percentage of completed challenges (rounded for readability)."""
-        from application.models.challenge import Challenge
+        from .challenge import Challenge
 
         if domain not in self._total_challenges_cache:
             self._total_challenges_cache[domain] = Challenge.query.filter_by(domain=domain).count()

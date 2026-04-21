@@ -4,7 +4,7 @@ Type: py
 Summary: SQLAlchemy model for duck trade logs and statuses.
 """
 
-from application.extensions import db
+from ..extensions import db
 
 
 class DuckTradeLog(db.Model):

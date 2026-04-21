@@ -6,8 +6,8 @@ Summary: SQLAlchemy model for coding challenges and rewards.
 
 from sqlalchemy.event import listens_for
 
-from application.extensions import db
-from application.models.challenge_log import ChallengeLog
+from ..extensions import db
+from .challenge_log import ChallengeLog
 
 
 class Challenge(db.Model):

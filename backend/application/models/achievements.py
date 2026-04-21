@@ -6,7 +6,7 @@ Summary: SQLAlchemy model for achievement definitions and metadata.
 
 from datetime import datetime
 
-from application.extensions import db
+from ..extensions import db
 
 
 class Achievement(db.Model):

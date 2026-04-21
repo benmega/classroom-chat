@@ -30309,3 +30309,121 @@ MemoryError
 2026-04-21 20:53:50,428 - application.tasks - INFO - Starting scheduled session cleanup
 2026-04-21 20:53:50,431 - application.tasks - INFO - No stale sessions found
 2026-04-21 20:53:50,431 - apscheduler.executors.default - INFO - Job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-21 20:54:50 +07)" executed successfully
+2026-04-21 20:54:03,534 - apscheduler.executors.default - INFO - Running job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-21 20:55:03 +07)" (scheduled at 2026-04-21 20:54:03.524662+07:00)
+2026-04-21 20:54:03,535 - application.tasks - INFO - Starting scheduled session cleanup
+2026-04-21 20:54:03,539 - application.tasks - INFO - No stale sessions found
+2026-04-21 20:54:03,540 - apscheduler.executors.default - INFO - Job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-21 20:55:03 +07)" executed successfully
+2026-04-21 20:54:10,955 - apscheduler.executors.default - INFO - Running job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-21 20:55:10 +07)" (scheduled at 2026-04-21 20:54:10.944368+07:00)
+2026-04-21 20:54:10,956 - application.tasks - INFO - Starting scheduled session cleanup
+2026-04-21 20:54:10,958 - application.tasks - INFO - No stale sessions found
+2026-04-21 20:54:10,958 - apscheduler.executors.default - INFO - Job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-21 20:55:10 +07)" executed successfully
+2026-04-21 20:54:11,017 - apscheduler.executors.default - INFO - Running job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-21 20:55:11 +07)" (scheduled at 2026-04-21 20:54:11.001610+07:00)
+2026-04-21 20:54:11,017 - application.tasks - INFO - Starting scheduled session cleanup
+2026-04-21 20:54:11,019 - application.tasks - INFO - No stale sessions found
+2026-04-21 20:54:11,019 - apscheduler.executors.default - INFO - Job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-21 20:55:11 +07)" executed successfully
+2026-04-21 20:54:49,090 - apscheduler.executors.default - INFO - Running job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-21 20:55:49 +07)" (scheduled at 2026-04-21 20:54:49.086783+07:00)
+2026-04-21 20:54:49,090 - application.tasks - INFO - Starting scheduled session cleanup
+2026-04-21 20:54:49,094 - application.tasks - INFO - No stale sessions found
+2026-04-21 20:54:49,095 - apscheduler.executors.default - INFO - Job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-21 20:55:49 +07)" executed successfully
+2026-04-21 20:55:03,537 - apscheduler.executors.default - INFO - Running job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-21 20:56:03 +07)" (scheduled at 2026-04-21 20:55:03.524662+07:00)
+2026-04-21 20:55:03,538 - application.tasks - INFO - Starting scheduled session cleanup
+2026-04-21 20:55:03,540 - application.tasks - INFO - No stale sessions found
+2026-04-21 20:55:03,541 - apscheduler.executors.default - INFO - Job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-21 20:56:03 +07)" executed successfully
+2026-04-21 20:55:10,958 - apscheduler.executors.default - INFO - Running job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-21 20:56:10 +07)" (scheduled at 2026-04-21 20:55:10.944368+07:00)
+2026-04-21 20:55:10,958 - application.tasks - INFO - Starting scheduled session cleanup
+2026-04-21 20:55:10,962 - application.tasks - INFO - No stale sessions found
+2026-04-21 20:55:10,962 - apscheduler.executors.default - INFO - Job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-21 20:56:10 +07)" executed successfully
+2026-04-21 20:55:11,005 - apscheduler.executors.default - INFO - Running job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-21 20:56:11 +07)" (scheduled at 2026-04-21 20:55:11.001610+07:00)
+2026-04-21 20:55:11,006 - application.tasks - INFO - Starting scheduled session cleanup
+2026-04-21 20:55:11,008 - application.tasks - INFO - No stale sessions found
+2026-04-21 20:55:11,008 - apscheduler.executors.default - INFO - Job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-21 20:56:11 +07)" executed successfully
+2026-04-21 20:55:49,095 - apscheduler.executors.default - INFO - Running job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-21 20:56:49 +07)" (scheduled at 2026-04-21 20:55:49.086783+07:00)
+2026-04-21 20:55:49,096 - application.tasks - INFO - Starting scheduled session cleanup
+2026-04-21 20:55:49,098 - application.tasks - INFO - No stale sessions found
+2026-04-21 20:55:49,099 - apscheduler.executors.default - INFO - Job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-21 20:56:49 +07)" executed successfully
+2026-04-21 20:56:03,531 - apscheduler.executors.default - INFO - Running job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-21 20:57:03 +07)" (scheduled at 2026-04-21 20:56:03.524662+07:00)
+2026-04-21 20:56:03,532 - application.tasks - INFO - Starting scheduled session cleanup
+2026-04-21 20:56:03,535 - application.tasks - INFO - No stale sessions found
+2026-04-21 20:56:03,535 - apscheduler.executors.default - INFO - Job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-21 20:57:03 +07)" executed successfully
+2026-04-21 20:56:10,949 - apscheduler.executors.default - INFO - Running job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-21 20:57:10 +07)" (scheduled at 2026-04-21 20:56:10.944368+07:00)
+2026-04-21 20:56:10,950 - application.tasks - INFO - Starting scheduled session cleanup
+2026-04-21 20:56:10,953 - application.tasks - INFO - No stale sessions found
+2026-04-21 20:56:10,953 - apscheduler.executors.default - INFO - Job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-21 20:57:10 +07)" executed successfully
+2026-04-21 20:56:11,010 - apscheduler.executors.default - INFO - Running job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-21 20:57:11 +07)" (scheduled at 2026-04-21 20:56:11.001610+07:00)
+2026-04-21 20:56:11,010 - application.tasks - INFO - Starting scheduled session cleanup
+2026-04-21 20:56:11,013 - application.tasks - INFO - No stale sessions found
+2026-04-21 20:56:11,013 - apscheduler.executors.default - INFO - Job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-21 20:57:11 +07)" executed successfully
+2026-04-21 20:56:16,068 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Ben\\AntiGravity\\classroom-chat\\backend\\application\\models\\project.py', reloading
+2026-04-21 20:56:16,441 - werkzeug - INFO -  * Restarting with stat
+2026-04-21 20:56:16,600 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Ben\\AntiGravity\\classroom-chat\\backend\\application\\models\\project.py', reloading
+2026-04-21 20:56:17,003 - werkzeug - INFO -  * Restarting with stat
+2026-04-21 20:56:20,557 - application - INFO - Configuring app for environment: development
+2026-04-21 20:56:20,557 - application - INFO - Configuring app for environment: development
+2026-04-21 20:56:21,107 - apscheduler.scheduler - INFO - Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2026-04-21 20:56:21,107 - apscheduler.scheduler - INFO - Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2026-04-21 20:56:21,113 - apscheduler.scheduler - INFO - Added job "scheduled_cleanup" to job store "default"
+2026-04-21 20:56:21,113 - apscheduler.scheduler - INFO - Added job "scheduled_cleanup" to job store "default"
+2026-04-21 20:56:21,113 - apscheduler.scheduler - INFO - Scheduler started
+2026-04-21 20:56:21,113 - apscheduler.scheduler - INFO - Scheduler started
+2026-04-21 20:56:21,120 - werkzeug - WARNING -  * Debugger is active!
+2026-04-21 20:56:21,120 - werkzeug - WARNING -  * Debugger is active!
+2026-04-21 20:56:21,123 - werkzeug - INFO -  * Debugger PIN: 135-229-167
+2026-04-21 20:56:21,123 - werkzeug - INFO -  * Debugger PIN: 135-229-167
+2026-04-21 20:56:49,100 - apscheduler.executors.default - INFO - Running job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-21 20:57:49 +07)" (scheduled at 2026-04-21 20:56:49.086783+07:00)
+2026-04-21 20:56:49,101 - application.tasks - INFO - Starting scheduled session cleanup
+2026-04-21 20:56:49,102 - application.tasks - INFO - No stale sessions found
+2026-04-21 20:56:49,102 - apscheduler.executors.default - INFO - Job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-21 20:57:49 +07)" executed successfully
+2026-04-21 20:56:59,827 - flask-limiter - INFO - ratelimit 60 per 1 minute (127.0.0.1) exceeded at endpoint: message.get_current_conversation
+2026-04-21 20:57:00,471 - flask-limiter - INFO - ratelimit 60 per 1 minute (127.0.0.1) exceeded at endpoint: message.get_current_conversation
+2026-04-21 20:57:01,823 - flask-limiter - INFO - ratelimit 60 per 1 minute (127.0.0.1) exceeded at endpoint: message.get_current_conversation
+2026-04-21 20:57:02,478 - flask-limiter - INFO - ratelimit 60 per 1 minute (127.0.0.1) exceeded at endpoint: message.get_current_conversation
+2026-04-21 20:57:03,535 - apscheduler.executors.default - INFO - Running job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-21 20:58:03 +07)" (scheduled at 2026-04-21 20:57:03.524662+07:00)
+2026-04-21 20:57:03,535 - application.tasks - INFO - Starting scheduled session cleanup
+2026-04-21 20:57:03,537 - application.tasks - INFO - No stale sessions found
+2026-04-21 20:57:03,537 - apscheduler.executors.default - INFO - Job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-21 20:58:03 +07)" executed successfully
+2026-04-21 20:57:03,824 - flask-limiter - INFO - ratelimit 60 per 1 minute (127.0.0.1) exceeded at endpoint: message.get_current_conversation
+2026-04-21 20:57:04,475 - flask-limiter - INFO - ratelimit 60 per 1 minute (127.0.0.1) exceeded at endpoint: message.get_current_conversation
+2026-04-21 20:57:05,819 - flask-limiter - INFO - ratelimit 60 per 1 minute (127.0.0.1) exceeded at endpoint: message.get_current_conversation
+2026-04-21 20:57:06,471 - flask-limiter - INFO - ratelimit 60 per 1 minute (127.0.0.1) exceeded at endpoint: message.get_current_conversation
+2026-04-21 20:57:07,827 - flask-limiter - INFO - ratelimit 60 per 1 minute (127.0.0.1) exceeded at endpoint: message.get_current_conversation
+2026-04-21 20:57:08,477 - flask-limiter - INFO - ratelimit 60 per 1 minute (127.0.0.1) exceeded at endpoint: message.get_current_conversation
+2026-04-21 20:57:09,832 - flask-limiter - INFO - ratelimit 60 per 1 minute (127.0.0.1) exceeded at endpoint: message.get_current_conversation
+2026-04-21 20:57:10,482 - flask-limiter - INFO - ratelimit 60 per 1 minute (127.0.0.1) exceeded at endpoint: message.get_current_conversation
+2026-04-21 20:57:11,818 - flask-limiter - INFO - ratelimit 60 per 1 minute (127.0.0.1) exceeded at endpoint: message.get_current_conversation
+2026-04-21 20:57:12,480 - flask-limiter - INFO - ratelimit 60 per 1 minute (127.0.0.1) exceeded at endpoint: message.get_current_conversation
+2026-04-21 20:57:13,824 - flask-limiter - INFO - ratelimit 60 per 1 minute (127.0.0.1) exceeded at endpoint: message.get_current_conversation
+2026-04-21 20:57:14,474 - flask-limiter - INFO - ratelimit 60 per 1 minute (127.0.0.1) exceeded at endpoint: message.get_current_conversation
+2026-04-21 20:57:15,831 - flask-limiter - INFO - ratelimit 60 per 1 minute (127.0.0.1) exceeded at endpoint: message.get_current_conversation
+2026-04-21 20:57:16,478 - flask-limiter - INFO - ratelimit 60 per 1 minute (127.0.0.1) exceeded at endpoint: message.get_current_conversation
+2026-04-21 20:57:17,822 - flask-limiter - INFO - ratelimit 60 per 1 minute (127.0.0.1) exceeded at endpoint: message.get_current_conversation
+2026-04-21 20:57:18,485 - flask-limiter - INFO - ratelimit 60 per 1 minute (127.0.0.1) exceeded at endpoint: message.get_current_conversation
+2026-04-21 20:57:19,829 - flask-limiter - INFO - ratelimit 60 per 1 minute (127.0.0.1) exceeded at endpoint: message.get_current_conversation
+2026-04-21 20:57:20,479 - flask-limiter - INFO - ratelimit 60 per 1 minute (127.0.0.1) exceeded at endpoint: message.get_current_conversation
+2026-04-21 20:57:21,113 - apscheduler.executors.default - INFO - Running job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-21 20:58:21 +07)" (scheduled at 2026-04-21 20:57:21.107396+07:00)
+2026-04-21 20:57:21,113 - apscheduler.executors.default - INFO - Running job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-21 20:58:21 +07)" (scheduled at 2026-04-21 20:57:21.107396+07:00)
+2026-04-21 20:57:21,113 - application.tasks - INFO - Starting scheduled session cleanup
+2026-04-21 20:57:21,113 - application.tasks - INFO - Starting scheduled session cleanup
+2026-04-21 20:57:21,121 - application.tasks - INFO - No stale sessions found
+2026-04-21 20:57:21,122 - apscheduler.executors.default - INFO - Job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-21 20:58:21 +07)" executed successfully
+2026-04-21 20:57:21,124 - application.tasks - INFO - No stale sessions found
+2026-04-21 20:57:21,125 - apscheduler.executors.default - INFO - Job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-21 20:58:21 +07)" executed successfully
+2026-04-21 20:57:24,625 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Ben\\AntiGravity\\classroom-chat\\backend\\application\\models\\message.py', reloading
+2026-04-21 20:57:24,641 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Ben\\AntiGravity\\classroom-chat\\backend\\application\\models\\challenge.py', reloading
+2026-04-21 20:57:24,974 - werkzeug - INFO -  * Restarting with stat
+2026-04-21 20:57:25,023 - werkzeug - INFO -  * Restarting with stat
+2026-04-21 20:57:26,354 - application - INFO - Configuring app for environment: development
+2026-04-21 20:57:26,355 - application - INFO - Configuring app for environment: development
+2026-04-21 20:57:26,721 - apscheduler.scheduler - INFO - Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2026-04-21 20:57:26,723 - apscheduler.scheduler - INFO - Added job "scheduled_cleanup" to job store "default"
+2026-04-21 20:57:26,723 - apscheduler.scheduler - INFO - Scheduler started
+2026-04-21 20:57:26,723 - apscheduler.scheduler - INFO - Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2026-04-21 20:57:26,724 - apscheduler.scheduler - INFO - Added job "scheduled_cleanup" to job store "default"
+2026-04-21 20:57:26,724 - apscheduler.scheduler - INFO - Scheduler started
+2026-04-21 20:57:26,727 - werkzeug - WARNING -  * Debugger is active!
+2026-04-21 20:57:26,727 - werkzeug - WARNING -  * Debugger is active!
+2026-04-21 20:57:26,729 - werkzeug - INFO -  * Debugger PIN: 135-229-167
+2026-04-21 20:57:26,729 - werkzeug - INFO -  * Debugger PIN: 135-229-167
+2026-04-21 20:57:49,094 - apscheduler.executors.default - INFO - Running job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-21 20:58:49 +07)" (scheduled at 2026-04-21 20:57:49.086783+07:00)
+2026-04-21 20:57:49,094 - application.tasks - INFO - Starting scheduled session cleanup
+2026-04-21 20:57:49,096 - application.tasks - INFO - No stale sessions found
+2026-04-21 20:57:49,096 - apscheduler.executors.default - INFO - Job "scheduled_cleanup (trigger: interval[0:01:00], next run at: 2026-04-21 20:58:49 +07)" executed successfully

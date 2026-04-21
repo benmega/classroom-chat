@@ -8,7 +8,7 @@ from datetime import datetime
 
 from sqlalchemy import Enum
 
-from application.extensions import db
+from ..extensions import db
 
 
 class Message(db.Model):

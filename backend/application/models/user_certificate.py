@@ -6,7 +6,7 @@ Summary: SQLAlchemy model for user-submitted certificates.
 
 from datetime import datetime
 
-from application.extensions import db
+from ..extensions import db
 
 
 class UserCertificate(db.Model):

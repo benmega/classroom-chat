@@ -6,7 +6,7 @@ Summary: SQLAlchemy model for course information and mapping.
 
 from datetime import datetime
 
-from application.extensions import db
+from ..extensions import db
 
 
 class Course(db.Model):

@@ -5,7 +5,7 @@ Summary: Model for storing user notes (images) uploaded to S3.
 """
 from datetime import datetime
 
-from application.extensions import db
+from ..extensions import db
 
 
 class Note(db.Model):

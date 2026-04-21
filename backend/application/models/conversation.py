@@ -6,7 +6,7 @@ Summary: SQLAlchemy model for chat conversations and relationships.
 
 from datetime import datetime
 
-from application.extensions import db
+from ..extensions import db
 
 # Association table for many-to-many relationship between users and conversations
 conversation_users = db.Table(

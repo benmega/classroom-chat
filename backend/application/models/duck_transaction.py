@@ -1,5 +1,5 @@
 from datetime import datetime
-from application.extensions import db
+from ..extensions import db
 
 class DuckTransaction(db.Model):
     __tablename__ = "duck_transactions"

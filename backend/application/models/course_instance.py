@@ -6,7 +6,7 @@ Summary: SQLAlchemy model for specific class instances (e.g., "Sat1030 CS 4 PY")
 
 from datetime import datetime
 
-from application.extensions import db
+from ..extensions import db
 
 
 class CourseInstance(db.Model):

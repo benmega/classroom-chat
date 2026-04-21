@@ -6,7 +6,7 @@ Summary: SQLAlchemy model for user skills and tagging.
 
 from sqlalchemy import UniqueConstraint
 
-from application.extensions import db
+from ..extensions import db
 
 
 class Skill(db.Model):

@@ -1,4 +1,4 @@
-from application.extensions import db
+from ..extensions import db
 
 
 class ChallengeLog(db.Model):

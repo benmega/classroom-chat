@@ -4,7 +4,7 @@ Type: py
 Summary: SQLAlchemy model for global configuration and feature flags.
 """
 
-from application.extensions import db
+from ..extensions import db
 
 
 class Configuration(db.Model):
