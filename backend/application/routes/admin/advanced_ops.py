@@ -1,4 +1,3 @@
-from flask import request, jsonify
 from application.extensions import db
 from application.models.conversation import Conversation, conversation_users
 from application.models.message import Message

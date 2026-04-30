@@ -1,8 +1,7 @@
 import re
 from datetime import date, timedelta, datetime
 
-from sqlalchemy import event, or_
-from sqlalchemy.orm import foreign
+from sqlalchemy import event
 from sqlalchemy.ext.hybrid import hybrid_property
 from werkzeug.security import generate_password_hash, check_password_hash
 

@@ -13,7 +13,8 @@ def get_directory_summary(root_dir=".", exclude=None):
     exclude = exclude or {".git", "__pycache__", ".github", "node_modules", "venv"}
     summary = []
     for path in sorted(pathlib.Path(root_dir).rglob("*")):
-        if any(part in exclude for part in path.parts): continue
+        if any(part in exclude for part in path.parts):
+            continue
         depth = len(path.parts) - 1
         summary.append(f"{'  ' * depth}- {path.name}{'/' if path.is_dir() else ''}")
     return "\n".join(summary)

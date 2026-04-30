@@ -1,6 +1,6 @@
 import logging
 import os
-from datetime import timedelta, datetime
+from datetime import timedelta
 
 from flask import Flask, session, g, jsonify
 from flask_cors import CORS
