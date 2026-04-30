@@ -280,9 +280,13 @@ def new_project():
         db.session.flush()
 
         if "project_image" in request.files:
-            filename = handle_project_image_upload(request.files["project_image"])
-            if filename:
-                new_proj.image_url = f"images/projects/{filename}"
+            file = request.files["project_image"]
+            if file and file.filename != "":
+                filename = handle_project_image_upload(file)
+                if filename:
+                    new_proj.image_url = f"images/projects/{filename}"
+                else:
+                    return "Invalid image format. Allowed: " + ", ".join(Config.ALLOWED_EXTENSIONS), 400
 
         video_upload_failed = False
         if "project_video" in request.files:
@@ -357,6 +361,8 @@ def edit_project(project_id):
                 filename = handle_project_image_upload(file)
                 if filename:
                     project.image_url = f"images/projects/{filename}"
+                else:
+                    return "Invalid image format. Allowed: " + ", ".join(Config.ALLOWED_EXTENSIONS), 400
 
         video_upload_failed = False
         if "project_video" in request.files:

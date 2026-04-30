@@ -35,7 +35,7 @@ class Config:
 
     UPLOAD_FOLDER = os.path.join(BASE_DIR, "userData")
     MAX_CONTENT_LENGTH = 500 * 1024 * 1024
-    ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif"}
+    ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif", "webp"}
 
     ADMIN_USERNAME = os.getenv("ADMIN_USERNAME", "admin")
     ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
@@ -91,4 +91,5 @@ class ProductionConfig(Config):
         "https://www.ozaria.com",
         "https://benmega.com",
         "https://www.benmega.com",
+        "https://blossom.benmega.com",
     ]

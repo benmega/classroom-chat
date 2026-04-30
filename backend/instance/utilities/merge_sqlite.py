@@ -12,8 +12,7 @@ from pathlib import Path
 
 # Configuration: table -> list of critical columns to preserve from prod
 CRITICAL_COLUMNS = {
-    "users": ["duck_balance"]  # add more columns as needed
-    # "another_table": ["important_col1", "important_col2"]
+    "users": ["duck_balance", "earned_ducks", "packets"]  # Preserve production balances
 }
 
 

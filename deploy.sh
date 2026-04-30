@@ -83,21 +83,19 @@ echo "Starting deploy..."
 # -------------------------
 # Code update
 # -------------------------
-cd "$APP_DIR"
-echo "Updating code..."
-run git fetch origin
-run git reset --hard origin/deploy-gunicorn
+# Note: Code is already updated by the GitHub Action SSH step before calling this script.
+# We keep this as a fallback but commented out.
+# cd "$APP_DIR"
+# echo "Updating code..."
+# run git fetch origin
+# run git reset --hard origin/deploy-gunicorn
 
 # -------------------------
 # Frontend build
 # -------------------------
-echo "Building frontend..."
-(
-    cd "$APP_DIR/frontend"
-    run npm install
-    export NODE_OPTIONS="--max-old-space-size=1536"
-    run npm run build
-)
+# Frontend build is now performed in GitHub Actions to avoid OOM on EC2.
+# Built files are transferred via SCP to $APP_DIR/frontend/dist/
+
 
 # Fix nginx read permissions on the freshly built dist/ files
 echo "Fixing frontend file permissions for nginx..."

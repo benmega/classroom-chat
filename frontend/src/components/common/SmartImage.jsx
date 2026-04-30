@@ -19,7 +19,7 @@ const SmartImage = ({
 
   const getFallback = () => {
     if (fallbackType === 'avatar') {
-      return '/static/user/profile_pictures/Default_pfp.jpg';
+      return '/static/images/Default_pfp.jpg';
     }
     return '/static/images/projects/Project_placeholder.png';
   };
