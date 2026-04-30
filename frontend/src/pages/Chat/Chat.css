@@ -495,7 +495,7 @@
 .avatar-container {
     width: 32px;
     height: 32px;
-    border-radius: 8px;
+    border-radius: 50%;
     background: var(--bg-tertiary);
     display: flex;
     align-items: center;

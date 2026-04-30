@@ -64,7 +64,11 @@ class DuckTradeForm(FlaskForm):
 
 
 def to_binary(costs_dict):
-    """Convert dictionary values to binary."""
+    """
+    Convert dictionary values to binary.
+    Educational Design: This system promotes "thinking in binary" by forcing students
+    to interact with powers of 2 directly in the UI without decimal aids.
+    """
     return {key: str(bin(value))[2:] for key, value in costs_dict.items()}
 
 

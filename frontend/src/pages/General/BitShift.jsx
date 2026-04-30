@@ -21,6 +21,11 @@ const BitShift = () => {
         duckCounts.reduce((sum, count, i) => sum + count * Math.pow(2, i) * multiplier, 0),
     [duckCounts, multiplier]);
     
+    // Educational Design: The 'Bit Shift' interface is intentionally challenging.
+    // By removing decimal hints (e.g., (128), (64)), we force students to 
+    // "think in binary" and internalize the powers of 2 (2^0 through 2^7).
+    // This promotes active recall and deeper understanding of binary-to-decimal conversion.
+
     const mathCheckPassed = useMemo(() => digitalDucks > 0 && binaryTotal === digitalDucks, [digitalDucks, binaryTotal]);
     const mathCheckMismatch = useMemo(() => digitalDucks > 0 && binaryTotal !== digitalDucks, [digitalDucks, binaryTotal]);
 
@@ -143,7 +148,7 @@ const BitShift = () => {
                             <div key={i} className="small-input-group">
                                 <label className="duck-label">
                                     {(Math.pow(2, i)).toString(2).padStart(i + 1, '0')}{isByteMode ? 'B' : 'b'}
-                                    <span style={{ fontSize: '0.7rem', opacity: 0.7, marginLeft: '4px' }}>({Math.pow(2, i) * multiplier})</span>
+                                    {/* Parenthetic hints removed to force students to calculate bit values manually */}
                                 </label>
                                 <button
                                     type="button"

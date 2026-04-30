@@ -9,6 +9,7 @@ import useAuthStore from '../../store/useAuthStore';
 import './ManageProject.css';
 import SmartImage from '../../components/common/SmartImage';
 import { formatStaticUrl } from '../../utils/formatters';
+import { extractVideoThumbnail } from '../../utils/video';
 
 const ManageProject = () => {
     const { projectId } = useParams();
@@ -32,6 +33,7 @@ const ManageProject = () => {
     const [projectImage, setProjectImage] = useState(null);
     const [imagePreview, setImagePreview] = useState(null);
     const [projectVideo, setProjectVideo] = useState(null);
+    const [isCustomImage, setIsCustomImage] = useState(false);
     const [error, setError] = useState(null);
 
     useEffect(() => {
@@ -62,6 +64,7 @@ const ManageProject = () => {
                     });
                     if (p.image_url) {
                         setImagePreview(formatStaticUrl(p.image_url));
+                        setIsCustomImage(true);
                     }
                 }
             } catch (error) {
@@ -110,14 +113,30 @@ const ManageProject = () => {
         }
     };
 
-    const handleFileChange = (e) => {
+    const handleFileChange = async (e) => {
         const { name, files } = e.target;
         if (files && files[0]) {
             if (name === 'project_image') {
                 setProjectImage(files[0]);
                 setImagePreview(URL.createObjectURL(files[0]));
+                setIsCustomImage(true);
             } else if (name === 'project_video') {
                 setProjectVideo(files[0]);
+                
+                // If no custom image is selected yet (either new or existing), 
+                // try to extract a thumbnail from the video
+                if (!isCustomImage) {
+                    try {
+                        const thumbnailBlob = await extractVideoThumbnail(files[0]);
+                        const thumbnailFile = new File([thumbnailBlob], "video_thumbnail.jpg", { type: "image/jpeg" });
+                        setProjectImage(thumbnailFile);
+                        setImagePreview(URL.createObjectURL(thumbnailFile));
+                        toast.success('Generated thumbnail from video!');
+                    } catch (err) {
+                        console.error('Failed to extract thumbnail:', err);
+                        // Non-critical error, just log it
+                    }
+                }
             }
         }
     };

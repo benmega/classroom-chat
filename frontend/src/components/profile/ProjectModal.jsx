@@ -1,6 +1,7 @@
 import React from 'react';
 import { X, ExternalLink, Code, CheckCircle } from 'lucide-react';
 import { formatStaticUrl } from '../../utils/formatters';
+import SmartImage from '../common/SmartImage';
 
 const getYoutubeEmbedUrl = (url) => {
     if (!url) return null;
@@ -44,9 +45,9 @@ const ProjectModal = ({ project, onClose }) => {
                 </div>
                 <div className="modal-body">
                     <div className="modal-main">
-                        {project.video_url && (
-                            <div className="video-spotlight">
-                                {getYoutubeEmbedUrl(project.video_url) ? (
+                        <div className="video-spotlight">
+                            {project.video_url ? (
+                                getYoutubeEmbedUrl(project.video_url) ? (
                                     <iframe 
                                         src={getYoutubeEmbedUrl(project.video_url)} 
                                         title="Project Video Presentation"
@@ -63,9 +64,15 @@ const ProjectModal = ({ project, onClose }) => {
                                     >
                                         Your browser does not support the video tag.
                                     </video>
-                                )}
-                            </div>
-                        )}
+                                )
+                            ) : (
+                                <SmartImage 
+                                    src={formatStaticUrl(project.image_url)} 
+                                    alt={project.name} 
+                                    fallbackType="project"
+                                />
+                            )}
+                        </div>
                         <h3>Description</h3>
                         <p>{project.description}</p>
                         {project.teacher_comment && (

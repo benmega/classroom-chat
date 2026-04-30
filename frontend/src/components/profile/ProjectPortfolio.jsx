@@ -22,15 +22,11 @@ const ProjectPortfolio = ({ projects, isOwner, setSelectedProject }) => {
                     {projects?.map(project => (
                         <div key={project.id} className="project-card">
                             <div className="project-thumb" onClick={() => setSelectedProject(project)}>
-                                {project.image_url ? (
-                                    <SmartImage 
-                                        src={formatStaticUrl(project.image_url)} 
-                                        alt={project.name} 
-                                        fallbackType="project"
-                                    />
-                                ) : (
-                                    <div className="code-placeholder"><Code size={32} /></div>
-                                )}
+                                <SmartImage 
+                                    src={formatStaticUrl(project.image_url)} 
+                                    alt={project.name} 
+                                    fallbackType="project"
+                                />
                                 {project.video_url && <div className="play-overlay"><Play size={24} fill="currentColor" /></div>}
                                 {isOwner && (
                                     <button className="edit-overlay" onClick={(e) => { e.stopPropagation(); navigate(`/project/edit/${project.id}`); }}>

@@ -28,7 +28,7 @@ const SmartImage = ({
     setErrorCount(prev => prev + 1);
   };
 
-  if (errorCount >= 2 || !src) {
+  if (errorCount >= 2) {
     // Both failed - render CSS placeholder
     return (
       <div 
@@ -55,7 +55,7 @@ const SmartImage = ({
     );
   }
 
-  const finalSrc = errorCount === 1 ? getFallback() : src;
+  const finalSrc = (errorCount === 1 || !src) ? getFallback() : src;
 
   return (
     <img 
@@ -63,6 +63,8 @@ const SmartImage = ({
       alt={alt} 
       className={className} 
       style={{
+        width: '100%',
+        height: '100%',
         ...style,
         objectFit: 'cover'
       }}

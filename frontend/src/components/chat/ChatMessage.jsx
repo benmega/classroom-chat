@@ -21,7 +21,7 @@ const ChatMessage = ({ msg, user }) => {
                                 fallbackType="avatar"
                             />
                         ) : (
-                            <UserIcon size={16} />
+                            <UserIcon size={20} />
                         )}
                     </div>
                 </Link>

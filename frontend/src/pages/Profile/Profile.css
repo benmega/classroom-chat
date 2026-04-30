@@ -937,12 +937,16 @@
     border: 1px solid var(--border-subtle);
 }
 
-.video-spotlight iframe {
+.video-spotlight iframe,
+.video-spotlight img,
+.video-spotlight .direct-video-player,
+.video-spotlight .css-placeholder {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
+    object-fit: cover;
 }
 
 .code-snippet {
