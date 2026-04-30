@@ -8,9 +8,17 @@ export async function setupSocketConnection() {
         throw new Error('Failed to fetch user ID');
     }
     const { user_id } = await response.json();
+    const csrfToken = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('csrf_token='))
+        ?.split('=')[1];
+
     const socket = io.connect(serverEndpoint, {
         auth: {
             user_id: user_id  // Pass user_id obtained from the server
+        },
+        extraHeaders: {
+            'X-CSRFToken': csrfToken || ''
         },
         transports: ['polling', 'websocket'],
         reconnection: true,

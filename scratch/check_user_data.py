@@ -1,5 +1,3 @@
-import requests
-
 # Assuming the server is running on localhost:5000
 # and needs admin session...
 # This might be tricky without a real session.

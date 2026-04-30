@@ -1,8 +1,8 @@
-from flask import Blueprint, jsonify, request, g
+from flask import Blueprint, jsonify, request
 from application.extensions import db
 from application.decorators.admin_required import admin_only
 from sqlalchemy import inspect
-from datetime import datetime
+
 
 crud_bp = Blueprint("admin_crud", __name__)
 

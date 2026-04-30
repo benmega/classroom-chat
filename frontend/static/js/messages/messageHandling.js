@@ -39,9 +39,17 @@ export function setupMessagingAndConversation() {
 
 function startHeartbeat() {
     setInterval(() => {
-        fetch('/session/heartbeat', {
+        const csrfToken = document.cookie
+            .split('; ')
+            .find(row => row.startsWith('csrf_token='))
+            ?.split('=')[1];
+
+        fetch('/api/session/heartbeat', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken || ''
+            },
         }).catch(err => console.error('Heartbeat failed:', err));
     }, HEARTBEAT_INTERVAL_MS);
 }

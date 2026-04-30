@@ -27,6 +27,8 @@ NEW_COLUMNS = {
         ("slug", "TEXT", None),
         ("is_approved", "BOOLEAN", 1),
         ("bio", "TEXT", None),
+        ("created_at", "DATETIME", None),
+        ("last_achievement_evaluation", "DATETIME", None),
     ],
     "conversations": [
         ("creator_id", "INTEGER", None),

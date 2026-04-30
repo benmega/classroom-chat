@@ -20,8 +20,8 @@ with app.app_context():
             if 'id' in column.name.lower() and column.name != 'id':
                 ref = column.name.replace('_id', '').capitalize()
                 print(f'            <ReferenceField source=\"{column.name}\" reference=\"{ref}\">')
-                print(f'                <TextField source=\"id\" />')
-                print(f'            </ReferenceField>')
+                print('                <TextField source=\"id\" />')
+                print('            </ReferenceField>')
             elif 'date' in column.name.lower() or 'time' in column.name.lower() or 'at' in column.name.lower() or str(column.type) == 'DATETIME':
                 print(f'            <DateField source=\"{column.name}\" showTime />')
             elif str(column.type) == 'BOOLEAN':

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import useAuthStore from '../../store/useAuthStore';
+import client from '../../api/client';
 import { 
     User, 
     Shield, 
@@ -82,16 +83,7 @@ const Layout = ({ children }) => {
         
         const sendHeartbeat = async () => {
             try {
-                // We use the imported client or a direct fetch if preferred.
-                // client from useAuthStore (via useAuthStore.js) is preferred if available.
-                // Since this file doesn't import client directly, I'll use fetch or import it if I can.
-                // But wait, the file already imports useAuthStore.
-                // I'll use a direct fetch for simplicity if I don't want to mess with imports,
-                // but let's check if I can import client.
-                await fetch('/session/heartbeat', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                });
+                await client.post('/api/session/heartbeat');
             } catch (err) {
                 console.error('Heartbeat failed:', err);
             }

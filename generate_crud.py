@@ -21,7 +21,7 @@ for name, fields_block in matches:
             source = re.search(r'source="([^"]+)"', line).group(1)
             ref = re.search(r'reference="([^"]+)"', line).group(1)
             fields.append((source, f'ReferenceInput reference="{ref}"'))
-            if not "/>" in line:
+            if "/>" not in line:
                 in_reference = True
             continue
         if "</ReferenceField" in line:

@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify
+from flask import request, jsonify
 from application.extensions import db
 from application.models.configuration import Configuration
 from application.models.banned_words import BannedWords

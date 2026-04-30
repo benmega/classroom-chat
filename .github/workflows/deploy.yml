@@ -10,23 +10,26 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Deploy via SSH
-        uses: appleboy/ssh-action@master
+        uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            # 1. Navigate to project directory
-            cd /path/to/your/project/root
+            APP_DIR="$HOME/classroom-chat"
 
-            # 2. Update the code
-            git pull origin deploy-gunicorn
+            # Inject all required production environment variables into backend/.env
+            # These are stored as GitHub Secrets and never committed to the repository
+            cat > "$APP_DIR/backend/.env" <<ENVFILE
+            FLASK_ENV=production
+            SECRET_KEY=${{ secrets.SECRET_KEY }}
+            ADMIN_USERNAME=${{ secrets.ADMIN_USERNAME }}
+            ADMIN_PASSWORD=${{ secrets.ADMIN_PASSWORD }}
+            DATABASE_URL=sqlite:////home/ubuntu/classroom-chat/backend/instance/prod_users.db
+            OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
+            WEBHOOK_SECRET=${{ secrets.WEBHOOK_SECRET }}
+            ENVFILE
 
-            # 3. Inject Production Environment Variables
-            # We create a fresh .env file using secrets stored in GitHub
-            echo "FLASK_ENV=${{ secrets.FLASK_ENV }}" > .env
-            echo "DEBUG=${{ secrets.DEBUG }}" >> .env
-
-            # 4. Set permissions and execute the deployment script
-            chmod +x ./classroom-chat/deploy.sh
-            ./classroom-chat/deploy.sh
+            # Execute the deployment script
+            chmod +x "$APP_DIR/deploy.sh"
+            "$APP_DIR/deploy.sh"

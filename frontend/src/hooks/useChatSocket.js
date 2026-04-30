@@ -14,10 +14,20 @@ const SOCKET_URL = getSocketUrl();
 // Singleton socket instance
 let _socket = null;
 
+const getCookie = (name) => {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop().split(';').shift();
+  return '';
+};
+
 const getSocket = () => {
   if (!_socket) {
     _socket = io(SOCKET_URL, {
       withCredentials: true,
+      extraHeaders: {
+        'X-CSRFToken': getCookie('csrf_token')
+      },
       // Polling first then upgrade is more reliable through proxies.
       transports: ['polling', 'websocket'],
       reconnection: true,

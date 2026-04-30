@@ -34,7 +34,7 @@ def register_blueprints(app: Flask):
     app.register_blueprint(message, url_prefix="/message")
     app.register_blueprint(duck_trade, url_prefix="/duck_trade")
     app.register_blueprint(achievements, url_prefix="/api/achievements")
-    app.register_blueprint(session, url_prefix="/session")
+    app.register_blueprint(session, url_prefix="/api/session")
     app.register_blueprint(notes_bp, url_prefix="/notes")
     app.register_blueprint(achievements_api)
     app.register_blueprint(webhooks_api)

@@ -14,8 +14,8 @@ from application.models.project import Project
 webhooks_api = Blueprint("webhooks_api", __name__, url_prefix="/api/webhooks")
 
 def validate_secret():
-    """Validates the incoming request against the LAMBDA_SECRET environment variable."""
-    expected_secret = os.environ.get("LAMBDA_SECRET")
+    """Validates the incoming request against the WEBHOOK_SECRET environment variable."""
+    expected_secret = os.environ.get("WEBHOOK_SECRET")
     incoming_secret = request.headers.get("X-API-KEY")
     return expected_secret and incoming_secret == expected_secret
 

@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from flask import Blueprint, jsonify, Response
+from flask import Blueprint, jsonify, Response, current_app
 from sqlalchemy import func, case
 from application.extensions import db
 from application.models.user import User
@@ -9,8 +9,7 @@ from application.models.banned_words import BannedWords
 from application.models.duck_transaction import DuckTransaction
 from application.decorators.api_response import api_response
 from application.decorators.admin_required import admin_only
-from flask import Blueprint, jsonify, current_app
-from flask_admin.contrib.sqla import ModelView
+
 
 from ..admin_routes import admin
 
