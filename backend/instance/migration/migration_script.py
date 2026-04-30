@@ -217,6 +217,65 @@ def seed_challenges(conn):
     """Wrapper to call the imported seed_challenges module."""
     seed_challenges_data(conn, CHALLENGES_SEED_PATH)
 
+
+def migrate_project_images(conn):
+    """
+    Moves project thumbnails from ephemeral frontend folders to persistent userData
+    and updates database paths.
+    """
+    import shutil
+    
+    # Paths relative to this script
+    # BASE_DIR is backend/instance/migration/
+    project_root = os.path.abspath(os.path.join(BASE_DIR, "..", "..", ".."))
+    
+    # In production, images might be in dist (if they were uploaded there before)
+    # or in static (if they were manually put there). We check both.
+    old_locations = [
+        os.path.join(project_root, "frontend", "dist", "images", "projects"),
+        os.path.join(project_root, "frontend", "static", "images", "projects")
+    ]
+    new_location = os.path.join(project_root, "userData", "projects")
+    
+    # 1. Ensure new location exists
+    if not os.path.exists(new_location):
+        os.makedirs(new_location, exist_ok=True)
+        print(f"Migration: Created directory {new_location}")
+
+    # 2. Move files from old locations to new location
+    moved_files_count = 0
+    for old_loc in old_locations:
+        if os.path.exists(old_loc):
+            for f in os.listdir(old_loc):
+                src = os.path.join(old_loc, f)
+                dst = os.path.join(new_location, f)
+                if os.path.isfile(src) and not os.path.exists(dst):
+                    try:
+                        shutil.copy2(src, dst)
+                        moved_files_count += 1
+                    except Exception as e:
+                        print(f"Migration Error: Failed to copy {f}: {e}")
+    
+    if moved_files_count > 0:
+        print(f"Migration: Copied {moved_files_count} project images to persistent storage.")
+
+    # 3. Update Database paths
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, image_url FROM projects WHERE image_url LIKE 'images/projects/%'")
+    rows = cursor.fetchall()
+    
+    if rows:
+        print(f"Migration: Updating {len(rows)} project image paths in database...")
+        updated_count = 0
+        for row_id, old_url in rows:
+            filename = old_url.replace("images/projects/", "")
+            new_url = f"/user/project_images/{filename}"
+            cursor.execute("UPDATE projects SET image_url = ? WHERE id = ?", (new_url, row_id))
+            updated_count += 1
+        
+        conn.commit()
+        print(f"Migration: Successfully updated {updated_count} project records.")
+
 # ================= RUNNER =================
 
 def run_migrations():
@@ -232,6 +291,7 @@ def run_migrations():
         migrate_classrooms_and_instances,
         seed_course_instances,
         seed_challenges, # Added new step to the pipeline
+        migrate_project_images, # Added new step to the pipeline
     ]
 
     try:

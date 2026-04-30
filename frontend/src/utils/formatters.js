@@ -35,11 +35,8 @@ export const formatStaticUrl = (url) => {
     if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
         return url;
     }
-    // If it already starts with /static, don't prepend it
-    if (url.startsWith('/static')) {
+    if (url.startsWith('/')) {
         return url;
     }
-    // Ensure it doesn't have a double slash if url starts with /
-    const cleanUrl = url.startsWith('/') ? url.substring(1) : url;
-    return `/static/${cleanUrl}`;
+    return `/static/${url}`;
 };

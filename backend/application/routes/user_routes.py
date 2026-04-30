@@ -284,7 +284,7 @@ def new_project():
             if file and file.filename != "":
                 filename = handle_project_image_upload(file)
                 if filename:
-                    new_proj.image_url = f"images/projects/{filename}"
+                    new_proj.image_url = f"/user/project_images/{filename}"
                 else:
                     return "Invalid image format. Allowed: " + ", ".join(Config.ALLOWED_EXTENSIONS), 400
 
@@ -360,7 +360,7 @@ def edit_project(project_id):
             if file and file.filename != "":
                 filename = handle_project_image_upload(file)
                 if filename:
-                    project.image_url = f"images/projects/{filename}"
+                    project.image_url = f"/user/project_images/{filename}"
                 else:
                     return "Invalid image format. Allowed: " + ", ".join(Config.ALLOWED_EXTENSIONS), 400
 
@@ -526,6 +526,25 @@ def profile_picture(filename):
 
 
 
+@limiter.limit("100 per minute")
+@user.route("/project_images/<path:filename>")
+def project_image(filename):
+    """Serves project thumbnails from the persistent userData/projects folder."""
+    upload_folder = os.path.join(Config.UPLOAD_FOLDER, "projects")
+    safe_path = os.path.normpath(filename)
+    
+    if os.path.isabs(safe_path) or safe_path.startswith(".."):
+        abort(400)
+
+    full_path = os.path.join(upload_folder, safe_path)
+    
+    if os.path.exists(full_path) and os.path.isfile(full_path):
+        return send_from_directory(upload_folder, safe_path)
+    else:
+        # Fallback to static placeholder if not found in uploads
+        return send_from_directory(os.path.join(Config.STATIC_FOLDER, "images"), "Project_placeholder.png")
+
+
 @user.route("/get_users", methods=["GET"])
 @require_login
 def get_users():
@@ -641,13 +660,11 @@ def handle_profile_picture_upload(user_obj):
 
 def handle_project_image_upload(file):
     """
-    Saves a project image and returns the filename.
-    Assumes storage in static/images/projects/
+    Saves a project image to the persistent userData directory and returns the filename.
     """
     if file and allowed_file(file.filename):
         filename = f"{uuid.uuid4().hex}.{file.filename.rsplit('.', 1)[1].lower()}"
-        # Adjust path as per your static folder structure
-        upload_path = os.path.join(Config.STATIC_FOLDER, "images", "projects")
+        upload_path = os.path.join(Config.UPLOAD_FOLDER, "projects")
 
         os.makedirs(upload_path, exist_ok=True)
         file.save(os.path.join(upload_path, filename))
