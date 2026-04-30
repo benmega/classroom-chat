@@ -15,28 +15,33 @@ from application.models.session_log import SessionLog
 
 session = Blueprint("session", __name__)
 
-INSTANCE_ID = "i-03afac811de461a56"
-REGION_NAME = "ap-southeast-1"
+_ec2_metadata_cache = None
 
-try:
-    response = requests.get(
-        "http://169.254.169.254/latest/dynamic/instance-identity/document", timeout=1.0
-    )
-    response_json = response.json()
-    INSTANCE_ID = response_json.get("instanceId")
-    REGION_NAME = response_json.get("region")
-    print(
-        f"Successfully fetched EC2 metadata. Instance: {INSTANCE_ID}, Region: {REGION_NAME}"
-    )
+def get_ec2_metadata():
+    global _ec2_metadata_cache
+    if _ec2_metadata_cache:
+        return _ec2_metadata_cache
 
-except requests.exceptions.ConnectionError:
-    print(
-        f"Not on EC2. Using default dev values. Instance: {INSTANCE_ID}, Region: {REGION_NAME}"
-    )
-except Exception as e:
-    print(f"Error fetching EC2 metadata, using defaults. Error: {e}")
+    instance_id = "i-03afac811de461a56"
+    region_name = "ap-southeast-1"
+    
+    try:
+        response = requests.get(
+            "http://169.254.169.254/latest/dynamic/instance-identity/document", timeout=0.1 # Very short timeout
+        )
+        response_json = response.json()
+        instance_id = response_json.get("instanceId", instance_id)
+        region_name = response_json.get("region", region_name)
+    except Exception:
+        pass # Silently fail and use defaults if not on EC2
 
-cloudwatch = boto3.client("cloudwatch", region_name=REGION_NAME)
+    _ec2_metadata_cache = (instance_id, region_name)
+    return _ec2_metadata_cache
+
+def get_cloudwatch_client():
+    _, region = get_ec2_metadata()
+    return boto3.client("cloudwatch", region_name=region)
+
 
 
 @session.route("/heartbeat", methods=["POST"])
@@ -60,21 +65,24 @@ def heartbeat():
         db.session.commit()
 
         try:
-            cloudwatch.put_metric_data(
+            instance_id, _ = get_ec2_metadata()
+            cw = get_cloudwatch_client()
+            cw.put_metric_data(
                 MetricData=[
                     {
                         "MetricName": "UserActivity",
                         "Dimensions": [
-                            {"Name": "InstanceId", "Value": INSTANCE_ID},
+                            {"Name": "InstanceId", "Value": instance_id},
                         ],
                         "Unit": "Count",
                         "Value": 1.0,
                     },
                 ],
-                Namespace="YourAppName/Activity",
+                Namespace="ClassroomChat/Activity",
             )
         except Exception as e:
             print(f"Error publishing metric to CloudWatch: {e}")
+
         # --- END MODIFIED CODE ---
 
     else:

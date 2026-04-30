@@ -21,16 +21,19 @@
     --bg-secondary: #F8FAFC;
     --bg-tertiary: #F1F5F9;
     --text-primary: #0F172A;
-    --text-secondary: #475569;
-    --text-muted: #94A3B8;
+    --text-secondary: #334155;
+    --text-muted: var(--text-muted); /* Darkened from var(--text-muted) for better contrast */
     --border-subtle: #E2E8F0;
-    --border-rich: #94A3B8;
-    --border-strong: #475569;
+    --border-rich: var(--text-muted);
+    --border-strong: var(--text-secondary);
     --slate-800: #1E293B;
     --blue-600: #2563EB;
 
     /* Gradients - Deep & Dynamic */
     --gradient-primary: linear-gradient(135deg, #0EB2BB 0%, #6366F1 100%);
+    --gradient-warning: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+    --gradient-error: linear-gradient(135deg, #EF4444 0%, #991B1B 100%);
+    --gradient-success: linear-gradient(135deg, #10B981 0%, #065F46 100%);
     --gradient-surface: linear-gradient(180deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.7) 100%);
     --gradient-mesh: radial-gradient(at 0% 0%, rgba(14, 178, 187, 0.15) 0, transparent 50%), 
                      radial-gradient(at 50% 0%, rgba(99, 102, 241, 0.1) 0, transparent 50%),
@@ -92,3 +95,4 @@
     --transition-smooth: 400ms cubic-bezier(0.4, 0, 0.2, 1);
     --transition-bounce: 500ms cubic-bezier(0.68, -0.6, 0.32, 1.6);
 }
+

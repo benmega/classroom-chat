@@ -52,18 +52,18 @@ The system uses **SQLite** (or PostgreSQL in production) via the SQLAlchemy ORM.
 
 ---
 
-## 4. Authentication & Security
-
-### Session Management
+### Session Management & Authentication
 The backend implements a custom **Session-based Authentication** system:
+- **`require_login` Decorator**: A central security decorator (`application/decorators/login_required.py`) used to protect API routes. It returns a `401 Unauthorized` response for JSON requests or redirects to the login page for browser requests if no session is found.
 - **`before_request` Hook**: Automatically loads the logged-in user from the session into Flask's `g` object for easy access across the application.
 - **CSRF Protection**: Enabled via `Flask-WTF` to prevent cross-site request forgery.
-- **Secure Sessions**: Permanent sessions with a strictly defined timeout (10 minutes by default) and secure cookie settings.
+- **Secure Sessions**: Permanent sessions with a strictly defined timeout (**10 hours**) and secure cookie settings to minimize disruptive logouts during class.
 
 ### Rate Limiting
 **Flask-Limiter** is used to prevent abuse and brute-force attacks:
 - **Default Limits**: 50/sec, 500/min, 20000/day.
 - **Error Handling**: A custom handler returns a JSON response with a "retry-after" message when limits are hit.
+
 
 ---
 

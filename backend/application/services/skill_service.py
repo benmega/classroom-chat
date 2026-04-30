@@ -65,10 +65,8 @@ def evaluate_user_skills(user):
     """
     new_skills_awarded = []
 
-    # Get current skills map "Name-Proficiency"
     existing_map = {f"{s.name}-{s.proficiency}" for s in user.skills}
 
-    # Pre-calculate counts
     counts = get_challenge_counts_by_language(user)
 
     # Language Badges (Based on Challenge Counts)
@@ -128,7 +126,6 @@ def evaluate_user_skills(user):
                         new_skills_awarded,
                     )
 
-    # Commit changes
     if new_skills_awarded:
         db.session.commit()
         return new_skills_awarded

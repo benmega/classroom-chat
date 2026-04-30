@@ -283,3 +283,21 @@ button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+/* --- React Admin Layout Fixes --- */
+.RaSidebar-root {
+  display: none !important;
+}
+/* Forces the React Admin layout to render side-by-side rather than stacking vertically */
+.RaLayout-root {
+  display: flex !important;
+  flex-direction: row !important;
+  width: 100%;
+}
+
+.RaLayout-appFrame {
+  flex: 1 1 auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+  min-width: 0;
+}

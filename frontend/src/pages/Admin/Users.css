@@ -7,51 +7,7 @@
     to { opacity: 1; transform: translateY(0); }
 }
 
-.page-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 2.5rem;
-    gap: 2rem;
-}
-
-.header-left {
-    display: flex;
-    align-items: center;
-    gap: 1.5rem;
-}
-
-.back-btn {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 8px 12px;
-    background: white;
-    border: 1px solid #e2e8f0;
-    border-radius: 10px;
-    color: #64748b;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.back-btn:hover {
-    color: var(--primary-color);
-    border-color: var(--primary-color);
-    background: #f8fafc;
-}
-
-.page-header h1 {
-    font-size: 2.25rem;
-    font-weight: 800;
-    color: #1e293b;
-    margin-bottom: 0.25rem;
-}
-
-.page-header p {
-    color: #64748b;
-    font-size: 1rem;
-}
+/* Standardized Header handled by AdminPageHeader.css */
 
 .header-actions {
     display: flex;
@@ -69,7 +25,7 @@
     left: 12px;
     top: 50%;
     transform: translateY(-50%);
-    color: #94a3b8;
+    color: var(--text-muted);
 }
 
 .search-bar input {
@@ -130,7 +86,7 @@
     font-size: 0.8rem;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: #94a3b8;
+    color: var(--text-muted);
     font-weight: 700;
 }
 
@@ -157,7 +113,7 @@
     padding: 16px 24px;
     font-size: 0.85rem;
     font-weight: 700;
-    color: #64748b;
+    color: var(--text-muted);
     border-bottom: 1px solid #e2e8f0;
 }
 
@@ -199,7 +155,7 @@
 
 .user-profile-cell .handle {
     font-size: 0.8rem;
-    color: #64748b;
+    color: var(--text-muted);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -207,17 +163,20 @@
 }
 
 .badge {
-    padding: 4px 10px;
-    border-radius: 8px;
-    font-size: 0.75rem;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 0.7rem;
     font-weight: 700;
     display: inline-flex;
     align-items: center;
-    gap: 5px;
+    gap: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
 }
 
-.badge.student { background: #eff6ff; color: #1d4ed8; }
-.badge.admin { background: #fef2f2; color: #dc2626; }
+.badge.student { background: #eff6ff; color: #1e40af; border: 1px solid #dbeafe; }
+.badge.admin { background: #fef2f2; color: #b91c1c; border: 1px solid #fee2e2; }
+
 
 .economy-info .duck-count {
     font-weight: 700;
@@ -227,7 +186,7 @@
 
 .economy-info .level-info {
     font-size: 0.8rem;
-    color: #94a3b8;
+    color: var(--text-muted);
 }
 
 .status-indicator {
@@ -246,7 +205,7 @@
 
 .status-indicator.online { color: #166534; }
 .status-indicator.online .dot { background: #22c55e; box-shadow: 0 0 8px rgba(34, 197, 94, 0.4); }
-.status-indicator.offline { color: #64748b; }
+.status-indicator.offline { color: var(--text-muted); }
 .status-indicator.offline .dot { background: #cbd5e1; }
 
 .action-group {
@@ -263,7 +222,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #64748b;
+    color: var(--text-muted);
     cursor: pointer;
     transition: all 0.2s;
 }
@@ -281,7 +240,7 @@
 .empty-row {
     text-align: center;
     padding: 60px !important;
-    color: #94a3b8;
+    color: var(--text-muted);
     font-style: italic;
 }
 
@@ -335,28 +294,14 @@
 
 .user-handle {
     font-size: 0.8rem;
-    color: #64748b;
+    color: var(--text-muted);
 }
 
 .admin-select {
     cursor: pointer;
 }
 
-@media (max-width: 1024px) {
-    .page-header {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-    
-    .header-actions {
-        width: 100%;
-        justify-content: space-between;
-    }
-    
-    .search-bar {
-        flex: 1;
-    }
-}
+/* @media handled by AdminPageHeader.css */
 
 /* Pagination Styling */
 .pagination-container {
@@ -370,7 +315,7 @@
 
 .pagination-info {
     font-size: 0.9rem;
-    color: #64748b;
+    color: var(--text-muted);
 }
 
 .pagination-info strong {
@@ -391,7 +336,7 @@
     background: white;
     border: 1px solid #e2e8f0;
     border-radius: 8px;
-    color: #475569;
+    color: var(--text-secondary);
     font-weight: 600;
     font-size: 0.85rem;
     cursor: pointer;
@@ -412,10 +357,11 @@
 
 .page-indicator {
     font-size: 0.9rem;
-    color: #64748b;
+    color: var(--text-muted);
     padding: 0 8px;
 }
 
 .page-indicator strong {
     color: var(--primary-color);
 }
+

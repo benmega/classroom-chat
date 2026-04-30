@@ -4,39 +4,7 @@
     margin: 0 auto;
 }
 
-.page-header {
-    margin-bottom: 3.5rem;
-}
-
-.page-header h1 {
-    font-size: 2.5rem;
-    font-weight: 800;
-    color: #1e293b;
-    margin-bottom: 0.5rem;
-}
-
-.page-header p {
-    color: #64748b;
-    font-size: 1.1rem;
-}
-
-.back-btn {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: none;
-    border: none;
-    color: #64748b;
-    font-weight: 600;
-    cursor: pointer;
-    margin-bottom: 1rem;
-    transition: color 0.2s;
-    font-size: 0.9rem;
-}
-
-.back-btn:hover {
-    color: var(--primary-color);
-}
+/* Standardized Header handled by AdminPageHeader.css */
 
 /* Trades List */
 .trades-list {
@@ -82,11 +50,11 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #64748b;
+    color: var(--text-muted);
 }
 
 .user-info h3 { font-size: 1.1rem; color: #1e293b; margin: 0; }
-.timestamp { display: flex; align-items: center; gap: 6px; font-size: 0.8rem; color: #94a3b8; margin-top: 4px; }
+.timestamp { display: flex; align-items: center; gap: 6px; font-size: 0.8rem; color: var(--text-muted); margin-top: 4px; }
 
 .trade-id {
     font-size: 0.75rem;
@@ -116,7 +84,7 @@
 .detail-item .label {
     font-size: 0.8rem;
     font-weight: 700;
-    color: #94a3b8;
+    color: var(--text-muted);
     text-transform: uppercase;
 }
 
@@ -201,10 +169,11 @@
 
 .empty-state svg { color: #cbd5e1; }
 .empty-state h3 { font-size: 1.5rem; color: #1e293b; margin: 0; }
-.empty-state p { color: #64748b; }
+.empty-state p { color: var(--text-muted); }
 
 @media (max-width: 500px) {
     .trades-list {
         grid-template-columns: 1fr;
     }
 }
+

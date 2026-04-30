@@ -88,3 +88,165 @@
     background: var(--border-subtle);
     border-radius: 3px;
 }
+
+/* --- Admin Form Styling in Modals --- */
+.admin-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.75rem;
+    width: 100%;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    width: 100%;
+}
+
+.form-group label {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0;
+    display: block;
+}
+
+.form-group small {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+.form-group .error-message {
+    font-size: 0.85rem;
+    color: var(--error-color);
+    font-weight: 600;
+    animation: fadeIn 0.2s ease-out;
+}
+
+/* Button enhancements for modals */
+.admin-form button[type="submit"] {
+    margin-top: 1rem;
+    padding: 1.1rem;
+    border-radius: var(--radius-md);
+    font-weight: 700;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: var(--transition-bounce);
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    border: none;
+    box-shadow: var(--shadow-md);
+}
+
+.admin-form .btn-primary {
+    background: var(--gradient-primary);
+    color: white;
+}
+
+.admin-form .btn-warning {
+    background: var(--gradient-warning);
+    color: white;
+}
+
+.admin-form .btn-danger {
+    background: var(--gradient-error);
+    color: white;
+}
+
+.admin-form button[type="submit"]:hover:not(:disabled) {
+    transform: translateY(-3px) scale(1.01);
+    box-shadow: var(--shadow-lg);
+    filter: brightness(1.05);
+}
+
+.admin-form button[type="submit"]:active:not(:disabled) {
+    transform: translateY(-1px);
+}
+
+.admin-form button[type="submit"]:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    filter: grayscale(0.5);
+}
+
+/* Input Specifics for Admin Forms */
+.admin-form input, 
+.admin-form select, 
+.admin-form textarea {
+    background: var(--bg-secondary);
+    border: 2px solid var(--border-subtle);
+    padding: 0.9rem 1.25rem;
+    font-weight: 500;
+}
+
+.admin-form input:focus, 
+.admin-form select:focus, 
+.admin-form textarea:focus {
+    border-color: var(--primary-color);
+    background: white;
+    box-shadow: var(--shadow-glow);
+}
+
+.admin-form input.readonly {
+    background: var(--bg-tertiary);
+    border-color: var(--border-subtle);
+    color: var(--text-muted);
+    cursor: not-allowed;
+}
+
+/* Responsive adjustments */
+@media (min-width: 800px) {
+    .admin-modal-content {
+        max-width: 650px; /* Slightly wider for desktop readability */
+    }
+    
+    .modal-body {
+        padding: 3rem;
+    }
+}
+
+/* User Badge Display in Modals */
+.user-badge-display {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    width: 100%;
+}
+
+.user-badge-display .avatar-small {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    object-fit: cover;
+    box-shadow: var(--shadow-sm);
+}
+
+.user-info-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.user-nickname {
+    font-weight: 700;
+    color: var(--text-primary);
+    font-size: 1rem;
+}
+
+.user-handle {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+
+

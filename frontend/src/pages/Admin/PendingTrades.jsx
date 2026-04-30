@@ -13,6 +13,7 @@ import { useNavigate } from 'react-router-dom';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
 import './PendingTrades.css';
+import AdminPageHeader from '../../components/admin/AdminPageHeader';
 
 const PendingTrades = () => {
     const navigate = useNavigate();
@@ -74,13 +75,10 @@ const PendingTrades = () => {
 
     return (
         <div className="admin-pending-trades-page">
-            <header className="page-header">
-                <button onClick={() => navigate('/admin')} className="back-btn">
-                    <ArrowLeft size={20} /> Back to Dashboard
-                </button>
-                <h1>Pending Duck Trades</h1>
-                <p>Approve or reject physical duck redemption requests.</p>
-            </header>
+            <AdminPageHeader 
+                title="Pending Duck Trades" 
+                description="Approve or reject physical duck redemption requests."
+            />
  
             <div className="trades-list">
                 {trades.length > 0 ? (

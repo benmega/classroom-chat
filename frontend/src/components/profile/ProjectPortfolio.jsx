@@ -2,6 +2,7 @@ import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Plus, Code, Play, Settings, CheckCircle, ExternalLink, Layers } from 'lucide-react';
 import SmartImage from '../common/SmartImage';
+import { formatStaticUrl } from '../../utils/formatters';
 
 const ProjectPortfolio = ({ projects, isOwner, setSelectedProject }) => {
     const navigate = useNavigate();
@@ -23,7 +24,7 @@ const ProjectPortfolio = ({ projects, isOwner, setSelectedProject }) => {
                             <div className="project-thumb" onClick={() => setSelectedProject(project)}>
                                 {project.image_url ? (
                                     <SmartImage 
-                                        src={`/static/${project.image_url}`} 
+                                        src={formatStaticUrl(project.image_url)} 
                                         alt={project.name} 
                                         fallbackType="project"
                                     />

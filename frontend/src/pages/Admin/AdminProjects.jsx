@@ -18,6 +18,9 @@ import client from '../../api/client';
 import toast from 'react-hot-toast';
 import './AdminProjects.css';
 import SmartImage from '../../components/common/SmartImage';
+import Skeleton from '../../components/common/Skeleton';
+import AdminPageHeader from '../../components/admin/AdminPageHeader';
+import { formatStaticUrl } from '../../utils/formatters';
 
 const AdminProjects = () => {
     const [projects, setProjects] = useState([]);
@@ -84,11 +87,18 @@ const AdminProjects = () => {
 
     if (selectedProject) {
         return (
-            <div className="project-detail-view">
-                <button onClick={() => setSelectedProject(null)} className="back-btn">
-                    <ArrowLeft size={20} /> Back to List
-                </button>
-
+            <div className="admin-projects-page">
+                <AdminPageHeader 
+                    title="Project Review" 
+                    description={`Reviewing: ${selectedProject.name}`}
+                    showBack={true}
+                    backPath="#"
+                >
+                    <button onClick={() => setSelectedProject(null)} className="back-btn secondary">
+                        Back to List
+                    </button>
+                </AdminPageHeader>
+                
                 <div className="project-review-card card">
                     <div className="review-grid">
                         <div className="project-info-panel">
@@ -115,7 +125,7 @@ const AdminProjects = () => {
 
                                 {selectedProject.image_url && (
                                     <SmartImage 
-                                        src={`/static/${selectedProject.image_url}`} 
+                                        src={formatStaticUrl(selectedProject.image_url)} 
                                         alt="Preview" 
                                         className="review-preview-img" 
                                         fallbackType="project"
@@ -178,12 +188,10 @@ const AdminProjects = () => {
 
     return (
         <div className="admin-projects-page">
-            <div className="page-header">
-                <div className="title-area">
-                    <h1>Project Management</h1>
-                    <p>Review and moderate student portfolio submissions.</p>
-                </div>
-                
+            <AdminPageHeader 
+                title="Project Management" 
+                description="Review and moderate student portfolio submissions."
+            >
                 <div className="filter-tabs">
                     <button 
                         className={filter === 'pending' ? 'active' : ''} 
@@ -198,7 +206,7 @@ const AdminProjects = () => {
                         All Projects <span className="count-badge">{counts.total}</span>
                     </button>
                 </div>
-            </div>
+            </AdminPageHeader>
 
             <div className="controls-bar">
                 <div className="search-box">
@@ -236,7 +244,7 @@ const AdminProjects = () => {
                                 <div className="p-thumb">
                                     {p.image_url ? (
                                         <SmartImage 
-                                            src={`/static/${p.image_url}`} 
+                                            src={formatStaticUrl(p.image_url)} 
                                             alt="" 
                                             fallbackType="project"
                                         />

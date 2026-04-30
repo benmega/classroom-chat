@@ -11,7 +11,7 @@ WARNING: This route must NEVER be enabled in production.
 
 import os
 
-from flask import Blueprint, jsonify, request, session, current_app, redirect
+from flask import Blueprint, jsonify, request, session, current_app, redirect, render_template
 from application.extensions import db
 from application.models.user import User
 from application.models.conversation import Conversation
@@ -54,6 +54,46 @@ def _resolve_role() -> str:
     return data.get("role", "admin").lower()
 
 
+def _perform_login(user_obj: User, role: str):
+    """Internal helper to establish the session for a user."""
+    session["user"] = user_obj.id
+    session.permanent = True
+    User.set_online(user_obj.id)
+    session["conversation_id"] = None
+
+
+
+@dev_login.route("/dev-login", methods=["GET"])
+def browser_dev_login():
+    """
+    Premium browser-facing shortcut for dev-login.
+    Matches the 'main app' aesthetics while providing instant authentication.
+    """
+    if not _is_dev_environment():
+        return jsonify({"error": "dev-login is disabled in production"}), 403
+    if not _is_local_request():
+        return jsonify({"error": "dev-login is only accessible from localhost"}), 403
+
+    role = request.args.get("role", "admin").lower()
+    username = _AGENT_ROLES.get(role)
+    error = None
+
+    if not username:
+        error = f"Unknown role '{role}'. Accepted: {list(_AGENT_ROLES.keys())}"
+    else:
+        user_obj = User.query.filter_by(username=username).first()
+        if not user_obj:
+            error = f"Agent user '{username}' not found in DB."
+        else:
+            _perform_login(user_obj, role)
+
+    # In development, redirect to the Vite dev server to ensure the 'main app' loads.
+    # If the user is already on the Vite server, this just brings them to /.
+    redirect_url = "http://localhost:5173/"
+    
+    return render_template("dev_login.html", role=role, error=error, redirect_url=redirect_url)
+
+
 @dev_login.route("/api/dev-login", methods=["GET", "POST"])
 def agent_dev_login():
     """
@@ -84,27 +124,12 @@ def agent_dev_login():
     if not user_obj:
         return jsonify({"error": f"Agent user '{username}' not found in the database"}), 404
 
-    # Establish the session exactly as the normal login route does
-    session["user"] = user_obj.id
-    session.permanent = True
-    User.set_online(user_obj.id)
+    _perform_login(user_obj, role)
 
-    # Link to the most recent conversation so chat works immediately
-    recent_conversation = (
-        Conversation.query.order_by(Conversation.created_at.desc()).first()
-    )
-    if recent_conversation:
-        if user_obj not in recent_conversation.users:
-            recent_conversation.users.append(user_obj)
-            db.session.commit()
-        session["conversation_id"] = recent_conversation.id
-    else:
-        session["conversation_id"] = None
-
-    # For browser navigation (GET), redirect to the frontend root.
-    # For programmatic use (POST), return success JSON.
+    # For browser navigation (GET), use the premium template or redirect.
     if request.method == "GET":
-        return redirect("/")
+        redirect_url = "http://localhost:5173/"
+        return render_template("dev_login.html", role=role, error=None, redirect_url=redirect_url)
 
     return jsonify({
         "success": True,

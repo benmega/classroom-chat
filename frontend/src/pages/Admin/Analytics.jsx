@@ -28,6 +28,7 @@ import { useNavigate } from 'react-router-dom';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
 import './Analytics.css';
+import AdminPageHeader from '../../components/admin/AdminPageHeader';
 
 ChartJS.register(
     CategoryScale,
@@ -135,30 +136,22 @@ const Analytics = () => {
 
     return (
         <div className="admin-analytics-page">
-            <header className="page-header">
-                <div className="header-left">
-                    <button onClick={() => navigate('/admin')} className="back-btn">
-                        <ArrowLeft size={20} /> Dashboard
-                    </button>
-                    <div>
-                        <h1>Economic Analytics</h1>
-                        <p>Real-time data on duck circulation and system activity.</p>
-                    </div>
-                </div>
-                <div className="header-actions">
-                    <select value={timeRange} onChange={(e) => setTimeRange(e.target.value)} className="range-select">
-                        <option value="24h">Last 24 Hours</option>
-                        <option value="7d">Last 7 Days</option>
-                        <option value="30d">Last 30 Days</option>
-                    </select>
-                    <button className="icon-btn" onClick={fetchAnalytics} disabled={isRefreshing}>
-                        <RefreshCw size={20} className={isRefreshing ? 'spinning' : ''} />
-                    </button>
-                    <button className="primary-btn" onClick={handleExport}>
-                        <Download size={18} /> Export CSV
-                    </button>
-                </div>
-            </header>
+            <AdminPageHeader 
+                title="Economic Analytics" 
+                description="Real-time data on duck circulation and system activity."
+            >
+                <select value={timeRange} onChange={(e) => setTimeRange(e.target.value)} className="range-select">
+                    <option value="24h">Last 24 Hours</option>
+                    <option value="7d">Last 7 Days</option>
+                    <option value="30d">Last 30 Days</option>
+                </select>
+                <button className="icon-btn" onClick={fetchAnalytics} disabled={isRefreshing}>
+                    <RefreshCw size={20} className={isRefreshing ? 'spinning' : ''} />
+                </button>
+                <button className="primary-btn" onClick={handleExport}>
+                    <Download size={18} /> Export CSV
+                </button>
+            </AdminPageHeader>
 
             <div className="analytics-grid">
                 <div className="main-charts">
@@ -229,7 +222,7 @@ const Analytics = () => {
                                         <div className="name">{u.nickname || u.username}</div>
                                         <div className="handle">@{u.username}</div>
                                     </div>
-                                    <div className="amount">🦆 {u.duck_balance?.toFixed(1)}</div>
+                                    <div className="amount">🦆 {(u.duck_balance ?? 0).toFixed(1)}</div>
                                 </div>
                             ))}
                         </div>

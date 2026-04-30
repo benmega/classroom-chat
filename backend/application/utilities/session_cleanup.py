@@ -1,4 +1,3 @@
-# application/utilities/session_cleanup.py
 from datetime import datetime, timedelta
 
 from application.extensions import db
@@ -17,7 +16,6 @@ def close_stale_sessions(timeout_minutes=10):
 
     for log in stale:
         log.end_time = log.last_seen
-        # Also mark the user as offline
         user = User.query.get(log.user_id)
         if user:
             user.is_online = False

@@ -89,71 +89,7 @@ def admin_stats():
         "timestamp": datetime.utcnow().isoformat()
     }
 
-@admin.route("/advanced-panel", methods=["GET"])
-@admin_only
-@api_response
-def advanced_panel():
-    """
-    Returns the list of advanced admin views (Flask-Admin endpoints)
-    to be displayed in the React Advanced Panel.
-    """
-    try:
-        # Get the admin instance from app extensions
-        admin = current_app.extensions.get('flask_admin_instance')
-        
-        # Pinned views that we always want at the top (and in this order)
-        pinned = {
-            "User": "Users",
-            "Project": "Projects",
-            "Achievement": "Achievements",
-            "DuckTradeLog": "Duck Trade Logs",
-            "Configuration": "Configuration",
-            "BannedWords": "Banned Words",
-            "Message": "Messages",
-            "Conversation": "Conversations"
-        }
-        
-        views_list = []
-        
-        if admin:
-            # Dynamically get all model views registered with Flask-Admin
-            for view in admin._views:
-                if isinstance(view, ModelView):
-                    model_name = view.model.__name__
-                    # Map to pretty name if pinned, otherwise use the view name
-                    name = pinned.get(model_name, view.name)
-                    views_list.append({
-                        "name": name,
-                        "endpoint": view.endpoint,
-                        "model": model_name
-                    })
-        else:
-            # Fallback to hardcoded list if admin instance is not found
-            # (though it should be registered during startup)
-            views_list = [
-                {"name": name, "endpoint": f"adv_{model_name}"} 
-                for model_name, name in pinned.items()
-            ]
-            
-        # Sort views: Pinned first in order, then others alphabetically
-        pinned_keys = list(pinned.keys())
-        def sort_key(v):
-            try:
-                # If it's a model in pinned list, use its index
-                return (0, pinned_keys.index(v.get('model', '')))
-            except ValueError:
-                # Otherwise, alphabetical at the bottom
-                return (1, v['name'])
-                
-        views_list.sort(key=sort_key)
 
-        return {
-            "views": views_list
-        }
-    except Exception as e:
-        # Log error and return empty list rather than 500
-        print(f"Error in advanced_panel: {str(e)}")
-        return {"views": [], "error": str(e)}, 500
 
 @admin.route("/logs", methods=["GET"])
 @admin_only

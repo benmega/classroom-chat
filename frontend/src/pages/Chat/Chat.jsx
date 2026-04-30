@@ -43,6 +43,7 @@ const Chat = () => {
   const [activeConversation, setActiveConversation] = useState(null);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
+  const textareaRef = useRef(null);
   const [loading, setLoading] = useState(true);
   const scrollRef = useRef(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -58,9 +59,7 @@ const Chat = () => {
       let updated = false;
       const nextConvs = prevConvs.map(conv => {
         if (conv.conversation_id === data.conversation_id) {
-          const msgExists = conv.messages?.some(m => 
-            (m.content === data.content && m.username === data.username && Math.abs(new Date(m.timestamp) - new Date(data.timestamp)) < 1000)
-          );
+          const msgExists = conv.messages?.some(m => m.id === data.id);
           if (msgExists) return conv;
           updated = true;
           return {
@@ -74,9 +73,7 @@ const Chat = () => {
     });
 
     setMessages(prev => {
-      const exists = prev.some(m => 
-        (m.content === data.content && m.username === data.username && Math.abs(new Date(m.timestamp) - new Date(data.timestamp)) < 1000)
-      );
+      const exists = prev.some(m => m.id === data.id);
       if (exists) return prev;
       
       if (prev.length > 0 && prev[0].conversation_id && prev[0].conversation_id !== data.conversation_id) {
@@ -85,6 +82,7 @@ const Chat = () => {
       return [...prev, data];
     });
   }, []);
+
 
   const { sendMessage } = useChatSocket(onMessageReceived);
 
@@ -130,12 +128,31 @@ const Chat = () => {
     if (!newMessage.trim() || !activeConversation) return;
 
     sendMessage({
-      content: newMessage,
+      content: newMessage.trim(),
       conversation_id: activeConversation.conversation_id
     });
 
     setNewMessage('');
     setShowEmojiPicker(false);
+    // Reset textarea height after clearing
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+    }
+  };
+
+  const handleTextareaKeyDown = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage(e);
+    }
+  };
+
+  const handleTextareaChange = (e) => {
+    setNewMessage(e.target.value);
+    // Auto-resize textarea
+    const el = e.target;
+    el.style.height = 'auto';
+    el.style.height = `${Math.min(el.scrollHeight, 160)}px`;
   };
 
   const onEmojiClick = (emojiData) => {
@@ -251,12 +268,14 @@ const Chat = () => {
                   onSubmit={handleSendMessage}
                   className="chat-input-form"
                 >
-                  <input 
-                    type="text" 
+                  <textarea
+                    ref={textareaRef}
                     value={newMessage}
-                    onChange={(e) => setNewMessage(e.target.value)}
-                    placeholder="Type your message..." 
+                    onChange={handleTextareaChange}
+                    onKeyDown={handleTextareaKeyDown}
+                    placeholder="Type your message... (Shift+Enter for new line)"
                     className="chat-input-field"
+                    rows={1}
                   />
                   <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)', position: 'relative' }} ref={emojiPickerRef}>
                     <button

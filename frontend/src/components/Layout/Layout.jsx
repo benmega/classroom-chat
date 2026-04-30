@@ -152,11 +152,11 @@ const Layout = ({ children }) => {
                                 <>
                                     <li className="nav-stat-item">
                                         <Link className="stat-badge ducks" to="/bit-shift">
-                                            <DuckIcon size={24} className="stat-icon" color="var(--primary-color)" />
+                                            <DuckIcon size={20} className="stat-icon" color="var(--primary-color)" />
                                             <div className="stat-content">
                                                 <span className="stat-label">Ducks</span>
                                                 <span className="stat-value">
-                                                    {user.duck_balance?.toLocaleString(undefined, { 
+                                                    {(user.duck_balance ?? 0).toLocaleString(undefined, { 
                                                         minimumFractionDigits: 0, 
                                                         maximumFractionDigits: 3 
                                                     })}
@@ -191,12 +191,6 @@ const Layout = ({ children }) => {
                                         aria-expanded={isDropdownOpen}
                                         title="Account"
                                     >
-                                        <SmartImage 
-                                            src={user?.profile_picture ? `/user/profile_pictures/${user.profile_picture}` : ''} 
-                                            alt="Profile Picture"
-                                            className="profile-menu_img"
-                                            fallbackType="avatar"
-                                        />
                                         <span className="profile-icon">
                                             <User size={18} strokeWidth={2} />
                                         </span>
@@ -208,7 +202,7 @@ const Layout = ({ children }) => {
                                                 <div className="dropdown-stat-info">
                                                     <span className="dropdown-stat-label">Ducks</span>
                                                     <span className="dropdown-stat-value">
-                                                        {user.duck_balance?.toLocaleString(undefined, { 
+                                                        {(user.duck_balance ?? 0).toLocaleString(undefined, { 
                                                             minimumFractionDigits: 0, 
                                                             maximumFractionDigits: 3 
                                                         })}

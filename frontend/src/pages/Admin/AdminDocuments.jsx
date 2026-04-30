@@ -16,6 +16,7 @@ import {
 import client from '../../api/client';
 import toast from 'react-hot-toast';
 import './AdminDocuments.css';
+import AdminPageHeader from '../../components/admin/AdminPageHeader';
 
 const AdminDocuments = () => {
     const [documents, setDocuments] = useState([]);
@@ -78,12 +79,10 @@ const AdminDocuments = () => {
 
     return (
         <div className="admin-documents-page">
-            <header className="page-header">
-                <div>
-                    <h1>Document Manager</h1>
-                    <p>Manage all uploaded files and system media.</p>
-                </div>
-            </header>
+            <AdminPageHeader 
+                title="Document Manager" 
+                description="Manage all uploaded files and system media."
+            />
 
             {stats && (
                 <div className="storage-overview">

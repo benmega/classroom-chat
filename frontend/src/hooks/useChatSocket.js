@@ -51,7 +51,6 @@ const useChatSocket = (onMessageReceived) => {
     const socket = getSocket();
     socketRef.current = socket;
 
-    // Sync initial state
     if (socket.connected !== isConnected) {
       setIsConnected(socket.connected);
     }

@@ -26,6 +26,10 @@ NEW_COLUMNS = {
     "users": [
         ("slug", "TEXT", None),
         ("is_approved", "BOOLEAN", 1),
+        ("bio", "TEXT", None),
+    ],
+    "conversations": [
+        ("creator_id", "INTEGER", None),
     ]
 }
 

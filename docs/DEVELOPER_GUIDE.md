@@ -3,21 +3,41 @@
 ## Project Structure
 
 ### High-Level Overview:
-├── app/ │ ├── init.py │ ├── models.py │ ├── routes.py │ ├── templates/ │ └── static/ ├── groupChat2/ │ ├── alembic/ │ ├── application/ │ ├── docs/ │ ├── instance/ │ ├── static/ │ ├── templates/ │ ├── tests/ │ ├── userData/ │ ├── config.env │ ├── config.py │ ├── main.py │ └── README.md
+├── backend/
+│   └── application/      # Flask app code
+│       ├── ai/
+│       ├── models/
+│       ├── routes/
+│       ├── services/
+│       ├── extensions.py
+│       └── config.py
+├── docs/                # Documentation files
+├── frontend/            # Vite + React SPA
+│   ├── src/             # Source code
+│   └── public/          # Static assets
+├── userData/            # Uploaded user assets
+└── ... (other support files)
 
 
 ### Detailed Project Structure:
-#### 1. **GroupChat2 Directory**  
-Contains the main application and supporting files.
-- `groupChat2/`
-  - **Core Files**  
-    - `config.env` - Configuration for environment variables.  
-    - `config.py` - Core app configuration.  
-    - `main.py` - Entry point for the application.
-    - `README.md` - Documentation and instructions.  
-  - **Alembic**:  
-    - Handles database migrations.  
-    - Contains `env.py`, `versions/`, and templates for migration scripts.  
+The repository follows a clear layout:
+```text
+classroom-chat/
+├── backend/
+│   └── application/      # Flask application
+│       ├── ai/            # AI services
+│       ├── models/        # SQLAlchemy models
+│       ├── routes/        # Flask blueprints
+│       ├── services/      # Business logic
+│       ├── extensions.py  # Shared extensions
+│       └── config.py      # Configuration
+├── docs/                # Documentation
+├── frontend/            # Vite + React SPA
+│   ├── src/             # Source code
+│   └── public/          # Static assets
+├── userData/            # Uploaded user assets
+└── ... (other support files)
+```  
   - **Application Directory**:  
     - Core app logic divided into modules: `api/`, `models/`, `routes/`, `utilities/`, etc.  
   - **Static and Templates**:  

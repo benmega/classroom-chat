@@ -4,6 +4,7 @@ import { Award, PlusCircle, Trash2, ArrowLeft, Info, Coins, Shield, Tag } from '
 import client from '../../api/client';
 import toast from 'react-hot-toast';
 import './AdminAchievements.css';
+import AdminPageHeader from '../../components/admin/AdminPageHeader';
 
 const AdminAchievements = () => {
     const navigate = useNavigate();
@@ -19,17 +20,44 @@ const AdminAchievements = () => {
         source: ''
     });
 
+    const [badgeFile, setBadgeFile] = useState(null);
+    const [badgePreview, setBadgePreview] = useState(null);
+
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleFileChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setBadgeFile(file);
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setBadgePreview(reader.result);
+            };
+            reader.readAsDataURL(file);
+        }
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setIsSubmitting(true);
 
+        const data = new FormData();
+        Object.keys(formData).forEach(key => {
+            data.append(key, formData[key]);
+        });
+        if (badgeFile) {
+            data.append('badge', badgeFile);
+        }
+
         try {
-            const response = await client.post('/api/achievements/add', formData);
+            const response = await client.post('/api/achievements/add', data, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
             if (response.data.status === 'success') {
                 toast.success(response.data.message);
                 navigate('/admin');
@@ -44,13 +72,10 @@ const AdminAchievements = () => {
 
     return (
         <div className="admin-achievements-page">
-            <header className="page-header">
-                <button onClick={() => navigate('/admin')} className="back-btn">
-                    <ArrowLeft size={20} /> Back to Dashboard
-                </button>
-                <h1>Add New Achievement</h1>
-                <p>Create a new milestone for students to earn.</p>
-            </header>
+            <AdminPageHeader 
+                title="Add New Achievement" 
+                description="Create a new milestone for students to earn."
+            />
 
             <div className="achievement-form-container card">
                 <form onSubmit={handleSubmit} className="achievement-form">
@@ -90,6 +115,23 @@ const AdminAchievements = () => {
                                 rows="3"
                                 placeholder="Explain what the student achieved..."
                             />
+                        </div>
+
+                        <div className="form-group">
+                            <label>Badge Icon (PNG/JPG/WEBP)</label>
+                            <div className="file-upload-wrapper">
+                                <input 
+                                    type="file" 
+                                    accept="image/*" 
+                                    onChange={handleFileChange}
+                                    id="badge-upload"
+                                    className="file-input"
+                                />
+                                <label htmlFor="badge-upload" className="file-label">
+                                    <PlusCircle size={16} /> {badgeFile ? badgeFile.name : 'Choose Image...'}
+                                </label>
+                            </div>
+                            <small className="hint">Recommended size: 128x128px. Transparent background preferred.</small>
                         </div>
                     </div>
 
@@ -163,9 +205,15 @@ const AdminAchievements = () => {
                     <h3><Award size={20} /> Live Preview</h3>
                     <div className="preview-achievement-card">
                         <div className="badge-wrapper">
-                            <div className={`preview-badge type-${formData.type}`}>
-                                <Award size={32} />
-                            </div>
+                            {badgePreview ? (
+                                <div className="preview-badge custom">
+                                    <img src={badgePreview} alt="Preview" />
+                                </div>
+                            ) : (
+                                <div className={`preview-badge type-${formData.type}`}>
+                                    <Award size={32} />
+                                </div>
+                            )}
                             <span className="reward-tag">+{formData.reward} 🦆</span>
                         </div>
                         <div className="preview-text">

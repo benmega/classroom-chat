@@ -28,12 +28,12 @@ achievements = Blueprint("achievements", __name__)
 CERT_URL_REGEX = r"https://(?:www\.)?(?:codecombat|ozaria)\.com/certificates/[\w\d]+\?.*course=([\w\d-]+)"
 
 
-UPLOAD_FOLDER = "certificates"
 ALLOWED_EXTENSIONS = {"pdf"}
 
 
-def allowed_file(filename):
-    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
+
+def allowed_file(filename, allowed_extensions=ALLOWED_EXTENSIONS):
+    return "." in filename and filename.rsplit(".", 1)[1].lower() in allowed_extensions
 
 
 # API for the achievements data
@@ -95,46 +95,72 @@ def achievements_page():
     return redirect("/achievements")
 
 
-@achievements.route("/add", methods=["GET", "POST"])
+@achievements.route("/add", methods=["POST"])
 @admin_only
 def add_achievement():
-    if request.method == "POST":
-        if request.is_json:
-            data = request.get_json()
-        else:
-            data = request.form
+    if request.is_json:
+        data = request.get_json()
+    else:
+        data = request.form
 
-        name = data.get("name")
-        slug = data.get("slug")
-        description = data.get("description")
-        achievement_type = data.get("type", "ducks")
-        reward = int(data.get("reward") or 1)
-        requirement_value = data.get("requirement_value") or None
-        source = data.get("source")
+    name = data.get("name")
+    slug = data.get("slug")
+    description = data.get("description")
+    achievement_type = data.get("type", "ducks")
+    reward = int(data.get("reward") or 1)
+    requirement_value = data.get("requirement_value") or None
+    source = data.get("source")
 
-        if not name or not slug:
-            return jsonify({"status": "error", "message": "Name and Slug are required."}), 400
+    if not name or not slug:
+        return jsonify({"status": "error", "message": "Name and Slug are required."}), 400
 
-        # Check for existing slug
-        existing = Achievement.query.filter_by(slug=slug).first()
-        if existing:
-            return jsonify({"status": "error", "message": "Achievement with this slug already exists."}), 400
+    # Check for existing slug
+    existing = Achievement.query.filter_by(slug=slug).first()
+    if existing:
+        return jsonify({"status": "error", "message": "Achievement with this slug already exists."}), 400
 
-        ach = Achievement(
-            name=name,
-            slug=slug,
-            type=achievement_type,
-            reward=reward,
-            description=description,
-            requirement_value=requirement_value,
-            source=source,
-        )
-        db.session.add(ach)
-        db.session.commit()
+    # Handle Badge Upload
+    badge_file = request.files.get("badge")
+    if badge_file and badge_file.filename != "":
+        allowed_badge_ext = {"png", "jpg", "jpeg", "webp"}
+        if not allowed_file(badge_file.filename, allowed_badge_ext):
+            return jsonify({"status": "error", "message": "Invalid badge file type."}), 400
+        
+        from flask import current_app
+        # We save to frontend/static/images/achievement_badges/
+        # which is current_app.static_folder / "images" / "achievement_badges"
+        badge_dir = os.path.join(current_app.static_folder, "images", "achievement_badges")
+        os.makedirs(badge_dir, exist_ok=True)
+        
+        ext = badge_file.filename.rsplit(".", 1)[1].lower()
+        filename = f"{slug}.{ext}"
+        filepath = os.path.join(badge_dir, filename)
+        badge_file.save(filepath)
+        
+        # Trigger sprite sheet rebuild
+        try:
+            import subprocess
+            tools_dir = os.path.join(current_app.config["BASE_DIR"], "backend", "tools")
+            script_path = os.path.join(tools_dir, "make_sprite_sheet.py")
+            # We need to make sure make_sprite_sheet.py uses the correct directories
+            # but for now we just try to run it.
+            subprocess.run(["python", script_path], check=False)
+        except Exception as e:
+            print(f"Error rebuilding sprite sheet: {e}")
 
-        return jsonify({"status": "success", "message": f"Achievement '{name}' added successfully!"})
+    ach = Achievement(
+        name=name,
+        slug=slug,
+        type=achievement_type,
+        reward=reward,
+        description=description,
+        requirement_value=requirement_value,
+        source=source,
+    )
+    db.session.add(ach)
+    db.session.commit()
 
-    return redirect("/admin/achievements/add")
+    return jsonify({"status": "success", "message": f"Achievement '{name}' added successfully!"})
 
 
 @achievements.route("/submit_certificate", methods=["GET", "POST"])
@@ -166,10 +192,13 @@ def submit_certificate():
             return jsonify({"success": False, "error": "Invalid file type. Only PDF is allowed."}), 400
 
         # 3. Save file
-        os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+        from flask import current_app
+        cert_dir = os.path.join(current_app.config["UPLOAD_FOLDER"], "certificates")
+        os.makedirs(cert_dir, exist_ok=True)
         filename = secure_filename(f"{current_user.username}_{achievement.slug}.pdf")
-        filepath = os.path.join(UPLOAD_FOLDER, filename)
+        filepath = os.path.join(cert_dir, filename)
         file.save(filepath)
+
 
         # 4. Create or update cert entry
         cert = UserCertificate.query.filter_by(

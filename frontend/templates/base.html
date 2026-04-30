@@ -79,9 +79,6 @@ Summary: Base layout template with header, navigation, and toast messages.
                     {% set pfp_url = url_for('user.profile_picture', filename=pfp_filename) %}
                     <li class="profile-menu">
                         <button class="profile-toggle" id="profileToggle" aria-haspopup="true" aria-expanded="false" title="Account">
-                            <img src="{{ pfp_url }}"
-                                 alt="Profile Picture"
-                                 class="profile-menu_img">
                             <span class="profile-icon" aria-hidden="true">
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                             </span>

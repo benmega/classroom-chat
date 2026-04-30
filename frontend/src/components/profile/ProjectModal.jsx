@@ -1,5 +1,6 @@
 import React from 'react';
 import { X, ExternalLink, Code, CheckCircle } from 'lucide-react';
+import { formatStaticUrl } from '../../utils/formatters';
 
 const getYoutubeEmbedUrl = (url) => {
     if (!url) return null;
@@ -58,7 +59,7 @@ const ProjectModal = ({ project, onClose }) => {
                                         src={project.video_url} 
                                         controls 
                                         className="direct-video-player"
-                                        poster={project.image_url ? `/static/${project.image_url}` : null}
+                                        poster={project.image_url ? formatStaticUrl(project.image_url) : null}
                                     >
                                         Your browser does not support the video tag.
                                     </video>

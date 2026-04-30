@@ -35,7 +35,7 @@
 
 .simple-stat .label {
     font-size: 0.85rem;
-    color: #94a3b8;
+    color: var(--text-secondary); /* Darker slate */
     font-weight: 600;
 }
 
@@ -79,7 +79,7 @@
 
 .earner-item .handle {
     font-size: 0.75rem;
-    color: #64748b;
+    color: var(--text-muted);
 }
 
 .earner-item .amount {
@@ -95,23 +95,23 @@
     margin-top: 1.5rem;
 }
 
-.stat-box {
+.admin-analytics-page .stat-box {
     background: #f8fafc;
     padding: 1rem;
     border-radius: 12px;
     text-align: center;
 }
 
-.stat-box .big-val {
+.admin-analytics-page .stat-box .big-val {
     display: block;
     font-size: 1.5rem;
     font-weight: 800;
     color: var(--primary-color);
 }
 
-.stat-box .label {
+.admin-analytics-page .stat-box .label {
     font-size: 0.75rem;
-    color: #64748b;
+    color: var(--text-secondary); /* Darker slate */
     font-weight: 700;
     text-transform: uppercase;
 }
@@ -122,7 +122,7 @@
     border: 1px solid #e2e8f0;
     background: white;
     font-weight: 600;
-    color: #475569;
+    color: var(--text-secondary);
     outline: none;
     cursor: pointer;
 }
@@ -144,3 +144,4 @@
         grid-template-columns: 1fr;
     }
 }
+

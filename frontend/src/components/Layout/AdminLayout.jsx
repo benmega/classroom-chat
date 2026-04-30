@@ -12,7 +12,6 @@ import {
     FileText,
     ShieldAlert,
     Users,
-    Settings,
     Menu,
     X,
     ChevronLeft,
@@ -64,7 +63,7 @@ const AdminLayout = ({ children }) => {
         { path: '/admin/pending-users', label: 'User Approvals', icon: Users, badge: true },
         { path: '/admin/pending-trades', label: 'Pending Trades', icon: BarChart3 },
         { path: '/admin/projects', label: 'Projects', icon: FolderKanban },
-        { path: '/admin/settings', label: 'Settings', icon: Settings },
+
 
         { path: '/admin/add-achievement', label: 'Achievements', icon: Trophy },
         { path: '/admin/certificates', label: 'Certificates', icon: FileCheck },
@@ -154,7 +153,10 @@ const AdminLayout = ({ children }) => {
                     </div>
                 </header>
 
-                <main key={location.pathname} className="admin-body animate-page-entry">
+                <main 
+                    key={location.pathname.startsWith('/admin/advanced-crud') ? '/admin/advanced-crud' : location.pathname} 
+                    className="admin-body animate-page-entry"
+                >
                     {children}
                 </main>
 

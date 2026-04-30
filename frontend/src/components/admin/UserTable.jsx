@@ -23,6 +23,7 @@ const UserTable = ({ users, onAdjustDucks, onResetPassword, onRemoveUser }) => {
                                     <SmartImage 
                                         src={u.profile_picture ? `/user/profile_pictures/${u.profile_picture}` : ''} 
                                         alt="" 
+                                        className="user-avatar"
                                         fallbackType="avatar"
                                     />
                                     <div>
@@ -31,7 +32,7 @@ const UserTable = ({ users, onAdjustDucks, onResetPassword, onRemoveUser }) => {
                                     </div>
                                 </div>
                             </td>
-                            <td><span className="duck-pill">{u.duck_balance?.toLocaleString(undefined, { maximumFractionDigits: 3 })} Ducks</span></td>
+                            <td><span className="duck-pill">{(u.duck_balance ?? 0).toLocaleString(undefined, { maximumFractionDigits: 3 })} Ducks</span></td>
                             <td>{u.cc_levels + u.oz_levels}</td>
                             <td>
                                 <span className={`status-pill ${u.is_online ? 'online' : 'offline'}`}>

@@ -26,18 +26,27 @@ class Config:
     SQLALCHEMY_ECHO = False
 
     OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-    SECRET_KEY = os.getenv("SECRET_KEY", "your-default-secret-key")
-    SESSION_TYPE = "filesystem"
+    SECRET_KEY = os.getenv("SECRET_KEY")
+    if not SECRET_KEY:
+        # Generate a random one for dev if not provided, but don't allow this in production
+        if os.getenv("FLASK_ENV") == "production":
+            raise RuntimeError("SECRET_KEY must be set in production environment!")
+        SECRET_KEY = "dev-secret-key-change-me"
 
     UPLOAD_FOLDER = os.path.join(BASE_DIR, "userData")
     MAX_CONTENT_LENGTH = 500 * 1024 * 1024
     ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif"}
 
     ADMIN_USERNAME = os.getenv("ADMIN_USERNAME", "admin")
-    ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "1234")
+    ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
+    if not ADMIN_PASSWORD:
+        if os.getenv("FLASK_ENV") == "production":
+            raise RuntimeError("ADMIN_PASSWORD must be set in production environment!")
+        ADMIN_PASSWORD = "admin-dev-password" # Slightly better than 1234
+
 
     # SocketIO configuration
-    SOCKETIO_ASYNC_MODE = "eventlet"
+    SOCKETIO_ASYNC_MODE = "gevent"
 
 
 class DevelopmentConfig(Config):
@@ -47,7 +56,7 @@ class DevelopmentConfig(Config):
         f'sqlite:///{os.path.join(Config.INSTANCE_FOLDER, "dev_users.db")}',
     )
     WTF_CSRF_ENABLED = False
-    RATELIMIT_STORAGE_URL = "memory://"
+    RATELIMIT_STORAGE_URI = "memory://"
 
 
 class TestingConfig(Config):

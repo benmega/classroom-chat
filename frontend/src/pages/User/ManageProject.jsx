@@ -8,6 +8,7 @@ import toast from 'react-hot-toast';
 import useAuthStore from '../../store/useAuthStore';
 import './ManageProject.css';
 import SmartImage from '../../components/common/SmartImage';
+import { formatStaticUrl } from '../../utils/formatters';
 
 const ManageProject = () => {
     const { projectId } = useParams();
@@ -60,7 +61,7 @@ const ManageProject = () => {
                         student_id: p.user_id || ''
                     });
                     if (p.image_url) {
-                        setImagePreview(`/static/${p.image_url}`);
+                        setImagePreview(formatStaticUrl(p.image_url));
                     }
                 }
             } catch (error) {

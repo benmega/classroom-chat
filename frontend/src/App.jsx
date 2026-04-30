@@ -30,7 +30,7 @@ import Analytics from './pages/Admin/Analytics';
 import PendingTrades from './pages/Admin/PendingTrades';
 import PendingUsers from './pages/Admin/PendingUsers';
 import AdvancedPanel from './pages/Admin/AdvancedPanel';
-import AdminSettings from './pages/Admin/AdminSettings';
+
 import AdminCRUD from './admin/AdminPanel';
 import AccessDenied from './pages/Error/AccessDenied';
 // Development-only shortcut page — Vite's tree-shaking removes this module
@@ -49,8 +49,9 @@ const ProtectedRoute = ({ children, adminOnly = false }) => {
       justifyContent: 'center', 
       alignItems: 'center', 
       height: '100vh', 
-      background: 'var(--text-primary)', 
-      color: 'var(--bg-secondary)',
+      background: 'var(--bg-primary)', 
+      color: 'var(--text-primary)',
+
       fontFamily: 'var(--font-body)'
     }}>
         <Loader2 style={{ animation: 'spin 1s linear infinite' }} size={64} strokeWidth={1.5} color="#3b82f6" />
@@ -214,6 +215,14 @@ function App() {
           </ProtectedRoute>
         } />
 
+        <Route path="/admin/advanced-crud/*" element={
+          <ProtectedRoute adminOnly={true}>
+            <AdminLayout>
+              <AdminCRUD />
+            </AdminLayout>
+          </ProtectedRoute>
+        } />
+
         <Route path="/admin/*" element={
           <ProtectedRoute adminOnly={true}>
             <AdminLayout>
@@ -229,8 +238,6 @@ function App() {
                 <Route path="pending-trades" element={<PendingTrades />} />
                 <Route path="pending-users" element={<PendingUsers />} />
                 <Route path="advanced" element={<AdvancedPanel />} />
-                <Route path="advanced-crud/*" element={<AdminCRUD />} />
-                <Route path="settings" element={<AdminSettings />} />
               </Routes>
             </AdminLayout>
           </ProtectedRoute>

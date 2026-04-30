@@ -8,15 +8,16 @@ from pathlib import Path
 
 from PIL import Image
 
-# Project root assumed one level up from this script
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
+# Project root assumed one level up from this script (backend/)
+# We need to reach classroom-chat/
+REPO_ROOT = Path(__file__).resolve().parents[2]
 
 # Input folder (badges)
-BADGE_DIR = PROJECT_ROOT / "static" / "images" / "achievement_badges"
+BADGE_DIR = REPO_ROOT / "frontend" / "static" / "images" / "achievement_badges"
 
 # Output paths
 SPRITE_PATH = BADGE_DIR / "sprite.webp"
-CSS_PATH = PROJECT_ROOT / "static" / "css" / "sprite.css"
+CSS_PATH = REPO_ROOT / "frontend" / "src" / "assets" / "css" / "sprite.css"
 
 # Target icon size
 ICON_SIZE = (128, 128)

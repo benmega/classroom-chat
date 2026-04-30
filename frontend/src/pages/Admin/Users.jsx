@@ -21,6 +21,7 @@ import {
 } from '../../components/admin/AdminModals';
 import './Users.css';
 import Skeleton from '../../components/common/Skeleton';
+import AdminPageHeader from '../../components/admin/AdminPageHeader';
 
 const Users = () => {
     const navigate = useNavigate();
@@ -202,38 +203,30 @@ const Users = () => {
 
     return (
         <div className="admin-users-page">
-            <header className="page-header">
-                <div className="header-left">
-                    <button onClick={() => navigate('/admin')} className="back-btn">
-                        <ChevronLeft size={20} /> Back
-                    </button>
-                    <div>
-                        <h1>User Directory</h1>
-                        <p>Manage all registered students and administrators.</p>
-                    </div>
+            <AdminPageHeader 
+                title="User Directory" 
+                description="Manage all registered students and administrators."
+            >
+                <div className="search-bar">
+                    <Search size={18} />
+                    <input 
+                        type="text" 
+                        placeholder="Search by name or @username..." 
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                    />
                 </div>
-                <div className="header-actions">
-                    <div className="search-bar">
-                        <Search size={18} />
-                        <input 
-                            type="text" 
-                            placeholder="Search by name or @username..." 
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                        />
-                    </div>
-                    <button className="primary-btn" onClick={() => setActiveModal('create')}>
-                        <Plus size={18} /> Add User
-                    </button>
-                    <button 
-                        className={`refresh-btn ${isRefreshing ? 'spinning' : ''}`}
-                        onClick={fetchUsers}
-                        disabled={isRefreshing}
-                    >
-                        <RefreshCw size={18} />
-                    </button>
-                </div>
-            </header>
+                <button className="primary-btn" onClick={() => setActiveModal('create')}>
+                    <Plus size={18} /> Add User
+                </button>
+                <button 
+                    className={`refresh-btn ${isRefreshing ? 'spinning' : ''}`}
+                    onClick={fetchUsers}
+                    disabled={isRefreshing}
+                >
+                    <RefreshCw size={18} />
+                </button>
+            </AdminPageHeader>
 
             <div className="users-stats-row">
                 <div className="stat-mini-card">
@@ -294,7 +287,7 @@ const Users = () => {
                                     </td>
                                     <td>
                                         <div className="economy-info">
-                                            <div className="duck-count">🦆 {u.duck_balance?.toLocaleString(undefined, { maximumFractionDigits: 2 })}</div>
+                                            <div className="duck-count">🦆 {(u.duck_balance ?? 0).toLocaleString(undefined, { maximumFractionDigits: 2 })}</div>
                                             <div className="level-info">Lvl: {u.total_levels || 0}</div>
                                         </div>
                                     </td>

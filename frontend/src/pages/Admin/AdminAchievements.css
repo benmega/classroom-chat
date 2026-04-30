@@ -1,38 +1,6 @@
 /* Layout handled by AdminLayout.css */
 
-.page-header {
-    margin-bottom: 3.5rem;
-}
-
-.page-header h1 {
-    font-size: 2.5rem;
-    font-weight: 800;
-    color: #1e293b;
-    margin-bottom: 0.5rem;
-}
-
-.page-header p {
-    color: #64748b;
-    font-size: 1.1rem;
-}
-
-.back-btn {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: none;
-    border: none;
-    color: #64748b;
-    font-weight: 600;
-    cursor: pointer;
-    margin-bottom: 1rem;
-    transition: color 0.2s;
-    font-size: 0.9rem;
-}
-
-.back-btn:hover {
-    color: var(--primary-color);
-}
+/* Standardized Header handled by AdminPageHeader.css */
 
 /* Form Container */
 .achievement-form-container {
@@ -69,7 +37,7 @@
     display: block;
     font-weight: 700;
     margin-bottom: 0.5rem;
-    color: #475569;
+    color: var(--text-secondary);
     font-size: 0.9rem;
 }
 
@@ -94,7 +62,7 @@
 .hint {
     display: block;
     font-size: 0.8rem;
-    color: #94a3b8;
+    color: var(--text-muted);
     margin-top: 6px;
 }
 
@@ -188,13 +156,13 @@
 }
 
 .preview-text h4 { font-size: 1.15rem; font-weight: 700; margin-bottom: 8px; }
-.preview-text p { font-size: 0.9rem; color: #64748b; line-height: 1.5; margin-bottom: 1rem; }
+.preview-text p { font-size: 0.9rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 1rem; }
 
 .req-pill {
     display: inline-block;
     padding: 4px 10px;
     background: #f1f5f9;
-    color: #475569;
+    color: var(--text-secondary);
     border-radius: 8px;
     font-size: 0.8rem;
     font-weight: 700;
@@ -215,3 +183,56 @@
         grid-template-columns: 1fr;
     }
 }
+
+/* File Upload Styling */
+.file-upload-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.file-input {
+    width: 0.1px;
+    height: 0.1px;
+    opacity: 0;
+    overflow: hidden;
+    position: absolute;
+    z-index: -1;
+}
+
+.file-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    background: #f8fafc;
+    border: 2px dashed #e2e8f0;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: var(--text-muted);
+    font-weight: 600;
+}
+
+.file-label:hover {
+    border-color: var(--primary-color);
+    background: #eff6ff;
+    color: var(--primary-color);
+}
+
+.preview-badge.custom {
+    background: none;
+    padding: 0;
+    overflow: hidden;
+    width: 64px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.preview-badge.custom img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+

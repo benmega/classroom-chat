@@ -1,22 +1,6 @@
 /* Layout handled by AdminLayout.css */
 
-.page-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 2.5rem;
-}
-
-.page-header h1 {
-    font-size: clamp(1.8rem, 4vw, 2.25rem);
-    font-weight: 800;
-    color: #1e293b;
-    margin-bottom: 0.5rem;
-}
-
-.page-header p {
-    color: #64748b;
-}
+/* Standardized Header handled by AdminPageHeader.css */
 
 /* Filter Tabs */
 .filter-tabs {
@@ -34,7 +18,7 @@
     border-radius: 10px;
     font-weight: 700;
     font-size: 0.95rem;
-    color: #64748b;
+    color: var(--text-muted);
     cursor: pointer;
     transition: all 0.2s;
     display: flex;
@@ -50,7 +34,7 @@
 
 .count-badge {
     background: #e2e8f0;
-    color: #475569;
+    color: var(--text-secondary);
     padding: 2px 8px;
     border-radius: 8px;
     font-size: 0.75rem;
@@ -80,7 +64,7 @@
     left: 12px;
     top: 50%;
     transform: translateY(-50%);
-    color: #64748b;
+    color: var(--text-muted);
 }
 
 .search-box input {
@@ -130,16 +114,22 @@
 
 .pending-indicator {
     position: absolute;
-    top: 12px;
-    left: 12px;
-    background: rgba(239, 68, 68, 0.9);
+    top: 16px;
+    left: 16px;
+    background: rgba(185, 28, 28, 0.9);
     color: white;
-    padding: 4px 12px;
+    padding: 6px 14px;
     border-radius: 20px;
     font-size: 0.75rem;
     font-weight: 700;
     backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
 }
+
 
 .p-content {
     padding: 1.5rem;
@@ -157,7 +147,7 @@
 
 .p-meta {
     font-size: 0.85rem;
-    color: #64748b;
+    color: var(--text-muted);
     display: flex;
     gap: 12px;
     margin-bottom: 12px;
@@ -165,7 +155,7 @@
 
 .p-desc {
     font-size: 0.9rem;
-    color: #475569;
+    color: var(--text-secondary);
     line-height: 1.5;
     margin-bottom: 1.5rem;
 }
@@ -190,18 +180,7 @@
 .status-text.approved { color: #10b981; }
 
 /* Detail View */
-.back-btn {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: none;
-    border: none;
-    color: #64748b;
-    font-weight: 600;
-    cursor: pointer;
-    margin-bottom: 1rem;
-    font-size: 0.9rem;
-}
+/* Back button in detail view now handled by secondary button style or component */
 
 .review-grid {
     display: grid;
@@ -210,7 +189,7 @@
 }
 
 .project-info-panel h2 { font-size: 2rem; margin-bottom: 1rem; }
-.project-info-panel .description { font-size: 1.1rem; line-height: 1.6; color: #475569; margin-bottom: 2rem; }
+.project-info-panel .description { font-size: 1.1rem; line-height: 1.6; color: var(--text-secondary); margin-bottom: 2rem; }
 
 .links-section {
     display: flex;
@@ -278,7 +257,7 @@
     cursor: pointer;
 }
 
-.btn-approve { background: #10b981; color: white; }
+.btn-approve { background: #065f46; color: white; } /* Darker green for contrast */
 .btn-reject { background: #f1f5f9; color: #ef4444; }
 
 .extra-context-section {
@@ -324,7 +303,7 @@
     max-height: 300px;
     overflow-y: auto;
     font-size: 0.95rem;
-    color: #475569;
+    color: var(--text-secondary);
     line-height: 1.7;
     background: white;
     padding: 1.25rem;
@@ -348,7 +327,7 @@
 }
 
 .transcript-view::-webkit-scrollbar-thumb:hover {
-    background: #94a3b8;
+    background: var(--text-muted);
 }
 
 @media (max-width: 1000px) {
@@ -356,3 +335,4 @@
         grid-template-columns: 1fr;
     }
 }
+

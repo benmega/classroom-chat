@@ -23,14 +23,11 @@ from flask_wtf.csrf import generate_csrf
 
 
 def create_app(config_class=None):
-    # Configure logging
     log_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     
-    # Console Handler
     console_handler = logging.StreamHandler()
     console_handler.setFormatter(log_formatter)
     
-    # File Handler
     log_dir = os.path.join(os.path.abspath(os.path.dirname(os.path.dirname(__file__))), "instance")
     if not os.path.exists(log_dir):
         os.makedirs(log_dir)
@@ -69,9 +66,9 @@ def create_app(config_class=None):
     ])
 
     cors_origins = getattr(config_class, "CORS_ORIGINS", [
-        "",
-        "",
-        "",
+        "http://localhost:5173",
+        "http://localhost:5174",
+        "http://localhost:5175",
         "http://localhost:8000",
         "http://127.0.0.1:5173",
         "http://127.0.0.1:5174",
@@ -87,7 +84,8 @@ def create_app(config_class=None):
     # x_for=1 tells Flask to trust the first X-Forwarded-For header
     app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_port=1)
 
-    app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(minutes=10)
+    app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(hours=10)
+
     base_dir = os.path.abspath(os.path.dirname(__file__))
     license_dir = os.path.abspath(os.path.join(base_dir, "..", "license"))
 
@@ -123,12 +121,15 @@ def create_app(config_class=None):
     with app.app_context():
         setup_models()
 
-        # Check the DB directly. If the 'user' table doesn't exist, we need to initialize.
+        db.create_all()
         inspector = inspect(db.engine)
-        if not inspector.has_table("users"):  # specific table name depends on your User model
-            db.create_all()
+        if not inspector.has_table("users"):
+            # This part is now redundant for create_all, but we still want to ensure default config if it was a fresh DB
             ensure_default_configuration()
             logger.info("Database initialized for the first time.")
+        else:
+            # Still check if we need to ensure default configuration even if users exists
+            ensure_default_configuration()
 
         scheduler.start()
 

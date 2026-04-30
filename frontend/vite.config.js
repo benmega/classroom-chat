@@ -25,9 +25,11 @@ export default defineConfig({
       '/server': 'http://localhost:8000',
       '/api/dev-login': 'http://localhost:8000',
       '/api/docs': 'http://localhost:8000',
+      '/static': 'http://localhost:8000',
       '/socket.io': {
         target: 'http://localhost:8000',
         ws: true,
+        changeOrigin: true,
       },
     },
   },

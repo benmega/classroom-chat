@@ -85,11 +85,35 @@ class User(db.Model):
             "profile_picture_url": f"/user/profile_pictures/{self.profile_picture}" if self.profile_picture else "/static/images/Default_pfp.jpg",
             "is_admin": self.is_admin,
             "is_approved": self.is_approved,
-            "slug": self.slug
+            "slug": self.slug,
+            "duck_balance": self.duck_balance,
+            "packets": self.packets
         }
 
-    def to_dict_summary(self):
+    def to_dict_summary(self, precomputed_progress=None):
         """Lighter dictionary for list views, avoids extremely expensive processing."""
+        
+        if precomputed_progress:
+            cc_levels = precomputed_progress.get((self._username, "codecombat.com"), 0)
+            oz_levels = precomputed_progress.get((self._username, "www.ozaria.com"), 0)
+            
+            from .challenge import Challenge
+            if "codecombat.com" not in self._total_challenges_cache:
+                self._total_challenges_cache["codecombat.com"] = Challenge.query.filter_by(domain="codecombat.com").count()
+            if "www.ozaria.com" not in self._total_challenges_cache:
+                self._total_challenges_cache["www.ozaria.com"] = Challenge.query.filter_by(domain="www.ozaria.com").count()
+                
+            cc_total = self._total_challenges_cache["codecombat.com"]
+            oz_total = self._total_challenges_cache["www.ozaria.com"]
+            
+            cc_percent = int(round((cc_levels / cc_total * 100), 0)) if cc_total > 0 else 0
+            oz_percent = int(round((oz_levels / oz_total * 100), 0)) if oz_total > 0 else 0
+        else:
+            cc_levels = self.get_progress("codecombat.com")
+            oz_levels = self.get_progress("www.ozaria.com")
+            cc_percent = self.get_progress_percent("codecombat.com")
+            oz_percent = self.get_progress_percent("www.ozaria.com")
+
         d = {
             "id": self.id,
             "username": self.username,
@@ -107,14 +131,15 @@ class User(db.Model):
             "earned_ducks": self.earned_ducks,
             "packets": self.packets,
             
-            # Progress counters - cached or slightly expensive but necessary for some views
-            "total_levels": self.get_progress("codecombat.com") + self.get_progress("www.ozaria.com"),
-            "cc_levels": self.get_progress("codecombat.com"),
-            "oz_levels": self.get_progress("www.ozaria.com"),
-            "cc_percent": self.get_progress_percent("codecombat.com"),
-            "oz_percent": self.get_progress_percent("www.ozaria.com"),
+            # Progress counters
+            "total_levels": cc_levels + oz_levels,
+            "cc_levels": cc_levels,
+            "oz_levels": oz_levels,
+            "cc_percent": cc_percent,
+            "oz_percent": oz_percent,
         }
         return d
+
 
     @hybrid_property
     def username(self):
@@ -126,16 +151,11 @@ class User(db.Model):
 
     def generate_slug(self):
         """Generate a unique kebab-case slug from the user's nickname."""
-        # Use nickname if available, otherwise fall back to username
         source = self.nickname if self.nickname else self._username
-        # Convert to lowercase and replace spaces/underscores with hyphens
         base_slug = re.sub(r'[_\s]+', '-', source.lower())
-        # Remove any characters that aren't alphanumeric or hyphens
         base_slug = re.sub(r'[^a-z0-9-]', '', base_slug)
-        # Remove leading/trailing hyphens and collapse multiple hyphens
         base_slug = re.sub(r'-+', '-', base_slug).strip('-')
 
-        # Ensure uniqueness by appending a number if necessary
         slug = base_slug
         counter = 1
         while User.query.filter_by(slug=slug).first() is not None:

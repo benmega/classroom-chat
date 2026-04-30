@@ -7,8 +7,14 @@ Summary: Entry point for starting the Flask application.
 import os
 import sys
 
+# Monkey patch for gevent if it's the selected async mode
+if os.getenv("SOCKETIO_ASYNC_MODE", "gevent") == "gevent":
+    from gevent import monkey
+    monkey.patch_all()
+
 from application import create_app
 from application.extensions import socketio
+
 
 app = create_app()
 

@@ -21,6 +21,8 @@ from application.models.configuration import Configuration
 from application.models.conversation import Conversation, conversation_users
 from application.models.user import User
 from application.utilities.db_helpers import get_user, save_message_to_db
+from application.decorators.login_required import require_login
+
 from sqlalchemy.orm import joinedload, selectinload
 
 message = Blueprint("message", __name__)
@@ -101,7 +103,9 @@ def start_conversation():
 
 
 @message.route("/set_active_conversation", methods=["POST"])
+@require_login
 def set_active_conversation():
+
     conversation_id = request.json.get("conversation_id")
 
     conversation = Conversation.query.get(conversation_id)
@@ -119,7 +123,9 @@ def set_active_conversation():
 
 @message.route("/get_current_conversation", methods=["GET"])
 @limiter.limit("60 per minute")
+@require_login
 def get_current_conversation():
+
     conversation = (
         Conversation.query.options(joinedload(Conversation.messages))
         .order_by(Conversation.created_at.desc())
@@ -140,7 +146,9 @@ def get_current_conversation():
 
 
 @message.route("/get_historical_conversation", methods=["GET"])
+@require_login
 def get_historical_conversation():
+
     conversation_id = session.get("conversation_id")
 
     if not conversation_id:
@@ -159,7 +167,9 @@ def get_historical_conversation():
 
 
 @message.route("/end_conversation", methods=["POST"])
+@require_login
 def end_conversation():
+
     if "conversation_id" in session:
         session.pop("conversation_id")
         return jsonify({"message": "Conversation ended"}), 200
@@ -167,7 +177,9 @@ def end_conversation():
 
 
 @message.route("/get_conversation", methods=["GET"])
+@require_login
 def get_conversation():
+
     conversation_id = session.get("conversation_id")
 
     if not conversation_id:
@@ -241,7 +253,15 @@ def conversation_history():
 
 
 @message.route("/api/conversations/<int:user_id>", methods=["GET"])
+@require_login
 def get_conversation_history(user_id):
+    current_user_id = session.get("user")
+    current_user = User.query.get(current_user_id)
+    
+    if user_id != current_user_id and not getattr(current_user, "is_admin", False):
+        return jsonify({"error": "Forbidden: You can only access your own conversation history"}), 403
+
+
     # 1. Join for participated conversations
     participated_ids = [c.id for c in Conversation.query.filter(Conversation.users.any(id=user_id)).all()]
 
@@ -281,7 +301,9 @@ def get_conversation_history(user_id):
 
 
 @message.route("/view_conversation/<int:conversation_id>", methods=["GET"])
+@require_login
 def view_conversation(conversation_id):
+
     conversation = Conversation.query.get_or_404(conversation_id)
 
     conversation_data = {

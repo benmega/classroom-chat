@@ -33,24 +33,20 @@ const ImageUpload = ({
     const file = e.target.files[0];
     if (!file) return;
 
-    // Reset status
     setError(null);
     setSuccess(false);
 
-    // Frontend validation
     if (file.size > 10 * 1024 * 1024) {
       setError('File is too large (max 10MB)');
       return;
     }
 
-    // Create preview
     const reader = new FileReader();
     reader.onloadend = () => {
       setPreview(reader.result);
     };
     reader.readAsDataURL(file);
 
-    // Start upload
     uploadFile(file);
   };
 

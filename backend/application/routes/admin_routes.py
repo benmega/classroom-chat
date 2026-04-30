@@ -10,6 +10,7 @@ from .admin import config_routes
 from .admin import trade_routes
 from .admin import doc_routes
 from .admin import project_routes
+from .admin import advanced_ops
 from .admin.crud_routes import crud_bp
 
 # React-Admin standalone CRUD blueprint (still nested/prefixed)

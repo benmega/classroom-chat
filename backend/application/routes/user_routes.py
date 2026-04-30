@@ -26,25 +26,19 @@ user = Blueprint("user", __name__)
 
 S3_UPLOAD_BUCKET = "youtube-upload-source-classroom-chat"
 
-s3_client = boto3.client(
-    "s3",
-    aws_access_key_id=os.environ.get("AWS_ACCESS_KEY_ID"),
-    aws_secret_access_key=os.environ.get("AWS_SECRET_ACCESS_KEY"),
-    region_name=os.environ.get("AWS_REGION", "ap-southeast-1"),
-)
+def get_s3_client():
+    if not os.environ.get("AWS_ACCESS_KEY_ID") or not os.environ.get("AWS_SECRET_ACCESS_KEY"):
+        return None
+    return boto3.client(
+        "s3",
+        aws_access_key_id=os.environ.get("AWS_ACCESS_KEY_ID"),
+        aws_secret_access_key=os.environ.get("AWS_SECRET_ACCESS_KEY"),
+        region_name=os.environ.get("AWS_REGION", "ap-southeast-1"),
+    )
 
-def require_login(view):
-    @wraps(view)
-    def wrapper(*args, **kwargs):
-        user_id = session.get("user")
-        if not user_id:
-            if request.is_json or request.accept_mimetypes.accept_json:
-                return jsonify({"error": "Authentication required. Please log in."}), 401
-            flash("Please log in to access this page.", "warning")
-            return redirect(url_for("user.login"))
-        return view(*args, **kwargs)
 
-    return wrapper
+from application.decorators.login_required import require_login
+
 
 
 
@@ -97,19 +91,6 @@ def login():
             if awarded:
                 db.session.commit()
             
-            # Link to recent conversation or create session context
-            recent_conversation = Conversation.query.order_by(
-                Conversation.created_at.desc()
-            ).first()
-
-            if recent_conversation:
-                if user_obj not in recent_conversation.users:
-                    recent_conversation.users.append(user_obj)
-                    db.session.commit()
-                session["conversation_id"] = recent_conversation.id
-            else:
-                session["conversation_id"] = None
-
             if request.is_json:
                 return {"user": user_obj.to_dict(), "awarded_duck": awarded}, 200
             
@@ -303,14 +284,25 @@ def new_project():
             if filename:
                 new_proj.image_url = f"images/projects/{filename}"
 
+        video_upload_failed = False
         if "project_video" in request.files:
             video_file = request.files["project_video"]
             if video_file.filename != "":
-                handle_video_s3_upload(video_file, user_obj, name, project_id=new_proj.id)
+                video_url = handle_video_s3_upload(video_file, user_obj, name, project_id=new_proj.id)
+                if not video_url:
+                    video_upload_failed = True
 
         db.session.commit()
         
+        if video_upload_failed:
+             return {
+                "message": "Project created, but video upload failed. Please check your credentials.",
+                "project_id": new_proj.id,
+                "video_upload_failed": True
+            }, 207
+
         return {"message": "Project created successfully!", "project_id": new_proj.id}
+
 
     # GET logic
     if request.is_json or request.accept_mimetypes.accept_json:
@@ -366,14 +358,25 @@ def edit_project(project_id):
                 if filename:
                     project.image_url = f"images/projects/{filename}"
 
+        video_upload_failed = False
         if "project_video" in request.files:
             video_file = request.files["project_video"]
             if video_file.filename != "":
-                handle_video_s3_upload(video_file, current_user, project.name, project_id=project.id)
+                video_url = handle_video_s3_upload(video_file, current_user, project.name, project_id=project.id)
+                if not video_url:
+                    video_upload_failed = True
 
         db.session.commit()
         
+        if video_upload_failed:
+            return {
+                "message": "Project updated, but video upload failed.",
+                "project": project.to_dict(),
+                "video_upload_failed": True
+            }, 207
+
         return {"message": "Project updated successfully!", "project": project.to_dict()}
+
 
     # GET logic
     if request.is_json or request.accept_mimetypes.accept_json:
@@ -518,7 +521,9 @@ def profile_picture(filename):
 
 
 @user.route("/get_users", methods=["GET"])
+@require_login
 def get_users():
+
     users = User.query.all()
     users_data = [{"id": u.id, "username": u.username} for u in users]
     return jsonify(users_data)
@@ -558,7 +563,9 @@ def search_users():
 
 
 @user.route("/get_user_id", methods=["GET"])
+@require_login
 def get_user_id():
+
     user_id = session.get("user")
     if user_id:
         return jsonify({"user_id": user_id})
@@ -658,6 +665,11 @@ def handle_video_s3_upload(file, user_obj, project_name, project_id):
     project_slug = secure_filename(project_name).replace("_", "-").lower()
     s3_filename = f"{user_obj.username}-{project_slug}.{ext}"
 
+    s3_client = get_s3_client()
+    if not s3_client:
+        current_app.logger.error("S3 client not initialized. Check AWS credentials.")
+        return False
+
     try:
         # Ensure full file is uploaded even if it was previously read
         file.seek(0)
@@ -685,5 +697,5 @@ def handle_video_s3_upload(file, user_obj, project_name, project_id):
             
         return True
     except Exception as e:
-        print(f"S3 Upload Error: {e}")
-        return False
+        current_app.logger.error(f"S3 Upload Error: {e}")
+        return False

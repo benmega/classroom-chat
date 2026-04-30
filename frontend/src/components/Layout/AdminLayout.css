@@ -8,7 +8,7 @@
     --admin-card-bg: #ffffff;
     --admin-sidebar-bg: #0f172a;
     --admin-text: #1e293b;
-    --admin-text-muted: #64748b;
+    --admin-text-muted: var(--text-muted);
     --admin-border: #e2e8f0;
     --admin-glass: rgba(15, 23, 42, 0.8);
     --transition-standard: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
@@ -125,7 +125,7 @@
     font-size: 0.75rem;
     text-transform: uppercase;
     font-weight: 700;
-    color: rgba(255, 255, 255, 0.4);
+    color: rgba(255, 255, 255, 0.55); /* Increased for contrast */
     margin-bottom: 8px;
     letter-spacing: 0.05em;
     white-space: nowrap;
@@ -141,7 +141,7 @@
     gap: 14px;
     padding: 0.85rem 1.25rem;
     text-decoration: none;
-    color: rgba(255, 255, 255, 0.6);
+    color: rgba(255, 255, 255, 0.7); /* Increased for contrast */
     border-radius: 14px;
     font-weight: 600;
     transition: var(--transition-standard);
@@ -176,13 +176,20 @@
 .nav-badge {
     background: linear-gradient(135deg, #f59e0b, #d97706);
     color: white;
-    font-size: 0.65rem;
+    font-size: 0.62rem;
     font-weight: 800;
-    padding: 2px 6px;
-    border-radius: 6px;
-    margin-left: auto;
+    padding: 1px 6px;
+    border-radius: 5px;
+    margin-left: 10px; /* Fixed spacing instead of 'auto' to keep it integrated */
     box-shadow: 0 2px 4px rgba(245, 158, 11, 0.4);
     transition: var(--transition-bounce);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    height: 18px;
+    vertical-align: middle;
+    align-self: center;
 }
 
 .nav-item:hover .nav-badge {
@@ -266,7 +273,9 @@
 /* Main Content Area Styling */
 .admin-main-wrapper {
     flex: 1;
+    min-width: 0;
     margin-left: var(--sidebar-width);
+    max-width: calc(100% - var(--sidebar-width));
     transition: var(--transition-standard);
     display: flex;
     flex-direction: column;
@@ -277,6 +286,7 @@
 
 .admin-app-container.collapsed .admin-main-wrapper {
     margin-left: var(--sidebar-collapsed-width);
+    max-width: calc(100% - var(--sidebar-collapsed-width));
 }
 
 .admin-top-bar {
@@ -352,7 +362,7 @@
 .status-text {
     font-size: 0.75rem;
     font-weight: 600;
-    color: #475569;
+    color: var(--text-secondary);
 }
 
 .admin-body {
@@ -415,7 +425,7 @@
 }
 
 .access-denied-card p {
-    color: #64748b;
+    color: var(--text-muted);
     margin-bottom: 2rem;
     line-height: 1.6;
 }
@@ -487,3 +497,4 @@
         display: none;
     }
 }
+

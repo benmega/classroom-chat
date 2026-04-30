@@ -273,7 +273,7 @@
     border-radius: 6px;
     font-size: 0.75rem;
     font-weight: 700;
-    color: #64748b;
+    color: var(--text-muted);
     text-transform: uppercase;
     width: fit-content;
     margin: 0 auto;
@@ -287,7 +287,7 @@
 
 .achievement-desc {
     font-size: 0.9rem;
-    color: #64748b;
+    color: var(--text-muted);
     line-height: 1.5;
 }
 
@@ -322,7 +322,7 @@
     grid-column: 1 / -1;
     text-align: center;
     padding: 5rem 2rem;
-    color: #94a3b8;
+    color: var(--text-muted);
 }
 
 .empty-achievements h3 {
@@ -367,7 +367,7 @@
     justify-content: flex-end;
     font-size: 0.75rem;
     font-weight: 700;
-    color: #64748b;
+    color: var(--text-muted);
 }
 
 .progress-track-mini {
@@ -379,7 +379,7 @@
 
 .progress-fill-mini {
     height: 100%;
-    background: #94a3b8;
+    background: var(--text-muted);
     border-radius: 3px;
     transition: width 0.5s ease;
 }
@@ -397,4 +397,5 @@
         font-size: 2rem;
     }
 }
+
 

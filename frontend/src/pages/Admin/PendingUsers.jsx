@@ -13,6 +13,7 @@ import { useNavigate } from 'react-router-dom';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
 import './PendingUsers.css';
+import AdminPageHeader from '../../components/admin/AdminPageHeader';
 
 const PendingUsers = () => {
     const navigate = useNavigate();
@@ -79,15 +80,10 @@ const PendingUsers = () => {
 
     return (
         <div className="admin-pending-users-page">
-            <header className="page-header">
-                <button onClick={() => navigate('/admin')} className="back-btn">
-                    <ArrowLeft size={20} /> Back to Dashboard
-                </button>
-                <div className="header-content">
-                    <h1>User Approvals</h1>
-                    <p>Manage new account registrations that require your approval.</p>
-                </div>
-            </header>
+            <AdminPageHeader 
+                title="User Approvals" 
+                description="Manage new account registrations that require your approval."
+            />
 
             <div className="users-list">
                 {users.length > 0 ? (

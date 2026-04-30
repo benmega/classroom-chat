@@ -4,7 +4,7 @@ Type: py
 Summary: Flask routes for general routes functionality.
 """
 
-from flask import Blueprint, session, redirect, url_for
+from flask import Blueprint, session, redirect, url_for, request
 
 general = Blueprint("general", __name__)
 
@@ -20,5 +20,6 @@ def index(path):
         from flask import jsonify
         return jsonify({"error": "API route not found"}), 404
         
-    from flask import render_template
-    return render_template("index.html")
+    from flask import render_template, g
+    username = g.user.username if hasattr(g, 'user') and g.user else None
+    return render_template("index.html", username=username)

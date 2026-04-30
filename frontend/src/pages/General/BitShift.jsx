@@ -134,7 +134,7 @@ const BitShift = () => {
                         </div>
                         <div className="balance-info">
                             <DuckIcon size={16} />
-                            <span>Cache: {user?.duck_balance?.toLocaleString(undefined, { maximumFractionDigits: 3 }) || 0}</span>
+                            <span>Cache: {(user?.duck_balance ?? 0).toLocaleString(undefined, { maximumFractionDigits: 3 })}</span>
                         </div>
                     </div>
 

@@ -13,8 +13,20 @@ from ..admin_routes import admin
 @admin_only
 @api_response
 def pending_users():
+    from application.models.challenge_log import ChallengeLog
+    from sqlalchemy import func
+    
     pending = User.query.filter_by(is_approved=False, is_admin=False).all()
-    return {"users": [u.to_dict_summary() for u in pending]}
+    usernames = [u.username for u in pending]
+    
+    counts = db.session.query(
+        ChallengeLog.username, ChallengeLog.domain, func.count(ChallengeLog.id)
+    ).filter(ChallengeLog.username.in_(usernames)).group_by(ChallengeLog.username, ChallengeLog.domain).all()
+    
+    precomputed = {(username, domain): count for username, domain, count in counts}
+    
+    return {"users": [u.to_dict_summary(precomputed) for u in pending]}
+
 
 @admin.route("/approve_user/<int:user_id>", methods=["POST"])
 @admin_only
@@ -41,16 +53,27 @@ def get_users():
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 50, type=int)
     
+    from application.models.challenge_log import ChallengeLog
+    from sqlalchemy import func
+    
     pagination = User.query.paginate(page=page, per_page=per_page, error_out=False)
     users = pagination.items
+    usernames = [u.username for u in users]
+    
+    counts = db.session.query(
+        ChallengeLog.username, ChallengeLog.domain, func.count(ChallengeLog.id)
+    ).filter(ChallengeLog.username.in_(usernames)).group_by(ChallengeLog.username, ChallengeLog.domain).all()
+    
+    precomputed = {(username, domain): count for username, domain, count in counts}
     
     user_data = []
     for u in users:
-        d = u.to_dict_summary()
+        d = u.to_dict_summary(precomputed)
         # Defensive pop redundant but kept for safety with existing patterns
         for field in ['password_hash', 'salt', 'ip_address']:
             d.pop(field, None)
         user_data.append(d)
+
         
     return jsonify({
         "users": user_data,

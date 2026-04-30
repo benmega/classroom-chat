@@ -224,7 +224,7 @@
 .stat-box .label {
     font-size: 0.65rem;
     text-transform: uppercase;
-    color: var(--text-muted);
+    color: var(--text-secondary);
     letter-spacing: 1px;
     font-weight: 700;
     margin-bottom: 2px;
@@ -1073,3 +1073,4 @@
         grid-template-columns: 1fr;
     }
 }
+

@@ -1,10 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
-    ArrowLeft, 
-    Database, 
     Layers, 
-    ExternalLink, 
     ShieldAlert, 
     Terminal, 
     Activity, 
@@ -17,33 +14,26 @@ import client from '../../api/client';
 import toast from 'react-hot-toast';
 import './AdvancedPanel.css';
 import { X } from 'lucide-react';
+import AdminPageHeader from '../../components/admin/AdminPageHeader';
 
 const AdvancedPanel = () => {
     const navigate = useNavigate();
-    const [views, setViews] = useState([]);
-    const [isLoading, setIsLoading] = useState(true);
+    const [isLoading, setIsLoading] = useState(false);
     const [logs, setLogs] = useState('');
     const [showLogModal, setShowLogModal] = useState(false);
+    const [showStatsModal, setShowStatsModal] = useState(false);
+    const [showPurgeModal, setShowPurgeModal] = useState(false);
     const [isFetchingLogs, setIsFetchingLogs] = useState(false);
+    const [isFetchingStats, setIsFetchingStats] = useState(false);
+    const [isPurging, setIsPurging] = useState(false);
+    const [extendedStats, setExtendedStats] = useState(null);
     
     // In production, the API is served from the same origin as the frontend.
     // In development, we fallback to the known Flask port (8000).
     const apiBaseUrl = import.meta.env.VITE_API_URL || 
                       (import.meta.env.DEV ? 'http://localhost:8000' : window.location.origin);
 
-    const fetchViews = async () => {
-        setIsLoading(true);
-        try {
-            const response = await client.get('/api/admin/advanced-panel');
-            if (response.data.status === 'success') {
-                setViews(response.data.data.views);
-            }
-        } catch {
-            toast.error('Failed to load advanced panel views.');
-        } finally {
-            setIsLoading(false);
-        }
-    };
+
 
     const fetchLogs = async () => {
         setIsFetchingLogs(true);
@@ -61,52 +51,51 @@ const AdvancedPanel = () => {
         }
     };
 
-    useEffect(() => {
-        fetchViews();
-    }, []);
+    const fetchExtendedStats = async () => {
+        setIsFetchingStats(true);
+        try {
+            const response = await client.get('/api/admin/advanced/stats-extended');
+            if (response.data.status === 'success') {
+                setExtendedStats(response.data.data);
+                setShowStatsModal(true);
+            }
+        } catch (err) {
+            toast.error('Failed to fetch server statistics.');
+            console.error(err);
+        } finally {
+            setIsFetchingStats(false);
+        }
+    };
+
+    const purgeHistory = async () => {
+        setIsPurging(true);
+        try {
+            const response = await client.post('/api/admin/advanced/purge-history');
+            if (response.data.status === 'success') {
+                toast.success(`History purged! Deleted ${response.data.data.deleted_messages} messages.`);
+                setShowPurgeModal(false);
+            }
+        } catch (err) {
+            toast.error('Failed to purge history.');
+            console.error(err);
+        } finally {
+            setIsPurging(false);
+        }
+    };
+
+
 
     if (isLoading) return <div className="admin-loading">Loading Advanced Panel...</div>;
 
     return (
         <div className="admin-advanced-panel">
-            <header className="page-header">
-                <button onClick={() => navigate('/admin')} className="back-btn">
-                    <ArrowLeft size={20} /> Back to Dashboard
-                </button>
-                <h1>Advanced Database Management</h1>
-                <p>Direct access to backend model controllers and system utilities.</p>
-            </header>
+            <AdminPageHeader 
+                title="Advanced Database Management" 
+                description="Direct access to backend model controllers and system utilities."
+            />
 
             <div className="advanced-grid">
-                <section className="model-links-section card">
-                    <div className="section-header">
-                        <Database size={24} />
-                        <h2>Model Views (Legacy SSR)</h2>
-                    </div>
-                    <p className="section-desc">Traditional server-rendered database management. For modern headless management, use the <strong>Headless CRUD</strong> utility below.</p>
-                    
-                    <div className="model-list">
-                        {views.length > 0 ? (
-                            views.map((view, idx) => (
-                                <a 
-                                    key={idx}
-                                    href={`${apiBaseUrl}/api/admin/advanced/${view.endpoint}/`} 
-                                    className="model-item"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                >
-                                    <div className="model-name">
-                                        <Layers size={18} />
-                                        <span>{view.name}</span>
-                                    </div>
-                                    <ExternalLink size={16} className="ext-icon" />
-                                </a>
-                            ))
-                        ) : (
-                            <div className="empty-state">No models registered.</div>
-                        )}
-                    </div>
-                </section>
+
 
                 <div className="utility-stack">
                     <section className="utility-card card">
@@ -150,9 +139,13 @@ const AdvancedPanel = () => {
                         <div className="utility-icon secondary"><Activity size={20} /></div>
                         <div className="utility-content">
                             <h3>Server Performance</h3>
-                            <p>Monitor memory usage and active DB connections.</p>
-                            <button className="btn-utility" onClick={() => navigate('/admin/dashboard')}>
-                                <BarChart3 size={16} /> View Stats
+                            <p>Monitor memory usage and database table counts.</p>
+                            <button 
+                                className="btn-utility" 
+                                onClick={fetchExtendedStats}
+                                disabled={isFetchingStats}
+                            >
+                                <BarChart3 size={16} /> {isFetchingStats ? 'Loading...' : 'View Extended Stats'}
                             </button>
                         </div>
                     </section>
@@ -170,7 +163,7 @@ const AdvancedPanel = () => {
                             <h4>Clear All History</h4>
                             <p>Permanently deletes all message and conversation history. This cannot be undone.</p>
                         </div>
-                        <button className="btn-danger" onClick={() => toast('Security confirmation required.')}>
+                        <button className="btn-danger" onClick={() => setShowPurgeModal(true)}>
                             <Trash2 size={18} /> Purge History
                         </button>
                     </div>
@@ -178,8 +171,8 @@ const AdvancedPanel = () => {
             </div>
 
             {showLogModal && (
-                <div className="log-modal-overlay">
-                    <div className="log-modal glass-panel animate-fade-in">
+                <div className="log-modal-overlay" onClick={() => setShowLogModal(false)}>
+                    <div className="log-modal glass-panel animate-fade-in" onClick={e => e.stopPropagation()}>
                         <div className="log-modal-header">
                             <div className="title-group">
                                 <Terminal size={20} />
@@ -195,6 +188,82 @@ const AdvancedPanel = () => {
                         <div className="log-modal-footer">
                             <button className="btn-secondary" onClick={() => setShowLogModal(false)}>Close</button>
                             <button className="btn-premium" onClick={fetchLogs}>Refresh</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {showStatsModal && extendedStats && (
+                <div className="log-modal-overlay" onClick={() => setShowStatsModal(false)}>
+                    <div className="log-modal glass-panel animate-fade-in" onClick={e => e.stopPropagation()}>
+                        <div className="log-modal-header">
+                            <div className="title-group">
+                                <Activity size={20} />
+                                <h3>Server Statistics</h3>
+                            </div>
+                            <button className="close-btn" onClick={() => setShowStatsModal(false)}>
+                                <X size={20} />
+                            </button>
+                        </div>
+                        <div className="log-content">
+                            <div className="stats-grid">
+                                <div className="stat-box">
+                                    <span className="label">Memory Usage</span>
+                                    <span className="value">{extendedStats.memory_usage_mb} MB</span>
+                                </div>
+                                <div className="stat-box">
+                                    <span className="label">CPU Usage</span>
+                                    <span className="value">{extendedStats.cpu_percent}%</span>
+                                </div>
+                                <div className="stat-box">
+                                    <span className="label">Uptime</span>
+                                    <span className="value">{Math.floor(extendedStats.uptime_seconds / 3600)}h {Math.floor((extendedStats.uptime_seconds % 3600) / 60)}m</span>
+                                </div>
+                            </div>
+                            
+                            <h4>Database Table Counts</h4>
+                            <div className="table-counts">
+                                {Object.entries(extendedStats.table_counts).map(([name, count]) => (
+                                    <div key={name} className="table-row">
+                                        <span>{name}</span>
+                                        <strong>{count}</strong>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                        <div className="log-modal-footer">
+                            <button className="btn-secondary" onClick={() => setShowStatsModal(false)}>Close</button>
+                            <button className="btn-premium" onClick={fetchExtendedStats}>Refresh</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {showPurgeModal && (
+                <div className="log-modal-overlay" onClick={() => setShowPurgeModal(false)}>
+                    <div className="log-modal glass-panel animate-fade-in purge-confirm" onClick={e => e.stopPropagation()}>
+                        <div className="log-modal-header danger">
+                            <div className="title-group">
+                                <ShieldAlert size={20} />
+                                <h3>Confirm History Purge</h3>
+                            </div>
+                            <button className="close-btn" onClick={() => setShowPurgeModal(false)}>
+                                <X size={20} />
+                            </button>
+                        </div>
+                        <div className="log-content">
+                            <p className="warning-text">This action is <strong>PERMANENT</strong> and will delete all messages and conversations from the database.</p>
+                            <p>Are you absolutely sure you want to proceed?</p>
+                        </div>
+                        <div className="log-modal-footer">
+                            <button className="btn-secondary" onClick={() => setShowPurgeModal(false)}>Cancel</button>
+                            <button 
+                                className="btn-danger" 
+                                onClick={purgeHistory}
+                                disabled={isPurging}
+                            >
+                                {isPurging ? 'Purging...' : 'Yes, Delete All History'}
+                            </button>
                         </div>
                     </div>
                 </div>

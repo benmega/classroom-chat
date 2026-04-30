@@ -13,6 +13,7 @@ import {
 import client from '../../api/client';
 import toast from 'react-hot-toast';
 import './AdminCertificates.css';
+import AdminPageHeader from '../../components/admin/AdminPageHeader';
 
 const AdminCertificates = () => {
     const [certificates, setCertificates] = useState([]);
@@ -59,12 +60,10 @@ const AdminCertificates = () => {
 
     return (
         <div className="admin-certificates-page">
-            <header className="page-header">
-                <div className="title-area">
-                    <h1>Certificate Review</h1>
-                    <p>Verify and approve external achievement submissions.</p>
-                </div>
-            </header>
+            <AdminPageHeader 
+                title="Certificate Review" 
+                description="Verify and approve external achievement submissions."
+            />
 
             <div className="controls-bar">
                 <div className="search-box">

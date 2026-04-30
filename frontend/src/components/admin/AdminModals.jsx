@@ -46,9 +46,7 @@ export const AdjustDucksModal = ({ isOpen, onClose, onSubmit, user, users, formE
                         />
                         <div className="user-info-text">
                             <span className="user-nickname">{user.nickname || user.username}</span>
-                            <span className="user-handle" style={{ whiteSpace: 'normal', overflow: 'visible', textOverflow: 'clip', maxWidth: 'none', display: 'block', wordBreak: 'break-all' }}>
-                                @{user.username}
-                            </span>
+                            <span className="user-handle">@{user.username}</span>
                         </div>
                         <input type="hidden" name="username" value={user.username} />
                     </div>
@@ -57,7 +55,7 @@ export const AdjustDucksModal = ({ isOpen, onClose, onSubmit, user, users, formE
                         <option value="">Select a user...</option>
                         {users.map(u => (
                             <option key={u.id} value={u.username}>
-                                {u.username} (Balance: 🦆 {u.duck_balance?.toFixed(1)})
+                                {u.username} (Balance: 🦆 {(u.duck_balance ?? 0).toFixed(1)})
                             </option>
                         ))}
                     </select>

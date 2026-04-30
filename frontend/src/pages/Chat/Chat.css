@@ -109,7 +109,7 @@
 
 .chat-input-form {
     display: flex;
-    align-items: center;
+    align-items: flex-end;
     gap: var(--spacing-md);
     background: var(--bg-tertiary);
     padding: var(--spacing-sm) var(--spacing-md);
@@ -133,6 +133,11 @@
     font-size: var(--font-md);
     color: var(--text-primary);
     font-family: inherit;
+    resize: none;
+    overflow: hidden;
+    line-height: 1.5;
+    min-height: 24px;
+    max-height: 160px;
 }
 
 .chat-send-btn {
@@ -475,6 +480,7 @@
     display: flex;
     align-items: flex-end;
     gap: 8px;
+    min-width: 0;
 }
 
 .chat-message-group.user .message-row {
@@ -505,6 +511,7 @@
 
 .message-bubble {
     max-width: min(80%, 650px);
+    min-width: 0;
     padding: 0.6rem 1rem;
     border-radius: 18px 18px 4px 18px;
     background: var(--bg-primary);
@@ -514,6 +521,7 @@
     line-height: 1.5;
     overflow-wrap: anywhere;
     word-break: break-word;
+    white-space: pre-wrap;
 }
 
 .chat-message-group.user .message-bubble {
@@ -529,3 +537,4 @@
 /* Corrected bubble points */
 .chat-message-group.user .message-bubble { border-radius: 18px 18px 4px 18px; }
 .chat-message-group.other .message-bubble { border-radius: 18px 18px 18px 4px; }
+
