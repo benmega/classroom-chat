@@ -95,6 +95,7 @@ echo "Building frontend..."
 (
     cd "$APP_DIR/frontend"
     run npm install
+    export NODE_OPTIONS="--max-old-space-size=1536"
     run npm run build
 )
 
