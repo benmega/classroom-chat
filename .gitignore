@@ -17,3 +17,4 @@ backend/reports/certificates/
 *.iws
 .venv/
 *.log
+*.bak
