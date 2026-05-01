@@ -158,3 +158,25 @@ document.getElementById('update-multiplier-button').addEventListener('click', fu
         Swal.fire('Error', 'Server error occurred.', 'error');
     });
 });
+
+
+document.addEventListener("DOMContentLoaded", () => {
+    // Connect to the SSE stream
+    const eventSource = new EventSource("/stream");
+
+    eventSource.onmessage = function(event) {
+        const data = JSON.parse(event.data);
+
+        // Only react to 'new_trade' events
+        if (data.type === "new_trade") {
+            showBootstrapToast(data.message, "success");
+
+            // Optional: Auto-refresh an admin table here if needed
+            // refreshPendingTradesTable();
+        }
+    };
+
+    eventSource.onerror = function(err) {
+        console.error("SSE connection failed:", err);
+    };
+});
