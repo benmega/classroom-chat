@@ -127,7 +127,8 @@ fi
 echo "Running migrations..."
 (
     cd "$MIGRATIONS_DIR"
-    run "$PYTHON_BIN" migration_script.py
+    # Ensure we run in production mode so it hits prod_users.db
+    run env FLASK_ENV=production "$PYTHON_BIN" migration_script.py
 )
 
 # -------------------------
