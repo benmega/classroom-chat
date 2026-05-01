@@ -6,6 +6,44 @@ from sqlalchemy import inspect
 
 crud_bp = Blueprint("admin_crud", __name__)
 
+# Fields that should never be exposed or edited via the admin UI
+_PROTECTED_FIELDS = {"password_hash", "password"}
+
+
+@crud_bp.route("/schema/<resource>", methods=["GET"])
+@admin_only
+def get_schema(resource):
+    """Return column metadata for a resource so the frontend can auto-generate fields."""
+    model = get_model(resource)
+    if not model:
+        return jsonify({"error": "Resource not found"}), 404
+
+    inspector = inspect(model)
+    fields = []
+
+    for col in inspector.mapper.column_attrs:
+        column = col.columns[0]  # Column object
+        col_name = col.key
+
+        if col_name in _PROTECTED_FIELDS:
+            continue
+
+        # Derive a simple type string the frontend can switch on
+        type_str = type(column.type).__name__.upper()  # e.g. VARCHAR, INTEGER, BOOLEAN, DATETIME, TEXT
+
+        # Collect foreign key targets (e.g. "users.id")
+        fk_targets = [fk.target_fullname for fk in column.foreign_keys]
+
+        fields.append({
+            "name": col_name,
+            "type": type_str,
+            "nullable": column.nullable,
+            "primary_key": column.primary_key,
+            "foreign_keys": fk_targets,
+        })
+
+    return jsonify({"resource": resource, "fields": fields})
+
 def get_model(resource_name):
     """Map resource name (plural or singular) to SQLAlchemy model class."""
     # This matches the names used in init_admin (Flask-Admin)
@@ -66,7 +104,7 @@ def create(resource):
     
     params = request.json
     # Prevent mass assignment of sensitive fields
-    protected = {"id", "password_hash", "created_at"}
+    protected = {"id", "password_hash", "password", "created_at"}
     filtered_params = {k: v for k, v in params.items() if k not in protected}
     
     item = model(**filtered_params)
@@ -88,7 +126,7 @@ def update(resource, id):
     
     params = request.json
     # Prevent mass assignment of sensitive fields
-    protected = {"id", "password_hash", "created_at"}
+    protected = {"id", "password_hash", "password", "created_at"}
     
     for key, value in params.items():
         if key not in protected and hasattr(item, key):
