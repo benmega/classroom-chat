@@ -16,3 +16,4 @@ backend/reports/certificates/
 *.ipr
 *.iws
 .venv/
+*.log
