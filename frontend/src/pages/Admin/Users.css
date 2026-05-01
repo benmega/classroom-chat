@@ -1,0 +1,367 @@
+.admin-users-page {
+    animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Standardized Header handled by AdminPageHeader.css */
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.search-bar {
+    position: relative;
+    width: 320px;
+}
+
+.search-bar svg {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+}
+
+.search-bar input {
+    width: 100%;
+    padding: 12px 12px 12px 42px;
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    font-size: 0.95rem;
+    outline: none;
+    transition: all 0.2s;
+}
+
+.search-bar input:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+}
+
+.primary-btn {
+    padding: 12px 20px;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.primary-btn:hover {
+    opacity: 0.9;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+}
+
+/* Stats Row */
+.users-stats-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2.5rem;
+}
+
+.stat-mini-card {
+    background: white;
+    padding: 1.25rem;
+    border-radius: 16px;
+    border: 1px solid #e2e8f0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.stat-mini-card .label {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    font-weight: 700;
+}
+
+.stat-mini-card .value {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: #1e293b;
+}
+
+/* Table Card */
+.users-table-container {
+    padding: 0;
+    overflow: hidden;
+}
+
+.users-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.users-table th {
+    background: #f8fafc;
+    text-align: left;
+    padding: 16px 24px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.users-table td {
+    padding: 16px 24px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.users-table tr:last-child td {
+    border-bottom: none;
+}
+
+.users-table tr:hover {
+    background: #f8fafc;
+}
+
+.user-profile-cell {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.user-profile-cell .avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    object-fit: cover;
+}
+
+.user-profile-cell .name {
+    font-weight: 700;
+    color: #1e293b;
+    font-size: 0.95rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 140px;
+}
+
+.user-profile-cell .handle {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 140px;
+}
+
+.badge {
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+}
+
+.badge.student { background: #eff6ff; color: #1e40af; border: 1px solid #dbeafe; }
+.badge.admin { background: #fef2f2; color: #b91c1c; border: 1px solid #fee2e2; }
+
+
+.economy-info .duck-count {
+    font-weight: 700;
+    color: #92400e;
+    font-size: 0.95rem;
+}
+
+.economy-info .level-info {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.status-indicator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.status-indicator .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+
+.status-indicator.online { color: #166534; }
+.status-indicator.online .dot { background: #22c55e; box-shadow: 0 0 8px rgba(34, 197, 94, 0.4); }
+.status-indicator.offline { color: var(--text-muted); }
+.status-indicator.offline .dot { background: #cbd5e1; }
+
+.action-group {
+    display: flex;
+    gap: 8px;
+}
+
+.action-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.action-btn:hover {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+    color: #1e293b;
+}
+
+.action-btn.adjust:hover { background: #fffbeb; border-color: #fcd34d; color: #b45309; }
+.action-btn.pass:hover { background: #eef2ff; border-color: #c7d2fe; color: #4338ca; }
+.action-btn.delete:hover { background: #fef2f2; border-color: #fecaca; color: #b91c1c; }
+
+.empty-row {
+    text-align: center;
+    padding: 60px !important;
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+/* Modal Enhancements */
+.submit-btn {
+    padding: 14px;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.submit-btn.danger { background: #ef4444; }
+
+.submit-btn:hover { opacity: 0.9; }
+
+.form-group input.readonly {
+    background: #f1f5f9;
+    opacity: 0.8;
+}
+
+.user-badge-display {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+}
+
+.user-badge-display .avatar-small {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    object-fit: cover;
+}
+
+.user-info-text {
+    display: flex;
+    flex-direction: column;
+}
+
+.user-nickname {
+    font-weight: 700;
+    color: #1e293b;
+    font-size: 0.95rem;
+}
+
+.user-handle {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.admin-select {
+    cursor: pointer;
+}
+
+/* @media handled by AdminPageHeader.css */
+
+/* Pagination Styling */
+.pagination-container {
+    padding: 20px 24px;
+    background: #f8fafc;
+    border-top: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.pagination-info {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+}
+
+.pagination-info strong {
+    color: #1e293b;
+}
+
+.pagination-controls {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.pagination-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    color: var(--text-secondary);
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.pagination-btn:hover:not(:disabled) {
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+    background: #f8fafc;
+}
+
+.pagination-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: #f1f5f9;
+}
+
+.page-indicator {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    padding: 0 8px;
+}
+
+.page-indicator strong {
+    color: var(--primary-color);
+}
+

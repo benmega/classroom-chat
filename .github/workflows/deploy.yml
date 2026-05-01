@@ -6,17 +6,60 @@ on:
       - deploy-gunicorn
 
 jobs:
-  deploy:
+  build-and-deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Deploy via SSH
-        uses: appleboy/ssh-action@master
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: './frontend/package-lock.json'
+
+      - name: Build Frontend
+        run: |
+          cd frontend
+          npm install
+          npm run build
+
+      - name: Copy Files to EC2
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: "frontend/dist/*"
+          target: "/home/ubuntu/classroom-chat/frontend/dist"
+          strip_components: 2
+
+      - name: Deploy Backend via SSH
+        uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            cd /path/to/your/project/root
-            git pull origin deploy-gunicorn
-            chmod +x ./classroom-chat/deploy.sh
-            ./classroom-chat/deploy.sh
+            APP_DIR="$HOME/classroom-chat"
+            
+            # Update code (for backend and script changes)
+            cd $APP_DIR
+            git fetch origin
+            git reset --hard origin/deploy-gunicorn
+
+            # Inject production environment variables
+            cat > "$APP_DIR/backend/.env" <<ENVFILE
+            FLASK_ENV=production
+            SECRET_KEY=${{ secrets.SECRET_KEY }}
+            ADMIN_USERNAME=${{ secrets.ADMIN_USERNAME }}
+            ADMIN_PASSWORD=${{ secrets.ADMIN_PASSWORD }}
+            DATABASE_URL=sqlite:////home/ubuntu/classroom-chat/backend/instance/prod_users.db
+            OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
+            WEBHOOK_SECRET=${{ secrets.WEBHOOK_SECRET }}
+            ENVFILE
+
+            # Execute the deployment script
+            chmod +x "$APP_DIR/deploy.sh"
+            "$APP_DIR/deploy.sh"

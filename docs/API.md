@@ -7,28 +7,32 @@
 ```markdown
 # API Documentation
 
+## Authentication Requirement
+All API endpoints (except `/login` and `/signup`) require a valid session cookie. If a request is made without authentication, the server will return a `401 Unauthorized` response for JSON requests.
+
 ## Authentication Endpoints
 - **POST /login**
-  - Description: Authenticate a user.
-  - Parameters:
-    - `username`: User's username.
-    - `password`: User's password.
+  - Description: Authenticate a user and create a session cookie.
+  - Parameters: `username`, `password`.
 
 - **POST /logout**
-  - Description: Log out a user.
+  - Description: Invalidate the user session.
 
-## Challenge Endpoints
+## Challenge Endpoints (Require Authentication)
 - **GET /challenges**
-  - Description: Retrieve all challenges.
+  - Description: Retrieve all challenges for the current user.
 
 - **POST /challenges/<slug>**
   - Description: Submit challenge completion.
-  - Parameters:
-    - `slug`: Unique identifier for the challenge.
 
-## Ducks Endpoints
+## Ducks Endpoints (Require Authentication)
 - **GET /leaderboard**
-  - Description: Retrieve the top performers.
+  - Description: Retrieve the top performers based on duck balance.
 
 - **GET /profile/<username>**
-  - Description: Retrieve user profile data.
+  - Description: Retrieve detailed profile, including achievements and duck balance.
+
+## Admin Endpoints (Require Admin Privileges)
+- **GET /api/admin/users** – List all users.
+- **POST /api/admin/duck-adjust** – Adjust a user's duck balance.
+- **POST /api/admin/upload-badge** – Upload a new achievement badge.

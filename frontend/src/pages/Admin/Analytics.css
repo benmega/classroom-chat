@@ -1,0 +1,147 @@
+.admin-analytics-page {
+    animation: fadeIn 0.4s ease-out;
+}
+
+.analytics-grid {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 2.5rem;
+}
+
+.chart-container {
+    height: 400px;
+    margin-top: 1.5rem;
+}
+
+.lower-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    margin-top: 2.5rem;
+}
+
+.simple-stat-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+}
+
+.simple-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.simple-stat .label {
+    font-size: 0.85rem;
+    color: var(--text-secondary); /* Darker slate */
+    font-weight: 600;
+}
+
+.simple-stat .value {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #1e293b;
+}
+
+.simple-stat .value.positive { color: #10b981; }
+
+.pie-container {
+    height: 200px;
+    display: flex;
+    justify-content: center;
+    margin-top: 1rem;
+}
+
+/* Sidebar Styling */
+.top-earners {
+    margin-top: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.earner-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    background: #f8fafc;
+    border-radius: 12px;
+}
+
+.earner-item .name {
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: #1e293b;
+}
+
+.earner-item .handle {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.earner-item .amount {
+    font-weight: 800;
+    color: #92400e;
+    font-size: 0.95rem;
+}
+
+.stat-highlight {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.admin-analytics-page .stat-box {
+    background: #f8fafc;
+    padding: 1rem;
+    border-radius: 12px;
+    text-align: center;
+}
+
+.admin-analytics-page .stat-box .big-val {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--primary-color);
+}
+
+.admin-analytics-page .stat-box .label {
+    font-size: 0.75rem;
+    color: var(--text-secondary); /* Darker slate */
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.range-select {
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+    background: white;
+    font-weight: 600;
+    color: var(--text-secondary);
+    outline: none;
+    cursor: pointer;
+}
+
+@media (max-width: 1200px) {
+    .analytics-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .recent-activity-sidebar {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .lower-grid, .recent-activity-sidebar {
+        grid-template-columns: 1fr;
+    }
+}
+

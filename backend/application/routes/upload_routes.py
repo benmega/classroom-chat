@@ -1,0 +1,77 @@
+"""
+File: upload_routes.py
+Type: py
+Summary: Flask routes for upload routes functionality.
+"""
+
+import base64
+import mimetypes
+import os
+from datetime import datetime
+from io import BytesIO
+
+from PIL import Image
+from flask import Blueprint, request, jsonify, send_from_directory, abort
+
+from application import limiter
+from application.config import Config
+
+upload = Blueprint("upload", __name__)
+
+
+@upload.route("/upload_file", methods=["POST"])
+@limiter.limit("10 per minute; 20 per day")
+# @premium_required
+def upload_file():
+    if not request.is_json:
+        return jsonify({"error": "Invalid JSON data"}), 400
+
+    json_data = request.get_json()
+
+    if not json_data:
+        return jsonify({"error": "Invalid JSON data"}), 400
+
+    data_url = json_data.get("file")
+
+    if not data_url:
+        return jsonify({"error": "No file data provided"}), 400
+
+    header, encoded = data_url.split(",", 1)
+    mime_type = header.split(";")[0].split(":")[1]
+    data = base64.b64decode(encoded)
+
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    file_path = None
+
+    extension = mimetypes.guess_extension(mime_type) or "bin"
+
+    if mime_type.startswith("image/"):
+        directory = os.path.join(Config.UPLOAD_FOLDER, "image")
+        os.makedirs(directory, exist_ok=True)
+        file_path = os.path.join(directory, f"file_{timestamp}{extension}")
+        image = Image.open(BytesIO(data))
+        image.save(file_path)
+    elif mime_type == "application/pdf":
+        directory = os.path.join(Config.UPLOAD_FOLDER, "pdf")
+        os.makedirs(directory, exist_ok=True)
+        file_path = os.path.join(directory, f"file_{timestamp}{extension}")
+        with open(file_path, "wb") as f:
+            f.write(data)
+    else:
+        directory = os.path.join(Config.UPLOAD_FOLDER, "other")
+        os.makedirs(directory, exist_ok=True)
+        file_path = os.path.join(directory, f"file_{timestamp}{extension}")
+        with open(file_path, "wb") as f:
+            f.write(data)
+
+    return jsonify({"message": "File uploaded successfully", "file_path": file_path})
+
+
+@upload.route("/uploads/<filename>")
+# @premium_required
+def uploaded_file(filename):
+    file_path = os.path.join(Config.UPLOAD_FOLDER, filename)
+    if os.path.exists(file_path):
+        return send_from_directory(os.path.dirname(file_path), filename)
+    else:
+        abort(404)

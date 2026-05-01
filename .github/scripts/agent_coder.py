@@ -14,8 +14,10 @@ def list_files():
     """Locate files in the repository."""
     files = []
     for path in pathlib.Path(".").rglob('*'):
-        if any(x in path.parts for x in {'.git', 'venv', '__pycache__', '.github'}): continue
-        if path.is_file(): files.append(str(path))
+        if any(x in path.parts for x in {'.git', 'venv', '__pycache__', '.github'}):
+            continue
+        if path.is_file():
+            files.append(str(path))
     return "\n".join(files)
 
 
@@ -128,7 +130,8 @@ def main():
         response = client.chat.completions.create(model="gpt-4o", messages=messages, tools=tools)
         msg = response.choices[0].message
         messages.append(msg)
-        if not msg.tool_calls: break
+        if not msg.tool_calls:
+            break
 
         for tool_call in msg.tool_calls:
             name, args = tool_call.function.name, json.loads(tool_call.function.arguments)

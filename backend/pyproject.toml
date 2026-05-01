@@ -1,0 +1,6 @@
+# pyproject.toml
+[tool.ruff.lint]
+ignore = ["E701"]
+
+[tool.pyright]
+extraPaths = ["."]
