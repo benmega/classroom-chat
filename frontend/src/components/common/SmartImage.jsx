@@ -32,9 +32,8 @@ const SmartImage = ({
     // Both failed - render CSS placeholder
     return (
       <div 
-        className={`css-placeholder ${className}`}
+        className={`css-placeholder smart-image-base ${className}`}
         style={{
-          ...style,
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
@@ -42,9 +41,8 @@ const SmartImage = ({
           background: 'var(--bg-tertiary, #f3f4f6)',
           color: 'var(--text-muted, #9ca3af)',
           borderRadius: 'inherit',
-          width: '100%',
-          height: '100%',
-          minHeight: '100px'
+          minHeight: '100px',
+          ...style
         }}
       >
         {fallbackType === 'avatar' ? <User size={24} /> : <Code size={32} />}
@@ -61,12 +59,10 @@ const SmartImage = ({
     <img 
       src={finalSrc} 
       alt={alt} 
-      className={className} 
+      className={`smart-image-base ${className}`} 
       style={{
-        width: '100%',
-        height: '100%',
-        ...style,
-        objectFit: 'cover'
+        objectFit: 'cover',
+        ...style
       }}
       onError={handleError}
       {...props}

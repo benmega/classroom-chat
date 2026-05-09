@@ -5,7 +5,6 @@ const getSocketUrl = () => {
   if (import.meta.env.VITE_API_URL) return import.meta.env.VITE_API_URL;
   
   // Use same origin in both dev and prod to leverage Vite proxy/same-host serving.
-  // Vite is configured to proxy /socket.io in vite.config.js
   return `${window.location.protocol}//${window.location.hostname}${window.location.port ? `:${window.location.port}` : ''}`;
 };
 
@@ -46,16 +45,21 @@ const getSocket = () => {
  * prevent reconnect loops on every re-render.
  *
  * @param {Function} onMessageReceived - Callback for 'message_received' events
+ * @param {Function} onClassroomEnrolled - Callback for 'classroom_enrolled' events
+ * @param {Object} lifecycleCallbacks - Optional callbacks for conversation lifecycle events
  */
-const useChatSocket = (onMessageReceived) => {
+const useChatSocket = (onMessageReceived, onClassroomEnrolled, lifecycleCallbacks = {}) => {
   const socketRef = useRef(null);
   const [isConnected, setIsConnected] = useState(false);
-  // Keep the callback in a ref so we never need to re-subscribe
-  // (which would force the socket to reconnect).
-  const callbackRef = useRef(onMessageReceived);
-  useEffect(() => {
-    callbackRef.current = onMessageReceived;
-  }, [onMessageReceived]);
+
+  // Keep callbacks in refs so we never need to re-subscribe
+  const messageCallbackRef = useRef(onMessageReceived);
+  const enrolledCallbackRef = useRef(onClassroomEnrolled);
+  const lifecycleRefs = useRef(lifecycleCallbacks);
+
+  useEffect(() => { messageCallbackRef.current = onMessageReceived; }, [onMessageReceived]);
+  useEffect(() => { enrolledCallbackRef.current = onClassroomEnrolled; }, [onClassroomEnrolled]);
+  useEffect(() => { lifecycleRefs.current = lifecycleCallbacks; }, [lifecycleCallbacks]);
 
   useEffect(() => {
     const socket = getSocket();
@@ -65,45 +69,41 @@ const useChatSocket = (onMessageReceived) => {
       setIsConnected(socket.connected);
     }
 
-    const onConnect = () => {
-      setIsConnected(true);
-      console.log('Socket.io connected:', socket.id);
-    };
+    const onConnect = () => setIsConnected(true);
+    const onDisconnect = (reason) => setIsConnected(false);
+    const onConnectError = (error) => setIsConnected(false);
 
-    const onDisconnect = (reason) => {
-      setIsConnected(false);
-      console.log('Socket.io disconnected:', reason);
-    };
-
-    const onConnectError = (error) => {
-      console.error('Socket.io connection error:', error.message);
-      setIsConnected(false);
-    };
-
-    const onMessage = (data) => {
-      if (callbackRef.current) {
-        callbackRef.current(data);
-      }
-    };
+    const onMessage = (data) => messageCallbackRef.current?.(data);
+    const onEnrolled = (data) => enrolledCallbackRef.current?.(data);
+    
+    const onCreated = (data) => lifecycleRefs.current?.onConversationCreated?.(data);
+    const onUpdated = (data) => lifecycleRefs.current?.onConversationUpdated?.(data);
+    const onDeleted = (data) => lifecycleRefs.current?.onConversationDeleted?.(data);
 
     socket.on('connect', onConnect);
     socket.on('disconnect', onDisconnect);
     socket.on('connect_error', onConnectError);
     socket.on('message_received', onMessage);
+    socket.on('classroom_enrolled', onEnrolled);
+    socket.on('conversation_created', onCreated);
+    socket.on('conversation_updated', onUpdated);
+    socket.on('conversation_deleted', onDeleted);
 
-    // Cleanup: remove only our listeners, don't disconnect the socket
-    // (it's shared and should persist across page navigations).
     return () => {
       socket.off('connect', onConnect);
       socket.off('disconnect', onDisconnect);
       socket.off('connect_error', onConnectError);
       socket.off('message_received', onMessage);
+      socket.off('classroom_enrolled', onEnrolled);
+      socket.off('conversation_created', onCreated);
+      socket.off('conversation_updated', onUpdated);
+      socket.off('conversation_deleted', onDeleted);
     };
-  }, []); // Empty deps — socket is set up once, callback is accessed via ref
+  }, []);
 
   /**
    * Emit 'send_message' event to the server
-   * @param {Object} messageData - The message object containing content, etc.
+   * @param {Object} messageData - The message object containing content, conversation_id, etc.
    */
   const sendMessage = useCallback((messageData) => {
     const socket = socketRef.current;

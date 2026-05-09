@@ -101,9 +101,20 @@ export const ResetPasswordModal = ({ isOpen, onClose, onSubmit, user, formErrors
     </Modal>
 );
 
-export const StartConversationModal = ({ isOpen, onClose, onSubmit, loading }) => (
+export const StartConversationModal = ({ isOpen, onClose, onSubmit, loading, classrooms = [] }) => (
     <Modal isOpen={isOpen} onClose={onClose} title="Start New Conversation">
         <form onSubmit={onSubmit} className="admin-form">
+            <div className="form-group">
+                <label>Target Classroom <span style={{ color: 'var(--error-color)' }}>*</span></label>
+                <select name="classroom_id" className="admin-select" required defaultValue="">
+                    <option value="" disabled>Select a classroom...</option>
+                    {classrooms.map(c => (
+                        <option key={c.id} value={c.id}>
+                            {c.name} {c.id === 'global' ? '(Announcements)' : ''}
+                        </option>
+                    ))}
+                </select>
+            </div>
             <div className="form-group">
                 <label>Conversation Topic (Optional)</label>
                 <input type="text" name="title" placeholder="Leave empty for default..." />

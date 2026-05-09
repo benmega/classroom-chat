@@ -28,6 +28,8 @@ class User(db.Model):
     slug = db.Column(db.String(100), unique=True, nullable=True)
     is_admin = db.Column(db.Boolean, default=False)
     is_approved = db.Column(db.Boolean, default=False)
+    # classroom_id single-FK removed — enrollment is now managed via the
+    # user_classrooms join table.  Use user.classrooms to query memberships.
     bio = db.Column(db.String(500), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
@@ -52,6 +54,14 @@ class User(db.Model):
         primaryjoin="User._username == foreign(ChallengeLog.username)",
         lazy="dynamic",
         viewonly=True,
+    )
+
+    # Many-to-many classroom enrollment via user_classrooms join table
+    classrooms = db.relationship(
+        "Classroom",
+        secondary="user_classrooms",
+        back_populates="users",
+        lazy="selectin",
     )
 
     notes = db.relationship('Note', back_populates='user', cascade='all, delete-orphan',
@@ -247,16 +257,27 @@ class User(db.Model):
             db.session.delete(project)
             db.session.commit()
 
-    def add_ducks(self, amount):
-        self.earned_ducks += amount
-        self.packets += amount / (2**14)
+    def add_ducks(self, amount, reason=None):
+        if amount > 0:
+            self.earned_ducks += amount
+            self.packets += amount / (2**14)
+        
         self.duck_balance += amount
-        # Removed db.session.commit() to allow route-level transaction control
+        
+        # Record the transaction
+        from .duck_transaction import DuckTransaction
+        transaction = DuckTransaction(
+            user_id=self.id,
+            amount=amount,
+            reason=reason
+        )
+        db.session.add(transaction)
+        # Note: The caller must commit the session
 
     def award_daily_duck(self, amount=1):
         today = date.today()
         if self.last_daily_duck != today:
-            self.add_ducks(amount)
+            self.add_ducks(amount, reason="Daily Duck")
             self.last_daily_duck = today
             # Note: The caller must commit the session
             return True

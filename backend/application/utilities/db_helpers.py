@@ -64,6 +64,7 @@ def save_message_to_db(user_id, message, conversation_id=None, message_type="tex
             conversation = Conversation(
                 title=f"Conversation started on {datetime.utcnow().strftime('%B %d, %Y')}",
                 creator_id=user_id,
+                classroom_id="archive" # Default for auto-created orphans
             )
             db.session.add(conversation)
             db.session.flush() # Get the ID before committing
@@ -77,6 +78,7 @@ def save_message_to_db(user_id, message, conversation_id=None, message_type="tex
                 conversation = Conversation(
                     title=f"Conversation started on {datetime.utcnow().strftime('%B %d, %Y')}",
                     creator_id=user_id,
+                    classroom_id="archive"
                 )
                 db.session.add(conversation)
                 db.session.flush()

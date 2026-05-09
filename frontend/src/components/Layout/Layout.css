@@ -274,7 +274,7 @@ a.stat-badge:hover {
     box-shadow: var(--shadow-glow);
 }
 
-.profile-menu_img {
+.profile-img {
     width: 36px;
     height: 36px;
     border-radius: 50%;
@@ -293,6 +293,8 @@ a.stat-badge:hover {
     position: absolute;
     top: calc(100% + 12px);
     right: 0;
+    left: auto; /* Ensure left is not set */
+    max-width: calc(100vw - 2rem); /* Prevent from going off-screen on mobile */
     background: var(--bg-primary);
     border: 1px solid var(--border-subtle);
     border-radius: var(--radius-md);

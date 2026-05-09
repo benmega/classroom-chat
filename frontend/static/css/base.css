@@ -30,9 +30,15 @@ header {
     box-shadow: var(--box-shadow-light);
     position: sticky;
     top: 0;
-    z-index: 10;
+    z-index: 1000;
     width: 100%;
     box-sizing: border-box;
+}
+
+/* Header becomes invisible (transparent) but keeps buttons visible */
+header.guest-mode {
+    background-color: transparent;
+    box-shadow: none;
 }
 
 #logo-container {
@@ -52,45 +58,56 @@ header {
     transform: scale(1.05);
 }
 
-.logo{
+.logo {
     text-decoration: none;
     color: inherit;
 }
 
+/* ========== NAVIGATION ========== */
 nav ul {
     list-style: none;
     margin: 0;
     padding: 0;
     display: flex;
-    gap: 20px;
+    align-items: center;
+    gap: 15px;
 }
 
 .nav-button {
-    font-size: var(--font-size-medium);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: var(--nav-item-size);
+    font-size: var(--nav-font-size);
     color: white;
     text-decoration: none;
-    padding: 12px 18px;
+    padding: var(--nav-padding);
     border-radius: var(--border-radius-medium);
     background-color: var(--primary-color-dark);
     transition: var(--transition-default);
+    box-sizing: border-box;
 }
 
 .nav-button:hover {
     background-color: var(--secondary-color-dark);
-    transform: scale(1.1);
+    transform: scale(1.05);
 }
 
 .nav-button:active {
     transform: scale(0.98);
 }
 
+/* Icon nav items */
 .nav-icon {
-    display: inline-block;
-    width: 40px; /* adjust size */
-    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--nav-item-size);
+    height: var(--nav-item-size);
     border-radius: var(--border-radius-medium);
     overflow: hidden;
     transition: var(--transition-default);
+    flex-shrink: 0;
 }
 
 .nav-icon img {
@@ -107,38 +124,23 @@ nav ul {
     transform: scale(0.98);
 }
 
-
-nav ul li.profile-pic {
-    width: 40px;
-    height: 40px;
-    overflow: hidden;
-    flex-shrink: 0;
-}
-
-
-.profile-menu_img {
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
-    object-fit: cover;
-    display: block;
-    border: 2px solid #000; /* black border */
-}
-
-
+/* ========== PROFILE MENU ========== */
 .profile-menu {
     position: relative;
-    width: auto;
-    height: auto;
+    width: var(--nav-item-size);
+    height: var(--nav-item-size);
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .profile-toggle {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: var(--nav-item-size);
-    height: var(--nav-item-size);
+    width: 100%;
+    height: 100%;
     border-radius: 50%;
     background: transparent;
     border: none;
@@ -151,11 +153,20 @@ nav ul li.profile-pic {
     outline-offset: 2px;
 }
 
+.profile-menu_img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    display: block;
+    border: 2px solid #000;
+}
+
 .profile-icon svg {
     display: block;
     width: 18px;
     height: 18px;
-    color: #000; /* black outline */
+    color: #000;
 }
 
 .profile-icon svg path,
@@ -200,12 +211,11 @@ nav ul li.profile-pic {
 }
 
 .dropdown-menu li a:hover {
-    background-color: #e6f7ff; /* soft blue hover */
-    color: #0056b3; /* darker text for contrast */
+    background-color: #e6f7ff;
+    color: #0056b3;
 }
 
-
-/* Styling for Digital Duck Label */
+/* ========== DIGITAL DUCKS ========== */
 .digital-ducks {
     font-size: 1.2em;
     padding-left: 20px;
@@ -229,7 +239,6 @@ nav ul li.profile-pic {
     text-decoration: underline;
 }
 
-
 .gradient-heading {
     background: var(--logo-gradient);
     -webkit-background-clip: text;
@@ -238,8 +247,7 @@ nav ul li.profile-pic {
     color: transparent;
 }
 
-
-/* Button styles (general) */
+/* ========== BUTTONS ========== */
 button {
     padding: var(--button-padding);
     background-color: var(--primary-color);
@@ -268,25 +276,15 @@ button:active::after {
     height: 300%;
     background: rgba(255, 255, 255, 0.5);
     border-radius: 50%;
-    animation: rippleEffect var(--ripple-duration) ease-out;
+    animation: rippleEffect 0.6s ease-out;
 }
 
-/* Ripple effect animation */
 @keyframes rippleEffect {
-    0% {
-        width: 0;
-        height: 0;
-        opacity: 1;
-    }
-    100% {
-        width: 300%;
-        height: 300%;
-        opacity: 0;
-    }
+    0% { width: 0; height: 0; opacity: 1; }
+    100% { width: 300%; height: 300%; opacity: 0; }
 }
 
-
-/* Styling for links */
+/* ========== LINKS ========== */
 a {
     color: var(--link-color);
     text-decoration: none;
@@ -298,72 +296,24 @@ a:hover {
     text-decoration: underline;
 }
 
-
-nav ul {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    align-items: center;
-    gap: 10px; /* smaller so items align cleanly */
-}
-
-/* Text nav buttons */
-.nav-button {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: var(--nav-item-size);
-    font-size: var(--nav-font-size);
-    color: white;
-    text-decoration: none;
-    padding: var(--nav-padding);
-    border-radius: var(--border-radius-medium);
-    background-color: var(--primary-color-dark);
-    transition: var(--transition-default);
-    box-sizing: border-box;
-}
-
-/* Icon nav items */
-.nav-icon,
-nav ul li.profile-pic,
-.profile-menu {
-    width: var(--nav-item-size);
-    height: var(--nav-item-size);
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.nav-icon img,
-.profile-menu_img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    border-radius: 50%;
-}
-
 footer {
     text-align: center;
     width: 100%;
+    padding: 20px;
 }
 
-
-/* Achievement Popup */
-/* Container */
+/* ========== ACHIEVEMENT POPUP ========== */
 #achievement-container {
     position: fixed;
     top: 20px;
     right: 20px;
     display: flex;
     flex-direction: column;
-    gap: 12px; /* space between popups */
+    gap: 12px;
     z-index: 9999;
-    pointer-events: none; /* clicks pass through */
+    pointer-events: none;
 }
 
-/* Popup */
 .achievement-popup {
     background: rgba(255, 255, 255, 0.95);
     border-left: 4px solid var(--highlight-color);
@@ -379,7 +329,7 @@ footer {
     font-family: var(--font-family);
     font-weight: 500;
     color: #333;
-    pointer-events: auto; /* allow hover effect */
+    pointer-events: auto;
 }
 
 .achievement-popup.show {
@@ -395,25 +345,14 @@ footer {
     border: 2px solid var(--highlight-color);
 }
 
-.achievement-popup::after {
-    content: ""; /* Optional */
-    margin-left: 8px;
-}
-
 .achievement-popup:hover {
     transform: scale(1.05);
     box-shadow: 0 8px 24px rgba(0,0,0,0.25);
 }
 
-/* Header becomes invisible (transparent) but keeps buttons visible */
-header.guest-mode {
-    background-color: transparent;
-    box-shadow: none;
-}
-
-/* Toast container adjustments to reduce interference with header/profile icons */
+/* ========== UTILITIES ========== */
 .toast-container {
-    z-index: 1050; /* sits above content but below modals */
+    z-index: 1050;
 }
 
 @media (max-width: 576px) {
@@ -428,8 +367,7 @@ header.guest-mode {
     width: 100%;
   }
 
-  /* Hide user info on small screens */
   .user-info {
     display: none;
   }
-}
+}

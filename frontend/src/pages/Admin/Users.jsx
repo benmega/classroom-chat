@@ -94,7 +94,7 @@ const Users = () => {
             if (response.data.success) {
                 toast.success(response.data.message);
                 setActiveModal(null);
-                fetchUsers();
+                fetchUsers(page);
             }
         } catch (error) {
             toast.error(error.response?.data?.message || 'Failed to create user.');
@@ -119,7 +119,7 @@ const Users = () => {
             if (response.data.success) {
                 toast.success(response.data.message);
                 setActiveModal(null);
-                fetchUsers();
+                fetchUsers(page);
             }
         } catch (error) {
             toast.error(error.response?.data?.message || 'Failed to adjust ducks.');
@@ -173,7 +173,7 @@ const Users = () => {
             const response = await client.post('/api/admin/remove_user', formData);
             if (response.data.success) {
                 toast.success(response.data.message);
-                fetchUsers();
+                fetchUsers(page);
             }
         } catch (error) {
             toast.error(error.response?.data?.message || 'Failed to remove user.');
@@ -221,7 +221,7 @@ const Users = () => {
                 </button>
                 <button 
                     className={`refresh-btn ${isRefreshing ? 'spinning' : ''}`}
-                    onClick={fetchUsers}
+                    onClick={() => fetchUsers(page)}
                     disabled={isRefreshing}
                 >
                     <RefreshCw size={18} />

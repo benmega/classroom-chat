@@ -22,6 +22,7 @@ class Challenge(db.Model):
     is_active = db.Column(db.Boolean, nullable=False, default=True)
     created_at = db.Column(db.DateTime, nullable=False, default=db.func.now())
     course_id = db.Column(db.String(100), nullable=True)
+    classroom_id = db.Column(db.String(64), db.ForeignKey("classrooms.id", ondelete="SET NULL"), nullable=True)
     description = db.Column(db.Text, nullable=True)
 
     def __repr__(self):

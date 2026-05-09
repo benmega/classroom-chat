@@ -76,32 +76,33 @@ def view_document(category, filename):
 
 @admin.route("/delete-document", methods=["POST"])
 @admin_only
+@api_response
 def delete_document():
     category = request.form.get("category")
     filename = request.form.get("filename")
 
     if not category or not filename:
-        return jsonify({"success": False, "message": "Category and filename are required"}), 400
+        return {"success": False, "message": "Category and filename are required"}, 400
 
     if category not in ["image", "pdf", "other"]:
-        return jsonify({"success": False, "message": "Invalid category"}), 400
+        return {"success": False, "message": "Invalid category"}, 400
 
     base_path = current_app.config["UPLOAD_FOLDER"]
     file_path = os.path.join(base_path, category, filename)
 
     if not os.path.exists(file_path):
-        return jsonify({"success": False, "message": "File not found"}), 404
+        return {"success": False, "message": "File not found"}, 404
 
     abs_file_path = os.path.abspath(file_path)
     abs_user_data = os.path.abspath(base_path)
     if not abs_file_path.startswith(abs_user_data):
-        return jsonify({"success": False, "message": "Invalid file path"}), 403
+        return {"success": False, "message": "Invalid file path"}, 403
 
     try:
         os.remove(file_path)
-        return jsonify({"success": True, "message": f"'{filename}' has been deleted successfully"})
+        return {"success": True, "message": f"'{filename}' has been deleted successfully"}
     except Exception as e:
-        return jsonify({"success": False, "message": f"Failed to delete file: {str(e)}"}), 500
+        return {"success": False, "message": f"Failed to delete file: {str(e)}"}, 500
 
 @admin.route("/documents/stats", methods=["GET"])
 @admin_only

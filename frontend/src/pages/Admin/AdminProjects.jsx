@@ -91,13 +91,8 @@ const AdminProjects = () => {
                 <AdminPageHeader 
                     title="Project Review" 
                     description={`Reviewing: ${selectedProject.name}`}
-                    showBack={true}
-                    backPath="#"
-                >
-                    <button onClick={() => setSelectedProject(null)} className="back-btn secondary">
-                        Back to List
-                    </button>
-                </AdminPageHeader>
+                    onBack={() => setSelectedProject(null)}
+                />
                 
                 <div className="project-review-card card">
                     <div className="review-grid">

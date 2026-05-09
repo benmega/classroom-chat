@@ -10,6 +10,8 @@ import {
     Plus,
     UserPlus,
     MessageSquare,
+    Clock,
+    ShoppingBag,
 } from 'lucide-react';
 import DuckIcon from '../../components/common/DuckIcon';
 import {
@@ -416,7 +418,11 @@ const AdminDashboard = () => {
                 </button>
             </div>
 
-            <AdminStats stats={dashboardData} onApprovalClick={() => navigate('/admin/pending-users')} />
+            <AdminStats 
+                stats={dashboardData} 
+                onApprovalClick={() => navigate('/admin/pending-users')} 
+                onTradeClick={() => navigate('/admin/pending-trades')}
+            />
 
             <div className="dashboard-layout">
                 <div className="main-content">
@@ -475,6 +481,10 @@ const AdminDashboard = () => {
                             <button className="action-item" onClick={() => navigate('/admin/pending-users')}>
                                 <div className="icon approval"><Shield size={20} /></div>
                                 <span>User Approvals</span>
+                            </button>
+                            <button className="action-item" onClick={() => navigate('/admin/pending-trades')}>
+                                <div className="icon pending"><ShoppingBag size={20} /></div>
+                                <span>Trade Approvals</span>
                             </button>
                             <button className="action-item" onClick={() => setActiveModal('create')}>
                                 <div className="icon"><UserPlus size={20} /></div>
@@ -560,7 +570,7 @@ const AdminDashboard = () => {
                 onClose={() => { setActiveModal(null); setModalUser(null); }} 
                 onSubmit={handleAdjustDucks} 
                 user={modalUser} 
-                users={users} 
+                users={dashboardData.all_users || []} 
                 formErrors={formErrors} 
                 loading={formLoading} 
             />
@@ -579,6 +589,7 @@ const AdminDashboard = () => {
                 onClose={() => setActiveModal(null)} 
                 onSubmit={handleStartConversation} 
                 loading={formLoading} 
+                classrooms={dashboardData.classrooms || []}
             />
         </div>
     );

@@ -15,7 +15,8 @@ import {
     Menu,
     X,
     ChevronLeft,
-    ChevronRight
+    ChevronRight,
+    ShoppingBag
 } from 'lucide-react';
 import useAuthStore from '../../store/useAuthStore';
 import useSidebar from '../../hooks/useSidebar';
@@ -61,7 +62,7 @@ const AdminLayout = ({ children }) => {
         { path: '/admin/users', label: 'Users', icon: Users },
         { path: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
         { path: '/admin/pending-users', label: 'User Approvals', icon: Users, badge: true },
-        { path: '/admin/pending-trades', label: 'Pending Trades', icon: BarChart3 },
+        { path: '/admin/pending-trades', label: 'Pending Trades', icon: ShoppingBag },
         { path: '/admin/projects', label: 'Projects', icon: FolderKanban },
 
 

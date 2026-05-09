@@ -140,13 +140,14 @@ def add_achievement():
         # Trigger sprite sheet rebuild
         try:
             import subprocess
+            import sys
             tools_dir = os.path.join(current_app.config["BASE_DIR"], "backend", "tools")
             script_path = os.path.join(tools_dir, "make_sprite_sheet.py")
-            # We need to make sure make_sprite_sheet.py uses the correct directories
-            # but for now we just try to run it.
-            subprocess.run(["python", script_path], check=False)
+            result = subprocess.run([sys.executable, script_path], check=True, capture_output=True, text=True)
+        except subprocess.CalledProcessError as e:
+            return jsonify({"status": "error", "message": f"Sprite sheet rebuild failed: {e.stderr}"}), 500
         except Exception as e:
-            print(f"Error rebuilding sprite sheet: {e}")
+            return jsonify({"status": "error", "message": f"Error rebuilding sprite sheet: {e}"}), 500
 
     ach = Achievement(
         name=name,

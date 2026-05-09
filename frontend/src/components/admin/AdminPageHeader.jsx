@@ -3,14 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import { ChevronLeft } from 'lucide-react';
 import './AdminPageHeader.css';
 
-const AdminPageHeader = ({ title, description, showBack = true, backPath = '/admin', children }) => {
+const AdminPageHeader = ({ title, description, showBack = true, backPath = '/admin', onBack, children }) => {
     const navigate = useNavigate();
 
     return (
         <header className="page-header standardized">
             <div className="header-left">
                 {showBack && (
-                    <button onClick={() => navigate(backPath)} className="back-btn">
+                    <button onClick={onBack ? onBack : () => navigate(backPath)} className="back-btn">
                         <ChevronLeft size={20} /> Back
                     </button>
                 )}

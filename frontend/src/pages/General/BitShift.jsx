@@ -34,9 +34,10 @@ const BitShift = () => {
             const newCounts = [...prev];
             newCounts[index] = newCounts[index] === 0 ? 1 : 0;
             
-            // Auto-sync digital ducks value to the new binary total
-            const newBinaryTotal = newCounts.reduce((sum, count, i) => sum + count * Math.pow(2, i) * multiplier, 0);
-            setDigitalDucks(newBinaryTotal);
+            // INTENTIONAL FRICTION: We deliberately DO NOT auto-sync the digitalDucks 
+            // value to the new binary total here. Students MUST calculate and enter 
+            // the decimal equivalent manually to reinforce binary-to-decimal learning.
+            // (Removed autofill feature)
             
             return newCounts;
         });
@@ -52,7 +53,8 @@ const BitShift = () => {
         }
 
         if (!mathCheckPassed) {
-            toast.error(`Binary total (${binaryTotal}) must equal the decimal amount (${digitalDucks}).`);
+            // Do not reveal the correct binaryTotal in the error message to maintain friction
+            toast.error(`Binary total does not match the decimal amount entered (${digitalDucks}).`);
             return;
         }
 
@@ -168,8 +170,8 @@ const BitShift = () => {
                         <div className={`math-check-banner ${mathCheckMismatch ? 'mismatch' : 'match'}`}>
                             <span className="math-check-equation">
                                 <strong className="binary-value">{(binaryTotal / multiplier).toString(2)}<sub>2</sub> {isByteMode ? 'B' : 'b'}</strong>
-                                {' '}={' '}
-                                <span className="decimal-value">{binaryTotal}<sub>10</sub> ducks</span>
+                                {' '}{mathCheckMismatch ? '≠' : '='}{' '}
+                                <span className="decimal-value">{digitalDucks}<sub>10</sub> ducks</span>
                             </span>
                             <span className="math-check-status">{mathCheckMismatch ? '✗ Mismatch' : '✓ Match'}</span>
                         </div>

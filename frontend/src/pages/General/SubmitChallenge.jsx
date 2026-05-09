@@ -39,7 +39,13 @@ const SubmitChallenge = () => {
             credentials: 'include'
         })
         .then(async r => {
-            const data = await r.json().catch(() => ({ success: false, message: 'Server returned a ' + r.status + ' error. Are you logged in?' }));
+            let data;
+            try {
+                data = await r.json();
+            } catch (e) {
+                data = { success: false, message: 'Server returned an invalid response (' + r.status + ').' };
+            }
+
             if (r.status === 401) {
                 alert('🔑 Please log in to the Classroom Chat app first!');
                 return;
@@ -54,7 +60,7 @@ const SubmitChallenge = () => {
             console.error('Submission Error:', e);
             alert('⚠️ Network Error:\\n\\nCould not reach the Classroom Chat server. Make sure you are logged in and the server is running!');
         });
-    })();`.replace(/\n\s+/g, ''); // Compact for bookmarklet use
+    })();`.replace(/\n\s+/g, ' '); // Compact for bookmarklet use
 
     useEffect(() => {
         if (bookmarkletRef.current) {

@@ -9,6 +9,7 @@ from application.models.banned_words import BannedWords
 from application.models.duck_transaction import DuckTransaction
 from application.decorators.api_response import api_response
 from application.decorators.admin_required import admin_only
+from application.models.classroom import Classroom
 
 
 from ..admin_routes import admin
@@ -29,8 +30,10 @@ def dashboard_data():
         
     total_users_count = User.query.count()
     users = User.query.limit(10).all()
+    all_users = User.query.all()
     config = Configuration.query.first()
     banned_words = BannedWords.query.all()
+    classrooms = Classroom.query.all()
 
     # Generate chart data
     now = datetime.utcnow()
@@ -64,6 +67,8 @@ def dashboard_data():
         "ducks_earned_this_week": ducks_earned_week,
         "total_users_count": total_users_count,
         "users": [u.to_dict_summary() for u in users],
+        "all_users": [{"id": u.id, "username": u.username, "duck_balance": u.duck_balance} for u in all_users],
+        "classrooms": [c.to_dict() for c in classrooms],
         "config": config.to_dict() if config else {},
         "banned_words": [bw.to_dict() for bw in banned_words],
         "chart_data": {

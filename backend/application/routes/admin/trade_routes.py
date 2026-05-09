@@ -43,7 +43,7 @@ def trade_action():
         if user.duck_balance < trade.digital_ducks:
             return jsonify({"status": "error", "message": "Insufficient ducks"}), 400
 
-        user.duck_balance -= trade.digital_ducks
+        user.add_ducks(-trade.digital_ducks, reason=f"Trade Approval: {trade.bit_ducks} Bits, {trade.byte_ducks} Bytes")
         trade.approve()
         db.session.commit()
         return jsonify({"status": "success", "message": "Trade approved"})

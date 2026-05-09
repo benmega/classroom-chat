@@ -27,6 +27,10 @@
 export const FK_OVERRIDES = {
     // User
     "Conversation.creator_id":      { reference: "User",         displayField: "username" },
+    "Conversation.classroom_id":    { reference: "Classroom",    displayField: "name" },
+
+    // Challenge
+    "Challenge.classroom_id":       { reference: "Classroom",    displayField: "name" },
 
     // Message
     "Message.user_id":              { reference: "User",         displayField: "username" },

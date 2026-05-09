@@ -247,42 +247,46 @@ const Layout = ({ children }) => {
             </main>
             
             {/* Mobile Navigation Sidebar */}
-            <div 
-                className={`mobile-overlay ${isSidebarOpen ? 'show' : ''}`} 
-                onClick={() => setSidebarOpen(false)}
-            ></div>
-            
-            <aside className={`mobile-sidebar ${isSidebarOpen ? 'open' : ''}`}>
-                <div className="sidebar-header">
-                    <div className="sidebar-logo">
-                        <img src="/images/logo.ico" alt="Logo" />
-                    </div>
-                    <button className="sidebar-close" onClick={() => setSidebarOpen(false)}>
-                        <X size={24} />
-                    </button>
-                </div>
+            {!isChatPage && (
+                <>
+                    <div 
+                        className={`mobile-overlay ${isSidebarOpen ? 'show' : ''}`} 
+                        onClick={() => setSidebarOpen(false)}
+                    ></div>
+                    
+                    <aside className={`mobile-sidebar ${isSidebarOpen ? 'open' : ''}`}>
+                        <div className="sidebar-header">
+                            <div className="sidebar-logo">
+                                <img src="/images/logo.ico" alt="Logo" />
+                            </div>
+                            <button className="sidebar-close" onClick={() => setSidebarOpen(false)}>
+                                <X size={24} />
+                            </button>
+                        </div>
 
-                <nav className="sidebar-nav">
-                    <ul>
-                        <li><Link to="/profile" onClick={() => setSidebarOpen(false)}><User size={18} /> Profile</Link></li>
-                        {user?.is_admin && (
-                            <li><Link to="/admin" onClick={() => setSidebarOpen(false)}><Shield size={18} /> Admin Panel</Link></li>
-                        )}
-                        <li><Link to="/achievements" onClick={() => setSidebarOpen(false)}><Award size={18} /> Achievements</Link></li>
-                        <li><Link to="/submit-certificate" onClick={() => setSidebarOpen(false)}><FileCheck size={18} /> Certificate</Link></li>
-                        <li><Link to="/submit-challenge" onClick={() => setSidebarOpen(false)}><Zap size={18} /> Challenge</Link></li>
-                        <li><Link to="/bit-shift" onClick={() => setSidebarOpen(false)}><RefreshCw size={18} /> Bit Shift</Link></li>
-                        <li><a href="https://benmega.github.io/screen-recorder/" target="_blank" rel="noopener noreferrer" onClick={() => setSidebarOpen(false)}><Disc size={18} /> Record</a></li>
-                        <li><Link to="/history" onClick={() => setSidebarOpen(false)}><MessageSquare size={18} /> History</Link></li>
-                    </ul>
-                </nav>
+                        <nav className="sidebar-nav">
+                            <ul>
+                                <li><Link to="/profile" onClick={() => setSidebarOpen(false)}><User size={18} /> Profile</Link></li>
+                                {user?.is_admin && (
+                                    <li><Link to="/admin" onClick={() => setSidebarOpen(false)}><Shield size={18} /> Admin Panel</Link></li>
+                                )}
+                                <li><Link to="/achievements" onClick={() => setSidebarOpen(false)}><Award size={18} /> Achievements</Link></li>
+                                <li><Link to="/submit-certificate" onClick={() => setSidebarOpen(false)}><FileCheck size={18} /> Certificate</Link></li>
+                                <li><Link to="/submit-challenge" onClick={() => setSidebarOpen(false)}><Zap size={18} /> Challenge</Link></li>
+                                <li><Link to="/bit-shift" onClick={() => setSidebarOpen(false)}><RefreshCw size={18} /> Bit Shift</Link></li>
+                                <li><a href="https://benmega.github.io/screen-recorder/" target="_blank" rel="noopener noreferrer" onClick={() => setSidebarOpen(false)}><Disc size={18} /> Record</a></li>
+                                <li><Link to="/history" onClick={() => setSidebarOpen(false)}><MessageSquare size={18} /> History</Link></li>
+                            </ul>
+                        </nav>
 
-                <div className="sidebar-footer">
-                    <button onClick={() => { handleLogout(); setSidebarOpen(false); }} className="sidebar-logout">
-                        <LogOut size={18} /> Logout
-                    </button>
-                </div>
-            </aside>
+                        <div className="sidebar-footer">
+                            <button onClick={() => { handleLogout(); setSidebarOpen(false); }} className="sidebar-logout">
+                                <LogOut size={18} /> Logout
+                            </button>
+                        </div>
+                    </aside>
+                </>
+            )}
 
             <footer>
                 <p>&copy; {new Date().getFullYear()} Classroom Chat. All Rights Reserved.</p>

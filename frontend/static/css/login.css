@@ -43,15 +43,19 @@ label {
     text-align: left;
 }
 
-input {
+input,
+.form-control {
+    width: 100%;
     padding: var(--input-padding);
     border: 1px solid var(--border-color);
     border-radius: var(--border-radius-small);
     font-size: 16px;
     transition: box-shadow var(--transition-default), border-color var(--transition-default);
+    box-sizing: border-box;
 }
 
-input:focus {
+input:focus,
+.form-control:focus {
     outline: none;
     border-color: var(--focus-border-color);
     box-shadow: 0 0 8px var(--focus-border-color);
@@ -64,7 +68,9 @@ input:focus {
     100% { box-shadow: 0 0 8px var(--focus-border-color); }
 }
 
-button {
+button,
+.login-button,
+.btn-primary {
     padding: var(--button-padding);
     background-color: var(--primary-color);
     color: white;
@@ -74,12 +80,24 @@ button {
     cursor: pointer;
     position: relative;
     overflow: hidden;
-    transition: background-color var(--transition-default), box-shadow var(--transition-default);
+    transition: background-color var(--transition-default), box-shadow var(--transition-default), transform var(--transition-default);
 }
 
-button:hover {
+.login-button,
+.btn-primary {
+    background-color: var(--secondary-color);
+}
+
+button:hover,
+.login-button:hover,
+.btn-primary:hover {
     background-color: var(--primary-color-dark);
     box-shadow: 0 8px 15px rgba(0, 128, 128, 0.3);
+}
+
+.login-button:hover,
+.btn-primary:hover {
+    background-color: var(--secondary-color-dark);
 }
 
 button:active::after {
@@ -96,16 +114,8 @@ button:active::after {
 }
 
 @keyframes rippleEffect {
-    0% {
-        width: 0;
-        height: 0;
-        opacity: 1;
-    }
-    100% {
-        width: 300%;
-        height: 300%;
-        opacity: 0;
-    }
+    0% { width: 0; height: 0; opacity: 1; }
+    100% { width: 300%; height: 300%; opacity: 0; }
 }
 
 p {
@@ -134,37 +144,8 @@ a:hover {
         font-size: 16px;
     }
 
-    input {
+    input, .form-control {
         font-size: 14px;
     }
 }
 
-.login-button {
-    background-color: var(--secondary-color);
-    color: white;
-    padding: var(--input-padding);
-    border: none;
-    border-radius: var(--border-radius-small);
-    cursor: pointer;
-}
-
-.form-control {
-    width: 100%;
-    padding: var(--input-padding);
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius-small);
-    font-size: 16px;
-}
-
-.btn-primary {
-    background-color: var(--secondary-color);
-    color: white;
-    padding: var(--button-padding);
-    border: none;
-    border-radius: var(--border-radius-small);
-    cursor: pointer;
-}
-
-.btn-primary:hover {
-    background-color: var(--secondary-color-dark);
-}

@@ -123,6 +123,10 @@
 .stat-icon.active { background: linear-gradient(135deg, #db2777, #831843); } /* Darker pink */
 .stat-icon.approval { background: linear-gradient(135deg, #7e22ce, #4c1d95); } /* Darker violet */
 
+.stat-card.clickable {
+    cursor: pointer;
+}
+
 .stat-card.clickable:hover {
     transform: translateY(-8px) scale(1.02);
     border-color: var(--primary-color);

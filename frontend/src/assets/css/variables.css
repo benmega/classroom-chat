@@ -22,10 +22,18 @@
     --bg-tertiary: #F1F5F9;
     --text-primary: #0F172A;
     --text-secondary: #334155;
-    --text-muted: var(--text-muted); /* Darkened from var(--text-muted) for better contrast */
+    --text-muted: #64748B; /* Slate 500 */
     --border-subtle: #E2E8F0;
-    --border-rich: var(--text-muted);
+    --border-rich: #94A3B8; /* Slate 400 */
     --border-strong: var(--text-secondary);
+    
+    /* Scrollbar Variables */
+    --scrollbar-width: 8px;
+    --scrollbar-track-bg: transparent;
+    --scrollbar-thumb-bg: rgba(148, 163, 184, 0.45); /* Slate 400 with improved visibility */
+    --scrollbar-thumb-hover: rgba(14, 178, 187, 0.75); /* Primary with better hover contrast */
+
+
     --slate-800: #1E293B;
     --blue-600: #2563EB;
 

@@ -1,6 +1,21 @@
 import React, { useMemo } from 'react';
-import { Search, PlusCircle, Hash, X, User as UserIcon, MessageSquare, Shield } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { 
+    Search, 
+    PlusCircle, 
+    Hash, 
+    X, 
+    User as UserIcon, 
+    MessageSquare, 
+    Shield,
+    Award,
+    FileCheck,
+    Zap,
+    RefreshCw,
+    Disc,
+    LogOut
+} from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import useAuthStore from '../../store/useAuthStore';
 
 const ChatSidebar = ({ 
     user, 
@@ -12,8 +27,17 @@ const ChatSidebar = ({
     activeConversation, 
     handleSelectConversation, 
     setIsModalOpen,
-    formatConversationTitle 
+    formatConversationTitle,
+    globalConversation,        // The canonical global/announcements conv object
 }) => {
+    const { logout } = useAuthStore();
+    const navigate = useNavigate();
+
+    const handleLogout = async () => {
+        await logout();
+        navigate('/login');
+    };
+
     const filteredConversations = useMemo(() => {
         const searchLower = (searchTerm || '').trim().toLowerCase();
         if (!searchLower) return conversations;
@@ -85,6 +109,35 @@ const ChatSidebar = ({
                 </div>
 
                 <div className="conversations-list">
+                    {/* ---- Pinned Global Announcements entry ---- */}
+                    {globalConversation && (
+                        <div
+                            id="sidebar-announcements-pin"
+                            onClick={() => handleSelectConversation(globalConversation)}
+                            className={`conversation-item pinned-announcement ${
+                                activeConversation?.conversation_id === globalConversation.conversation_id
+                                    ? 'active'
+                                    : ''
+                            }`}
+                        >
+                            <div className="conv-icon-container" style={{ background: 'var(--accent-subtle, rgba(99,102,241,0.15))', borderRadius: '10px' }}>
+                                <span style={{ fontSize: '20px', lineHeight: 1 }}>📢</span>
+                            </div>
+                            <div className="conv-info">
+                                <div className="conv-title-row">
+                                    <h4 className="conv-title" style={{ color: 'var(--primary-color)', fontWeight: 700 }}>
+                                        Announcements
+                                    </h4>
+                                    <span className="conv-date" style={{ fontSize: '0.65rem', color: 'var(--primary-color)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>pinned</span>
+                                </div>
+                                <p className="conv-last-msg">
+                                    {globalConversation.messages?.[globalConversation.messages.length - 1]?.content || 'Instructor announcements'}
+                                </p>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* ---- Classroom conversations ---- */}
                     {filteredConversations.length > 0 ? (
                         filteredConversations.map((conv) => (
                             <div 
@@ -120,9 +173,17 @@ const ChatSidebar = ({
                 </div>
 
                 <div className="chat-sidebar-footer mobile-only">
-                    <Link to="/profile" className="sidebar-footer-item"><UserIcon size={18} /> Profile</Link>
-                    <Link to="/history" className="sidebar-footer-item"><MessageSquare size={18} /> History</Link>
-                    {user?.is_admin && <Link to="/admin" className="sidebar-footer-item"><Shield size={18} /> Admin</Link>}
+                    <Link to="/profile" className="sidebar-footer-item" onClick={() => setSidebarOpen(false)}><UserIcon size={18} /> Profile</Link>
+                    {user?.is_admin && <Link to="/admin" className="sidebar-footer-item" onClick={() => setSidebarOpen(false)}><Shield size={18} /> Admin Panel</Link>}
+                    <Link to="/achievements" className="sidebar-footer-item" onClick={() => setSidebarOpen(false)}><Award size={18} /> Achievements</Link>
+                    <Link to="/submit-certificate" className="sidebar-footer-item" onClick={() => setSidebarOpen(false)}><FileCheck size={18} /> Certificate</Link>
+                    <Link to="/submit-challenge" className="sidebar-footer-item" onClick={() => setSidebarOpen(false)}><Zap size={18} /> Challenge</Link>
+                    <Link to="/bit-shift" className="sidebar-footer-item" onClick={() => setSidebarOpen(false)}><RefreshCw size={18} /> Bit Shift</Link>
+                    <a href="https://benmega.github.io/screen-recorder/" target="_blank" rel="noopener noreferrer" className="sidebar-footer-item" onClick={() => setSidebarOpen(false)}><Disc size={18} /> Record</a>
+                    <Link to="/history" className="sidebar-footer-item" onClick={() => setSidebarOpen(false)}><MessageSquare size={18} /> History</Link>
+                    <button onClick={handleLogout} className="sidebar-footer-item logout-btn" style={{ borderTop: '1px solid var(--border-subtle)', marginTop: '8px', color: 'var(--error-color)', width: '100%', textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer' }}>
+                        <LogOut size={18} /> Logout
+                    </button>
                 </div>
             </aside>
         </>

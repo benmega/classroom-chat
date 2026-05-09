@@ -256,6 +256,9 @@ def new_project():
         
         if not name:
             return "Project name is required.", 400
+            
+        # Defense: Strip any local file paths if somehow provided
+        name = name.split("\\")[-1].split("/")[-1]
 
         target_user_id = user_id
         if getattr(user_obj, 'is_admin', False):
@@ -337,7 +340,8 @@ def edit_project(project_id):
             return {"message": "Project deleted successfully."}
 
         # Default action is save
-        project.name = data.get("name")
+        # Strip local paths if somehow accidentally passed
+        project.name = data.get("name", "").split("\\")[-1].split("/")[-1]
         project.description = data.get("description")
         project.link = data.get("link")
         project.github_link = data.get("github_link")
@@ -611,7 +615,8 @@ def update_basic_user_info(user_obj, data):
     """Updates basic user settings (IP, Online Status, Password, Bio)."""
     ip_address = data.get("ip_address")
     user_obj.ip_address = ip_address if ip_address else user_obj.ip_address
-    user_obj.is_online = data.get("is_online") == "true" or data.get("is_online") is True
+    if "is_online" in data:
+        user_obj.is_online = data.get("is_online") == "true" or data.get("is_online") is True
     
     # Update bio if provided
     if "bio" in data:

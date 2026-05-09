@@ -15,6 +15,7 @@ from application.models import setup_models
 from application.models.configuration import Configuration
 from application.models.user import User
 from application.routes import register_blueprints
+from application.constants import GLOBAL_CLASSROOM_ID  # noqa: F401 — imported for side-effect availability
 
 from .license_checker import load_license
 from application.utilities.helper_functions import format_number
@@ -133,6 +134,10 @@ def create_app(config_class=None):
 
         scheduler.start()
 
+        # Ensure global classroom + conversation exist and update the
+        # in-process GLOBAL_CONVERSATION_ID constant.
+        seed_global_data()
+
     @app.before_request
     def load_user():
         user_id = session.get("user")
@@ -178,3 +183,64 @@ def ensure_default_configuration():
         default_config = Configuration(ai_teacher_enabled=False)
         db.session.add(default_config)
         db.session.commit()
+
+
+def seed_global_data():
+    """
+    Idempotently ensure the reserved classrooms and global conversation exist.
+    Populates application.constants.GLOBAL_CONVERSATION_ID in-process so
+    routes can import it as a constant without hitting the DB every request.
+    """
+    import application.constants as _constants
+    from application.models.classroom import Classroom
+    from application.models.conversation import Conversation
+    from datetime import datetime
+
+    logger = logging.getLogger(__name__)
+
+    try:
+        # 1. Ensure 'global' classroom exists
+        if not Classroom.query.get(_constants.GLOBAL_CLASSROOM_ID):
+            db.session.add(
+                Classroom(
+                    id=_constants.GLOBAL_CLASSROOM_ID, 
+                    name="Global Announcements", 
+                    language="python",
+                    url="global"
+                )
+            )
+            db.session.flush()
+            logger.info("Seeded 'global' classroom.")
+
+        # 2. Ensure 'archive' classroom exists
+        if not Classroom.query.get("archive"):
+            db.session.add(Classroom(id="archive", name="Archive", language="python", url="archive"))
+            db.session.flush()
+            logger.info("Seeded 'archive' classroom.")
+
+        # 3. Ensure the canonical global conversation exists
+        global_conv = Conversation.query.filter_by(
+            classroom_id=_constants.GLOBAL_CLASSROOM_ID
+        ).first()
+
+        if not global_conv:
+            global_conv = Conversation(
+                title="Global Announcements",
+                classroom_id=_constants.GLOBAL_CLASSROOM_ID,
+                is_locked=False,
+                slow_mode_delay=0,
+            )
+            db.session.add(global_conv)
+            db.session.flush()
+            logger.info(f"Seeded global conversation id={global_conv.id}.")
+
+        db.session.commit()
+
+        # 4. Populate the in-process constant
+        _constants.GLOBAL_CONVERSATION_ID = global_conv.id
+        logger.info(f"GLOBAL_CONVERSATION_ID = {global_conv.id}")
+
+    except Exception as exc:
+        db.session.rollback()
+        logger.error(f"seed_global_data failed: {exc}")
+        raise

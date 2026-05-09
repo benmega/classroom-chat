@@ -331,7 +331,7 @@ const ManageProject = () => {
                                         <Video size={18} /> {projectVideo ? 'Video Selected' : 'Upload Video File'}
                                         <input type="file" name="project_video" onChange={handleFileChange} accept="video/*" hidden />
                                     </label>
-                                    {projectVideo && <span className="file-name">{projectVideo.name}</span>}
+                                    {projectVideo && <span className="file-name">{projectVideo.name.split(/[\\/]/).pop()}</span>}
                                 </div>
                             </div>
                         </section>

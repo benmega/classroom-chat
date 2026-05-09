@@ -7,11 +7,12 @@ Summary: Flask routes for challenge routes functionality (Merged Version).
 import re
 from datetime import datetime
 
+from urllib.parse import urlparse, parse_qs
 from flask import Blueprint, request, session, redirect, url_for, flash, jsonify
 from flask_cors import cross_origin
 
 from application import Configuration
-from application.extensions import db
+from application.extensions import db, csrf
 from application.models.challenge import Challenge
 from application.models.challenge_log import ChallengeLog
 from application.models.course_instance import CourseInstance
@@ -21,18 +22,27 @@ from application.utilities.db_helpers import get_user
 challenge = Blueprint("challenge", __name__, url_prefix="/challenge")
 
 # Robust pattern from the working version
-URL_PATTERN = (
+# Robust base pattern for CodeCombat and Ozaria URLs
+BASE_PATTERN = (
     r"https://(?P<domain>[\w\.-]+)"
-    r"(?:/play/(?:ozaria/)?level/(?P<challenge_slug>[\w-]+)"
-    r"(?:\?(?:.*&)?course=(?P<course_id>[\w-]+))?"
-    r"(?:(?:\?|&)(?:.*&)?course-instance=(?P<course_instance>[\w-]+))?"
-    r"|/s/(?P<slug>[\w-]+)/lessons/(?P<lesson_id>\d+)/levels/(?P<level_id>\d+))"
+    r"(?:"
+    r"/play/(?:ozaria/)?level/(?P<challenge_slug>[\w-]+)"
+    r"|/s/(?P<slug>[\w-]+)/lessons/(?P<lesson_id>\d+)/levels/(?P<level_id>\d+)"
+    r")"
 )
+# Pattern that also captures potential query parameters
+URL_PATTERN = BASE_PATTERN + r"(?P<params>\?[^ \n\r\t]*)?"
 
 
 @challenge.route("/submit", methods=["GET", "POST"])
+@csrf.exempt
 @cross_origin(
-    origins=["https://codecombat.com", "https://www.ozaria.com"],
+    origins=[
+        "https://codecombat.com", 
+        "https://www.codecombat.com", 
+        "https://ozaria.com", 
+        "https://www.ozaria.com"
+    ],
     supports_credentials=True,
 )
 def submit_challenge():
@@ -95,12 +105,24 @@ def submit_challenge():
         db.session.commit()
         duck_reward = details.get("duck_reward", 0)
         message = f"Congrats {user.username}, you earned {duck_reward} ducks!"
-        
+
+        # ---- Classroom enrollment trigger ----------------------------------
+        # Re-extract the slug from the URL (already validated above) to fetch
+        # the Challenge ORM object and read its classroom_id.
+        extracted = _extract_challenge_details(url)
+        if extracted:
+            chal = Challenge.query.filter(
+                (Challenge.slug.ilike(extracted["challenge_slug"])) |
+                (Challenge.slug.ilike(extracted["challenge_slug"].replace("-", " ")))
+            ).first()
+            if chal and getattr(chal, "classroom_id", None):
+                _enroll_user_in_classroom(user, chal.classroom_id)
+
         return jsonify({
-            "success": True, 
-            "message": message, 
+            "success": True,
+            "message": message,
             "duck_reward": duck_reward,
-            "quack_count": duck_reward 
+            "quack_count": duck_reward,
         })
 
     # Failure path
@@ -138,20 +160,30 @@ def detect_and_handle_challenge_url(message, username, duck_multiplier=1, helper
 
 def _extract_challenge_details(message):
     """
-    Extract challenge details from a message using regex.
+    Extract challenge details from a message using regex and URL parsing.
     """
     match = re.search(URL_PATTERN, message)
     if not match:
         return None
 
-    # Handle the two different regex groups (standard level vs slug URL)
-    extracted_slug = match.group("challenge_slug") or match.group("slug")
+    domain = match.group("domain")
+    challenge_slug = match.group("challenge_slug") or match.group("slug")
+    params_str = match.group("params") or ""
+    
+    course_id = None
+    course_instance = None
+    
+    if params_str:
+        # parse_qs returns a dict mapping keys to lists of values
+        qs = parse_qs(params_str.lstrip('?'))
+        course_id = qs.get("course", [None])[0]
+        course_instance = qs.get("course-instance", [None])[0]
 
     return {
-        "domain": match.group("domain"),
-        "challenge_slug": extracted_slug,  # Key updated to match DB schema
-        "course_id": match.group("course_id") or None,
-        "course_instance": match.group("course_instance") or None,
+        "domain": domain,
+        "challenge_slug": challenge_slug,
+        "course_id": course_id,
+        "course_instance": course_instance,
     }
 
 
@@ -260,7 +292,7 @@ def _update_user_ducks(username, challenge_slug, duck_multiplier=1):
         if duck_multiplier > 1:
             print(f"Duck multiplier of {duck_multiplier} in effect.")
 
-        user.add_ducks(duck_reward)
+        user.add_ducks(duck_reward, reason=f"Challenge: {challenge.slug}")
         print(f"{username} was granted {duck_reward} duck(s).")
 
         return duck_reward
@@ -270,3 +302,56 @@ def _update_user_ducks(username, challenge_slug, duck_multiplier=1):
     except Exception as e:
         db.session.rollback()
         raise RuntimeError(f"Error updating user ducks: {e}")
+
+
+# ============================================================================
+# ENROLLMENT HELPERS
+# ============================================================================
+
+def _enroll_user_in_classroom(user, classroom_id: str):
+    """
+    Insert a user_classrooms row for (user.id, classroom_id) if one does not
+    already exist.  Emits a 'classroom_enrolled' WebSocket event to inform the
+    frontend sidebar to update without a page reload.
+
+    This is the ONLY student enrollment path — called exclusively from the
+    challenge submission success route.
+    """
+    from application.models.classroom import Classroom, user_classrooms
+    from datetime import datetime
+    from sqlalchemy import select, insert
+
+    try:
+        # Check for existing enrollment
+        already = db.session.execute(
+            select(user_classrooms.c.classroom_id).where(
+                user_classrooms.c.user_id == user.id,
+                user_classrooms.c.classroom_id == classroom_id,
+            )
+        ).first()
+
+        if already:
+            return  # Idempotent — already enrolled
+
+        classroom = Classroom.query.get(classroom_id)
+        if not classroom:
+            print(f"[Enrollment] Classroom '{classroom_id}' not found — skipping enrollment.")
+            return
+
+        db.session.execute(
+            insert(user_classrooms).values(
+                user_id=user.id,
+                classroom_id=classroom_id,
+                enrolled_at=datetime.utcnow(),
+            )
+        )
+        db.session.commit()
+        print(f"[Enrollment] User {user.id} enrolled in classroom '{classroom_id}'.")
+
+        # Emit enrollment event via centralised helper so the sidebar updates live
+        from application.socket_events import emit_classroom_enrolled
+        emit_classroom_enrolled(user.id, classroom.to_dict())
+
+    except Exception as exc:
+        db.session.rollback()
+        print(f"[Enrollment] Failed for user {user.id} → '{classroom_id}': {exc}")

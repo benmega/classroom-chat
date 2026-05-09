@@ -232,8 +232,10 @@
 }
 
 .user-avatar {
-    width: 44px;
-    height: 44px;
+    width: 44px !important;
+    height: 44px !important;
+    max-width: 100%;
+    max-height: 100%;
     border-radius: 12px;
     object-fit: cover;
     flex-shrink: 0;

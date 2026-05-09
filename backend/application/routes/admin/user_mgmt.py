@@ -118,9 +118,12 @@ def create_user():
         return jsonify(success=False, message="Username already exists"), 409
 
     try:
-        new_user = User(username=username, duck_balance=ducks)
+        new_user = User(username=username)
         new_user.set_password(password)
         db.session.add(new_user)
+        db.session.flush() # Get user ID
+        if ducks > 0:
+            new_user.add_ducks(ducks, reason="Initial Balance")
         db.session.commit()
         return jsonify(success=True, message=f"User '{username}' created with {ducks} ducks")
     except Exception as e:
@@ -157,7 +160,7 @@ def adjust_ducks():
 
     user = User.query.filter_by(username=username).first()
     if user:
-        user.add_ducks(amount)
+        user.add_ducks(amount, reason="Admin Adjustment")
         db.session.commit()
         return jsonify({"success": True, "message": f"Updated {username}'s ducks by {amount}."})
     else:
