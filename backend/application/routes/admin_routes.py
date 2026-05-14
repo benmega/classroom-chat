@@ -1,7 +1,7 @@
 from flask import Blueprint
 
 admin_pass = "duckduck"
-admin = Blueprint("admin", __name__)
+admin_bp = Blueprint("admin", __name__)
 
 # Import routes to register them on the admin blueprint
 from .admin import dashboard_routes
@@ -14,4 +14,4 @@ from .admin import advanced_ops
 from .admin.crud_routes import crud_bp
 
 # React-Admin standalone CRUD blueprint (still nested/prefixed)
-admin.register_blueprint(crud_bp, url_prefix="/crud")
+admin_bp.register_blueprint(crud_bp, url_prefix="/crud")

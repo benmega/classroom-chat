@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { 
     Users, 
     TrendingUp, 
@@ -10,10 +10,9 @@ import {
     Plus,
     UserPlus,
     MessageSquare,
-    Clock,
     ShoppingBag,
 } from 'lucide-react';
-import DuckIcon from '../../components/common/DuckIcon';
+import DuckIcon from '../../components/Icons/DuckIcon';
 import {
     Chart as ChartJS,
     CategoryScale,
@@ -27,8 +26,6 @@ import {
 } from 'chart.js';
 import { Line } from 'react-chartjs-2';
 import { useNavigate } from 'react-router-dom';
-import client from '../../api/client';
-import toast from 'react-hot-toast';
 import './AdminDashboard.css';
 import Skeleton from '../../components/common/Skeleton';
 
@@ -41,6 +38,10 @@ import {
     ResetPasswordModal, 
     StartConversationModal 
 } from '../../components/admin/AdminModals';
+
+// Hooks & Utils
+import { useAdminDashboard } from '../../hooks/useAdminDashboard';
+import { getChartConfig, chartOptions } from './chartConfig';
 
 ChartJS.register(
     CategoryScale,
@@ -55,238 +56,38 @@ ChartJS.register(
 
 const AdminDashboard = () => {
     const navigate = useNavigate();
-    const [dashboardData, setDashboardData] = useState(null);
-    const [isLoading, setIsLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
-    const [isRefreshing, setIsRefreshing] = useState(false);
-    
-    // Modal States
-    const [modalUser, setModalUser] = useState(null);
-    const [activeModal, setActiveModal] = useState(null); // 'create', 'adjust', 'reset', 'startConv'
-    
-    // Form States
-    const [formLoading, setFormLoading] = useState(false);
     const [newWord, setNewWord] = useState('');
     const [banReason, setBanReason] = useState('');
-    const [formErrors, setFormErrors] = useState({});
 
-    const fetchDashboardData = async () => {
-        setIsRefreshing(true);
-        try {
-            const response = await client.get('/api/admin/dashboard');
-            if (response.data.status === 'success') {
-                setDashboardData(response.data.data);
-            }
-        } catch (error) {
-            console.error('Error fetching admin data:', error);
-            toast.error('Failed to load dashboard data.');
-        } finally {
-            setIsLoading(false);
-            setIsRefreshing(false);
-        }
-    };
+    const {
+        dashboardData,
+        isLoading,
+        isRefreshing,
+        activeModal,
+        setActiveModal,
+        modalUser,
+        setModalUser,
+        formLoading,
+        formErrors,
+        fetchDashboardData,
+        handleToggleAI,
+        handleToggleMessages,
+        handleUpdateMultiplier,
+        handleAddBannedWord,
+        handleCreateUser,
+        handleAdjustDucks,
+        handleResetPassword,
+        handleStartConversation,
+        handleRemoveUser
+    } = useAdminDashboard();
 
-    useEffect(() => {
-        fetchDashboardData();
-    }, []);
-
-    useEffect(() => {
-        setFormErrors({});
-    }, [activeModal]);
-
-    const handleToggleAI = async () => {
-        try {
-            const response = await client.post('/api/admin/toggle-ai');
-            if (response.data.success) {
-                toast.success(response.data.message);
-                fetchDashboardData();
-            }
-        } catch {
-            toast.error('Failed to toggle AI.');
-        }
-    };
-
-    const handleToggleMessages = async () => {
-        try {
-            const response = await client.post('/api/admin/toggle-message-sending');
-            if (response.data.success) {
-                toast.success(response.data.message);
-                fetchDashboardData();
-            }
-        } catch {
-            toast.error('Failed to toggle messaging.');
-        }
-    };
-
-    const handleUpdateMultiplier = async (val) => {
-        try {
-            const response = await client.post('/api/admin/update_duck_multiplier', { multiplier: val });
-            if (response.data.success) {
-                toast.success('Multiplier updated!');
-                fetchDashboardData();
-            }
-        } catch {
-            toast.error('Failed to update multiplier.');
-        }
-    };
-
-    const handleAddBannedWord = async (e) => {
+    const onSubmitBannedWord = async (e) => {
         e.preventDefault();
-        if (!newWord.trim()) return;
-        
-        try {
-            const formData = new FormData();
-            formData.append('word', newWord);
-            formData.append('reason', banReason);
-            
-            const response = await client.post('/api/admin/add-banned-word', formData);
-            if (response.data.success) {
-                toast.success(response.data.message);
-                setNewWord('');
-                setBanReason('');
-                fetchDashboardData();
-            }
-        } catch (error) {
-            toast.error(error.response?.data?.message || 'Failed to add word.');
-        }
-    };
-
-    const handleCreateUser = async (e) => {
-        e.preventDefault();
-        const formData = new FormData(e.target);
-        const username = formData.get('username');
-        const password = formData.get('password');
-        
-        const errors = {};
-        if (!username) {
-            errors.username = 'Username is required';
-        } else if (!/^[a-z0-9_]{3,30}$/.test(username)) {
-            errors.username = '3-30 chars, lowercase, numbers, or underscores.';
-        }
-        
-        if (!password) {
-            errors.password = 'Initial password is required';
-        } else if (password.length < 6) {
-            errors.password = 'Password must be at least 6 characters.';
-        }
-        
-        if (Object.keys(errors).length > 0) {
-            setFormErrors(errors);
-            return;
-        }
-        
-        setFormErrors({});
-        setFormLoading(true);
-        try {
-            const response = await client.post('/api/admin/create_user', formData);
-            if (response.data.success) {
-                toast.success(response.data.message);
-                setActiveModal(null);
-                fetchDashboardData();
-            }
-        } catch (error) {
-            toast.error(error.response?.data?.message || 'Failed to create user.');
-        } finally {
-            setFormLoading(false);
-        }
-    };
-
-    const handleAdjustDucks = async (e) => {
-        e.preventDefault();
-        const formData = new FormData(e.target);
-        
-        const errors = {};
-        if (!formData.get('amount')) {
-            errors.amount = 'Adjustment amount is required';
-        }
-        
-        if (Object.keys(errors).length > 0) {
-            setFormErrors(errors);
-            return;
-        }
-
-        setFormErrors({});
-        setFormLoading(true);
-        try {
-            const response = await client.post('/api/admin/adjust_ducks', formData);
-            if (response.data.success) {
-                toast.success(response.data.message);
-                setActiveModal(null);
-                fetchDashboardData();
-            }
-        } catch (error) {
-            toast.error(error.response?.data?.message || 'Failed to adjust ducks.');
-        } finally {
-            setFormLoading(false);
-        }
-    };
-
-    const handleResetPassword = async (e) => {
-        e.preventDefault();
-        const formData = new FormData(e.target);
-        const data = Object.fromEntries(formData);
-        
-        const errors = {};
-        if (!data.new_password) errors.new_password = 'New password is required';
-        if (!data.confirm_password) errors.confirm_password = 'Confirmation is required';
-        
-        if (data.new_password && data.confirm_password && data.new_password !== data.confirm_password) {
-            errors.confirm_password = 'Passwords do not match';
-        }
-        
-        if (Object.keys(errors).length > 0) {
-            setFormErrors(errors);
-            return;
-        }
-
-        setFormErrors({});
-        setFormLoading(true);
-        try {
-            const response = await client.post('/api/admin/reset_password', {
-                username: data.username,
-                new_password: data.new_password
-            });
-            if (response.data.success) {
-                toast.success(response.data.message);
-                setActiveModal(null);
-            }
-        } catch (error) {
-            toast.error(error.response?.data?.message || 'Failed to reset password.');
-        } finally {
-            setFormLoading(false);
-        }
-    };
-
-    const handleStartConversation = async (e) => {
-        e.preventDefault();
-        const data = new FormData(e.target);
-        setFormLoading(true);
-        try {
-            const response = await client.post('/message/start_conversation', data);
-            if (response.status === 201) {
-                toast.success('New conversation started!');
-                setActiveModal(null);
-            }
-        } catch {
-            toast.error('Failed to start conversation.');
-        } finally {
-            setFormLoading(false);
-        }
-    };
-
-    const handleRemoveUser = async (username) => {
-        if (!window.confirm(`Are you sure you want to PERMANENTLY remove @${username}?`)) return;
-        
-        try {
-            const formData = new FormData();
-            formData.append('username', username);
-            const response = await client.post('/api/admin/remove_user', formData);
-            if (response.data.success) {
-                toast.success(response.data.message);
-                fetchDashboardData();
-            }
-        } catch (error) {
-            toast.error(error.response?.data?.message || 'Failed to remove user.');
+        const success = await handleAddBannedWord(newWord, banReason);
+        if (success) {
+            setNewWord('');
+            setBanReason('');
         }
     };
 
@@ -307,100 +108,17 @@ const AdminDashboard = () => {
             </div>
         </div>
     );
+    
     if (!dashboardData) return <div className="admin-error">Error loading dashboard.</div>;
 
-    const { 
-        users, 
-        config, 
-        banned_words, 
-        chart_data 
-    } = dashboardData;
+    const { users, config, banned_words, chart_data } = dashboardData;
 
     const filteredUsers = users.filter(u => 
         u.username.toLowerCase().includes(searchTerm.toLowerCase()) || 
         u.nickname?.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    const chartConfig = {
-        labels: chart_data?.labels || [],
-        datasets: [
-            {
-                label: 'Ducks Earned',
-                data: chart_data?.earned || [],
-                borderColor: '#10b981',
-                backgroundColor: (context) => {
-                    const ctx = context.chart.ctx;
-                    const gradient = ctx.createLinearGradient(0, 0, 0, 400);
-                    gradient.addColorStop(0, 'rgba(16, 185, 129, 0.4)');
-                    gradient.addColorStop(1, 'rgba(16, 185, 129, 0.0)');
-                    return gradient;
-                },
-                fill: true,
-                tension: 0.5,
-                pointRadius: 6,
-                pointHoverRadius: 8,
-                pointBackgroundColor: '#fff',
-                pointBorderColor: '#10b981',
-                pointBorderWidth: 3,
-            },
-            {
-                label: 'Ducks Spent',
-                data: chart_data?.spent || [],
-                borderColor: '#ef4444',
-                backgroundColor: (context) => {
-                    const ctx = context.chart.ctx;
-                    const gradient = ctx.createLinearGradient(0, 0, 0, 400);
-                    gradient.addColorStop(0, 'rgba(239, 68, 68, 0.3)');
-                    gradient.addColorStop(1, 'rgba(239, 68, 68, 0.0)');
-                    return gradient;
-                },
-                fill: true,
-                tension: 0.5,
-                pointRadius: 6,
-                pointHoverRadius: 8,
-                pointBackgroundColor: '#fff',
-                pointBorderColor: '#ef4444',
-                pointBorderWidth: 3,
-            }
-        ]
-    };
-
-    const chartOptions = {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: { 
-                position: 'top', 
-                align: 'end',
-                labels: { 
-                    usePointStyle: true, 
-                    boxWidth: 8,
-                    padding: 20,
-                    font: { size: 13, weight: '700', family: "'Outfit', sans-serif" } 
-                } 
-            },
-            tooltip: { 
-                backgroundColor: 'rgba(15, 23, 42, 0.9)',
-                padding: 16, 
-                borderRadius: 16, 
-                titleFont: { size: 14, family: "'Outfit', sans-serif" },
-                bodyFont: { size: 13, family: "'Inter', sans-serif" },
-                displayColors: true,
-                usePointStyle: true
-            }
-        },
-        scales: {
-            y: { 
-                beginAtZero: true, 
-                grid: { color: 'rgba(241, 245, 249, 0.5)', drawBorder: false },
-                ticks: { font: { weight: '600' }, color: '#64748b' }
-            },
-            x: { 
-                grid: { display: false },
-                ticks: { font: { weight: '600' }, color: '#64748b' }
-            }
-        }
-    };
+    const chartConfig = getChartConfig(chart_data);
 
     return (
         <div className="admin-dashboard">
@@ -539,7 +257,7 @@ const AdminDashboard = () => {
 
                     <div className="banned-words card">
                         <h3><AlertTriangle size={20} /> Content Moderation</h3>
-                        <form onSubmit={handleAddBannedWord} className="add-word-form">
+                        <form onSubmit={onSubmitBannedWord} className="add-word-form">
                             <input 
                                 type="text" 
                                 placeholder="Add banned word..." 

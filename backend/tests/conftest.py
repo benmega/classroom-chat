@@ -116,9 +116,6 @@ def create_dummy_license():
             f.write("DUMMY_LICENSE_FOR_TESTING")
 
     yield
-    # Optional: cleanup after tests if you want
-    # if os.path.exists(license_path):
-    #     os.remove(license_path)
 
 
 # 3. OVERRIDE: Custom live_server for Windows compatibility
@@ -628,7 +625,6 @@ def mock_render_template(client):
         "application.routes.challenge_routes.render_template", side_effect=side_effect
     ) as mock:
         yield mock
-
 
 
 @pytest.fixture

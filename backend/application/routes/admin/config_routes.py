@@ -4,10 +4,10 @@ from application.models.configuration import Configuration
 from application.models.banned_words import BannedWords
 from application.decorators.admin_required import admin_only
 
-from ..admin_routes import admin
+from ..admin_routes import admin_bp
 
 
-@admin.route("/toggle-ai", methods=["POST"])
+@admin_bp.route("/toggle-ai", methods=["POST"])
 @admin_only
 def toggle_ai():
     config = Configuration.query.first()
@@ -24,7 +24,7 @@ def toggle_ai():
         "status": config.ai_teacher_enabled,
     })
 
-@admin.route("/toggle-message-sending", methods=["POST"])
+@admin_bp.route("/toggle-message-sending", methods=["POST"])
 @admin_only
 def toggle_message_sending():
     config = Configuration.query.first()
@@ -41,7 +41,7 @@ def toggle_message_sending():
         "status": config.message_sending_enabled,
     })
 
-@admin.route("/update_duck_multiplier", methods=["POST"])
+@admin_bp.route("/update_duck_multiplier", methods=["POST"])
 def update_duck_multiplier():
     data = request.get_json()
     new_multiplier = data.get("multiplier")
@@ -63,7 +63,7 @@ def update_duck_multiplier():
         db.session.rollback()
         return jsonify({"success": False, "error": str(e)}), 500
 
-@admin.route("/add-banned-word", methods=["POST"])
+@admin_bp.route("/add-banned-word", methods=["POST"])
 @admin_only
 def add_banned_word():
     word = request.form.get("word")

@@ -24,11 +24,32 @@ def request_database_commit():
         return False
 
 
-def allowed_file(filename):
+def allowed_file(filename, allowed_extensions=None):
+    if allowed_extensions is None:
+        from application.config import Config
+        allowed_extensions = Config.ALLOWED_EXTENSIONS
+    
     return (
         "." in filename
-        and filename.rsplit(".", 1)[1].lower() in Config.ALLOWED_EXTENSIONS
+        and filename.rsplit(".", 1)[1].lower() in allowed_extensions
     )
+
+
+def get_s3_client():
+    import os
+    import boto3
+    from botocore.exceptions import BotoCoreError
+    try:
+        if not os.environ.get("AWS_ACCESS_KEY_ID") or not os.environ.get("AWS_SECRET_ACCESS_KEY"):
+            return None
+        return boto3.client(
+            "s3",
+            aws_access_key_id=os.environ.get("AWS_ACCESS_KEY_ID"),
+            aws_secret_access_key=os.environ.get("AWS_SECRET_ACCESS_KEY"),
+            region_name=os.environ.get("AWS_REGION", "ap-southeast-1"),
+        )
+    except Exception:
+        return None
 
 
 def format_file_size(size_bytes):
@@ -76,3 +97,21 @@ def cleanup_missing_user_pfps():
         request_database_commit()
         
     return fixed_count
+
+
+def safe_parse_datetime(val):
+    """
+    Robustly parse a datetime value that might be a string or already a datetime object.
+    Fixes TypeError: fromisoformat: argument must be str
+    """
+    from datetime import datetime
+    if val is None:
+        return None
+    if isinstance(val, datetime):
+        return val
+    if isinstance(val, str):
+        try:
+            return datetime.fromisoformat(val.replace("Z", "+00:00"))
+        except (ValueError, TypeError):
+            return None
+    return None

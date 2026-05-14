@@ -4,6 +4,7 @@ import { Toaster } from 'react-hot-toast';
 import { Loader2 } from 'lucide-react';
 import useAuthStore from './store/useAuthStore';
 import { SidebarProvider } from './context/SidebarContext';
+import { THEME } from './utils/theme';
 
 
 import Layout from './components/Layout/Layout';
@@ -51,10 +52,8 @@ const ProtectedRoute = ({ children, adminOnly = false }) => {
       height: '100vh', 
       background: 'var(--bg-primary)', 
       color: 'var(--text-primary)',
-
-      fontFamily: 'var(--font-body)'
     }}>
-        <Loader2 style={{ animation: 'spin 1s linear infinite' }} size={64} strokeWidth={1.5} color="#3b82f6" />
+        <Loader2 style={{ animation: 'spin 1s linear infinite' }} size={64} strokeWidth={1.5} color={THEME.colors.blue600} />
         <div style={{ textAlign: 'center' }}>
           <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 'bold', letterSpacing: '-0.025em' }}>Classroom Chat</h2>
           <p style={{ margin: '0.25rem 0 0 0', opacity: 0.7, fontSize: '0.875rem' }}>Preparing your workspace...</p>
@@ -93,11 +92,11 @@ function App() {
             toastOptions={{
                 duration: 4500,
                 style: {
-                    background: '#1e293b',
+                    background: THEME.colors.slate800,
                     color: '#ffffff',
-                    borderRadius: '12px',
+                    borderRadius: THEME.radius.md,
                     padding: '16px 24px',
-                    boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+                    boxShadow: THEME.shadows.xl,
                     fontSize: '0.95rem',
                     fontWeight: '600',
                     maxWidth: '420px',
@@ -105,22 +104,22 @@ function App() {
                 },
                 success: {
                     style: {
-                        background: '#10b981',
-                        border: '1px solid #059669',
+                        background: THEME.colors.success,
+                        border: `1px solid ${THEME.colors.successDark}`,
                     },
                     iconTheme: {
                         primary: '#ffffff',
-                        secondary: '#10b981',
+                        secondary: THEME.colors.success,
                     },
                 },
                 error: {
                     style: {
-                        background: '#ef4444',
-                        border: '1px solid #dc2626',
+                        background: THEME.colors.error,
+                        border: `1px solid ${THEME.colors.errorDark}`,
                     },
                     iconTheme: {
                         primary: '#ffffff',
-                        secondary: '#ef4444',
+                        secondary: THEME.colors.error,
                     },
                 },
             }}

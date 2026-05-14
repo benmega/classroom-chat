@@ -27,35 +27,16 @@ from application.models.user import User
 from application.utilities.db_helpers import get_user, save_message_to_db
 from application.decorators.login_required import require_login
 
+from application.services.message_service import serialize_message
+from application.services.classroom_service import get_enrolled_classroom_ids, user_enrolled_in
+from application.services.moderation_service import message_is_appropriate
+
 from sqlalchemy.orm import joinedload, selectinload
 from sqlalchemy import select
 
 message = Blueprint("message", __name__)
 
 
-# ============================================================================
-# HELPERS
-# ============================================================================
-
-def _get_enrolled_classroom_ids(user_id: int) -> set:
-    """Return the set of classroom IDs the user is enrolled in."""
-    rows = db.session.execute(
-        select(user_classrooms.c.classroom_id).where(
-            user_classrooms.c.user_id == user_id
-        )
-    ).fetchall()
-    return {row[0] for row in rows}
-
-
-def _user_enrolled_in(user_id: int, classroom_id: str) -> bool:
-    """Return True if the user has an enrollment row for classroom_id."""
-    row = db.session.execute(
-        select(user_classrooms.c.classroom_id).where(
-            user_classrooms.c.user_id == user_id,
-            user_classrooms.c.classroom_id == classroom_id,
-        )
-    ).first()
-    return row is not None
 
 
 # ============================================================================
@@ -99,7 +80,7 @@ def send_message():
 
     # ---- Classroom enrollment guard (non-global) ---------------------------
     elif not user.is_admin:
-        if not _user_enrolled_in(user.id, conv.classroom_id):
+        if not user_enrolled_in(user.id, conv.classroom_id):
             return jsonify(
                 success=False,
                 error="You are not enrolled in this classroom."
@@ -350,7 +331,7 @@ def get_conversation_history(user_id):
         # Students see:
         # 1. The global feed (always)
         # 2. Any conversation in a classroom they are enrolled in
-        enrolled_ids = _get_enrolled_classroom_ids(current_user_id)
+        enrolled_ids = get_enrolled_classroom_ids(current_user_id)
         allowed_classroom_ids = enrolled_ids | {GLOBAL_CLASSROOM_ID}
 
         conversations = (
@@ -482,7 +463,7 @@ def conversation_history():
             .all()
         )
     else:
-        enrolled_ids = _get_enrolled_classroom_ids(user_id)
+        enrolled_ids = get_enrolled_classroom_ids(user_id)
         allowed_ids = enrolled_ids | {GLOBAL_CLASSROOM_ID}
         conversations = (
             Conversation.query
@@ -520,59 +501,3 @@ def view_conversation(conversation_id):
     return redirect(f"/chat/view/{conversation_id}")
 
 
-# ============================================================================
-# MESSAGE VALIDATION
-# ============================================================================
-
-def message_is_appropriate(message):
-    banned_words = [word.word for word in BannedWords.query.all()]
-    return is_appropriate(message=message, banned_words=banned_words)
-
-
-def is_appropriate(message, banned_words=None):
-    if banned_words is None:
-        banned_words = []
-    message_lower = message.lower()
-    banned_words = [word.lower() for word in banned_words]
-    return not any(word in message_lower for word in banned_words)
-
-
-# ============================================================================
-# SERIALIZATION
-# ============================================================================
-
-def serialize_message(msg):
-    user = getattr(msg, "user", None)
-    if user:
-        username = getattr(user, "username", None)
-        nickname = getattr(user, "nickname", None)
-        profile_pic = getattr(user, "profile_picture", None)
-        slug = getattr(user, "slug", None)
-    else:
-        username = None
-        nickname = "Deleted User"
-        profile_pic = None
-        slug = None
-
-    timestamp = getattr(msg, "created_at", None)
-    if timestamp is not None:
-        timestamp = timestamp.isoformat()
-
-    conv = getattr(msg, "conversation", None)
-    classroom_id = getattr(conv, "classroom_id", None) if conv else None
-
-    return {
-        "id": msg.id,
-        "user_id": msg.user_id,
-        "sender_id": msg.user_id,          # alias for WS parity
-        "username": username,
-        "nickname": nickname,
-        "user_profile_pic": profile_pic,
-        "slug": slug,
-        "content": msg.content,
-        "timestamp": timestamp,
-        "message_type": getattr(msg, "message_type", "text"),
-        "classroom_id": classroom_id,
-        "is_global": classroom_id == GLOBAL_CLASSROOM_ID,
-        "conversation_id": msg.conversation_id,
-    }

@@ -1,7 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
-import useAuthStore from '../../store/useAuthStore';
-import client from '../../api/client';
+import React from 'react';
+import { Link } from 'react-router-dom';
 import { 
     User, 
     Shield, 
@@ -16,108 +14,35 @@ import {
     Menu,
     X
 } from 'lucide-react';
-import useSidebar from '../../hooks/useSidebar';
 
 import './Layout.css';
-import SmartImage from '../common/SmartImage';
 import UserSearch from '../common/UserSearch';
 import DuckIcon from '../common/DuckIcon';
+import Tutorial from '../common/Tutorial';
+
+// Hooks
+import { useLayout } from '../../hooks/useLayout';
 
 const Layout = ({ children }) => {
-    const { user, logout, isAuthenticated } = useAuthStore();
-    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-    const dropdownRef = useRef(null);
-    const navigate = useNavigate();
-    const location = useLocation();
-    const { isSidebarOpen, toggleSidebar, setSidebarOpen } = useSidebar();
-
-
-    const toggleDropdown = (e) => {
-        e.stopPropagation();
-        setIsDropdownOpen(!isDropdownOpen);
-    };
-
-    // --- Duck Balance Tracking for Quack Sound ---
-    const prevDuckBalanceRef = useRef(user?.duck_balance);
-
-    useEffect(() => {
-        // If user logs out or isn't there, reset ref and return
-        if (!user || user.duck_balance === undefined) {
-            prevDuckBalanceRef.current = user?.duck_balance;
-            return;
-        }
-
-        // Only quack if we had a previous balance (don't quack on initial load)
-        if (prevDuckBalanceRef.current !== undefined && prevDuckBalanceRef.current !== null) {
-            const currentDucks = Math.floor(user.duck_balance || 0);
-            const prevDucks = Math.floor(prevDuckBalanceRef.current || 0);
-            const diff = currentDucks - prevDucks;
-
-            if (diff > 0) {
-                // Play quacks with a slight overlap (60ms delay)
-                // Cap at 100 to avoid major performance/noise issues, 
-                // matching the user's example of "quack 100 times".
-                const quackCount = Math.min(diff, 100);
-                let quacksPlayed = 0;
-                
-                const quackInterval = setInterval(() => {
-                    if (quacksPlayed >= quackCount) {
-                        clearInterval(quackInterval);
-                        return;
-                    }
-                    const audio = new Audio('/static/sounds/quack.mp3');
-                    audio.play().catch(err => console.warn('Quack autoplay prevented:', err));
-                    quacksPlayed++;
-                }, 60); 
-            }
-        }
-        
-        // Update the ref for next comparison
-        prevDuckBalanceRef.current = user.duck_balance;
-    }, [user?.duck_balance, user]);
-    // --- Heartbeat ---
-    useEffect(() => {
-        if (!isAuthenticated || !user) return;
-
-        const HEARTBEAT_INTERVAL = 30000; // 30 seconds
-        
-        const sendHeartbeat = async () => {
-            try {
-                await client.post('/api/session/heartbeat');
-            } catch (err) {
-                console.error('Heartbeat failed:', err);
-            }
-        };
-
-        // Send initial heartbeat
-        sendHeartbeat();
-
-        const interval = setInterval(sendHeartbeat, HEARTBEAT_INTERVAL);
-        return () => clearInterval(interval);
-    }, [isAuthenticated, user]);
-    // ----------------------------------------------
-
-    useEffect(() => {
-        const handleClickOutside = (event) => {
-            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-                setIsDropdownOpen(false);
-            }
-        };
-
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, []);
-
-    const handleLogout = async () => {
-        await logout();
-        navigate('/login');
-    };
-
-    const isGuestPage = ['/login', '/signup'].includes(location.pathname);
-    const isChatPage = location.pathname === '/' || location.pathname.startsWith('/chat');
+    const {
+        user,
+        isAuthenticated,
+        isDropdownOpen,
+        setIsDropdownOpen,
+        dropdownRef,
+        isSidebarOpen,
+        setSidebarOpen,
+        toggleSidebar,
+        toggleDropdown,
+        handleLogout,
+        isGuestPage,
+        isChatPage,
+        location
+    } = useLayout();
 
     return (
         <div className="app-container">
+            {isAuthenticated && <Tutorial />}
             <header className={`${!isAuthenticated || isGuestPage ? 'guest-mode' : ''} ${isChatPage ? 'mobile-hidden' : ''}`}>
                 <div className="header-content">
                     {isAuthenticated && (

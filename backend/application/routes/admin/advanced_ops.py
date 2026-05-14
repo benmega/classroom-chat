@@ -3,9 +3,9 @@ from application.models.conversation import Conversation, conversation_users
 from application.models.message import Message
 from application.decorators.admin_required import admin_only
 from application.decorators.api_response import api_response
-from ..admin_routes import admin
+from ..admin_routes import admin_bp
 
-@admin.route("/advanced/purge-history", methods=["POST"])
+@admin_bp.route("/advanced/purge-history", methods=["POST"])
 @admin_only
 @api_response
 def purge_history():
@@ -36,7 +36,7 @@ def purge_history():
         db.session.rollback()
         return {"error": f"Failed to purge history: {str(e)}"}, 500
 
-@admin.route("/advanced/stats-extended", methods=["GET"])
+@admin_bp.route("/advanced/stats-extended", methods=["GET"])
 @admin_only
 @api_response
 def get_extended_stats():

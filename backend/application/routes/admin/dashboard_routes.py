@@ -12,10 +12,10 @@ from application.decorators.admin_required import admin_only
 from application.models.classroom import Classroom
 
 
-from ..admin_routes import admin
+from ..admin_routes import admin_bp
 
 
-@admin.route("/dashboard", methods=["GET"])
+@admin_bp.route("/dashboard", methods=["GET"])
 @admin_only
 @api_response
 def dashboard_data():
@@ -78,7 +78,7 @@ def dashboard_data():
         }
     }
 
-@admin.route("/stats", methods=["GET"])
+@admin_bp.route("/stats", methods=["GET"])
 @admin_only
 @api_response
 def admin_stats():
@@ -95,7 +95,7 @@ def admin_stats():
 
 
 
-@admin.route("/logs", methods=["GET"])
+@admin_bp.route("/logs", methods=["GET"])
 @admin_only
 @api_response
 def get_logs():
@@ -114,7 +114,7 @@ def get_logs():
             return {"logs": "".join(last_lines)}
     except Exception as e:
         return {"error": f"Failed to read logs: {str(e)}"}, 500
-@admin.route("/export/transactions", methods=["GET"])
+@admin_bp.route("/export/transactions", methods=["GET"])
 @admin_only
 def export_transactions():
     """Generates and serves a CSV file of all duck transactions."""

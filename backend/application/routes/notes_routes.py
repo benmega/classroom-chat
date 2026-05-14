@@ -11,32 +11,13 @@ from application.extensions import db
 from application.models.note import Note
 from application.models.user import User
 from application.utilities.db_helpers import get_user
-from application.utilities.helper_functions import allowed_file
+from application.utilities.helper_functions import allowed_file, get_s3_client
 
 notes_bp = Blueprint("notes", __name__)
 
 S3_NOTES_BUCKET = "classroom-chat-student-notes"
 
 
-def get_s3_client():
-    """
-    Create the S3 client lazily so the app can boot even if S3 isn't configured
-    or optional botocore dependencies aren't present.
-    Returns a boto3 client or None if unavailable.
-    """
-    try:
-        return boto3.client("s3")
-    except MissingDependencyException as e:
-        current_app.logger.error(
-            "S3 is unavailable due to a missing optional dependency: %s", e
-        )
-        return None
-    except BotoCoreError as e:
-        current_app.logger.error("S3 client initialization failed: %s", e)
-        return None
-    except Exception as e:
-        current_app.logger.exception("Unexpected error initializing S3 client: %s", e)
-        return None
 
 
 @notes_bp.route("/upload", methods=["POST"])

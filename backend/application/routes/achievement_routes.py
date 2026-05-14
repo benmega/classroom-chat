@@ -21,6 +21,7 @@ from application.models.user import User
 from application.models.user_certificate import UserCertificate
 from application.decorators.admin_required import admin_only
 from application.decorators.api_response import api_response
+from application.utilities.helper_functions import allowed_file
 
 achievements = Blueprint("achievements", __name__)
 
@@ -32,8 +33,6 @@ ALLOWED_EXTENSIONS = {"pdf"}
 
 
 
-def allowed_file(filename, allowed_extensions=ALLOWED_EXTENSIONS):
-    return "." in filename and filename.rsplit(".", 1)[1].lower() in allowed_extensions
 
 
 # API for the achievements data
@@ -295,3 +294,40 @@ def download_certificate(cert_id):
         as_attachment=True,
         download_name=download_name
     )
+
+
+@achievements.route("/check", methods=["GET"])
+def check_achievements():
+    user_id = session.get("user")
+    if not user_id:
+        return jsonify({"success": False, "error": "Not logged in"}), 401
+
+    user = User.query.filter_by(id=user_id).first()
+    if not user:
+        return jsonify({"success": False, "error": "User not found"}), 404
+
+    try:
+        from application.services.achievement_engine import evaluate_user
+        new_awards = evaluate_user(user)
+        # Also update user skills progress
+        from application.services.skill_service import evaluate_user_skills
+        evaluate_user_skills(user)
+    except Exception:
+        return (
+            jsonify({"success": False, "error": "Failed to evaluate achievements"}),
+            500,
+        )
+
+    payload = [
+        {
+            "id": a.id,
+            "name": a.name,
+            "badge": url_for(
+                "static",
+                filename=f"images/achievement_badges/{a.slug}.png",
+                _external=False,
+            ),
+        }
+        for a in new_awards
+    ]
+    return jsonify({"success": True, "new_awards": payload})

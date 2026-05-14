@@ -6,10 +6,10 @@ from application.decorators.api_response import api_response
 from application.decorators.admin_required import admin_only
 
 from flask import current_app
-from ..admin_routes import admin
+from ..admin_routes import admin_bp
 
 
-@admin.route("/pending_users", methods=["GET"])
+@admin_bp.route("/pending_users", methods=["GET"])
 @admin_only
 @api_response
 def pending_users():
@@ -28,7 +28,7 @@ def pending_users():
     return {"users": [u.to_dict_summary(precomputed) for u in pending]}
 
 
-@admin.route("/approve_user/<int:user_id>", methods=["POST"])
+@admin_bp.route("/approve_user/<int:user_id>", methods=["POST"])
 @admin_only
 @api_response
 def approve_user(user_id):
@@ -37,7 +37,7 @@ def approve_user(user_id):
     db.session.commit()
     return {"message": f"User {user_obj.username} approved successfully."}
 
-@admin.route("/reject_user/<int:user_id>", methods=["POST"])
+@admin_bp.route("/reject_user/<int:user_id>", methods=["POST"])
 @admin_only
 @api_response
 def reject_user(user_id):
@@ -47,9 +47,9 @@ def reject_user(user_id):
     db.session.commit()
     return {"message": f"User {username} rejected and removed."}
 
-@admin.route("/users", methods=["GET"])
+@admin_bp.route("/users", methods=["GET"])
 @admin_only
-def get_users():
+def admin_get_users_list():
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 50, type=int)
     
@@ -83,7 +83,7 @@ def get_users():
         "per_page": per_page
     })
 
-@admin.route("/reset_password", methods=["POST"])
+@admin_bp.route("/reset_password", methods=["POST"])
 @admin_only
 def reset_password():
     data = request.json
@@ -101,7 +101,7 @@ def reset_password():
     db.session.commit()
     return jsonify({"success": True, "message": f"Password reset for {username}"})
 
-@admin.route("/create_user", methods=["POST"])
+@admin_bp.route("/create_user", methods=["POST"])
 @admin_only
 def create_user():
     username = request.form.get("username", "").strip().lower()
@@ -130,7 +130,7 @@ def create_user():
         db.session.rollback()
         return jsonify(success=False, message="Internal server error"), 500
 
-@admin.route("/remove_user", methods=["POST"])
+@admin_bp.route("/remove_user", methods=["POST"])
 @admin_only
 def remove_user():
     username = request.form.get("username", "").strip().lower()
@@ -149,7 +149,7 @@ def remove_user():
         db.session.rollback()
         return jsonify(success=False, message="Internal server error"), 500
 
-@admin.route("/adjust_ducks", methods=["POST"])
+@admin_bp.route("/adjust_ducks", methods=["POST"])
 @admin_only
 def adjust_ducks():
     username = request.form.get("username")
@@ -166,7 +166,7 @@ def adjust_ducks():
     else:
         return jsonify({"success": False, "message": f"User '{username}' not found."}), 404
 
-@admin.route("/set_username", methods=["POST"])
+@admin_bp.route("/set_username", methods=["POST"])
 @admin_only
 def set_username_route():
     user_id = request.form.get("user_id")
@@ -183,7 +183,7 @@ def set_username_route():
     db.session.commit()
     return jsonify({"success": True, "message": "Username set successfully"})
 
-@admin.route("/verify_password", methods=["POST"])
+@admin_bp.route("/verify_password", methods=["POST"])
 @admin_only
 def verify_password():
     password = request.form.get("password")

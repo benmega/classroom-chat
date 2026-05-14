@@ -17,6 +17,8 @@ import {
 import { Link, useNavigate } from 'react-router-dom';
 import useAuthStore from '../../store/useAuthStore';
 
+import ChatSidebarFooter from './ChatSidebarFooter';
+
 const ChatSidebar = ({ 
     user, 
     isSidebarOpen, 
@@ -172,19 +174,11 @@ const ChatSidebar = ({
                     )}
                 </div>
 
-                <div className="chat-sidebar-footer mobile-only">
-                    <Link to="/profile" className="sidebar-footer-item" onClick={() => setSidebarOpen(false)}><UserIcon size={18} /> Profile</Link>
-                    {user?.is_admin && <Link to="/admin" className="sidebar-footer-item" onClick={() => setSidebarOpen(false)}><Shield size={18} /> Admin Panel</Link>}
-                    <Link to="/achievements" className="sidebar-footer-item" onClick={() => setSidebarOpen(false)}><Award size={18} /> Achievements</Link>
-                    <Link to="/submit-certificate" className="sidebar-footer-item" onClick={() => setSidebarOpen(false)}><FileCheck size={18} /> Certificate</Link>
-                    <Link to="/submit-challenge" className="sidebar-footer-item" onClick={() => setSidebarOpen(false)}><Zap size={18} /> Challenge</Link>
-                    <Link to="/bit-shift" className="sidebar-footer-item" onClick={() => setSidebarOpen(false)}><RefreshCw size={18} /> Bit Shift</Link>
-                    <a href="https://benmega.github.io/screen-recorder/" target="_blank" rel="noopener noreferrer" className="sidebar-footer-item" onClick={() => setSidebarOpen(false)}><Disc size={18} /> Record</a>
-                    <Link to="/history" className="sidebar-footer-item" onClick={() => setSidebarOpen(false)}><MessageSquare size={18} /> History</Link>
-                    <button onClick={handleLogout} className="sidebar-footer-item logout-btn" style={{ borderTop: '1px solid var(--border-subtle)', marginTop: '8px', color: 'var(--error-color)', width: '100%', textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer' }}>
-                        <LogOut size={18} /> Logout
-                    </button>
-                </div>
+                <ChatSidebarFooter 
+                    user={user} 
+                    onAction={() => setSidebarOpen(false)} 
+                    onLogout={handleLogout} 
+                />
             </aside>
         </>
     );

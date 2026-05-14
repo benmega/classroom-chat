@@ -12,9 +12,8 @@ from flask_swagger_ui import get_swaggerui_blueprint
 
 from application.routes.notes_routes import notes_bp
 from .achievement_routes import achievements
-from .admin_routes import admin as admin_api_bp
+from .admin_routes import admin_bp
 from .ai_routes import ai
-from .api_achievements import achievements_api
 from .api_webhooks import webhooks_api
 from .challenge_routes import challenge
 from .duck_trade_routes import duck_trade
@@ -27,7 +26,7 @@ from .user_routes import user
 
 
 def register_blueprints(app: Flask):
-    app.register_blueprint(admin_api_bp, url_prefix="/api/admin")
+    app.register_blueprint(admin_bp, url_prefix="/api/admin")
     app.register_blueprint(user, url_prefix="/user")
     app.register_blueprint(ai, url_prefix="/ai")
     app.register_blueprint(upload, url_prefix="/upload")
@@ -36,7 +35,6 @@ def register_blueprints(app: Flask):
     app.register_blueprint(achievements, url_prefix="/api/achievements")
     app.register_blueprint(session, url_prefix="/api/session")
     app.register_blueprint(notes_bp, url_prefix="/notes")
-    app.register_blueprint(achievements_api)
     app.register_blueprint(webhooks_api)
     app.register_blueprint(challenge)
     app.register_blueprint(general)

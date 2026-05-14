@@ -107,16 +107,11 @@ def submit_challenge():
         message = f"Congrats {user.username}, you earned {duck_reward} ducks!"
 
         # ---- Classroom enrollment trigger ----------------------------------
-        # Re-extract the slug from the URL (already validated above) to fetch
-        # the Challenge ORM object and read its classroom_id.
-        extracted = _extract_challenge_details(url)
-        if extracted:
-            chal = Challenge.query.filter(
-                (Challenge.slug.ilike(extracted["challenge_slug"])) |
-                (Challenge.slug.ilike(extracted["challenge_slug"].replace("-", " ")))
-            ).first()
-            if chal and getattr(chal, "classroom_id", None):
-                _enroll_user_in_classroom(user, chal.classroom_id)
+        # If the challenge log was successful, we check if it provided a
+        # classroom_id to enroll the user in.
+        classroom_id = details.get("classroom_id")
+        if classroom_id:
+            _enroll_user_in_classroom(user, classroom_id)
 
         return jsonify({
             "success": True,
@@ -258,6 +253,7 @@ def _log_challenge(details, username, helper=None):
             "success": True,
             "message": "Challenge logged successfully",
             "timestamp": challenge_log.timestamp,
+            "classroom_id": challenge.classroom_id or course_instance.classroom_id,
         }
 
     except Exception as e:

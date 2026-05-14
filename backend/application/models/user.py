@@ -28,8 +28,6 @@ class User(db.Model):
     slug = db.Column(db.String(100), unique=True, nullable=True)
     is_admin = db.Column(db.Boolean, default=False)
     is_approved = db.Column(db.Boolean, default=False)
-    # classroom_id single-FK removed — enrollment is now managed via the
-    # user_classrooms join table.  Use user.classrooms to query memberships.
     bio = db.Column(db.String(500), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
@@ -175,11 +173,9 @@ class User(db.Model):
         return slug
 
     def set_password(self, password):
-        """Generate a hashed password and store it"""
         self.password_hash = generate_password_hash(password)
 
     def check_password(self, password):
-        """Check the given password against the stored hash"""
         return check_password_hash(self.password_hash, password)
 
     @classmethod
@@ -230,20 +226,17 @@ class User(db.Model):
         return int(round(progress, 0))
 
     def add_skill(self, skill_name):
-        """Add a skill to the user."""
         new_skill = Skill(name=skill_name, user_id=self.id)
         db.session.add(new_skill)
         db.session.commit()
 
     def remove_skill(self, skill_id):
-        """Remove a skill by ID."""
         skill = Skill.query.get(skill_id)
         if skill and skill.user_id == self.id:
             db.session.delete(skill)
             db.session.commit()
 
     def add_project(self, name, description=None, link=None):
-        """Add a project to the user."""
         new_project = Project(
             name=name, description=description, link=link, user_id=self.id
         )
@@ -251,7 +244,6 @@ class User(db.Model):
         db.session.commit()
 
     def remove_project(self, project_id):
-        """Remove a project by ID."""
         project = Project.query.get(project_id)
         if project and project.user_id == self.id:
             db.session.delete(project)
@@ -299,9 +291,12 @@ class User(db.Model):
 
         logs = self.challenge_logs.all()
         counts = {}
+        from application.utilities.helper_functions import safe_parse_datetime
         for log in logs:
-            k = log.timestamp.date().isoformat()
-            counts[k] = counts.get(k, 0) + 1
+            parsed_ts = safe_parse_datetime(log.timestamp)
+            if parsed_ts:
+                k = parsed_ts.date().isoformat()
+                counts[k] = counts.get(k, 0) + 1
 
         # grid[weekday][week_index] (7 rows x 53 columns)
         grid = [[None for _ in range(53)] for _ in range(7)]

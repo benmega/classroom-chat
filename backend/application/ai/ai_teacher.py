@@ -20,8 +20,6 @@ from application.utilities.db_helpers import save_message_to_db
 # Configure logging
 logger = logging.getLogger(__name__)
 
-# Blueprint configuration
-ai = Blueprint("ai", __name__)
 
 # Constants
 AI_TEACHER_USER_ID = 0
@@ -316,38 +314,3 @@ def get_ai_response(
         return "Error: Could not process the AI response."
 
 
-@ai.route("/get_ai_response", methods=["POST"])
-def ai_response():
-    """
-    Flask route to handle AI response requests.
-
-    Returns:
-        JSON response with success status and AI response
-    """
-    try:
-        # Validate request data
-        if not request.form.get("message"):
-            return jsonify(success=False, error="Message is required"), 400
-
-        if not request.form.get("username"):
-            return jsonify(success=False, error="Username is required"), 400
-
-        user_message = request.form["message"].strip()
-        username = request.form["username"].strip()
-        conversation_id = request.form.get("conversation_id")
-
-        # Convert conversation_id to int if provided
-        if conversation_id:
-            try:
-                conversation_id = int(conversation_id)
-            except ValueError:
-                return jsonify(success=False, error="Invalid conversation ID"), 400
-
-        # Get AI response
-        ai_response = get_ai_response(user_message, username, conversation_id)
-
-        return jsonify(success=True, ai_response=ai_response)
-
-    except Exception as e:
-        logger.error(f"Error in ai_response route: {e}")
-        return jsonify(success=False, error="Internal server error"), 500

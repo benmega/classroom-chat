@@ -10,7 +10,7 @@ from werkzeug.exceptions import RequestEntityTooLarge
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 from application.config import DevelopmentConfig, TestingConfig, ProductionConfig
-from application.extensions import db, socketio, limiter, scheduler, csrf
+from application.extensions import db, socketio, limiter, scheduler, csrf, migrate
 from application.models import setup_models
 from application.models.configuration import Configuration
 from application.models.user import User
@@ -19,6 +19,7 @@ from application.constants import GLOBAL_CLASSROOM_ID  # noqa: F401 — imported
 
 from .license_checker import load_license
 from application.utilities.helper_functions import format_number
+from application.utilities.schema_check import check_for_schema_drift
 from flask_wtf.csrf import generate_csrf
 
 
@@ -100,6 +101,7 @@ def create_app(config_class=None):
     app.config["LICENSEE"] = license_data.get("licensee", "Unknown")
 
     db.init_app(app)
+    migrate.init_app(app, db)
     # cors_allowed_origins must match cors_origins exactly — using "*" alongside
     # withCredentials:true on the client causes browsers to block the handshake.
     socketio.init_app(
@@ -122,7 +124,12 @@ def create_app(config_class=None):
     with app.app_context():
         setup_models()
 
-        db.create_all()
+        # Only use create_all in non-production environments to avoid schema drift issues.
+        # Production should use migrations via 'flask db upgrade'.
+        if app.config.get("ENV") != "production":
+            db.create_all()
+            if app.config.get("ENV") == "development":
+                check_for_schema_drift(app)
         inspector = inspect(db.engine)
         if not inspector.has_table("users"):
             # This part is now redundant for create_all, but we still want to ensure default config if it was a fresh DB

@@ -18,7 +18,7 @@ from application.models.conversation import Conversation
 from application.models.project import Project
 from application.models.skill import Skill
 from application.models.user import User
-from application.utilities.helper_functions import allowed_file
+from application.utilities.helper_functions import allowed_file, get_s3_client
 from application.decorators.api_response import api_response
 
 
@@ -26,15 +26,6 @@ user = Blueprint("user", __name__)
 
 S3_UPLOAD_BUCKET = "youtube-upload-source-classroom-chat"
 
-def get_s3_client():
-    if not os.environ.get("AWS_ACCESS_KEY_ID") or not os.environ.get("AWS_SECRET_ACCESS_KEY"):
-        return None
-    return boto3.client(
-        "s3",
-        aws_access_key_id=os.environ.get("AWS_ACCESS_KEY_ID"),
-        aws_secret_access_key=os.environ.get("AWS_SECRET_ACCESS_KEY"),
-        region_name=os.environ.get("AWS_REGION", "ap-southeast-1"),
-    )
 
 
 from application.decorators.login_required import require_login
@@ -551,7 +542,7 @@ def project_image(filename):
 
 @user.route("/get_users", methods=["GET"])
 @require_login
-def get_users():
+def get_users_simple_list():
 
     users = User.query.all()
     users_data = [{"id": u.id, "username": u.username} for u in users]
