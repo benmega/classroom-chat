@@ -116,18 +116,48 @@
     position: absolute;
     top: 16px;
     left: 16px;
-    background: rgba(185, 28, 28, 0.9);
-    color: white;
+    background: rgba(255, 255, 255, 0.92);
+    color: #e11d48;
+    border: 1px solid rgba(225, 29, 72, 0.2);
     padding: 6px 14px;
     border-radius: 20px;
     font-size: 0.75rem;
     font-weight: 700;
-    backdrop-filter: blur(4px);
+    backdrop-filter: blur(8px);
     display: flex;
     align-items: center;
+    gap: 6px;
     justify-content: center;
     z-index: 10;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+    box-shadow: var(--shadow-sm);
+    letter-spacing: 0.02em;
+    transition: all 0.3s ease;
+}
+
+.pending-indicator::before {
+    content: '';
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    background-color: #e11d48;
+    border-radius: 50%;
+    box-shadow: 0 0 0 rgba(225, 29, 72, 0.4);
+    animation: pulse-dot 2s infinite;
+}
+
+@keyframes pulse-dot {
+    0% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(225, 29, 72, 0.4);
+    }
+    70% {
+        transform: scale(1);
+        box-shadow: 0 0 0 6px rgba(225, 29, 72, 0);
+    }
+    100% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(225, 29, 72, 0);
+    }
 }
 
 

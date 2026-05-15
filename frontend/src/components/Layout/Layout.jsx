@@ -17,7 +17,7 @@ import {
 
 import './Layout.css';
 import UserSearch from '../common/UserSearch';
-import DuckIcon from '../common/DuckIcon';
+import DuckIcon from '../Icons/DuckIcon';
 import Tutorial from '../common/Tutorial';
 
 // Hooks

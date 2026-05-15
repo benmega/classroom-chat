@@ -27,3 +27,15 @@ The User Management table in the Admin Panel has layout issues that affect reada
 ## Environment
 - **Browser**: Chrome (via Playwright)
 - **Resolution**: 1280x800 (Desktop)
+
+## Root Cause
+The Account Type column was using a generic `className="badge"` class. In standard un-scoped React builds, importing CSS globally causes any class declarations to be shared across the entire page. A global sprite stylesheet (`sprite.css`) declared `.badge` as a base class for large 128x128px achievement image sprite containers. Consequently, text label chips rendering with `className="badge"` inherited the dimensions and layout intended for image sprites, resulting in disproportionately tall rows and sparse layouts. 
+
+Pagination controls were already present and functional in the component (`Users.jsx`) but were visually displaced by the oversized row heights.
+
+## Changed Files
+- `frontend/src/pages/Admin/Users.jsx`
+- `frontend/src/pages/Admin/Users.css`
+- `frontend/src/components/Layout/Layout.jsx` (Fixed broken DuckIcon import path)
+- `frontend/src/components/admin/AdminModals.jsx` (Fixed broken DuckIcon import path)
+- `frontend/src/components/admin/AdminStats.jsx` (Fixed broken DuckIcon import path)

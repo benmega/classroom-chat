@@ -144,9 +144,9 @@ const Users = () => {
                                     <td>
                                         <div className="type-badge">
                                             {u.is_admin ? (
-                                                <span className="badge admin"><Shield size={12} /> Administrator</span>
+                                                <span className="user-role-badge admin"><Shield size={12} /> Administrator</span>
                                             ) : (
-                                                <span className="badge student">Student</span>
+                                                <span className="user-role-badge student">Student</span>
                                             )}
                                         </div>
                                     </td>
