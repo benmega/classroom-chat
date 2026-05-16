@@ -97,7 +97,7 @@ def login():
     # In this app, it might be served by a template
     try:
         return render_template("login.html"), 200
-    except:
+    except Exception:
         return "Login Page", 200
 
 

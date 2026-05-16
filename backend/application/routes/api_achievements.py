@@ -4,7 +4,7 @@ Type: py
 Summary: Flask routes for api achievements functionality.
 """
 
-from flask import Blueprint, session, jsonify, url_for, request
+from flask import Blueprint, session, jsonify, url_for
 
 from application.models.user import User
 from application.services.achievement_engine import evaluate_user

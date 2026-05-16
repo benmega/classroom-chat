@@ -8,7 +8,7 @@ import re
 from datetime import datetime
 
 from urllib.parse import parse_qs
-from flask import Blueprint, request, session, redirect, url_for, flash, jsonify, render_template
+from flask import Blueprint, request, session, redirect, url_for, flash, jsonify
 from flask_cors import cross_origin
 
 from application import Configuration

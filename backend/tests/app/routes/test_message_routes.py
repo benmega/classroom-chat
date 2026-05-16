@@ -10,26 +10,6 @@ from application import db, Configuration
 from application.constants import GLOBAL_CLASSROOM_ID
 from application.models.conversation import Conversation
 from application.models.classroom import Classroom
-
-
-def test_send_message(client, init_db, sample_admin):
-    """Test sending a message."""
-    # Set up session for user
-
-    with client.session_transaction() as sess:
-        sess["user"] = sample_admin.id
-"""
-File: test_message_routes.py
-Type: py
-Summary: Unit tests for message routes Flask routes.
-"""
-
-import json
-
-from application import db, Configuration
-from application.constants import GLOBAL_CLASSROOM_ID
-from application.models.conversation import Conversation
-from application.models.classroom import Classroom
 from application.models.user import User
 
 

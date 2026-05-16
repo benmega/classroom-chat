@@ -1,4 +1,4 @@
-import os
+
 
 def append_to_file(filename, content):
     path = f"c:/Users/Ben/AntiGravity/classroom-chat/issues/completed/{filename}"

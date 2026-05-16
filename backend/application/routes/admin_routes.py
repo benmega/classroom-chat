@@ -4,7 +4,7 @@ admin_pass = "duckduck"
 admin_bp = Blueprint("admin", __name__)
 
 # Import routes to register them on the admin blueprint
-from .admin import (
+from .admin import (  # noqa: F401, E402
     advanced_ops,
     config_routes,
     dashboard_routes,
