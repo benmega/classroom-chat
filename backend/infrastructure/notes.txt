@@ -3,4 +3,4 @@ backup prod
 scp -i ~/.ssh/test-key.pem ubuntu@blossom.benmega.com:classroom-chat/instance/dev_users.db "/mnt/c/Users/Acer/PycharmProjects/classroom-chat/instance/backups/"
 
 # On Asus
-scp -i ~/.ssh/test-key.pem ubuntu@blossom.benmega.com:classroom-chat/instance/dev_users.db "/mnt/c/Users/Ben/PycharmProjects/groupChat2/instance/backups/"
+scp -i ~/.ssh/test-key.pem ubuntu@blossom.benmega.com:classroom-chat/instance/dev_users.db "/mnt/c/Users/Ben/AntiGravity/classroom-chat/backend/instance/backups"

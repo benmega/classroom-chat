@@ -95,7 +95,7 @@ const AdminProjects = () => {
                     onBack={() => setSelectedProject(null)}
                 />
                 
-                <div className="project-review-card card">
+                <div className="project-review-card">
                     <div className="review-grid">
                         <div className="project-info-panel">
                             <div className="review-header-flex">
@@ -108,6 +108,18 @@ const AdminProjects = () => {
                                     <User size={16} /> {selectedProject.user_nickname} (#{selectedProject.user_id})
                                 </Link>
                             </div>
+
+                            {selectedProject.image_url && (
+                                <div className="review-image-container">
+                                    <SmartImage 
+                                        src={formatStaticUrl(selectedProject.image_url)} 
+                                        alt="Preview" 
+                                        className="review-preview-img" 
+                                        fallbackType="project"
+                                    />
+                                </div>
+                            )}
+
                             <p className="description">{selectedProject.description}</p>
                             
                             <div className="links-section">
@@ -128,35 +140,26 @@ const AdminProjects = () => {
                                 )}
                             </div>
 
-                                {selectedProject.image_url && (
-                                    <SmartImage 
-                                        src={formatStaticUrl(selectedProject.image_url)} 
-                                        alt="Preview" 
-                                        className="review-preview-img" 
-                                        fallbackType="project"
-                                    />
+                            <div className="extra-context-section">
+                                {selectedProject.code_snippet && (
+                                    <div className="context-block">
+                                        <h4><Code size={18} /> Code Snippet</h4>
+                                        <pre className="code-view">
+                                            <code>{selectedProject.code_snippet}</code>
+                                        </pre>
+                                    </div>
                                 )}
 
-                                <div className="extra-context-section">
-                                    {selectedProject.code_snippet && (
-                                        <div className="context-block">
-                                            <h4><Code size={18} /> Code Snippet</h4>
-                                            <pre className="code-view">
-                                                <code>{selectedProject.code_snippet}</code>
-                                            </pre>
+                                {selectedProject.video_transcript && (
+                                    <div className="context-block">
+                                        <h4><Video size={18} /> Video Transcript</h4>
+                                        <div className="transcript-view">
+                                            {selectedProject.video_transcript}
                                         </div>
-                                    )}
-
-                                    {selectedProject.video_transcript && (
-                                        <div className="context-block">
-                                            <h4><Video size={18} /> Video Transcript</h4>
-                                            <div className="transcript-view">
-                                                {selectedProject.video_transcript}
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
+                                    </div>
+                                )}
                             </div>
+                        </div>
 
                         <div className="review-actions-panel">
                             <h3 className="section-title"><MessageSquare size={18} /> Teacher Feedback</h3>

@@ -26,6 +26,11 @@ class DuckTradeLog(db.Model):
         db.DateTime, nullable=False, default=db.func.now(), index=True
     )
 
+    def __init__(self, **kwargs):
+        """Explicit constructor to handle keyword arguments correctly."""
+        for key, value in kwargs.items():
+            setattr(self, key, value)
+
     def approve(self):
         self.status = "approved"
         db.session.commit()

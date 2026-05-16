@@ -230,10 +230,19 @@
 /* Detail View */
 /* Back button in detail view now handled by secondary button style or component */
 
+.project-review-card {
+    max-width: 1200px;
+    margin: 0 auto;
+    border: none;
+    background: transparent;
+    box-shadow: none;
+}
+
 .review-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 3rem;
+    grid-template-columns: 1.2fr 0.8fr;
+    gap: 2rem;
+    align-items: start;
 }
 
 .review-header-flex {
@@ -245,9 +254,18 @@
     gap: 1rem;
 }
 
+.project-info-panel {
+    background: white;
+    padding: 2.5rem;
+    border-radius: 24px;
+    border: 1px solid #e2e8f0;
+    box-shadow: var(--shadow-sm);
+}
+
 .project-info-panel h2 { 
-    font-size: 2rem; 
+    font-size: 1.75rem; 
     margin: 0; 
+    color: #1e293b;
 }
 
 .student-profile-link {
@@ -321,21 +339,43 @@
 .project-link.video { background: #fff1f2; color: #e11d48; }
 .project-link.video:hover { background: #ffe4e6; }
 
+.review-image-container {
+    width: 100%;
+    max-height: 450px;
+    border-radius: 16px;
+    overflow: hidden;
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    margin-bottom: 2rem;
+}
+
 .review-preview-img {
     width: 100%;
-    border-radius: 16px;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.review-actions-panel {
+    position: sticky;
+    top: 2rem;
+    background: white;
+    padding: 2rem;
+    border-radius: 24px;
     border: 1px solid #e2e8f0;
+    box-shadow: var(--shadow-md);
 }
 
 .review-textarea {
     width: 100%;
-    padding: 1.5rem;
-    border-radius: 16px;
+    padding: 1.25rem;
+    border-radius: 12px;
     border: 1px solid #e2e8f0;
-    font-size: 1rem;
+    font-size: 0.95rem;
     background: #f8fafc;
-    margin: 1.5rem 0;
+    margin: 1rem 0 1.5rem 0;
     resize: none;
+    line-height: 1.5;
 }
 
 .review-buttons {
