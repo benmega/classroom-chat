@@ -211,13 +211,27 @@ def seed_global_data():
     Idempotently ensure the reserved classrooms and global conversation exist.
     Populates application.constants.GLOBAL_CONVERSATION_ID in-process so
     routes can import it as a constant without hitting the DB every request.
+
+    Skips gracefully if the schema is not yet migrated (e.g. during
+    'flask db upgrade' before the conversations table has classroom_id).
     """
     import application.constants as _constants
     from application.models.classroom import Classroom
     from application.models.conversation import Conversation
 
-
     logger = logging.getLogger(__name__)
+
+    # Guard: skip seeding if the schema hasn't been migrated yet.
+    # This allows 'flask db upgrade' to load the app without crashing.
+    inspector = inspect(db.engine)
+    if inspector.has_table("conversations"):
+        conv_cols = {c["name"] for c in inspector.get_columns("conversations")}
+        if "classroom_id" not in conv_cols:
+            logger.warning(
+                "seed_global_data: skipping — conversations.classroom_id missing. "
+                "Run 'flask db upgrade' first."
+            )
+            return
 
     try:
         # 1. Ensure 'global' classroom exists
