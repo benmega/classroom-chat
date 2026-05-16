@@ -23,5 +23,5 @@ class BannedWords(db.Model):
             "word": self.word,
             "added_on": self.added_on.isoformat() if self.added_on else None,
             "reason": self.reason,
-            "active": self.active
+            "active": self.active,
         }

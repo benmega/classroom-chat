@@ -487,10 +487,15 @@ footer {
 .user-search-container {
     position: relative;
     width: 100%;
-    max-width: 400px;
+    max-width: 300px;
     margin: 0 auto;
     padding: 0 1rem;
     flex-grow: 1;
+    transition: max-width var(--transition-smooth);
+}
+
+.user-search-container:focus-within {
+    max-width: 450px;
 }
 
 .user-search-container .search-input-wrapper-common {
@@ -499,7 +504,6 @@ footer {
 
 .user-search-container .search-input-wrapper-common:focus-within,
 .user-search-container .search-input-wrapper-common.active {
-    max-width: 600px;
     box-shadow: var(--shadow-glow);
 }
 

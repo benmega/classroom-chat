@@ -1,7 +1,7 @@
 import client from '../api/client';
 
 const dataProvider = {
-    getList: async (resource, params) => {
+    getList: async (resource, _params) => {
         const response = await client.get(`/api/admin/crud/${resource}`);
         return {
             data: response.data.data,
@@ -51,8 +51,8 @@ const dataProvider = {
         return { data: response.data.data };
     },
 
-    delete: async (resource, params) => {
-        const response = await client.delete(`/api/admin/crud/${resource}/${params.id}`);
+    delete: async (resource, _params) => {
+        const response = await client.delete(`/api/admin/crud/${resource}/${_params.id}`);
         return { data: response.data.data };
     },
 

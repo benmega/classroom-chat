@@ -1,6 +1,6 @@
 import os
 from datetime import datetime
-from flask import Blueprint, request, jsonify, send_file, current_app
+from flask import request, jsonify, send_file, current_app
 from application.decorators.api_response import api_response
 from application.decorators.admin_required import admin_only
 from application.utilities.helper_functions import format_file_size
@@ -23,18 +23,25 @@ def list_documents():
                 file_path = os.path.join(category_path, filename)
                 if os.path.isfile(file_path):
                     file_stats = os.stat(file_path)
-                    documents.append({
-                        "filename": filename,
-                        "category": category,
-                        "path": file_path,
-                        "size": file_stats.st_size,
-                        "size_formatted": format_file_size(file_stats.st_size),
-                        "created": datetime.fromtimestamp(file_stats.st_ctime).isoformat(),
-                        "modified": datetime.fromtimestamp(file_stats.st_mtime).isoformat(),
-                    })
+                    documents.append(
+                        {
+                            "filename": filename,
+                            "category": category,
+                            "path": file_path,
+                            "size": file_stats.st_size,
+                            "size_formatted": format_file_size(file_stats.st_size),
+                            "created": datetime.fromtimestamp(
+                                file_stats.st_ctime
+                            ).isoformat(),
+                            "modified": datetime.fromtimestamp(
+                                file_stats.st_mtime
+                            ).isoformat(),
+                        }
+                    )
 
     documents.sort(key=lambda x: x["created"], reverse=True)
     return {"documents": documents, "total": len(documents)}
+
 
 @admin_bp.route("/documents/<category>/<filename>/download", methods=["GET"])
 @admin_only
@@ -55,6 +62,7 @@ def download_document(category, filename):
 
     return send_file(file_path, as_attachment=True, download_name=filename)
 
+
 @admin_bp.route("/documents/<category>/<filename>/view", methods=["GET"])
 @admin_only
 def view_document(category, filename):
@@ -73,6 +81,7 @@ def view_document(category, filename):
         return jsonify({"success": False, "message": "Invalid file path"}), 403
 
     return send_file(file_path)
+
 
 @admin_bp.route("/delete-document", methods=["POST"])
 @admin_only
@@ -100,9 +109,13 @@ def delete_document():
 
     try:
         os.remove(file_path)
-        return {"success": True, "message": f"'{filename}' has been deleted successfully"}
+        return {
+            "success": True,
+            "message": f"'{filename}' has been deleted successfully",
+        }
     except Exception as e:
         return {"success": False, "message": f"Failed to delete file: {str(e)}"}, 500
+
 
 @admin_bp.route("/documents/stats", methods=["GET"])
 @admin_only

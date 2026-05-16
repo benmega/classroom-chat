@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const { labels, earned, spent } = window.chartData;
 
-    new Chart(ctx, {
+    const chart = new Chart(ctx, {
         type: 'bar',
         data: {
             labels: labels,

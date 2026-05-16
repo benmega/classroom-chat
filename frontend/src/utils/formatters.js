@@ -4,7 +4,7 @@ export const formatLargeNumber = (num) => {
     if (isNaN(val)) return '0';
     
     if (val < 10000) {
-        return val.toLocaleString(undefined, { maximumFractionDigits: 0 });
+        return val.toLocaleString(undefined, { maximumFractionDigits: 3 });
     }
     
     const formatter = new Intl.NumberFormat('en-US', {

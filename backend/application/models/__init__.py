@@ -21,11 +21,12 @@ def setup_models():
     from .user import User  # noqa: F401
     from .duck_trade import DuckTradeLog  # noqa: F401
     from .achievements import Achievement  # noqa: F401
-    from .note import Note # noqa: F401
+    from .note import Note  # noqa: F401
     from .classroom import Classroom  # noqa: F401
     from .course_instance import CourseInstance  # noqa: F401
     from .session_log import SessionLog  # noqa: F401
     from .user_certificate import UserCertificate  # noqa: F401
     from .duck_transaction import DuckTransaction  # noqa: F401
 
-setup_models()
+
+# setup_models() is called by create_app() within app_context

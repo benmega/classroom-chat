@@ -181,6 +181,24 @@
     display: flex;
     gap: 12px;
     margin-bottom: 12px;
+    align-items: center;
+}
+
+.student-info {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.id-pill {
+    background: #f1f5f9;
+    color: var(--text-muted);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 700;
 }
 
 .p-desc {
@@ -218,8 +236,59 @@
     gap: 3rem;
 }
 
-.project-info-panel h2 { font-size: 2rem; margin-bottom: 1rem; }
-.project-info-panel .description { font-size: 1.1rem; line-height: 1.6; color: var(--text-secondary); margin-bottom: 2rem; }
+.review-header-flex {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.project-info-panel h2 { 
+    font-size: 2rem; 
+    margin: 0; 
+}
+
+.student-profile-link {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: white;
+    color: var(--primary-color);
+    text-decoration: none;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    border: 1px solid var(--primary-color);
+    transition: all 0.2s;
+}
+
+.student-profile-link:hover {
+    background: var(--primary-color);
+    color: white;
+    box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.2);
+}
+
+.project-info-panel .description { 
+    font-size: 1.1rem; 
+    line-height: 1.6; 
+    color: var(--text-secondary); 
+    margin-bottom: 2rem; 
+    max-height: 200px;
+    overflow-y: auto;
+    padding-right: 10px;
+}
+
+.project-info-panel .description::-webkit-scrollbar {
+    width: 6px;
+}
+
+.project-info-panel .description::-webkit-scrollbar-thumb {
+    background: #e2e8f0;
+    border-radius: 3px;
+}
 
 .links-section {
     display: flex;
@@ -322,11 +391,31 @@
     border-radius: 12px;
     font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
     font-size: 0.85rem;
-    overflow-x: auto;
+    overflow: auto;
+    max-height: 500px;
     white-space: pre-wrap;
     line-height: 1.6;
     margin: 0;
     border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.code-view::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.code-view::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 4px;
+}
+
+.code-view::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+}
+
+.code-view::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
 }
 
 .transcript-view {

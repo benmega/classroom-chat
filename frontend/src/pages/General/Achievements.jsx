@@ -23,18 +23,6 @@ import './Achievements.css';
 import '../../assets/css/sprite.css'; 
 import Skeleton from '../../components/common/Skeleton';
 
-const StatCard = ({ icon: Icon, label, value, subtext, color }) => (
-    <div className={`ach-stat-card ${color}`}>
-        <div className="stat-icon-wrapper">
-            <Icon size={24} />
-        </div>
-        <div className="stat-content">
-            <span className="stat-label">{label}</span>
-            <span className="stat-value">{value}</span>
-            <span className="stat-subtext">{subtext}</span>
-        </div>
-    </div>
-);
 
 const Achievements = () => {
     const [achievements, setAchievements] = useState([]);

@@ -18,11 +18,14 @@ def toggle_ai():
     config.ai_teacher_enabled = not config.ai_teacher_enabled
     db.session.commit()
 
-    return jsonify({
-        "success": True,
-        "message": f"AI Teacher has been {'disabled' if config.ai_teacher_enabled else 'enabled'}",
-        "status": config.ai_teacher_enabled,
-    })
+    return jsonify(
+        {
+            "success": True,
+            "message": f"AI Teacher has been {'disabled' if config.ai_teacher_enabled else 'enabled'}",
+            "status": config.ai_teacher_enabled,
+        }
+    )
+
 
 @admin_bp.route("/toggle-message-sending", methods=["POST"])
 @admin_only
@@ -35,11 +38,14 @@ def toggle_message_sending():
         config.message_sending_enabled = not config.message_sending_enabled
     db.session.commit()
 
-    return jsonify({
-        "success": True,
-        "message": f"Message sending has been {'disabled' if config.message_sending_enabled else 'enabled'}",
-        "status": config.message_sending_enabled,
-    })
+    return jsonify(
+        {
+            "success": True,
+            "message": f"Message sending has been {'disabled' if config.message_sending_enabled else 'enabled'}",
+            "status": config.message_sending_enabled,
+        }
+    )
+
 
 @admin_bp.route("/update_duck_multiplier", methods=["POST"])
 def update_duck_multiplier():
@@ -63,6 +69,7 @@ def update_duck_multiplier():
         db.session.rollback()
         return jsonify({"success": False, "error": str(e)}), 500
 
+
 @admin_bp.route("/add-banned-word", methods=["POST"])
 @admin_only
 def add_banned_word():
@@ -79,4 +86,6 @@ def add_banned_word():
     db.session.add(new_banned_word)
     db.session.commit()
 
-    return jsonify({"success": True, "message": f"'{word}' has been added to banned words"})
+    return jsonify(
+        {"success": True, "message": f"'{word}' has been added to banned words"}
+    )

@@ -5,7 +5,6 @@ Summary: Unit tests for admin routes Flask routes.
 """
 
 import json
-from datetime import datetime, timedelta
 from unittest.mock import patch
 
 from flask import url_for
@@ -13,9 +12,7 @@ from flask import url_for
 from application.extensions import db
 from application.models.banned_words import BannedWords
 from application.models.configuration import Configuration
-from application.models.conversation import Conversation
 from application.models.duck_trade import DuckTradeLog
-from application.models.message import Message
 from application.models.user import User
 
 
@@ -70,7 +67,7 @@ def test_set_username_route(client, sample_user, sample_admin):
 
     # Query inside a context
     with client.application.app_context():
-        updated = User.query.get(sample_user.id)
+        updated = db.session.get(User, sample_user.id)
         assert updated.username == "new_username"
 
 
@@ -102,7 +99,7 @@ def test_verify_password_success(client, test_app, sample_admin):
 
     # Verify username was updated
     with test_app.app_context():
-        updated_user = User.query.get(sample_admin.id)
+        updated_user = db.session.get(User, sample_admin.id)
         assert updated_user.username == "verified_username"
 
 
@@ -224,7 +221,7 @@ def test_adjust_ducks(client, sample_admin, sample_user, test_app):
         assert response.status_code == 200
         assert data["success"] is True
 
-        updated_user = User.query.get(sample_user.id)
+        updated_user = db.session.get(User, sample_user.id)
         assert updated_user.duck_balance == initial_ducks + 50
 
 
@@ -332,5 +329,5 @@ def test_set_username_proper_case_handling(client, test_app, sample_user, sample
         json_response = json.loads(response.data)
         assert json_response["success"] is True
 
-        updated_user = User.query.get(sample_user.id)
+        updated_user = db.session.get(User, sample_user.id)
         assert updated_user.username == mixed_case_username.lower()

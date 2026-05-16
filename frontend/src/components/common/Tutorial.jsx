@@ -69,11 +69,12 @@ const Tutorial = () => {
     if (isOpen) {
       const slide = slides[currentSlide];
       const element = document.querySelector(slide.target);
-      if (element) {
-        setSpotlightRect(element.getBoundingClientRect());
-      } else {
-        setSpotlightRect(null);
-      }
+      const rect = element ? element.getBoundingClientRect() : null;
+      
+      const frame = requestAnimationFrame(() => {
+        setSpotlightRect(rect);
+      });
+      return () => cancelAnimationFrame(frame);
     }
   }, [isOpen, currentSlide]);
 

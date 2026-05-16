@@ -8,7 +8,6 @@ from datetime import datetime
 from typing import Dict, List, Optional
 
 import requests
-from flask import Blueprint, jsonify, request
 from sqlalchemy.exc import SQLAlchemyError
 
 from application import db, limiter
@@ -48,7 +47,7 @@ def get_or_create_ai_teacher() -> User:
         AITeacherError: If user creation fails
     """
     try:
-        user = User.query.get(AI_TEACHER_USER_ID)
+        user = db.session.get(User, AI_TEACHER_USER_ID)
 
         if not user:
             user = User(
@@ -312,5 +311,3 @@ def get_ai_response(
     except Exception as e:
         logger.error(f"Unexpected error in get_ai_response: {e}")
         return "Error: Could not process the AI response."
-
-

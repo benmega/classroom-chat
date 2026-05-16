@@ -29,7 +29,7 @@ def get_user(identifier):
     """
     try:
         if isinstance(identifier, int):
-            user = User.query.get(identifier)
+            user = db.session.get(User, identifier)
         else:
             user = User.query.filter_by(username=identifier).first()
 
@@ -64,28 +64,30 @@ def save_message_to_db(user_id, message, conversation_id=None, message_type="tex
             conversation = Conversation(
                 title=f"Conversation started on {datetime.utcnow().strftime('%B %d, %Y')}",
                 creator_id=user_id,
-                classroom_id="archive" # Default for auto-created orphans
+                classroom_id="archive",  # Default for auto-created orphans
             )
             db.session.add(conversation)
-            db.session.flush() # Get the ID before committing
-            
+            db.session.flush()  # Get the ID before committing
+
             session["conversation_id"] = conversation.id
             print(f"New conversation created with ID: {conversation.id}")
         else:
-            conversation = Conversation.query.get(conversation_id)
+            conversation = db.session.get(Conversation, conversation_id)
             if not conversation:
-                print(f"Error: Conversation ID {conversation_id} not found in the database. Creating a new one.")
+                print(
+                    f"Error: Conversation ID {conversation_id} not found in the database. Creating a new one."
+                )
                 conversation = Conversation(
                     title=f"Conversation started on {datetime.utcnow().strftime('%B %d, %Y')}",
                     creator_id=user_id,
-                    classroom_id="archive"
+                    classroom_id="archive",
                 )
                 db.session.add(conversation)
                 db.session.flush()
                 session["conversation_id"] = conversation.id
 
         # Ensure the user is associated with this conversation
-        user = User.query.get(user_id)
+        user = db.session.get(User, user_id)
         if user and user not in conversation.users:
             conversation.users.append(user)
             db.session.add(conversation)

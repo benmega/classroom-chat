@@ -1,5 +1,5 @@
-from datetime import datetime
 from application.constants import GLOBAL_CLASSROOM_ID
+
 
 def serialize_message(msg):
     """
@@ -20,6 +20,7 @@ def serialize_message(msg):
     timestamp = getattr(msg, "created_at", None)
     if timestamp is not None:
         from application.utilities.helper_functions import safe_parse_datetime
+
         parsed_ts = safe_parse_datetime(timestamp)
         timestamp = parsed_ts.isoformat() if parsed_ts else None
 
@@ -29,7 +30,7 @@ def serialize_message(msg):
     return {
         "id": msg.id,
         "user_id": msg.user_id,
-        "sender_id": msg.user_id,          # alias for WS parity
+        "sender_id": msg.user_id,  # alias for WS parity
         "username": username,
         "nickname": nickname,
         "user_profile_pic": profile_pic,

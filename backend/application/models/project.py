@@ -41,5 +41,7 @@ class Project(db.Model):
             "github_link": self.github_link,
             "video_url": self.video_url,
             "video_transcript": self.video_transcript,
-            "image_url": self.image_url
+            "image_url": self.image_url,
+            "user_nickname": self.user.nickname if self.user else "Unknown Student",
+            "user_slug": self.user.slug if self.user else None,
         }

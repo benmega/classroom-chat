@@ -137,10 +137,10 @@ def _award_skill(user, name, category, icon, level, existing_map, awarded_list):
     """Helper to handle the add/upgrade logic safely."""
     # Check if the user already has this skill at any level
     existing_skill = next((s for s in user.skills if s.name == name), None)
-    
+
     if existing_skill:
         if existing_skill.proficiency >= level:
-            return # Already have it at this level or higher
+            return  # Already have it at this level or higher
         # Otherwise, delete the old one to upgrade
         db.session.delete(existing_skill)
     elif level > 1:

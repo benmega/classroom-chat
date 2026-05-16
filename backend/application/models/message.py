@@ -21,7 +21,10 @@ class Message(db.Model):
         index=True,
     )
     user_id = db.Column(
-        db.Integer, db.ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+        db.Integer,
+        db.ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     content = db.Column(db.Text, nullable=False)
     message_type = db.Column(
@@ -35,7 +38,9 @@ class Message(db.Model):
     deleted_at = db.Column(db.DateTime, nullable=True)
 
     # Relationship to the User
-    user = db.relationship("User", backref=db.backref("messages", lazy="selectin"), lazy="selectin")
+    user = db.relationship(
+        "User", backref=db.backref("messages", lazy="selectin"), lazy="selectin"
+    )
 
     def __repr__(self):
         return f"<Message(id={self.id}, conversation_id={self.conversation_id}, user_id={self.user_id})>"

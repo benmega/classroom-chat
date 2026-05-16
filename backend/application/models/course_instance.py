@@ -13,13 +13,16 @@ class CourseInstance(db.Model):
     """
     Represents a specific course assigned to a classroom.
     """
+
     __tablename__ = "course_instances"
 
     # This is the _id from the JSON (678b56dc...)
     id = db.Column(db.String(64), primary_key=True)
 
     # Foreign Keys
-    classroom_id = db.Column(db.String(64), db.ForeignKey("classrooms.id"), nullable=False)
+    classroom_id = db.Column(
+        db.String(64), db.ForeignKey("classrooms.id"), nullable=False
+    )
     course_id = db.Column(db.String(64), db.ForeignKey("courses.id"), nullable=True)
 
     created_at = db.Column(db.DateTime, default=datetime.utcnow)

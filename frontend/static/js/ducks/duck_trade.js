@@ -86,7 +86,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 showBootstrapToast(result.message || "Trade submitted successfully!", "success");
                 form.reset();
                 updateLabels();
-                if (typeof fetchAchievements === "function") fetchAchievements();
+                if (typeof window.fetchAchievements === "function") window.fetchAchievements();
             } else {
                 showBootstrapToast(result.message || "An error occurred.", "error");
             }
@@ -130,7 +130,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    toggle.addEventListener("change", (event) => {
+    toggle.addEventListener("change", () => {
         updateLabels();
     });
 

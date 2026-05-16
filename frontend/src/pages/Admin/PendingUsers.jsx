@@ -28,7 +28,7 @@ const PendingUsers = () => {
             if (response.data.status === 'success') {
                 setUsers(response.data.data.users);
             }
-        } catch (error) {
+        } catch {
             toast.error('Failed to load pending users.');
         } finally {
             setIsLoading(false);
@@ -47,7 +47,7 @@ const PendingUsers = () => {
                 toast.success(response.data.data.message);
                 setUsers(prev => prev.filter(u => u.id !== userId));
             }
-        } catch (error) {
+        } catch {
             toast.error('Failed to approve user.');
         } finally {
             setIsProcessing(null);
@@ -64,7 +64,7 @@ const PendingUsers = () => {
                 toast.success(response.data.data.message);
                 setUsers(prev => prev.filter(u => u.id !== userId));
             }
-        } catch (error) {
+        } catch {
             toast.error('Failed to reject user.');
         } finally {
             setIsProcessing(null);

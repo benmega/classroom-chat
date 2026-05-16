@@ -1,12 +1,12 @@
 import React from 'react';
-import { X, ExternalLink, Code, CheckCircle } from 'lucide-react';
+import { X, ExternalLink, Code, CheckCircle, FileText } from 'lucide-react';
 import { formatStaticUrl } from '../../utils/formatters';
 import SmartImage from '../common/SmartImage';
 
 const getYoutubeEmbedUrl = (url) => {
     if (!url) return null;
     try {
-        const ytRegex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/|youtube\.com\/shorts\/|youtube\.com\/live\/)([^"&?\/\s]{11})/i;
+        const ytRegex = /(?:youtube\.com\/(?:[^/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/|youtube\.com\/shorts\/|youtube\.com\/live\/)([^"&?/\s]{11})/i;
         const ytMatch = url.match(ytRegex);
         const ytId = ytMatch ? ytMatch[1] : null;
         
@@ -73,7 +73,7 @@ const ProjectModal = ({ project, onClose }) => {
                                 />
                             )}
                         </div>
-                        <h3>Description</h3>
+                        <h3 className="section-heading"><FileText size={18} /> Description</h3>
                         <p>{project.description}</p>
                         {project.teacher_comment && (
                             <div className="teacher-feedback">

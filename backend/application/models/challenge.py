@@ -7,7 +7,7 @@ Summary: SQLAlchemy model for coding challenges and rewards.
 from sqlalchemy.event import listens_for
 
 from ..extensions import db
-from .challenge_log import ChallengeLog
+# ChallengeLog is imported locally within methods
 
 
 class Challenge(db.Model):
@@ -22,7 +22,11 @@ class Challenge(db.Model):
     is_active = db.Column(db.Boolean, nullable=False, default=True)
     created_at = db.Column(db.DateTime, nullable=False, default=db.func.now())
     course_id = db.Column(db.String(100), nullable=True)
-    classroom_id = db.Column(db.String(64), db.ForeignKey("classrooms.id", ondelete="SET NULL"), nullable=True)
+    classroom_id = db.Column(
+        db.String(64),
+        db.ForeignKey("classrooms.id", ondelete="SET NULL"),
+        nullable=True,
+    )
     description = db.Column(db.Text, nullable=True)
 
     def __repr__(self):
@@ -30,6 +34,7 @@ class Challenge(db.Model):
 
     def complete_challenge(self, user):
         """Logs the challenge completion and updates user progress."""
+        from .challenge_log import ChallengeLog
         log = ChallengeLog(
             username=user.username, domain=self.domain, challenge_slug=self.slug
         )

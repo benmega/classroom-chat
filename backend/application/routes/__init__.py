@@ -12,6 +12,7 @@ from flask_swagger_ui import get_swaggerui_blueprint
 
 from application.routes.notes_routes import notes_bp
 from .achievement_routes import achievements
+from .api_achievements import achievements_api
 from .admin_routes import admin_bp
 from .ai_routes import ai
 from .api_webhooks import webhooks_api
@@ -32,7 +33,8 @@ def register_blueprints(app: Flask):
     app.register_blueprint(upload, url_prefix="/upload")
     app.register_blueprint(message, url_prefix="/message")
     app.register_blueprint(duck_trade, url_prefix="/duck_trade")
-    app.register_blueprint(achievements, url_prefix="/api/achievements")
+    app.register_blueprint(achievements, url_prefix="/achievements")
+    app.register_blueprint(achievements_api)
     app.register_blueprint(session, url_prefix="/api/session")
     app.register_blueprint(notes_bp, url_prefix="/notes")
     app.register_blueprint(webhooks_api)
@@ -41,12 +43,10 @@ def register_blueprints(app: Flask):
     app.register_blueprint(server_info)
 
     # ── Swagger UI ───────────────────────────────────────────────────────────
-    SWAGGER_URL = '/api/docs'
-    API_URL = '/static/swagger.json'
+    SWAGGER_URL = "/api/docs"
+    API_URL = "/static/swagger.json"
     swaggerui_blueprint = get_swaggerui_blueprint(
-        SWAGGER_URL,
-        API_URL,
-        config={'app_name': "Classroom Chat API"}
+        SWAGGER_URL, API_URL, config={"app_name": "Classroom Chat API"}
     )
     app.register_blueprint(swaggerui_blueprint, url_prefix=SWAGGER_URL)
 
@@ -55,4 +55,5 @@ def register_blueprints(app: Flask):
     # enforces its own guards, providing defence-in-depth.
     if os.getenv("FLASK_ENV", "development").lower() != "production":
         from .dev_login_routes import dev_login
+
         app.register_blueprint(dev_login)

@@ -22,7 +22,7 @@ for table in tables:
     date_cols = [col[1] for col in columns if 'DATE' in col[2].upper() or 'TIME' in col[2].upper()]
     
     if not date_cols:
-        print(f"  No date/time columns found.")
+        print("  No date/time columns found.")
         continue
         
     for col in date_cols:
@@ -47,7 +47,7 @@ for table in tables:
             # Fix it! Set to NULL
             print(f"    Fixing {len(bad_rows)} rows in {table}.{col}...")
             cursor.execute(f"UPDATE {table} SET {col} = NULL WHERE typeof({col}) != 'text' AND {col} IS NOT NULL")
-            print(f"    Fixed.")
+            print("    Fixed.")
 
 conn.commit()
 conn.close()

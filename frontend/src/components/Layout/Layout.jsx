@@ -68,7 +68,7 @@ const Layout = ({ children }) => {
                             {isAuthenticated && user && (
                                 <>
                                     <li className="nav-stat-item">
-                                        <Link className="stat-badge ducks" to="/bit-shift">
+                                        <Link className="stat-badge ducks" to="/bit-shift" data-testid="nav-bit-shift">
                                             <DuckIcon size={20} className="stat-icon" color="var(--primary-color)" />
                                             <div className="stat-content">
                                                 <span className="stat-label">Ducks</span>
@@ -90,7 +90,7 @@ const Layout = ({ children }) => {
                                                     <span className="stat-label">Packets</span>
                                                     <span className="stat-value">{Number(user.packets).toLocaleString(undefined, { 
                                                         minimumFractionDigits: 0, 
-                                                        maximumFractionDigits: 5 
+                                                        maximumFractionDigits: 3 
                                                     })}</span>
                                                 </div>
                                             </div>
@@ -107,6 +107,7 @@ const Layout = ({ children }) => {
                                         aria-haspopup="true" 
                                         aria-expanded={isDropdownOpen}
                                         title="Account"
+                                        data-testid="profile-toggle"
                                     >
                                         <span className="profile-icon">
                                             <User size={18} strokeWidth={2} />
@@ -136,7 +137,7 @@ const Layout = ({ children }) => {
                                                         <span className="dropdown-stat-value">
                                                             {Number(user.packets).toLocaleString(undefined, { 
                                                                 minimumFractionDigits: 0, 
-                                                                maximumFractionDigits: 5 
+                                                                maximumFractionDigits: 3 
                                                             })}
                                                         </span>
                                                     </div>
@@ -144,7 +145,7 @@ const Layout = ({ children }) => {
                                             </li>
                                         )}
                                         <li className="mobile-only-stat dropdown-divider"></li>
-                                        <li><Link to="/profile" onClick={() => setIsDropdownOpen(false)}><User size={18} /> Profile</Link></li>
+                                        <li><Link to="/profile" onClick={() => setIsDropdownOpen(false)} data-testid="nav-profile"><User size={18} /> Profile</Link></li>
                                         {user?.is_admin && (
                                             <li><Link to="/admin" onClick={() => setIsDropdownOpen(false)}><Shield size={18} /> Admin Panel</Link></li>
                                         )}

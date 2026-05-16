@@ -9,18 +9,22 @@ from application.models.configuration import Configuration
 from application.models.conversation import Conversation
 
 
+from application.constants import GLOBAL_CLASSROOM_ID
+
+
 def test_conversation_history(client, init_db, sample_user):
     """Test conversation history page."""
     # Create a conversation and associate it with the sample_user
-    conversation = Conversation(title="User Conversation")
+    conversation = Conversation(title="User Conversation", classroom_id=GLOBAL_CLASSROOM_ID)
     conversation.users.append(sample_user)
     db.session.add(conversation)
     db.session.commit()
 
+
     with client.session_transaction() as sess:
         sess["user"] = sample_user.id
 
-    response = client.get("/message/conversation_history")
+    response = client.get("/message/conversation_history", headers={"Accept": "application/json"})
     assert response.status_code == 200
     assert b"User Conversation" in response.data
 
@@ -50,7 +54,7 @@ def test_configuration_update(sample_configuration):
     config.message_sending_enabled = True
     db.session.commit()
 
-    updated_config = Configuration.query.get(config.id)
+    updated_config = db.session.get(Configuration, config.id)
     assert updated_config is not None
     assert updated_config.message_sending_enabled is True
 

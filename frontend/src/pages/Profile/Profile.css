@@ -716,6 +716,7 @@
     position: relative;
     border: 1px solid var(--border-subtle);
     box-shadow: var(--shadow-sm);
+    cursor: pointer;
 }
 
 .note-item img {
@@ -949,6 +950,22 @@
     object-fit: cover;
 }
 
+.modal-main p {
+    max-height: 300px;
+    overflow-y: auto;
+    padding-right: 10px;
+    line-height: 1.6;
+}
+
+.modal-main p::-webkit-scrollbar {
+    width: 6px;
+}
+
+.modal-main p::-webkit-scrollbar-thumb {
+    background: var(--border-subtle);
+    border-radius: 3px;
+}
+
 .code-snippet {
     background: #1e293b;
     color: #e2e8f0;
@@ -1078,3 +1095,98 @@
     }
 }
 
+/* --- Added for iss_009, iss_011, iss_012 fixes --- */
+.modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-right: 40px; /* distance from close button */
+}
+
+.section-heading {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--primary-color);
+}
+
+.teacher-feedback {
+    background: var(--bg-tertiary);
+    border-left: 4px solid var(--success-color);
+    padding: 15px;
+    border-radius: var(--radius-sm);
+    margin-top: 15px;
+    max-height: 250px;
+    overflow-y: auto;
+}
+.teacher-feedback h4 {
+    margin: 0 0 5px 0;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    color: var(--success-color);
+}
+.teacher-feedback blockquote {
+    margin: 0;
+    font-style: italic;
+    color: var(--text-secondary);
+}
+
+.nav-slide {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: var(--transition-fast);
+    z-index: 1010;
+}
+.nav-slide:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+.nav-slide.prev { left: 20px; }
+.nav-slide.next { right: 20px; }
+
+.slide-content {
+    max-width: 90vw;
+    max-height: 80vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.slide-content img {
+    max-width: 100%;
+    max-height: 80vh;
+    object-fit: contain;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-xl);
+}
+
+@media (max-width: 768px) {
+    .close-modal, .close-slideshow {
+        width: 44px;
+        height: 44px;
+        min-width: 44px;
+        min-height: 44px;
+    }
+    
+    .nav-slide {
+        width: 44px;
+        height: 44px;
+        background: rgba(0, 0, 0, 0.5);
+    }
+    
+    .nav-slide.prev { left: 10px; }
+    .nav-slide.next { right: 10px; }
+
+    .slide-content img {
+        object-fit: contain;
+    }
+}

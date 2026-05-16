@@ -28,6 +28,7 @@ def check_achievements():
         new_awards = evaluate_user(user)
         # Also update user skills progress
         from application.services.skill_service import evaluate_user_skills
+
         evaluate_user_skills(user)
     except Exception:
         return (

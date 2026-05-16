@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import client from '../api/client';
 import toast from 'react-hot-toast';
 
@@ -14,7 +14,7 @@ export const useUsersManagement = () => {
     const [formLoading, setFormLoading] = useState(false);
     const [formErrors, setFormErrors] = useState({});
 
-    const fetchUsers = async (targetPage = page) => {
+    const fetchUsers = useCallback(async (targetPage = page) => {
         setIsRefreshing(true);
         try {
             const response = await client.get(`/api/admin/users?page=${targetPage}&per_page=50`);
@@ -37,11 +37,11 @@ export const useUsersManagement = () => {
             setIsLoading(false);
             setIsRefreshing(false);
         }
-    };
+    }, [page]);
 
     useEffect(() => {
         fetchUsers();
-    }, []);
+    }, [fetchUsers]);
 
     const handleCreateUser = async (e) => {
         e.preventDefault();

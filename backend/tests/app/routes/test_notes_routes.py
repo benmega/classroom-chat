@@ -3,6 +3,7 @@ from unittest.mock import patch
 
 from application.models.note import Note
 from application.models.user import User
+from application.extensions import db
 
 # Ensure this matches your file structure
 ROUTE_MODULE_PATH = "application.routes.notes_routes"
@@ -24,9 +25,10 @@ def test_upload_note_no_file(logged_in_client):
 def test_upload_note_success(mock_get_s3_client, logged_in_client, sample_user, init_db):
     mock_s3_client = mock_get_s3_client.return_value
     mock_s3_client.upload_fileobj.return_value = None
+    logged_in_client.application.config["USE_S3"] = True
 
     # 1. Ensure user exists in DB
-    db_user = User.query.get(sample_user.id)
+    db_user = db.session.get(User, sample_user.id)
     if not db_user:
         init_db.session.add(sample_user)
         init_db.session.commit()
@@ -48,7 +50,7 @@ def test_upload_note_success(mock_get_s3_client, logged_in_client, sample_user, 
     )
 
     assert response.status_code == 200, f"Response: {response.data}"
-    assert response.json["success"] is True
+    assert response.json["status"] == "success"
 
     mock_s3_client.upload_fileobj.assert_called_once()
     uploaded_note = Note.query.filter_by(user_id=sample_user.id).first()
@@ -59,9 +61,10 @@ def test_upload_note_success(mock_get_s3_client, logged_in_client, sample_user, 
 def test_upload_note_s3_failure(mock_get_s3_client, logged_in_client, sample_user, init_db):
     mock_s3_client = mock_get_s3_client.return_value
     mock_s3_client.upload_fileobj.side_effect = Exception("AWS Down")
+    logged_in_client.application.config["USE_S3"] = True
 
     # 1. Ensure user exists in DB
-    db_user = User.query.get(sample_user.id)
+    db_user = db.session.get(User, sample_user.id)
     if not db_user:
         init_db.session.add(sample_user)
         init_db.session.commit()
@@ -74,11 +77,13 @@ def test_upload_note_s3_failure(mock_get_s3_client, logged_in_client, sample_use
         "note_image": (io.BytesIO(b"img"), "fail.png")
     }
 
-    response = logged_in_client.post(
-        "/notes/upload",
-        data=data,
-        content_type="multipart/form-data"
-    )
+    # To force a 500, we also need to mock local failure
+    with patch("application.routes.notes_routes.handle_local_note_upload", return_value=None):
+        response = logged_in_client.post(
+            "/notes/upload",
+            data=data,
+            content_type="multipart/form-data"
+        )
 
     assert response.status_code == 500
     assert response.json["error"] == "Upload failed"

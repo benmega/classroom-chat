@@ -15,6 +15,7 @@ def request_database_commit():
     bool: True if the commit was successful, False if an exception occurred.
     """
     from application import db
+
     try:
         db.session.commit()
         return True
@@ -27,20 +28,20 @@ def request_database_commit():
 def allowed_file(filename, allowed_extensions=None):
     if allowed_extensions is None:
         from application.config import Config
+
         allowed_extensions = Config.ALLOWED_EXTENSIONS
-    
-    return (
-        "." in filename
-        and filename.rsplit(".", 1)[1].lower() in allowed_extensions
-    )
+
+    return "." in filename and filename.rsplit(".", 1)[1].lower() in allowed_extensions
 
 
 def get_s3_client():
     import os
     import boto3
-    from botocore.exceptions import BotoCoreError
+
     try:
-        if not os.environ.get("AWS_ACCESS_KEY_ID") or not os.environ.get("AWS_SECRET_ACCESS_KEY"):
+        if not os.environ.get("AWS_ACCESS_KEY_ID") or not os.environ.get(
+            "AWS_SECRET_ACCESS_KEY"
+        ):
             return None
         return boto3.client(
             "s3",
@@ -80,22 +81,21 @@ def cleanup_missing_user_pfps():
     """
     import os
     from application.models.user import User
-    from application.config import Config
-    
+
     upload_folder = os.path.join(Config.UPLOAD_FOLDER, "profile_pictures")
     users = User.query.all()
     fixed_count = 0
-    
+
     for u in users:
         if u.profile_picture and u.profile_picture != "Default_pfp.jpg":
             file_path = os.path.join(upload_folder, u.profile_picture)
             if not os.path.exists(file_path):
                 u.profile_picture = "Default_pfp.jpg"
                 fixed_count += 1
-    
+
     if fixed_count > 0:
         request_database_commit()
-        
+
     return fixed_count
 
 
@@ -105,6 +105,7 @@ def safe_parse_datetime(val):
     Fixes TypeError: fromisoformat: argument must be str
     """
     from datetime import datetime
+
     if val is None:
         return None
     if isinstance(val, datetime):

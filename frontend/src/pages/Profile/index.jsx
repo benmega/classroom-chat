@@ -48,6 +48,7 @@ const Profile = () => {
     const { target } = profileData;
 
     return (
+        <>
         <div className="profile-page">
             <ProfileHeader 
                 target={target} 
@@ -113,6 +114,7 @@ const Profile = () => {
                     />
                 </div>
             </div>
+        </div>
 
             <ProjectModal 
                 project={selectedProject} 
@@ -135,7 +137,7 @@ const Profile = () => {
                 onCancel={() => setIsCropping(false)}
                 onSave={handleSaveCrop}
             />
-        </div>
+        </>
     );
 };
 

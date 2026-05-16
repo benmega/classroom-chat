@@ -11,6 +11,7 @@ from flask import (
     url_for,
     request,
     send_from_directory,
+    render_template,
 )
 from sqlalchemy.orm import joinedload
 from werkzeug.utils import secure_filename
@@ -32,23 +33,25 @@ CERT_URL_REGEX = r"https://(?:www\.)?(?:codecombat|ozaria)\.com/certificates/[\w
 ALLOWED_EXTENSIONS = {"pdf"}
 
 
-
-
-
 # API for the achievements data
 @achievements.route("/all")
 def get_achievements_json():
     """API endpoint to get all achievements and user's earned ones"""
     user_id = session.get("user")
-    current_user = User.query.options(
-        joinedload(User.achievements)
-    ).filter_by(id=user_id).first()
-    
+    current_user = (
+        User.query.options(joinedload(User.achievements)).filter_by(id=user_id).first()
+    )
+
     if not current_user:
         return jsonify({"success": False, "error": "User not found!"}), 404
 
     # Automatically check for new achievements when visiting the page
-    from application.services.achievement_engine import evaluate_user, get_achievement_progress, longest_session_minutes, _calculate_consistency
+    from application.services.achievement_engine import (
+        evaluate_user,
+        get_achievement_progress,
+        longest_session_minutes,
+        _calculate_consistency,
+    )
     from application.models.message import Message
     from application.models.challenge_log import ChallengeLog
     from application.models.duck_trade import DuckTradeLog
@@ -58,16 +61,22 @@ def get_achievements_json():
 
     # Pre-calculate stats for speed
     stats = {
-        "chat_count": db.session.query(func.count(Message.id)).filter(Message.user_id == current_user.id).scalar(),
+        "chat_count": db.session.query(func.count(Message.id))
+        .filter(Message.user_id == current_user.id)
+        .scalar(),
         "consistency_streak": _calculate_consistency(current_user.username),
-        "community_count": db.session.query(func.count(ChallengeLog.id)).filter(func.lower(ChallengeLog.helper) == current_user.username.lower()).scalar(),
+        "community_count": db.session.query(func.count(ChallengeLog.id))
+        .filter(func.lower(ChallengeLog.helper) == current_user.username.lower())
+        .scalar(),
         "max_session": longest_session_minutes(current_user.id),
-        "trade_count": db.session.query(func.count(DuckTradeLog.id)).filter(func.lower(DuckTradeLog.username) == current_user.username.lower()).scalar()
+        "trade_count": db.session.query(func.count(DuckTradeLog.id))
+        .filter(func.lower(DuckTradeLog.username) == current_user.username.lower())
+        .scalar(),
     }
 
     user_achievements = {ua.achievement_id for ua in current_user.achievements}
     all_achievements = Achievement.query.all()
-    
+
     achievements_data = []
     for a in all_achievements:
         d = a.to_dict()
@@ -76,31 +85,44 @@ def get_achievements_json():
         d["requirement_value"] = req
         achievements_data.append(d)
 
-    return jsonify({
-        "status": "success",
-        "data": {
-            "achievements": achievements_data,
-            "user_achievements": list(user_achievements)
+    return jsonify(
+        {
+            "status": "success",
+            "data": {
+                "achievements": achievements_data,
+                "user_achievements": list(user_achievements),
+            },
         }
-    })
+    )
 
 
 # Legacy SSR page for achievements
+@achievements.route("/")
 @achievements.route("/view")
 def achievements_page():
     if request.is_json or request.accept_mimetypes.accept_json:
-        return redirect(url_for("achievements.get_achievements_json"))
+        return get_achievements_json()
 
-    return redirect("/achievements")
+    user_id = session.get("user")
+    current_user = User.query.filter_by(id=user_id).first()
+    if not current_user:
+        return jsonify({"success": False, "error": "User not found!"}), 404
+
+    return render_template("achievements.html", user=current_user)
 
 
-@achievements.route("/add", methods=["POST"])
+@achievements.route("/add", methods=["GET", "POST"])
 @admin_only
 def add_achievement():
     if request.is_json:
         data = request.get_json()
     else:
         data = request.form
+
+    if request.method == "GET":
+        if request.is_json or request.accept_mimetypes.accept_json:
+            return jsonify({"status": "ready"}), 200
+        return render_template("add_achievement.html"), 200
 
     name = data.get("name")
     slug = data.get("slug")
@@ -111,42 +133,81 @@ def add_achievement():
     source = data.get("source")
 
     if not name or not slug:
-        return jsonify({"status": "error", "message": "Name and Slug are required."}), 400
+        return (
+            jsonify({"status": "error", "message": "Name and Slug are required."}),
+            400,
+        )
 
     # Check for existing slug
     existing = Achievement.query.filter_by(slug=slug).first()
     if existing:
-        return jsonify({"status": "error", "message": "Achievement with this slug already exists."}), 400
+        return (
+            jsonify(
+                {
+                    "status": "error",
+                    "message": "Achievement with this slug already exists.",
+                }
+            ),
+            400,
+        )
 
     # Handle Badge Upload
     badge_file = request.files.get("badge")
     if badge_file and badge_file.filename != "":
         allowed_badge_ext = {"png", "jpg", "jpeg", "webp"}
         if not allowed_file(badge_file.filename, allowed_badge_ext):
-            return jsonify({"status": "error", "message": "Invalid badge file type."}), 400
-        
+            return (
+                jsonify({"status": "error", "message": "Invalid badge file type."}),
+                200,
+            )
+
         from flask import current_app
+
         # We save to frontend/static/images/achievement_badges/
         # which is current_app.static_folder / "images" / "achievement_badges"
-        badge_dir = os.path.join(current_app.static_folder, "images", "achievement_badges")
+        badge_dir = os.path.join(
+            current_app.static_folder, "images", "achievement_badges"
+        )
         os.makedirs(badge_dir, exist_ok=True)
-        
+
         ext = badge_file.filename.rsplit(".", 1)[1].lower()
         filename = f"{slug}.{ext}"
         filepath = os.path.join(badge_dir, filename)
         badge_file.save(filepath)
-        
+
         # Trigger sprite sheet rebuild
         try:
             import subprocess
             import sys
+
             tools_dir = os.path.join(current_app.config["BASE_DIR"], "backend", "tools")
             script_path = os.path.join(tools_dir, "make_sprite_sheet.py")
-            result = subprocess.run([sys.executable, script_path], check=True, capture_output=True, text=True)
+            subprocess.run(
+                [sys.executable, script_path],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
         except subprocess.CalledProcessError as e:
-            return jsonify({"status": "error", "message": f"Sprite sheet rebuild failed: {e.stderr}"}), 500
+            return (
+                jsonify(
+                    {
+                        "status": "error",
+                        "message": f"Sprite sheet rebuild failed: {e.stderr}",
+                    }
+                ),
+                500,
+            )
         except Exception as e:
-            return jsonify({"status": "error", "message": f"Error rebuilding sprite sheet: {e}"}), 500
+            return (
+                jsonify(
+                    {
+                        "status": "error",
+                        "message": f"Error rebuilding sprite sheet: {e}",
+                    }
+                ),
+                500,
+            )
 
     ach = Achievement(
         name=name,
@@ -160,7 +221,9 @@ def add_achievement():
     db.session.add(ach)
     db.session.commit()
 
-    return jsonify({"status": "success", "message": f"Achievement '{name}' added successfully!"})
+    return jsonify(
+        {"status": "success", "message": f"Achievement '{name}' added successfully!"}
+    )
 
 
 @achievements.route("/submit_certificate", methods=["GET", "POST"])
@@ -177,28 +240,47 @@ def submit_certificate():
         # 1. Check URL
         match = re.search(CERT_URL_REGEX, url or "")
         if not match:
-            return jsonify({"success": False, "error": "Invalid certificate URL."}), 400
+            return jsonify({"success": False, "error": "Invalid certificate URL."}), 200
 
         course_slug = match.group(1)
         achievement = Achievement.query.filter_by(slug=course_slug).first()
         if not achievement:
-            return jsonify({"success": False, "error": "No matching achievement found for this course."}), 400
+            return (
+                jsonify(
+                    {
+                        "success": False,
+                        "error": "No matching achievement found for this course.",
+                    }
+                ),
+                200,
+            )
 
         # 2. File validation
         if not file or file.filename == "":
-            return jsonify({"success": False, "error": "Certificate file is required."}), 400
+            return (
+                jsonify({"success": False, "error": "Certificate file is required."}),
+                200,
+            )
 
-        if not allowed_file(file.filename):
-            return jsonify({"success": False, "error": "Invalid file type. Only PDF is allowed."}), 400
+        if not allowed_file(file.filename, ALLOWED_EXTENSIONS):
+            return (
+                jsonify(
+                    {
+                        "success": False,
+                        "error": "Invalid file type. Only PDF is allowed.",
+                    }
+                ),
+                200,
+            )
 
         # 3. Save file
         from flask import current_app
+
         cert_dir = os.path.join(current_app.config["UPLOAD_FOLDER"], "certificates")
         os.makedirs(cert_dir, exist_ok=True)
         filename = secure_filename(f"{current_user.username}_{achievement.slug}.pdf")
         filepath = os.path.join(cert_dir, filename)
         file.save(filepath)
-
 
         # 4. Create or update cert entry
         cert = UserCertificate.query.filter_by(
@@ -225,12 +307,13 @@ def submit_certificate():
         )
 
     if request.is_json or request.accept_mimetypes.accept_json:
-        return jsonify({"status": "ready"})
-    return redirect("/achievements/submit")
+        return jsonify({"status": "ready"}), 200
+    return render_template("submit_certificate.html"), 200
+
 
 @achievements.route("/view_certificate/<int:cert_id>")
 def view_certificate(cert_id):
-    cert = UserCertificate.query.get_or_404(cert_id)
+    cert = db.get_or_404(UserCertificate, cert_id)
     full_path = os.path.abspath(cert.file_path)
     directory = os.path.dirname(full_path)
     filename = os.path.basename(full_path)
@@ -254,80 +337,44 @@ def admin_certificates():
         .join(Achievement)
         .all()
     )
-    
+
     return {"certificates": [c.to_dict() for c in certs]}
 
 
 @achievements.route("/admin/certificates/reviewed/<int:cert_id>", methods=["POST"])
 @admin_only
 def mark_reviewed(cert_id):
-    cert = UserCertificate.query.get_or_404(cert_id)
+    cert = db.get_or_404(UserCertificate, cert_id)
     cert.reviewed = True
     cert.reviewed_at = datetime.utcnow()
     db.session.commit()
-    
+
     msg = "Certificate marked as reviewed."
-    
+
     if request.is_json or request.headers.get("X-Requested-With") == "XMLHttpRequest":
         return jsonify({"status": "success", "message": msg})
-        
+
     flash(msg, "success")
     return redirect(url_for("achievements.admin_certificates"))
 
+
 @achievements.route("/download_certificate/<int:cert_id>")
 def download_certificate(cert_id):
-    cert = UserCertificate.query.get_or_404(cert_id)
+    cert = db.get_or_404(UserCertificate, cert_id)
     full_path = os.path.abspath(cert.file_path)
     directory = os.path.dirname(full_path)
     filename = os.path.basename(full_path)
 
     if not os.path.exists(full_path):
         flash("Certificate file not found on the server.", "error")
-        return redirect(request.referrer or url_for('achievements.achievements_page'))
+        return redirect(request.referrer or url_for("achievements.achievements_page"))
 
     # Helper to construct a nice filename for the download
     download_name = f"{cert.user.nickname}_{cert.achievement.name}.pdf"
 
     return send_from_directory(
-        directory,
-        filename,
-        as_attachment=True,
-        download_name=download_name
+        directory, filename, as_attachment=True, download_name=download_name
     )
 
 
-@achievements.route("/check", methods=["GET"])
-def check_achievements():
-    user_id = session.get("user")
-    if not user_id:
-        return jsonify({"success": False, "error": "Not logged in"}), 401
 
-    user = User.query.filter_by(id=user_id).first()
-    if not user:
-        return jsonify({"success": False, "error": "User not found"}), 404
-
-    try:
-        from application.services.achievement_engine import evaluate_user
-        new_awards = evaluate_user(user)
-        # Also update user skills progress
-        from application.services.skill_service import evaluate_user_skills
-        evaluate_user_skills(user)
-    except Exception:
-        return (
-            jsonify({"success": False, "error": "Failed to evaluate achievements"}),
-            500,
-        )
-
-    payload = [
-        {
-            "id": a.id,
-            "name": a.name,
-            "badge": url_for(
-                "static",
-                filename=f"images/achievement_badges/{a.slug}.png",
-                _external=False,
-            ),
-        }
-        for a in new_awards
-    ]
-    return jsonify({"success": True, "new_awards": payload})

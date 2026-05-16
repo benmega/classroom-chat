@@ -1,4 +1,3 @@
-import pytest
 from application.services.classroom_service import get_enrolled_classroom_ids, user_enrolled_in
 from application.extensions import db
 from application.models.classroom import user_classrooms

@@ -17,7 +17,7 @@ from application.extensions import db
 from application.models.user import User
 from application.models.challenge import Challenge
 from application.models.challenge_log import ChallengeLog
-from application.models.classroom import user_classrooms, Classroom
+from application.models.classroom import user_classrooms
 from sqlalchemy import select, insert
 
 def run_retroactive_enrollment():
@@ -31,7 +31,7 @@ def run_retroactive_enrollment():
             db.session.query(User.id, Challenge.classroom_id)
             .join(ChallengeLog, User._username == ChallengeLog.username)
             .join(Challenge, ChallengeLog.challenge_slug == Challenge.slug)
-            .filter(Challenge.classroom_id != None)
+            .filter(Challenge.classroom_id.is_not(None))
             .distinct()
         )
         

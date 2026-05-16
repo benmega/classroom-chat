@@ -23,12 +23,11 @@ def test_submit_challenge_get(
 ):
     """Test GET request to challenge submission page."""
     with client.session_transaction() as sess:
-        sess["user"] = sample_user.username
+        sess["user"] = sample_user.id
 
-    response = client.get("/challenge/submit")
-
+    response = client.get("/challenge/submit", headers={"Accept": "application/json"})
     assert response.status_code == 200
-    assert b"Mocked Template Content" in response.data
+    assert b"ready" in response.data
 
 
 def test_submit_challenge_no_session(client, init_db):
@@ -53,7 +52,7 @@ def test_submit_challenge_no_url(
 ):
     """Test submitting challenge without URL."""
     with client.session_transaction() as sess:
-        sess["user"] = sample_user.username
+        sess["user"] = sample_user.id
 
     response = client.post(
         "/challenge/submit",
@@ -61,7 +60,7 @@ def test_submit_challenge_no_url(
         follow_redirects=True,
     )
 
-    assert response.status_code == 200
+    assert response.status_code == 400
     assert b"Challenge URL is required" in response.data
 
 
@@ -74,7 +73,7 @@ def test_submit_challenge_success(
 ):
     """Test successful challenge submission."""
     with client.session_transaction() as sess:
-        sess["user"] = sample_user.username
+        sess["user"] = sample_user.id
 
     with patch(
         "application.routes.challenge_routes.detect_and_handle_challenge_url"
@@ -108,7 +107,7 @@ def test_submit_challenge_failed(
 ):
     """Test failed challenge submission."""
     with client.session_transaction() as sess:
-        sess["user"] = sample_user.username
+        sess["user"] = sample_user.id
 
     with patch(
         "application.routes.challenge_routes.detect_and_handle_challenge_url"
@@ -127,7 +126,7 @@ def test_submit_challenge_failed(
             follow_redirects=True,
         )
 
-        assert response.status_code == 200
+        assert response.status_code == 400
         assert b"Challenge could not be validated" in response.data
 
 
@@ -136,7 +135,7 @@ def test_submit_challenge_no_configuration(
 ):
     """Test submitting challenge when configuration is missing."""
     with client.session_transaction() as sess:
-        sess["user"] = sample_user.username
+        sess["user"] = sample_user.id
 
     Configuration.query.delete()
     db.session.commit()
@@ -164,7 +163,7 @@ def test_submit_challenge_with_helper(
 ):
     """Test challenge submission with helper information."""
     with client.session_transaction() as sess:
-        sess["user"] = sample_user.username
+        sess["user"] = sample_user.id
 
     with patch(
         "application.routes.challenge_routes.detect_and_handle_challenge_url"
@@ -202,7 +201,7 @@ def test_submit_challenge_with_notes(
 ):
     """Test challenge submission with notes."""
     with client.session_transaction() as sess:
-        sess["user"] = sample_user.username
+        sess["user"] = sample_user.id
 
     with patch(
         "application.routes.challenge_routes.detect_and_handle_challenge_url"
@@ -460,6 +459,7 @@ def test_update_user_ducks_success(init_db, sample_user, sample_challenge_active
     )
 
     assert reward == 10
+    db.session.commit()
     db.session.refresh(sample_user)
     assert sample_user.duck_balance == initial_ducks + 10
 
@@ -476,6 +476,7 @@ def test_update_user_ducks_with_multiplier(
     )
 
     assert reward == 50
+    db.session.commit()
     db.session.refresh(sample_user)
     assert sample_user.duck_balance == initial_ducks + 50
 

@@ -102,7 +102,7 @@ const ChatSidebar = ({
                     <div className="search-container">
                         <input 
                             type="text" 
-                            placeholder="Search conversations..." 
+                            placeholder="Search..." 
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />

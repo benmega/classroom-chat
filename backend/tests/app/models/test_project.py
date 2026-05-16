@@ -62,7 +62,7 @@ def test_project_update(sample_project):
     project.link = new_link
     db.session.commit()
 
-    updated_project = Project.query.get(project.id)
+    updated_project = db.session.get(Project, project.id)
     assert updated_project.name == new_name
     assert updated_project.description == new_description
     assert updated_project.link == new_link
@@ -74,7 +74,7 @@ def test_project_deletion(sample_project):
     db.session.delete(project)
     db.session.commit()
 
-    deleted_project = Project.query.get(project.id)
+    deleted_project = db.session.get(Project, project.id)
     assert deleted_project is None
 
 

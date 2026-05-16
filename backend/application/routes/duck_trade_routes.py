@@ -75,7 +75,9 @@ def to_binary(costs_dict):
 @duck_trade.route("/")
 def index():
     if request.is_json or request.accept_mimetypes.accept_json:
-        return jsonify({"message": "Duck trade endpoint. Use /submit_trade POST for actions."})
+        return jsonify(
+            {"message": "Duck trade endpoint. Use /submit_trade POST for actions."}
+        )
     return redirect("/trade")
 
 
@@ -106,12 +108,17 @@ def submit_trade():
             return redirect("/trade")
 
         from application import User
-        user = User.query.get(userid)
+
+        user = db.session.get(User, userid)
 
         # --- NEW CODE: Check for existing pending trades ---
-        existing_trade = DuckTradeLog.query.filter_by(username=user.username, status="pending").first()
+        existing_trade = DuckTradeLog.query.filter_by(
+            username=user.username, status="pending"
+        ).first()
         if existing_trade:
-            msg = "You already have a pending trade. Please wait for it to be processed."
+            msg = (
+                "You already have a pending trade. Please wait for it to be processed."
+            )
             if is_ajax:
                 return jsonify({"status": "error", "message": msg}), 400
             flash(msg, "warning")

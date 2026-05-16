@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import { 
     CheckCircle, 
     XCircle, 
@@ -90,14 +91,23 @@ const AdminProjects = () => {
             <div className="admin-projects-page">
                 <AdminPageHeader 
                     title="Project Review" 
-                    description={`Reviewing: ${selectedProject.name}`}
+                    description={`Reviewing project by ${selectedProject.user_nickname}`}
                     onBack={() => setSelectedProject(null)}
                 />
                 
                 <div className="project-review-card card">
                     <div className="review-grid">
                         <div className="project-info-panel">
-                            <h2>{selectedProject.name}</h2>
+                            <div className="review-header-flex">
+                                <h2>{selectedProject.name}</h2>
+                                <Link 
+                                    to={`/profile/${selectedProject.user_slug}`} 
+                                    className="student-profile-link"
+                                    target="_blank"
+                                >
+                                    <User size={16} /> {selectedProject.user_nickname} (#{selectedProject.user_id})
+                                </Link>
+                            </div>
                             <p className="description">{selectedProject.description}</p>
                             
                             <div className="links-section">
@@ -251,7 +261,10 @@ const AdminProjects = () => {
                                 <div className="p-content">
                                     <h3>{p.name}</h3>
                                     <div className="p-meta">
-                                        <span><User size={14} /> Student #{p.user_id}</span>
+                                        <span className="student-info">
+                                            <User size={14} /> {p.user_nickname} 
+                                            <span className="id-pill">#{p.user_id}</span>
+                                        </span>
                                     </div>
                                     <p className="p-desc">{p.description?.substring(0, 80)}...</p>
                                     <div className="card-footer">

@@ -592,7 +592,7 @@ function initNoteUpload() {
                         closeCameraModal();
                     }, 'image/jpeg');
                 };
-            } catch (err) {
+            } catch {
                 showNotification('Camera access denied or not found.', 'error');
             }
         });
@@ -644,7 +644,7 @@ document.addEventListener('click', async (e) => {
             deleteBtn.innerHTML = '<i class="fas fa-trash-alt"></i>';
             deleteBtn.disabled = false;
         }
-    } catch (error) {
+    } catch {
         showNotification('An error occurred.', 'error');
         deleteBtn.innerHTML = '<i class="fas fa-trash-alt"></i>';
         deleteBtn.disabled = false;

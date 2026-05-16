@@ -24,7 +24,6 @@ import {
     ArcElement
 } from 'chart.js';
 import { Line, Pie } from 'react-chartjs-2';
-import { useNavigate } from 'react-router-dom';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
 import './Analytics.css';
@@ -43,7 +42,6 @@ ChartJS.register(
 );
 
 const Analytics = () => {
-    const navigate = useNavigate();
     const [analyticsData, setAnalyticsData] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [isRefreshing, setIsRefreshing] = useState(false);

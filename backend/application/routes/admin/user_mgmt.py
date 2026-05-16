@@ -1,5 +1,5 @@
 import re
-from flask import Blueprint, request, jsonify
+from flask import request, jsonify
 from application.extensions import db
 from application.models.user import User
 from application.decorators.api_response import api_response
@@ -15,16 +15,21 @@ from ..admin_routes import admin_bp
 def pending_users():
     from application.models.challenge_log import ChallengeLog
     from sqlalchemy import func
-    
+
     pending = User.query.filter_by(is_approved=False, is_admin=False).all()
     usernames = [u.username for u in pending]
-    
-    counts = db.session.query(
-        ChallengeLog.username, ChallengeLog.domain, func.count(ChallengeLog.id)
-    ).filter(ChallengeLog.username.in_(usernames)).group_by(ChallengeLog.username, ChallengeLog.domain).all()
-    
+
+    counts = (
+        db.session.query(
+            ChallengeLog.username, ChallengeLog.domain, func.count(ChallengeLog.id)
+        )
+        .filter(ChallengeLog.username.in_(usernames))
+        .group_by(ChallengeLog.username, ChallengeLog.domain)
+        .all()
+    )
+
     precomputed = {(username, domain): count for username, domain, count in counts}
-    
+
     return {"users": [u.to_dict_summary(precomputed) for u in pending]}
 
 
@@ -32,56 +37,65 @@ def pending_users():
 @admin_only
 @api_response
 def approve_user(user_id):
-    user_obj = User.query.get_or_404(user_id)
+    user_obj = db.get_or_404(User, user_id)
     user_obj.is_approved = True
     db.session.commit()
     return {"message": f"User {user_obj.username} approved successfully."}
+
 
 @admin_bp.route("/reject_user/<int:user_id>", methods=["POST"])
 @admin_only
 @api_response
 def reject_user(user_id):
-    user_obj = User.query.get_or_404(user_id)
+    user_obj = db.get_or_404(User, user_id)
     username = user_obj.username
     db.session.delete(user_obj)
     db.session.commit()
     return {"message": f"User {username} rejected and removed."}
 
+
 @admin_bp.route("/users", methods=["GET"])
 @admin_only
-def admin_get_users_list():
-    page = request.args.get('page', 1, type=int)
-    per_page = request.args.get('per_page', 50, type=int)
-    
+def get_users():
+    page = request.args.get("page", 1, type=int)
+    per_page = request.args.get("per_page", 50, type=int)
+
     from application.models.challenge_log import ChallengeLog
     from sqlalchemy import func
-    
+
     pagination = User.query.paginate(page=page, per_page=per_page, error_out=False)
     users = pagination.items
     usernames = [u.username for u in users]
-    
-    counts = db.session.query(
-        ChallengeLog.username, ChallengeLog.domain, func.count(ChallengeLog.id)
-    ).filter(ChallengeLog.username.in_(usernames)).group_by(ChallengeLog.username, ChallengeLog.domain).all()
-    
+
+    counts = (
+        db.session.query(
+            ChallengeLog.username, ChallengeLog.domain, func.count(ChallengeLog.id)
+        )
+        .filter(ChallengeLog.username.in_(usernames))
+        .group_by(ChallengeLog.username, ChallengeLog.domain)
+        .all()
+    )
+
     precomputed = {(username, domain): count for username, domain, count in counts}
-    
+
     user_data = []
     for u in users:
         d = u.to_dict_summary(precomputed)
         # Defensive pop redundant but kept for safety with existing patterns
-        for field in ['password_hash', 'salt', 'ip_address']:
+        for field in ["password_hash", "salt", "ip_address"]:
             d.pop(field, None)
         user_data.append(d)
 
-        
-    return jsonify({
-        "users": user_data,
-        "total": pagination.total,
-        "pages": pagination.pages,
-        "current_page": pagination.page,
-        "per_page": per_page
-    })
+    return jsonify(
+        {
+            "users": user_data,
+            "total": pagination.total,
+            "pages": pagination.pages,
+            "current_page": pagination.page,
+            "per_page": per_page,
+        }
+    )
+
 
 @admin_bp.route("/reset_password", methods=["POST"])
 @admin_only
@@ -91,7 +105,12 @@ def reset_password():
     new_password = data.get("new_password")
 
     if not username or not new_password:
-        return jsonify({"success": False, "message": "Username and new password required"}), 400
+        return (
+            jsonify(
+                {"success": False, "message": "Username and new password required"}
+            ),
+            400,
+        )
 
     user = User.query.filter_by(username=username).first()
     if not user:
@@ -101,6 +120,7 @@ def reset_password():
     db.session.commit()
     return jsonify({"success": True, "message": f"Password reset for {username}"})
 
+
 @admin_bp.route("/create_user", methods=["POST"])
 @admin_only
 def create_user():
@@ -109,10 +129,22 @@ def create_user():
     ducks = request.form.get("ducks", type=int)
 
     if not username or not password or ducks is None or ducks < 0:
-        return jsonify(success=False, message="Username, password, and non-negative ducks required"), 400
+        return (
+            jsonify(
+                success=False,
+                message="Username, password, and non-negative ducks required",
+            ),
+            400,
+        )
 
     if not re.fullmatch(r"[a-z0-9_]{3,30}", username):
-        return jsonify(success=False, message="Username must be 3-30 chars: lowercase letters, numbers, or underscores only"), 400
+        return (
+            jsonify(
+                success=False,
+                message="Username must be 3-30 chars: lowercase letters, numbers, or underscores only",
+            ),
+            400,
+        )
 
     if User.query.filter_by(username=username).first():
         return jsonify(success=False, message="Username already exists"), 409
@@ -121,14 +153,17 @@ def create_user():
         new_user = User(username=username)
         new_user.set_password(password)
         db.session.add(new_user)
-        db.session.flush() # Get user ID
+        db.session.flush()  # Get user ID
         if ducks > 0:
             new_user.add_ducks(ducks, reason="Initial Balance")
         db.session.commit()
-        return jsonify(success=True, message=f"User '{username}' created with {ducks} ducks")
-    except Exception as e:
+        return jsonify(
+            success=True, message=f"User '{username}' created with {ducks} ducks"
+        )
+    except Exception:
         db.session.rollback()
         return jsonify(success=False, message="Internal server error"), 500
+
 
 @admin_bp.route("/remove_user", methods=["POST"])
 @admin_only
@@ -145,9 +180,10 @@ def remove_user():
         db.session.delete(user)
         db.session.commit()
         return jsonify(success=True, message=f"User '{username}' removed successfully")
-    except Exception as e:
+    except Exception:
         db.session.rollback()
         return jsonify(success=False, message="Internal server error"), 500
+
 
 @admin_bp.route("/adjust_ducks", methods=["POST"])
 @admin_only
@@ -156,32 +192,42 @@ def adjust_ducks():
     amount = request.form.get("amount", type=float)
 
     if not username or amount is None:
-        return jsonify({"success": False, "message": "Username and amount required"}), 400
+        return (
+            jsonify({"success": False, "message": "Username and amount required"}),
+            400,
+        )
 
     user = User.query.filter_by(username=username).first()
     if user:
         user.add_ducks(amount, reason="Admin Adjustment")
         db.session.commit()
-        return jsonify({"success": True, "message": f"Updated {username}'s ducks by {amount}."})
+        return jsonify(
+            {"success": True, "message": f"Updated {username}'s ducks by {amount}."}
+        )
     else:
-        return jsonify({"success": False, "message": f"User '{username}' not found."}), 404
+        return (
+            jsonify({"success": False, "message": f"User '{username}' not found."}),
+            404,
+        )
+
 
 @admin_bp.route("/set_username", methods=["POST"])
 @admin_only
 def set_username_route():
     user_id = request.form.get("user_id")
     username = request.form.get("username")
-    
+
     if not user_id or not username:
         return jsonify({"success": False, "message": "Missing arguments"}), 400
-        
-    user = User.query.get(user_id)
+
+    user = db.session.get(User, user_id)
     if not user:
         return jsonify({"success": False, "message": "User not found"}), 404
-        
+
     user.username = username.lower()
     db.session.commit()
     return jsonify({"success": True, "message": "Username set successfully"})
+
 
 @admin_bp.route("/verify_password", methods=["POST"])
 @admin_only
@@ -189,18 +235,19 @@ def verify_password():
     password = request.form.get("password")
     username = request.form.get("username")
     user_id = request.form.get("user_id")
-    
+
     # testing patch is done against application.routes.admin_routes.admin_pass by test framework
     # so we should use current_app for normal usage but support testing
     try:
         from application.routes.admin_routes import admin_pass
+
         app_admin_pass = admin_pass
     except ImportError:
         app_admin_pass = current_app.config.get("ADMIN_PASSWORD", "duckduck")
-        
+
     if password == app_admin_pass:
         if user_id and username:
-            user = User.query.get(user_id)
+            user = db.session.get(User, user_id)
             if user:
                 user.username = username.lower()
                 db.session.commit()

@@ -62,7 +62,7 @@ def test_course_is_active_flag(sample_course):
     course.is_active = False
     db.session.commit()
 
-    retrieved_course = Course.query.get(course.id)
+    retrieved_course = db.session.get(Course, course.id)
     assert retrieved_course.is_active is False
 
 
@@ -87,4 +87,4 @@ def test_course_deletion(sample_course):
     db.session.delete(course)
     db.session.commit()
 
-    assert Course.query.get(course.id) is None
+    assert db.session.get(Course, course.id) is None
