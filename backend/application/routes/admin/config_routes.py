@@ -4,10 +4,10 @@ from application.models.configuration import Configuration
 from application.models.banned_words import BannedWords
 from application.decorators.admin_required import admin_only
 
-from ..admin_routes import admin
+from ..admin_routes import admin_bp
 
 
-@admin.route("/toggle-ai", methods=["POST"])
+@admin_bp.route("/toggle-ai", methods=["POST"])
 @admin_only
 def toggle_ai():
     config = Configuration.query.first()
@@ -18,13 +18,16 @@ def toggle_ai():
     config.ai_teacher_enabled = not config.ai_teacher_enabled
     db.session.commit()
 
-    return jsonify({
-        "success": True,
-        "message": f"AI Teacher has been {'disabled' if config.ai_teacher_enabled else 'enabled'}",
-        "status": config.ai_teacher_enabled,
-    })
+    return jsonify(
+        {
+            "success": True,
+            "message": f"AI Teacher has been {'disabled' if config.ai_teacher_enabled else 'enabled'}",
+            "status": config.ai_teacher_enabled,
+        }
+    )
 
-@admin.route("/toggle-message-sending", methods=["POST"])
+
+@admin_bp.route("/toggle-message-sending", methods=["POST"])
 @admin_only
 def toggle_message_sending():
     config = Configuration.query.first()
@@ -35,13 +38,16 @@ def toggle_message_sending():
         config.message_sending_enabled = not config.message_sending_enabled
     db.session.commit()
 
-    return jsonify({
-        "success": True,
-        "message": f"Message sending has been {'disabled' if config.message_sending_enabled else 'enabled'}",
-        "status": config.message_sending_enabled,
-    })
+    return jsonify(
+        {
+            "success": True,
+            "message": f"Message sending has been {'disabled' if config.message_sending_enabled else 'enabled'}",
+            "status": config.message_sending_enabled,
+        }
+    )
 
-@admin.route("/update_duck_multiplier", methods=["POST"])
+
+@admin_bp.route("/update_duck_multiplier", methods=["POST"])
 def update_duck_multiplier():
     data = request.get_json()
     new_multiplier = data.get("multiplier")
@@ -63,7 +69,8 @@ def update_duck_multiplier():
         db.session.rollback()
         return jsonify({"success": False, "error": str(e)}), 500
 
-@admin.route("/add-banned-word", methods=["POST"])
+
+@admin_bp.route("/add-banned-word", methods=["POST"])
 @admin_only
 def add_banned_word():
     word = request.form.get("word")
@@ -79,4 +86,6 @@ def add_banned_word():
     db.session.add(new_banned_word)
     db.session.commit()
 
-    return jsonify({"success": True, "message": f"'{word}' has been added to banned words"})
+    return jsonify(
+        {"success": True, "message": f"'{word}' has been added to banned words"}
+    )

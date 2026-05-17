@@ -34,8 +34,14 @@ class Conversation(db.Model):
         nullable=False,
         default=lambda: f"New Chat on {datetime.utcnow().strftime('%B %d, %Y')}",
     )
-    creator_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
-    classroom_id = db.Column(db.String(64), db.ForeignKey("classrooms.id", ondelete="RESTRICT"), nullable=False)
+    creator_id = db.Column(
+        db.Integer, db.ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+    classroom_id = db.Column(
+        db.String(64),
+        db.ForeignKey("classrooms.id", ondelete="RESTRICT"),
+        nullable=False,
+    )
     is_locked = db.Column(db.Boolean, default=False)
     slow_mode_delay = db.Column(db.Integer, default=0)  # in seconds
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -48,11 +54,11 @@ class Conversation(db.Model):
         lazy="selectin",
     )
     messages = db.relationship(
-        "Message", 
-        backref="conversation", 
-        lazy="joined", 
+        "Message",
+        backref="conversation",
+        lazy="joined",
         cascade="all, delete-orphan",
-        order_by="Message.created_at.asc()"
+        order_by="Message.created_at.asc()",
     )
     classroom = db.relationship("Classroom", foreign_keys=[classroom_id], lazy="joined")
 

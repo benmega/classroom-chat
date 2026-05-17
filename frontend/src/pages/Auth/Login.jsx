@@ -26,7 +26,7 @@ const Login = () => {
             } else {
                 toast.error(result.error || 'Invalid username or password.');
             }
-        } catch (error) {
+        } catch {
             toast.error('An unexpected error occurred. Please try again.');
         } finally {
             setIsLoading(false);

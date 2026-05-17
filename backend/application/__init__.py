@@ -10,36 +10,42 @@ from werkzeug.exceptions import RequestEntityTooLarge
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 from application.config import DevelopmentConfig, TestingConfig, ProductionConfig
-from application.extensions import db, socketio, limiter, scheduler, csrf
+from application.extensions import db, socketio, limiter, scheduler, csrf, migrate
 from application.models import setup_models
 from application.models.configuration import Configuration
 from application.models.user import User
 from application.routes import register_blueprints
-from application.constants import GLOBAL_CLASSROOM_ID  # noqa: F401 — imported for side-effect availability
+from application.constants import (
+    GLOBAL_CLASSROOM_ID as GLOBAL_CLASSROOM_ID,
+)  # imported for side-effect availability
 
 from .license_checker import load_license
 from application.utilities.helper_functions import format_number
+from application.utilities.schema_check import check_for_schema_drift
 from flask_wtf.csrf import generate_csrf
 
 
-
 def create_app(config_class=None):
-    log_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    
+    log_formatter = logging.Formatter(
+        "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    )
+
     console_handler = logging.StreamHandler()
     console_handler.setFormatter(log_formatter)
-    
-    log_dir = os.path.join(os.path.abspath(os.path.dirname(os.path.dirname(__file__))), "instance")
+
+    log_dir = os.path.join(
+        os.path.abspath(os.path.dirname(os.path.dirname(__file__))), "instance"
+    )
     if not os.path.exists(log_dir):
         os.makedirs(log_dir)
     file_handler = logging.FileHandler(os.path.join(log_dir, "app.log"))
     file_handler.setFormatter(log_formatter)
-    
+
     root_logger = logging.getLogger()
     root_logger.setLevel(logging.INFO)
     root_logger.addHandler(console_handler)
     root_logger.addHandler(file_handler)
-    
+
     logger = logging.getLogger(__name__)
 
     # Dynamically select config if not explicitly passed
@@ -61,21 +67,30 @@ def create_app(config_class=None):
     # In production, TEMPLATE_FOLDER points to the built frontend/dist.
     # We add frontend/templates as a fallback so Flask-Admin templates are still found.
     from jinja2 import ChoiceLoader, FileSystemLoader
-    app.jinja_loader = ChoiceLoader([
-        app.jinja_loader,
-        FileSystemLoader(os.path.join(app.config.get('BASE_DIR', ''), 'frontend', 'templates'))
-    ])
 
-    cors_origins = getattr(config_class, "CORS_ORIGINS", [
-        "http://localhost:5173",
-        "http://localhost:5174",
-        "http://localhost:5175",
-        "http://localhost:8000",
-        "http://127.0.0.1:5173",
-        "http://127.0.0.1:5174",
-        "http://127.0.0.1:5175",
-        "http://127.0.0.1:8000",
-    ])
+    app.jinja_loader = ChoiceLoader(
+        [
+            app.jinja_loader,
+            FileSystemLoader(
+                os.path.join(app.config.get("BASE_DIR", ""), "frontend", "templates")
+            ),
+        ]
+    )
+
+    cors_origins = getattr(
+        config_class,
+        "CORS_ORIGINS",
+        [
+            "http://localhost:5173",
+            "http://localhost:5174",
+            "http://localhost:5175",
+            "http://localhost:8000",
+            "http://127.0.0.1:5173",
+            "http://127.0.0.1:5174",
+            "http://127.0.0.1:5175",
+            "http://127.0.0.1:8000",
+        ],
+    )
     CORS(
         app,
         origins=cors_origins,
@@ -100,6 +115,7 @@ def create_app(config_class=None):
     app.config["LICENSEE"] = license_data.get("licensee", "Unknown")
 
     db.init_app(app)
+    migrate.init_app(app, db)
     # cors_allowed_origins must match cors_origins exactly — using "*" alongside
     # withCredentials:true on the client causes browsers to block the handshake.
     socketio.init_app(
@@ -122,7 +138,12 @@ def create_app(config_class=None):
     with app.app_context():
         setup_models()
 
-        db.create_all()
+        # Only use create_all in non-production environments to avoid schema drift issues.
+        # Production should use migrations via 'flask db upgrade'.
+        if app.config.get("ENV") != "production":
+            db.create_all()
+            if app.config.get("ENV") == "development":
+                check_for_schema_drift(app)
         inspector = inspect(db.engine)
         if not inspector.has_table("users"):
             # This part is now redundant for create_all, but we still want to ensure default config if it was a fresh DB
@@ -164,7 +185,7 @@ def create_app(config_class=None):
             429,
         )
 
-    @app.template_filter('format_number')
+    @app.template_filter("format_number")
     def format_number_filter(value, precision=0):
         return format_number(value, precision)
 
@@ -172,7 +193,7 @@ def create_app(config_class=None):
     def set_csrf_cookie(response):
         # We set the CSRF cookie so the frontend (Axios) can read it and send it back in headers.
         # This is safe because it's only accessible to our own frontend via SameSite=Lax/Strict.
-        response.set_cookie('csrf_token', generate_csrf())
+        response.set_cookie("csrf_token", generate_csrf())
         return response
 
     return app
@@ -190,31 +211,49 @@ def seed_global_data():
     Idempotently ensure the reserved classrooms and global conversation exist.
     Populates application.constants.GLOBAL_CONVERSATION_ID in-process so
     routes can import it as a constant without hitting the DB every request.
+
+    Skips gracefully if the schema is not yet migrated (e.g. during
+    'flask db upgrade' before the conversations table has classroom_id).
     """
     import application.constants as _constants
     from application.models.classroom import Classroom
     from application.models.conversation import Conversation
-    from datetime import datetime
 
     logger = logging.getLogger(__name__)
 
+    # Guard: skip seeding if the schema hasn't been migrated yet.
+    # This allows 'flask db upgrade' to load the app without crashing.
+    inspector = inspect(db.engine)
+    if inspector.has_table("conversations"):
+        conv_cols = {c["name"] for c in inspector.get_columns("conversations")}
+        if "classroom_id" not in conv_cols:
+            logger.warning(
+                "seed_global_data: skipping — conversations.classroom_id missing. "
+                "Run 'flask db upgrade' first."
+            )
+            return
+
     try:
         # 1. Ensure 'global' classroom exists
-        if not Classroom.query.get(_constants.GLOBAL_CLASSROOM_ID):
+        if not db.session.get(Classroom, _constants.GLOBAL_CLASSROOM_ID):
             db.session.add(
                 Classroom(
-                    id=_constants.GLOBAL_CLASSROOM_ID, 
-                    name="Global Announcements", 
+                    id=_constants.GLOBAL_CLASSROOM_ID,
+                    name="Global Announcements",
                     language="python",
-                    url="global"
+                    url="global",
                 )
             )
             db.session.flush()
             logger.info("Seeded 'global' classroom.")
 
         # 2. Ensure 'archive' classroom exists
-        if not Classroom.query.get("archive"):
-            db.session.add(Classroom(id="archive", name="Archive", language="python", url="archive"))
+        if not db.session.get(Classroom, "archive"):
+            db.session.add(
+                Classroom(
+                    id="archive", name="Archive", language="python", url="archive"
+                )
+            )
             db.session.flush()
             logger.info("Seeded 'archive' classroom.")
 

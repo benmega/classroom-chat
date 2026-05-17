@@ -3,9 +3,10 @@ from application.models.conversation import Conversation, conversation_users
 from application.models.message import Message
 from application.decorators.admin_required import admin_only
 from application.decorators.api_response import api_response
-from ..admin_routes import admin
+from ..admin_routes import admin_bp
 
-@admin.route("/advanced/purge-history", methods=["POST"])
+
+@admin_bp.route("/advanced/purge-history", methods=["POST"])
 @admin_only
 @api_response
 def purge_history():
@@ -17,26 +18,27 @@ def purge_history():
         # Delete all messages first
         num_messages = Message.query.count()
         Message.query.delete(synchronize_session=False)
-        
+
         # Explicitly clear association table
         db.session.execute(conversation_users.delete())
-        
+
         # Delete all conversations
         num_conversations = Conversation.query.count()
         Conversation.query.delete(synchronize_session=False)
-        
+
         db.session.commit()
-        
+
         return {
             "message": "History purged successfully.",
             "deleted_conversations": num_conversations,
-            "deleted_messages": num_messages
+            "deleted_messages": num_messages,
         }
     except Exception as e:
         db.session.rollback()
         return {"error": f"Failed to purge history: {str(e)}"}, 500
 
-@admin.route("/advanced/stats-extended", methods=["GET"])
+
+@admin_bp.route("/advanced/stats-extended", methods=["GET"])
 @admin_only
 @api_response
 def get_extended_stats():
@@ -45,20 +47,20 @@ def get_extended_stats():
     """
     import psutil
     import os
-    
+
     # Process stats
     process = psutil.Process(os.getpid())
     memory_info = process.memory_info()
-    
+
     # DB stats (simple count for now)
     table_counts = {}
     for mapper in db.Model.registry.mappers:
         model = mapper.class_
         table_counts[model.__name__] = model.query.count()
-        
+
     return {
         "memory_usage_mb": round(memory_info.rss / (1024 * 1024), 2),
         "cpu_percent": process.cpu_percent(interval=0.1),
         "table_counts": table_counts,
-        "uptime_seconds": round(psutil.time.time() - process.create_time(), 0)
+        "uptime_seconds": round(psutil.time.time() - process.create_time(), 0),
     }

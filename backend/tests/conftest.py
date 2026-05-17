@@ -72,7 +72,7 @@ def test_app():
 
         @login_manager.user_loader
         def load_user(user_id):
-            return User.query.get(int(user_id))
+            return db.session.get(User, int(user_id))
 
     with app.app_context():
         db.create_all()
@@ -116,9 +116,6 @@ def create_dummy_license():
             f.write("DUMMY_LICENSE_FOR_TESTING")
 
     yield
-    # Optional: cleanup after tests if you want
-    # if os.path.exists(license_path):
-    #     os.remove(license_path)
 
 
 # 3. OVERRIDE: Custom live_server for Windows compatibility
@@ -167,7 +164,7 @@ def logged_in_client(client, sample_user):
     return client
 
 
-@pytest.fixture
+@pytest.fixture(autouse=True)
 def init_db(test_app):
     with test_app.app_context():
         db.create_all()
@@ -344,8 +341,11 @@ def sample_users(init_db):
 
 
 @pytest.fixture
-def sample_conversation(init_db, sample_users):
-    conversation = Conversation(title=f"Sample Conversation {uuid.uuid4().hex[:8]}")
+def sample_conversation(init_db, sample_users, sample_classroom):
+    conversation = Conversation(
+        title=f"Sample Conversation {uuid.uuid4().hex[:8]}",
+        classroom_id=sample_classroom.id
+    )
     conversation.users.extend(sample_users)
     db.session.add(conversation)
     db.session.commit()
@@ -435,7 +435,7 @@ def sample_duck_trade(init_db, sample_user):
         )
         db.session.add(trade)
         db.session.commit()
-        trade = DuckTradeLog.query.get(trade.id)
+        trade = db.session.get(DuckTradeLog, trade.id)
         return trade
     except ImportError:
         return None
@@ -630,14 +630,14 @@ def mock_render_template(client):
         yield mock
 
 
-
 @pytest.fixture
 def sample_classroom(init_db):
     """Creates a standard classroom."""
     classroom = Classroom(
         id="678b56dc12345",  # Simulating the MongoDB/JSON ID format
         name="Sat1030 CS 4 PY",
-        language="python"
+        language="python",
+        url="test-classroom-url"
     )
     db.session.add(classroom)
     db.session.commit()

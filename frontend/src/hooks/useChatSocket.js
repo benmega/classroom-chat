@@ -50,7 +50,7 @@ const getSocket = () => {
  */
 const useChatSocket = (onMessageReceived, onClassroomEnrolled, lifecycleCallbacks = {}) => {
   const socketRef = useRef(null);
-  const [isConnected, setIsConnected] = useState(false);
+  const [isConnected, setIsConnected] = useState(() => getSocket().connected);
 
   // Keep callbacks in refs so we never need to re-subscribe
   const messageCallbackRef = useRef(onMessageReceived);
@@ -65,13 +65,9 @@ const useChatSocket = (onMessageReceived, onClassroomEnrolled, lifecycleCallback
     const socket = getSocket();
     socketRef.current = socket;
 
-    if (socket.connected !== isConnected) {
-      setIsConnected(socket.connected);
-    }
-
     const onConnect = () => setIsConnected(true);
-    const onDisconnect = (reason) => setIsConnected(false);
-    const onConnectError = (error) => setIsConnected(false);
+    const onDisconnect = () => setIsConnected(false);
+    const onConnectError = () => setIsConnected(false);
 
     const onMessage = (data) => messageCallbackRef.current?.(data);
     const onEnrolled = (data) => enrolledCallbackRef.current?.(data);

@@ -17,6 +17,7 @@ session = Blueprint("session", __name__)
 
 _ec2_metadata_cache = None
 
+
 def get_ec2_metadata():
     global _ec2_metadata_cache
     if _ec2_metadata_cache:
@@ -24,24 +25,25 @@ def get_ec2_metadata():
 
     instance_id = "i-03afac811de461a56"
     region_name = "ap-southeast-1"
-    
+
     try:
         response = requests.get(
-            "http://169.254.169.254/latest/dynamic/instance-identity/document", timeout=0.1 # Very short timeout
+            "http://169.254.169.254/latest/dynamic/instance-identity/document",
+            timeout=0.1,  # Very short timeout
         )
         response_json = response.json()
         instance_id = response_json.get("instanceId", instance_id)
         region_name = response_json.get("region", region_name)
     except Exception:
-        pass # Silently fail and use defaults if not on EC2
+        pass  # Silently fail and use defaults if not on EC2
 
     _ec2_metadata_cache = (instance_id, region_name)
     return _ec2_metadata_cache
 
+
 def get_cloudwatch_client():
     _, region = get_ec2_metadata()
     return boto3.client("cloudwatch", region_name=region)
-
 
 
 @session.route("/heartbeat", methods=["POST"])

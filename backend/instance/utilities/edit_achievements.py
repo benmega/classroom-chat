@@ -66,18 +66,6 @@ def remove_achievements():
         print("No achievements were removed.")
 
 
-# def remove_achievement():
-#     list_achievements()
-#     id_ = input("Enter ID of achievement to remove: ").strip()
-#     achievement = Achievement.query.get(id_)
-#     if not achievement:
-#         print("Achievement not found.")
-#         return
-#     db.session.delete(achievement)
-#     db.session.commit()
-#     print(f"Removed achievement '{achievement.name}'.")
-
-
 def edit_achievement():
     list_achievements()
     id_ = input("Enter ID of achievement to edit: ").strip()

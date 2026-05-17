@@ -6,10 +6,7 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from werkzeug.security import generate_password_hash, check_password_hash
 
 from ..extensions import db
-from .challenge_log import ChallengeLog
-from .project import Project
-from .session_log import SessionLog
-from .skill import Skill
+# Models are imported locally within methods to prevent circular dependencies
 
 
 def default_nickname(context):
@@ -28,8 +25,6 @@ class User(db.Model):
     slug = db.Column(db.String(100), unique=True, nullable=True)
     is_admin = db.Column(db.Boolean, default=False)
     is_approved = db.Column(db.Boolean, default=False)
-    # classroom_id single-FK removed — enrollment is now managed via the
-    # user_classrooms join table.  Use user.classrooms to query memberships.
     bio = db.Column(db.String(500), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
@@ -41,8 +36,12 @@ class User(db.Model):
     last_achievement_evaluation = db.Column(db.DateTime, nullable=True)
 
     # Relationships
-    skills = db.relationship("Skill", backref="user", lazy=True, cascade="all, delete-orphan")
-    projects = db.relationship("Project", backref="user", lazy=True, cascade="all, delete-orphan")
+    skills = db.relationship(
+        "Skill", backref="user", lazy=True, cascade="all, delete-orphan"
+    )
+    projects = db.relationship(
+        "Project", backref="user", lazy=True, cascade="all, delete-orphan"
+    )
     achievements = db.relationship(
         "UserAchievement", backref="user", lazy=True, cascade="all, delete-orphan"
     )
@@ -64,25 +63,48 @@ class User(db.Model):
         lazy="selectin",
     )
 
-    notes = db.relationship('Note', back_populates='user', cascade='all, delete-orphan',
-                            order_by='desc(Note.created_at)')
+    notes = db.relationship(
+        "Note",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        order_by="desc(Note.created_at)",
+    )
 
     def __repr__(self):
         return f"<User {self._username}>"
 
     def to_dict(self):
         d = self.to_dict_summary()
-        
+
         # Relationships (serialized) - Expensive, only for single user view
-        d["skills"] = [s.to_dict() if hasattr(s, 'to_dict') else {"id": s.id, "name": s.name} for s in self.skills]
-        d["projects"] = [p.to_dict() if hasattr(p, 'to_dict') else {"id": p.id, "name": p.name} for p in self.projects]
-        d["certificates"] = [c.to_dict() if hasattr(c, 'to_dict') else {"id": c.id} for c in self.certificates]
-        d["achievements"] = [a.to_dict() if hasattr(a, 'to_dict') else {"id": a.id} for a in self.achievements]
-        d["notes"] = [n.to_dict() if hasattr(n, 'to_dict') else {"id": n.id, "url": f"/notes/view/{n.filename}"} for n in self.notes]
-        
+        d["skills"] = [
+            s.to_dict() if hasattr(s, "to_dict") else {"id": s.id, "name": s.name}
+            for s in self.skills
+        ]
+        d["projects"] = [
+            p.to_dict() if hasattr(p, "to_dict") else {"id": p.id, "name": p.name}
+            for p in self.projects
+        ]
+        d["certificates"] = [
+            c.to_dict() if hasattr(c, "to_dict") else {"id": c.id}
+            for c in self.certificates
+        ]
+        d["achievements"] = [
+            a.to_dict() if hasattr(a, "to_dict") else {"id": a.id}
+            for a in self.achievements
+        ]
+        d["notes"] = [
+            (
+                n.to_dict()
+                if hasattr(n, "to_dict")
+                else {"id": n.id, "url": f"/notes/view/{n.filename}"}
+            )
+            for n in self.notes
+        ]
+
         # Grid data - Extremely expensive
         d["contribution_data"] = self.get_contribution_data()
-        
+
         return d
 
     def to_dict_auth(self):
@@ -91,32 +113,45 @@ class User(db.Model):
             "id": self.id,
             "username": self.username,
             "nickname": self.nickname,
-            "profile_picture_url": f"/user/profile_pictures/{self.profile_picture}" if self.profile_picture else "/static/images/Default_pfp.jpg",
+            "profile_picture_url": (
+                f"/user/profile_pictures/{self.profile_picture}"
+                if self.profile_picture
+                else "/static/images/Default_pfp.jpg"
+            ),
             "is_admin": self.is_admin,
             "is_approved": self.is_approved,
             "slug": self.slug,
             "duck_balance": self.duck_balance,
-            "packets": self.packets
+            "packets": self.packets,
         }
 
     def to_dict_summary(self, precomputed_progress=None):
         """Lighter dictionary for list views, avoids extremely expensive processing."""
-        
+
         if precomputed_progress:
             cc_levels = precomputed_progress.get((self._username, "codecombat.com"), 0)
             oz_levels = precomputed_progress.get((self._username, "www.ozaria.com"), 0)
-            
+
             from .challenge import Challenge
+
             if "codecombat.com" not in self._total_challenges_cache:
-                self._total_challenges_cache["codecombat.com"] = Challenge.query.filter_by(domain="codecombat.com").count()
+                self._total_challenges_cache["codecombat.com"] = (
+                    Challenge.query.filter_by(domain="codecombat.com").count()
+                )
             if "www.ozaria.com" not in self._total_challenges_cache:
-                self._total_challenges_cache["www.ozaria.com"] = Challenge.query.filter_by(domain="www.ozaria.com").count()
-                
+                self._total_challenges_cache["www.ozaria.com"] = (
+                    Challenge.query.filter_by(domain="www.ozaria.com").count()
+                )
+
             cc_total = self._total_challenges_cache["codecombat.com"]
             oz_total = self._total_challenges_cache["www.ozaria.com"]
-            
-            cc_percent = int(round((cc_levels / cc_total * 100), 0)) if cc_total > 0 else 0
-            oz_percent = int(round((oz_levels / oz_total * 100), 0)) if oz_total > 0 else 0
+
+            cc_percent = (
+                int(round((cc_levels / cc_total * 100), 0)) if cc_total > 0 else 0
+            )
+            oz_percent = (
+                int(round((oz_levels / oz_total * 100), 0)) if oz_total > 0 else 0
+            )
         else:
             cc_levels = self.get_progress("codecombat.com")
             oz_levels = self.get_progress("www.ozaria.com")
@@ -128,18 +163,20 @@ class User(db.Model):
             "username": self.username,
             "nickname": self.nickname,
             "profile_picture": self.profile_picture,
-            "profile_picture_url": f"/user/profile_pictures/{self.profile_picture}" if self.profile_picture else "/static/images/Default_pfp.jpg",
+            "profile_picture_url": (
+                f"/user/profile_pictures/{self.profile_picture}"
+                if self.profile_picture
+                else "/static/images/Default_pfp.jpg"
+            ),
             "is_online": self.is_online,
             "is_admin": self.is_admin,
             "is_approved": self.is_approved,
             "bio": self.bio,
             "slug": self.slug,
-            
             # Gamification
             "duck_balance": self.duck_balance,
             "earned_ducks": self.earned_ducks,
             "packets": self.packets,
-            
             # Progress counters
             "total_levels": cc_levels + oz_levels,
             "cc_levels": cc_levels,
@@ -148,7 +185,6 @@ class User(db.Model):
             "oz_percent": oz_percent,
         }
         return d
-
 
     @hybrid_property
     def username(self):
@@ -161,9 +197,9 @@ class User(db.Model):
     def generate_slug(self):
         """Generate a unique kebab-case slug from the user's nickname."""
         source = self.nickname if self.nickname else self._username
-        base_slug = re.sub(r'[_\s]+', '-', source.lower())
-        base_slug = re.sub(r'[^a-z0-9-]', '', base_slug)
-        base_slug = re.sub(r'-+', '-', base_slug).strip('-')
+        base_slug = re.sub(r"[_\s]+", "-", source.lower())
+        base_slug = re.sub(r"[^a-z0-9-]", "", base_slug)
+        base_slug = re.sub(r"-+", "-", base_slug).strip("-")
 
         slug = base_slug
         counter = 1
@@ -175,11 +211,9 @@ class User(db.Model):
         return slug
 
     def set_password(self, password):
-        """Generate a hashed password and store it"""
         self.password_hash = generate_password_hash(password)
 
     def check_password(self, password):
-        """Check the given password against the stored hash"""
         return check_password_hash(self.password_hash, password)
 
     @classmethod
@@ -190,11 +224,13 @@ class User(db.Model):
             return
 
         if online:
+            from .session_log import SessionLog
             # Start new session if none active
             if not SessionLog.query.filter_by(user_id=user.id, end_time=None).first():
                 SessionLog.start_session(user.id)
             user.is_online = True
         else:
+            from .session_log import SessionLog
             # End the most recent session
             SessionLog.end_session(user.id)
             user.is_online = False
@@ -205,6 +241,7 @@ class User(db.Model):
 
     def get_progress(self, domain):
         """Calculate progress based on challenges completed for a specific domain."""
+        from .challenge_log import ChallengeLog
         total_challenges = ChallengeLog.query.filter_by(
             username=self._username, domain=domain
         ).count()
@@ -215,9 +252,12 @@ class User(db.Model):
         from .challenge import Challenge
 
         if domain not in self._total_challenges_cache:
-            self._total_challenges_cache[domain] = Challenge.query.filter_by(domain=domain).count()
-        
+            self._total_challenges_cache[domain] = Challenge.query.filter_by(
+                domain=domain
+            ).count()
+
         total_challenges = self._total_challenges_cache[domain]
+        from .challenge_log import ChallengeLog
         completed_challenges = ChallengeLog.query.filter_by(
             username=self._username, domain=domain
         ).count()
@@ -230,20 +270,20 @@ class User(db.Model):
         return int(round(progress, 0))
 
     def add_skill(self, skill_name):
-        """Add a skill to the user."""
+        from .skill import Skill
         new_skill = Skill(name=skill_name, user_id=self.id)
         db.session.add(new_skill)
         db.session.commit()
 
     def remove_skill(self, skill_id):
-        """Remove a skill by ID."""
-        skill = Skill.query.get(skill_id)
+        from .skill import Skill
+        skill = db.session.get(Skill, skill_id)
         if skill and skill.user_id == self.id:
             db.session.delete(skill)
             db.session.commit()
 
     def add_project(self, name, description=None, link=None):
-        """Add a project to the user."""
+        from .project import Project
         new_project = Project(
             name=name, description=description, link=link, user_id=self.id
         )
@@ -251,8 +291,8 @@ class User(db.Model):
         db.session.commit()
 
     def remove_project(self, project_id):
-        """Remove a project by ID."""
-        project = Project.query.get(project_id)
+        from .project import Project
+        project = db.session.get(Project, project_id)
         if project and project.user_id == self.id:
             db.session.delete(project)
             db.session.commit()
@@ -261,16 +301,13 @@ class User(db.Model):
         if amount > 0:
             self.earned_ducks += amount
             self.packets += amount / (2**14)
-        
+
         self.duck_balance += amount
-        
+
         # Record the transaction
         from .duck_transaction import DuckTransaction
-        transaction = DuckTransaction(
-            user_id=self.id,
-            amount=amount,
-            reason=reason
-        )
+
+        transaction = DuckTransaction(user_id=self.id, amount=amount, reason=reason)
         db.session.add(transaction)
         # Note: The caller must commit the session
 
@@ -299,9 +336,13 @@ class User(db.Model):
 
         logs = self.challenge_logs.all()
         counts = {}
+        from application.utilities.helper_functions import safe_parse_datetime
+
         for log in logs:
-            k = log.timestamp.date().isoformat()
-            counts[k] = counts.get(k, 0) + 1
+            parsed_ts = safe_parse_datetime(log.timestamp)
+            if parsed_ts:
+                k = parsed_ts.date().isoformat()
+                counts[k] = counts.get(k, 0) + 1
 
         # grid[weekday][week_index] (7 rows x 53 columns)
         grid = [[None for _ in range(53)] for _ in range(7)]
@@ -368,7 +409,7 @@ class User(db.Model):
 
 
 # SQLAlchemy event listener to auto-generate slug for new users
-@event.listens_for(User, 'before_insert')
+@event.listens_for(User, "before_insert")
 def receive_before_insert(mapper, connection, target):
     """Auto-generate slug before inserting a new user if not already set."""
     if not target.slug:

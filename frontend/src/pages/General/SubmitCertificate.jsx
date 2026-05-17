@@ -123,13 +123,13 @@ const SubmitCertificate = () => {
 
                     <div className="form-group">
                         <label htmlFor="certificate_file">Upload Certificate PDF</label>
-                        <div className="file-input-wrapper">
+                        <div className="submit-cert-file-input-wrapper">
                             <input 
                                 type="file" 
                                 id="certificate_file"
                                 onChange={handleFileChange}
                                 accept="application/pdf" 
-                                className="file-input"
+                                className="submit-cert-file-input"
                             />
                             <div className={`file-dummy ${errors.file ? 'is-invalid' : ''}`}>
                                 {certificateFile ? certificateFile.name : 'Choose a PDF file...'}

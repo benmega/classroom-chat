@@ -18,5 +18,5 @@ class Configuration(db.Model):
             "id": self.id,
             "ai_teacher_enabled": self.ai_teacher_enabled,
             "message_sending_enabled": self.message_sending_enabled,
-            "duck_multiplier": self.duck_multiplier
+            "duck_multiplier": self.duck_multiplier,
         }

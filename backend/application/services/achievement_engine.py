@@ -16,7 +16,7 @@ def check_achievement(user, achievement, stats=None):
     """Return True if the user meets the condition for this achievement."""
     if stats is None:
         stats = {}
-        
+
     try:
         requirement = int(achievement.requirement_value)
     except (ValueError, TypeError):
@@ -29,21 +29,41 @@ def check_achievement(user, achievement, stats=None):
             user.get_progress(achievement.source) if achievement.source else 0
         ),
         # Count all messages sent by the user
-        "chat": lambda: stats.get("chat_count") if "chat_count" in stats else db.session.query(func.count(Message.id))
-        .filter(Message.user_id == user.id)
-        .scalar(),
+        "chat": lambda: (
+            stats.get("chat_count")
+            if "chat_count" in stats
+            else db.session.query(func.count(Message.id))
+            .filter(Message.user_id == user.id)
+            .scalar()
+        ),
         # Count how many consecutive weeks with challenges
-        "consistency": lambda: stats.get("consistency_streak") if "consistency_streak" in stats else _calculate_consistency(user.username),
+        "consistency": lambda: (
+            stats.get("consistency_streak")
+            if "consistency_streak" in stats
+            else _calculate_consistency(user.username)
+        ),
         # Count how many times someone entered them as a helper
-        "community": lambda: stats.get("community_count") if "community_count" in stats else db.session.query(func.count(ChallengeLog.id))
-        .filter(func.lower(ChallengeLog.helper) == user.username.lower())
-        .scalar(),
+        "community": lambda: (
+            stats.get("community_count")
+            if "community_count" in stats
+            else db.session.query(func.count(ChallengeLog.id))
+            .filter(func.lower(ChallengeLog.helper) == user.username.lower())
+            .scalar()
+        ),
         # Longest session length in minutes
-        "session": lambda: stats.get("max_session") if "max_session" in stats else longest_session_minutes(user.id),
+        "session": lambda: (
+            stats.get("max_session")
+            if "max_session" in stats
+            else longest_session_minutes(user.id)
+        ),
         # Count number of trades (regardless of status)
-        "trade": lambda: stats.get("trade_count") if "trade_count" in stats else db.session.query(func.count(DuckTradeLog.id))
-        .filter(func.lower(DuckTradeLog.username) == user.username.lower())
-        .scalar(),
+        "trade": lambda: (
+            stats.get("trade_count")
+            if "trade_count" in stats
+            else db.session.query(func.count(DuckTradeLog.id))
+            .filter(func.lower(DuckTradeLog.username) == user.username.lower())
+            .scalar()
+        ),
         # Certificate submitted or not
         "certificate": lambda: (
             1
@@ -62,7 +82,7 @@ def get_achievement_progress(user, achievement, stats=None):
     """Return (current_value, requirement_value) for progress tracking."""
     if stats is None:
         stats = {}
-    
+
     try:
         requirement = int(achievement.requirement_value)
     except (ValueError, TypeError):
@@ -74,17 +94,37 @@ def get_achievement_progress(user, achievement, stats=None):
         "progress": lambda: (
             user.get_progress(achievement.source) if achievement.source else 0
         ),
-        "chat": lambda: stats.get("chat_count") if "chat_count" in stats else db.session.query(func.count(Message.id))
-        .filter(Message.user_id == user.id)
-        .scalar(),
-        "consistency": lambda: stats.get("consistency_streak") if "consistency_streak" in stats else _calculate_consistency(user.username),
-        "community": lambda: stats.get("community_count") if "community_count" in stats else db.session.query(func.count(ChallengeLog.id))
-        .filter(func.lower(ChallengeLog.helper) == user.username.lower())
-        .scalar(),
-        "session": lambda: stats.get("max_session") if "max_session" in stats else longest_session_minutes(user.id),
-        "trade": lambda: stats.get("trade_count") if "trade_count" in stats else db.session.query(func.count(DuckTradeLog.id))
-        .filter(func.lower(DuckTradeLog.username) == user.username.lower())
-        .scalar(),
+        "chat": lambda: (
+            stats.get("chat_count")
+            if "chat_count" in stats
+            else db.session.query(func.count(Message.id))
+            .filter(Message.user_id == user.id)
+            .scalar()
+        ),
+        "consistency": lambda: (
+            stats.get("consistency_streak")
+            if "consistency_streak" in stats
+            else _calculate_consistency(user.username)
+        ),
+        "community": lambda: (
+            stats.get("community_count")
+            if "community_count" in stats
+            else db.session.query(func.count(ChallengeLog.id))
+            .filter(func.lower(ChallengeLog.helper) == user.username.lower())
+            .scalar()
+        ),
+        "session": lambda: (
+            stats.get("max_session")
+            if "max_session" in stats
+            else longest_session_minutes(user.id)
+        ),
+        "trade": lambda: (
+            stats.get("trade_count")
+            if "trade_count" in stats
+            else db.session.query(func.count(DuckTradeLog.id))
+            .filter(func.lower(DuckTradeLog.username) == user.username.lower())
+            .scalar()
+        ),
         "certificate": lambda: (
             1
             if UserCertificate.query.filter_by(
@@ -135,7 +175,7 @@ def _calculate_consistency(username):
 def evaluate_user(user, force=False):
     """Evaluate all achievements for a given user with 1-hour throttling."""
     now = datetime.utcnow()
-    
+
     # Throttle: Only evaluate once every 60 minutes unless forced
     if not force and user.last_achievement_evaluation:
         elapsed = (now - user.last_achievement_evaluation).total_seconds()
@@ -145,20 +185,27 @@ def evaluate_user(user, force=False):
     # Pre-calculate common stats for the entire evaluation pass
     # This avoids N extra queries inside the loop below.
     from application.models.duck_trade import DuckTradeLog
+
     stats = {
-        "chat_count": db.session.query(func.count(Message.id)).filter(Message.user_id == user.id).scalar(),
+        "chat_count": db.session.query(func.count(Message.id))
+        .filter(Message.user_id == user.id)
+        .scalar(),
         "consistency_streak": _calculate_consistency(user.username),
-        "community_count": db.session.query(func.count(ChallengeLog.id)).filter(func.lower(ChallengeLog.helper) == user.username.lower()).scalar(),
+        "community_count": db.session.query(func.count(ChallengeLog.id))
+        .filter(func.lower(ChallengeLog.helper) == user.username.lower())
+        .scalar(),
         "max_session": longest_session_minutes(user.id),
-        "trade_count": db.session.query(func.count(DuckTradeLog.id)).filter(func.lower(DuckTradeLog.username) == user.username.lower()).scalar()
+        "trade_count": db.session.query(func.count(DuckTradeLog.id))
+        .filter(func.lower(DuckTradeLog.username) == user.username.lower())
+        .scalar(),
     }
 
     earned_ids = {ua.achievement_id for ua in user.achievements}
     new_awards = []
-    
+
     # Optimization: Only query definitions once
     all_achievements = Achievement.query.all()
-    
+
     for achievement in all_achievements:
         if achievement.id in earned_ids:
             continue

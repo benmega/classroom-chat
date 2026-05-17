@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
     Layers, 
@@ -18,7 +18,8 @@ import AdminPageHeader from '../../components/admin/AdminPageHeader';
 
 const AdvancedPanel = () => {
     const navigate = useNavigate();
-    const [isLoading, setIsLoading] = useState(false);
+    const isLoading = false; // Currently static
+    // const [isLoading, setIsLoading] = useState(false);
     const [logs, setLogs] = useState('');
     const [showLogModal, setShowLogModal] = useState(false);
     const [showStatsModal, setShowStatsModal] = useState(false);

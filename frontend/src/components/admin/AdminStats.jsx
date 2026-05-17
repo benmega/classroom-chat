@@ -1,6 +1,6 @@
 import React from 'react';
 import { TrendingUp, Clock, Users } from 'lucide-react';
-import DuckIcon from '../common/DuckIcon';
+import DuckIcon from '../Icons/DuckIcon';
 
 const AdminStats = ({ stats, onApprovalClick, onTradeClick }) => {
     return (

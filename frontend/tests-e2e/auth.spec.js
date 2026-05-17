@@ -52,7 +52,6 @@ test.describe('Authentication Flow', () => {
 
     // Should stay on login page and show error message
     await expect(page).toHaveURL('/login');
-    const toast = page.locator('div[role="status"]');
     // Note: react-hot-toast uses aria-live elements
   });
 });

@@ -13,7 +13,7 @@ from flask_wtf import FlaskForm
 from wtforms import IntegerField, FieldList, FormField, SubmitField
 from wtforms.validators import DataRequired, NumberRange
 
-from application import db
+from application.extensions import db
 from application.models.duck_trade import DuckTradeLog
 
 duck_trade = Blueprint("duck_trade", __name__)
@@ -75,7 +75,9 @@ def to_binary(costs_dict):
 @duck_trade.route("/")
 def index():
     if request.is_json or request.accept_mimetypes.accept_json:
-        return jsonify({"message": "Duck trade endpoint. Use /submit_trade POST for actions."})
+        return jsonify(
+            {"message": "Duck trade endpoint. Use /submit_trade POST for actions."}
+        )
     return redirect("/trade")
 
 
@@ -84,17 +86,21 @@ def submit_trade():
     form = DuckTradeForm()
     is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"
 
-    if not form.validate_on_submit():
-        error_msg = "Error: Check your inputs."
-        if is_ajax:
-            return (
-                jsonify(
-                    {"status": "error", "message": error_msg, "errors": form.errors}
-                ),
-                400,
-            )
-        flash(error_msg, "danger")
-        return redirect("/trade")
+    # If it's a JSON request from the React frontend, WTForms validation might fail 
+    # due to structure differences (e.g. nested FormFields). 
+    # We bypass WTForms validation for JSON AJAX requests and handle it manually.
+    if not request.is_json:
+        if not form.validate_on_submit():
+            error_msg = "Error: Check your inputs."
+            if is_ajax:
+                return (
+                    jsonify(
+                        {"status": "error", "message": error_msg, "errors": form.errors}
+                    ),
+                    400,
+                )
+            flash(error_msg, "danger")
+            return redirect("/trade")
 
     try:
         userid = session.get("user")
@@ -106,12 +112,24 @@ def submit_trade():
             return redirect("/trade")
 
         from application import User
-        user = User.query.get(userid)
+
+        user = db.session.get(User, userid)
+
+        if not user:
+            msg = "User profile not found. Please log in again."
+            if is_ajax:
+                return jsonify({"status": "error", "message": msg}), 401
+            flash(msg, "danger")
+            return redirect("/login")
 
         # --- NEW CODE: Check for existing pending trades ---
-        existing_trade = DuckTradeLog.query.filter_by(username=user.username, status="pending").first()
+        existing_trade = DuckTradeLog.query.filter_by(
+            username=user.username, status="pending"
+        ).first()
         if existing_trade:
-            msg = "You already have a pending trade. Please wait for it to be processed."
+            msg = (
+                "You already have a pending trade. Please wait for it to be processed."
+            )
             if is_ajax:
                 return jsonify({"status": "error", "message": msg}), 400
             flash(msg, "warning")
@@ -120,7 +138,18 @@ def submit_trade():
 
         if is_ajax and request.is_json:
             data = request.get_json()
-            d_ducks = int(data.get("digital_ducks", 0))
+            try:
+                d_ducks = int(data.get("digital_ducks", 0))
+                if d_ducks < 1:
+                    return (
+                        jsonify({"status": "error", "message": "Must trade at least 1 duck."}),
+                        400,
+                    )
+            except (ValueError, TypeError):
+                return (
+                    jsonify({"status": "error", "message": "Invalid duck count."}),
+                    400,
+                )
             bit_ducks = data.get("bit_ducks", [])
             byte_ducks = data.get("byte_ducks", [])
         else:

@@ -12,11 +12,10 @@ Room naming conventions:
 
 from datetime import datetime
 from flask import request, session
-from flask_socketio import emit, join_room, leave_room
+from flask_socketio import emit, join_room
 
 from application.extensions import db, socketio
 from application.constants import GLOBAL_CLASSROOM_ID
-import application.constants as _constants
 from .models.user import User
 from .models.classroom import user_classrooms
 from .utilities.db_helpers import save_message_to_db
@@ -47,7 +46,7 @@ def handle_connect(auth=None):
     if not user_id:
         return False  # Reject unauthenticated connections
 
-    user = User.query.get(user_id)
+    user = db.session.get(User, user_id)
     if not user:
         return False
 
@@ -69,7 +68,7 @@ def handle_connect(auth=None):
     # Mark online
     if user.id not in _active_sessions:
         _active_sessions[user.id] = set()
-    
+
     is_first_connection = len(_active_sessions[user.id]) == 0
     _active_sessions[user.id].add(request.sid)
 
@@ -88,10 +87,10 @@ def handle_disconnect(auth=None):
     if not user_id:
         return
 
-    user = User.query.get(user_id)
+    user = db.session.get(User, user_id)
     if user and user.id in _active_sessions:
         _active_sessions[user.id].discard(request.sid)
-        
+
         if len(_active_sessions[user.id]) == 0:
             del _active_sessions[user.id]
             user.set_online(user.id, False)
@@ -113,7 +112,7 @@ def handle_send_message(data):
     if not user_id:
         return
 
-    user = User.query.get(user_id)
+    user = db.session.get(User, user_id)
     if not user:
         return
 
@@ -125,7 +124,8 @@ def handle_send_message(data):
 
     # Re-fetch the conversation to get its classroom_id
     from .models.conversation import Conversation
-    conv = Conversation.query.get(conversation_id)
+
+    conv = db.session.get(Conversation, conversation_id)
     if not conv:
         return
 

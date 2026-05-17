@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import { 
     CheckCircle, 
     XCircle, 
@@ -90,14 +91,35 @@ const AdminProjects = () => {
             <div className="admin-projects-page">
                 <AdminPageHeader 
                     title="Project Review" 
-                    description={`Reviewing: ${selectedProject.name}`}
+                    description={`Reviewing project by ${selectedProject.user_nickname}`}
                     onBack={() => setSelectedProject(null)}
                 />
                 
-                <div className="project-review-card card">
+                <div className="project-review-card">
                     <div className="review-grid">
                         <div className="project-info-panel">
-                            <h2>{selectedProject.name}</h2>
+                            <div className="review-header-flex">
+                                <h2>{selectedProject.name}</h2>
+                                <Link 
+                                    to={`/profile/${selectedProject.user_slug}`} 
+                                    className="student-profile-link"
+                                    target="_blank"
+                                >
+                                    <User size={16} /> {selectedProject.user_nickname} (#{selectedProject.user_id})
+                                </Link>
+                            </div>
+
+                            {selectedProject.image_url && (
+                                <div className="review-image-container">
+                                    <SmartImage 
+                                        src={formatStaticUrl(selectedProject.image_url)} 
+                                        alt="Preview" 
+                                        className="review-preview-img" 
+                                        fallbackType="project"
+                                    />
+                                </div>
+                            )}
+
                             <p className="description">{selectedProject.description}</p>
                             
                             <div className="links-section">
@@ -118,35 +140,26 @@ const AdminProjects = () => {
                                 )}
                             </div>
 
-                                {selectedProject.image_url && (
-                                    <SmartImage 
-                                        src={formatStaticUrl(selectedProject.image_url)} 
-                                        alt="Preview" 
-                                        className="review-preview-img" 
-                                        fallbackType="project"
-                                    />
+                            <div className="extra-context-section">
+                                {selectedProject.code_snippet && (
+                                    <div className="context-block">
+                                        <h4><Code size={18} /> Code Snippet</h4>
+                                        <pre className="code-view">
+                                            <code>{selectedProject.code_snippet}</code>
+                                        </pre>
+                                    </div>
                                 )}
 
-                                <div className="extra-context-section">
-                                    {selectedProject.code_snippet && (
-                                        <div className="context-block">
-                                            <h4><Code size={18} /> Code Snippet</h4>
-                                            <pre className="code-view">
-                                                <code>{selectedProject.code_snippet}</code>
-                                            </pre>
+                                {selectedProject.video_transcript && (
+                                    <div className="context-block">
+                                        <h4><Video size={18} /> Video Transcript</h4>
+                                        <div className="transcript-view">
+                                            {selectedProject.video_transcript}
                                         </div>
-                                    )}
-
-                                    {selectedProject.video_transcript && (
-                                        <div className="context-block">
-                                            <h4><Video size={18} /> Video Transcript</h4>
-                                            <div className="transcript-view">
-                                                {selectedProject.video_transcript}
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
+                                    </div>
+                                )}
                             </div>
+                        </div>
 
                         <div className="review-actions-panel">
                             <h3 className="section-title"><MessageSquare size={18} /> Teacher Feedback</h3>
@@ -251,7 +264,10 @@ const AdminProjects = () => {
                                 <div className="p-content">
                                     <h3>{p.name}</h3>
                                     <div className="p-meta">
-                                        <span><User size={14} /> Student #{p.user_id}</span>
+                                        <span className="student-info">
+                                            <User size={14} /> {p.user_nickname} 
+                                            <span className="id-pill">#{p.user_id}</span>
+                                        </span>
                                     </div>
                                     <p className="p-desc">{p.description?.substring(0, 80)}...</p>
                                     <div className="card-footer">

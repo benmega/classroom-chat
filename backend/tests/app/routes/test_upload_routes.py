@@ -20,7 +20,7 @@ def test_upload_file_valid(client, sample_image_data, test_app, setup_directorie
 
     assert response.status_code == 200
     assert b"File uploaded successfully" in response.data
-    assert "userData/image/" in response.json["file_path"]
+    assert "userData/image/" in response.json["file_path"].replace("\\", "/")
 
 
 def test_upload_file_invalid_json(client, test_app):

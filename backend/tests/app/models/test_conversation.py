@@ -8,29 +8,33 @@ from datetime import datetime
 
 from application import db
 from application.models.conversation import Conversation
+from application.constants import GLOBAL_CLASSROOM_ID
 
 
 def test_conversation_creation(init_db):
     """Test creating a Conversation entry."""
-    conversation = Conversation(title="Test Conversation")
+    conversation = Conversation(
+        title="Test Conversation",
+        classroom_id=GLOBAL_CLASSROOM_ID
+    )
     db.session.add(conversation)
     db.session.commit()
 
-    retrieved_conversation = Conversation.query.first()
+    retrieved_conversation = Conversation.query.filter_by(title="Test Conversation").first()
     assert retrieved_conversation is not None
     assert retrieved_conversation.title == "Test Conversation"
     assert isinstance(retrieved_conversation.created_at, datetime)
 
 
-def test_conversation_default_title(init_db):
+def test_conversation_default_title(init_db, sample_classroom):
     """Test default title generation for a Conversation."""
-    conversation = Conversation()
+    conversation = Conversation(classroom_id=sample_classroom.id)
     db.session.add(conversation)
     db.session.commit()
 
-    retrieved_conversation = Conversation.query.first()
+    retrieved_conversation = Conversation.query.filter_by(classroom_id=sample_classroom.id).first()
     assert retrieved_conversation is not None
-    assert "New Conversation" in retrieved_conversation.title
+    assert "New Chat" in retrieved_conversation.title
 
 
 def test_conversation_users_relationship(sample_conversation):
@@ -84,5 +88,5 @@ def test_conversation_deletion_cascade(sample_conversation, sample_user, init_db
     db.session.commit()
 
     # Ensure both the conversation and its messages are deleted
-    assert Conversation.query.get(conversation.id) is None
+    assert db.session.get(Conversation, conversation.id) is None
     assert Message.query.first() is None

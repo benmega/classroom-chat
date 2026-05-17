@@ -22,7 +22,7 @@ class Achievement(db.Model):
     requirement_value = db.Column(db.String(128), nullable=True)
     source = db.Column(db.String(255), nullable=True)
     users = db.relationship("UserAchievement", backref="achievement", lazy=True)
-    
+
     def to_dict(self):
         return {
             "id": self.id,
@@ -32,15 +32,16 @@ class Achievement(db.Model):
             "reward": self.reward,
             "description": self.description,
             "requirement_value": self.requirement_value,
-            "source": self.source
+            "source": self.source,
         }
-
 
 
 class UserAchievement(db.Model):
     __tablename__ = "user_achievement"
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False, index=True)
+    user_id = db.Column(
+        db.Integer, db.ForeignKey("users.id"), nullable=False, index=True
+    )
     achievement_id = db.Column(
         db.Integer, db.ForeignKey("achievement.id"), nullable=False, index=True
     )
@@ -53,5 +54,5 @@ class UserAchievement(db.Model):
             "id": self.id,
             "achievement_id": self.achievement_id,
             "achievement": self.achievement.to_dict() if self.achievement else None,
-            "earned_at": self.earned_at.isoformat() if self.earned_at else None
+            "earned_at": self.earned_at.isoformat() if self.earned_at else None,
         }

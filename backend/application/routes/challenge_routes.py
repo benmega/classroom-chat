@@ -7,7 +7,7 @@ Summary: Flask routes for challenge routes functionality (Merged Version).
 import re
 from datetime import datetime
 
-from urllib.parse import urlparse, parse_qs
+from urllib.parse import parse_qs
 from flask import Blueprint, request, session, redirect, url_for, flash, jsonify
 from flask_cors import cross_origin
 
@@ -38,10 +38,10 @@ URL_PATTERN = BASE_PATTERN + r"(?P<params>\?[^ \n\r\t]*)?"
 @csrf.exempt
 @cross_origin(
     origins=[
-        "https://codecombat.com", 
-        "https://www.codecombat.com", 
-        "https://ozaria.com", 
-        "https://www.ozaria.com"
+        "https://codecombat.com",
+        "https://www.codecombat.com",
+        "https://ozaria.com",
+        "https://www.ozaria.com",
     ],
     supports_credentials=True,
 )
@@ -50,7 +50,10 @@ def submit_challenge():
     session_userid = session.get("user", None)
     if not session_userid:
         if request.is_json or request.accept_mimetypes.accept_json:
-            return {"success": False, "message": "Please log in to the Classroom Chat app first."}, 401
+            return {
+                "success": False,
+                "message": "Please log in to the Classroom Chat app first.",
+            }, 401
         flash("No session user found", "error")
         return redirect(url_for("user.login"))
 
@@ -107,30 +110,27 @@ def submit_challenge():
         message = f"Congrats {user.username}, you earned {duck_reward} ducks!"
 
         # ---- Classroom enrollment trigger ----------------------------------
-        # Re-extract the slug from the URL (already validated above) to fetch
-        # the Challenge ORM object and read its classroom_id.
-        extracted = _extract_challenge_details(url)
-        if extracted:
-            chal = Challenge.query.filter(
-                (Challenge.slug.ilike(extracted["challenge_slug"])) |
-                (Challenge.slug.ilike(extracted["challenge_slug"].replace("-", " ")))
-            ).first()
-            if chal and getattr(chal, "classroom_id", None):
-                _enroll_user_in_classroom(user, chal.classroom_id)
+        # If the challenge log was successful, we check if it provided a
+        # classroom_id to enroll the user in.
+        classroom_id = details.get("classroom_id")
+        if classroom_id:
+            _enroll_user_in_classroom(user, classroom_id)
 
-        return jsonify({
-            "success": True,
-            "message": message,
-            "duck_reward": duck_reward,
-            "quack_count": duck_reward,
-        })
+        return jsonify(
+            {
+                "success": True,
+                "message": message,
+                "duck_reward": duck_reward,
+                "quack_count": duck_reward,
+            }
+        )
 
     # Failure path
     msg = details.get(
         "message",
         "Mr. Mega does not recognize this challenge. Are you sure this is the right link?",
     )
-    
+
     return jsonify({"success": False, "message": msg}), 400
 
 
@@ -169,13 +169,13 @@ def _extract_challenge_details(message):
     domain = match.group("domain")
     challenge_slug = match.group("challenge_slug") or match.group("slug")
     params_str = match.group("params") or ""
-    
+
     course_id = None
     course_instance = None
-    
+
     if params_str:
         # parse_qs returns a dict mapping keys to lists of values
-        qs = parse_qs(params_str.lstrip('?'))
+        qs = parse_qs(params_str.lstrip("?"))
         course_id = qs.get("course", [None])[0]
         course_instance = qs.get("course-instance", [None])[0]
 
@@ -199,12 +199,18 @@ def _log_challenge(details, username, helper=None):
         provided_id = details.get("course_instance") or details.get("course_id")
 
         if not provided_id:
-            return {"success": False, "message": "No course instance provided in the URL."}
+            return {
+                "success": False,
+                "message": "No course instance provided in the URL.",
+            }
 
         # 2. Verify the CourseInstance exists.
         course_instance = CourseInstance.query.filter_by(id=provided_id).first()
         if not course_instance:
-            return {"success": False, "message": "This level doesn't seem to be part of a valid course instance."}
+            return {
+                "success": False,
+                "message": "This level doesn't seem to be part of a valid course instance.",
+            }
 
         # Get the parent course ID mapped to this instance
         actual_course_id = course_instance.course_id
@@ -214,22 +220,28 @@ def _log_challenge(details, username, helper=None):
 
         # Match the slug (handling potential space/dash mismatches)
         challenge = Challenge.query.filter(
-            (Challenge.slug.ilike(challenge_slug)) |
-            (Challenge.slug.ilike(challenge_slug.replace("-", " ")))
+            (Challenge.slug.ilike(challenge_slug))
+            | (Challenge.slug.ilike(challenge_slug.replace("-", " ")))
         ).first()
 
         if not challenge:
-            return {"success": False, "message": f"Couldn't identify challenge '{challenge_slug}'. Check the link and try again."}
+            return {
+                "success": False,
+                "message": f"Couldn't identify challenge '{challenge_slug}'. Check the link and try again.",
+            }
 
         # The ultimate validation: Does this challenge actually belong to this course?
         if challenge.course_id != actual_course_id:
-            return {"success": False, "message": "This challenge does not belong to the specified course."}
+            return {
+                "success": False,
+                "message": "This challenge does not belong to the specified course.",
+            }
 
         # 4. Tighten uniqueness check: SAME user, SAME challenge, SAME course instance
         filters = {
             "username": username,
             "challenge_slug": challenge.slug,  # Using the canonical slug from the DB
-            "course_instance": course_instance.id  # Strictly checking the instance, not the course
+            "course_instance": course_instance.id,  # Strictly checking the instance, not the course
         }
 
         existing_log = ChallengeLog.query.filter_by(**filters).first()
@@ -258,6 +270,7 @@ def _log_challenge(details, username, helper=None):
             "success": True,
             "message": "Challenge logged successfully",
             "timestamp": challenge_log.timestamp,
+            "classroom_id": challenge.classroom_id or course_instance.classroom_id,
         }
 
     except Exception as e:
@@ -308,6 +321,7 @@ def _update_user_ducks(username, challenge_slug, duck_multiplier=1):
 # ENROLLMENT HELPERS
 # ============================================================================
 
+
 def _enroll_user_in_classroom(user, classroom_id: str):
     """
     Insert a user_classrooms row for (user.id, classroom_id) if one does not
@@ -333,9 +347,11 @@ def _enroll_user_in_classroom(user, classroom_id: str):
         if already:
             return  # Idempotent — already enrolled
 
-        classroom = Classroom.query.get(classroom_id)
+        classroom = db.session.get(Classroom, classroom_id)
         if not classroom:
-            print(f"[Enrollment] Classroom '{classroom_id}' not found — skipping enrollment.")
+            print(
+                f"[Enrollment] Classroom '{classroom_id}' not found — skipping enrollment."
+            )
             return
 
         db.session.execute(
@@ -350,6 +366,7 @@ def _enroll_user_in_classroom(user, classroom_id: str):
 
         # Emit enrollment event via centralised helper so the sidebar updates live
         from application.socket_events import emit_classroom_enrolled
+
         emit_classroom_enrolled(user.id, classroom.to_dict())
 
     except Exception as exc:

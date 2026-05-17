@@ -64,7 +64,7 @@ def test_skill_update(sample_skill):
     skill.name = new_name
     db.session.commit()
 
-    updated_skill = Skill.query.get(skill.id)
+    updated_skill = db.session.get(Skill, skill.id)
     assert updated_skill.name == new_name
 
 
@@ -74,7 +74,7 @@ def test_skill_deletion(sample_skill):
     db.session.delete(skill)
     db.session.commit()
 
-    deleted_skill = Skill.query.get(skill.id)
+    deleted_skill = db.session.get(Skill, skill.id)
     assert deleted_skill is None
 
 

@@ -4,17 +4,13 @@ Type: js
 Summary: Main frontend bootstrap for sockets, chat, and achievements.
 */
 
-import { handleUsernameFormSubmission, closeModalLogic, handlePasswordSubmission, setupUsernameLogic } from './users/usernameLogic.js';
-import { socket } from './sockets/socketLogic.js';
-import { setupSocketConnection, setupSocket } from './sockets/socketManager.js';
-import { setupMessagingAndConversation, sendMessage, updateConversation } from './messages/messageHandling.js';
+import { setupSocket } from './sockets/socketManager.js';
+import { setupMessagingAndConversation } from './messages/messageHandling.js';
 import { initAchievements } from './achievements/achievements.js';
 
 
 document.addEventListener('DOMContentLoaded', async function() {
     await setupSocket();
     setupMessagingAndConversation();
-    const usernameEl = document.getElementById('currentUsername');
-    const username = usernameEl.dataset.username;
-    initAchievements(username);
+    initAchievements();
 });

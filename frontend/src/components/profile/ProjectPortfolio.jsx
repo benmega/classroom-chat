@@ -28,11 +28,6 @@ const ProjectPortfolio = ({ projects, isOwner, setSelectedProject }) => {
                                     fallbackType="project"
                                 />
                                 {project.video_url && <div className="play-overlay"><Play size={24} fill="currentColor" /></div>}
-                                {isOwner && (
-                                    <button className="edit-overlay" onClick={(e) => { e.stopPropagation(); navigate(`/project/edit/${project.id}`); }}>
-                                        <Settings size={14} />
-                                    </button>
-                                )}
                             </div>
                             <div className="project-content">
                                 <h3>{project.name}</h3>
@@ -47,6 +42,11 @@ const ProjectPortfolio = ({ projects, isOwner, setSelectedProject }) => {
                                 <div className="project-footer">
                                     {project.link && <a href={project.link} target="_blank" rel="noreferrer" className="link-icon"><ExternalLink size={16} /></a>}
                                     <button className="btn-text" onClick={() => setSelectedProject(project)}>Details</button>
+                                    {isOwner && (
+                                        <button className="link-icon" onClick={() => navigate(`/project/edit/${project.id}`)} title="Edit Project">
+                                            <Settings size={16} />
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                         </div>

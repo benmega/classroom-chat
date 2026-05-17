@@ -1,5 +1,5 @@
 // achievements.js
-export function initAchievements(username) {
+export function initAchievements() {
     async function fetchAchievements() {
         try {
             const res = await fetch("/api/achievements/check");

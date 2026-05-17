@@ -13,7 +13,9 @@ load_dotenv()
 
 class Config:
     # BASE_DIR is classroom-chat/
-    BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(os.path.dirname(__file__)), ".."))
+    BASE_DIR = os.path.abspath(
+        os.path.join(os.path.dirname(os.path.dirname(__file__)), "..")
+    )
 
     INSTANCE_FOLDER = os.path.join(BASE_DIR, "backend", "instance")
     STATIC_FOLDER = os.path.join(BASE_DIR, "frontend", "static")
@@ -42,8 +44,7 @@ class Config:
     if not ADMIN_PASSWORD:
         if os.getenv("FLASK_ENV") == "production":
             raise RuntimeError("ADMIN_PASSWORD must be set in production environment!")
-        ADMIN_PASSWORD = "admin-dev-password" # Slightly better than 1234
-
+        ADMIN_PASSWORD = "admin-dev-password"  # Slightly better than 1234
 
     # SocketIO configuration
     SOCKETIO_ASYNC_MODE = "gevent"
@@ -86,10 +87,14 @@ class ProductionConfig(Config):
     TEMPLATE_FOLDER = os.path.join(Config.BASE_DIR, "frontend", "dist")
     STATIC_FOLDER = os.path.join(Config.BASE_DIR, "frontend", "dist")
 
-    CORS_ORIGINS = os.getenv("CORS_ORIGINS", "").split(",") if os.getenv("CORS_ORIGINS") else [
-        "https://codecombat.com",
-        "https://www.ozaria.com",
-        "https://benmega.com",
-        "https://www.benmega.com",
-        "https://blossom.benmega.com",
-    ]
+    CORS_ORIGINS = (
+        os.getenv("CORS_ORIGINS", "").split(",")
+        if os.getenv("CORS_ORIGINS")
+        else [
+            "https://codecombat.com",
+            "https://www.ozaria.com",
+            "https://benmega.com",
+            "https://www.benmega.com",
+            "https://blossom.benmega.com",
+        ]
+    )

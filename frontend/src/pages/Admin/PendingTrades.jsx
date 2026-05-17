@@ -9,14 +9,12 @@ import {
     AlertCircle,
     Hash
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
 import './PendingTrades.css';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
 
 const PendingTrades = () => {
-    const navigate = useNavigate();
     const [trades, setTrades] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isProcessing, setIsProcessing] = useState(null);
@@ -28,7 +26,7 @@ const PendingTrades = () => {
             if (response.data.status === 'success') {
                 setTrades(response.data.data.trades);
             }
-        } catch (error) {
+        } catch {
             toast.error('Failed to load pending trades.');
         } finally {
             setIsLoading(false);
@@ -53,7 +51,7 @@ const PendingTrades = () => {
             } else {
                 toast.error(response.data.message || 'Action failed.');
             }
-        } catch (error) {
+        } catch {
             toast.error('An error occurred while processing the trade.');
         } finally {
             setIsProcessing(null);

@@ -11,10 +11,15 @@ WARNING: This route must NEVER be enabled in production.
 
 import os
 
-from flask import Blueprint, jsonify, request, session, current_app, redirect, render_template
-from application.extensions import db
+from flask import (
+    Blueprint,
+    jsonify,
+    request,
+    session,
+    current_app,
+    render_template,
+)
 from application.models.user import User
-from application.models.conversation import Conversation
 
 dev_login = Blueprint("dev_login", __name__)
 
@@ -62,7 +67,6 @@ def _perform_login(user_obj: User, role: str):
     session["conversation_id"] = None
 
 
-
 @dev_login.route("/dev-login", methods=["GET"])
 def browser_dev_login():
     """
@@ -90,8 +94,10 @@ def browser_dev_login():
     # In development, redirect to the Vite dev server to ensure the 'main app' loads.
     # If the user is already on the Vite server, this just brings them to /.
     redirect_url = "http://localhost:5173/"
-    
-    return render_template("dev_login.html", role=role, error=error, redirect_url=redirect_url)
+
+    return render_template(
+        "dev_login.html", role=role, error=error, redirect_url=redirect_url
+    )
 
 
 @dev_login.route("/api/dev-login", methods=["GET", "POST"])
@@ -116,24 +122,39 @@ def agent_dev_login():
     role = _resolve_role()
     username = _AGENT_ROLES.get(role)
     if not username:
-        return jsonify({
-            "error": f"Unknown role '{role}'. Accepted values: {list(_AGENT_ROLES.keys())}"
-        }), 400
+        return (
+            jsonify(
+                {
+                    "error": f"Unknown role '{role}'. Accepted values: {list(_AGENT_ROLES.keys())}"
+                }
+            ),
+            400,
+        )
 
     user_obj = User.query.filter_by(username=username).first()
     if not user_obj:
-        return jsonify({"error": f"Agent user '{username}' not found in the database"}), 404
+        return (
+            jsonify({"error": f"Agent user '{username}' not found in the database"}),
+            404,
+        )
 
     _perform_login(user_obj, role)
 
     # For browser navigation (GET), use the premium template or redirect.
     if request.method == "GET":
         redirect_url = "http://localhost:5173/"
-        return render_template("dev_login.html", role=role, error=None, redirect_url=redirect_url)
+        return render_template(
+            "dev_login.html", role=role, error=None, redirect_url=redirect_url
+        )
 
-    return jsonify({
-        "success": True,
-        "user": user_obj.to_dict(),
-        "role": role,
-        "message": f"Dev-login successful as '{username}' ({role})",
-    }), 200
+    return (
+        jsonify(
+            {
+                "success": True,
+                "user": user_obj.to_dict(),
+                "role": role,
+                "message": f"Dev-login successful as '{username}' ({role})",
+            }
+        ),
+        200,
+    )

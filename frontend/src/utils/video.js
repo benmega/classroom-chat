@@ -42,7 +42,7 @@ export const extractVideoThumbnail = (videoFile, seekTime = 1) => {
             }
         };
 
-        video.onerror = (e) => {
+        video.onerror = () => {
             // Cleanup
             URL.revokeObjectURL(video.src);
             if (video.parentNode) document.body.removeChild(video);

@@ -155,7 +155,7 @@ def test_add_achievement_no_requirement(client, init_db, sample_admin):
 
 def test_add_achievement_no_user(client, init_db):
     """Test adding achievement without logged in user/admin privileges."""
-    initial_count = Achievement.query.count()
+    initial_count = db.session.query(UserCertificate).count()
 
     response = client.post(
         "/achievements/add",
@@ -169,7 +169,7 @@ def test_add_achievement_no_user(client, init_db):
     )
 
     # Ensure the achievement was NOT added
-    final_count = Achievement.query.count()
+    final_count = db.session.query(UserCertificate).count()
     assert final_count == initial_count
     assert response.status_code == 401
 
@@ -219,7 +219,7 @@ def test_submit_certificate_invalid_url(client, init_db, sample_user):
     with client.session_transaction() as sess:
         sess["user"] = sample_user.id
 
-    initial_count = UserCertificate.query.count()
+    initial_count = db.session.query(UserCertificate).count()
     pdf_file = (BytesIO(b"pdf"), "certificate.pdf")
 
     response = client.post(
@@ -235,7 +235,7 @@ def test_submit_certificate_invalid_url(client, init_db, sample_user):
     assert response.status_code == 200
 
     # Check that no record was created
-    assert UserCertificate.query.count() == initial_count
+    assert db.session.query(UserCertificate).count() == initial_count
 
     assert response.is_json
     assert response.json.get("success") is False
@@ -247,7 +247,7 @@ def test_submit_certificate_no_matching_achievement(client, init_db, sample_user
     with client.session_transaction() as sess:
         sess["user"] = sample_user.id
 
-    initial_count = UserCertificate.query.count()
+    initial_count = db.session.query(UserCertificate).count()
     pdf_file = (BytesIO(b"pdf"), "certificate.pdf")
 
     response = client.post(
@@ -261,7 +261,7 @@ def test_submit_certificate_no_matching_achievement(client, init_db, sample_user
     )
 
     assert response.status_code == 200
-    assert UserCertificate.query.count() == initial_count
+    assert db.session.query(UserCertificate).count() == initial_count
 
     assert response.is_json
     assert response.json.get("success") is False
@@ -296,7 +296,7 @@ def test_submit_certificate_invalid_file_type(
     with client.session_transaction() as sess:
         sess["user"] = sample_user.id
 
-    initial_count = UserCertificate.query.count()
+    initial_count = db.session.query(UserCertificate).count()
     txt_file = (BytesIO(b"text"), "certificate.txt")
 
     response = client.post(
@@ -310,7 +310,7 @@ def test_submit_certificate_invalid_file_type(
     )
 
     assert response.status_code == 200
-    assert UserCertificate.query.count() == initial_count
+    assert db.session.query(UserCertificate).count() == initial_count
 
     assert response.is_json
     assert response.json.get("success") is False
@@ -352,8 +352,8 @@ def test_submit_certificate_update_existing(
     assert response.json.get("success") is True
 
     # Check that count is still 1 (uniqueness constraint) and values updated
-    assert UserCertificate.query.count() == 1
-    updated_cert = UserCertificate.query.get(old_id)
+    assert db.session.query(UserCertificate).count() == 1
+    updated_cert = db.session.get(UserCertificate, old_id)
     assert updated_cert.url == new_url
     assert updated_cert.file_path != "old.pdf"
 

@@ -1,6 +1,7 @@
 from datetime import datetime
 from ..extensions import db
 
+
 class DuckTransaction(db.Model):
     __tablename__ = "duck_transactions"
     id = db.Column(db.Integer, primary_key=True)
@@ -17,5 +18,5 @@ class DuckTransaction(db.Model):
             "user_id": self.user_id,
             "amount": self.amount,
             "reason": self.reason,
-            "timestamp": self.timestamp.isoformat()
+            "timestamp": self.timestamp.isoformat(),
         }

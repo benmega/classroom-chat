@@ -13,11 +13,13 @@ from application.models.project import Project
 
 webhooks_api = Blueprint("webhooks_api", __name__, url_prefix="/api/webhooks")
 
+
 def validate_secret():
     """Validates the incoming request against the WEBHOOK_SECRET environment variable."""
     expected_secret = os.environ.get("WEBHOOK_SECRET")
     incoming_secret = request.headers.get("X-API-KEY")
     return expected_secret and incoming_secret == expected_secret
+
 
 @webhooks_api.route("/youtube", methods=["POST"])
 def youtube_callback():
@@ -29,9 +31,12 @@ def youtube_callback():
     video_id = data.get("video_id")
 
     if not project_id or not video_id:
-        return jsonify({"success": False, "error": "Missing project_id or video_id"}), 400
+        return (
+            jsonify({"success": False, "error": "Missing project_id or video_id"}),
+            400,
+        )
 
-    project = Project.query.get(project_id)
+    project = db.session.get(Project, project_id)
     if not project:
         return jsonify({"success": False, "error": "Project not found"}), 404
 
@@ -45,6 +50,7 @@ def youtube_callback():
         db.session.rollback()
         return jsonify({"success": False, "error": str(e)}), 500
 
+
 @webhooks_api.route("/transcribe", methods=["POST"])
 def transcribe_callback():
     if not validate_secret():
@@ -55,9 +61,12 @@ def transcribe_callback():
     transcript = data.get("transcript")
 
     if not project_id or not transcript:
-        return jsonify({"success": False, "error": "Missing project_id or transcript"}), 400
+        return (
+            jsonify({"success": False, "error": "Missing project_id or transcript"}),
+            400,
+        )
 
-    project = Project.query.get(project_id)
+    project = db.session.get(Project, project_id)
     if not project:
         return jsonify({"success": False, "error": "Project not found"}), 404
 

@@ -90,6 +90,6 @@ def test_submit_trade_one_pending_limit(client, sample_user_with_ducks, test_app
 # Test the bit shift get route
 def test_bit_shift_get(client, test_app):
     with test_app.app_context():
-        response = client.get(url_for("duck_trade.bit_shift"))
+        response = client.get(url_for("duck_trade.bit_shift"), headers={"Accept": "application/json"})
         assert response.status_code == 200
-        assert b"Digital Ducks" in response.data
+        assert b"Bit Shift interface has migrated to React" in response.data

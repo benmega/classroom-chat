@@ -27,4 +27,5 @@ pytest-playwright
 openai
 ruff
 botocore[crt]
-flask-swagger-ui==4.11.1
+flask-swagger-ui==4.11.1
+Flask-Migrate~=4.1.0

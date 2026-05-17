@@ -28,7 +28,7 @@ PIP_CMD=("$PYTHON_BIN" -m pip)
 REQUIREMENTS_FILE="$APP_DIR/backend/requirements.txt"
 
 # Flask app puts its DB and migrations inside backend/instance/
-MIGRATIONS_DIR="$APP_DIR/backend/instance/migration"
+MIGRATIONS_DIR="$APP_DIR/backend/migrations"
 DB_FILE="$APP_DIR/backend/instance/prod_users.db"
 BACKUP_DIR="$APP_DIR/backend/instance/backups"
 TIMESTAMP="$(date +%Y%m%d_%H%M%S)"
@@ -124,11 +124,11 @@ fi
 # -------------------------
 # Migrations
 # -------------------------
-echo "Running migrations..."
+echo "Running database migrations..."
 (
-    cd "$MIGRATIONS_DIR"
+    cd "$APP_DIR/backend"
     # Ensure we run in production mode so it hits prod_users.db
-    run env FLASK_ENV=production "$PYTHON_BIN" migration_script.py
+    run env FLASK_APP=main.py FLASK_ENV=production "$PYTHON_BIN" -m flask db upgrade
 )
 
 # -------------------------

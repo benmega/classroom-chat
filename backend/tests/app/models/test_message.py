@@ -65,7 +65,7 @@ def test_message_strike_flag(sample_message):
     message.is_struck = True
     db.session.commit()
 
-    updated_message = Message.query.get(message.id)
+    updated_message = db.session.get(Message, message.id)
     assert updated_message.is_struck is True
 
 
@@ -77,7 +77,7 @@ def test_message_edit(sample_message):
     message.edited_at = datetime.utcnow()
     db.session.commit()
 
-    updated_message = Message.query.get(message.id)
+    updated_message = db.session.get(Message, message.id)
     assert updated_message.content == new_content
     assert updated_message.edited_at is not None
 
@@ -89,7 +89,7 @@ def test_message_soft_delete(sample_message):
     message.deleted_at = deletion_time
     db.session.commit()
 
-    deleted_message = Message.query.get(message.id)
+    deleted_message = db.session.get(Message, message.id)
     assert deleted_message.deleted_at == deletion_time
 
 

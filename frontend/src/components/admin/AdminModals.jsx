@@ -1,7 +1,7 @@
 import React from 'react';
 import Modal from '../common/Modal';
 import SmartImage from '../common/SmartImage';
-import DuckIcon from '../common/DuckIcon';
+import DuckIcon from '../Icons/DuckIcon';
 
 export const CreateUserModal = ({ isOpen, onClose, onSubmit, formErrors, loading }) => (
     <Modal isOpen={isOpen} onClose={onClose} title="Create New User">

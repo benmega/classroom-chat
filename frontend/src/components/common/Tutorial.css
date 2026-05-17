@@ -1,0 +1,136 @@
+.spotlight-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 10000;
+  pointer-events: none;
+}
+
+.spotlight-svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: auto;
+}
+
+.spotlight-card {
+  position: absolute;
+  width: 280px;
+  padding: 1.5rem;
+  pointer-events: auto;
+  z-index: 10001;
+  animation: spotlightFadeIn 0.3s ease-out forwards;
+  box-shadow: var(--shadow-rich);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+@keyframes spotlightFadeIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* Position adjustments for the card */
+.spotlight-card.center {
+  transform: translate(-50%, -50%);
+}
+
+.spotlight-card.right {
+  margin-left: 20px;
+}
+
+.spotlight-card.bottom,
+.spotlight-card.bottom-left {
+  margin-top: 20px;
+}
+
+.spotlight-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.spotlight-icon {
+  width: 40px;
+  height: 40px;
+  background: var(--gradient-primary);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  box-shadow: var(--shadow-glow);
+}
+
+.spotlight-title {
+  font-size: var(--font-lg);
+  font-weight: 700;
+  margin: 0;
+}
+
+.spotlight-desc {
+  font-size: var(--font-md);
+  color: var(--text-secondary);
+  line-height: 1.4;
+  margin-bottom: 1.25rem;
+}
+
+.spotlight-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.spotlight-dots {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.spotlight-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-full);
+  background: var(--border-subtle);
+}
+
+.spotlight-dot.active {
+  background: var(--primary-color);
+  width: 12px;
+}
+
+.spotlight-skip {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  color: var(--text-muted);
+  padding: 4px;
+  border-radius: var(--radius-full);
+  transition: var(--transition-fast);
+}
+
+.spotlight-skip:hover {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+/* Ensure spotlight card stays within viewport */
+@media (max-width: 600px) {
+  .spotlight-card {
+    position: fixed;
+    bottom: 2rem;
+    left: 50% !important;
+    top: auto !important;
+    transform: translateX(-50%) !important;
+    width: 90%;
+    margin: 0;
+  }
+  
+  .spotlight-card.right,
+  .spotlight-card.bottom {
+    margin: 0;
+  }
+}

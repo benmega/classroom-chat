@@ -1,42 +1,18 @@
 import os
 import uuid
-import boto3
-from botocore.exceptions import BotoCoreError, MissingDependencyException
 from flask import Blueprint, request, jsonify, session, current_app, send_from_directory
 from werkzeug.utils import secure_filename
 
 from application import limiter
-from application.config import Config
 from application.extensions import db
 from application.models.note import Note
 from application.models.user import User
 from application.utilities.db_helpers import get_user
-from application.utilities.helper_functions import allowed_file
+from application.utilities.helper_functions import allowed_file, get_s3_client
 
 notes_bp = Blueprint("notes", __name__)
 
 S3_NOTES_BUCKET = "classroom-chat-student-notes"
-
-
-def get_s3_client():
-    """
-    Create the S3 client lazily so the app can boot even if S3 isn't configured
-    or optional botocore dependencies aren't present.
-    Returns a boto3 client or None if unavailable.
-    """
-    try:
-        return boto3.client("s3")
-    except MissingDependencyException as e:
-        current_app.logger.error(
-            "S3 is unavailable due to a missing optional dependency: %s", e
-        )
-        return None
-    except BotoCoreError as e:
-        current_app.logger.error("S3 client initialization failed: %s", e)
-        return None
-    except Exception as e:
-        current_app.logger.exception("Unexpected error initializing S3 client: %s", e)
-        return None
 
 
 @notes_bp.route("/upload", methods=["POST"])
@@ -52,8 +28,8 @@ def upload_note():
         file = request.files["note_image"]
     else:
         return jsonify({"status": "error", "error": "No file provided"}), 400
-    
-    user_obj = User.query.get(user_id)
+
+    user_obj = db.session.get(User, user_id)
     if not user_obj:
         return jsonify({"status": "error", "error": "User not found"}), 404
 
@@ -61,17 +37,17 @@ def upload_note():
         # 1. Determine storage method (S3 if configured, else local)
         s3_client = get_s3_client()
         aws_configured = (
-            os.environ.get("AWS_ACCESS_KEY_ID") is not None and 
-            os.environ.get("AWS_SECRET_ACCESS_KEY") is not None
+            os.environ.get("AWS_ACCESS_KEY_ID") is not None
+            and os.environ.get("AWS_SECRET_ACCESS_KEY") is not None
         )
-        
+
         s3_key = None
         # Use S3 if configured AND not explicitly disabled for dev
         use_s3 = current_app.config.get("USE_S3", aws_configured)
-        
+
         if s3_client and use_s3:
             s3_key = handle_note_s3_upload(s3_client, file, user_obj)
-        
+
         # 2. Fallback to local if S3 failed, isn't configured, or disabled
         db_filename = s3_key
         if not db_filename:
@@ -85,14 +61,13 @@ def upload_note():
             db.session.add(new_note)
             db.session.commit()
 
-            return jsonify({
-                "status": "success", 
-                "message": "Note uploaded successfully.",
-                "note": {
-                    "id": new_note.id,
-                    "url": new_note.url
+            return jsonify(
+                {
+                    "status": "success",
+                    "message": "Note uploaded successfully.",
+                    "note": {"id": new_note.id, "url": new_note.url},
                 }
-            })
+            )
 
     return jsonify({"status": "error", "error": "Upload failed"}), 500
 
@@ -107,18 +82,20 @@ def handle_local_note_upload(file):
         filename = f"{uuid.uuid4().hex}.{ext}"
         notes_dir = os.path.join(current_app.config["UPLOAD_FOLDER"], "notes")
         os.makedirs(notes_dir, exist_ok=True)
-        
+
         file_path = os.path.join(notes_dir, filename)
-        
+
         # Ensure we are at the start of the file
         file.seek(0)
         file.save(file_path)
-        
+
         # Verify file size to catch empty uploads
         if os.path.exists(file_path) and os.path.getsize(file_path) > 0:
             return filename
         else:
-            current_app.logger.error(f"Local Note Upload saved an empty file: {filename}")
+            current_app.logger.error(
+                f"Local Note Upload saved an empty file: {filename}"
+            )
             if os.path.exists(file_path):
                 os.remove(file_path)
             return None
@@ -132,15 +109,15 @@ def handle_local_note_upload(file):
 def serve_note(filename):
     """Serve a locally stored note."""
     notes_dir = os.path.join(current_app.config["UPLOAD_FOLDER"], "notes")
-    
+
     # Security: prevent traversal
     filename = os.path.basename(filename)
     full_path = os.path.join(notes_dir, filename)
-    
+
     if not os.path.exists(full_path):
         current_app.logger.warning(f"Note not found on disk: {full_path}")
         # Could return a default image here if we want to avoid 404
-    
+
     return send_from_directory(notes_dir, filename)
 
 
@@ -168,7 +145,7 @@ def handle_note_s3_upload(s3_client, file, user_obj):
 
 @notes_bp.route("/delete/<int:note_id>", methods=["POST"])
 def delete_note(note_id):
-    note = Note.query.get_or_404(note_id)
+    note = db.get_or_404(Note, note_id)
 
     # Security check: Ensure the user owns the note (or is admin)
     user_id = session.get("user")
@@ -187,7 +164,9 @@ def delete_note(note_id):
                 s3_client.delete_object(Bucket=S3_NOTES_BUCKET, Key=note.filename)
         else:
             # 2. Local Delete
-            local_path = os.path.join(current_app.config["UPLOAD_FOLDER"], "notes", note.filename)
+            local_path = os.path.join(
+                current_app.config["UPLOAD_FOLDER"], "notes", note.filename
+            )
             if os.path.exists(local_path):
                 os.remove(local_path)
 
@@ -202,7 +181,12 @@ def delete_note(note_id):
         current_app.logger.error(f"Error deleting note {note_id}: {str(e)}")
 
         # Return a safe, generic message to the frontend
-        return jsonify({
-            "status": "error",
-            "error": "Failed to delete the note from the server."
-        }), 500
+        return (
+            jsonify(
+                {
+                    "status": "error",
+                    "error": "Failed to delete the note from the server.",
+                }
+            ),
+            500,
+        )
