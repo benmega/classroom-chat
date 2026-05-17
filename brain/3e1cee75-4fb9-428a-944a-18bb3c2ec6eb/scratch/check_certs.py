@@ -1,6 +1,5 @@
 
 from application import create_app, DevelopmentConfig
-from application.extensions import db
 from application.models.user_certificate import UserCertificate
 from application.models.user import User
 

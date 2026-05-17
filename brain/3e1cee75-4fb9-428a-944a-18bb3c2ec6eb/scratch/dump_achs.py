@@ -1,7 +1,6 @@
 
 from application import create_app, DevelopmentConfig
-from application.extensions import db
-from application.models.achievements import Achievement, UserAchievement
+from application.models.achievements import Achievement
 from application.models.user import User
 
 app = create_app(DevelopmentConfig)
