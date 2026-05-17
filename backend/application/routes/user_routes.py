@@ -165,7 +165,6 @@ def signup():
 
 
 @user.route("/profile", methods=["GET"])
-@require_login
 @api_response
 def profile():
     user_id = session.get("user")
