@@ -75,6 +75,7 @@ const useChatSocket = (onMessageReceived, onClassroomEnrolled, lifecycleCallback
     const onCreated = (data) => lifecycleRefs.current?.onConversationCreated?.(data);
     const onUpdated = (data) => lifecycleRefs.current?.onConversationUpdated?.(data);
     const onDeleted = (data) => lifecycleRefs.current?.onConversationDeleted?.(data);
+    const onMsgDeleted = (data) => lifecycleRefs.current?.onMessageDeleted?.(data);
 
     socket.on('connect', onConnect);
     socket.on('disconnect', onDisconnect);
@@ -84,6 +85,7 @@ const useChatSocket = (onMessageReceived, onClassroomEnrolled, lifecycleCallback
     socket.on('conversation_created', onCreated);
     socket.on('conversation_updated', onUpdated);
     socket.on('conversation_deleted', onDeleted);
+    socket.on('message_deleted', onMsgDeleted);
 
     return () => {
       socket.off('connect', onConnect);
@@ -94,6 +96,7 @@ const useChatSocket = (onMessageReceived, onClassroomEnrolled, lifecycleCallback
       socket.off('conversation_created', onCreated);
       socket.off('conversation_updated', onUpdated);
       socket.off('conversation_deleted', onDeleted);
+      socket.off('message_deleted', onMsgDeleted);
     };
   }, []);
 

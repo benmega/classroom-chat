@@ -1,11 +1,12 @@
 import React from 'react';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import './Modal.css';
 
 const Modal = ({ isOpen, onClose, title, children }) => {
     if (!isOpen) return null;
 
-    return (
+    return createPortal(
         <div className="admin-modal-overlay" onClick={onClose}>
             <div className="admin-modal-content" onClick={e => e.stopPropagation()}>
                 <div className="modal-header">
@@ -16,7 +17,8 @@ const Modal = ({ isOpen, onClose, title, children }) => {
                     {children}
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 };
 

@@ -64,7 +64,8 @@ const Chat = () => {
     handleCreateConversation,
     openEditModal,
     handleUpdateConversation,
-    handleDeleteConversation
+    handleDeleteConversation,
+    handleDeleteMessage
   } = useChatLogic();
 
   if (loading) return <div className="container" style={{ textAlign: 'center', padding: '100px' }}>Loading...</div>;
@@ -129,6 +130,7 @@ const Chat = () => {
                     key={msg.id || index}
                     msg={msg}
                     user={user}
+                    onDelete={handleDeleteMessage}
                   />
                 ))}
               </div>

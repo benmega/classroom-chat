@@ -1,10 +1,10 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { User as UserIcon } from 'lucide-react';
+import { User as UserIcon, Trash2 } from 'lucide-react';
 import SmartImage from '../common/SmartImage';
 import Linkify from '../common/Linkify';
 
-const ChatMessage = ({ msg, user }) => {
+const ChatMessage = ({ msg, user, onDelete }) => {
     const isUser = msg.user_id === user.id;
     return (
         <div className={`chat-message-group ${isUser ? 'user' : 'other'}`}>
@@ -28,6 +28,15 @@ const ChatMessage = ({ msg, user }) => {
                 <div className="message-bubble">
                     <Linkify text={msg.content} isUserMessage={isUser} />
                 </div>
+                {user?.is_admin && (
+                    <button 
+                        onClick={() => onDelete(msg.id)}
+                        className="delete-message-btn"
+                        title="Delete Announcement/Message"
+                    >
+                        <Trash2 size={16} />
+                    </button>
+                )}
             </div>
             <span className="chat-message-timestamp">
                 {msg.nickname || 'Unknown'} • {msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Just now'}

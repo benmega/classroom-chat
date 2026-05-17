@@ -293,6 +293,39 @@ def delete_conversation(conversation_id):
     return jsonify({"success": True})
 
 
+@message.route("/delete_message/<int:message_id>", methods=["DELETE"])
+@require_login
+def delete_message(message_id):
+    """Admin-only endpoint to strike/delete a message."""
+    user_id = session.get("user")
+    user = db.session.get(User, user_id)
+    if not user or not user.is_admin:
+        return jsonify({"error": "Forbidden: Admin access required"}), 403
+
+    from application.models.message import Message
+
+    msg = db.session.get(Message, message_id)
+    if not msg:
+        return jsonify({"error": "Message not found"}), 404
+
+    msg.is_struck = True
+    msg.deleted_at = datetime.utcnow()
+    db.session.commit()
+
+    # Broadcast deletion to the classroom room
+    from application.extensions import socketio
+    conv = msg.conversation
+    classroom_id = conv.classroom_id if conv else None
+    if classroom_id:
+        socketio.emit(
+            "message_deleted",
+            {"message_id": msg.id, "conversation_id": msg.conversation_id},
+            room=f"classroom:{classroom_id}",
+        )
+
+    return jsonify({"success": True})
+
+
 # ============================================================================
 # ME CONTEXT — called once on login by the frontend
 # ============================================================================
@@ -433,7 +466,7 @@ def get_current_conversation():
     conversation_data = {
         "conversation_id": conversation.id,
         "title": conversation.title,
-        "messages": [serialize_message(msg) for msg in conversation.messages],
+        "messages": [serialize_message(msg) for msg in conversation.messages if not msg.is_struck],
     }
     return jsonify(conversation=conversation_data)
 
@@ -452,7 +485,7 @@ def get_historical_conversation():
     conversation_data = {
         "conversation_id": conversation.id,
         "title": conversation.title,
-        "messages": [serialize_message(msg) for msg in conversation.messages],
+        "messages": [serialize_message(msg) for msg in conversation.messages if not msg.is_struck],
     }
     return jsonify(conversation=conversation_data)
 
@@ -484,7 +517,7 @@ def get_conversation():
     conversation_data = {
         "conversation_id": conversation.id,
         "title": conversation.title,
-        "messages": [serialize_message(msg) for msg in conversation.messages],
+        "messages": [serialize_message(msg) for msg in conversation.messages if not msg.is_struck],
     }
     return jsonify(conversation=conversation_data)
 
@@ -545,7 +578,7 @@ def view_conversation(conversation_id):
     conversation_data = {
         "conversation_id": conversation.id,
         "title": conversation.title,
-        "messages": [serialize_message(msg) for msg in conversation.messages],
+        "messages": [serialize_message(msg) for msg in conversation.messages if not msg.is_struck],
     }
     if request.is_json or request.accept_mimetypes.accept_json:
         return jsonify(conversation_data)

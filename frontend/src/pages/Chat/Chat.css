@@ -333,8 +333,37 @@
     margin: 0 0 0 40px;
 }
 
+.delete-message-btn {
+    background: none;
+    border: none;
+    padding: var(--spacing-xs);
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--text-muted);
+    transition: all 0.2s ease;
+    opacity: 0;
+    visibility: hidden;
+    margin-bottom: 2px;
+}
+
+.chat-message-group:hover .delete-message-btn {
+    opacity: 1;
+    visibility: visible;
+}
+
+.delete-message-btn:hover {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+    transform: scale(1.1);
+}
+
+
 /* Sidebar Components */
-.sidebar-header {
+.chat-sidebar .sidebar-header {
+    height: auto;
     padding: 1.5rem 1.25rem;
     border-bottom: 1px solid var(--border-subtle);
     display: flex;
@@ -342,7 +371,7 @@
     gap: 1.25rem;
 }
 
-.sidebar-header-top {
+.chat-sidebar .sidebar-header-top {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -350,7 +379,7 @@
     gap: 16px;
 }
 
-.sidebar-header h2 {
+.chat-sidebar .sidebar-header h2 {
     font-size: var(--font-xl);
 }
 
