@@ -625,7 +625,7 @@ def mock_render_template(client):
         return "Mocked Template Content"
 
     with patch(
-        "application.routes.challenge_routes.render_template", side_effect=side_effect
+        "application.routes.challenge_routes.render_template", side_effect=side_effect, create=True
     ) as mock:
         yield mock
 

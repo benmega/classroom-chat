@@ -165,10 +165,12 @@ def signup():
 
 
 @user.route("/profile", methods=["GET"])
-@require_login
 @api_response
 def profile():
     user_id = session.get("user")
+    if not user_id:
+        return "Authentication required. Please log in.", 401
+        
     user_obj = db.session.get(User, user_id)
     if not user_obj:
         return "User not found", 404

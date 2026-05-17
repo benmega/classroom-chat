@@ -142,12 +142,18 @@ function App() {
           </ProtectedRoute>
         } />
         
-        <Route path="/profile/:slug?" element={
+        <Route path="/profile" element={
           <ProtectedRoute>
             <Layout>
               <Profile />
             </Layout>
           </ProtectedRoute>
+        } />
+
+        <Route path="/profile/:slug" element={
+          <Layout>
+            <Profile />
+          </Layout>
         } />
 
         <Route path="/achievements" element={
