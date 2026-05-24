@@ -677,11 +677,10 @@
 
 
 .ach-strip-item .badge.mini {
-    width: 64px !important;
-    height: 64px !important;
-    transform: scale(0.4);
+    transform: scale(0.25);
     transform-origin: center;
-    margin: -15px;
+    margin: -48px;
+    flex-shrink: 0;
 }
 
 .ach-strip-info {
