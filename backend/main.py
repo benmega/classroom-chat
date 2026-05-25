@@ -7,6 +7,9 @@ Summary: Entry point for starting the Flask application.
 import os
 import sys
 
+# Ensure backend directory is in sys.path so we can import application modules
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
 # Monkey patch for gevent if it's the selected async mode
 if os.getenv("SOCKETIO_ASYNC_MODE", "gevent") == "gevent":
     from gevent import monkey

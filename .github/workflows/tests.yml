@@ -31,7 +31,7 @@ jobs:
         run: playwright install --with-deps
         
       - name: Check for pending migrations
-        run: flask db migrate --check
+        run: flask db check
         env:
           FLASK_APP: main.py
           FLASK_ENV: testing
