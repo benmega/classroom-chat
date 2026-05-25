@@ -2,7 +2,7 @@
 from application import create_app, DevelopmentConfig
 from application.extensions import db
 from application.models.user import User
-from application.models.achievements import Achievement, UserAchievement
+from application.models.achievements import UserAchievement
 from application.models.user_certificate import UserCertificate
 
 app = create_app(DevelopmentConfig)

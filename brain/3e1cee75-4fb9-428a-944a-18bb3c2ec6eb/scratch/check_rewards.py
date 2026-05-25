@@ -1,6 +1,5 @@
 
 from application import create_app, DevelopmentConfig
-from application.extensions import db
 from application.models.achievements import Achievement
 
 app = create_app(DevelopmentConfig)
