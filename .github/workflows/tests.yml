@@ -31,10 +31,12 @@ jobs:
         run: playwright install --with-deps
         
       - name: Check for pending migrations
-        run: flask db check
+        run: |
+          flask db stamp head
+          flask db check
         env:
           FLASK_APP: main.py
-          FLASK_ENV: testing
+          FLASK_ENV: development
           
       - name: Run Pytest
         env:
