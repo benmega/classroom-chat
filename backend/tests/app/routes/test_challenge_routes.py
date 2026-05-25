@@ -19,7 +19,7 @@ from application.models.configuration import Configuration
 
 
 def test_submit_challenge_get(
-    client, init_db, sample_user, sample_configuration, mock_render_template
+    client, init_db, sample_user, sample_configuration
 ):
     """Test GET request to challenge submission page."""
     with client.session_transaction() as sess:
@@ -48,7 +48,7 @@ def test_submit_challenge_no_session(client, init_db):
 
 
 def test_submit_challenge_no_url(
-    client, init_db, sample_user, sample_configuration, mock_render_template
+    client, init_db, sample_user, sample_configuration
 ):
     """Test submitting challenge without URL."""
     with client.session_transaction() as sess:
@@ -69,7 +69,6 @@ def test_submit_challenge_success(
     init_db,
     sample_user,
     sample_configuration,
-    mock_render_template,
 ):
     """Test successful challenge submission."""
     with client.session_transaction() as sess:
@@ -103,7 +102,7 @@ def test_submit_challenge_success(
 
 
 def test_submit_challenge_failed(
-    client, init_db, sample_user, sample_configuration, mock_render_template
+    client, init_db, sample_user, sample_configuration
 ):
     """Test failed challenge submission."""
     with client.session_transaction() as sess:
@@ -131,7 +130,7 @@ def test_submit_challenge_failed(
 
 
 def test_submit_challenge_no_configuration(
-    client, init_db, sample_user, mock_render_template
+    client, init_db, sample_user
 ):
     """Test submitting challenge when configuration is missing."""
     with client.session_transaction() as sess:
@@ -159,7 +158,6 @@ def test_submit_challenge_with_helper(
     init_db,
     sample_user,
     sample_configuration,
-    mock_render_template,
 ):
     """Test challenge submission with helper information."""
     with client.session_transaction() as sess:
@@ -197,7 +195,6 @@ def test_submit_challenge_with_notes(
     init_db,
     sample_user,
     sample_configuration,
-    mock_render_template,
 ):
     """Test challenge submission with notes."""
     with client.session_transaction() as sess:
