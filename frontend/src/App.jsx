@@ -34,6 +34,7 @@ import AdvancedPanel from './pages/Admin/AdvancedPanel';
 
 import AdminCRUD from './admin/AdminPanel';
 import AccessDenied from './pages/Error/AccessDenied';
+import ServerOffline from './pages/Error/ServerOffline';
 // Development-only shortcut page — Vite's tree-shaking removes this module
 // from production builds because it is only referenced inside the DEV guard below.
 import DevLogin from './pages/Auth/DevLogin';
@@ -71,11 +72,15 @@ const ProtectedRoute = ({ children, adminOnly = false }) => {
 };
 
 function App() {
-  const { checkAuth, isAuthenticated } = useAuthStore();
+  const { checkAuth, isAuthenticated, isServerOffline } = useAuthStore();
 
   useEffect(() => {
     checkAuth();
   }, [checkAuth]);
+
+  if (isServerOffline) {
+    return <ServerOffline />;
+  }
 
   return (
     <Router>

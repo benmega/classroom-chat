@@ -10,6 +10,7 @@ describe('useAuthStore', () => {
       user: null,
       isAuthenticated: false,
       isLoading: true,
+      isServerOffline: false,
     });
   });
 
@@ -18,6 +19,7 @@ describe('useAuthStore', () => {
     expect(state.user).toBeNull();
     expect(state.isAuthenticated).toBe(false);
     expect(state.isLoading).toBe(true);
+    expect(state.isServerOffline).toBe(false);
   });
 
   it('checkAuth sets user when logged in', async () => {
@@ -73,5 +75,35 @@ describe('useAuthStore', () => {
     const state = useAuthStore.getState();
     expect(state.isAuthenticated).toBe(false);
     expect(state.user).toBeNull();
+  });
+
+  it('checkAuth sets isServerOffline to true on 502 Bad Gateway', async () => {
+    server.use(
+      http.get('*/user/api/auth/status', () => {
+        return new HttpResponse(null, { status: 502 });
+      })
+    );
+
+    await useAuthStore.getState().checkAuth();
+
+    const state = useAuthStore.getState();
+    expect(state.isAuthenticated).toBe(false);
+    expect(state.user).toBeNull();
+    expect(state.isServerOffline).toBe(true);
+  });
+
+  it('checkAuth sets isServerOffline to true on network error (no response)', async () => {
+    server.use(
+      http.get('*/user/api/auth/status', () => {
+        return HttpResponse.error();
+      })
+    );
+
+    await useAuthStore.getState().checkAuth();
+
+    const state = useAuthStore.getState();
+    expect(state.isAuthenticated).toBe(false);
+    expect(state.user).toBeNull();
+    expect(state.isServerOffline).toBe(true);
   });
 });

@@ -5,18 +5,22 @@ const useAuthStore = create((set) => ({
   user: null,
   isAuthenticated: false,
   isLoading: true,
+  isServerOffline: false,
+
+  setServerOffline: (isOffline) => set({ isServerOffline: isOffline }),
   
   checkAuth: async () => {
     set({ isLoading: true });
     try {
       const response = await client.get('/user/api/auth/status', { timeout: 10000 });
       if (response.data.data.logged_in) {
-        set({ user: response.data.data.user, isAuthenticated: true });
+        set({ user: response.data.data.user, isAuthenticated: true, isServerOffline: false });
       } else {
-        set({ user: null, isAuthenticated: false });
+        set({ user: null, isAuthenticated: false, isServerOffline: false });
       }
-    } catch {
-      set({ user: null, isAuthenticated: false });
+    } catch (error) {
+      const isOffline = !error.response || [502, 503, 504].includes(error.response.status);
+      set({ user: null, isAuthenticated: false, isServerOffline: isOffline });
     } finally {
       set({ isLoading: false });
     }
