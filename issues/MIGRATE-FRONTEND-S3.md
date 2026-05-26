@@ -4,67 +4,33 @@ This issue tracks the steps required to permanently migrate the React frontend f
 
 ## 1. Backend Configuration Changes
 
-Modify `backend/application/config.py` to allow cross-subdomain sessions:
+Modify `backend/application/config.py` to allow cross-subdomain sessions and CSRF:
 ```python
 class ProductionConfig(Config):
     # Existing settings...
     SESSION_COOKIE_DOMAIN = ".benmega.com"
     SESSION_COOKIE_SAMESITE = "Lax"
     SESSION_COOKIE_SECURE = True
-    CORS_ORIGINS = ["https://blossom.benmega.com"]
+    WTF_CSRF_DOMAIN = ".benmega.com"
+    CORS_ORIGINS = ["https://blossom.benmega.com", "https://d2pa3ix3n5behv.cloudfront.net"]
 ```
-
-Modify `backend/application/__init__.py` to share the CSRF cookie across subdomains:
-```python
-# Change the CSRF protection initialization to use the cookie domain
-csrf = CSRFProtect()
-def create_app(config_class=ProductionConfig):
-    # ...
-    csrf.init_app(app)
-    app.config['WTF_CSRF_SSL_STRICT'] = False # If needed depending on architecture
-```
-*Note: Wait, Flask-WTF CSRF handles cookie domains. Better to check `WTF_CSRF_TIME_LIMIT` and `SESSION_COOKIE_DOMAIN` integrations.*
+*Note: Ensure `backend/application/__init__.py` properly initializes `CSRFProtect(app)` and no hardcoded domains override these config values.*
 
 ## 2. CI/CD Pipeline Changes (`deploy.yml`)
 
-Update `.github/workflows/deploy.yml` to build the frontend targeting the new API and push to S3:
-```yaml
-      - name: Build Frontend
-        env:
-          VITE_API_URL: https://api-blossom.benmega.com
-        run: |
-          cd frontend
-          npm install
-          npm run build
+We already created `.github/workflows/deploy-frontend.yml` which automatically builds and syncs the frontend to S3 on pushes to `deploy-gunicorn`.
 
-      - name: Deploy to S3
-        uses: jakejarvis/s3-sync-action@master
-        with:
-          args: --delete
-        env:
-          AWS_S3_BUCKET: 'blossom.benmega.com'
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION: 'ap-southeast-1'
-          SOURCE_DIR: 'frontend/dist'
-
-      - name: Invalidate CloudFront
-        uses: chetan/invalidate-cloudfront-action@v2
-        env:
-          DISTRIBUTION: E3VTOHKU7GPN72
-          PATHS: "/*"
-          AWS_REGION: "ap-southeast-1"
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-```
-*Remove the SCP step (`Copy Files to EC2`) from `deploy.yml` once S3 is the primary host.*
+To complete the cutover, you must update the primary `.github/workflows/deploy.yml`:
+- Completely **remove** the `Build Frontend` step.
+- Completely **remove** the `Copy Files to EC2` step (SCP action).
+This ensures the EC2 server no longer attempts to host the static React files.
 
 ## 3. Nginx and EC2 Cleanup
 
-- Modify `/home/ubuntu/classroom-chat/deploy.sh` to remove frontend build/directory chown logic if any.
+- Modify `/home/ubuntu/classroom-chat/deploy.sh` to remove any frontend directory creation, build, or `chown` logic.
 - Update the Nginx configuration on EC2:
   - Remove the `/` location block that serves the static React app.
-  - Ensure the `api-blossom.benmega.com` server block is routing correctly to Gunicorn (`http://127.0.0.1:8000`).
+  - Ensure the `api-blossom.benmega.com` server block is routing all API traffic correctly to Gunicorn (`http://127.0.0.1:8000`).
 
 ## 4. Route 53 DNS Switch (The Final Cutover)
 
@@ -75,4 +41,4 @@ Update `.github/workflows/deploy.yml` to build the frontend targeting the new AP
 
 ## Testing Before the Cutover
 
-You can test the S3 fallback by accessing `https://d2pa3ix3n5behv.cloudfront.net` (or forcing an EC2 health check failure so Route 53 routes `blossom.benmega.com` to CloudFront). Ensure `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` are added to GitHub Secrets to allow the fallback pipeline to deploy.
+You can test the S3 fallback by accessing `https://d2pa3ix3n5behv.cloudfront.net` (or forcing an EC2 health check failure so Route 53 routes `blossom.benmega.com` to CloudFront). Ensure the GitHub Action `deploy-frontend.yml` has successfully run at least once so the bucket is populated.
