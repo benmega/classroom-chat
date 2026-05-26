@@ -19,7 +19,6 @@ import AdminPageHeader from '../../components/admin/AdminPageHeader';
 const AdvancedPanel = () => {
     const navigate = useNavigate();
     const isLoading = false; // Currently static
-    // const [isLoading, setIsLoading] = useState(false);
     const [logs, setLogs] = useState('');
     const [showLogModal, setShowLogModal] = useState(false);
     const [showStatsModal, setShowStatsModal] = useState(false);
