@@ -129,6 +129,10 @@ echo "Running database migrations..."
     cd "$APP_DIR/backend"
     # Ensure we run in production mode so it hits prod_users.db
     run env FLASK_APP=main.py FLASK_ENV=production "$PYTHON_BIN" -m flask db upgrade
+    
+    # Run the idempotent multi-tenant classroom migration script
+    echo "Running custom classroom migration script..."
+    run env FLASK_APP=main.py FLASK_ENV=production "$PYTHON_BIN" -m tools.migrate_classroom
 )
 
 # -------------------------

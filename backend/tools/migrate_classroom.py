@@ -166,6 +166,45 @@ def run():
             print("       - users.classroom_id column not present, skipping migration")
 
         # ------------------------------------------------------------------
+        # Step 4.1: Retroactively enroll users based on challenge_logs
+        # ------------------------------------------------------------------
+        print("\n[4.1/7] Retroactively enrolling users from challenge_logs ...")
+        # Ensure course_instance column exists in challenge_logs
+        log_cols = [row[1] for row in conn.execute(text("PRAGMA table_info(challenge_logs)")).fetchall()]
+        if "course_instance" in log_cols:
+            result = conn.execute(text("""
+                INSERT OR IGNORE INTO user_classrooms (user_id, classroom_id, enrolled_at)
+                SELECT DISTINCT u.id, cl.course_instance, CURRENT_TIMESTAMP
+                FROM users u
+                JOIN challenge_logs cl ON u.username = cl.username
+                JOIN classrooms c ON c.id = cl.course_instance
+                WHERE cl.course_instance IS NOT NULL AND cl.course_instance != ''
+            """))
+            conn.commit()
+            print(f"       [OK] Added {result.rowcount} enrollments from challenge_logs")
+        else:
+            print("       - challenge_logs.course_instance column not present, skipping")
+
+        # ------------------------------------------------------------------
+        # Step 4.2: Retroactively enroll users based on conversation participation
+        # ------------------------------------------------------------------
+        print("\n[4.2/7] Retroactively enrolling users from conversation_users ...")
+        cu_cols = [row[1] for row in conn.execute(text("PRAGMA table_info(conversation_users)")).fetchall()]
+        if cu_cols:
+            result = conn.execute(text("""
+                INSERT OR IGNORE INTO user_classrooms (user_id, classroom_id, enrolled_at)
+                SELECT DISTINCT cu.user_id, conv.classroom_id, CURRENT_TIMESTAMP
+                FROM conversation_users cu
+                JOIN conversations conv ON cu.conversation_id = conv.id
+                JOIN classrooms c ON c.id = conv.classroom_id
+                WHERE conv.classroom_id NOT IN ('global', 'archive')
+            """))
+            conn.commit()
+            print(f"       [OK] Added {result.rowcount} enrollments from conversation_users")
+        else:
+            print("       - conversation_users table not present, skipping")
+
+        # ------------------------------------------------------------------
         # Step 5: Update conversations with NULL classroom_id -> 'archive'
         # ------------------------------------------------------------------
         print("\n[5/7] Archiving orphaned conversations (classroom_id IS NULL) ...")

@@ -241,6 +241,8 @@
     transform: scale(0.9375); /* 120/128 */
     transform-origin: center;
     display: block;
+    flex-shrink: 0;
+    margin: -4px;
 }
 
 .lock-overlay {
