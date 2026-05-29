@@ -115,7 +115,10 @@ const ChatSidebar = ({
                     {globalConversation && (
                         <div
                             id="sidebar-announcements-pin"
-                            onClick={() => handleSelectConversation(globalConversation)}
+                            onClick={() => {
+                                handleSelectConversation(globalConversation);
+                                setSidebarOpen(false);
+                            }}
                             className={`conversation-item pinned-announcement ${
                                 activeConversation?.conversation_id === globalConversation.conversation_id
                                     ? 'active'
@@ -140,11 +143,21 @@ const ChatSidebar = ({
                     )}
 
                     {/* ---- Classroom conversations ---- */}
+                    <div style={{ padding: '0 1rem', marginTop: '1rem', marginBottom: '0.25rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 0.5rem' }}>
+                            <h3 style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                                Class Spaces
+                            </h3>
+                        </div>
+                    </div>
                     {filteredConversations.length > 0 ? (
                         filteredConversations.map((conv) => (
                             <div 
                                 key={conv.conversation_id} 
-                                onClick={() => handleSelectConversation(conv)}
+                                onClick={() => {
+                                    handleSelectConversation(conv);
+                                    setSidebarOpen(false);
+                                }}
                                 className={`conversation-item ${activeConversation?.conversation_id === conv.conversation_id ? 'active' : ''}`}
                             >
                                 <div className="conv-icon-container">

@@ -26,22 +26,29 @@ const ChatMessage = ({ msg, user, onDelete }) => {
                         )}
                     </div>
                 </Link>
-                <div className="message-bubble">
-                    <Linkify text={msg.content} isUserMessage={isUser} />
+                <div className="message-content-wrapper">
+                    <div className="message-header">
+                        <span className="message-author">{msg.nickname || 'Unknown'}</span>
+                        <span className="chat-message-timestamp">
+                            {msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Just now'}
+                        </span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexDirection: isUser ? 'row-reverse' : 'row' }}>
+                        <div className="message-bubble">
+                            <Linkify text={msg.content} isUserMessage={isUser} />
+                        </div>
+                        {user?.is_admin && (
+                            <button 
+                                onClick={() => onDelete(msg.id)}
+                                className="delete-message-btn"
+                                title="Delete Announcement/Message"
+                            >
+                                <Trash2 size={16} />
+                            </button>
+                        )}
+                    </div>
                 </div>
-                {user?.is_admin && (
-                    <button 
-                        onClick={() => onDelete(msg.id)}
-                        className="delete-message-btn"
-                        title="Delete Announcement/Message"
-                    >
-                        <Trash2 size={16} />
-                    </button>
-                )}
             </div>
-            <span className="chat-message-timestamp">
-                {msg.nickname || 'Unknown'} • {msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Just now'}
-            </span>
         </div>
     );
 };

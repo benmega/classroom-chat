@@ -155,46 +155,55 @@ const Chat = () => {
                 ) : (
                   <form
                     onSubmit={handleSendMessage}
-                    className="chat-input-form"
+                    className="chat-input-wrapper-container"
                   >
-                    <textarea
-                      ref={textareaRef}
-                      value={newMessage}
-                      onChange={handleTextareaChange}
-                      onKeyDown={handleTextareaKeyDown}
-                      placeholder="Type your message... (Shift+Enter for new line)"
-                      className="chat-input-field"
-                      rows={1}
-                    />
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)', position: 'relative' }} ref={emojiPickerRef}>
-                      <button
-                        type="button"
-                        className="chat-icon-btn"
-                        onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                        title="Add emoji"
-                      >
-                        <Smile size={20} color={showEmojiPicker ? "var(--primary-color)" : "var(--text-secondary)"} />
-                      </button>
-
-                      {showEmojiPicker && (
-                        <div className="emoji-picker-container">
-                          <EmojiPicker
-                            onEmojiClick={onEmojiClick}
-                            autoFocusSearch={false}
-                            theme="auto"
-                            width={320}
-                            height={400}
-                          />
+                    <div className="chat-input-form-mockup">
+                        <div className="chat-input-toolbar">
+                            <div style={{ position: 'relative' }} ref={emojiPickerRef}>
+                                <button
+                                  type="button"
+                                  className="toolbar-btn"
+                                  onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                                  title="Add emoji"
+                                >
+                                  <Smile size={16} color={showEmojiPicker ? "var(--primary-color)" : "inherit"} />
+                                </button>
+                                {showEmojiPicker && (
+                                  <div className="emoji-picker-container">
+                                    <EmojiPicker
+                                      onEmojiClick={onEmojiClick}
+                                      autoFocusSearch={false}
+                                      theme="auto"
+                                      width={320}
+                                      height={400}
+                                    />
+                                  </div>
+                                )}
+                            </div>
                         </div>
-                      )}
 
-                      <button
-                        type="submit"
-                        disabled={!newMessage.trim()}
-                        className="chat-send-btn"
-                      >
-                        <Send size={18} />
-                      </button>
+                        <textarea
+                          ref={textareaRef}
+                          value={newMessage}
+                          onChange={handleTextareaChange}
+                          onKeyDown={handleTextareaKeyDown}
+                          placeholder={`Message ${activeConversation?.title ? formatConversationTitle(activeConversation.title) : 'channel'}...`}
+                          className="chat-input-field"
+                          rows={1}
+                        />
+
+                        <div className="chat-input-footer">
+                            <div className="chat-input-hint">
+                                Use <span className="hint-code">```</span> to wrap code blocks
+                            </div>
+                            <button
+                              type="submit"
+                              disabled={!newMessage.trim()}
+                              className="chat-send-btn"
+                            >
+                              <Send size={16} />
+                            </button>
+                        </div>
                     </div>
                   </form>
                 )}

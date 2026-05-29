@@ -8,7 +8,7 @@
 }
 
 html, body {
-  height: 100%;
+  height: 100dvh;
   margin: 0;
   padding: 0;
   overflow: hidden;
@@ -23,6 +23,17 @@ body {
   color: var(--text-primary);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
+}
+
+@media (max-width: 800px) {
+  html {
+    font-size: 14px; /* Scales all rem-based paddings, margins, and fonts down by ~12.5% */
+  }
+}
+@media (max-width: 500px) {
+  html {
+    font-size: 13px; /* Scales down by ~18.75% for small phones */
+  }
 }
 
 #root {
