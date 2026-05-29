@@ -24,11 +24,6 @@ test.describe('Mobile UI Audit Navigation', () => {
     await page.goto('http://localhost:8000/dev-login?role=admin');
     await page.waitForURL('**/localhost:5173/**', { timeout: 10000 });
     
-    // Set tutorial bypass
-    await page.evaluate(() => {
-      localStorage.setItem('hasSeenTutorial', 'true');
-    });
-    
     // 1. Home / Chat Page
     console.log('Navigating to Chat...');
     await page.goto('http://localhost:5173/');

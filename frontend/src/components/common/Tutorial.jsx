@@ -7,6 +7,7 @@ import {
   MousePointer2,
   Sparkles
 } from 'lucide-react';
+import useAuthStore from '../../store/useAuthStore';
 import './Tutorial.css';
 
 const slides = [
@@ -53,17 +54,18 @@ const Tutorial = () => {
   const [spotlightRect, setSpotlightRect] = useState(null);
   const containerRef = useRef(null);
   const location = useLocation();
+  const { user, completeTutorial } = useAuthStore();
 
   useEffect(() => {
     // Only show tutorial on the home page (chat page)
     if (location.pathname !== '/') return;
+    if (!user) return;
 
-    const hasSeenTutorial = localStorage.getItem('hasSeenTutorial');
-    if (!hasSeenTutorial) {
+    if (!user.has_seen_tutorial) {
       const timer = setTimeout(() => setIsOpen(true), 1000);
       return () => clearTimeout(timer);
     }
-  }, [location.pathname]);
+  }, [location.pathname, user]);
 
   useLayoutEffect(() => {
     if (isOpen) {
@@ -91,7 +93,9 @@ const Tutorial = () => {
   }, [isOpen, currentSlide]);
 
   const handleClose = () => {
-    localStorage.setItem('hasSeenTutorial', 'true');
+    if (user && !user.has_seen_tutorial) {
+      completeTutorial();
+    }
     setIsOpen(false);
   };
 

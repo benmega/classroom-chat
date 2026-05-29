@@ -27,6 +27,7 @@ class User(db.Model):
     is_approved = db.Column(db.Boolean, default=False)
     bio = db.Column(db.String(500), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    has_seen_tutorial = db.Column(db.Boolean, default=False)
 
     # Gamification
     packets = db.Column(db.Double, nullable=False, default=0)
@@ -123,6 +124,7 @@ class User(db.Model):
             "slug": self.slug,
             "duck_balance": self.duck_balance,
             "packets": self.packets,
+            "has_seen_tutorial": self.has_seen_tutorial,
         }
 
     def to_dict_summary(self, precomputed_progress=None):
@@ -183,6 +185,7 @@ class User(db.Model):
             "oz_levels": oz_levels,
             "cc_percent": cc_percent,
             "oz_percent": oz_percent,
+            "has_seen_tutorial": self.has_seen_tutorial,
         }
         return d
 
