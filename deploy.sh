@@ -91,24 +91,33 @@ echo "Starting deploy..."
 # run git reset --hard origin/deploy-gunicorn
 
 # -------------------------
-# Frontend build
-# -------------------------
-# Frontend build is now performed in GitHub Actions to avoid OOM on EC2.
-# Built files are transferred via SCP to $APP_DIR/frontend/dist/
-
-
-# Fix nginx read permissions on the freshly built dist/ files
-echo "Fixing frontend file permissions for nginx..."
-run chmod o+x "$HOME"
-run chmod -R o+r "$APP_DIR/frontend/dist/"
-run find "$APP_DIR/frontend/dist/" -type d -exec chmod o+x {} \;
-
-# -------------------------
 # Dependency verification
 # -------------------------
 if [[ -f "$REQUIREMENTS_FILE" ]]; then
     echo "Updating Python dependencies..."
     run "${PIP_CMD[@]}" install -r "$REQUIREMENTS_FILE"
+fi
+
+# -------------------------
+# Nginx configuration
+# -------------------------
+echo "Updating Nginx configuration..."
+if [[ -f "$APP_DIR/infrastructure/nginx/api-blossom.benmega.com.conf" ]]; then
+    run sudo cp "$APP_DIR/infrastructure/nginx/api-blossom.benmega.com.conf" "/etc/nginx/sites-available/benmega"
+    run sudo systemctl reload nginx
+else
+    echo "WARNING: Nginx configuration not found in repository at $APP_DIR/infrastructure/nginx/api-blossom.benmega.com.conf"
+fi
+
+# -------------------------
+# DNS Update Script
+# -------------------------
+echo "Updating and executing DNS boot script..."
+if [[ -f "$APP_DIR/infrastructure/update-dns.sh" ]]; then
+    run cp "$APP_DIR/infrastructure/update-dns.sh" "$HOME/update-dns.sh"
+    run chmod +x "$HOME/update-dns.sh"
+    # Execute immediately to update Route 53 to api-blossom.benmega.com
+    run "$HOME/update-dns.sh"
 fi
 
 # -------------------------

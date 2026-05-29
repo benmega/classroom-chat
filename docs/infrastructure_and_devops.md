@@ -110,24 +110,20 @@ File: `/etc/nginx/sites-available/benmega`
 # Redirect HTTP → HTTPS
 server {
     listen 80;
-    server_name blossom.benmega.com;
+    server_name api-blossom.benmega.com;
     client_max_body_size 500M;
     return 301 https://$host$request_uri;
 }
 
 server {
     listen 443 ssl;
-    server_name blossom.benmega.com;
+    server_name api-blossom.benmega.com;
     client_max_body_size 500M;
 
-    ssl_certificate     /etc/letsencrypt/live/blossom.benmega.com/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/blossom.benmega.com/privkey.pem;
+    ssl_certificate     /etc/letsencrypt/live/api-blossom.benmega.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/api-blossom.benmega.com/privkey.pem;
     include /etc/letsencrypt/options-ssl-nginx.conf;
     ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
-
-    # Serve the React SPA static files
-    root /home/ubuntu/classroom-chat/frontend/dist;
-    index index.html;
 
     # API / backend routes → proxy to Gunicorn
     location ~ ^/(api|user|session|message|upload|challenge|ai|duck_trade|notes|server)(/|$) {
@@ -151,21 +147,8 @@ server {
         proxy_set_header   X-Forwarded-Proto $scheme;
         proxy_read_timeout 120s;
     }
-
-    # React Router SPA fallback
-    location / {
-        try_files $uri $uri/ /index.html;
-    }
 }
 ```
-
-**Important:** Files in `frontend/dist/` must be readable by `www-data`. Run:
-```bash
-chmod o+x /home/ubuntu
-chmod -R o+r /home/ubuntu/classroom-chat/frontend/dist/
-find /home/ubuntu/classroom-chat/frontend/dist/ -type d -exec chmod o+x {} \;
-```
-`deploy.sh` does this automatically after each build.
 
 ---
 

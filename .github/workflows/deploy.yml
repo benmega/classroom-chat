@@ -12,29 +12,6 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: './frontend/package-lock.json'
-
-      - name: Build Frontend
-        run: |
-          cd frontend
-          npm install
-          npm run build
-
-      - name: Copy Files to EC2
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USERNAME }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          source: "frontend/dist/*"
-          target: "/home/ubuntu/classroom-chat/frontend/dist"
-          strip_components: 2
-
       - name: Deploy Backend via SSH
         uses: appleboy/ssh-action@v1.2.0
         with:

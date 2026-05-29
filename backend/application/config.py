@@ -77,9 +77,11 @@ class ProductionConfig(Config):
         "DATABASE_URL",
         f'sqlite:///{os.path.join(Config.INSTANCE_FOLDER, "prod_users.db")}',
     )
-    SESSION_COOKIE_SAMESITE = "None"
+    SESSION_COOKIE_DOMAIN = ".benmega.com"
+    SESSION_COOKIE_SAMESITE = "Lax"
     SESSION_COOKIE_SECURE = True
     SESSION_COOKIE_HTTPONLY = True
+    WTF_CSRF_DOMAIN = ".benmega.com"
     WTF_CSRF_ENABLED = True
     WTF_CSRF_TIME_LIMIT = None  # Sessions are short, don't expire tokens separately
 
@@ -91,10 +93,7 @@ class ProductionConfig(Config):
         os.getenv("CORS_ORIGINS", "").split(",")
         if os.getenv("CORS_ORIGINS")
         else [
-            "https://codecombat.com",
-            "https://www.ozaria.com",
-            "https://benmega.com",
-            "https://www.benmega.com",
             "https://blossom.benmega.com",
+            "https://d2pa3ix3n5behv.cloudfront.net",
         ]
     )
