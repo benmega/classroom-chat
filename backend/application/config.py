@@ -84,6 +84,7 @@ class ProductionConfig(Config):
     WTF_CSRF_DOMAIN = ".benmega.com"
     WTF_CSRF_ENABLED = True
     WTF_CSRF_TIME_LIMIT = None  # Sessions are short, don't expire tokens separately
+    WTF_CSRF_SSL_STRICT = False  # Disable strict referer checking for cross-subdomain requests
 
     # Build folders for Vite
     TEMPLATE_FOLDER = os.path.join(Config.BASE_DIR, "frontend", "dist")
