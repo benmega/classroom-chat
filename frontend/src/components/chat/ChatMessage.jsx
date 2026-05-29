@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { User as UserIcon, Trash2 } from 'lucide-react';
 import SmartImage from '../common/SmartImage';
 import Linkify from '../common/Linkify';
+import { getApiUrl } from '../../utils/apiUrl';
 
 const ChatMessage = ({ msg, user, onDelete }) => {
     const isUser = msg.user_id === user.id;
@@ -16,7 +17,7 @@ const ChatMessage = ({ msg, user, onDelete }) => {
                     <div className={`avatar-container ${msg.is_ai ? 'ai-avatar' : ''}`}>
                         {msg.user_profile_pic ? (
                             <SmartImage 
-                                src={`/user/profile_pictures/${msg.user_profile_pic}`} 
+                                src={getApiUrl(`/user/profile_pictures/${msg.user_profile_pic}`)} 
                                 alt={msg.nickname} 
                                 fallbackType="avatar"
                             />

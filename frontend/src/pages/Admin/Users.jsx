@@ -18,6 +18,7 @@ import {
 import './Users.css';
 import Skeleton from '../../components/common/Skeleton';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
+import { getApiUrl } from '../../utils/apiUrl';
 
 // Hooks
 import { useUsersManagement } from '../../hooks/useUsersManagement';
@@ -130,7 +131,7 @@ const Users = () => {
                                     <td>
                                         <div className="user-profile-cell">
                                             <SmartImage 
-                                                src={u.profile_picture ? `/user/profile_pictures/${u.profile_picture}` : ''} 
+                                                src={u.profile_picture ? getApiUrl(`/user/profile_pictures/${u.profile_picture}`) : ''} 
                                                 alt="" 
                                                 className="avatar"
                                                 fallbackType="avatar"

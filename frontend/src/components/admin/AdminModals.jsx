@@ -2,6 +2,7 @@ import React from 'react';
 import Modal from '../common/Modal';
 import SmartImage from '../common/SmartImage';
 import DuckIcon from '../Icons/DuckIcon';
+import { getApiUrl } from '../../utils/apiUrl';
 
 export const CreateUserModal = ({ isOpen, onClose, onSubmit, formErrors, loading }) => (
     <Modal isOpen={isOpen} onClose={onClose} title="Create New User">
@@ -39,7 +40,7 @@ export const AdjustDucksModal = ({ isOpen, onClose, onSubmit, user, users, formE
                 {user ? (
                     <div className="user-badge-display">
                         <SmartImage 
-                            src={user.profile_picture ? `/user/profile_pictures/${user.profile_picture}` : ''} 
+                            src={user.profile_picture ? getApiUrl(`/user/profile_pictures/${user.profile_picture}`) : ''} 
                             alt="" 
                             className="avatar-small"
                             fallbackType="avatar"

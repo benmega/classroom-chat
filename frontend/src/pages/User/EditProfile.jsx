@@ -6,6 +6,7 @@ import toast from 'react-hot-toast';
 import useAuthStore from '../../store/useAuthStore';
 import './EditProfile.css';
 import SmartImage from '../../components/common/SmartImage';
+import { getApiUrl } from '../../utils/apiUrl';
 
 const EditProfile = () => {
     const { user, checkAuth } = useAuthStore();
@@ -23,7 +24,7 @@ const EditProfile = () => {
         if (user) {
             setNickname(user.nickname || user.username);
             setBio(user.bio || '');
-            setPreviewUrl(user.profile_picture ? `/user/profile_pictures/${user.profile_picture}` : '/static/images/Default_pfp.jpg');
+            setPreviewUrl(user.profile_picture ? getApiUrl(`/user/profile_pictures/${user.profile_picture}`) : getApiUrl('/static/images/Default_pfp.jpg'));
         }
     }, [user]);
 

@@ -22,6 +22,7 @@ import useAuthStore from '../../store/useAuthStore';
 import useSidebar from '../../hooks/useSidebar';
 import './AdminLayout.css';
 import SmartImage from '../common/SmartImage';
+import { getApiUrl } from '../../utils/apiUrl';
 
 const AdminLayout = ({ children }) => {
     const { user, logout, isAuthenticated } = useAuthStore();
@@ -127,7 +128,7 @@ const AdminLayout = ({ children }) => {
 
                 <div className="sidebar-user">
                     <SmartImage
-                        src={user?.profile_picture ? `/user/profile_pictures/${user.profile_picture}` : ''}
+                        src={user?.profile_picture ? getApiUrl(`/user/profile_pictures/${user.profile_picture}`) : ''}
                         alt="Profile"
                         className="user-avatar"
                         fallbackType="avatar"
