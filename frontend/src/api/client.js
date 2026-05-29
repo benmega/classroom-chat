@@ -10,6 +10,21 @@ const client = axios.create({
   xsrfHeaderName: 'X-CSRFToken',
 });
 
+// Helper to read cookies safely
+const getCookie = (name) => {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop().split(';').shift();
+};
+
+client.interceptors.request.use((config) => {
+  const token = getCookie('csrf_token_v2');
+  if (token) {
+    config.headers['X-CSRFToken'] = token;
+  }
+  return config;
+});
+
 // Global response interceptor for handling common errors
 client.interceptors.response.use(
   (response) => response,
