@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Search, Loader2, X } from 'lucide-react';
+import { getApiUrl } from '../../utils/apiUrl';
 import client from '../../api/client';
 import SmartImage from './SmartImage';
 import './UserSearchInput.css';
@@ -159,7 +160,7 @@ const UserSearchInput = ({
                         >
                             <div className="result-avatar-common">
                                 <SmartImage 
-                                    src={user.profile_picture_url} 
+                                    src={getApiUrl(user.profile_picture_url)} 
                                     alt={user.nickname} 
                                     fallbackType="avatar"
                                 />

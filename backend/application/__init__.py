@@ -194,7 +194,7 @@ def create_app(config_class=None):
         # We set the CSRF cookie so the frontend (Axios) can read it and send it back in headers.
         # This is safe because it's only accessible to our own frontend via SameSite=Lax/Strict.
         response.set_cookie(
-            "csrf_token",
+            "csrf_token_v2",
             generate_csrf(),
             domain=app.config.get("WTF_CSRF_DOMAIN") or app.config.get("SESSION_COOKIE_DOMAIN"),
             samesite=app.config.get("SESSION_COOKIE_SAMESITE", "Lax"),

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { User } from 'lucide-react';
 import SmartImage from '../common/SmartImage';
 import { formatLargeNumber } from '../../utils/formatters';
+import { getApiUrl } from '../../utils/apiUrl';
 
 const ProfileHeader = ({ target, isOwner, pfpInputRef, onPfpChange }) => {
     return (
@@ -11,7 +12,7 @@ const ProfileHeader = ({ target, isOwner, pfpInputRef, onPfpChange }) => {
             <div className="profile-header-content">
                 <div className="avatar-wrapper" onClick={() => isOwner && pfpInputRef.current?.click()}>
                     <SmartImage 
-                        src={target.profile_picture_url} 
+                        src={getApiUrl(target.profile_picture_url)} 
                         alt={target.username} 
                         className="avatar-img"
                         fallbackType="avatar"

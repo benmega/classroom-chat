@@ -6,7 +6,7 @@ const client = axios.create({
   headers: {
     'Accept': 'application/json',
   },
-  xsrfCookieName: 'csrf_token',
+  xsrfCookieName: 'csrf_token_v2',
   xsrfHeaderName: 'X-CSRFToken',
 });
 
