@@ -457,6 +457,7 @@
 
     .admin-main-wrapper {
         margin-left: 0 !important;
+        max-width: 100% !important;
     }
 
     .admin-app-container.mobile-open .admin-sidebar {

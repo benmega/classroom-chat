@@ -12,7 +12,8 @@ import {
     LogOut,
     Package,
     Menu,
-    X
+    X,
+    Home
 } from 'lucide-react';
 
 import './Layout.css';
@@ -192,6 +193,7 @@ const Layout = ({ children }) => {
 
                         <nav className="sidebar-nav">
                             <ul>
+                                <li><Link to="/" onClick={() => setSidebarOpen(false)}><Home size={18} /> Chat</Link></li>
                                 <li><Link to="/profile" onClick={() => setSidebarOpen(false)}><User size={18} /> Profile</Link></li>
                                 {user?.is_admin && (
                                     <li><Link to="/admin" onClick={() => setSidebarOpen(false)}><Shield size={18} /> Admin Panel</Link></li>
