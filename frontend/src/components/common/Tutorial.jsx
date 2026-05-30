@@ -198,7 +198,7 @@ const Tutorial = () => {
           </button>
         </div>
 
-        <button className="spotlight-skip" onClick={handleClose}>
+        <button className="spotlight-skip" onClick={handleClose} aria-label="Close tutorial">
           <X size={16} />
         </button>
       </div>

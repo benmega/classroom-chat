@@ -107,7 +107,11 @@ const Layout = ({ children }) => {
                                 <li className="profile-menu" ref={dropdownRef}>
                                     <button 
                                         className="profile-toggle" 
-                                        onClick={toggleDropdown}
+                                        onClick={(e) => {
+                                            // Prevent double-click race condition
+                                            if (e.detail > 1) return;
+                                            toggleDropdown();
+                                        }}
                                         aria-haspopup="true" 
                                         aria-expanded={isDropdownOpen}
                                         title="Account"

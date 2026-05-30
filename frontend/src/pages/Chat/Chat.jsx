@@ -138,7 +138,7 @@ const Chat = () => {
 
             <div className="chat-input-area">
               <div className="chat-input-content">
-                {activeConversation?.classroom_id === GLOBAL_CLASSROOM_ID && !user?.is_admin ? (
+                {(activeConversation?.conversation_id === globalConversationId && !user?.is_admin) || activeConversation?.is_locked ? (
                   <p
                     id="global-feed-readonly-label"
                     style={{
@@ -150,7 +150,7 @@ const Chat = () => {
                       userSelect: 'none',
                     }}
                   >
-                    Announcements are posted by instructors only.
+                    {activeConversation?.is_locked ? 'This conversation is locked.' : 'Announcements are posted by instructors only.'}
                   </p>
                 ) : (
                   <form
@@ -200,6 +200,7 @@ const Chat = () => {
                               type="submit"
                               disabled={!newMessage.trim()}
                               className="chat-send-btn"
+                              aria-label="Send message"
                             >
                               <Send size={16} />
                             </button>

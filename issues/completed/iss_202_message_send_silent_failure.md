@@ -24,3 +24,7 @@ Users may think the application is broken or their connection dropped because th
 ## Proposed Fix
 - Disable the message input entirely for read-only channels.
 - Alternatively, if the failure is due to a server rejection, display an error toast (e.g., "You do not have permission to post in this channel") and clear the input or reset the state.
+
+## Verification Results
+- Updated `Chat.jsx` to correctly check `activeConversation.conversation_id === globalConversationId` and `activeConversation.is_locked` before displaying the form.
+- Replaced the input with a read-only message when applicable.

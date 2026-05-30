@@ -26,3 +26,6 @@ Users clicking on these links will be directed to an invalid URL (resulting in a
 
 ## Screenshots
 - [autolink_trailing_comma_screenshot](file:///c:/Users/Ben/AntiGravity/classroom-chat/issues/iss_201_autolink_trailing_comma.webp)
+
+## Verification Results
+- Updated regex in `Linkify.jsx` to ignore trailing punctuation (e.g. `,`, `.`, `!`, `?`) when matching URLs.

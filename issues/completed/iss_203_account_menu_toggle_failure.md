@@ -18,3 +18,6 @@ Executing a double-click on the `haspopup="menu"` Account button results in no v
 
 ## Proposed Fix
 - Debounce the click event handler for the dropdown toggle to prevent state race conditions.
+
+## Verification Results
+- Prevented double-click race conditions by checking `e.detail > 1` and exiting early in the `onClick` handler of the profile toggle in `Layout.jsx`.

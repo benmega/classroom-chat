@@ -11,6 +11,7 @@ import {
     UserPlus,
     MessageSquare,
     ShoppingBag,
+    Menu
 } from 'lucide-react';
 import DuckIcon from '../../components/Icons/DuckIcon';
 import {
@@ -41,6 +42,7 @@ import {
 
 // Hooks & Utils
 import { useAdminDashboard } from '../../hooks/useAdminDashboard';
+import useSidebar from '../../hooks/useSidebar';
 import { getChartConfig, chartOptions } from './chartConfig';
 
 ChartJS.register(
@@ -59,6 +61,7 @@ const AdminDashboard = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [newWord, setNewWord] = useState('');
     const [banReason, setBanReason] = useState('');
+    const { toggleSidebar } = useSidebar();
 
     const {
         dashboardData,
@@ -123,9 +126,14 @@ const AdminDashboard = () => {
     return (
         <div className="admin-dashboard">
             <div className="dashboard-header">
-                <div>
-                    <h1>Overview Dashboard</h1>
-                    <p>System status and user activity at a glance.</p>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                    <button className="hamburger-toggle mobile-only" onClick={toggleSidebar}>
+                        <Menu size={24} />
+                    </button>
+                    <div>
+                        <h1>Overview Dashboard</h1>
+                        <p>System status and user activity at a glance.</p>
+                    </div>
                 </div>
                 <button 
                     onClick={fetchDashboardData} 

@@ -28,3 +28,8 @@ Screen reader users will not know the purpose of the Send or Close buttons, and 
 
 ## Screenshots
 - [a11y_missing_names_screenshot](file:///c:/Users/Ben/AntiGravity/classroom-chat/issues/iss_200_a11y_missing_names.webp)
+
+## Verification Results
+- Added `aria-label="Send message"` to the send button in `Chat.jsx`.
+- Added `aria-label="Close tutorial"` to the tour close button in `Tutorial.jsx`.
+- Added `name="search"` and fallback `id` to the search input in `UserSearchInput.jsx`.

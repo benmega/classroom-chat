@@ -1,9 +1,6 @@
 /* --- Admin Dashboard Premium Styles --- */
 
 .admin-dashboard {
-    max-width: 1600px;
-    margin: 0 auto;
-    padding: 2rem;
     animation: fadeIn var(--transition-smooth);
 }
 
@@ -11,7 +8,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 3rem;
+    margin-bottom: 1.5rem;
 }
 
 .dashboard-header h1 {
@@ -57,7 +54,7 @@
     display: grid;
     grid-template-columns: repeat(1, 1fr);
     gap: 1rem;
-    margin-bottom: 4rem;
+    margin-bottom: 2rem;
 }
 
 @media (min-width: 640px) {
@@ -81,7 +78,7 @@
 .stat-card {
     background: var(--glass-bg);
     backdrop-filter: var(--glass-blur);
-    padding: 2rem;
+    padding: 1.25rem;
     border-radius: 28px;
     display: flex;
     align-items: center;
@@ -169,11 +166,11 @@
 .card {
     background: var(--glass-bg);
     backdrop-filter: var(--glass-blur);
-    padding: 2.5rem;
+    padding: 1.5rem;
     border-radius: 32px;
     border: 1px solid var(--glass-border);
     box-shadow: var(--shadow-rich);
-    margin-bottom: 3rem;
+    margin-bottom: 2rem;
     transition: var(--transition-smooth);
 }
 
@@ -182,9 +179,9 @@
 }
 
 .card-header {
-    margin-bottom: 2.5rem;
+    margin-bottom: 1.5rem;
     border-bottom: 1px solid var(--glass-border);
-    padding-bottom: 1.5rem;
+    padding-bottom: 1rem;
 }
 
 .card-header h3 {

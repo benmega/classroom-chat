@@ -142,19 +142,6 @@ const AdminLayout = ({ children }) => {
 
             {/* Main Content Area */}
             <div className="admin-main-wrapper">
-                <header className="admin-top-bar">
-                    <div className="top-bar-left">
-                        <button className="hamburger-toggle mobile-only" onClick={toggleSidebar}>
-                            <Menu size={24} />
-                        </button>
-                        <h2 className="page-title">
-                            {navItems.find(item =>
-                                item.end ? item.path === location.pathname : location.pathname.startsWith(item.path)
-                            )?.label || 'Administration'}
-                        </h2>
-                    </div>
-                </header>
-
                 <main 
                     key={location.pathname.startsWith('/admin/advanced-crud') ? '/admin/advanced-crud' : location.pathname} 
                     className="admin-body animate-page-entry"
