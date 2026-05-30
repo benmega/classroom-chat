@@ -7,6 +7,7 @@ Summary: Flask routes for challenge routes functionality (Merged Version).
 import re
 from datetime import datetime
 
+import os
 from urllib.parse import parse_qs
 from flask import Blueprint, request, session, redirect, url_for, flash, jsonify
 from flask_cors import cross_origin
@@ -34,15 +35,34 @@ BASE_PATTERN = (
 URL_PATTERN = BASE_PATTERN + r"(?P<params>\?[^ \n\r\t]*)?"
 
 
+FRONTEND_ORIGINS = (
+    os.getenv("CORS_ORIGINS", "").split(",")
+    if os.getenv("CORS_ORIGINS")
+    else [
+        "https://blossom.benmega.com",
+        "https://d2pa3ix3n5behv.cloudfront.net",
+        "http://localhost:5173",
+        "http://localhost:5174",
+        "http://localhost:5175",
+        "http://localhost:8000",
+        "http://127.0.0.1:5173",
+        "http://127.0.0.1:5174",
+        "http://127.0.0.1:5175",
+        "http://127.0.0.1:8000",
+    ]
+)
+
+CHALLENGE_ORIGINS = FRONTEND_ORIGINS + [
+    "https://codecombat.com",
+    "https://www.codecombat.com",
+    "https://ozaria.com",
+    "https://www.ozaria.com",
+]
+
 @challenge.route("/submit", methods=["GET", "POST"])
 @csrf.exempt
 @cross_origin(
-    origins=[
-        "https://codecombat.com",
-        "https://www.codecombat.com",
-        "https://ozaria.com",
-        "https://www.ozaria.com",
-    ],
+    origins=CHALLENGE_ORIGINS,
     supports_credentials=True,
 )
 def submit_challenge():
