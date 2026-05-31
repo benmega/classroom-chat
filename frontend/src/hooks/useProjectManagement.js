@@ -134,9 +134,7 @@ export const useProjectManagement = () => {
 
         try {
             const url = projectId ? `/user/project/edit/${projectId}` : '/user/project/new';
-            const response = await client.post(url, formData, {
-                headers: { 'Content-Type': 'multipart/form-data' }
-            });
+            const response = await client.post(url, formData);
 
             if (response.data.status === 'success') {
                 toast.success(projectId ? 'Project updated!' : 'Project created!');

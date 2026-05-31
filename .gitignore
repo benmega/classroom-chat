@@ -20,3 +20,4 @@ backend/reports/certificates/
 *.bak
 certificates/*
 git_log.txt
+.agents/workflows/git-review.md

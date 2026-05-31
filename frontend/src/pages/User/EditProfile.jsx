@@ -50,9 +50,7 @@ const EditProfile = () => {
             if (profilePic) {
                 const picData = new FormData();
                 picData.append('profile_picture', profilePic);
-                await client.post('/user/api/profile-picture', picData, {
-                    headers: { 'Content-Type': 'multipart/form-data' }
-                });
+                await client.post('/user/api/profile-picture', picData);
             }
 
             // 2. Handle Basic Info

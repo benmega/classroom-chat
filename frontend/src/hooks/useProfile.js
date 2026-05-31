@@ -118,9 +118,7 @@ export const useProfile = () => {
                 formData.append('profile_picture', blob, 'profile.jpg');
 
                 try {
-                    const response = await client.post('/user/api/profile-picture', formData, {
-                        headers: { 'Content-Type': 'multipart/form-data' }
-                    });
+                    const response = await client.post('/user/api/profile-picture', formData);
 
                     if (response.data.status === 'success') {
                         toast.success('Profile picture updated!');

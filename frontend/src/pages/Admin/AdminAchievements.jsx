@@ -53,11 +53,7 @@ const AdminAchievements = () => {
         }
 
         try {
-            const response = await client.post('/api/achievements/add', data, {
-                headers: {
-                    'Content-Type': 'multipart/form-data'
-                }
-            });
+            const response = await client.post('/api/achievements/add', data);
             if (response.data.status === 'success') {
                 toast.success(response.data.message);
                 navigate('/admin');
