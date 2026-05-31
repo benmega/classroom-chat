@@ -1,6 +1,6 @@
 import React from 'react';
-import { 
-  Send, 
+import {
+  Send,
   MessageSquare,
   Hash,
   Menu,
@@ -71,20 +71,21 @@ const Chat = () => {
   if (loading) return <div className="container" style={{ textAlign: 'center', padding: '100px' }}>Loading...</div>;
 
   return (
-    <div className="chat-container">
-      <ChatSidebar 
-        user={user}
-        isSidebarOpen={isSidebarOpen}
-        setSidebarOpen={setSidebarOpen}
-        conversations={conversations.filter(c => c.conversation_id !== globalConversationId)}
-        activeConversation={activeConversation}
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
-        handleSelectConversation={handleSelectConversation}
-        setIsModalOpen={setIsModalOpen}
-        formatConversationTitle={formatConversationTitle}
-        globalConversation={conversations.find(c => c.conversation_id === globalConversationId) || null}
-      />
+    <>
+      <div className="chat-container">
+        <ChatSidebar 
+          user={user}
+          isSidebarOpen={isSidebarOpen}
+          setSidebarOpen={setSidebarOpen}
+          conversations={conversations.filter(c => c.conversation_id !== globalConversationId)}
+          activeConversation={activeConversation}
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          handleSelectConversation={handleSelectConversation}
+          setIsModalOpen={setIsModalOpen}
+          formatConversationTitle={formatConversationTitle}
+          globalConversation={conversations.find(c => c.conversation_id === globalConversationId) || null}
+    />
 
       <div className="chat-window">
         {activeConversation ? (
@@ -104,7 +105,6 @@ const Chat = () => {
                   </div>
                   <div>
                     <h3 style={{ fontSize: 'var(--font-lg)', fontWeight: 700 }}>{formatConversationTitle(activeConversation.title)}</h3>
-                    <p style={{ fontSize: '0.75rem', color: 'var(--primary-color)', fontWeight: 600 }}>Active Now</p>
                   </div>
                 </div>
 
@@ -157,29 +157,27 @@ const Chat = () => {
                     onSubmit={handleSendMessage}
                     className="chat-input-wrapper-container"
                   >
-                    <div className="chat-input-form-mockup">
-                        <div className="chat-input-toolbar">
-                            <div style={{ position: 'relative' }} ref={emojiPickerRef}>
-                                <button
-                                  type="button"
-                                  className="toolbar-btn"
-                                  onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                                  title="Add emoji"
-                                >
-                                  <Smile size={16} color={showEmojiPicker ? "var(--primary-color)" : "inherit"} />
-                                </button>
-                                {showEmojiPicker && (
-                                  <div className="emoji-picker-container">
-                                    <EmojiPicker
-                                      onEmojiClick={onEmojiClick}
-                                      autoFocusSearch={false}
-                                      theme="auto"
-                                      width={320}
-                                      height={400}
-                                    />
-                                  </div>
-                                )}
-                            </div>
+                    <div className="chat-input-form-mockup" style={{ display: 'flex', alignItems: 'flex-end', padding: '0.5rem', gap: '0.5rem' }}>
+                        <div style={{ position: 'relative', paddingBottom: '4px' }} ref={emojiPickerRef}>
+                            <button
+                              type="button"
+                              className="toolbar-btn"
+                              onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                              title="Add emoji"
+                            >
+                              <Smile size={20} color={showEmojiPicker ? "var(--primary-color)" : "inherit"} />
+                            </button>
+                            {showEmojiPicker && (
+                              <div className="emoji-picker-container">
+                                <EmojiPicker
+                                  onEmojiClick={onEmojiClick}
+                                  autoFocusSearch={false}
+                                  theme="auto"
+                                  width={320}
+                                  height={400}
+                                />
+                              </div>
+                            )}
                         </div>
 
                         <textarea
@@ -192,17 +190,14 @@ const Chat = () => {
                           rows={1}
                         />
 
-                        <div className="chat-input-footer">
-                            <div className="chat-input-hint">
-                                Use <span className="hint-code">```</span> to wrap code blocks
-                            </div>
+                        <div style={{ paddingBottom: '4px' }}>
                             <button
                               type="submit"
                               disabled={!newMessage.trim()}
                               className="chat-send-btn"
                               aria-label="Send message"
                             >
-                              <Send size={16} />
+                              <Send size={18} />
                             </button>
                         </div>
                     </div>
@@ -282,6 +277,10 @@ const Chat = () => {
         isUpdating={isUpdating}
       />
     </div>
+    <footer className="desktop-chat-footer">
+      <p>&copy; {new Date().getFullYear()} Classroom Chat. All Rights Reserved.</p>
+    </footer>
+    </>
   );
 };
 

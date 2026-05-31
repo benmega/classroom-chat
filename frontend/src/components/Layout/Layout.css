@@ -637,4 +637,11 @@ footer {
     transform: translateX(4px);
 }
 
-
+@media (min-width: 801px) {
+    main.main-full {
+        overflow-y: auto;
+    }
+    .desktop-hidden-footer {
+        display: none !important;
+    }
+}

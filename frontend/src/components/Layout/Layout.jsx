@@ -223,7 +223,7 @@ const Layout = ({ children }) => {
                 </>
             )}
 
-            <footer>
+            <footer className={isChatPage ? 'desktop-hidden-footer' : ''}>
                 <p>&copy; {new Date().getFullYear()} Classroom Chat. All Rights Reserved.</p>
             </footer>
         </div>
