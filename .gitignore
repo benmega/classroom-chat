@@ -19,3 +19,4 @@ backend/reports/certificates/
 *.log
 *.bak
 certificates/*
+git_log.txt

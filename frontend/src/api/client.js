@@ -5,6 +5,7 @@ const client = axios.create({
   withCredentials: true,
   headers: {
     'Accept': 'application/json',
+    'X-Requested-With': 'XMLHttpRequest',
   },
   xsrfCookieName: 'csrf_token_v2',
   xsrfHeaderName: 'X-CSRFToken',

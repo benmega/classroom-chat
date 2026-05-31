@@ -8,7 +8,7 @@ import os
 
 from flask import Blueprint, request, jsonify
 
-from application.extensions import db
+from application.extensions import db, csrf
 from application.models.project import Project
 
 webhooks_api = Blueprint("webhooks_api", __name__, url_prefix="/api/webhooks")
@@ -22,6 +22,7 @@ def validate_secret():
 
 
 @webhooks_api.route("/youtube", methods=["POST"])
+@csrf.exempt
 def youtube_callback():
     if not validate_secret():
         return jsonify({"success": False, "error": "Unauthorized"}), 401
@@ -52,6 +53,7 @@ def youtube_callback():
 
 
 @webhooks_api.route("/transcribe", methods=["POST"])
+@csrf.exempt
 def transcribe_callback():
     if not validate_secret():
         return jsonify({"success": False, "error": "Unauthorized"}), 401
