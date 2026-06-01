@@ -31,10 +31,10 @@ const Landing = () => {
                 <section className="hero-section">
                     <div className="hero-content">
                         <h2 className="animate-fade-in" style={{ fontSize: 'clamp(2rem, 4vw, 3rem)' }}>
-                            Learn to <span style={{color: 'var(--primary-color)'}}>code</span> and use <span style={{color: 'var(--primary-color)'}}>AI</span>, all through the <span style={{color: 'var(--primary-color)'}}>power of play</span>.
+                            Ready to <span style={{color: 'var(--primary-color)'}}>level up</span> your coding?
                         </h2>
                         <p className="hero-subtitle animate-fade-in" style={{ animationDelay: '0.1s', fontSize: '1.25rem' }}>
-                            Sign-up today to play for free and explore our games and resources.
+                            A fun space for students to build projects and parents to track progress.
                         </p>
                         
                         <div className="hero-cta animate-fade-in" style={{ animationDelay: '0.2s', display: 'flex', flexDirection: 'column', gap: '1rem', width: '100%', maxWidth: '300px' }}>
