@@ -30,33 +30,34 @@ const Landing = () => {
             <main className="landing-main">
                 <section className="hero-section">
                     <div className="hero-content">
-                        <h2 className="animate-fade-in">Welcome to Your Virtual Classroom</h2>
-                        <p className="hero-subtitle animate-fade-in" style={{ animationDelay: '0.1s' }}>
-                            A unified space for students to learn, communicate, and grow. Parents, teachers, and admins can stay connected and informed.
+                        <h2 className="animate-fade-in" style={{ fontSize: 'clamp(2rem, 4vw, 3rem)' }}>
+                            Learn to <span style={{color: 'var(--primary-color)'}}>code</span> and use <span style={{color: 'var(--primary-color)'}}>AI</span>, all through the <span style={{color: 'var(--primary-color)'}}>power of play</span>.
+                        </h2>
+                        <p className="hero-subtitle animate-fade-in" style={{ animationDelay: '0.1s', fontSize: '1.25rem' }}>
+                            Sign-up today to play for free and explore our games and resources.
                         </p>
                         
-                        <div className="hero-cta animate-fade-in" style={{ animationDelay: '0.2s' }}>
-                            <button onClick={() => navigate('/login')} className="btn-premium btn-premium-lg">
-                                Student Login
+                        <div className="hero-cta animate-fade-in" style={{ animationDelay: '0.2s', display: 'flex', flexDirection: 'column', gap: '1rem', width: '100%', maxWidth: '300px' }}>
+                            <button onClick={() => navigate('/signup?role=educator')} className="btn-premium btn-premium-lg" style={{ width: '100%' }}>
+                                I'm an Educator
                             </button>
-                            <div className="secondary-roles">
-                                <span>Are you a Parent or Admin? </span>
-                                <button onClick={() => navigate('/login')} className="text-btn">Log in here</button>
-                            </div>
+                            <button onClick={() => navigate('/signup?role=parent')} className="btn-premium btn-premium-lg" style={{ width: '100%' }}>
+                                I'm a Parent
+                            </button>
+                            <button onClick={() => navigate('/login')} className="btn-premium btn-premium-lg" style={{ width: '100%' }}>
+                                Start Playing
+                            </button>
                         </div>
                     </div>
                     
                     <div className="hero-visual animate-float">
-                        <div className="mockup-window glass-panel">
-                            <div className="mockup-header">
-                                <span className="dot red"></span>
-                                <span className="dot yellow"></span>
-                                <span className="dot green"></span>
-                            </div>
-                            <div className="mockup-body">
-                                <div className="mockup-chat-bubble received">Hello class! Let's get started.</div>
-                                <div className="mockup-chat-bubble sent">I'm ready for today's lesson!</div>
-                                <div className="mockup-chat-bubble received">Great. Check out the new achievements.</div>
+                        <div className="slideshow-window glass-panel">
+                            <div className="slideshow-track">
+                                <div className="slide" style={{ background: '#2d3748' }}><span>Code Combat</span></div>
+                                <div className="slide" style={{ background: '#2b6cb0' }}><span>Ozaria</span></div>
+                                <div className="slide" style={{ background: '#2c5282' }}><span>PyCharm IDE</span></div>
+                                <div className="slide" style={{ background: '#276749' }}><span>Turtle Code</span></div>
+                                <div className="slide" style={{ background: '#b7791f' }}><span>3D Printed Ducks</span></div>
                             </div>
                         </div>
                     </div>
