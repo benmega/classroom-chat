@@ -53,11 +53,11 @@ const Landing = () => {
                     <div className="hero-visual animate-float">
                         <div className="slideshow-window glass-panel">
                             <div className="slideshow-track">
-                                <div className="slide" style={{ background: '#2d3748' }}><span>Code Combat</span></div>
-                                <div className="slide" style={{ background: '#2b6cb0' }}><span>Ozaria</span></div>
-                                <div className="slide" style={{ background: '#2c5282' }}><span>PyCharm IDE</span></div>
-                                <div className="slide" style={{ background: '#276749' }}><span>Turtle Code</span></div>
-                                <div className="slide" style={{ background: '#b7791f' }}><span>3D Printed Ducks</span></div>
+                                <img src="/images/code_combat.png" alt="Code Combat" className="slide" style={{ objectFit: 'cover' }} />
+                                <img src="/images/ozaria.png" alt="Ozaria" className="slide" style={{ objectFit: 'cover' }} />
+                                <img src="/images/pycharm.png" alt="PyCharm IDE" className="slide" style={{ objectFit: 'cover' }} />
+                                <img src="/images/turtle_code.png" alt="Turtle Code" className="slide" style={{ objectFit: 'cover' }} />
+                                <img src="/images/printed_ducks.png" alt="3D Printed Ducks" className="slide" style={{ objectFit: 'cover' }} />
                             </div>
                         </div>
                     </div>
