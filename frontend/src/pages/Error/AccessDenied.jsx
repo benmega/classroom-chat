@@ -66,7 +66,7 @@ const AccessDenied = () => {
           flexDirection: 'column',
           gap: '1rem'
         }}>
-          <Link to="/" style={{
+          <Link to="/chat" style={{
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',

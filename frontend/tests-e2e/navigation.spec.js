@@ -29,7 +29,7 @@ test.describe('Navigation', () => {
       window.localStorage.setItem('hasSeenTutorial', 'true');
     });
 
-    await page.goto('/');
+    await page.goto('/chat');
   });
 
   test('should navigate to profile from dashboard', async ({ page }) => {

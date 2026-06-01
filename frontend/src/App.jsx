@@ -19,6 +19,7 @@ import BitShift from './pages/General/BitShift';
 import SubmitCertificate from './pages/General/SubmitCertificate';
 import SubmitChallenge from './pages/General/SubmitChallenge';
 import History from './pages/General/History';
+import Landing from './pages/General/Landing';
 import EditProfile from './pages/User/EditProfile';
 import ManageProject from './pages/User/ManageProject';
 import AdminDashboard from './pages/Admin/AdminDashboard';
@@ -130,8 +131,8 @@ function App() {
             }}
         />
       <Routes>
-        <Route path="/login" element={isAuthenticated ? <Navigate to="/" /> : <Login />} />
-        <Route path="/signup" element={isAuthenticated ? <Navigate to="/" /> : <Signup />} />
+        <Route path="/login" element={isAuthenticated ? <Navigate to="/chat" /> : <Login />} />
+        <Route path="/signup" element={isAuthenticated ? <Navigate to="/chat" /> : <Signup />} />
 
         {/* Development-only shortcut — guarded so browsers in production never see this route */}
         {import.meta.env.DEV && (
@@ -139,7 +140,9 @@ function App() {
         )}
 
 
-        <Route path="/" element={
+        <Route path="/" element={<Landing />} />
+
+        <Route path="/chat" element={
           <ProtectedRoute>
             <Layout>
               <Chat />

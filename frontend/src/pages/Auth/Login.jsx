@@ -22,7 +22,7 @@ const Login = () => {
                 if (result.awarded_duck) {
                     toast.success('Welcome! Daily duck awarded.', { icon: '🦆' });
                 }
-                navigate('/');
+                navigate('/chat');
             } else {
                 toast.error(result.error || 'Invalid username or password.');
             }
