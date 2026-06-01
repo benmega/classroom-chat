@@ -22,8 +22,8 @@ const Landing = () => {
                     <h1>Classroom Chat</h1>
                 </div>
                 <div className="landing-nav-actions">
-                    <button onClick={() => navigate('/login')} className="btn-premium btn-premium-sm">Login</button>
-                    <button onClick={() => navigate('/signup')} className="btn-secondary">Sign Up</button>
+                    <button onClick={() => navigate('/login')} className="btn-secondary">Login</button>
+                    <button onClick={() => navigate('/signup')} className="btn-premium btn-premium-sm">Sign Up</button>
                 </div>
             </nav>
 
