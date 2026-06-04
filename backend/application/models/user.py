@@ -25,6 +25,7 @@ class User(db.Model):
     slug = db.Column(db.String(100), unique=True, nullable=True)
     is_admin = db.Column(db.Boolean, default=False)
     is_approved = db.Column(db.Boolean, default=False)
+    role = db.Column(db.String(20), default="student", nullable=False)
     bio = db.Column(db.String(500), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
@@ -68,6 +69,15 @@ class User(db.Model):
         back_populates="user",
         cascade="all, delete-orphan",
         order_by="desc(Note.created_at)",
+    )
+
+    # Parent → Student relationship via association table
+    children = db.relationship(
+        "User",
+        secondary="parent_students",
+        primaryjoin="User.id == parent_students.c.parent_id",
+        secondaryjoin="User.id == parent_students.c.student_id",
+        lazy="selectin",
     )
 
     def __repr__(self):
@@ -120,6 +130,7 @@ class User(db.Model):
             ),
             "is_admin": self.is_admin,
             "is_approved": self.is_approved,
+            "role": self.role,
             "slug": self.slug,
             "duck_balance": self.duck_balance,
             "packets": self.packets,

@@ -24,10 +24,12 @@ from .server_info_routes import server_info
 from .session_routes import session
 from .upload_routes import upload
 from .user_routes import user
+from .parent_routes import parent
 
 
 def register_blueprints(app: Flask):
     app.register_blueprint(admin_bp, url_prefix="/api/admin")
+    app.register_blueprint(parent, url_prefix="/api/parents")
     app.register_blueprint(user, url_prefix="/user")
     app.register_blueprint(ai, url_prefix="/ai")
     app.register_blueprint(upload, url_prefix="/upload")
