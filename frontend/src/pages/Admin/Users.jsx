@@ -15,7 +15,8 @@ import {
     CreateUserModal, 
     AdjustDucksModal, 
     ResetPasswordModal,
-    ManageChildrenModal
+    ManageChildrenModal,
+    ConnectionCardModal
 } from '../../components/admin/AdminModals';
 import './Users.css';
 import Skeleton from '../../components/common/Skeleton';
@@ -48,7 +49,10 @@ const Users = () => {
         handleRemoveUser,
         parentChildren,
         fetchParentChildren,
-        handleToggleChildLink
+        handleToggleChildLink,
+        connectionCode,
+        setConnectionCode,
+        fetchConnectionCard
     } = useUsersManagement();
 
     const filteredUsers = users.filter(u => 
@@ -198,6 +202,22 @@ const Users = () => {
                                                     <UsersIcon size={16} />
                                                 </button>
                                             )}
+                                            {!u.is_admin && u.role === 'student' && (
+                                                <button 
+                                                    className="action-btn" 
+                                                    onClick={async () => { 
+                                                        const success = await fetchConnectionCard(u.id);
+                                                        if (success) {
+                                                            setModalUser(u); 
+                                                            setActiveModal('connection_card'); 
+                                                        }
+                                                    }}
+                                                    title="Get Connection Card"
+                                                    style={{ color: '#059669', border: '1px solid #10b981', padding: '4px 8px', borderRadius: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}
+                                                >
+                                                    <Key size={14} /> <span style={{ fontSize: '0.75rem', fontWeight: 'bold' }}>Card</span>
+                                                </button>
+                                            )}
                                             {!u.is_admin && (
                                                 <button 
                                                     className="action-btn delete" 
@@ -282,6 +302,13 @@ const Users = () => {
                 parentChildren={parentChildren}
                 onToggleLink={handleToggleChildLink}
                 loading={formLoading}
+            />
+
+            <ConnectionCardModal 
+                isOpen={activeModal === 'connection_card'} 
+                onClose={() => { setActiveModal(null); setModalUser(null); setConnectionCode(null); }} 
+                student={modalUser}
+                connectionCode={connectionCode}
             />
         </div>
     );

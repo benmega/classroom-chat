@@ -25,6 +25,7 @@ from .session_routes import session
 from .upload_routes import upload
 from .user_routes import user
 from .parent_routes import parent
+from .cognito_routes import cognito_bp
 
 
 def register_blueprints(app: Flask):
@@ -38,6 +39,7 @@ def register_blueprints(app: Flask):
     app.register_blueprint(achievements, url_prefix="/achievements")
     app.register_blueprint(achievements_api)
     app.register_blueprint(session, url_prefix="/api/session")
+    app.register_blueprint(cognito_bp, url_prefix="/api/auth/cognito")
     app.register_blueprint(notes_bp, url_prefix="/notes")
     app.register_blueprint(webhooks_api)
     app.register_blueprint(challenge)

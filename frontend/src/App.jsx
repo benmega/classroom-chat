@@ -31,9 +31,11 @@ import Users from './pages/Admin/Users';
 import Analytics from './pages/Admin/Analytics';
 import PendingTrades from './pages/Admin/PendingTrades';
 import PendingUsers from './pages/Admin/PendingUsers';
+import AdminConnectionRequests from './pages/Admin/AdminConnectionRequests';
 import AdvancedPanel from './pages/Admin/AdvancedPanel';
 import ParentDashboard from './pages/Parent/ParentDashboard';
 import ParentReportCard from './pages/Parent/ParentReportCard';
+import ConnectChild from './pages/Parent/ConnectChild';
 
 import AdminCRUD from './admin/AdminPanel';
 import AccessDenied from './pages/Error/AccessDenied';
@@ -264,6 +266,7 @@ function App() {
                 <Route path="documents" element={<AdminDocuments />} />
                 <Route path="pending-trades" element={<PendingTrades />} />
                 <Route path="pending-users" element={<PendingUsers />} />
+                <Route path="connection-requests" element={<AdminConnectionRequests />} />
                 <Route path="advanced" element={<AdvancedPanel />} />
               </Routes>
             </AdminLayout>
@@ -281,6 +284,7 @@ function App() {
             <ParentReportCard />
           </ProtectedRoute>
         } />
+        <Route path="/parent/connect" element={<ConnectChild />} />
 
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" />} />

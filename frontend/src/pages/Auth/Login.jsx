@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { User, Lock, ArrowRight, Zap } from 'lucide-react';
 import useAuthStore from '../../store/useAuthStore';
 import toast from 'react-hot-toast';
@@ -11,6 +11,7 @@ const Login = () => {
     const [password, setPassword] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
+    const location = useLocation();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -22,7 +23,13 @@ const Login = () => {
                 if (result.awarded_duck) {
                     toast.success('Welcome! Daily duck awarded.', { icon: '🦆' });
                 }
-                if (result.role === 'parent') {
+                
+                const pendingCode = localStorage.getItem('pendingConnectionCode');
+                const fromPath = location.state?.from || (pendingCode ? `/parent/connect?code=${pendingCode}` : null);
+
+                if (fromPath) {
+                    navigate(fromPath);
+                } else if (result.role === 'parent') {
                     navigate('/parent/dashboard');
                 } else {
                     navigate('/chat');
@@ -99,10 +106,18 @@ const Login = () => {
                             </>
                         ) : (
                             <>
-                                Login <ArrowRight size={20} />
+                                Student Login <ArrowRight size={20} />
                             </>
                         )}
                     </button>
+                    
+                    <div className="auth-divider">
+                        <span>OR</span>
+                    </div>
+
+                    <a href="/api/auth/cognito/login" className="auth-button cognito-btn" style={{ textDecoration: 'none', textAlign: 'center', backgroundColor: 'var(--bg-card)' }}>
+                        Parent Sign In / Sign Up
+                    </a>
                 </form>
                 
                 <div className="auth-footer">

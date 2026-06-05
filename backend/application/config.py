@@ -46,6 +46,14 @@ class Config:
             raise RuntimeError("ADMIN_PASSWORD must be set in production environment!")
         ADMIN_PASSWORD = "admin-dev-password"  # Slightly better than 1234
 
+    # Cognito OAuth configuration
+    COGNITO_USER_POOL_ID = os.getenv("COGNITO_USER_POOL_ID")
+    COGNITO_CLIENT_ID = os.getenv("COGNITO_CLIENT_ID")
+    COGNITO_CLIENT_SECRET = os.getenv("COGNITO_CLIENT_SECRET")
+    COGNITO_DOMAIN = os.getenv("COGNITO_DOMAIN")
+    COGNITO_REDIRECT_URI = os.getenv("COGNITO_REDIRECT_URI")
+    COGNITO_REGION = os.getenv("COGNITO_REGION", "us-east-1")
+
     # SocketIO configuration
     SOCKETIO_ASYNC_MODE = "gevent"
 

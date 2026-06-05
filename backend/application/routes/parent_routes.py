@@ -4,12 +4,13 @@ Type: py
 Summary: API endpoints for parent accounts to view linked children and student report cards.
 """
 
-from flask import Blueprint, session
+from flask import Blueprint, session, request
 
 from application.decorators.api_response import api_response
 from application.decorators.login_required import require_login
 from application.extensions import db
 from application.models.user import User
+from application.models.parent_connection_request import ParentConnectionRequest
 
 
 parent = Blueprint("parent", __name__)
@@ -119,3 +120,78 @@ def get_student_report(student_id):
     }
 
     return report
+
+
+@parent.route("/connect/code", methods=["POST"])
+@require_login
+@api_response
+def connect_via_code():
+    """Instantly links the authenticated parent to a student using their connection code."""
+    data = request.json or {}
+    code = data.get("code", "").strip()
+    
+    if not code:
+        return "Connection code is required.", 400
+        
+    user_id = session.get("user")
+    user_obj = db.session.get(User, user_id)
+    
+    if not user_obj or user_obj.role != "parent":
+        return "Access denied. Parent account required.", 403
+        
+    student = User.query.filter_by(connection_code=code).first()
+    if not student:
+        return "Invalid connection code.", 404
+        
+    if student in user_obj.children:
+        return "Already linked to this student.", 400
+        
+    user_obj.children.append(student)
+    db.session.commit()
+    
+    return {"message": "Student successfully linked.", "student": {"id": student.id, "nickname": student.nickname}}
+
+@parent.route("/connect/request", methods=["POST"])
+@require_login
+@api_response
+def request_connection():
+    """Submits a request to the admin to link the parent with a specific student."""
+    data = request.json or {}
+    username = data.get("username", "").strip()
+    relationship = data.get("relationship", "").strip()
+    message = data.get("message", "").strip()
+    
+    if not username or not relationship:
+        return "Username and relationship are required.", 400
+        
+    user_id = session.get("user")
+    user_obj = db.session.get(User, user_id)
+    
+    if not user_obj or user_obj.role != "parent":
+        return "Access denied. Parent account required.", 403
+        
+    student = User.query.filter_by(_username=username.lower()).first()
+    if not student:
+        return "Student not found.", 404
+        
+    if student in user_obj.children:
+        return "Already linked to this student.", 400
+        
+    # Check for pending request
+    existing_req = ParentConnectionRequest.query.filter_by(
+        parent_id=user_id, student_id=student.id, status="pending"
+    ).first()
+    if existing_req:
+        return "A pending connection request already exists for this student.", 400
+        
+    req = ParentConnectionRequest(
+        parent_id=user_id,
+        student_id=student.id,
+        relationship=relationship,
+        message=message
+    )
+    db.session.add(req)
+    db.session.commit()
+    
+    return {"message": "Connection request submitted. Waiting for admin approval."}
+

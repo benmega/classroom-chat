@@ -204,6 +204,10 @@ const AdminDashboard = () => {
                                 <div className="icon pending"><ShoppingBag size={20} /></div>
                                 <span>Trade Approvals</span>
                             </button>
+                            <button className="action-item" onClick={() => navigate('/admin/connection-requests')}>
+                                <div className="icon"><Users size={20} /></div>
+                                <span>Parent Requests</span>
+                            </button>
                             <button className="action-item" onClick={() => setActiveModal('create')}>
                                 <div className="icon"><UserPlus size={20} /></div>
                                 <span>Create User</span>

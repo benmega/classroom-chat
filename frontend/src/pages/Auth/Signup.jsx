@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { User, Lock, UserPlus, Zap, CheckCircle } from 'lucide-react';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
@@ -10,12 +10,16 @@ const Signup = () => {
     const [password, setPassword] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
+    const [searchParams] = useSearchParams();
+    const role = searchParams.get('role');
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setIsLoading(true);
         try {
-            const response = await client.post('/user/signup', { username, password });
+            const payload = { username, password };
+            if (role === 'parent') payload.role = 'parent';
+            const response = await client.post('/user/signup', payload);
             toast.success(response.data.data.message || 'Signup successful! Awaiting approval.');
             setIsSuccess(true);
         } catch (error) {

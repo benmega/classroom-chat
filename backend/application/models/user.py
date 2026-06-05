@@ -26,6 +26,10 @@ class User(db.Model):
     is_admin = db.Column(db.Boolean, default=False)
     is_approved = db.Column(db.Boolean, default=False)
     role = db.Column(db.String(20), default="student", nullable=False)
+    
+    # OAuth / Cognito fields
+    email = db.Column(db.String(120), unique=True, nullable=True)
+    cognito_sub = db.Column(db.String(50), unique=True, nullable=True)
     bio = db.Column(db.String(500), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
@@ -35,6 +39,7 @@ class User(db.Model):
     duck_balance = db.Column(db.Double, nullable=False, default=0)
     last_daily_duck = db.Column(db.Date, nullable=True)
     last_achievement_evaluation = db.Column(db.DateTime, nullable=True)
+    connection_code = db.Column(db.String(10), unique=True, nullable=True)
 
     # Relationships
     skills = db.relationship(
@@ -221,6 +226,21 @@ class User(db.Model):
 
         self.slug = slug
         return slug
+
+    def get_connection_code(self):
+        if not self.connection_code:
+            self.connection_code = self.generate_connection_code()
+            db.session.commit()
+        return self.connection_code
+
+    def generate_connection_code(self):
+        """Generate a unique 6-character alphanumeric connection code."""
+        import random
+        import string
+        while True:
+            code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+            if User.query.filter_by(connection_code=code).first() is None:
+                return code
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)

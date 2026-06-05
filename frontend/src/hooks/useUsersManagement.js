@@ -13,6 +13,7 @@ export const useUsersManagement = () => {
     const [modalUser, setModalUser] = useState(null);
     const [formLoading, setFormLoading] = useState(false);
     const [formErrors, setFormErrors] = useState({});
+    const [connectionCode, setConnectionCode] = useState(null);
 
     const fetchUsers = useCallback(async (targetPage = page) => {
         setIsRefreshing(true);
@@ -181,6 +182,20 @@ export const useUsersManagement = () => {
         }
     };
 
+    const fetchConnectionCard = async (studentId) => {
+        setFormLoading(true);
+        try {
+            const response = await client.get(`/api/admin/user/${studentId}/connection_card`);
+            setConnectionCode(response.data.data?.connection_code || response.data.connection_code);
+            return true;
+        } catch (error) {
+            toast.error('Failed to generate connection card.');
+            return false;
+        } finally {
+            setFormLoading(false);
+        }
+    };
+
     return {
         users,
         isLoading,
@@ -202,6 +217,9 @@ export const useUsersManagement = () => {
         handleRemoveUser,
         parentChildren,
         fetchParentChildren,
-        handleToggleChildLink
+        handleToggleChildLink,
+        connectionCode,
+        setConnectionCode,
+        fetchConnectionCard
     };
 };

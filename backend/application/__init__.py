@@ -228,6 +228,8 @@ def seed_global_data():
 
     logger = logging.getLogger(__name__)
 
+    import sqlalchemy
+
     # Guard: skip seeding if the schema hasn't been migrated yet.
     # This allows 'flask db upgrade' to load the app without crashing.
     inspector = inspect(db.engine)
@@ -286,6 +288,9 @@ def seed_global_data():
         _constants.GLOBAL_CONVERSATION_ID = global_conv.id
         logger.info(f"GLOBAL_CONVERSATION_ID = {global_conv.id}")
 
+    except sqlalchemy.exc.OperationalError as exc:
+        db.session.rollback()
+        logger.warning(f"seed_global_data skipped due to OperationalError (schema drift?): {exc}")
     except Exception as exc:
         db.session.rollback()
         logger.error(f"seed_global_data failed: {exc}")

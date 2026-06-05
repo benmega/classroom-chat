@@ -64,6 +64,7 @@ const AdminLayout = ({ children }) => {
         { path: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
         { path: '/admin/pending-users', label: 'User Approvals', icon: Users, badge: true },
         { path: '/admin/pending-trades', label: 'Pending Trades', icon: ShoppingBag },
+        { path: '/admin/connection-requests', label: 'Parent Requests', icon: Users },
         { path: '/admin/projects', label: 'Projects', icon: FolderKanban },
 
 

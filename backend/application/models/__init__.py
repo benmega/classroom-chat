@@ -28,6 +28,7 @@ def setup_models():
     from .user_certificate import UserCertificate  # noqa: F401
     from .duck_transaction import DuckTransaction  # noqa: F401
     from .parent_student import parent_students  # noqa: F401
+    from .parent_connection_request import ParentConnectionRequest  # noqa: F401
 
 
 # setup_models() is called by create_app() within app_context

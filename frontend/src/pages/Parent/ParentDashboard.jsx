@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Loader2, LogOut, Users, Eye, User } from 'lucide-react';
+import { Loader2, LogOut, Users, Eye, User, UserPlus } from 'lucide-react';
 import client from '../../api/client';
 import useAuthStore from '../../store/useAuthStore';
+import AddChildModal from './AddChildModal';
 import './ParentDashboard.css';
 
 const ParentDashboard = () => {
@@ -10,18 +11,20 @@ const ParentDashboard = () => {
     const [children, setChildren] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+
+    const fetchChildren = async () => {
+        try {
+            const response = await client.get(`/api/parents/children?t=${new Date().getTime()}`);
+            setChildren(response.data.data?.children || response.data.children || []);
+        } catch (err) {
+            setError(err.response?.data?.error || 'Failed to load children');
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     useEffect(() => {
-        const fetchChildren = async () => {
-            try {
-                const response = await client.get('/api/parents/children');
-                setChildren(response.data.data?.children || []);
-            } catch (err) {
-                setError(err.response?.data?.error || 'Failed to load children');
-            } finally {
-                setIsLoading(false);
-            }
-        };
         fetchChildren();
     }, []);
 
@@ -56,10 +59,16 @@ const ParentDashboard = () => {
                         <h1>Your Children's Progress</h1>
                         <p>Track achievements, coursework, and coding activity</p>
                     </div>
-                    <button className="parent-logout-btn" onClick={handleLogout}>
-                        <LogOut size={16} />
-                        Sign Out
-                    </button>
+                    <div className="parent-header-actions">
+                        <button className="add-child-btn" onClick={() => setIsModalOpen(true)}>
+                            <UserPlus size={16} />
+                            Add Child
+                        </button>
+                        <button className="parent-logout-btn" onClick={handleLogout}>
+                            <LogOut size={16} />
+                            Sign Out
+                        </button>
+                    </div>
                 </div>
             </header>
 
@@ -81,6 +90,10 @@ const ParentDashboard = () => {
                                 Your account doesn't have any students linked yet.
                                 Please contact the administrator to connect your child's account.
                             </p>
+                            <button className="add-child-btn" onClick={() => setIsModalOpen(true)} style={{ marginTop: '1.5rem' }}>
+                                <UserPlus size={16} />
+                                Add Child
+                            </button>
                         </div>
                     )}
 
@@ -112,6 +125,12 @@ const ParentDashboard = () => {
                     ))}
                 </div>
             </main>
+
+            <AddChildModal 
+                isOpen={isModalOpen} 
+                onClose={() => setIsModalOpen(false)} 
+                onAdded={fetchChildren} 
+            />
         </div>
     );
 };
