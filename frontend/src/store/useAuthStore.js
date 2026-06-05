@@ -30,7 +30,11 @@ const useAuthStore = create((set) => ({
     try {
       const response = await client.post('/user/login', { username, password });
       set({ user: response.data.user, isAuthenticated: true });
-      return { success: true, awarded_duck: response.data.awarded_duck };
+      return { 
+        success: true, 
+        awarded_duck: response.data.awarded_duck,
+        role: response.data.user.role
+      };
     } catch (error) {
       return { 
         success: false, 

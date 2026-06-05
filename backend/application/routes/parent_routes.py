@@ -94,6 +94,18 @@ def get_student_report(student_id):
         ),
         "contribution_data": student.get_contribution_data(),
         "unlocked_achievements": unlocked_achievements,
+        "projects": [
+            p.to_dict() if hasattr(p, "to_dict") else {"id": p.id, "name": p.name}
+            for p in student.projects
+        ],
+        "notes": [
+            (
+                n.to_dict()
+                if hasattr(n, "to_dict")
+                else {"id": n.id, "url": f"/notes/view/{n.filename}"}
+            )
+            for n in student.notes
+        ],
         "course_progress": {
             "codecombat": {
                 "levels_completed": cc_levels,

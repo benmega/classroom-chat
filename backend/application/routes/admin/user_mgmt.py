@@ -254,3 +254,58 @@ def verify_password():
         return jsonify({"success": True})
     else:
         return jsonify({"success": False}), 401
+
+
+@admin_bp.route("/parents/<int:parent_id>/children", methods=["GET"])
+@admin_only
+def get_parent_children(parent_id):
+    parent = db.session.get(User, parent_id)
+    if not parent or parent.role != "parent":
+        return jsonify({"success": False, "message": "Parent not found"}), 404
+        
+    children = [
+        {
+            "id": child.id,
+            "username": child.username,
+            "nickname": child.nickname,
+            "profile_picture": child.profile_picture
+        }
+        for child in parent.children
+    ]
+    return jsonify({"success": True, "children": children})
+
+
+@admin_bp.route("/parents/<int:parent_id>/link/<int:student_id>", methods=["POST"])
+@admin_only
+def link_parent_child(parent_id, student_id):
+    parent = db.session.get(User, parent_id)
+    student = db.session.get(User, student_id)
+    
+    if not parent or parent.role != "parent":
+        return jsonify({"success": False, "message": "Parent not found"}), 404
+    if not student or student.role != "student":
+        return jsonify({"success": False, "message": "Student not found"}), 404
+        
+    if student not in parent.children:
+        parent.children.append(student)
+        db.session.commit()
+        return jsonify({"success": True, "message": f"Linked {student.username} to {parent.username}"})
+    return jsonify({"success": True, "message": "Already linked"})
+
+
+@admin_bp.route("/parents/<int:parent_id>/unlink/<int:student_id>", methods=["POST"])
+@admin_only
+def unlink_parent_child(parent_id, student_id):
+    parent = db.session.get(User, parent_id)
+    student = db.session.get(User, student_id)
+    
+    if not parent or parent.role != "parent":
+        return jsonify({"success": False, "message": "Parent not found"}), 404
+    if not student or student.role != "student":
+        return jsonify({"success": False, "message": "Student not found"}), 404
+        
+    if student in parent.children:
+        parent.children.remove(student)
+        db.session.commit()
+        return jsonify({"success": True, "message": f"Unlinked {student.username} from {parent.username}"})
+    return jsonify({"success": True, "message": "Not linked"})

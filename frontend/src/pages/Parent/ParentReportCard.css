@@ -2,6 +2,8 @@
 
 .report-card-page {
     min-height: 100vh;
+    height: 100vh;
+    overflow-y: auto;
     background: var(--bg-secondary);
     font-family: var(--font-body);
     padding-bottom: 4rem;
@@ -10,7 +12,7 @@
 /* ─── Report Header ─── */
 .report-header {
     background: var(--gradient-primary);
-    padding: 2rem 2rem 4rem;
+    padding: 0.5rem 1.5rem 0.5rem;
     position: relative;
     overflow: hidden;
 }
@@ -46,13 +48,28 @@
     font-size: var(--font-sm);
     font-weight: 600;
     cursor: pointer;
-    transition: var(--transition-fast);
-    margin-bottom: 1.5rem;
+    transition: all 0.2s;
+    margin-bottom: 2rem;
 }
 
 .report-back-btn:hover {
     background: rgba(255, 255, 255, 0.25);
-    transform: translateY(-1px);
+    transform: translateX(-4px);
+}
+
+.report-header-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.report-header-title h1 {
+    margin: 0;
+    font-family: var(--font-heading);
+    font-size: var(--font-2xl);
+    font-weight: 800;
+    color: #ffffff;
+    letter-spacing: -0.02em;
 }
 
 .report-student-info {
@@ -62,21 +79,21 @@
 }
 
 .report-student-avatar {
-    width: 72px;
-    height: 72px;
+    width: 48px;
+    height: 48px;
     border-radius: 50%;
     object-fit: cover;
-    border: 3px solid rgba(255, 255, 255, 0.4);
+    border: 2px solid rgba(255, 255, 255, 0.4);
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
     background: var(--bg-tertiary);
 }
 
 .report-student-avatar-placeholder {
-    width: 72px;
-    height: 72px;
+    width: 48px;
+    height: 48px;
     border-radius: 50%;
     background: rgba(255, 255, 255, 0.15);
-    border: 3px solid rgba(255, 255, 255, 0.3);
+    border: 2px solid rgba(255, 255, 255, 0.3);
     display: flex;
     align-items: center;
     justify-content: center;

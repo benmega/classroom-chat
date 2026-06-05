@@ -3,7 +3,12 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Loader2, ArrowLeft, Activity, Award, BookOpen, User } from 'lucide-react';
 import client from '../../api/client';
 import ContributionGraph from '../../components/profile/ContributionGraph';
+import ProjectPortfolio from '../../components/profile/ProjectPortfolio';
+import DigitalNotebook from '../../components/profile/DigitalNotebook';
+import ProjectModal from '../../components/profile/ProjectModal';
+import NoteSlideshow from '../../components/profile/NoteSlideshow';
 import '../../assets/css/sprite.css';
+import '../Profile/Profile.css';
 import './ParentReportCard.css';
 
 const ParentReportCard = () => {
@@ -12,6 +17,8 @@ const ParentReportCard = () => {
     const [reportData, setReportData] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [selectedProject, setSelectedProject] = useState(null);
+    const [slideshowIndex, setSlideshowIndex] = useState(null);
 
     useEffect(() => {
         const fetchReport = async () => {
@@ -66,18 +73,11 @@ const ParentReportCard = () => {
     const oz = reportData.course_progress?.ozaria || {};
 
     return (
+        <>
         <div className="report-card-page animate-page-entry">
             {/* ── Header ── */}
             <header className="report-header">
-                <div className="report-header-inner">
-                    <button
-                        className="report-back-btn"
-                        onClick={() => navigate('/parent/dashboard')}
-                    >
-                        <ArrowLeft size={16} />
-                        Back to Dashboard
-                    </button>
-
+                <div className="report-header-inner" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: '0.5rem' }}>
                     <div className="report-student-info">
                         {reportData.profile_picture_url ? (
                             <img
@@ -87,108 +87,149 @@ const ParentReportCard = () => {
                             />
                         ) : (
                             <div className="report-student-avatar-placeholder">
-                                <User size={32} strokeWidth={1.5} />
+                                <User size={24} strokeWidth={1.5} />
                             </div>
                         )}
                         <div className="report-student-details">
-                            <h1>{reportData.username}</h1>
+                            <h1 style={{ fontSize: '1.5rem', marginBottom: '0' }}>{reportData.username}</h1>
                             {reportData.nickname && (
-                                <p className="report-student-nick">{reportData.nickname}</p>
+                                <p className="report-student-nick" style={{ margin: '0', fontSize: '0.9rem' }}>{reportData.nickname}</p>
                             )}
                         </div>
                     </div>
+
+                    <button
+                        className="report-back-btn"
+                        style={{ marginBottom: '0' }}
+                        onClick={() => navigate('/parent/dashboard')}
+                    >
+                        <ArrowLeft size={16} />
+                        Back
+                    </button>
                 </div>
             </header>
 
             {/* ── Body Sections ── */}
-            <div className="report-body">
-
-                {/* Activity / Contribution Graph */}
-                <section className="report-section">
-                    <div className="report-section-header">
-                        <h2><Activity size={20} /> Coding Activity</h2>
-                    </div>
-                    <div className="report-activity-visual">
-                        <ContributionGraph data={reportData.contribution_data} />
-                    </div>
-                </section>
-
-                {/* Course Progress */}
-                <section className="report-section">
-                    <div className="report-section-header">
-                        <h2><BookOpen size={20} /> Course Progress</h2>
-                    </div>
-                    <div className="report-progress-list">
-                        <div className="report-progress-item">
-                            <div className="report-prog-label">
-                                <span>CodeCombat</span>
-                                <span>{cc.percent || 0}%</span>
-                            </div>
-                            <div className="report-progress-track">
-                                <div
-                                    className="report-progress-fill"
-                                    style={{ width: `${cc.percent || 0}%` }}
-                                />
-                            </div>
-                            <small>{cc.levels_completed || 0} Levels Completed</small>
+            <div className="dashboard-grid" style={{ marginTop: '20px' }}>
+                <div className="column-left">
+                    {/* Course Progress */}
+                    <section className="dashboard-panel">
+                        <div className="panel-header">
+                            <h2><BookOpen size={20} /> Course Progress</h2>
                         </div>
+                        <div className="progress-list-container">
+                            <div className="progress-list">
+                                <div className="progress-item">
+                                    <div className="prog-label">
+                                        <span>CodeCombat</span>
+                                        <span>{cc.percent || 0}%</span>
+                                    </div>
+                                    <div className="progress-track">
+                                        <div
+                                            className="progress-fill"
+                                            style={{ width: `${cc.percent || 0}%` }}
+                                        />
+                                    </div>
+                                    <small>{cc.levels_completed || 0} Levels Completed</small>
+                                </div>
 
-                        {(oz.levels_completed > 0 || oz.percent > 0) && (
-                            <div className="report-progress-item">
-                                <div className="report-prog-label">
-                                    <span>Ozaria</span>
-                                    <span>{oz.percent || 0}%</span>
+                                {(oz.levels_completed > 0 || oz.percent > 0) && (
+                                    <div className="progress-item">
+                                        <div className="prog-label">
+                                            <span>Ozaria</span>
+                                            <span>{oz.percent || 0}%</span>
+                                        </div>
+                                        <div className="progress-track">
+                                            <div
+                                                className="progress-fill ozaria"
+                                                style={{ width: `${oz.percent || 0}%` }}
+                                            />
+                                        </div>
+                                        <small>{oz.levels_completed || 0} Levels Completed</small>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* Achievements */}
+                    <section className="dashboard-panel">
+                        <div className="panel-header">
+                            <h2><Award size={20} /> Achievements</h2>
+                        </div>
+                        {(!reportData.unlocked_achievements || reportData.unlocked_achievements.length === 0) ? (
+                            <div className="report-empty-achievements">
+                                <Award size={32} strokeWidth={1.2} />
+                                <p>No achievements earned yet.</p>
+                            </div>
+                        ) : (
+                            <div className="achievement-strip-container">
+                                <div className="achievement-strip">
+                                    {reportData.unlocked_achievements.map((ua) => (
+                                        <div key={ua.id} className="ach-strip-item">
+                                            <div className={`badge badge-${ua.achievement?.slug || ua.slug || 'default'} mini`}>&nbsp;</div>
+                                            <div className="ach-strip-info">
+                                                <span className="ach-name">
+                                                    {ua.achievement?.name || ua.name}
+                                                </span>
+                                                {(ua.achievement?.description || ua.description) && (
+                                                    <span className="ach-desc">
+                                                        {ua.achievement?.description || ua.description}
+                                                    </span>
+                                                )}
+                                                {ua.earned_at && (
+                                                    <span className="ach-date">
+                                                        Earned {new Date(ua.earned_at).toLocaleDateString()}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))}
                                 </div>
-                                <div className="report-progress-track">
-                                    <div
-                                        className="report-progress-fill ozaria"
-                                        style={{ width: `${oz.percent || 0}%` }}
-                                    />
-                                </div>
-                                <small>{oz.levels_completed || 0} Levels Completed</small>
                             </div>
                         )}
-                    </div>
-                </section>
+                    </section>
+                </div>
 
-                {/* Achievements */}
-                <section className="report-section">
-                    <div className="report-section-header">
-                        <h2><Award size={20} /> Achievements</h2>
-                    </div>
-                    {(!reportData.unlocked_achievements || reportData.unlocked_achievements.length === 0) ? (
-                        <div className="report-empty-achievements">
-                            <Award size={32} strokeWidth={1.2} />
-                            <p>No achievements earned yet.</p>
-                        </div>
-                    ) : (
-                        <div className="report-achievements-grid">
-                            {reportData.unlocked_achievements.map((ua) => (
-                                <div key={ua.id} className="report-achievement-item">
-                                    <div className={`badge badge-${ua.achievement?.slug || ua.slug || 'default'} mini`}>&nbsp;</div>
-                                    <div className="report-achievement-info">
-                                        <span className="report-ach-name">
-                                            {ua.achievement?.name || ua.name}
-                                        </span>
-                                        {(ua.achievement?.description || ua.description) && (
-                                            <span className="report-ach-desc">
-                                                {ua.achievement?.description || ua.description}
-                                            </span>
-                                        )}
-                                        {ua.earned_at && (
-                                            <span className="report-ach-date">
-                                                Earned {new Date(ua.earned_at).toLocaleDateString()}
-                                            </span>
-                                        )}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                </section>
+                <div className="column-right">
+                    <ProjectPortfolio 
+                        projects={reportData.projects} 
+                        isOwner={false} 
+                        setSelectedProject={setSelectedProject}
+                    />
 
+                    {/* Activity / Contribution Graph */}
+                    <section className="dashboard-panel">
+                        <div className="panel-header">
+                            <h2><Activity size={20} /> Coding Activity</h2>
+                        </div>
+                        <div className="contribution-container">
+                            <ContributionGraph data={reportData.contribution_data} />
+                        </div>
+                    </section>
+
+                    <DigitalNotebook 
+                        notes={reportData.notes}
+                        isOwner={false}
+                        setSlideshowIndex={setSlideshowIndex}
+                    />
+                </div>
             </div>
         </div>
+
+        <ProjectModal 
+            project={selectedProject} 
+            onClose={() => setSelectedProject(null)} 
+        />
+
+        <NoteSlideshow 
+            notes={reportData.notes}
+            currentIndex={slideshowIndex}
+            onClose={() => setSlideshowIndex(null)}
+            onPrev={() => setSlideshowIndex(i => i > 0 ? i - 1 : reportData.notes.length - 1)}
+            onNext={() => setSlideshowIndex(i => i < reportData.notes.length - 1 ? i + 1 : 0)}
+        />
+        </>
     );
 };
 

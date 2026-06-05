@@ -7,13 +7,15 @@ import {
     Trash2, 
     RefreshCw,
     Shield,
-    ChevronLeft
+    ChevronLeft,
+    Users as UsersIcon
 } from 'lucide-react';
 import SmartImage from '../../components/common/SmartImage';
 import { 
     CreateUserModal, 
     AdjustDucksModal, 
-    ResetPasswordModal 
+    ResetPasswordModal,
+    ManageChildrenModal
 } from '../../components/admin/AdminModals';
 import './Users.css';
 import Skeleton from '../../components/common/Skeleton';
@@ -43,7 +45,10 @@ const Users = () => {
         handleCreateUser,
         handleAdjustDucks,
         handleResetPassword,
-        handleRemoveUser
+        handleRemoveUser,
+        parentChildren,
+        fetchParentChildren,
+        handleToggleChildLink
     } = useUsersManagement();
 
     const filteredUsers = users.filter(u => 
@@ -179,6 +184,20 @@ const Users = () => {
                                             >
                                                 <Key size={16} />
                                             </button>
+                                            {u.role === 'parent' && (
+                                                <button 
+                                                    className="action-btn" 
+                                                    onClick={() => { 
+                                                        setModalUser(u); 
+                                                        fetchParentChildren(u.id);
+                                                        setActiveModal('manage_children'); 
+                                                    }}
+                                                    title="Manage Children"
+                                                    style={{ color: '#4f46e5' }}
+                                                >
+                                                    <UsersIcon size={16} />
+                                                </button>
+                                            )}
                                             {!u.is_admin && (
                                                 <button 
                                                     className="action-btn delete" 
@@ -253,6 +272,16 @@ const Users = () => {
                 user={modalUser} 
                 formErrors={formErrors} 
                 loading={formLoading} 
+            />
+
+            <ManageChildrenModal 
+                isOpen={activeModal === 'manage_children'} 
+                onClose={() => { setActiveModal(null); setModalUser(null); }} 
+                parent={modalUser}
+                users={users}
+                parentChildren={parentChildren}
+                onToggleLink={handleToggleChildLink}
+                loading={formLoading}
             />
         </div>
     );

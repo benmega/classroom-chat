@@ -151,6 +151,36 @@ export const useUsersManagement = () => {
         }
     };
 
+    const [parentChildren, setParentChildren] = useState([]);
+
+    const fetchParentChildren = async (parentId) => {
+        try {
+            const response = await client.get(`/api/admin/parents/${parentId}/children`);
+            if (response.data.success) {
+                setParentChildren(response.data.children || []);
+            }
+        } catch (error) {
+            toast.error('Failed to load parent children.');
+            setParentChildren([]);
+        }
+    };
+
+    const handleToggleChildLink = async (parentId, studentId, isLinked) => {
+        setFormLoading(true);
+        try {
+            const endpoint = isLinked ? 'unlink' : 'link';
+            const response = await client.post(`/api/admin/parents/${parentId}/${endpoint}/${studentId}`);
+            if (response.data.success) {
+                toast.success(response.data.message);
+                await fetchParentChildren(parentId);
+            }
+        } catch (error) {
+            toast.error(error.response?.data?.message || 'Failed to toggle student link.');
+        } finally {
+            setFormLoading(false);
+        }
+    };
+
     return {
         users,
         isLoading,
@@ -169,6 +199,9 @@ export const useUsersManagement = () => {
         handleCreateUser,
         handleAdjustDucks,
         handleResetPassword,
-        handleRemoveUser
+        handleRemoveUser,
+        parentChildren,
+        fetchParentChildren,
+        handleToggleChildLink
     };
 };

@@ -2,6 +2,8 @@
 
 .parent-dashboard {
     min-height: 100vh;
+    height: 100vh;
+    overflow-y: auto;
     background: var(--bg-secondary);
     font-family: var(--font-body);
 }
@@ -9,7 +11,7 @@
 /* ─── Header Banner ─── */
 .parent-header {
     background: var(--gradient-primary);
-    padding: 3rem 2rem 4rem;
+    padding: 1rem 2rem 1.5rem;
     position: relative;
     overflow: hidden;
 }
@@ -39,7 +41,7 @@
 .parent-header-text h1 {
     margin: 0;
     font-family: var(--font-heading);
-    font-size: var(--font-4xl);
+    font-size: var(--font-2xl);
     font-weight: 800;
     color: #ffffff;
     letter-spacing: -0.03em;

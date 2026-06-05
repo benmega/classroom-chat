@@ -182,6 +182,7 @@ class User(db.Model):
             "is_online": self.is_online,
             "is_admin": self.is_admin,
             "is_approved": self.is_approved,
+            "role": self.role,
             "bio": self.bio,
             "slug": self.slug,
             # Gamification

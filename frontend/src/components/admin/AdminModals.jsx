@@ -126,3 +126,58 @@ export const StartConversationModal = ({ isOpen, onClose, onSubmit, loading, cla
         </form>
     </Modal>
 );
+
+export const ManageChildrenModal = ({ isOpen, onClose, parent, users, parentChildren, onToggleLink, loading }) => {
+    const students = users.filter(u => u.role === 'student');
+    const childIds = new Set(parentChildren.map(c => c.id));
+
+    return (
+        <Modal isOpen={isOpen} onClose={onClose} title={`Manage Children: ${parent?.username || ''}`}>
+            <div className="admin-form">
+                <div className="form-group">
+                    <label>Select Students to Link</label>
+                    <div style={{ maxHeight: '300px', overflowY: 'auto', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '10px', background: '#f8fafc' }}>
+                        {students.length === 0 ? (
+                            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', textAlign: 'center' }}>No students found.</p>
+                        ) : (
+                            students.map(s => {
+                                const isLinked = childIds.has(s.id);
+                                return (
+                                    <div key={s.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px', borderBottom: '1px solid #e2e8f0' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                            <SmartImage 
+                                                src={s.profile_picture ? getApiUrl(`/user/profile_pictures/${s.profile_picture}`) : ''} 
+                                                alt="" 
+                                                className="avatar-small"
+                                                fallbackType="avatar"
+                                                style={{ width: '32px', height: '32px', borderRadius: '8px', objectFit: 'cover' }}
+                                            />
+                                            <div>
+                                                <div style={{ fontWeight: '600', fontSize: '0.9rem' }}>{s.nickname || s.username}</div>
+                                                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>@{s.username}</div>
+                                            </div>
+                                        </div>
+                                        <button 
+                                            type="button"
+                                            className={`btn-primary ${isLinked ? 'danger' : ''}`}
+                                            style={{ padding: '6px 12px', fontSize: '0.8rem', borderRadius: '6px' }}
+                                            onClick={() => onToggleLink(parent.id, s.id, isLinked)}
+                                            disabled={loading}
+                                        >
+                                            {isLinked ? 'Unlink' : 'Link'}
+                                        </button>
+                                    </div>
+                                );
+                            })
+                        )}
+                    </div>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '20px' }}>
+                    <button type="button" className="btn-secondary" onClick={onClose} style={{ padding: '10px 20px', borderRadius: '8px', border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer' }}>
+                        Close
+                    </button>
+                </div>
+            </div>
+        </Modal>
+    );
+};
