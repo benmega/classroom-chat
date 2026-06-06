@@ -313,10 +313,6 @@ const Chat = () => {
         isUpdating={isUpdating}
       />
     </div>
-    <footer className="desktop-chat-footer">
-      <p>&copy; {new Date().getFullYear()} Classroom Chat. All Rights Reserved.</p>
-    </footer>
-    </>
   );
 };
 
