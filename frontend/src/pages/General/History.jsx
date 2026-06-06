@@ -139,7 +139,7 @@ const History = () => {
                                     </span>
                                     <span className="participants">
                                         <User size={14} />
-                                        {conv.messages?.length || 0} messages
+                                        {conv.messages_count !== undefined ? conv.messages_count : (conv.messages?.length || 0)} messages
                                     </span>
                                 </div>
                             </div>

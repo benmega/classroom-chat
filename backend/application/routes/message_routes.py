@@ -354,12 +354,14 @@ def get_conversation_history(user_id):
             403,
         )
 
+    limit = request.args.get("limit", type=int)
+    offset = request.args.get("offset", default=0, type=int)
+
     if getattr(current_user, "is_admin", False):
         # Admins see all conversations
-        conversations = (
+        query = (
             Conversation.query.options(selectinload(Conversation.messages))
             .order_by(Conversation.created_at.desc())
-            .all()
         )
     else:
         # Students see:
@@ -368,31 +370,37 @@ def get_conversation_history(user_id):
         enrolled_ids = get_enrolled_classroom_ids(current_user_id)
         allowed_classroom_ids = enrolled_ids | {GLOBAL_CLASSROOM_ID}
 
-        conversations = (
+        query = (
             Conversation.query.filter(
                 Conversation.classroom_id.in_(allowed_classroom_ids)
             )
             .options(selectinload(Conversation.messages))
             .order_by(Conversation.created_at.desc())
-            .all()
         )
 
-    return jsonify(
-        [
-            {
-                "conversation_id": conv.id,
-                "title": conv.title,
-                "classroom_id": conv.classroom_id,
-                "is_global": conv.classroom_id == GLOBAL_CLASSROOM_ID,
-                "is_locked": conv.is_locked,
-                "slow_mode_delay": conv.slow_mode_delay,
-                "messages": [
-                    serialize_message(msg) for msg in conv.messages if not msg.is_struck
-                ],
-            }
-            for conv in conversations
-        ]
-    )
+    if limit is not None:
+        conversations = query.limit(limit).offset(offset).all()
+    else:
+        conversations = query.all()
+
+    response_data = []
+    for conv in conversations:
+        # Find the last unstruck message
+        unstruck_messages = [msg for msg in conv.messages if not msg.is_struck]
+        last_msg = serialize_message(unstruck_messages[-1]) if unstruck_messages else None
+        
+        response_data.append({
+            "conversation_id": conv.id,
+            "title": conv.title,
+            "classroom_id": conv.classroom_id,
+            "is_global": conv.classroom_id == GLOBAL_CLASSROOM_ID,
+            "is_locked": conv.is_locked,
+            "slow_mode_delay": conv.slow_mode_delay,
+            "messages": [last_msg] if last_msg else [],
+            "messages_count": len(unstruck_messages),
+        })
+
+    return jsonify(response_data)
 
 
 # ============================================================================

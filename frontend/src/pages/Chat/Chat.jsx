@@ -64,7 +64,10 @@ const Chat = () => {
     handleCreateConversation,
     openEditModal,
     handleUpdateConversation,
-    handleDeleteConversation
+    handleDeleteConversation,
+    hasMoreConversations,
+    isLoadingMoreConversations,
+    handleLoadMoreConversations
   } = useChatLogic();
 
   if (loading) return <div className="container" style={{ textAlign: 'center', padding: '100px' }}>Loading...</div>;
@@ -83,6 +86,9 @@ const Chat = () => {
         setIsModalOpen={setIsModalOpen}
         formatConversationTitle={formatConversationTitle}
         globalConversation={conversations.find(c => c.conversation_id === globalConversationId) || null}
+        hasMoreConversations={hasMoreConversations}
+        isLoadingMoreConversations={isLoadingMoreConversations}
+        handleLoadMoreConversations={handleLoadMoreConversations}
       />
 
       <div className="chat-window">

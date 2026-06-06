@@ -31,6 +31,9 @@ const ChatSidebar = ({
     setIsModalOpen,
     formatConversationTitle,
     globalConversation,        // The canonical global/announcements conv object
+    hasMoreConversations,
+    isLoadingMoreConversations,
+    handleLoadMoreConversations,
 }) => {
     const { logout } = useAuthStore();
     const navigate = useNavigate();
@@ -170,6 +173,59 @@ const ChatSidebar = ({
                     ) : (
                         <div className="empty-search">
                             <p>No conversations found</p>
+                        </div>
+                    )}
+                    {hasMoreConversations && (
+                        <div className="load-more-container" style={{ padding: '0.75rem var(--spacing-md, 1rem)', display: 'flex', justifyContent: 'center' }}>
+                            <button
+                                onClick={handleLoadMoreConversations}
+                                disabled={isLoadingMoreConversations}
+                                className="btn-load-more"
+                                style={{
+                                    width: '100%',
+                                    padding: '0.625rem 1rem',
+                                    borderRadius: '10px',
+                                    border: '1px solid var(--border-subtle)',
+                                    background: 'var(--bg-secondary)',
+                                    color: 'var(--text-secondary)',
+                                    fontSize: '0.8rem',
+                                    fontWeight: '600',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    gap: '0.5rem',
+                                    transition: 'all 0.2s ease',
+                                    boxShadow: 'var(--shadow-sm)',
+                                }}
+                                onMouseEnter={(e) => {
+                                    e.currentTarget.style.background = 'var(--bg-tertiary)';
+                                    e.currentTarget.style.color = 'var(--text-primary)';
+                                    e.currentTarget.style.borderColor = 'var(--primary-color)';
+                                }}
+                                onMouseLeave={(e) => {
+                                    e.currentTarget.style.background = 'var(--bg-secondary)';
+                                    e.currentTarget.style.color = 'var(--text-secondary)';
+                                    e.currentTarget.style.borderColor = 'var(--border-subtle)';
+                                }}
+                            >
+                                {isLoadingMoreConversations ? (
+                                    <>
+                                        <span className="spinner-loader" style={{
+                                            width: '14px',
+                                            height: '14px',
+                                            border: '2px solid var(--text-secondary)',
+                                            borderTopColor: 'transparent',
+                                            borderRadius: '50%',
+                                            display: 'inline-block',
+                                            animation: 'spin 0.8s linear infinite',
+                                        }}></span>
+                                        Loading...
+                                    </>
+                                ) : (
+                                    'Load More'
+                                )}
+                            </button>
                         </div>
                     )}
                 </div>
