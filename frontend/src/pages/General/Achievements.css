@@ -46,6 +46,7 @@
     border-radius: 14px;
     border: 1px solid var(--glass-border);
     box-shadow: var(--shadow-sm);
+    flex-shrink: 0;
 }
 
 .ach-brand h1 {
@@ -140,8 +141,24 @@
 .filter-scroll {
     display: flex;
     justify-content: flex-start;
-    flex-wrap: wrap;
     gap: 10px;
+    overflow-x: auto;
+    padding-bottom: 8px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+}
+
+.filter-scroll::-webkit-scrollbar {
+    height: 4px;
+}
+
+.filter-scroll::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.filter-scroll::-webkit-scrollbar-thumb {
+    background-color: var(--border-rich);
+    border-radius: 4px;
 }
 
 .filter-chip {
@@ -157,6 +174,8 @@
     display: flex;
     align-items: center;
     gap: 8px;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .filter-chip:hover {
@@ -191,6 +210,26 @@
     .ach-global-stats {
         width: 100%;
         flex: none;
+    }
+}
+
+@media (max-width: 600px) {
+    .achievements-page {
+        padding: 1rem;
+    }
+    .ach-controls {
+        padding: 1.25rem;
+    }
+    .ach-brand {
+        gap: 0.75rem;
+    }
+    .ach-brand h1 {
+        font-size: 1.6rem;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+    }
+    .ach-brand p {
+        font-size: 0.9rem;
     }
 }
 

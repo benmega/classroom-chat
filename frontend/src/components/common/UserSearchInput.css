@@ -8,17 +8,17 @@
     align-items: center;
     background: var(--bg-tertiary);
     border: 1px solid var(--border-subtle);
-    border-radius: var(--radius-md); /* Matching header badges */
-    padding: 0.4rem 1rem; /* More compact for header */
+    border-radius: var(--radius-full);
+    padding: 0.5rem 1rem;
     transition: var(--transition-smooth);
-    box-shadow: var(--shadow-sm);
+    box-shadow: none;
 }
 
 .search-input-wrapper-common.active,
 .search-input-wrapper-common:focus-within {
     background: white;
     border-color: var(--primary-color);
-    box-shadow: var(--shadow-glow);
+    box-shadow: 0 0 0 2px var(--primary-light);
 }
 
 .search-icon-common {

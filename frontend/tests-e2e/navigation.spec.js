@@ -10,7 +10,7 @@ test.describe('Navigation', () => {
         body: JSON.stringify({
           data: {
             logged_in: true,
-            user: { id: 1, username: 'testuser', role: 'student', is_admin: false, packets: 0, duck_balance: 100 }
+            user: { id: 1, username: 'testuser', role: 'student', is_admin: false, packets: 0, duck_balance: 100, has_seen_tutorial: true }
           }
         }),
       });

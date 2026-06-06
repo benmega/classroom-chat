@@ -232,6 +232,11 @@ def seed_global_data():
 
     # Guard: skip seeding if the schema hasn't been migrated yet.
     # This allows 'flask db upgrade' to load the app without crashing.
+    import sys
+    if "db" in sys.argv:
+        logger.info("seed_global_data: skipping — 'flask db' command detected.")
+        return
+
     inspector = inspect(db.engine)
     if inspector.has_table("conversations"):
         conv_cols = {c["name"] for c in inspector.get_columns("conversations")}

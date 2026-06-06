@@ -68,13 +68,13 @@
 .users-stats-row {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1.5rem;
-    margin-bottom: 2.5rem;
+    gap: 1.25rem;
+    margin-bottom: 1.5rem;
 }
 
 .stat-mini-card {
     background: white;
-    padding: 1.25rem;
+    padding: 1rem;
     border-radius: 16px;
     border: 1px solid #e2e8f0;
     display: flex;
@@ -241,7 +241,7 @@
 
 .empty-row {
     text-align: center;
-    padding: 60px !important;
+    padding: 30px !important;
     color: var(--text-muted);
     font-style: italic;
 }

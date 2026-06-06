@@ -1,14 +1,19 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft } from 'lucide-react';
+import { ChevronLeft, Menu } from 'lucide-react';
+import useSidebar from '../../hooks/useSidebar';
 import './AdminPageHeader.css';
 
 const AdminPageHeader = ({ title, description, showBack = true, backPath = '/admin', onBack, children }) => {
     const navigate = useNavigate();
+    const { toggleSidebar } = useSidebar();
 
     return (
         <header className="page-header standardized">
             <div className="header-left">
+                <button className="hamburger-toggle mobile-only" onClick={toggleSidebar}>
+                    <Menu size={24} />
+                </button>
                 {showBack && (
                     <button onClick={onBack ? onBack : () => navigate(backPath)} className="back-btn">
                         <ChevronLeft size={20} /> Back

@@ -2,8 +2,8 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 2.5rem;
-    gap: 2rem;
+    margin-bottom: 1.5rem;
+    gap: 1.5rem;
     width: 100%;
 }
 

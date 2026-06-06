@@ -12,7 +12,8 @@ import {
     LogOut,
     Package,
     Menu,
-    X
+    X,
+    Home
 } from 'lucide-react';
 
 import './Layout.css';
@@ -58,8 +59,11 @@ const Layout = ({ children }) => {
                         </button>
                     )}
                     <div id="logo-container">
-                        <Link to="/chat" className="logo">
-                            <img src="/images/logo.ico" alt="Classroom Chat Logo" />
+                        <Link to="/chat" className="logo-link">
+                            <div className="logo-icon-wrapper">
+                                <img src="/images/logo.ico" alt="Classroom Chat Logo" className="logo-img" />
+                            </div>
+                            <span className="logo-text">ClassroomChat</span>
                         </Link>
                     </div>
 
@@ -105,7 +109,11 @@ const Layout = ({ children }) => {
                                 <li className="profile-menu" ref={dropdownRef}>
                                     <button 
                                         className="profile-toggle" 
-                                        onClick={toggleDropdown}
+                                        onClick={(e) => {
+                                            // Prevent double-click race condition
+                                            if (e.detail > 1) return;
+                                            toggleDropdown();
+                                        }}
                                         aria-haspopup="true" 
                                         aria-expanded={isDropdownOpen}
                                         title="Account"
@@ -191,6 +199,7 @@ const Layout = ({ children }) => {
 
                         <nav className="sidebar-nav">
                             <ul>
+                                <li><Link to="/" onClick={() => setSidebarOpen(false)}><Home size={18} /> Chat</Link></li>
                                 <li><Link to="/profile" onClick={() => setSidebarOpen(false)}><User size={18} /> Profile</Link></li>
                                 {user?.is_admin && (
                                     <li><Link to="/admin" onClick={() => setSidebarOpen(false)}><Shield size={18} /> Admin Panel</Link></li>
@@ -210,7 +219,7 @@ const Layout = ({ children }) => {
                 </>
             )}
 
-            <footer>
+            <footer className={isChatPage ? 'desktop-hidden-footer' : ''}>
                 <p>&copy; {new Date().getFullYear()} Classroom Chat. All Rights Reserved.</p>
             </footer>
         </div>

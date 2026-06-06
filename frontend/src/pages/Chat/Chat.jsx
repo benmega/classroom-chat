@@ -111,7 +111,6 @@ const Chat = () => {
                   </div>
                   <div>
                     <h3 style={{ fontSize: 'var(--font-lg)', fontWeight: 700 }}>{formatConversationTitle(activeConversation.title)}</h3>
-                    <p style={{ fontSize: '0.75rem', color: 'var(--primary-color)', fontWeight: 600 }}>Active Now</p>
                   </div>
                 </div>
 
@@ -145,7 +144,7 @@ const Chat = () => {
 
             <div className="chat-input-area">
               <div className="chat-input-content">
-                {activeConversation?.classroom_id === GLOBAL_CLASSROOM_ID && !user?.is_admin ? (
+                {(activeConversation?.conversation_id === globalConversationId && !user?.is_admin) || activeConversation?.is_locked ? (
                   <p
                     id="global-feed-readonly-label"
                     style={{
@@ -157,51 +156,56 @@ const Chat = () => {
                       userSelect: 'none',
                     }}
                   >
-                    Announcements are posted by instructors only.
+                    {activeConversation?.is_locked ? 'This conversation is locked.' : 'Announcements are posted by instructors only.'}
                   </p>
                 ) : (
                   <form
                     onSubmit={handleSendMessage}
-                    className="chat-input-form"
+                    className="chat-input-wrapper-container"
                   >
-                    <textarea
-                      ref={textareaRef}
-                      value={newMessage}
-                      onChange={handleTextareaChange}
-                      onKeyDown={handleTextareaKeyDown}
-                      placeholder="Type your message... (Shift+Enter for new line)"
-                      className="chat-input-field"
-                      rows={1}
-                    />
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)', position: 'relative' }} ref={emojiPickerRef}>
-                      <button
-                        type="button"
-                        className="chat-icon-btn"
-                        onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                        title="Add emoji"
-                      >
-                        <Smile size={20} color={showEmojiPicker ? "var(--primary-color)" : "var(--text-secondary)"} />
-                      </button>
-
-                      {showEmojiPicker && (
-                        <div className="emoji-picker-container">
-                          <EmojiPicker
-                            onEmojiClick={onEmojiClick}
-                            autoFocusSearch={false}
-                            theme="auto"
-                            width={320}
-                            height={400}
-                          />
+                    <div className="chat-input-form-mockup" style={{ display: 'flex', alignItems: 'flex-end', padding: '0.5rem', gap: '0.5rem' }}>
+                        <div style={{ position: 'relative', paddingBottom: '4px' }} ref={emojiPickerRef}>
+                            <button
+                              type="button"
+                              className="toolbar-btn"
+                              onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                              title="Add emoji"
+                            >
+                              <Smile size={20} color={showEmojiPicker ? "var(--primary-color)" : "inherit"} />
+                            </button>
+                            {showEmojiPicker && (
+                              <div className="emoji-picker-container">
+                                <EmojiPicker
+                                  onEmojiClick={onEmojiClick}
+                                  autoFocusSearch={false}
+                                  theme="auto"
+                                  width={320}
+                                  height={400}
+                                />
+                              </div>
+                            )}
                         </div>
-                      )}
 
-                      <button
-                        type="submit"
-                        disabled={!newMessage.trim()}
-                        className="chat-send-btn"
-                      >
-                        <Send size={18} />
-                      </button>
+                        <textarea
+                          ref={textareaRef}
+                          value={newMessage}
+                          onChange={handleTextareaChange}
+                          onKeyDown={handleTextareaKeyDown}
+                          placeholder={`Message ${activeConversation?.title ? formatConversationTitle(activeConversation.title) : 'channel'}...`}
+                          className="chat-input-field"
+                          rows={1}
+                        />
+
+                        <div style={{ paddingBottom: '4px' }}>
+                            <button
+                              type="submit"
+                              disabled={!newMessage.trim()}
+                              className="chat-send-btn"
+                              aria-label="Send message"
+                            >
+                              <Send size={18} />
+                            </button>
+                        </div>
                     </div>
                   </form>
                 )}
@@ -309,6 +313,10 @@ const Chat = () => {
         isUpdating={isUpdating}
       />
     </div>
+    <footer className="desktop-chat-footer">
+      <p>&copy; {new Date().getFullYear()} Classroom Chat. All Rights Reserved.</p>
+    </footer>
+    </>
   );
 };
 

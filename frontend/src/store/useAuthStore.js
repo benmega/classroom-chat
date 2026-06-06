@@ -97,6 +97,15 @@ const useAuthStore = create((set) => ({
       set({ user: null, isAuthenticated: false, hamburgerProgress: 0 });
     }
   },
+  
+  completeTutorial: async () => {
+    try {
+      await client.post('/user/api/auth/tutorial/complete');
+      set((state) => ({ user: { ...state.user, has_seen_tutorial: true } }));
+    } catch (error) {
+      console.error('Failed to complete tutorial', error);
+    }
+  },
 }));
 
 export default useAuthStore;

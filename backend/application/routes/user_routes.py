@@ -119,6 +119,25 @@ def auth_status():
         }, 500
 
 
+@user.route("/api/auth/tutorial/complete", methods=["POST"])
+@require_login
+@api_response
+def tutorial_complete():
+    try:
+        user_id = session.get("user")
+        if user_id:
+            user_obj = db.session.get(User, user_id)
+            if user_obj:
+                user_obj.has_seen_tutorial = True
+                db.session.commit()
+                return {"message": "Tutorial marked as seen", "has_seen_tutorial": True}, 200
+        return {"error": "Unauthorized"}, 401
+    except Exception as e:
+        current_app.logger.error(f"Error completing tutorial: {str(e)}", exc_info=True)
+        return {"error": "Internal server error"}, 500
+
+
+
 @user.route("/logout")
 def logout():
     user_id = session.get("user")
