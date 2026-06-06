@@ -5,7 +5,7 @@ import client from '../api/client';
 import useSidebar from './useSidebar';
 
 export const useLayout = () => {
-    const { user, logout, isAuthenticated } = useAuthStore();
+    const { user, logout, isAuthenticated, hamburgerProgress } = useAuthStore();
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const dropdownRef = useRef(null);
     const navigate = useNavigate();
@@ -113,6 +113,7 @@ export const useLayout = () => {
         handleLogout,
         isGuestPage,
         isChatPage,
-        location
+        location,
+        hamburgerProgress
     };
 };

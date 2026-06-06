@@ -20,6 +20,7 @@ import SubmitCertificate from './pages/General/SubmitCertificate';
 import SubmitChallenge from './pages/General/SubmitChallenge';
 import History from './pages/General/History';
 import Landing from './pages/General/Landing';
+import SubmitWork from './pages/General/SubmitWork';
 import EditProfile from './pages/User/EditProfile';
 import ManageProject from './pages/User/ManageProject';
 import AdminDashboard from './pages/Admin/AdminDashboard';
@@ -197,26 +198,13 @@ function App() {
           </ProtectedRoute>
         } />
 
-        <Route path="/submit-certificate" element={
-          <ProtectedRoute>
-            <Layout>
-              <SubmitCertificate />
-            </Layout>
-          </ProtectedRoute>
-        } />
+        <Route path="/submit-certificate" element={<Navigate to="/submit-work" replace />} />
+        <Route path="/submit-challenge" element={<Navigate to="/submit-work" replace />} />
 
-        <Route path="/submit-challenge" element={
+        <Route path="/submit-work" element={
           <ProtectedRoute>
             <Layout>
-              <SubmitChallenge />
-            </Layout>
-          </ProtectedRoute>
-        } />
-
-        <Route path="/history" element={
-          <ProtectedRoute>
-            <Layout>
-              <History />
+              <SubmitWork />
             </Layout>
           </ProtectedRoute>
         } />

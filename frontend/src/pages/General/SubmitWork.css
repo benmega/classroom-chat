@@ -1,0 +1,69 @@
+.submit-work-page {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem;
+    animation: fadeIn 0.3s ease-out;
+}
+
+.submit-work-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.submit-work-header h1 {
+    font-size: 2rem;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.submit-work-header p {
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+}
+
+.submit-work-tabs {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 1px;
+}
+
+.tab-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--text-secondary);
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-bottom: -1px;
+}
+
+.tab-btn:hover {
+    color: var(--text-primary);
+    background: var(--bg-hover);
+    border-radius: 6px 6px 0 0;
+}
+
+.tab-btn.active {
+    color: var(--primary-color);
+    border-bottom-color: var(--primary-color);
+}
+
+.submit-work-content {
+    background: transparent;
+}
+
+/* Adjust child component padding if they have it */
+.submit-work-content .submit-challenge-page,
+.submit-work-content .submit-certificate-page {
+    padding: 0;
+    margin: 0;
+}
