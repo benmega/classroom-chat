@@ -1,11 +1,15 @@
 import React from 'react';
-import { Activity } from 'lucide-react';
+import { Activity, Plus } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const CourseProgress = ({ target }) => {
     return (
         <section className="dashboard-panel">
-            <div className="panel-header">
+            <div className="panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <h2><Activity size={20} /> Course Progress</h2>
+                <Link to="/submit-work#challenge" title="Submit Challenge" style={{ color: 'var(--text-secondary)', display: 'flex', alignItems: 'center' }}>
+                    <Plus size={20} />
+                </Link>
             </div>
             <div className="progress-list-container">
                 <div className="progress-list">
