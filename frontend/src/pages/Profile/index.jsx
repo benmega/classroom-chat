@@ -2,7 +2,6 @@ import React from 'react';
 import { User } from 'lucide-react';
 import './Profile.css';
 import '../../assets/css/sprite.css'; 
-import useAuthStore from '../../store/useAuthStore'; 
 import ContributionGraph from '../../components/profile/ContributionGraph';
 
 // New sub-components

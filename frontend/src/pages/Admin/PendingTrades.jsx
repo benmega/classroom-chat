@@ -74,8 +74,7 @@ const PendingTrades = () => {
     return (
         <div className="admin-pending-trades-page">
             <AdminPageHeader 
-                title="Pending Duck Trades" 
-                description="Approve or reject physical duck redemption requests."
+                title="Duck Trades" 
             />
  
             <div className="trades-list">

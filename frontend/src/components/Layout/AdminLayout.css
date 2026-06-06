@@ -293,8 +293,8 @@
 
 .admin-top-bar {
     height: var(--top-bar-height);
-    background: white;
-    border-bottom: 1px solid var(--admin-border);
+    background: transparent;
+    border-bottom: none;
     padding: 0 2rem;
     display: flex;
     align-items: center;

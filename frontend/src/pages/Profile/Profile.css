@@ -614,20 +614,22 @@
    ================================================================= */
 .cert-list {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-    gap: 15px;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
 }
 
 .cert-item {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     align-items: center;
-    text-align: center;
-    padding: 15px;
+    text-align: left;
+    padding: 10px;
     background: var(--bg-tertiary);
     border-radius: var(--radius-md);
     border: 1px solid var(--border-subtle);
     transition: var(--transition-smooth);
+    gap: 8px;
+    cursor: pointer;
 }
 
 .cert-item:hover {
@@ -638,24 +640,35 @@
 }
 
 .cert-icon {
-    width: 60px;
-    height: 60px;
-    margin-bottom: 10px;
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    overflow: hidden;
 }
 
 .cert-icon .badge {
-    transform: scale(0.5); /* Scale down the big CSS badges */
+    transform: scale(0.3125); /* Scale down the 128px badges to 40px: 40 / 128 = 0.3125 */
     transform-origin: top left;
+}
+
+.cert-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    flex-grow: 1;
 }
 
 .cert-info h4 {
     font-size: 0.85rem;
-    margin-bottom: 4px;
+    margin: 0 0 2px 0;
     font-weight: 800;
+    line-height: 1.2;
+    color: var(--text-primary);
+    word-break: break-word;
 }
 
 .cert-date {
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     color: var(--text-muted);
 }
 

@@ -61,8 +61,7 @@ const AdminCertificates = () => {
     return (
         <div className="admin-certificates-page">
             <AdminPageHeader 
-                title="Certificate Review" 
-                description="Verify and approve external achievement submissions."
+                title="Certificate Approvals" 
             />
 
             <div className="controls-bar">

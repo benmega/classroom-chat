@@ -16,7 +16,8 @@ import {
     AdjustDucksModal, 
     ResetPasswordModal,
     ManageChildrenModal,
-    ConnectionCardModal
+    ConnectionCardModal,
+    BulkConnectionCardsModal
 } from '../../components/admin/AdminModals';
 import './Users.css';
 import Skeleton from '../../components/common/Skeleton';
@@ -52,7 +53,13 @@ const Users = () => {
         handleToggleChildLink,
         connectionCode,
         setConnectionCode,
-        fetchConnectionCard
+        fetchConnectionCard,
+        classrooms,
+        fetchClassrooms,
+        classroomCards,
+        setClassroomCards,
+        isFetchingCards,
+        fetchClassroomCards
     } = useUsersManagement();
 
     const filteredUsers = users.filter(u => 
@@ -80,7 +87,6 @@ const Users = () => {
         <div className="admin-users-page">
             <AdminPageHeader 
                 title="User Directory" 
-                description="Manage all registered students and administrators."
             >
                 <div className="search-bar">
                     <Search size={18} />
@@ -93,6 +99,9 @@ const Users = () => {
                 </div>
                 <button className="primary-btn" onClick={() => setActiveModal('create')}>
                     <Plus size={18} /> Add User
+                </button>
+                <button className="primary-btn" onClick={() => setActiveModal('bulk_connection_cards')} style={{ background: '#10b981', color: 'white', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Key size={18} /> Print Cohort Cards
                 </button>
                 <button 
                     className={`refresh-btn ${isRefreshing ? 'spinning' : ''}`}
@@ -309,6 +318,17 @@ const Users = () => {
                 onClose={() => { setActiveModal(null); setModalUser(null); setConnectionCode(null); }} 
                 student={modalUser}
                 connectionCode={connectionCode}
+            />
+
+            <BulkConnectionCardsModal
+                isOpen={activeModal === 'bulk_connection_cards'}
+                onClose={() => setActiveModal(null)}
+                classrooms={classrooms}
+                fetchClassrooms={fetchClassrooms}
+                classroomCards={classroomCards}
+                setClassroomCards={setClassroomCards}
+                isFetchingCards={isFetchingCards}
+                fetchClassroomCards={fetchClassroomCards}
             />
         </div>
     );

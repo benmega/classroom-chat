@@ -2,7 +2,7 @@ import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Award, Plus } from 'lucide-react';
 
-const AchievementsList = ({ achievements, isOwner }) => {
+const AchievementsList = ({ achievements }) => {
     const navigate = useNavigate();
 
     if (!achievements || achievements.length === 0) return null;

@@ -8,7 +8,8 @@ import {
     Trash2, 
     FileText, 
     Code, 
-    BarChart3 
+    BarChart3,
+    Trophy
 } from 'lucide-react';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
@@ -91,65 +92,93 @@ const AdvancedPanel = () => {
         <div className="admin-advanced-panel">
             <AdminPageHeader 
                 title="Advanced Database Management" 
-                description="Direct access to backend model controllers and system utilities."
             />
 
             <div className="advanced-grid">
+                <section className="utility-card card premium-card">
+                    <div className="utility-icon premium"><Layers size={20} /></div>
+                    <div className="utility-content">
+                        <h3>Headless Database Management</h3>
+                        <p>Manage all database records via the new React-based headless interface.</p>
+                        <button className="btn-premium" onClick={() => navigate('/admin/advanced-crud')}>
+                            <Activity size={16} /> Open Headless CRUD
+                        </button>
+                    </div>
+                </section>
 
+                <section className="utility-card card">
+                    <div className="utility-icon primary"><FileText size={20} /></div>
+                    <div className="utility-content">
+                        <h3>Assets & Documents</h3>
+                        <p>Manage static files, documents, and other digital assets.</p>
+                        <button className="btn-utility" onClick={() => navigate('/admin/documents')}>
+                            <FileText size={16} /> Manage Assets
+                        </button>
+                    </div>
+                </section>
 
-                <div className="utility-stack">
-                    <section className="utility-card card">
-                        <div className="utility-icon warning"><ShieldAlert size={20} /></div>
-                        <div className="utility-content">
-                            <h3>System Logs</h3>
-                            <p>View real-time server output and error traces.</p>
-                            <button 
-                                className="btn-utility" 
-                                onClick={fetchLogs}
-                                disabled={isFetchingLogs}
-                            >
-                                <FileText size={16} /> {isFetchingLogs ? 'Fetching...' : 'Open Log Viewer'}
-                            </button>
-                        </div>
-                    </section>
+                <section className="utility-card card">
+                    <div className="utility-icon primary"><Trophy size={20} /></div>
+                    <div className="utility-content">
+                        <h3>Achievements</h3>
+                        <p>Manage platform achievements and milestones.</p>
+                        <button className="btn-utility" onClick={() => navigate('/admin/add-achievement')}>
+                            <Trophy size={16} /> Manage Achievements
+                        </button>
+                    </div>
+                </section>
 
-                    <section className="utility-card card premium-card">
-                        <div className="utility-icon premium"><Layers size={20} /></div>
-                        <div className="utility-content">
-                            <h3>Headless Database Management</h3>
-                            <p>Manage all database records via the new React-based headless interface.</p>
-                            <button className="btn-premium" onClick={() => navigate('/admin/advanced-crud')}>
-                                <Activity size={16} /> Open Headless CRUD
-                            </button>
-                        </div>
-                    </section>
+                <section className="utility-card card">
+                    <div className="utility-icon primary"><BarChart3 size={20} /></div>
+                    <div className="utility-content">
+                        <h3>Analytics Dashboard</h3>
+                        <p>View detailed system analytics and usage metrics.</p>
+                        <button className="btn-utility" onClick={() => navigate('/admin/analytics')}>
+                            <Activity size={16} /> Open Analytics
+                        </button>
+                    </div>
+                </section>
 
-                    <section className="utility-card card">
-                        <div className="utility-icon primary"><Terminal size={20} /></div>
-                        <div className="utility-content">
-                            <h3>API Documentation</h3>
-                            <p>Browse available endpoints and request schemas.</p>
-                            <button className="btn-utility" onClick={() => window.open(`${apiBaseUrl}/api/docs/`, '_blank')}>
-                                <Code size={16} /> View Swagger
-                            </button>
-                        </div>
-                    </section>
+                <section className="utility-card card">
+                    <div className="utility-icon primary"><Terminal size={20} /></div>
+                    <div className="utility-content">
+                        <h3>API Documentation</h3>
+                        <p>Browse available endpoints and request schemas.</p>
+                        <button className="btn-utility" onClick={() => window.open(`${apiBaseUrl}/api/docs/`, '_blank')}>
+                            <Code size={16} /> View Swagger
+                        </button>
+                    </div>
+                </section>
 
-                    <section className="utility-card card">
-                        <div className="utility-icon secondary"><Activity size={20} /></div>
-                        <div className="utility-content">
-                            <h3>Server Performance</h3>
-                            <p>Monitor memory usage and database table counts.</p>
-                            <button 
-                                className="btn-utility" 
-                                onClick={fetchExtendedStats}
-                                disabled={isFetchingStats}
-                            >
-                                <BarChart3 size={16} /> {isFetchingStats ? 'Loading...' : 'View Extended Stats'}
-                            </button>
-                        </div>
-                    </section>
-                </div>
+                <section className="utility-card card">
+                    <div className="utility-icon secondary"><Activity size={20} /></div>
+                    <div className="utility-content">
+                        <h3>Server Performance</h3>
+                        <p>Monitor memory usage and database table counts.</p>
+                        <button 
+                            className="btn-utility" 
+                            onClick={fetchExtendedStats}
+                            disabled={isFetchingStats}
+                        >
+                            <BarChart3 size={16} /> {isFetchingStats ? 'Loading...' : 'View Extended Stats'}
+                        </button>
+                    </div>
+                </section>
+
+                <section className="utility-card card">
+                    <div className="utility-icon warning"><ShieldAlert size={20} /></div>
+                    <div className="utility-content">
+                        <h3>System Logs</h3>
+                        <p>View real-time server output and error traces.</p>
+                        <button 
+                            className="btn-utility" 
+                            onClick={fetchLogs}
+                            disabled={isFetchingLogs}
+                        >
+                            <FileText size={16} /> {isFetchingLogs ? 'Fetching...' : 'Open Log Viewer'}
+                        </button>
+                    </div>
+                </section>
             </div>
             
             <div className="danger-zone">

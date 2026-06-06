@@ -356,3 +356,45 @@ def get_connection_card(user_id):
     
     code = student.get_connection_code()
     return {"connection_code": code, "student_id": student.id, "username": student.username, "nickname": student.nickname}
+
+
+@admin_bp.route("/classrooms", methods=["GET"])
+@admin_only
+@api_response
+def get_classrooms_list():
+    from application.models.classroom import Classroom
+    classrooms = Classroom.query.order_by(Classroom.name).all()
+    return {"classrooms": [c.to_dict() for c in classrooms]}
+
+
+@admin_bp.route("/classrooms/<classroom_id>/connection_cards", methods=["GET"])
+@admin_only
+@api_response
+def get_classroom_connection_cards(classroom_id):
+    from application.models.classroom import Classroom
+    
+    if classroom_id == "all":
+        students = User.query.filter_by(role="student").all()
+        classroom_name = "All Students"
+    else:
+        classroom = db.session.get(Classroom, classroom_id)
+        if not classroom:
+            return "Classroom not found.", 404
+        students = [u for u in classroom.users if u.role == "student"]
+        classroom_name = classroom.name
+    
+    cards = []
+    for student in students:
+        code = student.get_connection_code()
+        cards.append({
+            "id": student.id,
+            "username": student.username,
+            "nickname": student.nickname,
+            "connection_code": code
+        })
+    
+    # Sort students by nickname or username for easier distribution
+    cards.sort(key=lambda x: (x["nickname"] or x["username"]).lower())
+    
+    return {"classroom_name": classroom_name, "cards": cards}
+

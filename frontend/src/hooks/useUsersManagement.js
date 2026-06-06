@@ -160,7 +160,7 @@ export const useUsersManagement = () => {
             if (response.data.success) {
                 setParentChildren(response.data.children || []);
             }
-        } catch (error) {
+        } catch {
             toast.error('Failed to load parent children.');
             setParentChildren([]);
         }
@@ -188,11 +188,41 @@ export const useUsersManagement = () => {
             const response = await client.get(`/api/admin/user/${studentId}/connection_card`);
             setConnectionCode(response.data.data?.connection_code || response.data.connection_code);
             return true;
-        } catch (error) {
+        } catch {
             toast.error('Failed to generate connection card.');
             return false;
         } finally {
             setFormLoading(false);
+        }
+    };
+
+    const [classrooms, setClassrooms] = useState([]);
+    const [classroomCards, setClassroomCards] = useState([]);
+    const [isFetchingCards, setIsFetchingCards] = useState(false);
+
+    const fetchClassrooms = useCallback(async () => {
+        try {
+            const response = await client.get('/api/admin/classrooms');
+            setClassrooms(response.data.data?.classrooms || response.data.classrooms || []);
+        } catch (error) {
+            console.error('Error fetching classrooms:', error);
+            toast.error('Failed to load classrooms list.');
+        }
+    }, []);
+
+    const fetchClassroomCards = async (classroomId) => {
+        setIsFetchingCards(true);
+        try {
+            const response = await client.get(`/api/admin/classrooms/${classroomId}/connection_cards`);
+            setClassroomCards(response.data.data?.cards || response.data.cards || []);
+            return true;
+        } catch (error) {
+            console.error('Error fetching cohort connection cards:', error);
+            toast.error('Failed to load cohort connection cards.');
+            setClassroomCards([]);
+            return false;
+        } finally {
+            setIsFetchingCards(false);
         }
     };
 
@@ -220,6 +250,12 @@ export const useUsersManagement = () => {
         handleToggleChildLink,
         connectionCode,
         setConnectionCode,
-        fetchConnectionCard
+        fetchConnectionCard,
+        classrooms,
+        fetchClassrooms,
+        classroomCards,
+        setClassroomCards,
+        isFetchingCards,
+        fetchClassroomCards
     };
 };

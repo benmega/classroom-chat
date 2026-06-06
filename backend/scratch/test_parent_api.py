@@ -48,7 +48,7 @@ if children:
     print(f"   Achievements count: {len(data.get('unlocked_achievements', []))}")
     
     # CRITICAL: Verify gamification data is EXCLUDED
-    print(f"\n   === GAMIFICATION EXCLUSION CHECK ===")
+    print("\n   === GAMIFICATION EXCLUSION CHECK ===")
     print(f"   'duck_balance' in response: {'duck_balance' in data}")
     print(f"   'earned_ducks' in response: {'earned_ducks' in data}")
     print(f"   'packets' in response: {'packets' in data}")

@@ -250,7 +250,7 @@ const ScreenRecorder = ({ isOpen, onClose, onRecordingComplete }) => {
         recorderRef.current.cleanup();
         recorderRef.current = null;
       }
-      setStage('setup');
+      setTimeout(() => setStage('setup'), 0);
     }
   }, [isOpen]);
 

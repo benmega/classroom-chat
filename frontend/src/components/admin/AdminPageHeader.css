@@ -5,6 +5,9 @@
     margin-bottom: 1.5rem;
     gap: 1.5rem;
     width: 100%;
+    background: transparent;
+    border-bottom: none;
+    box-shadow: none;
 }
 
 .page-header.standardized .header-left {

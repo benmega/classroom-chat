@@ -82,8 +82,7 @@ const AdminDocuments = () => {
     return (
         <div className="admin-documents-page">
             <AdminPageHeader 
-                title="Document Manager" 
-                description="Manage all uploaded files and system media."
+                title="Asset & Document Management" 
             />
 
             {stats && (

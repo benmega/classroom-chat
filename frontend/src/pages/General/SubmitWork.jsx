@@ -14,9 +14,9 @@ const SubmitWork = () => {
 
     useEffect(() => {
         if (location.hash === '#certificate') {
-            setActiveTab('certificate');
+            setTimeout(() => setActiveTab('certificate'), 0);
         } else if (location.hash === '#challenge') {
-            setActiveTab('challenge');
+            setTimeout(() => setActiveTab('challenge'), 0);
         }
     }, [location.hash]);
 
@@ -29,7 +29,6 @@ const SubmitWork = () => {
         <div className="submit-work-page animate-page-entry">
             <div className="submit-work-header">
                 <h1>Submit Work</h1>
-                <p>Submit your challenges or certificates to earn rewards.</p>
             </div>
             
             <div className="submit-work-tabs">

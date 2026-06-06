@@ -61,17 +61,17 @@ const Signup = () => {
                         window.location.href = '/parent/dashboard';
                         return;
                     }
-                } catch (loginError) {
+                } catch {
                     toast.error('Account exists, but password was incorrect. Please log in.');
                     setTimeout(() => window.location.href = '/login', 1500);
                 }
             } else if (selectedRole !== 'parent' && error.response?.status === 409 && error.response?.data?.error === 'Username already exists.') {
                 try {
-                    const loginRes = await client.post('/user/login', { username, password });
+                    await client.post('/user/login', { username, password });
                     toast.success('Account found! Logging you in...');
                     window.location.href = '/';
                     return;
-                } catch (loginError) {
+                } catch {
                     toast.error('Account exists, but password was incorrect. Please log in.');
                     setTimeout(() => window.location.href = '/login', 1500);
                 }

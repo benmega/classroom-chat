@@ -90,8 +90,7 @@ const AdminProjects = () => {
         return (
             <div className="admin-projects-page">
                 <AdminPageHeader 
-                    title="Project Review" 
-                    description={`Reviewing project by ${selectedProject.user_nickname}`}
+                    title={selectedProject.name}
                     onBack={() => setSelectedProject(null)}
                 />
                 
@@ -197,8 +196,7 @@ const AdminProjects = () => {
     return (
         <div className="admin-projects-page">
             <AdminPageHeader 
-                title="Project Management" 
-                description="Review and moderate student portfolio submissions."
+                title="Project Submissions"
             >
                 <div className="filter-tabs">
                     <button 

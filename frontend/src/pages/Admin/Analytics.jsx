@@ -135,8 +135,7 @@ const Analytics = () => {
     return (
         <div className="admin-analytics-page">
             <AdminPageHeader 
-                title="Economic Analytics" 
-                description="Real-time data on duck circulation and system activity."
+                title="System Analytics" 
             >
                 <select value={timeRange} onChange={(e) => setTimeRange(e.target.value)} className="range-select">
                     <option value="24h">Last 24 Hours</option>

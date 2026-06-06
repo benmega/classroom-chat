@@ -103,93 +103,92 @@ const SubmitChallenge = () => {
     return (
         <div className="submit-challenge-page">
             <div className="form-card">
-                <div className="form-header">
-                    <h2 className="form-title">Submit a Challenge</h2>
-                    <p className="form-description">Paste your level URL below to earn your bits!</p>
-                </div>
-                
                 <form onSubmit={handleSubmit} className="challenge-form">
-                    <div className="form-group primary-input">
-                        <label htmlFor="url">Challenge URL</label>
-                        <div className="input-with-icon">
-                            <input 
-                                type="url" 
-                                id="url"
-                                value={url}
-                                onChange={(e) => setUrl(e.target.value)}
-                                placeholder="https://codecombat.com/play/level/..." 
-                                required 
-                                className="form-control main-url-input"
-                            />
-                            <div className="input-accessory">
-                                <span className="required-tag">Required</span>
+                    <div className="challenge-form-cols">
+                        <div className="challenge-form-main">
+                            <div className="form-group primary-input">
+                                <label htmlFor="url">Challenge URL</label>
+                                <div className="input-with-icon">
+                                    <input 
+                                        type="url" 
+                                        id="url"
+                                        value={url}
+                                        onChange={(e) => setUrl(e.target.value)}
+                                        placeholder="https://codecombat.com/play/level/..." 
+                                        required 
+                                        className="form-control main-url-input"
+                                    />
+                                    <div className="input-accessory">
+                                        <span className="required-tag">Required</span>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                    </div>
 
-                    <div className={`optional-section ${showOptional ? 'is-expanded' : ''}`}>
-                        <button 
-                            type="button" 
-                            className="toggle-optional"
-                            onClick={() => setShowOptional(!showOptional)}
-                        >
-                            <span>{showOptional ? '−' : '+'} Add Details (Helpers, Notes)</span>
-                        </button>
+                            <div className={`optional-section ${showOptional ? 'is-expanded' : ''}`}>
+                                <button 
+                                    type="button" 
+                                    className="toggle-optional"
+                                    onClick={() => setShowOptional(!showOptional)}
+                                >
+                                    <span>{showOptional ? '−' : '+'} Add Details (Helpers, Notes)</span>
+                                </button>
+                                
+                                <div className="optional-content">
+                                    <div className="form-group">
+                                        <label htmlFor="helpers">Who helped you?</label>
+                                        <UserSearchInput 
+                                            id="helpers"
+                                            value={helpers}
+                                            onChange={setHelpers}
+                                            onSelect={(u) => setHelpers(u.username)}
+                                            placeholder="Search for users who helped..." 
+                                            className="form-control"
+                                            showIcon={false}
+                                        />
+                                    </div>
+
+                                    <div className="form-group">
+                                        <label htmlFor="notes">Notes</label>
+                                        <textarea 
+                                          id="notes" 
+                                          value={notes}
+                                          onChange={(e) => setNotes(e.target.value)}
+                                          rows="2" 
+                                          className="form-control"
+                                          placeholder="What did you learn or struggle with?"
+                                        ></textarea>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button type="submit" className="submit-button" disabled={isSubmitting}>
+                                {isSubmitting ? (
+                                    <span className="btn-loading">
+                                        <svg className="spinner" viewBox="0 0 50 50">
+                                            <circle className="path" cx="25" cy="25" r="20" fill="none" strokeWidth="5"></circle>
+                                        </svg>
+                                        Submitting...
+                                    </span>
+                                ) : 'Submit Challenge'}
+                            </button>
+                        </div>
                         
-                        <div className="optional-content">
-                            <div className="form-group">
-                                <label htmlFor="helpers">Who helped you?</label>
-                                <UserSearchInput 
-                                    id="helpers"
-                                    value={helpers}
-                                    onChange={setHelpers}
-                                    onSelect={(u) => setHelpers(u.username)}
-                                    placeholder="Search for users who helped..." 
-                                    className="form-control"
-                                    showIcon={false}
-                                />
+                        <div className="bookmarklet-container">
+                            <div className="bookmarklet-header">
+                              <h3>Quick Submit</h3>
+                              <p>Drag this button to your bookmarks bar for instant submission!</p>
                             </div>
-
-                            <div className="form-group">
-                                <label htmlFor="notes">Notes</label>
-                                <textarea 
-                                  id="notes" 
-                                  value={notes}
-                                  onChange={(e) => setNotes(e.target.value)}
-                                  rows="2" 
-                                  className="form-control"
-                                  placeholder="What did you learn or struggle with?"
-                                ></textarea>
-                            </div>
+                            <a 
+                                ref={bookmarkletRef}
+                                className="bookmarklet-btn"
+                                onClick={(e) => {
+                                    alert('To install, please drag this link to your bookmarks bar.');
+                                    e.preventDefault();
+                                }}
+                            >
+                                <span>➡️ Submit Challenge 🦆</span>
+                            </a>
                         </div>
-                    </div>
-
-                    <button type="submit" className="submit-button" disabled={isSubmitting}>
-                        {isSubmitting ? (
-                            <span className="btn-loading">
-                                <svg className="spinner" viewBox="0 0 50 50">
-                                    <circle className="path" cx="25" cy="25" r="20" fill="none" strokeWidth="5"></circle>
-                                </svg>
-                                Submitting...
-                            </span>
-                        ) : 'Submit Challenge'}
-                    </button>
-                    
-                    <div className="bookmarklet-container">
-                        <div className="bookmarklet-header">
-                          <h3>Quick Submit</h3>
-                          <p>Drag this button to your bookmarks bar for instant submission!</p>
-                        </div>
-                        <a 
-                            ref={bookmarkletRef}
-                            className="bookmarklet-btn"
-                            onClick={(e) => {
-                                alert('To install, please drag this link to your bookmarks bar.');
-                                e.preventDefault();
-                            }}
-                        >
-                            <span>➡️ Submit Challenge 🦆</span>
-                        </a>
                     </div>
                 </form>
             </div>

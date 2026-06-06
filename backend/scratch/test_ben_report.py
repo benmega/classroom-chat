@@ -1,5 +1,6 @@
 """Quick test: get ben's report (id=2) which should have real progress data."""
-import requests, json
+import requests
+import json
 
 s = requests.Session()
 s.post("http://localhost:8000/user/login", json={"username": "test_parent", "password": "parent123"})

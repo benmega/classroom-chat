@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { NavLink, Link, useNavigate, useLocation } from 'react-router-dom';
+import { NavLink, Link, useLocation } from 'react-router-dom';
 import {
     Home,
     LogOut,
@@ -25,16 +25,10 @@ import SmartImage from '../common/SmartImage';
 import { getApiUrl } from '../../utils/apiUrl';
 
 const AdminLayout = ({ children }) => {
-    const { user, logout, isAuthenticated } = useAuthStore();
+    const { user, isAuthenticated } = useAuthStore();
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-    const { isSidebarOpen, toggleSidebar, setSidebarOpen } = useSidebar();
-    const navigate = useNavigate();
+    const { isSidebarOpen, setSidebarOpen } = useSidebar();
     const location = useLocation();
-
-    const handleLogout = async () => {
-        await logout();
-        navigate('/login');
-    };
 
     const toggleSidebarDesktop = () => setIsSidebarCollapsed(!isSidebarCollapsed);
 
@@ -61,17 +55,12 @@ const AdminLayout = ({ children }) => {
     const navItems = [
         { path: '/admin', label: 'Dashboard', icon: LayoutDashboard, end: true },
         { path: '/admin/users', label: 'Users', icon: Users },
-        { path: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
-        { path: '/admin/pending-users', label: 'User Approvals', icon: Users, badge: true },
         { path: '/admin/pending-trades', label: 'Pending Trades', icon: ShoppingBag },
-        { path: '/admin/connection-requests', label: 'Parent Requests', icon: Users },
         { path: '/admin/projects', label: 'Projects', icon: FolderKanban },
-
-
-        { path: '/admin/add-achievement', label: 'Achievements', icon: Trophy },
         { path: '/admin/certificates', label: 'Certificates', icon: FileCheck },
-        { path: '/admin/documents', label: 'Assets & Documents', icon: FileText },
         { path: '/admin/advanced', label: 'Advanced Panel', icon: ShieldAlert },
+        { path: '/chat', label: 'Back to Site', icon: Home },
+        { path: '/logout', label: 'Logout', icon: LogOut },
     ];
 
     return (
@@ -114,17 +103,7 @@ const AdminLayout = ({ children }) => {
                         ))}
                     </div>
 
-                    <div className="nav-group secondary">
-                        <span className="nav-group-label">System</span>
-                        <NavLink to="/chat" className="nav-item">
-                            <Home size={20} className="nav-icon" />
-                            <span className="nav-label">Back to Site</span>
-                        </NavLink>
-                        <button onClick={handleLogout} className="nav-item logout-btn">
-                            <LogOut size={20} className="nav-icon" />
-                            <span className="nav-label">Logout</span>
-                        </button>
-                    </div>
+                    {/* Secondary system group removed; Logout now in primary navigation */}
                 </nav>
 
                 <div className="sidebar-user">

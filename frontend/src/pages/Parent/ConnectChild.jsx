@@ -17,8 +17,10 @@ const ConnectChild = () => {
 
     useEffect(() => {
         if (!code) {
-            setStatus('error');
-            setMessage('No connection code provided.');
+            setTimeout(() => {
+                setStatus('error');
+                setMessage('No connection code provided.');
+            }, 0);
             return;
         }
 
@@ -30,8 +32,10 @@ const ConnectChild = () => {
         }
 
         if (user?.role !== 'parent') {
-            setStatus('error');
-            setMessage('You must be logged in as a parent to use this connection code.');
+            setTimeout(() => {
+                setStatus('error');
+                setMessage('You must be logged in as a parent to use this connection code.');
+            }, 0);
             return;
         }
 

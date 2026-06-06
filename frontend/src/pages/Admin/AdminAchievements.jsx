@@ -69,8 +69,7 @@ const AdminAchievements = () => {
     return (
         <div className="admin-achievements-page">
             <AdminPageHeader 
-                title="Add New Achievement" 
-                description="Create a new milestone for students to earn."
+                title="Create Achievement" 
             />
 
             <div className="achievement-form-container card">

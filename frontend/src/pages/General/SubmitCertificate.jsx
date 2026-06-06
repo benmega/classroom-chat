@@ -94,47 +94,46 @@ const SubmitCertificate = () => {
     return (
         <div className="submit-certificate-page">
             <div className="form-card">
-                <h2 className="form-title">Submit Completion Certificate</h2>
-                <p className="form-subtitle">Upload your CodeCombat or Ozaria certificate to earn rewards.</p>
-
                 <form onSubmit={handleSubmit} className="certificate-form">
-                    <div className="form-group">
-                        <label htmlFor="certificate_url">Certificate URL</label>
-                        <input 
-                            type="text" 
-                            id="certificate_url"
-                            value={certificateUrl}
-                            onChange={(e) => {
-                                setCertificateUrl(e.target.value);
-                                if (errors.url) {
-                                    setErrors(prev => {
-                                        const newErrors = { ...prev };
-                                        delete newErrors.url;
-                                        return newErrors;
-                                    });
-                                }
-                            }}
-                            placeholder="https://codecombat.com/certificates/..." 
-                            className={`form-control ${errors.url ? 'is-invalid' : ''}`}
-                        />
-                        {errors.url && <div className="error-message">{errors.url}</div>}
-                    </div>
-
-                    <div className="form-group">
-                        <label htmlFor="certificate_file">Upload Certificate PDF</label>
-                        <div className="submit-cert-file-input-wrapper">
+                    <div className="certificate-form-cols">
+                        <div className="form-group">
+                            <label htmlFor="certificate_url">Certificate URL</label>
                             <input 
-                                type="file" 
-                                id="certificate_file"
-                                onChange={handleFileChange}
-                                accept="application/pdf" 
-                                className="submit-cert-file-input"
+                                type="text" 
+                                id="certificate_url"
+                                value={certificateUrl}
+                                onChange={(e) => {
+                                    setCertificateUrl(e.target.value);
+                                    if (errors.url) {
+                                        setErrors(prev => {
+                                            const newErrors = { ...prev };
+                                            delete newErrors.url;
+                                            return newErrors;
+                                        });
+                                    }
+                                }}
+                                placeholder="https://codecombat.com/certificates/..." 
+                                className={`form-control ${errors.url ? 'is-invalid' : ''}`}
                             />
-                            <div className={`file-dummy ${errors.file ? 'is-invalid' : ''}`}>
-                                {certificateFile ? certificateFile.name : 'Choose a PDF file...'}
-                            </div>
+                            {errors.url && <div className="error-message">{errors.url}</div>}
                         </div>
-                        {errors.file && <div className="error-message">{errors.file}</div>}
+
+                        <div className="form-group">
+                            <label htmlFor="certificate_file">Upload Certificate PDF</label>
+                            <div className="submit-cert-file-input-wrapper">
+                                <input 
+                                    type="file" 
+                                    id="certificate_file"
+                                    onChange={handleFileChange}
+                                    accept="application/pdf" 
+                                    className="submit-cert-file-input"
+                                />
+                                <div className={`file-dummy ${errors.file ? 'is-invalid' : ''}`}>
+                                    {certificateFile ? certificateFile.name : 'Choose a PDF file...'}
+                                </div>
+                            </div>
+                            {errors.file && <div className="error-message">{errors.file}</div>}
+                        </div>
                     </div>
 
                     {isUploading && (
