@@ -161,14 +161,39 @@ input {
 }
 
 .btn-secondary {
+  padding: var(--btn-padding-md);
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  font-size: var(--btn-font-md);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: var(--transition-bounce);
   background: var(--bg-tertiary);
   color: var(--text-primary);
   border: 1px solid var(--border-subtle);
+  cursor: pointer;
+}
+
+.btn-secondary-sm {
+  padding: var(--btn-padding-sm);
+  font-size: var(--btn-font-sm);
+}
+
+.btn-secondary-lg {
+  padding: var(--btn-padding-lg);
+  font-size: var(--btn-font-lg);
 }
 
 .btn-secondary:hover {
   background: var(--border-subtle);
   border-color: var(--border-rich);
+  transform: translateY(-2px);
+}
+
+.btn-secondary:active {
+  transform: translateY(0);
 }
 
 .smart-image-base {

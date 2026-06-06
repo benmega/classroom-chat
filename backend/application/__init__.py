@@ -193,7 +193,14 @@ def create_app(config_class=None):
     def set_csrf_cookie(response):
         # We set the CSRF cookie so the frontend (Axios) can read it and send it back in headers.
         # This is safe because it's only accessible to our own frontend via SameSite=Lax/Strict.
-        response.set_cookie("csrf_token", generate_csrf())
+        response.set_cookie(
+            "csrf_token_v2",
+            generate_csrf(),
+            domain=app.config.get("WTF_CSRF_DOMAIN") or app.config.get("SESSION_COOKIE_DOMAIN"),
+            samesite=app.config.get("SESSION_COOKIE_SAMESITE", "Lax"),
+            secure=app.config.get("SESSION_COOKIE_SECURE", False),
+            httponly=False
+        )
         return response
 
     return app
@@ -220,6 +227,8 @@ def seed_global_data():
     from application.models.conversation import Conversation
 
     logger = logging.getLogger(__name__)
+
+    import sqlalchemy
 
     # Guard: skip seeding if the schema hasn't been migrated yet.
     # This allows 'flask db upgrade' to load the app without crashing.
@@ -279,6 +288,9 @@ def seed_global_data():
         _constants.GLOBAL_CONVERSATION_ID = global_conv.id
         logger.info(f"GLOBAL_CONVERSATION_ID = {global_conv.id}")
 
+    except sqlalchemy.exc.OperationalError as exc:
+        db.session.rollback()
+        logger.warning(f"seed_global_data skipped due to OperationalError (schema drift?): {exc}")
     except Exception as exc:
         db.session.rollback()
         logger.error(f"seed_global_data failed: {exc}")

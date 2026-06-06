@@ -22,6 +22,7 @@ import useAuthStore from '../../store/useAuthStore';
 import useSidebar from '../../hooks/useSidebar';
 import './AdminLayout.css';
 import SmartImage from '../common/SmartImage';
+import { getApiUrl } from '../../utils/apiUrl';
 
 const AdminLayout = ({ children }) => {
     const { user, logout, isAuthenticated } = useAuthStore();
@@ -49,7 +50,7 @@ const AdminLayout = ({ children }) => {
                     <Shield size={64} color="#ef4444" />
                     <h1>Access Denied</h1>
                     <p>You do not have administrative permission to view this page. Restricted area.</p>
-                    <Link to="/" className="btn-back">
+                    <Link to="/chat" className="btn-back">
                         <Home size={18} /> Back to Site
                     </Link>
                 </div>
@@ -63,6 +64,7 @@ const AdminLayout = ({ children }) => {
         { path: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
         { path: '/admin/pending-users', label: 'User Approvals', icon: Users, badge: true },
         { path: '/admin/pending-trades', label: 'Pending Trades', icon: ShoppingBag },
+        { path: '/admin/connection-requests', label: 'Parent Requests', icon: Users },
         { path: '/admin/projects', label: 'Projects', icon: FolderKanban },
 
 
@@ -114,7 +116,7 @@ const AdminLayout = ({ children }) => {
 
                     <div className="nav-group secondary">
                         <span className="nav-group-label">System</span>
-                        <NavLink to="/" className="nav-item">
+                        <NavLink to="/chat" className="nav-item">
                             <Home size={20} className="nav-icon" />
                             <span className="nav-label">Back to Site</span>
                         </NavLink>
@@ -127,7 +129,7 @@ const AdminLayout = ({ children }) => {
 
                 <div className="sidebar-user">
                     <SmartImage
-                        src={user?.profile_picture ? `/user/profile_pictures/${user.profile_picture}` : ''}
+                        src={user?.profile_picture ? getApiUrl(`/user/profile_pictures/${user.profile_picture}`) : ''}
                         alt="Profile"
                         className="user-avatar"
                         fallbackType="avatar"

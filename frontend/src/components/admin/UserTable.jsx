@@ -1,6 +1,7 @@
 import React from 'react';
 import { ArrowUpCircle, Key, Trash2 } from 'lucide-react';
 import SmartImage from '../common/SmartImage';
+import { getApiUrl } from '../../utils/apiUrl';
 
 const UserTable = ({ users, onAdjustDucks, onResetPassword, onRemoveUser }) => {
     return (
@@ -21,7 +22,7 @@ const UserTable = ({ users, onAdjustDucks, onResetPassword, onRemoveUser }) => {
                             <td>
                                 <div className="user-cell">
                                     <SmartImage 
-                                        src={u.profile_picture ? `/user/profile_pictures/${u.profile_picture}` : ''} 
+                                        src={u.profile_picture ? getApiUrl(`/user/profile_pictures/${u.profile_picture}`) : ''} 
                                         alt="" 
                                         className="user-avatar"
                                         fallbackType="avatar"

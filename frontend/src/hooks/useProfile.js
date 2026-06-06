@@ -42,7 +42,7 @@ export const useProfile = () => {
         fetchProfile();
     }, [slug, fetchProfile]);
 
-    const isOwner = profileData?.viewer?.id === profileData?.target?.id || profileData?.viewer?.is_admin;
+    const isOwner = !!profileData?.viewer && profileData?.viewer?.id === profileData?.target?.id;
 
     const handleDeleteNote = async (noteId) => {
         if (!window.confirm('Delete this note?')) return;
@@ -118,9 +118,7 @@ export const useProfile = () => {
                 formData.append('profile_picture', blob, 'profile.jpg');
 
                 try {
-                    const response = await client.post('/user/api/profile-picture', formData, {
-                        headers: { 'Content-Type': 'multipart/form-data' }
-                    });
+                    const response = await client.post('/user/api/profile-picture', formData);
 
                     if (response.data.status === 'success') {
                         toast.success('Profile picture updated!');

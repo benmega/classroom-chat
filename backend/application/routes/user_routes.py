@@ -165,10 +165,12 @@ def signup():
 
 
 @user.route("/profile", methods=["GET"])
-@require_login
 @api_response
 def profile():
     user_id = session.get("user")
+    if not user_id:
+        return "Authentication required. Please log in.", 401
+        
     user_obj = db.session.get(User, user_id)
     if not user_obj:
         return "User not found", 404
@@ -730,8 +732,14 @@ def handle_video_s3_upload(file, user_obj, project_name, project_id):
         return False
 
     try:
+        from boto3.s3.transfer import TransferConfig
         # Ensure full file is uploaded even if it was previously read
         file.seek(0)
+        
+        # Increase multipart threshold to 500MB to force PutObject for videos.
+        # S3 triggers are often configured only for s3:ObjectCreated:Put,
+        # which ignores MultipartUpload events unless explicitly enabled.
+        config = TransferConfig(multipart_threshold=1024 * 1024 * 500)
 
         s3_client.upload_fileobj(
             file,
@@ -741,6 +749,7 @@ def handle_video_s3_upload(file, user_obj, project_name, project_id):
                 "ContentType": file.content_type or "video/mp4",
                 "Metadata": {"project-id": str(project_id)},
             },
+            Config=config
         )
 
         # Update project video URL

@@ -39,17 +39,15 @@ def get_s3_client():
     import boto3
 
     try:
-        if not os.environ.get("AWS_ACCESS_KEY_ID") or not os.environ.get(
-            "AWS_SECRET_ACCESS_KEY"
-        ):
-            return None
-        return boto3.client(
-            "s3",
-            aws_access_key_id=os.environ.get("AWS_ACCESS_KEY_ID"),
-            aws_secret_access_key=os.environ.get("AWS_SECRET_ACCESS_KEY"),
-            region_name=os.environ.get("AWS_REGION", "ap-southeast-1"),
-        )
-    except Exception:
+        kwargs = {"region_name": os.environ.get("AWS_REGION", "ap-southeast-1")}
+        if os.environ.get("AWS_ACCESS_KEY_ID") and os.environ.get("AWS_SECRET_ACCESS_KEY"):
+            kwargs["aws_access_key_id"] = os.environ.get("AWS_ACCESS_KEY_ID")
+            kwargs["aws_secret_access_key"] = os.environ.get("AWS_SECRET_ACCESS_KEY")
+        
+        return boto3.client("s3", **kwargs)
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
         return None
 
 

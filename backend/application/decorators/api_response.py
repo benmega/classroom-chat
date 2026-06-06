@@ -1,13 +1,18 @@
 import logging
 from functools import wraps
+from typing import Any, Callable, Union
 from flask import jsonify, Response, current_app
 
 logger = logging.getLogger(__name__)
 
 
-def api_response(f):
+def api_response(
+    f: Callable[..., Any],
+) -> Callable[..., Union[Response, tuple[Response, int]]]:
     @wraps(f)
-    def decorated_function(*args, **kwargs):
+    def decorated_function(
+        *args: Any, **kwargs: Any
+    ) -> Union[Response, tuple[Response, int]]:
         try:
             data = f(*args, **kwargs)
 
@@ -17,7 +22,8 @@ def api_response(f):
 
             # If the function returns a tuple (response, status_code)
             if isinstance(data, tuple):
-                response_data, status_code = data
+                response_data, raw_code = data
+                status_code = int(raw_code) if raw_code is not None else 200
             else:
                 response_data = data
                 status_code = 200
@@ -35,7 +41,7 @@ def api_response(f):
             from werkzeug.exceptions import HTTPException
 
             if isinstance(e, HTTPException):
-                status_code = e.code
+                status_code = e.code if e.code is not None else 500
                 error_msg = str(e.description)
             else:
                 status_code = 500

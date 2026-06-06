@@ -30,13 +30,15 @@ export const formatConversationTitle = (title) => {
     return title;
 };
 
+import { getApiUrl } from './apiUrl';
+
 export const formatStaticUrl = (url) => {
     if (!url) return null;
     if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
         return url;
     }
-    if (url.startsWith('/')) {
-        return url;
-    }
-    return `/static/${url}`;
+    
+    // Pass through getApiUrl so that dynamic /user/... assets are routed to the backend
+    const formattedUrl = url.startsWith('/') ? url : `/static/${url}`;
+    return getApiUrl(formattedUrl);
 };

@@ -359,3 +359,38 @@
     }
 }
 
+/* Cognito Button & Divider Styles */
+.auth-divider {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    margin: 0.5rem 0;
+    color: var(--text-muted);
+}
+
+.auth-divider::before,
+.auth-divider::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.auth-divider span {
+    padding: 0 1rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.cognito-btn {
+    background: var(--bg-card) !important;
+    color: var(--text-primary) !important;
+    border: 2px solid var(--border-subtle) !important;
+    box-shadow: none !important;
+}
+
+.cognito-btn:hover {
+    border-color: var(--primary-color) !important;
+    background: var(--bg-secondary) !important;
+    box-shadow: var(--shadow-sm) !important;
+}
+

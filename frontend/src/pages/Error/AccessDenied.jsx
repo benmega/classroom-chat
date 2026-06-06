@@ -48,7 +48,7 @@ const AccessDenied = () => {
           WebkitBackgroundClip: 'text',
           WebkitTextFillColor: 'transparent'
         }}>
-          Access Denied
+          YOU SHALL NOT PASS! 🧙‍♂️
         </h1>
         
         <p style={{
@@ -57,8 +57,8 @@ const AccessDenied = () => {
           marginBottom: '2rem',
           lineHeight: '1.6'
         }}>
-          You've reached a restricted area. Only administrators have permission to access this page. 
-          If you believe this is an error, please contact your teacher.
+          The dark fire will not avail you, flame of Udûn! This is a restricted area. 
+          Return to the shadows... or just go back to the homepage.
         </p>
         
         <div style={{
@@ -66,7 +66,7 @@ const AccessDenied = () => {
           flexDirection: 'column',
           gap: '1rem'
         }}>
-          <Link to="/" style={{
+          <Link to="/chat" style={{
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',

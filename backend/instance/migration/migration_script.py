@@ -29,14 +29,100 @@ NEW_COLUMNS = {
         ("bio", "TEXT", None),
         ("created_at", "DATETIME", None),
         ("last_achievement_evaluation", "DATETIME", None),
+        ("is_admin", "BOOLEAN", 0),
     ],
     "conversations": [
         ("creator_id", "INTEGER", None),
+        ("classroom_id", "VARCHAR(64)", None),
+        ("is_locked", "BOOLEAN", 0),
+        ("slow_mode_delay", "INTEGER", 0),
+    ],
+    "challenges": [
+        ("classroom_id", "VARCHAR(64)", None),
+        ("course_id", "VARCHAR(100)", None),
+        ("difficulty", "VARCHAR(50)", "medium"),
+        ("value", "INTEGER", 1),
+        ("is_active", "BOOLEAN", 1),
+        ("description", "TEXT", None),
+    ],
+    "configuration": [
+        ("ai_teacher_enabled", "BOOLEAN", 0),
+        ("message_sending_enabled", "BOOLEAN", 0),
+        ("duck_multiplier", "FLOAT", 1.0),
+    ],
+    "banned_words": [
+        ("added_on", "DATETIME", "CURRENT_TIMESTAMP"),
+        ("reason", "TEXT", None),
+        ("active", "BOOLEAN", 1),
     ]
 }
 
 # Add new tables here in the future
-NEW_TABLES = {}
+NEW_TABLES = {
+    "duck_transactions": """
+        CREATE TABLE IF NOT EXISTS duck_transactions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            amount FLOAT NOT NULL,
+            reason VARCHAR(200),
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users (id)
+        )
+    """,
+    "user_classrooms": """
+        CREATE TABLE IF NOT EXISTS user_classrooms (
+            user_id INTEGER NOT NULL,
+            classroom_id VARCHAR(64) NOT NULL,
+            enrolled_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (user_id, classroom_id),
+            FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+            FOREIGN KEY (classroom_id) REFERENCES classrooms (id) ON DELETE CASCADE
+        )
+    """,
+    "achievement": """
+        CREATE TABLE IF NOT EXISTS achievement (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            slug VARCHAR(64) UNIQUE NOT NULL,
+            name VARCHAR(128) NOT NULL,
+            type VARCHAR(64) NOT NULL,
+            reward INTEGER NOT NULL DEFAULT 1,
+            description VARCHAR(256),
+            requirement_value VARCHAR(128),
+            source VARCHAR(255)
+        )
+    """,
+    "user_achievement": """
+        CREATE TABLE IF NOT EXISTS user_achievement (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            achievement_id INTEGER NOT NULL,
+            earned_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE (user_id, achievement_id),
+            FOREIGN KEY (user_id) REFERENCES users (id),
+            FOREIGN KEY (achievement_id) REFERENCES achievement (id)
+        )
+    """,
+    "courses": """
+        CREATE TABLE IF NOT EXISTS courses (
+            id VARCHAR(64) PRIMARY KEY,
+            name VARCHAR(255) NOT NULL,
+            domain VARCHAR(255) NOT NULL,
+            description TEXT DEFAULT 'No description provided.',
+            is_active BOOLEAN DEFAULT 1,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            default_challenge_value INTEGER DEFAULT 1
+        )
+    """,
+    "notes": """
+        CREATE TABLE IF NOT EXISTS notes (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            filename VARCHAR(255) NOT NULL,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users (id)
+        )
+    """
+}
 
 
 # ================= MIGRATION STEPS =================

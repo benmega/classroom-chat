@@ -7,17 +7,21 @@ import {
     Trash2, 
     RefreshCw,
     Shield,
-    ChevronLeft
+    ChevronLeft,
+    Users as UsersIcon
 } from 'lucide-react';
 import SmartImage from '../../components/common/SmartImage';
 import { 
     CreateUserModal, 
     AdjustDucksModal, 
-    ResetPasswordModal 
+    ResetPasswordModal,
+    ManageChildrenModal,
+    ConnectionCardModal
 } from '../../components/admin/AdminModals';
 import './Users.css';
 import Skeleton from '../../components/common/Skeleton';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
+import { getApiUrl } from '../../utils/apiUrl';
 
 // Hooks
 import { useUsersManagement } from '../../hooks/useUsersManagement';
@@ -42,7 +46,13 @@ const Users = () => {
         handleCreateUser,
         handleAdjustDucks,
         handleResetPassword,
-        handleRemoveUser
+        handleRemoveUser,
+        parentChildren,
+        fetchParentChildren,
+        handleToggleChildLink,
+        connectionCode,
+        setConnectionCode,
+        fetchConnectionCard
     } = useUsersManagement();
 
     const filteredUsers = users.filter(u => 
@@ -130,7 +140,7 @@ const Users = () => {
                                     <td>
                                         <div className="user-profile-cell">
                                             <SmartImage 
-                                                src={u.profile_picture ? `/user/profile_pictures/${u.profile_picture}` : ''} 
+                                                src={u.profile_picture ? getApiUrl(`/user/profile_pictures/${u.profile_picture}`) : ''} 
                                                 alt="" 
                                                 className="avatar"
                                                 fallbackType="avatar"
@@ -178,6 +188,36 @@ const Users = () => {
                                             >
                                                 <Key size={16} />
                                             </button>
+                                            {u.role === 'parent' && (
+                                                <button 
+                                                    className="action-btn" 
+                                                    onClick={() => { 
+                                                        setModalUser(u); 
+                                                        fetchParentChildren(u.id);
+                                                        setActiveModal('manage_children'); 
+                                                    }}
+                                                    title="Manage Children"
+                                                    style={{ color: '#4f46e5' }}
+                                                >
+                                                    <UsersIcon size={16} />
+                                                </button>
+                                            )}
+                                            {!u.is_admin && u.role === 'student' && (
+                                                <button 
+                                                    className="action-btn" 
+                                                    onClick={async () => { 
+                                                        const success = await fetchConnectionCard(u.id);
+                                                        if (success) {
+                                                            setModalUser(u); 
+                                                            setActiveModal('connection_card'); 
+                                                        }
+                                                    }}
+                                                    title="Get Connection Card"
+                                                    style={{ color: '#059669', border: '1px solid #10b981', padding: '4px 8px', borderRadius: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}
+                                                >
+                                                    <Key size={14} /> <span style={{ fontSize: '0.75rem', fontWeight: 'bold' }}>Card</span>
+                                                </button>
+                                            )}
                                             {!u.is_admin && (
                                                 <button 
                                                     className="action-btn delete" 
@@ -252,6 +292,23 @@ const Users = () => {
                 user={modalUser} 
                 formErrors={formErrors} 
                 loading={formLoading} 
+            />
+
+            <ManageChildrenModal 
+                isOpen={activeModal === 'manage_children'} 
+                onClose={() => { setActiveModal(null); setModalUser(null); }} 
+                parent={modalUser}
+                users={users}
+                parentChildren={parentChildren}
+                onToggleLink={handleToggleChildLink}
+                loading={formLoading}
+            />
+
+            <ConnectionCardModal 
+                isOpen={activeModal === 'connection_card'} 
+                onClose={() => { setActiveModal(null); setModalUser(null); setConnectionCode(null); }} 
+                student={modalUser}
+                connectionCode={connectionCode}
             />
         </div>
     );

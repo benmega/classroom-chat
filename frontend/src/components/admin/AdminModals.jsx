@@ -2,6 +2,7 @@ import React from 'react';
 import Modal from '../common/Modal';
 import SmartImage from '../common/SmartImage';
 import DuckIcon from '../Icons/DuckIcon';
+import { getApiUrl } from '../../utils/apiUrl';
 
 export const CreateUserModal = ({ isOpen, onClose, onSubmit, formErrors, loading }) => (
     <Modal isOpen={isOpen} onClose={onClose} title="Create New User">
@@ -39,7 +40,7 @@ export const AdjustDucksModal = ({ isOpen, onClose, onSubmit, user, users, formE
                 {user ? (
                     <div className="user-badge-display">
                         <SmartImage 
-                            src={user.profile_picture ? `/user/profile_pictures/${user.profile_picture}` : ''} 
+                            src={user.profile_picture ? getApiUrl(`/user/profile_pictures/${user.profile_picture}`) : ''} 
                             alt="" 
                             className="avatar-small"
                             fallbackType="avatar"
@@ -125,3 +126,99 @@ export const StartConversationModal = ({ isOpen, onClose, onSubmit, loading, cla
         </form>
     </Modal>
 );
+
+export const ManageChildrenModal = ({ isOpen, onClose, parent, users, parentChildren, onToggleLink, loading }) => {
+    const students = users.filter(u => u.role === 'student');
+    const childIds = new Set(parentChildren.map(c => c.id));
+
+    return (
+        <Modal isOpen={isOpen} onClose={onClose} title={`Manage Children: ${parent?.username || ''}`}>
+            <div className="admin-form">
+                <div className="form-group">
+                    <label>Select Students to Link</label>
+                    <div style={{ maxHeight: '300px', overflowY: 'auto', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '10px', background: '#f8fafc' }}>
+                        {students.length === 0 ? (
+                            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', textAlign: 'center' }}>No students found.</p>
+                        ) : (
+                            students.map(s => {
+                                const isLinked = childIds.has(s.id);
+                                return (
+                                    <div key={s.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px', borderBottom: '1px solid #e2e8f0' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                            <SmartImage 
+                                                src={s.profile_picture ? getApiUrl(`/user/profile_pictures/${s.profile_picture}`) : ''} 
+                                                alt="" 
+                                                className="avatar-small"
+                                                fallbackType="avatar"
+                                                style={{ width: '32px', height: '32px', borderRadius: '8px', objectFit: 'cover' }}
+                                            />
+                                            <div>
+                                                <div style={{ fontWeight: '600', fontSize: '0.9rem' }}>{s.nickname || s.username}</div>
+                                                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>@{s.username}</div>
+                                            </div>
+                                        </div>
+                                        <button 
+                                            type="button"
+                                            className={`btn-primary ${isLinked ? 'danger' : ''}`}
+                                            style={{ padding: '6px 12px', fontSize: '0.8rem', borderRadius: '6px' }}
+                                            onClick={() => onToggleLink(parent.id, s.id, isLinked)}
+                                            disabled={loading}
+                                        >
+                                            {isLinked ? 'Unlink' : 'Link'}
+                                        </button>
+                                    </div>
+                                );
+                            })
+                        )}
+                    </div>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '20px' }}>
+                    <button type="button" className="btn-secondary" onClick={onClose} style={{ padding: '10px 20px', borderRadius: '8px', border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer' }}>
+                        Close
+                    </button>
+                </div>
+            </div>
+        </Modal>
+    );
+};
+
+export const ConnectionCardModal = ({ isOpen, onClose, student, connectionCode }) => {
+    if (!student || !connectionCode) return null;
+
+    const qrData = encodeURIComponent(`${window.location.origin}/parent/connect?code=${connectionCode}`);
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${qrData}`;
+
+    return (
+        <Modal isOpen={isOpen} onClose={onClose} title={`Connection Card: ${student.username}`}>
+            <div className="connection-card-container" style={{ textAlign: 'center', padding: '1rem' }}>
+                <p style={{ marginBottom: '1.5rem', color: 'var(--text-muted)' }}>
+                    Print or show this card to the parent. They can scan the QR code or enter the code manually to connect.
+                </p>
+                <div style={{ background: 'white', padding: '1.5rem', borderRadius: '12px', display: 'inline-block', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}>
+                    <h3 style={{ margin: '0 0 1rem 0', color: '#1e293b' }}>{student.nickname || student.username}</h3>
+                    <img src={qrUrl} alt="QR Code" style={{ width: '200px', height: '200px' }} />
+                    <div style={{ marginTop: '1rem', padding: '0.75rem', background: '#f1f5f9', borderRadius: '8px', border: '1px dashed #cbd5e1' }}>
+                        <span style={{ fontSize: '0.9rem', color: '#64748b', display: 'block', marginBottom: '4px' }}>Connection Code</span>
+                        <span style={{ fontSize: '1.5rem', fontWeight: 'bold', letterSpacing: '4px', color: '#0f172a' }}>{connectionCode}</span>
+                    </div>
+                </div>
+                <div style={{ marginTop: '2rem', display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+                    <button className="btn-secondary" onClick={() => window.print()} style={{ padding: '0.5rem 1rem', borderRadius: '6px', cursor: 'pointer', border: '1px solid var(--border-color)', background: 'transparent', color: 'var(--text-color)' }}>
+                        Print Card
+                    </button>
+                    <button className="btn-primary" onClick={onClose}>
+                        Done
+                    </button>
+                </div>
+            </div>
+            <style>{`
+                @media print {
+                    body * { visibility: hidden; }
+                    .connection-card-container, .connection-card-container * { visibility: visible; }
+                    .connection-card-container { position: absolute; left: 0; top: 0; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+                    .connection-card-container button, .modal-header { display: none !important; }
+                }
+            `}</style>
+        </Modal>
+    );
+};

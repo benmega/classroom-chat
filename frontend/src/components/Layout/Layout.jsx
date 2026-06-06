@@ -56,7 +56,7 @@ const Layout = ({ children }) => {
                         </button>
                     )}
                     <div id="logo-container">
-                        <Link to="/" className="logo">
+                        <Link to="/chat" className="logo">
                             <img src="/images/logo.ico" alt="Classroom Chat Logo" />
                         </Link>
                     </div>

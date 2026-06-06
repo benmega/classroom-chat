@@ -46,6 +46,14 @@ class Config:
             raise RuntimeError("ADMIN_PASSWORD must be set in production environment!")
         ADMIN_PASSWORD = "admin-dev-password"  # Slightly better than 1234
 
+    # Cognito OAuth configuration
+    COGNITO_USER_POOL_ID = os.getenv("COGNITO_USER_POOL_ID")
+    COGNITO_CLIENT_ID = os.getenv("COGNITO_CLIENT_ID")
+    COGNITO_CLIENT_SECRET = os.getenv("COGNITO_CLIENT_SECRET")
+    COGNITO_DOMAIN = os.getenv("COGNITO_DOMAIN")
+    COGNITO_REDIRECT_URI = os.getenv("COGNITO_REDIRECT_URI")
+    COGNITO_REGION = os.getenv("COGNITO_REGION", "us-east-1")
+
     # SocketIO configuration
     SOCKETIO_ASYNC_MODE = "gevent"
 
@@ -77,11 +85,14 @@ class ProductionConfig(Config):
         "DATABASE_URL",
         f'sqlite:///{os.path.join(Config.INSTANCE_FOLDER, "prod_users.db")}',
     )
-    SESSION_COOKIE_SAMESITE = "None"
+    SESSION_COOKIE_DOMAIN = ".benmega.com"
+    SESSION_COOKIE_SAMESITE = "Lax"
     SESSION_COOKIE_SECURE = True
     SESSION_COOKIE_HTTPONLY = True
+    WTF_CSRF_DOMAIN = ".benmega.com"
     WTF_CSRF_ENABLED = True
     WTF_CSRF_TIME_LIMIT = None  # Sessions are short, don't expire tokens separately
+    WTF_CSRF_SSL_STRICT = False  # Disable strict referer checking for cross-subdomain requests
 
     # Build folders for Vite
     TEMPLATE_FOLDER = os.path.join(Config.BASE_DIR, "frontend", "dist")
@@ -91,10 +102,7 @@ class ProductionConfig(Config):
         os.getenv("CORS_ORIGINS", "").split(",")
         if os.getenv("CORS_ORIGINS")
         else [
-            "https://codecombat.com",
-            "https://www.ozaria.com",
-            "https://benmega.com",
-            "https://www.benmega.com",
             "https://blossom.benmega.com",
+            "https://d2pa3ix3n5behv.cloudfront.net",
         ]
     )

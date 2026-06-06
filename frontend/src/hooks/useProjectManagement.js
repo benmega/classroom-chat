@@ -134,12 +134,14 @@ export const useProjectManagement = () => {
 
         try {
             const url = projectId ? `/user/project/edit/${projectId}` : '/user/project/new';
-            const response = await client.post(url, formData, {
-                headers: { 'Content-Type': 'multipart/form-data' }
-            });
+            const response = await client.post(url, formData);
 
             if (response.data.status === 'success') {
-                toast.success(projectId ? 'Project updated!' : 'Project created!');
+                if (response.data.data && response.data.data.video_upload_failed) {
+                    toast.error(response.data.data.message || 'Project saved, but video upload failed.');
+                } else {
+                    toast.success(projectId ? 'Project updated!' : 'Project created!');
+                }
                 
                 if (currentUser?.is_admin && projectData.student_id) {
                     const student = students.find(s => String(s.id) === String(projectData.student_id));

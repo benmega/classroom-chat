@@ -262,3 +262,48 @@ def test_view_conversation(client, init_db, sample_user):
     response = client.get(f"/message/view_conversation/{conversation.id}", headers={"Accept": "application/json"})
     assert response.status_code == 200
     assert b"Detailed Conversation" in response.data
+
+
+def test_delete_message_as_admin(client, init_db, sample_admin):
+    """Test message deletion by admin."""
+    from application.models.message import Message
+
+    with client.session_transaction() as sess:
+        sess["user"] = sample_admin.id
+
+    conversation = Conversation(title="Delete Chat", classroom_id=GLOBAL_CLASSROOM_ID)
+    db.session.add(conversation)
+    db.session.commit()
+
+    msg = Message(content="This message will be deleted", user_id=sample_admin.id, conversation_id=conversation.id)
+    db.session.add(msg)
+    db.session.commit()
+
+    response = client.delete(f"/message/delete_message/{msg.id}")
+    assert response.status_code == 200
+    data = json.loads(response.data)
+    assert data["success"] is True
+
+    # Re-fetch from DB and verify is_struck
+    updated_msg = db.session.get(Message, msg.id)
+    assert updated_msg.is_struck is True
+
+
+def test_delete_message_as_student_forbidden(client, init_db, sample_user, sample_admin):
+    """Test message deletion by student returns 403."""
+    from application.models.message import Message
+
+    with client.session_transaction() as sess:
+        sess["user"] = sample_user.id
+
+    conversation = Conversation(title="Delete Chat Student", classroom_id=GLOBAL_CLASSROOM_ID)
+    db.session.add(conversation)
+    db.session.commit()
+
+    msg = Message(content="Should not be deleted by student", user_id=sample_admin.id, conversation_id=conversation.id)
+    db.session.add(msg)
+    db.session.commit()
+
+    response = client.delete(f"/message/delete_message/{msg.id}")
+    assert response.status_code == 403
+

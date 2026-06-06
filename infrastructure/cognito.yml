@@ -1,0 +1,75 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Cognito User Pool setup for Classroom Chat Parents'
+
+Parameters:
+  EnvironmentName:
+    Type: String
+    Default: dev
+    Description: 'Environment name (e.g., dev, prod)'
+  CallbackUrl:
+    Type: String
+    Default: 'http://localhost:5173/api/auth/cognito/callback'
+    Description: 'The callback URL where users will be redirected after login. E.g., https://yourdomain.com/api/auth/cognito/callback for prod.'
+  DomainPrefix:
+    Type: String
+    Description: 'A unique prefix for the Cognito domain (e.g., classroom-chat-auth-dev-xyz). Must be globally unique across AWS.'
+
+Resources:
+  UserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: !Sub ${EnvironmentName}-classroom-chat-parents
+      AutoVerifiedAttributes:
+        - email
+      UsernameAttributes:
+        - email
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 8
+          RequireLowercase: true
+          RequireNumbers: true
+          RequireSymbols: false
+          RequireUppercase: true
+      Schema:
+        - Name: email
+          AttributeDataType: String
+          Mutable: true
+          Required: true
+
+  UserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      ClientName: !Sub ${EnvironmentName}-classroom-chat-client
+      UserPoolId: !Ref UserPool
+      GenerateSecret: true
+      AllowedOAuthFlowsUserPoolClient: true
+      ExplicitAuthFlows:
+        - ALLOW_USER_PASSWORD_AUTH
+        - ALLOW_REFRESH_TOKEN_AUTH
+      SupportedIdentityProviders:
+        - COGNITO
+      AllowedOAuthFlows:
+        - code
+      AllowedOAuthScopes:
+        - email
+        - openid
+        - profile
+      CallbackURLs:
+        - !Ref CallbackUrl
+
+  UserPoolDomain:
+    Type: AWS::Cognito::UserPoolDomain
+    Properties:
+      Domain: !Ref DomainPrefix
+      UserPoolId: !Ref UserPool
+
+Outputs:
+  UserPoolId:
+    Description: 'The ID of the Cognito User Pool'
+    Value: !Ref UserPool
+  ClientId:
+    Description: 'The Client ID of the Cognito User Pool App Client'
+    Value: !Ref UserPoolClient
+  CognitoDomain:
+    Description: 'The domain for the Cognito hosted UI'
+    Value: !Sub '${DomainPrefix}.auth.${AWS::Region}.amazoncognito.com'

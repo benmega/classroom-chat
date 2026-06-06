@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { Loader2 } from 'lucide-react';
 import useAuthStore from './store/useAuthStore';
@@ -19,6 +19,7 @@ import BitShift from './pages/General/BitShift';
 import SubmitCertificate from './pages/General/SubmitCertificate';
 import SubmitChallenge from './pages/General/SubmitChallenge';
 import History from './pages/General/History';
+import Landing from './pages/General/Landing';
 import EditProfile from './pages/User/EditProfile';
 import ManageProject from './pages/User/ManageProject';
 import AdminDashboard from './pages/Admin/AdminDashboard';
@@ -30,7 +31,11 @@ import Users from './pages/Admin/Users';
 import Analytics from './pages/Admin/Analytics';
 import PendingTrades from './pages/Admin/PendingTrades';
 import PendingUsers from './pages/Admin/PendingUsers';
+import AdminConnectionRequests from './pages/Admin/AdminConnectionRequests';
 import AdvancedPanel from './pages/Admin/AdvancedPanel';
+import ParentDashboard from './pages/Parent/ParentDashboard';
+import ParentReportCard from './pages/Parent/ParentReportCard';
+import ConnectChild from './pages/Parent/ConnectChild';
 
 import AdminCRUD from './admin/AdminPanel';
 import AccessDenied from './pages/Error/AccessDenied';
@@ -40,8 +45,9 @@ import ServerOffline from './pages/Error/ServerOffline';
 import DevLogin from './pages/Auth/DevLogin';
 
 
-const ProtectedRoute = ({ children, adminOnly = false }) => {
+const ProtectedRoute = ({ children, adminOnly = false, parentOnly = false }) => {
   const { isAuthenticated, user, isLoading } = useAuthStore();
+  const location = useLocation();
   
   if (isLoading) return (
     <div style={{ 
@@ -67,12 +73,21 @@ const ProtectedRoute = ({ children, adminOnly = false }) => {
   if (!isAuthenticated) return <Navigate to="/login" />;
   if (adminOnly && !user?.is_admin) return <AccessDenied />;
 
-  
+  // Redirect parents away from student/admin routes to their dashboard
+  if (user?.role === 'parent' && !location.pathname.startsWith('/parent/')) {
+    return <Navigate to="/parent/dashboard" replace />;
+  }
+
+  // Restrict parent-only routes to parent role
+  if (parentOnly && user?.role !== 'parent') {
+    return <Navigate to="/chat" replace />;
+  }
+
   return children;
 };
 
 function App() {
-  const { checkAuth, isAuthenticated, isServerOffline } = useAuthStore();
+  const { checkAuth, isAuthenticated, isServerOffline, user } = useAuthStore();
 
   useEffect(() => {
     checkAuth();
@@ -81,6 +96,8 @@ function App() {
   if (isServerOffline) {
     return <ServerOffline />;
   }
+
+  const authRedirect = user?.role === 'parent' ? '/parent/dashboard' : '/chat';
 
   return (
     <Router>
@@ -130,8 +147,9 @@ function App() {
             }}
         />
       <Routes>
-        <Route path="/login" element={isAuthenticated ? <Navigate to="/" /> : <Login />} />
-        <Route path="/signup" element={isAuthenticated ? <Navigate to="/" /> : <Signup />} />
+        <Route path="/login" element={isAuthenticated ? <Navigate to={authRedirect} /> : <Login />} />
+        <Route path="/signup" element={isAuthenticated ? <Navigate to={authRedirect} /> : <Signup />} />
+
 
         {/* Development-only shortcut — guarded so browsers in production never see this route */}
         {import.meta.env.DEV && (
@@ -139,7 +157,9 @@ function App() {
         )}
 
 
-        <Route path="/" element={
+        <Route path="/" element={<Landing />} />
+
+        <Route path="/chat" element={
           <ProtectedRoute>
             <Layout>
               <Chat />
@@ -147,12 +167,18 @@ function App() {
           </ProtectedRoute>
         } />
         
-        <Route path="/profile/:slug?" element={
+        <Route path="/profile" element={
           <ProtectedRoute>
             <Layout>
               <Profile />
             </Layout>
           </ProtectedRoute>
+        } />
+
+        <Route path="/profile/:slug" element={
+          <Layout>
+            <Profile />
+          </Layout>
         } />
 
         <Route path="/achievements" element={
@@ -241,11 +267,25 @@ function App() {
                 <Route path="documents" element={<AdminDocuments />} />
                 <Route path="pending-trades" element={<PendingTrades />} />
                 <Route path="pending-users" element={<PendingUsers />} />
+                <Route path="connection-requests" element={<AdminConnectionRequests />} />
                 <Route path="advanced" element={<AdvancedPanel />} />
               </Routes>
             </AdminLayout>
           </ProtectedRoute>
         } />
+
+        {/* Parent Routes */}
+        <Route path="/parent/dashboard" element={
+          <ProtectedRoute parentOnly={true}>
+            <ParentDashboard />
+          </ProtectedRoute>
+        } />
+        <Route path="/parent/report/:studentId" element={
+          <ProtectedRoute parentOnly={true}>
+            <ParentReportCard />
+          </ProtectedRoute>
+        } />
+        <Route path="/parent/connect" element={<ConnectChild />} />
 
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" />} />

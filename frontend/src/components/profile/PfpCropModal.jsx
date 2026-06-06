@@ -1,10 +1,11 @@
 import React from 'react';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 
 const PfpCropModal = ({ isCropping, cropImgRef, cropImage, isUploadingPic, onCancel, onSave }) => {
     if (!isCropping) return null;
 
-    return (
+    return createPortal(
         <div className="modal-overlay crop-modal-overlay">
             <div className="modal-content crop-modal-content">
                 <div className="modal-header">
@@ -21,7 +22,8 @@ const PfpCropModal = ({ isCropping, cropImgRef, cropImage, isUploadingPic, onCan
                     </button>
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 };
 

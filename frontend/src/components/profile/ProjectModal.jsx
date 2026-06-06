@@ -1,4 +1,5 @@
 import React from 'react';
+import { createPortal } from 'react-dom';
 import { X, ExternalLink, Code, CheckCircle, FileText } from 'lucide-react';
 import { formatStaticUrl } from '../../utils/formatters';
 import SmartImage from '../common/SmartImage';
@@ -32,7 +33,7 @@ const getYoutubeEmbedUrl = (url) => {
 const ProjectModal = ({ project, onClose }) => {
     if (!project) return null;
 
-    return (
+    return createPortal(
         <div className="modal-overlay" onClick={onClose}>
             <div className="modal-content project-modal" onClick={e => e.stopPropagation()}>
                 <button className="close-modal" onClick={onClose}><X size={24} /></button>
@@ -92,7 +93,8 @@ const ProjectModal = ({ project, onClose }) => {
                     </div>
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 };
 

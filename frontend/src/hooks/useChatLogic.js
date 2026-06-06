@@ -165,10 +165,24 @@ export const useChatLogic = () => {
     }
   }, [activeConversation]);
 
+  const onMessageDeleted = useCallback((data) => {
+    setConversations(prev => prev.map(c => {
+      if (c.conversation_id === data.conversation_id && c.messages) {
+        return {
+          ...c,
+          messages: c.messages.filter(m => m.id !== data.message_id)
+        };
+      }
+      return c;
+    }));
+    setMessages(prev => prev.filter(m => m.id !== data.message_id));
+  }, []);
+
   const { sendMessage } = useChatSocket(onMessageReceived, onClassroomEnrolled, {
     onConversationCreated,
     onConversationUpdated,
-    onConversationDeleted
+    onConversationDeleted,
+    onMessageDeleted
   });
 
   useEffect(() => {
@@ -374,6 +388,27 @@ export const useChatLogic = () => {
     }
   };
 
+  const handleDeleteMessage = async (messageId) => {
+    if (!window.confirm('Are you sure you want to delete this message?')) return;
+    try {
+      await client.delete(`/message/delete_message/${messageId}`);
+      toast.success('Message deleted');
+      setMessages(prev => prev.filter(m => m.id !== messageId));
+      setConversations(prevConvs => prevConvs.map(conv => {
+        if (conv.conversation_id === activeConversation?.conversation_id && conv.messages) {
+          return {
+            ...conv,
+            messages: conv.messages.filter(m => m.id !== messageId)
+          };
+        }
+        return conv;
+      }));
+    } catch (err) {
+      toast.error('Failed to delete message');
+      console.error(err);
+    }
+  };
+
   return {
     user,
     conversations,
@@ -417,6 +452,7 @@ export const useChatLogic = () => {
     handleDeleteConversation,
     hasMoreConversations,
     isLoadingMoreConversations,
-    handleLoadMoreConversations
+    handleLoadMoreConversations,
+    handleDeleteMessage
   };
 };
