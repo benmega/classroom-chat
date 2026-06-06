@@ -10,7 +10,7 @@ import SmartImage from '../../components/common/SmartImage';
 import { useProjectManagement } from '../../hooks/useProjectManagement';
 
 const ManageProject = () => {
-    const { currentUser } = useAuthStore();
+    const { user: currentUser } = useAuthStore();
     const {
         projectId,
         projectData,
