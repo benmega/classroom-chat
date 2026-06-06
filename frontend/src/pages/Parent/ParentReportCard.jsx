@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Loader2, ArrowLeft, Activity, Award, BookOpen, User } from 'lucide-react';
+import { Loader2, ArrowLeft, Activity, Award, BookOpen, User, ChevronDown, ChevronUp } from 'lucide-react';
 import client from '../../api/client';
 import ContributionGraph from '../../components/profile/ContributionGraph';
 import ProjectPortfolio from '../../components/profile/ProjectPortfolio';
@@ -19,6 +19,15 @@ const ParentReportCard = () => {
     const [error, setError] = useState(null);
     const [selectedProject, setSelectedProject] = useState(null);
     const [slideshowIndex, setSlideshowIndex] = useState(null);
+    const [expandedCourse, setExpandedCourse] = useState(null);
+
+    const toggleCourse = (course) => {
+        if (expandedCourse === course) {
+            setExpandedCourse(null);
+        } else {
+            setExpandedCourse(course);
+        }
+    };
 
     useEffect(() => {
         const fetchReport = async () => {
@@ -76,8 +85,17 @@ const ParentReportCard = () => {
         <>
         <div className="report-card-page animate-page-entry">
             {/* ── Header ── */}
-            <header className="report-header">
-                <div className="report-header-inner" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: '0.5rem' }}>
+            <header className="report-header glass-panel">
+                <div className="report-header-inner" style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', justifyContent: 'flex-start' }}>
+                    <button
+                        className="btn-secondary btn-secondary-sm report-back-btn"
+                        style={{ marginBottom: '0' }}
+                        onClick={() => navigate('/parent/dashboard')}
+                    >
+                        <ArrowLeft size={16} />
+                        Back
+                    </button>
+
                     <div className="report-student-info">
                         {reportData.profile_picture_url ? (
                             <img
@@ -97,15 +115,6 @@ const ParentReportCard = () => {
                             )}
                         </div>
                     </div>
-
-                    <button
-                        className="report-back-btn"
-                        style={{ marginBottom: '0' }}
-                        onClick={() => navigate('/parent/dashboard')}
-                    >
-                        <ArrowLeft size={16} />
-                        Back
-                    </button>
                 </div>
             </header>
 
@@ -119,10 +128,17 @@ const ParentReportCard = () => {
                         </div>
                         <div className="progress-list-container">
                             <div className="progress-list">
-                                <div className="progress-item">
+                                <div 
+                                    className="progress-item clickable-progress"
+                                    onClick={() => toggleCourse('codecombat')}
+                                    style={{ cursor: 'pointer' }}
+                                >
                                     <div className="prog-label">
                                         <span>CodeCombat</span>
-                                        <span>{cc.percent || 0}%</span>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                            <span>{cc.percent || 0}%</span>
+                                            {expandedCourse === 'codecombat' ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                                        </div>
                                     </div>
                                     <div className="progress-track">
                                         <div
@@ -130,14 +146,35 @@ const ParentReportCard = () => {
                                             style={{ width: `${cc.percent || 0}%` }}
                                         />
                                     </div>
-                                    <small>{cc.levels_completed || 0} Levels Completed</small>
+                                    <small>{cc.levels_completed || 0} Total Levels</small>
+
+                                    {expandedCourse === 'codecombat' && cc.breakdown && (
+                                        <div className="course-breakdown animate-fade-in" style={{ marginTop: '12px', padding: '10px', background: 'rgba(0,0,0,0.1)', borderRadius: '8px' }}>
+                                            <h4 style={{ fontSize: '0.85rem', marginBottom: '8px', color: 'var(--text-color)' }}>Chapters Completed</h4>
+                                            {cc.breakdown.length > 0 ? cc.breakdown.map((item, idx) => (
+                                                <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: '4px', color: 'var(--text-muted)' }}>
+                                                    <span>{item.course_name}</span>
+                                                    <span style={{ fontWeight: 600 }}>{item.levels_completed}</span>
+                                                </div>
+                                            )) : (
+                                                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>No chapter data available.</div>
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
 
                                 {(oz.levels_completed > 0 || oz.percent > 0) && (
-                                    <div className="progress-item">
+                                    <div 
+                                        className="progress-item clickable-progress"
+                                        onClick={() => toggleCourse('ozaria')}
+                                        style={{ cursor: 'pointer', marginTop: '1rem' }}
+                                    >
                                         <div className="prog-label">
                                             <span>Ozaria</span>
-                                            <span>{oz.percent || 0}%</span>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                <span>{oz.percent || 0}%</span>
+                                                {expandedCourse === 'ozaria' ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                                            </div>
                                         </div>
                                         <div className="progress-track">
                                             <div
@@ -145,7 +182,21 @@ const ParentReportCard = () => {
                                                 style={{ width: `${oz.percent || 0}%` }}
                                             />
                                         </div>
-                                        <small>{oz.levels_completed || 0} Levels Completed</small>
+                                        <small>{oz.levels_completed || 0} Total Levels</small>
+
+                                        {expandedCourse === 'ozaria' && oz.breakdown && (
+                                            <div className="course-breakdown animate-fade-in" style={{ marginTop: '12px', padding: '10px', background: 'rgba(0,0,0,0.1)', borderRadius: '8px' }}>
+                                                <h4 style={{ fontSize: '0.85rem', marginBottom: '8px', color: 'var(--text-color)' }}>Chapters Completed</h4>
+                                                {oz.breakdown.length > 0 ? oz.breakdown.map((item, idx) => (
+                                                    <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: '4px', color: 'var(--text-muted)' }}>
+                                                        <span>{item.course_name}</span>
+                                                        <span style={{ fontWeight: 600 }}>{item.levels_completed}</span>
+                                                    </div>
+                                                )) : (
+                                                    <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>No chapter data available.</div>
+                                                )}
+                                            </div>
+                                        )}
                                     </div>
                                 )}
                             </div>

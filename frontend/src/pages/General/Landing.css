@@ -141,6 +141,7 @@
 
 .slide {
     width: 20%;
+    flex: 0 0 20%;
     height: 100%;
     display: flex;
     align-items: center;

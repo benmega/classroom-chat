@@ -4,57 +4,34 @@
     min-height: 100vh;
     height: 100vh;
     overflow-y: auto;
-    background: var(--bg-secondary);
+    background: transparent;
     font-family: var(--font-body);
     padding-bottom: 4rem;
 }
 
 /* ─── Report Header ─── */
 .report-header {
-    background: var(--gradient-primary);
-    padding: 0.5rem 1.5rem 0.5rem;
-    position: relative;
-    overflow: hidden;
-}
-
-.report-header::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background:
-        radial-gradient(circle at 30% 60%, rgba(255, 255, 255, 0.12) 0%, transparent 50%),
-        radial-gradient(circle at 70% 30%, rgba(255, 255, 255, 0.08) 0%, transparent 40%);
-    pointer-events: none;
+    padding: 1rem 2rem;
+    margin: 1rem;
+    position: sticky;
+    top: 1rem;
+    z-index: 100;
 }
 
 .report-header-inner {
-    max-width: 1000px;
+    width: 100%;
+    max-width: 1400px;
     margin: 0 auto;
     position: relative;
     z-index: 1;
 }
 
 .report-back-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 8px 16px;
-    background: rgba(255, 255, 255, 0.15);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.25);
-    border-radius: var(--radius-sm);
-    color: #ffffff;
-    font-size: var(--font-sm);
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-    margin-bottom: 2rem;
+    transition: transform 0.2s ease;
 }
 
 .report-back-btn:hover {
-    background: rgba(255, 255, 255, 0.25);
-    transform: translateX(-4px);
+    transform: translateX(-4px) !important;
 }
 
 .report-header-title {
@@ -83,8 +60,8 @@
     height: 48px;
     border-radius: 50%;
     object-fit: cover;
-    border: 2px solid rgba(255, 255, 255, 0.4);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    border: 2px solid var(--border-subtle);
+    box-shadow: var(--shadow-sm);
     background: var(--bg-tertiary);
 }
 
@@ -92,12 +69,12 @@
     width: 48px;
     height: 48px;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.15);
-    border: 2px solid rgba(255, 255, 255, 0.3);
+    background: var(--bg-tertiary);
+    border: 2px solid var(--border-subtle);
     display: flex;
     align-items: center;
     justify-content: center;
-    color: rgba(255, 255, 255, 0.7);
+    color: var(--text-muted);
 }
 
 .report-student-details h1 {
@@ -105,63 +82,20 @@
     font-family: var(--font-heading);
     font-size: var(--font-3xl);
     font-weight: 800;
-    color: #ffffff;
+    color: var(--text-primary);
     letter-spacing: -0.03em;
 }
 
 .report-student-details .report-student-nick {
     margin: 0.25rem 0 0;
     font-size: var(--font-md);
-    color: rgba(255, 255, 255, 0.75);
+    color: var(--text-muted);
     font-weight: 400;
 }
 
-/* ─── Report Body ─── */
-.report-body {
-    max-width: 1000px;
-    margin: -2rem auto 0;
-    padding: 0 2rem;
-    position: relative;
-    z-index: 2;
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-}
 
-/* ─── Report Section (Glass Panels) ─── */
-.report-section {
-    background: var(--glass-bg);
-    backdrop-filter: var(--glass-blur);
-    -webkit-backdrop-filter: var(--glass-blur);
-    border: 1px solid var(--glass-border);
-    border-radius: var(--radius-md);
-    padding: 1.75rem;
-    box-shadow: var(--shadow-soft);
-}
 
-.report-section-header {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    border-bottom: 1px solid var(--border-subtle);
-    margin-bottom: 1.25rem;
-    padding-bottom: 0.75rem;
-}
 
-.report-section-header h2 {
-    margin: 0;
-    font-family: var(--font-heading);
-    font-size: 1.2rem;
-    font-weight: 700;
-    color: var(--text-primary);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.report-section-header svg {
-    color: var(--primary-color);
-}
 
 /* ─── Progress Bars (Read-Only) ─── */
 .report-progress-list {
@@ -277,7 +211,6 @@
     opacity: 0.4;
 }
 
-/* ─── Loading State ─── */
 .report-loading {
     display: flex;
     flex-direction: column;
@@ -285,7 +218,7 @@
     justify-content: center;
     height: 100vh;
     gap: 1.5rem;
-    background: var(--bg-secondary);
+    background: transparent;
     color: var(--text-primary);
 }
 
@@ -351,7 +284,9 @@
 /* ─── Responsive ─── */
 @media (max-width: 640px) {
     .report-header {
-        padding: 1.5rem 1rem 3rem;
+        padding: 1rem 1.25rem;
+        margin: 0.5rem;
+        top: 0.5rem;
     }
 
     .report-student-details h1 {
@@ -366,9 +301,5 @@
 
     .report-body {
         padding: 0 1rem;
-    }
-
-    .report-section {
-        padding: 1.25rem;
     }
 }

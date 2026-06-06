@@ -26,6 +26,7 @@ const LandingMobile = () => {
                         
                         <div className="hero-visual animate-float" style={{ margin: '1rem 0' }}>
                             <div className="slideshow-window glass-panel" style={{ width: '100%', maxWidth: '100%', borderRadius: '16px' }}>
+                                {/* RULE: All slideshow images below must be close to a 16:9 aspect ratio (e.g. 1024x576) to avoid awkward cropping */}
                                 <div className="slideshow-track">
                                     <img src="/images/code_combat.png" alt="Code Combat" className="slide" style={{ objectFit: 'cover' }} />
                                     <img src="/images/ozaria.png" alt="Ozaria" className="slide" style={{ objectFit: 'cover' }} />
@@ -37,47 +38,18 @@ const LandingMobile = () => {
                         </div>
 
                         <div className="hero-cta animate-fade-in" style={{ animationDelay: '0.2s', display: 'flex', flexDirection: 'column', gap: '1rem', width: '100%', maxWidth: '300px' }}>
-                            <button onClick={() => navigate('/login')} className="btn-premium btn-premium-lg" style={{ width: '100%' }}>
-                                Login
+
+                            <button onClick={() => navigate('/signup?role=student')} className="btn-secondary" style={{ width: '100%', padding: '0.8rem' }}>
+                                I'm a Student
                             </button>
-                            <button onClick={() => navigate('/signup')} className="btn-secondary" style={{ width: '100%', padding: '0.8rem' }}>
-                                Sign Up
-                            </button>
-                            <button onClick={() => navigate('/signup?role=educator')} className="btn-secondary" style={{ width: '100%', padding: '0.8rem' }}>
-                                I'm an Educator
-                            </button>
-                            <button onClick={() => navigate('/signup?role=parent')} className="btn-secondary" style={{ width: '100%', padding: '0.8rem' }}>
+                            <button onClick={() => navigate('/signup?role=parent')} className="btn-premium btn-premium-lg" style={{ width: '100%' }}>
                                 I'm a Parent
                             </button>
                         </div>
                     </div>
                 </section>
 
-                <section className="features-section container" style={{ paddingTop: '2rem' }}>
-                    <h3 className="section-title" style={{ fontSize: '1.75rem' }}>Why Classroom Chat?</h3>
-                    <div className="features-grid mobile-grid">
-                        <div className="feature-card card-premium" style={{ alignItems: 'center', textAlign: 'center' }}>
-                            <div className="feature-icon">💬</div>
-                            <h4>Real-Time Chat</h4>
-                            <p>Engage in instant messaging with peers and teachers for seamless collaboration.</p>
-                        </div>
-                        <div className="feature-card card-premium" style={{ alignItems: 'center', textAlign: 'center' }}>
-                            <div className="feature-icon">🏆</div>
-                            <h4>Achievements</h4>
-                            <p>Earn badges and certificates as you progress through your learning journey.</p>
-                        </div>
-                        <div className="feature-card card-premium" style={{ alignItems: 'center', textAlign: 'center' }}>
-                            <div className="feature-icon">👨‍👩‍👧</div>
-                            <h4>Parent Access</h4>
-                            <p>Stay involved with transparent progress tracking and easy communication.</p>
-                        </div>
-                        <div className="feature-card card-premium" style={{ alignItems: 'center', textAlign: 'center' }}>
-                            <div className="feature-icon">🛠️</div>
-                            <h4>Admin Controls</h4>
-                            <p>Comprehensive tools for teachers and admins to manage the classroom environment.</p>
-                        </div>
-                    </div>
-                </section>
+
             </main>
 
             <footer className="landing-footer">

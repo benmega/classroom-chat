@@ -42,6 +42,26 @@ const useAuthStore = create((set) => ({
       };
     }
   },
+
+  loginParentCognito: async (email, password) => {
+    try {
+      const response = await client.post('/api/auth/cognito/login', { email, password });
+      if (response.data.success) {
+        // Since cognito login sets the session cookie, we checkAuth to populate the user
+        await useAuthStore.getState().checkAuth();
+        return { 
+          success: true,
+          role: response.data.role
+        };
+      }
+      return { success: false, error: 'Login failed' };
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error.response?.data?.error || 'Login failed' 
+      };
+    }
+  },
   
   logout: async () => {
     try {

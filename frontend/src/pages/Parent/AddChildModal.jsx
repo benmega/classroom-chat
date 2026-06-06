@@ -63,86 +63,99 @@ const AddChildModal = ({ isOpen, onClose, onAdded }) => {
                     <button className="close-btn" onClick={onClose}><X size={20} /></button>
                 </div>
                 
-                <div className="modal-body unified-layout">
-                    {/* OPTION 1: INSTANT CONNECT WITH CODE */}
-                    <div className="add-child-section">
-                        <h3><Key size={18} /> Connect with Code</h3>
-                        <p className="tab-desc">If you received a physical card, enter the 6-character connection code to instantly link the student.</p>
-                        
-                        <form onSubmit={handleCodeSubmit} className="add-child-form inline-form">
-                            <div className="form-group inline-input">
-                                <input 
-                                    type="text" 
-                                    placeholder="Enter connection code..." 
-                                    value={code}
-                                    onChange={(e) => setCode(e.target.value)}
-                                    maxLength={10}
-                                />
-                                <button type="submit" className="submit-btn" disabled={isSubmittingCode || !code.trim()}>
-                                    {isSubmittingCode ? 'Connecting...' : 'Connect'}
-                                </button>
-                            </div>
-                            {codeError && <div className="error-message">{codeError}</div>}
-                        </form>
-                    </div>
-
-                    <div className="modal-divider">
-                        <span>OR</span>
-                    </div>
-
-                    {/* OPTION 2: SEARCH AND REQUEST */}
-                    <div className="add-child-section">
-                        <h3><Search size={18} /> Search & Request</h3>
-                        
-                        {requestSuccess ? (
-                            <div className="success-message">
-                                <UserPlus size={40} />
-                                <h3>Request Sent!</h3>
-                                <p>The administrator will review your request. Once approved, the student will appear on your dashboard.</p>
-                            </div>
-                        ) : (
-                            <form onSubmit={handleSearchSubmit} className="add-child-form">
-                                <p className="tab-desc">Search for your child's username and submit a request to the administrator.</p>
-                                
-                                <div className="form-group">
-                                    <label>Student's Username</label>
+                <div className="modal-tabs">
+                    <button 
+                        className={`tab-btn ${activeTab === 'code' ? 'active' : ''}`}
+                        onClick={() => setActiveTab('code')}
+                    >
+                        <Key size={16} /> Code
+                    </button>
+                    <button 
+                        className={`tab-btn ${activeTab === 'search' ? 'active' : ''}`}
+                        onClick={() => setActiveTab('search')}
+                    >
+                        <Search size={16} /> Search
+                    </button>
+                </div>
+                
+                <div className="modal-body">
+                    {activeTab === 'code' && (
+                        <div className="add-child-section animate-fade-in">
+                            <h3>Connect with Code</h3>
+                            <p className="tab-desc">If you received a physical card, enter the 6-character connection code to instantly link the student.</p>
+                            
+                            <form onSubmit={handleCodeSubmit} className="add-child-form inline-form">
+                                <div className="form-group inline-input">
                                     <input 
                                         type="text" 
-                                        value={username}
-                                        onChange={(e) => setUsername(e.target.value)}
-                                        required
+                                        placeholder="Enter connection code..." 
+                                        value={code}
+                                        onChange={(e) => setCode(e.target.value)}
+                                        maxLength={10}
                                     />
+                                    <button type="submit" className="submit-btn" disabled={isSubmittingCode || !code.trim()}>
+                                        {isSubmittingCode ? 'Connecting...' : 'Connect'}
+                                    </button>
                                 </div>
-                                
-                                <div className="form-row">
-                                    <div className="form-group half-width">
-                                        <label>Relationship</label>
-                                        <select value={relationship} onChange={(e) => setRelationship(e.target.value)}>
-                                            <option value="Parent">Parent</option>
-                                            <option value="Guardian">Guardian</option>
-                                            <option value="Tutor">Tutor</option>
-                                            <option value="Other">Other</option>
-                                        </select>
-                                    </div>
-                                    <div className="form-group half-width">
-                                        <label>Message (Optional)</label>
+                                {codeError && <div className="error-message">{codeError}</div>}
+                            </form>
+                        </div>
+                    )}
+
+                    {activeTab === 'search' && (
+                        <div className="add-child-section animate-fade-in">
+                            <h3>Search & Request</h3>
+                            
+                            {requestSuccess ? (
+                                <div className="success-message">
+                                    <UserPlus size={40} />
+                                    <h3>Request Sent!</h3>
+                                    <p>The administrator will review your request. Once approved, the student will appear on your dashboard.</p>
+                                </div>
+                            ) : (
+                                <form onSubmit={handleSearchSubmit} className="add-child-form">
+                                    <p className="tab-desc">Search for your child's username and submit a request to the administrator.</p>
+                                    
+                                    <div className="form-group">
+                                        <label>Student's Username</label>
                                         <input 
-                                            type="text"
-                                            value={message}
-                                            onChange={(e) => setMessage(e.target.value)}
-                                            placeholder="Any details..."
+                                            type="text" 
+                                            value={username}
+                                            onChange={(e) => setUsername(e.target.value)}
+                                            required
                                         />
                                     </div>
-                                </div>
-                                
-                                {searchError && <div className="error-message">{searchError}</div>}
-                                
-                                <button type="submit" className="submit-btn" disabled={isSubmittingRequest || !username.trim()}>
-                                    {isSubmittingRequest ? 'Sending Request...' : 'Send Request'}
-                                </button>
-                            </form>
-                        )}
-                    </div>
+                                    
+                                    <div className="form-row">
+                                        <div className="form-group half-width">
+                                            <label>Relationship</label>
+                                            <select value={relationship} onChange={(e) => setRelationship(e.target.value)}>
+                                                <option value="Parent">Parent</option>
+                                                <option value="Guardian">Guardian</option>
+                                                <option value="Tutor">Tutor</option>
+                                                <option value="Other">Other</option>
+                                            </select>
+                                        </div>
+                                        <div className="form-group half-width">
+                                            <label>Message (Optional)</label>
+                                            <input 
+                                                type="text"
+                                                value={message}
+                                                onChange={(e) => setMessage(e.target.value)}
+                                                placeholder="Any details..."
+                                            />
+                                        </div>
+                                    </div>
+                                    
+                                    {searchError && <div className="error-message">{searchError}</div>}
+                                    
+                                    <button type="submit" className="submit-btn" disabled={isSubmittingRequest || !username.trim()}>
+                                        {isSubmittingRequest ? 'Sending Request...' : 'Send Request'}
+                                    </button>
+                                </form>
+                            )}
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

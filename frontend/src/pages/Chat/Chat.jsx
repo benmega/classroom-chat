@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { 
   Send, 
   MessageSquare,
@@ -239,9 +240,39 @@ const Chat = () => {
              }}>
                Welcome back, {user?.nickname || user?.username || 'Student'}!
              </h2>
-             <p style={{ fontSize: 'var(--font-lg)', color: 'var(--text-secondary)', textAlign: 'center', maxWidth: '400px' }}>
-               Pick a channel or conversation from the sidebar to start collaborating with your classmates.
-             </p>
+             {user?.role === 'student' && classrooms.length === 0 ? (
+               <div style={{
+                  background: 'var(--bg-secondary)',
+                  padding: '2rem',
+                  borderRadius: 'var(--radius-lg)',
+                  border: '1px solid var(--border-subtle)',
+                  marginTop: '1.5rem',
+                  maxWidth: '500px',
+                  textAlign: 'center',
+                  boxShadow: 'var(--shadow-md)'
+               }}>
+                 <h3 style={{ fontSize: '1.25rem', color: 'var(--text-primary)', marginBottom: '1rem', fontWeight: 700 }}>
+                   🎮 Unlock Your Classroom
+                 </h3>
+                 <p style={{ fontSize: '1rem', color: 'var(--text-secondary)', marginBottom: '1.5rem', lineHeight: 1.5 }}>
+                   To unlock your classroom dashboard and join your classmates, you need to complete your first challenge.
+                 </p>
+                 <Link 
+                   to="/submit-challenge" 
+                   className="auth-button"
+                   style={{ display: 'inline-flex', padding: '0.75rem 1.5rem', textDecoration: 'none', margin: '0 auto', width: 'auto' }}
+                 >
+                   Go Complete a Challenge
+                 </Link>
+                 <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginTop: '1rem', fontStyle: 'italic' }}>
+                   Once you finish your first level, come back here and refresh the page!
+                 </p>
+               </div>
+             ) : (
+               <p style={{ fontSize: 'var(--font-lg)', color: 'var(--text-secondary)', textAlign: 'center', maxWidth: '400px' }}>
+                 Pick a channel or conversation from the sidebar to start collaborating with your classmates.
+               </p>
+             )}
           </div>
         )}
       </div>

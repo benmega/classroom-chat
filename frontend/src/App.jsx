@@ -150,6 +150,7 @@ function App() {
         <Route path="/login" element={isAuthenticated ? <Navigate to={authRedirect} /> : <Login />} />
         <Route path="/signup" element={isAuthenticated ? <Navigate to={authRedirect} /> : <Signup />} />
 
+
         {/* Development-only shortcut — guarded so browsers in production never see this route */}
         {import.meta.env.DEV && (
           <Route path="/dev-login" element={<DevLogin />} />

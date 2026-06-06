@@ -62,11 +62,42 @@
     color: #ffffff;
 }
 
-.modal-body.unified-layout {
-    padding: 1.5rem 2rem;
+.modal-tabs {
     display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    background: rgba(0, 0, 0, 0.1);
+}
+
+.tab-btn {
+    flex: 1;
+    padding: 1rem;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border-bottom: 2px solid transparent;
+}
+
+.tab-btn:hover {
+    color: var(--text-color);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.tab-btn.active {
+    color: var(--primary-color);
+    border-bottom-color: var(--primary-color);
+    background: rgba(14, 178, 187, 0.05);
+}
+
+.modal-body {
+    padding: 1.5rem;
 }
 
 .add-child-section {
@@ -97,27 +128,6 @@
 .inline-form .inline-input .submit-btn {
     width: auto;
     padding: 0.75rem 1.5rem;
-}
-
-.modal-divider {
-    display: flex;
-    align-items: center;
-    text-align: center;
-    color: var(--text-muted);
-    font-size: 0.85rem;
-    font-weight: 600;
-    margin: 0.5rem 0;
-}
-
-.modal-divider::before,
-.modal-divider::after {
-    content: '';
-    flex: 1;
-    border-bottom: 1px solid var(--border-color);
-}
-
-.modal-divider span {
-    padding: 0 1rem;
 }
 
 .form-row {

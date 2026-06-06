@@ -1,118 +1,43 @@
 """
 File: cognito_routes.py
 Type: py
-Summary: Flask routes for AWS Cognito authentication.
+Summary: Flask routes for AWS Cognito authentication using Boto3 (Custom UI).
 """
-import requests
-from flask import Blueprint, redirect, request, jsonify, session, current_app
+import hmac
+import hashlib
+import base64
+import boto3
+from botocore.exceptions import ClientError
+from flask import Blueprint, request, jsonify, session, current_app
 from jose import jwt
 
 from application.extensions import db
 from application.models.user import User
+from application.models.session_log import SessionLog
 
 cognito_bp = Blueprint("cognito", __name__)
 
-def get_cognito_jwks():
+def get_boto_client():
     region = current_app.config.get("COGNITO_REGION", "us-east-1")
-    pool_id = current_app.config.get("COGNITO_USER_POOL_ID")
-    if not pool_id:
-        return {}
-    url = f"https://cognito-idp.{region}.amazonaws.com/{pool_id}/.well-known/jwks.json"
-    try:
-        r = requests.get(url, timeout=5)
-        return r.json()
-    except Exception:
-        return {}
+    return boto3.client("cognito-idp", region_name=region)
 
-@cognito_bp.route("/login")
-def login():
-    domain = current_app.config.get("COGNITO_DOMAIN")
-    client_id = current_app.config.get("COGNITO_CLIENT_ID")
-    redirect_uri = current_app.config.get("COGNITO_REDIRECT_URI")
-    
-    if not domain or not client_id:
-        return jsonify({"error": "Cognito not configured"}), 500
-        
-    cognito_url = (
-        f"https://{domain}/login?"
-        f"client_id={client_id}&"
-        f"response_type=code&"
-        f"scope=email+openid+profile&"
-        f"redirect_uri={redirect_uri}"
-    )
-    return redirect(cognito_url)
-
-@cognito_bp.route("/callback")
-def callback():
-    code = request.args.get("code")
-    if not code:
-        return jsonify({"error": "Missing code"}), 400
-
-    domain = current_app.config.get("COGNITO_DOMAIN")
+def get_secret_hash(username):
     client_id = current_app.config.get("COGNITO_CLIENT_ID")
     client_secret = current_app.config.get("COGNITO_CLIENT_SECRET")
-    redirect_uri = current_app.config.get("COGNITO_REDIRECT_URI")
-    region = current_app.config.get("COGNITO_REGION", "us-east-1")
+    if not client_secret:
+        return None
+    message = bytes(username + client_id, 'utf-8')
+    key = bytes(client_secret, 'utf-8')
+    return base64.b64encode(hmac.new(key, message, digestmod=hashlib.sha256).digest()).decode()
 
-    # Exchange code for tokens
-    token_url = f"https://{domain}/oauth2/token"
-    data = {
-        "grant_type": "authorization_code",
-        "client_id": client_id,
-        "code": code,
-        "redirect_uri": redirect_uri
-    }
-    
-    headers = {"Content-Type": "application/x-www-form-urlencoded"}
-    if client_secret:
-        auth = (client_id, client_secret)
-        r = requests.post(token_url, data=data, auth=auth, headers=headers)
-    else:
-        r = requests.post(token_url, data=data, headers=headers)
-        
-    if r.status_code != 200:
-        return jsonify({"error": "Failed to fetch tokens", "details": r.text}), 400
-        
-    tokens = r.json()
-    id_token = tokens.get("id_token")
-    
-    if not id_token:
-        return jsonify({"error": "No ID token received"}), 400
-    
-    # Verify the ID token
-    try:
-        jwks = get_cognito_jwks()
-        pool_id = current_app.config.get("COGNITO_USER_POOL_ID")
-        audience = client_id
-        issuer = f"https://cognito-idp.{region}.amazonaws.com/{pool_id}"
-        
-        claims = jwt.decode(
-            id_token,
-            jwks,
-            algorithms=["RS256"],
-            audience=audience,
-            issuer=issuer
-        )
-    except Exception as e:
-        return jsonify({"error": "Invalid token", "details": str(e)}), 400
-        
-    email = claims.get("email")
-    cognito_sub = claims.get("sub")
-    
-    if not email or not cognito_sub:
-        return jsonify({"error": "Missing email or sub in token"}), 400
-        
-    # Check if user exists
+def sync_cognito_user(email, cognito_sub):
+    """Ensure the user exists in our local database."""
     user = User.query.filter_by(cognito_sub=cognito_sub).first()
-    
     if not user:
-        # Check if email is already taken by a non-Cognito user
         user = User.query.filter_by(email=email).first()
         if user:
-            # Link accounts
             user.cognito_sub = cognito_sub
         else:
-            # Create new parent account
             base_username = email.split('@')[0]
             username = base_username
             counter = 1
@@ -125,25 +50,112 @@ def callback():
                 email=email,
                 cognito_sub=cognito_sub,
                 role="parent",
-                is_approved=True # Parent accounts via Cognito are auto-approved
+                is_approved=True
             )
-            # Dummy password since they use Cognito
-            user.set_password(f"cognito_{cognito_sub}") 
+            user.set_password(f"cognito_{cognito_sub}")
             db.session.add(user)
-            
         db.session.commit()
+    return user
+
+@cognito_bp.route("/register", methods=["POST"])
+def register():
+    data = request.json
+    email = data.get("email")
+    password = data.get("password")
+    
+    if not email or not password:
+        return jsonify({"error": "Missing email or password"}), 400
         
-    # Standard local session login
-    session["user"] = user.id
+    client_id = current_app.config.get("COGNITO_CLIENT_ID")
+    client = get_boto_client()
+    kwargs = {
+        "ClientId": client_id,
+        "Username": email,
+        "Password": password,
+        "UserAttributes": [{"Name": "email", "Value": email}]
+    }
     
-    from application.models.session_log import SessionLog
-    SessionLog.start_session(user.id)
-    User.set_online(user.id, online=True)
+    secret_hash = get_secret_hash(email)
+    if secret_hash:
+        kwargs["SecretHash"] = secret_hash
+        
+    try:
+        client.sign_up(**kwargs)
+        return jsonify({"success": True, "message": "Verification code sent to email"})
+    except ClientError as e:
+        return jsonify({"error": e.response['Error']['Message']}), 400
+
+@cognito_bp.route("/verify", methods=["POST"])
+def verify():
+    data = request.json
+    email = data.get("email")
+    code = data.get("code")
     
-    # Check if this is local dev proxy (e.g. from Vite 5173). Let Vite handle redirects to dashboard
-    frontend_url = request.headers.get("Referer", "")
-    if "5173" in frontend_url or "localhost:5173" in current_app.config.get("COGNITO_REDIRECT_URI", ""):
-        return redirect("http://localhost:5173/parent/dashboard")
+    if not email or not code:
+        return jsonify({"error": "Missing email or code"}), 400
+        
+    client_id = current_app.config.get("COGNITO_CLIENT_ID")
+    client = get_boto_client()
+    kwargs = {
+        "ClientId": client_id,
+        "Username": email,
+        "ConfirmationCode": code
+    }
     
-    # Default redirect for production
-    return redirect("/parent/dashboard")
+    secret_hash = get_secret_hash(email)
+    if secret_hash:
+        kwargs["SecretHash"] = secret_hash
+        
+    try:
+        client.confirm_sign_up(**kwargs)
+        return jsonify({"success": True, "message": "Email verified successfully. You can now log in."})
+    except ClientError as e:
+        return jsonify({"error": e.response['Error']['Message']}), 400
+
+@cognito_bp.route("/login", methods=["POST"])
+def login():
+    data = request.json
+    email = data.get("email")
+    password = data.get("password")
+    
+    if not email or not password:
+        return jsonify({"error": "Missing email or password"}), 400
+        
+    client_id = current_app.config.get("COGNITO_CLIENT_ID")
+    client = get_boto_client()
+    
+    auth_parameters = {
+        "USERNAME": email,
+        "PASSWORD": password
+    }
+    
+    secret_hash = get_secret_hash(email)
+    if secret_hash:
+        auth_parameters["SECRET_HASH"] = secret_hash
+        
+    try:
+        response = client.initiate_auth(
+            ClientId=client_id,
+            AuthFlow="USER_PASSWORD_AUTH",
+            AuthParameters=auth_parameters
+        )
+        
+        id_token = response['AuthenticationResult']['IdToken']
+        claims = jwt.get_unverified_claims(id_token)
+        cognito_sub = claims.get("sub")
+        email_claim = claims.get("email", email)
+        
+        user = sync_cognito_user(email_claim, cognito_sub)
+        
+        session["user"] = user.id
+        SessionLog.start_session(user.id)
+        User.set_online(user.id, online=True)
+        
+        return jsonify({
+            "success": True,
+            "role": user.role,
+            "username": user.username
+        })
+        
+    except ClientError as e:
+        return jsonify({"error": e.response['Error']['Message']}), 401

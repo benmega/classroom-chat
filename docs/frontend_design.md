@@ -81,6 +81,9 @@ Common UI patterns are encapsulated in reusable classes and components:
 - **`btn-premium`**: Gradient-filled buttons with "bounce" transitions.
 - **`SmartImage`**: A utility component for handling profile pictures with automatic fallbacks.
 
+### 5.3 Asset Standards
+- **Homepage Banners**: Must be close to a **16:9** aspect ratio (e.g. 1024×576) to avoid awkward cropping by the slideshow component. Square or tall images (such as 1:1 ratios) must be avoided.
+
 ---
 
 ## 6. Directory Structure

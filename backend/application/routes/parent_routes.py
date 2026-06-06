@@ -11,6 +11,9 @@ from application.decorators.login_required import require_login
 from application.extensions import db
 from application.models.user import User
 from application.models.parent_connection_request import ParentConnectionRequest
+from application.models.challenge_log import ChallengeLog
+from application.models.course import Course
+from sqlalchemy import func
 
 
 parent = Blueprint("parent", __name__)
@@ -79,11 +82,46 @@ def get_student_report(student_id):
                 "earned_at": ua.earned_at.isoformat() if ua.earned_at else None,
             })
 
-    # Course progress
+    # Course progress totals
     cc_levels = student.get_progress("codecombat.com")
     cc_percent = student.get_progress_percent("codecombat.com")
     oz_levels = student.get_progress("www.ozaria.com")
     oz_percent = student.get_progress_percent("www.ozaria.com")
+
+    # Detailed course progress breakdown
+    def get_course_breakdown(domain):
+        logs = db.session.query(
+            ChallengeLog.course_id,
+            func.count(ChallengeLog.id).label('completed_count')
+        ).filter(
+            ChallengeLog.username == student._username,
+            ChallengeLog.domain == domain
+        ).group_by(ChallengeLog.course_id).all()
+        
+        breakdown = []
+        for log in logs:
+            course_id = log.course_id
+            count = log.completed_count
+            course_name = "Other"
+            if course_id:
+                course = db.session.get(Course, course_id)
+                if course:
+                    course_name = course.name
+                else:
+                    course_name = course_id
+            
+            breakdown.append({
+                "course_id": course_id,
+                "course_name": course_name,
+                "levels_completed": count
+            })
+        
+        # Sort by levels completed, or another stable sort if preferred
+        breakdown.sort(key=lambda x: x["levels_completed"], reverse=True)
+        return breakdown
+
+    cc_breakdown = get_course_breakdown("codecombat.com")
+    oz_breakdown = get_course_breakdown("www.ozaria.com")
 
     report = {
         "username": student.username,
@@ -111,10 +149,12 @@ def get_student_report(student_id):
             "codecombat": {
                 "levels_completed": cc_levels,
                 "percent": cc_percent,
+                "breakdown": cc_breakdown
             },
             "ozaria": {
                 "levels_completed": oz_levels,
                 "percent": oz_percent,
+                "breakdown": oz_breakdown
             },
         },
     }

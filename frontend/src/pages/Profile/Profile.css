@@ -14,12 +14,14 @@
    ================================================================= */
 .profile-header-card {
     position: relative;
-    background: var(--bg-primary);
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
     border-radius: var(--radius-md);
     overflow: visible; /* Changed from hidden to allow avatar overflow */
     margin: 20px auto;
     max-width: 1440px; /* Increased from 1200px */
-    border: 1px solid var(--border-subtle);
+    border: 1px solid var(--glass-border);
     box-shadow: var(--shadow-soft);
 }
 
@@ -258,12 +260,14 @@
 }
 
 .dashboard-panel {
-    background: var(--bg-primary);
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
     border-radius: var(--radius-md);
     padding: 24px;
     margin-bottom: 25px;
     box-shadow: var(--shadow-soft);
-    border: 1px solid var(--border-subtle);
+    border: 1px solid var(--glass-border);
     display: flex;
     flex-direction: column;
 }
@@ -918,7 +922,7 @@
     margin-bottom: 2rem;
 }
 
-.modal-body {
+.project-modal .modal-body {
     padding: 0 2.5rem 2.5rem;
     gap: 2.5rem;
     grid-template-columns: 1fr 340px;
@@ -1089,7 +1093,7 @@
     .cert-item { flex-basis: 150px; }
     .note-item { flex-basis: 120px; }
 
-    .modal-body {
+    .project-modal .modal-body {
         grid-template-columns: 1fr;
     }
 }
