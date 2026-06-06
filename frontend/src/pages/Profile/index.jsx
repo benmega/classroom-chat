@@ -43,7 +43,6 @@ const Profile = () => {
         handleSaveCrop
     } = useProfile();
 
-    const { hamburgerProgress, setHamburgerProgress } = useAuthStore();
 
     if (isLoading) return <div className="profile-loading">Loading Profile...</div>;
     if (!profileData) return <div className="profile-error">Profile not found.</div>;
@@ -81,58 +80,7 @@ const Profile = () => {
                         </section>
                     ) : null}
 
-                    {isOwner && (
-                        <section className="dashboard-panel interface-explorer-section">
-                            <div className="panel-header">
-                                <h2><User size={20} /> Interface Explorer</h2>
-                            </div>
-                            <div className="panel-content explorer-content">
-                                <p className="explorer-desc">
-                                    Did you know the menu icon ☰ is called a <strong>Hamburger Menu</strong> because it looks like a real hamburger 🍔? Play with the slider below to watch the hamburger morph in real-time!
-                                </p>
-                                <div className="interactive-morph-control">
-                                    <div className="morph-slider-labels">
-                                        <span className="label-hamburger">🍔 Hamburger</span>
-                                        <span className="label-separator">─────</span>
-                                        <span className="label-menu">3-Line Menu ☰</span>
-                                    </div>
-                                    <input 
-                                        type="range" 
-                                        min="0" 
-                                        max="1" 
-                                        step="0.01" 
-                                        value={hamburgerProgress} 
-                                        onChange={(e) => setHamburgerProgress(parseFloat(e.target.value))}
-                                        className="morph-slider"
-                                        aria-label="Hamburger morph slider"
-                                    />
-                                    <div className="morph-slider-status">
-                                        Morphed Stage: <strong>{Math.round(hamburgerProgress * 100)}%</strong>
-                                    </div>
-                                </div>
-                                <div className="interface-db-status">
-                                    <div className="status-metric">
-                                        Completed Challenges: <strong>{target.completed_challenges_count ?? 0}</strong>
-                                    </div>
-                                    <div className="status-metric">
-                                        Active Menu Style: <strong>{target.completed_challenges_count >= 10 ? "3-Line Menu ☰" : target.completed_challenges_count === 0 ? "Literal Hamburger 🍔" : "Hybrid Morph State"}</strong>
-                                    </div>
-                                    {localStorage.getItem(`hamburger_override_${target.username}`) !== null && (
-                                        <button 
-                                            onClick={() => {
-                                                localStorage.removeItem(`hamburger_override_${target.username}`);
-                                                const completed = target.completed_challenges_count ?? 0;
-                                                setHamburgerProgress(Math.min(completed / 10, 1.0));
-                                            }}
-                                            className="reset-override-btn"
-                                        >
-                                            Reset to database progress
-                                        </button>
-                                    )}
-                                </div>
-                            </div>
-                        </section>
-                    )}
+
 
                     <CourseProgress target={target} />
                     
