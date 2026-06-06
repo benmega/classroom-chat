@@ -1189,3 +1189,150 @@
         object-fit: contain;
     }
 }
+
+/* =================================================================
+   11. INTERFACE EXPLORER
+   ================================================================= */
+.interface-explorer-section {
+    border: 1px solid var(--border-subtle);
+    background: var(--bg-primary);
+}
+
+.explorer-content {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.explorer-desc {
+    font-size: 0.9rem;
+    line-height: 1.6;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.interactive-morph-control {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-subtle);
+    padding: 16px;
+    border-radius: var(--radius-sm);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.morph-slider-labels {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--text-muted);
+}
+
+.label-separator {
+    color: var(--border-subtle);
+    font-size: 0.7rem;
+    letter-spacing: 2px;
+    flex-grow: 1;
+    text-align: center;
+    margin: 0 8px;
+}
+
+.label-hamburger {
+    color: #D97706; /* Hamburger golden amber */
+}
+
+.label-menu {
+    color: var(--text-secondary);
+}
+
+/* Custom premium styling for the input range slider */
+.morph-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 8px;
+    border-radius: 9999px;
+    background: var(--border-subtle);
+    outline: none;
+    transition: background 150ms ease;
+    margin: 8px 0;
+}
+
+.morph-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--primary-color);
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(14, 178, 187, 0.4);
+    border: 2px solid white;
+    transition: transform var(--transition-fast) ease, box-shadow var(--transition-fast) ease;
+}
+
+.morph-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.15);
+    box-shadow: 0 3px 12px rgba(14, 178, 187, 0.6);
+}
+
+.morph-slider::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--primary-color);
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(14, 178, 187, 0.4);
+    border: 2px solid white;
+    transition: transform var(--transition-fast) ease, box-shadow var(--transition-fast) ease;
+}
+
+.morph-slider::-moz-range-thumb:hover {
+    transform: scale(1.15);
+    box-shadow: 0 3px 12px rgba(14, 178, 187, 0.6);
+}
+
+.morph-slider-status {
+    text-align: center;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.interface-db-status {
+    border-top: 1px dashed var(--border-subtle);
+    padding-top: 12px;
+    margin-top: 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.status-metric {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+.status-metric strong {
+    color: var(--text-primary);
+}
+
+.reset-override-btn {
+    align-self: flex-start;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    background: transparent;
+    border: none;
+    padding: 4px 0;
+    cursor: pointer;
+    text-decoration: underline;
+    transition: color 150ms ease;
+    margin-top: 6px;
+}
+
+.reset-override-btn:hover {
+    color: var(--primary-dark);
+}
+

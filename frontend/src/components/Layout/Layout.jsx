@@ -19,6 +19,7 @@ import './Layout.css';
 import UserSearch from '../common/UserSearch';
 import DuckIcon from '../Icons/DuckIcon';
 import Tutorial from '../common/Tutorial';
+import HamburgerIcon from '../common/HamburgerIcon';
 
 // Hooks
 import { useLayout } from '../../hooks/useLayout';
@@ -37,7 +38,8 @@ const Layout = ({ children }) => {
         handleLogout,
         isGuestPage,
         isChatPage,
-        location
+        location,
+        hamburgerProgress
     } = useLayout();
 
     return (
@@ -110,7 +112,7 @@ const Layout = ({ children }) => {
                                         data-testid="profile-toggle"
                                     >
                                         <span className="profile-icon">
-                                            <User size={18} strokeWidth={2} />
+                                            <HamburgerIcon progress={hamburgerProgress} size={20} />
                                         </span>
                                     </button>
                                     <ul className={`dropdown-menu ${isDropdownOpen ? 'show' : ''}`}>

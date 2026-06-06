@@ -123,6 +123,7 @@ class User(db.Model):
             "slug": self.slug,
             "duck_balance": self.duck_balance,
             "packets": self.packets,
+            "completed_challenges_count": self.challenge_logs.count(),
         }
 
     def to_dict_summary(self, precomputed_progress=None):
@@ -179,6 +180,7 @@ class User(db.Model):
             "packets": self.packets,
             # Progress counters
             "total_levels": cc_levels + oz_levels,
+            "completed_challenges_count": cc_levels + oz_levels,
             "cc_levels": cc_levels,
             "oz_levels": oz_levels,
             "cc_percent": cc_percent,
