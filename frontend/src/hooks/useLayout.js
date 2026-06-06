@@ -94,7 +94,7 @@ export const useLayout = () => {
 
     const handleLogout = async () => {
         await logout();
-        navigate('/login');
+        navigate('/');
     };
 
     const isGuestPage = ['/login', '/signup'].includes(location.pathname);

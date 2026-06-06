@@ -59,14 +59,25 @@ const PendingTrades = () => {
     };
 
     const formatBits = (bits) => {
-        if (!bits || !Array.isArray(bits)) return 'N/A';
+        if (!bits || !Array.isArray(bits)) return '0000 0000';
         // Ensure 8 bits, pad with 0 at the end (since it's LSB first in the array)
         const paddedBits = [...bits];
         while (paddedBits.length < 8) {
             paddedBits.push(0);
         }
-        // Reverse to show MSB on the left and join with spaces
-        return paddedBits.reverse().join(' ');
+        // Reverse to show MSB on the left
+        const reversed = paddedBits.reverse();
+        return `${reversed.slice(0, 4).join('')} ${reversed.slice(4, 8).join('')}`;
+    };
+
+    const calculateDecimal = (bits) => {
+        if (!bits || !Array.isArray(bits)) return 0;
+        return bits.reduce((acc, bit, idx) => acc + (bit === 1 ? Math.pow(2, idx) : 0), 0);
+    };
+
+    const hasBytes = (bytes) => {
+        if (!bytes || !Array.isArray(bytes)) return false;
+        return bytes.some(b => b === 1);
     };
 
     if (isLoading) return <div className="admin-loading">Loading Trades...</div>;
@@ -81,38 +92,49 @@ const PendingTrades = () => {
                 {trades.length > 0 ? (
                     trades.map(trade => (
                         <div key={trade.id} className="trade-card card">
-                            <div className="trade-header">
+                            <div className="trade-header" style={{ alignItems: 'flex-start' }}>
                                 <div className="user-info">
                                     <div className="avatar-placeholder">
                                         <User size={24} />
                                     </div>
-                                    <div>
-                                        <h3>{trade.username}</h3>
-                                        <span className="timestamp">
-                                            <Clock size={14} /> 
-                                            {new Date(trade.timestamp).toLocaleString()}
-                                        </span>
+                                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                        <h3 style={{ fontSize: '1.2rem', marginBottom: '2px' }}>{trade.nickname || trade.username}</h3>
+                                        <span style={{ fontSize: '0.9rem', color: '#64748b' }}>@{trade.username}</span>
                                     </div>
                                 </div>
-                                <div className="trade-id">
-                                    <Hash size={14} /> ID: {trade.id}
+                                <div className="trade-id" style={{ flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Hash size={14} /> ID: {trade.id}</div>
+                                    <span className="timestamp" style={{ marginTop: 0 }}>
+                                        <Clock size={12} /> 
+                                        {new Date(trade.timestamp).toLocaleString()}
+                                    </span>
                                 </div>
                             </div>
  
                             <div className="trade-details">
-                                <div className="detail-item total">
-                                    <span className="label">Digital Ducks</span>
-                                    <span className="value">{trade.digital_ducks} 🦆</span>
+                                <div style={{ marginBottom: '1rem' }}>
+                                    <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#1e293b', fontFamily: 'monospace' }}>
+                                        {formatBits(trade.bit_ducks)} bits
+                                    </div>
+                                    <div style={{ fontSize: '0.8rem', color: '#64748b' }}>
+                                        {calculateDecimal(trade.bit_ducks)} in decimal
+                                    </div>
                                 </div>
-                                <div className="detail-grid">
-                                    <div className="detail-item">
-                                        <span className="label">Bit Ducks</span>
-                                        <span className="value font-mono">{formatBits(trade.bit_ducks)}</span>
+
+                                {hasBytes(trade.byte_ducks) && (
+                                    <div style={{ marginBottom: '1rem' }}>
+                                        <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#1e293b', fontFamily: 'monospace' }}>
+                                            {formatBits(trade.byte_ducks)} bytes
+                                        </div>
+                                        <div style={{ fontSize: '0.8rem', color: '#64748b' }}>
+                                            {calculateDecimal(trade.byte_ducks)} in decimal
+                                        </div>
                                     </div>
-                                    <div className="detail-item">
-                                        <span className="label">Byte Ducks</span>
-                                        <span className="value font-mono">{formatBits(trade.byte_ducks)}</span>
-                                    </div>
+                                )}
+
+                                <div className="detail-item total" style={{ borderTop: '1px solid #e2e8f0', paddingTop: '0.75rem' }}>
+                                    <span className="label">Digital Ducks Requested</span>
+                                    <span className="value">{trade.digital_ducks} 🦆</span>
                                 </div>
                             </div>
 

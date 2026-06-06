@@ -15,7 +15,9 @@ from .achievement_routes import (
     admin_certificates,
     mark_reviewed,
     view_certificate,
-    download_certificate
+    download_certificate,
+    mark_all_reviewed,
+    download_all_certificates
 )
 
 achievements_api = Blueprint(
@@ -56,6 +58,16 @@ def api_view_certificate(cert_id):
 @achievements_api.route("/download_certificate/<int:cert_id>", methods=["GET"])
 def api_download_certificate(cert_id):
     return download_certificate(cert_id)
+
+
+@achievements_api.route("/admin/certificates/reviewed/all", methods=["POST"])
+def api_mark_all_reviewed():
+    return mark_all_reviewed()
+
+
+@achievements_api.route("/admin/certificates/download_all", methods=["GET"])
+def api_download_all_certificates():
+    return download_all_certificates()
 
 
 @achievements_api.route("/check", methods=["GET"])

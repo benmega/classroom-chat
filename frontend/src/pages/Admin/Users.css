@@ -74,7 +74,7 @@
 
 .stat-mini-card {
     background: white;
-    padding: 1rem;
+    padding: 0.75rem;
     border-radius: 16px;
     border: 1px solid #e2e8f0;
     display: flex;
@@ -110,7 +110,7 @@
 .users-table th {
     background: #f8fafc;
     text-align: left;
-    padding: 16px 24px;
+    padding: 12px 16px;
     font-size: 0.85rem;
     font-weight: 700;
     color: var(--text-muted);
@@ -118,7 +118,7 @@
 }
 
 .users-table td {
-    padding: 12px 16px;
+    padding: 8px 12px;
     border-bottom: 1px solid #f1f5f9;
 }
 
@@ -137,9 +137,9 @@
 }
 
 .user-profile-cell .avatar {
-    width: 44px !important;
-    height: 44px !important;
-    border-radius: 12px;
+    width: 36px !important;
+    height: 36px !important;
+    border-radius: 10px;
     object-fit: cover;
     flex-shrink: 0;
 }
@@ -216,9 +216,9 @@
 }
 
 .action-btn {
-    width: 36px;
-    height: 36px;
-    border-radius: 10px;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
     border: 1px solid #e2e8f0;
     background: white;
     display: flex;
@@ -241,7 +241,7 @@
 
 .empty-row {
     text-align: center;
-    padding: 30px !important;
+    padding: 20px !important;
     color: var(--text-muted);
     font-style: italic;
 }
@@ -269,17 +269,17 @@
 .user-badge-display {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 12px;
+    gap: 8px;
+    padding: 8px;
     background: #f8fafc;
     border: 1px solid #e2e8f0;
     border-radius: 12px;
 }
 
 .user-badge-display .avatar-small {
-    width: 40px !important;
-    height: 40px !important;
-    border-radius: 10px;
+    width: 32px !important;
+    height: 32px !important;
+    border-radius: 8px;
     object-fit: cover;
     flex-shrink: 0;
 }
@@ -308,7 +308,7 @@
 
 /* Pagination Styling */
 .pagination-container {
-    padding: 20px 24px;
+    padding: 12px 16px;
     background: #f8fafc;
     border-top: 1px solid #e2e8f0;
     display: flex;

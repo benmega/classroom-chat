@@ -40,7 +40,7 @@ const ChatSidebar = ({
 
     const handleLogout = async () => {
         await logout();
-        navigate('/login');
+        navigate('/');
     };
 
     const filteredConversations = useMemo(() => {

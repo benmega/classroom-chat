@@ -26,7 +26,8 @@ import { formatStaticUrl } from '../../utils/formatters';
 const AdminProjects = () => {
     const [projects, setProjects] = useState([]);
     const [filter, setFilter] = useState('pending');
-    const [searchTerm, setSearchTerm] = useState('');
+    const [statusFilter, setStatusFilter] = useState('all');
+    const [sortBy, setSortBy] = useState('newest');
     const [counts, setCounts] = useState({ pending: 0, total: 0 });
     const [isLoading, setIsLoading] = useState(true);
     const [selectedProject, setSelectedProject] = useState(null);
@@ -82,19 +83,59 @@ const AdminProjects = () => {
         }
     };
 
-    const filteredProjects = projects.filter(p => 
-        p.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    let processedProjects = [...projects];
+
+    if (statusFilter === 'missing_video') {
+        processedProjects = processedProjects.filter(p => !p.video_url);
+    } else if (statusFilter === 'missing_work') {
+        processedProjects = processedProjects.filter(p => !p.link && !p.github_link && !p.code_snippet);
+    } else if (statusFilter === 'needs_feedback') {
+        processedProjects = processedProjects.filter(p => !p.teacher_comment);
+    }
+
+    if (sortBy === 'newest') {
+        processedProjects.sort((a, b) => b.id - a.id);
+    } else if (sortBy === 'oldest') {
+        processedProjects.sort((a, b) => a.id - b.id);
+    }
 
     if (selectedProject) {
         return (
             <div className="admin-projects-page">
                 <AdminPageHeader 
-                    title={selectedProject.name}
-                    onBack={() => setSelectedProject(null)}
+                    title="Review Project"
                 />
                 
                 <div className="project-review-card">
+                    <div style={{ marginBottom: '1.5rem' }}>
+                        <button 
+                            onClick={() => setSelectedProject(null)}
+                            style={{ 
+                                display: 'flex', 
+                                alignItems: 'center', 
+                                gap: '8px', 
+                                padding: '8px 16px', 
+                                background: 'white', 
+                                border: '1px solid #e2e8f0', 
+                                borderRadius: '10px', 
+                                cursor: 'pointer', 
+                                fontWeight: '700', 
+                                color: '#475569',
+                                fontSize: '0.95rem',
+                                transition: 'all 0.2s'
+                            }}
+                            onMouseOver={(e) => {
+                                e.currentTarget.style.backgroundColor = '#f8fafc';
+                                e.currentTarget.style.borderColor = '#cbd5e1';
+                            }}
+                            onMouseOut={(e) => {
+                                e.currentTarget.style.backgroundColor = 'white';
+                                e.currentTarget.style.borderColor = '#e2e8f0';
+                            }}
+                        >
+                            <ArrowLeft size={18} /> Back to Projects
+                        </button>
+                    </div>
                     <div className="review-grid">
                         <div className="project-info-panel">
                             <div className="review-header-flex">
@@ -215,14 +256,32 @@ const AdminProjects = () => {
             </AdminPageHeader>
 
             <div className="controls-bar">
-                <div className="search-box">
-                    <Search size={18} />
-                    <input 
-                        type="text" 
-                        placeholder="Search projects..." 
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                    />
+                <div className="filter-sort-controls">
+                    <div className="control-group">
+                        <Filter size={18} />
+                        <select 
+                            value={statusFilter} 
+                            onChange={(e) => setStatusFilter(e.target.value)}
+                            className="select-control"
+                        >
+                            <option value="all">All Statuses</option>
+                            <option value="needs_feedback">Needs Feedback</option>
+                            <option value="missing_video">Missing Video</option>
+                            <option value="missing_work">Missing Work</option>
+                        </select>
+                    </div>
+                    
+                    <div className="control-group">
+                        <Clock size={18} />
+                        <select 
+                            value={sortBy} 
+                            onChange={(e) => setSortBy(e.target.value)}
+                            className="select-control"
+                        >
+                            <option value="newest">Newest First</option>
+                            <option value="oldest">Oldest First</option>
+                        </select>
+                    </div>
                 </div>
             </div>
 
@@ -241,8 +300,8 @@ const AdminProjects = () => {
                 </div>
             ) : (
                 <div className="projects-list-grid">
-                    {filteredProjects.length > 0 ? (
-                        filteredProjects.map(p => (
+                    {processedProjects.length > 0 ? (
+                        processedProjects.map(p => (
                             <div key={p.id} className="admin-project-card" onClick={() => {
                                 setSelectedProject(p);
                                 setTeacherComment(p.teacher_comment || '');
@@ -257,7 +316,7 @@ const AdminProjects = () => {
                                     ) : (
                                         <div className="no-img"><Clock size={32} /></div>
                                     )}
-                                    {(!p.teacher_comment) && <div className="pending-indicator">Review Needed</div>}
+                                    {/* Removed pending-indicator overlay */}
                                 </div>
                                 <div className="p-content">
                                     <h3>{p.name}</h3>
@@ -266,6 +325,21 @@ const AdminProjects = () => {
                                             <User size={14} /> {p.user_nickname} 
                                             <span className="id-pill">#{p.user_id}</span>
                                         </span>
+                                    </div>
+                                    <div className="project-status-tags">
+                                        {!p.teacher_comment && (
+                                            <span className="p-tag tag-needs-review"><MessageSquare size={12}/> Needs Feedback</span>
+                                        )}
+                                        {!p.video_url ? (
+                                            <span className="p-tag tag-missing"><Video size={12}/> Missing Video</span>
+                                        ) : (
+                                            <span className="p-tag tag-present"><Video size={12}/> Video</span>
+                                        )}
+                                        {(!p.link && !p.github_link && !p.code_snippet) ? (
+                                            <span className="p-tag tag-missing"><Code size={12}/> Missing Work</span>
+                                        ) : (
+                                            <span className="p-tag tag-present"><Code size={12}/> Work Submitted</span>
+                                        )}
                                     </div>
                                     <p className="p-desc">{p.description?.substring(0, 80)}...</p>
                                     <div className="card-footer">

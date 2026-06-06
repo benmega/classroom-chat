@@ -403,6 +403,22 @@ export const BulkConnectionCardsModal = ({ isOpen, onClose, classrooms, fetchCla
 
                 /* Printing Overrides */
                 @media print {
+                    /* Reset all fixed positions and restricted heights on ancestors to allow pagination */
+                    html, body, #root, .admin-modal-overlay, .admin-modal-content, .modal-body {
+                        height: auto !important;
+                        min-height: auto !important;
+                        max-height: none !important;
+                        overflow: visible !important;
+                        position: static !important;
+                        transform: none !important;
+                        margin: 0 !important;
+                        padding: 0 !important;
+                    }
+
+                    .modal-header, .close-btn, .no-print {
+                        display: none !important;
+                    }
+
                     /* Hide everything in the body except our print container */
                     body * {
                         visibility: hidden !important;

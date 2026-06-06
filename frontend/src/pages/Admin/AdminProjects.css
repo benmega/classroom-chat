@@ -6,16 +6,16 @@
 .filter-tabs {
     display: flex;
     background: #f1f5f9;
-    padding: 6px;
-    border-radius: 14px;
+    padding: 4px;
+    border-radius: 12px;
     gap: 4px;
 }
 
 .filter-tabs button {
-    padding: 10px 24px;
+    padding: 8px 16px;
     border: none;
     background: none;
-    border-radius: 10px;
+    border-radius: 8px;
     font-weight: 700;
     font-size: 0.95rem;
     color: var(--text-muted);
@@ -23,7 +23,7 @@
     transition: all 0.2s;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
 }
 
 .filter-tabs button.active {
@@ -48,44 +48,64 @@
 
 /* Controls */
 .controls-bar {
-    margin-bottom: 2.5rem;
+    margin-bottom: 1.5rem;
     display: flex;
-    gap: 1.5rem;
+    gap: 1rem;
 }
 
-.search-box {
-    position: relative;
-    max-width: 400px;
+.filter-sort-controls {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
     width: 100%;
 }
 
-.search-box svg {
+.control-group {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.control-group svg {
     position: absolute;
     left: 12px;
-    top: 50%;
-    transform: translateY(-50%);
     color: var(--text-muted);
+    pointer-events: none;
 }
 
-.search-box input {
-    width: 100%;
-    padding: 12px 12px 12px 42px;
+.select-control {
+    padding: 10px 12px 10px 38px;
     border: 1px solid #e2e8f0;
-    border-radius: 12px;
+    border-radius: 10px;
     background: white;
     font-size: 0.95rem;
+    color: var(--text-primary);
+    cursor: pointer;
+    outline: none;
+    appearance: none;
+    min-width: 180px;
+    font-weight: 600;
+}
+
+.select-control:hover {
+    border-color: #cbd5e1;
+}
+
+.select-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 /* List Grid */
 .projects-list-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: 2rem;
+    gap: 1.25rem;
 }
 
 .admin-project-card {
     background: white;
-    border-radius: 20px;
+    border-radius: 16px;
     border: 1px solid #e2e8f0;
     overflow: hidden;
     cursor: pointer;
@@ -101,7 +121,7 @@
 }
 
 .p-thumb {
-    height: 180px;
+    height: 140px;
     position: relative;
     background: #f1f5f9;
 }
@@ -112,57 +132,11 @@
     object-fit: cover;
 }
 
-.pending-indicator {
-    position: absolute;
-    top: 16px;
-    left: 16px;
-    background: rgba(255, 255, 255, 0.92);
-    color: #e11d48;
-    border: 1px solid rgba(225, 29, 72, 0.2);
-    padding: 6px 14px;
-    border-radius: 20px;
-    font-size: 0.75rem;
-    font-weight: 700;
-    backdrop-filter: blur(8px);
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    justify-content: center;
-    z-index: 10;
-    box-shadow: var(--shadow-sm);
-    letter-spacing: 0.02em;
-    transition: all 0.3s ease;
-}
 
-.pending-indicator::before {
-    content: '';
-    display: inline-block;
-    width: 6px;
-    height: 6px;
-    background-color: #e11d48;
-    border-radius: 50%;
-    box-shadow: 0 0 0 rgba(225, 29, 72, 0.4);
-    animation: pulse-dot 2s infinite;
-}
-
-@keyframes pulse-dot {
-    0% {
-        transform: scale(0.95);
-        box-shadow: 0 0 0 0 rgba(225, 29, 72, 0.4);
-    }
-    70% {
-        transform: scale(1);
-        box-shadow: 0 0 0 6px rgba(225, 29, 72, 0);
-    }
-    100% {
-        transform: scale(0.95);
-        box-shadow: 0 0 0 0 rgba(225, 29, 72, 0);
-    }
-}
 
 
 .p-content {
-    padding: 1.5rem;
+    padding: 1rem;
     flex-grow: 1;
     display: flex;
     flex-direction: column;
@@ -201,16 +175,51 @@
     font-weight: 700;
 }
 
+.project-status-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 12px;
+}
+
+.p-tag {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.tag-needs-review {
+    background: #fffbeb;
+    color: #d97706;
+    border: 1px solid #fde68a;
+}
+
+.tag-missing {
+    background: #fff1f2;
+    color: #e11d48;
+    border: 1px solid #ffe4e6;
+}
+
+.tag-present {
+    background: #f1f5f9;
+    color: #64748b;
+    border: 1px solid #e2e8f0;
+}
+
 .p-desc {
     font-size: 0.9rem;
     color: var(--text-secondary);
     line-height: 1.5;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
 }
 
 .card-footer {
     margin-top: auto;
-    padding-top: 1rem;
+    padding-top: 0.75rem;
     border-top: 1px solid #f1f5f9;
     display: flex;
     justify-content: space-between;

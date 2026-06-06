@@ -39,7 +39,7 @@ const ParentDashboard = () => {
 
     const handleLogout = async () => {
         await useAuthStore.getState().logout();
-        navigate('/login');
+        navigate('/');
     };
 
     if (isLoading) {

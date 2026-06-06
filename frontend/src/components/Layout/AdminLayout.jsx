@@ -86,21 +86,42 @@ const AdminLayout = ({ children }) => {
                 <nav className="sidebar-nav">
                     <div className="nav-group">
                         <span className="nav-group-label">Management</span>
-                        {navItems.map((item) => (
-                            <NavLink
-                                key={item.path}
-                                to={item.path}
-                                end={item.end}
-                                className={({ isActive }) => `nav-item ${isActive || (item.path !== '/admin' && location.pathname.startsWith(item.path)) ? 'active' : ''}`}
-                                title={item.label}
-                            >
-                                <item.icon size={22} className="nav-icon" />
-                                <span className="nav-label">{item.label}</span>
-                                {item.badge && (
-                                    <span className="nav-badge">NEW</span>
-                                )}
-                            </NavLink>
-                        ))}
+                        {navItems.map((item) => {
+                            if (item.path === '/logout') {
+                                return (
+                                    <button
+                                        key={item.path}
+                                        onClick={async (e) => {
+                                            e.preventDefault();
+                                            await useAuthStore.getState().logout();
+                                            window.location.href = '/';
+                                        }}
+                                        className="nav-item"
+                                        title={item.label}
+                                        style={{ width: '100%', textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
+                                    >
+                                        <item.icon size={22} className="nav-icon" />
+                                        <span className="nav-label">{item.label}</span>
+                                    </button>
+                                );
+                            }
+
+                            return (
+                                <NavLink
+                                    key={item.path}
+                                    to={item.path}
+                                    end={item.end}
+                                    className={({ isActive }) => `nav-item ${isActive || (item.path !== '/admin' && location.pathname.startsWith(item.path)) ? 'active' : ''}`}
+                                    title={item.label}
+                                >
+                                    <item.icon size={22} className="nav-icon" />
+                                    <span className="nav-label">{item.label}</span>
+                                    {item.badge && (
+                                        <span className="nav-badge">NEW</span>
+                                    )}
+                                </NavLink>
+                            );
+                        })}
                     </div>
 
                     {/* Secondary system group removed; Logout now in primary navigation */}

@@ -2,8 +2,8 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 1.5rem;
-    gap: 1.5rem;
+    margin-bottom: 1rem;
+    gap: 1rem;
     width: 100%;
     background: transparent;
     border-bottom: none;
@@ -13,7 +13,7 @@
 .page-header.standardized .header-left {
     display: flex;
     align-items: center;
-    gap: 1.5rem;
+    gap: 1rem;
 }
 
 .page-header.standardized .back-btn {
@@ -43,7 +43,7 @@
 }
 
 .page-header.standardized h1 {
-    font-size: 2.25rem;
+    font-size: 1.75rem;
     font-weight: 800;
     color: #1e293b;
     margin: 0;
@@ -72,7 +72,7 @@
     .page-header.standardized {
         flex-direction: column;
         align-items: flex-start;
-        gap: 1.5rem;
+        gap: 1rem;
     }
     
     .page-header.standardized .header-actions {

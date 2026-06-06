@@ -6,19 +6,19 @@
 .admin-advanced-panel .advanced-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 1.5rem;
-    margin-bottom: 2.5rem;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
     align-items: stretch;
 }
 
 .admin-advanced-panel .utility-card {
     display: flex;
-    gap: 1.25rem;
-    padding: 1.5rem;
+    gap: 1rem;
+    padding: 1rem;
     background: var(--glass-bg);
     backdrop-filter: var(--glass-blur);
     border: 1px solid var(--glass-border);
-    border-radius: 24px;
+    border-radius: 16px;
     box-shadow: var(--shadow-soft);
     transition: var(--transition-smooth);
 }
@@ -42,9 +42,9 @@
 }
 
 .admin-advanced-panel .utility-icon {
-    width: 48px;
-    height: 48px;
-    border-radius: 14px;
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -112,9 +112,9 @@
 .admin-advanced-panel .danger-zone {
     background: #fef2f2;
     border: 1px solid #fee2e2;
-    border-radius: 24px;
-    padding: 1.5rem;
-    margin-top: 1.5rem;
+    border-radius: 16px;
+    padding: 1.25rem;
+    margin-top: 1rem;
 }
 
 .admin-advanced-panel .danger-header {
@@ -122,7 +122,7 @@
     align-items: center;
     gap: 12px;
     color: #dc2626;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
 }
 
 .admin-advanced-panel .danger-header h3 { font-size: 1.25rem; font-weight: 800; margin: 0; }
@@ -132,7 +132,7 @@
     justify-content: space-between;
     align-items: center;
     background: white;
-    padding: 1.25rem;
+    padding: 1rem;
     border-radius: 16px;
     border: 1px solid #fee2e2;
 }
@@ -199,7 +199,7 @@
 }
 
 .log-modal-header {
-    padding: 1.5rem 2rem;
+    padding: 1rem 1.5rem;
     border-bottom: 1px solid var(--border-subtle);
     display: flex;
     justify-content: space-between;
@@ -223,7 +223,7 @@
 .log-content {
     flex: 1;
     overflow: auto;
-    padding: 2rem;
+    padding: 1.5rem;
     background: #0f172a;
     color: #cbd5e1;
     font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
@@ -237,7 +237,7 @@
 }
 
 .log-modal-footer {
-    padding: 1.25rem 2rem;
+    padding: 1rem 1.5rem;
     border-top: 1px solid var(--border-subtle);
     display: flex;
     justify-content: flex-end;
@@ -266,7 +266,7 @@
 
 .log-content .stat-box {
     background: rgba(255, 255, 255, 0.05);
-    padding: 1.5rem;
+    padding: 1rem;
     border-radius: 16px;
     display: flex;
     flex-direction: column;

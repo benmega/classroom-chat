@@ -1,6 +1,9 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ShieldAlert, Home, ArrowLeft } from 'lucide-react';
+import { Home, ArrowLeft } from 'lucide-react';
+
+import youShallNotPassImage from '../../assets/you_shall_not_pass.png';
+import rubberDuckImage from '../../assets/rubber_duck.png';
 
 const AccessDenied = () => {
   return (
@@ -35,21 +38,23 @@ const AccessDenied = () => {
             padding: '1rem',
             borderRadius: '1rem'
           }}>
-            <ShieldAlert size={48} color="#ef4444" strokeWidth={1.5} />
+            <img src={rubberDuckImage} alt="Rubber Duck Icon" style={{ width: 48, height: 48, display: 'block' }} />
           </div>
         </div>
         
-        <h1 style={{
-          fontSize: '2.25rem',
-          fontWeight: '800',
-          marginBottom: '1rem',
-          letterSpacing: '-0.025em',
-          background: 'linear-gradient(to right, white, var(--text-muted))',
-          WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent'
-        }}>
-          YOU SHALL NOT PASS! 🧙‍♂️
-        </h1>
+        <img 
+          src={youShallNotPassImage} 
+          alt="You Shall Not Pass" 
+          style={{
+            width: '100%',
+            maxWidth: '400px',
+            marginBottom: '1rem',
+            borderRadius: '0.5rem',
+            display: 'block',
+            marginLeft: 'auto',
+            marginRight: 'auto'
+          }} 
+        />
         
         <p style={{
           fontSize: '1.125rem',
