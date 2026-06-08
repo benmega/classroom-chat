@@ -326,20 +326,19 @@ const AdminProjects = () => {
                                             <span className="id-pill">#{p.user_id}</span>
                                         </span>
                                     </div>
-                                    <div className="project-status-tags">
-                                        {!p.teacher_comment && (
-                                            <span className="p-tag tag-needs-review"><MessageSquare size={12}/> Needs Feedback</span>
-                                        )}
-                                        {!p.video_url ? (
-                                            <span className="p-tag tag-missing"><Video size={12}/> Missing Video</span>
-                                        ) : (
-                                            <span className="p-tag tag-present"><Video size={12}/> Video</span>
-                                        )}
-                                        {(!p.link && !p.github_link && !p.code_snippet) ? (
-                                            <span className="p-tag tag-missing"><Code size={12}/> Missing Work</span>
-                                        ) : (
-                                            <span className="p-tag tag-present"><Code size={12}/> Work Submitted</span>
-                                        )}
+                                    <div className="project-checklist">
+                                        <div className={`checklist-item ${p.teacher_comment ? 'completed' : 'pending'}`}>
+                                            {p.teacher_comment ? <CheckCircle size={14}/> : <XCircle size={14}/>}
+                                            <span>Teacher Feedback</span>
+                                        </div>
+                                        <div className={`checklist-item ${p.video_url ? 'completed' : 'pending'}`}>
+                                            {p.video_url ? <CheckCircle size={14}/> : <XCircle size={14}/>}
+                                            <span>Video Submission</span>
+                                        </div>
+                                        <div className={`checklist-item ${(!p.link && !p.github_link && !p.code_snippet) ? 'pending' : 'completed'}`}>
+                                            {(!p.link && !p.github_link && !p.code_snippet) ? <XCircle size={14}/> : <CheckCircle size={14}/>}
+                                            <span>Work Submission</span>
+                                        </div>
                                     </div>
                                     <p className="p-desc">{p.description?.substring(0, 80)}...</p>
                                     <div className="card-footer">

@@ -13,9 +13,6 @@
 .report-header {
     padding: 1rem 2rem;
     margin: 1rem;
-    position: sticky;
-    top: 1rem;
-    z-index: 100;
 }
 
 .report-header-inner {

@@ -150,9 +150,7 @@ const AdminLayout = ({ children }) => {
                     {children}
                 </main>
 
-                <footer className="admin-site-footer">
-                    <p>&copy; {new Date().getFullYear()} Classroom Chat. <span>Version 2.4.0 (Alpha)</span></p>
-                </footer>
+
             </div>
         </div>
     );

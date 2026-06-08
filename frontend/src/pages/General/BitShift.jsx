@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Package, ArrowRightLeft, CreditCard } from 'lucide-react';
+import { Package, ArrowRightLeft, CreditCard, Zap } from 'lucide-react';
 import DuckIcon from '../../components/Icons/DuckIcon';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
@@ -30,6 +30,7 @@ const BitShift = () => {
     const mathCheckMismatch = useMemo(() => digitalDucks > 0 && binaryTotal !== digitalDucks, [digitalDucks, binaryTotal]);
 
     const handleDuckToggle = (index) => {
+        setHasAttemptedSubmit(false);
         setDuckCounts(prev => {
             const newCounts = [...prev];
             newCounts[index] = newCounts[index] === 0 ? 1 : 0;
@@ -41,6 +42,28 @@ const BitShift = () => {
             
             return newCounts;
         });
+    };
+
+    // Auto Bitshift perk: auto-fills binary toggles from the decimal input
+    const autoCalculate = () => {
+        if (digitalDucks < 1) {
+            toast.error('Enter a duck amount first.');
+            return;
+        }
+        const value = Math.floor(digitalDucks / multiplier);
+        if (value > 255) {
+            toast.error('Maximum value for 8 bits is 255.');
+            return;
+        }
+        const newCounts = Array(8).fill(0);
+        for (let i = 7; i >= 0; i--) {
+            if (value & (1 << i)) {
+                newCounts[i] = 1;
+            }
+        }
+        setDuckCounts(newCounts);
+        setHasAttemptedSubmit(false);
+        toast.success('Binary auto-calculated!');
     };
 
     const handleSubmit = async (e) => {
@@ -130,8 +153,7 @@ const BitShift = () => {
                                 onChange={(e) => {
                                     const val = parseInt(e.target.value) || 0;
                                     setDigitalDucks(val);
-                                    // Only reset flag if value is cleared
-                                    if (val === 0) setHasAttemptedSubmit(false);
+                                    setHasAttemptedSubmit(false);
                                 }}
                                 className="digital-ducks-input"
                                 min="0"
@@ -165,8 +187,21 @@ const BitShift = () => {
                         ))}
                     </div>
 
+                    {user?.has_auto_bitshift && (
+                        <div style={{ display: 'flex', justifyContent: 'center', marginTop: '0.5rem' }}>
+                            <button
+                                type="button"
+                                onClick={autoCalculate}
+                                className="auto-bitshift-btn"
+                                title="Auto-calculate the binary from your decimal input"
+                            >
+                                <Zap size={16} /> Auto Calculate
+                            </button>
+                        </div>
+                    )}
+
                     {/* Live math check indicator — only shown on incorrect attempt */}
-                    {(hasAttemptedSubmit || digitalDucks > 0) && (
+                    {(hasAttemptedSubmit && digitalDucks > 0) && (
                         <div className={`math-check-banner ${mathCheckMismatch ? 'mismatch' : 'match'}`}>
                             <span className="math-check-equation">
                                 <strong className="binary-value">{(binaryTotal / multiplier).toString(2)}<sub>2</sub> {isByteMode ? 'B' : 'b'}</strong>

@@ -59,11 +59,19 @@ def reject_user(user_id):
 def get_users():
     page = request.args.get("page", 1, type=int)
     per_page = request.args.get("per_page", 50, type=int)
+    search = request.args.get("search", "", type=str)
 
     from application.models.challenge_log import ChallengeLog
     from sqlalchemy import func
 
-    pagination = User.query.paginate(page=page, per_page=per_page, error_out=False)
+    query = User.query
+    if search:
+        query = query.filter(db.or_(
+            User._username.ilike(f"%{search}%"),
+            User.nickname.ilike(f"%{search}%")
+        ))
+
+    pagination = query.paginate(page=page, per_page=per_page, error_out=False)
     users = pagination.items
     usernames = [u.username for u in users]
 

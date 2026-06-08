@@ -21,7 +21,7 @@ const LandingMobile = () => {
                             Ready to <span style={{color: 'var(--primary-color)'}}>level up</span> your coding?
                         </h2>
                         <p className="hero-subtitle animate-fade-in" style={{ animationDelay: '0.1s', fontSize: '1.1rem', margin: '0 auto' }}>
-                            A fun space for students to build projects and parents to track progress.
+                            A space for students to build projects and parents to track progress.
                         </p>
                         
                         <div className="hero-visual animate-float" style={{ margin: '1rem 0' }}>
@@ -52,9 +52,7 @@ const LandingMobile = () => {
 
             </main>
 
-            <footer className="landing-footer">
-                <p>&copy; {new Date().getFullYear()} Classroom Chat.</p>
-            </footer>
+
         </div>
     );
 };

@@ -11,10 +11,12 @@ export const useAdminDashboard = () => {
     const [formLoading, setFormLoading] = useState(false);
     const [formErrors, setFormErrors] = useState({});
 
-    const fetchDashboardData = async () => {
+    const [timeframe, setTimeframe] = useState(7);
+
+    const fetchDashboardData = async (days = timeframe) => {
         setIsRefreshing(true);
         try {
-            const response = await client.get('/api/admin/dashboard');
+            const response = await client.get(`/api/admin/dashboard?days=${days}`);
             if (response.data.status === 'success') {
                 setDashboardData(response.data.data);
             }
@@ -28,8 +30,8 @@ export const useAdminDashboard = () => {
     };
 
     useEffect(() => {
-        fetchDashboardData();
-    }, []);
+        fetchDashboardData(timeframe);
+    }, [timeframe]);
 
     useEffect(() => {
         setFormErrors({});
@@ -240,6 +242,8 @@ export const useAdminDashboard = () => {
         setModalUser,
         formLoading,
         formErrors,
+        timeframe,
+        setTimeframe,
         fetchDashboardData,
         handleToggleAI,
         handleToggleMessages,

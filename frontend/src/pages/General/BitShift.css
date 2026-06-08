@@ -508,3 +508,30 @@
     font-weight: 800;
 }
 
+/* Auto Bitshift Perk Button */
+.auto-bitshift-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1.5rem;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: white;
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    border: none;
+    border-radius: var(--radius-full);
+    cursor: pointer;
+    transition: var(--transition-bounce);
+    box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+}
+
+.auto-bitshift-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(245, 158, 11, 0.4);
+    filter: brightness(1.1);
+}
+
+.auto-bitshift-btn:active {
+    transform: scale(0.97);
+}
+

@@ -37,6 +37,18 @@ const CourseProgress = ({ target }) => {
                     )}
                 </div>
             </div>
+            {target.course_progress && (
+                <div style={{ marginTop: '1rem', textAlign: 'center' }}>
+                    <Link 
+                        to={`/course-progress/${target.slug}`} 
+                        state={{ target }}
+                        className="btn-primary btn-primary-sm" 
+                        style={{ width: '100%', display: 'inline-flex', justifyContent: 'center' }}
+                    >
+                        View Detailed Tree
+                    </Link>
+                </div>
+            )}
         </section>
     );
 };

@@ -26,6 +26,7 @@ from .upload_routes import upload
 from .user_routes import user
 from .parent_routes import parent
 from .cognito_routes import cognito_bp
+from .shop_routes import shop_bp
 
 
 def register_blueprints(app: Flask):
@@ -45,6 +46,7 @@ def register_blueprints(app: Flask):
     app.register_blueprint(challenge)
     app.register_blueprint(general)
     app.register_blueprint(server_info)
+    app.register_blueprint(shop_bp, url_prefix="/api/shop")
 
     # ── Swagger UI ───────────────────────────────────────────────────────────
     SWAGGER_URL = "/api/docs"

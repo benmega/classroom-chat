@@ -118,6 +118,23 @@ export const useProjectManagement = () => {
         }
     };
 
+    const handleRecordedVideo = async (blob) => {
+        const file = new File([blob], `recorded_video_${Date.now()}.webm`, { type: 'video/webm' });
+        setProjectVideo(file);
+        
+        if (!isCustomImage) {
+            try {
+                const thumbnailBlob = await extractVideoThumbnail(file);
+                const thumbnailFile = new File([thumbnailBlob], "video_thumbnail.jpg", { type: "image/jpeg" });
+                setProjectImage(thumbnailFile);
+                setImagePreview(URL.createObjectURL(thumbnailFile));
+                toast.success('Generated thumbnail from recording!');
+            } catch (err) {
+                console.error('Failed to extract thumbnail:', err);
+            }
+        }
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setIsSaving(true);
@@ -202,6 +219,7 @@ export const useProjectManagement = () => {
         error,
         handleInputChange,
         handleFileChange,
+        handleRecordedVideo,
         handleSubmit,
         handleDelete,
         adjustTextareaHeight,

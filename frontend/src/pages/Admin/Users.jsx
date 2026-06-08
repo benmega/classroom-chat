@@ -28,8 +28,6 @@ import { getApiUrl } from '../../utils/apiUrl';
 import { useUsersManagement } from '../../hooks/useUsersManagement';
 
 const Users = () => {
-    const [searchTerm, setSearchTerm] = useState('');
-    
     const {
         users,
         isLoading,
@@ -59,13 +57,12 @@ const Users = () => {
         classroomCards,
         setClassroomCards,
         isFetchingCards,
-        fetchClassroomCards
+        fetchClassroomCards,
+        searchTerm,
+        setSearchTerm
     } = useUsersManagement();
 
-    const filteredUsers = users.filter(u => 
-        u.username.toLowerCase().includes(searchTerm.toLowerCase()) || 
-        u.nickname?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const filteredUsers = users;
 
     if (isLoading) return (
         <div className="admin-users-page">

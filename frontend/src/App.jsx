@@ -16,11 +16,14 @@ import Profile from './pages/Profile/index';
 import Chat from './pages/Chat/Chat';
 import Achievements from './pages/General/Achievements';
 import BitShift from './pages/General/BitShift';
-import SubmitCertificate from './pages/General/SubmitCertificate';
+
 import SubmitChallenge from './pages/General/SubmitChallenge';
 import History from './pages/General/History';
 import Landing from './pages/General/Landing';
 import SubmitWork from './pages/General/SubmitWork';
+import CourseProgressTree from './pages/General/CourseProgressTree';
+import CourseLevelBreakdown from './pages/General/CourseLevelBreakdown';
+import Shop from './pages/General/Shop';
 import EditProfile from './pages/User/EditProfile';
 import ManageProject from './pages/User/ManageProject';
 import AdminDashboard from './pages/Admin/AdminDashboard';
@@ -181,6 +184,22 @@ function App() {
           </Layout>
         } />
 
+        <Route path="/course-progress/:slug" element={
+          <ProtectedRoute>
+            <Layout>
+              <CourseProgressTree />
+            </Layout>
+          </ProtectedRoute>
+        } />
+
+        <Route path="/course-progress/:slug/breakdown" element={
+          <ProtectedRoute>
+            <Layout>
+              <CourseLevelBreakdown />
+            </Layout>
+          </ProtectedRoute>
+        } />
+
         <Route path="/achievements" element={
           <ProtectedRoute>
             <Layout>
@@ -193,6 +212,14 @@ function App() {
           <ProtectedRoute>
             <Layout>
               <BitShift />
+            </Layout>
+          </ProtectedRoute>
+        } />
+
+        <Route path="/shop" element={
+          <ProtectedRoute>
+            <Layout>
+              <Shop />
             </Layout>
           </ProtectedRoute>
         } />
@@ -272,6 +299,16 @@ function App() {
           </ProtectedRoute>
         } />
         <Route path="/parent/connect" element={<ConnectChild />} />
+        <Route path="/parent/course-progress/:slug" element={
+          <ProtectedRoute parentOnly={true}>
+            <CourseProgressTree />
+          </ProtectedRoute>
+        } />
+        <Route path="/parent/course-progress/:slug/breakdown" element={
+          <ProtectedRoute parentOnly={true}>
+            <CourseLevelBreakdown />
+          </ProtectedRoute>
+        } />
 
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" />} />

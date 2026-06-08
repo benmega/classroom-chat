@@ -95,6 +95,7 @@ const useAuthStore = create((set) => ({
       await client.get('/user/logout');
     } finally {
       set({ user: null, isAuthenticated: false, hamburgerProgress: 0 });
+      window.location.href = '/';
     }
   },
   

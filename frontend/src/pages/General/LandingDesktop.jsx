@@ -25,7 +25,7 @@ const LandingDesktop = () => {
                             Ready to <span style={{color: 'var(--primary-color)'}}>level up</span> your coding?
                         </h2>
                         <p className="hero-subtitle animate-fade-in" style={{ animationDelay: '0.1s', fontSize: '1.25rem' }}>
-                            A fun space for students to build projects and parents to track progress.
+                            A space for students to build projects and parents to track progress.
                         </p>
                         
                         <div className="hero-cta animate-fade-in" style={{ animationDelay: '0.2s', display: 'flex', flexDirection: 'row', gap: '1rem', marginTop: '1rem' }}>
@@ -56,9 +56,7 @@ const LandingDesktop = () => {
 
             </main>
 
-            <footer className="landing-footer">
-                <p>&copy; {new Date().getFullYear()} Classroom Chat. All rights reserved.</p>
-            </footer>
+
         </div>
     );
 };

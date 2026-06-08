@@ -195,7 +195,8 @@ export const ConnectionCardModal = ({ isOpen, onClose, student, connectionCode }
                     Print or show this card to the parent. They can scan the QR code or enter the code manually to connect.
                 </p>
                 <div style={{ background: 'white', padding: '1.5rem', borderRadius: '12px', display: 'inline-block', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}>
-                    <h3 style={{ margin: '0 0 1rem 0', color: '#1e293b' }}>{student.nickname || student.username}</h3>
+                    <h3 style={{ margin: '0 0 0.25rem 0', color: '#1e293b' }}>{student.nickname || student.username}</h3>
+                    <div style={{ fontSize: '0.9rem', color: '#64748b', marginBottom: '1rem' }}>@{student.username}</div>
                     <img src={qrUrl} alt="QR Code" style={{ width: '200px', height: '200px' }} />
                     <div style={{ marginTop: '1rem', padding: '0.75rem', background: '#f1f5f9', borderRadius: '8px', border: '1px dashed #cbd5e1' }}>
                         <span style={{ fontSize: '0.9rem', color: '#64748b', display: 'block', marginBottom: '4px' }}>Connection Code</span>
@@ -296,7 +297,8 @@ export const BulkConnectionCardsModal = ({ isOpen, onClose, classrooms, fetchCla
 
                                 return (
                                     <div key={card.id} className="bulk-print-card">
-                                        <h3 className="card-student-name">{card.nickname || card.username}</h3>
+                                        <h3 className="card-student-name" style={{ marginBottom: '2px' }}>{card.nickname || card.username}</h3>
+                                        <div style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '0.75rem', textAlign: 'center', wordBreak: 'break-all' }}>@{card.username}</div>
                                         <div className="card-qr-wrapper">
                                             <img src={qrUrl} alt={`QR Code for ${card.username}`} className="card-qr-img" />
                                         </div>

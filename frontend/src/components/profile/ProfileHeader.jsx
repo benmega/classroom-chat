@@ -8,7 +8,15 @@ import { getApiUrl } from '../../utils/apiUrl';
 const ProfileHeader = ({ target, isOwner, pfpInputRef, onPfpChange }) => {
     return (
         <div className="profile-header-card">
-            <div className="header-background"></div>
+            <div 
+                className="header-background"
+                style={target.has_custom_wallpaper && target.profile_wallpaper ? {
+                    backgroundImage: `url(${target.profile_wallpaper})`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                    backgroundRepeat: 'no-repeat'
+                } : {}}
+            ></div>
             <div className="profile-header-content">
                 <div className="avatar-wrapper" onClick={() => isOwner && pfpInputRef.current?.click()}>
                     <SmartImage 

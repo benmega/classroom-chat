@@ -50,7 +50,7 @@
     align-items: center;
     text-align: center;
     padding: 3rem 2rem 2rem;
-    max-width: 1400px;
+    max-width: 1600px;
     margin: 0 auto;
     gap: 4rem;
 }
@@ -117,7 +117,7 @@
 }
 
 .hero-visual {
-    flex: 1;
+    flex: 1.2;
     width: 100%;
     display: flex;
     justify-content: center;
@@ -125,23 +125,26 @@
 
 .slideshow-window {
     width: 100%;
-    max-width: 800px;
+    max-width: 1000px;
     aspect-ratio: 16 / 9;
     overflow: hidden;
     position: relative;
     border-radius: var(--radius-lg);
+    container-type: inline-size;
 }
 
 .slideshow-track {
     display: flex;
-    width: 500%;
+    width: 100%;
     height: 100%;
     animation: slideShow 25s infinite;
 }
 
 .slide {
-    width: 20%;
-    flex: 0 0 20%;
+    width: 100%;
+    min-width: 100%;
+    max-width: 100%;
+    flex: 0 0 100%;
     height: 100%;
     display: flex;
     align-items: center;
@@ -154,10 +157,10 @@
 
 @keyframes slideShow {
     0%, 15% { transform: translateX(0); }
-    20%, 35% { transform: translateX(-20%); }
-    40%, 55% { transform: translateX(-40%); }
-    60%, 75% { transform: translateX(-60%); }
-    80%, 95% { transform: translateX(-80%); }
+    20%, 35% { transform: translateX(-100cqi); }
+    40%, 55% { transform: translateX(-200cqi); }
+    60%, 75% { transform: translateX(-300cqi); }
+    80%, 95% { transform: translateX(-400cqi); }
     100% { transform: translateX(0); }
 }
 

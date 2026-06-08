@@ -175,39 +175,35 @@
     font-weight: 700;
 }
 
-.project-status-tags {
+.project-checklist {
     display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin-bottom: 12px;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 16px;
+    background: #f8fafc;
+    padding: 12px;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
 }
 
-.p-tag {
+.checklist-item {
     display: flex;
     align-items: center;
-    gap: 4px;
-    padding: 4px 8px;
-    border-radius: 6px;
-    font-size: 0.75rem;
-    font-weight: 700;
+    gap: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
 }
 
-.tag-needs-review {
-    background: #fffbeb;
-    color: #d97706;
-    border: 1px solid #fde68a;
+.checklist-item.pending {
+    color: #ef4444;
 }
 
-.tag-missing {
-    background: #fff1f2;
-    color: #e11d48;
-    border: 1px solid #ffe4e6;
+.checklist-item.completed {
+    color: #10b981;
 }
 
-.tag-present {
-    background: #f1f5f9;
-    color: #64748b;
-    border: 1px solid #e2e8f0;
+.checklist-item span {
+    color: var(--text-secondary);
 }
 
 .p-desc {

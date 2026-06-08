@@ -92,7 +92,7 @@ const PendingTrades = () => {
                 {trades.length > 0 ? (
                     trades.map(trade => (
                         <div key={trade.id} className="trade-card card">
-                            <div className="trade-header" style={{ alignItems: 'flex-start' }}>
+                            <div className="trade-header" style={{ alignItems: 'flex-start', marginBottom: '0.5rem' }}>
                                 <div className="user-info">
                                     <div className="avatar-placeholder">
                                         <User size={24} />
@@ -111,9 +111,9 @@ const PendingTrades = () => {
                                 </div>
                             </div>
  
-                            <div className="trade-details">
-                                <div style={{ marginBottom: '1rem' }}>
-                                    <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#1e293b', fontFamily: 'monospace' }}>
+                            <div className="trade-details" style={{ flexDirection: 'row', flexWrap: 'wrap', gap: '1.5rem' }}>
+                                <div>
+                                    <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#1e293b', fontFamily: 'monospace' }}>
                                         {formatBits(trade.bit_ducks)} bits
                                     </div>
                                     <div style={{ fontSize: '0.8rem', color: '#64748b' }}>
@@ -122,8 +122,8 @@ const PendingTrades = () => {
                                 </div>
 
                                 {hasBytes(trade.byte_ducks) && (
-                                    <div style={{ marginBottom: '1rem' }}>
-                                        <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#1e293b', fontFamily: 'monospace' }}>
+                                    <div>
+                                        <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#1e293b', fontFamily: 'monospace' }}>
                                             {formatBits(trade.byte_ducks)} bytes
                                         </div>
                                         <div style={{ fontSize: '0.8rem', color: '#64748b' }}>
@@ -131,11 +131,6 @@ const PendingTrades = () => {
                                         </div>
                                     </div>
                                 )}
-
-                                <div className="detail-item total" style={{ borderTop: '1px solid #e2e8f0', paddingTop: '0.75rem' }}>
-                                    <span className="label">Digital Ducks Requested</span>
-                                    <span className="value">{trade.digital_ducks} 🦆</span>
-                                </div>
                             </div>
 
                             <div className="trade-actions">

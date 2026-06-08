@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Loader2, ArrowLeft, Activity, Award, BookOpen, User, ChevronDown, ChevronUp } from 'lucide-react';
 import client from '../../api/client';
 import ContributionGraph from '../../components/profile/ContributionGraph';
@@ -201,6 +201,18 @@ const ParentReportCard = () => {
                                 )}
                             </div>
                         </div>
+                        {reportData.course_progress && (
+                            <div style={{ padding: '0 1.25rem 1.25rem', textAlign: 'center' }}>
+                                <Link 
+                                    to={`/parent/course-progress/${studentId}`} 
+                                    state={{ target: reportData }}
+                                    className="btn-primary btn-primary-sm" 
+                                    style={{ width: '100%', display: 'inline-flex', justifyContent: 'center' }}
+                                >
+                                    View Detailed Tree
+                                </Link>
+                            </div>
+                        )}
                     </section>
 
                     {/* Achievements */}

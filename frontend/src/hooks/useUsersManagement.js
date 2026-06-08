@@ -14,11 +14,29 @@ export const useUsersManagement = () => {
     const [formLoading, setFormLoading] = useState(false);
     const [formErrors, setFormErrors] = useState({});
     const [connectionCode, setConnectionCode] = useState(null);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSearchTerm(searchTerm);
+        }, 300);
+        return () => clearTimeout(timer);
+    }, [searchTerm]);
+
+    // Reset to page 1 when search changes
+    useEffect(() => {
+        setPage(1);
+    }, [debouncedSearchTerm]);
 
     const fetchUsers = useCallback(async (targetPage = page) => {
         setIsRefreshing(true);
         try {
-            const response = await client.get(`/api/admin/users?page=${targetPage}&per_page=50`);
+            let url = `/api/admin/users?page=${targetPage}&per_page=50`;
+            if (debouncedSearchTerm) {
+                url += `&search=${encodeURIComponent(debouncedSearchTerm)}`;
+            }
+            const response = await client.get(url);
             const data = response.data;
             
             if (Array.isArray(data)) {
@@ -38,11 +56,11 @@ export const useUsersManagement = () => {
             setIsLoading(false);
             setIsRefreshing(false);
         }
-    }, [page]);
+    }, [page, debouncedSearchTerm]);
 
     useEffect(() => {
-        fetchUsers();
-    }, [fetchUsers]);
+        fetchUsers(page);
+    }, [fetchUsers, page]);
 
     const handleCreateUser = async (e) => {
         e.preventDefault();
@@ -256,6 +274,8 @@ export const useUsersManagement = () => {
         classroomCards,
         setClassroomCards,
         isFetchingCards,
-        fetchClassroomCards
+        fetchClassroomCards,
+        searchTerm,
+        setSearchTerm
     };
 };

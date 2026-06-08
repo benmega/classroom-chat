@@ -73,6 +73,8 @@ const AdminDashboard = () => {
         setModalUser,
         formLoading,
         formErrors,
+        timeframe,
+        setTimeframe,
         fetchDashboardData,
         handleToggleAI,
         handleToggleMessages,
@@ -123,6 +125,8 @@ const AdminDashboard = () => {
 
     const chartConfig = getChartConfig(chart_data);
 
+    const maxDays = dashboardData?.chart_data?.max_history_days || 0;
+
     return (
         <div className="admin-dashboard">
             <div className="dashboard-header">
@@ -135,7 +139,7 @@ const AdminDashboard = () => {
                     </div>
                 </div>
                 <button 
-                    onClick={fetchDashboardData} 
+                    onClick={() => fetchDashboardData(timeframe)} 
                     className={`refresh-btn ${isRefreshing ? 'spinning' : ''}`}
                     disabled={isRefreshing}
                 >
@@ -152,8 +156,28 @@ const AdminDashboard = () => {
             <div className="dashboard-layout">
                 <div className="main-content">
                     <div className="chart-card card">
-                        <div className="card-header">
-                            <h3><TrendingUp size={20} /> Duck Transactions (Last 7 Days)</h3>
+                        <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <h3><TrendingUp size={20} /> Duck Transactions</h3>
+                            <select 
+                                value={timeframe} 
+                                onChange={(e) => setTimeframe(e.target.value === 'all' ? 'all' : Number(e.target.value))}
+                                style={{
+                                    padding: '0.25rem 0.5rem',
+                                    borderRadius: '0.375rem',
+                                    border: '1px solid var(--border-color)',
+                                    backgroundColor: 'var(--bg-secondary)',
+                                    color: 'var(--text-primary)',
+                                    fontFamily: 'Outfit, sans-serif',
+                                    fontSize: '0.875rem',
+                                    cursor: 'pointer'
+                                }}
+                            >
+                                <option value={7}>Last 7 Days</option>
+                                <option value={30} disabled={maxDays > 0 && maxDays < 30}>Last 1 Month</option>
+                                <option value={90} disabled={maxDays > 0 && maxDays < 90}>Last 3 Months</option>
+                                <option value={365} disabled={maxDays > 0 && maxDays < 365}>Last 1 Year</option>
+                                <option value="all">All Time</option>
+                            </select>
                         </div>
                         <div className="chart-container" style={{ height: '300px' }}>
                             <Line data={chartConfig} options={chartOptions} />
