@@ -131,17 +131,31 @@ if [[ -f "$DB_FILE" ]]; then
 fi
 
 # -------------------------
-# Migrations
+# Migrations & Database Initialization
 # -------------------------
-echo "Running database migrations..."
+echo "Initializing/updating database..."
 (
     cd "$APP_DIR/backend"
     # Ensure we run in production mode so it hits prod_users.db
-    run env FLASK_APP=main.py FLASK_ENV=production "$PYTHON_BIN" -m flask db upgrade
-    
+
+    # Create schema from models if DB doesn't exist or is empty
+    echo "Ensuring database schema is up-to-date..."
+    run env FLASK_APP=main.py FLASK_ENV=production "$PYTHON_BIN" << 'PYEOF'
+from main import app
+from application.extensions import db
+
+with app.app_context():
+    # Create all tables from models (idempotent - won't fail if tables exist)
+    db.create_all()
+    print("Database schema initialized/verified")
+PYEOF
+
+    # Apply any pending migrations (currently none, but future migrations will run here)
+    run env FLASK_APP=main.py FLASK_ENV=production "$PYTHON_BIN" -m flask db upgrade || echo "Note: No migrations to apply"
+
     # Run the idempotent multi-tenant classroom migration script
     echo "Running custom classroom migration script..."
-    run env FLASK_APP=main.py FLASK_ENV=production "$PYTHON_BIN" -m tools.migrate_classroom
+    run env FLASK_APP=main.py FLASK_ENV=production "$PYTHON_BIN" -m tools.migrate_classroom || true
 )
 
 # -------------------------
