@@ -6,6 +6,9 @@ import UserSearchInput from '../../components/common/UserSearchInput';
 import './SubmitChallenge.css';
 import './SubmitCertificate.css';
 
+// Check if the URL is a certificate URL
+const CERT_URL_PATTERN = /^https:\/\/(?:www\.)?(?:codecombat|ozaria)\.com\/certificates\/[\w\d]+\?.*course=[\w\d-]+.*$/;
+
 const SubmitChallenge = () => {
     const { user, checkAuth } = useAuthStore();
     const [url, setUrl] = useState('');
@@ -74,9 +77,6 @@ const SubmitChallenge = () => {
             bookmarkletRef.current.setAttribute('href', bookmarkletCode);
         }
     }, [bookmarkletCode]);
-
-    // Check if the URL is a certificate URL
-    const CERT_URL_PATTERN = /^https:\/\/(?:www\.)?(?:codecombat|ozaria)\.com\/certificates\/[\w\d]+\?.*course=[\w\d-]+.*$/;
 
     useEffect(() => {
         if (CERT_URL_PATTERN.test(url.trim())) {

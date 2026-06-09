@@ -124,7 +124,6 @@ const CourseProgressTree = () => {
     const [hoveredNodeId, setHoveredNodeId] = useState(null);
     
     const progressData = location.state?.course_progress || location.state?.target?.course_progress;
-    const username = location.state?.username || location.state?.target?.username || 'Student';
 
     const ccBreakdown = progressData?.codecombat?.breakdown || [];
     const ozBreakdown = progressData?.ozaria?.breakdown || [];
@@ -173,7 +172,7 @@ const CourseProgressTree = () => {
     }, []);
 
     const recommendedNodeId = useMemo(() => {
-        const candidates = processedNodes.filter(n => true);
+        const candidates = processedNodes.filter(_n => true);
         const sorted = [...candidates].sort((a, b) => a.row - b.row);
         
         for (const node of sorted) {

@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Shield, Loader2, ShoppingCart } from 'lucide-react';
 import toast from 'react-hot-toast';
-import useAuthStore from '../../store/useAuthStore';
 import client from '../../api/client';
 import './Shop.css'; // Let's use a standard CSS file
 
 const Shop = () => {
-    const { user } = useAuthStore();
     const [items, setItems] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
 
@@ -22,7 +20,7 @@ const Shop = () => {
                 return a.is_crowdfunded ? 1 : -1;
             });
             setItems(sortedItems);
-        } catch (error) {
+        } catch {
             toast.error("Failed to load shop items");
         } finally {
             setIsLoading(false);

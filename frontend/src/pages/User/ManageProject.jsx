@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Save, Trash2, Upload, Link as LinkIcon, Video, Code, Camera, LayoutTemplate, Image as ImageIcon, CheckCircle, ExternalLink, Play, Youtube, Monitor, FileVideo } from 'lucide-react';
 import AccessDenied from '../Error/AccessDenied';
 import NotFound from '../Error/NotFound';

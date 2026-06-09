@@ -1,6 +1,14 @@
 // achievements.js
 export function initAchievements() {
+    let isCheckingAchievements = false;
+
     async function fetchAchievements() {
+        // Prevent concurrent calls to avoid race conditions and duplicate duck awards
+        if (isCheckingAchievements) {
+            return;
+        }
+
+        isCheckingAchievements = true;
         try {
             const res = await fetch("/api/achievements/check");
             if (!res.ok) return;
@@ -12,6 +20,8 @@ export function initAchievements() {
             data.new_awards.forEach(a => showAchievement(a.name, a.badge));
         } catch (err) {
             console.error("Error fetching achievements:", err);
+        } finally {
+            isCheckingAchievements = false;
         }
     }
 

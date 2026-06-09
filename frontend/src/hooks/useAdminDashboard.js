@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import client from '../api/client';
 import toast from 'react-hot-toast';
 
@@ -13,7 +13,7 @@ export const useAdminDashboard = () => {
 
     const [timeframe, setTimeframe] = useState(7);
 
-    const fetchDashboardData = async (days = timeframe) => {
+    const fetchDashboardData = useCallback(async (days = timeframe) => {
         setIsRefreshing(true);
         try {
             const response = await client.get(`/api/admin/dashboard?days=${days}`);
@@ -27,11 +27,11 @@ export const useAdminDashboard = () => {
             setIsLoading(false);
             setIsRefreshing(false);
         }
-    };
+    }, [timeframe]);
 
     useEffect(() => {
         fetchDashboardData(timeframe);
-    }, [timeframe]);
+    }, [timeframe, fetchDashboardData]);
 
     useEffect(() => {
         setFormErrors({});
