@@ -133,7 +133,37 @@
     flex-direction: column;
     align-items: center;
     text-align: center;
+    position: relative;
+}
+
+.disconnect-btn {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    opacity: 0;
+    z-index: 10;
+}
+
+.child-card:hover .disconnect-btn {
+    opacity: 1;
+}
+
+.disconnect-btn:hover {
+    background: #ef4444;
+    color: white;
+    transform: scale(1.1);
 }
 
 /* ─── Ghost Card ─── */

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Loader2, LogOut, Users, Eye, User, UserPlus, Plus } from 'lucide-react';
+import { Loader2, LogOut, Users, Eye, User, UserPlus, Plus, X } from 'lucide-react';
+import toast from 'react-hot-toast';
 import client from '../../api/client';
 import useAuthStore from '../../store/useAuthStore';
 import AddChildModal from './AddChildModal';
@@ -40,6 +41,20 @@ const ParentDashboard = () => {
     const handleLogout = async () => {
         await useAuthStore.getState().logout();
         navigate('/');
+    };
+
+    const handleDisconnect = async (childId, childName) => {
+        if (!window.confirm(`Remove ${childName} from your account? You can reconnect later with their code.`)) {
+            return;
+        }
+
+        try {
+            await client.post(`/api/parents/disconnect/${childId}`);
+            toast.success(`Disconnected from ${childName}`);
+            fetchChildren();
+        } catch (err) {
+            toast.error(err.response?.data?.error || 'Failed to disconnect');
+        }
     };
 
     if (isLoading) {
@@ -121,24 +136,35 @@ const ParentDashboard = () => {
                     )}
 
                     {children.map((child) => (
-                        <div 
-                            key={child.id} 
+                        <div
+                            key={child.id}
                             className="child-card glass-panel"
-                            onClick={() => navigate(`/parent/report/${child.id}`)}
                         >
-                            {child.profile_picture_url && !child.profile_picture_url.includes('Default_pfp.jpg') ? (
-                                <img
-                                    className="child-avatar"
-                                    src={child.profile_picture_url}
-                                    alt={child.username}
-                                />
-                            ) : (
-                                <div className="child-avatar-initials">
-                                    {getInitials(child.nickname || child.username)}
-                                </div>
-                            )}
-                            <h3 className="child-name">{child.nickname || child.username}</h3>
-                            <p className="child-nickname" style={{ marginBottom: 0 }}>@{child.username}</p>
+                            <button
+                                className="disconnect-btn"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDisconnect(child.id, child.nickname || child.username);
+                                }}
+                                title="Remove this child from your account"
+                            >
+                                <X size={16} />
+                            </button>
+                            <div onClick={() => navigate(`/parent/report/${child.id}`)} style={{ cursor: 'pointer', flex: 1 }}>
+                                {child.profile_picture_url && !child.profile_picture_url.includes('Default_pfp.jpg') ? (
+                                    <img
+                                        className="child-avatar"
+                                        src={child.profile_picture_url}
+                                        alt={child.username}
+                                    />
+                                ) : (
+                                    <div className="child-avatar-initials">
+                                        {getInitials(child.nickname || child.username)}
+                                    </div>
+                                )}
+                                <h3 className="child-name">{child.nickname || child.username}</h3>
+                                <p className="child-nickname" style={{ marginBottom: 0 }}>@{child.username}</p>
+                            </div>
                         </div>
                     ))}
 
