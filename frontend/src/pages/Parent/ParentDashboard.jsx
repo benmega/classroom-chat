@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Loader2, LogOut, Users, Eye, User, UserPlus, Plus, X } from 'lucide-react';
+import { Loader2, LogOut, Users, Eye, User, UserPlus, Plus, MoreVertical } from 'lucide-react';
 import toast from 'react-hot-toast';
 import client from '../../api/client';
 import useAuthStore from '../../store/useAuthStore';
@@ -22,6 +22,7 @@ const ParentDashboard = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [openMenu, setOpenMenu] = useState(null);
 
     const fetchChildren = async () => {
         try {
@@ -140,16 +141,32 @@ const ParentDashboard = () => {
                             key={child.id}
                             className="child-card glass-panel"
                         >
-                            <button
-                                className="disconnect-btn"
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleDisconnect(child.id, child.nickname || child.username);
-                                }}
-                                title="Remove this child from your account"
-                            >
-                                <X size={16} />
-                            </button>
+                            <div className="child-card-menu">
+                                <button
+                                    className="menu-btn"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setOpenMenu(openMenu === child.id ? null : child.id);
+                                    }}
+                                    title="Options"
+                                >
+                                    <MoreVertical size={18} />
+                                </button>
+                                {openMenu === child.id && (
+                                    <div className="child-menu-dropdown">
+                                        <button
+                                            className="menu-item disconnect"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setOpenMenu(null);
+                                                handleDisconnect(child.id, child.nickname || child.username);
+                                            }}
+                                        >
+                                            Remove Child
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
                             <div onClick={() => navigate(`/parent/report/${child.id}`)} style={{ cursor: 'pointer', flex: 1 }}>
                                 {child.profile_picture_url && !child.profile_picture_url.includes('Default_pfp.jpg') ? (
                                     <img
