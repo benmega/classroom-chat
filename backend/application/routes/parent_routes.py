@@ -11,6 +11,7 @@ from application.decorators.login_required import require_login
 from application.extensions import db
 from application.models.user import User
 from application.models.parent_connection_request import ParentConnectionRequest
+from application.models.connection_attempt import ConnectionAttempt
 from application.models.challenge_log import ChallengeLog
 from application.models.course import Course
 from sqlalchemy import func
@@ -117,26 +118,37 @@ def connect_via_code():
     """Instantly links the authenticated parent to a student using their connection code."""
     data = request.json or {}
     code = data.get("code", "").strip()
-    
+
     if not code:
         return "Connection code is required.", 400
-        
+
     user_id = session.get("user")
     user_obj = db.session.get(User, user_id)
-    
+
     if not user_obj or user_obj.role != "parent":
         return "Access denied. Parent account required.", 403
-        
+
+    # Check rate limits
+    is_allowed, error_msg = ConnectionAttempt.check_rate_limits(user_id)
+    if not is_allowed:
+        ConnectionAttempt.log_attempt(user_id, code, success=False)
+        return error_msg, 429
+
     student = User.query.filter_by(connection_code=code).first()
     if not student:
+        ConnectionAttempt.log_attempt(user_id, code, success=False)
         return "Invalid connection code.", 404
-        
+
     if student in user_obj.children:
+        ConnectionAttempt.log_attempt(user_id, code, success=False)
         return "Already linked to this student.", 400
-        
+
     user_obj.children.append(student)
     db.session.commit()
-    
+
+    # Log successful attempt
+    ConnectionAttempt.log_attempt(user_id, code, success=True)
+
     return {"message": "Student successfully linked.", "student": {"id": student.id, "nickname": student.nickname}}
 
 @parent.route("/connect/request", methods=["POST"])
