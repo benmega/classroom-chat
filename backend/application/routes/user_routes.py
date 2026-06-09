@@ -261,6 +261,31 @@ def edit_profile():
     return redirect("/edit-profile")
 
 
+@user.route("/api/parent-code", methods=["GET"])
+@require_login
+@api_response
+def get_parent_connection_code():
+    """Returns the student's connection code for parents to use."""
+    user_id = session.get("user")
+    user_obj = db.session.get(User, user_id)
+
+    if not user_obj:
+        return "User not found", 404
+
+    if user_obj.role == "parent":
+        return "Parents cannot use connection codes.", 400
+
+    code = user_obj.get_connection_code()
+    db.session.commit()
+
+    return {
+        "connection_code": code,
+        "student_id": user_obj.id,
+        "username": user_obj.username,
+        "nickname": user_obj.nickname
+    }
+
+
 @user.route("/project/new", methods=["GET", "POST"])
 @require_login
 @api_response

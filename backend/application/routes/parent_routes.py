@@ -148,30 +148,30 @@ def request_connection():
     username = data.get("username", "").strip()
     relationship = data.get("relationship", "").strip()
     message = data.get("message", "").strip()
-    
+
     if not username or not relationship:
         return "Username and relationship are required.", 400
-        
+
     user_id = session.get("user")
     user_obj = db.session.get(User, user_id)
-    
+
     if not user_obj or user_obj.role != "parent":
         return "Access denied. Parent account required.", 403
-        
+
     student = User.query.filter_by(_username=username.lower()).first()
     if not student:
         return "Student not found.", 404
-        
+
     if student in user_obj.children:
         return "Already linked to this student.", 400
-        
+
     # Check for pending request
     existing_req = ParentConnectionRequest.query.filter_by(
         parent_id=user_id, student_id=student.id, status="pending"
     ).first()
     if existing_req:
         return "A pending connection request already exists for this student.", 400
-        
+
     req = ParentConnectionRequest(
         parent_id=user_id,
         student_id=student.id,
@@ -180,6 +180,30 @@ def request_connection():
     )
     db.session.add(req)
     db.session.commit()
-    
+
     return {"message": "Connection request submitted. Waiting for admin approval."}
+
+
+@parent.route("/disconnect/<int:student_id>", methods=["POST"])
+@require_login
+@api_response
+def disconnect_student(student_id):
+    """Removes the connection between the authenticated parent and a student."""
+    user_id = session.get("user")
+    user_obj = db.session.get(User, user_id)
+
+    if not user_obj or user_obj.role != "parent":
+        return "Access denied. Parent account required.", 403
+
+    student = db.session.get(User, student_id)
+    if not student:
+        return "Student not found.", 404
+
+    if student not in user_obj.children:
+        return "This student is not linked to your account.", 400
+
+    user_obj.children.remove(student)
+    db.session.commit()
+
+    return {"message": f"Successfully disconnected from {student.nickname}."}
 
