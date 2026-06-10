@@ -1,4 +1,3 @@
-import requests
 from application import create_app
 from application.extensions import db
 from application.models.user import User
@@ -9,7 +8,7 @@ with app.app_context():
     # Find an admin
     admin = User.query.filter_by(is_admin=True).first()
     student1 = User.query.filter_by(is_admin=False).first()
-    student2 = User.query.filter(User.id != student1.id, User.is_admin == False).first()
+    student2 = User.query.filter(User.id != student1.id, not User.is_admin).first()
     
     if not admin or not student1 or not student2:
         print("Not enough users to test.")
