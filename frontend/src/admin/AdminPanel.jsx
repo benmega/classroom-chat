@@ -42,6 +42,7 @@ import {
 } from 'react-admin';
 import dataProvider from './dataProvider';
 import { FK_OVERRIDES, HIDDEN_FIELDS, READONLY_FIELDS, RESOURCES } from './adminSchema';
+import client from '../api/client';
 
 // ─── Schema Fetching ─────────────────────────────────────────────────────────
 
@@ -50,11 +51,9 @@ const _schemaCache = {};
 
 async function fetchSchema(resourceName) {
     if (_schemaCache[resourceName]) return _schemaCache[resourceName];
-    const res = await fetch(`/api/admin/crud/schema/${resourceName}`, { credentials: 'include' });
-    if (!res.ok) throw new Error(`Schema fetch failed for ${resourceName}: ${res.status}`);
-    const json = await res.json();
-    _schemaCache[resourceName] = json.fields;
-    return json.fields;
+    const res = await client.get(`/api/admin/crud/schema/${resourceName}`);
+    _schemaCache[resourceName] = res.data.fields;
+    return res.data.fields;
 }
 
 // ─── Field/Input Factories ────────────────────────────────────────────────────
