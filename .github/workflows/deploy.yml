@@ -43,6 +43,12 @@ jobs:
             DATABASE_URL=sqlite:////home/ubuntu/classroom-chat/backend/instance/prod_users.db
             OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
             WEBHOOK_SECRET=${{ secrets.WEBHOOK_SECRET }}
+            COGNITO_REGION=${{ secrets.COGNITO_REGION }}
+            COGNITO_USER_POOL_ID=${{ secrets.COGNITO_USER_POOL_ID }}
+            COGNITO_CLIENT_ID=${{ secrets.COGNITO_CLIENT_ID }}
+            COGNITO_CLIENT_SECRET=${{ secrets.COGNITO_CLIENT_SECRET }}
+            COGNITO_DOMAIN=${{ secrets.COGNITO_DOMAIN }}
+            COGNITO_REDIRECT_URI=${{ secrets.COGNITO_REDIRECT_URI }}
             ENVFILE
 
             # Execute the deployment script
