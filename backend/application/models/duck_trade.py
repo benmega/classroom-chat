@@ -9,8 +9,8 @@ from ..extensions import db
 
 class DuckTradeLog(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(
-        db.String(80), db.ForeignKey("users.username"), nullable=False, index=True
+    user_id = db.Column(
+        db.Integer, db.ForeignKey("users.id"), nullable=False, index=True
     )
     digital_ducks = db.Column(db.Integer, nullable=False)
     bit_ducks = db.Column(
@@ -42,7 +42,7 @@ class DuckTradeLog(db.Model):
     def to_dict(self):
         return {
             "id": self.id,
-            "username": self.username,
+            "user_id": self.user_id,
             "digital_ducks": self.digital_ducks,
             "bit_ducks": self.bit_ducks,
             "byte_ducks": self.byte_ducks,

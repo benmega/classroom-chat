@@ -96,6 +96,8 @@ header.guest-mode {
 
 .hamburger-toggle {
     display: none;
+    position: relative;
+    z-index: 50;
     background: transparent;
     border: none;
     color: var(--text-primary);

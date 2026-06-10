@@ -5,7 +5,7 @@ class ChallengeLog(db.Model):
     __tablename__ = "challenge_logs"
 
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(100), nullable=False, index=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
     domain = db.Column(db.String(100), nullable=False)
     challenge_slug = db.Column(db.String(255), nullable=False)
     timestamp = db.Column(
@@ -16,4 +16,4 @@ class ChallengeLog(db.Model):
     helper = db.Column(db.String(100), nullable=True)
 
     def __repr__(self):
-        return f"<ChallengeLog(username={self.username}, domain={self.domain}, slug={self.challenge_slug}, timestamp={self.timestamp})>"
+        return f"<ChallengeLog(user_id={self.user_id}, domain={self.domain}, slug={self.challenge_slug}, timestamp={self.timestamp})>"

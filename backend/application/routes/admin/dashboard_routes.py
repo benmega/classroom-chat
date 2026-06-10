@@ -152,10 +152,8 @@ def export_transactions():
     """Generates and serves a CSV file of all duck transactions."""
     import csv
     import io
-
-    transactions = DuckTransaction.query.order_by(
-        DuckTransaction.timestamp.desc()
-    ).all()
+    from sqlalchemy.orm import joinedload
+    from flask import stream_with_context
 
     def generate():
         data = io.StringIO()
@@ -166,6 +164,13 @@ def export_transactions():
         yield data.getvalue()
         data.seek(0)
         data.truncate(0)
+
+        # Fix N+1 and OOM by using joinedload and yield_per
+        transactions = DuckTransaction.query.options(
+            joinedload(DuckTransaction.user)
+        ).order_by(
+            DuckTransaction.timestamp.desc()
+        ).yield_per(100)
 
         for tx in transactions:
             writer.writerow(
@@ -181,7 +186,7 @@ def export_transactions():
             data.seek(0)
             data.truncate(0)
 
-    response = Response(generate(), mimetype="text/csv")
+    response = Response(stream_with_context(generate()), mimetype="text/csv")
     response.headers.set(
         "Content-Disposition",
         "attachment",

@@ -40,6 +40,11 @@
     overflow: hidden;
 }
 
+.parent-header-text {
+    flex: 1;
+    min-width: 0;
+}
+
 .parent-header-text h1 {
     margin: 0;
     font-family: var(--font-heading, inherit);
@@ -47,6 +52,8 @@
     font-weight: 700;
     color: var(--text-primary, #111827);
     letter-spacing: -0.01em;
+    word-break: break-word;
+    white-space: normal;
 }
 
 .parent-header-text p {

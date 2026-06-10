@@ -68,9 +68,6 @@ const ProtectedRoute = ({ children, adminOnly = false, parentOnly = false }) => 
           <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 'bold', letterSpacing: '-0.025em' }}>Classroom Chat</h2>
           <p style={{ margin: '0.25rem 0 0 0', opacity: 0.7, fontSize: '0.875rem' }}>Preparing your workspace...</p>
         </div>
-        <style>{`
-          @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        `}</style>
     </div>
   );
   if (!isAuthenticated) return <Navigate to="/login" />;

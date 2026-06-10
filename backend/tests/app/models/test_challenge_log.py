@@ -10,14 +10,14 @@ import pytest
 
 from application.extensions import db
 from application.models.challenge_log import ChallengeLog
+from application.models.user import User
 
 
 def test_challenge_log_creation(sample_challenge_log):
     """Test creating a ChallengeLog entry."""
     challenge_log = sample_challenge_log
 
-    # Assert the generated username matches the one created in the fixture
-    assert challenge_log.username.startswith("user_")
+    assert db.session.get(User, challenge_log.user_id).username.startswith("user_")
     assert challenge_log.domain == "codecombat.com"
 
     # UPDATED: Check challenge_slug instead of challenge_name
@@ -33,7 +33,7 @@ def test_challenge_log_timestamp(init_db):
     """Test that the timestamp is set correctly when creating a new ChallengeLog."""
     # UPDATED: Use challenge_slug in constructor
     challenge_log = ChallengeLog(
-        username="testuser",
+        user_id=123,
         domain="LeetCode",
         challenge_slug="leetcode-challenge-slug",
         course_id="54321",
@@ -52,8 +52,8 @@ def test_challenge_log_repr(sample_challenge_log):
     challenge_log = sample_challenge_log
     repr_output = repr(challenge_log)
 
-    # Check that the username in the repr_output starts with 'user_'
-    assert repr_output.startswith("<ChallengeLog(username=user_")
+    # Check that the user_id in the repr_output is correct
+    assert repr_output.startswith("<ChallengeLog(user_id=")
     assert "domain=codecombat.com" in repr_output
 
     # UPDATED: The new __repr__ returns 'slug=' instead of 'challenge='
@@ -66,7 +66,7 @@ def test_challenge_log_missing_field():
     with pytest.raises(Exception):  # Should raise an IntegrityError
         # UPDATED: Use challenge_slug in constructor
         challenge_log = ChallengeLog(
-            username="testuser",
+            user_id=123,
             domain="codecombat.com",
             challenge_slug=None,  # Missing required challenge_slug
         )
@@ -78,7 +78,7 @@ def test_challenge_log_with_optional_fields(init_db):
     """Test creating ChallengeLog with missing optional fields."""
     # UPDATED: Use challenge_slug in constructor
     challenge_log = ChallengeLog(
-        username="testuser",
+        user_id=123,
         domain="HackerRank",
         challenge_slug="sample-challenge-slug",
         # Missing course_id and course_instance, which are optional
@@ -87,7 +87,7 @@ def test_challenge_log_with_optional_fields(init_db):
     db.session.commit()
 
     # Assert the ChallengeLog was created without errors
-    assert challenge_log.username == "testuser"
+    assert challenge_log.user_id == 123
     assert challenge_log.domain == "HackerRank"
 
     # UPDATED: Check challenge_slug

@@ -322,6 +322,9 @@
     justify-content: center;
     border-radius: 8px;
     transition: background 0.2s;
+    position: relative;
+    z-index: 50;
+    flex-shrink: 0;
 }
 
 .hamburger-toggle:hover {

@@ -314,6 +314,7 @@ def delete_message(message_id):
 
     # Broadcast deletion to the classroom room
     from application.extensions import socketio
+
     conv = msg.conversation
     classroom_id = conv.classroom_id if conv else None
     if classroom_id:
@@ -392,10 +393,9 @@ def get_conversation_history(user_id):
 
     if getattr(current_user, "is_admin", False):
         # Admins see all conversations
-        query = (
-            Conversation.query.options(selectinload(Conversation.messages))
-            .order_by(Conversation.created_at.desc())
-        )
+        query = Conversation.query.options(
+            selectinload(Conversation.messages)
+        ).order_by(Conversation.created_at.desc())
     else:
         # Students see:
         # 1. The global feed (always)
@@ -420,18 +420,22 @@ def get_conversation_history(user_id):
     for conv in conversations:
         # Find the last unstruck message
         unstruck_messages = [msg for msg in conv.messages if not msg.is_struck]
-        last_msg = serialize_message(unstruck_messages[-1]) if unstruck_messages else None
-        
-        response_data.append({
-            "conversation_id": conv.id,
-            "title": conv.title,
-            "classroom_id": conv.classroom_id,
-            "is_global": conv.classroom_id == GLOBAL_CLASSROOM_ID,
-            "is_locked": conv.is_locked,
-            "slow_mode_delay": conv.slow_mode_delay,
-            "messages": [last_msg] if last_msg else [],
-            "messages_count": len(unstruck_messages),
-        })
+        last_msg = (
+            serialize_message(unstruck_messages[-1]) if unstruck_messages else None
+        )
+
+        response_data.append(
+            {
+                "conversation_id": conv.id,
+                "title": conv.title,
+                "classroom_id": conv.classroom_id,
+                "is_global": conv.classroom_id == GLOBAL_CLASSROOM_ID,
+                "is_locked": conv.is_locked,
+                "slow_mode_delay": conv.slow_mode_delay,
+                "messages": [last_msg] if last_msg else [],
+                "messages_count": len(unstruck_messages),
+            }
+        )
 
     return jsonify(response_data)
 
@@ -474,7 +478,9 @@ def get_current_conversation():
     conversation_data = {
         "conversation_id": conversation.id,
         "title": conversation.title,
-        "messages": [serialize_message(msg) for msg in conversation.messages if not msg.is_struck],
+        "messages": [
+            serialize_message(msg) for msg in conversation.messages if not msg.is_struck
+        ],
     }
     return jsonify(conversation=conversation_data)
 
@@ -493,7 +499,9 @@ def get_historical_conversation():
     conversation_data = {
         "conversation_id": conversation.id,
         "title": conversation.title,
-        "messages": [serialize_message(msg) for msg in conversation.messages if not msg.is_struck],
+        "messages": [
+            serialize_message(msg) for msg in conversation.messages if not msg.is_struck
+        ],
     }
     return jsonify(conversation=conversation_data)
 
@@ -515,9 +523,7 @@ def get_conversation():
         return jsonify({"error": "No active conversation"}), 400
 
     conversation = db.session.get(
-        Conversation,
-        conversation_id,
-        options=[joinedload(Conversation.messages)]
+        Conversation, conversation_id, options=[joinedload(Conversation.messages)]
     )
     if not conversation:
         return jsonify({"error": "Conversation not found"}), 404
@@ -525,7 +531,9 @@ def get_conversation():
     conversation_data = {
         "conversation_id": conversation.id,
         "title": conversation.title,
-        "messages": [serialize_message(msg) for msg in conversation.messages if not msg.is_struck],
+        "messages": [
+            serialize_message(msg) for msg in conversation.messages if not msg.is_struck
+        ],
     }
     return jsonify(conversation=conversation_data)
 
@@ -586,7 +594,9 @@ def view_conversation(conversation_id):
     conversation_data = {
         "conversation_id": conversation.id,
         "title": conversation.title,
-        "messages": [serialize_message(msg) for msg in conversation.messages if not msg.is_struck],
+        "messages": [
+            serialize_message(msg) for msg in conversation.messages if not msg.is_struck
+        ],
     }
     if request.is_json or request.accept_mimetypes.accept_json:
         return jsonify(conversation_data)

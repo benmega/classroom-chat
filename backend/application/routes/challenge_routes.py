@@ -111,7 +111,7 @@ def submit_challenge():
 
     # Process the URL
     challenge_check = detect_and_handle_challenge_url(
-        url, user.username, duck_multiplier, helper
+        url, user, duck_multiplier, helper
     )
 
     if not isinstance(challenge_check, dict):
@@ -155,7 +155,7 @@ def submit_challenge():
     return jsonify({"success": False, "message": msg}), 400
 
 
-def detect_and_handle_challenge_url(message, username, duck_multiplier=1, helper=None):
+def detect_and_handle_challenge_url(message, user, duck_multiplier=1, helper=None):
     """
     Detect and handle a challenge URL in a message.
     """
@@ -163,7 +163,7 @@ def detect_and_handle_challenge_url(message, username, duck_multiplier=1, helper
     if not match:
         return {"handled": False, "details": None}
 
-    log_result = _log_challenge(match, username, helper)
+    log_result = _log_challenge(match, user, helper)
 
     if not log_result.get("success"):
         return {"handled": True, "details": log_result}
@@ -171,7 +171,7 @@ def detect_and_handle_challenge_url(message, username, duck_multiplier=1, helper
     try:
         # Calculate rewards
         duck_reward = _update_user_ducks(
-            username, match["challenge_slug"], duck_multiplier
+            user, match["challenge_slug"], duck_multiplier
         )
         log_result["duck_reward"] = duck_reward
         return {"handled": True, "details": log_result}
@@ -208,11 +208,11 @@ def _extract_challenge_details(message):
     }
 
 
-def _log_challenge(details, username, helper=None):
+def _log_challenge(details, user, helper=None):
     """
     Log challenge completion to the database using challenge_slug.
     """
-    if helper == username:
+    if user and helper == user.username:
         helper = ""
 
     try:
@@ -260,7 +260,7 @@ def _log_challenge(details, username, helper=None):
 
         # 4. Tighten uniqueness check: SAME user, SAME challenge, SAME course instance
         filters = {
-            "username": username,
+            "user_id": user.id,
             "challenge_slug": challenge.slug,  # Using the canonical slug from the DB
             "course_instance": course_instance.id,  # Strictly checking the instance, not the course
         }
@@ -276,7 +276,7 @@ def _log_challenge(details, username, helper=None):
 
         # 5. Create new log with the strictly validated data
         challenge_log = ChallengeLog(
-            username=username,
+            user_id=user.id,
             domain=details["domain"],
             challenge_slug=challenge.slug,
             course_id=actual_course_id,  # Verified parent course ID
@@ -299,14 +299,13 @@ def _log_challenge(details, username, helper=None):
         return {"success": False, "message": f"Error logging challenge: {str(e)}"}
 
 
-def _update_user_ducks(username, challenge_slug, duck_multiplier=1):
+def _update_user_ducks(user, challenge_slug, duck_multiplier=1):
     """
     Update the user's duck count.
     """
     try:
-        user = User.query.filter_by(username=username).first()
         if not user:
-            raise ValueError(f"User with username '{username}' not found")
+            raise ValueError(f"User not found")
 
         # UPDATED: Try finding by slug, then try relaxed matching (spaces vs dashes)
         challenge = Challenge.query.filter(Challenge.slug.ilike(challenge_slug)).first()
@@ -327,7 +326,7 @@ def _update_user_ducks(username, challenge_slug, duck_multiplier=1):
             print(f"Duck multiplier of {duck_multiplier} in effect.")
 
         user.add_ducks(duck_reward, reason=f"Challenge: {challenge.slug}")
-        print(f"{username} was granted {duck_reward} duck(s).")
+        print(f"{user.username} was granted {duck_reward} duck(s).")
 
         return duck_reward
 

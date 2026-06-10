@@ -5,7 +5,7 @@ import SmartImage from '../common/SmartImage';
 import Linkify from '../common/Linkify';
 import { getApiUrl } from '../../utils/apiUrl';
 
-const ChatMessage = ({ msg, user, onDelete }) => {
+const ChatMessage = React.memo(({ msg, user, onDelete }) => {
     const isUser = msg.user_id === user.id;
     return (
         <div className={`chat-message-group ${isUser ? 'user' : 'other'}`}>
@@ -54,6 +54,6 @@ const ChatMessage = ({ msg, user, onDelete }) => {
             </div>
         </div>
     );
-};
+});
 
 export default ChatMessage;

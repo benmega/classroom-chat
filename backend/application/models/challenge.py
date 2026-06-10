@@ -36,7 +36,7 @@ class Challenge(db.Model):
         """Logs the challenge completion and updates user progress."""
         from .challenge_log import ChallengeLog
         log = ChallengeLog(
-            username=user.username, domain=self.domain, challenge_slug=self.slug
+            user_id=user.id, domain=self.domain, challenge_slug=self.slug
         )
         db.session.add(log)
         db.session.commit()

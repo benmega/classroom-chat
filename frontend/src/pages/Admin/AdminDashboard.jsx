@@ -156,7 +156,7 @@ const AdminDashboard = () => {
             <div className="dashboard-layout">
                 <div className="main-content">
                     <div className="chart-card card">
-                        <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
                             <h3><TrendingUp size={20} /> Duck Transactions</h3>
                             <select 
                                 value={timeframe} 

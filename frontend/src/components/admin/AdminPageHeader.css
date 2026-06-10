@@ -81,3 +81,11 @@
         flex-wrap: wrap;
     }
 }
+
+@media (max-width: 640px) {
+    .page-header.standardized h1 {
+        font-size: 1.4rem;
+        word-break: break-word;
+        white-space: normal;
+    }
+}

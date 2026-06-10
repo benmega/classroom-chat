@@ -9,13 +9,9 @@ const SmartImage = ({
   style = {},
   ...props 
 }) => {
-  const [errorCount, setErrorCount] = useState(0); // 0: healthy, 1: primary failed, 2: fallback failed
-  const [prevSrc, setPrevSrc] = useState(src);
+  const [errorState, setErrorState] = useState({ src, count: 0 });
 
-  if (src !== prevSrc) {
-    setPrevSrc(src);
-    setErrorCount(0);
-  }
+  const errorCount = errorState.src === src ? errorState.count : 0;
 
   const getFallback = () => {
     if (fallbackType === 'avatar') {
@@ -25,7 +21,10 @@ const SmartImage = ({
   };
 
   const handleError = () => {
-    setErrorCount(prev => prev + 1);
+    setErrorState(prev => ({
+      src,
+      count: prev.src === src ? prev.count + 1 : 1
+    }));
   };
 
   if (errorCount >= 2) {

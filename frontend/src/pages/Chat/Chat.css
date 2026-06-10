@@ -98,6 +98,8 @@
     justify-content: center;
     border-radius: var(--radius-sm);
     transition: var(--transition-fast);
+    position: relative;
+    z-index: 50;
 }
 
 .hamburger-toggle:hover {
@@ -122,21 +124,7 @@
     box-shadow: var(--shadow-glow);
 }
 
-.chat-input-field {
-    flex: 1;
-    background: none;
-    border: none;
-    padding: var(--spacing-sm) 0;
-    outline: none;
-    font-size: var(--font-md);
-    color: var(--text-primary);
-    font-family: inherit;
-    resize: none;
-    overflow: hidden;
-    line-height: 1.5;
-    min-height: 24px;
-    max-height: 160px;
-}
+
 
 .chat-send-btn {
     background: var(--primary-color);
@@ -669,17 +657,21 @@
 
 
 .chat-input-field {
+    flex: 1;
     width: 100%;
     background: transparent !important;
     border: none !important;
     outline: none !important;
     box-shadow: none !important;
-    padding: 0.75rem 1rem;
+    padding: 10px 12px;
     font-size: var(--font-sm);
+    line-height: 1.5;
     color: var(--text-primary);
     resize: none;
-    min-height: 60px;
+    min-height: 44px;
+    max-height: 160px;
     font-family: inherit;
+    overflow-y: auto;
 }
 
 

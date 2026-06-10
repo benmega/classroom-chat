@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { User, Lock, UserPlus, CheckCircle, Mail, ShieldCheck, ArrowRight } from 'lucide-react';
 import client from '../../api/client';
-import axios from 'axios';
 import toast from 'react-hot-toast';
 import './Auth.css';
 
@@ -38,7 +37,7 @@ const Signup = () => {
         setIsLoading(true);
         try {
             if (selectedRole === 'parent') {
-                const res = await axios.post('/api/auth/cognito/register', { email, password });
+                const res = await client.post('/api/auth/cognito/register', { email, password });
                 if (res.data.success) {
                     toast.success('Verification code sent to your email!');
                     setMode('verify');
@@ -55,7 +54,7 @@ const Signup = () => {
         } catch (error) {
             if (selectedRole === 'parent' && error.response?.data?.error?.includes('already exists')) {
                 try {
-                    const loginRes = await axios.post('/api/auth/cognito/login', { email, password });
+                    const loginRes = await client.post('/api/auth/cognito/login', { email, password });
                     if (loginRes.data.success) {
                         toast.success('Account found! Logging you in...');
                         window.location.href = '/parent/dashboard';
@@ -87,10 +86,10 @@ const Signup = () => {
         e.preventDefault();
         setIsLoading(true);
         try {
-            const res = await axios.post('/api/auth/cognito/verify', { email, code });
+            const res = await client.post('/api/auth/cognito/verify', { email, code });
             if (res.data.success) {
                 toast.success('Email verified! Logging you in...');
-                const loginRes = await axios.post('/api/auth/cognito/login', { email, password });
+                const loginRes = await client.post('/api/auth/cognito/login', { email, password });
                 if (loginRes.data.success) {
                     window.location.href = '/parent/dashboard';
                 }

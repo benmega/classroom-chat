@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { 
     Search, 
     PlusCircle, 
@@ -38,39 +38,43 @@ const ChatSidebar = ({
     const { logout } = useAuthStore();
     const navigate = useNavigate();
 
+    const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchTerm);
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSearchTerm(searchTerm);
+        }, 300);
+        return () => clearTimeout(timer);
+    }, [searchTerm]);
+
     const handleLogout = async () => {
         await logout();
         navigate('/');
     };
 
     const filteredConversations = useMemo(() => {
-        const searchLower = (searchTerm || '').trim().toLowerCase();
+        const searchLower = (debouncedSearchTerm || '').trim().toLowerCase();
         if (!searchLower) return conversations;
 
         const results = conversations.filter(conv => {
             // Match title
             const titleMatch = (conv.title || '').toLowerCase().includes(searchLower);
-            
-            // Match formatted title
             const formattedTitleMatch = formatConversationTitle(conv.title).toLowerCase().includes(searchLower);
             
-            // Match any message content
-            const messageMatch = conv.messages?.some(msg => 
-                (msg.content || '').toLowerCase().includes(searchLower)
-            );
+            if (titleMatch || formattedTitleMatch) return true;
             
-            // Match any participant name (including sender attribution)
-            const participantMatch = conv.messages?.some(msg => 
-                (msg.nickname || '').toLowerCase().includes(searchLower) || 
-                (msg.username || '').toLowerCase().includes(searchLower)
-            );
-            
-            return titleMatch || formattedTitleMatch || messageMatch || participantMatch;
+            // Match any message content or participant name
+            return conv.messages?.some(msg => {
+                if ((msg.content || '').toLowerCase().includes(searchLower)) return true;
+                if ((msg.nickname || '').toLowerCase().includes(searchLower)) return true;
+                if ((msg.username || '').toLowerCase().includes(searchLower)) return true;
+                return false;
+            });
         });
 
         console.debug(`[ChatSearch] Term: "${searchLower}", Results: ${results.length}/${conversations.length}`);
         return results;
-    }, [conversations, searchTerm, formatConversationTitle]);
+    }, [conversations, debouncedSearchTerm, formatConversationTitle]);
 
     return (
         <>

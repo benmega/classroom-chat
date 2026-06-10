@@ -235,7 +235,7 @@ def test_detect_and_handle_challenge_url_valid(
 
     url = f"https://codecombat.com/play/level/dungeons-of-kithgard?course={sample_course.id}&course-instance={sample_course_instance.id}"
     result = detect_and_handle_challenge_url(
-        url, sample_user.username, duck_multiplier=1
+        url, sample_user, duck_multiplier=1
     )
 
     assert result["handled"] is True
@@ -249,7 +249,7 @@ def test_detect_and_handle_challenge_url_invalid(init_db, sample_user):
 
     url = "https://invalid-url.com/not-a-challenge"
     result = detect_and_handle_challenge_url(
-        url, sample_user.username, duck_multiplier=1
+        url, sample_user, duck_multiplier=1
     )
 
     assert result["handled"] is False
@@ -269,14 +269,14 @@ def test_detect_and_handle_challenge_url_duplicate(
 
     # Submit challenge first time
     result1 = detect_and_handle_challenge_url(
-        url, sample_user.username, duck_multiplier=1
+        url, sample_user, duck_multiplier=1
     )
     assert result1["handled"] is True
     assert result1["details"]["success"] is True
 
     # Try to submit same challenge again
     result2 = detect_and_handle_challenge_url(
-        url, sample_user.username, duck_multiplier=1
+        url, sample_user, duck_multiplier=1
     )
     assert result2["handled"] is True
     assert result2["details"]["success"] is False
@@ -294,7 +294,7 @@ def test_detect_and_handle_challenge_url_with_multiplier(
 
     url = f"https://codecombat.com/play/level/dungeons-of-kithgard?course={sample_course.id}&course-instance={sample_course_instance.id}"
     result = detect_and_handle_challenge_url(
-        url, sample_user.username, duck_multiplier=3
+        url, sample_user, duck_multiplier=3
     )
 
     assert result["handled"] is True
@@ -313,11 +313,11 @@ def test_detect_and_handle_challenge_url_helper_self(
 
     url = f"https://codecombat.com/play/level/dungeons-of-kithgard?course={sample_course.id}&course-instance={sample_course_instance.id}"
     detect_and_handle_challenge_url(
-        url, sample_user.username, duck_multiplier=1, helper=sample_user.username
+        url, sample_user, duck_multiplier=1, helper=sample_user.username
     )
 
     log = ChallengeLog.query.filter_by(
-        username=sample_user.username, challenge_slug="dungeons-of-kithgard"
+        user_id=sample_user.id, challenge_slug="dungeons-of-kithgard"
     ).first()
 
     assert log is not None
@@ -373,13 +373,13 @@ def test_log_challenge_success(init_db, sample_user, sample_challenge_active, sa
         "course_instance": sample_course_instance.id,
     }
 
-    result = _log_challenge(details, sample_user.username)
+    result = _log_challenge(details, sample_user)
 
     assert result["success"] is True
     assert "Challenge logged successfully" in result["message"]
 
     log = ChallengeLog.query.filter_by(
-        username=sample_user.username, challenge_slug="dungeons-of-kithgard"
+        user_id=sample_user.id, challenge_slug="dungeons-of-kithgard"
     ).first()
     assert log is not None
 
@@ -406,10 +406,10 @@ def test_log_challenge_duplicate(init_db, sample_user, sample_course, sample_cou
         "course_instance": sample_course_instance.id,
     }
 
-    result1 = _log_challenge(details, sample_user.username)
+    result1 = _log_challenge(details, sample_user)
     assert result1["success"] is True
 
-    result2 = _log_challenge(details, sample_user.username)
+    result2 = _log_challenge(details, sample_user)
     assert result2["success"] is False
     assert "already claimed" in result2["message"]
 
@@ -436,12 +436,12 @@ def test_log_challenge_with_helper(init_db, sample_user, sample_course, sample_c
         "course_instance": sample_course_instance.id,
     }
 
-    result = _log_challenge(details, sample_user.username, helper="helper_user")
+    result = _log_challenge(details, sample_user, helper="helper_user")
 
     assert result["success"] is True
 
     log = ChallengeLog.query.filter_by(
-        username=sample_user.username, challenge_slug="helper-challenge"
+        user_id=sample_user.id, challenge_slug="helper-challenge"
     ).first()
     assert log.helper == "helper_user"
 
@@ -452,7 +452,7 @@ def test_update_user_ducks_success(init_db, sample_user, sample_challenge_active
 
     initial_ducks = sample_user.duck_balance
     reward = _update_user_ducks(
-        sample_user.username, "dungeons-of-kithgard", duck_multiplier=1
+        sample_user, "dungeons-of-kithgard", duck_multiplier=1
     )
 
     assert reward == 10
@@ -469,7 +469,7 @@ def test_update_user_ducks_with_multiplier(
 
     initial_ducks = sample_user.duck_balance
     reward = _update_user_ducks(
-        sample_user.username, "dungeons-of-kithgard", duck_multiplier=5
+        sample_user, "dungeons-of-kithgard", duck_multiplier=5
     )
 
     assert reward == 50
@@ -482,9 +482,9 @@ def test_update_user_ducks_user_not_found(init_db):
     """Test updating ducks for non-existent user."""
     from application.routes.challenge_routes import _update_user_ducks
 
-    with pytest.raises(ValueError, match="User with username .* not found"):
+    with pytest.raises(ValueError, match="User not found"):
         _update_user_ducks(
-            "nonexistent_user", "dungeons-of-kithgard", duck_multiplier=1
+            None, "dungeons-of-kithgard", duck_multiplier=1
         )
 
 
@@ -494,7 +494,7 @@ def test_update_user_ducks_challenge_not_found(init_db, sample_user):
 
     with pytest.raises(ValueError, match="Challenge .* not found"):
         _update_user_ducks(
-            sample_user.username, "nonexistent-challenge", duck_multiplier=1
+            sample_user, "nonexistent-challenge", duck_multiplier=1
         )
 
 
@@ -505,7 +505,7 @@ def test_update_user_ducks_case_insensitive(
     from application.routes.challenge_routes import _update_user_ducks
 
     reward = _update_user_ducks(
-        sample_user.username, "DUNGEONS-OF-KITHGARD", duck_multiplier=1
+        sample_user, "DUNGEONS-OF-KITHGARD", duck_multiplier=1
     )
     assert reward == 10
 
@@ -519,7 +519,7 @@ def test_challenge_complete_challenge_method(
     sample_challenge_active.complete_challenge(sample_user)
 
     assert ChallengeLog.query.count() == initial_log_count + 1
-    log = ChallengeLog.query.filter_by(username=sample_user.username).first()
+    log = ChallengeLog.query.filter_by(user_id=sample_user.id).first()
     assert log.challenge_slug == sample_challenge_active.slug
 
 
@@ -652,7 +652,7 @@ def test_detect_and_handle_ozaria_domain(
     url = f"https://www.ozaria.com/play/ozaria/level/chapter-1-sky-mountain?course={sample_course.id}&course-instance={sample_course_instance.id}"
 
     result = detect_and_handle_challenge_url(
-        url, sample_user.username, duck_multiplier=1
+        url, sample_user, duck_multiplier=1
     )
 
     assert result["handled"] is True

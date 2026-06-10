@@ -66,7 +66,7 @@ class User(db.Model):
     )
     challenge_logs = db.relationship(
         "ChallengeLog",
-        primaryjoin="User._username == foreign(ChallengeLog.username)",
+        primaryjoin="User.id == foreign(ChallengeLog.user_id)",
         lazy="dynamic",
         viewonly=True,
     )
@@ -139,7 +139,7 @@ class User(db.Model):
         """Ultra-lightweight dictionary for frequent auth status checks."""
         return {
             "id": self.id,
-            "username": self.username,
+            "user_id": self.id,
             "nickname": self.nickname,
             "profile_picture_url": (
                 f"/user/profile_pictures/{self.profile_picture}"
@@ -198,7 +198,7 @@ class User(db.Model):
 
         d = {
             "id": self.id,
-            "username": self.username,
+            "user_id": self.id,
             "nickname": self.nickname,
             "profile_picture": self.profile_picture,
             "profile_picture_url": (
@@ -306,7 +306,7 @@ class User(db.Model):
         """Calculate progress based on challenges completed for a specific domain."""
         from .challenge_log import ChallengeLog
         total_challenges = ChallengeLog.query.filter_by(
-            username=self._username, domain=domain
+            user_id=self.id, domain=domain
         ).count()
         return total_challenges  # Modify if you want percentages based on predefined thresholds.
 
@@ -322,7 +322,7 @@ class User(db.Model):
         total_challenges = self._total_challenges_cache[domain]
         from .challenge_log import ChallengeLog
         completed_challenges = ChallengeLog.query.filter_by(
-            username=self._username, domain=domain
+            user_id=self.id, domain=domain
         ).count()
 
         progress = (
@@ -345,7 +345,7 @@ class User(db.Model):
             from .challenge import Challenge
             
             user_logs = ChallengeLog.query.filter_by(
-                username=self._username, domain=domain
+                user_id=self.id, domain=domain
             ).all()
             completed_slugs = {cl.challenge_slug for cl in user_logs}
             
@@ -489,15 +489,26 @@ class User(db.Model):
         end_date = today + timedelta(days=(6 - idx))
         start_date = end_date - timedelta(weeks=52)
 
-        logs = self.challenge_logs.all()
-        counts = {}
-        from application.utilities.helper_functions import safe_parse_datetime
+        from sqlalchemy import func
+        from .challenge_log import ChallengeLog
 
-        for log in logs:
-            parsed_ts = safe_parse_datetime(log.timestamp)
-            if parsed_ts:
-                k = parsed_ts.date().isoformat()
-                counts[k] = counts.get(k, 0) + 1
+        results = db.session.query(
+            func.date(ChallengeLog.timestamp),
+            func.count(ChallengeLog.id)
+        ).filter(
+            ChallengeLog.user_id == self.id,
+            ChallengeLog.timestamp >= start_date,
+            ChallengeLog.timestamp <= (end_date + timedelta(days=1))
+        ).group_by(
+            func.date(ChallengeLog.timestamp)
+        ).all()
+
+        counts = {}
+        for row in results:
+            if not row[0]:
+                continue
+            k = row[0] if isinstance(row[0], str) else row[0].isoformat()
+            counts[k] = row[1]
 
         # grid[weekday][week_index] (7 rows x 53 columns)
         grid = [[None for _ in range(53)] for _ in range(7)]

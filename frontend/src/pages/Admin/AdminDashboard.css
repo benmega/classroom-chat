@@ -302,7 +302,7 @@
 }
 
 @media (max-width: 800px) {
-    .dashboard-header h1 { font-size: 2rem; }
+    .dashboard-header h1 { font-size: 1.5rem; word-break: break-word; white-space: normal; }
     .side-content { grid-template-columns: 1fr; }
     .search-box { width: 100%; }
 }
