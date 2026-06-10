@@ -1,10 +1,17 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Award, Plus } from 'lucide-react';
+<<<<<<< Updated upstream
 
 const AchievementsList = ({ achievements }) => {
     const navigate = useNavigate();
 
+=======
+
+const AchievementsList = ({ achievements, isOwner }) => {
+    const navigate = useNavigate();
+
+>>>>>>> Stashed changes
     if (!achievements || achievements.length === 0) return null;
 
     return (

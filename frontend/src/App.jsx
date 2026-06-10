@@ -16,9 +16,13 @@ import Profile from './pages/Profile/index';
 import Chat from './pages/Chat/Chat';
 import Achievements from './pages/General/Achievements';
 import BitShift from './pages/General/BitShift';
+<<<<<<< Updated upstream
 
 import SubmitChallenge from './pages/General/SubmitChallenge';
 import History from './pages/General/History';
+=======
+import SubmitWork from './pages/General/SubmitWork';
+>>>>>>> Stashed changes
 import Landing from './pages/General/Landing';
 import SubmitWork from './pages/General/SubmitWork';
 import CourseProgressTree from './pages/General/CourseProgressTree';
@@ -213,6 +217,7 @@ function App() {
           </ProtectedRoute>
         } />
 
+<<<<<<< Updated upstream
         <Route path="/shop" element={
           <ProtectedRoute>
             <Layout>
@@ -224,6 +229,11 @@ function App() {
         <Route path="/submit-certificate" element={<Navigate to="/submit-work" replace />} />
         <Route path="/submit-challenge" element={<Navigate to="/submit-work" replace />} />
 
+=======
+        <Route path="/submit-certificate" element={<Navigate to="/submit-work" replace />} />
+        <Route path="/submit-challenge" element={<Navigate to="/submit-work" replace />} />
+
+>>>>>>> Stashed changes
         <Route path="/submit-work" element={
           <ProtectedRoute>
             <Layout>

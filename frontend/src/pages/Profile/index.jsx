@@ -96,7 +96,7 @@ const Profile = () => {
                     
                     <CertificationsList certificates={target.certificates} />
 
-                    <AchievementsList achievements={target.achievements} />
+                    <AchievementsList achievements={target.achievements} isOwner={isOwner} />
 
                     <TechnicalSkills skills={target.skills} />
                 </div>

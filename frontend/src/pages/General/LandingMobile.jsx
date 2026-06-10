@@ -52,7 +52,10 @@ const LandingMobile = () => {
 
             </main>
 
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
         </div>
     );
 };

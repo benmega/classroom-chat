@@ -692,6 +692,18 @@
     border: 1px solid transparent;
 }
 
+.ach-strip-item.clickable {
+    cursor: pointer;
+    transition: var(--transition-smooth);
+}
+
+.ach-strip-item.clickable:hover {
+    background: var(--bg-primary);
+    border-color: var(--primary-color);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
 
 .ach-strip-item .badge.mini {
     transform: scale(0.25);
