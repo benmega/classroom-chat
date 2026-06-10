@@ -1,0 +1,436 @@
+.course-progress-page {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+    padding-bottom: 6rem;
+}
+
+.skill-tree-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    position: relative;
+    margin-top: 2rem;
+}
+
+.desktop-header {
+    display: none;
+}
+
+.desktop-track-lines {
+    display: none;
+}
+
+.branch-header {
+    width: 100%;
+    text-align: center;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-radius: var(--radius-md);
+    background: var(--surface-secondary);
+}
+
+.branch-header h2 {
+    margin: 0;
+    font-size: 1.2rem;
+    color: var(--text-primary);
+}
+
+.skill-node-cell {
+    display: flex;
+    justify-content: center;
+    position: relative;
+    z-index: 1;
+    width: 100%;
+}
+
+.skill-card {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    background: var(--surface-primary);
+    border: 2px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    padding: 1.25rem;
+    width: 100%;
+    max-width: 400px;
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+/* User wants CodeCombat and Ozaria colors */
+.skill-card.codecombat {
+    border-color: rgba(43, 145, 175, 0.3); /* CodeCombat Teal-ish blue */
+}
+.skill-card.ozaria {
+    border-color: rgba(144, 46, 219, 0.3); /* Ozaria Purple */
+}
+
+/* Active nodes */
+.skill-node-cell.active .skill-card.codecombat {
+    border-color: #2b91af;
+    box-shadow: 0 4px 12px rgba(43, 145, 175, 0.15);
+}
+
+.skill-node-cell.active .skill-card.ozaria {
+    border-color: #902edb;
+    box-shadow: 0 4px 12px rgba(144, 46, 219, 0.15);
+}
+
+/* Locked nodes removed as per request */
+
+.skill-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.skill-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    overflow: hidden;
+}
+
+.domain-logo {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+/* User wants CodeCombat and Ozaria colors */
+/* Re-add if you want specific borders or subtle backgrounds behind logos */
+
+
+
+.skill-content h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: var(--text-color);
+}
+
+.domain-label {
+    margin: 0.2rem 0;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: var(--text-secondary);
+    letter-spacing: 0.5px;
+}
+
+.course-progress-container {
+    margin-top: 0.75rem;
+    width: 100%;
+}
+
+.course-progress-bar {
+    width: 100%;
+    height: 8px;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+    margin-bottom: 0.4rem;
+}
+
+.course-progress-fill {
+    height: 100%;
+    border-radius: var(--radius-full);
+    transition: width 0.3s ease;
+}
+
+.skill-node-cell.active .skill-card.codecombat .course-progress-fill {
+    background: #2b91af;
+}
+
+.skill-node-cell.active .skill-card.ozaria .course-progress-fill {
+    background: #902edb;
+}
+
+.skill-node-cell.locked .course-progress-fill {
+    background: var(--text-muted);
+}
+
+.course-progress-text {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.skill-node-cell.active .skill-card.codecombat .course-progress-text {
+    color: #2b91af;
+}
+
+.skill-node-cell.active .skill-card.ozaria .course-progress-text {
+    color: #902edb;
+}
+
+/* Extra node specific styling */
+.skill-node-cell.locked .skill-card {
+    border-style: dashed;
+    border: 2px solid var(--border-subtle);
+    opacity: 0.65;
+    filter: grayscale(50%);
+    transition: opacity 0.3s ease, filter 0.3s ease, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.skill-node-cell.locked:hover .skill-card {
+    opacity: 0.8;
+    filter: grayscale(20%);
+}
+
+.report-back-btn {
+    margin-top: 1rem;
+    cursor: pointer;
+    transition: transform 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+}
+
+.report-back-btn:hover {
+    transform: translateX(-4px);
+    color: var(--text-primary);
+}
+
+@media (min-width: 1024px) {
+    .skill-tree-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        grid-auto-rows: minmax(100px, auto);
+        gap: 1.5rem;
+    }
+    
+    .desktop-header {
+        display: block;
+        align-self: start;
+        margin-bottom: 0;
+    }
+
+    .skill-tree-svg-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 0;
+    }
+
+    .tree-line {
+        stroke-width: 4px;
+        stroke-linecap: round;
+        transition: stroke 0.3s ease;
+    }
+
+    .tree-line.locked-line {
+        stroke: var(--border-subtle);
+    }
+
+    .tree-line.active-line.codecombat {
+        stroke: #2b91af;
+    }
+
+    .tree-line.active-line.ozaria {
+        stroke: #902edb;
+    }
+
+    .tree-line.active-line.mixed {
+        stroke: url(#oz-cs-gradient);
+    }
+    
+    .tree-line.active-line {
+        stroke: var(--primary-color, #4a90e2);
+    }
+}
+
+/* Modal Styles */
+.course-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 1rem;
+    backdrop-filter: blur(4px);
+}
+
+.course-modal-content {
+    background: var(--surface-primary);
+    border-radius: var(--radius-lg);
+    width: 100%;
+    max-width: 500px;
+    max-height: 80vh;
+    padding: 2rem;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+.course-modal-close {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+}
+
+.course-modal-close:hover {
+    background: var(--surface-secondary);
+    color: var(--text-primary);
+}
+
+.course-modal-content h2 {
+    margin: 0 0 1.5rem 0;
+    padding-right: 2rem;
+    color: var(--text-primary);
+}
+
+.course-modal-progress {
+    margin-bottom: 1.5rem;
+}
+
+.levels-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    overflow-y: auto;
+    padding-right: 0.5rem;
+}
+
+.level-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem 1rem;
+    background: var(--surface-secondary);
+    border-radius: var(--radius-md);
+    transition: opacity 0.2s;
+}
+
+.level-item.uncompleted {
+    opacity: 0.6;
+    background: transparent;
+    border: 1px dashed var(--border-subtle);
+}
+
+.level-item-icon {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    background: var(--bg-tertiary);
+    color: transparent;
+}
+
+.level-item.completed .level-item-icon {
+    background: #22c55e;
+    color: #fff;
+}
+
+.level-item span {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.level-item.uncompleted span {
+    color: var(--text-secondary);
+}
+
+/* Interactivity Enhancements */
+.skill-node-cell {
+    transition: opacity 0.3s ease, filter 0.3s ease;
+}
+
+.skill-node-cell.dimmed {
+    opacity: 0.3;
+    filter: grayscale(80%);
+}
+
+.tree-line {
+    transition: stroke 0.3s ease, opacity 0.3s ease;
+}
+
+.tree-line.dimmed {
+    opacity: 0.15;
+}
+
+/* Recommended Bouncing Pulse */
+@keyframes recommended-pulse {
+    0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(74, 144, 226, 0.7); }
+    50% { transform: scale(1.03); box-shadow: 0 0 0 10px rgba(74, 144, 226, 0); }
+    100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(74, 144, 226, 0); }
+}
+
+.skill-node-cell.recommended .skill-card {
+    animation: recommended-pulse 2s infinite ease-in-out;
+    border-color: var(--primary-color, #4a90e2);
+}
+
+/* Smart Tooltips */
+.node-tooltip {
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%) translateY(10px);
+    background: var(--surface-primary);
+    border: 1px solid var(--border-subtle);
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-md);
+    font-size: 0.85rem;
+    color: var(--text-primary);
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.2s ease;
+    z-index: 10;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    pointer-events: none;
+}
+
+.node-tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 6px;
+    border-style: solid;
+    border-color: var(--border-subtle) transparent transparent transparent;
+}
+
+.skill-node-cell.locked:hover .node-tooltip {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(-10px);
+}
+
+.canvas-wrapper {
+    cursor: grab;
+}
+.canvas-wrapper:active {
+    cursor: grabbing;
+}
+
+

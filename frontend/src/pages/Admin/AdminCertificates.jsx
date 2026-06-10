@@ -8,7 +8,8 @@ import {
     Award,
     Clock,
     Search,
-    AlertCircle
+    AlertCircle,
+    ExternalLink
 } from 'lucide-react';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
@@ -50,6 +51,19 @@ const AdminCertificates = () => {
         }
     };
 
+    const handleApproveAll = async () => {
+        if (!window.confirm("Are you sure you want to mark all pending certificates as reviewed?")) return;
+        try {
+            const response = await client.post('/api/achievements/admin/certificates/reviewed/all');
+            if (response.data.status === 'success') {
+                toast.success(response.data.message);
+                setCertificates([]); // all unreviewed certificates are now reviewed
+            }
+        } catch {
+            toast.error('Failed to mark all as reviewed.');
+        }
+    };
+
     const filteredCerts = certificates.filter(c => 
         c.user?.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         c.user?.nickname?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -61,8 +75,7 @@ const AdminCertificates = () => {
     return (
         <div className="admin-certificates-page">
             <AdminPageHeader 
-                title="Certificate Review" 
-                description="Verify and approve external achievement submissions."
+                title="Certificate Approvals" 
             />
 
             <div className="controls-bar">
@@ -75,68 +88,85 @@ const AdminCertificates = () => {
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
                 </div>
+                {certificates.length > 0 && (
+                    <div className="bulk-actions" style={{ display: 'flex', gap: '10px' }}>
+                        <a 
+                            href="/api/achievements/admin/certificates/download_all"
+                            className="btn-secondary"
+                            style={{ display: 'flex', alignItems: 'center', gap: '6px', textDecoration: 'none', padding: '8px 16px', borderRadius: '6px', backgroundColor: 'var(--surface-color)', border: '1px solid var(--border-color)', color: 'var(--text-color)' }}
+                        >
+                            <Download size={16} /> Download All
+                        </a>
+                        <button 
+                            className="btn-primary"
+                            onClick={handleApproveAll}
+                            style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 16px', borderRadius: '6px', backgroundColor: 'var(--primary-color)', color: 'white', border: 'none', cursor: 'pointer' }}
+                        >
+                            <CheckCircle size={16} /> Approve All
+                        </button>
+                    </div>
+                )}
             </div>
 
             <div className="certs-grid">
                 {filteredCerts.length > 0 ? (
                     filteredCerts.map(cert => (
-                        <div key={cert.id} className="cert-review-card card">
-                            <div className="cert-status-badge pending">
-                                <Clock size={14} /> Pending Review
-                            </div>
-                            
-                            <div className="cert-header">
-                                <div className="user-info">
-                                    <div className="user-avatar">
-                                        <User size={24} />
-                                    </div>
-                                    <div>
-                                        <h3>{cert.user?.nickname || cert.user?.username}</h3>
-                                        <span>@{cert.user?.username}</span>
-                                    </div>
+                        <div key={cert.id} className="cert-review-card">
+                            <a 
+                                href={`/api/achievements/view_certificate/${cert.id}`} 
+                                target="_blank" 
+                                rel="noopener noreferrer" 
+                                className="cert-thumbnail" 
+                                title="Click to view full certificate"
+                            >
+                                <iframe 
+                                    src={`/api/achievements/view_certificate/${cert.id}#toolbar=0&navpanes=0&scrollbar=0`} 
+                                    title="Certificate Preview" 
+                                    frameBorder="0" 
+                                    scrolling="no"
+                                    tabIndex="-1"
+                                ></iframe>
+                                <div className="thumbnail-overlay">
+                                    <Eye size={24} />
                                 </div>
-                            </div>
+                            </a>
 
-                            <div className="cert-body">
-                                <div className="achievement-info">
-                                    <Award size={18} />
-                                    <span>{cert.achievement?.name}</span>
-                                </div>
-                                <div className="submission-date">
-                                    <Clock size={16} />
-                                    <span>Submitted {new Date(cert.submitted_at).toLocaleDateString()}</span>
-                                </div>
-                                {cert.url && (
-                                    <div className="cert-url">
-                                        <Eye size={16} />
-                                        <a href={cert.url} target="_blank" rel="noopener noreferrer">View Original Link</a>
+                            <div className="cert-content-wrapper">
+                                <div className="cert-header-info">
+                                    <h3>
+                                        {cert.user?.nickname || cert.user?.username} 
+                                        <span className="text-muted">@{cert.user?.username}</span>
+                                    </h3>
+                                    <div className="achievement-title">
+                                        <Award size={16} /> 
+                                        {cert.achievement?.name}
                                     </div>
-                                )}
-                            </div>
+                                    <div className="submission-date">
+                                        <Clock size={14} /> 
+                                        {new Date(cert.submitted_at).toLocaleDateString()}
+                                    </div>
+                                    {cert.url && (
+                                        <a href={cert.url} target="_blank" rel="noopener noreferrer" className="original-link">
+                                            <ExternalLink size={14} /> Original Link
+                                        </a>
+                                    )}
+                                </div>
 
-                            <div className="cert-footer">
-                                <div className="file-actions">
-                                    <a 
-                                        href={`/api/achievements/view_certificate/${cert.id}`} 
-                                        target="_blank" 
-                                        rel="noopener noreferrer"
-                                        className="btn-view"
+                                <div className="cert-actions">
+                                    <button 
+                                        onClick={() => handleMarkReviewed(cert.id)}
+                                        className="btn-approve"
                                     >
-                                        <Eye size={16} /> View PDF
-                                    </a>
+                                        <CheckCircle size={16} /> Approve
+                                    </button>
                                     <a 
                                         href={`/api/achievements/download_certificate/${cert.id}`} 
-                                        className="btn-download"
+                                        className="btn-icon"
+                                        title="Download PDF"
                                     >
                                         <Download size={16} />
                                     </a>
                                 </div>
-                                <button 
-                                    onClick={() => handleMarkReviewed(cert.id)}
-                                    className="btn-approve"
-                                >
-                                    <CheckCircle size={18} /> Mark Reviewed
-                                </button>
                             </div>
                         </div>
                     ))

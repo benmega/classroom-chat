@@ -8,9 +8,9 @@ import React from 'react';
 const Linkify = ({ text, isUserMessage }) => {
   if (!text) return null;
 
-  // Regex to detect URLs (http, https, www)
-  const urlRegex = /(https?:\/\/[^\s]+|www\.[^\s]+)/g;
-
+  // Regex to detect URLs (http, https, www) and ignore trailing punctuation like commas
+  const urlRegex = /(https?:\/\/[^\s]+?(?=[.,!?;:]*(?:\s|$))|www\.[^\s]+?(?=[.,!?;:]*(?:\s|$)))/g;
+  
   const parts = text.split(urlRegex);
 
   return (

@@ -1,95 +1,50 @@
-.admin-advanced-panel {
-    padding: 2rem;
-    max-width: 1400px;
-    margin: 0 auto;
-}
+
 
 /* Standardized Header handled by AdminPageHeader.css */
 
 /* Advanced Grid */
 .admin-advanced-panel .advanced-grid {
     display: grid;
-    grid-template-columns: 1fr 400px;
-    gap: 2rem;
-    margin-bottom: 3rem;
-    align-items: start;
-}
-
-.admin-advanced-panel .model-links-section {
-    padding: 2rem;
-}
-
-.admin-advanced-panel .section-header {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 1.25rem;
-    color: var(--primary-color);
-}
-
-.admin-advanced-panel .section-header h2 { font-size: 1.35rem; margin: 0; color: #1e293b; }
-.admin-advanced-panel .section-desc { font-size: 0.95rem; color: var(--text-muted); margin-bottom: 1.75rem; line-height: 1.5; }
-
-
-.admin-advanced-panel .model-list {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: 1.25rem;
-}
-
-.admin-advanced-panel .model-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1rem 1.5rem;
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 16px;
-    text-decoration: none;
-    color: #1e293b;
-    font-weight: 700;
-    transition: all 0.2s;
-}
-
-.admin-advanced-panel .model-item:hover {
-    background: white;
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-sm);
-    border-color: var(--primary-color);
-    color: var(--primary-color);
-}
-
-.admin-advanced-panel .model-name {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.admin-advanced-panel .ext-icon {
-    color: #cbd5e1;
-}
-
-.admin-advanced-panel .model-item:hover .ext-icon { color: var(--primary-color); }
-
-/* Utility Stack */
-.admin-advanced-panel .utility-stack {
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    align-items: stretch;
 }
 
 .admin-advanced-panel .utility-card {
     display: flex;
-    gap: 1.5rem;
-    padding: 2rem;
-    background: white;
-    border-radius: 20px;
+    gap: 1rem;
+    padding: 1rem;
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    box-shadow: var(--shadow-soft);
+    transition: var(--transition-smooth);
+}
+
+.admin-advanced-panel .utility-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+    background: var(--glass-bg-hover);
+    border-color: var(--primary-color);
+}
+
+/* Premium card styling */
+.admin-advanced-panel .utility-card.premium-card {
+    border: 1px dashed rgba(99, 102, 241, 0.4);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.8) 0%, rgba(99, 102, 241, 0.03) 100%);
+}
+
+.admin-advanced-panel .utility-card.premium-card:hover {
+    border-color: var(--secondary-color);
+    box-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.15), var(--shadow-glow);
 }
 
 .admin-advanced-panel .utility-icon {
-    width: 48px;
-    height: 48px;
-    border-radius: 14px;
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -99,9 +54,37 @@
 .admin-advanced-panel .utility-icon.warning { background: #fffbeb; color: #d97706; }
 .admin-advanced-panel .utility-icon.primary { background: #eff6ff; color: #3b82f6; }
 .admin-advanced-panel .utility-icon.secondary { background: #f0fdf4; color: #22c55e; }
+.admin-advanced-panel .utility-icon.premium { 
+    background: linear-gradient(135deg, #6366f1 0%, #0eb2bb 100%); 
+    color: white; 
+    box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3);
+}
 
-.admin-advanced-panel .utility-content h3 { font-size: 1.1rem; font-weight: 700; color: #1e293b; margin-bottom: 4px; }
-.admin-advanced-panel .utility-content p { font-size: 0.9rem; color: var(--text-muted); margin-bottom: 12px; }
+.admin-advanced-panel .utility-content {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+.admin-advanced-panel .utility-content h3 { 
+    font-size: 1.15rem; 
+    font-weight: 700; 
+    color: #1e293b; 
+    margin-bottom: 6px; 
+}
+
+.admin-advanced-panel .utility-content p { 
+    font-size: 0.9rem; 
+    color: var(--text-muted); 
+    margin-bottom: 16px; 
+    line-height: 1.45;
+    flex-grow: 1;
+}
+
+.admin-advanced-panel .btn-utility,
+.admin-advanced-panel .btn-premium {
+    align-self: flex-start;
+}
 
 .admin-advanced-panel .btn-utility {
     display: flex;
@@ -129,8 +112,9 @@
 .admin-advanced-panel .danger-zone {
     background: #fef2f2;
     border: 1px solid #fee2e2;
-    border-radius: 24px;
-    padding: 2.5rem;
+    border-radius: 16px;
+    padding: 1.25rem;
+    margin-top: 1rem;
 }
 
 .admin-advanced-panel .danger-header {
@@ -138,7 +122,7 @@
     align-items: center;
     gap: 12px;
     color: #dc2626;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
 }
 
 .admin-advanced-panel .danger-header h3 { font-size: 1.25rem; font-weight: 800; margin: 0; }
@@ -148,7 +132,7 @@
     justify-content: space-between;
     align-items: center;
     background: white;
-    padding: 1.5rem;
+    padding: 1rem;
     border-radius: 16px;
     border: 1px solid #fee2e2;
 }
@@ -177,7 +161,14 @@
     transform: translateY(-1px);
 }
 
-@media (max-width: 1100px) {
+/* Responsive Grid columns */
+@media (max-width: 1200px) {
+    .admin-advanced-panel .advanced-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
     .admin-advanced-panel .advanced-grid {
         grid-template-columns: 1fr;
     }
@@ -208,7 +199,7 @@
 }
 
 .log-modal-header {
-    padding: 1.5rem 2rem;
+    padding: 1rem 1.5rem;
     border-bottom: 1px solid var(--border-subtle);
     display: flex;
     justify-content: space-between;
@@ -232,7 +223,7 @@
 .log-content {
     flex: 1;
     overflow: auto;
-    padding: 2rem;
+    padding: 1.5rem;
     background: #0f172a;
     color: #cbd5e1;
     font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
@@ -246,7 +237,7 @@
 }
 
 .log-modal-footer {
-    padding: 1.25rem 2rem;
+    padding: 1rem 1.5rem;
     border-top: 1px solid var(--border-subtle);
     display: flex;
     justify-content: flex-end;
@@ -275,7 +266,7 @@
 
 .log-content .stat-box {
     background: rgba(255, 255, 255, 0.05);
-    padding: 1.5rem;
+    padding: 1rem;
     border-radius: 16px;
     display: flex;
     flex-direction: column;

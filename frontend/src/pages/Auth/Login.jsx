@@ -1,30 +1,47 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { User, Lock, ArrowRight, Zap } from 'lucide-react';
 import useAuthStore from '../../store/useAuthStore';
 import toast from 'react-hot-toast';
 import './Auth.css';
 
 const Login = () => {
-    const { login } = useAuthStore();
-    const [username, setUsername] = useState('');
+    const { login, loginParentCognito } = useAuthStore();
+    const [usernameOrEmail, setUsernameOrEmail] = useState('');
     const [password, setPassword] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
+    const location = useLocation();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setIsLoading(true);
         try {
-            const result = await login(username, password);
+            let result;
+            if (usernameOrEmail.includes('@')) {
+                result = await loginParentCognito(usernameOrEmail, password);
+            } else {
+                result = await login(usernameOrEmail, password);
+            }
+
             if (result.success) {
                 toast.success('Login successful!');
                 if (result.awarded_duck) {
                     toast.success('Welcome! Daily duck awarded.', { icon: '🦆' });
                 }
-                navigate('/');
+                
+                const pendingCode = localStorage.getItem('pendingConnectionCode');
+                const fromPath = location.state?.from || (pendingCode ? `/parent/connect?code=${pendingCode}` : null);
+
+                if (fromPath) {
+                    navigate(fromPath);
+                } else if (result.role === 'parent') {
+                    navigate('/parent/dashboard');
+                } else {
+                    navigate('/chat');
+                }
             } else {
-                toast.error(result.error || 'Invalid username or password.');
+                toast.error(result.error || 'Invalid credentials.');
             }
         } catch {
             toast.error('An unexpected error occurred. Please try again.');
@@ -54,11 +71,11 @@ const Login = () => {
                         <div className="input-wrapper">
                             <input 
                                 type="text" 
-                                id="username"
-                                value={username} 
-                                onChange={(e) => setUsername(e.target.value)} 
+                                id="usernameOrEmail"
+                                value={usernameOrEmail} 
+                                onChange={(e) => setUsernameOrEmail(e.target.value)} 
                                 required
-                                placeholder="Username"
+                                placeholder="Username or Email"
                                 autoComplete="username"
                                 className="auth-input"
                             />
@@ -101,9 +118,12 @@ const Login = () => {
                     </button>
                 </form>
                 
-                <div className="auth-footer">
-                    Don't have an account? 
-                    <Link to="/signup" className="auth-link">Create Account</Link>
+                <div className="auth-footer" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                    <div style={{ display: 'flex', gap: '1.25rem', justifyContent: 'center', alignItems: 'center', fontSize: '1.05rem' }}>
+                        <Link to="/signup" className="auth-link" style={{ margin: 0 }}>New Student</Link>
+                        <span style={{ color: 'var(--border-subtle)', userSelect: 'none' }}>|</span>
+                        <Link to="/signup?role=parent" className="auth-link" style={{ margin: 0 }}>New Parent</Link>
+                    </div>
                 </div>
             </div>
         </div>

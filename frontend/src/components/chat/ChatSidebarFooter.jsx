@@ -9,7 +9,8 @@ import {
     RefreshCw, 
     Disc, 
     MessageSquare,
-    LogOut
+    LogOut,
+    ShoppingCart
 } from 'lucide-react';
 
 const ChatSidebarFooter = ({ user, onAction, onLogout }) => {
@@ -29,16 +30,18 @@ const ChatSidebarFooter = ({ user, onAction, onLogout }) => {
                 <Award size={18} /> Achievements
             </Link>
             
-            <Link to="/submit-certificate" className="sidebar-footer-item" onClick={onAction}>
-                <FileCheck size={18} /> Certificate
-            </Link>
+
             
-            <Link to="/submit-challenge" className="sidebar-footer-item" onClick={onAction}>
-                <Zap size={18} /> Challenge
+            <Link to="/submit-work" className="sidebar-footer-item" onClick={onAction}>
+                <Zap size={18} /> Submit Work
             </Link>
             
             <Link to="/bit-shift" className="sidebar-footer-item" onClick={onAction}>
                 <RefreshCw size={18} /> Bit Shift
+            </Link>
+            
+            <Link to="/shop" className="sidebar-footer-item" style={{ color: '#facc15' }} onClick={onAction}>
+                <ShoppingCart size={18} /> Packet Shop
             </Link>
             
             <a 

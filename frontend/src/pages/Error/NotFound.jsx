@@ -78,7 +78,7 @@ const NotFound = ({ message = "The page or resource you are looking for doesn't 
           flexDirection: 'column',
           gap: '1rem'
         }}>
-          <Link to="/" style={{
+          <Link to="/chat" style={{
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',

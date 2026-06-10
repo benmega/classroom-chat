@@ -1,6 +1,17 @@
-backup prod
-# On Acer
-scp -i ~/.ssh/test-key.pem ubuntu@blossom.benmega.com:classroom-chat/instance/dev_users.db "/mnt/c/Users/Acer/PycharmProjects/classroom-chat/instance/backups/"
+Database Management
+===================
 
-# On Asus
-scp -i ~/.ssh/test-key.pem ubuntu@blossom.benmega.com:classroom-chat/instance/dev_users.db "/mnt/c/Users/Ben/PycharmProjects/groupChat2/instance/backups/"
+For database sync and backup operations, use the db_sync.sh script:
+
+  # Sync dev environment with latest production database
+  ./infrastructure/db_sync.sh sync
+
+  # Restore dev database from last synced production state (rollback)
+  ./infrastructure/db_sync.sh restore
+
+  # Show help
+  ./infrastructure/db_sync.sh help
+
+See db_sync.sh for implementation details.
+
+scp -i ~/.ssh/test-key.pem ubuntu@api-blossom.benmega.com:/home/ubuntu/classroom-chat/backend/instance/prod_users.db /mnt/c/Users/Ben/AntiGravity/classroom-chat/backend/instance/backups/prod_users.db

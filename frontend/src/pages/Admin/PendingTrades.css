@@ -1,23 +1,19 @@
-.admin-pending-trades-page {
-    padding: 2.5rem;
-    max-width: 1200px;
-    margin: 0 auto;
-}
+
 
 /* Standardized Header handled by AdminPageHeader.css */
 
 /* Trades List */
 .trades-list {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
-    gap: 2rem;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1rem;
 }
 
 .trade-card {
     background: white;
-    border-radius: 20px;
+    border-radius: 16px;
     border: 1px solid #e2e8f0;
-    padding: 2rem;
+    padding: 1rem;
     display: flex;
     flex-direction: column;
     transition: all 0.2s;
@@ -33,7 +29,7 @@
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    margin-bottom: 2rem;
+    margin-bottom: 1rem;
 }
 
 .user-info {
@@ -43,10 +39,10 @@
 }
 
 .avatar-placeholder {
-    width: 44px;
-    height: 44px;
+    width: 36px;
+    height: 36px;
     background: #f1f5f9;
-    border-radius: 12px;
+    border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -67,12 +63,12 @@
 
 .trade-details {
     background: #f8fafc;
-    padding: 1.5rem;
-    border-radius: 16px;
-    margin-bottom: 2rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 12px;
+    margin-bottom: 0.75rem;
     display: flex;
     flex-direction: column;
-    gap: 1.25rem;
+    gap: 0.5rem;
 }
 
 .detail-item {
@@ -103,7 +99,7 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 1rem;
-    padding-top: 1rem;
+    padding-top: 0.75rem;
     border-top: 1px solid #e2e8f0;
 }
 
@@ -114,7 +110,7 @@
 
 .btn-approve, .btn-reject {
     flex: 1;
-    padding: 14px;
+    padding: 10px;
     border-radius: 12px;
     border: none;
     font-weight: 700;

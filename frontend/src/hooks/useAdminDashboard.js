@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import client from '../api/client';
 import toast from 'react-hot-toast';
 
@@ -11,10 +11,12 @@ export const useAdminDashboard = () => {
     const [formLoading, setFormLoading] = useState(false);
     const [formErrors, setFormErrors] = useState({});
 
-    const fetchDashboardData = async () => {
+    const [timeframe, setTimeframe] = useState(7);
+
+    const fetchDashboardData = useCallback(async (days = timeframe) => {
         setIsRefreshing(true);
         try {
-            const response = await client.get('/api/admin/dashboard');
+            const response = await client.get(`/api/admin/dashboard?days=${days}`);
             if (response.data.status === 'success') {
                 setDashboardData(response.data.data);
             }
@@ -25,11 +27,11 @@ export const useAdminDashboard = () => {
             setIsLoading(false);
             setIsRefreshing(false);
         }
-    };
+    }, [timeframe]);
 
     useEffect(() => {
-        fetchDashboardData();
-    }, []);
+        fetchDashboardData(timeframe);
+    }, [timeframe, fetchDashboardData]);
 
     useEffect(() => {
         setFormErrors({});
@@ -240,6 +242,8 @@ export const useAdminDashboard = () => {
         setModalUser,
         formLoading,
         formErrors,
+        timeframe,
+        setTimeframe,
         fetchDashboardData,
         handleToggleAI,
         handleToggleMessages,

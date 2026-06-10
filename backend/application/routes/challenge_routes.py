@@ -127,7 +127,8 @@ def submit_challenge():
         # Explicit commit to ensure log and user duck updates are saved
         db.session.commit()
         duck_reward = details.get("duck_reward", 0)
-        message = f"Congrats {user.username}, you earned {duck_reward} ducks!"
+        duck_word = "duck" if duck_reward == 1 else "ducks"
+        message = f"Congrats {user.username}, you earned {duck_reward} {duck_word}!"
 
         # ---- Classroom enrollment trigger ----------------------------------
         # If the challenge log was successful, we check if it provided a

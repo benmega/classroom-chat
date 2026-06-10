@@ -7,7 +7,15 @@ on:
   workflow_dispatch:
 
 jobs:
+  # Gates: deploy must not run unless both of these succeed.
+  tests:
+    uses: ./.github/workflows/tests.yml
+
+  lint:
+    uses: ./.github/workflows/lint.yml
+
   build-and-deploy-s3:
+    needs: [tests, lint]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code

@@ -123,7 +123,7 @@ const History = () => {
             <div className="history-list">
                 {filteredConversations.length > 0 ? (
                     filteredConversations.map((conv) => (
-                        <div key={conv.conversation_id} className="history-card" onClick={() => navigate(`/?conv=${conv.conversation_id}`)}>
+                        <div key={conv.conversation_id} className="history-card" onClick={() => navigate(`/chat?conv=${conv.conversation_id}`)}>
                             <div className="card-icon">
                                 <MessageSquare size={24} />
                             </div>
@@ -139,7 +139,7 @@ const History = () => {
                                     </span>
                                     <span className="participants">
                                         <User size={14} />
-                                        {conv.messages?.length || 0} messages
+                                        {conv.messages_count !== undefined ? conv.messages_count : (conv.messages?.length || 0)} messages
                                     </span>
                                 </div>
                             </div>
@@ -153,7 +153,7 @@ const History = () => {
                         <MessageSquare size={48} />
                         <h3>No Conversations Found</h3>
                         <p>You haven't participated in any conversations yet or your search matched nothing.</p>
-                        <button onClick={() => navigate('/')} className="btn-premium">Start a Conversation</button>
+                        <button onClick={() => navigate('/chat')} className="btn-premium">Start a Conversation</button>
                     </div>
                 )}
             </div>

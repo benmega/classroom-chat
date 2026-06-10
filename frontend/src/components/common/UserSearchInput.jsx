@@ -129,7 +129,8 @@ const UserSearchInput = ({
             <div className={`search-input-wrapper-common ${wrapperClassName} ${isOpen && query.trim().length >= minChars ? 'active' : ''}`}>
                 {showIcon && <Search className="search-icon-common" size={18} />}
                 <input
-                    id={id}
+                    id={id || "user-search-input"}
+                    name="search"
                     type="text"
                     value={query}
                     onChange={handleInputChange}

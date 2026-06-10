@@ -25,8 +25,14 @@ class User(db.Model):
     slug = db.Column(db.String(100), unique=True, nullable=True)
     is_admin = db.Column(db.Boolean, default=False)
     is_approved = db.Column(db.Boolean, default=False)
+    role = db.Column(db.String(20), default="student", nullable=False)
+    
+    # OAuth / Cognito fields
+    email = db.Column(db.String(120), unique=True, nullable=True)
+    cognito_sub = db.Column(db.String(50), unique=True, nullable=True)
     bio = db.Column(db.String(500), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    has_seen_tutorial = db.Column(db.Boolean, default=False)
 
     # Gamification
     packets = db.Column(db.Double, nullable=False, default=0)
@@ -34,6 +40,16 @@ class User(db.Model):
     duck_balance = db.Column(db.Double, nullable=False, default=0)
     last_daily_duck = db.Column(db.Date, nullable=True)
     last_achievement_evaluation = db.Column(db.DateTime, nullable=True)
+    connection_code = db.Column(db.String(10), unique=True, nullable=True)
+
+    # Shop Perks
+    has_chat_font = db.Column(db.Boolean, default=False)
+    chat_font_color = db.Column(db.String(7), nullable=True)
+    has_animated_border = db.Column(db.Boolean, default=False)
+    has_auto_bitshift = db.Column(db.Boolean, default=False)
+    has_custom_wallpaper = db.Column(db.Boolean, default=False)
+    profile_wallpaper = db.Column(db.String(255), nullable=True)
+    has_auto_claimer = db.Column(db.Boolean, default=False)
 
     # Relationships
     skills = db.relationship(
@@ -70,6 +86,15 @@ class User(db.Model):
         order_by="desc(Note.created_at)",
     )
 
+    # Parent → Student relationship via association table
+    children = db.relationship(
+        "User",
+        secondary="parent_students",
+        primaryjoin="User.id == parent_students.c.parent_id",
+        secondaryjoin="User.id == parent_students.c.student_id",
+        lazy="selectin",
+    )
+
     def __repr__(self):
         return f"<User {self._username}>"
 
@@ -104,6 +129,9 @@ class User(db.Model):
 
         # Grid data - Extremely expensive
         d["contribution_data"] = self.get_contribution_data()
+        
+        # Course progress tree breakdown
+        d["course_progress"] = self.get_course_progress_data()
 
         return d
 
@@ -120,9 +148,19 @@ class User(db.Model):
             ),
             "is_admin": self.is_admin,
             "is_approved": self.is_approved,
+            "role": self.role,
             "slug": self.slug,
             "duck_balance": self.duck_balance,
             "packets": self.packets,
+            "completed_challenges_count": self.challenge_logs.count(),
+            "has_seen_tutorial": self.has_seen_tutorial,
+            "has_chat_font": self.has_chat_font,
+            "chat_font_color": self.chat_font_color,
+            "has_animated_border": self.has_animated_border,
+            "has_auto_bitshift": self.has_auto_bitshift,
+            "has_custom_wallpaper": self.has_custom_wallpaper,
+            "profile_wallpaper": self.profile_wallpaper,
+            "has_auto_claimer": self.has_auto_claimer,
         }
 
     def to_dict_summary(self, precomputed_progress=None):
@@ -171,6 +209,7 @@ class User(db.Model):
             "is_online": self.is_online,
             "is_admin": self.is_admin,
             "is_approved": self.is_approved,
+            "role": self.role,
             "bio": self.bio,
             "slug": self.slug,
             # Gamification
@@ -179,10 +218,19 @@ class User(db.Model):
             "packets": self.packets,
             # Progress counters
             "total_levels": cc_levels + oz_levels,
+            "completed_challenges_count": cc_levels + oz_levels,
             "cc_levels": cc_levels,
             "oz_levels": oz_levels,
             "cc_percent": cc_percent,
             "oz_percent": oz_percent,
+            "has_seen_tutorial": self.has_seen_tutorial,
+            "has_chat_font": self.has_chat_font,
+            "chat_font_color": self.chat_font_color,
+            "has_animated_border": self.has_animated_border,
+            "has_auto_bitshift": self.has_auto_bitshift,
+            "has_custom_wallpaper": self.has_custom_wallpaper,
+            "profile_wallpaper": self.profile_wallpaper,
+            "has_auto_claimer": self.has_auto_claimer,
         }
         return d
 
@@ -209,6 +257,21 @@ class User(db.Model):
 
         self.slug = slug
         return slug
+
+    def get_connection_code(self):
+        if not self.connection_code:
+            self.connection_code = self.generate_connection_code()
+            db.session.commit()
+        return self.connection_code
+
+    def generate_connection_code(self):
+        """Generate a unique 6-character alphanumeric connection code."""
+        import random
+        import string
+        while True:
+            code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+            if User.query.filter_by(connection_code=code).first() is None:
+                return code
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -268,6 +331,98 @@ class User(db.Model):
             else 0
         )
         return int(round(progress, 0))
+
+    def get_course_progress_data(self):
+        from .challenge_log import ChallengeLog
+        from .course import Course
+
+        cc_levels = self.get_progress("codecombat.com")
+        cc_percent = self.get_progress_percent("codecombat.com")
+        oz_levels = self.get_progress("www.ozaria.com")
+        oz_percent = self.get_progress_percent("www.ozaria.com")
+
+        def get_course_breakdown(domain):
+            from .challenge import Challenge
+            
+            user_logs = ChallengeLog.query.filter_by(
+                username=self._username, domain=domain
+            ).all()
+            completed_slugs = {cl.challenge_slug for cl in user_logs}
+            
+            all_challenges = Challenge.query.filter_by(domain=domain).all()
+            
+            courses_map = {}
+            for c in all_challenges:
+                if c.course_id not in courses_map:
+                    courses_map[c.course_id] = []
+                courses_map[c.course_id].append(c)
+                
+            breakdown = []
+            for course_id, challenges in courses_map.items():
+                course_name = "Other"
+                if course_id:
+                    course = db.session.get(Course, course_id)
+                    course_name = course.name if course else course_id
+                
+                levels = []
+                completed_count = 0
+                for c in challenges:
+                    is_completed = c.slug in completed_slugs
+                    if is_completed:
+                        completed_count += 1
+                    levels.append({
+                        "name": c.name,
+                        "slug": c.slug,
+                        "is_completed": is_completed
+                    })
+                
+                if len(levels) > 0:
+                    breakdown.append({
+                        "course_id": course_id,
+                        "course_name": course_name,
+                        "levels_completed": completed_count,
+                        "levels_total": len(levels),
+                        "levels": levels
+                    })
+            
+            handled_course_ids = set(courses_map.keys())
+            legacy_courses = {}
+            for cl in user_logs:
+                if cl.course_id and cl.course_id not in handled_course_ids:
+                    if cl.course_id not in legacy_courses:
+                        legacy_courses[cl.course_id] = []
+                    if not any(lvl["slug"] == cl.challenge_slug for lvl in legacy_courses[cl.course_id]):
+                        legacy_courses[cl.course_id].append({
+                            "name": cl.challenge_slug,
+                            "slug": cl.challenge_slug,
+                            "is_completed": True
+                        })
+                        
+            for course_id, levels in legacy_courses.items():
+                course = db.session.get(Course, course_id)
+                breakdown.append({
+                    "course_id": course_id,
+                    "course_name": course.name if course else course_id,
+                    "levels_completed": len(levels),
+                    "levels_total": len(levels),
+                    "levels": levels
+                })
+            
+            breakdown.sort(key=lambda x: x["levels_completed"], reverse=True)
+            return breakdown
+
+        return {
+            "codecombat": {
+                "levels_completed": cc_levels,
+                "percent": cc_percent,
+                "breakdown": get_course_breakdown("codecombat.com")
+            },
+            "ozaria": {
+                "levels_completed": oz_levels,
+                "percent": oz_percent,
+                "breakdown": get_course_breakdown("www.ozaria.com")
+            },
+        }
 
     def add_skill(self, skill_name):
         from .skill import Skill

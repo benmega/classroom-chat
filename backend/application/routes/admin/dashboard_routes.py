@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from flask import Response, current_app
+from flask import Response, current_app, request
 from sqlalchemy import func, case
 from application.extensions import db
 from application.models.user import User
@@ -39,9 +39,24 @@ def dashboard_data():
     banned_words = BannedWords.query.all()
     classrooms = Classroom.query.all()
 
-    # Generate chart data
+    days_param = request.args.get("days", "7")
     now = datetime.utcnow()
-    chart_start = (now - timedelta(days=6)).replace(
+    
+    first_tx = DuckTransaction.query.order_by(DuckTransaction.timestamp.asc()).first()
+    max_history_days = 0
+    if first_tx and first_tx.timestamp:
+        max_history_days = (now - first_tx.timestamp).days + 1
+
+    if days_param == "all":
+        days = max_history_days if max_history_days > 0 else 7
+    else:
+        try:
+            days = int(days_param)
+        except ValueError:
+            days = 7
+
+    # Generate chart data
+    chart_start = (now - timedelta(days=days - 1)).replace(
         hour=0, minute=0, second=0, microsecond=0
     )
 
@@ -66,7 +81,7 @@ def dashboard_data():
     labels = []
     earned = []
     spent = []
-    for i in range(6, -1, -1):
+    for i in range(days - 1, -1, -1):
         day = (now - timedelta(days=i)).date()
         labels.append(day.strftime("%b %d"))
 
@@ -89,7 +104,7 @@ def dashboard_data():
         "classrooms": [c.to_dict() for c in classrooms],
         "config": config.to_dict() if config else {},
         "banned_words": [bw.to_dict() for bw in banned_words],
-        "chart_data": {"labels": labels, "earned": earned, "spent": spent},
+        "chart_data": {"labels": labels, "earned": earned, "spent": spent, "max_history_days": max_history_days},
     }
 
 

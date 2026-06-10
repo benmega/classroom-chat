@@ -31,13 +31,16 @@ const ChatSidebar = ({
     setIsModalOpen,
     formatConversationTitle,
     globalConversation,        // The canonical global/announcements conv object
+    hasMoreConversations,
+    isLoadingMoreConversations,
+    handleLoadMoreConversations,
 }) => {
     const { logout } = useAuthStore();
     const navigate = useNavigate();
 
     const handleLogout = async () => {
         await logout();
-        navigate('/login');
+        navigate('/');
     };
 
     const filteredConversations = useMemo(() => {
@@ -115,7 +118,10 @@ const ChatSidebar = ({
                     {globalConversation && (
                         <div
                             id="sidebar-announcements-pin"
-                            onClick={() => handleSelectConversation(globalConversation)}
+                            onClick={() => {
+                                handleSelectConversation(globalConversation);
+                                setSidebarOpen(false);
+                            }}
                             className={`conversation-item pinned-announcement ${
                                 activeConversation?.conversation_id === globalConversation.conversation_id
                                     ? 'active'
@@ -140,11 +146,21 @@ const ChatSidebar = ({
                     )}
 
                     {/* ---- Classroom conversations ---- */}
+                    <div style={{ padding: '0 1rem', marginTop: '1rem', marginBottom: '0.25rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 0.5rem' }}>
+                            <h3 style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                                Class Spaces
+                            </h3>
+                        </div>
+                    </div>
                     {filteredConversations.length > 0 ? (
                         filteredConversations.map((conv) => (
                             <div 
                                 key={conv.conversation_id} 
-                                onClick={() => handleSelectConversation(conv)}
+                                onClick={() => {
+                                    handleSelectConversation(conv);
+                                    setSidebarOpen(false);
+                                }}
                                 className={`conversation-item ${activeConversation?.conversation_id === conv.conversation_id ? 'active' : ''}`}
                             >
                                 <div className="conv-icon-container">
@@ -170,6 +186,59 @@ const ChatSidebar = ({
                     ) : (
                         <div className="empty-search">
                             <p>No conversations found</p>
+                        </div>
+                    )}
+                    {hasMoreConversations && (
+                        <div className="load-more-container" style={{ padding: '0.75rem var(--spacing-md, 1rem)', display: 'flex', justifyContent: 'center' }}>
+                            <button
+                                onClick={handleLoadMoreConversations}
+                                disabled={isLoadingMoreConversations}
+                                className="btn-load-more"
+                                style={{
+                                    width: '100%',
+                                    padding: '0.625rem 1rem',
+                                    borderRadius: '10px',
+                                    border: '1px solid var(--border-subtle)',
+                                    background: 'var(--bg-secondary)',
+                                    color: 'var(--text-secondary)',
+                                    fontSize: '0.8rem',
+                                    fontWeight: '600',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    gap: '0.5rem',
+                                    transition: 'all 0.2s ease',
+                                    boxShadow: 'var(--shadow-sm)',
+                                }}
+                                onMouseEnter={(e) => {
+                                    e.currentTarget.style.background = 'var(--bg-tertiary)';
+                                    e.currentTarget.style.color = 'var(--text-primary)';
+                                    e.currentTarget.style.borderColor = 'var(--primary-color)';
+                                }}
+                                onMouseLeave={(e) => {
+                                    e.currentTarget.style.background = 'var(--bg-secondary)';
+                                    e.currentTarget.style.color = 'var(--text-secondary)';
+                                    e.currentTarget.style.borderColor = 'var(--border-subtle)';
+                                }}
+                            >
+                                {isLoadingMoreConversations ? (
+                                    <>
+                                        <span className="spinner-loader" style={{
+                                            width: '14px',
+                                            height: '14px',
+                                            border: '2px solid var(--text-secondary)',
+                                            borderTopColor: 'transparent',
+                                            borderRadius: '50%',
+                                            display: 'inline-block',
+                                            animation: 'spin 0.8s linear infinite',
+                                        }}></span>
+                                        Loading...
+                                    </>
+                                ) : (
+                                    'Load More'
+                                )}
+                            </button>
                         </div>
                     )}
                 </div>

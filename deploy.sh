@@ -131,14 +131,42 @@ if [[ -f "$DB_FILE" ]]; then
 fi
 
 # -------------------------
-# Migrations
+# Migrations & Database Initialization
 # -------------------------
-echo "Running database migrations..."
+echo "Initializing/updating database..."
 (
     cd "$APP_DIR/backend"
     # Ensure we run in production mode so it hits prod_users.db
+
+    # Create schema from models if DB doesn't exist or is empty
+    echo "Ensuring database schema is up-to-date..."
+    run env FLASK_APP=main.py FLASK_ENV=production "$PYTHON_BIN" << 'PYEOF'
+from main import app
+from application.extensions import db
+
+with app.app_context():
+    # Create all tables from models (idempotent - won't fail if tables exist)
+    db.create_all()
+    print("Database schema initialized/verified")
+PYEOF
+
+    # Heal a dangling alembic stamp. If alembic_version points to a revision that no
+    # longer exists in the codebase (a "ghost" left by deleted migrations), `flask db
+    # current` exits non-zero and a plain `upgrade` would fail. Purge the stamp so the
+    # upgrade can run from base. This only fires when the stamp is genuinely broken;
+    # healthy deploys skip it and run a normal upgrade.
+    echo "Checking alembic revision state..."
+    if ! run env FLASK_APP=main.py FLASK_ENV=production "$PYTHON_BIN" -m flask db current >/dev/null 2>&1; then
+        echo "WARNING: alembic_version references a missing revision; purging dangling stamp..."
+        run env FLASK_APP=main.py FLASK_ENV=production "$PYTHON_BIN" -m flask db stamp base --purge
+    fi
+
+    # Apply pending migrations. No error swallowing: a failed migration must abort the
+    # deploy (set -e propagates the failure out of this subshell) so we never restart
+    # the service on a schema that doesn't match the code.
+    echo "Applying migrations..."
     run env FLASK_APP=main.py FLASK_ENV=production "$PYTHON_BIN" -m flask db upgrade
-    
+
     # Run the idempotent multi-tenant classroom migration script
     echo "Running custom classroom migration script..."
     run env FLASK_APP=main.py FLASK_ENV=production "$PYTHON_BIN" -m tools.migrate_classroom

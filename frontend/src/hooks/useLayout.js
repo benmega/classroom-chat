@@ -5,7 +5,7 @@ import client from '../api/client';
 import useSidebar from './useSidebar';
 
 export const useLayout = () => {
-    const { user, logout, isAuthenticated } = useAuthStore();
+    const { user, logout, isAuthenticated, hamburgerProgress } = useAuthStore();
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const dropdownRef = useRef(null);
     const navigate = useNavigate();
@@ -32,18 +32,29 @@ export const useLayout = () => {
             const diff = currentDucks - prevDucks;
 
             if (diff > 0) {
-                const quackCount = Math.min(diff, 100);
+                const quackCount = Math.min(diff, 10); // cap to 10 to avoid noise spam
                 let quacksPlayed = 0;
                 
-                const quackInterval = setInterval(() => {
-                    if (quacksPlayed >= quackCount) {
-                        clearInterval(quackInterval);
-                        return;
-                    }
+                const playQuack = () => {
                     const audio = new Audio('/static/sounds/quack.mp3');
+                    audio.volume = 1.0;
                     audio.play().catch(err => console.warn('Quack autoplay prevented:', err));
-                    quacksPlayed++;
-                }, 60); 
+                };
+
+                // Play first quack immediately
+                playQuack();
+                quacksPlayed++;
+
+                if (quacksPlayed < quackCount) {
+                    const quackInterval = setInterval(() => {
+                        if (quacksPlayed >= quackCount) {
+                            clearInterval(quackInterval);
+                            return;
+                        }
+                        playQuack();
+                        quacksPlayed++;
+                    }, 250); 
+                }
             }
         }
         
@@ -83,7 +94,7 @@ export const useLayout = () => {
 
     const handleLogout = async () => {
         await logout();
-        navigate('/login');
+        navigate('/');
     };
 
     const isGuestPage = ['/login', '/signup'].includes(location.pathname);
@@ -102,6 +113,7 @@ export const useLayout = () => {
         handleLogout,
         isGuestPage,
         isChatPage,
-        location
+        location,
+        hamburgerProgress
     };
 };

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { 
     Search, 
     Plus, 
@@ -7,13 +7,17 @@ import {
     Trash2, 
     RefreshCw,
     Shield,
-    ChevronLeft
+    ChevronLeft,
+    Users as UsersIcon
 } from 'lucide-react';
 import SmartImage from '../../components/common/SmartImage';
 import { 
     CreateUserModal, 
     AdjustDucksModal, 
-    ResetPasswordModal 
+    ResetPasswordModal,
+    ManageChildrenModal,
+    ConnectionCardModal,
+    BulkConnectionCardsModal
 } from '../../components/admin/AdminModals';
 import './Users.css';
 import Skeleton from '../../components/common/Skeleton';
@@ -24,8 +28,6 @@ import { getApiUrl } from '../../utils/apiUrl';
 import { useUsersManagement } from '../../hooks/useUsersManagement';
 
 const Users = () => {
-    const [searchTerm, setSearchTerm] = useState('');
-    
     const {
         users,
         isLoading,
@@ -43,13 +45,24 @@ const Users = () => {
         handleCreateUser,
         handleAdjustDucks,
         handleResetPassword,
-        handleRemoveUser
+        handleRemoveUser,
+        parentChildren,
+        fetchParentChildren,
+        handleToggleChildLink,
+        connectionCode,
+        setConnectionCode,
+        fetchConnectionCard,
+        classrooms,
+        fetchClassrooms,
+        classroomCards,
+        setClassroomCards,
+        isFetchingCards,
+        fetchClassroomCards,
+        searchTerm,
+        setSearchTerm
     } = useUsersManagement();
 
-    const filteredUsers = users.filter(u => 
-        u.username.toLowerCase().includes(searchTerm.toLowerCase()) || 
-        u.nickname?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const filteredUsers = users;
 
     if (isLoading) return (
         <div className="admin-users-page">
@@ -71,7 +84,6 @@ const Users = () => {
         <div className="admin-users-page">
             <AdminPageHeader 
                 title="User Directory" 
-                description="Manage all registered students and administrators."
             >
                 <div className="search-bar">
                     <Search size={18} />
@@ -84,6 +96,9 @@ const Users = () => {
                 </div>
                 <button className="primary-btn" onClick={() => setActiveModal('create')}>
                     <Plus size={18} /> Add User
+                </button>
+                <button className="primary-btn" onClick={() => setActiveModal('bulk_connection_cards')} style={{ background: '#10b981', color: 'white', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Key size={18} /> Print Cohort Cards
                 </button>
                 <button 
                     className={`refresh-btn ${isRefreshing ? 'spinning' : ''}`}
@@ -179,6 +194,36 @@ const Users = () => {
                                             >
                                                 <Key size={16} />
                                             </button>
+                                            {u.role === 'parent' && (
+                                                <button 
+                                                    className="action-btn" 
+                                                    onClick={() => { 
+                                                        setModalUser(u); 
+                                                        fetchParentChildren(u.id);
+                                                        setActiveModal('manage_children'); 
+                                                    }}
+                                                    title="Manage Children"
+                                                    style={{ color: '#4f46e5' }}
+                                                >
+                                                    <UsersIcon size={16} />
+                                                </button>
+                                            )}
+                                            {!u.is_admin && u.role === 'student' && (
+                                                <button 
+                                                    className="action-btn" 
+                                                    onClick={async () => { 
+                                                        const success = await fetchConnectionCard(u.id);
+                                                        if (success) {
+                                                            setModalUser(u); 
+                                                            setActiveModal('connection_card'); 
+                                                        }
+                                                    }}
+                                                    title="Get Connection Card"
+                                                    style={{ color: '#059669', border: '1px solid #10b981', padding: '4px 8px', borderRadius: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}
+                                                >
+                                                    <Key size={14} /> <span style={{ fontSize: '0.75rem', fontWeight: 'bold' }}>Card</span>
+                                                </button>
+                                            )}
                                             {!u.is_admin && (
                                                 <button 
                                                     className="action-btn delete" 
@@ -253,6 +298,34 @@ const Users = () => {
                 user={modalUser} 
                 formErrors={formErrors} 
                 loading={formLoading} 
+            />
+
+            <ManageChildrenModal 
+                isOpen={activeModal === 'manage_children'} 
+                onClose={() => { setActiveModal(null); setModalUser(null); }} 
+                parent={modalUser}
+                users={users}
+                parentChildren={parentChildren}
+                onToggleLink={handleToggleChildLink}
+                loading={formLoading}
+            />
+
+            <ConnectionCardModal 
+                isOpen={activeModal === 'connection_card'} 
+                onClose={() => { setActiveModal(null); setModalUser(null); setConnectionCode(null); }} 
+                student={modalUser}
+                connectionCode={connectionCode}
+            />
+
+            <BulkConnectionCardsModal
+                isOpen={activeModal === 'bulk_connection_cards'}
+                onClose={() => setActiveModal(null)}
+                classrooms={classrooms}
+                fetchClassrooms={fetchClassrooms}
+                classroomCards={classroomCards}
+                setClassroomCards={setClassroomCards}
+                isFetchingCards={isFetchingCards}
+                fetchClassroomCards={fetchClassroomCards}
             />
         </div>
     );

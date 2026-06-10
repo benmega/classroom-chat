@@ -1,0 +1,19 @@
+.hamburger-transition-svg {
+    display: inline-block;
+    vertical-align: middle;
+    transition: transform var(--transition-fast, 150ms) ease;
+}
+
+/* Subtle bounce/wobble on hover when in hamburger form to feel alive */
+.profile-toggle:hover .hamburger-transition-svg {
+    transform: scale(1.15) rotate(5deg);
+}
+
+.hamburger-top-bun,
+.hamburger-patty,
+.hamburger-bottom-bun,
+.hamburger-lettuce,
+.hamburger-cheese,
+.hamburger-sesame-seeds {
+    transition: fill 150ms ease, opacity 150ms ease, x 150ms ease, y 150ms ease, width 150ms ease, height 150ms ease, rx 150ms ease, ry 150ms ease;
+}

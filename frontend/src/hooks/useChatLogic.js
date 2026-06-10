@@ -14,6 +14,9 @@ export const useChatLogic = () => {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
+  const [conversationsOffset, setConversationsOffset] = useState(0);
+  const [hasMoreConversations, setHasMoreConversations] = useState(true);
+  const [isLoadingMoreConversations, setIsLoadingMoreConversations] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newConversationTitle, setNewConversationTitle] = useState('');
   const [isCreating, setIsCreating] = useState(false);
@@ -64,29 +67,71 @@ export const useChatLogic = () => {
     });
   }, []);
 
-  const fetchHistory = useCallback(async (defaultConvId = null) => {
+  const fetchHistory = useCallback(async (defaultConvId = null, offset = 0) => {
     if (!user?.id) {
       setLoading(false);
       return;
     }
+    if (offset > 0) {
+      setIsLoadingMoreConversations(true);
+    }
     try {
-      const response = await client.get(`/message/api/conversations/${user.id}`);
+      const limit = 20;
+      const response = await client.get(`/message/api/conversations/${user.id}?limit=${limit}&offset=${offset}`);
       const historyData = response.data.data || response.data;
-      setConversations(historyData);
+      
+      setConversations(prev => {
+        if (offset === 0) return historyData;
+        const merged = [...prev];
+        historyData.forEach(newConv => {
+          if (!merged.some(c => c.conversation_id === newConv.conversation_id)) {
+            merged.push(newConv);
+          }
+        });
+        return merged;
+      });
 
-      if (defaultConvId) {
-        const target = historyData.find(c => c.conversation_id === defaultConvId);
+      setHasMoreConversations(historyData.length === limit);
+
+      if (defaultConvId && offset === 0) {
+        let target = historyData.find(c => c.conversation_id === defaultConvId);
+        if (!target) {
+          try {
+            const singleRes = await client.get(`/message/view_conversation/${defaultConvId}`);
+            target = singleRes.data.conversation || singleRes.data;
+            if (target) {
+              setConversations(prev => [target, ...prev]);
+            }
+          } catch (err) {
+            console.error('Failed to load global conversation', err);
+          }
+        }
         if (target) {
           setActiveConversation(target);
-          setMessages(target.messages || []);
+          try {
+            const msgsRes = await client.get(`/message/view_conversation/${target.conversation_id}`);
+            const fullConv = msgsRes.data.conversation || msgsRes.data;
+            setMessages(fullConv.messages || []);
+          } catch (err) {
+            console.error('Failed to load messages for active conversation', err);
+            setMessages(target.messages || []);
+          }
         }
       }
-    } catch {
-      console.error('Failed to load conversation history');
+    } catch (err) {
+      console.error('Failed to load conversation history', err);
     } finally {
       setLoading(false);
+      setIsLoadingMoreConversations(false);
     }
   }, [user]);
+
+  const handleLoadMoreConversations = useCallback(async () => {
+    if (isLoadingMoreConversations || !hasMoreConversations) return;
+    const nextOffset = conversationsOffset + 20;
+    setConversationsOffset(nextOffset);
+    await fetchHistory(null, nextOffset);
+  }, [conversationsOffset, hasMoreConversations, isLoadingMoreConversations, fetchHistory]);
 
   const onClassroomEnrolled = useCallback((data) => {
     const classroom = data?.classroom;
@@ -156,9 +201,9 @@ export const useChatLogic = () => {
         const firstClassroom = (ctx.classrooms || []).find(c => c.id !== GLOBAL_CLASSROOM_ID);
         if (firstClassroom) setSelectedClassroomId(firstClassroom.id);
 
-        await fetchHistory(globalConvId);
+        await fetchHistory(globalConvId, 0);
       } catch {
-        await fetchHistory();
+        await fetchHistory(null, 0);
       }
     };
 
@@ -171,13 +216,12 @@ export const useChatLogic = () => {
       const convId = params.get('conv');
       if (convId) {
         const targetConv = conversations.find(c => c.conversation_id === parseInt(convId));
-        if (targetConv) {
-          setActiveConversation(targetConv);
-          setMessages(targetConv.messages || []);
+        if (targetConv && activeConversation?.conversation_id !== targetConv.conversation_id) {
+          handleSelectConversation(targetConv);
         }
       }
     }
-  }, [location.search, conversations]);
+  }, [location.search, conversations, activeConversation]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -231,9 +275,19 @@ export const useChatLogic = () => {
     };
   }, []);
 
-  const handleSelectConversation = (conv) => {
+  const handleSelectConversation = async (conv) => {
     setActiveConversation(conv);
     setMessages(conv.messages || []);
+    try {
+      const response = await client.get(`/message/view_conversation/${conv.conversation_id}`);
+      const convData = response.data.conversation || response.data;
+      setMessages(convData.messages || []);
+      setConversations(prev => prev.map(c => 
+        c.conversation_id === conv.conversation_id ? { ...c, messages: convData.messages } : c
+      ));
+    } catch (err) {
+      console.error('Failed to load messages for conversation', err);
+    }
   };
 
   const handleCreateConversation = async (e) => {
@@ -396,6 +450,9 @@ export const useChatLogic = () => {
     openEditModal,
     handleUpdateConversation,
     handleDeleteConversation,
+    hasMoreConversations,
+    isLoadingMoreConversations,
+    handleLoadMoreConversations,
     handleDeleteMessage
   };
 };

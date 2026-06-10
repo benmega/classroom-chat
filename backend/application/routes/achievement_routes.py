@@ -12,9 +12,12 @@ from flask import (
     request,
     send_from_directory,
     render_template,
+    send_file,
 )
 from sqlalchemy.orm import joinedload
 from werkzeug.utils import secure_filename
+import zipfile
+import io
 
 from application.extensions import db
 from application.models.achievements import Achievement
@@ -374,6 +377,51 @@ def download_certificate(cert_id):
 
     return send_from_directory(
         directory, filename, as_attachment=True, download_name=download_name
+    )
+
+
+@achievements.route("/admin/certificates/reviewed/all", methods=["POST"])
+@admin_only
+def mark_all_reviewed():
+    certs = db.session.query(UserCertificate).filter_by(reviewed=False).all()
+    now = datetime.utcnow()
+    for cert in certs:
+        cert.reviewed = True
+        cert.reviewed_at = now
+    db.session.commit()
+
+    msg = f"{len(certs)} certificates marked as reviewed."
+
+    if request.is_json or request.headers.get("X-Requested-With") == "XMLHttpRequest":
+        return jsonify({"status": "success", "message": msg})
+
+    flash(msg, "success")
+    return redirect(url_for("achievements.admin_certificates"))
+
+
+@achievements.route("/admin/certificates/download_all")
+@admin_only
+def download_all_certificates():
+    certs = db.session.query(UserCertificate).filter_by(reviewed=False).join(User).join(Achievement).all()
+
+    if not certs:
+        flash("No certificates to download.", "error")
+        return redirect(request.referrer or url_for("achievements.admin_certificates"))
+
+    memory_file = io.BytesIO()
+    with zipfile.ZipFile(memory_file, 'w', zipfile.ZIP_DEFLATED) as zf:
+        for cert in certs:
+            full_path = os.path.abspath(cert.file_path)
+            if os.path.exists(full_path):
+                filename = f"{cert.user.nickname}_{cert.achievement.name}.pdf"
+                zf.write(full_path, filename)
+
+    memory_file.seek(0)
+    return send_file(
+        memory_file,
+        mimetype="application/zip",
+        as_attachment=True,
+        download_name="all_pending_certificates.zip"
     )
 
 

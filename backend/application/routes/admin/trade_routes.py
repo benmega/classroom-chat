@@ -12,16 +12,18 @@ from ..admin_routes import admin_bp
 @admin_only
 @api_response
 def pending_trades():
-    pend_trades = DuckTradeLog.query.filter_by(status="pending").all()
+    # Join with User to get nickname
+    pend_trades = db.session.query(DuckTradeLog, User).outerjoin(User, DuckTradeLog.username == User._username).filter(DuckTradeLog.status == "pending").all()
 
     trades_list = [
         {
-            "id": t.id,
-            "username": t.username,
-            "digital_ducks": t.digital_ducks,
-            "bit_ducks": t.bit_ducks,
-            "byte_ducks": t.byte_ducks,
-            "timestamp": t.timestamp.isoformat() if t.timestamp else None,
+            "id": t[0].id,
+            "username": t[0].username,
+            "nickname": t[1].nickname if t[1] else t[0].username,
+            "digital_ducks": t[0].digital_ducks,
+            "bit_ducks": t[0].bit_ducks,
+            "byte_ducks": t[0].byte_ducks,
+            "timestamp": t[0].timestamp.isoformat() if t[0].timestamp else None,
         }
         for t in pend_trades
     ]

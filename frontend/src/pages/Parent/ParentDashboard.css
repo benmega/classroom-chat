@@ -1,0 +1,397 @@
+/* ParentDashboard.css - Redesigned */
+
+.parent-dashboard {
+    min-height: 100vh;
+    height: 100vh;
+    overflow-y: auto;
+    background: transparent;
+    font-family: var(--font-body, system-ui, sans-serif);
+    color: var(--text-primary, #111827);
+}
+
+/* ─── Header Banner ─── */
+.parent-header {
+    padding: 1rem 2rem;
+    margin: 1rem;
+    position: sticky;
+    top: 1rem;
+    z-index: 100;
+}
+
+.parent-header-content {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+}
+
+.header-icon-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: transparent;
+    overflow: hidden;
+}
+
+.parent-header-text h1 {
+    margin: 0;
+    font-family: var(--font-heading, inherit);
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-primary, #111827);
+    letter-spacing: -0.01em;
+}
+
+.parent-header-text p {
+    margin: 0.25rem 0 0;
+    font-size: 0.875rem;
+    color: var(--text-muted, #6b7280);
+}
+
+.parent-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+/* Buttons removed as they will use global .btn-premium and .btn-secondary classes */
+
+/* ─── Body Container ─── */
+.parent-body {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2.5rem 2rem;
+}
+
+/* ─── Children Grid ─── */
+.children-grid {
+    display: grid;
+    gap: 1.5rem;
+    justify-content: center;
+}
+
+/* 1 child + ghost = 2 cards */
+.children-grid.grid-few {
+    grid-template-columns: repeat(auto-fit, minmax(320px, 420px));
+}
+.children-grid.grid-few .child-card {
+    padding: 2.5rem 2rem;
+}
+.children-grid.grid-few .child-avatar,
+.children-grid.grid-few .child-avatar-initials,
+.children-grid.grid-few .ghost-card-icon {
+    width: 96px;
+    height: 96px;
+    font-size: 1.75rem;
+}
+.children-grid.grid-few .child-name {
+    font-size: 1.5rem;
+}
+.children-grid.grid-few .child-nickname {
+    font-size: 1rem;
+}
+
+/* 2-3 children + ghost = 3-4 cards */
+.children-grid.grid-medium {
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+.children-grid.grid-medium .child-avatar,
+.children-grid.grid-medium .child-avatar-initials,
+.children-grid.grid-medium .ghost-card-icon {
+    width: 80px;
+    height: 80px;
+}
+.children-grid.grid-medium .child-name {
+    font-size: 1.25rem;
+}
+
+/* 4+ children + ghost = 5+ cards */
+.children-grid.grid-many {
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+}
+.children-grid.grid-many .child-avatar,
+.children-grid.grid-many .child-avatar-initials,
+.children-grid.grid-many .ghost-card-icon {
+    width: 64px;
+    height: 64px;
+}
+.children-grid.grid-many .child-card {
+    padding: 1.25rem;
+}
+
+/* ─── Child Card ─── */
+.child-card {
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    position: relative;
+}
+
+.child-card-menu {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    z-index: 20;
+}
+
+.menu-btn {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s;
+    opacity: 0.6;
+}
+
+.menu-btn:hover {
+    color: var(--text-primary);
+    opacity: 1;
+}
+
+.child-menu-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: white;
+    border: 1px solid var(--border-subtle);
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    min-width: 160px;
+    margin-top: 0.5rem;
+    z-index: 30;
+}
+
+.menu-item {
+    display: block;
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: none;
+    background: transparent;
+    text-align: left;
+    cursor: pointer;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    transition: all 0.2s;
+    border-radius: 0;
+}
+
+.menu-item:hover {
+    background: var(--bg-secondary);
+}
+
+.menu-item.disconnect {
+    color: #ef4444;
+}
+
+.menu-item.disconnect:hover {
+    background: rgba(239, 68, 68, 0.1);
+}
+
+/* ─── Ghost Card ─── */
+.ghost-card {
+    background: transparent;
+    border: 2px dashed var(--border-subtle, #e5e7eb);
+    box-shadow: none;
+    justify-content: center;
+    transition: all 0.2s ease-out;
+}
+
+.ghost-card:hover {
+    border-color: var(--primary-color, #0f766e);
+    background: var(--primary-light, #f0fdfa);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.ghost-card .ghost-text {
+    color: var(--text-muted, #6b7280);
+    transition: color 0.2s;
+}
+
+.ghost-card:hover .ghost-text,
+.ghost-card:hover .ghost-card-icon {
+    color: var(--primary-color, #0f766e);
+}
+
+.ghost-card-icon {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: var(--bg-secondary, #f3f4f6);
+    color: var(--text-muted, #9ca3af);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 0.75rem;
+    transition: all 0.2s;
+}
+
+.ghost-card:hover .ghost-card-icon {
+    background: #ffffff;
+}
+
+.child-avatar {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-bottom: 0.75rem;
+    border: 2px solid #ffffff;
+    box-shadow: 0 0 0 1px var(--border-subtle, #e5e7eb);
+}
+
+.child-avatar-initials {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: var(--primary-light, #f0fdfa);
+    color: var(--primary-color, #0f766e);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: 0.75rem;
+    letter-spacing: 0.5px;
+    border: 1px solid var(--border-subtle, #e5e7eb);
+}
+
+.child-name {
+    font-family: var(--font-heading, inherit);
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--text-primary, #111827);
+    margin: 0 0 0.25rem 0;
+}
+
+.child-nickname {
+    font-size: 0.875rem;
+    color: var(--text-muted, #6b7280);
+    margin: 0;
+}
+
+/* ─── Loading State ─── */
+.parent-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    gap: 1rem;
+    background: transparent;
+    color: var(--text-primary, #111827);
+}
+
+.parent-loading h2 {
+    margin: 0;
+    font-family: var(--font-heading, inherit);
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.parent-loading p {
+    margin: 0;
+    color: var(--text-muted, #6b7280);
+    font-size: 0.875rem;
+}
+
+/* ─── Empty State ─── */
+.parent-empty-state {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem 2rem;
+    background: #ffffff;
+    border: 1px dashed var(--border-subtle, #d1d5db);
+    border-radius: var(--radius-lg, 0.5rem);
+    text-align: center;
+    gap: 0.75rem;
+}
+
+.parent-empty-state svg {
+    color: var(--text-muted, #9ca3af);
+    margin-bottom: 0.5rem;
+}
+
+.parent-empty-state h3 {
+    margin: 0;
+    font-family: var(--font-heading, inherit);
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-primary, #111827);
+}
+
+.parent-empty-state p {
+    margin: 0;
+    color: var(--text-muted, #6b7280);
+    max-width: 400px;
+    line-height: 1.5;
+}
+
+/* ─── Error State ─── */
+.parent-error {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 2rem;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: var(--radius-lg, 0.5rem);
+    text-align: center;
+    gap: 0.5rem;
+}
+
+.parent-error h3 {
+    margin: 0;
+    color: #b91c1c;
+    font-weight: 600;
+}
+
+.parent-error p {
+    margin: 0;
+    color: #7f1d1d;
+    font-size: 0.875rem;
+}
+
+/* ─── Responsive ─── */
+@media (max-width: 640px) {
+    .parent-header {
+        padding: 1rem 1.25rem;
+        margin: 0.5rem;
+        top: 0.5rem;
+    }
+
+    .parent-header-text h1 {
+        font-size: 1.125rem;
+    }
+
+    .parent-body {
+        padding: 1.5rem 1.25rem;
+    }
+
+    .children-grid,
+    .children-grid.grid-few,
+    .children-grid.grid-medium,
+    .children-grid.grid-many {
+        grid-template-columns: 1fr;
+    }
+}

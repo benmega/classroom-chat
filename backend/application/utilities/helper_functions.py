@@ -45,7 +45,7 @@ def get_s3_client():
             kwargs["aws_secret_access_key"] = os.environ.get("AWS_SECRET_ACCESS_KEY")
         
         return boto3.client("s3", **kwargs)
-    except Exception as e:
+    except Exception:
         import traceback
         traceback.print_exc()
         return None

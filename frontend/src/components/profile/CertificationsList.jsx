@@ -1,13 +1,17 @@
 import React from 'react';
-import { Award } from 'lucide-react';
+import { Award, Plus } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const CertificationsList = ({ certificates }) => {
     if (!certificates || certificates.length === 0) return null;
 
     return (
         <section className="dashboard-panel">
-            <div className="panel-header">
+            <div className="panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <h2><Award size={20} /> Certifications</h2>
+                <Link to="/submit-work" title="Submit Certificate" style={{ color: 'var(--text-secondary)', display: 'flex', alignItems: 'center' }}>
+                    <Plus size={20} />
+                </Link>
             </div>
             <div className="cert-list-container">
                 <div className="cert-list">

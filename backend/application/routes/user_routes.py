@@ -119,6 +119,25 @@ def auth_status():
         }, 500
 
 
+@user.route("/api/auth/tutorial/complete", methods=["POST"])
+@require_login
+@api_response
+def tutorial_complete():
+    try:
+        user_id = session.get("user")
+        if user_id:
+            user_obj = db.session.get(User, user_id)
+            if user_obj:
+                user_obj.has_seen_tutorial = True
+                db.session.commit()
+                return {"message": "Tutorial marked as seen", "has_seen_tutorial": True}, 200
+        return {"error": "Unauthorized"}, 401
+    except Exception as e:
+        current_app.logger.error(f"Error completing tutorial: {str(e)}", exc_info=True)
+        return {"error": "Internal server error"}, 500
+
+
+
 @user.route("/logout")
 def logout():
     user_id = session.get("user")
@@ -240,6 +259,31 @@ def edit_profile():
     if request.accept_mimetypes.best == "application/json" or request.is_json:
         return {"user": user_obj.to_dict()}
     return redirect("/edit-profile")
+
+
+@user.route("/api/parent-code", methods=["GET"])
+@require_login
+@api_response
+def get_parent_connection_code():
+    """Returns the student's connection code for parents to use."""
+    user_id = session.get("user")
+    user_obj = db.session.get(User, user_id)
+
+    if not user_obj:
+        return "User not found", 404
+
+    if user_obj.role == "parent":
+        return "Parents cannot use connection codes.", 400
+
+    code = user_obj.get_connection_code()
+    db.session.commit()
+
+    return {
+        "connection_code": code,
+        "student_id": user_obj.id,
+        "username": user_obj.username,
+        "nickname": user_obj.nickname
+    }
 
 
 @user.route("/project/new", methods=["GET", "POST"])

@@ -1,5 +1,6 @@
 import React from 'react';
-import { User } from 'lucide-react';
+import { User, Pencil } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import './Profile.css';
 import '../../assets/css/sprite.css'; 
 import ContributionGraph from '../../components/profile/ContributionGraph';
@@ -20,6 +21,7 @@ import PfpCropModal from '../../components/profile/PfpCropModal';
 import { useProfile } from '../../hooks/useProfile';
 
 const Profile = () => {
+    const navigate = useNavigate();
     const {
         profileData,
         isLoading,
@@ -42,6 +44,7 @@ const Profile = () => {
         handleSaveCrop
     } = useProfile();
 
+
     if (isLoading) return <div className="profile-loading">Loading Profile...</div>;
     if (!profileData) return <div className="profile-error">Profile not found.</div>;
 
@@ -61,8 +64,17 @@ const Profile = () => {
                 <div className="column-left">
                     {(target.bio || isOwner) ? (
                         <section className="dashboard-panel bio-section">
-                            <div className="panel-header">
+                            <div className="panel-header between">
                                 <h2><User size={20} /> About Me</h2>
+                                {isOwner && (
+                                    <button 
+                                        onClick={() => navigate('/settings')}
+                                        className="btn-icon"
+                                        title="Edit Profile"
+                                    >
+                                        <Pencil size={16} />
+                                    </button>
+                                )}
                             </div>
                             <div className="bio-panel-content">
                                 {target.bio ? (
@@ -77,6 +89,8 @@ const Profile = () => {
                             </div>
                         </section>
                     ) : null}
+
+
 
                     <CourseProgress target={target} />
                     

@@ -1,17 +1,15 @@
 .app-container {
     display: flex;
     flex-direction: column;
-    height: 100vh;
+    height: 100dvh;
     overflow: hidden;
 }
 
 header {
     flex-shrink: 0;
-    background: var(--glass-bg);
-    backdrop-filter: var(--glass-blur);
-    border-bottom: 1px solid var(--glass-border);
-    box-shadow: var(--shadow-soft);
-    /* Removed sticky since app-container is 100vh flex-column */
+    background: var(--bg-primary);
+    border-bottom: 1px solid var(--border-subtle);
+    box-shadow: var(--shadow-sm);
     z-index: 1000;
     width: 100%;
 }
@@ -20,15 +18,12 @@ header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0.4rem 2.5rem; /* Slimmer height, wider horizontal padding for desktop */
-    max-width: 1500px; /* Increased max-width for better use of large screens */
-    margin: 0 auto;
+    padding: 0.75rem 1rem;
     width: 100%;
 }
 
 header.guest-mode {
     background: transparent;
-    backdrop-filter: none;
     border-bottom: none;
     box-shadow: none;
 }
@@ -38,9 +33,9 @@ header.guest-mode {
         display: none;
     }
     .header-content {
-        padding: 0 1rem;
-        min-height: 72px; /* Standardize with AdminLayout variable */
-        gap: 0.75rem;
+        padding: 0 0.75rem;
+        min-height: 56px;
+        gap: 0.5rem;
     }
 }
 
@@ -49,9 +44,6 @@ header.guest-mode {
         padding: 0.5rem 0.75rem;
         flex-wrap: nowrap;
         gap: 0.5rem;
-    }
-    #logo-container .logo img {
-        height: 30px;
     }
     .hamburger-toggle {
         padding: 0.4rem;
@@ -62,19 +54,44 @@ header.guest-mode {
 #logo-container {
     display: flex;
     align-items: center;
+    width: 256px; /* 64 * 4px */
 }
 
-#logo-container .logo img {
-    height: 42px; /* Slightly smaller logo for a more professional desktop look */
+.logo-link {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.logo-icon-wrapper {
+    width: 40px;
+    height: 40px;
+    background: var(--primary-light);
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid var(--primary-color);
+    box-shadow: var(--shadow-sm);
+}
+
+.logo-img {
+    height: 24px;
     width: auto;
     display: block;
     object-fit: contain;
     transition: var(--transition-smooth);
-    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
 }
 
-#logo-container .logo img:hover {
+.logo-link:hover .logo-img {
     transform: scale(1.1) rotate(-3deg);
+}
+
+.logo-text {
+    font-weight: 800;
+    font-size: var(--font-lg);
+    letter-spacing: -0.025em;
+    color: var(--text-primary);
 }
 
 .hamburger-toggle {
@@ -120,20 +137,20 @@ nav ul {
     gap: 0.5rem;
     padding: 0.25rem 0.75rem;
     background: var(--bg-tertiary);
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-full);
     transition: var(--transition-bounce);
     border: 1px solid var(--border-subtle);
-    box-shadow: var(--shadow-sm);
+    box-shadow: none;
     position: relative;
-    height: 56px; /* Matched to search bar height */
-    padding: 0 1.25rem; /* Wider padding for better balance */
+    height: 40px;
+    padding: 0 1rem;
 }
 
 a.stat-badge:hover {
     background: white;
     border-color: var(--primary-color);
     transform: translateY(-1px);
-    box-shadow: var(--shadow-glow);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
 
 .stat-badge .stat-icon {
@@ -172,17 +189,12 @@ a.stat-badge:hover {
 }
 
 .stat-badge .stat-label {
-    font-size: 0.65rem; /* Adjusted for better visibility with height 56px */
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--text-muted);
-    margin-bottom: 0px;
+    display: none;
 }
 
 .stat-badge .stat-value {
-    font-size: 1.1rem; /* Shrunk from the accidental 2.2rem override */
-    font-weight: 800;
+    font-size: 0.95rem;
+    font-weight: 700;
     color: var(--text-primary);
     line-height: 1;
 }
@@ -194,10 +206,10 @@ a.stat-badge:hover {
     .stat-badge {
         padding: 0 0.75rem;
         gap: 0.4rem;
-        height: 48px; /* Slightly smaller for tablets */
+        height: 38px;
     }
     .stat-badge .stat-value {
-        font-size: 1rem;
+        font-size: 0.9rem;
     }
     .stat-label {
         display: none;
@@ -242,13 +254,13 @@ a.stat-badge:hover {
     align-items: center;
     justify-content: center;
     padding: 0;
-    border-radius: var(--radius-md); /* Matching stat badges */
+    border-radius: var(--radius-full);
     background: var(--bg-tertiary);
     border: 1px solid var(--border-subtle);
     cursor: pointer;
     transition: var(--transition-fast);
-    width: 38px; /* Matching height of stat badges */
-    height: 38px;
+    width: 40px;
+    height: 40px;
 }
 
 @media (max-width: 500px) {
@@ -487,15 +499,9 @@ footer {
 .user-search-container {
     position: relative;
     width: 100%;
-    max-width: 300px;
-    margin: 0 auto;
-    padding: 0 1rem;
+    max-width: 672px; /* max-w-2xl */
+    margin: 0 1rem;
     flex-grow: 1;
-    transition: max-width var(--transition-smooth);
-}
-
-.user-search-container:focus-within {
-    max-width: 450px;
 }
 
 .user-search-container .search-input-wrapper-common {
@@ -631,4 +637,11 @@ footer {
     transform: translateX(4px);
 }
 
-
+@media (min-width: 801px) {
+    main.main-full {
+        overflow-y: auto;
+    }
+    .desktop-hidden-footer {
+        display: none !important;
+    }
+}

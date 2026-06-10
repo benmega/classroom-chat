@@ -1,9 +1,6 @@
 /* --- Admin Dashboard Premium Styles --- */
 
 .admin-dashboard {
-    max-width: 1600px;
-    margin: 0 auto;
-    padding: 2rem;
     animation: fadeIn var(--transition-smooth);
 }
 
@@ -11,17 +8,17 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 3rem;
+    margin-bottom: 1rem;
 }
 
 .dashboard-header h1 {
-    font-size: 2.8rem;
+    font-size: 2rem;
     font-weight: 800;
     font-family: var(--font-heading);
     background: linear-gradient(135deg, var(--text-primary), var(--primary-color));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.25rem;
 }
 
 .dashboard-header p {
@@ -56,36 +53,31 @@
 .stats-grid {
     display: grid;
     grid-template-columns: repeat(1, 1fr);
-    gap: 1rem;
-    margin-bottom: 4rem;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
 }
 
 @media (min-width: 640px) {
-    .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 1.25rem; }
+    .stats-grid { grid-template-columns: repeat(3, 1fr); gap: 0.75rem; }
 }
 
 @media (min-width: 1024px) {
-    .stats-grid { grid-template-columns: repeat(3, 1fr); gap: 1.5rem; }
+    .stats-grid { grid-template-columns: repeat(5, 1fr); gap: 0.75rem; }
+    .stat-card { padding: 0.5rem; border-radius: 16px; }
 }
 
 @media (min-width: 1400px) {
-    .stats-grid { grid-template-columns: repeat(4, 1fr); }
-    .stat-card { padding: 1.5rem; }
-}
-
-@media (min-width: 1600px) {
-    .stats-grid { grid-template-columns: repeat(5, 1fr); }
-    .stat-card { padding: 2rem; }
+    .stats-grid { gap: 1rem; }
 }
 
 .stat-card {
     background: var(--glass-bg);
     backdrop-filter: var(--glass-blur);
-    padding: 2rem;
-    border-radius: 28px;
+    padding: 0.5rem;
+    border-radius: 16px;
     display: flex;
     align-items: center;
-    gap: 1.5rem;
+    gap: 0.5rem;
     border: 1px solid var(--glass-border);
     box-shadow: var(--shadow-soft);
     position: relative;
@@ -104,9 +96,9 @@
 }
 
 .stat-icon {
-    width: 70px;
-    height: 70px;
-    border-radius: 20px;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -115,7 +107,7 @@
     z-index: 1;
 }
 
-.stat-icon svg { width: 32px; height: 32px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.2)); }
+.stat-icon svg { width: 20px; height: 20px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.2)); }
 
 .stat-icon.ducks { background: linear-gradient(135deg, #fbbf24, #d97706); color: #78350f; } /* Darker text for yellow */
 .stat-icon.week { background: linear-gradient(135deg, #059669, #064e3b); } /* Darker green */
@@ -141,7 +133,7 @@
 
 .stat-label {
     display: block;
-    font-size: 0.95rem;
+    font-size: 0.75rem;
     color: var(--text-secondary);
     font-weight: 700;
     margin-bottom: 6px;
@@ -152,7 +144,7 @@
 }
 
 .stat-value {
-    font-size: 2.2rem;
+    font-size: 1.5rem;
     font-weight: 900;
     font-family: var(--font-heading);
     color: var(--text-primary);
@@ -162,18 +154,18 @@
 /* Dashboard Content Grid */
 .dashboard-layout {
     display: grid;
-    grid-template-columns: 1fr 400px;
-    gap: 3rem;
+    grid-template-columns: 1fr 340px;
+    gap: 1.5rem;
 }
 
 .card {
     background: var(--glass-bg);
     backdrop-filter: var(--glass-blur);
-    padding: 2.5rem;
-    border-radius: 32px;
+    padding: 1rem;
+    border-radius: 20px;
     border: 1px solid var(--glass-border);
     box-shadow: var(--shadow-rich);
-    margin-bottom: 3rem;
+    margin-bottom: 1.5rem;
     transition: var(--transition-smooth);
 }
 
@@ -182,13 +174,13 @@
 }
 
 .card-header {
-    margin-bottom: 2.5rem;
+    margin-bottom: 1rem;
     border-bottom: 1px solid var(--glass-border);
-    padding-bottom: 1.5rem;
+    padding-bottom: 0.75rem;
 }
 
 .card-header h3 {
-    font-size: 1.5rem;
+    font-size: 1.25rem;
     margin-bottom: 0;
     display: flex;
     align-items: center;
@@ -230,7 +222,7 @@
 
 /* Table Style Overhaul */
 .admin-table {
-    border-spacing: 0 10px;
+    border-spacing: 0 6px;
     border-collapse: separate;
 }
 
@@ -241,7 +233,7 @@
 .admin-table td {
     background: var(--bg-secondary);
     border: none;
-    padding: 20px 16px;
+    padding: 12px 12px;
 }
 
 .admin-table td:first-child { border-radius: 16px 0 0 16px; }
@@ -253,10 +245,10 @@
 }
 
 .user-cell img, .user-avatar {
-    width: 44px;
-    height: 44px;
-    border-radius: 12px;
-    border: 3px solid white;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    border: 2px solid white;
     box-shadow: var(--shadow-soft);
     object-fit: cover;
 }
@@ -273,8 +265,8 @@
 /* Quick Actions Sidebar */
 .action-item {
     background: var(--glass-bg);
-    border-radius: 18px;
-    padding: 1.25rem;
+    border-radius: 14px;
+    padding: 1rem;
     border: 1px solid var(--glass-border);
 }
 
@@ -284,9 +276,9 @@
 }
 
 .action-item .icon {
-    width: 48px;
-    height: 48px;
-    border-radius: 14px;
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
 }
 
 /* Banned Words */

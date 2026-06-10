@@ -33,7 +33,7 @@ test.describe('Authentication Flow', () => {
     await page.click('button[id="login-submit-btn"]');
 
     // Should show success toast and navigate to home
-    await expect(page).toHaveURL('/');
+    await expect(page).toHaveURL('/chat');
   });
 
   test('should show error on invalid credentials', async ({ page }) => {

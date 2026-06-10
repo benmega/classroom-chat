@@ -59,11 +59,19 @@ def reject_user(user_id):
 def get_users():
     page = request.args.get("page", 1, type=int)
     per_page = request.args.get("per_page", 50, type=int)
+    search = request.args.get("search", "", type=str)
 
     from application.models.challenge_log import ChallengeLog
     from sqlalchemy import func
 
-    pagination = User.query.paginate(page=page, per_page=per_page, error_out=False)
+    query = User.query
+    if search:
+        query = query.filter(db.or_(
+            User._username.ilike(f"%{search}%"),
+            User.nickname.ilike(f"%{search}%")
+        ))
+
+    pagination = query.paginate(page=page, per_page=per_page, error_out=False)
     users = pagination.items
     usernames = [u.username for u in users]
 
@@ -254,3 +262,147 @@ def verify_password():
         return jsonify({"success": True})
     else:
         return jsonify({"success": False}), 401
+
+
+@admin_bp.route("/parents/<int:parent_id>/children", methods=["GET"])
+@admin_only
+def get_parent_children(parent_id):
+    parent = db.session.get(User, parent_id)
+    if not parent or parent.role != "parent":
+        return jsonify({"success": False, "message": "Parent not found"}), 404
+        
+    children = [
+        {
+            "id": child.id,
+            "username": child.username,
+            "nickname": child.nickname,
+            "profile_picture": child.profile_picture
+        }
+        for child in parent.children
+    ]
+    return jsonify({"success": True, "children": children})
+
+
+@admin_bp.route("/parents/<int:parent_id>/link/<int:student_id>", methods=["POST"])
+@admin_only
+def link_parent_child(parent_id, student_id):
+    parent = db.session.get(User, parent_id)
+    student = db.session.get(User, student_id)
+    
+    if not parent or parent.role != "parent":
+        return jsonify({"success": False, "message": "Parent not found"}), 404
+    if not student or student.role != "student":
+        return jsonify({"success": False, "message": "Student not found"}), 404
+        
+    if student not in parent.children:
+        parent.children.append(student)
+        db.session.commit()
+        return jsonify({"success": True, "message": f"Linked {student.username} to {parent.username}"})
+    return jsonify({"success": True, "message": "Already linked"})
+
+
+@admin_bp.route("/parents/<int:parent_id>/unlink/<int:student_id>", methods=["POST"])
+@admin_only
+def unlink_parent_child(parent_id, student_id):
+    parent = db.session.get(User, parent_id)
+    student = db.session.get(User, student_id)
+    
+    if not parent or parent.role != "parent":
+        return jsonify({"success": False, "message": "Parent not found"}), 404
+    if not student or student.role != "student":
+        return jsonify({"success": False, "message": "Student not found"}), 404
+        
+    if student in parent.children:
+        parent.children.remove(student)
+        db.session.commit()
+        return jsonify({"success": True, "message": f"Unlinked {student.username} from {parent.username}"})
+    return jsonify({"success": True, "message": "Not linked"})
+
+@admin_bp.route("/connection_requests", methods=["GET"])
+@admin_only
+@api_response
+def get_connection_requests():
+    from application.models.parent_connection_request import ParentConnectionRequest
+    requests = ParentConnectionRequest.query.filter_by(status="pending").all()
+    return {"requests": [r.to_dict() for r in requests]}
+
+@admin_bp.route("/connection_requests/<int:req_id>/approve", methods=["POST"])
+@admin_only
+@api_response
+def approve_connection_request(req_id):
+    from application.models.parent_connection_request import ParentConnectionRequest
+    req = db.session.get(ParentConnectionRequest, req_id)
+    if not req or req.status != "pending":
+        return "Request not found or not pending.", 404
+    
+    req.status = "approved"
+    if req.student not in req.parent.children:
+        req.parent.children.append(req.student)
+    db.session.commit()
+    return {"message": "Request approved."}
+
+@admin_bp.route("/connection_requests/<int:req_id>/reject", methods=["POST"])
+@admin_only
+@api_response
+def reject_connection_request(req_id):
+    from application.models.parent_connection_request import ParentConnectionRequest
+    req = db.session.get(ParentConnectionRequest, req_id)
+    if not req or req.status != "pending":
+        return "Request not found or not pending.", 404
+    
+    req.status = "rejected"
+    db.session.commit()
+    return {"message": "Request rejected."}
+
+@admin_bp.route("/user/<int:user_id>/connection_card", methods=["GET"])
+@admin_only
+@api_response
+def get_connection_card(user_id):
+    student = db.session.get(User, user_id)
+    if not student:
+        return "Student not found.", 404
+    
+    code = student.get_connection_code()
+    return {"connection_code": code, "student_id": student.id, "username": student.username, "nickname": student.nickname}
+
+
+@admin_bp.route("/classrooms", methods=["GET"])
+@admin_only
+@api_response
+def get_classrooms_list():
+    from application.models.classroom import Classroom
+    classrooms = Classroom.query.order_by(Classroom.name).all()
+    return {"classrooms": [c.to_dict() for c in classrooms]}
+
+
+@admin_bp.route("/classrooms/<classroom_id>/connection_cards", methods=["GET"])
+@admin_only
+@api_response
+def get_classroom_connection_cards(classroom_id):
+    from application.models.classroom import Classroom
+    
+    if classroom_id == "all":
+        students = User.query.filter_by(role="student").all()
+        classroom_name = "All Students"
+    else:
+        classroom = db.session.get(Classroom, classroom_id)
+        if not classroom:
+            return "Classroom not found.", 404
+        students = [u for u in classroom.users if u.role == "student"]
+        classroom_name = classroom.name
+    
+    cards = []
+    for student in students:
+        code = student.get_connection_code()
+        cards.append({
+            "id": student.id,
+            "username": student.username,
+            "nickname": student.nickname,
+            "connection_code": code
+        })
+    
+    # Sort students by nickname or username for easier distribution
+    cards.sort(key=lambda x: (x["nickname"] or x["username"]).lower())
+    
+    return {"classroom_name": classroom_name, "cards": cards}
+

@@ -173,8 +173,14 @@ def _calculate_consistency(username):
 
 
 def evaluate_user(user, force=False):
-    """Evaluate all achievements for a given user with 1-hour throttling."""
+    """Evaluate all achievements for a given user with 1-hour throttling and pessimistic locking."""
     now = datetime.utcnow()
+
+    # Use pessimistic locking to prevent concurrent evaluations
+    # Lock the user row to ensure only one evaluation runs at a time
+    user = db.session.query(user.__class__).with_for_update().filter_by(id=user.id).first()
+    if not user:
+        return []
 
     # Throttle: Only evaluate once every 60 minutes unless forced
     if not force and user.last_achievement_evaluation:

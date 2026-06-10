@@ -12,7 +12,7 @@
     border-radius: 20px;
     box-shadow: var(--shadow-lg);
     border: 1px solid var(--border-subtle);
-    max-width: 550px;
+    max-width: 100%;
     width: 100%;
 }
 
@@ -203,4 +203,13 @@
         gap: 1rem;
     }
 }
+
+@media (min-width: 769px) {
+    .certificate-form-cols {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+    }
+}
+
 

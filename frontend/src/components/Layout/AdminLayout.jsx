@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { NavLink, Link, useNavigate, useLocation } from 'react-router-dom';
+import { NavLink, Link, useLocation } from 'react-router-dom';
 import {
     Home,
     LogOut,
@@ -25,16 +25,10 @@ import SmartImage from '../common/SmartImage';
 import { getApiUrl } from '../../utils/apiUrl';
 
 const AdminLayout = ({ children }) => {
-    const { user, logout, isAuthenticated } = useAuthStore();
+    const { user, isAuthenticated } = useAuthStore();
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-    const { isSidebarOpen, toggleSidebar, setSidebarOpen } = useSidebar();
-    const navigate = useNavigate();
+    const { isSidebarOpen, setSidebarOpen } = useSidebar();
     const location = useLocation();
-
-    const handleLogout = async () => {
-        await logout();
-        navigate('/login');
-    };
 
     const toggleSidebarDesktop = () => setIsSidebarCollapsed(!isSidebarCollapsed);
 
@@ -50,7 +44,7 @@ const AdminLayout = ({ children }) => {
                     <Shield size={64} color="#ef4444" />
                     <h1>Access Denied</h1>
                     <p>You do not have administrative permission to view this page. Restricted area.</p>
-                    <Link to="/" className="btn-back">
+                    <Link to="/chat" className="btn-back">
                         <Home size={18} /> Back to Site
                     </Link>
                 </div>
@@ -61,16 +55,12 @@ const AdminLayout = ({ children }) => {
     const navItems = [
         { path: '/admin', label: 'Dashboard', icon: LayoutDashboard, end: true },
         { path: '/admin/users', label: 'Users', icon: Users },
-        { path: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
-        { path: '/admin/pending-users', label: 'User Approvals', icon: Users, badge: true },
         { path: '/admin/pending-trades', label: 'Pending Trades', icon: ShoppingBag },
         { path: '/admin/projects', label: 'Projects', icon: FolderKanban },
-
-
-        { path: '/admin/add-achievement', label: 'Achievements', icon: Trophy },
         { path: '/admin/certificates', label: 'Certificates', icon: FileCheck },
-        { path: '/admin/documents', label: 'Assets & Documents', icon: FileText },
         { path: '/admin/advanced', label: 'Advanced Panel', icon: ShieldAlert },
+        { path: '/chat', label: 'Back to Site', icon: Home },
+        { path: '/logout', label: 'Logout', icon: LogOut },
     ];
 
     return (
@@ -96,34 +86,45 @@ const AdminLayout = ({ children }) => {
                 <nav className="sidebar-nav">
                     <div className="nav-group">
                         <span className="nav-group-label">Management</span>
-                        {navItems.map((item) => (
-                            <NavLink
-                                key={item.path}
-                                to={item.path}
-                                end={item.end}
-                                className={({ isActive }) => `nav-item ${isActive || (item.path !== '/admin' && location.pathname.startsWith(item.path)) ? 'active' : ''}`}
-                                title={item.label}
-                            >
-                                <item.icon size={22} className="nav-icon" />
-                                <span className="nav-label">{item.label}</span>
-                                {item.badge && (
-                                    <span className="nav-badge">NEW</span>
-                                )}
-                            </NavLink>
-                        ))}
+                        {navItems.map((item) => {
+                            if (item.path === '/logout') {
+                                return (
+                                    <button
+                                        key={item.path}
+                                        onClick={async (e) => {
+                                            e.preventDefault();
+                                            await useAuthStore.getState().logout();
+                                            window.location.href = '/';
+                                        }}
+                                        className="nav-item"
+                                        title={item.label}
+                                        style={{ width: '100%', textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
+                                    >
+                                        <item.icon size={22} className="nav-icon" />
+                                        <span className="nav-label">{item.label}</span>
+                                    </button>
+                                );
+                            }
+
+                            return (
+                                <NavLink
+                                    key={item.path}
+                                    to={item.path}
+                                    end={item.end}
+                                    className={({ isActive }) => `nav-item ${isActive || (item.path !== '/admin' && location.pathname.startsWith(item.path)) ? 'active' : ''}`}
+                                    title={item.label}
+                                >
+                                    <item.icon size={22} className="nav-icon" />
+                                    <span className="nav-label">{item.label}</span>
+                                    {item.badge && (
+                                        <span className="nav-badge">NEW</span>
+                                    )}
+                                </NavLink>
+                            );
+                        })}
                     </div>
 
-                    <div className="nav-group secondary">
-                        <span className="nav-group-label">System</span>
-                        <NavLink to="/" className="nav-item">
-                            <Home size={20} className="nav-icon" />
-                            <span className="nav-label">Back to Site</span>
-                        </NavLink>
-                        <button onClick={handleLogout} className="nav-item logout-btn">
-                            <LogOut size={20} className="nav-icon" />
-                            <span className="nav-label">Logout</span>
-                        </button>
-                    </div>
+                    {/* Secondary system group removed; Logout now in primary navigation */}
                 </nav>
 
                 <div className="sidebar-user">
@@ -142,19 +143,6 @@ const AdminLayout = ({ children }) => {
 
             {/* Main Content Area */}
             <div className="admin-main-wrapper">
-                <header className="admin-top-bar">
-                    <div className="top-bar-left">
-                        <button className="hamburger-toggle mobile-only" onClick={toggleSidebar}>
-                            <Menu size={24} />
-                        </button>
-                        <h2 className="page-title">
-                            {navItems.find(item =>
-                                item.end ? item.path === location.pathname : location.pathname.startsWith(item.path)
-                            )?.label || 'Administration'}
-                        </h2>
-                    </div>
-                </header>
-
                 <main 
                     key={location.pathname.startsWith('/admin/advanced-crud') ? '/admin/advanced-crud' : location.pathname} 
                     className="admin-body animate-page-entry"
@@ -162,9 +150,7 @@ const AdminLayout = ({ children }) => {
                     {children}
                 </main>
 
-                <footer className="admin-site-footer">
-                    <p>&copy; {new Date().getFullYear()} Classroom Chat. <span>Version 2.4.0 (Alpha)</span></p>
-                </footer>
+
             </div>
         </div>
     );

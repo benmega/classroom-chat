@@ -27,7 +27,7 @@ const ContributionGraph = ({ data }) => {
                                 <div 
                                     key={cIdx} 
                                     className={`graph-cell level-${cell?.level || 0}`}
-                                    title={`${cell?.count || 0} activity on ${cell?.date || 'unknown'}`}
+                                    title={`completed ${cell?.count || 0} of levels on ${cell?.date || 'unknown'}`}
                                 ></div>
                             ))}
                         </div>
