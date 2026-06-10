@@ -12,9 +12,6 @@ from application.extensions import db
 from application.models.user import User
 from application.models.parent_connection_request import ParentConnectionRequest
 from application.models.connection_attempt import ConnectionAttempt
-from application.models.challenge_log import ChallengeLog
-from application.models.course import Course
-from sqlalchemy import func
 
 
 parent = Blueprint("parent", __name__)

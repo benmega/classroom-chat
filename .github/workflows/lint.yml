@@ -3,6 +3,8 @@ name: Linting
 on:
   push:
   pull_request:
+  # Allow other workflows (e.g. deploy) to require this as a gate.
+  workflow_call:
 
 jobs:
   lint:

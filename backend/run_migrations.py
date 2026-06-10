@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 """Run database migrations using alembic."""
-import sys
 import os
 from alembic.config import Config
 from alembic import command

@@ -333,7 +333,6 @@ class User(db.Model):
         return int(round(progress, 0))
 
     def get_course_progress_data(self):
-        from sqlalchemy import func
         from .challenge_log import ChallengeLog
         from .course import Course
 
@@ -392,7 +391,7 @@ class User(db.Model):
                 if cl.course_id and cl.course_id not in handled_course_ids:
                     if cl.course_id not in legacy_courses:
                         legacy_courses[cl.course_id] = []
-                    if not any(l["slug"] == cl.challenge_slug for l in legacy_courses[cl.course_id]):
+                    if not any(lvl["slug"] == cl.challenge_slug for lvl in legacy_courses[cl.course_id]):
                         legacy_courses[cl.course_id].append({
                             "name": cl.challenge_slug,
                             "slug": cl.challenge_slug,

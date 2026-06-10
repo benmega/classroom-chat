@@ -6,11 +6,12 @@ backend_path = os.path.dirname(os.path.abspath(__file__))
 if backend_path not in sys.path:
     sys.path.insert(0, backend_path)
 
-from application import create_app, db
-from application.models.course import Course
-from application.models.challenge import Challenge
-from application.models.configuration import Configuration
-from sqlalchemy import func
+# Imports must follow the sys.path setup above so the application package resolves.
+from application import create_app, db  # noqa: E402
+from application.models.course import Course  # noqa: E402
+from application.models.challenge import Challenge  # noqa: E402
+from application.models.configuration import Configuration  # noqa: E402
+from sqlalchemy import func  # noqa: E402
 
 app = create_app()
 
@@ -39,7 +40,7 @@ with app.app_context():
         func.avg(Challenge.value).label('avg_value'),
         func.count(Challenge.id).label('level_count')
     ).outerjoin(Course, Course.id == Challenge.course_id) \
-     .filter(Course.id == None) \
+     .filter(Course.id.is_(None)) \
      .group_by(Challenge.course_id).all()
      
     if orphan_results:
