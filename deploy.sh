@@ -88,7 +88,7 @@ echo "Starting deploy..."
 # cd "$APP_DIR"
 # echo "Updating code..."
 # run git fetch origin
-# run git reset --hard origin/deploy-gunicorn
+# run git reset --hard origin/deploy
 
 # -------------------------
 # Dependency verification

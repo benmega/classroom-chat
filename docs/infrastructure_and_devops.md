@@ -44,7 +44,7 @@ These steps must be performed manually once after provisioning a new EC2 instanc
 # 1. Clone the repo
 git clone <repo-url> ~/classroom-chat
 cd ~/classroom-chat
-git checkout deploy-gunicorn
+git checkout deploy
 
 # 2. Create Python virtualenv and install deps
 python3 -m venv venv
@@ -154,7 +154,7 @@ server {
 
 ## 6. CI/CD Pipeline (GitHub Actions)
 
-- **`deploy.yml`**: Triggers on push to `deploy-gunicorn`. SSHes into EC2, writes
+- **`deploy.yml`**: Triggers on push to `deploy`. SSHes into EC2, writes
   `backend/.env` from GitHub Secrets, then runs `deploy.sh`.
 - **`lint.yml`**: ESLint (React) + Ruff (Python) on every PR.
 - **`tests.yml`**: Vitest + Pytest on every PR.
