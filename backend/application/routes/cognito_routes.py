@@ -67,6 +67,10 @@ def register():
         return jsonify({"error": "Missing email or password"}), 400
         
     client_id = current_app.config.get("COGNITO_CLIENT_ID")
+    if not client_id:
+        current_app.logger.error("COGNITO_CLIENT_ID is not configured")
+        return jsonify({"error": "Cognito is not configured on this server"}), 503
+
     client = get_boto_client()
     kwargs = {
         "ClientId": client_id,
@@ -95,6 +99,10 @@ def verify():
         return jsonify({"error": "Missing email or code"}), 400
         
     client_id = current_app.config.get("COGNITO_CLIENT_ID")
+    if not client_id:
+        current_app.logger.error("COGNITO_CLIENT_ID is not configured")
+        return jsonify({"error": "Cognito is not configured on this server"}), 503
+
     client = get_boto_client()
     kwargs = {
         "ClientId": client_id,
@@ -122,6 +130,10 @@ def login():
         return jsonify({"error": "Missing email or password"}), 400
         
     client_id = current_app.config.get("COGNITO_CLIENT_ID")
+    if not client_id:
+        current_app.logger.error("COGNITO_CLIENT_ID is not configured")
+        return jsonify({"error": "Cognito is not configured on this server"}), 503
+
     client = get_boto_client()
     
     auth_parameters = {
