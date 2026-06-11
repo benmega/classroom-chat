@@ -1,6 +1,5 @@
 import subprocess
 import json
-import sys
 import time
 
 proc = subprocess.Popen(

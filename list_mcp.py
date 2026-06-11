@@ -1,6 +1,5 @@
 import subprocess
 import json
-import sys
 
 proc = subprocess.Popen(
     ['node', r'C:\Users\Ben\AppData\Local\Programs\Antigravity\resources\app.asar.unpacked\node_modules\chrome-devtools-mcp\build\src\bin\chrome-devtools-mcp.js'],

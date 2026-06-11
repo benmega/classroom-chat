@@ -17,7 +17,6 @@ from application.extensions import db, csrf
 from application.models.challenge import Challenge
 from application.models.challenge_log import ChallengeLog
 from application.models.course_instance import CourseInstance
-from application.models.user import User
 from application.utilities.db_helpers import get_user
 
 challenge = Blueprint("challenge", __name__, url_prefix="/challenge")
@@ -305,7 +304,7 @@ def _update_user_ducks(user, challenge_slug, duck_multiplier=1):
     """
     try:
         if not user:
-            raise ValueError(f"User not found")
+            raise ValueError("User not found")
 
         # UPDATED: Try finding by slug, then try relaxed matching (spaces vs dashes)
         challenge = Challenge.query.filter(Challenge.slug.ilike(challenge_slug)).first()
