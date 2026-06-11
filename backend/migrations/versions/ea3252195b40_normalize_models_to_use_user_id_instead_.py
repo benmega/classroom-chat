@@ -17,8 +17,13 @@ depends_on = None
 
 
 def upgrade():
-    op.drop_table('trade')
-    op.drop_table('bounties')
+    bind = op.get_bind()
+    inspector = sa.inspect(bind)
+    existing_tables = inspector.get_table_names()
+    if 'trade' in existing_tables:
+        op.drop_table('trade')
+    if 'bounties' in existing_tables:
+        op.drop_table('bounties')
     with op.batch_alter_table('challenge_logs', schema=None) as batch_op:
         batch_op.add_column(sa.Column('user_id', sa.Integer(), nullable=True))
 
