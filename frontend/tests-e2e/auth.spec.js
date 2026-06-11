@@ -28,7 +28,7 @@ test.describe('Authentication Flow', () => {
     });
 
     // Fill login form
-    await page.fill('input[placeholder="Username"]', 'testuser');
+    await page.fill('input#usernameOrEmail', 'testuser');
     await page.fill('input[placeholder="Password"]', 'password123');
     await page.click('button[id="login-submit-btn"]');
 
@@ -46,7 +46,7 @@ test.describe('Authentication Flow', () => {
       });
     });
 
-    await page.fill('input[placeholder="Username"]', 'wronguser');
+    await page.fill('input#usernameOrEmail', 'wronguser');
     await page.fill('input[placeholder="Password"]', 'wrongpass');
     await page.click('button[id="login-submit-btn"]');
 

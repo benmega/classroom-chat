@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import { Home, ArrowLeft } from 'lucide-react';
 
 import youShallNotPassImage from '../../assets/you_shall_not_pass.png';
-import rubberDuckImage from '../../assets/rubber_duck.png';
 
 const AccessDenied = () => {
   return (
@@ -13,7 +12,9 @@ const AccessDenied = () => {
       justifyContent: 'center',
       alignItems: 'center',
       minHeight: '100vh',
-      backgroundColor: 'var(--text-primary)',
+      backgroundColor: 'rgba(15, 23, 42, 0.8)',
+      backdropFilter: 'blur(8px)',
+      WebkitBackdropFilter: 'blur(8px)',
       color: 'var(--bg-secondary)',
       fontFamily: 'var(--font-body)',
       padding: '2rem',
@@ -28,19 +29,6 @@ const AccessDenied = () => {
         width: '100%',
         boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
       }}>
-        <div style={{
-          display: 'flex',
-          justifyContent: 'center',
-          marginBottom: '1.5rem'
-        }}>
-          <div style={{
-            background: 'rgba(239, 68, 68, 0.2)',
-            padding: '1rem',
-            borderRadius: '1rem'
-          }}>
-            <img src={rubberDuckImage} alt="Rubber Duck Icon" style={{ width: 48, height: 48, display: 'block' }} />
-          </div>
-        </div>
         
         <img 
           src={youShallNotPassImage} 
@@ -55,6 +43,19 @@ const AccessDenied = () => {
             marginRight: 'auto'
           }} 
         />
+
+        <h1 style={{
+          color: 'var(--error-color)',
+          fontFamily: 'var(--font-heading)',
+          fontWeight: 800,
+          fontSize: '2.25rem',
+          marginTop: '1.5rem',
+          marginBottom: '1rem',
+          letterSpacing: '-0.025em',
+          lineHeight: '1.2'
+        }}>
+          YOU SHALL NOT PASS! 🧙‍♂️
+        </h1>
         
         <p style={{
           fontSize: '1.125rem',

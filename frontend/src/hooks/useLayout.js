@@ -27,12 +27,12 @@ export const useLayout = () => {
         }
 
         if (prevDuckBalanceRef.current !== undefined && prevDuckBalanceRef.current !== null) {
-            const currentDucks = Math.floor(user.duck_balance || 0);
-            const prevDucks = Math.floor(prevDuckBalanceRef.current || 0);
+            const currentDucks = user.duck_balance || 0;
+            const prevDucks = prevDuckBalanceRef.current || 0;
             const diff = currentDucks - prevDucks;
 
             if (diff > 0) {
-                const quackCount = Math.min(diff, 10); // cap to 10 to avoid noise spam
+                const quackCount = Math.max(1, Math.min(Math.floor(diff), 100));
                 let quacksPlayed = 0;
                 
                 const playQuack = () => {

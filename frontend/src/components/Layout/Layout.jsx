@@ -12,7 +12,9 @@ import {
     Menu,
     X,
     Home,
-    ShoppingCart
+    ShoppingCart,
+    RefreshCw,
+    Disc
 } from 'lucide-react';
 
 import './Layout.css';

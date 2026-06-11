@@ -15,21 +15,6 @@ export const formatLargeNumber = (num) => {
     return formatter.format(val);
 };
 
-export const formatConversationTitle = (title) => {
-    if (!title) return 'Conversation';
-    if (title.startsWith('Conversation started by User') && title.includes(' at ')) {
-      const parts = title.split(' at ');
-      if (parts.length >= 2) {
-        const datePart = parts[1].split('.')[0];
-        const date = new Date(datePart.replace(' ', 'T'));
-        if (!isNaN(date)) {
-          return `Chat on ${date.toLocaleDateString([], { month: 'long', day: 'numeric', year: 'numeric' })}`;
-        }
-      }
-    }
-    return title;
-};
-
 import { getApiUrl } from './apiUrl';
 
 export const formatStaticUrl = (url) => {

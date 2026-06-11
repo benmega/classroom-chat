@@ -2,6 +2,10 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Navigation', () => {
   test.beforeEach(async ({ page }) => {
+    // Enable browser console logging in tests
+    page.on('console', msg => console.log(`BROWSER CONSOLE: [${msg.type()}] ${msg.text()}`));
+    page.on('pageerror', err => console.log(`BROWSER ERROR: ${err.message}`));
+
     // Mock user session
     await page.route('**/auth/status', async (route) => {
       await route.fulfill({
@@ -23,6 +27,33 @@ test.describe('Navigation', () => {
         contentType: 'application/json',
         body: JSON.stringify({ status: 'success' }),
       });
+    });
+
+    // Mock all message endpoints to return a safe empty or mock response
+    await page.route('**/message/**', async (route) => {
+      const url = route.request().url();
+      if (url.includes('/message/api/me/context')) {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            global_conversation_id: null,
+            classrooms: []
+          }),
+        });
+      } else if (url.includes('/message/api/conversations')) {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ data: [] }),
+        });
+      } else {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({}),
+        });
+      }
     });
 
     await page.addInitScript(() => {

@@ -15,3 +15,7 @@ For database sync and backup operations, use the db_sync.sh script:
 See db_sync.sh for implementation details.
 
 scp -i ~/.ssh/test-key.pem ubuntu@api-blossom.benmega.com:/home/ubuntu/classroom-chat/backend/instance/prod_users.db /mnt/c/Users/Ben/AntiGravity/classroom-chat/backend/instance/backups/prod_users.db
+
+
+# TO SSH
+ssh -i ~/.ssh/test-key.pem -L 8000:localhost:8000 ubuntu@api-blossom.benmega.com
