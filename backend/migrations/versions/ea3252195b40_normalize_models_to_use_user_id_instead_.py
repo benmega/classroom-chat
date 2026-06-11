@@ -33,16 +33,25 @@ def upgrade():
 
     with op.batch_alter_table('challenge_logs', schema=None) as batch_op:
         batch_op.alter_column('user_id', existing_type=sa.Integer(), nullable=False)
-        batch_op.drop_index(batch_op.f('ix_challenge_logs_username'))
+        try:
+            batch_op.drop_index(batch_op.f('ix_challenge_logs_username'))
+        except ValueError:
+            pass  # Index may not exist in all environments
         batch_op.create_index(batch_op.f('ix_challenge_logs_user_id'), ['user_id'], unique=False)
         batch_op.create_foreign_key(batch_op.f('fk_challenge_logs_user_id_users'), 'users', ['user_id'], ['id'])
         batch_op.drop_column('username')
 
     with op.batch_alter_table('duck_trade_log', schema=None) as batch_op:
         batch_op.alter_column('user_id', existing_type=sa.Integer(), nullable=False)
-        batch_op.drop_index(batch_op.f('ix_duck_trade_log_username'))
+        try:
+            batch_op.drop_index(batch_op.f('ix_duck_trade_log_username'))
+        except ValueError:
+            pass  # Index may not exist in all environments
         batch_op.create_index(batch_op.f('ix_duck_trade_log_user_id'), ['user_id'], unique=False)
-        batch_op.drop_constraint('fk_duck_trade_log_username_users', type_='foreignkey')
+        try:
+            batch_op.drop_constraint('fk_duck_trade_log_username_users', type_='foreignkey')
+        except (ValueError, KeyError):
+            pass  # Constraint may not exist in all environments
         batch_op.create_foreign_key(batch_op.f('fk_duck_trade_log_user_id_users'), 'users', ['user_id'], ['id'])
         batch_op.drop_column('username')
 
