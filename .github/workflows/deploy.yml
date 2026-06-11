@@ -3,7 +3,7 @@ name: Deploy to EC2
 on:
   push:
     branches:
-      - deploy-gunicorn
+      - deploy
 
 jobs:
   # Gates: deploy must not run unless both of these succeed.
@@ -32,7 +32,7 @@ jobs:
             # Update code (for backend and script changes)
             cd $APP_DIR
             git fetch origin
-            git reset --hard origin/deploy-gunicorn
+            git reset --hard origin/deploy
 
             # Inject production environment variables
             cat > "$APP_DIR/backend/.env" <<ENVFILE
@@ -55,4 +55,4 @@ jobs:
 
             # Execute the deployment script
             chmod +x "$APP_DIR/deploy.sh"
-            "$APP_DIR/deploy.sh"
+            "$APP_DIR/deploy.sh"
