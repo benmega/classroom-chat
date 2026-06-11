@@ -22,6 +22,9 @@ export const useChatLogic = () => {
   const [isCreating, setIsCreating] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [isLoadingMoreMessages, setIsLoadingMoreMessages] = useState(false);
+  const [hasMoreMessages, setHasMoreMessages] = useState(true);
+  const lastMessageIdRef = useRef(null);
 
   const [globalConversationId, setGlobalConversationId] = useState(null);
   const [classrooms, setClassrooms] = useState([]);
@@ -112,6 +115,7 @@ export const useChatLogic = () => {
             const msgsRes = await client.get(`/message/view_conversation/${target.conversation_id}`);
             const fullConv = msgsRes.data.conversation || msgsRes.data;
             setMessages(fullConv.messages || []);
+            setHasMoreMessages((fullConv.messages || []).length === 50);
           } catch (err) {
             console.error('Failed to load messages for active conversation', err);
             setMessages(target.messages || []);
@@ -224,10 +228,57 @@ export const useChatLogic = () => {
   }, [location.search, conversations, activeConversation]);
 
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    if (scrollRef.current && messages.length > 0) {
+      const currentLastMsgId = messages[messages.length - 1].id;
+      if (currentLastMsgId !== lastMessageIdRef.current) {
+        scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+        lastMessageIdRef.current = currentLastMsgId;
+      }
     }
   }, [messages]);
+
+  const handleMessageScroll = (e) => {
+    if (e.target.scrollTop === 0) {
+      loadMoreMessages();
+    }
+  };
+
+  const loadMoreMessages = useCallback(async () => {
+    if (!activeConversation || isLoadingMoreMessages || !hasMoreMessages || messages.length === 0) return;
+    setIsLoadingMoreMessages(true);
+    
+    try {
+      const firstMessageId = messages[0].id;
+      const response = await client.get(`/message/view_conversation/${activeConversation.conversation_id}?before_id=${firstMessageId}&limit=50`);
+      const newMessages = response.data.conversation?.messages || response.data.messages || [];
+      
+      if (newMessages.length < 50) {
+        setHasMoreMessages(false);
+      }
+      
+      if (newMessages.length > 0) {
+        const container = scrollRef.current;
+        const previousScrollHeight = container ? container.scrollHeight : 0;
+
+        setMessages(prev => [...newMessages, ...prev]);
+        setConversations(prev => prev.map(c => 
+          c.conversation_id === activeConversation.conversation_id 
+            ? { ...c, messages: [...newMessages, ...(c.messages || [])] } 
+            : c
+        ));
+
+        setTimeout(() => {
+          if (container) {
+            container.scrollTop = container.scrollHeight - previousScrollHeight;
+          }
+        }, 0);
+      }
+    } catch (err) {
+      console.error('Failed to load older messages', err);
+    } finally {
+      setIsLoadingMoreMessages(false);
+    }
+  }, [activeConversation, isLoadingMoreMessages, hasMoreMessages, messages]);
 
   const handleSendMessage = async (e) => {
     if (e) e.preventDefault();
@@ -282,6 +333,7 @@ export const useChatLogic = () => {
       const response = await client.get(`/message/view_conversation/${conv.conversation_id}`);
       const convData = response.data.conversation || response.data;
       setMessages(convData.messages || []);
+      setHasMoreMessages((convData.messages || []).length === 50);
       setConversations(prev => prev.map(c => 
         c.conversation_id === conv.conversation_id ? { ...c, messages: convData.messages } : c
       ));
@@ -388,7 +440,7 @@ export const useChatLogic = () => {
     }
   };
 
-  const handleDeleteMessage = async (messageId) => {
+  const handleDeleteMessage = useCallback(async (messageId) => {
     if (!window.confirm('Are you sure you want to delete this message?')) return;
     try {
       await client.delete(`/message/delete_message/${messageId}`);
@@ -407,7 +459,7 @@ export const useChatLogic = () => {
       toast.error('Failed to delete message');
       console.error(err);
     }
-  };
+  }, [activeConversation?.conversation_id]);
 
   return {
     user,
@@ -453,6 +505,8 @@ export const useChatLogic = () => {
     hasMoreConversations,
     isLoadingMoreConversations,
     handleLoadMoreConversations,
-    handleDeleteMessage
+    handleDeleteMessage,
+    handleMessageScroll,
+    isLoadingMoreMessages
   };
 };

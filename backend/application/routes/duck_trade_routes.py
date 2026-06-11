@@ -124,7 +124,7 @@ def submit_trade():
 
         # --- NEW CODE: Check for existing pending trades ---
         existing_trade = DuckTradeLog.query.filter_by(
-            username=user.username, status="pending"
+            user_id=user.id, status="pending"
         ).first()
         if existing_trade:
             msg = (
@@ -158,7 +158,7 @@ def submit_trade():
             byte_ducks = []
 
         trade = DuckTradeLog(
-            username=user.username,
+            user_id=user.id,
             digital_ducks=d_ducks,
             bit_ducks=bit_ducks,
             byte_ducks=byte_ducks,

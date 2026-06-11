@@ -150,7 +150,13 @@ const AdminLayout = ({ children }) => {
                     {children}
                 </main>
 
+<<<<<<< Updated upstream
 
+=======
+                <footer className="admin-site-footer">
+                    <p><span>Version 2.4.0 (Alpha)</span></p>
+                </footer>
+>>>>>>> Stashed changes
             </div>
         </div>
     );

@@ -11,6 +11,9 @@
 .chart-container {
     height: 300px;
     margin-top: 1.5rem;
+    position: relative;
+    width: 100%;
+    min-width: 0;
 }
 
 .lower-grid {

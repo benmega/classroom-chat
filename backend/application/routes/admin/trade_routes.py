@@ -13,13 +13,13 @@ from ..admin_routes import admin_bp
 @api_response
 def pending_trades():
     # Join with User to get nickname
-    pend_trades = db.session.query(DuckTradeLog, User).outerjoin(User, DuckTradeLog.username == User._username).filter(DuckTradeLog.status == "pending").all()
+    pend_trades = db.session.query(DuckTradeLog, User).outerjoin(User, DuckTradeLog.user_id == User.id).filter(DuckTradeLog.status == "pending").all()
 
     trades_list = [
         {
             "id": t[0].id,
-            "username": t[0].username,
-            "nickname": t[1].nickname if t[1] else t[0].username,
+            "username": t[1].username if t[1] else str(t[0].user_id),
+            "nickname": t[1].nickname if t[1] else str(t[0].user_id),
             "digital_ducks": t[0].digital_ducks,
             "bit_ducks": t[0].bit_ducks,
             "byte_ducks": t[0].byte_ducks,
@@ -42,7 +42,7 @@ def trade_action():
         return jsonify({"status": "error", "message": "Trade not found"}), 404
 
     if action == "approve":
-        user = User.query.filter_by(username=trade.username).first()
+        user = User.query.filter_by(id=trade.user_id).first()
         if not user:
             return jsonify({"status": "error", "message": "User not found"}), 404
 

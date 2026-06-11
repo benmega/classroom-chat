@@ -20,7 +20,7 @@ const ImageUpload = ({
   initialImage = null, 
   onUploadSuccess = () => {}, 
   label = 'Upload Image',
-  secondaryLabel = 'PNG, JPG or GIF (max. 5MB)'
+  secondaryLabel = 'PNG, JPG or GIF (max. 10MB)'
 }) => {
   const [preview, setPreview] = useState(initialImage);
   const [isUploading, setIsUploading] = useState(false);

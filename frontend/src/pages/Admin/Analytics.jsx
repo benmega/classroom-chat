@@ -165,6 +165,12 @@ const Analytics = () => {
                                     plugins: {
                                         legend: { position: 'top', labels: { usePointStyle: true } }
                                     },
+                                    layout: {
+                                        padding: {
+                                            right: 20,
+                                            left: 10
+                                        }
+                                    },
                                     scales: {
                                         y: { beginAtZero: true, grid: { color: '#f1f5f9' } },
                                         x: { grid: { display: false } }

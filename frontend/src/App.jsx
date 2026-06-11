@@ -16,9 +16,13 @@ import Profile from './pages/Profile/index';
 import Chat from './pages/Chat/Chat';
 import Achievements from './pages/General/Achievements';
 import BitShift from './pages/General/BitShift';
+<<<<<<< Updated upstream
 
 import SubmitChallenge from './pages/General/SubmitChallenge';
 import History from './pages/General/History';
+=======
+import SubmitWork from './pages/General/SubmitWork';
+>>>>>>> Stashed changes
 import Landing from './pages/General/Landing';
 import SubmitWork from './pages/General/SubmitWork';
 import CourseProgressTree from './pages/General/CourseProgressTree';
@@ -68,9 +72,6 @@ const ProtectedRoute = ({ children, adminOnly = false, parentOnly = false }) => 
           <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 'bold', letterSpacing: '-0.025em' }}>Classroom Chat</h2>
           <p style={{ margin: '0.25rem 0 0 0', opacity: 0.7, fontSize: '0.875rem' }}>Preparing your workspace...</p>
         </div>
-        <style>{`
-          @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        `}</style>
     </div>
   );
   if (!isAuthenticated) return <Navigate to="/login" />;
@@ -216,6 +217,7 @@ function App() {
           </ProtectedRoute>
         } />
 
+<<<<<<< Updated upstream
         <Route path="/shop" element={
           <ProtectedRoute>
             <Layout>
@@ -227,6 +229,11 @@ function App() {
         <Route path="/submit-certificate" element={<Navigate to="/submit-work" replace />} />
         <Route path="/submit-challenge" element={<Navigate to="/submit-work" replace />} />
 
+=======
+        <Route path="/submit-certificate" element={<Navigate to="/submit-work" replace />} />
+        <Route path="/submit-challenge" element={<Navigate to="/submit-work" replace />} />
+
+>>>>>>> Stashed changes
         <Route path="/submit-work" element={
           <ProtectedRoute>
             <Layout>

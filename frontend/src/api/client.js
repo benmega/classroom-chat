@@ -34,7 +34,10 @@ client.interceptors.response.use(
     if (error.response && error.response.status === 401) {
       // Avoid redirect loops if we are already on the login page
       if (!window.location.pathname.startsWith('/login') && !window.location.pathname.startsWith('/api/dev-login')) {
-        window.location.href = '/login';
+        // Use dynamic import to avoid circular dependency
+        import('../store/useAuthStore').then(({ default: useAuthStore }) => {
+          useAuthStore.setState({ user: null, isAuthenticated: false, hamburgerProgress: 0 });
+        });
       }
     }
     return Promise.reject(error);

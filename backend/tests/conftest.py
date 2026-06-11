@@ -278,9 +278,12 @@ def logged_in_admin(client, sample_user):
 @pytest.fixture
 def sample_challenge_log(init_db):
     unique_username = f"user_{uuid.uuid4()}"
+    unique_user = User(username=unique_username, password_hash="test")
+    db.session.add(unique_user)
+    db.session.commit()
     unique_slug = f"challenge-slug-{uuid.uuid4()}"
     challenge_log = ChallengeLog(
-        username=unique_username,
+        user_id=unique_user.id,
         domain="codecombat.com",
         challenge_slug=unique_slug,
         course_id="12345",
@@ -427,7 +430,7 @@ def sample_duck_trade(init_db, sample_user):
 
         sample_user.duck_balance = 100
         trade = DuckTradeLog(
-            username=sample_user.username,
+            user_id=sample_user.id,
             digital_ducks=1,
             bit_ducks=[1, 0, 0, 0, 0, 0, 0],
             byte_ducks=[0, 0, 0, 0, 0, 0, 0],

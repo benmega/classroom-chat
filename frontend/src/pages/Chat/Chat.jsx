@@ -69,7 +69,9 @@ const Chat = () => {
     hasMoreConversations,
     isLoadingMoreConversations,
     handleLoadMoreConversations,
-    handleDeleteMessage
+    handleDeleteMessage,
+    handleMessageScroll,
+    isLoadingMoreMessages
   } = useChatLogic();
 
   if (loading) return <div className="container" style={{ textAlign: 'center', padding: '100px' }}>Loading...</div>;
@@ -129,8 +131,14 @@ const Chat = () => {
             <div 
               ref={scrollRef}
               className="chat-messages"
+              onScroll={handleMessageScroll}
             >
               <div className="chat-messages-inner">
+                {isLoadingMoreMessages && (
+                  <div style={{ textAlign: 'center', padding: '1rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+                    Loading older messages...
+                  </div>
+                )}
                 {messages.map((msg, index) => (
                   <ChatMessage 
                     key={msg.id || index}

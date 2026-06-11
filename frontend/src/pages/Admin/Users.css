@@ -102,6 +102,12 @@
     overflow: hidden;
 }
 
+.table-responsive {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
 .users-table {
     width: 100%;
     border-collapse: collapse;
@@ -366,5 +372,13 @@
 
 .page-indicator strong {
     color: var(--primary-color);
+}
+
+@media (max-width: 640px) {
+    .pagination-container {
+        flex-direction: column;
+        gap: 12px;
+        align-items: flex-start;
+    }
 }
 

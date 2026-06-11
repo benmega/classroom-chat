@@ -14,7 +14,7 @@ from application.models.duck_trade import DuckTradeLog
 def test_submit_trade_valid(client, sample_user_with_ducks, test_app):
     with test_app.app_context():
         # Clear any existing pending trades to avoid triggering our new rule
-        DuckTradeLog.query.filter_by(username=sample_user_with_ducks.username).delete()
+        DuckTradeLog.query.filter_by(user_id=sample_user_with_ducks.id).delete()
         db.session.commit()
 
         # Start a session and set the user ID (not username!)
@@ -39,7 +39,7 @@ def test_submit_trade_valid(client, sample_user_with_ducks, test_app):
         assert response.status_code == 200
 
         # Verify the database state actually changed
-        trade = DuckTradeLog.query.filter_by(username=sample_user_with_ducks.username, status="pending").first()
+        trade = DuckTradeLog.query.filter_by(user_id=sample_user_with_ducks.id, status="pending").first()
         assert trade is not None
         assert trade.digital_ducks == 3
 
@@ -48,7 +48,7 @@ def test_submit_trade_valid(client, sample_user_with_ducks, test_app):
 def test_submit_trade_one_pending_limit(client, sample_user_with_ducks, test_app):
     with test_app.app_context():
         # --- FIX: Clear existing trades to prevent database leaks between tests ---
-        DuckTradeLog.query.filter_by(username=sample_user_with_ducks.username).delete()
+        DuckTradeLog.query.filter_by(user_id=sample_user_with_ducks.id).delete()
         db.session.commit()
         # ------------------------------------------------------------------------
 
@@ -57,7 +57,7 @@ def test_submit_trade_one_pending_limit(client, sample_user_with_ducks, test_app
 
         # Seed an existing pending trade
         existing_trade = DuckTradeLog(
-            username=sample_user_with_ducks.username,
+            user_id=sample_user_with_ducks.id,
             digital_ducks=1,
             bit_ducks=[0] * 7,
             byte_ducks=[0] * 7,
@@ -83,7 +83,7 @@ def test_submit_trade_one_pending_limit(client, sample_user_with_ducks, test_app
         assert b"You already have a pending trade" in response.data
 
         # Ensure a second trade wasn't added to the DB
-        trade_count = DuckTradeLog.query.filter_by(username=sample_user_with_ducks.username).count()
+        trade_count = DuckTradeLog.query.filter_by(user_id=sample_user_with_ducks.id).count()
         assert trade_count == 1
 
 

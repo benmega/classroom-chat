@@ -25,7 +25,7 @@ const getSocket = () => {
     _socket = io(SOCKET_URL, {
       withCredentials: true,
       extraHeaders: {
-        'X-CSRFToken': getCookie('csrf_token')
+        'X-CSRFToken': getCookie('csrf_token_v2')
       },
       // Polling first then upgrade is more reliable through proxies.
       transports: ['polling', 'websocket'],

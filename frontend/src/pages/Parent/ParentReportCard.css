@@ -50,6 +50,8 @@
     display: flex;
     align-items: center;
     gap: 1.25rem;
+    flex: 1;
+    min-width: 0;
 }
 
 .report-student-avatar {
@@ -74,6 +76,11 @@
     color: var(--text-muted);
 }
 
+.report-student-details {
+    flex: 1;
+    min-width: 0;
+}
+
 .report-student-details h1 {
     margin: 0;
     font-family: var(--font-heading);
@@ -81,6 +88,8 @@
     font-weight: 800;
     color: var(--text-primary);
     letter-spacing: -0.03em;
+    word-break: break-word;
+    white-space: normal;
 }
 
 .report-student-details .report-student-nick {

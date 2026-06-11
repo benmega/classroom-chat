@@ -139,7 +139,11 @@ const Layout = ({ children }) => {
                                         </li>
                                         {user.packets > 0.001 && (
                                             <li className="mobile-only-stat mobile-only">
+<<<<<<< Updated upstream
                                                 <Link to="/shop" onClick={() => setIsDropdownOpen(false)} className="dropdown-stat-link packets">
+=======
+                                                <div className="dropdown-stat-link packets">
+>>>>>>> Stashed changes
                                                     <Package size={20} />
                                                     <div className="dropdown-stat-info">
                                                         <span className="dropdown-stat-label">Packets</span>
@@ -159,6 +163,11 @@ const Layout = ({ children }) => {
                                             <li><Link to="/admin" onClick={() => setIsDropdownOpen(false)}><Shield size={18} /> Admin Panel</Link></li>
                                         )}
                                         <li><Link to="/submit-work" onClick={() => setIsDropdownOpen(false)}><FileCheck size={18} /> Submit Work</Link></li>
+<<<<<<< Updated upstream
+=======
+                                        <li><Link to="/bit-shift" onClick={() => setIsDropdownOpen(false)}><RefreshCw size={18} /> Bit Shift</Link></li>
+                                        <li><a href="https://benmega.github.io/screen-recorder/" target="_blank" rel="noopener noreferrer" onClick={() => setIsDropdownOpen(false)}><Disc size={18} /> Record</a></li>
+>>>>>>> Stashed changes
                                         <li><button onClick={() => { handleLogout(); setIsDropdownOpen(false); }} className="logout-btn"><LogOut size={18} /> Logout</button></li>
                                     </ul>
                                 </li>
@@ -202,6 +211,11 @@ const Layout = ({ children }) => {
                                     <li><Link to="/admin" onClick={() => setSidebarOpen(false)}><Shield size={18} /> Admin Panel</Link></li>
                                 )}
                                 <li><Link to="/submit-work" onClick={() => setSidebarOpen(false)}><FileCheck size={18} /> Submit Work</Link></li>
+<<<<<<< Updated upstream
+=======
+                                <li><Link to="/bit-shift" onClick={() => setSidebarOpen(false)}><RefreshCw size={18} /> Bit Shift</Link></li>
+                                <li><a href="https://benmega.github.io/screen-recorder/" target="_blank" rel="noopener noreferrer" onClick={() => setSidebarOpen(false)}><Disc size={18} /> Record</a></li>
+>>>>>>> Stashed changes
                             </ul>
                         </nav>
 
@@ -214,7 +228,10 @@ const Layout = ({ children }) => {
                 </>
             )}
 
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
         </div>
     );
 };

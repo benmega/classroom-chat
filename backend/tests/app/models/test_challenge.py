@@ -25,12 +25,12 @@ def test_complete_challenge(sample_challenge, sample_user):
     sample_challenge.complete_challenge(sample_user)
 
     # Ensure a new log entry is created
-    log_entry = ChallengeLog.query.filter_by(username=sample_user.username).first()
+    log_entry = ChallengeLog.query.filter_by(user_id=sample_user.id).first()
     assert log_entry is not None
 
     # UPDATED: Check 'challenge_slug' against 'sample_challenge.slug'
     assert log_entry.challenge_slug == sample_challenge.slug
-    assert log_entry.username == sample_user.username
+    assert log_entry.user_id == sample_user.id
 
 
 # Test scaling of challenge value based on difficulty
@@ -131,7 +131,7 @@ def test_complete_challenge_logs_slug(init_db, sample_user):
     challenge.complete_challenge(sample_user)
 
     # 3. Verify the log
-    log = ChallengeLog.query.filter_by(username=sample_user.username).first()
+    log = ChallengeLog.query.filter_by(user_id=sample_user.id).first()
 
     assert log is not None
     assert log.challenge_slug == challenge_slug  # Crucial check: Must match slug
