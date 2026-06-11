@@ -49,6 +49,8 @@ jobs:
             COGNITO_CLIENT_SECRET=${{ secrets.COGNITO_CLIENT_SECRET }}
             COGNITO_DOMAIN=${{ secrets.COGNITO_DOMAIN }}
             COGNITO_REDIRECT_URI=${{ secrets.COGNITO_REDIRECT_URI }}
+            AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
+            AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
             ENVFILE
 
             # Execute the deployment script

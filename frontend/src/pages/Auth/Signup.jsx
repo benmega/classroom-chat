@@ -204,6 +204,8 @@ const Signup = () => {
                                         value={username} 
                                         onChange={(e) => setUsername(e.target.value)} 
                                         required
+                                        pattern="[a-zA-Z0-9_]{3,30}"
+                                        title="Username must be 3-30 chars: letters, numbers, or underscores only."
                                         placeholder="Username"
                                         autoComplete="username"
                                         className="auth-input"
