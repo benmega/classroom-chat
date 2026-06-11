@@ -1,8 +1,4 @@
-<<<<<<< Updated upstream
 import React, { useState } from 'react';
-=======
-import React, { useEffect, useState } from 'react';
->>>>>>> Stashed changes
 import { Save, Trash2, Upload, Link as LinkIcon, Video, Code, Camera, LayoutTemplate, Image as ImageIcon, CheckCircle, ExternalLink, Play, Youtube, Monitor, FileVideo } from 'lucide-react';
 import AccessDenied from '../Error/AccessDenied';
 import NotFound from '../Error/NotFound';
@@ -16,7 +12,7 @@ import { formatStaticUrl } from '../../utils/formatters';
 import { useProjectManagement } from '../../hooks/useProjectManagement';
 
 const ManageProject = () => {
-    const { user: currentUser } = useAuthStore();
+    const { currentUser } = useAuthStore();
     const {
         projectId,
         projectData,

@@ -56,10 +56,6 @@ const LandingDesktop = () => {
 
             </main>
 
-<<<<<<< Updated upstream
-
-=======
->>>>>>> Stashed changes
         </div>
     );
 };

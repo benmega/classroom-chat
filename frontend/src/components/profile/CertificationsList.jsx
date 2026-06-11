@@ -9,11 +9,7 @@ const CertificationsList = ({ certificates }) => {
         <section className="dashboard-panel">
             <div className="panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <h2><Award size={20} /> Certifications</h2>
-<<<<<<< Updated upstream
-                <Link to="/submit-work" title="Submit Certificate" style={{ color: 'var(--text-secondary)', display: 'flex', alignItems: 'center' }}>
-=======
                 <Link to="/submit-work#certificate" title="Submit Certificate" style={{ color: 'var(--text-secondary)', display: 'flex', alignItems: 'center' }}>
->>>>>>> Stashed changes
                     <Plus size={20} />
                 </Link>
             </div>

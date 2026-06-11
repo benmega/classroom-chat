@@ -146,7 +146,7 @@ def test_challenge_log_model_structure(init_db):
     """
     # Create a log entry directly
     log = ChallengeLog(
-        username="test_user", domain="test.com", challenge_slug="test-slug"
+        user_id=1, domain="test.com", challenge_slug="test-slug"
     )
     db.session.add(log)
     db.session.commit()

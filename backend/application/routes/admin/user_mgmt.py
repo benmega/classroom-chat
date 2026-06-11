@@ -17,18 +17,19 @@ def pending_users():
     from sqlalchemy import func
 
     pending = User.query.filter_by(is_approved=False, is_admin=False).all()
-    usernames = [u.username for u in pending]
+    user_ids = [u.id for u in pending]
 
     counts = (
         db.session.query(
-            ChallengeLog.username, ChallengeLog.domain, func.count(ChallengeLog.id)
+            ChallengeLog.user_id, ChallengeLog.domain, func.count(ChallengeLog.id)
         )
-        .filter(ChallengeLog.username.in_(usernames))
-        .group_by(ChallengeLog.username, ChallengeLog.domain)
+        .filter(ChallengeLog.user_id.in_(user_ids))
+        .group_by(ChallengeLog.user_id, ChallengeLog.domain)
         .all()
     )
 
-    precomputed = {(username, domain): count for username, domain, count in counts}
+    id_to_username = {u.id: u._username for u in pending}
+    precomputed = {(id_to_username[user_id], domain): count for user_id, domain, count in counts}
 
     return {"users": [u.to_dict_summary(precomputed) for u in pending]}
 
@@ -73,18 +74,19 @@ def get_users():
 
     pagination = query.paginate(page=page, per_page=per_page, error_out=False)
     users = pagination.items
-    usernames = [u.username for u in users]
+    user_ids = [u.id for u in users]
 
     counts = (
         db.session.query(
-            ChallengeLog.username, ChallengeLog.domain, func.count(ChallengeLog.id)
+            ChallengeLog.user_id, ChallengeLog.domain, func.count(ChallengeLog.id)
         )
-        .filter(ChallengeLog.username.in_(usernames))
-        .group_by(ChallengeLog.username, ChallengeLog.domain)
+        .filter(ChallengeLog.user_id.in_(user_ids))
+        .group_by(ChallengeLog.user_id, ChallengeLog.domain)
         .all()
     )
 
-    precomputed = {(username, domain): count for username, domain, count in counts}
+    id_to_username = {u.id: u._username for u in users}
+    precomputed = {(id_to_username[user_id], domain): count for user_id, domain, count in counts}
 
     user_data = []
     for u in users:
