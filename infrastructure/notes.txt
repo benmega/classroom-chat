@@ -19,3 +19,6 @@ scp -i ~/.ssh/test-key.pem ubuntu@api-blossom.benmega.com:/home/ubuntu/classroom
 
 # TO SSH
 ssh -i ~/.ssh/test-key.pem -L 8000:localhost:8000 ubuntu@api-blossom.benmega.com
+
+# What's wrong?
+sudo journalctl -u gunicorn-benmega.service -n 100 --no-pager
