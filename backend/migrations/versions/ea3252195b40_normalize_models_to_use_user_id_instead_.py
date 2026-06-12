@@ -20,6 +20,16 @@ def upgrade():
     bind = op.get_bind()
     inspector = sa.inspect(bind)
 
+    # ── Clean up orphaned Alembic temp tables ─────────────────────────────────
+    # SQLite's batch_alter_table works by creating _alembic_tmp_<table>, copying
+    # data into it, then renaming.  If a previous migration run crashed mid-way,
+    # these temp tables are left behind and block the next attempt.
+    # Dropping them here makes upgrade() safely re-entrant after any failure.
+    existing_tables = inspector.get_table_names()
+    for orphan in ('_alembic_tmp_challenge_logs', '_alembic_tmp_duck_trade_log'):
+        if orphan in existing_tables:
+            bind.execute(sa.text(f'DROP TABLE "{orphan}"'))
+
     # ── Drop legacy tables if they exist ──────────────────────────────────────
     existing_tables = inspector.get_table_names()
     if 'trade' in existing_tables:
