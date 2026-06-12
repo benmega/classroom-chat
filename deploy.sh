@@ -133,42 +133,81 @@ fi
 # -------------------------
 # Migrations & Database Initialization
 # -------------------------
+# ARCHITECTURE NOTE — read before changing this section:
+#
+# Alembic is the single source of truth for schema management.
+# We distinguish two cases:
+#
+#   FRESH INSTALL (no alembic_version table):
+#     db.create_all() builds the schema directly from the current ORM models,
+#     then we stamp to head so Alembic knows the DB is already current.
+#     flask db upgrade is then a no-op.
+#
+#   EXISTING INSTALL (alembic_version table present):
+#     Alembic owns the schema. flask db upgrade applies any pending migrations.
+#     db.create_all() is NOT called — it would silently create tables that
+#     migrations expect to be absent, causing every subsequent migration to fail.
+#
+# DO NOT add db.create_all() back here. If you need a new table, write an
+# Alembic migration: cd backend && flask db migrate -m "description"
 echo "Initializing/updating database..."
 (
     cd "$APP_DIR/backend"
-    # Ensure we run in production mode so it hits prod_users.db
 
-    # Create schema from models if DB doesn't exist or is empty
-    echo "Ensuring database schema is up-to-date..."
+    echo "Bootstrapping database (fresh install check)..."
     run env FLASK_APP=main.py FLASK_ENV=production "$PYTHON_BIN" << 'PYEOF'
+import os, sys
 from main import app
 from application.extensions import db
+from sqlalchemy import inspect, text
+from alembic.config import Config
+from alembic import command
 
 with app.app_context():
-    # Create all tables from models (idempotent - won't fail if tables exist)
-    db.create_all()
-    print("Database schema initialized/verified")
+    inspector = inspect(db.engine)
+    tables = inspector.get_table_names()
+
+    if 'alembic_version' not in tables:
+        # Fresh install: no Alembic tracking exists yet.
+        # Create all tables from the current models and stamp to head.
+        # flask db upgrade (below) will then be a no-op.
+        print("Fresh install detected: creating schema from models...")
+        db.create_all()
+
+        migrations_dir = os.path.join(os.path.dirname(os.path.abspath('main.py')), 'migrations')
+        alembic_cfg = Config(os.path.join(migrations_dir, 'alembic.ini'))
+        alembic_cfg.set_main_option('script_location', migrations_dir)
+        alembic_cfg.set_main_option('sqlalchemy.url', str(app.config['SQLALCHEMY_DATABASE_URI']))
+        command.stamp(alembic_cfg, 'head')
+        print("Schema created and stamped to head. Alembic is now the owner.")
+    else:
+        # Existing install: Alembic owns the schema.
+        # Let flask db upgrade handle everything below.
+        with db.engine.connect() as conn:
+            current = conn.execute(text("SELECT version_num FROM alembic_version")).scalar()
+        print(f"Existing database detected (stamp: {current}). Alembic will apply pending migrations.")
 PYEOF
 
     # Heal a dangling alembic stamp. If alembic_version points to a revision that no
-    # longer exists in the codebase (a "ghost" left by deleted migrations), `flask db
-    # current` exits non-zero and a plain `upgrade` would fail. Purge the stamp so the
-    # upgrade can run from base. This only fires when the stamp is genuinely broken;
-    # healthy deploys skip it and run a normal upgrade.
+    # longer exists in the codebase (a "ghost" left by deleted migrations), purge the
+    # stamp so upgrade can run from base. This only fires when genuinely broken.
     echo "Checking alembic revision state..."
-    if ! run env FLASK_APP=main.py FLASK_ENV=production "$PYTHON_BIN" -m flask db current >/dev/null 2>&1; then
+    if ! run env FLASK_APP=main.py FLASK_ENV=production "$PYTHON_BIN" -m flask db current > /dev/null 2>&1; then
         echo "WARNING: alembic_version references a missing revision; purging dangling stamp..."
         run env FLASK_APP=main.py FLASK_ENV=production "$PYTHON_BIN" -m flask db stamp base --purge
     fi
 
-    # Apply pending migrations. No error swallowing: a failed migration must abort the
-    # deploy (set -e propagates the failure out of this subshell) so we never restart
-    # the service on a schema that doesn't match the code.
+    # Apply pending migrations.
+    # On a fresh install this is a no-op (already stamped to head above).
+    # On an existing install this applies any outstanding revisions.
+    # set -e means a failed migration aborts the deploy — we never restart the
+    # service on a schema that doesn't match the code.
     echo "Applying migrations..."
     run env FLASK_APP=main.py FLASK_ENV=production "$PYTHON_BIN" -m flask db upgrade
 
-    # Run the idempotent multi-tenant classroom migration script
-    echo "Running custom classroom migration script..."
+    # Run the data-seeding script (inserts reserved rows, backfills enrolments, etc.).
+    # This is intentionally separate from Alembic — it handles data, not schema.
+    echo "Running data seeding script..."
     run env FLASK_APP=main.py FLASK_ENV=production "$PYTHON_BIN" -m tools.migrate_classroom
 )
 

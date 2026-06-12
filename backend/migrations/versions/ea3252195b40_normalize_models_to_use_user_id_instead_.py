@@ -4,12 +4,46 @@ Revision ID: ea3252195b40
 Revises: a1b2c3d4e5f6
 Create Date: 2026-06-10 12:54:08.498310
 
+────────────────────────────────────────────────────────────────────────────
+DESIGN NOTES FOR FUTURE DEVELOPERS
+────────────────────────────────────────────────────────────────────────────
+This migration replaces the 'username' foreign key (a string) with 'user_id'
+(an integer FK) on challenge_logs and duck_trade_log.
+
+Key rules that make this migration safe on any database state:
+
+1.  TOP-LEVEL SCHEMA CHECK before entering batch_alter_table.
+    We check whether 'username' exists on the table.  If it does not, the
+    table is already on the new schema and we skip it entirely.  This means
+    the migration is a no-op on databases that were created by db.create_all()
+    from the current models (which already have user_id, no username).
+
+2.  NO CONDITIONAL LOGIC INSIDE batch_alter_table.
+    Operations inside a batch_alter_table context are *buffered* — they are
+    not executed until the context exits (flush).  Any exception is raised
+    during flush(), NOT during the individual add_column / drop_index call.
+    This means try/except blocks around individual batch_op calls are useless
+    and will never catch anything.  Instead, inspect the schema BEFORE entering
+    the context and only include operations you know will succeed.
+
+3.  SQLite table rebuild makes explicit FK drops unnecessary.
+    batch_alter_table on SQLite works by creating a new table, copying data,
+    and dropping the old one.  Old unnamed/implicit FK constraints disappear
+    automatically during the rebuild.  There is no need to call
+    drop_constraint() for the old username FK.
+
+4.  NULL cleanup runs BEFORE alter_column(nullable=False).
+    batch_alter_table rebuilds the table with the new constraint, which means
+    SQLite does an internal INSERT SELECT.  Any NULL in a NOT NULL column will
+    fail that INSERT.  Always DELETE nulls before the batch that enforces NOT NULL.
 """
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import sqlite
 
-# revision identifiers, used by Alembic.
+# ---------------------------------------------------------------------------
+# Alembic revision chain
+# ---------------------------------------------------------------------------
 revision = 'ea3252195b40'
 down_revision = 'a1b2c3d4e5f6'
 branch_labels = None
@@ -19,19 +53,18 @@ depends_on = None
 def upgrade():
     bind = op.get_bind()
     inspector = sa.inspect(bind)
-
-    # ── Clean up orphaned Alembic temp tables ─────────────────────────────────
-    # SQLite's batch_alter_table works by creating _alembic_tmp_<table>, copying
-    # data into it, then renaming.  If a previous migration run crashed mid-way,
-    # these temp tables are left behind and block the next attempt.
-    # Dropping them here makes upgrade() safely re-entrant after any failure.
     existing_tables = inspector.get_table_names()
+
+    # ── Clean up orphaned temp tables from any previous failed run ───────────
+    # SQLite batch_alter_table creates _alembic_tmp_<table> and renames it at
+    # the end.  A crash between CREATE and RENAME leaves a ghost table that
+    # blocks every subsequent attempt.  Dropping it here makes the migration
+    # re-entrant with no manual server intervention required.
     for orphan in ('_alembic_tmp_challenge_logs', '_alembic_tmp_duck_trade_log'):
         if orphan in existing_tables:
             bind.execute(sa.text(f'DROP TABLE "{orphan}"'))
 
-    # ── Drop legacy tables if they exist ──────────────────────────────────────
-    existing_tables = inspector.get_table_names()
+    # ── Drop legacy tables (were removed from models) ────────────────────────
     if 'trade' in existing_tables:
         op.drop_table('trade')
     if 'bounties' in existing_tables:
@@ -40,87 +73,75 @@ def upgrade():
     # ── challenge_logs ────────────────────────────────────────────────────────
     cl_cols = {c['name'] for c in inspector.get_columns('challenge_logs')}
 
-    # Add user_id only if it doesn't exist yet
-    if 'user_id' not in cl_cols:
+    if 'username' not in cl_cols:
+        # Schema already has user_id and no username column — nothing to do.
+        # This is the case for any DB created from the current models.
+        print("challenge_logs: already on new schema, skipping.")
+    else:
+        # Old schema detected: username column present, user_id absent.
+        # Step 1: add user_id as nullable
         with op.batch_alter_table('challenge_logs', schema=None) as batch_op:
             batch_op.add_column(sa.Column('user_id', sa.Integer(), nullable=True))
 
-        # Back-fill from username column (only meaningful if username still exists)
-        if 'username' in cl_cols:
-            op.execute(
-                "UPDATE challenge_logs SET user_id = "
-                "(SELECT id FROM users WHERE LOWER(users.username) = LOWER(challenge_logs.username))"
+        # Step 2: back-fill user_id from the username column
+        op.execute(
+            "UPDATE challenge_logs "
+            "SET user_id = (SELECT id FROM users "
+            "               WHERE LOWER(users.username) = LOWER(challenge_logs.username))"
+        )
+
+        # Step 3: purge rows that had no matching user (orphans)
+        op.execute("DELETE FROM challenge_logs WHERE user_id IS NULL")
+
+        # Step 4: rebuild table — enforce NOT NULL, add index + FK, drop username.
+        # All operations in this context are known to be safe:
+        #   • user_id is non-null (purged above)
+        #   • ix_challenge_logs_user_id does not exist (we just added the column)
+        #   • username column exists (we checked above)
+        #   • Old FK on username disappears automatically during the table rebuild.
+        with op.batch_alter_table('challenge_logs', schema=None) as batch_op:
+            batch_op.alter_column('user_id', existing_type=sa.Integer(), nullable=False)
+            batch_op.create_index(
+                batch_op.f('ix_challenge_logs_user_id'), ['user_id'], unique=False
             )
-
-    # Always purge orphan rows before enforcing NOT NULL — this must run
-    # unconditionally because the prod DB may have been built by db.create_all()
-    # (user_id column already present) but still contain NULL rows from legacy
-    # data that pre-dates the FK relationship.
-    op.execute("DELETE FROM challenge_logs WHERE user_id IS NULL")
-
-    # Second batch: make user_id NOT NULL, swap indexes, drop username.
-    # SQLite batch_alter_table rebuilds the entire table, so any NULL in user_id
-    # would fail the constraint during the internal INSERT SELECT — hence the
-    # unconditional DELETE immediately above.
-    with op.batch_alter_table('challenge_logs', schema=None) as batch_op:
-        batch_op.alter_column('user_id', existing_type=sa.Integer(), nullable=False)
-
-        cl_indexes = {ix['name'] for ix in inspector.get_indexes('challenge_logs')}
-        if 'ix_challenge_logs_username' in cl_indexes:
-            try:
-                batch_op.drop_index(batch_op.f('ix_challenge_logs_username'))
-            except (ValueError, Exception):
-                pass
-        if 'ix_challenge_logs_user_id' not in cl_indexes:
-            batch_op.create_index(batch_op.f('ix_challenge_logs_user_id'), ['user_id'], unique=False)
-
-        batch_op.create_foreign_key(batch_op.f('fk_challenge_logs_user_id_users'), 'users', ['user_id'], ['id'])
-
-        # Re-inspect to see if username column still exists before dropping
-        cl_cols_now = {c['name'] for c in sa.inspect(bind).get_columns('challenge_logs')}
-        if 'username' in cl_cols_now:
+            batch_op.create_foreign_key(
+                batch_op.f('fk_challenge_logs_user_id_users'),
+                'users', ['user_id'], ['id'],
+            )
             batch_op.drop_column('username')
 
     # ── duck_trade_log ────────────────────────────────────────────────────────
-    dtl_cols = {c['name'] for c in inspector.get_columns('duck_trade_log')}
+    # Re-inspect: the challenge_logs batch may have refreshed the connection state.
+    dtl_cols = {c['name'] for c in sa.inspect(bind).get_columns('duck_trade_log')}
 
-    if 'user_id' not in dtl_cols:
+    if 'username' not in dtl_cols:
+        print("duck_trade_log: already on new schema, skipping.")
+    else:
+        # Step 1: add user_id as nullable
         with op.batch_alter_table('duck_trade_log', schema=None) as batch_op:
             batch_op.add_column(sa.Column('user_id', sa.Integer(), nullable=True))
 
-        if 'username' in dtl_cols:
-            op.execute(
-                "UPDATE duck_trade_log SET user_id = "
-                "(SELECT id FROM users WHERE LOWER(users.username) = LOWER(duck_trade_log.username))"
+        # Step 2: back-fill
+        op.execute(
+            "UPDATE duck_trade_log "
+            "SET user_id = (SELECT id FROM users "
+            "               WHERE LOWER(users.username) = LOWER(duck_trade_log.username))"
+        )
+
+        # Step 3: purge orphans
+        op.execute("DELETE FROM duck_trade_log WHERE user_id IS NULL")
+
+        # Step 4: rebuild table
+        with op.batch_alter_table('duck_trade_log', schema=None) as batch_op:
+            batch_op.alter_column('user_id', existing_type=sa.Integer(), nullable=False)
+            batch_op.create_index(
+                batch_op.f('ix_duck_trade_log_user_id'), ['user_id'], unique=False
             )
-
-    # Same pattern as challenge_logs — purge NULLs unconditionally before
-    # the batch rebuild enforces NOT NULL.
-    op.execute("DELETE FROM duck_trade_log WHERE user_id IS NULL")
-
-    with op.batch_alter_table('duck_trade_log', schema=None) as batch_op:
-        batch_op.alter_column('user_id', existing_type=sa.Integer(), nullable=False)
-
-        dtl_indexes = {ix['name'] for ix in inspector.get_indexes('duck_trade_log')}
-        if 'ix_duck_trade_log_username' in dtl_indexes:
-            try:
-                batch_op.drop_index(batch_op.f('ix_duck_trade_log_username'))
-            except (ValueError, Exception):
-                pass
-        if 'ix_duck_trade_log_user_id' not in dtl_indexes:
-            batch_op.create_index(batch_op.f('ix_duck_trade_log_user_id'), ['user_id'], unique=False)
-
-        try:
-            batch_op.drop_constraint('fk_duck_trade_log_username_users', type_='foreignkey')
-        except (ValueError, KeyError, Exception):
-            pass
-        batch_op.create_foreign_key(batch_op.f('fk_duck_trade_log_user_id_users'), 'users', ['user_id'], ['id'])
-
-        dtl_cols_now = {c['name'] for c in sa.inspect(bind).get_columns('duck_trade_log')}
-        if 'username' in dtl_cols_now:
+            batch_op.create_foreign_key(
+                batch_op.f('fk_duck_trade_log_user_id_users'),
+                'users', ['user_id'], ['id'],
+            )
             batch_op.drop_column('username')
-
-    # ### end Alembic commands ###
 
 
 def downgrade():

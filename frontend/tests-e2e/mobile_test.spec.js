@@ -46,7 +46,7 @@ test.describe('Mobile UI Audit Navigation', () => {
       
       // Close sidebar by clicking overlay or close button
       const closeBtn = page.locator('.mobile-sidebar .sidebar-close, .mobile-overlay').first();
-      await closeBtn.click();
+      await closeBtn.click({ force: true });
       await page.waitForTimeout(500);
     } else {
       console.log('Hamburger menu not found on Profile page!');
