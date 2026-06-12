@@ -19,46 +19,85 @@ depends_on = None
 def upgrade():
     bind = op.get_bind()
     inspector = sa.inspect(bind)
+
+    # ── Drop legacy tables if they exist ──────────────────────────────────────
     existing_tables = inspector.get_table_names()
     if 'trade' in existing_tables:
         op.drop_table('trade')
     if 'bounties' in existing_tables:
         op.drop_table('bounties')
-    with op.batch_alter_table('challenge_logs', schema=None) as batch_op:
-        batch_op.add_column(sa.Column('user_id', sa.Integer(), nullable=True))
 
-    with op.batch_alter_table('duck_trade_log', schema=None) as batch_op:
-        batch_op.add_column(sa.Column('user_id', sa.Integer(), nullable=True))
+    # ── challenge_logs ────────────────────────────────────────────────────────
+    cl_cols = {c['name'] for c in inspector.get_columns('challenge_logs')}
 
-    op.execute("UPDATE challenge_logs SET user_id = (SELECT id FROM users WHERE LOWER(users.username) = LOWER(challenge_logs.username))")
-    op.execute("UPDATE duck_trade_log SET user_id = (SELECT id FROM users WHERE LOWER(users.username) = LOWER(duck_trade_log.username))")
-    # Delete orphan logs if user_id is still NULL
-    op.execute("DELETE FROM challenge_logs WHERE user_id IS NULL")
-    op.execute("DELETE FROM duck_trade_log WHERE user_id IS NULL")
+    # Add user_id only if it doesn't exist yet
+    if 'user_id' not in cl_cols:
+        with op.batch_alter_table('challenge_logs', schema=None) as batch_op:
+            batch_op.add_column(sa.Column('user_id', sa.Integer(), nullable=True))
 
+        # Back-fill from username column (only meaningful if username still exists)
+        if 'username' in cl_cols:
+            op.execute(
+                "UPDATE challenge_logs SET user_id = "
+                "(SELECT id FROM users WHERE LOWER(users.username) = LOWER(challenge_logs.username))"
+            )
+        op.execute("DELETE FROM challenge_logs WHERE user_id IS NULL")
+
+    # Second batch: make user_id NOT NULL, swap indexes, drop username
     with op.batch_alter_table('challenge_logs', schema=None) as batch_op:
         batch_op.alter_column('user_id', existing_type=sa.Integer(), nullable=False)
-        try:
-            batch_op.drop_index(batch_op.f('ix_challenge_logs_username'))
-        except ValueError:
-            pass  # Index may not exist in all environments
-        batch_op.create_index(batch_op.f('ix_challenge_logs_user_id'), ['user_id'], unique=False)
+
+        cl_indexes = {ix['name'] for ix in inspector.get_indexes('challenge_logs')}
+        if 'ix_challenge_logs_username' in cl_indexes:
+            try:
+                batch_op.drop_index(batch_op.f('ix_challenge_logs_username'))
+            except (ValueError, Exception):
+                pass
+        if 'ix_challenge_logs_user_id' not in cl_indexes:
+            batch_op.create_index(batch_op.f('ix_challenge_logs_user_id'), ['user_id'], unique=False)
+
         batch_op.create_foreign_key(batch_op.f('fk_challenge_logs_user_id_users'), 'users', ['user_id'], ['id'])
-        batch_op.drop_column('username')
+
+        # Re-inspect after the batch above may have changed things
+        cl_cols_now = {c['name'] for c in sa.inspect(bind).get_columns('challenge_logs')}
+        if 'username' in cl_cols_now:
+            batch_op.drop_column('username')
+
+    # ── duck_trade_log ────────────────────────────────────────────────────────
+    dtl_cols = {c['name'] for c in inspector.get_columns('duck_trade_log')}
+
+    if 'user_id' not in dtl_cols:
+        with op.batch_alter_table('duck_trade_log', schema=None) as batch_op:
+            batch_op.add_column(sa.Column('user_id', sa.Integer(), nullable=True))
+
+        if 'username' in dtl_cols:
+            op.execute(
+                "UPDATE duck_trade_log SET user_id = "
+                "(SELECT id FROM users WHERE LOWER(users.username) = LOWER(duck_trade_log.username))"
+            )
+        op.execute("DELETE FROM duck_trade_log WHERE user_id IS NULL")
 
     with op.batch_alter_table('duck_trade_log', schema=None) as batch_op:
         batch_op.alter_column('user_id', existing_type=sa.Integer(), nullable=False)
-        try:
-            batch_op.drop_index(batch_op.f('ix_duck_trade_log_username'))
-        except ValueError:
-            pass  # Index may not exist in all environments
-        batch_op.create_index(batch_op.f('ix_duck_trade_log_user_id'), ['user_id'], unique=False)
+
+        dtl_indexes = {ix['name'] for ix in inspector.get_indexes('duck_trade_log')}
+        if 'ix_duck_trade_log_username' in dtl_indexes:
+            try:
+                batch_op.drop_index(batch_op.f('ix_duck_trade_log_username'))
+            except (ValueError, Exception):
+                pass
+        if 'ix_duck_trade_log_user_id' not in dtl_indexes:
+            batch_op.create_index(batch_op.f('ix_duck_trade_log_user_id'), ['user_id'], unique=False)
+
         try:
             batch_op.drop_constraint('fk_duck_trade_log_username_users', type_='foreignkey')
-        except (ValueError, KeyError):
-            pass  # Constraint may not exist in all environments
+        except (ValueError, KeyError, Exception):
+            pass
         batch_op.create_foreign_key(batch_op.f('fk_duck_trade_log_user_id_users'), 'users', ['user_id'], ['id'])
-        batch_op.drop_column('username')
+
+        dtl_cols_now = {c['name'] for c in sa.inspect(bind).get_columns('duck_trade_log')}
+        if 'username' in dtl_cols_now:
+            batch_op.drop_column('username')
 
     # ### end Alembic commands ###
 

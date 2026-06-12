@@ -1,17 +1,20 @@
-#!/usr/bin/env python
-"""Run database migrations using alembic."""
-import os
-from alembic.config import Config
-from alembic import command
-from application import create_app
+"""
+DEPRECATED — do not use.
 
-app = create_app()
+This file is no longer called by anything in the deploy pipeline.
+Use the standard Alembic CLI instead:
 
-with app.app_context():
-    migrations_dir = os.path.join(os.path.dirname(__file__), 'migrations')
-    alembic_cfg = Config(os.path.join(migrations_dir, 'alembic.ini'))
-    alembic_cfg.set_main_option('script_location', migrations_dir)
-    alembic_cfg.set_main_option('sqlalchemy.url', str(app.config['SQLALCHEMY_DATABASE_URI']))
+    cd backend
+    flask db upgrade        # apply all pending migrations (what deploy.sh runs)
+    flask db migrate -m ""  # auto-generate a new migration from model changes
+    flask db downgrade      # roll back one revision
 
-    command.upgrade(alembic_cfg, 'head')
-    print("Migrations completed successfully")
+See backend/migrations/versions/ for the full migration history.
+
+This file will be removed in a future cleanup commit.
+"""
+
+raise RuntimeError(
+    "run_migrations.py is deprecated and should not be executed directly. "
+    "Run `flask db upgrade` instead."
+)
