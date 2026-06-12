@@ -73,60 +73,66 @@ def upgrade():
     # ── challenge_logs ────────────────────────────────────────────────────────
     cl_cols = {c['name'] for c in inspector.get_columns('challenge_logs')}
 
-    if 'username' not in cl_cols:
-        # Schema already has user_id and no username column — nothing to do.
-        # This is the case for any DB created from the current models.
+    if 'username' not in cl_cols and 'user_id' in cl_cols:
+        # Schema already completely converted — nothing to do.
         print("challenge_logs: already on new schema, skipping.")
     else:
-        # Old schema detected: username column present, user_id absent.
-        # Step 1: add user_id as nullable
-        with op.batch_alter_table('challenge_logs', schema=None) as batch_op:
-            batch_op.add_column(sa.Column('user_id', sa.Integer(), nullable=True))
+        # Old or partially migrated schema detected.
+        
+        # Step 1: add user_id as nullable (only if it doesn't already exist from a prior failed run)
+        if 'user_id' not in cl_cols:
+            with op.batch_alter_table('challenge_logs', schema=None) as batch_op:
+                batch_op.add_column(sa.Column('user_id', sa.Integer(), nullable=True))
 
-        # Step 2: back-fill user_id from the username column
-        op.execute(
-            "UPDATE challenge_logs "
-            "SET user_id = (SELECT id FROM users "
-            "               WHERE LOWER(users.username) = LOWER(challenge_logs.username))"
-        )
+        # Step 2: back-fill user_id from the username column (only if username still exists)
+        if 'username' in cl_cols:
+            op.execute(
+                "UPDATE challenge_logs "
+                "SET user_id = (SELECT id FROM users "
+                "               WHERE LOWER(users.username) = LOWER(challenge_logs.username))"
+            )
 
         # Step 3: purge rows that had no matching user (orphans)
         op.execute("DELETE FROM challenge_logs WHERE user_id IS NULL")
 
         # Step 4: rebuild table — enforce NOT NULL, add index + FK, drop username.
-        # All operations in this context are known to be safe:
-        #   • user_id is non-null (purged above)
-        #   • ix_challenge_logs_user_id does not exist (we just added the column)
-        #   • username column exists (we checked above)
-        #   • Old FK on username disappears automatically during the table rebuild.
         with op.batch_alter_table('challenge_logs', schema=None) as batch_op:
             batch_op.alter_column('user_id', existing_type=sa.Integer(), nullable=False)
-            batch_op.create_index(
-                batch_op.f('ix_challenge_logs_user_id'), ['user_id'], unique=False
-            )
+            
+            # Create index only if it doesn't exist
+            cl_indexes = {ix['name'] for ix in inspector.get_indexes('challenge_logs')}
+            if 'ix_challenge_logs_user_id' not in cl_indexes:
+                batch_op.create_index(
+                    batch_op.f('ix_challenge_logs_user_id'), ['user_id'], unique=False
+                )
+                
             batch_op.create_foreign_key(
                 batch_op.f('fk_challenge_logs_user_id_users'),
                 'users', ['user_id'], ['id'],
             )
-            batch_op.drop_column('username')
+            
+            if 'username' in cl_cols:
+                batch_op.drop_column('username')
 
     # ── duck_trade_log ────────────────────────────────────────────────────────
     # Re-inspect: the challenge_logs batch may have refreshed the connection state.
     dtl_cols = {c['name'] for c in sa.inspect(bind).get_columns('duck_trade_log')}
 
-    if 'username' not in dtl_cols:
+    if 'username' not in dtl_cols and 'user_id' in dtl_cols:
         print("duck_trade_log: already on new schema, skipping.")
     else:
         # Step 1: add user_id as nullable
-        with op.batch_alter_table('duck_trade_log', schema=None) as batch_op:
-            batch_op.add_column(sa.Column('user_id', sa.Integer(), nullable=True))
+        if 'user_id' not in dtl_cols:
+            with op.batch_alter_table('duck_trade_log', schema=None) as batch_op:
+                batch_op.add_column(sa.Column('user_id', sa.Integer(), nullable=True))
 
         # Step 2: back-fill
-        op.execute(
-            "UPDATE duck_trade_log "
-            "SET user_id = (SELECT id FROM users "
-            "               WHERE LOWER(users.username) = LOWER(duck_trade_log.username))"
-        )
+        if 'username' in dtl_cols:
+            op.execute(
+                "UPDATE duck_trade_log "
+                "SET user_id = (SELECT id FROM users "
+                "               WHERE LOWER(users.username) = LOWER(duck_trade_log.username))"
+            )
 
         # Step 3: purge orphans
         op.execute("DELETE FROM duck_trade_log WHERE user_id IS NULL")
@@ -134,14 +140,20 @@ def upgrade():
         # Step 4: rebuild table
         with op.batch_alter_table('duck_trade_log', schema=None) as batch_op:
             batch_op.alter_column('user_id', existing_type=sa.Integer(), nullable=False)
-            batch_op.create_index(
-                batch_op.f('ix_duck_trade_log_user_id'), ['user_id'], unique=False
-            )
+            
+            dtl_indexes = {ix['name'] for ix in inspector.get_indexes('duck_trade_log')}
+            if 'ix_duck_trade_log_user_id' not in dtl_indexes:
+                batch_op.create_index(
+                    batch_op.f('ix_duck_trade_log_user_id'), ['user_id'], unique=False
+                )
+                
             batch_op.create_foreign_key(
                 batch_op.f('fk_duck_trade_log_user_id_users'),
                 'users', ['user_id'], ['id'],
             )
-            batch_op.drop_column('username')
+            
+            if 'username' in dtl_cols:
+                batch_op.drop_column('username')
 
 
 def downgrade():

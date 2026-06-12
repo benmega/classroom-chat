@@ -36,13 +36,13 @@ with engine.connect() as conn:
         profile_picture VARCHAR(200)
     )"""))
     conn.execute(text("""CREATE TABLE challenge_logs (
-        id INTEGER PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id),
+        id INTEGER PRIMARY KEY, user_id INTEGER, username VARCHAR(80),
         domain VARCHAR(100) NOT NULL, challenge_slug VARCHAR(255) NOT NULL,
         course_id VARCHAR(100), course_instance VARCHAR(100),
         timestamp DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, helper TEXT
     )"""))
     conn.execute(text("""CREATE TABLE duck_trade_log (
-        id INTEGER PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id),
+        id INTEGER PRIMARY KEY, user_id INTEGER, username VARCHAR(80),
         digital_ducks INTEGER, bit_ducks TEXT, byte_ducks TEXT,
         status VARCHAR(20), timestamp DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
     )"""))
@@ -76,8 +76,8 @@ with engine.connect() as conn:
     conn.execute(text("CREATE TABLE alembic_version (version_num VARCHAR(32) PRIMARY KEY)"))
     conn.execute(text("INSERT INTO alembic_version VALUES ('a1b2c3d4e5f6')"))
     conn.execute(text("INSERT INTO users (id,username,password_hash) VALUES (1,'alice','hash1'),(2,'bob','hash2')"))
-    conn.execute(text("INSERT INTO challenge_logs (user_id,domain,challenge_slug) VALUES (1,'codecombat.com','level-1'),(2,'codecombat.com','level-2')"))
-    conn.execute(text("INSERT INTO duck_trade_log (user_id,digital_ducks,status) VALUES (1,5,'pending')"))
+    conn.execute(text("INSERT INTO challenge_logs (username,domain,challenge_slug) VALUES ('alice','codecombat.com','level-1'),('bob','codecombat.com','level-2')"))
+    conn.execute(text("INSERT INTO duck_trade_log (username,digital_ducks,status) VALUES ('alice',5,'pending')"))
     conn.commit()
 
 engine.dispose()
