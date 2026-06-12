@@ -41,9 +41,17 @@ def upgrade():
                 "UPDATE challenge_logs SET user_id = "
                 "(SELECT id FROM users WHERE LOWER(users.username) = LOWER(challenge_logs.username))"
             )
-        op.execute("DELETE FROM challenge_logs WHERE user_id IS NULL")
 
-    # Second batch: make user_id NOT NULL, swap indexes, drop username
+    # Always purge orphan rows before enforcing NOT NULL — this must run
+    # unconditionally because the prod DB may have been built by db.create_all()
+    # (user_id column already present) but still contain NULL rows from legacy
+    # data that pre-dates the FK relationship.
+    op.execute("DELETE FROM challenge_logs WHERE user_id IS NULL")
+
+    # Second batch: make user_id NOT NULL, swap indexes, drop username.
+    # SQLite batch_alter_table rebuilds the entire table, so any NULL in user_id
+    # would fail the constraint during the internal INSERT SELECT — hence the
+    # unconditional DELETE immediately above.
     with op.batch_alter_table('challenge_logs', schema=None) as batch_op:
         batch_op.alter_column('user_id', existing_type=sa.Integer(), nullable=False)
 
@@ -58,7 +66,7 @@ def upgrade():
 
         batch_op.create_foreign_key(batch_op.f('fk_challenge_logs_user_id_users'), 'users', ['user_id'], ['id'])
 
-        # Re-inspect after the batch above may have changed things
+        # Re-inspect to see if username column still exists before dropping
         cl_cols_now = {c['name'] for c in sa.inspect(bind).get_columns('challenge_logs')}
         if 'username' in cl_cols_now:
             batch_op.drop_column('username')
@@ -75,7 +83,10 @@ def upgrade():
                 "UPDATE duck_trade_log SET user_id = "
                 "(SELECT id FROM users WHERE LOWER(users.username) = LOWER(duck_trade_log.username))"
             )
-        op.execute("DELETE FROM duck_trade_log WHERE user_id IS NULL")
+
+    # Same pattern as challenge_logs — purge NULLs unconditionally before
+    # the batch rebuild enforces NOT NULL.
+    op.execute("DELETE FROM duck_trade_log WHERE user_id IS NULL")
 
     with op.batch_alter_table('duck_trade_log', schema=None) as batch_op:
         batch_op.alter_column('user_id', existing_type=sa.Integer(), nullable=False)
