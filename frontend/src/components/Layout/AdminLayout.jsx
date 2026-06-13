@@ -16,7 +16,8 @@ import {
     X,
     ChevronLeft,
     ChevronRight,
-    ShoppingBag
+    ShoppingBag,
+    GraduationCap
 } from 'lucide-react';
 import useAuthStore from '../../store/useAuthStore';
 import useSidebar from '../../hooks/useSidebar';
@@ -57,6 +58,7 @@ const AdminLayout = ({ children }) => {
         { path: '/admin/users', label: 'Users', icon: Users },
         { path: '/admin/pending-trades', label: 'Pending Trades', icon: ShoppingBag },
         { path: '/admin/projects', label: 'Projects', icon: FolderKanban },
+        { path: '/admin/course-instances', label: 'Course Instances', icon: GraduationCap },
         { path: '/admin/certificates', label: 'Certificates', icon: FileCheck },
         { path: '/admin/advanced', label: 'Advanced Panel', icon: ShieldAlert },
         { path: '/chat', label: 'Back to Site', icon: Home },

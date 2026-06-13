@@ -161,6 +161,8 @@ const Users = () => {
                                         <div className="type-badge">
                                             {u.is_admin ? (
                                                 <span className="user-role-badge admin"><Shield size={12} /> Administrator</span>
+                                            ) : u.role === 'parent' ? (
+                                                <span className="user-role-badge parent">Parent</span>
                                             ) : (
                                                 <span className="user-role-badge student">Student</span>
                                             )}

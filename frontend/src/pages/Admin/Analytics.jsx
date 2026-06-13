@@ -24,6 +24,7 @@ import {
     ArcElement
 } from 'chart.js';
 import { Line, Pie } from 'react-chartjs-2';
+import { useNavigate } from 'react-router-dom';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
 import './Analytics.css';
@@ -42,6 +43,7 @@ ChartJS.register(
 );
 
 const Analytics = () => {
+    const navigate = useNavigate();
     const [analyticsData, setAnalyticsData] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [isRefreshing, setIsRefreshing] = useState(false);
@@ -100,14 +102,15 @@ const Analytics = () => {
     };
 
     const userDistributionData = {
-        labels: ['Active Students', 'Inactive Students', 'Administrators'],
+        labels: ['Active Students', 'Inactive Students', 'Parents', 'Administrators'],
         datasets: [{
             data: [
-                users.filter(u => u.is_online && !u.is_admin).length,
-                users.filter(u => !u.is_online && !u.is_admin).length,
+                users.filter(u => u.is_online && u.role === 'student' && !u.is_admin).length,
+                users.filter(u => !u.is_online && u.role === 'student' && !u.is_admin).length,
+                users.filter(u => u.role === 'parent').length,
                 users.filter(u => u.is_admin).length
             ],
-            backgroundColor: ['#10b981', '#94a3b8', '#6366f1'],
+            backgroundColor: ['#10b981', '#94a3b8', '#8b5cf6', '#6366f1'],
             borderWidth: 0,
         }]
     };
@@ -188,7 +191,7 @@ const Analytics = () => {
                                     <span className="label">Total Supply</span>
                                     <span className="value">🦆 {total_ducks.toLocaleString()}</span>
                                 </div>
-                                <div className="simple-stat">
+                                <div className="simple-stat clickable" onClick={() => navigate('/admin/transactions?type=earned')}>
                                     <span className="label">Minted (7d)</span>
                                     <span className="value positive">+ {ducks_earned_this_week.toLocaleString()}</span>
                                 </div>

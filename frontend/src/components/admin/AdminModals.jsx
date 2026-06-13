@@ -1,10 +1,13 @@
 import React, { useEffect, useState } from 'react';
+import { Eye, EyeOff } from 'lucide-react';
 import Modal from '../common/Modal';
 import SmartImage from '../common/SmartImage';
 import DuckIcon from '../Icons/DuckIcon';
 import { getApiUrl } from '../../utils/apiUrl';
 
-export const CreateUserModal = ({ isOpen, onClose, onSubmit, formErrors, loading }) => (
+export const CreateUserModal = ({ isOpen, onClose, onSubmit, formErrors, loading }) => {
+    const [showPassword, setShowPassword] = useState(false);
+    return (
     <Modal isOpen={isOpen} onClose={onClose} title="Create New User">
         <form onSubmit={onSubmit} className="admin-form" noValidate>
             <div className={`form-group ${formErrors.username ? 'has-error' : ''}`}>
@@ -18,7 +21,21 @@ export const CreateUserModal = ({ isOpen, onClose, onSubmit, formErrors, loading
             </div>
             <div className={`form-group ${formErrors.password ? 'has-error' : ''}`}>
                 <label>Initial Password</label>
-                <input type="password" name="password" />
+                <div style={{ position: 'relative' }}>
+                    <input 
+                        type={showPassword ? "text" : "password"} 
+                        name="password" 
+                        style={{ paddingRight: '2.5rem' }}
+                    />
+                    <button 
+                        type="button" 
+                        onClick={() => setShowPassword(!showPassword)}
+                        style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                        tabIndex="-1"
+                    >
+                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                </div>
                 {formErrors.password && <span className="error-message">{formErrors.password}</span>}
             </div>
             <div className="form-group">
@@ -30,7 +47,8 @@ export const CreateUserModal = ({ isOpen, onClose, onSubmit, formErrors, loading
             </button>
         </form>
     </Modal>
-);
+    );
+};
 
 export const AdjustDucksModal = ({ isOpen, onClose, onSubmit, user, users, formErrors, loading }) => (
     <Modal isOpen={isOpen} onClose={onClose} title="Adjust Duck Balance">
@@ -78,7 +96,11 @@ export const AdjustDucksModal = ({ isOpen, onClose, onSubmit, user, users, formE
     </Modal>
 );
 
-export const ResetPasswordModal = ({ isOpen, onClose, onSubmit, user, formErrors, loading }) => (
+export const ResetPasswordModal = ({ isOpen, onClose, onSubmit, user, formErrors, loading }) => {
+    const [showNewPassword, setShowNewPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+    return (
     <Modal isOpen={isOpen} onClose={onClose} title="Reset User Password">
         <form onSubmit={onSubmit} className="admin-form" noValidate>
             <div className="form-group">
@@ -87,12 +109,40 @@ export const ResetPasswordModal = ({ isOpen, onClose, onSubmit, user, formErrors
             </div>
             <div className={`form-group ${formErrors.new_password ? 'has-error' : ''}`}>
                 <label>New Password</label>
-                <input type="password" name="new_password" />
+                <div style={{ position: 'relative' }}>
+                    <input 
+                        type={showNewPassword ? "text" : "password"} 
+                        name="new_password" 
+                        style={{ paddingRight: '2.5rem' }}
+                    />
+                    <button 
+                        type="button" 
+                        onClick={() => setShowNewPassword(!showNewPassword)}
+                        style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                        tabIndex="-1"
+                    >
+                        {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                </div>
                 {formErrors.new_password && <span className="error-message">{formErrors.new_password}</span>}
             </div>
             <div className={`form-group ${formErrors.confirm_password ? 'has-error' : ''}`}>
                 <label>Confirm Password</label>
-                <input type="password" name="confirm_password" />
+                <div style={{ position: 'relative' }}>
+                    <input 
+                        type={showConfirmPassword ? "text" : "password"} 
+                        name="confirm_password" 
+                        style={{ paddingRight: '2.5rem' }}
+                    />
+                    <button 
+                        type="button" 
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                        tabIndex="-1"
+                    >
+                        {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                </div>
                 {formErrors.confirm_password && <span className="error-message">{formErrors.confirm_password}</span>}
             </div>
             <button type="submit" className="btn-warning" disabled={loading}>
@@ -100,7 +150,8 @@ export const ResetPasswordModal = ({ isOpen, onClose, onSubmit, user, formErrors
             </button>
         </form>
     </Modal>
-);
+    );
+};
 
 export const StartConversationModal = ({ isOpen, onClose, onSubmit, loading, classrooms = [] }) => (
     <Modal isOpen={isOpen} onClose={onClose} title="Start New Conversation">

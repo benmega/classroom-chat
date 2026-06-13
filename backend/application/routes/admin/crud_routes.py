@@ -112,7 +112,9 @@ def create(resource):
 
     params = request.json
     # Prevent mass assignment of sensitive fields
-    protected = {"id", "password_hash", "password", "created_at"}
+    protected = {"password_hash", "password", "created_at"}
+    if resource.lower() not in {"course", "courses", "courseinstance", "courseinstances"}:
+        protected.add("id")
     filtered_params = {k: v for k, v in params.items() if k not in protected}
 
     item = model(**filtered_params)

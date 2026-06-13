@@ -151,6 +151,7 @@ const AdminDashboard = () => {
                 stats={dashboardData} 
                 onApprovalClick={() => navigate('/admin/pending-users')} 
                 onTradeClick={() => navigate('/admin/pending-trades')}
+                onEarnedWeekClick={() => navigate('/admin/transactions?type=earned')}
             />
 
             <div className="dashboard-layout">
