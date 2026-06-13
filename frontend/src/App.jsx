@@ -12,6 +12,8 @@ import AdminLayout from './components/Layout/AdminLayout';
 
 import Login from './pages/Auth/Login';
 import Signup from './pages/Auth/Signup';
+import ForgotPassword from './pages/Auth/ForgotPassword';
+import ResetPassword from './pages/Auth/ResetPassword';
 import Profile from './pages/Profile/index';
 import Chat from './pages/Chat/Chat';
 import Achievements from './pages/General/Achievements';
@@ -27,12 +29,15 @@ import AdminDashboard from './pages/Admin/AdminDashboard';
 import AdminProjects from './pages/Admin/AdminProjects';
 import AdminCertificates from './pages/Admin/AdminCertificates';
 import AdminAchievements from './pages/Admin/AdminAchievements';
+import AdminChallenges from './pages/Admin/AdminChallenges';
 import AdminDocuments from './pages/Admin/AdminDocuments';
 import Users from './pages/Admin/Users';
 import Analytics from './pages/Admin/Analytics';
 import PendingTrades from './pages/Admin/PendingTrades';
 import PendingUsers from './pages/Admin/PendingUsers';
 import AdvancedPanel from './pages/Admin/AdvancedPanel';
+import AdminCourseInstances from './pages/Admin/AdminCourseInstances';
+import DuckTransactions from './pages/Admin/DuckTransactions';
 import ParentDashboard from './pages/Parent/ParentDashboard';
 import ParentReportCard from './pages/Parent/ParentReportCard';
 import ConnectChild from './pages/Parent/ConnectChild';
@@ -146,6 +151,8 @@ function App() {
       <Routes>
         <Route path="/login" element={isAuthenticated ? <Navigate to={authRedirect} /> : <Login />} />
         <Route path="/signup" element={isAuthenticated ? <Navigate to={authRedirect} /> : <Signup />} />
+        <Route path="/forgot-password" element={isAuthenticated ? <Navigate to={authRedirect} /> : <ForgotPassword />} />
+        <Route path="/reset-password" element={isAuthenticated ? <Navigate to={authRedirect} /> : <ResetPassword />} />
 
 
         {/* Development-only shortcut — guarded so browsers in production never see this route */}
@@ -272,10 +279,13 @@ function App() {
                 <Route path="users" element={<Users />} />
                 <Route path="analytics" element={<Analytics />} />
                 <Route path="add-achievement" element={<AdminAchievements />} />
+                <Route path="add-challenges" element={<AdminChallenges />} />
                 <Route path="documents" element={<AdminDocuments />} />
                 <Route path="pending-trades" element={<PendingTrades />} />
                 <Route path="pending-users" element={<PendingUsers />} />
+                <Route path="course-instances" element={<AdminCourseInstances />} />
                 <Route path="advanced" element={<AdvancedPanel />} />
+                <Route path="transactions" element={<DuckTransactions />} />
               </Routes>
             </AdminLayout>
           </ProtectedRoute>
@@ -284,23 +294,31 @@ function App() {
         {/* Parent Routes */}
         <Route path="/parent/dashboard" element={
           <ProtectedRoute parentOnly={true}>
-            <ParentDashboard />
+            <Layout>
+              <ParentDashboard />
+            </Layout>
           </ProtectedRoute>
         } />
         <Route path="/parent/report/:studentId" element={
           <ProtectedRoute parentOnly={true}>
-            <ParentReportCard />
+            <Layout>
+              <ParentReportCard />
+            </Layout>
           </ProtectedRoute>
         } />
         <Route path="/parent/connect" element={<ConnectChild />} />
         <Route path="/parent/course-progress/:slug" element={
           <ProtectedRoute parentOnly={true}>
-            <CourseProgressTree />
+            <Layout>
+              <CourseProgressTree />
+            </Layout>
           </ProtectedRoute>
         } />
         <Route path="/parent/course-progress/:slug/breakdown" element={
           <ProtectedRoute parentOnly={true}>
-            <CourseLevelBreakdown />
+            <Layout>
+              <CourseLevelBreakdown />
+            </Layout>
           </ProtectedRoute>
         } />
 

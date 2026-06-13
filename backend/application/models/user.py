@@ -455,6 +455,9 @@ class User(db.Model):
             db.session.commit()
 
     def add_ducks(self, amount, reason=None):
+        if self.role == "parent":
+            return
+
         if amount > 0:
             self.earned_ducks += amount
             self.packets += amount / (2**14)
@@ -469,6 +472,9 @@ class User(db.Model):
         # Note: The caller must commit the session
 
     def award_daily_duck(self, amount=1):
+        if self.role == "parent":
+            return False
+            
         today = date.today()
         if self.last_daily_duck != today:
             self.add_ducks(amount, reason="Daily Duck")

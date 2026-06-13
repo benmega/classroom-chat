@@ -52,12 +52,16 @@ const ProfileHeader = ({ target, isOwner, pfpInputRef, onPfpChange }) => {
                 </div>
 
                 <div className="header-stats">
-                    <div className="stat-box" title={target.duck_balance?.toLocaleString()}>
-                        <span className="label">Ducks</span>
-                        <span className="value">{formatLargeNumber(target.duck_balance)}</span>
-                    </div>
-                    
-                    <div className="stat-divider"></div>
+                    {target.role !== 'parent' && (
+                        <>
+                            <div className="stat-box" title={target.duck_balance?.toLocaleString()}>
+                                <span className="label">Ducks</span>
+                                <span className="value">{formatLargeNumber(target.duck_balance)}</span>
+                            </div>
+                            
+                            <div className="stat-divider"></div>
+                        </>
+                    )}
 
                     <div className="stat-box">
                         <span className="label">Levels</span>
@@ -71,7 +75,7 @@ const ProfileHeader = ({ target, isOwner, pfpInputRef, onPfpChange }) => {
                         <span className="value">{target.projects?.length || 0}</span>
                     </div>
                     
-                    {target.packets > 0 && (
+                    {target.role !== 'parent' && target.packets > 0 && (
                         <>
                             <div className="stat-divider"></div>
                             <div className="stat-box" title={target.packets.toLocaleString()}>
@@ -81,12 +85,16 @@ const ProfileHeader = ({ target, isOwner, pfpInputRef, onPfpChange }) => {
                         </>
                     )}
                     
-                    <div className="stat-divider"></div>
+                    {target.role !== 'parent' && (
+                        <>
+                            <div className="stat-divider"></div>
 
-                    <div className="stat-box highlight" title={target.earned_ducks?.toLocaleString()}>
-                        <span className="label">Lifetime</span>
-                        <span className="value">{formatLargeNumber(target.earned_ducks)}</span>
-                    </div>
+                            <div className="stat-box highlight" title={target.earned_ducks?.toLocaleString()}>
+                                <span className="label">Lifetime</span>
+                                <span className="value">{formatLargeNumber(target.earned_ducks)}</span>
+                            </div>
+                        </>
+                    )}
                 </div>
             </div>
         </div>
