@@ -144,6 +144,30 @@
     color: var(--primary-color);
 }
 
+.toggle-password-btn {
+    position: absolute;
+    right: 1.25rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    transition: var(--transition-fast);
+}
+
+.toggle-password-btn:hover {
+    color: var(--text-primary);
+}
+
+.auth-input.has-password-toggle {
+    padding-right: 3.25rem !important;
+}
+
 .auth-button {
     margin-top: 1rem;
     padding: 1.2rem !important;

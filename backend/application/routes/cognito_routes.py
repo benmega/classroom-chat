@@ -159,3 +159,58 @@ def login():
         
     except ClientError as e:
         return jsonify({"error": e.response['Error']['Message']}), 401
+
+@cognito_bp.route("/forgot-password", methods=["POST"])
+def forgot_password():
+    data = request.json
+    email = data.get("email")
+    if not email:
+        return jsonify({"error": "Missing email"}), 400
+
+    client_id = current_app.config.get("COGNITO_CLIENT_ID")
+    client = get_boto_client()
+
+    kwargs = {
+        "ClientId": client_id,
+        "Username": email
+    }
+    
+    secret_hash = get_secret_hash(email)
+    if secret_hash:
+        kwargs["SecretHash"] = secret_hash
+
+    try:
+        client.forgot_password(**kwargs)
+        return jsonify({"success": True, "message": "Verification code sent to email"})
+    except ClientError as e:
+        return jsonify({"error": e.response['Error']['Message']}), 400
+
+@cognito_bp.route("/confirm-forgot-password", methods=["POST"])
+def confirm_forgot_password():
+    data = request.json
+    email = data.get("email")
+    code = data.get("code")
+    new_password = data.get("new_password")
+
+    if not email or not code or not new_password:
+        return jsonify({"error": "Missing email, code, or new password"}), 400
+
+    client_id = current_app.config.get("COGNITO_CLIENT_ID")
+    client = get_boto_client()
+
+    kwargs = {
+        "ClientId": client_id,
+        "Username": email,
+        "ConfirmationCode": code,
+        "Password": new_password
+    }
+    
+    secret_hash = get_secret_hash(email)
+    if secret_hash:
+        kwargs["SecretHash"] = secret_hash
+
+    try:
+        client.confirm_forgot_password(**kwargs)
+        return jsonify({"success": True, "message": "Password reset successfully"})
+    except ClientError as e:
+        return jsonify({"error": e.response['Error']['Message']}), 400

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { User, Lock, UserPlus, CheckCircle, Mail, ShieldCheck, ArrowRight } from 'lucide-react';
+import { User, Lock, UserPlus, CheckCircle, Mail, ShieldCheck, ArrowRight, Eye, EyeOff } from 'lucide-react';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
 import './Auth.css';
@@ -17,6 +17,8 @@ const Signup = () => {
     const [email, setEmail] = useState(''); // for parent
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [code, setCode] = useState(''); // for verify
     
     const [isLoading, setIsLoading] = useState(false);
@@ -218,32 +220,50 @@ const Signup = () => {
                         <div className="form-group">
                             <div className="input-wrapper">
                                 <input 
-                                    type="password" 
+                                    type={showPassword ? "text" : "password"} 
                                     id="password"
                                     value={password} 
                                     onChange={(e) => setPassword(e.target.value)} 
                                     required
                                     placeholder={selectedRole === 'parent' ? "Password (min 8 chars)" : "Password"}
                                     autoComplete="new-password"
-                                    className="auth-input"
+                                    className="auth-input has-password-toggle"
                                 />
                                 <Lock className="input-icon" size={18} />
+                                <button 
+                                    type="button" 
+                                    className="toggle-password-btn"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    aria-label={showPassword ? "Hide password" : "Show password"}
+                                    tabIndex="-1"
+                                >
+                                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                </button>
                             </div>
                         </div>
                         
                         <div className="form-group">
                             <div className="input-wrapper">
                                 <input 
-                                    type="password" 
+                                    type={showConfirmPassword ? "text" : "password"} 
                                     id="confirmPassword"
                                     value={confirmPassword} 
                                     onChange={(e) => setConfirmPassword(e.target.value)} 
                                     required
                                     placeholder="Confirm Password"
                                     autoComplete="new-password"
-                                    className="auth-input"
+                                    className="auth-input has-password-toggle"
                                 />
                                 <Lock className="input-icon" size={18} />
+                                <button 
+                                    type="button" 
+                                    className="toggle-password-btn"
+                                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                    aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                                    tabIndex="-1"
+                                >
+                                    {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                </button>
                             </div>
                         </div>
                         
