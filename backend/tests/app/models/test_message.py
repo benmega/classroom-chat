@@ -12,14 +12,16 @@ from application import db
 from application.models.message import Message
 
 
-def test_message_creation(init_db, sample_user, sample_conversation):
+def test_message_creation(init_db, sample_user, sample_classroom):
     """Test creating a message."""
     content = "Hello, this is a dynamically generated message!"
     message = Message(
-        conversation_id=sample_conversation.id,
         user_id=sample_user.id,
         content=content,
         message_type="text",
+        target_classrooms=[sample_classroom],
+        is_global=False,
+        target_live=False
     )
     db.session.add(message)
     db.session.commit()
@@ -28,26 +30,27 @@ def test_message_creation(init_db, sample_user, sample_conversation):
     assert retrieved_message is not None
     assert retrieved_message.content == content
     assert retrieved_message.message_type == "text"
+    assert sample_classroom in retrieved_message.target_classrooms
     assert isinstance(retrieved_message.created_at, datetime)
 
 
 def test_message_repr(sample_message):
     """Test the __repr__ method of Message."""
     message = sample_message
-    expected_repr = f"<Message(id={message.id}, conversation_id={message.conversation_id}, user_id={message.user_id})>"
+    expected_repr = f"<Message(id={message.id}, user_id={message.user_id}, is_global={message.is_global})>"
     assert repr(message) == expected_repr
 
 
-def test_message_types(init_db, sample_user, sample_conversation):
+def test_message_types(init_db, sample_user, sample_classroom):
     """Test creating messages with different message types."""
     message_types = ["text", "link", "code_snippet"]
     for msg_type in message_types:
         content = f"This is a {msg_type} message."
         message = Message(
-            conversation_id=sample_conversation.id,
             user_id=sample_user.id,
             content=content,
             message_type=msg_type,
+            target_classrooms=[sample_classroom],
         )
         db.session.add(message)
         db.session.commit()
@@ -93,16 +96,16 @@ def test_message_soft_delete(sample_message):
     assert deleted_message.deleted_at == deletion_time
 
 
-def test_dynamic_message_generation(init_db, sample_user, sample_conversation):
+def test_dynamic_message_generation(init_db, sample_user, sample_classroom):
     """Test creating messages with random data to simulate real-world conditions."""
     for _ in range(10):  # Generate 10 random messages
         content = "".join(random.choices(string.ascii_letters + string.digits, k=50))
         msg_type = random.choice(["text", "link", "code_snippet"])
         message = Message(
-            conversation_id=sample_conversation.id,
             user_id=sample_user.id,
             content=content,
             message_type=msg_type,
+            target_classrooms=[sample_classroom],
         )
         db.session.add(message)
     db.session.commit()

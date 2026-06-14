@@ -1,24 +1,23 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { User as UserIcon, Trash2 } from 'lucide-react';
+import { User as UserIcon, Trash2, Globe, Radio, Users, UserPlus } from 'lucide-react';
 import SmartImage from '../common/SmartImage';
 import Linkify from '../common/Linkify';
 import { getApiUrl } from '../../utils/apiUrl';
 
 const ChatMessage = React.memo(({ msg, user, onDelete }) => {
-    const isUser = msg.user_id === user.id;
     return (
-        <div className={`chat-message-group ${isUser ? 'user' : 'other'}`}>
+        <div className="chat-message-group">
             <div className="message-row">
                 <Link 
                     to={msg.slug ? `/profile/${msg.slug}` : '#'} 
                     className="avatar-link"
                 >
-                    <div className={`avatar-container ${msg.is_ai ? 'ai-avatar' : ''} ${msg.has_animated_border ? 'perk-animated-border' : ''}`}>
+                    <div className="avatar-container">
                         {msg.user_profile_pic ? (
                             <SmartImage 
                                 src={getApiUrl(`/user/profile_pictures/${msg.user_profile_pic}`)} 
-                                alt={msg.nickname} 
+                                alt={msg.user_name || 'User'} 
                                 fallbackType="avatar"
                             />
                         ) : (
@@ -28,23 +27,56 @@ const ChatMessage = React.memo(({ msg, user, onDelete }) => {
                 </Link>
                 <div className="message-content-wrapper">
                     <div className="message-header">
-                        <span className="message-author">{msg.nickname || 'Unknown'}</span>
+                        <span className="message-author">{msg.user_name || 'Unknown'}</span>
+                        
+                        <div className="message-targeting-info">
+                            {msg.is_global && (
+                                <Globe size={12} color="var(--primary-color)" style={{ marginTop: '2px' }} title="Global Post" />
+                            )}
+                            
+                            {(user?.is_admin || user?.id === msg.user_id) && !msg.is_global && (
+                                <>
+                                    {msg.target_live && (
+                                        <span className="targeting-badge">
+                                            <Radio size={10} /> Live
+                                        </span>
+                                    )}
+                                    {msg.target_classrooms?.length === 1 ? (
+                                        <span className="targeting-badge">
+                                            <Users size={10} /> {msg.target_classrooms[0]}
+                                        </span>
+                                    ) : msg.target_classrooms?.length > 1 ? (
+                                        <span className="targeting-badge" title={msg.target_classrooms.join(', ')}>
+                                            <Users size={10} /> {msg.target_classrooms.length} Classes
+                                        </span>
+                                    ) : null}
+
+                                    {msg.target_users?.length === 1 ? (
+                                        <span className="targeting-badge user-badge">
+                                            <UserPlus size={10} /> {msg.target_users[0]}
+                                        </span>
+                                    ) : msg.target_users?.length > 1 ? (
+                                        <span className="targeting-badge user-badge" title={msg.target_users.join(', ')}>
+                                            <UserPlus size={10} /> {msg.target_users.length} Students
+                                        </span>
+                                    ) : null}
+                                </>
+                            )}
+                        </div>
+
                         <span className="chat-message-timestamp">
-                            {msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Just now'}
+                            {msg.created_at ? new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Just now'}
                         </span>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexDirection: isUser ? 'row-reverse' : 'row' }}>
-                        <div 
-                            className={`message-bubble ${msg.has_chat_font ? 'perk-chat-font' : ''}`}
-                            style={msg.has_chat_font && msg.chat_font_color ? { color: msg.chat_font_color } : undefined}
-                        >
-                            <Linkify text={msg.content} isUserMessage={isUser} />
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', minWidth: 0, width: '100%' }}>
+                        <div className="message-bubble" style={{ flex: 1, minWidth: 0 }}>
+                            <Linkify text={msg.content} isUserMessage={false} />
                         </div>
                         {user?.is_admin && (
                             <button 
                                 onClick={() => onDelete(msg.id)}
                                 className="delete-message-btn"
-                                title="Delete Announcement/Message"
+                                title="Delete Post"
                             >
                                 <Trash2 size={16} />
                             </button>

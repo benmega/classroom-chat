@@ -17,13 +17,27 @@ depends_on = None
 
 
 def upgrade():
-    op.drop_table('trade')
-    op.drop_table('bounties')
-    with op.batch_alter_table('challenge_logs', schema=None) as batch_op:
-        batch_op.add_column(sa.Column('user_id', sa.Integer(), nullable=True))
+    bind = op.get_bind()
+    inspector = sa.inspect(bind)
+    existing_tables = set(inspector.get_table_names())
 
-    with op.batch_alter_table('duck_trade_log', schema=None) as batch_op:
-        batch_op.add_column(sa.Column('user_id', sa.Integer(), nullable=True))
+    if 'trade' in existing_tables:
+        op.drop_table('trade')
+    if 'bounties' in existing_tables:
+        op.drop_table('bounties')
+    
+    challenge_logs_cols = {c['name'] for c in inspector.get_columns('challenge_logs')}
+    duck_trade_log_cols = {c['name'] for c in inspector.get_columns('duck_trade_log')}
+    challenge_logs_indexes = {idx['name'] for idx in inspector.get_indexes('challenge_logs')}
+    duck_trade_log_indexes = {idx['name'] for idx in inspector.get_indexes('duck_trade_log')}
+
+    if 'user_id' not in challenge_logs_cols:
+        with op.batch_alter_table('challenge_logs', schema=None) as batch_op:
+            batch_op.add_column(sa.Column('user_id', sa.Integer(), nullable=True))
+
+    if 'user_id' not in duck_trade_log_cols:
+        with op.batch_alter_table('duck_trade_log', schema=None) as batch_op:
+            batch_op.add_column(sa.Column('user_id', sa.Integer(), nullable=True))
 
     op.execute("UPDATE challenge_logs SET user_id = (SELECT id FROM users WHERE LOWER(users.username) = LOWER(challenge_logs.username))")
     op.execute("UPDATE duck_trade_log SET user_id = (SELECT id FROM users WHERE LOWER(users.username) = LOWER(duck_trade_log.username))")
@@ -31,27 +45,23 @@ def upgrade():
     op.execute("DELETE FROM challenge_logs WHERE user_id IS NULL")
     op.execute("DELETE FROM duck_trade_log WHERE user_id IS NULL")
 
+    duck_trade_log_fks = {fk['name'] for fk in inspector.get_foreign_keys('duck_trade_log') if fk.get('name')}
+
     with op.batch_alter_table('challenge_logs', schema=None) as batch_op:
         batch_op.alter_column('user_id', existing_type=sa.Integer(), nullable=False)
-        try:
-            batch_op.drop_index(batch_op.f('ix_challenge_logs_username'))
-        except ValueError:
-            pass  # Index may not exist in all environments
+        if 'ix_challenge_logs_username' in challenge_logs_indexes:
+            batch_op.drop_index('ix_challenge_logs_username')
         batch_op.create_index(batch_op.f('ix_challenge_logs_user_id'), ['user_id'], unique=False)
         batch_op.create_foreign_key(batch_op.f('fk_challenge_logs_user_id_users'), 'users', ['user_id'], ['id'])
         batch_op.drop_column('username')
 
     with op.batch_alter_table('duck_trade_log', schema=None) as batch_op:
         batch_op.alter_column('user_id', existing_type=sa.Integer(), nullable=False)
-        try:
-            batch_op.drop_index(batch_op.f('ix_duck_trade_log_username'))
-        except ValueError:
-            pass  # Index may not exist in all environments
+        if 'ix_duck_trade_log_username' in duck_trade_log_indexes:
+            batch_op.drop_index('ix_duck_trade_log_username')
         batch_op.create_index(batch_op.f('ix_duck_trade_log_user_id'), ['user_id'], unique=False)
-        try:
+        if 'fk_duck_trade_log_username_users' in duck_trade_log_fks:
             batch_op.drop_constraint('fk_duck_trade_log_username_users', type_='foreignkey')
-        except (ValueError, KeyError):
-            pass  # Constraint may not exist in all environments
         batch_op.create_foreign_key(batch_op.f('fk_duck_trade_log_user_id_users'), 'users', ['user_id'], ['id'])
         batch_op.drop_column('username')
 

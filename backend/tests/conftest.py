@@ -29,8 +29,8 @@ from application.models.banned_words import BannedWords
 from application.models.challenge import Challenge
 from application.models.challenge_log import ChallengeLog
 from application.models.classroom import Classroom
+from application.models.classroom import Classroom
 from application.models.configuration import Configuration
-from application.models.conversation import Conversation
 from application.models.course import Course
 from application.models.course_instance import CourseInstance
 from application.models.message import Message
@@ -343,16 +343,7 @@ def sample_users(init_db):
     return [user1, user2]
 
 
-@pytest.fixture
-def sample_conversation(init_db, sample_users, sample_classroom):
-    conversation = Conversation(
-        title=f"Sample Conversation {uuid.uuid4().hex[:8]}",
-        classroom_id=sample_classroom.id
-    )
-    conversation.users.extend(sample_users)
-    db.session.add(conversation)
-    db.session.commit()
-    return conversation
+
 
 
 @pytest.fixture
@@ -370,12 +361,14 @@ def sample_course(init_db):
 
 
 @pytest.fixture
-def sample_message(init_db, sample_user, sample_conversation):
+def sample_message(init_db, sample_user, sample_classroom):
     message = Message(
-        conversation_id=sample_conversation.id,
         user_id=sample_user.id,
         content="This is a test message.",
         message_type="text",
+        target_classrooms=[sample_classroom],
+        is_global=False,
+        target_live=False
     )
     db.session.add(message)
     db.session.commit()

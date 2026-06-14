@@ -40,37 +40,17 @@ def test_generate_unique_username():
     assert username2.startswith("user_")
 
 
-def test_save_message_to_db_new_conversation(init_db, sample_user, client):
+def test_save_message_to_db_basic(init_db, sample_user, client):
     user = sample_user
     with client.application.test_request_context("/"):
-        with client.session_transaction() as sess:
-            sess.pop("conversation_id", None)  # Ensure no active conversation
-
-        result = save_message_to_db(user.id, "Hello, world!")
+        result = save_message_to_db(user.id, message="Hello, world!", is_global=True)
         assert result["success"] is True
+        assert result.get("message_id") is not None
 
 
-def test_save_message_to_db_existing_conversation(
-    init_db, sample_user, sample_conversation, client
-):
+def test_save_message_to_db_with_classroom(init_db, sample_user, sample_classroom, client):
     user = sample_user
-    conversation = sample_conversation
-
     with client.application.test_request_context("/"):
-        with client.session_transaction() as sess:
-            sess["conversation_id"] = conversation.id
-
-        result = save_message_to_db(user.id, "Hello again!")
-        assert result["success"] is True
-
-
-def test_save_message_to_db_no_conversation_in_db(init_db, sample_user, client):
-    user = sample_user
-
-    with client.application.test_request_context("/"):
-        with client.session_transaction() as sess:
-            sess["conversation_id"] = 9999  # Non-existent conversation ID
-
-        result = save_message_to_db(user.id, "This should succeed.")
+        result = save_message_to_db(user.id, message="Hello again!", target_classrooms=[sample_classroom.id])
         assert result["success"] is True
         assert result.get("message_id") is not None

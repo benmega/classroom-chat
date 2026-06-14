@@ -12,7 +12,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from application import db, limiter
 from application.models.ai_settings import get_ai_settings
-from application.models.conversation import Conversation
+from application.models.message import Message
 from application.models.user import User
 from application.utilities.db_helpers import save_message_to_db
 
@@ -68,64 +68,35 @@ def get_or_create_ai_teacher() -> User:
         raise AITeacherError("Failed to create AI Teacher user") from e
 
 
-def get_or_create_conversation(
-    conversation_id: Optional[int], username: str
-) -> Conversation:
+def get_recent_messages(user: User, limit: int = 50) -> List[Dict[str, str]]:
     """
-    Get existing conversation or create a new one.
-
-    Args:
-        conversation_id: Optional existing conversation ID
-        username: Username of the person starting the conversation
-
-    Returns:
-        Conversation: The conversation instance
-
-    Raises:
-        AITeacherError: If conversation operations fail
+    Get recent messages for context, filtered by what the user is allowed to see.
     """
     try:
-        if conversation_id:
-            conversation = (
-                db.session.query(Conversation).filter_by(id=conversation_id).first()
+        query = Message.query.filter(Message.deleted_at.is_(None))
+        
+        if not user.is_admin:
+            user_classroom_ids = [c.id for c in user.classrooms]
+            query = query.filter(
+                db.or_(
+                    Message.is_global == True,
+                    Message.user_id == user.id,
+                    Message.target_users.any(User.id == user.id),
+                    Message.target_classrooms.any(Message.target_classrooms.property.mapper.class_.id.in_(user_classroom_ids)) if user_classroom_ids else False
+                )
             )
-            if not conversation:
-                raise AITeacherError("Conversation not found")
-            return conversation
-
-        # Create new conversation
-        conversation = Conversation(
-            title=f"Conversation with {username} - {datetime.utcnow().strftime('%Y-%m-%d %H:%M')}"
-        )
-        db.session.add(conversation)
-        db.session.commit()
-        logger.info(f"Created new conversation {conversation.id} for user {username}")
-
-        return conversation
-
+            
+        messages = query.order_by(Message.created_at.desc()).limit(limit).all()
+        return [
+            {
+                "role": "assistant" if message.user_id == AI_TEACHER_USER_ID else "user",
+                "content": message.content,
+            }
+            for message in reversed(messages)
+        ]
     except SQLAlchemyError as e:
-        db.session.rollback()
-        logger.error(f"Database error with conversation: {e}")
-        raise AITeacherError("Failed to handle conversation") from e
-
-
-def build_conversation_history(conversation: Conversation) -> List[Dict[str, str]]:
-    """
-    Build conversation history from database messages.
-
-    Args:
-        conversation: The conversation instance
-
-    Returns:
-        List of message dictionaries with 'role' and 'content' keys
-    """
-    return [
-        {
-            "role": "assistant" if message.user_id == AI_TEACHER_USER_ID else "user",
-            "content": message.content,
-        }
-        for message in conversation.messages
-    ]
+        logger.error(f"Database error getting messages: {e}")
+        return []
 
 
 def format_prompt(
@@ -250,7 +221,7 @@ def get_local_llm_response(
 
         # Save AI response to database
         save_result = save_message_to_db(
-            user_id=AI_TEACHER_USER_ID, message=ai_response
+            user_id=AI_TEACHER_USER_ID, message=ai_response, is_global=True
         )
         if isinstance(save_result, str):  # Error occurred
             raise AITeacherError(f"Failed to save AI response: {save_result}")
@@ -267,7 +238,7 @@ def get_local_llm_response(
 
 @limiter.limit("1 per minute; 10 per day")
 def get_ai_response(
-    user_message: str, username: str, conversation_id: Optional[int] = None
+    user_message: str, username: str
 ) -> str:
     """
     Main function to get AI response for a user message.
@@ -275,7 +246,6 @@ def get_ai_response(
     Args:
         user_message: The user's message
         username: Username of the person sending the message
-        conversation_id: Optional existing conversation ID
 
     Returns:
         The AI response or error message
@@ -288,19 +258,20 @@ def get_ai_response(
 
         # Ensure AI teacher user exists
         get_or_create_ai_teacher()
-
-        # Get or create conversation
-        conversation = get_or_create_conversation(conversation_id, username)
+        
+        user = User.query.filter_by(username=username).first()
+        if not user:
+            return "Error: User not found."
 
         # Save user message
         save_result = save_message_to_db(
-            user_id=None, message=user_message
-        )  # Assuming None for regular users
+            user_id=user.id, message=user_message, is_global=True
+        )
         if isinstance(save_result, str):  # Error occurred
             return f"Error saving message: {save_result}"
 
         # Build conversation history
-        conversation_history = build_conversation_history(conversation)
+        conversation_history = get_recent_messages(user)
 
         # Generate AI response
         return get_local_llm_response(user_message, conversation_history)

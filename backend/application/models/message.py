@@ -1,7 +1,7 @@
 """
 File: message.py
 Type: py
-Summary: SQLAlchemy model for chat messages and metadata.
+Summary: SQLAlchemy model for feed posts (messages) and visibility targeting.
 """
 
 from datetime import datetime
@@ -11,15 +11,43 @@ from sqlalchemy import Enum
 from ..extensions import db
 
 
+# Association tables for message visibility targeting
+message_classrooms = db.Table(
+    "message_classrooms",
+    db.Column(
+        "message_id",
+        db.Integer,
+        db.ForeignKey("messages.id", ondelete="CASCADE"),
+        primary_key=True,
+    ),
+    db.Column(
+        "classroom_id",
+        db.String(64),
+        db.ForeignKey("classrooms.id", ondelete="CASCADE"),
+        primary_key=True,
+    ),
+)
+
+message_users = db.Table(
+    "message_users",
+    db.Column(
+        "message_id",
+        db.Integer,
+        db.ForeignKey("messages.id", ondelete="CASCADE"),
+        primary_key=True,
+    ),
+    db.Column(
+        "user_id",
+        db.Integer,
+        db.ForeignKey("users.id", ondelete="CASCADE"),
+        primary_key=True,
+    ),
+)
+
+
 class Message(db.Model):
     __tablename__ = "messages"
     id = db.Column(db.Integer, primary_key=True)
-    conversation_id = db.Column(
-        db.Integer,
-        db.ForeignKey("conversations.id", ondelete="CASCADE"),
-        nullable=False,
-        index=True,
-    )
     user_id = db.Column(
         db.Integer,
         db.ForeignKey("users.id", ondelete="CASCADE"),
@@ -37,10 +65,28 @@ class Message(db.Model):
     edited_at = db.Column(db.DateTime, nullable=True)
     deleted_at = db.Column(db.DateTime, nullable=True)
 
-    # Relationship to the User
+    # Targeting metadata
+    is_global = db.Column(db.Boolean, default=False)
+    target_live = db.Column(db.Boolean, default=False)
+
+    # Relationships
     user = db.relationship(
         "User", backref=db.backref("messages", lazy="selectin"), lazy="selectin"
     )
+    
+    target_classrooms = db.relationship(
+        "Classroom",
+        secondary=message_classrooms,
+        lazy="selectin",
+        backref=db.backref("targeted_messages", lazy="selectin")
+    )
+    
+    target_users = db.relationship(
+        "User",
+        secondary=message_users,
+        lazy="selectin",
+        backref=db.backref("targeted_messages", lazy="selectin")
+    )
 
     def __repr__(self):
-        return f"<Message(id={self.id}, conversation_id={self.conversation_id}, user_id={self.user_id})>"
+        return f"<Message(id={self.id}, user_id={self.user_id}, is_global={self.is_global})>"

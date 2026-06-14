@@ -57,10 +57,6 @@ const ParentDashboard = () => {
         fetchChildren();
     }, []);
 
-    const handleLogout = async () => {
-        await useAuthStore.getState().logout();
-        navigate('/');
-    };
 
     const handleDisconnect = async (childId, childName) => {
         if (!window.confirm(`Remove ${childName} from your account? You can reconnect later with their code.`)) {
