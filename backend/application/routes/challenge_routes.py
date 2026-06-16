@@ -26,7 +26,7 @@ challenge = Blueprint("challenge", __name__, url_prefix="/challenge")
 BASE_PATTERN = (
     r"https://(?P<domain>[\w\.-]+)"
     r"(?:"
-    r"/play/(?:ozaria/)?level/(?P<challenge_slug>[\w-]+)"
+    r"/play/(?:(?:ozaria|junior)/)?level/(?P<challenge_slug>[\w-]+)"
     r"|/s/(?P<slug>[\w-]+)/lessons/(?P<lesson_id>\d+)/levels/(?P<level_id>\d+)"
     r")"
 )
