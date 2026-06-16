@@ -1,9 +1,10 @@
 /* ParentDashboard.css - Redesigned */
 
 .parent-dashboard {
-    min-height: 100vh;
-    height: 100vh;
+    min-height: 100dvh;
+    height: 100dvh;
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
     background: transparent;
     font-family: var(--font-body, system-ui, sans-serif);
     color: var(--text-primary, #111827);

@@ -1,19 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Loader2, MoreVertical } from 'lucide-react';
+import { Loader2, MoreVertical, User } from 'lucide-react';
 import toast from 'react-hot-toast';
 import client from '../../api/client';
 import useAuthStore from '../../store/useAuthStore';
 import './ParentDashboard.css';
-
-const getInitials = (name) => {
-    if (!name) return '?';
-    const parts = name.split(/[\s_-]+/);
-    if (parts.length > 1) {
-        return (parts[0][0] + parts[1][0]).toUpperCase();
-    }
-    return name.slice(0, 2).toUpperCase();
-};
 
 const ParentDashboard = () => {
     const navigate = useNavigate();
@@ -149,7 +140,7 @@ const ParentDashboard = () => {
                                             />
                                         ) : (
                                             <div className="child-avatar-initials">
-                                                {getInitials(child.nickname || child.username)}
+                                                <User size={36} strokeWidth={1.5} />
                                             </div>
                                         )}
                                         <h3 className="child-name">{child.nickname || child.username}</h3>

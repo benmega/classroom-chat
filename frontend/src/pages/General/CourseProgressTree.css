@@ -3,6 +3,9 @@
     margin: 0 auto;
     padding: 2rem 1rem;
     padding-bottom: 6rem;
+    height: 100dvh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 .skill-tree-grid {
@@ -90,6 +93,8 @@
     justify-content: center;
     width: 48px;
     height: 48px;
+    min-width: 48px;
+    min-height: 48px;
     border-radius: 50%;
     flex-shrink: 0;
     overflow: hidden;
@@ -98,6 +103,8 @@
 .domain-logo {
     width: 100%;
     height: 100%;
+    max-width: 48px;
+    max-height: 48px;
     object-fit: contain;
 }
 
