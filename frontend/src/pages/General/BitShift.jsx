@@ -4,6 +4,7 @@ import DuckIcon from '../../components/Icons/DuckIcon';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
 import useAuthStore from '../../store/useAuthStore';
+import confetti from 'canvas-confetti';
 import './BitShift.css';
 
 const BitShift = () => {
@@ -95,6 +96,12 @@ const BitShift = () => {
 
             if (response.data.status === 'success') {
                 toast.success(response.data.message || 'Trade submitted for approval.');
+                confetti({
+                    particleCount: 100,
+                    spread: 70,
+                    origin: { y: 0.6 },
+                    zIndex: 9999
+                });
                 setDigitalDucks(0);
                 setDuckCounts(Array(8).fill(0));
                 setHasAttemptedSubmit(false);

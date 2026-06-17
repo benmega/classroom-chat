@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Shield, Loader2, ShoppingCart } from 'lucide-react';
 import toast from 'react-hot-toast';
 import client from '../../api/client';
+import confetti from 'canvas-confetti';
 import './Shop.css'; // Let's use a standard CSS file
 
 const Shop = () => {
@@ -27,6 +28,22 @@ const Shop = () => {
         }
     };
 
+    const handlePurchase = async (itemId) => {
+        try {
+            const response = await client.post(`/api/shop/purchase/${itemId}`);
+            toast.success(response.data.message);
+            confetti({
+                particleCount: 100,
+                spread: 70,
+                origin: { y: 0.6 },
+                zIndex: 9999
+            });
+            fetchItems();
+        } catch (error) {
+            toast.error(error.response?.data?.message || "Purchase failed");
+        }
+    };
+
 
     if (isLoading) {
         return (
@@ -44,10 +61,13 @@ const Shop = () => {
 
             <div className="shop-items-grid">
                 {items.map(item => (
-                    <div key={item.id} className="shop-item-card crowdfunded">
+                    <div key={item.id} className={`shop-item-card ${item.is_purchased ? 'purchased' : ''} ${item.is_crowdfunded ? 'crowdfunded' : ''}`}>
                         <div className="shop-item-header">
                             <div className="shop-item-icon">
                                 <Shield size={24} />
+                            </div>
+                            <div className="shop-item-price">
+                                {item.base_price} Packets
                             </div>
                         </div>
 
@@ -57,9 +77,22 @@ const Shop = () => {
                         </div>
 
                         <div className="shop-item-actions">
-                            <button className="shop-btn-coming-soon" disabled>
-                                Coming Soon
-                            </button>
+                            {item.is_purchased ? (
+                                <button className="shop-btn-equipped" disabled>
+                                    Owned
+                                </button>
+                            ) : item.is_crowdfunded ? (
+                                <button className="shop-btn-coming-soon" disabled>
+                                    Coming Soon
+                                </button>
+                            ) : (
+                                <button 
+                                    className="shop-btn-purchase" 
+                                    onClick={() => handlePurchase(item.id)}
+                                >
+                                    Purchase
+                                </button>
+                            )}
                         </div>
                     </div>
                 ))}

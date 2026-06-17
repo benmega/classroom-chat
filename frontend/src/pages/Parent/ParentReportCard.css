@@ -310,3 +310,27 @@
         padding: 0 1rem;
     }
 }
+
+/* Make Achievements 25% shorter (from 400px to 300px) */
+.report-dashboard-grid .achievement-strip-container {
+    max-height: 300px;
+}
+
+@media (max-width: 1024px) {
+    .report-dashboard-grid .column-left,
+    .report-dashboard-grid .column-right {
+        display: contents;
+    }
+    
+    /* Prevent grid blowout when display: contents makes these direct grid items */
+    .report-dashboard-grid .column-left > *,
+    .report-dashboard-grid .column-right > * {
+        min-width: 0;
+    }
+    
+    .report-dashboard-grid > .column-right > :nth-child(1) { order: 1; } /* Projects */
+    .report-dashboard-grid > .column-left > :nth-child(1) { order: 2; } /* Course Progress */
+    .report-dashboard-grid > .column-left > :nth-child(2) { order: 3; } /* Achievements */
+    .report-dashboard-grid > .column-right > :nth-child(2) { order: 4; } /* Activity */
+    .report-dashboard-grid > .column-right > :nth-child(3) { order: 5; } /* Notebook */
+}

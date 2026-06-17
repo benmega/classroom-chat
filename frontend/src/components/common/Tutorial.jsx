@@ -10,7 +10,7 @@ import {
 import useAuthStore from '../../store/useAuthStore';
 import './Tutorial.css';
 
-const slides = [
+const studentSlides = [
   {
     target: 'body',
     title: "Welcome!",
@@ -48,6 +48,30 @@ const slides = [
   }
 ];
 
+const parentSlides = [
+  {
+    target: 'body',
+    title: "Welcome!",
+    description: "Let's get you set up.",
+    icon: <Sparkles size={32} />,
+    position: 'center'
+  },
+  {
+    target: '.connect-card',
+    title: "Link Your Student",
+    description: "Enter the 6-character code from their instructor to connect.",
+    icon: <MousePointer2 size={24} />,
+    position: 'top'
+  },
+  {
+    target: '.profile-toggle',
+    title: "Account Settings",
+    description: "Manage your profile and settings here.",
+    icon: <MousePointer2 size={24} />,
+    position: 'bottom-left'
+  }
+];
+
 const Tutorial = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -56,16 +80,24 @@ const Tutorial = () => {
   const location = useLocation();
   const { user, completeTutorial } = useAuthStore();
 
+  const isParent = user?.role === 'parent';
+  const slides = isParent ? parentSlides : studentSlides;
+
   useEffect(() => {
-    // Only show tutorial on the home page (chat page)
-    if (location.pathname !== '/') return;
     if (!user) return;
+    
+    // Check path based on role
+    if (isParent) {
+        if (location.pathname !== '/parent/dashboard') return;
+    } else {
+        if (location.pathname !== '/') return;
+    }
 
     if (!user.has_seen_tutorial) {
       const timer = setTimeout(() => setIsOpen(true), 1000);
       return () => clearTimeout(timer);
     }
-  }, [location.pathname, user]);
+  }, [location.pathname, user, isParent]);
 
   useLayoutEffect(() => {
     if (isOpen) {
@@ -134,6 +166,11 @@ const Tutorial = () => {
         left = spotlightRect.left + (spotlightRect.width / 2);
         transform = 'translateX(-50%)';
         break;
+      case 'top':
+        top = spotlightRect.top - 20;
+        left = spotlightRect.left + (spotlightRect.width / 2);
+        transform = 'translate(-50%, -100%)';
+        break;
       case 'bottom-left':
         top = spotlightRect.bottom + 20;
         left = spotlightRect.right - 280; // Align right edges if possible
@@ -147,12 +184,20 @@ const Tutorial = () => {
     // Viewport clamping
     const cardWidth = 280;
     const padding = 20;
+    const estimatedCardHeight = 220;
     
     if (typeof left === 'number') {
       if (left + cardWidth > window.innerWidth - padding) {
         left = window.innerWidth - cardWidth - padding;
       }
       if (left < padding) left = padding;
+    }
+
+    if (typeof top === 'number') {
+      if (top + estimatedCardHeight > window.innerHeight - padding) {
+        top = window.innerHeight - estimatedCardHeight - padding;
+      }
+      if (top < padding) top = padding;
     }
 
     return { top, left, transform };

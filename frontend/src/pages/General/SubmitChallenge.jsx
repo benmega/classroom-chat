@@ -3,6 +3,7 @@ import client from '../../api/client';
 import toast from 'react-hot-toast';
 import useAuthStore from '../../store/useAuthStore';
 import UserSearchInput from '../../components/common/UserSearchInput';
+import confetti from 'canvas-confetti';
 import './SubmitChallenge.css';
 import './SubmitCertificate.css';
 
@@ -127,6 +128,12 @@ const SubmitChallenge = () => {
 
                 if (response.data.success) {
                     toast.success('Certificate submitted successfully!');
+                    confetti({
+                        particleCount: 200,
+                        spread: 100,
+                        origin: { y: 0.6 },
+                        zIndex: 9999
+                    });
                     setUrl('');
                     setCertificateFile(null);
                     setHelpers('');
@@ -147,17 +154,29 @@ const SubmitChallenge = () => {
                 if (response.data.success) {
                     toast.success(response.data.message || 'Challenge submitted successfully!');
                     
+                    const duckReward = response.data.duck_reward || 10;
+                    const pCount = Math.min(50 + (duckReward * 10), 500);
+                    
+                    confetti({
+                        particleCount: pCount,
+                        spread: Math.min(70 + (duckReward * 2), 160),
+                        origin: { y: 0.6 },
+                        zIndex: 9999
+                    });
+                    
                     setUrl('');
                     setHelpers('');
                     setNotes('');
                     checkAuth(); // Refresh user balance
                 } else {
                     toast.error(response.data.message || 'Submission failed.');
+                    setUrl('');
                 }
             }
         } catch (error) {
             console.error('Submission error:', error);
             toast.error(error.response?.data?.message || error.response?.data?.error || 'An error occurred during submission.');
+            setUrl('');
         } finally {
             setIsSubmitting(false);
         }
@@ -178,6 +197,7 @@ const SubmitChallenge = () => {
                                     onChange={(e) => setUrl(e.target.value)}
                                     placeholder="https://codecombat.com/play/level/..." 
                                     required 
+                                    autoComplete="off"
                                     className="form-control main-url-input"
                                 />
                             </div>

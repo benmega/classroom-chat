@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { Loader2, MoreVertical, User } from 'lucide-react';
 import toast from 'react-hot-toast';
 import client from '../../api/client';
-import useAuthStore from '../../store/useAuthStore';
+
+import DesktopNotice from '../../components/common/DesktopNotice';
 import './ParentDashboard.css';
 
 const ParentDashboard = () => {
@@ -27,7 +28,9 @@ const ParentDashboard = () => {
             setConnectCode('');
             fetchChildren();
         } catch (err) {
-            setConnectError(err.response?.data?.error || 'Failed to connect. Invalid code?');
+            const msg = err.response?.data?.error || 'Failed to connect. Invalid code?';
+            setConnectError(msg);
+            toast.error(msg);
         } finally {
             setIsConnecting(false);
         }
@@ -84,6 +87,7 @@ const ParentDashboard = () => {
         <div className="parent-dashboard animate-page-entry">
             {/* ── Card Grid ── */}
             <main className="parent-body">
+                <DesktopNotice />
                 {(() => {
                     let gridClass = 'children-grid';
                     const totalCards = children.length + 1;

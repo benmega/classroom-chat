@@ -52,17 +52,6 @@ const ProfileHeader = ({ target, isOwner, pfpInputRef, onPfpChange }) => {
                 </div>
 
                 <div className="header-stats">
-                    {target.role !== 'parent' && (
-                        <>
-                            <div className="stat-box" title={target.duck_balance?.toLocaleString()}>
-                                <span className="label">Ducks</span>
-                                <span className="value">{formatLargeNumber(target.duck_balance)}</span>
-                            </div>
-                            
-                            <div className="stat-divider"></div>
-                        </>
-                    )}
-
                     <div className="stat-box">
                         <span className="label">Levels</span>
                         <span className="value">{target.total_levels || 0}</span>
@@ -74,16 +63,6 @@ const ProfileHeader = ({ target, isOwner, pfpInputRef, onPfpChange }) => {
                         <span className="label">Projects</span>
                         <span className="value">{target.projects?.length || 0}</span>
                     </div>
-                    
-                    {target.role !== 'parent' && target.packets > 0 && (
-                        <>
-                            <div className="stat-divider"></div>
-                            <div className="stat-box" title={target.packets.toLocaleString()}>
-                                <span className="label">Packets</span>
-                                <span className="value">{formatLargeNumber(target.packets)}</span>
-                            </div>
-                        </>
-                    )}
                     
                     {target.role !== 'parent' && (
                         <>

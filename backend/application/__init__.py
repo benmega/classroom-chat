@@ -224,6 +224,7 @@ def seed_global_data():
     """
     import application.constants as _constants
     from application.models.classroom import Classroom
+    from application.models.store_item import StoreItem
     import logging
 
     logger = logging.getLogger(__name__)
@@ -259,6 +260,21 @@ def seed_global_data():
             )
             db.session.flush()
             logger.info("Seeded 'archive' classroom.")
+
+        # 3. Ensure store items exist
+        default_store_items = [
+            {"name": "Chat Font Color", "description": "Unlock the ability to change the color of your chat messages.", "base_price": 0.005, "is_crowdfunded": False, "crowdfund_goal": None},
+            {"name": "Animated Profile Border", "description": "Stand out with an animated border around your profile picture.", "base_price": 0.01, "is_crowdfunded": False, "crowdfund_goal": None},
+            {"name": "Custom Profile Wallpaper", "description": "Set a custom wallpaper for your user profile page.", "base_price": 0.015, "is_crowdfunded": False, "crowdfund_goal": None},
+            {"name": "Auto Bitshift", "description": "Automatically perform bitshift operations on your packets.", "base_price": 0.02, "is_crowdfunded": True, "crowdfund_goal": 0.5},
+            {"name": "Auto Challenge Claimer", "description": "Automatically claim rewards from completed challenges.", "base_price": 0.05, "is_crowdfunded": True, "crowdfund_goal": 1.0},
+        ]
+
+        for item_data in default_store_items:
+            item = StoreItem.query.filter_by(name=item_data["name"]).first()
+            if not item:
+                db.session.add(StoreItem(**item_data))
+                logger.info(f"Seeded store item '{item_data['name']}'.")
 
         db.session.commit()
 

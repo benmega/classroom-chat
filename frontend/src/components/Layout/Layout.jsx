@@ -51,7 +51,7 @@ const Layout = ({ children }) => {
             {isAuthenticated && <Tutorial />}
             <header className={`${!isAuthenticated || isGuestPage ? 'guest-mode' : ''} ${isChatPage ? 'mobile-hidden' : ''}`}>
                 <div className="header-content">
-                    {isAuthenticated && (
+                    {isAuthenticated && !isParent && (
                         <button 
                             className="hamburger-toggle mobile-only" 
                             onClick={toggleSidebar}
@@ -97,7 +97,7 @@ const Layout = ({ children }) => {
                                                 <Package size={20} className="stat-icon" />
                                                 <div className="stat-content">
                                                     <span className="stat-label">Packets</span>
-                                                    <span className="stat-value">{Number(user.packets).toLocaleString(undefined, { 
+                                                    <span className="stat-value">{Number(user.packets || 0).toLocaleString(undefined, { 
                                                         minimumFractionDigits: 0, 
                                                         maximumFractionDigits: 3 
                                                     })}</span>
@@ -145,18 +145,18 @@ const Layout = ({ children }) => {
                                                 </li>
                                                 {user.packets > 0.001 && (
                                                     <li className="mobile-only-stat mobile-only">
-                                                        <div className="dropdown-stat-link packets">
+                                                        <Link to="/shop" onClick={() => setIsDropdownOpen(false)} className="dropdown-stat-link packets" style={{ textDecoration: 'none' }}>
                                                             <Package size={20} />
                                                             <div className="dropdown-stat-info">
                                                                 <span className="dropdown-stat-label">Packets</span>
                                                                 <span className="dropdown-stat-value">
-                                                                    {Number(user.packets).toLocaleString(undefined, { 
+                                                                    {Number(user.packets || 0).toLocaleString(undefined, { 
                                                                         minimumFractionDigits: 0, 
                                                                         maximumFractionDigits: 3 
                                                                     })}
                                                                 </span>
                                                             </div>
-                                                        </div>
+                                                        </Link>
                                                     </li>
                                                 )}
                                             </>
@@ -193,7 +193,7 @@ const Layout = ({ children }) => {
             </main>
             
             {/* Mobile Navigation Sidebar */}
-            {!isChatPage && (
+            {!isChatPage && !isParent && (
                 <>
                     <div 
                         className={`mobile-overlay ${isSidebarOpen ? 'show' : ''}`} 
