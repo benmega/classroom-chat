@@ -9,6 +9,12 @@ from alembic import op
 import sqlalchemy as sa
 
 
+def _existing_columns(table_name):
+    bind = op.get_bind()
+    inspector = sa.inspect(bind)
+    return {c['name'] for c in inspector.get_columns(table_name)}
+
+
 # revision identifiers, used by Alembic.
 revision = 'f907d00ca5ef'
 down_revision = '6ed31261661c'
@@ -157,7 +163,8 @@ def upgrade():
         batch_op.create_unique_constraint(batch_op.f('uq_users_email'), ['email'])
         batch_op.create_unique_constraint(batch_op.f('uq_users_slug'), ['slug'])
         batch_op.create_unique_constraint(batch_op.f('uq_users_username'), ['username'])
-        batch_op.drop_column('ducks')
+        if 'ducks' in _existing_columns('users'):
+            batch_op.drop_column('ducks')
 
     # ### end Alembic commands ###
 
