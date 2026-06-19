@@ -157,11 +157,11 @@ const Shop = () => {
                 if (typeof window.Cropper === 'undefined') {
                     const link = document.createElement('link');
                     link.rel = 'stylesheet';
-                    link.href = '/static/lib/cropper.min.css';
+                    link.href = '/lib/cropper.min.css';
                     document.head.appendChild(link);
 
                     const script = document.createElement('script');
-                    script.src = '/static/lib/cropper.min.js';
+                    script.src = '/lib/cropper.min.js';
                     script.async = true;
                     script.onload = () => initCropper();
                     document.body.appendChild(script);
