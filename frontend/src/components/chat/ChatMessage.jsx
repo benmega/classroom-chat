@@ -65,7 +65,7 @@ const ChatMessage = React.memo(({ msg, user, onDelete }) => {
                         </div>
 
                         <span className="chat-message-timestamp">
-                            {msg.created_at ? new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Just now'}
+                            {msg.created_at ? new Date(typeof msg.created_at === 'string' && !msg.created_at.endsWith('Z') ? msg.created_at + 'Z' : msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Just now'}
                         </span>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', minWidth: 0, width: '100%' }}>
