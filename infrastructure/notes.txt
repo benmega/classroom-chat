@@ -4,7 +4,7 @@ Database Management
 For database sync and backup operations, use the db_sync.sh script:
 
   # Sync dev environment with latest production database
-  ./infrastructure/db_sync.sh sync
+  /mnt/c/Users/Ben/AntiGravity/classroom-chat/infrastructure/db_sync.sh sync
 
   # Restore dev database from last synced production state (rollback)
   ./infrastructure/db_sync.sh restore
