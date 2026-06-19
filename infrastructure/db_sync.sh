@@ -1,6 +1,6 @@
 #!/bin/bash
 # Database sync utilities for classroom-chat
-# Manages production database backups and development environment sync
+# Manages production database backups and development environment sync.
 
 set -e
 
