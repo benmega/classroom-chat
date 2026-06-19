@@ -216,12 +216,9 @@ def upgrade():
     # --- users ---
     usr_cols = {c['name'] for c in inspector.get_columns('users')}
     usr_constraints = _get_unique_constraint_names(inspector, 'users')
-    # Determine if drawer will actually exist after add_column (needed for unique constraint guard)
-    drawer_will_exist = 'drawer' in usr_cols  # already exists — add_column will be skipped
     with op.batch_alter_table('users', schema=None) as batch_op:
         if 'drawer' not in usr_cols:
             batch_op.add_column(sa.Column('drawer', sa.String(length=4), nullable=True))
-            drawer_will_exist = True
         batch_op.alter_column('password_hash',
                existing_type=sa.VARCHAR(length=128),
                type_=sa.String(length=200),
