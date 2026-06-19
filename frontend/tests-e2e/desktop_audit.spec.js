@@ -17,6 +17,7 @@ test.describe('Desktop UI Audit', () => {
   });
 
   test('Navigate admin portal and capture desktop screenshots', async ({ page }) => {
+    test.slow();
     page.on('console', msg => console.log(`BROWSER CONSOLE: [${msg.type()}] ${msg.text()}`));
     page.on('pageerror', err => console.log(`BROWSER ERROR: ${err.message}`));
 
@@ -24,7 +25,7 @@ test.describe('Desktop UI Audit', () => {
     await page.goto('http://localhost:8000/dev-login?role=admin');
     
     console.log('2. Waiting for redirection to dashboard...');
-    await page.waitForURL('**/', { timeout: 15000 });
+    await page.waitForURL('**/admin/dashboard', { timeout: 15000 });
     
     // Wait for the loading screen to disappear
     await page.waitForTimeout(2000);
