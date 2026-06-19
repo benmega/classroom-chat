@@ -352,3 +352,22 @@ button:disabled {
   flex-direction: column !important;
   min-width: 0;
 }
+
+/* --- Shop Perks --- */
+@keyframes borderPulse {
+    0% { box-shadow: 0 0 0 0 rgba(250, 204, 21, 0.9); border-color: #facc15; }
+    50% { box-shadow: 0 0 0 15px rgba(250, 204, 21, 0); border-color: #fef08a; }
+    100% { box-shadow: 0 0 0 0 rgba(250, 204, 21, 0); border-color: #facc15; }
+}
+
+.perk-animated-border {
+    border: 3px solid #facc15 !important;
+    animation: borderPulse 1.5s infinite !important;
+    border-radius: 50%;
+    z-index: 1;
+}
+
+.perk-chat-font, .perk-chat-font * {
+    font-family: 'Comic Sans MS', 'Chalkboard SE', sans-serif !important;
+    color: var(--chat-font-color, inherit) !important;
+}

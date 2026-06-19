@@ -13,7 +13,7 @@ const ChatMessage = React.memo(({ msg, user, onDelete }) => {
                     to={msg.slug ? `/profile/${msg.slug}` : '#'} 
                     className="avatar-link"
                 >
-                    <div className="avatar-container">
+                    <div className={`avatar-container ${msg.has_animated_border ? "animated-profile-border" : ""}`}>
                         {msg.user_profile_pic ? (
                             <SmartImage 
                                 src={getApiUrl(`/user/profile_pictures/${msg.user_profile_pic}`)} 
@@ -69,7 +69,7 @@ const ChatMessage = React.memo(({ msg, user, onDelete }) => {
                         </span>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', minWidth: 0, width: '100%' }}>
-                        <div className="message-bubble" style={{ flex: 1, minWidth: 0 }}>
+                        <div className={`message-bubble ${msg.chat_font_color ? "perk-chat-font" : ""}`} style={{ flex: 1, minWidth: 0, ...(msg.chat_font_color ? { "--chat-font-color": msg.chat_font_color } : {}) }}>
                             <Linkify text={msg.content} isUserMessage={false} />
                         </div>
                         {user?.is_admin && (

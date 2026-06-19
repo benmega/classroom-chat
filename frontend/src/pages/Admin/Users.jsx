@@ -14,6 +14,7 @@ import SmartImage from '../../components/common/SmartImage';
 import { 
     CreateUserModal, 
     AdjustDucksModal, 
+    SetDrawerModal,
     ResetPasswordModal,
     ManageChildrenModal,
     ConnectionCardModal,
@@ -44,6 +45,7 @@ const Users = () => {
         fetchUsers,
         handleCreateUser,
         handleAdjustDucks,
+        handleSetDrawer,
         handleResetPassword,
         handleRemoveUser,
         parentChildren,
@@ -154,6 +156,7 @@ const Users = () => {
                                             <div className="info">
                                                 <div className="name">{u.nickname || u.username}</div>
                                                 <div className="handle">@{u.username}</div>
+                                                {u.role === 'student' && u.drawer && <div className="drawer-info" style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '2px' }}>Drawer: <span style={{ fontFamily: 'monospace', fontWeight: 'bold' }}>{u.drawer}</span></div>}
                                             </div>
                                         </div>
                                     </td>
@@ -189,8 +192,18 @@ const Users = () => {
                                             >
                                                 <ArrowUpCircle size={16} />
                                             </button>
+                                            {u.role === 'student' && (
+                                                <button 
+                                                    className="action-btn" 
+                                                    onClick={() => { setModalUser(u); setActiveModal('drawer'); }}
+                                                    title="Set Drawer"
+                                                    style={{ color: '#0ea5e9' }}
+                                                >
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"></path><path d="m3.3 7 8.7 5 8.7-5"></path><path d="M12 22V12"></path></svg>
+                                                </button>
+                                            )}
                                             <button 
-                                                className="action-btn pass" 
+                                                className="action-btn pass"  
                                                 onClick={() => { setModalUser(u); setActiveModal('reset'); }}
                                                 title="Reset Password"
                                             >
@@ -290,6 +303,14 @@ const Users = () => {
                 user={modalUser} 
                 users={users} 
                 formErrors={formErrors} 
+                loading={formLoading} 
+            />
+
+            <SetDrawerModal 
+                isOpen={activeModal === 'drawer'} 
+                onClose={() => { setActiveModal(null); setModalUser(null); }} 
+                onSubmit={handleSetDrawer} 
+                user={modalUser} 
                 loading={formLoading} 
             />
 

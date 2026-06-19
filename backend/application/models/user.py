@@ -41,6 +41,7 @@ class User(db.Model):
     last_daily_duck = db.Column(db.Date, nullable=True)
     last_achievement_evaluation = db.Column(db.DateTime, nullable=True)
     connection_code = db.Column(db.String(10), unique=True, nullable=True)
+    drawer = db.Column(db.String(4), unique=True, nullable=True)
 
     # Shop Perks
     has_chat_font = db.Column(db.Boolean, default=False)
@@ -50,6 +51,7 @@ class User(db.Model):
     has_custom_wallpaper = db.Column(db.Boolean, default=False)
     profile_wallpaper = db.Column(db.String(255), nullable=True)
     has_auto_claimer = db.Column(db.Boolean, default=False)
+    has_double_duck = db.Column(db.Boolean, default=False)
 
     # Relationships
     skills = db.relationship(
@@ -153,7 +155,6 @@ class User(db.Model):
             "slug": self.slug,
             "duck_balance": self.duck_balance,
             "packets": self.packets,
-            "completed_challenges_count": self.challenge_logs.count(),
             "has_seen_tutorial": self.has_seen_tutorial,
             "has_chat_font": self.has_chat_font,
             "chat_font_color": self.chat_font_color,
@@ -162,6 +163,8 @@ class User(db.Model):
             "has_custom_wallpaper": self.has_custom_wallpaper,
             "profile_wallpaper": self.profile_wallpaper,
             "has_auto_claimer": self.has_auto_claimer,
+            "has_double_duck": self.has_double_duck,
+            "drawer": self.drawer,
         }
 
     def to_dict_summary(self, precomputed_progress=None):
@@ -233,6 +236,7 @@ class User(db.Model):
             "has_custom_wallpaper": self.has_custom_wallpaper,
             "profile_wallpaper": self.profile_wallpaper,
             "has_auto_claimer": self.has_auto_claimer,
+            "drawer": self.drawer,
         }
         return d
 
@@ -475,6 +479,10 @@ class User(db.Model):
         if self.role == "parent":
             return False
             
+        if self.has_double_duck:
+            amount *= 2
+        
+        from datetime import date
         today = date.today()
         if self.last_daily_duck != today:
             self.add_ducks(amount, reason="Daily Duck")

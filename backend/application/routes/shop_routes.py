@@ -83,6 +83,8 @@ def purchase_item(item_id):
         current_user.has_custom_wallpaper = True
     elif item.name == "Auto Challenge Claimer":
         current_user.has_auto_claimer = True
+    elif item.name == "Permanent Double Duck":
+        current_user.has_double_duck = True
         
     db.session.commit()
     

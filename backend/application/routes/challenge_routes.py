@@ -107,6 +107,8 @@ def submit_challenge():
         return jsonify({"success": False, "message": msg}), 400
 
     duck_multiplier = config.duck_multiplier
+    if user.has_double_duck:
+        duck_multiplier *= 2
 
     # Process the URL
     challenge_check = detect_and_handle_challenge_url(

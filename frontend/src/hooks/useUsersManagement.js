@@ -65,8 +65,10 @@ export const useUsersManagement = () => {
     const handleCreateUser = async (e) => {
         e.preventDefault();
         const formData = new FormData(e.target);
-        const username = formData.get('username');
-        const password = formData.get('password');
+        const username = formData.get('username')?.trim() || '';
+        const password = formData.get('password')?.trim() || '';
+        formData.set('username', username);
+        formData.set('password', password);
         
         const errors = {};
         if (!username) errors.username = 'Username is required';
@@ -149,6 +151,27 @@ export const useUsersManagement = () => {
             }
         } catch (error) {
             toast.error(error.response?.data?.message || 'Failed to reset password.');
+        } finally {
+            setFormLoading(false);
+        }
+    };
+
+    const handleSetDrawer = async (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        const username = formData.get('username');
+        const drawer = formData.get('drawer');
+        
+        setFormLoading(true);
+        try {
+            const response = await client.post('/api/admin/set_drawer', { username, drawer });
+            if (response.data) {
+                toast.success(response.data.message || 'Drawer updated successfully.');
+                setActiveModal(null);
+                fetchUsers(page);
+            }
+        } catch (error) {
+            toast.error(error.response?.data?.message || 'Failed to set drawer.');
         } finally {
             setFormLoading(false);
         }
@@ -262,6 +285,7 @@ export const useUsersManagement = () => {
         handleCreateUser,
         handleAdjustDucks,
         handleResetPassword,
+        handleSetDrawer,
         handleRemoveUser,
         parentChildren,
         fetchParentChildren,

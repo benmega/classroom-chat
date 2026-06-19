@@ -11,14 +11,14 @@ const ProfileHeader = ({ target, isOwner, pfpInputRef, onPfpChange }) => {
             <div 
                 className="header-background"
                 style={target.has_custom_wallpaper && target.profile_wallpaper ? {
-                    backgroundImage: `url(${target.profile_wallpaper})`,
+                    backgroundImage: `url(${target.profile_wallpaper.startsWith('http') ? target.profile_wallpaper : getApiUrl('/user/profile_wallpapers/' + target.profile_wallpaper)})`,
                     backgroundSize: 'cover',
                     backgroundPosition: 'center',
                     backgroundRepeat: 'no-repeat'
                 } : {}}
             ></div>
             <div className="profile-header-content">
-                <div className="avatar-wrapper" onClick={() => isOwner && pfpInputRef.current?.click()}>
+                <div className={`avatar-wrapper ${target.has_animated_border ? 'perk-animated-border' : ''}`} onClick={() => isOwner && pfpInputRef.current?.click()}>
                     <SmartImage 
                         src={getApiUrl(target.profile_picture_url)} 
                         alt={target.username} 

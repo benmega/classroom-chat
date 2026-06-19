@@ -138,6 +138,25 @@ echo "Initializing/updating database..."
     cd "$APP_DIR/backend"
     # Ensure we run in production mode so it hits prod_users.db
 
+    # Heal invalid integer values in last_daily_duck column before starting flask context
+    echo "Healing any invalid/integer last_daily_duck values in SQLite database..."
+    run "$PYTHON_BIN" -c "
+import sqlite3, os
+db_path = 'instance/prod_users.db'
+if os.path.exists(db_path):
+    conn = sqlite3.connect(db_path)
+    c = conn.cursor()
+    c.execute(\"SELECT name FROM sqlite_master WHERE type='table' AND name='users'\")
+    if c.fetchone():
+        c.execute(\"SELECT name FROM pragma_table_info('users') WHERE name='last_daily_duck'\")
+        if c.fetchone():
+            c.execute(\"UPDATE users SET last_daily_duck = last_daily_duck || '-01-01' WHERE typeof(last_daily_duck) = 'integer'\")
+            if c.rowcount > 0:
+                conn.commit()
+                print(f'Healed {c.rowcount} users with invalid last_daily_duck values.')
+    conn.close()
+"
+
     # Create schema from models if DB doesn't exist or is empty
     echo "Ensuring database schema is up-to-date..."
     run env FLASK_APP=main.py FLASK_ENV=production "$PYTHON_BIN" << 'PYEOF'

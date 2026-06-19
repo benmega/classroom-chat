@@ -96,6 +96,32 @@ export const AdjustDucksModal = ({ isOpen, onClose, onSubmit, user, users, formE
     </Modal>
 );
 
+export const SetDrawerModal = ({ isOpen, onClose, onSubmit, user, loading }) => (
+    <Modal isOpen={isOpen} onClose={onClose} title="Set User Drawer">
+        <form onSubmit={onSubmit} className="admin-form">
+            <div className="form-group">
+                <label>Target User</label>
+                <input type="text" value={user ? user.username : ''} readOnly className="readonly" />
+                <input type="hidden" name="username" value={user ? user.username : ''} />
+            </div>
+            <div className="form-group">
+                <label>Drawer Number</label>
+                <input 
+                    type="text" 
+                    name="drawer" 
+                    defaultValue={user?.drawer || ''} 
+                    placeholder="e.g. 0xA6" 
+                    maxLength={4}
+                />
+                <small>Hex format expected, max 4 characters (e.g. 0x01, 0xA6). Leave blank to clear.</small>
+            </div>
+            <button type="submit" className="btn-primary" disabled={loading}>
+                {loading ? 'Saving...' : 'Set Drawer'}
+            </button>
+        </form>
+    </Modal>
+);
+
 export const ResetPasswordModal = ({ isOpen, onClose, onSubmit, user, formErrors, loading }) => {
     const [showNewPassword, setShowNewPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -279,13 +305,17 @@ export const BulkConnectionCardsModal = ({ isOpen, onClose, classrooms, fetchCla
     const [selectedClassroomId, setSelectedClassroomId] = useState('');
 
     useEffect(() => {
+        let timeoutId;
         if (isOpen) {
             fetchClassrooms();
-            setTimeout(() => {
+            timeoutId = setTimeout(() => {
                 setClassroomCards([]);
                 setSelectedClassroomId('');
             }, 0);
         }
+        return () => {
+            if (timeoutId) clearTimeout(timeoutId);
+        };
     }, [isOpen, fetchClassrooms, setClassroomCards]);
 
     const handleClassroomChange = async (e) => {

@@ -76,14 +76,14 @@ const ParentReportCard = () => {
         <div className="report-card-page animate-page-entry">
             {/* ── Header ── */}
             <header className="report-header glass-panel">
-                <div className="report-header-inner" style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', justifyContent: 'flex-start' }}>
+                <div className="report-header-inner">
                     <button
                         className="btn-secondary btn-secondary-sm report-back-btn"
-                        style={{ marginBottom: '0' }}
                         onClick={() => navigate('/parent/dashboard')}
+                        title="Back to Dashboard"
+                        aria-label="Back to Dashboard"
                     >
                         <ArrowLeft size={16} />
-                        Back
                     </button>
 
                     <div className="report-student-info">
@@ -95,13 +95,17 @@ const ParentReportCard = () => {
                             />
                         ) : (
                             <div className="report-student-avatar-placeholder">
-                                <User size={24} strokeWidth={1.5} />
+                                <User size={20} strokeWidth={1.5} />
                             </div>
                         )}
                         <div className="report-student-details">
-                            <h1 style={{ fontSize: '1.5rem', marginBottom: '0' }}>{reportData.username}</h1>
+                            <h1 className="report-student-name">
+                                {reportData.nickname || reportData.username}
+                            </h1>
                             {reportData.nickname && (
-                                <p className="report-student-nick" style={{ margin: '0', fontSize: '0.9rem' }}>{reportData.nickname}</p>
+                                <p className="report-student-id">
+                                    {reportData.username}
+                                </p>
                             )}
                         </div>
                     </div>

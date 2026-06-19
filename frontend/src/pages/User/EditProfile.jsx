@@ -145,6 +145,21 @@ const EditProfile = () => {
                                     </small>
                                 </div>
                             )}
+                            {user?.drawer && (
+                                <div className="form-group">
+                                    <label>Assigned Drawer (readonly)</label>
+                                    <input 
+                                        type="text" 
+                                        value={user.drawer} 
+                                        disabled 
+                                        className="form-control readonly" 
+                                        style={{ fontFamily: 'monospace', fontWeight: 'bold' }} 
+                                    />
+                                    <small style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginTop: '0.25rem', display: 'block' }}>
+                                        This is your physical drawer assignment in the classroom.
+                                    </small>
+                                </div>
+                            )}
                             <div className="form-group">
                                 <label>Nickname</label>
                                 <input 

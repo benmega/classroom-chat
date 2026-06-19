@@ -263,11 +263,12 @@ def seed_global_data():
 
         # 3. Ensure store items exist
         default_store_items = [
-            {"name": "Chat Font Color", "description": "Unlock the ability to change the color of your chat messages.", "base_price": 0.005, "is_crowdfunded": False, "crowdfund_goal": None},
+            {"name": "Chat Font Color", "description": "Unlock the ability to change the color of your chat messages.", "base_price": 0.008, "is_crowdfunded": False, "crowdfund_goal": None},
             {"name": "Animated Profile Border", "description": "Stand out with an animated border around your profile picture.", "base_price": 0.01, "is_crowdfunded": False, "crowdfund_goal": None},
             {"name": "Custom Profile Wallpaper", "description": "Set a custom wallpaper for your user profile page.", "base_price": 0.015, "is_crowdfunded": False, "crowdfund_goal": None},
-            {"name": "Auto Bitshift", "description": "Automatically perform bitshift operations on your packets.", "base_price": 0.02, "is_crowdfunded": True, "crowdfund_goal": 0.5},
-            {"name": "Auto Challenge Claimer", "description": "Automatically claim rewards from completed challenges.", "base_price": 0.05, "is_crowdfunded": True, "crowdfund_goal": 1.0},
+            {"name": "Auto Bitshift", "description": "Automatically perform bitshift operations on your packets.", "base_price": 0.025, "is_crowdfunded": False, "crowdfund_goal": 0.5},
+            {"name": "Auto Challenge Claimer", "description": "Automatically claim rewards from completed challenges.", "base_price": 0.018, "is_crowdfunded": False, "crowdfund_goal": 1.0},
+            {"name": "Permanent Double Duck", "description": "Permanently double all your duck earnings! This stacks with global multipliers.", "base_price": 0.05, "is_crowdfunded": False, "crowdfund_goal": None},
         ]
 
         for item_data in default_store_items:
