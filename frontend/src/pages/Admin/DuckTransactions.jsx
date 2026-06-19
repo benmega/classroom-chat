@@ -61,6 +61,7 @@ const DuckTransactions = () => {
     // Refetch when search params change
     useEffect(() => {
         fetchTransactions(pageParam, typeParam, searchParam);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [pageParam, typeParam, searchParam]);
 
     // Handle Search Submit
@@ -124,7 +125,7 @@ const DuckTransactions = () => {
                 hour: '2-digit',
                 minute: '2-digit'
             });
-        } catch (e) {
+        } catch {
             return dateString;
         }
     };

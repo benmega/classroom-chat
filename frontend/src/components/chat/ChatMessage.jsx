@@ -13,7 +13,7 @@ const ChatMessage = React.memo(({ msg, user, onDelete }) => {
                     to={msg.slug ? `/profile/${msg.slug}` : '#'} 
                     className="avatar-link"
                 >
-                    <div className={`avatar-container ${msg.has_animated_border ? "animated-profile-border" : ""}`}>
+                    <div className={`avatar-container ${msg.has_animated_border ? "perk-animated-border" : ""}`}>
                         {msg.user_profile_pic ? (
                             <SmartImage 
                                 src={getApiUrl(`/user/profile_pictures/${msg.user_profile_pic}`)} 

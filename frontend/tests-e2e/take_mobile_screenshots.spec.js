@@ -1,4 +1,4 @@
-import { test, expect, devices } from '@playwright/test';
+import { test, devices } from '@playwright/test';
 
 test.use({ ...devices['Pixel 5'] });
 
@@ -14,13 +14,14 @@ test('take admin mobile screenshots', async ({ page }) => {
 
   // Menu Open
   try {
-    const menuButton = page.locator('button:has(svg)');
     // Just click the first button on the top left or top right that might be a menu.
     // Actually, mobile menus are typically the top left or right button. 
     // We can also just search for a button containing a menu icon.
     // Let's use getByRole('button').nth(0) or something.
     // Since we don't know, we will just screenshot the profile page.
-  } catch(e) {}
+  } catch {
+    // Ignore menu interaction errors
+  }
 
   // Profile
   await page.goto('http://localhost:5173/profile');

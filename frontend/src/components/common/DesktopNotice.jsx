@@ -1,16 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { X } from 'lucide-react';
 import './DesktopNotice.css';
 
 const DesktopNotice = () => {
-    const [isVisible, setIsVisible] = useState(false);
-
-    useEffect(() => {
-        const isDismissed = localStorage.getItem('desktopNoticeDismissed');
-        if (!isDismissed) {
-            setIsVisible(true);
-        }
-    }, []);
+    const [isVisible, setIsVisible] = useState(() => !localStorage.getItem('desktopNoticeDismissed'));
 
     const handleDismiss = () => {
         setIsVisible(false);

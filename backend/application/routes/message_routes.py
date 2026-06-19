@@ -1,6 +1,6 @@
 import logging
 from flask import Blueprint, jsonify, request, g
-from application.models.message import Message, message_classrooms, message_users
+from application.models.message import Message
 from application.models.user import User
 from application.decorators.login_required import require_login
 from application.extensions import db
@@ -35,7 +35,7 @@ def get_feed():
             # Using SQLAlchemy any() or direct joins for associations
             query = query.filter(
                 db.or_(
-                    Message.is_global == True,
+                    Message.is_global.is_(True),
                     Message.user_id == user.id,
                     Message.target_users.any(User.id == user.id),
                     Message.target_classrooms.any(Message.target_classrooms.property.mapper.class_.id.in_(user_classroom_ids)) if user_classroom_ids else False
@@ -62,7 +62,9 @@ def get_feed():
                 "target_live": msg.target_live,
                 "target_classrooms": [c.name for c in msg.target_classrooms] if msg.target_classrooms else [],
                 "target_users": [(u.nickname or u.username) for u in msg.target_users] if msg.target_users else [],
-                "is_struck": msg.is_struck
+                "is_struck": msg.is_struck,
+                "has_animated_border": msg.has_animated_border,
+                "chat_font_color": msg.chat_font_color
             }
             message_data.append(msg_dict)
 

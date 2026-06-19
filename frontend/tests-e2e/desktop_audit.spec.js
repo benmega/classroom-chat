@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test } from '@playwright/test';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -46,17 +46,12 @@ test.describe('Desktop UI Audit', () => {
       console.log('WARNING: No chat link found.');
     }
 
-    // Navigate to Profile
-    console.log('7. Clicking on the profile link...');
-    const profileLink = page.locator('a[href="/profile"]').first();
-    if (await profileLink.count() > 0) {
-      await profileLink.click();
-      await page.waitForTimeout(3000);
-      const profilePath = path.join(screenshotsDir, 'desktop_profile_audit.png');
-      console.log(`8. Capturing profile screenshot to: ${profilePath}`);
-      await page.screenshot({ path: profilePath, fullPage: true });
-    } else {
-      console.log('WARNING: No profile link found.');
-    }
+    // Navigate to Profile via URL (link may not be visible on desktop layout)
+    console.log('7. Navigating to profile page...');
+    await page.goto('http://localhost:5173/profile');
+    await page.waitForTimeout(3000);
+    const profilePath = path.join(screenshotsDir, 'desktop_profile_audit.png');
+    console.log(`8. Capturing profile screenshot to: ${profilePath}`);
+    await page.screenshot({ path: profilePath, fullPage: true });
   });
 });

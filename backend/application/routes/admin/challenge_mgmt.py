@@ -1,4 +1,4 @@
-from flask import request, jsonify
+from flask import request
 from application.extensions import db
 from application.models.challenge import Challenge
 from application.decorators.admin_required import admin_only
@@ -37,7 +37,7 @@ def bulk_add_challenges():
 
         if not name or not slug:
             skipped_count += 1
-            errors.append(f"Missing name or slug for an item")
+            errors.append("Missing name or slug for an item")
             continue
 
         # Check if challenge already exists

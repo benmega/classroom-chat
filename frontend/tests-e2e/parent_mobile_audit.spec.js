@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test } from '@playwright/test';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -28,7 +28,7 @@ test.describe('Parent Portal Mobile UI Audit', () => {
     
     console.log('2. Waiting for redirection to parent dashboard...');
     // The Flask page redirects to http://localhost:5173/ which redirects to /parent/dashboard
-    await page.waitForURL('**/parent/dashboard', { timeout: 15000 });
+    await page.waitForURL('**/parent/dashboard', { timeout: 30000, waitUntil: 'domcontentloaded' });
     
     console.log('3. Waiting for dashboard content to load...');
     // Wait for the loading screen to disappear, and child cards or connection card to appear
@@ -43,7 +43,7 @@ test.describe('Parent Portal Mobile UI Audit', () => {
     await page.screenshot({ path: dashboardPath, fullPage: true });
 
     // Check if there is a child card available
-    const childCard = page.locator('.child-card').first();
+
     const childCardCount = await page.locator('.child-card').count();
     console.log(`Found ${childCardCount} cards on dashboard.`);
     

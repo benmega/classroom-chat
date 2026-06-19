@@ -4,8 +4,7 @@ AI Teacher Blueprint for handling AI chat interactions using local LLM via Ollam
 """
 
 import logging
-from datetime import datetime
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 import requests
 from sqlalchemy.exc import SQLAlchemyError
@@ -79,7 +78,7 @@ def get_recent_messages(user: User, limit: int = 50) -> List[Dict[str, str]]:
             user_classroom_ids = [c.id for c in user.classrooms]
             query = query.filter(
                 db.or_(
-                    Message.is_global == True,
+                    Message.is_global.is_(True),
                     Message.user_id == user.id,
                     Message.target_users.any(User.id == user.id),
                     Message.target_classrooms.any(Message.target_classrooms.property.mapper.class_.id.in_(user_classroom_ids)) if user_classroom_ids else False

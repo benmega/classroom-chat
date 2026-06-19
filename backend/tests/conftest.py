@@ -29,7 +29,6 @@ from application.models.banned_words import BannedWords
 from application.models.challenge import Challenge
 from application.models.challenge_log import ChallengeLog
 from application.models.classroom import Classroom
-from application.models.classroom import Classroom
 from application.models.configuration import Configuration
 from application.models.course import Course
 from application.models.course_instance import CourseInstance

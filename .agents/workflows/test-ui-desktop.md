@@ -7,7 +7,7 @@ description: Automatically test the Desktop UI for bugs, and document them as Ji
 This workflow provides the standardized procedure for finding and recording UI bugs specifically for desktop resolutions.
 
 1.  **Locate**: List the `issues/` directory to identify the last used issue ID (e.g., `iss_033`).
-2.  **Health Check**: Before starting deep exploration, perform a simple navigation to `http://localhost:5173/` using `browser_subagent`. 
+2.  **Health Check**: Before starting deep exploration, ensure the `browser` subagent is available (ask the user to run the `@[/browser]` slash command if it is not). Then, perform a simple navigation to `http://localhost:5173/` using the `browser` subagent. 
     - If the browser fails to return a Page ID or throws a CDP error, stop and report "Browser Environment Unstable" to the user.
 3.  **Authentication**: If testing a protected route or a user flow that requires being logged in, **YOU MUST** follow the `@[/login]` workflow. Summary:
     1. Navigate to `http://localhost:8000/dev-login?role=admin` — the backend returns JSON confirming the session.
@@ -15,7 +15,7 @@ This workflow provides the standardized procedure for finding and recording UI b
     - **CRITICAL**: Port **8000** is the backend. Port **5173** is the React app. They share the same session cookie.
     - Do NOT use the standard `/login` form unless the task is explicitly about testing login behaviour.
     - If `/dev-login` returns an error, **stop and report the failure**. Do not attempt workarounds.
-4.  **Explore**: Use `browser_subagent` to systematically navigate through the application focusing on **common user flows** (e.g., Login -> Dashboard -> Chat -> Profile).
+4.  **Explore**: Use the `browser` subagent to systematically navigate through the application focusing on **common user flows** (e.g., Login -> Dashboard -> Chat -> Profile).
     - **QA Standards**: Reference [testing_and_qa.md](file:///c:/Users/Ben/AntiGravity/classroom-chat/docs/testing_and_qa.md) for the standardized audit criteria.
     - Prioritize desktop viewports (e.g., 1440px and 1280px).
     - Focus on desktop-specific interactions: hover states, sidebar navigation, and expanded layouts.

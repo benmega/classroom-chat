@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+
 import { FileUp, Save, Info, Tag, Database, Activity, CheckCircle, AlertTriangle } from 'lucide-react';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
@@ -8,7 +8,7 @@ import AdminPageHeader from '../../components/admin/AdminPageHeader';
 import Papa from 'papaparse';
 
 const AdminChallenges = () => {
-    const navigate = useNavigate();
+
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [courses, setCourses] = useState([]);
     

@@ -133,7 +133,7 @@ const AdminCourseInstances = () => {
             await client.delete(`/api/admin/crud/courseinstance/${id}`);
             toast.success('Course Instance deleted.');
             fetchData(true);
-        } catch (error) {
+        } catch {
             toast.error('Failed to delete course instance.');
         }
     };

@@ -5,9 +5,8 @@ Summary: Database helper functions for users, messages, and conversations.
 """
 
 import uuid
-from datetime import datetime
 
-from flask import abort, session
+from flask import abort
 
 from application.models.message import Message
 from application.models.user import User, db
@@ -59,13 +58,18 @@ def save_message_to_db(user_id, message, is_global=False, target_live=False, tar
     """
     try:
         from application.models.classroom import Classroom
+        user = db.session.get(User, user_id)
+        if not user:
+            return {"success": False, "error": "User not found"}
         
         new_message = Message(
             user_id=user_id,
             content=message,
             message_type=message_type,
             is_global=is_global,
-            target_live=target_live
+            target_live=target_live,
+            has_animated_border=user.has_animated_border,
+            chat_font_color=user.chat_font_color
         )
         
         if target_live:

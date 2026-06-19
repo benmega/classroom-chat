@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import useAuthStore from '../../store/useAuthStore';
 import client from '../../api/client';
 import './Shop.css'; // Let's use a standard CSS file
+import WallpaperCropModal from '../../components/profile/WallpaperCropModal';
 
 const Shop = () => {
     const { user, checkAuth } = useAuthStore();
@@ -12,6 +13,12 @@ const Shop = () => {
     const [purchasingId, setPurchasingId] = useState(null);
     const [chatColor, setChatColor] = useState('#facc15');
     const wallpaperInputRef = React.useRef(null);
+    
+    const [isCropping, setIsCropping] = useState(false);
+    const [cropImage, setCropImage] = useState(null);
+    const [isUploadingPic, setIsUploadingPic] = useState(false);
+    const cropperRef = React.useRef(null);
+    const cropImgRef = React.useRef(null);
 
     const apiBase = import.meta.env.VITE_API_URL || '';
     const fullApiUrl = apiBase.startsWith('http') ? apiBase : (window.location.origin + apiBase);
@@ -47,7 +54,7 @@ const Shop = () => {
                 return a.is_crowdfunded ? 1 : -1;
             });
             setItems(sortedItems);
-        } catch (error) {
+        } catch {
             toast.error("Failed to load shop items");
         } finally {
             setIsLoading(false);
@@ -79,7 +86,7 @@ const Shop = () => {
                 value: chatColor
             });
             await checkAuth(true); // Sync user state globally in background
-        } catch (error) {
+        } catch {
             toast.error("Failed to save color configuration.");
         }
     };
@@ -87,16 +94,113 @@ const Shop = () => {
     const handleWallpaperUpload = async (e) => {
         const file = e.target.files[0];
         if (!file) return;
-        const formData = new FormData();
-        formData.append('profile_wallpaper', file);
-        try {
-            await client.post('/user/api/profile-wallpaper', formData);
-            toast.success("Wallpaper saved!");
-            await checkAuth(true);
-        } catch (error) {
-            toast.error(error.response?.data?.error || "Failed to upload wallpaper.");
+
+        if (!['image/jpeg', 'image/png', 'image/webp', 'image/gif'].includes(file.type)) {
+            toast.error('Please select a valid image file (JPG, PNG, WebP).');
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = () => {
+            setCropImage(reader.result);
+            setIsCropping(true);
+        };
+        reader.readAsDataURL(file);
+        
+        if (wallpaperInputRef.current) {
+            wallpaperInputRef.current.value = '';
         }
     };
+
+    const handleSaveCrop = async () => {
+        if (!cropperRef.current) return;
+        setIsUploadingPic(true);
+
+        try {
+            const canvas = cropperRef.current.getCroppedCanvas({
+                width: 1200,
+                height: 400,
+                imageSmoothingQuality: 'high'
+            });
+
+            canvas.toBlob(async (blob) => {
+                if (!blob) {
+                    toast.error('Failed to process image.');
+                    setIsUploadingPic(false);
+                    return;
+                }
+
+                const formData = new FormData();
+                formData.append('profile_wallpaper', blob, 'wallpaper.jpg');
+
+                try {
+                    await client.post('/user/api/profile-wallpaper', formData);
+                    toast.success("Wallpaper saved!");
+                    setIsCropping(false);
+                    await checkAuth(true);
+                } catch (error) {
+                    toast.error(error.response?.data?.error || "Failed to upload wallpaper.");
+                } finally {
+                    setIsUploadingPic(false);
+                }
+            }, 'image/jpeg', 0.9);
+        } catch (err) {
+            console.error('Cropping error:', err);
+            toast.error('Error cropping image.');
+            setIsUploadingPic(false);
+        }
+    };
+
+    useEffect(() => {
+        if (isCropping) {
+            const loadCropper = async () => {
+                if (typeof window.Cropper === 'undefined') {
+                    const link = document.createElement('link');
+                    link.rel = 'stylesheet';
+                    link.href = '/static/lib/cropper.min.css';
+                    document.head.appendChild(link);
+
+                    const script = document.createElement('script');
+                    script.src = '/static/lib/cropper.min.js';
+                    script.async = true;
+                    script.onload = () => initCropper();
+                    document.body.appendChild(script);
+                } else {
+                    initCropper();
+                }
+            };
+
+            const initCropper = () => {
+                setTimeout(() => {
+                    if (cropImgRef.current) {
+                        cropperRef.current = new window.Cropper(cropImgRef.current, {
+                            aspectRatio: 4 / 1,
+                            viewMode: 2,
+                            dragMode: 'move',
+                            autoCropArea: 0.8,
+                            restore: false,
+                            guides: true,
+                            center: true,
+                            highlight: false,
+                            cropBoxMovable: true,
+                            cropBoxResizable: true,
+                            minCropBoxWidth: 300,
+                            minCropBoxHeight: 100,
+                        });
+                    }
+                }, 100);
+            };
+
+            loadCropper();
+        }
+
+        return () => {
+            if (cropperRef.current) {
+                cropperRef.current.destroy();
+                cropperRef.current = null;
+            }
+        };
+    }, [isCropping]);
 
     if (isLoading) {
         return (
@@ -115,7 +219,7 @@ const Shop = () => {
             <div className="shop-items-grid">
                 {items.map(item => {
                     const isAffordable = user?.packets >= item.base_price;
-                    const canPurchase = !item.is_purchased && !item.is_crowdfunded && isAffordable;
+
                     
                     return (
                         <div key={item.id} className={`shop-item-card ${item.is_crowdfunded ? 'crowdfunded' : ''} ${item.is_purchased ? 'purchased' : ''}`}>
@@ -202,6 +306,15 @@ const Shop = () => {
                     );
                 })}
             </div>
+
+            <WallpaperCropModal 
+                isCropping={isCropping}
+                cropImgRef={cropImgRef}
+                cropImage={cropImage}
+                isUploadingPic={isUploadingPic}
+                onCancel={() => setIsCropping(false)}
+                onSave={handleSaveCrop}
+            />
         </div>
     );
 };

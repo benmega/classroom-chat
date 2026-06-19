@@ -65,6 +65,10 @@ class Message(db.Model):
     edited_at = db.Column(db.DateTime, nullable=True)
     deleted_at = db.Column(db.DateTime, nullable=True)
 
+    # Snapshot of User Perks at Send Time
+    has_animated_border = db.Column(db.Boolean, default=False)
+    chat_font_color = db.Column(db.String(7), nullable=True)
+
     # Targeting metadata
     is_global = db.Column(db.Boolean, default=False)
     target_live = db.Column(db.Boolean, default=False)

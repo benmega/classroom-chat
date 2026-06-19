@@ -26,7 +26,7 @@
 }
 
 .header-background {
-    height: 120px;
+    aspect-ratio: 4 / 1;
     background: var(--gradient-primary);
     border-radius: var(--radius-md) var(--radius-md) 0 0;
     position: relative;
@@ -1053,10 +1053,6 @@
 
     .profile-header-card {
         margin: 10px 0;
-    }
-
-    .header-background {
-        height: 100px;
     }
 
     .profile-header-content {
