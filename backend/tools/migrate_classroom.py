@@ -103,7 +103,7 @@ def run():
         # the many-to-many join table.  Copy those rows across if the column
         # still exists on the users table (SQLite makes column drops hard, so
         # it may linger even if the model no longer declares it).
-        print("\n[3/6] Migrating legacy users.classroom_id → user_classrooms ...")
+        print("\n[3/6] Migrating legacy users.classroom_id -> user_classrooms ...")
         users_cols = [row[1] for row in conn.execute(text("PRAGMA table_info(users)")).fetchall()]
         if "classroom_id" in users_cols:
             rows = conn.execute(
@@ -116,7 +116,7 @@ def run():
                     text("SELECT id FROM classrooms WHERE id = :id"), {"id": cid}
                 ).fetchone()
                 if not valid:
-                    print(f"       ⚠ Skipping user {user_id}: classroom '{cid}' not found")
+                    print(f"       [WARNING] Skipping user {user_id}: classroom '{cid}' not found")
                     continue
 
                 conn.execute(
@@ -129,7 +129,7 @@ def run():
                 migrated += 1
 
             conn.commit()
-            print(f"       [OK] Migrated {migrated} user→classroom rows")
+            print(f"       [OK] Migrated {migrated} user->classroom rows")
         else:
             print("       - users.classroom_id column not present, skipping")
 
@@ -183,39 +183,43 @@ def run():
         # schema migration) gets moved to 'archive' so the NOT NULL constraint
         # is satisfied without data loss.
         print("\n[6/6] Archiving orphaned conversations and seeding global conversation ...")
-        result = conn.execute(
-            text("UPDATE conversations SET classroom_id = 'archive' WHERE classroom_id IS NULL")
-        )
-        conn.commit()
-        print(f"       [OK] Archived {result.rowcount} orphaned conversation(s)")
-
-        # Ensure exactly one conversation exists in the global classroom.
-        global_conv = conn.execute(
-            text("SELECT id FROM conversations WHERE classroom_id = :cid LIMIT 1"),
-            {"cid": GLOBAL_CLASSROOM_ID}
-        ).fetchone()
-
-        if not global_conv:
-            conn.execute(
-                text("""
-                    INSERT INTO conversations (title, classroom_id, is_locked, slow_mode_delay, created_at)
-                    VALUES ('Global Announcements', :cid, 0, 0, :ts)
-                """),
-                {"cid": GLOBAL_CLASSROOM_ID, "ts": datetime.utcnow()}
+        conv_cols = [row[1] for row in conn.execute(text("PRAGMA table_info(conversations)")).fetchall()]
+        if conv_cols:
+            result = conn.execute(
+                text("UPDATE conversations SET classroom_id = 'archive' WHERE classroom_id IS NULL")
             )
             conn.commit()
+            print(f"       [OK] Archived {result.rowcount} orphaned conversation(s)")
+
+            # Ensure exactly one conversation exists in the global classroom.
             global_conv = conn.execute(
                 text("SELECT id FROM conversations WHERE classroom_id = :cid LIMIT 1"),
                 {"cid": GLOBAL_CLASSROOM_ID}
             ).fetchone()
-            print(f"       [OK] Created global conversation id={global_conv[0]}")
-        else:
-            print(f"       - global conversation already exists id={global_conv[0]}, skipping")
 
-        # Propagate the discovered ID back to the in-process constant so that
-        # any code running in the same process immediately sees the right value.
-        _constants.GLOBAL_CONVERSATION_ID = global_conv[0]
-        print(f"       [OK] GLOBAL_CONVERSATION_ID = {global_conv[0]}")
+            if not global_conv:
+                conn.execute(
+                    text("""
+                        INSERT INTO conversations (title, classroom_id, is_locked, slow_mode_delay, created_at)
+                        VALUES ('Global Announcements', :cid, 0, 0, :ts)
+                    """),
+                    {"cid": GLOBAL_CLASSROOM_ID, "ts": datetime.utcnow()}
+                )
+                conn.commit()
+                global_conv = conn.execute(
+                    text("SELECT id FROM conversations WHERE classroom_id = :cid LIMIT 1"),
+                    {"cid": GLOBAL_CLASSROOM_ID}
+                ).fetchone()
+                print(f"       [OK] Created global conversation id={global_conv[0]}")
+            else:
+                print(f"       - global conversation already exists id={global_conv[0]}, skipping")
+
+            # Propagate the discovered ID back to the in-process constant so that
+            # any code running in the same process immediately sees the right value.
+            _constants.GLOBAL_CONVERSATION_ID = global_conv[0]
+            print(f"       [OK] GLOBAL_CONVERSATION_ID = {global_conv[0]}")
+        else:
+            print("       - conversations table not present, skipping")
 
         conn.close()
 
