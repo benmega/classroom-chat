@@ -16,5 +16,19 @@ This workflow automates running the preflight script and proactively fixing any 
     - **Unit Tests (Pytest/Vitest)**: Read the test outputs to understand the failure. Modify the source code or the test code (whichever is appropriate) to resolve the bug.
     - **Database Migrations (`flask db check`)**: If migrations are out of sync, generate a new migration using `flask db migrate -m "Auto migration"` and apply it using `flask db upgrade head`.
     - **End-to-End Tests (Playwright)**: Debug the UI/integration failure. You may need to review the frontend source code or backend API endpoints to fix the bug.
+
+### Migration Idempotency Checklist
+
+Before signing off on any migration, verify each of the following for every `upgrade()` function:
+
+- [ ] Every `add_column` call is guarded with `if 'col' not in existing_cols:`
+- [ ] Every `drop_column` call is guarded with `if 'col' in existing_cols:`
+- [ ] Every `create_index` / `create_unique_constraint` / `create_foreign_key` call is guarded with a name-existence check
+- [ ] Every `drop_index` / `drop_constraint` / `drop_foreign_key` call is guarded with a name-existence check
+- [ ] Each `batch_alter_table` block has a matching `_alembic_tmp_<table>` entry in the ghost-table cleanup block at the top of `upgrade()`
+- [ ] No operation in the new migration duplicates one already performed in a parallel branch (run `python backend/scripts/validate_migrations.py` to check)
+- [ ] Auto-generated migrations have been manually compared against all migrations on branches that will be merged
+
+**Manual review gate**: Run `python backend/scripts/lint_migrations.py` and confirm exit code 0 before approving any migration PR.
 4.  **Re-run Preflight**: After applying a fix, return to Step 1 and re-run the `scripts/preflight.ps1` script. Repeat this loop until the script passes completely.
 5.  **Summary**: Present the user with a summary of the issues you fixed and confirm that the codebase is ready to merge. Note the final frontend and backend test coverage percentages.

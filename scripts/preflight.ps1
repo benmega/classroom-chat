@@ -26,11 +26,18 @@ ruff check . ; Assert-Success
 Write-Host " -> Running Pytest with Coverage..." -ForegroundColor DarkGray
 python -m pytest --cov=. --cov-report=term ; Assert-Success
 
-# Migrations Check
-Write-Host " -> Checking Database Migrations..." -ForegroundColor DarkGray
+# Migration linter
+Write-Host " -> Linting migrations for idempotency..." -ForegroundColor DarkGray
 $env:FLASK_APP = "main.py"
-$env:FLASK_ENV = "development"
-# flask db check will fail if the DB schema is out of sync with models
+python scripts/lint_migrations.py ; Assert-Success
+
+# Prod migration simulation — run flask db upgrade against a copy of prod_users.db
+Write-Host " -> Simulating prod migration against prod_users.db copy..." -ForegroundColor DarkGray
+python scratch/sim_prod_migration.py ; Assert-Success
+
+# Migrations Check
+Write-Host " -> Checking Database Migrations (Dev)..." -ForegroundColor DarkGray
+# flask db check will fail if the codebase models are out of sync with migrations
 flask db check ; Assert-Success
 
 # ---------------------------------------------------------
