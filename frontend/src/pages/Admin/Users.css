@@ -184,6 +184,7 @@
 
 .user-role-badge.student { background: linear-gradient(135deg, #eff6ff, #dbeafe); color: #1e40af; border: 1px solid #bfdbfe; }
 .user-role-badge.admin { background: linear-gradient(135deg, #fef2f2, #fee2e2); color: #b91c1c; border: 1px solid #fecaca; }
+.user-role-badge.parent { background: linear-gradient(135deg, #f5f3ff, #ede9fe); color: #6d28d9; border: 1px solid #ddd6fe; }
 
 
 .economy-info .duck-count {

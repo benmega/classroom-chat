@@ -224,10 +224,10 @@ def seed_global_data():
     """
     import application.constants as _constants
     from application.models.classroom import Classroom
-    from application.models.conversation import Conversation
+    from application.models.store_item import StoreItem
+    import logging
 
     logger = logging.getLogger(__name__)
-
     import sqlalchemy
 
     # Guard: skip seeding if the schema hasn't been migrated yet.
@@ -236,16 +236,6 @@ def seed_global_data():
     if "db" in sys.argv:
         logger.info("seed_global_data: skipping — 'flask db' command detected.")
         return
-
-    inspector = inspect(db.engine)
-    if inspector.has_table("conversations"):
-        conv_cols = {c["name"] for c in inspector.get_columns("conversations")}
-        if "classroom_id" not in conv_cols:
-            logger.warning(
-                "seed_global_data: skipping — conversations.classroom_id missing. "
-                "Run 'flask db upgrade' first."
-            )
-            return
 
     try:
         # 1. Ensure 'global' classroom exists
@@ -271,27 +261,23 @@ def seed_global_data():
             db.session.flush()
             logger.info("Seeded 'archive' classroom.")
 
-        # 3. Ensure the canonical global conversation exists
-        global_conv = Conversation.query.filter_by(
-            classroom_id=_constants.GLOBAL_CLASSROOM_ID
-        ).first()
+        # 3. Ensure store items exist
+        default_store_items = [
+            {"name": "Chat Font Color", "description": "Unlock the ability to change the color of your chat messages.", "base_price": 0.008, "is_crowdfunded": False, "crowdfund_goal": None},
+            {"name": "Animated Profile Border", "description": "Stand out with an animated border around your profile picture.", "base_price": 0.01, "is_crowdfunded": False, "crowdfund_goal": None},
+            {"name": "Custom Profile Wallpaper", "description": "Set a custom wallpaper for your user profile page.", "base_price": 0.015, "is_crowdfunded": False, "crowdfund_goal": None},
+            {"name": "Auto Bitshift", "description": "Automatically perform bitshift operations on your packets.", "base_price": 0.025, "is_crowdfunded": False, "crowdfund_goal": 0.5},
+            {"name": "Auto Challenge Claimer", "description": "Automatically claim rewards from completed challenges.", "base_price": 0.018, "is_crowdfunded": False, "crowdfund_goal": 1.0},
+            {"name": "Permanent Double Duck", "description": "Permanently double all your duck earnings! This stacks with global multipliers.", "base_price": 0.05, "is_crowdfunded": False, "crowdfund_goal": None},
+        ]
 
-        if not global_conv:
-            global_conv = Conversation(
-                title="Global Announcements",
-                classroom_id=_constants.GLOBAL_CLASSROOM_ID,
-                is_locked=False,
-                slow_mode_delay=0,
-            )
-            db.session.add(global_conv)
-            db.session.flush()
-            logger.info(f"Seeded global conversation id={global_conv.id}.")
+        for item_data in default_store_items:
+            item = StoreItem.query.filter_by(name=item_data["name"]).first()
+            if not item:
+                db.session.add(StoreItem(**item_data))
+                logger.info(f"Seeded store item '{item_data['name']}'.")
 
         db.session.commit()
-
-        # 4. Populate the in-process constant
-        _constants.GLOBAL_CONVERSATION_ID = global_conv.id
-        logger.info(f"GLOBAL_CONVERSATION_ID = {global_conv.id}")
 
     except sqlalchemy.exc.OperationalError as exc:
         db.session.rollback()

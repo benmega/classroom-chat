@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
-import { User, Lock, ArrowRight, Zap } from 'lucide-react';
+import { User, Lock, ArrowRight, Zap, Eye, EyeOff } from 'lucide-react';
 import useAuthStore from '../../store/useAuthStore';
 import toast from 'react-hot-toast';
 import './Auth.css';
@@ -9,6 +9,7 @@ const Login = () => {
     const { login, loginParentCognito } = useAuthStore();
     const [usernameOrEmail, setUsernameOrEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
     const location = useLocation();
@@ -86,16 +87,25 @@ const Login = () => {
                     <div className="form-group">
                         <div className="input-wrapper">
                             <input 
-                                type="password" 
+                                type={showPassword ? "text" : "password"} 
                                 id="password"
                                 value={password} 
                                 onChange={(e) => setPassword(e.target.value)} 
                                 required
                                 placeholder="Password"
                                 autoComplete="current-password"
-                                className="auth-input"
+                                className="auth-input has-password-toggle"
                             />
                             <Lock className="input-icon" size={18} />
+                            <button 
+                                type="button" 
+                                className="toggle-password-btn"
+                                onClick={() => setShowPassword(!showPassword)}
+                                aria-label={showPassword ? "Hide password" : "Show password"}
+                                tabIndex="-1"
+                            >
+                                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                            </button>
                         </div>
                     </div>
                     
@@ -118,11 +128,14 @@ const Login = () => {
                     </button>
                 </form>
                 
-                <div className="auth-footer" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                <div className="auth-footer" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                     <div style={{ display: 'flex', gap: '1.25rem', justifyContent: 'center', alignItems: 'center', fontSize: '1.05rem' }}>
                         <Link to="/signup" className="auth-link" style={{ margin: 0 }}>New Student</Link>
                         <span style={{ color: 'var(--border-subtle)', userSelect: 'none' }}>|</span>
                         <Link to="/signup?role=parent" className="auth-link" style={{ margin: 0 }}>New Parent</Link>
+                    </div>
+                    <div style={{ textAlign: 'center' }}>
+                        <Link to="/forgot-password" className="auth-link" style={{ margin: 0, fontSize: '0.95rem' }}>Forgot Password?</Link>
                     </div>
                 </div>
             </div>

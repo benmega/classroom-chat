@@ -44,12 +44,14 @@ const Layout = ({ children }) => {
         hamburgerProgress
     } = useLayout();
 
+    const isParent = user?.role === 'parent';
+
     return (
         <div className="app-container">
             {isAuthenticated && <Tutorial />}
             <header className={`${!isAuthenticated || isGuestPage ? 'guest-mode' : ''} ${isChatPage ? 'mobile-hidden' : ''}`}>
                 <div className="header-content">
-                    {isAuthenticated && (
+                    {isAuthenticated && !isParent && (
                         <button 
                             className="hamburger-toggle mobile-only" 
                             onClick={toggleSidebar}
@@ -60,7 +62,7 @@ const Layout = ({ children }) => {
                         </button>
                     )}
                     <div id="logo-container">
-                        <Link to="/chat" className="logo-link">
+                        <Link to={isParent ? "/parent/dashboard" : "/chat"} className="logo-link">
                             <div className="logo-icon-wrapper">
                                 <img src="/images/logo.ico" alt="Classroom Chat Logo" className="logo-img" />
                             </div>
@@ -72,7 +74,7 @@ const Layout = ({ children }) => {
 
                     <nav>
                         <ul>
-                            {isAuthenticated && user && (
+                            {isAuthenticated && user && user.role !== 'parent' && (
                                 <>
                                     <li className="nav-stat-item">
                                         <Link className="stat-badge ducks" to="/bit-shift" data-testid="nav-bit-shift">
@@ -95,7 +97,7 @@ const Layout = ({ children }) => {
                                                 <Package size={20} className="stat-icon" />
                                                 <div className="stat-content">
                                                     <span className="stat-label">Packets</span>
-                                                    <span className="stat-value">{Number(user.packets).toLocaleString(undefined, { 
+                                                    <span className="stat-value">{Number(user.packets || 0).toLocaleString(undefined, { 
                                                         minimumFractionDigits: 0, 
                                                         maximumFractionDigits: 3 
                                                     })}</span>
@@ -121,48 +123,58 @@ const Layout = ({ children }) => {
                                         data-testid="profile-toggle"
                                     >
                                         <span className="profile-icon">
-                                            <HamburgerIcon progress={hamburgerProgress} size={20} />
+                                            <HamburgerIcon progress={user?.role === 'student' ? hamburgerProgress : 1} size={20} />
                                         </span>
                                     </button>
                                     <ul className={`dropdown-menu ${isDropdownOpen ? 'show' : ''}`}>
-                                        <li className="mobile-only-stat mobile-only">
-                                            <Link to="/bit-shift" onClick={() => setIsDropdownOpen(false)} className="dropdown-stat-link">
-                                                <DuckIcon size={20} />
-                                                <div className="dropdown-stat-info">
-                                                    <span className="dropdown-stat-label">Ducks</span>
-                                                    <span className="dropdown-stat-value">
-                                                        {(user.duck_balance ?? 0).toLocaleString(undefined, { 
-                                                            minimumFractionDigits: 0, 
-                                                            maximumFractionDigits: 3 
-                                                        })}
-                                                    </span>
-                                                </div>
-                                            </Link>
-                                        </li>
-                                        {user.packets > 0.001 && (
-                                            <li className="mobile-only-stat mobile-only">
-                                                <div className="dropdown-stat-link packets">
-                                                    <Package size={20} />
-                                                    <div className="dropdown-stat-info">
-                                                        <span className="dropdown-stat-label">Packets</span>
-                                                        <span className="dropdown-stat-value">
-                                                            {Number(user.packets).toLocaleString(undefined, { 
-                                                                minimumFractionDigits: 0, 
-                                                                maximumFractionDigits: 3 
-                                                            })}
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            </li>
+                                        {user?.role !== 'parent' && (
+                                            <>
+                                                <li className="mobile-only-stat mobile-only">
+                                                    <Link to="/bit-shift" onClick={() => setIsDropdownOpen(false)} className="dropdown-stat-link">
+                                                        <DuckIcon size={20} />
+                                                        <div className="dropdown-stat-info">
+                                                            <span className="dropdown-stat-label">Ducks</span>
+                                                            <span className="dropdown-stat-value">
+                                                                {(user.duck_balance ?? 0).toLocaleString(undefined, { 
+                                                                    minimumFractionDigits: 0, 
+                                                                    maximumFractionDigits: 3 
+                                                                })}
+                                                            </span>
+                                                        </div>
+                                                    </Link>
+                                                </li>
+                                                {user.packets > 0.001 && (
+                                                    <li className="mobile-only-stat mobile-only">
+                                                        <Link to="/shop" onClick={() => setIsDropdownOpen(false)} className="dropdown-stat-link packets" style={{ textDecoration: 'none' }}>
+                                                            <Package size={20} />
+                                                            <div className="dropdown-stat-info">
+                                                                <span className="dropdown-stat-label">Packets</span>
+                                                                <span className="dropdown-stat-value">
+                                                                    {Number(user.packets || 0).toLocaleString(undefined, { 
+                                                                        minimumFractionDigits: 0, 
+                                                                        maximumFractionDigits: 3 
+                                                                    })}
+                                                                </span>
+                                                            </div>
+                                                        </Link>
+                                                    </li>
+                                                )}
+                                            </>
                                         )}
-                                        <li className="mobile-only-stat mobile-only dropdown-divider"></li>
-                                        <li><Link to="/profile" onClick={() => setIsDropdownOpen(false)} data-testid="nav-profile"><User size={18} /> Profile</Link></li>
+                                        {user?.role !== 'parent' && <li className="mobile-only-stat mobile-only dropdown-divider"></li>}
+                                        {!isParent && (
+                                            <li><Link to="/profile" onClick={() => setIsDropdownOpen(false)} data-testid="nav-profile"><User size={18} /> Profile</Link></li>
+                                        )}
                                         {user?.is_admin && (
                                             <li><Link to="/admin" onClick={() => setIsDropdownOpen(false)}><Shield size={18} /> Admin Panel</Link></li>
                                         )}
-                                        <li><Link to="/submit-work" onClick={() => setIsDropdownOpen(false)}><FileCheck size={18} /> Submit Work</Link></li>
-                                        <li><Link to="/bit-shift" onClick={() => setIsDropdownOpen(false)}><RefreshCw size={18} /> Bit Shift</Link></li>
-                                        <li><a href="https://benmega.github.io/screen-recorder/" target="_blank" rel="noopener noreferrer" onClick={() => setIsDropdownOpen(false)}><Disc size={18} /> Record</a></li>
+                                        {!isParent && (
+                                            <>
+                                                <li><Link to="/submit-work" onClick={() => setIsDropdownOpen(false)}><FileCheck size={18} /> Submit Work</Link></li>
+                                                <li><Link to="/bit-shift" onClick={() => setIsDropdownOpen(false)}><RefreshCw size={18} /> Bit Shift</Link></li>
+                                                <li><a href="https://benmega.github.io/screen-recorder/" target="_blank" rel="noopener noreferrer" onClick={() => setIsDropdownOpen(false)}><Disc size={18} /> Record</a></li>
+                                            </>
+                                        )}
                                         <li><button onClick={() => { handleLogout(); setIsDropdownOpen(false); }} className="logout-btn"><LogOut size={18} /> Logout</button></li>
                                     </ul>
                                 </li>
@@ -181,7 +193,7 @@ const Layout = ({ children }) => {
             </main>
             
             {/* Mobile Navigation Sidebar */}
-            {!isChatPage && (
+            {!isChatPage && !isParent && (
                 <>
                     <div 
                         className={`mobile-overlay ${isSidebarOpen ? 'show' : ''}`} 
@@ -200,14 +212,20 @@ const Layout = ({ children }) => {
 
                         <nav className="sidebar-nav">
                             <ul>
-                                <li><Link to="/" onClick={() => setSidebarOpen(false)}><Home size={18} /> Chat</Link></li>
-                                <li><Link to="/profile" onClick={() => setSidebarOpen(false)}><User size={18} /> Profile</Link></li>
+                                <li><Link to={isParent ? "/parent/dashboard" : "/"} onClick={() => setSidebarOpen(false)}><Home size={18} /> {isParent ? 'Dashboard' : 'Chat'}</Link></li>
+                                {!isParent && (
+                                    <li><Link to="/profile" onClick={() => setSidebarOpen(false)}><User size={18} /> Profile</Link></li>
+                                )}
                                 {user?.is_admin && (
                                     <li><Link to="/admin" onClick={() => setSidebarOpen(false)}><Shield size={18} /> Admin Panel</Link></li>
                                 )}
-                                <li><Link to="/submit-work" onClick={() => setSidebarOpen(false)}><FileCheck size={18} /> Submit Work</Link></li>
-                                <li><Link to="/bit-shift" onClick={() => setSidebarOpen(false)}><RefreshCw size={18} /> Bit Shift</Link></li>
-                                <li><a href="https://benmega.github.io/screen-recorder/" target="_blank" rel="noopener noreferrer" onClick={() => setSidebarOpen(false)}><Disc size={18} /> Record</a></li>
+                                {!isParent && (
+                                    <>
+                                        <li><Link to="/submit-work" onClick={() => setSidebarOpen(false)}><FileCheck size={18} /> Submit Work</Link></li>
+                                        <li><Link to="/bit-shift" onClick={() => setSidebarOpen(false)}><RefreshCw size={18} /> Bit Shift</Link></li>
+                                        <li><a href="https://benmega.github.io/screen-recorder/" target="_blank" rel="noopener noreferrer" onClick={() => setSidebarOpen(false)}><Disc size={18} /> Record</a></li>
+                                    </>
+                                )}
                             </ul>
                         </nav>
 

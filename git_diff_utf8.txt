@@ -1,0 +1,4950 @@
+﻿diff --git a/backend/application/__init__.py b/backend/application/__init__.py
+index 7316f60c..cb7887be 100644
+--- a/backend/application/__init__.py
++++ b/backend/application/__init__.py
+@@ -224,10 +224,9 @@ def seed_global_data():
+     """
+     import application.constants as _constants
+     from application.models.classroom import Classroom
+-    from application.models.conversation import Conversation
++    import logging
+ 
+     logger = logging.getLogger(__name__)
+-
+     import sqlalchemy
+ 
+     # Guard: skip seeding if the schema hasn't been migrated yet.
+@@ -237,16 +236,6 @@ def seed_global_data():
+         logger.info("seed_global_data: skipping ΓÇö 'flask db' command detected.")
+         return
+ 
+-    inspector = inspect(db.engine)
+-    if inspector.has_table("conversations"):
+-        conv_cols = {c["name"] for c in inspector.get_columns("conversations")}
+-        if "classroom_id" not in conv_cols:
+-            logger.warning(
+-                "seed_global_data: skipping ΓÇö conversations.classroom_id missing. "
+-                "Run 'flask db upgrade' first."
+-            )
+-            return
+-
+     try:
+         # 1. Ensure 'global' classroom exists
+         if not db.session.get(Classroom, _constants.GLOBAL_CLASSROOM_ID):
+@@ -271,28 +260,8 @@ def seed_global_data():
+             db.session.flush()
+             logger.info("Seeded 'archive' classroom.")
+ 
+-        # 3. Ensure the canonical global conversation exists
+-        global_conv = Conversation.query.filter_by(
+-            classroom_id=_constants.GLOBAL_CLASSROOM_ID
+-        ).first()
+-
+-        if not global_conv:
+-            global_conv = Conversation(
+-                title="Global Announcements",
+-                classroom_id=_constants.GLOBAL_CLASSROOM_ID,
+-                is_locked=False,
+-                slow_mode_delay=0,
+-            )
+-            db.session.add(global_conv)
+-            db.session.flush()
+-            logger.info(f"Seeded global conversation id={global_conv.id}.")
+-
+         db.session.commit()
+ 
+-        # 4. Populate the in-process constant
+-        _constants.GLOBAL_CONVERSATION_ID = global_conv.id
+-        logger.info(f"GLOBAL_CONVERSATION_ID = {global_conv.id}")
+-
+     except sqlalchemy.exc.OperationalError as exc:
+         db.session.rollback()
+         logger.warning(f"seed_global_data skipped due to OperationalError (schema drift?): {exc}")
+diff --git a/backend/application/ai/ai_teacher.py b/backend/application/ai/ai_teacher.py
+index ed0b96fa..71b37537 100644
+--- a/backend/application/ai/ai_teacher.py
++++ b/backend/application/ai/ai_teacher.py
+@@ -12,7 +12,7 @@ from sqlalchemy.exc import SQLAlchemyError
+ 
+ from application import db, limiter
+ from application.models.ai_settings import get_ai_settings
+-from application.models.conversation import Conversation
++from application.models.message import Message
+ from application.models.user import User
+ from application.utilities.db_helpers import save_message_to_db
+ 
+@@ -68,64 +68,22 @@ def get_or_create_ai_teacher() -> User:
+         raise AITeacherError("Failed to create AI Teacher user") from e
+ 
+ 
+-def get_or_create_conversation(
+-    conversation_id: Optional[int], username: str
+-) -> Conversation:
++def get_recent_messages(limit: int = 50) -> List[Dict[str, str]]:
+     """
+-    Get existing conversation or create a new one.
+-
+-    Args:
+-        conversation_id: Optional existing conversation ID
+-        username: Username of the person starting the conversation
+-
+-    Returns:
+-        Conversation: The conversation instance
+-
+-    Raises:
+-        AITeacherError: If conversation operations fail
++    Get recent messages for context.
+     """
+     try:
+-        if conversation_id:
+-            conversation = (
+-                db.session.query(Conversation).filter_by(id=conversation_id).first()
+-            )
+-            if not conversation:
+-                raise AITeacherError("Conversation not found")
+-            return conversation
+-
+-        # Create new conversation
+-        conversation = Conversation(
+-            title=f"Conversation with {username} - {datetime.utcnow().strftime('%Y-%m-%d %H:%M')}"
+-        )
+-        db.session.add(conversation)
+-        db.session.commit()
+-        logger.info(f"Created new conversation {conversation.id} for user {username}")
+-
+-        return conversation
+-
++        messages = Message.query.order_by(Message.created_at.desc()).limit(limit).all()
++        return [
++            {
++                "role": "assistant" if message.user_id == AI_TEACHER_USER_ID else "user",
++                "content": message.content,
++            }
++            for message in reversed(messages)
++        ]
+     except SQLAlchemyError as e:
+-        db.session.rollback()
+-        logger.error(f"Database error with conversation: {e}")
+-        raise AITeacherError("Failed to handle conversation") from e
+-
+-
+-def build_conversation_history(conversation: Conversation) -> List[Dict[str, str]]:
+-    """
+-    Build conversation history from database messages.
+-
+-    Args:
+-        conversation: The conversation instance
+-
+-    Returns:
+-        List of message dictionaries with 'role' and 'content' keys
+-    """
+-    return [
+-        {
+-            "role": "assistant" if message.user_id == AI_TEACHER_USER_ID else "user",
+-            "content": message.content,
+-        }
+-        for message in conversation.messages
+-    ]
++        logger.error(f"Database error getting messages: {e}")
++        return []
+ 
+ 
+ def format_prompt(
+@@ -250,7 +208,7 @@ def get_local_llm_response(
+ 
+         # Save AI response to database
+         save_result = save_message_to_db(
+-            user_id=AI_TEACHER_USER_ID, message=ai_response
++            user_id=AI_TEACHER_USER_ID, message=ai_response, is_global=True
+         )
+         if isinstance(save_result, str):  # Error occurred
+             raise AITeacherError(f"Failed to save AI response: {save_result}")
+@@ -267,7 +225,7 @@ def get_local_llm_response(
+ 
+ @limiter.limit("1 per minute; 10 per day")
+ def get_ai_response(
+-    user_message: str, username: str, conversation_id: Optional[int] = None
++    user_message: str, username: str
+ ) -> str:
+     """
+     Main function to get AI response for a user message.
+@@ -275,7 +233,6 @@ def get_ai_response(
+     Args:
+         user_message: The user's message
+         username: Username of the person sending the message
+-        conversation_id: Optional existing conversation ID
+ 
+     Returns:
+         The AI response or error message
+@@ -289,18 +246,15 @@ def get_ai_response(
+         # Ensure AI teacher user exists
+         get_or_create_ai_teacher()
+ 
+-        # Get or create conversation
+-        conversation = get_or_create_conversation(conversation_id, username)
+-
+         # Save user message
+         save_result = save_message_to_db(
+-            user_id=None, message=user_message
++            user_id=None, message=user_message, is_global=True
+         )  # Assuming None for regular users
+         if isinstance(save_result, str):  # Error occurred
+             return f"Error saving message: {save_result}"
+ 
+         # Build conversation history
+-        conversation_history = build_conversation_history(conversation)
++        conversation_history = get_recent_messages()
+ 
+         # Generate AI response
+         return get_local_llm_response(user_message, conversation_history)
+diff --git a/backend/application/models/__init__.py b/backend/application/models/__init__.py
+index 08a0ca13..9fc1f79e 100644
+--- a/backend/application/models/__init__.py
++++ b/backend/application/models/__init__.py
+@@ -13,7 +13,6 @@ def setup_models():
+     from .banned_words import BannedWords  # noqa: F401
+     from .challenge import Challenge  # noqa: F401
+     from .challenge_log import ChallengeLog  # noqa: F401
+-    from .conversation import Conversation  # noqa: F401
+     from .course import Course  # noqa: F401
+     from .message import Message  # noqa: F401
+     from .project import Project  # noqa: F401
+diff --git a/backend/application/models/conversation.py b/backend/application/models/conversation.py
+deleted file mode 100644
+index 1c2184d8..00000000
+--- a/backend/application/models/conversation.py
++++ /dev/null
+@@ -1,66 +0,0 @@
+-"""
+-File: conversation.py
+-Type: py
+-Summary: SQLAlchemy model for chat conversations and relationships.
+-"""
+-
+-from datetime import datetime
+-
+-from ..extensions import db
+-
+-# Association table for many-to-many relationship between users and conversations
+-conversation_users = db.Table(
+-    "conversation_users",
+-    db.Column(
+-        "conversation_id",
+-        db.Integer,
+-        db.ForeignKey("conversations.id", ondelete="CASCADE"),
+-        primary_key=True,
+-    ),
+-    db.Column(
+-        "user_id",
+-        db.Integer,
+-        db.ForeignKey("users.id", ondelete="CASCADE"),
+-        primary_key=True,
+-    ),
+-)
+-
+-
+-class Conversation(db.Model):
+-    __tablename__ = "conversations"
+-    id = db.Column(db.Integer, primary_key=True)
+-    title = db.Column(
+-        db.String(100),
+-        nullable=False,
+-        default=lambda: f"New Chat on {datetime.utcnow().strftime('%B %d, %Y')}",
+-    )
+-    creator_id = db.Column(
+-        db.Integer, db.ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+-    )
+-    classroom_id = db.Column(
+-        db.String(64),
+-        db.ForeignKey("classrooms.id", ondelete="RESTRICT"),
+-        nullable=False,
+-    )
+-    is_locked = db.Column(db.Boolean, default=False)
+-    slow_mode_delay = db.Column(db.Integer, default=0)  # in seconds
+-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+-
+-    # Relationships
+-    users = db.relationship(
+-        "User",
+-        secondary=conversation_users,
+-        backref=db.backref("conversations", lazy="selectin"),
+-        lazy="selectin",
+-    )
+-    messages = db.relationship(
+-        "Message",
+-        backref="conversation",
+-        lazy="joined",
+-        cascade="all, delete-orphan",
+-        order_by="Message.created_at.asc()",
+-    )
+-    classroom = db.relationship("Classroom", foreign_keys=[classroom_id], lazy="joined")
+-
+-    def __repr__(self):
+-        return f"<Conversation {self.id}: {self.title}>"
+diff --git a/backend/application/models/message.py b/backend/application/models/message.py
+index 61ca15d5..e5b11862 100644
+--- a/backend/application/models/message.py
++++ b/backend/application/models/message.py
+@@ -1,7 +1,7 @@
+ """
+ File: message.py
+ Type: py
+-Summary: SQLAlchemy model for chat messages and metadata.
++Summary: SQLAlchemy model for feed posts (messages) and visibility targeting.
+ """
+ 
+ from datetime import datetime
+@@ -11,15 +11,43 @@ from sqlalchemy import Enum
+ from ..extensions import db
+ 
+ 
++# Association tables for message visibility targeting
++message_classrooms = db.Table(
++    "message_classrooms",
++    db.Column(
++        "message_id",
++        db.Integer,
++        db.ForeignKey("messages.id", ondelete="CASCADE"),
++        primary_key=True,
++    ),
++    db.Column(
++        "classroom_id",
++        db.String(64),
++        db.ForeignKey("classrooms.id", ondelete="CASCADE"),
++        primary_key=True,
++    ),
++)
++
++message_users = db.Table(
++    "message_users",
++    db.Column(
++        "message_id",
++        db.Integer,
++        db.ForeignKey("messages.id", ondelete="CASCADE"),
++        primary_key=True,
++    ),
++    db.Column(
++        "user_id",
++        db.Integer,
++        db.ForeignKey("users.id", ondelete="CASCADE"),
++        primary_key=True,
++    ),
++)
++
++
+ class Message(db.Model):
+     __tablename__ = "messages"
+     id = db.Column(db.Integer, primary_key=True)
+-    conversation_id = db.Column(
+-        db.Integer,
+-        db.ForeignKey("conversations.id", ondelete="CASCADE"),
+-        nullable=False,
+-        index=True,
+-    )
+     user_id = db.Column(
+         db.Integer,
+         db.ForeignKey("users.id", ondelete="CASCADE"),
+@@ -37,10 +65,28 @@ class Message(db.Model):
+     edited_at = db.Column(db.DateTime, nullable=True)
+     deleted_at = db.Column(db.DateTime, nullable=True)
+ 
+-    # Relationship to the User
++    # Targeting metadata
++    is_global = db.Column(db.Boolean, default=False)
++    target_live = db.Column(db.Boolean, default=False)
++
++    # Relationships
+     user = db.relationship(
+         "User", backref=db.backref("messages", lazy="selectin"), lazy="selectin"
+     )
++    
++    target_classrooms = db.relationship(
++        "Classroom",
++        secondary=message_classrooms,
++        lazy="selectin",
++        backref=db.backref("targeted_messages", lazy="selectin")
++    )
++    
++    target_users = db.relationship(
++        "User",
++        secondary=message_users,
++        lazy="selectin",
++        backref=db.backref("targeted_messages", lazy="selectin")
++    )
+ 
+     def __repr__(self):
+-        return f"<Message(id={self.id}, conversation_id={self.conversation_id}, user_id={self.user_id})>"
++        return f"<Message(id={self.id}, user_id={self.user_id}, is_global={self.is_global})>"
+diff --git a/backend/application/routes/admin/advanced_ops.py b/backend/application/routes/admin/advanced_ops.py
+index 92657843..fc1880be 100644
+--- a/backend/application/routes/admin/advanced_ops.py
++++ b/backend/application/routes/admin/advanced_ops.py
+@@ -1,5 +1,4 @@
+ from application.extensions import db
+-from application.models.conversation import Conversation, conversation_users
+ from application.models.message import Message
+ from application.decorators.admin_required import admin_only
+ from application.decorators.api_response import api_response
+@@ -15,22 +14,14 @@ def purge_history():
+     This is a destructive action.
+     """
+     try:
+-        # Delete all messages first
++        # Delete all messages first (cascades to target tables)
+         num_messages = Message.query.count()
+         Message.query.delete(synchronize_session=False)
+ 
+-        # Explicitly clear association table
+-        db.session.execute(conversation_users.delete())
+-
+-        # Delete all conversations
+-        num_conversations = Conversation.query.count()
+-        Conversation.query.delete(synchronize_session=False)
+-
+         db.session.commit()
+ 
+         return {
+             "message": "History purged successfully.",
+-            "deleted_conversations": num_conversations,
+             "deleted_messages": num_messages,
+         }
+     except Exception as e:
+diff --git a/backend/application/routes/message_routes.py b/backend/application/routes/message_routes.py
+index b5125f3d..75e23642 100644
+--- a/backend/application/routes/message_routes.py
++++ b/backend/application/routes/message_routes.py
+@@ -1,603 +1,140 @@
+-"""
+-File: message_routes.py
+-Type: py
+-Summary: Flask routes for message/conversation functionality.
+-         Enforces classroom-scoped RBAC and Global Announcement access rules.
+-"""
+-
+-from datetime import datetime
+-
+-from flask import (
+-    Blueprint,
+-    request,
+-    jsonify,
+-    session,
+-    redirect,
+-)
+-
+-from application.ai.ai_teacher import get_ai_response
+-from application.constants import GLOBAL_CLASSROOM_ID
+-import application.constants as _constants
+-from application.extensions import db, limiter
+-from application.models.classroom import Classroom
+-from application.models.configuration import Configuration
+-from application.models.conversation import Conversation
++import logging
++from flask import Blueprint, jsonify, request, g
++from application.models.message import Message, message_classrooms, message_users
+ from application.models.user import User
+-from application.utilities.db_helpers import get_user, save_message_to_db
+ from application.decorators.login_required import require_login
++from application.extensions import db
+ 
+-from application.services.message_service import serialize_message
+-from application.services.classroom_service import (
+-    get_enrolled_classroom_ids,
+-    user_enrolled_in,
+-)
+-from application.services.moderation_service import message_is_appropriate
+-
+-from sqlalchemy.orm import joinedload, selectinload
++logger = logging.getLogger(__name__)
+ 
+ message = Blueprint("message", __name__)
+ 
++@message.route("/api/feed", methods=["GET"])
++@require_login
++def get_feed():
++    try:
++        user = g.get("user")
++        if not user:
++            return jsonify({"success": False, "error": "User not logged in"}), 401
+ 
+-# ============================================================================
+-# SEND MESSAGE
+-# ============================================================================
+-
+-
+-@message.route("/send_message", methods=["POST"])
+-@limiter.limit("20 per minute; 100 per day")
+-def send_message():
+-    session_userid = session.get("user")
+-    form_message = request.form.get("message")
+-
+-    if not session_userid:
+-        return jsonify(success=False, error="No session username found"), 400
+-
+-    user = get_user(session_userid)
+-    if not user:
+-        return jsonify(success=False, error="Unknown User"), 403
+-
+-    config = Configuration.query.first()
+-    if not config:
+-        return jsonify(success=False, error="No Configuration Found"), 500
+-    if not user.is_admin and not config.message_sending_enabled:
+-        return jsonify(success=False, error="Non-admin messages are disabled"), 403
+-
+-    conversation_id = request.form.get("conversation_id")
+-    if not conversation_id:
+-        return jsonify(success=False, error="conversation_id is required"), 400
++        limit = request.args.get("limit", 50, type=int)
++        before_id = request.args.get("before_id", type=int)
+ 
+-    conv = db.session.get(Conversation, conversation_id)
+-    if not conv:
+-        return jsonify(success=False, error="Conversation not found"), 404
++        query = Message.query.filter(Message.deleted_at.is_(None))
+ 
+-    # ---- Global Announcement guard ----------------------------------------
+-    if conv.classroom_id == GLOBAL_CLASSROOM_ID:
++        # Admin gets everything
+         if not user.is_admin:
+-            return (
+-                jsonify(
+-                    success=False,
+-                    error="Only instructors may post to the Global Announcements feed.",
+-                ),
+-                403,
+-            )
+-
+-    # ---- Classroom enrollment guard (non-global) ---------------------------
+-    elif not user.is_admin:
+-        if not user_enrolled_in(user.id, conv.classroom_id):
+-            return (
+-                jsonify(success=False, error="You are not enrolled in this classroom."),
+-                403,
+-            )
+-
+-    # ---- Conversation-level moderation ------------------------------------
+-    if conv.is_locked and not user.is_admin:
+-        return jsonify(success=False, error="This conversation is locked by admin"), 403
+-
+-    if conv.slow_mode_delay > 0 and not user.is_admin:
+-        from application.models.message import Message
+-
+-        last_msg = (
+-            Message.query.filter_by(conversation_id=conv.id, user_id=user.id)
+-            .order_by(Message.created_at.desc())
+-            .first()
+-        )
+-        if last_msg:
+-            time_passed = (datetime.utcnow() - last_msg.created_at).total_seconds()
+-            if time_passed < conv.slow_mode_delay:
+-                wait_time = int(conv.slow_mode_delay - time_passed)
+-                return (
+-                    jsonify(
+-                        success=False,
+-                        error=f"Slow mode active. Please wait {wait_time} more seconds.",
+-                    ),
+-                    429,
++            # User classrooms
++            user_classroom_ids = [c.id for c in user.classrooms]
++
++            # Condition 1: Global messages
++            # Condition 2: Authored by user
++            # Condition 3: Targeted to user
++            # Condition 4: Targeted to one of user's classrooms
++            
++            # Using SQLAlchemy any() or direct joins for associations
++            query = query.filter(
++                db.or_(
++                    Message.is_global == True,
++                    Message.user_id == user.id,
++                    Message.target_users.any(User.id == user.id),
++                    Message.target_classrooms.any(Message.target_classrooms.property.mapper.class_.id.in_(user_classroom_ids)) if user_classroom_ids else False
+                 )
++            )
+ 
+-    if not message_is_appropriate(form_message):
+-        return (
+-            jsonify(success=False, error="Inappropriate messages are not allowed"),
+-            403,
+-        )
+-
+-    if not save_message_to_db(user.id, form_message, conversation_id=conversation_id):
+-        return jsonify(success=False, error="Database commit failed"), 500
+-
+-    if config.ai_teacher_enabled:
+-        ai_teacher_response = get_ai_response(form_message, user.username)
+-        return jsonify(success=True, ai_teacher_response=ai_teacher_response)
+-
+-    return jsonify(success=True), 200
+-
+-
+-# ============================================================================
+-# START CONVERSATION (admin only)
+-# ============================================================================
+-
+-
+-@message.route("/start_conversation", methods=["POST"])
+-def start_conversation():
+-    user_id = session.get("user")
+-    if not user_id:
+-        return jsonify({"error": "Unauthorized"}), 401
+-
+-    user = db.session.get(User, user_id)
+-    if not user or not user.is_admin:
+-        return jsonify({"error": "Only admins can create conversations"}), 403
+-
+-    if request.is_json:
+-        data = request.get_json()
+-        title = data.get("title")
+-        classroom_id = data.get("classroom_id")
+-    else:
+-        title = request.form.get("title")
+-        classroom_id = request.form.get("classroom_id")
+-
+-    # Conversations must belong to a classroom
+-    if not classroom_id:
+-        return jsonify({"error": "classroom_id is required"}), 400
+-
+-    if not db.session.get(Classroom, classroom_id):
+-        return jsonify({"error": f"Classroom '{classroom_id}' not found"}), 404
+-
+-    if title and title.strip():
+-        new_conversation = Conversation(
+-            title=title, creator_id=user.id, classroom_id=classroom_id
+-        )
+-    else:
+-        new_conversation = Conversation(creator_id=user.id, classroom_id=classroom_id)
+-
+-    new_conversation.users.append(user)
+-    db.session.add(new_conversation)
+-    db.session.commit()
+-
+-    session["conversation_id"] = new_conversation.id
+-
+-    # Emit to the classroom room so all enrolled users see the new conversation in their sidebar
+-    from application.extensions import socketio
+-
+-    socketio.emit(
+-        "conversation_created",
+-        {
+-            "conversation_id": new_conversation.id,
+-            "title": new_conversation.title,
+-            "classroom_id": new_conversation.classroom_id,
+-        },
+-        room=f"classroom:{new_conversation.classroom_id}",
+-    )
+-
+-    return (
+-        jsonify(
+-            {
+-                "conversation_id": new_conversation.id,
+-                "title": new_conversation.title,
+-                "classroom_id": new_conversation.classroom_id,
++        if before_id:
++            query = query.filter(Message.id < before_id)
++
++        messages = query.order_by(Message.id.desc()).limit(limit).all()
++
++        message_data = []
++        for msg in messages:
++            msg_dict = {
++                "id": msg.id,
++                "user_id": msg.user_id,
++                "user_name": msg.user.nickname if msg.user and msg.user.nickname else (msg.user.username if msg.user else "Unknown"),
++                "slug": msg.user.slug if msg.user else None,
++                "user_profile_pic": msg.user.profile_picture if msg.user else None,
++                "content": msg.content,
++                "message_type": msg.message_type,
++                "created_at": msg.created_at.isoformat() if msg.created_at else None,
++                "is_global": msg.is_global,
++                "target_live": msg.target_live,
++                "target_classrooms": [c.name for c in msg.target_classrooms] if msg.target_classrooms else [],
++                "target_users": [(u.nickname or u.username) for u in msg.target_users] if msg.target_users else [],
++                "is_struck": msg.is_struck
+             }
+-        ),
+-        201,
+-    )
+-
++            message_data.append(msg_dict)
+ 
+-@message.route("/update_conversation", methods=["POST"])
+-@require_login
+-def update_conversation():
+-    """
+-    Admin-only endpoint to update conversation metadata or moderation settings.
+-    Allows renaming, locking, or setting slow mode delay.
+-    """
+-    user_id = session.get("user")
+-    user = db.session.get(User, user_id)
+-    if not user or not user.is_admin:
+-        return jsonify({"error": "Forbidden: Admin access required"}), 403
+-
+-    data = request.get_json() or {}
+-    conv_id = data.get("conversation_id")
+-    conv = db.session.get(Conversation, conv_id)
+-    if not conv:
+-        return jsonify({"error": "Conversation not found"}), 404
+-
+-    if "is_locked" in data:
+-        conv.is_locked = bool(data["is_locked"])
+-    if "slow_mode_delay" in data:
+-        try:
+-            conv.slow_mode_delay = int(data["slow_mode_delay"])
+-        except (ValueError, TypeError):
+-            return jsonify({"error": "slow_mode_delay must be an integer"}), 400
+-    if "title" in data and data["title"]:
+-        conv.title = str(data["title"]).strip()
+-
+-    db.session.commit()
+-
+-    # Broadcast update to the classroom room
+-    from application.extensions import socketio
+-
+-    socketio.emit(
+-        "conversation_updated",
+-        {
+-            "conversation_id": conv.id,
+-            "title": conv.title,
+-            "is_locked": conv.is_locked,
+-            "slow_mode_delay": conv.slow_mode_delay,
+-            "classroom_id": conv.classroom_id,
+-        },
+-        room=f"classroom:{conv.classroom_id}",
+-    )
+-
+-    return jsonify(
+-        {
+-            "success": True,
+-            "conversation": {
+-                "conversation_id": conv.id,
+-                "title": conv.title,
+-                "is_locked": conv.is_locked,
+-                "slow_mode_delay": conv.slow_mode_delay,
+-            },
+-        }
+-    )
++        return jsonify({"success": True, "messages": message_data})
+ 
++    except Exception as e:
++        logger.error(f"Error fetching feed: {e}")
++        return jsonify({"success": False, "error": str(e)}), 500
+ 
+-@message.route("/delete_conversation/<int:conversation_id>", methods=["DELETE"])
++@message.route("/api/me/context", methods=["GET"])
+ @require_login
+-def delete_conversation(conversation_id):
+-    """Admin-only endpoint to permanently remove a conversation."""
+-    user_id = session.get("user")
+-    user = db.session.get(User, user_id)
+-    if not user or not user.is_admin:
+-        return jsonify({"error": "Forbidden: Admin access required"}), 403
+-
+-    conv = db.session.get(Conversation, conversation_id)
+-    if not conv:
+-        return jsonify({"error": "Conversation not found"}), 404
+-
+-    # The Global Announcements feed cannot be deleted
+-    if conv.classroom_id == GLOBAL_CLASSROOM_ID:
+-        return (
+-            jsonify({"error": "The Global Announcements feed cannot be deleted"}),
+-            400,
+-        )
+-
+-    classroom_id = conv.classroom_id
+-    conversation_id = conv.id
+-
+-    db.session.delete(conv)
+-    db.session.commit()
+-
+-    # Broadcast deletion to the classroom room
+-    from application.extensions import socketio
+-
+-    socketio.emit(
+-        "conversation_deleted",
+-        {"conversation_id": conversation_id, "classroom_id": classroom_id},
+-        room=f"classroom:{classroom_id}",
+-    )
+-
+-    return jsonify({"success": True})
+-
++def get_me_context():
++    try:
++        user = g.get("user")
++        if not user:
++            return jsonify({"success": False, "error": "User not logged in"}), 401
++
++        if user.is_admin:
++            from application.models.classroom import Classroom
++            classrooms = Classroom.query.all()
++            users = User.query.filter(User.role != 'parent').all()
++            
++            classroom_data = [{"id": c.id, "name": c.name} for c in classrooms]
++            user_data = [{"id": u.id, "username": u.username, "nickname": u.nickname} for u in users]
++        else:
++            classroom_data = [{"id": c.id, "name": c.name} for c in user.classrooms]
++            user_data = []
++
++        return jsonify({
++            "success": True,
++            "classrooms": classroom_data,
++            "users": user_data
++        })
++    except Exception as e:
++        logger.error(f"Error fetching context: {e}")
++        return jsonify({"success": False, "error": str(e)}), 500
+ 
+ @message.route("/delete_message/<int:message_id>", methods=["DELETE"])
+ @require_login
+ def delete_message(message_id):
+     """Admin-only endpoint to strike/delete a message."""
+-    user_id = session.get("user")
+-    user = db.session.get(User, user_id)
++    user = g.get("user")
+     if not user or not user.is_admin:
+         return jsonify({"error": "Forbidden: Admin access required"}), 403
+ 
+-    from application.models.message import Message
++    try:
++        from datetime import datetime
++        msg = db.session.get(Message, message_id)
++        if not msg:
++            return jsonify({"error": "Message not found"}), 404
+ 
+-    msg = db.session.get(Message, message_id)
+-    if not msg:
+-        return jsonify({"error": "Message not found"}), 404
++        msg.is_struck = True
++        msg.deleted_at = datetime.utcnow()
++        db.session.commit()
+ 
+-    msg.is_struck = True
+-    msg.deleted_at = datetime.utcnow()
+-    db.session.commit()
++        # Broadcast deletion to everyone
++        from application.extensions import socketio
++        from application.constants import GLOBAL_CLASSROOM_ID
+ 
+-    # Broadcast deletion to the classroom room
+-    from application.extensions import socketio
+-
+-    conv = msg.conversation
+-    classroom_id = conv.classroom_id if conv else None
+-    if classroom_id:
+         socketio.emit(
+             "message_deleted",
+-            {"message_id": msg.id, "conversation_id": msg.conversation_id},
+-            room=f"classroom:{classroom_id}",
+-        )
+-
+-    return jsonify({"success": True})
+-
+-
+-# ============================================================================
+-# ME CONTEXT ΓÇö called once on login by the frontend
+-# ============================================================================
+-
+-
+-@message.route("/api/me/context", methods=["GET"])
+-@require_login
+-def get_me_context():
+-    """
+-    Returns the current user's enrolled classrooms and the global conversation ID.
+-    The frontend calls this once on login to populate the sidebar and set the
+-    default open conversation to the Global Announcements feed.
+-    """
+-    user_id = session.get("user")
+-    user = db.session.get(User, user_id)
+-    if not user:
+-        return jsonify({"error": "User not found"}), 404
+-
+-    # Refresh the in-process constant in case the server just started
+-    global_conv_id = _constants.GLOBAL_CONVERSATION_ID
+-
+-    if user.is_admin:
+-        # Admins see all classrooms
+-        classrooms = Classroom.query.all()
+-    else:
+-        # Students see only their enrolled classrooms
+-        classrooms = user.classrooms
+-
+-    return (
+-        jsonify(
+-            {
+-                "global_conversation_id": global_conv_id,
+-                "global_classroom_id": GLOBAL_CLASSROOM_ID,
+-                "classrooms": [c.to_dict() for c in classrooms],
+-            }
+-        ),
+-        200,
+-    )
+-
+-
+-# ============================================================================
+-# CONVERSATION HISTORY (scoped)
+-# ============================================================================
+-
+-
+-@message.route("/api/conversations/<int:user_id>", methods=["GET"])
+-@require_login
+-def get_conversation_history(user_id):
+-    current_user_id = session.get("user")
+-    current_user = db.session.get(User, current_user_id)
+-
+-    if user_id != current_user_id and not getattr(current_user, "is_admin", False):
+-        return (
+-            jsonify(
+-                {
+-                    "error": "Forbidden: You can only access your own conversation history"
+-                }
+-            ),
+-            403,
+-        )
+-
+-    limit = request.args.get("limit", type=int)
+-    offset = request.args.get("offset", default=0, type=int)
+-
+-    if getattr(current_user, "is_admin", False):
+-        # Admins see all conversations
+-        query = Conversation.query.options(
+-            selectinload(Conversation.messages)
+-        ).order_by(Conversation.created_at.desc())
+-    else:
+-        # Students see:
+-        # 1. The global feed (always)
+-        # 2. Any conversation in a classroom they are enrolled in
+-        enrolled_ids = get_enrolled_classroom_ids(current_user_id)
+-        allowed_classroom_ids = enrolled_ids | {GLOBAL_CLASSROOM_ID}
+-
+-        query = (
+-            Conversation.query.filter(
+-                Conversation.classroom_id.in_(allowed_classroom_ids)
+-            )
+-            .options(selectinload(Conversation.messages))
+-            .order_by(Conversation.created_at.desc())
+-        )
+-
+-    if limit is not None:
+-        conversations = query.limit(limit).offset(offset).all()
+-    else:
+-        conversations = query.all()
+-
+-    response_data = []
+-    for conv in conversations:
+-        # Find the last unstruck message
+-        unstruck_messages = [msg for msg in conv.messages if not msg.is_struck]
+-        last_msg = (
+-            serialize_message(unstruck_messages[-1]) if unstruck_messages else None
+-        )
+-
+-        response_data.append(
+-            {
+-                "conversation_id": conv.id,
+-                "title": conv.title,
+-                "classroom_id": conv.classroom_id,
+-                "is_global": conv.classroom_id == GLOBAL_CLASSROOM_ID,
+-                "is_locked": conv.is_locked,
+-                "slow_mode_delay": conv.slow_mode_delay,
+-                "messages": [last_msg] if last_msg else [],
+-                "messages_count": len(unstruck_messages),
+-            }
+-        )
+-
+-    return jsonify(response_data)
+-
+-
+-# ============================================================================
+-# VIEW / MANAGE INDIVIDUAL CONVERSATIONS
+-# ============================================================================
+-
+-
+-@message.route("/set_active_conversation", methods=["POST"])
+-@require_login
+-def set_active_conversation():
+-    conversation_id = request.json.get("conversation_id")
+-    conversation = db.session.get(Conversation, conversation_id)
+-    if not conversation:
+-        return jsonify({"error": "Conversation not found"}), 404
+-
+-    session["conversation_id"] = conversation_id
+-    return (
+-        jsonify(
+-            {"message": "Conversation updated", "conversation_id": conversation_id}
+-        ),
+-        200,
+-    )
+-
+-
+-@message.route("/get_current_conversation", methods=["GET"])
+-@limiter.limit("60 per minute")
+-@require_login
+-def get_current_conversation():
+-    conversation = (
+-        Conversation.query.options(joinedload(Conversation.messages))
+-        .order_by(Conversation.created_at.desc())
+-        .first()
+-    )
+-    if not conversation:
+-        return jsonify({"error": "No active conversation available"}), 400
+-
+-    session["conversation_id"] = conversation.id
+-    conversation_data = {
+-        "conversation_id": conversation.id,
+-        "title": conversation.title,
+-        "messages": [
+-            serialize_message(msg) for msg in conversation.messages if not msg.is_struck
+-        ],
+-    }
+-    return jsonify(conversation=conversation_data)
+-
+-
+-@message.route("/get_historical_conversation", methods=["GET"])
+-@require_login
+-def get_historical_conversation():
+-    conversation_id = session.get("conversation_id")
+-    if not conversation_id:
+-        return jsonify({"error": "No historical conversation in session"}), 400
+-
+-    conversation = db.session.get(Conversation, conversation_id)
+-    if not conversation:
+-        return jsonify({"error": "Conversation not found"}), 404
+-
+-    conversation_data = {
+-        "conversation_id": conversation.id,
+-        "title": conversation.title,
+-        "messages": [
+-            serialize_message(msg) for msg in conversation.messages if not msg.is_struck
+-        ],
+-    }
+-    return jsonify(conversation=conversation_data)
+-
+-
+-@message.route("/end_conversation", methods=["POST"])
+-@require_login
+-def end_conversation():
+-    if "conversation_id" in session:
+-        session.pop("conversation_id")
+-        return jsonify({"message": "Conversation ended"}), 200
+-    return jsonify({"error": "No active conversation to end"}), 400
+-
+-
+-@message.route("/get_conversation", methods=["GET"])
+-@require_login
+-def get_conversation():
+-    conversation_id = session.get("conversation_id")
+-    if not conversation_id:
+-        return jsonify({"error": "No active conversation"}), 400
+-
+-    conversation = db.session.get(
+-        Conversation, conversation_id, options=[joinedload(Conversation.messages)]
+-    )
+-    if not conversation:
+-        return jsonify({"error": "Conversation not found"}), 404
+-
+-    conversation_data = {
+-        "conversation_id": conversation.id,
+-        "title": conversation.title,
+-        "messages": [
+-            serialize_message(msg) for msg in conversation.messages if not msg.is_struck
+-        ],
+-    }
+-    return jsonify(conversation=conversation_data)
+-
+-
+-@message.route("/conversation_history", methods=["GET"])
+-def conversation_history():
+-    if "user" not in session:
+-        if request.is_json or request.accept_mimetypes.accept_json:
+-            return {"error": "Authentication required"}, 401
+-        return redirect("/login")
+-
+-    user_id = session["user"]
+-    user = User.query.filter_by(id=user_id).first()
+-
+-    if not user:
+-        if request.is_json or request.accept_mimetypes.accept_json:
+-            return {"error": "User not found"}, 404
+-        return redirect("/login")
+-
+-    if user.is_admin:
+-        conversations = (
+-            Conversation.query.options(selectinload(Conversation.messages))
+-            .order_by(Conversation.created_at.desc())
+-            .all()
+-        )
+-    else:
+-        enrolled_ids = get_enrolled_classroom_ids(user_id)
+-        allowed_ids = enrolled_ids | {GLOBAL_CLASSROOM_ID}
+-        conversations = (
+-            Conversation.query.filter(Conversation.classroom_id.in_(allowed_ids))
+-            .options(selectinload(Conversation.messages))
+-            .order_by(Conversation.created_at.desc())
+-            .all()
++            {"message_id": msg.id},
++            room=f"classroom:{GLOBAL_CLASSROOM_ID}"
+         )
+-
+-    if request.is_json or request.accept_mimetypes.accept_json:
+-        return jsonify(
+-            [
+-                {
+-                    "conversation_id": conv.id,
+-                    "title": conv.title,
+-                    "classroom_id": conv.classroom_id,
+-                    "created_at": (
+-                        conv.created_at.isoformat() if conv.created_at else None
+-                    ),
+-                }
+-                for conv in conversations
+-            ]
++        
++        # Also emit to individual rooms to ensure it reaches users who only got it directly
++        socketio.emit(
++            "message_deleted",
++            {"message_id": msg.id}
+         )
+ 
+-    return redirect("/chat/history")
+-
+-
+-@message.route("/view_conversation/<int:conversation_id>", methods=["GET"])
+-@require_login
+-def view_conversation(conversation_id):
+-    conversation = db.get_or_404(Conversation, conversation_id)
+-    conversation_data = {
+-        "conversation_id": conversation.id,
+-        "title": conversation.title,
+-        "messages": [
+-            serialize_message(msg) for msg in conversation.messages if not msg.is_struck
+-        ],
+-    }
+-    if request.is_json or request.accept_mimetypes.accept_json:
+-        return jsonify(conversation_data)
+-    return redirect(f"/chat/view/{conversation_id}")
++        return jsonify({"success": True})
++    except Exception as e:
++        logger.error(f"Error deleting message: {e}")
++        return jsonify({"success": False, "error": str(e)}), 500
+diff --git a/backend/application/socket_events.py b/backend/application/socket_events.py
+index 1ecd2eb9..c59afbcf 100644
+--- a/backend/application/socket_events.py
++++ b/backend/application/socket_events.py
+@@ -104,9 +104,7 @@ def handle_disconnect(auth=None):
+ @socketio.on("send_message")
+ def handle_send_message(data):
+     """
+-    Handle 'send_message' from the client.
+-    Server re-validates enrollment ΓÇö client room IDs are not trusted.
+-    Emits 'message_received' only to the correct classroom room.
++    Handle 'send_message' from the client for the unified feed.
+     """
+     user_id = session.get("user")
+     if not user_id:
+@@ -117,64 +115,85 @@ def handle_send_message(data):
+         return
+ 
+     content = data.get("content")
+-    conversation_id = data.get("conversation_id")
+-
+-    if not content or not conversation_id:
+-        return
+-
+-    # Re-fetch the conversation to get its classroom_id
+-    from .models.conversation import Conversation
+-
+-    conv = db.session.get(Conversation, conversation_id)
+-    if not conv:
++    if not content or len(content) > 4000:
+         return
+ 
+-    classroom_id = conv.classroom_id
+-    is_global = classroom_id == GLOBAL_CLASSROOM_ID
+-
+-    # ---- Server-side authorization ----------------------------------------
+-    if is_global:
+-        if not user.is_admin:
+-            # Silently drop ΓÇö UI should have already gated this
+-            return
+-    else:
+-        if not user.is_admin:
+-            enrolled = db.session.execute(
+-                select(user_classrooms.c.classroom_id).where(
+-                    user_classrooms.c.user_id == user.id,
+-                    user_classrooms.c.classroom_id == classroom_id,
+-                )
+-            ).first()
+-            if not enrolled:
+-                return  # Not enrolled ΓÇö drop silently; HTTP route returns 403
+-
+-    # Ensure conversation is tracked in session for save_message_to_db
+-    session["conversation_id"] = conversation_id
+-
+-    save_result = save_message_to_db(user.id, content, conversation_id=conversation_id)
++    # Parse targeting parameters from frontend
++    is_global = data.get("is_global", False)
++    target_live = data.get("target_live", False)
++    target_classrooms = data.get("target_classrooms", [])
++    target_users = data.get("target_users", [])
++
++    # Server-side validation
++    if not user.is_admin:
++        # Students can't send global messages
++        is_global = False
++        # Students can only target their own classrooms
++        enrolled_ids = _get_enrolled_classroom_ids(user.id)
++        # Filter target_classrooms to only those the student is enrolled in
++        if target_classrooms:
++            target_classrooms = [cid for cid in target_classrooms if cid in enrolled_ids]
++        else:
++            # Default to all their classrooms if not specified
++            target_classrooms = enrolled_ids
++            
++        # Optional: restrict students from targeting specific users unless explicitly allowed.
++        # But per the prompt, students can post to live students and their specific classroom.
++        target_users = []
++
++    save_result = save_message_to_db(
++        user.id, 
++        message=content, 
++        is_global=is_global, 
++        target_live=target_live, 
++        target_classrooms=target_classrooms,
++        target_user_ids=target_users
++    )
+ 
+     if not save_result.get("success"):
+         return
+ 
++    from .models.message import Message
++    msg = db.session.get(Message, save_result.get("message_id"))
++
+     payload = {
+-        "id": save_result.get("message_id"),
++        "id": msg.id,
+         "user_id": user.id,
+-        "sender_id": user.id,
+-        "username": user.username,
+-        "nickname": user.nickname or user.username,
+-        "user_profile_pic": user.profile_picture,
++        "user_name": user.nickname if user.nickname else user.username,
+         "slug": user.slug,
+-        "content": content,
+-        "timestamp": datetime.utcnow().isoformat(),
+-        "conversation_id": save_result.get("conversation_id"),
+-        "classroom_id": classroom_id,
+-        "is_global": is_global,
+-        "message_type": "text",
++        "user_profile_pic": user.profile_picture,
++        "content": msg.content,
++        "message_type": msg.message_type,
++        "created_at": msg.created_at.isoformat() if msg.created_at else datetime.utcnow().isoformat(),
++        "is_global": msg.is_global,
++        "target_live": msg.target_live,
++        "target_classrooms": [c.name for c in msg.target_classrooms] if msg.target_classrooms else [],
++        "target_users": [(u.nickname or u.username) for u in msg.target_users] if msg.target_users else [],
++        "is_struck": msg.is_struck
+     }
+ 
+-    # Emit ONLY to the classroom room ΓÇö never broadcast globally
+-    target_room = f"classroom:{classroom_id}"
+-    emit("message_received", payload, room=target_room)
++    # Emit to appropriate rooms
++    if is_global:
++        emit("message_received", payload, room=f"classroom:{GLOBAL_CLASSROOM_ID}")
++    else:
++        # Emit to specific classrooms
++        for cid in target_classrooms:
++            emit("message_received", payload, room=f"classroom:{cid}")
++            
++        # Emit to sender
++        emit("message_received", payload, room=f"user:{user.id}")
++        
++        # Emit to specifically targeted users
++        for uid in target_users:
++            if uid != user.id:
++                emit("message_received", payload, room=f"user:{uid}")
++
++        if target_live:
++            online_users = User.query.filter_by(is_online=True).all()
++            for u in online_users:
++                # Basic dedup: if u in target_users, we already sent
++                if u.id not in target_users and u.id != user.id:
++                    emit("message_received", payload, room=f"user:{u.id}")
+ 
+ 
+ def emit_classroom_enrolled(user_id: int, classroom_dict: dict):
+diff --git a/backend/application/utilities/db_helpers.py b/backend/application/utilities/db_helpers.py
+index 74ce0417..969acb27 100644
+--- a/backend/application/utilities/db_helpers.py
++++ b/backend/application/utilities/db_helpers.py
+@@ -9,7 +9,6 @@ from datetime import datetime
+ 
+ from flask import abort, session
+ 
+-from application.models.conversation import Conversation
+ from application.models.message import Message
+ from application.models.user import User, db
+ 
+@@ -41,73 +40,60 @@ def get_user(identifier):
+         abort(500, description=f"An error occurred: {str(e)}")
+ 
+ 
+-def save_message_to_db(user_id, message, conversation_id=None, message_type="text"):
++def save_message_to_db(user_id, message, is_global=False, target_live=False, target_classrooms=None, target_user_ids=None, message_type="text"):
+     """
+-    Saves a message to the database, creating a new conversation if needed.
++    Saves a feed post (message) to the database with visibility targeting.
+ 
+     Args:
+         user_id (int): The ID of the user sending the message.
+         message (str): The content of the message.
+-        conversation_id (int, optional): The ID of the conversation.
++        is_global (bool): If true, visible to everyone.
++        target_live (bool): If true, targets currently online users.
++        target_classrooms (list): List of classroom IDs to target.
++        target_user_ids (list): List of specific user IDs to target.
+         message_type (str): The type of message (default is "text").
+ 
+     Returns:
+-        dict: A dictionary containing success status, message ID, conversation ID,
++        dict: A dictionary containing success status, message ID,
+               or error details if applicable.
+     """
+     try:
+-        if not conversation_id:
+-            conversation_id = session.get("conversation_id")
+-
+-        if not conversation_id:
+-            print("No active conversation found. Creating a new one.")
+-            conversation = Conversation(
+-                title=f"Conversation started on {datetime.utcnow().strftime('%B %d, %Y')}",
+-                creator_id=user_id,
+-                classroom_id="archive",  # Default for auto-created orphans
+-            )
+-            db.session.add(conversation)
+-            db.session.flush()  # Get the ID before committing
+-
+-            session["conversation_id"] = conversation.id
+-            print(f"New conversation created with ID: {conversation.id}")
+-        else:
+-            conversation = db.session.get(Conversation, conversation_id)
+-            if not conversation:
+-                print(
+-                    f"Error: Conversation ID {conversation_id} not found in the database. Creating a new one."
+-                )
+-                conversation = Conversation(
+-                    title=f"Conversation started on {datetime.utcnow().strftime('%B %d, %Y')}",
+-                    creator_id=user_id,
+-                    classroom_id="archive",
+-                )
+-                db.session.add(conversation)
+-                db.session.flush()
+-                session["conversation_id"] = conversation.id
+-
+-        # Ensure the user is associated with this conversation
+-        user = db.session.get(User, user_id)
+-        if user and user not in conversation.users:
+-            conversation.users.append(user)
+-            db.session.add(conversation)
+-
++        from application.models.classroom import Classroom
++        
+         new_message = Message(
+             user_id=user_id,
+-            conversation_id=conversation.id,
+             content=message,
+             message_type=message_type,
++            is_global=is_global,
++            target_live=target_live
+         )
++        
++        if target_live:
++            # Get currently online users
++            online_users = User.query.filter_by(is_online=True).all()
++            new_message.target_users.extend(online_users)
++            
++        if target_user_ids:
++            for uid in target_user_ids:
++                u = db.session.get(User, uid)
++                if u and u not in new_message.target_users:
++                    new_message.target_users.append(u)
++
++        if target_classrooms:
++            for cid in target_classrooms:
++                classroom = db.session.get(Classroom, cid)
++                if classroom:
++                    new_message.target_classrooms.append(classroom)
++
+         db.session.add(new_message)
+         db.session.commit()
+ 
+         print(
+-            f"Message saved with ID: {new_message.id} in conversation ID: {conversation.id} for user {user_id}"
++            f"Message saved with ID: {new_message.id} for user {user_id}"
+         )
+         return {
+             "success": True,
+             "message_id": new_message.id,
+-            "conversation_id": conversation.id,
+         }
+ 
+     except Exception as e:
+diff --git a/backend/migrations/versions/ea3252195b40_normalize_models_to_use_user_id_instead_.py b/backend/migrations/versions/ea3252195b40_normalize_models_to_use_user_id_instead_.py
+index db45c20c..66262b54 100644
+--- a/backend/migrations/versions/ea3252195b40_normalize_models_to_use_user_id_instead_.py
++++ b/backend/migrations/versions/ea3252195b40_normalize_models_to_use_user_id_instead_.py
+@@ -17,13 +17,27 @@ depends_on = None
+ 
+ 
+ def upgrade():
+-    op.drop_table('trade')
+-    op.drop_table('bounties')
+-    with op.batch_alter_table('challenge_logs', schema=None) as batch_op:
+-        batch_op.add_column(sa.Column('user_id', sa.Integer(), nullable=True))
++    bind = op.get_bind()
++    inspector = sa.inspect(bind)
++    existing_tables = set(inspector.get_table_names())
+ 
+-    with op.batch_alter_table('duck_trade_log', schema=None) as batch_op:
+-        batch_op.add_column(sa.Column('user_id', sa.Integer(), nullable=True))
++    if 'trade' in existing_tables:
++        op.drop_table('trade')
++    if 'bounties' in existing_tables:
++        op.drop_table('bounties')
++    
++    challenge_logs_cols = {c['name'] for c in inspector.get_columns('challenge_logs')}
++    duck_trade_log_cols = {c['name'] for c in inspector.get_columns('duck_trade_log')}
++    challenge_logs_indexes = {idx['name'] for idx in inspector.get_indexes('challenge_logs')}
++    duck_trade_log_indexes = {idx['name'] for idx in inspector.get_indexes('duck_trade_log')}
++
++    if 'user_id' not in challenge_logs_cols:
++        with op.batch_alter_table('challenge_logs', schema=None) as batch_op:
++            batch_op.add_column(sa.Column('user_id', sa.Integer(), nullable=True))
++
++    if 'user_id' not in duck_trade_log_cols:
++        with op.batch_alter_table('duck_trade_log', schema=None) as batch_op:
++            batch_op.add_column(sa.Column('user_id', sa.Integer(), nullable=True))
+ 
+     op.execute("UPDATE challenge_logs SET user_id = (SELECT id FROM users WHERE LOWER(users.username) = LOWER(challenge_logs.username))")
+     op.execute("UPDATE duck_trade_log SET user_id = (SELECT id FROM users WHERE LOWER(users.username) = LOWER(duck_trade_log.username))")
+@@ -31,27 +45,23 @@ def upgrade():
+     op.execute("DELETE FROM challenge_logs WHERE user_id IS NULL")
+     op.execute("DELETE FROM duck_trade_log WHERE user_id IS NULL")
+ 
++    duck_trade_log_fks = {fk['name'] for fk in inspector.get_foreign_keys('duck_trade_log') if fk.get('name')}
++
+     with op.batch_alter_table('challenge_logs', schema=None) as batch_op:
+         batch_op.alter_column('user_id', existing_type=sa.Integer(), nullable=False)
+-        try:
+-            batch_op.drop_index(batch_op.f('ix_challenge_logs_username'))
+-        except ValueError:
+-            pass  # Index may not exist in all environments
++        if 'ix_challenge_logs_username' in challenge_logs_indexes:
++            batch_op.drop_index('ix_challenge_logs_username')
+         batch_op.create_index(batch_op.f('ix_challenge_logs_user_id'), ['user_id'], unique=False)
+         batch_op.create_foreign_key(batch_op.f('fk_challenge_logs_user_id_users'), 'users', ['user_id'], ['id'])
+         batch_op.drop_column('username')
+ 
+     with op.batch_alter_table('duck_trade_log', schema=None) as batch_op:
+         batch_op.alter_column('user_id', existing_type=sa.Integer(), nullable=False)
+-        try:
+-            batch_op.drop_index(batch_op.f('ix_duck_trade_log_username'))
+-        except ValueError:
+-            pass  # Index may not exist in all environments
++        if 'ix_duck_trade_log_username' in duck_trade_log_indexes:
++            batch_op.drop_index('ix_duck_trade_log_username')
+         batch_op.create_index(batch_op.f('ix_duck_trade_log_user_id'), ['user_id'], unique=False)
+-        try:
++        if 'fk_duck_trade_log_username_users' in duck_trade_log_fks:
+             batch_op.drop_constraint('fk_duck_trade_log_username_users', type_='foreignkey')
+-        except (ValueError, KeyError):
+-            pass  # Constraint may not exist in all environments
+         batch_op.create_foreign_key(batch_op.f('fk_duck_trade_log_user_id_users'), 'users', ['user_id'], ['id'])
+         batch_op.drop_column('username')
+ 
+diff --git a/backend/tests/app/models/test_configuration.py b/backend/tests/app/models/test_configuration.py
+index de8aa48c..6b6e8d0e 100644
+--- a/backend/tests/app/models/test_configuration.py
++++ b/backend/tests/app/models/test_configuration.py
+@@ -6,28 +6,8 @@ Summary: Unit tests for configuration model.
+ 
+ from application import db
+ from application.models.configuration import Configuration
+-from application.models.conversation import Conversation
+ 
+ 
+-from application.constants import GLOBAL_CLASSROOM_ID
+-
+-
+-def test_conversation_history(client, init_db, sample_user):
+-    """Test conversation history page."""
+-    # Create a conversation and associate it with the sample_user
+-    conversation = Conversation(title="User Conversation", classroom_id=GLOBAL_CLASSROOM_ID)
+-    conversation.users.append(sample_user)
+-    db.session.add(conversation)
+-    db.session.commit()
+-
+-
+-    with client.session_transaction() as sess:
+-        sess["user"] = sample_user.id
+-
+-    response = client.get("/message/conversation_history", headers={"Accept": "application/json"})
+-    assert response.status_code == 200
+-    assert b"User Conversation" in response.data
+-
+ 
+ def test_configuration_default_values(init_db):
+     """Test the default values of Configuration fields."""
+diff --git a/backend/tests/app/models/test_conversation.py b/backend/tests/app/models/test_conversation.py
+deleted file mode 100644
+index 91945956..00000000
+--- a/backend/tests/app/models/test_conversation.py
++++ /dev/null
+@@ -1,92 +0,0 @@
+-"""
+-File: test_conversation.py
+-Type: py
+-Summary: Unit tests for conversation model.
+-"""
+-
+-from datetime import datetime
+-
+-from application import db
+-from application.models.conversation import Conversation
+-from application.constants import GLOBAL_CLASSROOM_ID
+-
+-
+-def test_conversation_creation(init_db):
+-    """Test creating a Conversation entry."""
+-    conversation = Conversation(
+-        title="Test Conversation",
+-        classroom_id=GLOBAL_CLASSROOM_ID
+-    )
+-    db.session.add(conversation)
+-    db.session.commit()
+-
+-    retrieved_conversation = Conversation.query.filter_by(title="Test Conversation").first()
+-    assert retrieved_conversation is not None
+-    assert retrieved_conversation.title == "Test Conversation"
+-    assert isinstance(retrieved_conversation.created_at, datetime)
+-
+-
+-def test_conversation_default_title(init_db, sample_classroom):
+-    """Test default title generation for a Conversation."""
+-    conversation = Conversation(classroom_id=sample_classroom.id)
+-    db.session.add(conversation)
+-    db.session.commit()
+-
+-    retrieved_conversation = Conversation.query.filter_by(classroom_id=sample_classroom.id).first()
+-    assert retrieved_conversation is not None
+-    assert "New Chat" in retrieved_conversation.title
+-
+-
+-def test_conversation_users_relationship(sample_conversation):
+-    """Test the relationship between Conversation and User."""
+-    conversation = sample_conversation
+-    assert len(conversation.users) == 2
+-
+-
+-def test_conversation_messages_relationship(sample_conversation, sample_user, init_db):
+-    """Test the relationship between Conversation and Message."""
+-    from application.models.message import Message
+-
+-    conversation = sample_conversation
+-    user = sample_user
+-    message = Message(
+-        content="Test Message", conversation=conversation, user_id=user.id
+-    )
+-    db.session.add(message)
+-    db.session.commit()
+-
+-    retrieved_conversation = Conversation.query.first()
+-    assert len(retrieved_conversation.messages) == 1
+-    assert retrieved_conversation.messages[0].content == "Test Message"
+-    assert retrieved_conversation.messages[0].user_id == user.id
+-
+-
+-def test_conversation_repr(sample_conversation):
+-    """Test the __repr__ method of Conversation."""
+-    conversation = sample_conversation
+-    assert (
+-        repr(conversation) == f"<Conversation {conversation.id}: {conversation.title}>"
+-    )
+-
+-
+-def test_conversation_deletion_cascade(sample_conversation, sample_user, init_db):
+-    """Test that deleting a Conversation also deletes its messages."""
+-    from application.models.message import Message
+-
+-    conversation = sample_conversation
+-    user = sample_user
+-
+-    # Create a message associated with the conversation and user
+-    message = Message(
+-        content="Message to be deleted", conversation=conversation, user_id=user.id
+-    )
+-    db.session.add(message)
+-    db.session.commit()
+-
+-    # Delete the conversation
+-    db.session.delete(conversation)
+-    db.session.commit()
+-
+-    # Ensure both the conversation and its messages are deleted
+-    assert db.session.get(Conversation, conversation.id) is None
+-    assert Message.query.first() is None
+diff --git a/backend/tests/app/models/test_message.py b/backend/tests/app/models/test_message.py
+index cdf40bf0..82a90ae4 100644
+--- a/backend/tests/app/models/test_message.py
++++ b/backend/tests/app/models/test_message.py
+@@ -12,14 +12,16 @@ from application import db
+ from application.models.message import Message
+ 
+ 
+-def test_message_creation(init_db, sample_user, sample_conversation):
++def test_message_creation(init_db, sample_user, sample_classroom):
+     """Test creating a message."""
+     content = "Hello, this is a dynamically generated message!"
+     message = Message(
+-        conversation_id=sample_conversation.id,
+         user_id=sample_user.id,
+         content=content,
+         message_type="text",
++        target_classrooms=[sample_classroom],
++        is_global=False,
++        target_live=False
+     )
+     db.session.add(message)
+     db.session.commit()
+@@ -28,26 +30,27 @@ def test_message_creation(init_db, sample_user, sample_conversation):
+     assert retrieved_message is not None
+     assert retrieved_message.content == content
+     assert retrieved_message.message_type == "text"
++    assert sample_classroom in retrieved_message.target_classrooms
+     assert isinstance(retrieved_message.created_at, datetime)
+ 
+ 
+ def test_message_repr(sample_message):
+     """Test the __repr__ method of Message."""
+     message = sample_message
+-    expected_repr = f"<Message(id={message.id}, conversation_id={message.conversation_id}, user_id={message.user_id})>"
++    expected_repr = f"<Message(id={message.id}, user_id={message.user_id}, is_global={message.is_global})>"
+     assert repr(message) == expected_repr
+ 
+ 
+-def test_message_types(init_db, sample_user, sample_conversation):
++def test_message_types(init_db, sample_user, sample_classroom):
+     """Test creating messages with different message types."""
+     message_types = ["text", "link", "code_snippet"]
+     for msg_type in message_types:
+         content = f"This is a {msg_type} message."
+         message = Message(
+-            conversation_id=sample_conversation.id,
+             user_id=sample_user.id,
+             content=content,
+             message_type=msg_type,
++            target_classrooms=[sample_classroom],
+         )
+         db.session.add(message)
+         db.session.commit()
+@@ -93,16 +96,16 @@ def test_message_soft_delete(sample_message):
+     assert deleted_message.deleted_at == deletion_time
+ 
+ 
+-def test_dynamic_message_generation(init_db, sample_user, sample_conversation):
++def test_dynamic_message_generation(init_db, sample_user, sample_classroom):
+     """Test creating messages with random data to simulate real-world conditions."""
+     for _ in range(10):  # Generate 10 random messages
+         content = "".join(random.choices(string.ascii_letters + string.digits, k=50))
+         msg_type = random.choice(["text", "link", "code_snippet"])
+         message = Message(
+-            conversation_id=sample_conversation.id,
+             user_id=sample_user.id,
+             content=content,
+             message_type=msg_type,
++            target_classrooms=[sample_classroom],
+         )
+         db.session.add(message)
+     db.session.commit()
+diff --git a/backend/tests/app/routes/test_message_routes.py b/backend/tests/app/routes/test_message_routes.py
+index 3fecb10e..7a05a51b 100644
+--- a/backend/tests/app/routes/test_message_routes.py
++++ b/backend/tests/app/routes/test_message_routes.py
+@@ -1,309 +1,75 @@
+-"""
+-File: test_message_routes.py
+-Type: py
+-Summary: Unit tests for message routes Flask routes.
+-"""
+-
+-import json
+-
+-from application import db, Configuration
+-from application.constants import GLOBAL_CLASSROOM_ID
+-from application.models.conversation import Conversation
+-from application.models.classroom import Classroom
+-from application.models.user import User
+-
+-
+-def test_send_message(client, init_db, sample_admin):
+-    """Test sending a message."""
+-    # Set up session for user
+-
+-    with client.session_transaction() as sess:
+-        sess["user"] = sample_admin.id
+-
+-    # Create configuration
+-    config = Configuration(message_sending_enabled=True, ai_teacher_enabled=False)
+-    init_db.session.add(config)
+-    init_db.session.commit()
+-
+-    # Create a non-locked conversation and enroll user
+-    classroom = Classroom(id="test-class", name="Test Class", language="python", url="http://test")
+-    db.session.add(classroom)
+-    # Re-fetch user to avoid detached instance issues if any
+-    db_user = db.session.get(User, sample_admin.id)
+-    classroom.users.append(db_user)
++import pytest
++from flask import url_for
++from application import db
++from application.models.message import Message
++
++def test_get_feed_not_logged_in(client, init_db):
++    response = client.get("/message/api/feed")
++    # Actually wait, url prefix for message is /message, so the route is /message/api/feed
++    # Let me check __init__.py. It's app.register_blueprint(message, url_prefix="/message")
++    # Yes.
++    assert response.status_code == 302 # login redirect
++    # Wait, @require_login redirects or returns 401 if it's an API.
++    # require_login uses `@login_required` or similar, let's just check redirect
++
++def test_get_feed_admin(client, init_db, sample_user):
++    sample_user.is_admin = True
++    db.session.commit()
+     
+-    conversation = Conversation(title="Test", classroom_id="test-class")
+-    db.session.add(conversation)
++    # Create some messages
++    msg1 = Message(user_id=sample_user.id, content="msg1", is_global=False)
++    msg2 = Message(user_id=sample_user.id, content="msg2", is_global=True)
++    db.session.add_all([msg1, msg2])
+     db.session.commit()
+-
+-
+-    # Mock dependencies
+-    from unittest.mock import patch
+-
+-    with patch(
+-        "application.routes.message_routes.message_is_appropriate", return_value=True
+-    ), patch(
+-        "application.routes.message_routes.save_message_to_db", return_value=True
+-    ):
+-        response = client.post("/message/send_message", data={"message": "Hello!", "conversation_id": conversation.id})
+-        print(response.data.decode())  # Output the response content for debugging
+-        assert response.status_code == 200
+-        assert b"success" in response.data
+-
+-
+-def test_send_message_no_session(client):
+-    """Test sending message with no active session."""
+-    response = client.post("/message/send_message", data={"message": "Hello!"})
+-    assert response.status_code == 400
+-    assert b"No session username found" in response.data
+-
+-
+-def test_send_message_inappropriate(client, init_db, sample_user, sample_configuration):
+-    """Test sending an inappropriate message."""
+-    # Set up session for user
++    
+     with client.session_transaction() as sess:
+         sess["user"] = sample_user.id
+-
+-    # Mock dependencies
+-    from unittest.mock import patch
+-
+-    with patch(
+-        "application.routes.message_routes.message_is_appropriate", return_value=False
+-    ):
+-        # Create a non-locked conversation and enroll user
+-        classroom = Classroom(id="test-class-2", name="Test Class 2", language="python", url="http://test")
+-        db.session.add(classroom)
+-        db_user = db.session.get(User, sample_user.id)
+-        classroom.users.append(db_user)
+-        
+-        conversation = Conversation(title="Test 2", classroom_id="test-class-2")
+-        db.session.add(conversation)
+-        db.session.commit()
+-
+         
+-        response = client.post("/message/send_message", data={"message": "Poop!", "conversation_id": conversation.id})
+-
+-    print(response.data.decode())  # Output the response content for debugging
+-    assert response.status_code == 403
+-    assert b"Inappropriate messages are not allowed" in response.data
+-
+-
+-def test_start_conversation(client, init_db, sample_admin):
+-    """Test starting a new conversation (Admin only)."""
+-    with client.session_transaction() as sess:
+-        sess["user"] = sample_admin.id
+-
+-    # Ensure classroom exists
+-    if not db.session.get(Classroom, GLOBAL_CLASSROOM_ID):
+-        db.session.add(Classroom(id=GLOBAL_CLASSROOM_ID, name="Global", language="python", url="http://test"))
+-        db.session.commit()
+-
+-    response = client.post(
+-        "/message/start_conversation", 
+-        data={"title": "Test Conversation", "classroom_id": GLOBAL_CLASSROOM_ID}
+-    )
+-
+-
+-    assert response.status_code == 201
+-    data = json.loads(response.data)
+-    assert "conversation_id" in data
+-    assert data["title"] == "Test Conversation"
+-
+-
+-def test_set_active_conversation(client, init_db, sample_user):
+-    """Test setting active conversation."""
+-    with client.session_transaction() as sess:
+-        sess["user"] = sample_user.id
+-
+-    # Create a conversation
+-    conversation = Conversation(title="Test Conversation", classroom_id=GLOBAL_CLASSROOM_ID)
+-    db.session.add(conversation)
+-    db.session.commit()
+-
+-    response = client.post(
+-        "/message/set_active_conversation", json={"conversation_id": conversation.id}
+-    )
+-
+-    assert response.status_code == 200
+-    data = json.loads(response.data)
+-    assert data["conversation_id"] == conversation.id
+-
+-
+-def test_set_active_conversation_not_found(client, init_db, sample_user):
+-    """Test setting active conversation with an invalid ID."""
+-    with client.session_transaction() as sess:
+-        sess["user"] = sample_user.id
+-
+-    response = client.post(
+-        "/message/set_active_conversation", json={"conversation_id": 999}
+-    )
+-
+-    assert response.status_code == 404
+-    assert b"Conversation not found" in response.data
+-
+-
+-def test_get_current_conversation(client, init_db, sample_user):
+-    """Test retrieving the current conversation."""
+-    # Create a conversation
+-    conversation = Conversation(title="Test Conversation", classroom_id=GLOBAL_CLASSROOM_ID)
+-    db.session.add(conversation)
+-    db.session.commit()
+-
+-    # Set session for user
+-    with client.session_transaction() as sess:
+-        sess["user"] = sample_user.id
+-        sess["conversation_id"] = conversation.id
+-
+-    response = client.get("/message/get_current_conversation", headers={"Accept": "application/json"})
+-    assert response.status_code == 200
+-    data = json.loads(response.data)
+-    assert "conversation_id" in data["conversation"]
+-    assert data["conversation"]["title"] == conversation.title
+-
+-
+-def test_get_historical_conversation(client, init_db, sample_user):
+-    """Test retrieving historical conversation."""
+-    # Create a conversation
+-    conversation = Conversation(title="Test Historical Conversation", classroom_id=GLOBAL_CLASSROOM_ID)
+-    db.session.add(conversation)
+-    db.session.commit()
+-
+-    # Set session for user
+-    with client.session_transaction() as sess:
+-        sess["user"] = sample_user.id
+-        sess["conversation_id"] = conversation.id
+-
+-    response = client.get("/message/get_historical_conversation", headers={"Accept": "application/json"})
+-    assert response.status_code == 200
+-    data = json.loads(response.data)
+-    assert data["conversation"]["conversation_id"] == conversation.id
+-
+-
+-def test_end_conversation(client, sample_user):
+-    """Test ending a conversation."""
+-    # Set up session
+-    with client.session_transaction() as sess:
+-        sess["user"] = sample_user.id
+-        sess["conversation_id"] = 12345
+-
+-
+-    response = client.post("/message/end_conversation", headers={"Accept": "application/json"})
++    response = client.get("/message/api/feed")
+     assert response.status_code == 200
+-    assert b"Conversation ended" in response.data
+-
++    data = response.get_json()
++    assert data["success"] is True
++    assert len(data["messages"]) == 2
+ 
+-def test_get_conversation(client, init_db):
+-    """Test retrieving conversation by session."""
+-    conversation = Conversation(title="Test Conversation", classroom_id=GLOBAL_CLASSROOM_ID)
+-    db.session.add(conversation)
++def test_get_feed_student(client, init_db, sample_user, sample_classroom):
++    # User in a classroom
++    sample_user.classrooms.append(sample_classroom)
+     db.session.commit()
+-
+-    # Set session
+-    with client.session_transaction() as sess:
+-        sess["user"] = 1 # Any user ID for this test since it's simple
+-        sess["conversation_id"] = conversation.id
+-
+-    response = client.get("/message/get_conversation", headers={"Accept": "application/json"})
+-    assert response.status_code == 200
+-    data = json.loads(response.data)
+-    assert data["conversation"]["conversation_id"] == conversation.id
+-
+-
+-def test_conversation_history(client, init_db, sample_user):
+-    """Test conversation history page."""
+-    # Create a conversation and associate it with the sample_user
+-    conversation = Conversation(title="User Conversation", classroom_id=GLOBAL_CLASSROOM_ID)
+-    conversation.users.append(sample_user)
+-    db.session.add(conversation)
++    
++    # Message 1: Global
++    msg1 = Message(user_id=sample_user.id, content="global msg", is_global=True)
++    
++    # Message 2: Targeted to classroom
++    msg2 = Message(user_id=sample_user.id, content="classroom msg", is_global=False)
++    msg2.target_classrooms.append(sample_classroom)
++    
++    # Message 3: Invisible
++    msg3 = Message(user_id=sample_user.id, content="invisible", is_global=False)
++    # wait, authored by user, so it will be visible!
++    
++    # Let's create another user
++    from application.models.user import User
++    other_user = User(username="other", role="student")
++    other_user.set_password("pass")
++    db.session.add(other_user)
+     db.session.commit()
+-
+-    with client.session_transaction() as sess:
+-        sess["user"] = sample_user.id
+-
+-    response = client.get("/message/conversation_history", headers={"Accept": "application/json"})
+-    assert response.status_code == 200
+-    assert b"User Conversation" in response.data
+-
+-
+-def test_get_conversation_history(client, init_db, sample_user):
+-    """Test retrieving conversation history for a user."""
+-    # Create a conversation and associate it with the sample_user
+-    conversation = Conversation(title="User Conversation", classroom_id=GLOBAL_CLASSROOM_ID)
+-    conversation.users.append(sample_user)
+-    db.session.add(conversation)
++    
++    msg4 = Message(user_id=other_user.id, content="other invisible", is_global=False)
++    
++    db.session.add_all([msg1, msg2, msg3, msg4])
+     db.session.commit()
+-
+-    # Call the API endpoint
+-    with client.session_transaction() as sess:
+-        sess["user"] = sample_user.id
+-
+-    response = client.get(
+-        f"/message/api/conversations/{sample_user.id}",
+-        headers={"Accept": "application/json"},
+-    )
+-    assert response.status_code == 200
+-
+-    # Parse the response data
+-    data = json.loads(response.data)
+-    assert len(data) > 0
+-    assert data[0]["title"] == "User Conversation"
+-
+-
+-def test_view_conversation(client, init_db, sample_user):
+-    """Test viewing conversation details."""
++    
+     with client.session_transaction() as sess:
+         sess["user"] = sample_user.id
+-
+-    conversation = Conversation(title="Detailed Conversation", classroom_id=GLOBAL_CLASSROOM_ID)
+-
+-    db.session.add(conversation)
+-    db.session.commit()
+-
+-    response = client.get(f"/message/view_conversation/{conversation.id}", headers={"Accept": "application/json"})
+-    assert response.status_code == 200
+-    assert b"Detailed Conversation" in response.data
+-
+-
+-def test_delete_message_as_admin(client, init_db, sample_admin):
+-    """Test message deletion by admin."""
+-    from application.models.message import Message
+-
+-    with client.session_transaction() as sess:
+-        sess["user"] = sample_admin.id
+-
+-    conversation = Conversation(title="Delete Chat", classroom_id=GLOBAL_CLASSROOM_ID)
+-    db.session.add(conversation)
+-    db.session.commit()
+-
+-    msg = Message(content="This message will be deleted", user_id=sample_admin.id, conversation_id=conversation.id)
+-    db.session.add(msg)
+-    db.session.commit()
+-
+-    response = client.delete(f"/message/delete_message/{msg.id}")
++        
++    response = client.get("/message/api/feed")
+     assert response.status_code == 200
+-    data = json.loads(response.data)
++    data = response.get_json()
+     assert data["success"] is True
+-
+-    # Re-fetch from DB and verify is_struck
+-    updated_msg = db.session.get(Message, msg.id)
+-    assert updated_msg.is_struck is True
+-
+-
+-def test_delete_message_as_student_forbidden(client, init_db, sample_user, sample_admin):
+-    """Test message deletion by student returns 403."""
+-    from application.models.message import Message
+-
+-    with client.session_transaction() as sess:
+-        sess["user"] = sample_user.id
+-
+-    conversation = Conversation(title="Delete Chat Student", classroom_id=GLOBAL_CLASSROOM_ID)
+-    db.session.add(conversation)
+-    db.session.commit()
+-
+-    msg = Message(content="Should not be deleted by student", user_id=sample_admin.id, conversation_id=conversation.id)
+-    db.session.add(msg)
+-    db.session.commit()
+-
+-    response = client.delete(f"/message/delete_message/{msg.id}")
+-    assert response.status_code == 403
+-
++    assert len(data["messages"]) == 3
++    
++    contents = [m["content"] for m in data["messages"]]
++    assert "global msg" in contents
++    assert "classroom msg" in contents
++    assert "invisible" in contents
++    assert "other invisible" not in contents
+diff --git a/backend/tests/app/routes/test_user_routes.py b/backend/tests/app/routes/test_user_routes.py
+index 7cbbc4f9..ab99046b 100644
+--- a/backend/tests/app/routes/test_user_routes.py
++++ b/backend/tests/app/routes/test_user_routes.py
+@@ -15,23 +15,10 @@ from PIL import Image
+ 
+ from application import db
+ from application.models.user import User
+-from application.models.conversation import Conversation
+ from application.models.project import Project
+ from application.models.skill import Skill
+ from application.constants import GLOBAL_CLASSROOM_ID
+ 
+-@pytest.fixture
+-def sample_conversation_for_login(init_db):
+-    """Fixture to create a conversation for login tests."""
+-    conversation = Conversation(title="Recent Conversation", classroom_id=GLOBAL_CLASSROOM_ID)
+-
+-    db.session.add(conversation)
+-    db.session.commit()
+-    return conversation
+-
+-
+-# --- API / Utility Tests ---
+-
+ 
+ def test_get_users(client, init_db, sample_user):
+     """Test retrieving all users."""
+@@ -82,7 +69,7 @@ def test_login_get(client, init_db):
+     assert b"login" in response.data.lower()
+ 
+ 
+-def test_login_success(client, init_db, sample_user, sample_conversation_for_login):
++def test_login_success(client, init_db, sample_user):
+     """Test successful login."""
+     sample_user.set_password("testpassword123")
+     db.session.commit()
+diff --git a/backend/tests/conftest.py b/backend/tests/conftest.py
+index 02feac23..98db8fb9 100644
+--- a/backend/tests/conftest.py
++++ b/backend/tests/conftest.py
+@@ -29,8 +29,8 @@ from application.models.banned_words import BannedWords
+ from application.models.challenge import Challenge
+ from application.models.challenge_log import ChallengeLog
+ from application.models.classroom import Classroom
++from application.models.classroom import Classroom
+ from application.models.configuration import Configuration
+-from application.models.conversation import Conversation
+ from application.models.course import Course
+ from application.models.course_instance import CourseInstance
+ from application.models.message import Message
+@@ -343,16 +343,7 @@ def sample_users(init_db):
+     return [user1, user2]
+ 
+ 
+-@pytest.fixture
+-def sample_conversation(init_db, sample_users, sample_classroom):
+-    conversation = Conversation(
+-        title=f"Sample Conversation {uuid.uuid4().hex[:8]}",
+-        classroom_id=sample_classroom.id
+-    )
+-    conversation.users.extend(sample_users)
+-    db.session.add(conversation)
+-    db.session.commit()
+-    return conversation
++
+ 
+ 
+ @pytest.fixture
+@@ -370,12 +361,14 @@ def sample_course(init_db):
+ 
+ 
+ @pytest.fixture
+-def sample_message(init_db, sample_user, sample_conversation):
++def sample_message(init_db, sample_user, sample_classroom):
+     message = Message(
+-        conversation_id=sample_conversation.id,
+         user_id=sample_user.id,
+         content="This is a test message.",
+         message_type="text",
++        target_classrooms=[sample_classroom],
++        is_global=False,
++        target_live=False
+     )
+     db.session.add(message)
+     db.session.commit()
+diff --git a/backend/tests/helpers/test_db_helpers.py b/backend/tests/helpers/test_db_helpers.py
+index 9ad0c177..bbda7651 100644
+--- a/backend/tests/helpers/test_db_helpers.py
++++ b/backend/tests/helpers/test_db_helpers.py
+@@ -40,37 +40,17 @@ def test_generate_unique_username():
+     assert username2.startswith("user_")
+ 
+ 
+-def test_save_message_to_db_new_conversation(init_db, sample_user, client):
++def test_save_message_to_db_basic(init_db, sample_user, client):
+     user = sample_user
+     with client.application.test_request_context("/"):
+-        with client.session_transaction() as sess:
+-            sess.pop("conversation_id", None)  # Ensure no active conversation
+-
+-        result = save_message_to_db(user.id, "Hello, world!")
+-        assert result["success"] is True
+-
+-
+-def test_save_message_to_db_existing_conversation(
+-    init_db, sample_user, sample_conversation, client
+-):
+-    user = sample_user
+-    conversation = sample_conversation
+-
+-    with client.application.test_request_context("/"):
+-        with client.session_transaction() as sess:
+-            sess["conversation_id"] = conversation.id
+-
+-        result = save_message_to_db(user.id, "Hello again!")
++        result = save_message_to_db(user.id, message="Hello, world!", is_global=True)
+         assert result["success"] is True
++        assert result.get("message_id") is not None
+ 
+ 
+-def test_save_message_to_db_no_conversation_in_db(init_db, sample_user, client):
++def test_save_message_to_db_with_classroom(init_db, sample_user, sample_classroom, client):
+     user = sample_user
+-
+     with client.application.test_request_context("/"):
+-        with client.session_transaction() as sess:
+-            sess["conversation_id"] = 9999  # Non-existent conversation ID
+-
+-        result = save_message_to_db(user.id, "This should succeed.")
++        result = save_message_to_db(user.id, message="Hello again!", target_classrooms=[sample_classroom.id])
+         assert result["success"] is True
+         assert result.get("message_id") is not None
+diff --git a/frontend/package-lock.json b/frontend/package-lock.json
+index 41b24045..32196c35 100644
+--- a/frontend/package-lock.json
++++ b/frontend/package-lock.json
+@@ -16,6 +16,7 @@
+         "chart.js": "^4.5.1",
+         "emoji-picker-react": "^4.18.0",
+         "lucide-react": "^0.453.0",
++        "papaparse": "^5.5.3",
+         "react": "^19.2.4",
+         "react-admin": "^5.14.5",
+         "react-chartjs-2": "^5.3.1",
+@@ -4617,6 +4618,11 @@
+         "url": "https://github.com/sponsors/sindresorhus"
+       }
+     },
++    "node_modules/papaparse": {
++      "version": "5.5.3",
++      "resolved": "https://registry.npmjs.org/papaparse/-/papaparse-5.5.3.tgz",
++      "integrity": "sha512-5QvjGxYVjxO59MGU2lHVYpRWBBtKHnlIAcSe1uNFCkkptUh63NFRj0FJQm7nR67puEruUci/ZkjmEFrjCAyP4A=="
++    },
+     "node_modules/parent-module": {
+       "version": "1.0.1",
+       "resolved": "https://registry.npmjs.org/parent-module/-/parent-module-1.0.1.tgz",
+diff --git a/frontend/package.json b/frontend/package.json
+index 43c616c9..a04613c0 100644
+--- a/frontend/package.json
++++ b/frontend/package.json
+@@ -21,6 +21,7 @@
+     "chart.js": "^4.5.1",
+     "emoji-picker-react": "^4.18.0",
+     "lucide-react": "^0.453.0",
++    "papaparse": "^5.5.3",
+     "react": "^19.2.4",
+     "react-admin": "^5.14.5",
+     "react-chartjs-2": "^5.3.1",
+diff --git a/frontend/src/components/chat/ChatMessage.jsx b/frontend/src/components/chat/ChatMessage.jsx
+index 85f2f527..1a144aa2 100644
+--- a/frontend/src/components/chat/ChatMessage.jsx
++++ b/frontend/src/components/chat/ChatMessage.jsx
+@@ -1,24 +1,23 @@
+ import React from 'react';
+ import { Link } from 'react-router-dom';
+-import { User as UserIcon, Trash2 } from 'lucide-react';
++import { User as UserIcon, Trash2, Globe, Radio, Users, UserPlus } from 'lucide-react';
+ import SmartImage from '../common/SmartImage';
+ import Linkify from '../common/Linkify';
+ import { getApiUrl } from '../../utils/apiUrl';
+ 
+ const ChatMessage = React.memo(({ msg, user, onDelete }) => {
+-    const isUser = msg.user_id === user.id;
+     return (
+-        <div className={`chat-message-group ${isUser ? 'user' : 'other'}`}>
++        <div className="chat-message-group">
+             <div className="message-row">
+                 <Link 
+                     to={msg.slug ? `/profile/${msg.slug}` : '#'} 
+                     className="avatar-link"
+                 >
+-                    <div className={`avatar-container ${msg.is_ai ? 'ai-avatar' : ''} ${msg.has_animated_border ? 'perk-animated-border' : ''}`}>
++                    <div className="avatar-container">
+                         {msg.user_profile_pic ? (
+                             <SmartImage 
+                                 src={getApiUrl(`/user/profile_pictures/${msg.user_profile_pic}`)} 
+-                                alt={msg.nickname} 
++                                alt={msg.user_name || 'User'} 
+                                 fallbackType="avatar"
+                             />
+                         ) : (
+@@ -28,23 +27,47 @@ const ChatMessage = React.memo(({ msg, user, onDelete }) => {
+                 </Link>
+                 <div className="message-content-wrapper">
+                     <div className="message-header">
+-                        <span className="message-author">{msg.nickname || 'Unknown'}</span>
++                        <span className="message-author">{msg.user_name || 'Unknown'}</span>
++                        
++                        <div className="message-targeting-info">
++                            {msg.is_global && (
++                                <Globe size={12} color="var(--primary-color)" style={{ marginTop: '2px' }} title="Global Post" />
++                            )}
++                            
++                            {(user?.is_admin || user?.id === msg.user_id) && !msg.is_global && (
++                                <>
++                                    {msg.target_live && (
++                                        <span className="targeting-badge">
++                                            <Radio size={10} /> Live
++                                        </span>
++                                    )}
++                                    {msg.target_classrooms?.map((cName, i) => (
++                                        <span key={`c-${i}`} className="targeting-badge">
++                                            <Users size={10} /> {cName}
++                                        </span>
++                                    ))}
++                                    {msg.target_users?.map((uName, i) => (
++                                        <span key={`u-${i}`} className="targeting-badge user-badge">
++                                            <UserPlus size={10} /> {uName}
++                                        </span>
++                                    ))}
++                                </>
++                            )}
++                        </div>
++
+                         <span className="chat-message-timestamp">
+-                            {msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Just now'}
++                            {msg.created_at ? new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Just now'}
+                         </span>
+                     </div>
+-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexDirection: isUser ? 'row-reverse' : 'row' }}>
+-                        <div 
+-                            className={`message-bubble ${msg.has_chat_font ? 'perk-chat-font' : ''}`}
+-                            style={msg.has_chat_font && msg.chat_font_color ? { color: msg.chat_font_color } : undefined}
+-                        >
+-                            <Linkify text={msg.content} isUserMessage={isUser} />
++                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', minWidth: 0, width: '100%' }}>
++                        <div className="message-bubble" style={{ flex: 1, minWidth: 0 }}>
++                            <Linkify text={msg.content} isUserMessage={false} />
+                         </div>
+                         {user?.is_admin && (
+                             <button 
+                                 onClick={() => onDelete(msg.id)}
+                                 className="delete-message-btn"
+-                                title="Delete Announcement/Message"
++                                title="Delete Post"
+                             >
+                                 <Trash2 size={16} />
+                             </button>
+diff --git a/frontend/src/components/chat/ChatSidebar.jsx b/frontend/src/components/chat/ChatSidebar.jsx
+deleted file mode 100644
+index 19b63c74..00000000
+--- a/frontend/src/components/chat/ChatSidebar.jsx
++++ /dev/null
+@@ -1,260 +0,0 @@
+-import React, { useMemo, useState, useEffect } from 'react';
+-import { 
+-    Search, 
+-    PlusCircle, 
+-    Hash, 
+-    X, 
+-    User as UserIcon, 
+-    MessageSquare, 
+-    Shield,
+-    Award,
+-    FileCheck,
+-    Zap,
+-    RefreshCw,
+-    Disc,
+-    LogOut
+-} from 'lucide-react';
+-import { Link, useNavigate } from 'react-router-dom';
+-import useAuthStore from '../../store/useAuthStore';
+-
+-import ChatSidebarFooter from './ChatSidebarFooter';
+-
+-const ChatSidebar = ({ 
+-    user, 
+-    isSidebarOpen, 
+-    setSidebarOpen, 
+-    searchTerm, 
+-    setSearchTerm, 
+-    conversations, 
+-    activeConversation, 
+-    handleSelectConversation, 
+-    setIsModalOpen,
+-    formatConversationTitle,
+-    globalConversation,        // The canonical global/announcements conv object
+-    hasMoreConversations,
+-    isLoadingMoreConversations,
+-    handleLoadMoreConversations,
+-}) => {
+-    const { logout } = useAuthStore();
+-    const navigate = useNavigate();
+-
+-    const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchTerm);
+-
+-    useEffect(() => {
+-        const timer = setTimeout(() => {
+-            setDebouncedSearchTerm(searchTerm);
+-        }, 300);
+-        return () => clearTimeout(timer);
+-    }, [searchTerm]);
+-
+-    const handleLogout = async () => {
+-        await logout();
+-        navigate('/');
+-    };
+-
+-    const filteredConversations = useMemo(() => {
+-        const searchLower = (debouncedSearchTerm || '').trim().toLowerCase();
+-        if (!searchLower) return conversations;
+-
+-        const results = conversations.filter(conv => {
+-            // Match title
+-            const titleMatch = (conv.title || '').toLowerCase().includes(searchLower);
+-            const formattedTitleMatch = formatConversationTitle(conv.title).toLowerCase().includes(searchLower);
+-            
+-            if (titleMatch || formattedTitleMatch) return true;
+-            
+-            // Match any message content or participant name
+-            return conv.messages?.some(msg => {
+-                if ((msg.content || '').toLowerCase().includes(searchLower)) return true;
+-                if ((msg.nickname || '').toLowerCase().includes(searchLower)) return true;
+-                if ((msg.username || '').toLowerCase().includes(searchLower)) return true;
+-                return false;
+-            });
+-        });
+-
+-        console.debug(`[ChatSearch] Term: "${searchLower}", Results: ${results.length}/${conversations.length}`);
+-        return results;
+-    }, [conversations, debouncedSearchTerm, formatConversationTitle]);
+-
+-    return (
+-        <>
+-            <div 
+-                className={`sidebar-overlay ${isSidebarOpen ? 'open' : ''}`} 
+-                onClick={() => setSidebarOpen(false)}
+-            ></div>
+-
+-            <aside className={`chat-sidebar ${isSidebarOpen ? 'open' : ''}`}>
+-                <div className="sidebar-header">
+-                    <div className="sidebar-header-top">
+-                        <h2>Messages</h2>
+-                        <div className="sidebar-actions">
+-                            <button 
+-                                className="mobile-menu-toggle"
+-                                onClick={() => setSidebarOpen(false)}
+-                            >
+-                                <X size={20} />
+-                            </button>
+-
+-                            {user?.is_admin && (
+-                                <button 
+-                                    onClick={() => setIsModalOpen(true)}
+-                                    className="add-conv-btn"
+-                                    title="New Conversation"
+-                                >
+-                                    <PlusCircle size={20} />
+-                                </button>
+-                            )}
+-                        </div>
+-                    </div>
+-                    <div className="search-container">
+-                        <input 
+-                            type="text" 
+-                            placeholder="Search..." 
+-                            value={searchTerm}
+-                            onChange={(e) => setSearchTerm(e.target.value)}
+-                        />
+-                        <Search size={16} className="search-icon" />
+-                    </div>
+-                </div>
+-
+-                <div className="conversations-list">
+-                    {/* ---- Pinned Global Announcements entry ---- */}
+-                    {globalConversation && (
+-                        <div
+-                            id="sidebar-announcements-pin"
+-                            onClick={() => {
+-                                handleSelectConversation(globalConversation);
+-                                setSidebarOpen(false);
+-                            }}
+-                            className={`conversation-item pinned-announcement ${
+-                                activeConversation?.conversation_id === globalConversation.conversation_id
+-                                    ? 'active'
+-                                    : ''
+-                            }`}
+-                        >
+-                            <div className="conv-icon-container" style={{ background: 'var(--accent-subtle, rgba(99,102,241,0.15))', borderRadius: '10px' }}>
+-                                <span style={{ fontSize: '20px', lineHeight: 1 }}>≡ƒôó</span>
+-                            </div>
+-                            <div className="conv-info">
+-                                <div className="conv-title-row">
+-                                    <h4 className="conv-title" style={{ color: 'var(--primary-color)', fontWeight: 700 }}>
+-                                        Announcements
+-                                    </h4>
+-                                    <span className="conv-date" style={{ fontSize: '0.65rem', color: 'var(--primary-color)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>pinned</span>
+-                                </div>
+-                                <p className="conv-last-msg">
+-                                    {globalConversation.messages?.[globalConversation.messages.length - 1]?.content || 'Instructor announcements'}
+-                                </p>
+-                            </div>
+-                        </div>
+-                    )}
+-
+-                    {/* ---- Classroom conversations ---- */}
+-                    <div style={{ padding: '0 1rem', marginTop: '1rem', marginBottom: '0.25rem' }}>
+-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 0.5rem' }}>
+-                            <h3 style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+-                                Class Spaces
+-                            </h3>
+-                        </div>
+-                    </div>
+-                    {filteredConversations.length > 0 ? (
+-                        filteredConversations.map((conv) => (
+-                            <div 
+-                                key={conv.conversation_id} 
+-                                onClick={() => {
+-                                    handleSelectConversation(conv);
+-                                    setSidebarOpen(false);
+-                                }}
+-                                className={`conversation-item ${activeConversation?.conversation_id === conv.conversation_id ? 'active' : ''}`}
+-                            >
+-                                <div className="conv-icon-container">
+-                                    <Hash size={24} />
+-                                </div>
+-                                <div className="conv-info">
+-                                    <div className="conv-title-row">
+-                                        <h4 className="conv-title">
+-                                            {formatConversationTitle(conv.title)}
+-                                        </h4>
+-                                        <span className="conv-date">
+-                                            {conv.messages?.[conv.messages.length - 1]?.timestamp ? 
+-                                                new Date(conv.messages[conv.messages.length - 1].timestamp).toLocaleDateString([], { month: 'short', day: 'numeric' }) : 
+-                                                ''}
+-                                        </span>
+-                                    </div>
+-                                    <p className="conv-last-msg">
+-                                        {conv.messages?.[conv.messages.length - 1]?.content || 'No messages yet'}
+-                                    </p>
+-                                </div>
+-                            </div>
+-                        ))
+-                    ) : (
+-                        <div className="empty-search">
+-                            <p>No conversations found</p>
+-                        </div>
+-                    )}
+-                    {hasMoreConversations && (
+-                        <div className="load-more-container" style={{ padding: '0.75rem var(--spacing-md, 1rem)', display: 'flex', justifyContent: 'center' }}>
+-                            <button
+-                                onClick={handleLoadMoreConversations}
+-                                disabled={isLoadingMoreConversations}
+-                                className="btn-load-more"
+-                                style={{
+-                                    width: '100%',
+-                                    padding: '0.625rem 1rem',
+-                                    borderRadius: '10px',
+-                                    border: '1px solid var(--border-subtle)',
+-                                    background: 'var(--bg-secondary)',
+-                                    color: 'var(--text-secondary)',
+-                                    fontSize: '0.8rem',
+-                                    fontWeight: '600',
+-                                    cursor: 'pointer',
+-                                    display: 'flex',
+-                                    alignItems: 'center',
+-                                    justifyContent: 'center',
+-                                    gap: '0.5rem',
+-                                    transition: 'all 0.2s ease',
+-                                    boxShadow: 'var(--shadow-sm)',
+-                                }}
+-                                onMouseEnter={(e) => {
+-                                    e.currentTarget.style.background = 'var(--bg-tertiary)';
+-                                    e.currentTarget.style.color = 'var(--text-primary)';
+-                                    e.currentTarget.style.borderColor = 'var(--primary-color)';
+-                                }}
+-                                onMouseLeave={(e) => {
+-                                    e.currentTarget.style.background = 'var(--bg-secondary)';
+-                                    e.currentTarget.style.color = 'var(--text-secondary)';
+-                                    e.currentTarget.style.borderColor = 'var(--border-subtle)';
+-                                }}
+-                            >
+-                                {isLoadingMoreConversations ? (
+-                                    <>
+-                                        <span className="spinner-loader" style={{
+-                                            width: '14px',
+-                                            height: '14px',
+-                                            border: '2px solid var(--text-secondary)',
+-                                            borderTopColor: 'transparent',
+-                                            borderRadius: '50%',
+-                                            display: 'inline-block',
+-                                            animation: 'spin 0.8s linear infinite',
+-                                        }}></span>
+-                                        Loading...
+-                                    </>
+-                                ) : (
+-                                    'Load More'
+-                                )}
+-                            </button>
+-                        </div>
+-                    )}
+-                </div>
+-
+-                <ChatSidebarFooter 
+-                    user={user} 
+-                    onAction={() => setSidebarOpen(false)} 
+-                    onLogout={handleLogout} 
+-                />
+-            </aside>
+-        </>
+-    );
+-};
+-
+-export default ChatSidebar;
+diff --git a/frontend/src/components/chat/ChatSidebarFooter.jsx b/frontend/src/components/chat/ChatSidebarFooter.jsx
+deleted file mode 100644
+index 54deeb3a..00000000
+--- a/frontend/src/components/chat/ChatSidebarFooter.jsx
++++ /dev/null
+@@ -1,81 +0,0 @@
+-import React from 'react';
+-import { Link } from 'react-router-dom';
+-import { 
+-    User as UserIcon, 
+-    Shield, 
+-    Award, 
+-    FileCheck, 
+-    Zap, 
+-    RefreshCw, 
+-    Disc, 
+-    MessageSquare,
+-    LogOut,
+-    ShoppingCart
+-} from 'lucide-react';
+-
+-const ChatSidebarFooter = ({ user, onAction, onLogout }) => {
+-    return (
+-        <div className="chat-sidebar-footer mobile-only">
+-            <Link to="/profile" className="sidebar-footer-item" onClick={onAction}>
+-                <UserIcon size={18} /> Profile
+-            </Link>
+-            
+-            {user?.is_admin && (
+-                <Link to="/admin" className="sidebar-footer-item" onClick={onAction}>
+-                    <Shield size={18} /> Admin Panel
+-                </Link>
+-            )}
+-            
+-            <Link to="/achievements" className="sidebar-footer-item" onClick={onAction}>
+-                <Award size={18} /> Achievements
+-            </Link>
+-            
+-
+-            
+-            <Link to="/submit-work" className="sidebar-footer-item" onClick={onAction}>
+-                <Zap size={18} /> Submit Work
+-            </Link>
+-            
+-            <Link to="/bit-shift" className="sidebar-footer-item" onClick={onAction}>
+-                <RefreshCw size={18} /> Bit Shift
+-            </Link>
+-            
+-            <Link to="/shop" className="sidebar-footer-item" style={{ color: '#facc15' }} onClick={onAction}>
+-                <ShoppingCart size={18} /> Packet Shop
+-            </Link>
+-            
+-            <a 
+-                href="https://benmega.github.io/screen-recorder/" 
+-                target="_blank" 
+-                rel="noopener noreferrer" 
+-                className="sidebar-footer-item" 
+-                onClick={onAction}
+-            >
+-                <Disc size={18} /> Record
+-            </a>
+-            
+-            <Link to="/history" className="sidebar-footer-item" onClick={onAction}>
+-                <MessageSquare size={18} /> History
+-            </Link>
+-            
+-            <button 
+-                onClick={onLogout} 
+-                className="sidebar-footer-item logout-btn" 
+-                style={{ 
+-                    borderTop: '1px solid var(--border-subtle)', 
+-                    marginTop: '8px', 
+-                    color: 'var(--error-color)', 
+-                    width: '100%', 
+-                    textAlign: 'left', 
+-                    background: 'none', 
+-                    border: 'none', 
+-                    cursor: 'pointer' 
+-                }}
+-            >
+-                <LogOut size={18} /> Logout
+-            </button>
+-        </div>
+-    );
+-};
+-
+-export default ChatSidebarFooter;
+diff --git a/frontend/src/components/chat/ManageConversationModal.jsx b/frontend/src/components/chat/ManageConversationModal.jsx
+deleted file mode 100644
+index 6eee3ec4..00000000
+--- a/frontend/src/components/chat/ManageConversationModal.jsx
++++ /dev/null
+@@ -1,195 +0,0 @@
+-import React from 'react';
+-import { X, Lock, Clock, Trash2 } from 'lucide-react';
+-import { THEME } from '../../utils/theme';
+-
+-const ManageConversationModal = ({ 
+-  isOpen, 
+-  onClose, 
+-  onSubmit, 
+-  onDelete,
+-  title, 
+-  setTitle, 
+-  isLocked, 
+-  setIsLocked, 
+-  slowMode, 
+-  setSlowMode, 
+-  isUpdating 
+-}) => {
+-  if (!isOpen) return null;
+-
+-  return (
+-    <div style={{
+-      position: 'fixed',
+-      top: 0,
+-      left: 0,
+-      right: 0,
+-      bottom: 0,
+-      background: 'rgba(0, 0, 0, 0.5)',
+-      display: 'flex',
+-      alignItems: 'center',
+-      justifyContent: 'center',
+-      zIndex: 1000,
+-      backdropFilter: 'blur(4px)'
+-    }}>
+-      <div style={{
+-        background: 'var(--bg-primary)',
+-        padding: '2rem',
+-        borderRadius: '16px',
+-        width: '100%',
+-        maxWidth: '450px',
+-        boxShadow: 'var(--shadow-lg)',
+-        border: '1px solid var(--border-subtle)'
+-      }}>
+-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+-          <h2 style={{ fontSize: '1.5rem', fontWeight: 700 }}>Manage Conversation</h2>
+-          <button 
+-            onClick={onClose}
+-            style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer' }}
+-          >
+-            <X size={24} />
+-          </button>
+-        </div>
+-        
+-        <form onSubmit={onSubmit}>
+-          <div style={{ marginBottom: '1.25rem' }}>
+-            <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
+-              Conversation Title
+-            </label>
+-            <input 
+-              type="text"
+-              value={title}
+-              onChange={(e) => setTitle(e.target.value)}
+-              style={{
+-                width: '100%',
+-                padding: '0.75rem',
+-                borderRadius: '8px',
+-                border: '1px solid var(--border-subtle)',
+-                background: 'var(--bg-secondary)',
+-                color: 'var(--text-primary)',
+-                outline: 'none'
+-              }}
+-            />
+-          </div>
+-
+-          <div style={{ marginBottom: '1.25rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.75rem', background: 'var(--bg-secondary)', borderRadius: '12px', border: '1px solid var(--border-subtle)' }}>
+-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+-              <div style={{ padding: '0.5rem', background: 'rgba(239, 68, 68, 0.1)', borderRadius: '8px' }}>
+-                <Lock size={18} color={THEME.colors.error} />
+-              </div>
+-              <div>
+-                <p style={{ fontWeight: 600, fontSize: '0.875rem' }}>Lock Conversation</p>
+-                <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Prevent students from posting</p>
+-              </div>
+-            </div>
+-            <button
+-              type="button"
+-              onClick={() => setIsLocked(!isLocked)}
+-              style={{
+-                width: '44px',
+-                height: '24px',
+-                borderRadius: '12px',
+-                background: isLocked ? 'var(--primary-color)' : 'var(--bg-tertiary)',
+-                position: 'relative',
+-                border: 'none',
+-                cursor: 'pointer',
+-                transition: 'all 0.2s'
+-              }}
+-            >
+-              <div style={{
+-                width: '18px',
+-                height: '18px',
+-                borderRadius: '50%',
+-                background: 'white',
+-                position: 'absolute',
+-                top: '3px',
+-                left: isLocked ? '23px' : '3px',
+-                transition: 'all 0.2s'
+-              }} />
+-            </button>
+-          </div>
+-
+-          <div style={{ marginBottom: '1.5rem' }}>
+-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
+-              <Clock size={18} color="var(--primary-color)" />
+-              <label style={{ fontSize: '0.875rem', fontWeight: 600 }}>Slow Mode (seconds)</label>
+-            </div>
+-            <input 
+-              type="range"
+-              min="0"
+-              max="60"
+-              step="5"
+-              value={slowMode}
+-              onChange={(e) => setSlowMode(parseInt(e.target.value))}
+-              style={{ width: '100%', accentColor: 'var(--primary-color)', cursor: 'pointer' }}
+-            />
+-            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.25rem' }}>
+-              <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Off</span>
+-              <span style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--primary-color)' }}>{slowMode}s</span>
+-              <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>60s</span>
+-            </div>
+-          </div>
+-
+-          <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem' }}>
+-            <button 
+-              type="button"
+-              onClick={onDelete}
+-              style={{
+-                padding: '0.75rem',
+-                borderRadius: '8px',
+-                border: `1px solid ${THEME.colors.error}`,
+-                background: 'none',
+-                color: THEME.colors.error,
+-                cursor: 'pointer',
+-                display: 'flex',
+-                alignItems: 'center',
+-                justifyContent: 'center',
+-                gap: '0.5rem',
+-                flex: '0 0 auto'
+-              }}
+-              title="Delete Conversation"
+-            >
+-              <Trash2 size={18} />
+-            </button>
+-            
+-            <button 
+-              type="button"
+-              onClick={onClose}
+-              style={{
+-                flex: 1,
+-                padding: '0.75rem',
+-                borderRadius: '8px',
+-                border: '1px solid var(--border-subtle)',
+-                background: 'none',
+-                color: 'var(--text-primary)',
+-                cursor: 'pointer',
+-                fontWeight: 600
+-              }}
+-            >
+-              Cancel
+-            </button>
+-            
+-            <button 
+-              type="submit"
+-              disabled={isUpdating}
+-              style={{
+-                flex: 1,
+-                padding: '0.75rem',
+-                borderRadius: '8px',
+-                border: 'none',
+-                background: 'var(--gradient-primary)',
+-                color: 'white',
+-                cursor: 'pointer',
+-                fontWeight: 600,
+-                opacity: isUpdating ? 0.6 : 1
+-              }}
+-            >
+-              {isUpdating ? 'Updating...' : 'Save Changes'}
+-            </button>
+-          </div>
+-        </form>
+-      </div>
+-    </div>
+-  );
+-};
+-
+-export default ManageConversationModal;
+diff --git a/frontend/src/components/chat/NewConversationModal.jsx b/frontend/src/components/chat/NewConversationModal.jsx
+deleted file mode 100644
+index ea480149..00000000
+--- a/frontend/src/components/chat/NewConversationModal.jsx
++++ /dev/null
+@@ -1,140 +0,0 @@
+-import React from 'react';
+-import { X } from 'lucide-react';
+-
+-const NewConversationModal = ({ 
+-  isOpen, 
+-  onClose, 
+-  onSubmit, 
+-  title, 
+-  setTitle, 
+-  classrooms, 
+-  selectedClassroomId, 
+-  setSelectedClassroomId, 
+-  isCreating 
+-}) => {
+-  if (!isOpen) return null;
+-
+-  return (
+-    <div style={{
+-      position: 'fixed',
+-      top: 0,
+-      left: 0,
+-      right: 0,
+-      bottom: 0,
+-      background: 'rgba(0, 0, 0, 0.5)',
+-      display: 'flex',
+-      alignItems: 'center',
+-      justifyContent: 'center',
+-      zIndex: 1000,
+-      backdropFilter: 'blur(4px)'
+-    }}>
+-      <div style={{
+-        background: 'var(--bg-primary)',
+-        padding: '2rem',
+-        borderRadius: '16px',
+-        width: '100%',
+-        maxWidth: '400px',
+-        boxShadow: 'var(--shadow-lg)',
+-        border: '1px solid var(--border-subtle)'
+-      }}>
+-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+-          <h2 style={{ fontSize: '1.5rem', fontWeight: 700 }}>New Conversation</h2>
+-          <button 
+-            onClick={onClose}
+-            style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer' }}
+-          >
+-            <X size={24} />
+-          </button>
+-        </div>
+-        <form onSubmit={onSubmit}>
+-          <div style={{ marginBottom: '1rem' }}>
+-            <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
+-              Conversation Title
+-            </label>
+-            <input 
+-              type="text"
+-              placeholder="e.g. Project Discussion"
+-              value={title}
+-              onChange={(e) => setTitle(e.target.value)}
+-              style={{
+-                width: '100%',
+-                padding: '0.75rem',
+-                borderRadius: '8px',
+-                border: '1px solid var(--border-subtle)',
+-                background: 'var(--bg-secondary)',
+-                color: 'var(--text-primary)',
+-                outline: 'none'
+-              }}
+-              autoFocus
+-            />
+-          </div>
+-
+-          <div style={{ marginBottom: '1.5rem' }}>
+-            <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
+-              Target Classroom
+-            </label>
+-            <select
+-              value={selectedClassroomId}
+-              onChange={(e) => setSelectedClassroomId(e.target.value)}
+-              style={{
+-                width: '100%',
+-                padding: '0.75rem',
+-                borderRadius: '8px',
+-                border: '1px solid var(--border-subtle)',
+-                background: 'var(--bg-secondary)',
+-                color: 'var(--text-primary)',
+-                outline: 'none',
+-                cursor: 'pointer'
+-              }}
+-            >
+-              <option value="" disabled>Select a classroom</option>
+-              {classrooms.map(c => (
+-                <option key={c.id} value={c.id}>
+-                  {c.name}
+-                </option>
+-              ))}
+-            </select>
+-          </div>
+-
+-          <div style={{ display: 'flex', gap: '1rem' }}>
+-            <button 
+-              type="button"
+-              onClick={onClose}
+-              style={{
+-                flex: 1,
+-                padding: '0.75rem',
+-                borderRadius: '8px',
+-                border: '1px solid var(--border-subtle)',
+-                background: 'none',
+-                color: 'var(--text-primary)',
+-                cursor: 'pointer',
+-                fontWeight: 600
+-              }}
+-            >
+-              Cancel
+-            </button>
+-            <button 
+-              type="submit"
+-              disabled={isCreating || !title.trim() || !selectedClassroomId}
+-              style={{
+-                flex: 1,
+-                padding: '0.75rem',
+-                borderRadius: '8px',
+-                border: 'none',
+-                background: 'var(--gradient-primary)',
+-                color: 'white',
+-                cursor: 'pointer',
+-                fontWeight: 600,
+-                opacity: (isCreating || !title.trim() || !selectedClassroomId) ? 0.6 : 1
+-              }}
+-            >
+-              {isCreating ? 'Creating...' : 'Create'}
+-            </button>
+-          </div>
+-        </form>
+-      </div>
+-    </div>
+-  );
+-};
+-
+-export default NewConversationModal;
+diff --git a/frontend/src/hooks/useChatLogic.js b/frontend/src/hooks/useChatLogic.js
+deleted file mode 100644
+index 6da15c37..00000000
+--- a/frontend/src/hooks/useChatLogic.js
++++ /dev/null
+@@ -1,512 +0,0 @@
+-import { useState, useEffect, useRef, useCallback } from 'react';
+-import { useLocation } from 'react-router-dom';
+-import toast from 'react-hot-toast';
+-import useAuthStore from '../store/useAuthStore';
+-import client from '../api/client';
+-import useChatSocket from './useChatSocket';
+-import { GLOBAL_CLASSROOM_ID } from '../utils/constants';
+-
+-export const useChatLogic = () => {
+-  const { user } = useAuthStore();
+-  const location = useLocation();
+-  const [conversations, setConversations] = useState([]);
+-  const [activeConversation, setActiveConversation] = useState(null);
+-  const [messages, setMessages] = useState([]);
+-  const [newMessage, setNewMessage] = useState('');
+-  const [loading, setLoading] = useState(true);
+-  const [conversationsOffset, setConversationsOffset] = useState(0);
+-  const [hasMoreConversations, setHasMoreConversations] = useState(true);
+-  const [isLoadingMoreConversations, setIsLoadingMoreConversations] = useState(false);
+-  const [isModalOpen, setIsModalOpen] = useState(false);
+-  const [newConversationTitle, setNewConversationTitle] = useState('');
+-  const [isCreating, setIsCreating] = useState(false);
+-  const [searchTerm, setSearchTerm] = useState('');
+-  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+-  const [isLoadingMoreMessages, setIsLoadingMoreMessages] = useState(false);
+-  const [hasMoreMessages, setHasMoreMessages] = useState(true);
+-  const lastMessageIdRef = useRef(null);
+-
+-  const [globalConversationId, setGlobalConversationId] = useState(null);
+-  const [classrooms, setClassrooms] = useState([]);
+-  const [selectedClassroomId, setSelectedClassroomId] = useState('');
+-
+-  // Editing state
+-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+-  const [editTitle, setEditTitle] = useState('');
+-  const [editIsLocked, setEditIsLocked] = useState(false);
+-  const [editSlowMode, setEditSlowMode] = useState(0);
+-  const [isUpdating, setIsUpdating] = useState(false);
+-
+-  const scrollRef = useRef(null);
+-  const textareaRef = useRef(null);
+-  const emojiPickerRef = useRef(null);
+-
+-  const onMessageReceived = useCallback((data) => {
+-    setConversations(prevConvs => {
+-      let updated = false;
+-      const nextConvs = prevConvs.map(conv => {
+-        if (conv.conversation_id === data.conversation_id) {
+-          const msgExists = conv.messages?.some(m => m.id === data.id);
+-          if (msgExists) return conv;
+-          updated = true;
+-          return {
+-            ...conv,
+-            messages: [...(conv.messages || []), data]
+-          };
+-        }
+-        return conv;
+-      });
+-      return updated ? nextConvs : prevConvs;
+-    });
+-
+-    setMessages(prev => {
+-      const exists = prev.some(m => m.id === data.id);
+-      if (exists) return prev;
+-
+-      if (prev.length > 0 && prev[0]?.conversation_id && prev[0].conversation_id !== data.conversation_id) {
+-        return prev;
+-      }
+-      return [...prev, data];
+-    });
+-  }, []);
+-
+-  const fetchHistory = useCallback(async (defaultConvId = null, offset = 0) => {
+-    if (!user?.id) {
+-      setLoading(false);
+-      return;
+-    }
+-    if (offset > 0) {
+-      setIsLoadingMoreConversations(true);
+-    }
+-    try {
+-      const limit = 20;
+-      const response = await client.get(`/message/api/conversations/${user.id}?limit=${limit}&offset=${offset}`);
+-      const historyData = response.data.data || response.data;
+-      
+-      setConversations(prev => {
+-        if (offset === 0) return historyData;
+-        const merged = [...prev];
+-        historyData.forEach(newConv => {
+-          if (!merged.some(c => c.conversation_id === newConv.conversation_id)) {
+-            merged.push(newConv);
+-          }
+-        });
+-        return merged;
+-      });
+-
+-      setHasMoreConversations(historyData.length === limit);
+-
+-      if (defaultConvId && offset === 0) {
+-        let target = historyData.find(c => c.conversation_id === defaultConvId);
+-        if (!target) {
+-          try {
+-            const singleRes = await client.get(`/message/view_conversation/${defaultConvId}`);
+-            target = singleRes.data.conversation || singleRes.data;
+-            if (target) {
+-              setConversations(prev => [target, ...prev]);
+-            }
+-          } catch (err) {
+-            console.error('Failed to load global conversation', err);
+-          }
+-        }
+-        if (target) {
+-          setActiveConversation(target);
+-          try {
+-            const msgsRes = await client.get(`/message/view_conversation/${target.conversation_id}`);
+-            const fullConv = msgsRes.data.conversation || msgsRes.data;
+-            setMessages(fullConv.messages || []);
+-            setHasMoreMessages((fullConv.messages || []).length === 50);
+-          } catch (err) {
+-            console.error('Failed to load messages for active conversation', err);
+-            setMessages(target.messages || []);
+-          }
+-        }
+-      }
+-    } catch (err) {
+-      console.error('Failed to load conversation history', err);
+-    } finally {
+-      setLoading(false);
+-      setIsLoadingMoreConversations(false);
+-    }
+-  }, [user]);
+-
+-  const handleLoadMoreConversations = useCallback(async () => {
+-    if (isLoadingMoreConversations || !hasMoreConversations) return;
+-    const nextOffset = conversationsOffset + 20;
+-    setConversationsOffset(nextOffset);
+-    await fetchHistory(null, nextOffset);
+-  }, [conversationsOffset, hasMoreConversations, isLoadingMoreConversations, fetchHistory]);
+-
+-  const onClassroomEnrolled = useCallback((data) => {
+-    const classroom = data?.classroom;
+-    if (!classroom) return;
+-    toast.success(`You've been enrolled in "${classroom.name}"!`);
+-    fetchHistory();
+-  }, [fetchHistory]);
+-
+-  const onConversationCreated = useCallback((data) => {
+-    setConversations(prev => {
+-      if (prev.some(c => c.conversation_id === data.conversation_id)) return prev;
+-      return [data, ...prev];
+-    });
+-  }, []);
+-
+-  const onConversationUpdated = useCallback((data) => {
+-    setConversations(prev => prev.map(c => 
+-      c.conversation_id === data.conversation_id ? { ...c, ...data } : c
+-    ));
+-    if (activeConversation?.conversation_id === data.conversation_id) {
+-      setActiveConversation(prev => prev ? ({ ...prev, ...data }) : null);
+-    }
+-  }, [activeConversation]);
+-
+-  const onConversationDeleted = useCallback((data) => {
+-    setConversations(prev => prev.filter(c => c.conversation_id !== data.conversation_id));
+-    if (activeConversation?.conversation_id === data.conversation_id) {
+-      setActiveConversation(null);
+-      setMessages([]);
+-      toast.error('This conversation was deleted by an admin.');
+-    }
+-  }, [activeConversation]);
+-
+-  const onMessageDeleted = useCallback((data) => {
+-    setConversations(prev => prev.map(c => {
+-      if (c.conversation_id === data.conversation_id && c.messages) {
+-        return {
+-          ...c,
+-          messages: c.messages.filter(m => m.id !== data.message_id)
+-        };
+-      }
+-      return c;
+-    }));
+-    setMessages(prev => prev.filter(m => m.id !== data.message_id));
+-  }, []);
+-
+-  const { sendMessage } = useChatSocket(onMessageReceived, onClassroomEnrolled, {
+-    onConversationCreated,
+-    onConversationUpdated,
+-    onConversationDeleted,
+-    onMessageDeleted
+-  });
+-
+-  useEffect(() => {
+-    const initChat = async () => {
+-      if (!user?.id) {
+-        setLoading(false);
+-        return;
+-      }
+-      try {
+-        const ctxRes = await client.get('/message/api/me/context');
+-        const ctx = ctxRes.data;
+-        const globalConvId = ctx.global_conversation_id;
+-        setGlobalConversationId(globalConvId);
+-        setClassrooms(ctx.classrooms || []);
+-        
+-        const firstClassroom = (ctx.classrooms || []).find(c => c.id !== GLOBAL_CLASSROOM_ID);
+-        if (firstClassroom) setSelectedClassroomId(firstClassroom.id);
+-
+-        await fetchHistory(globalConvId, 0);
+-      } catch {
+-        await fetchHistory(null, 0);
+-      }
+-    };
+-
+-    initChat();
+-  }, [user, fetchHistory]);
+-
+-  useEffect(() => {
+-    if (conversations.length > 0) {
+-      const params = new URLSearchParams(location.search);
+-      const convId = params.get('conv');
+-      if (convId) {
+-        const targetConv = conversations.find(c => c.conversation_id === parseInt(convId));
+-        if (targetConv && activeConversation?.conversation_id !== targetConv.conversation_id) {
+-          handleSelectConversation(targetConv);
+-        }
+-      }
+-    }
+-  }, [location.search, conversations, activeConversation]);
+-
+-  useEffect(() => {
+-    if (scrollRef.current && messages.length > 0) {
+-      const currentLastMsgId = messages[messages.length - 1].id;
+-      if (currentLastMsgId !== lastMessageIdRef.current) {
+-        scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+-        lastMessageIdRef.current = currentLastMsgId;
+-      }
+-    }
+-  }, [messages]);
+-
+-  const handleMessageScroll = (e) => {
+-    if (e.target.scrollTop === 0) {
+-      loadMoreMessages();
+-    }
+-  };
+-
+-  const loadMoreMessages = useCallback(async () => {
+-    if (!activeConversation || isLoadingMoreMessages || !hasMoreMessages || messages.length === 0) return;
+-    setIsLoadingMoreMessages(true);
+-    
+-    try {
+-      const firstMessageId = messages[0].id;
+-      const response = await client.get(`/message/view_conversation/${activeConversation.conversation_id}?before_id=${firstMessageId}&limit=50`);
+-      const newMessages = response.data.conversation?.messages || response.data.messages || [];
+-      
+-      if (newMessages.length < 50) {
+-        setHasMoreMessages(false);
+-      }
+-      
+-      if (newMessages.length > 0) {
+-        const container = scrollRef.current;
+-        const previousScrollHeight = container ? container.scrollHeight : 0;
+-
+-        setMessages(prev => [...newMessages, ...prev]);
+-        setConversations(prev => prev.map(c => 
+-          c.conversation_id === activeConversation.conversation_id 
+-            ? { ...c, messages: [...newMessages, ...(c.messages || [])] } 
+-            : c
+-        ));
+-
+-        setTimeout(() => {
+-          if (container) {
+-            container.scrollTop = container.scrollHeight - previousScrollHeight;
+-          }
+-        }, 0);
+-      }
+-    } catch (err) {
+-      console.error('Failed to load older messages', err);
+-    } finally {
+-      setIsLoadingMoreMessages(false);
+-    }
+-  }, [activeConversation, isLoadingMoreMessages, hasMoreMessages, messages]);
+-
+-  const handleSendMessage = async (e) => {
+-    if (e) e.preventDefault();
+-    if (!newMessage.trim() || !activeConversation) return;
+-
+-    sendMessage({
+-      content: newMessage.trim(),
+-      conversation_id: activeConversation.conversation_id
+-    });
+-
+-    setNewMessage('');
+-    setShowEmojiPicker(false);
+-    if (textareaRef.current) {
+-      textareaRef.current.style.height = 'auto';
+-    }
+-  };
+-
+-  const handleTextareaKeyDown = (e) => {
+-    if (e.key === 'Enter' && !e.shiftKey) {
+-      e.preventDefault();
+-      handleSendMessage();
+-    }
+-  };
+-
+-  const handleTextareaChange = (e) => {
+-    setNewMessage(e.target.value);
+-    const el = e.target;
+-    el.style.height = 'auto';
+-    el.style.height = `${Math.min(el.scrollHeight, 160)}px`;
+-  };
+-
+-  const onEmojiClick = (emojiData) => {
+-    setNewMessage(prev => prev + emojiData.emoji);
+-  };
+-
+-  useEffect(() => {
+-    const handleClickOutside = (event) => {
+-      if (emojiPickerRef.current && !emojiPickerRef.current.contains(event.target)) {
+-        setShowEmojiPicker(false);
+-      }
+-    };
+-    document.addEventListener('mousedown', handleClickOutside);
+-    return () => {
+-      document.removeEventListener('mousedown', handleClickOutside);
+-    };
+-  }, []);
+-
+-  const handleSelectConversation = async (conv) => {
+-    setActiveConversation(conv);
+-    setMessages(conv.messages || []);
+-    try {
+-      const response = await client.get(`/message/view_conversation/${conv.conversation_id}`);
+-      const convData = response.data.conversation || response.data;
+-      setMessages(convData.messages || []);
+-      setHasMoreMessages((convData.messages || []).length === 50);
+-      setConversations(prev => prev.map(c => 
+-        c.conversation_id === conv.conversation_id ? { ...c, messages: convData.messages } : c
+-      ));
+-    } catch (err) {
+-      console.error('Failed to load messages for conversation', err);
+-    }
+-  };
+-
+-  const handleCreateConversation = async (e) => {
+-    e.preventDefault();
+-    if (!newConversationTitle.trim()) return;
+-    if (!selectedClassroomId) {
+-      toast.error('Please select a classroom');
+-      return;
+-    }
+-
+-    setIsCreating(true);
+-    try {
+-      const response = await client.post('/message/start_conversation', {
+-        title: newConversationTitle,
+-        classroom_id: selectedClassroomId
+-      });
+-      
+-      const newConv = {
+-        conversation_id: response.data.conversation_id,
+-        title: response.data.title,
+-        classroom_id: response.data.classroom_id,
+-        messages: []
+-      };
+-
+-      setConversations(prev => [newConv, ...prev]);
+-      setActiveConversation(newConv);
+-      setMessages([]);
+-      setIsModalOpen(false);
+-      setNewConversationTitle('');
+-      toast.success('Conversation created!');
+-    } catch (err) {
+-      toast.error('Failed to create conversation');
+-      console.error(err);
+-    } finally {
+-      setIsCreating(false);
+-    }
+-  };
+-
+-  const openEditModal = () => {
+-    if (!activeConversation) return;
+-    setEditTitle(activeConversation.title || '');
+-    setEditIsLocked(activeConversation.is_locked || false);
+-    setEditSlowMode(activeConversation.slow_mode_delay || 0);
+-    setIsEditModalOpen(true);
+-  };
+-
+-  const handleUpdateConversation = async (e) => {
+-    e.preventDefault();
+-    if (!activeConversation) return;
+-
+-    setIsUpdating(true);
+-    try {
+-      const response = await client.post('/message/update_conversation', {
+-        conversation_id: activeConversation.conversation_id,
+-        title: editTitle,
+-        is_locked: editIsLocked,
+-        slow_mode_delay: editSlowMode
+-      });
+-
+-      if (response.data.success) {
+-        const updatedConv = {
+-          ...activeConversation,
+-          title: editTitle,
+-          is_locked: editIsLocked,
+-          slow_mode_delay: editSlowMode
+-        };
+-
+-        setConversations(prev => prev.map(c => 
+-          c.conversation_id === updatedConv.conversation_id ? updatedConv : c
+-        ));
+-        setActiveConversation(updatedConv);
+-        setIsEditModalOpen(false);
+-        toast.success('Conversation updated!');
+-      }
+-    } catch (err) {
+-      toast.error('Failed to update conversation');
+-      console.error(err);
+-    } finally {
+-      setIsUpdating(false);
+-    }
+-  };
+-
+-  const handleDeleteConversation = async () => {
+-    if (!activeConversation) return;
+-    if (!window.confirm('Are you sure you want to permanently delete this conversation and all its messages?')) return;
+-
+-    try {
+-      await client.delete(`/message/delete_conversation/${activeConversation.conversation_id}`);
+-      
+-      setConversations(prev => prev.filter(c => c.conversation_id !== activeConversation.conversation_id));
+-      setActiveConversation(null);
+-      setMessages([]);
+-      setIsEditModalOpen(false);
+-      toast.success('Conversation deleted');
+-    } catch (err) {
+-      toast.error('Failed to delete conversation');
+-      console.error(err);
+-    }
+-  };
+-
+-  const handleDeleteMessage = useCallback(async (messageId) => {
+-    if (!window.confirm('Are you sure you want to delete this message?')) return;
+-    try {
+-      await client.delete(`/message/delete_message/${messageId}`);
+-      toast.success('Message deleted');
+-      setMessages(prev => prev.filter(m => m.id !== messageId));
+-      setConversations(prevConvs => prevConvs.map(conv => {
+-        if (conv.conversation_id === activeConversation?.conversation_id && conv.messages) {
+-          return {
+-            ...conv,
+-            messages: conv.messages.filter(m => m.id !== messageId)
+-          };
+-        }
+-        return conv;
+-      }));
+-    } catch (err) {
+-      toast.error('Failed to delete message');
+-      console.error(err);
+-    }
+-  }, [activeConversation?.conversation_id]);
+-
+-  return {
+-    user,
+-    conversations,
+-    activeConversation,
+-    messages,
+-    newMessage,
+-    loading,
+-    isModalOpen,
+-    setIsModalOpen,
+-    newConversationTitle,
+-    setNewConversationTitle,
+-    isCreating,
+-    searchTerm,
+-    setSearchTerm,
+-    showEmojiPicker,
+-    setShowEmojiPicker,
+-    globalConversationId,
+-    classrooms,
+-    selectedClassroomId,
+-    setSelectedClassroomId,
+-    isEditModalOpen,
+-    setIsEditModalOpen,
+-    editTitle,
+-    setEditTitle,
+-    editIsLocked,
+-    setEditIsLocked,
+-    editSlowMode,
+-    setEditSlowMode,
+-    isUpdating,
+-    scrollRef,
+-    textareaRef,
+-    emojiPickerRef,
+-    handleSendMessage,
+-    handleTextareaKeyDown,
+-    handleTextareaChange,
+-    onEmojiClick,
+-    handleSelectConversation,
+-    handleCreateConversation,
+-    openEditModal,
+-    handleUpdateConversation,
+-    handleDeleteConversation,
+-    hasMoreConversations,
+-    isLoadingMoreConversations,
+-    handleLoadMoreConversations,
+-    handleDeleteMessage,
+-    handleMessageScroll,
+-    isLoadingMoreMessages
+-  };
+-};
+diff --git a/frontend/src/pages/Chat/Chat.css b/frontend/src/pages/Chat/Chat.css
+index 1f4ec81f..1bb8b7ef 100644
+--- a/frontend/src/pages/Chat/Chat.css
++++ b/frontend/src/pages/Chat/Chat.css
+@@ -1,521 +1,163 @@
+-/* Chat.css */
++/* Chat.css - Social Media Feed Styles */
+ 
+-.chat-container {
++.feed-container {
+     display: flex;
++    justify-content: center;
+     height: 100%;
+     overflow: hidden;
+     background: var(--bg-primary);
+     position: relative;
+-    border: none;
+-}
+-
+-.chat-sidebar {
+-    width: 320px;
+-    flex-shrink: 0;
+-    background: var(--bg-primary);
+-    border-right: 1px solid var(--border-subtle);
+-    display: flex;
+-    flex-direction: column;
+-    transition: transform var(--transition-smooth);
+-    z-index: 10;
+ }
+ 
+-.chat-window {
+-    flex: 1;
+-    min-width: 0;
++.feed-main {
++    width: 100%;
++    max-width: 1200px;
+     display: flex;
+     flex-direction: column;
+-    background: var(--bg-secondary);
+-    position: relative;
+-}
+-
+-.chat-header {
+     background: var(--bg-primary);
+-    border-bottom: 1px solid var(--border-subtle);
+-    min-height: 64px;
+-    display: flex;
+-    align-items: center;
++    border-left: 1px solid var(--border-subtle);
++    border-right: 1px solid var(--border-subtle);
++    height: 100%;
+ }
+ 
+-.chat-header-content {
+-    width: 100%;
+-    padding: 0.5rem 2rem;
+-    display: flex;
+-    justify-content: space-between;
+-    align-items: center;
+-}
+ 
+-@media (max-width: 800px) {
+-    .chat-header-content {
+-        padding: 0 1rem;
+-        min-height: 72px; /* Standardize with AdminLayout and Layout */
+-    }
+-}
+ 
+-@media (max-width: 400px) {
+-    .chat-header-content {
+-        padding: 0.5rem 0.75rem;
+-    }
+-}
+-
+-.chat-messages {
+-    flex: 1;
+-    overflow-y: auto;
+-    padding: 0;
++.feed-input-area {
++    padding: 1.5rem;
++    border-bottom: 1px solid var(--border-subtle);
++    background: var(--bg-secondary);
++    position: relative;
++    z-index: 20;
+ }
+ 
+-.chat-messages-inner {
+-    width: 100%;
+-    max-width: 1000px;
+-    margin: 0 auto;
+-    padding: 0.5rem 1rem;
++.feed-input-form-mockup {
++    background: var(--bg-primary);
++    border: 1px solid var(--border-subtle);
++    border-radius: var(--radius-lg);
++    box-shadow: var(--shadow-sm);
++    transition: all 0.2s ease;
+     display: flex;
+     flex-direction: column;
+-    gap: 0.5rem;
++    position: relative;
++    z-index: 10;
+ }
+ 
+-.chat-input-area {
+-    background: var(--bg-primary);
+-    border-top: 1px solid var(--border-subtle);
++.feed-input-form-mockup:focus-within {
++    box-shadow: 0 0 0 2px var(--primary-light);
++    border-color: var(--primary-color);
+ }
+ 
+-.chat-input-content {
++.feed-input-field {
+     width: 100%;
+-    max-width: 1000px;
+-    margin: 0 auto;
+-    padding: 1rem 2rem;
+-}
+-
+-.mobile-menu-toggle,
+-.hamburger-toggle {
+-    display: none;
+-    background: none;
++    padding: 1rem;
+     border: none;
+-    padding: var(--spacing-sm);
+-    color: var(--text-secondary);
+-    cursor: pointer;
+-    align-items: center;
+-    justify-content: center;
+-    border-radius: var(--radius-sm);
+-    transition: var(--transition-fast);
+-    position: relative;
+-    z-index: 50;
+-}
+-
+-.hamburger-toggle:hover {
+-    background: var(--bg-tertiary);
+-    color: var(--primary-color);
++    background: transparent;
++    font-size: var(--font-md);
++    color: var(--text-primary);
++    resize: none;
++    outline: none;
++    font-family: inherit;
+ }
+ 
+-.chat-input-form {
++.feed-toolbar {
+     display: flex;
+-    align-items: flex-end;
+-    gap: var(--spacing-md);
+-    background: var(--bg-tertiary);
+-    padding: var(--spacing-sm) var(--spacing-md);
+-    border-radius: var(--radius-md);
+-    border: 1px solid var(--border-subtle);
+-    transition: var(--transition-fast);
+-}
+-
+-.chat-input-form:focus-within {
+-    background: white;
+-    border-color: var(--primary-color);
+-    box-shadow: var(--shadow-glow);
++    justify-content: space-between;
++    align-items: center;
++    padding: 0.5rem 1rem;
++    border-top: 1px solid var(--border-subtle);
++    background: var(--bg-secondary);
+ }
+ 
+-
+-
+-.chat-send-btn {
+-    background: var(--primary-color);
+-    color: white;
+-    border: none;
+-    padding: var(--spacing-sm);
+-    border-radius: var(--radius-sm);
++.feed-targeting {
+     display: flex;
+     align-items: center;
+-    justify-content: center;
+-    transition: var(--transition-bounce);
++    gap: 1rem;
+ }
+ 
+-.chat-send-btn:hover:not(:disabled) {
+-    transform: translateY(-2px);
+-    box-shadow: var(--shadow-glow);
+-    filter: brightness(1.1);
+-}
+-
+-.chat-send-btn:disabled {
+-    opacity: 0.5;
+-    cursor: not-allowed;
+-}
+-
+-.chat-icon-btn {
+-    background: none;
+-    border: none;
+-    padding: var(--spacing-xs);
+-    border-radius: var(--radius-sm);
++.targeting-option {
+     display: flex;
+     align-items: center;
+-    justify-content: center;
+-    cursor: pointer;
++    gap: 0.25rem;
++    font-size: var(--font-sm);
+     color: var(--text-secondary);
+-    transition: all 0.2s ease;
+-}
+-
+-.chat-icon-btn:hover {
+-    background: var(--bg-primary);
+-    color: var(--primary-color);
+-}
+-
+-.emoji-picker-container {
+-    position: absolute;
+-    bottom: calc(100% + 15px);
+-    right: 0;
+-    z-index: 1000;
+-    box-shadow: var(--shadow-xl);
+-    border-radius: 8px;
+-    animation: slideInUp 0.2s ease;
+-}
+-
+-@keyframes slideInUp {
+-    from {
+-        opacity: 0;
+-        transform: translateY(10px);
+-    }
+-    to {
+-        opacity: 1;
+-        transform: translateY(0);
+-    }
++    cursor: pointer;
++    user-select: none;
+ }
+ 
+-
+-.chat-sidebar-footer {
+-    padding: 1rem;
+-    border-top: 1px solid var(--border-subtle);
+-    display: flex;
+-    flex-direction: column;
+-    gap: 0.25rem;
+-    background: var(--bg-primary);
+-    margin-top: auto;
++.targeting-option input[type="checkbox"] {
++    cursor: pointer;
+ }
+ 
+-.sidebar-footer-item {
++.classroom-targeting {
+     display: flex;
+     align-items: center;
+-    gap: 12px;
+-    padding: 0.75rem 1rem;
+-    text-decoration: none;
++    gap: 0.5rem;
+     color: var(--text-secondary);
+-    font-weight: 600;
+-    font-size: var(--font-sm);
+-    border-radius: 8px;
+-    transition: all 0.2s;
+ }
+ 
+-.sidebar-footer-item:hover {
+-    background: var(--bg-tertiary);
+-    color: var(--primary-color);
+-}
+-
+-/* Mobile Responsive Adjustments */
+-@media (max-width: 800px) {
+-    .header-icon-container {
+-        display: none !important;
+-    }
+-
+-
+-    .chat-container {
+-        height: 100%;
+-    }
+-
+-    .chat-sidebar {
+-        position: fixed; /* Changed from absolute to fixed to ensure it covers the screen regardless of scroll */
+-        top: 0;
+-        left: 0;
+-        bottom: 0;
+-        width: 280px;
+-        transform: translateX(-100%);
+-        box-shadow: var(--shadow-xl);
+-        z-index: 1100;
+-    }
+-
+-    .chat-sidebar.open {
+-        transform: translateX(0);
+-    }
+-
+-    .mobile-menu-toggle,
+-    .hamburger-toggle {
+-        display: flex;
+-    }
+-
+-    .welcome-toggle {
+-        background: white;
+-        box-shadow: var(--shadow-md);
+-        border: 1px solid var(--border-subtle);
+-        z-index: 5;
+-    }
+-
+-    .sidebar-overlay {
+-        position: fixed; /* Changed from absolute to fixed */
+-        top: 0;
+-        left: 0;
+-        right: 0;
+-        bottom: 0;
+-        background: rgba(0, 0, 0, 0.4);
+-        backdrop-filter: blur(4px); /* Increased blur slightly */
+-        z-index: 1099;
+-        display: none;
+-    }
+-
+-    .sidebar-overlay.open {
+-        display: block;
+-    }
+-}
+-
+-@media (max-width: 500px) {
+-    .chat-container {
+-        border-radius: 0;
+-        border-left: none;
+-        border-right: none;
+-    }
+-}
+-
+-
+-.chat-message-group {
++.classroom-badges {
+     display: flex;
+-    flex-direction: column;
+-    gap: 2px;
+-    min-width: 0;
+-    width: 100%;
+-}
+-
+-.chat-message-group.user {
+-    align-items: flex-end;
+-}
+-
+-.chat-message-group.other {
+-    align-items: flex-start;
++    gap: 0.5rem;
++    flex-wrap: wrap;
+ }
+ 
+-.chat-message-timestamp {
++.classroom-badge {
+     font-size: 0.75rem;
+-    color: var(--text-muted);
+-    opacity: 0;
+-    visibility: hidden;
+-    transition: all 0.2s ease;
+-    pointer-events: none;
+-}
+-
+-.chat-message-group:hover .chat-message-timestamp {
+-    opacity: 1;
+-    visibility: visible;
+-}
+-
+-.chat-message-group.user .chat-message-timestamp {
+-    margin: 0 40px 0 0;
+-}
+-
+-.chat-message-group.other .chat-message-timestamp {
+-    margin: 0 0 0 40px;
+-}
+-
+-.delete-message-btn {
+-    background: none;
+-    border: none;
+-    padding: var(--spacing-xs);
+-    border-radius: var(--radius-sm);
+-    display: flex;
+-    align-items: center;
+-    justify-content: center;
++    padding: 0.2rem 0.5rem;
++    border-radius: var(--radius-full);
++    background: var(--bg-tertiary);
++    color: var(--text-secondary);
+     cursor: pointer;
+-    color: var(--text-muted);
+     transition: all 0.2s ease;
+-    opacity: 0;
+-    visibility: hidden;
+-    margin-bottom: 2px;
+-}
+-
+-.chat-message-group:hover .delete-message-btn {
+-    opacity: 1;
+-    visibility: visible;
+-}
+-
+-.delete-message-btn:hover {
+-    background: rgba(239, 68, 68, 0.1);
+-    color: #ef4444;
+-    transform: scale(1.1);
++    border: 1px solid var(--border-subtle);
+ }
+ 
+-
+-/* Sidebar Components */
+-.chat-sidebar .sidebar-header {
+-    height: auto;
+-    padding: 1.5rem 1.25rem;
+-    border-bottom: 1px solid var(--border-subtle);
+-    display: flex;
+-    flex-direction: column;
+-    gap: 1.25rem;
++.classroom-badge.active {
++    background: var(--primary-light);
++    color: var(--primary-dark);
++    border-color: var(--primary-color);
+ }
+ 
+-.chat-sidebar .sidebar-header-top {
++.feed-actions {
+     display: flex;
+-    justify-content: space-between;
+     align-items: center;
+-    margin-bottom: 0;
+-    gap: 16px;
+-}
+-
+-.chat-sidebar .sidebar-header h2 {
+-    font-size: var(--font-xl);
+-}
+-
+-.sidebar-actions {
+-    display: flex;
+-    gap: 8px;
++    gap: 0.5rem;
+ }
+ 
+-.add-conv-btn {
++.user-select-dropdown {
++    font-size: 0.75rem;
++    padding: 0.2rem 0.5rem;
++    border-radius: var(--radius-sm);
+     background: var(--bg-tertiary);
++    color: var(--text-secondary);
+     border: 1px solid var(--border-subtle);
+-    color: var(--primary-color);
+-    cursor: pointer;
+-    display: flex;
+-    align-items: center;
+-    justify-content: center;
+-    padding: 8px;
+-    border-radius: 10px;
+-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+-}
+-
+-.add-conv-btn:hover {
+-    background: var(--primary-color);
+-    color: white;
+-    transform: translateY(-1px);
+-    box-shadow: var(--shadow-sm);
+-}
+-
+-.search-container {
+-    position: relative;
+-}
+-
+-.search-container input {
+-    width: 100%;
+-    padding: 12px 16px 12px 42px;
+-    border-radius: 12px;
+-    border: 1px solid var(--border-subtle);
+-    background: var(--bg-secondary);
+-    font-size: var(--font-sm);
+     outline: none;
+-    transition: all 0.2s ease;
+-    box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
++    cursor: pointer;
+ }
+ 
+-.search-container input:focus {
++.user-select-dropdown:focus {
+     border-color: var(--primary-color);
+-    background: white;
+-    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1), 0 2px 4px rgba(0,0,0,0.05);
+-}
+-
+-.search-icon {
+-    position: absolute;
+-    left: 10px;
+-    top: 50%;
+-    transform: translateY(-50%);
+-    color: var(--text-muted);
+ }
+ 
+-.conversations-list {
++.feed-messages {
+     flex: 1;
+     overflow-y: auto;
++    background: var(--bg-primary);
++    padding-bottom: 2rem;
+ }
+ 
+-.conversation-item {
+-    padding: 0.5rem 0.75rem;
+-    margin: 0.25rem 0.75rem;
+-    cursor: pointer;
+-    display: flex;
+-    align-items: center;
+-    gap: 12px;
+-    transition: all 0.2s;
+-    border-radius: var(--radius-md);
+-    background: transparent;
+-    color: var(--text-secondary);
+-}
+-
+-.conversation-item:hover {
+-    background: var(--bg-secondary);
+-    color: var(--text-primary);
+-}
+-
+-.conversation-item.active {
+-    background: var(--primary-light);
+-    color: var(--primary-dark);
+-}
+-
+-.conv-icon-container {
+-    width: 28px;
+-    height: 28px;
+-    display: flex;
+-    align-items: center;
+-    justify-content: center;
+-    color: inherit;
+-}
+-
+-.conversation-item.active .conv-icon-container {
+-    color: var(--primary-color);
+-}
+-
+-.conv-info {
+-    flex: 1;
+-    min-width: 0;
++.feed-messages-inner {
+     display: flex;
+     flex-direction: column;
+-    justify-content: center;
+-}
+-
+-.conv-title-row {
+-    display: flex;
+-    justify-content: space-between;
+-    align-items: center;
+-    gap: 8px;
+-}
+-
+-.conv-title {
+-    font-size: 0.9rem;
+-    font-weight: 600;
+-    overflow: hidden;
+-    text-overflow: ellipsis;
+-    white-space: nowrap;
+-    flex: 1;
+-}
+-
+-.conv-date {
+-    font-size: 0.7rem;
+-    color: var(--text-muted);
+-    flex-shrink: 0;
+-}
+-
+-.conv-last-msg {
+-    font-size: 0.75rem;
+-    color: var(--text-muted);
+-    overflow: hidden;
+-    text-overflow: ellipsis;
+-    white-space: nowrap;
++    padding: 1.5rem;
++    gap: 1.5rem;
+ }
+ 
+-.empty-search {
+-    padding: 2rem;
+-    text-align: center;
+-    color: var(--text-muted);
+-}
+-
+-/* Chat Message Components */
++/* Chat Message Overrides for Feed */
+ .message-row {
+     display: flex;
+     align-items: flex-start;
+-    gap: 8px;
+-    min-width: 0;
+-    margin-bottom: 0.25rem;
++    gap: 1rem;
+ }
+ 
+ .chat-message-group {
+@@ -524,18 +166,15 @@
+     width: 100%;
+ }
+ 
+-.chat-message-group.user .message-row {
+-    flex-direction: row-reverse;
+-}
+-
+ .avatar-link {
+     text-decoration: none;
+     display: flex;
++    flex-shrink: 0;
+ }
+ 
+ .avatar-container {
+-    width: 40px;
+-    height: 40px;
++    width: 48px;
++    height: 48px;
+     border-radius: 50%;
+     background: var(--bg-tertiary);
+     border: 1px solid var(--border-subtle);
+@@ -549,150 +188,88 @@
+ 
+ .message-content-wrapper {
+     flex: 1;
+-    max-width: min(85%, 750px);
+     display: flex;
+     flex-direction: column;
++    min-width: 0;
+ }
+ 
+-.chat-message-group.user .message-content-wrapper {
+-    align-items: flex-end;
++.message-header {
++    display: flex;
++    align-items: center;
++    gap: 0.5rem;
++    margin-bottom: 0.25rem;
++    flex-wrap: wrap;
+ }
+ 
+-.message-header {
++.message-targeting-info {
+     display: flex;
+-    align-items: baseline;
+-    gap: 0.25rem;
+-    margin-bottom: 0.1rem;
++    align-items: center;
++    gap: 0.35rem;
++    flex-wrap: wrap;
++}
++
++.targeting-badge {
++    display: inline-flex;
++    align-items: center;
++    gap: 0.2rem;
++    font-size: 0.65rem;
++    padding: 0.15rem 0.4rem;
++    border-radius: var(--radius-full);
++    background: var(--bg-tertiary);
++    color: var(--text-secondary);
++    border: 1px solid var(--border-subtle);
++    font-weight: 500;
+ }
+ 
+-.chat-message-group.user .message-header {
+-    flex-direction: row-reverse;
++.targeting-badge.user-badge {
++    background: var(--primary-light);
++    color: var(--primary-dark);
++    border-color: rgba(var(--primary-color-rgb), 0.2);
+ }
+ 
+ .message-author {
+     font-weight: 700;
+     color: var(--text-primary);
++    font-size: var(--font-md);
+ }
+ 
+ .chat-message-timestamp {
+-    font-size: 0.75rem;
++    font-size: 0.8rem;
+     color: var(--text-muted);
+-    opacity: 0;
+-    transition: opacity 0.2s ease;
+-}
+-
+-.chat-message-group:hover .chat-message-timestamp {
+-    opacity: 1;
+ }
+ 
+ .message-bubble {
+-    padding: 0.4rem 0.75rem;
+-    background: var(--bg-tertiary);
++    font-size: var(--font-md);
++    line-height: 1.5;
+     color: var(--text-primary);
+-    box-shadow: var(--shadow-sm);
+-    font-size: 0.9rem;
+-    line-height: 1.4;
+     overflow-wrap: anywhere;
+     word-break: break-word;
+     white-space: pre-wrap;
+-    display: inline-block;
+-    
+-    /* Mockup uses rounded-2xl rounded-tl-sm for others */
+-    border-radius: 12px 12px 12px 12px; 
+-}
+-
+-.chat-message-group.other .message-bubble {
+-    border-radius: 4px 12px 12px 12px;
+-    background: var(--bg-secondary);
+-    border: 1px solid var(--border-subtle);
+-}
+-
+-.chat-message-group.user .message-bubble {
+-    background: var(--primary-color);
+-    color: white;
+-    border-radius: 12px 4px 12px 12px;
+-}
+-
+-/* New Input Box Styling */
+-.chat-input-wrapper-container {
+     padding: 0;
+     background: transparent;
+-    border-top: none;
+-}
+-
+-.chat-input-form-mockup {
+-    background: var(--bg-secondary);
+-    border: 1px solid var(--border-subtle);
+-    border-radius: var(--radius-lg);
+-    overflow: hidden;
+-    transition: all 0.2s;
+-    box-shadow: var(--shadow-sm);
+-}
+-
+-.chat-input-form-mockup:focus-within {
+-    box-shadow: 0 0 0 2px var(--primary-light);
+-    border-color: var(--primary-color);
+-}
+-
+-
+-
+-.toolbar-btn {
+-    padding: 6px;
+-    color: var(--text-muted);
+-    border-radius: var(--radius-sm);
+-    transition: all 0.2s;
+-    display: flex;
+-    align-items: center;
+-    justify-content: center;
+-    cursor: pointer;
+-    background: none;
+     border: none;
++    box-shadow: none;
++    border-radius: 0;
+ }
+ 
+-.toolbar-btn:hover {
+-    background: var(--bg-tertiary);
+-    color: var(--text-primary);
+-}
+-
+-
+-
+-.chat-input-field {
+-    flex: 1;
+-    width: 100%;
+-    background: transparent !important;
+-    border: none !important;
+-    outline: none !important;
+-    box-shadow: none !important;
+-    padding: 10px 12px;
+-    font-size: var(--font-sm);
+-    line-height: 1.5;
+-    color: var(--text-primary);
+-    resize: none;
+-    min-height: 44px;
+-    max-height: 160px;
+-    font-family: inherit;
+-    overflow-y: auto;
+-}
+-
+-
+-
+ .chat-send-btn {
+     background: var(--primary-color);
+     color: white;
+-    width: 32px;
+-    height: 32px;
+-    border-radius: 8px;
++    border: none;
++    padding: 0.5rem 1rem;
++    border-radius: var(--radius-sm);
+     display: flex;
+     align-items: center;
+-    justify-content: center;
+-    transition: var(--transition-fast);
+-    box-shadow: var(--shadow-sm);
+-    border: none;
++    gap: 0.5rem;
++    font-weight: 600;
+     cursor: pointer;
++    transition: var(--transition-fast);
+ }
+ 
+ .chat-send-btn:hover:not(:disabled) {
+-    background: var(--primary-dark);
++    transform: translateY(-1px);
++    box-shadow: var(--shadow-sm);
++    filter: brightness(1.1);
+ }
+ 
+ .chat-send-btn:disabled {
+@@ -723,87 +300,45 @@
+     color: #ef4444;
+ }
+ 
+-/* Native Mobile UI Density Adjustments */
+-@media (max-width: 800px) {
+-    .chat-messages-inner {
+-        padding: 0.5rem 0.75rem;
+-        gap: 0.5rem;
+-    }
+-    .message-bubble {
+-        padding: 0.4rem 0.75rem;
+-        font-size: 0.9rem;
+-    }
+-    .avatar-container {
+-        width: 32px;
+-        height: 32px;
+-        font-size: 0.9rem;
+-    }
+-    .chat-message-group.user .message-row,
+-    .chat-message-group.other .message-row {
+-        gap: 8px;
+-    }
+-    .conversation-item {
+-        padding: 0.5rem 0.75rem;
+-    }
+-    .conv-icon-container {
+-        width: 32px;
+-        height: 32px;
+-    }
+-    .conv-icon-container svg, 
+-    .conv-icon-container span {
+-        width: 18px;
+-        height: 18px;
+-        font-size: 16px !important;
+-    }
+-    .conv-title {
+-        font-size: 0.9rem;
+-    }
+-    .conv-last-msg {
+-        font-size: 0.75rem;
+-    }
+-    .chat-sidebar .sidebar-header {
+-        padding: 1rem;
+-        gap: 1rem;
+-    }
+-    .chat-input-wrapper-container {
+-        padding: 0.5rem;
+-    }
++.toolbar-btn {
++    padding: 6px;
++    color: var(--text-muted);
++    border-radius: var(--radius-sm);
++    transition: all 0.2s;
++    display: flex;
++    align-items: center;
++    justify-content: center;
++    cursor: pointer;
++    background: none;
++    border: none;
+ }
+ 
+-@media (min-width: 801px) {
+-    .desktop-chat-footer {
+-        display: block;
+-        text-align: center;
+-        padding: 1.5rem;
+-        background: var(--bg-primary);
+-        color: var(--text-muted);
+-        font-size: 0.9rem;
+-    }
+-    .chat-container {
+-        flex: 0 0 100%;
+-    }
++.toolbar-btn:hover {
++    background: var(--bg-tertiary);
++    color: var(--text-primary);
+ }
+ 
++/* Mobile Responsive */
+ @media (max-width: 800px) {
+-    .desktop-chat-footer {
+-        display: none;
++    .feed-main {
++        border-left: none;
++        border-right: none;
++    }
++    
++    .feed-header {
++        padding: 1rem;
+     }
+-}
+-
+-/* SHOP PERKS */
+ 
+-@keyframes borderPulse {
+-    0% { box-shadow: 0 0 0 0 rgba(250, 204, 21, 0.7); }
+-    70% { box-shadow: 0 0 0 10px rgba(250, 204, 21, 0); }
+-    100% { box-shadow: 0 0 0 0 rgba(250, 204, 21, 0); }
+-}
++    .feed-input-area {
++        padding: 1rem;
++    }
+ 
+-.perk-animated-border {
+-    border: 2px solid #facc15 !important;
+-    animation: borderPulse 2s infinite !important;
+-    border-radius: 50%;
+-}
++    .feed-messages-inner {
++        padding: 1rem;
++    }
+ 
+-.perk-chat-font {
+-    font-family: 'Comic Sans MS', 'Chalkboard SE', sans-serif !important;
++    .avatar-container {
++        width: 40px;
++        height: 40px;
++    }
+ }
+diff --git a/frontend/src/pages/Chat/Chat.jsx b/frontend/src/pages/Chat/Chat.jsx
+index c131f089..38a9667e 100644
+--- a/frontend/src/pages/Chat/Chat.jsx
++++ b/frontend/src/pages/Chat/Chat.jsx
+@@ -1,325 +1,190 @@
+ import React from 'react';
+-import { Link } from 'react-router-dom';
+ import { 
+   Send, 
+-  MessageSquare,
+-  Hash,
+-  Menu,
+   Smile,
+-  Settings,
++  Globe,
++  Users,
++  Radio,
++  UserPlus
+ } from 'lucide-react';
+ import EmojiPicker from 'emoji-picker-react';
+-import useSidebar from '../../hooks/useSidebar';
+ import './Chat.css';
+ 
+ // Extracted Components
+-import ChatSidebar from '../../components/chat/ChatSidebar';
+ import ChatMessage from '../../components/chat/ChatMessage';
+-import NewConversationModal from '../../components/chat/NewConversationModal';
+-import ManageConversationModal from '../../components/chat/ManageConversationModal';
+-import { formatConversationTitle } from '../../utils/chatUtils';
++import MultiSelectDropdown from '../../components/chat/MultiSelectDropdown';
+ 
+-// Hooks & Constants
+-import { useChatLogic } from '../../hooks/useChatLogic';
+-import { GLOBAL_CLASSROOM_ID } from '../../utils/constants';
++// Hooks
++import { useFeedLogic } from '../../hooks/useFeedLogic';
+ 
+ const Chat = () => {
+-  const { isSidebarOpen, setSidebarOpen, toggleSidebar } = useSidebar();
+   const {
+     user,
+-    conversations,
+-    activeConversation,
+     messages,
+     newMessage,
+     loading,
+-    isModalOpen,
+-    setIsModalOpen,
+-    newConversationTitle,
+-    setNewConversationTitle,
+-    isCreating,
+-    searchTerm,
+-    setSearchTerm,
++    isLoadingMore,
++    hasMore,
+     showEmojiPicker,
+     setShowEmojiPicker,
+-    globalConversationId,
+     classrooms,
+-    selectedClassroomId,
+-    setSelectedClassroomId,
+-    isEditModalOpen,
+-    setIsEditModalOpen,
+-    editTitle,
+-    setEditTitle,
+-    editIsLocked,
+-    setEditIsLocked,
+-    editSlowMode,
+-    setEditSlowMode,
+-    isUpdating,
+-    scrollRef,
++    users,
++    isGlobal,
++    setIsGlobal,
++    targetLive,
++    setTargetLive,
++    targetClassrooms,
++    setTargetClassrooms,
++    toggleTargetClassroom,
++    targetUsers,
++    setTargetUsers,
++    toggleTargetUser,
+     textareaRef,
+     emojiPickerRef,
+     handleSendMessage,
+     handleTextareaKeyDown,
+     handleTextareaChange,
+     onEmojiClick,
+-    handleSelectConversation,
+-    handleCreateConversation,
+-    openEditModal,
+-    handleUpdateConversation,
+-    handleDeleteConversation,
+-    hasMoreConversations,
+-    isLoadingMoreConversations,
+-    handleLoadMoreConversations,
+     handleDeleteMessage,
+-    handleMessageScroll,
+-    isLoadingMoreMessages
+-  } = useChatLogic();
++    handleScroll
++  } = useFeedLogic();
+ 
+-  if (loading) return <div className="container" style={{ textAlign: 'center', padding: '100px' }}>Loading...</div>;
++  if (loading) return <div className="container" style={{ textAlign: 'center', padding: '100px' }}>Loading Feed...</div>;
+ 
+   return (
+-    <div className="chat-container">
+-      <ChatSidebar 
+-        user={user}
+-        isSidebarOpen={isSidebarOpen}
+-        setSidebarOpen={setSidebarOpen}
+-        conversations={conversations.filter(c => c.conversation_id !== globalConversationId)}
+-        activeConversation={activeConversation}
+-        searchTerm={searchTerm}
+-        setSearchTerm={setSearchTerm}
+-        handleSelectConversation={handleSelectConversation}
+-        setIsModalOpen={setIsModalOpen}
+-        formatConversationTitle={formatConversationTitle}
+-        globalConversation={conversations.find(c => c.conversation_id === globalConversationId) || null}
+-        hasMoreConversations={hasMoreConversations}
+-        isLoadingMoreConversations={isLoadingMoreConversations}
+-        handleLoadMoreConversations={handleLoadMoreConversations}
+-      />
++    <div className="feed-container">
++      <div className="feed-main">
++        <div className="feed-input-area">
++          <form onSubmit={handleSendMessage} className="feed-input-wrapper-container">
++            <div className="feed-input-form-mockup">
++                <textarea
++                  ref={textareaRef}
++                  value={newMessage}
++                  onChange={handleTextareaChange}
++                  onKeyDown={handleTextareaKeyDown}
++                  placeholder={`What's on your mind, ${user?.nickname || user?.username || 'Student'}?`}
++                  className="feed-input-field"
++                  rows={2}
++                  maxLength={4000}
++                />
++                
++                <div className="feed-toolbar">
++                  <div className="feed-targeting">
++                    <span className="targeting-label-for">For</span>
+ 
+-      <div className="chat-window">
+-        {activeConversation ? (
+-          <>
+-            <div className="chat-header">
+-              <div className="chat-header-content">
+-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+-                  <button 
+-                    className="hamburger-toggle" 
+-                    onClick={toggleSidebar}
+-                    aria-label="Toggle Sidebar"
+-                  >
+-                    <Menu size={24} />
+-                  </button>
+-                  <div className="header-icon-container" style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'var(--bg-tertiary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+-                    <Hash size={20} color="var(--primary-color)" />
+-                  </div>
+-                  <div>
+-                    <h3 style={{ fontSize: 'var(--font-lg)', fontWeight: 700 }}>{formatConversationTitle(activeConversation.title)}</h3>
+-                  </div>
+-                </div>
+-
+-                {user?.is_admin && activeConversation.classroom_id !== GLOBAL_CLASSROOM_ID && (
+-                  <button 
+-                    onClick={openEditModal}
+-                    className="chat-icon-btn"
+-                    title="Manage Conversation"
+-                  >
+-                    <Settings size={20} />
+-                  </button>
+-                )}
+-              </div>
+-            </div>
+-
+-            <div 
+-              ref={scrollRef}
+-              className="chat-messages"
+-              onScroll={handleMessageScroll}
+-            >
+-              <div className="chat-messages-inner">
+-                {isLoadingMoreMessages && (
+-                  <div style={{ textAlign: 'center', padding: '1rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+-                    Loading older messages...
+-                  </div>
+-                )}
+-                {messages.map((msg, index) => (
+-                  <ChatMessage 
+-                    key={msg.id || index}
+-                    msg={msg}
+-                    user={user}
+-                    onDelete={handleDeleteMessage}
+-                  />
+-                ))}
+-              </div>
+-            </div>
++                    {classrooms.filter(c => c.id !== 'global').length > 0 && (
++                      <MultiSelectDropdown
++                        icon={Users}
++                        defaultLabel="Classes"
++                        options={classrooms.filter(c => c.id !== 'global')}
++                        selectedValues={targetClassrooms}
++                        onChange={setTargetClassrooms}
++                        disabled={isGlobal}
++                      />
++                    )}
+ 
+-            <div className="chat-input-area">
+-              <div className="chat-input-content">
+-                {(activeConversation?.conversation_id === globalConversationId && !user?.is_admin) || activeConversation?.is_locked ? (
+-                  <p
+-                    id="global-feed-readonly-label"
+-                    style={{
+-                      textAlign: 'center',
+-                      fontSize: '0.8rem',
+-                      color: 'var(--text-muted)',
+-                      padding: '0.75rem 1rem',
+-                      fontStyle: 'italic',
+-                      userSelect: 'none',
+-                    }}
+-                  >
+-                    {activeConversation?.is_locked ? 'This conversation is locked.' : 'Announcements are posted by instructors only.'}
+-                  </p>
+-                ) : (
+-                  <form
+-                    onSubmit={handleSendMessage}
+-                    className="chat-input-wrapper-container"
+-                  >
+-                    <div className="chat-input-form-mockup" style={{ display: 'flex', alignItems: 'flex-end', padding: '0.5rem', gap: '0.5rem' }}>
+-                        <div style={{ position: 'relative', paddingBottom: '4px' }} ref={emojiPickerRef}>
+-                            <button
+-                              type="button"
+-                              className="toolbar-btn"
+-                              onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+-                              title="Add emoji"
+-                            >
+-                              <Smile size={20} color={showEmojiPicker ? "var(--primary-color)" : "inherit"} />
+-                            </button>
+-                            {showEmojiPicker && (
+-                              <div className="emoji-picker-container">
+-                                <EmojiPicker
+-                                  onEmojiClick={onEmojiClick}
+-                                  autoFocusSearch={false}
+-                                  theme="auto"
+-                                  width={320}
+-                                  height={400}
+-                                />
+-                              </div>
+-                            )}
+-                        </div>
++                    {user?.is_admin && users?.length > 0 && (
++                      <MultiSelectDropdown
++                        icon={UserPlus}
++                        defaultLabel="Students"
++                        options={users}
++                        selectedValues={targetUsers}
++                        onChange={setTargetUsers}
++                        disabled={isGlobal}
++                      />
++                    )}
+ 
+-                        <textarea
+-                          ref={textareaRef}
+-                          value={newMessage}
+-                          onChange={handleTextareaChange}
+-                          onKeyDown={handleTextareaKeyDown}
+-                          placeholder={`Message ${activeConversation?.title ? formatConversationTitle(activeConversation.title) : 'channel'}...`}
+-                          className="chat-input-field"
+-                          rows={1}
++                    {user?.is_admin && (
++                      <label className="targeting-option checkbox-option" title="Send to everyone">
++                        <input 
++                          type="checkbox" 
++                          checked={isGlobal} 
++                          onChange={(e) => setIsGlobal(e.target.checked)}
+                         />
++                        <Globe size={16} /> Global
++                      </label>
++                    )}
++                    
++                    <label className="targeting-option checkbox-option" title="Send to online users">
++                      <input 
++                        type="checkbox" 
++                        checked={targetLive} 
++                        onChange={(e) => setTargetLive(e.target.checked)}
++                      />
++                      <Radio size={16} /> Live
++                    </label>
++                  </div>
+ 
+-                        <div style={{ paddingBottom: '4px' }}>
+-                            <button
+-                              type="submit"
+-                              disabled={!newMessage.trim()}
+-                              className="chat-send-btn"
+-                              aria-label="Send message"
+-                            >
+-                              <Send size={18} />
+-                            </button>
+-                        </div>
++                  <div className="feed-actions">
++                    <div style={{ position: 'relative' }} ref={emojiPickerRef}>
++                        <button
++                          type="button"
++                          className="toolbar-btn"
++                          onClick={() => setShowEmojiPicker(!showEmojiPicker)}
++                          title="Add emoji"
++                        >
++                          <Smile size={20} color={showEmojiPicker ? "var(--primary-color)" : "inherit"} />
++                        </button>
++                        {showEmojiPicker && (
++                          <div className="emoji-picker-container" style={{ position: 'absolute', bottom: '100%', right: 0, zIndex: 100 }}>
++                            <EmojiPicker
++                              onEmojiClick={onEmojiClick}
++                              autoFocusSearch={false}
++                              theme="auto"
++                              width={320}
++                              height={400}
++                            />
++                          </div>
++                        )}
+                     </div>
+-                  </form>
+-                )}
+-              </div>
++                    <button
++                      type="submit"
++                      disabled={!newMessage.trim()}
++                      className="chat-send-btn"
++                      aria-label="Post message"
++                    >
++                      <Send size={18} /> Post
++                    </button>
++                  </div>
++                </div>
+             </div>
+-          </>
+-        ) : (
+-          <div className="animate-fade-in" style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', position: 'relative', padding: '2rem' }}>
+-             <button 
+-               className="hamburger-toggle welcome-toggle" 
+-               onClick={toggleSidebar}
+-               aria-label="Toggle Sidebar"
+-               style={{ position: 'absolute', top: '1.5rem', left: '1rem' }}
+-             >
+-               <Menu size={24} />
+-             </button>
+-             <div className="animate-float" style={{ 
+-               width: '100px', 
+-               height: '100px', 
+-               borderRadius: '30px', 
+-               background: 'var(--bg-tertiary)', 
+-               display: 'flex', 
+-               alignItems: 'center', 
+-               justifyContent: 'center',
+-               marginBottom: '2rem',
+-               boxShadow: 'var(--shadow-lg)',
+-               border: '1px solid var(--border-subtle)'
+-             }}>
+-               <MessageSquare size={48} color="var(--primary-color)" />
+-             </div>
++          </form>
++        </div>
+ 
+-             <h2 style={{ 
+-               fontSize: 'clamp(1.25rem, 4vw, var(--font-4xl))', 
+-               fontWeight: 800, 
+-               letterSpacing: '-0.025em',
+-               lineHeight: 1.2,
+-               marginBottom: '1rem',
+-               background: 'var(--gradient-primary)',
+-               WebkitBackgroundClip: 'text',
+-               WebkitTextFillColor: 'transparent',
+-               textAlign: 'center'
+-             }}>
+-               Welcome back, {user?.nickname || user?.username || 'Student'}!
+-             </h2>
+-             {user?.role === 'student' && classrooms.length === 0 ? (
+-               <div style={{
+-                  background: 'var(--bg-secondary)',
+-                  padding: '2rem',
+-                  borderRadius: 'var(--radius-lg)',
+-                  border: '1px solid var(--border-subtle)',
+-                  marginTop: '1.5rem',
+-                  maxWidth: '500px',
+-                  textAlign: 'center',
+-                  boxShadow: 'var(--shadow-md)'
+-               }}>
+-                 <h3 style={{ fontSize: '1.25rem', color: 'var(--text-primary)', marginBottom: '1rem', fontWeight: 700 }}>
+-                   ≡ƒÄ« Unlock Your Classroom
+-                 </h3>
+-                 <p style={{ fontSize: '1rem', color: 'var(--text-secondary)', marginBottom: '1.5rem', lineHeight: 1.5 }}>
+-                   To unlock your classroom dashboard and join your classmates, you need to complete your first challenge.
+-                 </p>
+-                 <Link 
+-                   to="/submit-challenge" 
+-                   className="auth-button"
+-                   style={{ display: 'inline-flex', padding: '0.75rem 1.5rem', textDecoration: 'none', margin: '0 auto', width: 'auto' }}
+-                 >
+-                   Go Complete a Challenge
+-                 </Link>
+-                 <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginTop: '1rem', fontStyle: 'italic' }}>
+-                   Once you finish your first level, come back here and refresh the page!
+-                 </p>
+-               </div>
+-             ) : (
+-               <p style={{ fontSize: 'var(--font-lg)', color: 'var(--text-secondary)', textAlign: 'center', maxWidth: '400px' }}>
+-                 Pick a channel or conversation from the sidebar to start collaborating with your classmates.
+-               </p>
+-             )}
++        <div 
++          className="feed-messages"
++          onScroll={handleScroll}
++        >
++          <div className="feed-messages-inner">
++            {messages.length === 0 ? (
++              <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
++                No messages to display. Be the first to post!
++              </div>
++            ) : (
++              messages.map((msg, index) => (
++                <ChatMessage 
++                  key={msg.id || index}
++                  msg={msg}
++                  user={user}
++                  onDelete={handleDeleteMessage}
++                />
++              ))
++            )}
++            
++            {isLoadingMore && (
++              <div style={{ textAlign: 'center', padding: '1rem', color: 'var(--text-muted)' }}>
++                Loading more...
++              </div>
++            )}
++            
++            {!hasMore && messages.length > 0 && (
++              <div style={{ textAlign: 'center', padding: '1rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>
++                You've reached the end of the feed.
++              </div>
++            )}
+           </div>
+-        )}
++        </div>
+       </div>
+-
+-      <NewConversationModal 
+-        isOpen={isModalOpen}
+-        onClose={() => setIsModalOpen(false)}
+-        onSubmit={handleCreateConversation}
+-        title={newConversationTitle}
+-        setTitle={setNewConversationTitle}
+-        classrooms={classrooms}
+-        selectedClassroomId={selectedClassroomId}
+-        setSelectedClassroomId={setSelectedClassroomId}
+-        isCreating={isCreating}
+-      />
+-
+-      <ManageConversationModal 
+-        isOpen={isEditModalOpen}
+-        onClose={() => setIsEditModalOpen(false)}
+-        onSubmit={handleUpdateConversation}
+-        onDelete={handleDeleteConversation}
+-        title={editTitle}
+-        setTitle={setEditTitle}
+-        isLocked={editIsLocked}
+-        setIsLocked={setEditIsLocked}
+-        slowMode={editSlowMode}
+-        setSlowMode={setEditSlowMode}
+-        isUpdating={isUpdating}
+-      />
+     </div>
+   );
+ };
+diff --git a/frontend/templates/base.html b/frontend/templates/base.html
+index 24f356fc..d46e4c79 100644
+--- a/frontend/templates/base.html
++++ b/frontend/templates/base.html
+@@ -94,7 +94,6 @@ Summary: Base layout template with header, navigation, and toast messages.
+                                 <li><a href="{{ url_for('achievements.submit_certificate') }}"><i class="bi bi-patch-check"></i> Certificate</a></li>
+                                 <li><a href="{{ url_for('challenge.submit_challenge') }}"><i class="bi bi-lightning-charge"></i> Challenge</a></li>
+                                 <li><a href="https://benmega.github.io/screen-recorder/"><i class="bi bi-record-circle"></i> Record</a></li>
+-                                <li><a href="{{ url_for('message.conversation_history') }}"><i class="bi bi-chat-right-text"></i> History</a></li>
+                                 <li><a href="{{ url_for('user.logout') }}"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
+                             </ul>
+                     </li>

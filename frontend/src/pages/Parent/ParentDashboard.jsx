@@ -1,28 +1,40 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Loader2, LogOut, Users, Eye, User, UserPlus, Plus, MoreVertical } from 'lucide-react';
+import { Loader2, MoreVertical, User } from 'lucide-react';
 import toast from 'react-hot-toast';
 import client from '../../api/client';
-import useAuthStore from '../../store/useAuthStore';
-import AddChildModal from './AddChildModal';
-import './ParentDashboard.css';
 
-const getInitials = (name) => {
-    if (!name) return '?';
-    const parts = name.split(/[\s_-]+/);
-    if (parts.length > 1) {
-        return (parts[0][0] + parts[1][0]).toUpperCase();
-    }
-    return name.slice(0, 2).toUpperCase();
-};
+import DesktopNotice from '../../components/common/DesktopNotice';
+import './ParentDashboard.css';
 
 const ParentDashboard = () => {
     const navigate = useNavigate();
     const [children, setChildren] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [isModalOpen, setIsModalOpen] = useState(false);
     const [openMenu, setOpenMenu] = useState(null);
+    const [connectCode, setConnectCode] = useState('');
+    const [connectError, setConnectError] = useState(null);
+    const [isConnecting, setIsConnecting] = useState(false);
+
+    const handleConnectChild = async (e) => {
+        e.preventDefault();
+        setConnectError(null);
+        setIsConnecting(true);
+        
+        try {
+            await client.post('/api/parents/connect/code', { code: connectCode });
+            toast.success('Child connected successfully!');
+            setConnectCode('');
+            fetchChildren();
+        } catch (err) {
+            const msg = err.response?.data?.error || 'Failed to connect. Invalid code?';
+            setConnectError(msg);
+            toast.error(msg);
+        } finally {
+            setIsConnecting(false);
+        }
+    };
 
     const fetchChildren = async () => {
         try {
@@ -39,10 +51,6 @@ const ParentDashboard = () => {
         fetchChildren();
     }, []);
 
-    const handleLogout = async () => {
-        await useAuthStore.getState().logout();
-        navigate('/');
-    };
 
     const handleDisconnect = async (childId, childName) => {
         if (!window.confirm(`Remove ${childName} from your account? You can reconnect later with their code.`)) {
@@ -77,136 +85,109 @@ const ParentDashboard = () => {
 
     return (
         <div className="parent-dashboard animate-page-entry">
-            {/* ── Gradient Header Banner ── */}
-            <header className="parent-header glass-panel">
-                <div className="parent-header-content">
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                        <div className="header-icon-container">
-                            <img src="/images/logo.ico" alt="Blossom Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
-                        </div>
-                        <div className="parent-header-text">
-                            <h1>Your Children's Progress</h1>
-                            <p>Track achievements, coursework, and coding activity</p>
-                        </div>
-                    </div>
-                    <div className="parent-header-actions">
-                        <button className="btn-premium btn-premium-sm" onClick={() => setIsModalOpen(true)}>
-                            <UserPlus size={16} />
-                            Add Child
-                        </button>
-                        <button className="btn-secondary btn-secondary-sm" onClick={handleLogout}>
-                            <LogOut size={16} />
-                            Sign Out
-                        </button>
-                    </div>
-                </div>
-            </header>
-
             {/* ── Card Grid ── */}
             <main className="parent-body">
+                <DesktopNotice />
                 {(() => {
                     let gridClass = 'children-grid';
-                    if (children.length > 0) {
-                        const totalCards = children.length + 1;
-                        if (totalCards <= 2) gridClass += ' grid-few';
-                        else if (totalCards <= 4) gridClass += ' grid-medium';
-                        else gridClass += ' grid-many';
-                    }
+                    const totalCards = children.length + 1;
+                    if (totalCards <= 2) gridClass += ' grid-few';
+                    else if (totalCards <= 4) gridClass += ' grid-medium';
+                    else gridClass += ' grid-many';
+
                     return (
                         <div className={gridClass}>
                             {error && (
-                        <div className="parent-error">
-                            <h3>Something went wrong</h3>
-                            <p>{error}</p>
-                        </div>
-                    )}
+                                <div className="parent-error">
+                                    <h3>Something went wrong</h3>
+                                    <p>{error}</p>
+                                </div>
+                            )}
 
-                    {!error && children.length === 0 && (
-                        <div className="parent-empty-state">
-                            <Users size={48} strokeWidth={1.2} />
-                            <h3>No Children Linked</h3>
-                            <p>
-                                Your account doesn't have any students linked yet.
-                                Please contact the administrator to connect your child's account.
-                            </p>
-                            <button className="btn-premium btn-premium-sm" onClick={() => setIsModalOpen(true)} style={{ marginTop: '1.5rem' }}>
-                                <UserPlus size={16} />
-                                Add Child
-                            </button>
-                        </div>
-                    )}
-
-                    {children.map((child) => (
-                        <div
-                            key={child.id}
-                            className="child-card glass-panel"
-                        >
-                            <div className="child-card-menu">
-                                <button
-                                    className="menu-btn"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        setOpenMenu(openMenu === child.id ? null : child.id);
-                                    }}
-                                    title="Options"
+                            {children.map((child) => (
+                                <div
+                                    key={child.id}
+                                    className="child-card glass-panel"
                                 >
-                                    <MoreVertical size={18} />
-                                </button>
-                                {openMenu === child.id && (
-                                    <div className="child-menu-dropdown">
+                                    <div className="child-card-menu">
                                         <button
-                                            className="menu-item disconnect"
+                                            className="menu-btn"
                                             onClick={(e) => {
                                                 e.stopPropagation();
-                                                setOpenMenu(null);
-                                                handleDisconnect(child.id, child.nickname || child.username);
+                                                setOpenMenu(openMenu === child.id ? null : child.id);
                                             }}
+                                            title="Options"
                                         >
-                                            Remove Child
+                                            <MoreVertical size={18} />
                                         </button>
+                                        {openMenu === child.id && (
+                                            <div className="child-menu-dropdown">
+                                                <button
+                                                    className="menu-item disconnect"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setOpenMenu(null);
+                                                        handleDisconnect(child.id, child.nickname || child.username);
+                                                    }}
+                                                >
+                                                    Remove Child
+                                                </button>
+                                            </div>
+                                        )}
                                     </div>
-                                )}
-                            </div>
-                            <div onClick={() => navigate(`/parent/report/${child.id}`)} style={{ cursor: 'pointer', flex: 1 }}>
-                                {child.profile_picture_url && !child.profile_picture_url.includes('Default_pfp.jpg') ? (
-                                    <img
-                                        className="child-avatar"
-                                        src={child.profile_picture_url}
-                                        alt={child.username}
-                                    />
-                                ) : (
-                                    <div className="child-avatar-initials">
-                                        {getInitials(child.nickname || child.username)}
+                                    <div onClick={() => navigate(`/parent/report/${child.id}`)} style={{ cursor: 'pointer', flex: 1 }}>
+                                        {child.profile_picture_url && !child.profile_picture_url.includes('Default_pfp.jpg') ? (
+                                            <img
+                                                className="child-avatar"
+                                                src={child.profile_picture_url}
+                                                alt={child.username}
+                                            />
+                                        ) : (
+                                            <div className="child-avatar-initials">
+                                                <User size={36} strokeWidth={1.5} />
+                                            </div>
+                                        )}
+                                        <h3 className="child-name">{child.nickname || child.username}</h3>
+                                        <p className="child-nickname" style={{ marginBottom: 0 }}>@{child.username}</p>
                                     </div>
-                                )}
-                                <h3 className="child-name">{child.nickname || child.username}</h3>
-                                <p className="child-nickname" style={{ marginBottom: 0 }}>@{child.username}</p>
-                            </div>
-                        </div>
-                    ))}
+                                </div>
+                            ))}
 
-                    {children.length > 0 && (
-                        <div 
-                            className="child-card ghost-card glass-panel"
-                            onClick={() => setIsModalOpen(true)}
-                        >
-                            <div className="ghost-card-icon">
-                                <Plus size={32} strokeWidth={2} />
-                            </div>
-                            <h3 className="child-name ghost-text">Add Child</h3>
-                            <p className="child-nickname ghost-text" style={{ marginBottom: 0 }}>Connect another account</p>
+                            {!error && (
+                                <div className="child-card connect-card glass-panel">
+                                    <h3>Enter Your Code</h3>
+                                    <p className="connect-card-desc">
+                                        If you received a physical card or connection code from the school, enter the 6-character code below to instantly link the student.
+                                    </p>
+                                    <form onSubmit={handleConnectChild} className="connect-form">
+                                        <input 
+                                            type="text" 
+                                            placeholder="Enter connection code..." 
+                                            value={connectCode}
+                                            onChange={(e) => setConnectCode(e.target.value)}
+                                            maxLength={10}
+                                            className="connect-input"
+                                        />
+                                        <button 
+                                            type="submit" 
+                                            className="btn-premium btn-premium-sm" 
+                                            disabled={isConnecting || !connectCode.trim()}
+                                            style={{ width: '100%', justifyContent: 'center' }}
+                                        >
+                                            {isConnecting ? 'Connecting...' : 'Connect'}
+                                        </button>
+                                        {connectError && (
+                                            <div className="connect-error-msg">
+                                                {connectError}
+                                            </div>
+                                        )}
+                                    </form>
+                                </div>
+                            )}
                         </div>
-                    )}
-                </div>
-                );
+                    );
                 })()}
             </main>
-
-            <AddChildModal 
-                isOpen={isModalOpen} 
-                onClose={() => setIsModalOpen(false)} 
-                onAdded={fetchChildren} 
-            />
         </div>
     );
 };

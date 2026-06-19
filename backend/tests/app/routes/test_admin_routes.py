@@ -288,11 +288,52 @@ def test_reset_password(client, sample_admin, sample_user, test_app, init_db):
         assert response.status_code == 404
 
 
-def test_duck_transactions_data(client, sample_admin):
-    """Test retrieving duck transaction data."""
+def test_admin_transactions(client, test_app, sample_admin, sample_user):
+    """Test retrieving, filtering, and searching admin transactions."""
     login_as_admin(client, sample_admin)
 
-    pass # test deprecated
+    with test_app.app_context():
+        from application.models.duck_transaction import DuckTransaction
+        # Clear existing transactions if any to start fresh
+        DuckTransaction.query.delete()
+        
+        # Add a couple of sample transactions
+        tx1 = DuckTransaction(user_id=sample_user.id, amount=10.0, reason="Earned daily bonus")
+        tx2 = DuckTransaction(user_id=sample_user.id, amount=-5.0, reason="Spent on emoji pack")
+        db.session.add_all([tx1, tx2])
+        db.session.commit()
+
+        # Test all transactions
+        response = client.get("/api/admin/transactions")
+        assert response.status_code == 200
+        data = json.loads(response.data)
+        assert data["status"] == "success"
+        txs = data["data"]["transactions"]
+        assert len(txs) == 2
+
+        # Test earned transactions
+        response = client.get("/api/admin/transactions?type=earned")
+        assert response.status_code == 200
+        data = json.loads(response.data)
+        txs = data["data"]["transactions"]
+        assert len(txs) == 1
+        assert all(t["amount"] > 0 for t in txs)
+
+        # Test spent transactions
+        response = client.get("/api/admin/transactions?type=spent")
+        assert response.status_code == 200
+        data = json.loads(response.data)
+        txs = data["data"]["transactions"]
+        assert len(txs) == 1
+        assert all(t["amount"] < 0 for t in txs)
+
+        # Test search query
+        response = client.get("/api/admin/transactions?search=emoji")
+        assert response.status_code == 200
+        data = json.loads(response.data)
+        txs = data["data"]["transactions"]
+        assert len(txs) == 1
+        assert txs[0]["reason"] == "Spent on emoji pack"
 
 
 def test_get_users(client, test_app, sample_users, sample_admin, init_db):
@@ -331,3 +372,47 @@ def test_set_username_proper_case_handling(client, test_app, sample_user, sample
 
         updated_user = db.session.get(User, sample_user.id)
         assert updated_user.username == mixed_case_username.lower()
+
+
+def test_admin_transactions_route(client, test_app, sample_user, sample_admin):
+    """Test that the /transactions route works, filters correctly, and requires admin."""
+    from application.models.duck_transaction import DuckTransaction
+
+    # 1. Test requires auth
+    response = client.get("/api/admin/transactions")
+    assert response.status_code == 401
+
+    # 2. Test works with admin auth
+    login_as_admin(client, sample_admin)
+
+    with test_app.app_context():
+        # Add a couple of dummy transactions
+        tx1 = DuckTransaction(user_id=sample_user.id, amount=10.0, reason="Test Earned")
+        tx2 = DuckTransaction(user_id=sample_user.id, amount=-5.0, reason="Test Spent")
+        db.session.add_all([tx1, tx2])
+        db.session.commit()
+
+        # Fetch all
+        resp = client.get("/api/admin/transactions")
+        assert resp.status_code == 200
+        data = resp.get_json()["data"]
+        assert len(data["transactions"]) >= 2
+
+        # Fetch earned only
+        resp_earned = client.get("/api/admin/transactions?type=earned")
+        assert resp_earned.status_code == 200
+        data_earned = resp_earned.get_json()["data"]
+        assert all(t["amount"] > 0 for t in data_earned["transactions"])
+
+        # Fetch spent only
+        resp_spent = client.get("/api/admin/transactions?type=spent")
+        assert resp_spent.status_code == 200
+        data_spent = resp_spent.get_json()["data"]
+        assert all(t["amount"] < 0 for t in data_spent["transactions"])
+
+        # Search filter
+        resp_search = client.get("/api/admin/transactions?search=Earned")
+        assert resp_search.status_code == 200
+        data_search = resp_search.get_json()["data"]
+        assert len(data_search["transactions"]) > 0
+        assert any("Earned" in t["reason"] for t in data_search["transactions"])

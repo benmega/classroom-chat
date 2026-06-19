@@ -126,6 +126,9 @@ def reset_password():
     if not user:
         return jsonify({"success": False, "message": "User not found"}), 404
 
+    if user.is_admin:
+        return jsonify({"success": False, "message": "Cannot reset password of another admin"}), 403
+
     user.set_password(new_password)
     db.session.commit()
     return jsonify({"success": True, "message": f"Password reset for {username}"})
@@ -186,6 +189,9 @@ def remove_user():
     if not user:
         return jsonify(success=False, message="User not found"), 404
 
+    if user.is_admin:
+        return jsonify(success=False, message="Cannot remove another admin"), 403
+
     try:
         db.session.delete(user)
         db.session.commit()
@@ -224,19 +230,27 @@ def adjust_ducks():
 @admin_bp.route("/set_username", methods=["POST"])
 @admin_only
 def set_username_route():
-    user_id = request.form.get("user_id")
+    user_id = request.form.get("user_id", type=int)
     username = request.form.get("username")
 
     if not user_id or not username:
         return jsonify({"success": False, "message": "Missing arguments"}), 400
 
+    if not re.fullmatch(r"[a-z0-9_]{3,30}", username.lower()):
+        return jsonify(success=False, message="Username must be 3-30 chars: lowercase letters, numbers, or underscores only"), 400
+
     user = db.session.get(User, user_id)
     if not user:
         return jsonify({"success": False, "message": "User not found"}), 404
 
-    user.username = username.lower()
-    db.session.commit()
-    return jsonify({"success": True, "message": "Username set successfully"})
+    import sqlalchemy.exc
+    try:
+        user.username = username.lower()
+        db.session.commit()
+        return jsonify({"success": True, "message": "Username set successfully"})
+    except sqlalchemy.exc.IntegrityError:
+        db.session.rollback()
+        return jsonify({"success": False, "message": "Username already exists"}), 409
 
 
 @admin_bp.route("/verify_password", methods=["POST"])
@@ -244,7 +258,7 @@ def set_username_route():
 def verify_password():
     password = request.form.get("password")
     username = request.form.get("username")
-    user_id = request.form.get("user_id")
+    user_id = request.form.get("user_id", type=int)
 
     # testing patch is done against application.routes.admin_routes.admin_pass by test framework
     # so we should use current_app for normal usage but support testing
@@ -257,10 +271,18 @@ def verify_password():
 
     if password == app_admin_pass:
         if user_id and username:
+            if not re.fullmatch(r"[a-z0-9_]{3,30}", username.lower()):
+                return jsonify({"success": False, "message": "Invalid username format"}), 400
+                
             user = db.session.get(User, user_id)
             if user:
-                user.username = username.lower()
-                db.session.commit()
+                import sqlalchemy.exc
+                try:
+                    user.username = username.lower()
+                    db.session.commit()
+                except sqlalchemy.exc.IntegrityError:
+                    db.session.rollback()
+                    return jsonify({"success": False, "message": "Username already exists"}), 409
         return jsonify({"success": True})
     else:
         return jsonify({"success": False}), 401
@@ -407,4 +429,46 @@ def get_classroom_connection_cards(classroom_id):
     cards.sort(key=lambda x: (x["nickname"] or x["username"]).lower())
     
     return {"classroom_name": classroom_name, "cards": cards}
+
+
+@admin_bp.route("/set_drawer", methods=["POST"])
+@admin_only
+@api_response
+def set_drawer():
+    username = request.json.get("username")
+    drawer = request.json.get("drawer")
+    
+    if not username:
+        return "Username is required", 400
+        
+    user = User.query.filter_by(username=username).first()
+    if not user:
+        return "User not found", 404
+        
+    if user.role != "student":
+        return "Drawers can only be assigned to students", 403
+        
+    if not drawer or str(drawer).strip() == "":
+        user.drawer = None
+    else:
+        drawer = str(drawer).strip()
+        if not re.fullmatch(r"0x[0-9A-Fa-f]{2}", drawer):
+            return "Drawer must be in hex format (e.g. 0xA6)", 400
+            
+        try:
+            val = int(drawer, 16)
+            if val < 0 or val > 35:
+                return "Drawer number must be between 0x00 and 0x23", 400
+        except ValueError:
+            return "Invalid hex drawer", 400
+            
+        user.drawer = drawer
+        
+    import sqlalchemy.exc
+    try:
+        db.session.commit()
+        return {"message": f"Drawer updated for {username}"}
+    except sqlalchemy.exc.IntegrityError:
+        db.session.rollback()
+        return "Drawer number is already assigned to another student", 409
 

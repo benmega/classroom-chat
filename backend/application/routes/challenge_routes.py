@@ -26,7 +26,7 @@ challenge = Blueprint("challenge", __name__, url_prefix="/challenge")
 BASE_PATTERN = (
     r"https://(?P<domain>[\w\.-]+)"
     r"(?:"
-    r"/play/(?:ozaria/)?level/(?P<challenge_slug>[\w-]+)"
+    r"/play/(?:(?:ozaria|junior)/)?level/(?P<challenge_slug>[\w-]+)"
     r"|/s/(?P<slug>[\w-]+)/lessons/(?P<lesson_id>\d+)/levels/(?P<level_id>\d+)"
     r")"
 )
@@ -107,6 +107,8 @@ def submit_challenge():
         return jsonify({"success": False, "message": msg}), 400
 
     duck_multiplier = config.duck_multiplier
+    if user.has_double_duck:
+        duck_multiplier *= 2
 
     # Process the URL
     challenge_check = detect_and_handle_challenge_url(
@@ -127,7 +129,12 @@ def submit_challenge():
         db.session.commit()
         duck_reward = details.get("duck_reward", 0)
         duck_word = "duck" if duck_reward == 1 else "ducks"
-        message = f"Congrats {user.username}, you earned {duck_reward} {duck_word}!"
+        
+        challenge_name = details.get("challenge_name")
+        if challenge_name:
+            message = f"Congratulations on completing {challenge_name}! You earned {duck_reward} {duck_word}!"
+        else:
+            message = f"Congrats {user.username}, you earned {duck_reward} {duck_word}!"
 
         # ---- Classroom enrollment trigger ----------------------------------
         # If the challenge log was successful, we check if it provided a
@@ -291,6 +298,7 @@ def _log_challenge(details, user, helper=None):
             "message": "Challenge logged successfully",
             "timestamp": challenge_log.timestamp,
             "classroom_id": challenge.classroom_id or course_instance.classroom_id,
+            "challenge_name": challenge.name,
         }
 
     except Exception as e:

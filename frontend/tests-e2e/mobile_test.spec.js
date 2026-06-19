@@ -17,6 +17,7 @@ test.describe('Mobile UI Audit Navigation', () => {
   }
 
   test('Explore all routes', async ({ page }) => {
+    test.slow(); // This audit test visits many pages — triple the default timeout
     // Enable console logging
     page.on('console', msg => console.log(`BROWSER CONSOLE: [${msg.type()}] ${msg.text()}`));
 

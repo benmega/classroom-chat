@@ -12,6 +12,7 @@ from .admin import (  # noqa: F401, E402
     project_routes,
     trade_routes,
     user_mgmt,
+    challenge_mgmt,
 )
 from .admin.crud_routes import crud_bp  # noqa: E402
 

@@ -13,7 +13,6 @@ def setup_models():
     from .banned_words import BannedWords  # noqa: F401
     from .challenge import Challenge  # noqa: F401
     from .challenge_log import ChallengeLog  # noqa: F401
-    from .conversation import Conversation  # noqa: F401
     from .course import Course  # noqa: F401
     from .message import Message  # noqa: F401
     from .project import Project  # noqa: F401

@@ -22,7 +22,7 @@ const CourseLevelBreakdown = () => {
     }
 
     return (
-        <div className="course-progress-container" style={{ padding: '2rem', maxWidth: '800px', margin: '0 auto' }}>
+        <div className="course-progress-container" style={{ padding: '2rem', maxWidth: '800px', margin: '0 auto', height: '100dvh', overflowY: 'auto', WebkitOverflowScrolling: 'touch' }}>
             <button className="back-button" onClick={() => navigate(-1)} style={{ marginBottom: '2rem' }}>
                 <ArrowLeft size={20} />
                 <span>Back to Skill Tree</span>

@@ -7,6 +7,8 @@ import ProjectPortfolio from '../../components/profile/ProjectPortfolio';
 import DigitalNotebook from '../../components/profile/DigitalNotebook';
 import ProjectModal from '../../components/profile/ProjectModal';
 import NoteSlideshow from '../../components/profile/NoteSlideshow';
+import DesktopNotice from '../../components/common/DesktopNotice';
+import CourseProgress from '../../components/profile/CourseProgress';
 import '../../assets/css/sprite.css';
 import '../Profile/Profile.css';
 import './ParentReportCard.css';
@@ -19,15 +21,6 @@ const ParentReportCard = () => {
     const [error, setError] = useState(null);
     const [selectedProject, setSelectedProject] = useState(null);
     const [slideshowIndex, setSlideshowIndex] = useState(null);
-    const [expandedCourse, setExpandedCourse] = useState(null);
-
-    const toggleCourse = (course) => {
-        if (expandedCourse === course) {
-            setExpandedCourse(null);
-        } else {
-            setExpandedCourse(course);
-        }
-    };
 
     useEffect(() => {
         const fetchReport = async () => {
@@ -78,22 +71,19 @@ const ParentReportCard = () => {
         );
     }
 
-    const cc = reportData.course_progress?.codecombat || {};
-    const oz = reportData.course_progress?.ozaria || {};
-
     return (
         <>
         <div className="report-card-page animate-page-entry">
             {/* ── Header ── */}
             <header className="report-header glass-panel">
-                <div className="report-header-inner" style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', justifyContent: 'flex-start' }}>
+                <div className="report-header-inner">
                     <button
                         className="btn-secondary btn-secondary-sm report-back-btn"
-                        style={{ marginBottom: '0' }}
                         onClick={() => navigate('/parent/dashboard')}
+                        title="Back to Dashboard"
+                        aria-label="Back to Dashboard"
                     >
                         <ArrowLeft size={16} />
-                        Back
                     </button>
 
                     <div className="report-student-info">
@@ -105,13 +95,17 @@ const ParentReportCard = () => {
                             />
                         ) : (
                             <div className="report-student-avatar-placeholder">
-                                <User size={24} strokeWidth={1.5} />
+                                <User size={20} strokeWidth={1.5} />
                             </div>
                         )}
                         <div className="report-student-details">
-                            <h1 style={{ fontSize: '1.5rem', marginBottom: '0' }}>{reportData.username}</h1>
+                            <h1 className="report-student-name">
+                                {reportData.nickname || reportData.username}
+                            </h1>
                             {reportData.nickname && (
-                                <p className="report-student-nick" style={{ margin: '0', fontSize: '0.9rem' }}>{reportData.nickname}</p>
+                                <p className="report-student-id">
+                                    {reportData.username}
+                                </p>
                             )}
                         </div>
                     </div>
@@ -119,101 +113,10 @@ const ParentReportCard = () => {
             </header>
 
             {/* ── Body Sections ── */}
-            <div className="dashboard-grid" style={{ marginTop: '20px' }}>
+            <DesktopNotice />
+            <div className="dashboard-grid report-dashboard-grid" style={{ marginTop: '20px' }}>
                 <div className="column-left">
-                    {/* Course Progress */}
-                    <section className="dashboard-panel">
-                        <div className="panel-header">
-                            <h2><BookOpen size={20} /> Course Progress</h2>
-                        </div>
-                        <div className="progress-list-container">
-                            <div className="progress-list">
-                                <div 
-                                    className="progress-item clickable-progress"
-                                    onClick={() => toggleCourse('codecombat')}
-                                    style={{ cursor: 'pointer' }}
-                                >
-                                    <div className="prog-label">
-                                        <span>CodeCombat</span>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                            <span>{cc.percent || 0}%</span>
-                                            {expandedCourse === 'codecombat' ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                                        </div>
-                                    </div>
-                                    <div className="progress-track">
-                                        <div
-                                            className="progress-fill"
-                                            style={{ width: `${cc.percent || 0}%` }}
-                                        />
-                                    </div>
-                                    <small>{cc.levels_completed || 0} Total Levels</small>
-
-                                    {expandedCourse === 'codecombat' && cc.breakdown && (
-                                        <div className="course-breakdown animate-fade-in" style={{ marginTop: '12px', padding: '10px', background: 'rgba(0,0,0,0.1)', borderRadius: '8px' }}>
-                                            <h4 style={{ fontSize: '0.85rem', marginBottom: '8px', color: 'var(--text-color)' }}>Chapters Completed</h4>
-                                            {cc.breakdown.length > 0 ? cc.breakdown.map((item, idx) => (
-                                                <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: '4px', color: 'var(--text-muted)' }}>
-                                                    <span>{item.course_name}</span>
-                                                    <span style={{ fontWeight: 600 }}>{item.levels_completed}</span>
-                                                </div>
-                                            )) : (
-                                                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>No chapter data available.</div>
-                                            )}
-                                        </div>
-                                    )}
-                                </div>
-
-                                {(oz.levels_completed > 0 || oz.percent > 0) && (
-                                    <div 
-                                        className="progress-item clickable-progress"
-                                        onClick={() => toggleCourse('ozaria')}
-                                        style={{ cursor: 'pointer', marginTop: '1rem' }}
-                                    >
-                                        <div className="prog-label">
-                                            <span>Ozaria</span>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                <span>{oz.percent || 0}%</span>
-                                                {expandedCourse === 'ozaria' ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                                            </div>
-                                        </div>
-                                        <div className="progress-track">
-                                            <div
-                                                className="progress-fill ozaria"
-                                                style={{ width: `${oz.percent || 0}%` }}
-                                            />
-                                        </div>
-                                        <small>{oz.levels_completed || 0} Total Levels</small>
-
-                                        {expandedCourse === 'ozaria' && oz.breakdown && (
-                                            <div className="course-breakdown animate-fade-in" style={{ marginTop: '12px', padding: '10px', background: 'rgba(0,0,0,0.1)', borderRadius: '8px' }}>
-                                                <h4 style={{ fontSize: '0.85rem', marginBottom: '8px', color: 'var(--text-color)' }}>Chapters Completed</h4>
-                                                {oz.breakdown.length > 0 ? oz.breakdown.map((item, idx) => (
-                                                    <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: '4px', color: 'var(--text-muted)' }}>
-                                                        <span>{item.course_name}</span>
-                                                        <span style={{ fontWeight: 600 }}>{item.levels_completed}</span>
-                                                    </div>
-                                                )) : (
-                                                    <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>No chapter data available.</div>
-                                                )}
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                        {reportData.course_progress && (
-                            <div style={{ padding: '0 1.25rem 1.25rem', textAlign: 'center' }}>
-                                <Link 
-                                    to={`/parent/course-progress/${studentId}`} 
-                                    state={{ target: reportData }}
-                                    className="btn-primary btn-primary-sm" 
-                                    style={{ width: '100%', display: 'inline-flex', justifyContent: 'center' }}
-                                >
-                                    View Detailed Tree
-                                </Link>
-                            </div>
-                        )}
-                    </section>
+                    <CourseProgress target={reportData} isParentView={true} studentId={studentId} />
 
                     {/* Achievements */}
                     <section className="dashboard-panel">

@@ -11,14 +11,14 @@ const ProfileHeader = ({ target, isOwner, pfpInputRef, onPfpChange }) => {
             <div 
                 className="header-background"
                 style={target.has_custom_wallpaper && target.profile_wallpaper ? {
-                    backgroundImage: `url(${target.profile_wallpaper})`,
+                    backgroundImage: `url(${target.profile_wallpaper.startsWith('http') ? target.profile_wallpaper : getApiUrl('/user/profile_wallpapers/' + target.profile_wallpaper)})`,
                     backgroundSize: 'cover',
                     backgroundPosition: 'center',
                     backgroundRepeat: 'no-repeat'
                 } : {}}
             ></div>
             <div className="profile-header-content">
-                <div className="avatar-wrapper" onClick={() => isOwner && pfpInputRef.current?.click()}>
+                <div className={`avatar-wrapper ${target.has_animated_border ? 'perk-animated-border' : ''}`} onClick={() => isOwner && pfpInputRef.current?.click()}>
                     <SmartImage 
                         src={getApiUrl(target.profile_picture_url)} 
                         alt={target.username} 
@@ -52,13 +52,6 @@ const ProfileHeader = ({ target, isOwner, pfpInputRef, onPfpChange }) => {
                 </div>
 
                 <div className="header-stats">
-                    <div className="stat-box" title={target.duck_balance?.toLocaleString()}>
-                        <span className="label">Ducks</span>
-                        <span className="value">{formatLargeNumber(target.duck_balance)}</span>
-                    </div>
-                    
-                    <div className="stat-divider"></div>
-
                     <div className="stat-box">
                         <span className="label">Levels</span>
                         <span className="value">{target.total_levels || 0}</span>
@@ -71,22 +64,16 @@ const ProfileHeader = ({ target, isOwner, pfpInputRef, onPfpChange }) => {
                         <span className="value">{target.projects?.length || 0}</span>
                     </div>
                     
-                    {target.packets > 0 && (
+                    {target.role !== 'parent' && (
                         <>
                             <div className="stat-divider"></div>
-                            <div className="stat-box" title={target.packets.toLocaleString()}>
-                                <span className="label">Packets</span>
-                                <span className="value">{formatLargeNumber(target.packets)}</span>
+
+                            <div className="stat-box highlight" title={target.earned_ducks?.toLocaleString()}>
+                                <span className="label">Lifetime</span>
+                                <span className="value">{formatLargeNumber(target.earned_ducks)}</span>
                             </div>
                         </>
                     )}
-                    
-                    <div className="stat-divider"></div>
-
-                    <div className="stat-box highlight" title={target.earned_ducks?.toLocaleString()}>
-                        <span className="label">Lifetime</span>
-                        <span className="value">{formatLargeNumber(target.earned_ducks)}</span>
-                    </div>
                 </div>
             </div>
         </div>

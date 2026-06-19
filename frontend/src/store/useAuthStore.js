@@ -17,8 +17,8 @@ const useAuthStore = create((set) => ({
     return { hamburgerProgress: progress };
   }),
   
-  checkAuth: async () => {
-    set({ isLoading: true });
+  checkAuth: async (background = false) => {
+    if (!background) set({ isLoading: true });
     try {
       const response = await client.get('/user/api/auth/status', { timeout: 10000 });
       if (response.data.data.logged_in) {
@@ -40,7 +40,7 @@ const useAuthStore = create((set) => ({
       const isOffline = !error.response || [502, 503, 504].includes(error.response.status);
       set({ user: null, isAuthenticated: false, isServerOffline: isOffline, hamburgerProgress: 0 });
     } finally {
-      set({ isLoading: false });
+      if (!background) set({ isLoading: false });
     }
   },
   

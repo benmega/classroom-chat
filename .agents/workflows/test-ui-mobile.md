@@ -13,7 +13,8 @@ This workflow provides the standardized procedure for finding and recording UI b
     1. Navigate to `http://localhost:8000/dev-login?role=admin` — the backend returns JSON confirming the session.
     2. Then navigate to `http://localhost:5173/` and verify the dashboard/chat loads (not the login page).
     - **CRITICAL**: Port **8000** is the backend. Port **5173** is the React app. They share the same session cookie.
-    - Do NOT use the standard `/login` form unless the task is explicitly about testing login behaviour.
+    - **Parent Account Testing**: When reviewing the mobile view for parents, you can use the dev-login shortcut by navigating to `http://localhost:8000/dev-login?role=parent`. Alternatively, navigate to the standard `/login` form and use credentials: username `test_parent` and password `parent123`.
+    - Do NOT use the standard `/login` form unless the task is explicitly about testing login behaviour, or you are using the test parent credentials.
     - If `/dev-login` returns an error, **stop and report the failure**. Do not attempt workarounds.
 4.  **Explore**: Use `browser_subagent` to systematically navigate through the application focusing on **common user flows** (e.g., Login -> Dashboard -> Chat -> Profile).
     - **QA Standards**: Reference [testing_and_qa.md](file:///c:/Users/Ben/AntiGravity/classroom-chat/docs/testing_and_qa.md) for the standardized audit criteria.

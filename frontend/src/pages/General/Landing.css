@@ -157,10 +157,10 @@
 
 @keyframes slideShow {
     0%, 15% { transform: translateX(0); }
-    20%, 35% { transform: translateX(-100cqi); }
-    40%, 55% { transform: translateX(-200cqi); }
-    60%, 75% { transform: translateX(-300cqi); }
-    80%, 95% { transform: translateX(-400cqi); }
+    20%, 35% { transform: translateX(-100%); }
+    40%, 55% { transform: translateX(-200%); }
+    60%, 75% { transform: translateX(-300%); }
+    80%, 95% { transform: translateX(-400%); }
     100% { transform: translateX(0); }
 }
 

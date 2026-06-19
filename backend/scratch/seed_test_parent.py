@@ -30,8 +30,8 @@ else:
     # Create test parent account
     pw_hash = generate_password_hash("parent123")
     c.execute(
-        "INSERT INTO users (username, password_hash, nickname, role, is_approved, slug) VALUES (?, ?, ?, ?, ?, ?)",
-        ("test_parent", pw_hash, "Test Parent", "parent", 1, "test-parent")
+        "INSERT INTO users (username, password_hash, nickname, role, is_approved, slug, ducks) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        ("test_parent", pw_hash, "Test Parent", "parent", 1, "test-parent", 0)
     )
     parent_id = c.lastrowid
     print(f"\nCreated test parent account: id={parent_id}, username=test_parent, password=parent123")

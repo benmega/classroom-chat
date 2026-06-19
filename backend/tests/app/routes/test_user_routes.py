@@ -10,27 +10,12 @@ from datetime import date
 from io import BytesIO
 from unittest.mock import patch
 
-import pytest
 from PIL import Image
 
 from application import db
 from application.models.user import User
-from application.models.conversation import Conversation
 from application.models.project import Project
 from application.models.skill import Skill
-from application.constants import GLOBAL_CLASSROOM_ID
-
-@pytest.fixture
-def sample_conversation_for_login(init_db):
-    """Fixture to create a conversation for login tests."""
-    conversation = Conversation(title="Recent Conversation", classroom_id=GLOBAL_CLASSROOM_ID)
-
-    db.session.add(conversation)
-    db.session.commit()
-    return conversation
-
-
-# --- API / Utility Tests ---
 
 
 def test_get_users(client, init_db, sample_user):
@@ -82,7 +67,7 @@ def test_login_get(client, init_db):
     assert b"login" in response.data.lower()
 
 
-def test_login_success(client, init_db, sample_user, sample_conversation_for_login):
+def test_login_success(client, init_db, sample_user):
     """Test successful login."""
     sample_user.set_password("testpassword123")
     db.session.commit()

@@ -16,20 +16,19 @@ const ALIGNED_NODES = [
   { id: 'cc-junior', title: 'Code Combat Junior', aliases: ['Code Combat Junior', 'Junior'], domain: 'codecombat', track: 'cs', row: 1 },
   { id: 'cs-1', title: 'Introduction to Computer Science', aliases: ['Introduction to Computer Science', 'Computer Science 1', 'CS1'], domain: 'codecombat', track: 'cs', row: 2 },
   { id: 'oz-1', title: 'Sky Mountain', aliases: ['Sky Mountain', 'Ozaria 1', 'Chapter1', 'Chapter 1'], domain: 'ozaria', track: 'ozaria', row: 3 },
-  { id: 'gd-1', title: 'Game Development 1', aliases: ['Game Development 1', 'GD1'], domain: 'codecombat', track: 'gd', row: 4 },
+  { id: 'gd-1', title: 'Game Development 1', aliases: ['Game Development 1', 'GD1'], domain: 'codecombat', track: 'gd', row: 3 },
+  { id: 'cs-2', title: 'Computer Science 2', aliases: ['Computer Science 2', 'CS2'], domain: 'codecombat', track: 'cs', row: 4 },
   { id: 'oz-2', title: 'Ozaria Chapter 2', aliases: ['Ozaria Chapter 2', 'Chapter 2', 'Ozaria 2', 'Chapter2'], domain: 'ozaria', track: 'ozaria', row: 5 },
-  { id: 'wd-1', title: 'Web Development 1', aliases: ['Web Development 1', 'WD1'], domain: 'codecombat', track: 'wd', row: 6 },
-  { id: 'cs-2', title: 'Computer Science 2', aliases: ['Computer Science 2', 'CS2'], domain: 'codecombat', track: 'cs', row: 7 },
-  { id: 'oz-3', title: 'Ozaria Chapter 3', aliases: ['Ozaria Chapter 3', 'Chapter 3', 'Ozaria 3', 'Chapter3'], domain: 'ozaria', track: 'ozaria', row: 8 },
-  { id: 'gd-2', title: 'Game Development 2', aliases: ['Game Development 2', 'GD2'], domain: 'codecombat', track: 'gd', row: 9 },
-  { id: 'wd-2', title: 'Web Development 2', aliases: ['Web Development 2', 'WD2'], domain: 'codecombat', track: 'wd', row: 10 },
-  { id: 'cs-3', title: 'Computer Science 3', aliases: ['Computer Science 3', 'CS3'], domain: 'codecombat', track: 'cs', row: 11 },
-  { id: 'cc-8', title: 'Code Combat 8', aliases: ['Code Combat 8'], domain: 'codecombat', track: 'cs', row: 12 },
-  { id: 'cs-4', title: 'Computer Science 4', aliases: ['Computer Science 4', 'CS4'], domain: 'codecombat', track: 'cs', row: 13 },
-  { id: 'oz-4', title: 'Ozaria 4', aliases: ['Ozaria 4', 'Ozaria Chapter 4', 'Chapter 4', 'Chapter4'], domain: 'ozaria', track: 'ozaria', row: 14 },
-  { id: 'gd-3', title: 'Game Development 3', aliases: ['Game Development 3', 'GD3'], domain: 'codecombat', track: 'gd', row: 14 },
-  { id: 'cs-5', title: 'Computer Science 5', aliases: ['Computer Science 5', 'CS5'], domain: 'codecombat', track: 'cs', row: 15 },
-  { id: 'cs-6', title: 'Computer Science 6', aliases: ['Computer Science 6', 'CS6'], domain: 'codecombat', track: 'cs', row: 16 },
+  { id: 'wd-1', title: 'Web Development 1', aliases: ['Web Development 1', 'WD1'], domain: 'codecombat', track: 'wd', row: 5 },
+  { id: 'cs-3', title: 'Computer Science 3', aliases: ['Computer Science 3', 'CS3'], domain: 'codecombat', track: 'cs', row: 6 },
+  { id: 'oz-3', title: 'Ozaria Chapter 3', aliases: ['Ozaria Chapter 3', 'Chapter 3', 'Ozaria 3', 'Chapter3'], domain: 'ozaria', track: 'ozaria', row: 7 },
+  { id: 'gd-2', title: 'Game Development 2', aliases: ['Game Development 2', 'GD2'], domain: 'codecombat', track: 'gd', row: 7 },
+  { id: 'wd-2', title: 'Web Development 2', aliases: ['Web Development 2', 'WD2'], domain: 'codecombat', track: 'wd', row: 7 },
+  { id: 'cs-4', title: 'Computer Science 4', aliases: ['Computer Science 4', 'CS4'], domain: 'codecombat', track: 'cs', row: 8 },
+  { id: 'oz-4', title: 'Ozaria 4', aliases: ['Ozaria 4', 'Ozaria Chapter 4', 'Chapter 4', 'Chapter4'], domain: 'ozaria', track: 'ozaria', row: 9 },
+  { id: 'gd-3', title: 'Game Development 3', aliases: ['Game Development 3', 'GD3'], domain: 'codecombat', track: 'gd', row: 9 },
+  { id: 'cs-5', title: 'Computer Science 5', aliases: ['Computer Science 5', 'CS5'], domain: 'codecombat', track: 'cs', row: 10 },
+  { id: 'cs-6', title: 'Computer Science 6', aliases: ['Computer Science 6', 'CS6'], domain: 'codecombat', track: 'cs', row: 11 },
 ];
 
 const BRANCH_EDGES = [
@@ -56,7 +55,7 @@ const getAncestors = (nodeId, processedNodes) => {
     while (added) {
         added = false;
         TRACKS.forEach(track => {
-            const trackNodes = processedNodes.filter(n => n.track === track.id);
+            const trackNodes = processedNodes.filter(n => n.track === track.id && !n.is_extra);
             for (let i = 0; i < trackNodes.length - 1; i++) {
                 if (ancestors.has(trackNodes[i + 1].id) && !ancestors.has(trackNodes[i].id)) {
                     ancestors.add(trackNodes[i].id); added = true;
@@ -78,7 +77,7 @@ const getDescendants = (nodeId, processedNodes) => {
     while (added) {
         added = false;
         TRACKS.forEach(track => {
-            const trackNodes = processedNodes.filter(n => n.track === track.id);
+            const trackNodes = processedNodes.filter(n => n.track === track.id && !n.is_extra);
             for (let i = 0; i < trackNodes.length - 1; i++) {
                 if (descendants.has(trackNodes[i].id) && !descendants.has(trackNodes[i + 1].id)) {
                     descendants.add(trackNodes[i + 1].id); added = true;
@@ -98,7 +97,7 @@ const getPrerequisiteTitles = (nodeId, processedNodes) => {
     const titles = [];
     const node = processedNodes.find(n => n.id === nodeId);
     if (!node) return "";
-    const trackNodes = processedNodes.filter(n => n.track === node.track);
+    const trackNodes = processedNodes.filter(n => n.track === node.track && !n.is_extra);
     const myIndex = trackNodes.findIndex(n => n.id === node.id);
     if (myIndex > 0) {
         titles.push(trackNodes[myIndex - 1].title);
@@ -184,7 +183,7 @@ const CourseProgressTree = () => {
             if (ancestors.size === 0) return node.id;
             
             let hasActiveParent = false;
-            const trackNodes = processedNodes.filter(n => n.track === node.track);
+            const trackNodes = processedNodes.filter(n => n.track === node.track && !n.is_extra);
             const myIndex = trackNodes.findIndex(n => n.id === node.id);
             if (myIndex > 0 && trackNodes[myIndex - 1].has_started) {
                 hasActiveParent = true;
@@ -220,7 +219,7 @@ const CourseProgressTree = () => {
             let lineIdCounter = 0;
 
             TRACKS.forEach(track => {
-                const trackNodes = processedNodes.filter(n => n.track === track.id);
+                const trackNodes = processedNodes.filter(n => n.track === track.id && !n.is_extra);
                 for (let i = 0; i < trackNodes.length - 1; i++) {
                     const fromNode = trackNodes[i];
                     const toNode = trackNodes[i + 1];
@@ -274,6 +273,29 @@ const CourseProgressTree = () => {
         return () => window.removeEventListener('resize', updateLines);
     }, [processedNodes, isDesktop]);
 
+    const hasScrolledRef = useRef(false);
+
+    useLayoutEffect(() => {
+        if (location.state?.highlightCourseName && Object.keys(nodeRefs.current).length > 0 && !hasScrolledRef.current) {
+            const highlightName = location.state.highlightCourseName;
+            const targetNode = processedNodes.find(n => n.title === highlightName || matchCourse(highlightName, n.aliases || []));
+            if (targetNode && nodeRefs.current[targetNode.id]) {
+                hasScrolledRef.current = true;
+                setTimeout(() => {
+                    nodeRefs.current[targetNode.id].scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    
+                    // Optional: add a temporary highlight effect
+                    const el = nodeRefs.current[targetNode.id];
+                    el.style.transition = 'box-shadow 0.5s ease';
+                    el.style.boxShadow = '0 0 20px 5px var(--primary-color)';
+                    setTimeout(() => {
+                        el.style.boxShadow = '';
+                    }, 2000);
+                }, 100);
+            }
+        }
+    }, [location.state, processedNodes]);
+
     if (!progressData) {
         return (
             <div className="report-card-page animate-page-entry" style={{ padding: '2rem', textAlign: 'center' }}>
@@ -316,11 +338,29 @@ const CourseProgressTree = () => {
             )}
 
             {/* Desktop Headers */}
-            {TRACKS.map(track => (
-                <div key={track.id} className="branch-header glass-panel desktop-header" style={{ gridColumn: track.col, gridRow: 1 }}>
-                    <h2>{track.title}</h2>
-                </div>
-            ))}
+            {TRACKS.map(track => {
+                const trackNodes = processedNodes.filter(n => n.track === track.id && !n.is_extra);
+                let totalPercent = 0;
+                trackNodes.forEach(n => {
+                    if (n.levels_total) {
+                        totalPercent += Math.min((n.levels_completed / n.levels_total), 1);
+                    } else if (n.has_started && n.levels_completed > 0) {
+                        totalPercent += 1;
+                    }
+                });
+                const percent = trackNodes.length > 0 ? (totalPercent / trackNodes.length) * 100 : 0;
+                const isComplete = trackNodes.length > 0 && trackNodes.every(n => n.has_started && n.levels_completed >= (n.levels_total || 1));
+                
+                return (
+                    <div key={track.id} className={`branch-header glass-panel desktop-header ${isComplete ? 'track-completed' : ''}`} style={{ gridColumn: track.col, gridRow: 1, position: 'relative', overflow: 'hidden' }}>
+                        <div className="track-progress-bg" style={{ width: `${percent}%` }}></div>
+                        <h2 style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+                            <span>{track.title}</span>
+                            <span style={{ fontSize: '0.8rem', opacity: 0.8, fontWeight: 'normal' }}>{Math.round(percent)}%</span>
+                        </h2>
+                    </div>
+                );
+            })}
             
             {/* Nodes */}
             {processedNodes.map(node => {

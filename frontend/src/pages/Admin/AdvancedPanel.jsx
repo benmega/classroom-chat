@@ -9,7 +9,8 @@ import {
     FileText, 
     Code, 
     BarChart3,
-    Trophy
+    Trophy,
+    Database
 } from 'lucide-react';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
@@ -124,6 +125,17 @@ const AdvancedPanel = () => {
                         <p>Manage platform achievements and milestones.</p>
                         <button className="btn-utility" onClick={() => navigate('/admin/add-achievement')}>
                             <Trophy size={16} /> Manage Achievements
+                        </button>
+                    </div>
+                </section>
+
+                <section className="utility-card card">
+                    <div className="utility-icon primary"><Database size={20} /></div>
+                    <div className="utility-content">
+                        <h3>Challenge Sets</h3>
+                        <p>Bulk import challenges via CSV.</p>
+                        <button className="btn-utility" onClick={() => navigate('/admin/add-challenges')}>
+                            <Database size={16} /> Manage Challenges
                         </button>
                     </div>
                 </section>

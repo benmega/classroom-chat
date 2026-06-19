@@ -2,7 +2,7 @@ import React from 'react';
 import { TrendingUp, Clock, Users } from 'lucide-react';
 import DuckIcon from '../Icons/DuckIcon';
 
-const AdminStats = ({ stats, onApprovalClick, onTradeClick }) => {
+const AdminStats = ({ stats, onApprovalClick, onTradeClick, onEarnedWeekClick }) => {
     return (
         <div className="stats-grid">
             <div className="stat-card">
@@ -12,7 +12,7 @@ const AdminStats = ({ stats, onApprovalClick, onTradeClick }) => {
                     <span className="stat-value">{stats.total_ducks.toLocaleString()}</span>
                 </div>
             </div>
-            <div className="stat-card">
+            <div className="stat-card clickable" onClick={onEarnedWeekClick}>
                 <div className="stat-icon week"><TrendingUp size={24} /></div>
                 <div className="stat-info">
                     <span className="stat-label">Earned This Week</span>

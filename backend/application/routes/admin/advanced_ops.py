@@ -1,5 +1,4 @@
 from application.extensions import db
-from application.models.conversation import Conversation, conversation_users
 from application.models.message import Message
 from application.decorators.admin_required import admin_only
 from application.decorators.api_response import api_response
@@ -15,22 +14,14 @@ def purge_history():
     This is a destructive action.
     """
     try:
-        # Delete all messages first
+        # Delete all messages first (cascades to target tables)
         num_messages = Message.query.count()
         Message.query.delete(synchronize_session=False)
-
-        # Explicitly clear association table
-        db.session.execute(conversation_users.delete())
-
-        # Delete all conversations
-        num_conversations = Conversation.query.count()
-        Conversation.query.delete(synchronize_session=False)
 
         db.session.commit()
 
         return {
             "message": "History purged successfully.",
-            "deleted_conversations": num_conversations,
             "deleted_messages": num_messages,
         }
     except Exception as e:

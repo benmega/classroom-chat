@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+.grid {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 20px;
+    border: 1px solid black;
+}
+.main {
+    background: lightblue;
+}
+.sidebar {
+    background: lightcoral;
+    height: 0;
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+.sidebar h3 {
+    margin: 0 0 10px 0;
+}
+.code {
+    background: #333;
+    color: white;
+    overflow: auto;
+    min-height: 0;
+    margin: 0;
+}
+</style>
+</head>
+<body>
+    <h2>Test: Right is smaller</h2>
+    <div class="grid">
+        <div class="main">
+            <p>Tall line 1</p><p>Tall line 2</p><p>Tall line 3</p><p>Tall line 4</p><p>Tall line 5</p>
+        </div>
+        <div class="sidebar">
+            <h3>Technical Logic</h3>
+            <pre class="code">Short code</pre>
+        </div>
+    </div>
+    
+    <h2>Test: Right is taller</h2>
+    <div class="grid">
+        <div class="main">
+            <p>Short line 1</p><p>Short line 2</p>
+        </div>
+        <div class="sidebar">
+            <h3>Technical Logic</h3>
+            <pre class="code">Very long code<br>Very long code<br>Very long code<br>Very long code<br>Very long code<br>Very long code<br>Very long code<br>Very long code<br>Very long code<br>Very long code<br></pre>
+        </div>
+    </div>
+</body>
+</html>

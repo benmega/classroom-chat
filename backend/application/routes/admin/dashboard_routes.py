@@ -193,3 +193,52 @@ def export_transactions():
         filename=f"duck_transactions_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
     )
     return response
+
+
+@admin_bp.route("/transactions", methods=["GET"])
+@admin_only
+@api_response
+def admin_transactions():
+    from sqlalchemy.orm import joinedload
+
+    page = request.args.get("page", 1, type=int)
+    per_page = request.args.get("per_page", 20, type=int)
+    tx_type = request.args.get("type", "all", type=str)
+    search_query = request.args.get("search", "", type=str)
+
+    query = DuckTransaction.query.options(joinedload(DuckTransaction.user))
+
+    if tx_type == "earned":
+        query = query.filter(DuckTransaction.amount > 0)
+    elif tx_type == "spent":
+        query = query.filter(DuckTransaction.amount < 0)
+
+    if search_query:
+        query = query.join(User).filter(
+            db.or_(
+                User._username.ilike(f"%{search_query}%"),
+                User.nickname.ilike(f"%{search_query}%"),
+                DuckTransaction.reason.ilike(f"%{search_query}%"),
+            )
+        )
+
+    # Order by timestamp descending
+    query = query.order_by(DuckTransaction.timestamp.desc())
+
+    pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+
+    transactions = []
+    for tx in pagination.items:
+        tx_dict = tx.to_dict()
+        tx_dict["username"] = tx.user.username if tx.user else "System"
+        tx_dict["nickname"] = tx.user.nickname if tx.user else ""
+        transactions.append(tx_dict)
+
+    return {
+        "transactions": transactions,
+        "total": pagination.total,
+        "page": page,
+        "pages": pagination.pages,
+        "per_page": per_page,
+    }
+

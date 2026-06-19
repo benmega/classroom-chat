@@ -615,6 +615,7 @@ def test_url_pattern_matches_various_formats():
         "https://codecombat.com/play/level/dungeons-of-kithgard?course=intro-to-python",
         "https://codecombat.com/play/level/dungeons-of-kithgard?course=intro-to-python&course-instance=fall2024",
         "https://www.ozaria.com/play/ozaria/level/1upm4l1l2b?course=5d8a57abe8919b28d5113af1&course-instance=634a512688e9fc00249dc9ba",
+        "https://codecombat.com/play/junior/level/step-change?course=65f32b6c87c07dbeb5ba1936"
     ]
 
     for url in test_urls:
@@ -637,6 +638,12 @@ def test_extract_challenge_details_domains():
     oz_res = _extract_challenge_details(oz_url)
     assert oz_res["domain"] == "www.ozaria.com"
     assert oz_res["challenge_slug"] == "chapter-1-sky-mountain"
+
+    # Test CodeCombat Junior
+    junior_url = "https://codecombat.com/play/junior/level/step-change"
+    junior_res = _extract_challenge_details(junior_url)
+    assert junior_res["domain"] == "codecombat.com"
+    assert junior_res["challenge_slug"] == "step-change"
 
 
 def test_detect_and_handle_ozaria_domain(

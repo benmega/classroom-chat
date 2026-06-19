@@ -555,8 +555,67 @@ def api_upload_project_image():
         return {"new_url": new_url, "filename": filename}
 
     except Exception as e:
-        current_app.logger.error(f"Error uploading project image: {e}")
-        return "Server error during image upload.", 500
+        print(f"Error saving image: {str(e)}")
+        return "Error saving image", 500
+
+
+@user.route("/api/profile-wallpaper", methods=["POST"])
+@require_login
+@api_response
+def api_edit_profile_wallpaper():
+    user_id = session.get("user")
+    user_obj = db.session.get(User, user_id)
+
+    if not user_obj.has_custom_wallpaper:
+        return "You do not own the Custom Profile Wallpaper perk.", 403
+
+    if "profile_wallpaper" not in request.files:
+        return "No file part in request", 400
+
+    file = request.files["profile_wallpaper"]
+    if file.filename == "":
+        return "No file selected", 400
+
+    if not allowed_file(file.filename):
+        return (
+            "Invalid file format. Allowed: " + ", ".join(Config.ALLOWED_EXTENSIONS),
+            400,
+        )
+
+    file.seek(0, os.SEEK_END)
+    file_size = file.tell()
+    file.seek(0)
+    if file_size > 10 * 1024 * 1024:
+        return "File too large. Maximum size is 10MB.", 400
+
+    try:
+        filename = f"{uuid.uuid4().hex}.{file.filename.rsplit('.', 1)[1].lower()}"
+        secure_path = os.path.join(
+            current_app.config["UPLOAD_FOLDER"], "profile_wallpapers", filename
+        )
+
+        os.makedirs(os.path.dirname(secure_path), exist_ok=True)
+
+        img = Image.open(file)
+        img.save(secure_path)
+
+        if user_obj.profile_wallpaper:
+            old_path = os.path.join(
+                current_app.config["UPLOAD_FOLDER"],
+                "profile_wallpapers",
+                user_obj.profile_wallpaper,
+            )
+            if os.path.exists(old_path):
+                os.remove(old_path)
+
+        user_obj.profile_wallpaper = filename
+        db.session.commit()
+
+        new_url = url_for("user.profile_wallpaper", filename=filename)
+        return {"new_url": new_url, "filename": filename, "message": "Profile wallpaper updated successfully!"}
+    except Exception as e:
+        print(f"Error saving wallpaper: {str(e)}")
+        return "Error saving wallpaper", 500
 
 
 @user.route("/delete_profile_picture", methods=["POST"])
@@ -600,6 +659,23 @@ def profile_picture(filename):
     else:
         # Fallback to default if not found on disk
         return send_from_directory(static_images_folder, "Default_pfp.jpg")
+
+
+@limiter.limit("50 per minute")
+@user.route("/profile_wallpapers/<path:filename>")
+def profile_wallpaper(filename):
+    upload_folder = os.path.join(Config.UPLOAD_FOLDER, "profile_wallpapers")
+    safe_path = os.path.normpath(filename)
+
+    if os.path.isabs(safe_path) or safe_path.startswith(".."):
+        abort(400)
+
+    full_path = os.path.join(upload_folder, safe_path)
+
+    if os.path.exists(full_path) and os.path.isfile(full_path):
+        return send_from_directory(upload_folder, safe_path)
+    else:
+        return "", 404
 
 
 @limiter.limit("100 per minute")

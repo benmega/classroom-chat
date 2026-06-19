@@ -5,11 +5,9 @@ Summary: Database helper functions for users, messages, and conversations.
 """
 
 import uuid
-from datetime import datetime
 
-from flask import abort, session
+from flask import abort
 
-from application.models.conversation import Conversation
 from application.models.message import Message
 from application.models.user import User, db
 
@@ -41,73 +39,65 @@ def get_user(identifier):
         abort(500, description=f"An error occurred: {str(e)}")
 
 
-def save_message_to_db(user_id, message, conversation_id=None, message_type="text"):
+def save_message_to_db(user_id, message, is_global=False, target_live=False, target_classrooms=None, target_user_ids=None, message_type="text"):
     """
-    Saves a message to the database, creating a new conversation if needed.
+    Saves a feed post (message) to the database with visibility targeting.
 
     Args:
         user_id (int): The ID of the user sending the message.
         message (str): The content of the message.
-        conversation_id (int, optional): The ID of the conversation.
+        is_global (bool): If true, visible to everyone.
+        target_live (bool): If true, targets currently online users.
+        target_classrooms (list): List of classroom IDs to target.
+        target_user_ids (list): List of specific user IDs to target.
         message_type (str): The type of message (default is "text").
 
     Returns:
-        dict: A dictionary containing success status, message ID, conversation ID,
+        dict: A dictionary containing success status, message ID,
               or error details if applicable.
     """
     try:
-        if not conversation_id:
-            conversation_id = session.get("conversation_id")
-
-        if not conversation_id:
-            print("No active conversation found. Creating a new one.")
-            conversation = Conversation(
-                title=f"Conversation started on {datetime.utcnow().strftime('%B %d, %Y')}",
-                creator_id=user_id,
-                classroom_id="archive",  # Default for auto-created orphans
-            )
-            db.session.add(conversation)
-            db.session.flush()  # Get the ID before committing
-
-            session["conversation_id"] = conversation.id
-            print(f"New conversation created with ID: {conversation.id}")
-        else:
-            conversation = db.session.get(Conversation, conversation_id)
-            if not conversation:
-                print(
-                    f"Error: Conversation ID {conversation_id} not found in the database. Creating a new one."
-                )
-                conversation = Conversation(
-                    title=f"Conversation started on {datetime.utcnow().strftime('%B %d, %Y')}",
-                    creator_id=user_id,
-                    classroom_id="archive",
-                )
-                db.session.add(conversation)
-                db.session.flush()
-                session["conversation_id"] = conversation.id
-
-        # Ensure the user is associated with this conversation
+        from application.models.classroom import Classroom
         user = db.session.get(User, user_id)
-        if user and user not in conversation.users:
-            conversation.users.append(user)
-            db.session.add(conversation)
-
+        if not user:
+            return {"success": False, "error": "User not found"}
+        
         new_message = Message(
             user_id=user_id,
-            conversation_id=conversation.id,
             content=message,
             message_type=message_type,
+            is_global=is_global,
+            target_live=target_live,
+            has_animated_border=user.has_animated_border,
+            chat_font_color=user.chat_font_color
         )
+        
+        if target_live:
+            # Get currently online users
+            online_users = User.query.filter_by(is_online=True).all()
+            new_message.target_users.extend(online_users)
+            
+        if target_user_ids:
+            for uid in target_user_ids:
+                u = db.session.get(User, uid)
+                if u and u not in new_message.target_users:
+                    new_message.target_users.append(u)
+
+        if target_classrooms:
+            for cid in target_classrooms:
+                classroom = db.session.get(Classroom, cid)
+                if classroom:
+                    new_message.target_classrooms.append(classroom)
+
         db.session.add(new_message)
         db.session.commit()
 
         print(
-            f"Message saved with ID: {new_message.id} in conversation ID: {conversation.id} for user {user_id}"
+            f"Message saved with ID: {new_message.id} for user {user_id}"
         )
         return {
             "success": True,
             "message_id": new_message.id,
-            "conversation_id": conversation.id,
         }
 
     except Exception as e:

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Save, X, Lock, User as UserIcon } from 'lucide-react';
+import { Save, X, Lock, User as UserIcon, Eye, EyeOff, Copy } from 'lucide-react';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
 import useAuthStore from '../../store/useAuthStore';
@@ -19,12 +19,21 @@ const EditProfile = () => {
     const [isSaving, setIsSaving] = useState(false);
     const [profilePic, setProfilePic] = useState(null);
     const [previewUrl, setPreviewUrl] = useState(null);
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [connectionCode, setConnectionCode] = useState('');
 
     useEffect(() => {
         if (user) {
             setNickname(user.nickname || user.username);
             setBio(user.bio || '');
             setPreviewUrl(user.profile_picture ? getApiUrl(`/user/profile_pictures/${user.profile_picture}`) : getApiUrl('/static/images/Default_pfp.jpg'));
+
+            if (user.role !== 'parent') {
+                client.get('/user/api/parent-code')
+                    .then(res => setConnectionCode(res.data?.data?.connection_code || res.data?.connection_code))
+                    .catch(err => console.error('Failed to fetch connection code:', err));
+            }
         }
     }, [user]);
 
@@ -105,6 +114,52 @@ const EditProfile = () => {
                                 <label>Username (readonly)</label>
                                 <input type="text" value={user?.username || ''} disabled className="form-control readonly" />
                             </div>
+                            {user?.role !== 'parent' && (
+                                <div className="form-group">
+                                    <label>Parent Connection Code</label>
+                                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                        <input 
+                                            type="text" 
+                                            value={connectionCode || 'Loading...'} 
+                                            disabled 
+                                            className="form-control readonly" 
+                                            style={{ flex: 1, fontFamily: 'monospace', fontWeight: 'bold', letterSpacing: '2px' }} 
+                                        />
+                                        <button 
+                                            type="button" 
+                                            className="btn-secondary" 
+                                            onClick={() => {
+                                                if (connectionCode) {
+                                                    navigator.clipboard.writeText(connectionCode);
+                                                    toast.success('Code copied to clipboard!');
+                                                }
+                                            }}
+                                            disabled={!connectionCode}
+                                            title="Copy Code"
+                                        >
+                                            <Copy size={18} />
+                                        </button>
+                                    </div>
+                                    <small style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginTop: '0.25rem', display: 'block' }}>
+                                        Share this code with your parents to allow them to connect to your account.
+                                    </small>
+                                </div>
+                            )}
+                            {user?.drawer && (
+                                <div className="form-group">
+                                    <label>Assigned Drawer (readonly)</label>
+                                    <input 
+                                        type="text" 
+                                        value={user.drawer} 
+                                        disabled 
+                                        className="form-control readonly" 
+                                        style={{ fontFamily: 'monospace', fontWeight: 'bold' }} 
+                                    />
+                                    <small style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginTop: '0.25rem', display: 'block' }}>
+                                        This is your physical drawer assignment in the classroom.
+                                    </small>
+                                </div>
+                            )}
                             <div className="form-group">
                                 <label>Nickname</label>
                                 <input 
@@ -135,25 +190,47 @@ const EditProfile = () => {
                             <h3 className="section-title"><Lock size={18} /> Password Security</h3>
                             <div className="form-group">
                                 <label>New Password</label>
-                                <input 
-                                    type="password" 
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    placeholder="Leave blank to keep current" 
-                                    className="form-control" 
-                                    autoComplete="new-password"
-                                />
+                                <div style={{ position: 'relative' }}>
+                                    <input 
+                                        type={showPassword ? "text" : "password"} 
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                        placeholder="Leave blank to keep current" 
+                                        className="form-control" 
+                                        autoComplete="new-password"
+                                        style={{ paddingRight: '2.5rem' }}
+                                    />
+                                    <button 
+                                        type="button" 
+                                        onClick={() => setShowPassword(!showPassword)}
+                                        style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                        tabIndex="-1"
+                                    >
+                                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                    </button>
+                                </div>
                             </div>
                             <div className="form-group">
                                 <label>Confirm New Password</label>
-                                <input 
-                                    type="password" 
-                                    value={confirmPassword}
-                                    onChange={(e) => setConfirmPassword(e.target.value)}
-                                    placeholder="Confirm your new password" 
-                                    className="form-control" 
-                                    autoComplete="new-password"
-                                />
+                                <div style={{ position: 'relative' }}>
+                                    <input 
+                                        type={showConfirmPassword ? "text" : "password"} 
+                                        value={confirmPassword}
+                                        onChange={(e) => setConfirmPassword(e.target.value)}
+                                        placeholder="Confirm your new password" 
+                                        className="form-control" 
+                                        autoComplete="new-password"
+                                        style={{ paddingRight: '2.5rem' }}
+                                    />
+                                    <button 
+                                        type="button" 
+                                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                        style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                        tabIndex="-1"
+                                    >
+                                        {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                    </button>
+                                </div>
                             </div>
                         </section>
                     </div>

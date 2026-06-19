@@ -30,6 +30,7 @@ _LOCAL_HOSTS = {"127.0.0.1", "::1", "localhost"}
 _AGENT_ROLES = {
     "admin": "ben",
     "student": "blossomstudent01",
+    "parent": "test_parent",
 }
 
 

@@ -11,17 +11,14 @@ def serialize_message(msg):
         nickname = getattr(user, "nickname", None)
         profile_pic = getattr(user, "profile_picture", None)
         slug = getattr(user, "slug", None)
-        has_animated_border = getattr(user, "has_animated_border", False)
-        has_chat_font = getattr(user, "has_chat_font", False)
-        chat_font_color = getattr(user, "chat_font_color", None)
     else:
         username = None
         nickname = "Deleted User"
         profile_pic = None
         slug = None
-        has_animated_border = False
-        has_chat_font = False
-        chat_font_color = None
+
+    has_animated_border = getattr(msg, "has_animated_border", False)
+    chat_font_color = getattr(msg, "chat_font_color", None)
 
     timestamp = getattr(msg, "created_at", None)
     if timestamp is not None:
@@ -48,6 +45,5 @@ def serialize_message(msg):
         "is_global": classroom_id == GLOBAL_CLASSROOM_ID,
         "conversation_id": msg.conversation_id,
         "has_animated_border": has_animated_border,
-        "has_chat_font": has_chat_font,
         "chat_font_color": chat_font_color,
     }

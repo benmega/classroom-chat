@@ -1,0 +1,108 @@
+.multiselect-dropdown {
+  position: relative;
+  display: inline-block;
+  font-family: inherit;
+}
+
+.multiselect-dropdown.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.multiselect-trigger {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: transparent;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-full);
+  padding: 0.35rem 0.8rem;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.multiselect-trigger:hover:not(:disabled) {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+.multiselect-trigger.active {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  border-color: var(--primary-color);
+}
+
+.multiselect-trigger .multiselect-label {
+  max-width: 150px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.multiselect-trigger .chevron {
+  transition: transform 0.2s ease;
+}
+
+.multiselect-trigger.active .chevron {
+  transform: rotate(180deg);
+}
+
+.multiselect-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  min-width: 200px;
+  max-width: 250px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  z-index: 100;
+  padding: 0.5rem 0;
+}
+
+.multiselect-options-list {
+  max-height: 250px;
+  overflow-y: auto;
+}
+
+.multiselect-option {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+}
+
+.multiselect-option:hover {
+  background: var(--bg-tertiary);
+}
+
+.multiselect-option .checkbox {
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--border-subtle);
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.multiselect-option .checkbox.checked {
+  background: var(--primary-color);
+  border-color: var(--primary-color);
+  color: white;
+}
+
+.multiselect-divider {
+  height: 1px;
+  background: var(--border-subtle);
+  margin: 0.5rem 0;
+}

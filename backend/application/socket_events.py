@@ -104,9 +104,7 @@ def handle_disconnect(auth=None):
 @socketio.on("send_message")
 def handle_send_message(data):
     """
-    Handle 'send_message' from the client.
-    Server re-validates enrollment — client room IDs are not trusted.
-    Emits 'message_received' only to the correct classroom room.
+    Handle 'send_message' from the client for the unified feed.
     """
     user_id = session.get("user")
     if not user_id:
@@ -117,64 +115,87 @@ def handle_send_message(data):
         return
 
     content = data.get("content")
-    conversation_id = data.get("conversation_id")
-
-    if not content or not conversation_id:
+    if not content or len(content) > 4000:
         return
 
-    # Re-fetch the conversation to get its classroom_id
-    from .models.conversation import Conversation
+    # Parse targeting parameters from frontend
+    is_global = data.get("is_global", False)
+    target_live = data.get("target_live", False)
+    target_classrooms = data.get("target_classrooms", [])
+    target_users = data.get("target_users", [])
 
-    conv = db.session.get(Conversation, conversation_id)
-    if not conv:
-        return
+    # Server-side validation
+    if not user.is_admin:
+        # Students can't send global messages
+        is_global = False
+        # Students can only target their own classrooms
+        enrolled_ids = _get_enrolled_classroom_ids(user.id)
+        # Filter target_classrooms to only those the student is enrolled in
+        if target_classrooms:
+            target_classrooms = [cid for cid in target_classrooms if cid in enrolled_ids]
+        else:
+            # Default to all their classrooms if not specified
+            target_classrooms = enrolled_ids
+            
+        # Optional: restrict students from targeting specific users unless explicitly allowed.
+        # But per the prompt, students can post to live students and their specific classroom.
+        target_users = []
 
-    classroom_id = conv.classroom_id
-    is_global = classroom_id == GLOBAL_CLASSROOM_ID
-
-    # ---- Server-side authorization ----------------------------------------
-    if is_global:
-        if not user.is_admin:
-            # Silently drop — UI should have already gated this
-            return
-    else:
-        if not user.is_admin:
-            enrolled = db.session.execute(
-                select(user_classrooms.c.classroom_id).where(
-                    user_classrooms.c.user_id == user.id,
-                    user_classrooms.c.classroom_id == classroom_id,
-                )
-            ).first()
-            if not enrolled:
-                return  # Not enrolled — drop silently; HTTP route returns 403
-
-    # Ensure conversation is tracked in session for save_message_to_db
-    session["conversation_id"] = conversation_id
-
-    save_result = save_message_to_db(user.id, content, conversation_id=conversation_id)
+    save_result = save_message_to_db(
+        user.id, 
+        message=content, 
+        is_global=is_global, 
+        target_live=target_live, 
+        target_classrooms=target_classrooms,
+        target_user_ids=target_users
+    )
 
     if not save_result.get("success"):
         return
 
+    from .models.message import Message
+    msg = db.session.get(Message, save_result.get("message_id"))
+
     payload = {
-        "id": save_result.get("message_id"),
+        "id": msg.id,
         "user_id": user.id,
-        "sender_id": user.id,
-        "username": user.username,
-        "nickname": user.nickname or user.username,
-        "user_profile_pic": user.profile_picture,
+        "user_name": user.nickname if user.nickname else user.username,
         "slug": user.slug,
-        "content": content,
-        "timestamp": datetime.utcnow().isoformat(),
-        "conversation_id": save_result.get("conversation_id"),
-        "classroom_id": classroom_id,
-        "is_global": is_global,
-        "message_type": "text",
+        "user_profile_pic": user.profile_picture,
+        "content": msg.content,
+        "message_type": msg.message_type,
+        "created_at": msg.created_at.isoformat() if msg.created_at else datetime.utcnow().isoformat(),
+        "is_global": msg.is_global,
+        "target_live": msg.target_live,
+        "target_classrooms": [c.name for c in msg.target_classrooms] if msg.target_classrooms else [],
+        "target_users": [(u.nickname or u.username) for u in msg.target_users] if msg.target_users else [],
+        "is_struck": msg.is_struck,
+        "has_animated_border": msg.has_animated_border,
+        "chat_font_color": msg.chat_font_color
     }
 
-    # Emit ONLY to the classroom room — never broadcast globally
-    target_room = f"classroom:{classroom_id}"
-    emit("message_received", payload, room=target_room)
+    # Emit to appropriate rooms
+    if is_global:
+        emit("message_received", payload, room=f"classroom:{GLOBAL_CLASSROOM_ID}")
+    else:
+        # Emit to specific classrooms
+        for cid in target_classrooms:
+            emit("message_received", payload, room=f"classroom:{cid}")
+            
+        # Emit to sender
+        emit("message_received", payload, room=f"user:{user.id}")
+        
+        # Emit to specifically targeted users
+        for uid in target_users:
+            if uid != user.id:
+                emit("message_received", payload, room=f"user:{uid}")
+
+        if target_live:
+            online_users = User.query.filter_by(is_online=True).all()
+            for u in online_users:
+                # Basic dedup: if u in target_users, we already sent
+                if u.id not in target_users and u.id != user.id:
+                    emit("message_received", payload, room=f"user:{u.id}")
 
 
 def emit_classroom_enrolled(user_id: int, classroom_dict: dict):

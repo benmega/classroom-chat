@@ -89,14 +89,15 @@ function makeField(col, resourceName) {
  * Given a column descriptor, return the correct react-admin *input* component
  * (used in Create / Edit forms).
  */
-function makeInput(col, resourceName) {
+function makeInput(col, resourceName, isCreate = false) {
     const key = `${resourceName}.${col.name}`;
     const fkOverride = FK_OVERRIDES[key];
     const isDisabled = col.primary_key || READONLY_FIELDS.has(col.name);
 
-    // Primary key → always disabled text
+    // Primary key → disabled text unless creating Course or CourseInstance
     if (col.primary_key) {
-        return <TextInput key={col.name} source={col.name} disabled />;
+        const canEditPK = isCreate && ["Course", "CourseInstance"].includes(resourceName);
+        return <TextInput key={col.name} source={col.name} disabled={!canEditPK} />;
     }
 
     // Foreign key with a known reference override → ReferenceInput
@@ -175,8 +176,8 @@ function DynamicCreate({ resourceName }) {
         <Create>
             <SimpleForm>
                 {fields
-                    .filter(col => !col.primary_key) // omit auto-generated PK on create
-                    .map(col => makeInput(col, resourceName))}
+                    .filter(col => !col.primary_key || ["Course", "CourseInstance"].includes(resourceName))
+                    .map(col => makeInput(col, resourceName, true))}
             </SimpleForm>
         </Create>
     );
