@@ -53,7 +53,6 @@ depends_on = None
 def upgrade():
     bind = op.get_bind()
     inspector = sa.inspect(bind)
-<<<<<<< HEAD
     existing_tables = inspector.get_table_names()
 
     # ── Clean up orphaned temp tables from any previous failed run ───────────
@@ -64,27 +63,6 @@ def upgrade():
     for orphan in ('_alembic_tmp_challenge_logs', '_alembic_tmp_duck_trade_log'):
         if orphan in existing_tables:
             bind.execute(sa.text(f'DROP TABLE "{orphan}"'))
-=======
-    existing_tables = set(inspector.get_table_names())
-
-    if 'trade' in existing_tables:
-        op.drop_table('trade')
-    if 'bounties' in existing_tables:
-        op.drop_table('bounties')
-    
-    challenge_logs_cols = {c['name'] for c in inspector.get_columns('challenge_logs')}
-    duck_trade_log_cols = {c['name'] for c in inspector.get_columns('duck_trade_log')}
-    challenge_logs_indexes = {idx['name'] for idx in inspector.get_indexes('challenge_logs')}
-    duck_trade_log_indexes = {idx['name'] for idx in inspector.get_indexes('duck_trade_log')}
-
-    if 'user_id' not in challenge_logs_cols:
-        with op.batch_alter_table('challenge_logs', schema=None) as batch_op:
-            batch_op.add_column(sa.Column('user_id', sa.Integer(), nullable=True))
-
-    if 'user_id' not in duck_trade_log_cols:
-        with op.batch_alter_table('duck_trade_log', schema=None) as batch_op:
-            batch_op.add_column(sa.Column('user_id', sa.Integer(), nullable=True))
->>>>>>> main
 
     # ── Drop legacy tables (were removed from models) ────────────────────────
     if 'trade' in existing_tables:
@@ -92,7 +70,6 @@ def upgrade():
     if 'bounties' in existing_tables:
         op.drop_table('bounties')
 
-<<<<<<< HEAD
     # ── challenge_logs ────────────────────────────────────────────────────────
     cl_cols = {c['name'] for c in inspector.get_columns('challenge_logs')}
 
@@ -106,27 +83,6 @@ def upgrade():
         if 'user_id' not in cl_cols:
             with op.batch_alter_table('challenge_logs', schema=None) as batch_op:
                 batch_op.add_column(sa.Column('user_id', sa.Integer(), nullable=True))
-=======
-    duck_trade_log_fks = {fk['name'] for fk in inspector.get_foreign_keys('duck_trade_log') if fk.get('name')}
-
-    with op.batch_alter_table('challenge_logs', schema=None) as batch_op:
-        batch_op.alter_column('user_id', existing_type=sa.Integer(), nullable=False)
-        if 'ix_challenge_logs_username' in challenge_logs_indexes:
-            batch_op.drop_index('ix_challenge_logs_username')
-        batch_op.create_index(batch_op.f('ix_challenge_logs_user_id'), ['user_id'], unique=False)
-        batch_op.create_foreign_key(batch_op.f('fk_challenge_logs_user_id_users'), 'users', ['user_id'], ['id'])
-        batch_op.drop_column('username')
-
-    with op.batch_alter_table('duck_trade_log', schema=None) as batch_op:
-        batch_op.alter_column('user_id', existing_type=sa.Integer(), nullable=False)
-        if 'ix_duck_trade_log_username' in duck_trade_log_indexes:
-            batch_op.drop_index('ix_duck_trade_log_username')
-        batch_op.create_index(batch_op.f('ix_duck_trade_log_user_id'), ['user_id'], unique=False)
-        if 'fk_duck_trade_log_username_users' in duck_trade_log_fks:
-            batch_op.drop_constraint('fk_duck_trade_log_username_users', type_='foreignkey')
-        batch_op.create_foreign_key(batch_op.f('fk_duck_trade_log_user_id_users'), 'users', ['user_id'], ['id'])
-        batch_op.drop_column('username')
->>>>>>> main
 
         # Step 2: back-fill user_id from the username column (only if username still exists)
         if 'username' in cl_cols:
