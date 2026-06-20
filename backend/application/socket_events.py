@@ -126,6 +126,11 @@ def handle_send_message(data):
 
     # Server-side validation
     if not user.is_admin:
+        from .models.configuration import Configuration
+        config = Configuration.query.first()
+        if config and not config.message_sending_enabled:
+            return
+
         # Students can't send global messages
         is_global = False
         # Students can only target their own classrooms
