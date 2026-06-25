@@ -10,6 +10,7 @@ from .admin import (  # noqa: F401, E402
     dashboard_routes,
     doc_routes,
     project_routes,
+    standard_project_routes,
     trade_routes,
     user_mgmt,
     challenge_mgmt,

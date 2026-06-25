@@ -53,7 +53,7 @@ export const useFeedLogic = () => {
       setIsLoadingMore(true);
     }
     try {
-      const limit = 50;
+      const limit = 20;
       let url = `/message/api/feed?limit=${limit}`;
       if (beforeId) {
         url += `&before_id=${beforeId}`;

@@ -26,6 +26,7 @@ class User(db.Model):
     is_admin = db.Column(db.Boolean, default=False)
     is_approved = db.Column(db.Boolean, default=False)
     role = db.Column(db.String(20), default="student", nullable=False)
+    can_chat = db.Column(db.Boolean, default=True)
     
     # OAuth / Cognito fields
     email = db.Column(db.String(120), unique=True, nullable=True)
@@ -165,6 +166,7 @@ class User(db.Model):
             "has_auto_claimer": self.has_auto_claimer,
             "has_double_duck": self.has_double_duck,
             "drawer": self.drawer,
+            "can_chat": getattr(self, 'can_chat', True),
         }
 
     def to_dict_summary(self, precomputed_progress=None):
@@ -237,6 +239,7 @@ class User(db.Model):
             "profile_wallpaper": self.profile_wallpaper,
             "has_auto_claimer": self.has_auto_claimer,
             "drawer": self.drawer,
+            "can_chat": getattr(self, 'can_chat', True),
         }
         return d
 

@@ -5,11 +5,11 @@ import SmartImage from '../common/SmartImage';
 import { formatLargeNumber } from '../../utils/formatters';
 import { getApiUrl } from '../../utils/apiUrl';
 
-const ProfileHeader = ({ target, isOwner, pfpInputRef, onPfpChange }) => {
+const ProfileHeader = ({ target, isOwner, isTargetUser, editLink, pfpInputRef, onPfpChange }) => {
     return (
         <div className="profile-header-card">
             <div 
-                className="header-background"
+                className={`header-background ${target.has_custom_wallpaper ? 'custom-banner' : ''}`}
                 style={target.has_custom_wallpaper && target.profile_wallpaper ? {
                     backgroundImage: `url(${target.profile_wallpaper.startsWith('http') ? target.profile_wallpaper : getApiUrl('/user/profile_wallpapers/' + target.profile_wallpaper)})`,
                     backgroundSize: 'cover',
@@ -18,14 +18,14 @@ const ProfileHeader = ({ target, isOwner, pfpInputRef, onPfpChange }) => {
                 } : {}}
             ></div>
             <div className="profile-header-content">
-                <div className={`avatar-wrapper ${target.has_animated_border ? 'perk-animated-border' : ''}`} onClick={() => isOwner && pfpInputRef.current?.click()}>
+                <div className={`avatar-wrapper ${target.has_animated_border ? 'perk-animated-border' : ''}`} onClick={() => isTargetUser && pfpInputRef.current?.click()}>
                     <SmartImage 
                         src={getApiUrl(target.profile_picture_url)} 
                         alt={target.username} 
                         className="avatar-img"
                         fallbackType="avatar"
                     />
-                    {isOwner && (
+                    {isTargetUser && (
                         <>
                             <div className="upload-overlay">
                                 <span>Change Photo</span>
@@ -45,7 +45,7 @@ const ProfileHeader = ({ target, isOwner, pfpInputRef, onPfpChange }) => {
                     <h1 className="student-name">{target.nickname || target.username}</h1>
                     <p className="student-title">@{target.username}</p>
                     {isOwner && (
-                        <Link to="/settings" className="btn-settings">
+                        <Link to={editLink || "/settings"} className="btn-settings">
                             <User size={14} /> Edit Profile
                         </Link>
                     )}

@@ -25,7 +25,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/151</span>
+                <span class='fraction'>0/152</span>
             </div>
         
             
@@ -46,7 +46,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/151</span>
+                <span class='fraction'>0/152</span>
             </div>
         
             
@@ -248,7 +248,8 @@
 <a name='L183'></a><a href='#L183'>183</a>
 <a name='L184'></a><a href='#L184'>184</a>
 <a name='L185'></a><a href='#L185'>185</a>
-<a name='L186'></a><a href='#L186'>186</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
+<a name='L186'></a><a href='#L186'>186</a>
+<a name='L187'></a><a href='#L187'>187</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -260,6 +261,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -448,6 +450,7 @@ import {
 <span class="cstat-no" title="statement not covered" >} from 'lucide-react';</span>
 <span class="cstat-no" title="statement not covered" >import client from '../../api/client';</span>
 <span class="cstat-no" title="statement not covered" >import toast from 'react-hot-toast';</span>
+<span class="cstat-no" title="statement not covered" >import { getApiUrl } from '../../utils/apiUrl';</span>
 <span class="cstat-no" title="statement not covered" >import './AdminCertificates.css';</span>
 <span class="cstat-no" title="statement not covered" >import AdminPageHeader from '../../components/admin/AdminPageHeader';</span>
 &nbsp;
@@ -526,7 +529,7 @@ import {
 <span class="cstat-no" title="statement not covered" >                {certificates.length &gt; 0 &amp;&amp; (</span>
 <span class="cstat-no" title="statement not covered" >                    &lt;div className="bulk-actions" style={{ display: 'flex', gap: '10px' }}&gt;</span>
 <span class="cstat-no" title="statement not covered" >                        &lt;a </span>
-<span class="cstat-no" title="statement not covered" >                            href="/api/achievements/admin/certificates/download_all"</span>
+<span class="cstat-no" title="statement not covered" >                            href={getApiUrl("/api/achievements/admin/certificates/download_all")}</span>
 <span class="cstat-no" title="statement not covered" >                            className="btn-secondary"</span>
 <span class="cstat-no" title="statement not covered" >                            style={{ display: 'flex', alignItems: 'center', gap: '6px', textDecoration: 'none', padding: '8px 16px', borderRadius: '6px', backgroundColor: 'var(--surface-color)', border: '1px solid var(--border-color)', color: 'var(--text-color)' }}</span>
                         &gt;
@@ -548,14 +551,14 @@ import {
 <span class="cstat-no" title="statement not covered" >                    filteredCerts.map(cert =&gt; (</span>
 <span class="cstat-no" title="statement not covered" >                        &lt;div key={cert.id} className="cert-review-card"&gt;</span>
 <span class="cstat-no" title="statement not covered" >                            &lt;a </span>
-<span class="cstat-no" title="statement not covered" >                                href={`/api/achievements/view_certificate/${cert.id}`} </span>
+<span class="cstat-no" title="statement not covered" >                                href={getApiUrl(`/api/achievements/view_certificate/${cert.id}`)} </span>
 <span class="cstat-no" title="statement not covered" >                                target="_blank" </span>
 <span class="cstat-no" title="statement not covered" >                                rel="noopener noreferrer" </span>
 <span class="cstat-no" title="statement not covered" >                                className="cert-thumbnail" </span>
 <span class="cstat-no" title="statement not covered" >                                title="Click to view full certificate"</span>
                             &gt;
 <span class="cstat-no" title="statement not covered" >                                &lt;iframe </span>
-<span class="cstat-no" title="statement not covered" >                                    src={`/api/achievements/view_certificate/${cert.id}#toolbar=0&amp;navpanes=0&amp;scrollbar=0`} </span>
+<span class="cstat-no" title="statement not covered" >                                    src={getApiUrl(`/api/achievements/view_certificate/${cert.id}#toolbar=0&amp;navpanes=0&amp;scrollbar=0`)} </span>
 <span class="cstat-no" title="statement not covered" >                                    title="Certificate Preview" </span>
 <span class="cstat-no" title="statement not covered" >                                    frameBorder="0" </span>
 <span class="cstat-no" title="statement not covered" >                                    scrolling="no"</span>
@@ -595,7 +598,7 @@ import {
 <span class="cstat-no" title="statement not covered" >                                        &lt;CheckCircle size={16} /&gt; Approve</span>
 <span class="cstat-no" title="statement not covered" >                                    &lt;/button&gt;</span>
 <span class="cstat-no" title="statement not covered" >                                    &lt;a </span>
-<span class="cstat-no" title="statement not covered" >                                        href={`/api/achievements/download_certificate/${cert.id}`} </span>
+<span class="cstat-no" title="statement not covered" >                                        href={getApiUrl(`/api/achievements/download_certificate/${cert.id}`)} </span>
 <span class="cstat-no" title="statement not covered" >                                        className="btn-icon"</span>
 <span class="cstat-no" title="statement not covered" >                                        title="Download PDF"</span>
                                     &gt;
@@ -625,7 +628,7 @@ import {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-06-19T07:08:54.865Z
+                at 2026-06-24T09:30:31.378Z
             </div>
         <script src="../../../../prettify.js"></script>
         <script>

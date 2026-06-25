@@ -16,7 +16,8 @@ export const useAdminDashboard = () => {
     const fetchDashboardData = useCallback(async (days = timeframe) => {
         setIsRefreshing(true);
         try {
-            const response = await client.get(`/api/admin/dashboard?days=${days}`);
+            const tzOffset = new Date().getTimezoneOffset();
+            const response = await client.get(`/api/admin/dashboard?days=${days}&tz_offset=${tzOffset}`);
             if (response.data.status === 'success') {
                 setDashboardData(response.data.data);
             }

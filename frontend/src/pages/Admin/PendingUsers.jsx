@@ -15,9 +15,7 @@ import AdminPageHeader from '../../components/admin/AdminPageHeader';
 
 const PendingUsers = () => {
     const [users, setUsers] = useState([]);
-    const [requests, setRequests] = useState([]);
     const [isLoadingUsers, setIsLoadingUsers] = useState(true);
-    const [isLoadingRequests, setIsLoadingRequests] = useState(true);
     const [isProcessing, setIsProcessing] = useState(null);
 
     const fetchPendingUsers = async () => {
@@ -34,21 +32,8 @@ const PendingUsers = () => {
         }
     };
 
-    const fetchRequests = async () => {
-        setIsLoadingRequests(true);
-        try {
-            const response = await client.get('/api/admin/connection_requests');
-            setRequests(response.data.data?.requests || []);
-        } catch {
-            toast.error('Failed to load connection requests.');
-        } finally {
-            setIsLoadingRequests(false);
-        }
-    };
-
     useEffect(() => {
         fetchPendingUsers();
-        fetchRequests();
     }, []);
 
     // --- User Approvals ---
@@ -83,34 +68,7 @@ const PendingUsers = () => {
         }
     };
 
-    // --- Connection Requests ---
-    const handleApproveRequest = async (reqId) => {
-        setIsProcessing(`req-${reqId}`);
-        try {
-            await client.post(`/api/admin/connection_requests/${reqId}/approve`);
-            toast.success('Connection approved!');
-            setRequests(prev => prev.filter(r => r.id !== reqId));
-        } catch {
-            toast.error('Failed to approve request.');
-        } finally {
-            setIsProcessing(null);
-        }
-    };
-
-    const handleRejectRequest = async (reqId) => {
-        setIsProcessing(`req-${reqId}`);
-        try {
-            await client.post(`/api/admin/connection_requests/${reqId}/reject`);
-            toast.success('Connection rejected.');
-            setRequests(prev => prev.filter(r => r.id !== reqId));
-        } catch {
-            toast.error('Failed to reject request.');
-        } finally {
-            setIsProcessing(null);
-        }
-    };
-
-    if (isLoadingUsers && isLoadingRequests) return (
+    if (isLoadingUsers) return (
         <div className="admin-loading-container">
             <div className="admin-loader"></div>
             <p>Loading Account Approvals...</p>
@@ -191,66 +149,6 @@ const PendingUsers = () => {
                 )}
             </div>
 
-            {/* Parent Connection Requests Section */}
-            <h2 className="section-title" style={{ marginTop: '3rem', marginBottom: '1rem', paddingLeft: '0.5rem' }}>Parent Connection Requests</h2>
-            <div className="users-list">
-                {requests.length > 0 ? (
-                    requests.map(req => (
-                        <div key={req.id} className="user-card card">
-                            <div className="user-card-header">
-                                <div className="user-info">
-                                    <div className="avatar-placeholder">
-                                        <Users size={24} />
-                                    </div>
-                                    <div>
-                                        <h3>{req.parent?.username}</h3>
-                                        <p className="nickname text-muted">{req.relationship}</p>
-                                    </div>
-                                </div>
-                                <div className="user-badge pending">
-                                    Pending
-                                </div>
-                            </div>
-
-                            <div className="user-details">
-                                <div className="detail-row">
-                                    <span className="label">Student</span>
-                                    <span className="value">@{req.student?.username}</span>
-                                </div>
-                                {req.message && (
-                                    <div className="detail-row" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '4px' }}>
-                                        <span className="label">Message</span>
-                                        <span className="value" style={{ fontStyle: 'italic', opacity: 0.8 }}>"{req.message}"</span>
-                                    </div>
-                                )}
-                            </div>
-
-                            <div className="user-actions">
-                                <button 
-                                    className="btn-reject"
-                                    onClick={() => handleRejectRequest(req.id)}
-                                    disabled={isProcessing === `req-${req.id}`}
-                                >
-                                    <XCircle size={18} /> Reject
-                                </button>
-                                <button 
-                                    className="btn-approve"
-                                    onClick={() => handleApproveRequest(req.id)}
-                                    disabled={isProcessing === `req-${req.id}`}
-                                >
-                                    <CheckCircle size={18} /> Approve
-                                </button>
-                            </div>
-                        </div>
-                    ))
-                ) : (
-                    <div className="empty-state-card" style={{ padding: '2rem', minHeight: 'auto' }}>
-                        <Shield size={32} style={{ color: 'var(--primary-color)', marginBottom: '1rem' }} />
-                        <h3>No Pending Connection Requests</h3>
-                        <p>There are no pending parent-student connection requests.</p>
-                    </div>
-                )}
-            </div>
         </div>
     );
 };

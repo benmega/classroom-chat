@@ -96,31 +96,58 @@ export const AdjustDucksModal = ({ isOpen, onClose, onSubmit, user, users, formE
     </Modal>
 );
 
-export const SetDrawerModal = ({ isOpen, onClose, onSubmit, user, loading }) => (
-    <Modal isOpen={isOpen} onClose={onClose} title="Set User Drawer">
-        <form onSubmit={onSubmit} className="admin-form">
-            <div className="form-group">
-                <label>Target User</label>
-                <input type="text" value={user ? user.username : ''} readOnly className="readonly" />
-                <input type="hidden" name="username" value={user ? user.username : ''} />
-            </div>
-            <div className="form-group">
-                <label>Drawer Number</label>
-                <input 
-                    type="text" 
-                    name="drawer" 
-                    defaultValue={user?.drawer || ''} 
-                    placeholder="e.g. 0xA6" 
-                    maxLength={4}
-                />
-                <small>Hex format expected, max 4 characters (e.g. 0x01, 0xA6). Leave blank to clear.</small>
-            </div>
-            <button type="submit" className="btn-primary" disabled={loading}>
-                {loading ? 'Saving...' : 'Set Drawer'}
-            </button>
-        </form>
-    </Modal>
-);
+export const SetDrawerModal = ({ isOpen, onClose, onSubmit, user, loading }) => {
+    const [drawerInput, setDrawerInput] = useState('');
+
+    useEffect(() => {
+        if (isOpen && user?.drawer) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
+            setDrawerInput(user.drawer.replace(/^0x/i, ''));
+        } else {
+            setDrawerInput('');
+        }
+    }, [isOpen, user]);
+
+    const handleInputChange = (e) => {
+        let val = e.target.value;
+        if (val.toLowerCase().startsWith('0x')) {
+            val = val.substring(2);
+        }
+        val = val.replace(/[^0-9a-fA-F]/g, '').slice(0, 2).toUpperCase();
+        setDrawerInput(val);
+    };
+
+    return (
+        <Modal isOpen={isOpen} onClose={onClose} title="Set User Drawer">
+            <form onSubmit={onSubmit} className="admin-form">
+                <div className="form-group">
+                    <label>Target User</label>
+                    <input type="text" value={user ? user.username : ''} readOnly className="readonly" />
+                    <input type="hidden" name="username" value={user ? user.username : ''} />
+                </div>
+                <div className="form-group">
+                    <label>Drawer Number</label>
+                    <div style={{ display: 'flex', alignItems: 'center', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '8px', overflow: 'hidden' }}>
+                        <span style={{ padding: '0.75rem 1rem', background: 'var(--bg-secondary)', color: 'var(--text-muted)', borderRight: '1px solid var(--border-color)', fontWeight: 'bold' }}>0x</span>
+                        <input 
+                            type="text" 
+                            value={drawerInput} 
+                            onChange={handleInputChange}
+                            placeholder="e.g. A6" 
+                            maxLength={4}
+                            style={{ border: 'none', borderRadius: 0, margin: 0, flex: 1, boxShadow: 'none' }}
+                        />
+                        <input type="hidden" name="drawer" value={drawerInput ? `0x${drawerInput}` : ''} />
+                    </div>
+                    <small>Hex format expected. Max value 23 (35). Leave blank to clear.</small>
+                </div>
+                <button type="submit" className="btn-primary" disabled={loading}>
+                    {loading ? 'Saving...' : 'Set Drawer'}
+                </button>
+            </form>
+        </Modal>
+    );
+};
 
 export const ResetPasswordModal = ({ isOpen, onClose, onSubmit, user, formErrors, loading }) => {
     const [showNewPassword, setShowNewPassword] = useState(false);
@@ -199,6 +226,26 @@ export const StartConversationModal = ({ isOpen, onClose, onSubmit, loading, cla
             </div>
             <button type="submit" className="btn-primary" disabled={loading}>
                 {loading ? 'Starting...' : 'Start Conversation'}
+            </button>
+        </form>
+    </Modal>
+);
+
+export const AddBannedWordModal = ({ isOpen, onClose, onSubmit, newWord, setNewWord, loading }) => (
+    <Modal isOpen={isOpen} onClose={onClose} title="Add Banned Word">
+        <form onSubmit={onSubmit} className="admin-form">
+            <div className="form-group">
+                <label>Word to Ban</label>
+                <input 
+                    type="text" 
+                    value={newWord}
+                    onChange={(e) => setNewWord(e.target.value)}
+                    placeholder="e.g. badword" 
+                    required
+                />
+            </div>
+            <button type="submit" className="btn-primary" style={{ background: 'var(--gradient-error)' }} disabled={loading}>
+                {loading ? 'Adding...' : 'Ban Word'}
             </button>
         </form>
     </Modal>

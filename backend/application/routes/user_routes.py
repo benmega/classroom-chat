@@ -776,6 +776,10 @@ def update_basic_user_info(user_obj, data):
     if "bio" in data:
         user_obj.bio = data.get("bio")
 
+    # Update nickname if provided
+    if "nickname" in data:
+        user_obj.nickname = data.get("nickname")
+
     password = data.get("password")
     confirm_password = data.get("confirm_password")
 

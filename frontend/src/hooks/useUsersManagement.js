@@ -13,6 +13,7 @@ export const useUsersManagement = () => {
     const [modalUser, setModalUser] = useState(null);
     const [formLoading, setFormLoading] = useState(false);
     const [formErrors, setFormErrors] = useState({});
+    const [stats, setStats] = useState({ online: 0, admins: 0, pending: 0 });
     const [connectionCode, setConnectionCode] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
@@ -48,6 +49,7 @@ export const useUsersManagement = () => {
                 setTotalUsers(data.total || 0);
                 setTotalPages(data.pages || 1);
                 setPage(data.current_page || 1);
+                if (data.stats) setStats(data.stats);
             }
         } catch (error) {
             console.error('Error fetching users:', error);
@@ -156,22 +158,42 @@ export const useUsersManagement = () => {
         }
     };
 
-    const handleSetDrawer = async (e) => {
-        e.preventDefault();
-        const formData = new FormData(e.target);
+    const handleSetDrawer = async (e, forceOverwrite = false) => {
+        if (e && e.preventDefault) {
+            e.preventDefault();
+        }
+        
+        // Handle form data if it's an event, or extract it if we're calling recursively with the form element
+        const formElement = e.target || e;
+        const formData = new FormData(formElement);
         const username = formData.get('username');
         const drawer = formData.get('drawer');
         
         setFormLoading(true);
         try {
-            const response = await client.post('/api/admin/set_drawer', { username, drawer });
+            const payload = { username, drawer };
+            if (forceOverwrite) {
+                payload.force = true;
+            }
+            
+            const response = await client.post('/api/admin/set_drawer', payload);
             if (response.data) {
                 toast.success(response.data.message || 'Drawer updated successfully.');
                 setActiveModal(null);
                 fetchUsers(page);
             }
         } catch (error) {
-            toast.error(error.response?.data?.message || 'Failed to set drawer.');
+            const errorData = error.response?.data;
+            if (errorData?.conflict && errorData?.current_owner) {
+                // Duplicate drawer assignment detected
+                const confirmed = window.confirm(`That drawer is already assigned to @${errorData.current_owner}. Do you want to take it over and remove that student's drawer assignment to move it over to this student, or cancel?`);
+                if (confirmed) {
+                    // recursively call with force=true, passing the original target
+                    return handleSetDrawer(formElement, true);
+                }
+            } else {
+                toast.error(errorData?.message || 'Failed to set drawer.');
+            }
         } finally {
             setFormLoading(false);
         }
@@ -190,6 +212,25 @@ export const useUsersManagement = () => {
             }
         } catch (error) {
             toast.error(error.response?.data?.message || 'Failed to remove user.');
+        }
+    };
+
+    const handleToggleChat = async (userId) => {
+        try {
+            const response = await client.post(`/api/admin/user/${userId}/toggle-chat`);
+            toast.success(response.data.message);
+            
+            // Optimistically update the specific user in the users array
+            setUsers(prevUsers => 
+                prevUsers.map(user => 
+                    user.id === userId ? { ...user, can_chat: response.data.can_chat } : user
+                )
+            );
+            
+            // Optionally re-fetch to ensure consistency if other fields changed
+            // fetchUsers(page);
+        } catch (error) {
+            toast.error(error.response?.data?.message || 'Failed to toggle chat status.');
         }
     };
 
@@ -275,6 +316,7 @@ export const useUsersManagement = () => {
         setPage,
         totalPages,
         totalUsers,
+        stats,
         activeModal,
         setActiveModal,
         modalUser,
@@ -300,6 +342,7 @@ export const useUsersManagement = () => {
         isFetchingCards,
         fetchClassroomCards,
         searchTerm,
-        setSearchTerm
+        setSearchTerm,
+        handleToggleChat
     };
 };

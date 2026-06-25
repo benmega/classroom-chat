@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
+import { getApiUrl } from '../../utils/apiUrl';
 import './AdminDocuments.css';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
 
@@ -154,7 +155,7 @@ const AdminDocuments = () => {
                             <div className="doc-actions">
                                 <div className="primary-actions">
                                     <a 
-                                        href={`/api/admin/documents/${doc.category}/${doc.filename}/view`} 
+                                        href={getApiUrl(`/api/admin/documents/${doc.category}/${doc.filename}/view`)} 
                                         target="_blank" 
                                         rel="noopener noreferrer"
                                         className="action-btn"
@@ -163,7 +164,7 @@ const AdminDocuments = () => {
                                         <Eye size={18} />
                                     </a>
                                     <a 
-                                        href={`/api/admin/documents/${doc.category}/${doc.filename}/download`} 
+                                        href={getApiUrl(`/api/admin/documents/${doc.category}/${doc.filename}/download`)} 
                                         className="action-btn"
                                         title="Download"
                                     >

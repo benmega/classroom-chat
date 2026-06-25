@@ -47,8 +47,6 @@ const Chat = () => {
     handleScroll
   } = useFeedLogic();
 
-  if (loading) return <div className="container" style={{ textAlign: 'center', padding: '100px' }}>Loading Feed...</div>;
-
   return (
     <div className="feed-container">
       <div className="feed-main">
@@ -154,7 +152,11 @@ const Chat = () => {
           onScroll={handleScroll}
         >
           <div className="feed-messages-inner">
-            {messages.length === 0 ? (
+            {loading ? (
+              <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
+                Loading feed...
+              </div>
+            ) : messages.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
                 No messages to display. Be the first to post!
               </div>

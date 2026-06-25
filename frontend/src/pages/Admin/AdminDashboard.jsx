@@ -2,18 +2,14 @@ import React, { useState } from 'react';
 import { 
     Users, 
     TrendingUp, 
-    Settings, 
-    AlertTriangle, 
     Search,
     RefreshCw,
     Shield,
-    Plus,
-    UserPlus,
+    Menu,
+    Bot,
     MessageSquare,
-    ShoppingBag,
-    Menu
+    AlertTriangle
 } from 'lucide-react';
-import DuckIcon from '../../components/Icons/DuckIcon';
 import {
     Chart as ChartJS,
     CategoryScale,
@@ -32,12 +28,8 @@ import Skeleton from '../../components/common/Skeleton';
 
 // Extracted Components
 import AdminStats from '../../components/admin/AdminStats';
-import UserTable from '../../components/admin/UserTable';
 import { 
-    CreateUserModal, 
-    AdjustDucksModal, 
-    ResetPasswordModal, 
-    StartConversationModal 
+    AddBannedWordModal
 } from '../../components/admin/AdminModals';
 
 // Hooks & Utils
@@ -58,7 +50,6 @@ ChartJS.register(
 
 const AdminDashboard = () => {
     const navigate = useNavigate();
-    const [searchTerm, setSearchTerm] = useState('');
     const [newWord, setNewWord] = useState('');
     const [banReason, setBanReason] = useState('');
     const { toggleSidebar } = useSidebar();
@@ -69,22 +60,14 @@ const AdminDashboard = () => {
         isRefreshing,
         activeModal,
         setActiveModal,
-        modalUser,
-        setModalUser,
         formLoading,
-        formErrors,
         timeframe,
         setTimeframe,
         fetchDashboardData,
         handleToggleAI,
         handleToggleMessages,
         handleUpdateMultiplier,
-        handleAddBannedWord,
-        handleCreateUser,
-        handleAdjustDucks,
-        handleResetPassword,
-        handleStartConversation,
-        handleRemoveUser
+        handleAddBannedWord
     } = useAdminDashboard();
 
     const onSubmitBannedWord = async (e) => {
@@ -116,12 +99,7 @@ const AdminDashboard = () => {
     
     if (!dashboardData) return <div className="admin-error">Error loading dashboard.</div>;
 
-    const { users, config, banned_words, chart_data } = dashboardData;
-
-    const filteredUsers = users.filter(u => 
-        u.username.toLowerCase().includes(searchTerm.toLowerCase()) || 
-        u.nickname?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const { config, chart_data } = dashboardData;
 
     const chartConfig = getChartConfig(chart_data);
 
@@ -152,6 +130,8 @@ const AdminDashboard = () => {
                 onApprovalClick={() => navigate('/admin/pending-users')} 
                 onTradeClick={() => navigate('/admin/pending-trades')}
                 onEarnedWeekClick={() => navigate('/admin/transactions?type=earned')}
+                onTotalDucksClick={() => navigate('/admin/users')}
+                onOnlineUsersClick={() => navigate('/admin/users?filter=online')}
             />
 
             <div className="dashboard-layout">
@@ -185,161 +165,82 @@ const AdminDashboard = () => {
                         </div>
                     </div>
 
-                    <div className="user-management card">
-                        <div className="card-header">
-                            <div className="title-group">
-                                <h3><Users size={20} /> User Management</h3>
-                                <span className="user-count-badge">Total: {dashboardData.total_users_count || users.length}</span>
-                            </div>
-                            <div className="header-actions">
-                                <div className="search-box">
-                                    <Search size={18} />
-                                    <input 
-                                        type="text" 
-                                        placeholder="Search top results..." 
-                                        value={searchTerm}
-                                        onChange={(e) => setSearchTerm(e.target.value)}
-                                    />
+                    <div className="admin-controls-card card" style={{ padding: '2rem' }}>
+                        {/* Unified Controls Grid */}
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' }}>
+                            <button className="action-item" onClick={() => navigate('/admin/users')} style={{ display: 'flex', alignItems: 'center', gap: '12px', textAlign: 'left', padding: '12px 16px', borderRadius: '12px', border: '1px solid var(--border-subtle)', background: 'var(--bg-secondary)', cursor: 'pointer' }}>
+                                <div className="icon" style={{ width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '10px', background: 'var(--primary-color)', color: 'white' }}><Users size={20} /></div>
+                                <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>User Directory</span>
+                            </button>
+                            <button className="action-item" onClick={() => navigate('/admin/pending-users')} style={{ display: 'flex', alignItems: 'center', gap: '12px', textAlign: 'left', padding: '12px 16px', borderRadius: '12px', border: '1px solid var(--border-subtle)', background: 'var(--bg-secondary)', cursor: 'pointer' }}>
+                                <div className="icon approval" style={{ width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '10px', background: 'var(--primary-color)', color: 'white' }}><Shield size={20} /></div>
+                                <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>Account Approvals</span>
+                            </button>
+                            
+                            <button 
+                                onClick={handleToggleAI}
+                                style={{ 
+                                    display: 'flex', alignItems: 'center', gap: '12px', textAlign: 'left', 
+                                    padding: '12px 16px', borderRadius: '12px', 
+                                    border: config?.ai_teacher_enabled ? '1px solid var(--success-color)' : '1px solid var(--error-color)', 
+                                    background: config?.ai_teacher_enabled ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)', 
+                                    cursor: 'pointer' 
+                                }}
+                            >
+                                <div className="icon" style={{ width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '10px', background: config?.ai_teacher_enabled ? 'var(--success-color)' : 'var(--error-color)', color: 'white' }}><Bot size={20} /></div>
+                                <div>
+                                    <span style={{ fontWeight: 600, color: 'var(--text-primary)', display: 'block' }}>AI Teacher</span>
+                                    <small style={{ color: 'var(--text-secondary)' }}>{config?.ai_teacher_enabled ? 'Enabled' : 'Disabled'}</small>
                                 </div>
-                                <button className="add-user-btn" onClick={() => setActiveModal('create')}>
-                                    <Plus size={18} /> Create User
-                                </button>
-                                <button className="view-all-btn" onClick={() => navigate('/admin/users')}>
-                                    Directory
-                                </button>
-                            </div>
-                        </div>
-                        <UserTable 
-                            users={filteredUsers} 
-                            onAdjustDucks={(u) => { setModalUser(u); setActiveModal('adjust'); }}
-                            onResetPassword={(u) => { setModalUser(u); setActiveModal('reset'); }}
-                            onRemoveUser={handleRemoveUser}
-                        />
-                        {dashboardData.total_users_count > 10 && (
-                            <div className="table-footer">
-                                <p>Showing 10 of {dashboardData.total_users_count} total users.</p>
-                                <button onClick={() => navigate('/admin/users')} className="text-btn">View full directory →</button>
-                            </div>
-                        )}
-                    </div>
-                </div>
+                            </button>
+                            
+                            <button 
+                                onClick={handleToggleMessages}
+                                style={{ 
+                                    display: 'flex', alignItems: 'center', gap: '12px', textAlign: 'left', 
+                                    padding: '12px 16px', borderRadius: '12px', 
+                                    border: config?.message_sending_enabled ? '1px solid var(--success-color)' : '1px solid var(--error-color)', 
+                                    background: config?.message_sending_enabled ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)', 
+                                    cursor: 'pointer' 
+                                }}
+                            >
+                                <div className="icon" style={{ width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '10px', background: config?.message_sending_enabled ? 'var(--success-color)' : 'var(--error-color)', color: 'white' }}><MessageSquare size={20} /></div>
+                                <div>
+                                    <span style={{ fontWeight: 600, color: 'var(--text-primary)', display: 'block' }}>Public Messaging</span>
+                                    <small style={{ color: 'var(--text-secondary)' }}>{config?.message_sending_enabled ? 'Enabled' : 'Disabled'}</small>
+                                </div>
+                            </button>
 
-                <div className="side-content">
-                    <div className="quick-actions card">
-                        <h3>⚡ Quick Actions</h3>
-                        <div className="action-buttons">
-                            <button className="action-item" onClick={() => navigate('/admin/pending-users')}>
-                                <div className="icon approval"><Shield size={20} /></div>
-                                <span>Account Approvals</span>
+                            <button className="action-item" onClick={() => setActiveModal('bannedWord')} style={{ display: 'flex', alignItems: 'center', gap: '12px', textAlign: 'left', padding: '12px 16px', borderRadius: '12px', border: '1px solid var(--border-subtle)', background: 'var(--bg-secondary)', cursor: 'pointer' }}>
+                                <div className="icon" style={{ width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '10px', background: 'var(--error-color)', color: 'white' }}><AlertTriangle size={20} /></div>
+                                <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>Content Moderation</span>
                             </button>
-                            <button className="action-item" onClick={() => navigate('/admin/pending-trades')}>
-                                <div className="icon pending"><ShoppingBag size={20} /></div>
-                                <span>Trade Approvals</span>
-                            </button>
-                            <button className="action-item" onClick={() => setActiveModal('create')}>
-                                <div className="icon"><UserPlus size={20} /></div>
-                                <span>Create User</span>
-                            </button>
-                            <button className="action-item" onClick={() => setActiveModal('startConv')}>
-                                <div className="icon primary"><MessageSquare size={20} /></div>
-                                <span>New Conversation</span>
-                            </button>
-                            <button className="action-item" onClick={() => setActiveModal('adjust')}>
-                                <div className="icon warning"><DuckIcon size={24} color="#92400e" /></div>
-                                <span>Adjust Wealth</span>
-                            </button>
-                        </div>
-                    </div>
-
-                    <div className="settings-card card">
-                        <h3><Settings size={20} /> Global Config</h3>
-                        <div className="setting-item">
-                            <div className="setting-info">
-                                <span>AI Teacher</span>
-                                <small>{config?.ai_teacher_enabled ? 'Enabled' : 'Disabled'}</small>
+                            
+                            <div className="setting-item multiplier" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-secondary)', padding: '12px 16px', borderRadius: '12px', border: '1px solid var(--border-subtle)' }}>
+                                <label style={{ fontWeight: 600, color: 'var(--text-primary)' }}>Duck Multiplier</label>
+                                <div className="multiplier-input" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <input 
+                                        type="number" 
+                                        step="0.1" 
+                                        defaultValue={config?.duck_multiplier || 1.0} 
+                                        onBlur={(e) => handleUpdateMultiplier(e.target.value)}
+                                        style={{ width: '60px', padding: '4px 8px', borderRadius: '6px', border: '1px solid var(--border-color)', background: 'var(--bg-tertiary)', color: 'var(--text-primary)' }}
+                                    />
+                                    <RefreshCw size={14} color="var(--text-secondary)" />
+                                </div>
                             </div>
-                            <label className="switch">
-                                <input type="checkbox" checked={config?.ai_teacher_enabled || false} onChange={handleToggleAI} />
-                                <span className="slider"></span>
-                            </label>
-                        </div>
-                        <div className="setting-item">
-                            <div className="setting-info">
-                                <span>Public Messaging</span>
-                                <small>{config?.message_sending_enabled ? 'Enabled' : 'Disabled'}</small>
-                            </div>
-                            <label className="switch">
-                                <input type="checkbox" checked={config?.message_sending_enabled || false} onChange={handleToggleMessages} />
-                                <span className="slider"></span>
-                            </label>
-                        </div>
-                        <div className="setting-item multiplier">
-                            <label>Duck Multiplier</label>
-                            <div className="multiplier-input">
-                                <input 
-                                    type="number" 
-                                    step="0.1" 
-                                    defaultValue={config?.duck_multiplier || 1.0} 
-                                    onBlur={(e) => handleUpdateMultiplier(e.target.value)}
-                                />
-                                <RefreshCw size={14} />
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="banned-words card">
-                        <h3><AlertTriangle size={20} /> Content Moderation</h3>
-                        <form onSubmit={onSubmitBannedWord} className="add-word-form">
-                            <input 
-                                type="text" 
-                                placeholder="Add banned word..." 
-                                value={newWord}
-                                onChange={(e) => setNewWord(e.target.value)}
-                            />
-                            <button type="submit" className="add-btn"><Plus size={18} /></button>
-                        </form>
-                        <div className="words-list">
-                            {banned_words.slice(0, 12).map(word => (
-                                <div key={word.id} className="word-chip">{word.word}</div>
-                            ))}
                         </div>
                     </div>
                 </div>
             </div>
 
-            <CreateUserModal 
-                isOpen={activeModal === 'create'} 
+            <AddBannedWordModal 
+                isOpen={activeModal === 'bannedWord'} 
                 onClose={() => setActiveModal(null)} 
-                onSubmit={handleCreateUser} 
-                formErrors={formErrors} 
+                onSubmit={(e) => { e.preventDefault(); onSubmitBannedWord(e); setActiveModal(null); }} 
+                newWord={newWord}
+                setNewWord={setNewWord}
                 loading={formLoading} 
-            />
-
-            <AdjustDucksModal 
-                isOpen={activeModal === 'adjust'} 
-                onClose={() => { setActiveModal(null); setModalUser(null); }} 
-                onSubmit={handleAdjustDucks} 
-                user={modalUser} 
-                users={dashboardData.all_users || []} 
-                formErrors={formErrors} 
-                loading={formLoading} 
-            />
-
-            <ResetPasswordModal 
-                isOpen={activeModal === 'reset'} 
-                onClose={() => { setActiveModal(null); setModalUser(null); }} 
-                onSubmit={handleResetPassword} 
-                user={modalUser} 
-                formErrors={formErrors} 
-                loading={formLoading} 
-            />
-
-            <StartConversationModal 
-                isOpen={activeModal === 'startConv'} 
-                onClose={() => setActiveModal(null)} 
-                onSubmit={handleStartConversation} 
-                loading={formLoading} 
-                classrooms={dashboardData.classrooms || []}
             />
         </div>
     );

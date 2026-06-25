@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Shield, Unlock, Star, Loader2, ShoppingCart } from 'lucide-react';
+import { Shield, Unlock, Star, Loader2, ShoppingCart, Palette, Image as ImageIcon, Zap, Bird } from 'lucide-react';
 import toast from 'react-hot-toast';
 import useAuthStore from '../../store/useAuthStore';
 import client from '../../api/client';
@@ -210,11 +210,16 @@ const Shop = () => {
         );
     }
 
+    const getIconForItem = (item) => {
+        if (item.name === "Chat Font Color") return <Palette size={24} />;
+        if (item.name === "Custom Profile Wallpaper") return <ImageIcon size={24} />;
+        if (item.name === "Auto Challenge Claimer") return <Zap size={24} />;
+        if (item.name === "Permanent Double Duck") return <Bird size={24} />;
+        return item.is_crowdfunded ? <Shield size={24} /> : item.is_purchased ? <Unlock size={24} /> : <Star size={24} />;
+    };
+
     return (
         <div className="shop-page">
-            <div className="shop-page-header">
-                <h2><ShoppingCart size={24} /> Packet Shop</h2>
-            </div>
 
             <div className="shop-items-grid">
                 {items.map(item => {
@@ -225,7 +230,7 @@ const Shop = () => {
                         <div key={item.id} className={`shop-item-card ${item.is_crowdfunded ? 'crowdfunded' : ''} ${item.is_purchased ? 'purchased' : ''}`}>
                             <div className="shop-item-header">
                                 <div className="shop-item-icon">
-                                    {item.is_crowdfunded ? <Shield size={24} /> : item.is_purchased ? <Unlock size={24} /> : <Star size={24} />}
+                                    {getIconForItem(item)}
                                 </div>
                                 <div className="shop-item-price">
                                     {item.base_price.toFixed(3)} Packets

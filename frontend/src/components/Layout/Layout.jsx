@@ -14,7 +14,8 @@ import {
     Home,
     ShoppingCart,
     RefreshCw,
-    Disc
+    Disc,
+    Archive
 } from 'lucide-react';
 
 import './Layout.css';
@@ -76,6 +77,17 @@ const Layout = ({ children }) => {
                         <ul>
                             {isAuthenticated && user && user.role !== 'parent' && (
                                 <>
+                                    {user.drawer && (
+                                        <li className="nav-stat-item">
+                                            <div className="stat-badge drawer" data-testid="nav-drawer" title="Drawer Number">
+                                                <Archive size={20} className="stat-icon" />
+                                                <div className="stat-content">
+                                                    <span className="stat-label">Drawer</span>
+                                                    <span className="stat-value">{user.drawer}</span>
+                                                </div>
+                                            </div>
+                                        </li>
+                                    )}
                                     <li className="nav-stat-item">
                                         <Link className="stat-badge ducks" to="/bit-shift" data-testid="nav-bit-shift">
                                             <DuckIcon size={20} className="stat-icon" color="var(--primary-color)" />
@@ -129,6 +141,17 @@ const Layout = ({ children }) => {
                                     <ul className={`dropdown-menu ${isDropdownOpen ? 'show' : ''}`}>
                                         {user?.role !== 'parent' && (
                                             <>
+                                                {user.drawer && (
+                                                    <li className="mobile-only-stat mobile-only">
+                                                        <div className="dropdown-stat-link drawer" style={{ textDecoration: 'none' }}>
+                                                            <Archive size={20} />
+                                                            <div className="dropdown-stat-info">
+                                                                <span className="dropdown-stat-label">Drawer</span>
+                                                                <span className="dropdown-stat-value">{user.drawer}</span>
+                                                            </div>
+                                                        </div>
+                                                    </li>
+                                                )}
                                                 <li className="mobile-only-stat mobile-only">
                                                     <Link to="/bit-shift" onClick={() => setIsDropdownOpen(false)} className="dropdown-stat-link">
                                                         <DuckIcon size={20} />

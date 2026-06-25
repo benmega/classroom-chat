@@ -48,9 +48,11 @@ const ManageProject = () => {
     return (
         <div className="manage-project-page split-layout">
             <div className="editor-pane">
-                <div className="manage-header">
-                    <h2>{projectId ? `Edit Project: ${projectData.name}` : 'Create New Project'}</h2>
-                </div>
+                {projectId && (
+                    <div className="manage-header">
+                        <h2>Edit Project: {projectData.name}</h2>
+                    </div>
+                )}
 
                 <div className="tab-navigation">
                     <button 

@@ -55,6 +55,20 @@ def reject_user(user_id):
     return {"message": f"User {username} rejected and removed."}
 
 
+@admin_bp.route("/user/<int:user_id>/toggle-chat", methods=["POST"])
+@admin_only
+@api_response
+def toggle_user_chat(user_id):
+    user_obj = db.get_or_404(User, user_id)
+    # Default is True, if not set it acts as True
+    current_status = getattr(user_obj, 'can_chat', True)
+    user_obj.can_chat = not current_status
+    db.session.commit()
+    
+    status_str = "unmuted" if user_obj.can_chat else "muted"
+    return {"message": f"User {user_obj.username} has been {status_str}.", "can_chat": user_obj.can_chat}
+
+
 @admin_bp.route("/users", methods=["GET"])
 @admin_only
 def get_users():
@@ -71,6 +85,10 @@ def get_users():
             User._username.ilike(f"%{search}%"),
             User.nickname.ilike(f"%{search}%")
         ))
+
+    online_count = query.filter(User.is_online.is_(True)).count()
+    admin_count = query.filter(User.is_admin.is_(True)).count()
+    pending_count = query.filter(User.is_approved.is_(False), User.is_admin.is_(False)).count()
 
     pagination = query.paginate(page=page, per_page=per_page, error_out=False)
     users = pagination.items
@@ -103,6 +121,11 @@ def get_users():
             "pages": pagination.pages,
             "current_page": pagination.page,
             "per_page": per_page,
+            "stats": {
+                "online": online_count,
+                "admins": admin_count,
+                "pending": pending_count
+            }
         }
     )
 
@@ -342,41 +365,7 @@ def unlink_parent_child(parent_id, student_id):
         return jsonify({"success": True, "message": f"Unlinked {student.username} from {parent.username}"})
     return jsonify({"success": True, "message": "Not linked"})
 
-@admin_bp.route("/connection_requests", methods=["GET"])
-@admin_only
-@api_response
-def get_connection_requests():
-    from application.models.parent_connection_request import ParentConnectionRequest
-    requests = ParentConnectionRequest.query.filter_by(status="pending").all()
-    return {"requests": [r.to_dict() for r in requests]}
 
-@admin_bp.route("/connection_requests/<int:req_id>/approve", methods=["POST"])
-@admin_only
-@api_response
-def approve_connection_request(req_id):
-    from application.models.parent_connection_request import ParentConnectionRequest
-    req = db.session.get(ParentConnectionRequest, req_id)
-    if not req or req.status != "pending":
-        return "Request not found or not pending.", 404
-    
-    req.status = "approved"
-    if req.student not in req.parent.children:
-        req.parent.children.append(req.student)
-    db.session.commit()
-    return {"message": "Request approved."}
-
-@admin_bp.route("/connection_requests/<int:req_id>/reject", methods=["POST"])
-@admin_only
-@api_response
-def reject_connection_request(req_id):
-    from application.models.parent_connection_request import ParentConnectionRequest
-    req = db.session.get(ParentConnectionRequest, req_id)
-    if not req or req.status != "pending":
-        return "Request not found or not pending.", 404
-    
-    req.status = "rejected"
-    db.session.commit()
-    return {"message": "Request rejected."}
 
 @admin_bp.route("/user/<int:user_id>/connection_card", methods=["GET"])
 @admin_only
@@ -437,6 +426,7 @@ def get_classroom_connection_cards(classroom_id):
 def set_drawer():
     username = request.json.get("username")
     drawer = request.json.get("drawer")
+    force = request.json.get("force", False)
     
     if not username:
         return "Username is required", 400
@@ -452,16 +442,31 @@ def set_drawer():
         user.drawer = None
     else:
         drawer = str(drawer).strip()
-        if not re.fullmatch(r"0x[0-9A-Fa-f]{2}", drawer):
-            return "Drawer must be in hex format (e.g. 0xA6)", 400
+        
+        # Be flexible: if they omitted 0x, we can add it (frontend does this now, but backend should too)
+        if not drawer.lower().startswith("0x"):
+            drawer = "0x" + drawer
+            
+        if not re.fullmatch(r"0[xX][0-9A-Fa-f]{1,2}", drawer):
+            return "Drawer must be in hex format (e.g. 0xA6 or A6)", 400
             
         try:
             val = int(drawer, 16)
             if val < 0 or val > 35:
-                return "Drawer number must be between 0x00 and 0x23", 400
+                return "Drawer number must be between 0 (0x00) and 35 (0x23)", 400
         except ValueError:
             return "Invalid hex drawer", 400
             
+        # Standardize format to 0x uppercase hex
+        drawer = f"0x{val:02X}"
+        
+        existing_user = User.query.filter_by(drawer=drawer).first()
+        if existing_user and existing_user.id != user.id:
+            if not force:
+                return {"conflict": True, "message": f"Drawer {drawer} is already assigned to @{existing_user.username}.", "current_owner": existing_user.username}, 409
+            else:
+                existing_user.drawer = None
+                
         user.drawer = drawer
         
     import sqlalchemy.exc

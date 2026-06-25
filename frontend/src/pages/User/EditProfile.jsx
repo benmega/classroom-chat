@@ -86,28 +86,22 @@ const EditProfile = () => {
     return (
         <div className="edit-profile-page">
             <div className="settings-container">
-                <div className="settings-header">
-                    <h2>Account Settings</h2>
-                    <p>Modify your public profile and account security.</p>
-                </div>
-
                 <form onSubmit={handleSave} className="settings-form">
-                    <section className="profile-pic-section">
-                        <div className="avatar-wrapper">
-                            <SmartImage 
-                                src={previewUrl} 
-                                alt="Profile Preview" 
-                                className="preview-avatar" 
-                                fallbackType="avatar"
-                            />
-                            <label htmlFor="pfp-upload" className="upload-overlay">
-                                <span>Change Photo</span>
-                                <input type="file" id="pfp-upload" hidden onChange={handleFileChange} accept="image/*" />
-                            </label>
-                        </div>
-                    </section>
-
                     <div className="form-sections-grid">
+                        <section className="profile-pic-section">
+                            <div className="avatar-wrapper">
+                                <SmartImage 
+                                    src={previewUrl} 
+                                    alt="Profile Preview" 
+                                    className="preview-avatar" 
+                                    fallbackType="avatar"
+                                />
+                                <label htmlFor="pfp-upload" className="upload-overlay">
+                                    <span>Change Photo</span>
+                                    <input type="file" id="pfp-upload" hidden onChange={handleFileChange} accept="image/*" />
+                                </label>
+                            </div>
+                        </section>
                         <section className="settings-section">
                             <h3 className="section-title"><UserIcon size={18} /> Basic Information</h3>
                             <div className="form-group">

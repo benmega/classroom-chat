@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { 
     Search, 
     Plus, 
@@ -8,7 +9,9 @@ import {
     RefreshCw,
     Shield,
     ChevronLeft,
-    Users as UsersIcon
+    Users as UsersIcon,
+    MessageSquare,
+    MessageSquareOff
 } from 'lucide-react';
 import SmartImage from '../../components/common/SmartImage';
 import { 
@@ -61,7 +64,9 @@ const Users = () => {
         isFetchingCards,
         fetchClassroomCards,
         searchTerm,
-        setSearchTerm
+        setSearchTerm,
+        stats,
+        handleToggleChat
     } = useUsersManagement();
 
     const filteredUsers = users;
@@ -118,15 +123,15 @@ const Users = () => {
                 </div>
                 <div className="stat-mini-card">
                     <span className="label">Online Now</span>
-                    <span className="value">{users.filter(u => u.is_online).length}</span>
+                    <span className="value">{stats?.online ?? users.filter(u => u.is_online).length}</span>
                 </div>
                 <div className="stat-mini-card">
                     <span className="label">Admins</span>
-                    <span className="value">{users.filter(u => u.is_admin).length}</span>
+                    <span className="value">{stats?.admins ?? users.filter(u => u.is_admin).length}</span>
                 </div>
                 <div className="stat-mini-card">
                     <span className="label">Pending Approval</span>
-                    <span className="value">{users.filter(u => !u.is_approved && !u.is_admin).length}</span>
+                    <span className="value">{stats?.pending ?? users.filter(u => !u.is_approved && !u.is_admin).length}</span>
                 </div>
             </div>
 
@@ -154,8 +159,10 @@ const Users = () => {
                                                 fallbackType="avatar"
                                             />
                                             <div className="info">
-                                                <div className="name">{u.nickname || u.username}</div>
-                                                <div className="handle">@{u.username}</div>
+                                                <Link to={`/profile/${u.username}`} className="user-profile-link">
+                                                    <div className="name">{u.nickname || u.username}</div>
+                                                    <div className="handle">@{u.username}</div>
+                                                </Link>
                                                 {u.role === 'student' && u.drawer && <div className="drawer-info" style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '2px' }}>Drawer: <span style={{ fontFamily: 'monospace', fontWeight: 'bold' }}>{u.drawer}</span></div>}
                                             </div>
                                         </div>
@@ -240,6 +247,27 @@ const Users = () => {
                                                 </button>
                                             )}
                                             {!u.is_admin && (
+                                                <button 
+                                                    className="action-btn drawer" 
+                                                    onClick={() => { setModalUser(u); setActiveModal('drawer'); }}
+                                                    title="Set Drawer"
+                                                >
+                                                    <div className="drawer-icon">D</div>
+                                                </button>
+                                            )}
+                                            
+                                            {u.role === 'student' && (
+                                                <button
+                                                    className={`action-btn ${u.can_chat ? 'message' : 'message-off'}`}
+                                                    onClick={() => handleToggleChat(u.id)}
+                                                    title={u.can_chat ? 'Mute Chat' : 'Unmute Chat'}
+                                                    style={{ color: u.can_chat ? 'var(--primary-color)' : 'var(--error-color)' }}
+                                                >
+                                                    {u.can_chat ? <MessageSquare size={16} /> : <MessageSquareOff size={16} />}
+                                                </button>
+                                            )}
+                                            
+                                            {u.role === 'parent' && (
                                                 <button 
                                                     className="action-btn delete" 
                                                     onClick={() => handleRemoveUser(u.username)}

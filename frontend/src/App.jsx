@@ -27,6 +27,8 @@ import EditProfile from './pages/User/EditProfile';
 import ManageProject from './pages/User/ManageProject';
 import AdminDashboard from './pages/Admin/AdminDashboard';
 import AdminProjects from './pages/Admin/AdminProjects';
+import AdminAssignProject from './pages/Admin/AdminAssignProject';
+import AdminStandardProjects from './pages/Admin/AdminStandardProjects';
 import AdminCertificates from './pages/Admin/AdminCertificates';
 import AdminAchievements from './pages/Admin/AdminAchievements';
 import AdminChallenges from './pages/Admin/AdminChallenges';
@@ -275,6 +277,8 @@ function App() {
                 <Route index element={<AdminDashboard />} />
                 <Route path="dashboard" element={<AdminDashboard />} />
                 <Route path="projects" element={<AdminProjects />} />
+                <Route path="assign-project" element={<AdminAssignProject />} />
+                <Route path="standard-projects" element={<AdminStandardProjects />} />
                 <Route path="certificates" element={<AdminCertificates />} />
                 <Route path="users" element={<Users />} />
                 <Route path="analytics" element={<Analytics />} />

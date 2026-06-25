@@ -68,30 +68,31 @@
 .users-stats-row {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1.25rem;
-    margin-bottom: 1.5rem;
+    gap: 1rem;
+    margin-bottom: 1rem;
 }
 
-.stat-mini-card {
+.users-stats-row .stat-mini-card {
     background: white;
-    padding: 0.75rem;
-    border-radius: 16px;
+    padding: 0.25rem 0.75rem;
+    border-radius: 8px;
     border: 1px solid #e2e8f0;
     display: flex;
-    flex-direction: column;
-    gap: 4px;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
 }
 
-.stat-mini-card .label {
-    font-size: 0.8rem;
+.users-stats-row .stat-mini-card .label {
+    font-size: 0.75rem;
     text-transform: uppercase;
     letter-spacing: 0.05em;
     color: var(--text-muted);
     font-weight: 700;
 }
 
-.stat-mini-card .value {
-    font-size: 1.75rem;
+.users-stats-row .stat-mini-card .value {
+    font-size: 1.25rem;
     font-weight: 800;
     color: #1e293b;
 }
@@ -381,5 +382,17 @@
         gap: 12px;
         align-items: flex-start;
     }
+}
+
+.user-profile-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+
+.user-profile-link:hover .name,
+.user-profile-link:hover .handle {
+    text-decoration: underline;
+    color: var(--primary-color);
 }
 

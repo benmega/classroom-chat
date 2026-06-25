@@ -48,7 +48,9 @@ const Profile = () => {
     if (isLoading) return <div className="profile-loading">Loading Profile...</div>;
     if (!profileData) return <div className="profile-error">Profile not found.</div>;
 
-    const { target } = profileData;
+    const { target, viewer } = profileData;
+    const isTargetUser = viewer?.id === target?.id;
+    const editLink = isTargetUser ? '/settings' : `/admin/advanced-crud/User/${target?.id}`;
 
     return (
         <>
@@ -56,6 +58,8 @@ const Profile = () => {
             <ProfileHeader 
                 target={target} 
                 isOwner={isOwner} 
+                isTargetUser={isTargetUser}
+                editLink={editLink}
                 pfpInputRef={pfpInputRef}
                 onPfpChange={handlePfpChange}
             />
@@ -68,7 +72,7 @@ const Profile = () => {
                                 <h2><User size={20} /> About Me</h2>
                                 {isOwner && (
                                     <button 
-                                        onClick={() => navigate('/settings')}
+                                        onClick={() => navigate(editLink)}
                                         className="btn-icon"
                                         title="Edit Profile"
                                     >

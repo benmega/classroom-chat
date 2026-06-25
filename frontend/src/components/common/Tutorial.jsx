@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useLayoutEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { 
   X, 
@@ -99,30 +99,46 @@ const Tutorial = () => {
     }
   }, [location.pathname, user, isParent]);
 
-  useLayoutEffect(() => {
-    if (isOpen) {
-      const slide = slides[currentSlide];
-      const element = document.querySelector(slide.target);
-      const rect = element ? element.getBoundingClientRect() : null;
-      
-      const frame = requestAnimationFrame(() => {
-        setSpotlightRect(rect);
-      });
-      return () => cancelAnimationFrame(frame);
-    }
-  }, [isOpen, currentSlide]);
-
   useEffect(() => {
-    const handleResize = () => {
-      if (isOpen) {
+    if (!isOpen) return;
+
+    let frameId;
+    const updateRect = () => {
+      if (frameId) cancelAnimationFrame(frameId);
+      frameId = requestAnimationFrame(() => {
         const slide = slides[currentSlide];
+        if (slide.target === 'body') {
+          setSpotlightRect(null);
+          return;
+        }
         const element = document.querySelector(slide.target);
-        if (element) setSpotlightRect(element.getBoundingClientRect());
-      }
+        if (element) {
+          setSpotlightRect(element.getBoundingClientRect());
+        }
+      });
     };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, [isOpen, currentSlide]);
+
+    // Scroll into view when slide changes
+    const slide = slides[currentSlide];
+    if (slide.target !== 'body') {
+      const element = document.querySelector(slide.target);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }
+
+    // Initial update
+    updateRect();
+
+    window.addEventListener('resize', updateRect);
+    window.addEventListener('scroll', updateRect, true);
+
+    return () => {
+      window.removeEventListener('resize', updateRect);
+      window.removeEventListener('scroll', updateRect, true);
+      if (frameId) cancelAnimationFrame(frameId);
+    };
+  }, [isOpen, currentSlide, slides]);
 
   const handleClose = () => {
     if (user && !user.has_seen_tutorial) {

@@ -26,10 +26,16 @@
 }
 
 .header-background {
-    aspect-ratio: 4 / 1;
+    aspect-ratio: 8 / 1;
+    min-height: 140px;
     background: var(--gradient-primary);
     border-radius: var(--radius-md) var(--radius-md) 0 0;
     position: relative;
+    transition: aspect-ratio 0.3s ease;
+}
+
+.header-background.custom-banner {
+    aspect-ratio: 4 / 1;
 }
 
 .profile-header-content {
@@ -369,12 +375,12 @@
    ================================================================= */
 .skill-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(85px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
     gap: 15px;
 }
 
 /* Hover effects removed to avoid implying interactivity on static cards */
-.skill-card {
+.tech-skill-card {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -386,14 +392,21 @@
     transition: var(--transition-smooth);
 }
 
+.tech-skill-card img {
+    width: 36px;
+    height: 36px;
+    margin-bottom: 10px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
 
-.skill-card i {
+.tech-skill-card i, .tech-skill-card svg {
     font-size: 1.8rem;
     margin-bottom: 8px;
     color: var(--primary-color);
 }
 
-.skill-card span {
+.tech-skill-card span {
     font-size: 0.85rem;
     font-weight: 700;
     color: var(--text-primary);
@@ -408,9 +421,9 @@
 }
 
 /* Proficiency borders matching levels */
-.skill-card.proficiency-1 { border-bottom: 3px solid #cd7f32; }
-.skill-card.proficiency-2 { border-bottom: 3px solid #b0c4de; }
-.skill-card.proficiency-3 { border-bottom: 3px solid #ffd700; }
+.tech-skill-card.proficiency-1 { border-bottom: 3px solid #cd7f32; }
+.tech-skill-card.proficiency-2 { border-bottom: 3px solid #b0c4de; }
+.tech-skill-card.proficiency-3 { border-bottom: 3px solid #ffd700; }
 
 /* =================================================================
    6. PROJECTS PORTFOLIO
@@ -523,6 +536,25 @@
     margin: 0 0 10px 0;
     color: var(--text-primary);
     font-size: 1.15rem;
+}
+
+.in-progress-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--bg-tertiary);
+    color: var(--warning-color, #d97706);
+    border: 1px solid var(--warning-color, #d97706);
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 4px 8px;
+    border-radius: 12px;
+    text-transform: uppercase;
+    z-index: 10;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
 }
 
 .card-teacher-feedback {
@@ -814,6 +846,11 @@
     gap: 2px;
     margin-left: 30px;
     min-width: max-content;
+}
+
+.month-label {
+    font-size: 10px;
+    color: var(--text-muted);
 }
 
 .graph-grid {

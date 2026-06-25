@@ -311,56 +311,59 @@ const CourseProgressTree = () => {
     }
 
     const treeContent = (
-        <div className="skill-tree-grid" ref={containerRef}>
-            {/* SVG Overlay for Connections */}
-            {lines.length > 0 && (
-                <svg className="skill-tree-svg-overlay">
-                    <defs>
-                        <linearGradient id="oz-cs-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                            <stop offset="0%" stopColor="#902edb" />
-                            <stop offset="100%" stopColor="#2b91af" />
-                        </linearGradient>
-                    </defs>
-                    {lines.map(line => {
-                        const isDimmed = hoveredNodeId && (!connectedNodes.has(line.fromId) || !connectedNodes.has(line.toId));
-                        return (
-                            <line 
-                                key={line.id} 
-                                x1={line.x1} 
-                                y1={line.y1} 
-                                x2={line.x2} 
-                                y2={line.y2} 
-                                className={`tree-line ${line.isActive ? 'active-line' : 'locked-line'} ${line.isActive ? line.lineDomain : ''} ${isDimmed ? 'dimmed' : ''}`}
-                            />
-                        );
-                    })}
-                </svg>
-            )}
-
+        <div className="skill-tree-container">
             {/* Desktop Headers */}
-            {TRACKS.map(track => {
-                const trackNodes = processedNodes.filter(n => n.track === track.id && !n.is_extra);
-                let totalPercent = 0;
-                trackNodes.forEach(n => {
-                    if (n.levels_total) {
-                        totalPercent += Math.min((n.levels_completed / n.levels_total), 1);
-                    } else if (n.has_started && n.levels_completed > 0) {
-                        totalPercent += 1;
-                    }
-                });
-                const percent = trackNodes.length > 0 ? (totalPercent / trackNodes.length) * 100 : 0;
-                const isComplete = trackNodes.length > 0 && trackNodes.every(n => n.has_started && n.levels_completed >= (n.levels_total || 1));
-                
-                return (
-                    <div key={track.id} className={`branch-header glass-panel desktop-header ${isComplete ? 'track-completed' : ''}`} style={{ gridColumn: track.col, gridRow: 1, position: 'relative', overflow: 'hidden' }}>
-                        <div className="track-progress-bg" style={{ width: `${percent}%` }}></div>
-                        <h2 style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
-                            <span>{track.title}</span>
-                            <span style={{ fontSize: '0.8rem', opacity: 0.8, fontWeight: 'normal' }}>{Math.round(percent)}%</span>
-                        </h2>
-                    </div>
-                );
-            })}
+            <div className="track-headers-container">
+                {TRACKS.map(track => {
+                    const trackNodes = processedNodes.filter(n => n.track === track.id && !n.is_extra);
+                    let totalPercent = 0;
+                    trackNodes.forEach(n => {
+                        if (n.levels_total) {
+                            totalPercent += Math.min((n.levels_completed / n.levels_total), 1);
+                        } else if (n.has_started && n.levels_completed > 0) {
+                            totalPercent += 1;
+                        }
+                    });
+                    const percent = trackNodes.length > 0 ? (totalPercent / trackNodes.length) * 100 : 0;
+                    const isComplete = trackNodes.length > 0 && trackNodes.every(n => n.has_started && n.levels_completed >= (n.levels_total || 1));
+                    
+                    return (
+                        <div key={track.id} className={`branch-header glass-panel desktop-header ${isComplete ? 'track-completed' : ''}`} style={{ position: 'relative', overflow: 'hidden' }}>
+                            <div className="track-progress-bg" style={{ width: `${percent}%` }}></div>
+                            <h2 style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+                                <span>{track.title}</span>
+                                <span style={{ fontSize: '0.8rem', opacity: 0.8, fontWeight: 'normal' }}>{Math.round(percent)}%</span>
+                            </h2>
+                        </div>
+                    );
+                })}
+            </div>
+
+            <div className="skill-tree-grid" ref={containerRef}>
+                {/* SVG Overlay for Connections */}
+                {lines.length > 0 && (
+                    <svg className="skill-tree-svg-overlay">
+                        <defs>
+                            <linearGradient id="oz-cs-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                <stop offset="0%" stopColor="#902edb" />
+                                <stop offset="100%" stopColor="#2b91af" />
+                            </linearGradient>
+                        </defs>
+                        {lines.map(line => {
+                            const isDimmed = hoveredNodeId && (!connectedNodes.has(line.fromId) || !connectedNodes.has(line.toId));
+                            return (
+                                <line 
+                                    key={line.id} 
+                                    x1={line.x1} 
+                                    y1={line.y1} 
+                                    x2={line.x2} 
+                                    y2={line.y2} 
+                                    className={`tree-line ${line.isActive ? 'active-line' : 'locked-line'} ${line.isActive ? line.lineDomain : ''} ${isDimmed ? 'dimmed' : ''}`}
+                                />
+                            );
+                        })}
+                    </svg>
+                )}
             
             {/* Nodes */}
             {processedNodes.map(node => {
@@ -368,12 +371,13 @@ const CourseProgressTree = () => {
                 const isRecommended = node.id === recommendedNodeId;
                 const isDimmed = hoveredNodeId && !connectedNodes.has(node.id);
                 const prereqs = !node.has_started ? getPrerequisiteTitles(node.id, processedNodes) : "";
+                const isComplete = node.levels_total && node.levels_completed >= node.levels_total;
 
                 return (
                     <div 
                         key={node.id} 
                         ref={el => nodeRefs.current[node.id] = el}
-                        className={`skill-node-cell ${node.has_started ? 'active' : 'locked'} ${node.is_extra ? 'extra-node' : ''} ${isRecommended ? 'recommended' : ''} ${isDimmed ? 'dimmed' : ''}`}
+                        className={`skill-node-cell ${node.has_started ? 'active' : 'locked'} ${node.is_extra ? 'extra-node' : ''} ${isRecommended ? 'recommended' : ''} ${isDimmed ? 'dimmed' : ''} ${isComplete ? 'completed' : ''}`}
                         style={{ 
                             gridColumn: trackInfo?.col || 1, 
                             gridRow: node.row + 1
@@ -417,23 +421,37 @@ const CourseProgressTree = () => {
                     </div>
                 );
             })}
+            </div>
         </div>
     );
 
     return (
         <div className="course-progress-page animate-page-entry">
-            <header className="report-header" style={{ background: 'transparent', border: 'none', boxShadow: 'none', padding: '0 0 1rem 0' }}>
-                <div className="report-header-inner" style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start' }}>
-                    <button
-                        className="report-back-btn"
-                        style={{ marginBottom: '0', background: 'transparent', border: 'none', boxShadow: 'none', padding: '0' }}
-                        onClick={() => navigate(-1)}
-                        title="Go Back"
-                    >
-                        <ArrowLeft size={24} color="var(--text-primary)" />
-                    </button>
-                </div>
-            </header>
+            <button
+                className="report-back-btn"
+                style={{ 
+                    position: 'absolute', 
+                    top: '1rem', 
+                    left: '1rem', 
+                    background: 'var(--surface-secondary)', 
+                    border: '1px solid var(--border-subtle)', 
+                    borderRadius: '50%',
+                    width: '40px',
+                    height: '40px',
+                    padding: '0',
+                    margin: '0',
+                    boxShadow: 'var(--shadow-sm)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    zIndex: 100,
+                    cursor: 'pointer'
+                }}
+                onClick={() => navigate(-1)}
+                title="Go Back"
+            >
+                <ArrowLeft size={24} color="var(--text-primary)" />
+            </button>
 
             {treeContent}
         </div>

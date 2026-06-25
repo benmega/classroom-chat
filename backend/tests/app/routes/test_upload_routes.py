@@ -42,7 +42,7 @@ def test_upload_file_no_data(client):
         response = client.post(url_for("upload.upload_file"), json=json_data)
 
         assert response.status_code == 400
-        assert b'{"error":"Invalid JSON data"}' in response.data
+        assert response.json.get("error") == "Invalid JSON data"
 
 
 def test_upload_file_multiple_file_types(client):

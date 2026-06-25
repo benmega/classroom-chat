@@ -1,11 +1,12 @@
 .course-progress-page {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 2rem 1rem;
+    width: 100%;
+    margin: 0;
+    padding: 2rem 2rem;
     padding-bottom: 6rem;
     height: 100dvh;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
+    position: relative;
 }
 
 .skill-tree-grid {
@@ -49,16 +50,23 @@
 
 .skill-card {
     display: flex;
+    flex-direction: row !important; /* Force row to override Profile.css */
     align-items: center;
+    justify-content: flex-start !important;
+    text-align: left !important;
     gap: 1.25rem;
     background: var(--surface-primary);
     border: 2px solid var(--border-subtle);
     border-radius: var(--radius-lg);
     padding: 1.25rem;
     width: 100%;
-    max-width: 400px;
+    max-width: 100%;
     box-shadow: var(--shadow-sm);
     transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.track-headers-container {
+    display: none;
 }
 
 /* User wants CodeCombat and Ozaria colors */
@@ -78,6 +86,15 @@
 .skill-node-cell.active .skill-card.ozaria {
     border-color: #902edb;
     box-shadow: 0 4px 12px rgba(144, 46, 219, 0.15);
+}
+
+/* Completed nodes */
+.skill-node-cell.completed .skill-card.codecombat {
+    background: rgba(43, 145, 175, 0.15);
+}
+
+.skill-node-cell.completed .skill-card.ozaria {
+    background: rgba(144, 46, 219, 0.15);
 }
 
 /* Locked nodes removed as per request */
@@ -211,6 +228,15 @@
         gap: 1.25rem 1rem;
     }
     
+    .track-headers-container {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1.25rem 1rem;
+        padding: 1rem 0;
+        margin-top: 0;
+        margin-bottom: 1rem;
+    }
+
     .desktop-header {
         display: block;
         align-self: start;
@@ -218,8 +244,9 @@
     }
 
     .skill-card {
-        padding: 0.75rem 1rem;
+        padding: 0.5rem 0.75rem; /* Shorter padding */
         gap: 0.75rem;
+        max-width: 100%;
     }
 
     .skill-icon {

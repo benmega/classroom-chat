@@ -25,7 +25,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/265</span>
+                <span class='fraction'>0/269</span>
             </div>
         
             
@@ -46,7 +46,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/265</span>
+                <span class='fraction'>0/269</span>
             </div>
         
             
@@ -385,7 +385,12 @@
 <a name='L320'></a><a href='#L320'>320</a>
 <a name='L321'></a><a href='#L321'>321</a>
 <a name='L322'></a><a href='#L322'>322</a>
-<a name='L323'></a><a href='#L323'>323</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
+<a name='L323'></a><a href='#L323'>323</a>
+<a name='L324'></a><a href='#L324'>324</a>
+<a name='L325'></a><a href='#L325'>325</a>
+<a name='L326'></a><a href='#L326'>326</a>
+<a name='L327'></a><a href='#L327'>327</a>
+<a name='L328'></a><a href='#L328'>328</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -600,6 +605,11 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -708,7 +718,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js"><span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" ><span class="branch-0 cbranch-no" title="branch not covered" >import React, { useState, useEffect } from 'react';</span></span></span>
-<span class="cstat-no" title="statement not covered" >import { Shield, Unlock, Star, Loader2, ShoppingCart } from 'lucide-react';</span>
+<span class="cstat-no" title="statement not covered" >import { Shield, Unlock, Star, Loader2, ShoppingCart, Palette, Image as ImageIcon, Zap, Bird } from 'lucide-react';</span>
 <span class="cstat-no" title="statement not covered" >import toast from 'react-hot-toast';</span>
 <span class="cstat-no" title="statement not covered" >import useAuthStore from '../../store/useAuthStore';</span>
 <span class="cstat-no" title="statement not covered" >import client from '../../api/client';</span>
@@ -919,11 +929,16 @@
         );
 <span class="cstat-no" title="statement not covered" >    }</span>
 &nbsp;
+<span class="cstat-no" title="statement not covered" >    const getIconForItem = (item) =&gt; {</span>
+<span class="cstat-no" title="statement not covered" >        if (item.name === "Chat Font Color") return &lt;Palette size={24} /&gt;;</span>
+<span class="cstat-no" title="statement not covered" >        if (item.name === "Custom Profile Wallpaper") return &lt;ImageIcon size={24} /&gt;;</span>
+<span class="cstat-no" title="statement not covered" >        if (item.name === "Auto Challenge Claimer") return &lt;Zap size={24} /&gt;;</span>
+<span class="cstat-no" title="statement not covered" >        if (item.name === "Permanent Double Duck") return &lt;Bird size={24} /&gt;;</span>
+<span class="cstat-no" title="statement not covered" >        return item.is_crowdfunded ? &lt;Shield size={24} /&gt; : item.is_purchased ? &lt;Unlock size={24} /&gt; : &lt;Star size={24} /&gt;;</span>
+<span class="cstat-no" title="statement not covered" >    };</span>
+&nbsp;
 <span class="cstat-no" title="statement not covered" >    return (</span>
 <span class="cstat-no" title="statement not covered" >        &lt;div className="shop-page"&gt;</span>
-<span class="cstat-no" title="statement not covered" >            &lt;div className="shop-page-header"&gt;</span>
-<span class="cstat-no" title="statement not covered" >                &lt;h2&gt;&lt;ShoppingCart size={24} /&gt; Packet Shop&lt;/h2&gt;</span>
-<span class="cstat-no" title="statement not covered" >            &lt;/div&gt;</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >            &lt;div className="shop-items-grid"&gt;</span>
 <span class="cstat-no" title="statement not covered" >                {items.map(item =&gt; {</span>
@@ -934,7 +949,7 @@
 <span class="cstat-no" title="statement not covered" >                        &lt;div key={item.id} className={`shop-item-card ${item.is_crowdfunded ? 'crowdfunded' : ''} ${item.is_purchased ? 'purchased' : ''}`}&gt;</span>
 <span class="cstat-no" title="statement not covered" >                            &lt;div className="shop-item-header"&gt;</span>
 <span class="cstat-no" title="statement not covered" >                                &lt;div className="shop-item-icon"&gt;</span>
-<span class="cstat-no" title="statement not covered" >                                    {item.is_crowdfunded ? &lt;Shield size={24} /&gt; : item.is_purchased ? &lt;Unlock size={24} /&gt; : &lt;Star size={24} /&gt;}</span>
+<span class="cstat-no" title="statement not covered" >                                    {getIconForItem(item)}</span>
 <span class="cstat-no" title="statement not covered" >                                &lt;/div&gt;</span>
 <span class="cstat-no" title="statement not covered" >                                &lt;div className="shop-item-price"&gt;</span>
 <span class="cstat-no" title="statement not covered" >                                    {item.base_price.toFixed(3)} Packets</span>
@@ -1036,7 +1051,7 @@
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-06-19T07:08:54.865Z
+                at 2026-06-24T09:30:31.378Z
             </div>
         <script src="../../../../prettify.js"></script>
         <script>

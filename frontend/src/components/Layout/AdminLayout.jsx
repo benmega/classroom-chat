@@ -17,7 +17,8 @@ import {
     ChevronLeft,
     ChevronRight,
     ShoppingBag,
-    GraduationCap
+    GraduationCap,
+    BookOpen
 } from 'lucide-react';
 import useAuthStore from '../../store/useAuthStore';
 import useSidebar from '../../hooks/useSidebar';
@@ -58,6 +59,7 @@ const AdminLayout = ({ children }) => {
         { path: '/admin/users', label: 'Users', icon: Users },
         { path: '/admin/pending-trades', label: 'Pending Trades', icon: ShoppingBag },
         { path: '/admin/projects', label: 'Projects', icon: FolderKanban },
+        { path: '/admin/standard-projects', label: 'Standard Projects', icon: BookOpen },
         { path: '/admin/course-instances', label: 'Course Instances', icon: GraduationCap },
         { path: '/admin/certificates', label: 'Certificates', icon: FileCheck },
         { path: '/admin/advanced', label: 'Advanced Panel', icon: ShieldAlert },
@@ -151,10 +153,6 @@ const AdminLayout = ({ children }) => {
                 >
                     {children}
                 </main>
-
-                <footer className="admin-site-footer">
-                    <p><span>Version 2.4.0 (Alpha)</span></p>
-                </footer>
             </div>
         </div>
     );

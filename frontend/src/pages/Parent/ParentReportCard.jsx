@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Loader2, ArrowLeft, Activity, Award, BookOpen, User, ChevronDown, ChevronUp } from 'lucide-react';
 import client from '../../api/client';
+import { getApiUrl } from '../../utils/apiUrl';
 import ContributionGraph from '../../components/profile/ContributionGraph';
 import ProjectPortfolio from '../../components/profile/ProjectPortfolio';
 import DigitalNotebook from '../../components/profile/DigitalNotebook';
@@ -87,10 +88,10 @@ const ParentReportCard = () => {
                     </button>
 
                     <div className="report-student-info">
-                        {reportData.profile_picture_url ? (
+                        {reportData.profile_picture_url && !reportData.profile_picture_url.includes('Default_pfp.jpg') ? (
                             <img
                                 className="report-student-avatar"
-                                src={reportData.profile_picture_url}
+                                src={getApiUrl(reportData.profile_picture_url)}
                                 alt={reportData.username}
                             />
                         ) : (

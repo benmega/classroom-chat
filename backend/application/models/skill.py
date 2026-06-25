@@ -27,3 +27,12 @@ class Skill(db.Model):
 
     def __repr__(self):
         return f"{self.name} ({self.category})"
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "category": self.category,
+            "icon": self.icon,
+            "proficiency": self.proficiency
+        }
