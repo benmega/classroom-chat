@@ -6,6 +6,7 @@ import Linkify from '../common/Linkify';
 import { getApiUrl } from '../../utils/apiUrl';
 
 const ChatMessage = React.memo(({ msg, user, onDelete }) => {
+    const borderSpeed = msg.animated_border_speed === 'slow' ? '3s' : msg.animated_border_speed === 'fast' ? '0.5s' : '1.5s';
     return (
         <div className="chat-message-group">
             <div className="message-row">
@@ -13,7 +14,10 @@ const ChatMessage = React.memo(({ msg, user, onDelete }) => {
                     to={msg.slug ? `/profile/${msg.slug}` : '#'} 
                     className="avatar-link"
                 >
-                    <div className={`avatar-container ${msg.has_animated_border ? "perk-animated-border" : ""}`}>
+                    <div 
+                        className={`avatar-container ${msg.has_animated_border ? "perk-animated-border" : ""}`}
+                        style={msg.has_animated_border ? { '--border-speed': borderSpeed } : {}}
+                    >
                         {msg.user_profile_pic ? (
                             <SmartImage 
                                 src={getApiUrl(`/user/profile_pictures/${msg.user_profile_pic}`)} 

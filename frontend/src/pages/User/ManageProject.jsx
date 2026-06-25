@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Save, Trash2, Upload, Link as LinkIcon, Video, Code, Camera, LayoutTemplate, Image as ImageIcon, CheckCircle, ExternalLink, Play, Youtube, Monitor, FileVideo } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Save, Trash2, Upload, Link as LinkIcon, Video, Code, Camera, Image as ImageIcon, CheckCircle, ExternalLink, Play, Youtube, ArrowRight, ArrowLeft } from 'lucide-react';
 import AccessDenied from '../Error/AccessDenied';
 import NotFound from '../Error/NotFound';
 import useAuthStore from '../../store/useAuthStore';
@@ -32,12 +32,19 @@ const ManageProject = () => {
     } = useProjectManagement();
 
     const [isRecorderOpen, setIsRecorderOpen] = useState(false);
-    const [activeTab, setActiveTab] = useState('core');
+    const [activeTab, setActiveTab] = useState('core'); // 'core', 'media', 'code'
+    const descRef = useRef(null);
 
     const onRecordingComplete = (blob) => {
         handleRecordedVideo(blob);
         setIsRecorderOpen(false);
     };
+
+    useEffect(() => {
+        if (activeTab === 'core' && descRef.current) {
+            adjustTextareaHeight(descRef.current);
+        }
+    }, [activeTab, projectData.description, adjustTextareaHeight]);
 
     const handleNext = () => {
         if (activeTab === 'core') setActiveTab('media');
@@ -55,240 +62,226 @@ const ManageProject = () => {
     if (error === 'not_found') return <NotFound message="The project you are looking for does not exist or you do not have permission to view it." />;
 
     return (
-        <div className="manage-project-page split-layout">
-            <div className="editor-pane">
-                <div className="tab-navigation">
-                    <button
-                        type="button"
-                        className={`tab-btn ${activeTab === 'core' ? 'active' : ''}`}
-                        onClick={() => setActiveTab('core')}
-                    >
-                        <LayoutTemplate size={16} /> Core Info
-                    </button>
-                    <button
-                        type="button"
-                        className={`tab-btn ${activeTab === 'media' ? 'active' : ''}`}
-                        onClick={() => setActiveTab('media')}
-                    >
-                        <ImageIcon size={16} /> Media
-                    </button>
-                    <button
-                        type="button"
-                        className={`tab-btn ${activeTab === 'code' ? 'active' : ''}`}
-                        onClick={() => setActiveTab('code')}
-                    >
-                        <Code size={16} /> Code Showcase
-                    </button>
-                </div>
+        <div className="manage-project-page">
+            <form onSubmit={handleSubmit} className="manage-project-grid">
+                
+                {/* LEFT COLUMN: Input Form */}
+                <div className="form-column">
+                    <div className="form-wizard-header">
+                        <div className={`step ${activeTab === 'core' ? 'active' : ''}`} onClick={() => setActiveTab('core')}>1. Core Info</div>
+                        <div className={`step ${activeTab === 'media' ? 'active' : ''}`} onClick={() => setActiveTab('media')}>2. Media</div>
+                        <div className={`step ${activeTab === 'code' ? 'active' : ''}`} onClick={() => setActiveTab('code')}>3. Code</div>
+                    </div>
 
-                <form onSubmit={handleSubmit} className="project-editor-form">
-                    <div className="tab-content">
+                    {currentUser?.is_admin && (
+                        <div className="admin-controls-panel">
+                            <h4>Admin Controls</h4>
+                            <div className="form-group">
+                                <label>Assign to Student</label>
+                                <select name="student_id" value={projectData.student_id || ''} onChange={handleInputChange} className="form-control" required>
+                                    <option value="">Select Student</option>
+                                    {students.map(s => <option key={s.id} value={s.id}>{s.username}</option>)}
+                                </select>
+                            </div>
+                            <div className="form-group">
+                                <label>Teacher Comment</label>
+                                <textarea name="teacher_comment" value={projectData.teacher_comment || ''} onChange={(e) => { handleInputChange(e); adjustTextareaHeight(e.target); }} rows="2" className="form-control admin-textarea" />
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="form-wizard-content">
                         {activeTab === 'core' && (
-                            <section className="form-section fade-in">
+                            <div className="form-section fade-in">
+                                <h3>Core Information</h3>
                                 <div className="form-group">
-                                    <label>Project Name *</label>
+                                    <label>Project Name</label>
                                     <input
                                         type="text"
                                         name="name"
                                         value={projectData.name || ''}
                                         onChange={handleInputChange}
+                                        placeholder="e.g. My Awesome Platformer"
+                                        className="form-control title-input-left"
                                         required
-                                        placeholder="e.g. My Awesome Game"
-                                        className="form-control"
                                     />
                                 </div>
                                 <div className="form-group">
                                     <label>Description</label>
                                     <textarea
+                                        ref={descRef}
                                         name="description"
                                         value={projectData.description || ''}
-                                        onChange={(e) => {
-                                            handleInputChange(e);
-                                            adjustTextareaHeight(e.target);
-                                        }}
-                                        rows="6"
-                                        placeholder="Tell the story of your project..."
-                                        className="form-control"
+                                        onChange={(e) => { handleInputChange(e); adjustTextareaHeight(e.target); }}
+                                        placeholder="What is this project about? What did you learn?"
+                                        className="form-control desc-input-left"
+                                        rows="4"
                                     />
                                 </div>
-
-                                {currentUser?.is_admin && (
-                                    <>
-                                        <div className="form-group">
-                                            <label>Assign to Student</label>
-                                            <select
-                                                name="student_id"
-                                                value={projectData.student_id || ''}
-                                                onChange={handleInputChange}
-                                                className="form-control"
-                                                required
-                                            >
-                                                <option value="">Select Student</option>
-                                                {students.map(s => (
-                                                    <option key={s.id} value={s.id}>{s.username}</option>
-                                                ))}
-                                            </select>
-                                        </div>
-                                        <div className="form-group">
-                                            <label>Teacher Comment (Admin Only)</label>
-                                            <textarea
-                                                name="teacher_comment"
-                                                value={projectData.teacher_comment || ''}
-                                                onChange={(e) => {
-                                                    handleInputChange(e);
-                                                    adjustTextareaHeight(e.target);
-                                                }}
-                                                rows="4"
-                                                className="form-control admin-textarea"
-                                            />
-                                        </div>
-                                    </>
-                                )}
-                            </section>
+                                <div className="form-group">
+                                    <label>Demo Link <span className="optional-badge">Optional</span></label>
+                                    <div className="video-input-wrapper">
+                                        <LinkIcon size={16} className="input-icon" />
+                                        <input
+                                            type="url"
+                                            name="link"
+                                            value={projectData.link || ''}
+                                            onChange={handleInputChange}
+                                            placeholder="https://..."
+                                            className="form-control with-icon"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
                         )}
 
                         {activeTab === 'media' && (
-                            <section className="form-section fade-in media-section">
-                                <div className="media-card">
-                                    <h4><Video size={16} /> Video</h4>
-                                    <div className="video-options-compact">
-                                        <div className="video-input-wrapper">
-                                            <Youtube size={16} className="input-icon" />
-                                            <input
-                                                type="text"
-                                                name="video_url"
-                                                value={projectData.video_url || ''}
-                                                onChange={handleInputChange}
-                                                placeholder="YouTube/Vimeo URL"
-                                                className="form-control with-icon"
-                                            />
-                                        </div>
-                                        <div className="or-divider"><span>OR</span></div>
-                                        <div className="video-upload-actions">
-                                            <label className="file-upload-btn secondary">
-                                                <Upload size={16} /> Upload
-                                                <input type="file" name="project_video" onChange={handleFileChange} accept="video/*" hidden />
-                                            </label>
-                                            <button
-                                                type="button"
-                                                className="file-upload-btn action-record"
-                                                onClick={() => setIsRecorderOpen(true)}
-                                            >
-                                                <Camera size={16} /> Record
-                                            </button>
-                                        </div>
-                                        {projectVideo && <div className="file-name success-text">Selected: {projectVideo.name.split(/[\\/]/).pop()}</div>}
-                                    </div>
+                            <div className="form-section fade-in">
+                                <h3>Media Assets</h3>
+                                
+                                <div className="media-input-card">
+                                    <h4><ImageIcon size={16} /> Cover Image</h4>
+                                    <p className="media-hint">Upload a thumbnail to represent your project.</p>
+                                    <label className="file-upload-btn primary-upload">
+                                        <Upload size={16} /> {imagePreview || projectData.image_url ? 'Change Cover Image' : 'Upload Image'}
+                                        <input type="file" name="project_image" onChange={handleFileChange} accept="image/*" hidden />
+                                    </label>
                                 </div>
 
-                                <div className="media-card">
-                                    <h4><ImageIcon size={16} /> Thumbnail</h4>
-                                    <div className="thumbnail-upload compact">
-                                        <label className="file-upload-btn primary">
-                                            <Upload size={16} /> {imagePreview ? 'Change Image' : 'Upload Image'}
-                                            <input type="file" name="project_image" onChange={handleFileChange} accept="image/*" hidden />
+                                <div className="media-input-card">
+                                    <h4><Video size={16} /> Video Presentation</h4>
+                                    <p className="media-hint">Add a YouTube/Vimeo link, or upload/record a video directly.</p>
+                                    
+                                    <div className="video-input-wrapper">
+                                        <Youtube size={16} className="input-icon" />
+                                        <input 
+                                            type="text" 
+                                            name="video_url" 
+                                            value={projectData.video_url || ''} 
+                                            onChange={handleInputChange} 
+                                            placeholder="YouTube/Vimeo URL" 
+                                            className="form-control with-icon" 
+                                        />
+                                    </div>
+                                    <div className="or-divider"><span>OR</span></div>
+                                    <div className="video-upload-actions">
+                                        <label className="file-upload-btn secondary-upload">
+                                            <Upload size={16} /> Upload Video
+                                            <input type="file" name="project_video" onChange={handleFileChange} accept="video/*" hidden />
                                         </label>
-                                        {imagePreview && <span className="success-text">Image Selected</span>}
+                                        <button type="button" className="file-upload-btn action-record" onClick={() => setIsRecorderOpen(true)}>
+                                            <Camera size={16} /> Record Screen
+                                        </button>
                                     </div>
+                                    {projectVideo && <div className="file-name success-text">Selected: {projectVideo.name.split(/[\\/]/).pop()}</div>}
                                 </div>
-
-                                <div className="media-card">
-                                    <h4><LinkIcon size={16} /> Demo Link</h4>
-                                    <input
-                                        type="url"
-                                        name="link"
-                                        value={projectData.link || ''}
-                                        onChange={handleInputChange}
-                                        placeholder="https://..."
-                                        className="form-control"
-                                    />
-                                </div>
-                            </section>
+                            </div>
                         )}
 
                         {activeTab === 'code' && (
-                            <section className="form-section code-section fade-in h-full">
-                                <p className="hint">Paste your code here.</p>
-                                <textarea
-                                    name="code_snippet"
-                                    value={projectData.code_snippet || ''}
-                                    onChange={handleInputChange}
-                                    className="form-control code-editor h-full"
-                                    placeholder="def my_awesome_logic():\n    pass"
-                                />
-                            </section>
+                            <div className="form-section fade-in">
+                                <h3>Code Showcase</h3>
+                                <p className="media-hint">Paste an interesting snippet of your code to show off your logic.</p>
+                                <div className="form-group">
+                                    <textarea
+                                        name="code_snippet"
+                                        value={projectData.code_snippet || ''}
+                                        onChange={handleInputChange}
+                                        className="form-control inline-code-editor"
+                                        placeholder="def my_awesome_function():\n    pass"
+                                    />
+                                </div>
+                            </div>
                         )}
                     </div>
 
-                    <div className="form-footer sticky-footer">
-                        <div className="footer-left">
-                            <button type="button" onClick={() => navigate('/profile')} className="btn-cancel">
-                                Cancel
-                            </button>
-                            {activeTab !== 'core' && (
-                                <button type="button" onClick={handleBack} className="btn-secondary">
-                                    Back
-                                </button>
-                            )}
-                        </div>
-                        <div className="action-group">
-                            {projectId && (
-                                <button type="button" onClick={handleDelete} className="btn-delete">
-                                    <Trash2 size={18} /> Delete
-                                </button>
-                            )}
-                            {activeTab !== 'code' ? (
-                                <button type="button" onClick={handleNext} className="btn-primary">
-                                    Next
-                                </button>
-                            ) : (
-                                <button type="submit" disabled={isSaving} className="btn-save">
-                                    <Save size={18} /> {isSaving ? 'Saving...' : (projectId ? 'Update Project' : 'Create Project')}
-                                </button>
-                            )}
-                        </div>
-                    </div>
-                </form>
-            </div>
+                </div>
 
-            <div className="preview-pane">
-                <div className="preview-content">
-                    <div className="project-card mock-preview">
-                        <div className="project-thumb">
-                            <SmartImage
-                                src={imagePreview || formatStaticUrl(projectData.image_url) || null}
-                                alt={projectData.name || 'Preview'}
-                                fallbackType="project"
-                            />
-                            {(projectData.video_url || projectVideo) && (
-                                <div className="play-overlay"><Play size={24} fill="currentColor" /></div>
-                            )}
-                        </div>
-                        <div className="project-content">
-                            <h3>{projectData.name || 'Project Name'}</h3>
-
-                            {projectData.teacher_comment && (
-                                <div className="card-teacher-feedback">
-                                    <CheckCircle size={14} /> {projectData.teacher_comment.substring(0, 80)}{projectData.teacher_comment.length > 80 ? '...' : ''}
+                {/* RIGHT COLUMN: Live Preview */}
+                <div className="preview-column">
+                    <div className="preview-sticky-container">
+                        <div className={`preview-card-wrapper highlight-${activeTab}`}>
+                            <div className="project-presentation-card">
+                                
+                                <div className="preview-section-media">
+                                    <div className="hero-background">
+                                        <SmartImage src={imagePreview || formatStaticUrl(projectData.image_url) || null} alt={projectData.name || 'Cover'} fallbackType="project" />
+                                        {(projectData.video_url || projectVideo) && <div className="play-overlay"><Play size={48} fill="currentColor" /></div>}
+                                    </div>
                                 </div>
-                            )}
 
-                            <p className="preview-desc">
-                                {projectData.description ?
-                                    (projectData.description.length > 150 ? projectData.description.substring(0, 150) + '...' : projectData.description)
-                                    : 'A short description of your project will appear here...'}
-                            </p>
+                                <div className="preview-section-core">
+                                    <h1 className={projectData.name ? '' : 'placeholder-text'}>
+                                        {projectData.name || 'Project Name...'}
+                                    </h1>
+                                    
+                                    {projectData.link && (
+                                        <div className="link-preview">
+                                            <ExternalLink size={14} /> {projectData.link}
+                                        </div>
+                                    )}
 
-                            <div className="project-footer">
-                                {projectData.link && (
-                                    <a href="#" className="link-icon" onClick={(e) => e.preventDefault()}><ExternalLink size={16} /></a>
-                                )}
-                                <button className="btn-text" onClick={(e) => e.preventDefault()}>Details</button>
+                                    <p className={`preview-desc ${projectData.description ? '' : 'placeholder-text'}`}>
+                                        {projectData.description || 'Tell the story of your project...'}
+                                    </p>
+                                    
+                                    {projectData.teacher_comment && (
+                                        <div className="card-teacher-feedback mt-3">
+                                            <CheckCircle size={14} /> Teacher Note: {projectData.teacher_comment}
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="preview-section-code">
+                                    {projectData.code_snippet ? (
+                                        <div className="inline-code-section">
+                                            <h4><Code size={16} /> Code Snippet</h4>
+                                            <pre className="code-preview-block"><code>{projectData.code_snippet}</code></pre>
+                                        </div>
+                                    ) : (
+                                        <div className="inline-code-section placeholder-code">
+                                            <h4><Code size={16} /> Code Snippet</h4>
+                                            <div className="no-code-preview">Source code preview not available.</div>
+                                        </div>
+                                    )}
+                                </div>
+
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
+
+                {/* Floating Bottom Bar */}
+                <div className="floating-action-bar">
+                    <div className="footer-left">
+                        <button type="button" onClick={() => navigate('/profile')} className="btn-cancel">
+                            Cancel
+                        </button>
+                        {projectId && (
+                            <button type="button" onClick={handleDelete} className="btn-delete">
+                                <Trash2 size={18} /> Delete Project
+                            </button>
+                        )}
+                    </div>
+                    
+                    <div className="footer-actions">
+                        {activeTab !== 'core' && (
+                            <button type="button" className="btn-secondary-outline" onClick={handleBack}>
+                                <ArrowLeft size={16} /> Back
+                            </button>
+                        )}
+                        {activeTab !== 'code' ? (
+                            <button type="button" className="btn-primary" onClick={handleNext}>
+                                Next <ArrowRight size={16} />
+                            </button>
+                        ) : (
+                            <button type="submit" disabled={isSaving} className="btn-save">
+                                <Save size={18} /> {isSaving ? 'Saving...' : (projectId ? 'Update Project' : 'Create Project')}
+                            </button>
+                        )}
+                    </div>
+                </div>
+            </form>
 
             <ScreenRecorder
                 isOpen={isRecorderOpen}

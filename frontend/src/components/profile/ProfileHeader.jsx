@@ -6,6 +6,7 @@ import { formatLargeNumber } from '../../utils/formatters';
 import { getApiUrl } from '../../utils/apiUrl';
 
 const ProfileHeader = ({ target, isOwner, pfpInputRef, onPfpChange }) => {
+    const borderSpeed = target.animated_border_speed === 'slow' ? '3s' : target.animated_border_speed === 'fast' ? '0.5s' : '1.5s';
     return (
         <div className="profile-header-card">
             <div 
@@ -18,7 +19,11 @@ const ProfileHeader = ({ target, isOwner, pfpInputRef, onPfpChange }) => {
                 } : {}}
             ></div>
             <div className="profile-header-content">
-                <div className={`avatar-wrapper ${target.has_animated_border ? 'perk-animated-border' : ''}`} onClick={() => isOwner && pfpInputRef.current?.click()}>
+                <div 
+                    className={`avatar-wrapper ${target.has_animated_border ? 'perk-animated-border' : ''}`} 
+                    onClick={() => isOwner && pfpInputRef.current?.click()}
+                    style={target.has_animated_border ? { '--border-speed': borderSpeed } : {}}
+                >
                     <SmartImage 
                         src={getApiUrl(target.profile_picture_url)} 
                         alt={target.username} 

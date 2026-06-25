@@ -47,6 +47,7 @@ class User(db.Model):
     has_chat_font = db.Column(db.Boolean, default=False)
     chat_font_color = db.Column(db.String(7), nullable=True)
     has_animated_border = db.Column(db.Boolean, default=False)
+    animated_border_speed = db.Column(db.String(10), default="normal")
     has_auto_bitshift = db.Column(db.Boolean, default=False)
     has_custom_wallpaper = db.Column(db.Boolean, default=False)
     profile_wallpaper = db.Column(db.String(255), nullable=True)
@@ -159,6 +160,7 @@ class User(db.Model):
             "has_chat_font": self.has_chat_font,
             "chat_font_color": self.chat_font_color,
             "has_animated_border": self.has_animated_border,
+            "animated_border_speed": self.animated_border_speed,
             "has_auto_bitshift": self.has_auto_bitshift,
             "has_custom_wallpaper": self.has_custom_wallpaper,
             "profile_wallpaper": self.profile_wallpaper,
@@ -232,6 +234,7 @@ class User(db.Model):
             "has_chat_font": self.has_chat_font,
             "chat_font_color": self.chat_font_color,
             "has_animated_border": self.has_animated_border,
+            "animated_border_speed": self.animated_border_speed,
             "has_auto_bitshift": self.has_auto_bitshift,
             "has_custom_wallpaper": self.has_custom_wallpaper,
             "profile_wallpaper": self.profile_wallpaper,

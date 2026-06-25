@@ -70,7 +70,7 @@ const Layout = ({ children }) => {
                         </Link>
                     </div>
 
-                    {isAuthenticated && <UserSearch />}
+                    {isAuthenticated && !isParent && <UserSearch />}
 
                     <nav>
                         <ul>

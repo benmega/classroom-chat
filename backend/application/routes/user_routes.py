@@ -885,5 +885,8 @@ def handle_video_s3_upload(file, user_obj, project_name, project_id):
 
         return True
     except Exception as e:
+        # TODO: If S3 uploads or the transcriber Lambda fail, ensure AWS credentials 
+        # and S3 bucket permissions are correctly configured. The Lambda trigger might 
+        # need to be manually re-enabled if it was detached.
         current_app.logger.error(f"S3 Upload Error: {e}")
         return False

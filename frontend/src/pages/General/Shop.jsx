@@ -12,6 +12,7 @@ const Shop = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [purchasingId, setPurchasingId] = useState(null);
     const [chatColor, setChatColor] = useState('#facc15');
+    const [borderSpeed, setBorderSpeed] = useState('normal');
     const wallpaperInputRef = React.useRef(null);
     
     const [isCropping, setIsCropping] = useState(false);
@@ -43,6 +44,9 @@ const Shop = () => {
         if (user?.chat_font_color) {
             setChatColor(user.chat_font_color);
         }
+        if (user?.animated_border_speed) {
+            setBorderSpeed(user.animated_border_speed);
+        }
         fetchItems();
     }, [user]);
 
@@ -50,8 +54,7 @@ const Shop = () => {
         try {
             const response = await client.get('/api/shop/items');
             const sortedItems = response.data.sort((a, b) => {
-                if (a.is_crowdfunded === b.is_crowdfunded) return a.base_price - b.base_price;
-                return a.is_crowdfunded ? 1 : -1;
+                return a.base_price - b.base_price;
             });
             setItems(sortedItems);
         } catch {
@@ -88,6 +91,20 @@ const Shop = () => {
             await checkAuth(true); // Sync user state globally in background
         } catch {
             toast.error("Failed to save color configuration.");
+        }
+    };
+
+    const handleBorderSpeedSubmit = async (speed) => {
+        try {
+            await client.put(`/api/shop/configure`, {
+                perk_name: "animated_border_speed",
+                value: speed
+            });
+            setBorderSpeed(speed);
+            toast.success("Animation speed updated!");
+            await checkAuth(true);
+        } catch {
+            toast.error("Failed to save animation speed.");
         }
     };
 
@@ -212,20 +229,16 @@ const Shop = () => {
 
     return (
         <div className="shop-page">
-            <div className="shop-page-header">
-                <h2><ShoppingCart size={24} /> Packet Shop</h2>
-            </div>
-
             <div className="shop-items-grid">
                 {items.map(item => {
                     const isAffordable = user?.packets >= item.base_price;
 
                     
                     return (
-                        <div key={item.id} className={`shop-item-card ${item.is_crowdfunded ? 'crowdfunded' : ''} ${item.is_purchased ? 'purchased' : ''}`}>
+                        <div key={item.id} className={`shop-item-card ${item.is_purchased ? 'purchased' : ''}`}>
                             <div className="shop-item-header">
                                 <div className="shop-item-icon">
-                                    {item.is_crowdfunded ? <Shield size={24} /> : item.is_purchased ? <Unlock size={24} /> : <Star size={24} />}
+                                    {item.is_purchased ? <Unlock size={24} /> : <Star size={24} />}
                                 </div>
                                 <div className="shop-item-price">
                                     {item.base_price.toFixed(3)} Packets
@@ -233,16 +246,101 @@ const Shop = () => {
                             </div>
                             
                             <div className="shop-item-content">
-                                <h3>{item.name}</h3>
-                                <p>{item.description}</p>
+                                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', marginBottom: '1rem' }}>
+                                    <h3 style={{ margin: 0, textAlign: 'center' }}>{item.name}</h3>
+                                    <div title={item.description} style={{ cursor: 'help', color: 'var(--text-muted)', display: 'flex' }}>
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></svg>
+                                    </div>
+                                </div>
+                                
+                                {item.name === "Chat Font Color" && (
+                                    <div className="shop-preview chat-preview">
+                                        <div className="chat-bubble-preview">
+                                            <strong>User:</strong> <span style={{ color: chatColor || '#facc15', textShadow: '0 0 2px rgba(0,0,0,0.5)' }}>This is a test message to preview!</span>
+                                        </div>
+                                        <div style={{ marginTop: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Test color:</span>
+                                            <input 
+                                                type="color" 
+                                                value={chatColor} 
+                                                onChange={(e) => setChatColor(e.target.value)}
+                                                style={{ width: '24px', height: '24px', padding: '0', cursor: 'pointer', border: 'none', background: 'transparent' }}
+                                            />
+                                        </div>
+                                    </div>
+                                )}
+
+                                {item.name === "Animated Profile Border" && (
+                                    <div className="shop-preview border-preview">
+                                        <div 
+                                            className="animated-border-preview"
+                                            style={{ '--border-speed': borderSpeed === 'slow' ? '3s' : borderSpeed === 'fast' ? '0.5s' : '1.5s' }}
+                                        >
+                                            <img src={`https://ui-avatars.com/api/?name=${user?.username || 'User'}&background=random`} alt="Avatar" />
+                                        </div>
+                                        {item.is_purchased && (
+                                            <div style={{ marginTop: '15px', width: '100%' }}>
+                                                <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '5px' }}>Animation Speed:</label>
+                                                <select 
+                                                    value={borderSpeed} 
+                                                    onChange={(e) => handleBorderSpeedSubmit(e.target.value)}
+                                                    className="form-control"
+                                                    style={{ padding: '4px 8px', fontSize: '0.9rem' }}
+                                                >
+                                                    <option value="slow">Slow</option>
+                                                    <option value="normal">Normal</option>
+                                                    <option value="fast">Fast</option>
+                                                </select>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
+                                {item.name === "Custom Profile Wallpaper" && (
+                                    <div className="shop-preview wallpaper-preview" style={{ padding: 0 }}>
+                                        <div className="mini-profile-header">
+                                            <div 
+                                                className="mini-header-bg"
+                                                style={{
+                                                    backgroundImage: `url(${(item.is_purchased && user?.profile_wallpaper) ? (user.profile_wallpaper.startsWith('http') ? user.profile_wallpaper : (fullApiUrl + '/user/profile_wallpapers/' + user.profile_wallpaper)) : '/mobile_wallpaper_sample.png'})`,
+                                                    backgroundSize: 'cover',
+                                                    backgroundPosition: 'center'
+                                                }}
+                                            ></div>
+                                            <div className="mini-header-content">
+                                                <div className="mini-avatar">
+                                                    <img src={user?.profile_picture_url ? (user.profile_picture_url.startsWith('http') ? user.profile_picture_url : (fullApiUrl + user.profile_picture_url)) : `https://ui-avatars.com/api/?name=${user?.username || 'User'}&background=random`} alt="Avatar" />
+                                                </div>
+                                                <div className="mini-info">
+                                                    <div className="mini-name">{user?.nickname || user?.username || 'Student'}</div>
+                                                    <div className="mini-username">@{user?.username || 'student'}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {item.name === "Auto Challenge Claimer" && (
+                                    <div className="shop-preview image-preview">
+                                        <img src="/auto_challenge_claimer.png" alt="Claimer Preview" />
+                                    </div>
+                                )}
+
+                                {item.name === "Auto Bit Shift" && (
+                                    <div className="shop-preview image-preview">
+                                        <img src="/auto_bit_shift.png" alt="Bit Shift Preview" />
+                                    </div>
+                                )}
+
+                                {item.name === "Permanent Double Duck" && (
+                                    <div className="shop-preview image-preview">
+                                        <img src="/super_duck_2x.png" alt="Double Duck Preview" />
+                                    </div>
+                                )}
                             </div>
 
                             <div className="shop-item-actions">
-                                {item.is_crowdfunded ? (
-                                    <button className="shop-btn-coming-soon" disabled>
-                                        Coming Soon
-                                    </button>
-                                ) : item.is_purchased ? (
+                                {item.is_purchased ? (
                                     item.name === "Chat Font Color" ? (
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', justifyContent: 'space-between' }}>
                                             <span style={{ fontSize: '0.9rem', fontWeight: 600 }}>Color:</span>

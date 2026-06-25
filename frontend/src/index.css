@@ -362,7 +362,7 @@ button:disabled {
 
 .perk-animated-border {
     border: 3px solid #facc15 !important;
-    animation: borderPulse 1.5s infinite !important;
+    animation: borderPulse var(--border-speed, 1.5s) infinite !important;
     border-radius: 50%;
     z-index: 1;
 }

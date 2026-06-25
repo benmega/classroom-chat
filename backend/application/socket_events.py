@@ -171,6 +171,7 @@ def handle_send_message(data):
         "target_users": [(u.nickname or u.username) for u in msg.target_users] if msg.target_users else [],
         "is_struck": msg.is_struck,
         "has_animated_border": msg.has_animated_border,
+        "animated_border_speed": msg.animated_border_speed,
         "chat_font_color": msg.chat_font_color
     }
 
