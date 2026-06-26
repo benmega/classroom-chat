@@ -236,22 +236,18 @@ const Shop = () => {
                     
                     return (
                         <div key={item.id} className={`shop-item-card ${item.is_purchased ? 'purchased' : ''}`}>
-                            <div className="shop-item-header">
-                                <div className="shop-item-icon">
-                                    {item.is_purchased ? <Unlock size={24} /> : <Star size={24} />}
+                            <div className="shop-item-header" style={{ alignItems: 'center' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <h3 style={{ margin: 0, fontSize: '1.1rem' }}>
+                                        {item.name.replace('Profile ', '').replace('Permanent ', '').replace('Challenge ', '').replace('Font ', '')}
+                                    </h3>
                                 </div>
-                                <div className="shop-item-price">
-                                    {item.base_price.toFixed(3)} Packets
+                                <div title={item.description} style={{ cursor: 'help', color: 'var(--text-muted)', display: 'flex', position: 'absolute', right: 0 }}>
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></svg>
                                 </div>
                             </div>
                             
                             <div className="shop-item-content">
-                                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', marginBottom: '1rem' }}>
-                                    <h3 style={{ margin: 0, textAlign: 'center' }}>{item.name}</h3>
-                                    <div title={item.description} style={{ cursor: 'help', color: 'var(--text-muted)', display: 'flex' }}>
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></svg>
-                                    </div>
-                                </div>
                                 
                                 {item.name === "Chat Font Color" && (
                                     <div className="shop-preview chat-preview">
@@ -326,15 +322,15 @@ const Shop = () => {
                                     </div>
                                 )}
 
-                                {item.name === "Auto Bit Shift" && (
+                                {item.name === "Auto Bitshift" && (
                                     <div className="shop-preview image-preview">
-                                        <img src="/auto_bit_shift.png" alt="Bit Shift Preview" />
+                                        <img src="/auto_bit_shift.png?v=3" alt="Bit Shift Preview" style={{ objectPosition: 'center 65%' }} />
                                     </div>
                                 )}
 
                                 {item.name === "Permanent Double Duck" && (
                                     <div className="shop-preview image-preview">
-                                        <img src="/super_duck_2x.png" alt="Double Duck Preview" />
+                                        <img src="/super_duck_2x.png?v=3" alt="Double Duck Preview" style={{ objectPosition: 'center 35%' }} />
                                     </div>
                                 )}
                             </div>
@@ -396,7 +392,7 @@ const Shop = () => {
                                         disabled={!isAffordable || purchasingId === item.id}
                                         onClick={() => handlePurchase(item.id, item.name)}
                                     >
-                                        {purchasingId === item.id ? <Loader2 className="spinner" size={16} /> : 'Purchase'}
+                                        {purchasingId === item.id ? <Loader2 className="spinner" size={16} /> : `${item.base_price.toFixed(3)} Packets`}
                                     </button>
                                 )}
                             </div>
