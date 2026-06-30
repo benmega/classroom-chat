@@ -96,6 +96,52 @@ export const AdjustDucksModal = ({ isOpen, onClose, onSubmit, user, users, formE
     </Modal>
 );
 
+export const AdjustPacketsModal = ({ isOpen, onClose, onSubmit, user, users, formErrors, loading }) => (
+    <Modal isOpen={isOpen} onClose={onClose} title="Adjust Packets Balance">
+        <form onSubmit={onSubmit} className="admin-form" noValidate>
+            <div className="form-group">
+                <label>Target User</label>
+                {user ? (
+                    <div className="user-badge-display">
+                        <SmartImage 
+                            src={user.profile_picture ? getApiUrl(`/user/profile_pictures/${user.profile_picture}`) : ''} 
+                            alt="" 
+                            className="avatar-small"
+                            fallbackType="avatar"
+                        />
+                        <div className="user-info-text">
+                            <span className="user-nickname">{user.nickname || user.username}</span>
+                            <span className="user-handle">@{user.username}</span>
+                        </div>
+                        <input type="hidden" name="username" value={user.username} />
+                    </div>
+                ) : (
+                    <select name="username" className="admin-select">
+                        <option value="">Select a user...</option>
+                        {users.map(u => (
+                            <option key={u.id} value={u.username}>
+                                {u.username} (Balance: 📦 {(u.packets ?? 0).toFixed(3)})
+                            </option>
+                        ))}
+                    </select>
+                )}
+            </div>
+            <div className={`form-group ${formErrors.amount ? 'has-error' : ''}`}>
+                <label>Adjustment Amount</label>
+                <input type="number" name="amount" step="any" placeholder="e.g. 10 or -5" />
+                {formErrors.amount ? (
+                    <span className="error-message">{formErrors.amount}</span>
+                ) : (
+                    <small>Positive to add, negative to subtract.</small>
+                )}
+            </div>
+            <button type="submit" className="btn-primary" disabled={loading}>
+                {loading ? 'Applying...' : 'Apply Adjustment'}
+            </button>
+        </form>
+    </Modal>
+);
+
 export const SetDrawerModal = ({ isOpen, onClose, onSubmit, user, loading }) => (
     <Modal isOpen={isOpen} onClose={onClose} title="Set User Drawer">
         <form onSubmit={onSubmit} className="admin-form">

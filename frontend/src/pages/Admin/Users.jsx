@@ -14,6 +14,7 @@ import SmartImage from '../../components/common/SmartImage';
 import { 
     CreateUserModal, 
     AdjustDucksModal, 
+    AdjustPacketsModal,
     SetDrawerModal,
     ResetPasswordModal,
     ManageChildrenModal,
@@ -45,6 +46,7 @@ const Users = () => {
         fetchUsers,
         handleCreateUser,
         handleAdjustDucks,
+        handleAdjustPackets,
         handleSetDrawer,
         handleResetPassword,
         handleRemoveUser,
@@ -174,6 +176,7 @@ const Users = () => {
                                     <td>
                                         <div className="economy-info">
                                             <div className="duck-count">🦆 {(u.duck_balance ?? 0).toLocaleString(undefined, { maximumFractionDigits: 2 })}</div>
+                                            <div className="packet-count" style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>📦 {(u.packets ?? 0).toLocaleString(undefined, { maximumFractionDigits: 3 })}</div>
                                             <div className="level-info">Lvl: {u.total_levels || 0}</div>
                                         </div>
                                     </td>
@@ -188,7 +191,15 @@ const Users = () => {
                                             <button 
                                                 className="action-btn adjust" 
                                                 onClick={() => { setModalUser(u); setActiveModal('adjust'); }}
-                                                title="Adjust Balance"
+                                                title="Adjust Ducks"
+                                            >
+                                                <ArrowUpCircle size={16} />
+                                            </button>
+                                            <button 
+                                                className="action-btn adjust-packets" 
+                                                onClick={() => { setModalUser(u); setActiveModal('adjust_packets'); }}
+                                                title="Adjust Packets"
+                                                style={{ color: 'var(--accent-color)' }}
                                             >
                                                 <ArrowUpCircle size={16} />
                                             </button>
@@ -297,6 +308,16 @@ const Users = () => {
                 isOpen={activeModal === 'adjust'} 
                 onClose={() => { setActiveModal(null); setModalUser(null); }} 
                 onSubmit={handleAdjustDucks} 
+                user={modalUser} 
+                users={users} 
+                formErrors={formErrors} 
+                loading={formLoading} 
+            />
+
+            <AdjustPacketsModal 
+                isOpen={activeModal === 'adjust_packets'} 
+                onClose={() => { setActiveModal(null); setModalUser(null); }} 
+                onSubmit={handleAdjustPackets} 
                 user={modalUser} 
                 users={users} 
                 formErrors={formErrors} 

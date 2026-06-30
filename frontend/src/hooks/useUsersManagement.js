@@ -120,6 +120,31 @@ export const useUsersManagement = () => {
         }
     };
 
+    const handleAdjustPackets = async (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        
+        if (!formData.get('amount')) {
+            setFormErrors({ amount: 'Adjustment amount is required' });
+            return;
+        }
+
+        setFormErrors({});
+        setFormLoading(true);
+        try {
+            const response = await client.post('/api/admin/adjust_packets', formData);
+            if (response.data.success) {
+                toast.success(response.data.message);
+                setActiveModal(null);
+                fetchUsers(page);
+            }
+        } catch (error) {
+            toast.error(error.response?.data?.message || 'Failed to adjust packets.');
+        } finally {
+            setFormLoading(false);
+        }
+    };
+
     const handleResetPassword = async (e) => {
         e.preventDefault();
         const formData = new FormData(e.target);
@@ -284,6 +309,7 @@ export const useUsersManagement = () => {
         fetchUsers,
         handleCreateUser,
         handleAdjustDucks,
+        handleAdjustPackets,
         handleResetPassword,
         handleSetDrawer,
         handleRemoveUser,

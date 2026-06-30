@@ -227,6 +227,32 @@ def adjust_ducks():
         )
 
 
+@admin_bp.route("/adjust_packets", methods=["POST"])
+@admin_only
+def adjust_packets():
+    username = request.form.get("username")
+    amount = request.form.get("amount", type=float)
+
+    if not username or amount is None:
+        return (
+            jsonify({"success": False, "message": "Username and amount required"}),
+            400,
+        )
+
+    user = User.query.filter_by(username=username).first()
+    if user:
+        user.packets += amount
+        db.session.commit()
+        return jsonify(
+            {"success": True, "message": f"Updated {username}'s packets by {amount}."}
+        )
+    else:
+        return (
+            jsonify({"success": False, "message": f"User '{username}' not found."}),
+            404,
+        )
+
+
 @admin_bp.route("/set_username", methods=["POST"])
 @admin_only
 def set_username_route():
