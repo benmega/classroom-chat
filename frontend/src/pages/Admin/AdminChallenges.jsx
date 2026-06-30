@@ -232,11 +232,11 @@ const AdminChallenges = () => {
                             <span className="stat-label">File Status</span>
                             <span className="stat-value">
                                 {fileName ? (
-                                    <span style={{color: 'var(--color-success)', display: 'flex', alignItems: 'center', gap: '0.5rem'}}>
+                                    <span className="stat-status-loaded">
                                         <CheckCircle size={16} /> Loaded
                                     </span>
                                 ) : (
-                                    <span style={{color: 'var(--text-muted)'}}>Waiting...</span>
+                                    <span className="stat-status-waiting">Waiting...</span>
                                 )}
                             </span>
                         </div>
@@ -246,9 +246,9 @@ const AdminChallenges = () => {
                         </div>
                         
                         {parsedChallenges.length > 0 && (
-                            <div className="stat-item" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '0.5rem' }}>
+                            <div className="stat-item stat-item-column">
                                 <span className="stat-label">Preview (First 3):</span>
-                                <ul style={{ margin: 0, paddingLeft: '1.5rem', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
+                                <ul className="stat-preview-list">
                                     {parsedChallenges.slice(0, 3).map((c, i) => (
                                         <li key={i}><strong>{c.name}</strong> ({c.slug})</li>
                                     ))}
@@ -259,7 +259,7 @@ const AdminChallenges = () => {
                     </div>
                     
                     <div className="pro-tip">
-                        <Info size={16} style={{ flexShrink: 0 }} />
+                        <Info size={16} className="pro-tip-icon" />
                         <p>If a challenge slug already exists in the database, it will be skipped during the import process to prevent duplicates.</p>
                     </div>
                 </aside>

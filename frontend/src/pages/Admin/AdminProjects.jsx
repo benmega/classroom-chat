@@ -107,31 +107,10 @@ const AdminProjects = () => {
                 />
                 
                 <div className="project-review-card">
-                    <div style={{ marginBottom: '1.5rem' }}>
+                    <div className="back-btn-container">
                         <button 
+                            className="admin-project-back-btn"
                             onClick={() => setSelectedProject(null)}
-                            style={{ 
-                                display: 'flex', 
-                                alignItems: 'center', 
-                                gap: '8px', 
-                                padding: '8px 16px', 
-                                background: 'white', 
-                                border: '1px solid #e2e8f0', 
-                                borderRadius: '10px', 
-                                cursor: 'pointer', 
-                                fontWeight: '700', 
-                                color: '#475569',
-                                fontSize: '0.95rem',
-                                transition: 'all 0.2s'
-                            }}
-                            onMouseOver={(e) => {
-                                e.currentTarget.style.backgroundColor = '#f8fafc';
-                                e.currentTarget.style.borderColor = '#cbd5e1';
-                            }}
-                            onMouseOut={(e) => {
-                                e.currentTarget.style.backgroundColor = 'white';
-                                e.currentTarget.style.borderColor = '#e2e8f0';
-                            }}
                         >
                             <ArrowLeft size={18} /> Back to Projects
                         </button>
@@ -290,10 +269,10 @@ const AdminProjects = () => {
                     {[1, 2, 3, 4, 5, 6].map(i => (
                         <div key={i} className="admin-project-card">
                             <Skeleton height="180px" borderRadius="12px 12px 0 0" />
-                            <div className="p-content" style={{ padding: '20px' }}>
+                            <div className="p-content p-content-padded">
                                 <Skeleton height="24px" width="70%" className="skeleton-title" />
                                 <Skeleton height="16px" width="40%" />
-                                <Skeleton height="40px" width="100%" style={{ marginTop: '15px' }} />
+                                <Skeleton height="40px" width="100%" className="skeleton-mt" />
                             </div>
                         </div>
                     ))}

@@ -18,6 +18,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
+import './AdminPanel.css';
 import {
     Admin,
     BooleanField,
@@ -139,7 +140,7 @@ function useSchema(resourceName) {
 /** List view — shows all non-hidden columns as a datagrid. */
 function DynamicList({ resourceName }) {
     const { fields, error } = useSchema(resourceName);
-    if (error)   return <p style={{ color: 'red' }}>Schema error: {error}</p>;
+    if (error)   return <p className="admin-schema-error">Schema error: {error}</p>;
     if (!fields) return <Loading />;
 
     return (
@@ -154,7 +155,7 @@ function DynamicList({ resourceName }) {
 /** Edit view — shows all editable columns as a form. */
 function DynamicEdit({ resourceName }) {
     const { fields, error } = useSchema(resourceName);
-    if (error)   return <p style={{ color: 'red' }}>Schema error: {error}</p>;
+    if (error)   return <p className="admin-schema-error">Schema error: {error}</p>;
     if (!fields) return <Loading />;
 
     return (
@@ -169,7 +170,7 @@ function DynamicEdit({ resourceName }) {
 /** Create view — shows all writable columns as a form (PKs excluded). */
 function DynamicCreate({ resourceName }) {
     const { fields, error } = useSchema(resourceName);
-    if (error)   return <p style={{ color: 'red' }}>Schema error: {error}</p>;
+    if (error)   return <p className="admin-schema-error">Schema error: {error}</p>;
     if (!fields) return <Loading />;
 
     return (
@@ -202,21 +203,7 @@ function buildResource(name) {
 // ─── Layout ──────────────────────────────────────────────────────────────────
 
 const CustomTopMenu = () => (
-    <ul style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
-        gap: '10px',
-        padding: '20px',
-        backgroundColor: 'var(--bg-primary)',
-        borderBottom: '1px solid var(--border-subtle)',
-        maxHeight: '35vh',
-        overflowY: 'auto',
-        marginBottom: '20px',
-        borderRadius: '0 0 var(--radius-lg) var(--radius-lg)',
-        boxShadow: 'var(--shadow-soft)',
-        listStyle: 'none',
-        margin: '0',
-    }}>
+    <ul className="admin-top-menu">
         {RESOURCES.map(name => (
             <Menu.ResourceItem key={name} name={name} />
         ))}

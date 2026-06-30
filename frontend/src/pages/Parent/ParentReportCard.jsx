@@ -42,13 +42,12 @@ const ParentReportCard = () => {
                 <Loader2
                     size={56}
                     strokeWidth={1.5}
-                    style={{ animation: 'spin 1s linear infinite', color: 'var(--primary-color)' }}
+                    className="report-loader-icon"
                 />
-                <div style={{ textAlign: 'center' }}>
+                <div className="report-loading-text">
                     <h2>Loading Report Card</h2>
                     <p>Fetching your child's progress…</p>
                 </div>
-                <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
             </div>
         );
     }
@@ -114,7 +113,7 @@ const ParentReportCard = () => {
 
             {/* ── Body Sections ── */}
             <DesktopNotice />
-            <div className="dashboard-grid report-dashboard-grid" style={{ marginTop: '20px' }}>
+            <div className="dashboard-grid report-dashboard-grid report-dashboard-grid-spaced">
                 <div className="column-left">
                     <CourseProgress target={reportData} isParentView={true} studentId={studentId} />
 

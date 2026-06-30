@@ -47,7 +47,7 @@ const Chat = () => {
     handleScroll
   } = useFeedLogic();
 
-  if (loading) return <div className="container" style={{ textAlign: 'center', padding: '100px' }}>Loading Feed...</div>;
+  if (loading) return <div className="container feed-loading">Loading Feed...</div>;
 
   return (
     <div className="feed-container">
@@ -114,7 +114,7 @@ const Chat = () => {
                   </div>
 
                   <div className="feed-actions">
-                    <div style={{ position: 'relative' }} ref={emojiPickerRef}>
+                    <div className="emoji-picker-wrapper" ref={emojiPickerRef}>
                         <button
                           type="button"
                           className="toolbar-btn"
@@ -124,7 +124,7 @@ const Chat = () => {
                           <Smile size={20} color={showEmojiPicker ? "var(--primary-color)" : "inherit"} />
                         </button>
                         {showEmojiPicker && (
-                          <div className="emoji-picker-container" style={{ position: 'absolute', bottom: '100%', right: 0, zIndex: 100 }}>
+                          <div className="emoji-picker-container emoji-picker-container-absolute">
                             <EmojiPicker
                               onEmojiClick={onEmojiClick}
                               autoFocusSearch={false}
@@ -155,7 +155,7 @@ const Chat = () => {
         >
           <div className="feed-messages-inner">
             {messages.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
+              <div className="feed-empty-msg">
                 No messages to display. Be the first to post!
               </div>
             ) : (
@@ -170,13 +170,13 @@ const Chat = () => {
             )}
             
             {isLoadingMore && (
-              <div style={{ textAlign: 'center', padding: '1rem', color: 'var(--text-muted)' }}>
+              <div className="feed-loading-more">
                 Loading more...
               </div>
             )}
             
             {!hasMore && messages.length > 0 && (
-              <div style={{ textAlign: 'center', padding: '1rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>
+              <div className="feed-end-msg">
                 You've reached the end of the feed.
               </div>
             )}

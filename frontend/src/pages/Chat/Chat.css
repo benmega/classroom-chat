@@ -305,7 +305,7 @@
 
 .delete-message-btn:hover {
     background: rgba(239, 68, 68, 0.1);
-    color: #ef4444;
+    color: var(--error-color);
 }
 
 .toolbar-btn {
@@ -348,8 +348,40 @@
     .avatar-container {
         width: 40px;
         height: 40px;
+    }
 }
 
+.feed-loading {
+    text-align: center;
+    padding: 100px;
+}
 
+.emoji-picker-wrapper {
+    position: relative;
+}
 
+.emoji-picker-container-absolute {
+    position: absolute;
+    bottom: 100%;
+    right: 0;
+    z-index: 100;
+}
 
+.feed-empty-msg {
+    text-align: center;
+    padding: 3rem;
+    color: var(--text-muted);
+}
+
+.feed-loading-more {
+    text-align: center;
+    padding: 1rem;
+    color: var(--text-muted);
+}
+
+.feed-end-msg {
+    text-align: center;
+    padding: 1rem;
+    color: var(--text-muted);
+    font-style: italic;
+}

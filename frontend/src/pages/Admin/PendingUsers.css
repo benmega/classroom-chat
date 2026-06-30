@@ -10,6 +10,41 @@
     gap: 1rem;
 }
 
+
+
+.pending-section-title {
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+    padding-left: 0.5rem;
+}
+
+.pending-section-title-mt3 {
+    margin-top: 3rem;
+    margin-bottom: 1rem;
+    padding-left: 0.5rem;
+}
+
+.pending-empty-state {
+    padding: 2rem;
+    min-height: auto;
+}
+
+.pending-empty-icon {
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+}
+
+.detail-row-column {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+}
+
+.pending-message-value {
+    font-style: italic;
+    opacity: 0.8;
+}
+
 .user-card {
     background: var(--bg-primary);
     border: 1px solid var(--border-subtle);
@@ -26,7 +61,7 @@
 .user-card:hover {
     transform: translateY(-8px);
     border-color: var(--primary-light);
-    box-shadow: 0 12px 30px rgba(0,0,0,0.15);
+    box-shadow: var(--shadow-lg);
 }
 
 .user-card-header {
@@ -78,7 +113,7 @@
 
 .badge-pending {
     background: rgba(245, 158, 11, 0.1);
-    color: #f59e0b;
+    color: var(--warning-color);
     border: 1px solid rgba(245, 158, 11, 0.2);
 }
 
@@ -141,15 +176,15 @@
 
 .btn-reject {
     background: rgba(239, 68, 68, 0.1);
-    color: #ef4444;
+    color: var(--error-color);
     border: 1px solid rgba(239, 68, 68, 0.2);
 }
 
 .btn-reject:hover:not(:disabled) {
-    background: #ef4444;
+    background: var(--error-color);
     color: white;
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+    box-shadow: var(--shadow-md);
 }
 
 button:disabled {

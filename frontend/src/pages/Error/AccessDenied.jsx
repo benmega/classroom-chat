@@ -3,120 +3,37 @@ import { Link } from 'react-router-dom';
 import { Home, ArrowLeft } from 'lucide-react';
 
 import youShallNotPassImage from '../../assets/you_shall_not_pass.png';
+import './AccessDenied.css';
 
 const AccessDenied = () => {
   return (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      justifyContent: 'center',
-      alignItems: 'center',
-      minHeight: '100vh',
-      backgroundColor: 'rgba(15, 23, 42, 0.8)',
-      backdropFilter: 'blur(8px)',
-      WebkitBackdropFilter: 'blur(8px)',
-      color: 'var(--bg-secondary)',
-      fontFamily: 'var(--font-body)',
-      padding: '2rem',
-      textAlign: 'center'
-    }}>
-      <div style={{
-        background: 'rgba(239, 68, 68, 0.1)',
-        padding: '2rem',
-        borderRadius: '1.5rem',
-        border: '1px solid rgba(239, 68, 68, 0.2)',
-        maxWidth: '500px',
-        width: '100%',
-        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
-      }}>
+    <div className="access-denied-container">
+      <div className="access-denied-card">
         
         <img 
           src={youShallNotPassImage} 
           alt="You Shall Not Pass" 
-          style={{
-            width: '100%',
-            maxWidth: '400px',
-            marginBottom: '1rem',
-            borderRadius: '0.5rem',
-            display: 'block',
-            marginLeft: 'auto',
-            marginRight: 'auto'
-          }} 
+          className="access-denied-img"
         />
 
-        <h1 style={{
-          color: 'var(--error-color)',
-          fontFamily: 'var(--font-heading)',
-          fontWeight: 800,
-          fontSize: '2.25rem',
-          marginTop: '1.5rem',
-          marginBottom: '1rem',
-          letterSpacing: '-0.025em',
-          lineHeight: '1.2'
-        }}>
+        <h1 className="access-denied-title">
           YOU SHALL NOT PASS! 🧙‍♂️
         </h1>
         
-        <p style={{
-          fontSize: '1.125rem',
-          color: 'var(--text-muted)',
-          marginBottom: '2rem',
-          lineHeight: '1.6'
-        }}>
+        <p className="access-denied-text">
           The dark fire will not avail you, flame of Udûn! This is a restricted area. 
           Return to the shadows... or just go back to the homepage.
         </p>
         
-        <div style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '1rem'
-        }}>
-          <Link to="/chat" style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '0.75rem',
-            backgroundColor: 'var(--primary-color)',
-            color: 'white',
-            padding: '0.75rem 1.5rem',
-            borderRadius: '0.75rem',
-            textDecoration: 'none',
-            fontWeight: '600',
-            transition: 'all 0.2s ease',
-            boxShadow: 'var(--shadow-md)'
-          }}
-          onMouseEnter={(e) => e.target.style.backgroundColor = 'var(--blue-600)'}
-          onMouseLeave={(e) => e.target.style.backgroundColor = 'var(--primary-color)'}
-          >
+        <div className="access-denied-actions">
+          <Link to="/chat" className="access-denied-btn-home">
             <Home size={20} />
             Return Home
           </Link>
           
           <button 
             onClick={() => window.history.back()}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '0.75rem',
-              backgroundColor: 'transparent',
-              color: 'var(--text-muted)',
-              padding: '0.75rem 1.5rem',
-              borderRadius: '0.75rem',
-              border: '1px solid var(--border-strong)',
-              cursor: 'pointer',
-              fontWeight: '500',
-              transition: 'all 0.2s ease'
-            }}
-            onMouseEnter={(e) => {
-              e.target.style.borderColor = 'var(--text-muted)';
-              e.target.style.color = 'var(--bg-secondary)';
-            }}
-            onMouseLeave={(e) => {
-              e.target.style.borderColor = 'var(--border-strong)';
-              e.target.style.color = 'var(--text-muted)';
-            }}
+            className="access-denied-btn-back"
           >
             <ArrowLeft size={20} />
             Go Back
@@ -128,3 +45,4 @@ const AccessDenied = () => {
 };
 
 export default AccessDenied;
+

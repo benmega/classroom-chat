@@ -104,11 +104,11 @@ const AdminDashboard = () => {
             <div className="dashboard-layout">
                 <div className="main-content">
                     <Skeleton height="350px" className="skeleton-card" />
-                    <Skeleton height="500px" className="skeleton-card" style={{ marginTop: '20px' }} />
+                    <Skeleton height="500px" className="skeleton-card skeleton-card-mt" />
                 </div>
                 <div className="side-content">
                     <Skeleton height="200px" className="skeleton-card" />
-                    <Skeleton height="250px" className="skeleton-card" style={{ marginTop: '20px' }} />
+                    <Skeleton height="250px" className="skeleton-card skeleton-card-mt" />
                 </div>
             </div>
         </div>
@@ -130,7 +130,7 @@ const AdminDashboard = () => {
     return (
         <div className="admin-dashboard">
             <div className="dashboard-header">
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                <div className="dashboard-header-left">
                     <button className="hamburger-toggle mobile-only" onClick={toggleSidebar}>
                         <Menu size={24} />
                     </button>
@@ -157,21 +157,12 @@ const AdminDashboard = () => {
             <div className="dashboard-layout">
                 <div className="main-content">
                     <div className="chart-card card">
-                        <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+                        <div className="card-header chart-header">
                             <h3><TrendingUp size={20} /> Duck Transactions</h3>
                             <select 
                                 value={timeframe} 
                                 onChange={(e) => setTimeframe(e.target.value === 'all' ? 'all' : Number(e.target.value))}
-                                style={{
-                                    padding: '0.25rem 0.5rem',
-                                    borderRadius: '0.375rem',
-                                    border: '1px solid var(--border-color)',
-                                    backgroundColor: 'var(--bg-secondary)',
-                                    color: 'var(--text-primary)',
-                                    fontFamily: 'Outfit, sans-serif',
-                                    fontSize: '0.875rem',
-                                    cursor: 'pointer'
-                                }}
+                                className="chart-timeframe-select"
                             >
                                 <option value={7}>Last 7 Days</option>
                                 <option value={30} disabled={maxDays > 0 && maxDays < 30}>Last 1 Month</option>
@@ -180,7 +171,7 @@ const AdminDashboard = () => {
                                 <option value="all">All Time</option>
                             </select>
                         </div>
-                        <div className="chart-container" style={{ height: '300px' }}>
+                        <div className="chart-container chart-container-fixed">
                             <Line data={chartConfig} options={chartOptions} />
                         </div>
                     </div>

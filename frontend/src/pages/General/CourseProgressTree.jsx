@@ -239,32 +239,6 @@ const CourseProgressTree = () => {
                 }
             });
 
-            BRANCH_EDGES.forEach(edge => {
-                const fromNode = processedNodes.find(n => n.id === edge.from);
-                const toNode = processedNodes.find(n => n.id === edge.to);
-                const fromEl = nodeRefs.current[edge.from];
-                const toEl = nodeRefs.current[edge.to];
-                
-                if (fromNode && toNode && fromEl && toEl) {
-                    const x1 = fromEl.offsetLeft + fromEl.offsetWidth / 2;
-                    const y = toEl.offsetTop + toEl.offsetHeight / 2;
-                    
-                    const fromTrackInfo = TRACKS.find(t => t.id === fromNode.track);
-                    const toTrackInfo = TRACKS.find(t => t.id === toNode.track);
-                    
-                    let x2;
-                    if (toTrackInfo.col > fromTrackInfo.col) {
-                        x2 = toEl.offsetLeft;
-                    } else {
-                        x2 = toEl.offsetLeft + toEl.offsetWidth;
-                    }
-
-                    const isActive = fromNode.has_started && toNode.has_started;
-                    const lineDomain = fromNode.domain === toNode.domain ? fromNode.domain : 'mixed';
-
-                    newLines.push({ id: `branch-${edge.from}-${edge.to}`, x1, y1: y, x2, y2: y, isActive, lineDomain, fromId: edge.from, toId: edge.to });
-                }
-            });
             setLines(newLines);
         };
 
@@ -421,19 +395,14 @@ const CourseProgressTree = () => {
     );
 
     return (
-        <div className="course-progress-page animate-page-entry">
-            <header className="report-header" style={{ background: 'transparent', border: 'none', boxShadow: 'none', padding: '0 0 1rem 0' }}>
-                <div className="report-header-inner" style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start' }}>
-                    <button
-                        className="report-back-btn"
-                        style={{ marginBottom: '0', background: 'transparent', border: 'none', boxShadow: 'none', padding: '0' }}
-                        onClick={() => navigate(-1)}
-                        title="Go Back"
-                    >
-                        <ArrowLeft size={24} color="var(--text-primary)" />
-                    </button>
-                </div>
-            </header>
+        <div className="course-progress-page animate-page-entry" style={{ position: 'relative' }}>
+            <button
+                className="subtle-back-btn"
+                onClick={() => navigate(-1)}
+                title="Go Back"
+            >
+                <ArrowLeft size={20} />
+            </button>
 
             {treeContent}
         </div>

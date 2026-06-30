@@ -72,13 +72,12 @@ const ParentDashboard = () => {
                 <Loader2
                     size={56}
                     strokeWidth={1.5}
-                    style={{ animation: 'spin 1s linear infinite', color: 'var(--primary-color)' }}
+                    className="parent-loader-icon"
                 />
-                <div style={{ textAlign: 'center' }}>
+                <div className="parent-loading-text">
                     <h2>Classroom Chat</h2>
                     <p>Loading your dashboard…</p>
                 </div>
-                <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
             </div>
         );
     }
@@ -135,7 +134,7 @@ const ParentDashboard = () => {
                                             </div>
                                         )}
                                     </div>
-                                    <div onClick={() => navigate(`/parent/report/${child.id}`)} style={{ cursor: 'pointer', flex: 1 }}>
+                                    <div onClick={() => navigate(`/parent/report/${child.id}`)} className="child-card-clickable">
                                         {child.profile_picture_url && !child.profile_picture_url.includes('Default_pfp.jpg') ? (
                                             <img
                                                 className="child-avatar"
@@ -148,7 +147,7 @@ const ParentDashboard = () => {
                                             </div>
                                         )}
                                         <h3 className="child-name">{child.nickname || child.username}</h3>
-                                        <p className="child-nickname" style={{ marginBottom: 0 }}>@{child.username}</p>
+                                        <p className="child-nickname">@{child.username}</p>
                                     </div>
                                 </div>
                             ))}
@@ -170,9 +169,8 @@ const ParentDashboard = () => {
                                         />
                                         <button 
                                             type="submit" 
-                                            className="btn-premium btn-premium-sm" 
+                                            className="btn-premium btn-premium-sm connect-submit-btn" 
                                             disabled={isConnecting || !connectCode.trim()}
-                                            style={{ width: '100%', justifyContent: 'center' }}
                                         >
                                             {isConnecting ? 'Connecting...' : 'Connect'}
                                         </button>

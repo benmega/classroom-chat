@@ -355,13 +355,13 @@ button:disabled {
 
 /* --- Shop Perks --- */
 @keyframes borderPulse {
-    0% { box-shadow: 0 0 0 0 rgba(250, 204, 21, 0.9); border-color: #facc15; }
+    0% { box-shadow: 0 0 0 0 rgba(250, 204, 21, 0.9); border-color: var(--accent-color); }
     50% { box-shadow: 0 0 0 15px rgba(250, 204, 21, 0); border-color: #fef08a; }
-    100% { box-shadow: 0 0 0 0 rgba(250, 204, 21, 0); border-color: #facc15; }
+    100% { box-shadow: 0 0 0 0 rgba(250, 204, 21, 0); border-color: var(--accent-color); }
 }
 
 .perk-animated-border {
-    border: 3px solid #facc15 !important;
+    border: 3px solid var(--accent-color) !important;
     animation: borderPulse var(--border-speed, 1.5s) infinite !important;
     border-radius: 50%;
     z-index: 1;

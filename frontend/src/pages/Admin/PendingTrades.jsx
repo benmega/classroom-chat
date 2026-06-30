@@ -92,41 +92,41 @@ const PendingTrades = () => {
                 {trades.length > 0 ? (
                     trades.map(trade => (
                         <div key={trade.id} className="trade-card card">
-                            <div className="trade-header" style={{ alignItems: 'flex-start', marginBottom: '0.5rem' }}>
+                            <div className="trade-header trade-header-flex">
                                 <div className="user-info">
                                     <div className="avatar-placeholder">
                                         <User size={24} />
                                     </div>
-                                    <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                        <h3 style={{ fontSize: '1.2rem', marginBottom: '2px' }}>{trade.nickname || trade.username}</h3>
-                                        <span style={{ fontSize: '0.9rem', color: '#64748b' }}>@{trade.username}</span>
+                                    <div className="trade-user-details">
+                                        <h3 className="trade-user-name">{trade.nickname || trade.username}</h3>
+                                        <span className="trade-user-handle">@{trade.username}</span>
                                     </div>
                                 </div>
-                                <div className="trade-id" style={{ flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Hash size={14} /> ID: {trade.id}</div>
-                                    <span className="timestamp" style={{ marginTop: 0 }}>
+                                <div className="trade-id trade-id-column">
+                                    <div className="trade-id-row"><Hash size={14} /> ID: {trade.id}</div>
+                                    <span className="timestamp timestamp-mt-0">
                                         <Clock size={12} /> 
                                         {new Date(trade.timestamp).toLocaleString()}
                                     </span>
                                 </div>
                             </div>
  
-                            <div className="trade-details" style={{ flexDirection: 'row', flexWrap: 'wrap', gap: '1.5rem' }}>
+                            <div className="trade-details trade-details-row">
                                 <div>
-                                    <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#1e293b', fontFamily: 'monospace' }}>
+                                    <div className="trade-amount-primary">
                                         {formatBits(trade.bit_ducks)} bits
                                     </div>
-                                    <div style={{ fontSize: '0.8rem', color: '#64748b' }}>
+                                    <div className="trade-amount-secondary">
                                         {calculateDecimal(trade.bit_ducks)} in decimal
                                     </div>
                                 </div>
 
                                 {hasBytes(trade.byte_ducks) && (
                                     <div>
-                                        <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#1e293b', fontFamily: 'monospace' }}>
+                                        <div className="trade-amount-primary">
                                             {formatBits(trade.byte_ducks)} bytes
                                         </div>
-                                        <div style={{ fontSize: '0.8rem', color: '#64748b' }}>
+                                        <div className="trade-amount-secondary">
                                             {calculateDecimal(trade.byte_ducks)} in decimal
                                         </div>
                                     </div>

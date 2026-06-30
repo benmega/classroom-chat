@@ -162,20 +162,18 @@ const Signup = () => {
                     </form>
                 ) : (
                     <form onSubmit={handleSubmit} className="auth-form" id="signup-form">
-                        <div className="role-selector" style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem' }}>
+                        <div className="auth-role-selector-container">
                             <button 
                                 type="button"
-                                className={`role-btn ${selectedRole === 'student' ? 'active' : ''}`}
+                                className={`auth-role-btn ${selectedRole === 'student' ? 'active' : 'inactive'}`}
                                 onClick={() => setSelectedRole('student')}
-                                style={{ flex: 1, padding: '0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', background: selectedRole === 'student' ? 'var(--primary-color)' : 'transparent', color: selectedRole === 'student' ? 'white' : 'var(--text-primary)', cursor: 'pointer', transition: 'all 0.2s', fontWeight: selectedRole === 'student' ? 'bold' : 'normal' }}
                             >
                                 Student
                             </button>
                             <button 
                                 type="button"
-                                className={`role-btn ${selectedRole === 'parent' ? 'active' : ''}`}
+                                className={`auth-role-btn ${selectedRole === 'parent' ? 'active' : 'inactive'}`}
                                 onClick={() => setSelectedRole('parent')}
-                                style={{ flex: 1, padding: '0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', background: selectedRole === 'parent' ? 'var(--primary-color)' : 'transparent', color: selectedRole === 'parent' ? 'white' : 'var(--text-primary)', cursor: 'pointer', transition: 'all 0.2s', fontWeight: selectedRole === 'parent' ? 'bold' : 'normal' }}
                             >
                                 Parent
                             </button>

@@ -15,6 +15,7 @@ import client from '../../api/client';
 import toast from 'react-hot-toast';
 import './AdminCertificates.css';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
+import Skeleton from '../../components/common/Skeleton';
 
 const AdminCertificates = () => {
     const [certificates, setCertificates] = useState([]);
@@ -70,7 +71,32 @@ const AdminCertificates = () => {
         c.achievement?.name?.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    if (isLoading) return <div className="admin-loading">Loading Certificates...</div>;
+    if (isLoading) {
+        return (
+            <div className="admin-certificates-page">
+                <AdminPageHeader title="Certificate Approvals" />
+                <div className="controls-bar">
+                    <Skeleton width="300px" height="40px" borderRadius="8px" />
+                </div>
+                <div className="certs-grid">
+                    {[1, 2, 3, 4].map(i => (
+                        <div key={i} className="cert-review-card" style={{ display: 'flex', gap: '16px', padding: '16px' }}>
+                            <Skeleton width="200px" height="140px" borderRadius="8px" />
+                            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                <Skeleton width="60%" height="24px" />
+                                <Skeleton width="40%" height="16px" />
+                                <Skeleton width="30%" height="16px" />
+                                <div style={{ marginTop: 'auto', display: 'flex', gap: '8px' }}>
+                                    <Skeleton width="100px" height="36px" borderRadius="6px" />
+                                    <Skeleton width="40px" height="36px" borderRadius="6px" />
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="admin-certificates-page">
@@ -89,18 +115,16 @@ const AdminCertificates = () => {
                     />
                 </div>
                 {certificates.length > 0 && (
-                    <div className="bulk-actions" style={{ display: 'flex', gap: '10px' }}>
+                    <div className="bulk-actions">
                         <a 
                             href="/api/achievements/admin/certificates/download_all"
-                            className="btn-secondary"
-                            style={{ display: 'flex', alignItems: 'center', gap: '6px', textDecoration: 'none', padding: '8px 16px', borderRadius: '6px', backgroundColor: 'var(--surface-color)', border: '1px solid var(--border-color)', color: 'var(--text-color)' }}
+                            className="btn-secondary admin-cert-action-btn"
                         >
                             <Download size={16} /> Download All
                         </a>
                         <button 
-                            className="btn-primary"
+                            className="btn-primary admin-cert-action-btn-primary"
                             onClick={handleApproveAll}
-                            style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 16px', borderRadius: '6px', backgroundColor: 'var(--primary-color)', color: 'white', border: 'none', cursor: 'pointer' }}
                         >
                             <CheckCircle size={16} /> Approve All
                         </button>

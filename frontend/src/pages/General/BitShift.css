@@ -235,7 +235,7 @@
 
 .math-check-banner.mismatch {
     background: rgba(239, 68, 68, 0.1);
-    border-color: #ef4444;
+    border-color: var(--error-color);
     color: #dc2626;
     box-shadow: 0 0 16px rgba(239, 68, 68, 0.15);
     animation: shake 0.35s ease;
@@ -517,7 +517,7 @@
     font-size: 0.9rem;
     font-weight: 700;
     color: white;
-    background: linear-gradient(135deg, #f59e0b, #d97706);
+    background: linear-gradient(135deg, var(--warning-color), #d97706);
     border: none;
     border-radius: var(--radius-full);
     cursor: pointer;

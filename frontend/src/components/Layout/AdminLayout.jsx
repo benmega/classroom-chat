@@ -42,7 +42,7 @@ const AdminLayout = ({ children }) => {
         return (
             <div className="access-denied-container">
                 <div className="access-denied-card">
-                    <Shield size={64} color="#ef4444" />
+                    <Shield size={64} color="var(--error-color)" />
                     <h1>Access Denied</h1>
                     <p>You do not have administrative permission to view this page. Restricted area.</p>
                     <Link to="/chat" className="btn-back">

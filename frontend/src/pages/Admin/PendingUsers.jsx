@@ -124,7 +124,7 @@ const PendingUsers = () => {
             />
 
             {/* Pending Signups Section */}
-            <h2 className="section-title" style={{ marginTop: '2rem', marginBottom: '1rem', paddingLeft: '0.5rem' }}>Pending Signups</h2>
+            <h2 className="section-title pending-section-title">Pending Signups</h2>
             <div className="users-list">
                 {users.length > 0 ? (
                     users.map(user => (
@@ -183,8 +183,8 @@ const PendingUsers = () => {
                         </div>
                     ))
                 ) : (
-                    <div className="empty-state-card" style={{ padding: '2rem', minHeight: 'auto' }}>
-                        <Shield size={32} style={{ color: 'var(--primary-color)', marginBottom: '1rem' }} />
+                    <div className="empty-state-card pending-empty-state">
+                        <Shield size={32} className="pending-empty-icon" />
                         <h3>No Pending Signups</h3>
                         <p>All signups have been processed.</p>
                     </div>
@@ -192,7 +192,7 @@ const PendingUsers = () => {
             </div>
 
             {/* Parent Connection Requests Section */}
-            <h2 className="section-title" style={{ marginTop: '3rem', marginBottom: '1rem', paddingLeft: '0.5rem' }}>Parent Connection Requests</h2>
+            <h2 className="section-title pending-section-title-mt3">Parent Connection Requests</h2>
             <div className="users-list">
                 {requests.length > 0 ? (
                     requests.map(req => (
@@ -218,9 +218,9 @@ const PendingUsers = () => {
                                     <span className="value">@{req.student?.username}</span>
                                 </div>
                                 {req.message && (
-                                    <div className="detail-row" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '4px' }}>
+                                    <div className="detail-row detail-row-column">
                                         <span className="label">Message</span>
-                                        <span className="value" style={{ fontStyle: 'italic', opacity: 0.8 }}>"{req.message}"</span>
+                                        <span className="value pending-message-value">"{req.message}"</span>
                                     </div>
                                 )}
                             </div>
@@ -244,8 +244,8 @@ const PendingUsers = () => {
                         </div>
                     ))
                 ) : (
-                    <div className="empty-state-card" style={{ padding: '2rem', minHeight: 'auto' }}>
-                        <Shield size={32} style={{ color: 'var(--primary-color)', marginBottom: '1rem' }} />
+                    <div className="empty-state-card pending-empty-state">
+                        <Shield size={32} className="pending-empty-icon" />
                         <h3>No Pending Connection Requests</h3>
                         <p>There are no pending parent-student connection requests.</p>
                     </div>

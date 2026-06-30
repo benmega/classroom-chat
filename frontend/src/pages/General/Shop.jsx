@@ -11,7 +11,7 @@ const Shop = () => {
     const [items, setItems] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [purchasingId, setPurchasingId] = useState(null);
-    const [chatColor, setChatColor] = useState('#facc15');
+    const [chatColor, setChatColor] = useState('var(--accent-color)');
     const [borderSpeed, setBorderSpeed] = useState('normal');
     const wallpaperInputRef = React.useRef(null);
     
@@ -252,7 +252,7 @@ const Shop = () => {
                                 {item.name === "Chat Font Color" && (
                                     <div className="shop-preview chat-preview">
                                         <div className="chat-bubble-preview">
-                                            <strong>User:</strong> <span style={{ color: chatColor || '#facc15', textShadow: '0 0 2px rgba(0,0,0,0.5)' }}>This is a test message to preview!</span>
+                                            <strong>User:</strong> <span style={{ color: chatColor || 'var(--accent-color)', textShadow: '0 0 2px var(--shadow-dark)' }}>This is a test message to preview!</span>
                                         </div>
                                         <div style={{ marginTop: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                                             <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Test color:</span>

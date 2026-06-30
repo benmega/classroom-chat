@@ -1,0 +1,19 @@
+.admin-schema-error {
+    color: var(--error-color, red);
+}
+
+.admin-top-menu {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 10px;
+    padding: 20px;
+    background-color: var(--bg-primary);
+    border-bottom: 1px solid var(--border-subtle);
+    max-height: 35vh;
+    overflow-y: auto;
+    margin-bottom: 20px;
+    border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+    box-shadow: var(--shadow-soft);
+    list-style: none;
+    margin: 0;
+}

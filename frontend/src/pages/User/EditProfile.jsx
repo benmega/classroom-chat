@@ -117,13 +117,12 @@ const EditProfile = () => {
                             {user?.role !== 'parent' && (
                                 <div className="form-group">
                                     <label>Parent Connection Code</label>
-                                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                    <div className="connection-code-row">
                                         <input 
                                             type="text" 
                                             value={connectionCode || 'Loading...'} 
                                             disabled 
-                                            className="form-control readonly" 
-                                            style={{ flex: 1, fontFamily: 'monospace', fontWeight: 'bold', letterSpacing: '2px' }} 
+                                            className="form-control readonly connection-code-input" 
                                         />
                                         <button 
                                             type="button" 
@@ -140,7 +139,7 @@ const EditProfile = () => {
                                             <Copy size={18} />
                                         </button>
                                     </div>
-                                    <small style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginTop: '0.25rem', display: 'block' }}>
+                                    <small className="form-help-text">
                                         Share this code with your parents to allow them to connect to your account.
                                     </small>
                                 </div>
@@ -152,10 +151,9 @@ const EditProfile = () => {
                                         type="text" 
                                         value={user.drawer} 
                                         disabled 
-                                        className="form-control readonly" 
-                                        style={{ fontFamily: 'monospace', fontWeight: 'bold' }} 
+                                        className="form-control readonly drawer-input" 
                                     />
-                                    <small style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginTop: '0.25rem', display: 'block' }}>
+                                    <small className="form-help-text">
                                         This is your physical drawer assignment in the classroom.
                                     </small>
                                 </div>
@@ -180,7 +178,7 @@ const EditProfile = () => {
                                     rows="4"
                                     maxLength="500"
                                 />
-                                <small className="char-count" style={{ display: 'block', textAlign: 'right', fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+                                <small className="char-count">
                                     {bio?.length || 0}/500
                                 </small>
                             </div>
@@ -190,20 +188,19 @@ const EditProfile = () => {
                             <h3 className="section-title"><Lock size={18} /> Password Security</h3>
                             <div className="form-group">
                                 <label>New Password</label>
-                                <div style={{ position: 'relative' }}>
+                                <div className="password-input-wrapper">
                                     <input 
                                         type={showPassword ? "text" : "password"} 
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
                                         placeholder="Leave blank to keep current" 
-                                        className="form-control" 
+                                        className="form-control password-input" 
                                         autoComplete="new-password"
-                                        style={{ paddingRight: '2.5rem' }}
                                     />
                                     <button 
                                         type="button" 
+                                        className="password-toggle-btn"
                                         onClick={() => setShowPassword(!showPassword)}
-                                        style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                                         tabIndex="-1"
                                     >
                                         {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -212,20 +209,19 @@ const EditProfile = () => {
                             </div>
                             <div className="form-group">
                                 <label>Confirm New Password</label>
-                                <div style={{ position: 'relative' }}>
+                                <div className="password-input-wrapper">
                                     <input 
                                         type={showConfirmPassword ? "text" : "password"} 
                                         value={confirmPassword}
                                         onChange={(e) => setConfirmPassword(e.target.value)}
                                         placeholder="Confirm your new password" 
-                                        className="form-control" 
+                                        className="form-control password-input" 
                                         autoComplete="new-password"
-                                        style={{ paddingRight: '2.5rem' }}
                                     />
                                     <button 
                                         type="button" 
+                                        className="password-toggle-btn"
                                         onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                        style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                                         tabIndex="-1"
                                     >
                                         {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}

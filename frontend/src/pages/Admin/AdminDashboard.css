@@ -11,6 +11,39 @@
     margin-bottom: 1rem;
 }
 
+.skeleton-card-mt {
+    margin-top: 20px;
+}
+
+.dashboard-header-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.chart-timeframe-select {
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.375rem;
+    border: 1px solid var(--border-subtle);
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    font-family: var(--font-heading);
+    font-size: 0.875rem;
+    cursor: pointer;
+}
+
+.chart-container-fixed {
+    height: 300px;
+}
+
 .dashboard-header h1 {
     font-size: 2rem;
     font-weight: 800;
@@ -110,7 +143,7 @@
 .stat-icon svg { width: 20px; height: 20px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.2)); }
 
 .stat-icon.ducks { background: linear-gradient(135deg, #fbbf24, #d97706); color: #78350f; } /* Darker text for yellow */
-.stat-icon.week { background: linear-gradient(135deg, #059669, #064e3b); } /* Darker green */
+.stat-icon.week { background: linear-gradient(135deg, var(--success-dark), #064e3b); } /* Darker green */
 .stat-icon.pending { background: linear-gradient(135deg, #4f46e5, #312e81); } /* Darker indigo */
 .stat-icon.active { background: linear-gradient(135deg, #db2777, #831843); } /* Darker pink */
 .stat-icon.approval { background: linear-gradient(135deg, #7e22ce, #4c1d95); } /* Darker violet */

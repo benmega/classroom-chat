@@ -37,7 +37,7 @@ const AddChildModal = ({ isOpen, onClose, onAdded }) => {
                 
                 <div className="modal-body">
                     <div className="add-child-section animate-fade-in">
-                        <p className="tab-desc" style={{ marginBottom: '1.5rem', lineHeight: '1.5', color: 'var(--text-muted)' }}>
+                        <p className="tab-desc modal-tab-desc">
                             If you received a physical card or connection code from the school, enter the 6-character code below to instantly link the student.
                         </p>
                         

@@ -67,8 +67,8 @@ const ProtectedRoute = ({ children, adminOnly = false, parentOnly = false }) => 
     }}>
         <Loader2 style={{ animation: 'spin 1s linear infinite' }} size={64} strokeWidth={1.5} color={THEME.colors.blue600} />
         <div style={{ textAlign: 'center' }}>
-          <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 'bold', letterSpacing: '-0.025em' }}>Classroom Chat</h2>
-          <p style={{ margin: '0.25rem 0 0 0', opacity: 0.7, fontSize: '0.875rem' }}>Preparing your workspace...</p>
+          <h2 style={{ margin: 0, fontSize: 'var(--font-2xl)', fontWeight: 'bold', letterSpacing: '-0.025em' }}>Classroom Chat</h2>
+          <p style={{ margin: '0.25rem 0 0 0', opacity: 0.7, fontSize: 'var(--font-sm)' }}>Preparing your workspace...</p>
         </div>
     </div>
   );
@@ -117,7 +117,7 @@ function App() {
                 duration: 4500,
                 style: {
                     background: THEME.colors.slate800,
-                    color: '#ffffff',
+                    color: 'var(--bg-primary)',
                     borderRadius: THEME.radius.md,
                     padding: '16px 24px',
                     boxShadow: THEME.shadows.xl,
@@ -132,7 +132,7 @@ function App() {
                         border: `1px solid ${THEME.colors.successDark}`,
                     },
                     iconTheme: {
-                        primary: '#ffffff',
+                        primary: 'var(--bg-primary)',
                         secondary: THEME.colors.success,
                     },
                 },
@@ -142,7 +142,7 @@ function App() {
                         border: `1px solid ${THEME.colors.errorDark}`,
                     },
                     iconTheme: {
-                        primary: '#ffffff',
+                        primary: 'var(--bg-primary)',
                         secondary: THEME.colors.error,
                     },
                 },

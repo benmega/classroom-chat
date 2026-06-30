@@ -17,6 +17,7 @@ import client from '../../api/client';
 import toast from 'react-hot-toast';
 import './AdminDocuments.css';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
+import Skeleton from '../../components/common/Skeleton';
 
 const AdminDocuments = () => {
     const [documents, setDocuments] = useState([]);
@@ -77,7 +78,40 @@ const AdminDocuments = () => {
         return matchesSearch && matchesCategory;
     });
 
-    if (isLoading) return <div className="admin-loading">Loading Document Manager...</div>;
+    if (isLoading) {
+        return (
+            <div className="admin-documents-page">
+                <AdminPageHeader title="Asset & Document Management" />
+                <div className="storage-overview" style={{ display: 'flex', gap: '16px', marginBottom: '24px' }}>
+                    <Skeleton height="120px" width="300px" borderRadius="12px" />
+                    <div className="storage-stats-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', flex: 1 }}>
+                        <Skeleton height="56px" borderRadius="8px" />
+                        <Skeleton height="56px" borderRadius="8px" />
+                        <Skeleton height="56px" borderRadius="8px" />
+                        <Skeleton height="56px" borderRadius="8px" />
+                    </div>
+                </div>
+                <div className="controls-bar card" style={{ padding: '16px', marginBottom: '24px' }}>
+                    <Skeleton height="40px" width="400px" />
+                </div>
+                <div className="documents-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '20px' }}>
+                    {[1, 2, 3, 4, 5, 6].map(i => (
+                        <div key={i} className="doc-card card" style={{ padding: '0', overflow: 'hidden' }}>
+                            <Skeleton height="150px" borderRadius="12px 12px 0 0" />
+                            <div style={{ padding: '16px' }}>
+                                <Skeleton height="20px" width="80%" />
+                                <Skeleton height="14px" width="60%" style={{ marginTop: '8px' }} />
+                                <div style={{ display: 'flex', gap: '8px', marginTop: '16px' }}>
+                                    <Skeleton height="32px" width="50%" borderRadius="6px" />
+                                    <Skeleton height="32px" width="50%" borderRadius="6px" />
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="admin-documents-page">
@@ -93,7 +127,7 @@ const AdminDocuments = () => {
                             <span className="label">Total Storage Used</span>
                             <span className="value">{stats.total_size_formatted}</span>
                             <div className="storage-bar">
-                                <div className="fill" style={{ width: '45%' }}></div>
+                                <div className="fill storage-fill-45"></div>
                             </div>
                         </div>
                     </div>

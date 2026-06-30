@@ -1,0 +1,134 @@
+.server-offline-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 2rem;
+  background-color: var(--bg-secondary);
+  background-image: var(--gradient-mesh);
+  font-family: var(--font-body);
+  text-align: center;
+}
+
+.server-offline-card {
+  max-width: 580px;
+  width: 100%;
+  padding: 3rem;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-rich);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.server-offline-img {
+  width: 200px;
+  height: auto;
+  margin-bottom: 1.5rem;
+  filter: drop-shadow(0 8px 16px rgba(0,0,0,0.12));
+}
+
+.server-offline-box {
+  width: 100%;
+}
+
+.server-offline-title {
+  font-size: 2.5rem;
+  color: var(--primary-color);
+  font-family: var(--font-heading);
+  font-weight: 800;
+  margin-bottom: 1rem;
+  line-height: 1.2;
+}
+
+.server-offline-subtitle {
+  font-size: 1.2rem;
+  color: var(--text-secondary);
+  margin-bottom: 2.5rem;
+  opacity: 0.85;
+}
+
+.server-offline-btn {
+  width: 100%;
+  max-width: 400px;
+  font-size: 1.25rem;
+  padding: 16px 32px;
+  border-radius: var(--radius-md);
+}
+
+.server-offline-error {
+  margin-top: 1.5rem;
+  color: var(--error-color);
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.server-offline-waking-box {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.server-offline-rocket {
+  font-size: 4.5rem;
+  margin-bottom: 1.5rem;
+  animation: bounce 1s infinite;
+}
+
+.server-offline-progress-container {
+  width: 100%;
+  background-color: rgba(0, 0, 0, 0.06);
+  border-radius: var(--radius-full);
+  height: 32px;
+  overflow: hidden;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.08);
+  margin-bottom: 1.5rem;
+}
+
+.server-offline-progress-bar {
+  height: 100%;
+  border-radius: var(--radius-full);
+  background: linear-gradient(90deg, var(--primary-color), var(--secondary-color), var(--primary-color));
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite, widthTransition 0.3s ease;
+}
+
+.server-offline-time {
+  font-size: 2.25rem;
+  font-weight: 800;
+  color: var(--secondary-color);
+  font-family: var(--font-heading);
+  margin-bottom: 0.75rem;
+}
+
+.server-offline-status {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  opacity: 0.85;
+  margin-bottom: 1.25rem;
+}
+
+.server-offline-fun-msg {
+  font-size: 1.25rem;
+  font-style: italic;
+  font-weight: 600;
+  color: var(--primary-color);
+  min-height: 32px;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-15px); }
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+@keyframes widthTransition {
+  0% { width: 0%; }
+}

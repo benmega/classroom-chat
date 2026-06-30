@@ -55,7 +55,7 @@
 .admin-advanced-panel .utility-icon.primary { background: #eff6ff; color: #3b82f6; }
 .admin-advanced-panel .utility-icon.secondary { background: #f0fdf4; color: #22c55e; }
 .admin-advanced-panel .utility-icon.premium { 
-    background: linear-gradient(135deg, #6366f1 0%, #0eb2bb 100%); 
+    background: linear-gradient(135deg, var(--secondary-color) 0%, var(--primary-color) 100%); 
     color: white; 
     box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3);
 }
@@ -69,7 +69,7 @@
 .admin-advanced-panel .utility-content h3 { 
     font-size: 1.15rem; 
     font-weight: 700; 
-    color: #1e293b; 
+    color: var(--slate-800); 
     margin-bottom: 6px; 
 }
 
@@ -91,7 +91,7 @@
     align-items: center;
     justify-content: center;
     gap: 8px;
-    background: #f1f5f9;
+    background: var(--bg-tertiary);
     border: none;
     padding: 10px 18px;
     border-radius: 12px;
@@ -103,14 +103,14 @@
 }
 
 .admin-advanced-panel .btn-utility:hover { 
-    background: #e2e8f0; 
-    color: #1e293b;
+    background: var(--border-subtle); 
+    color: var(--slate-800);
     transform: translateY(-1px);
 }
 
 /* Danger Zone */
 .admin-advanced-panel .danger-zone {
-    background: #fef2f2;
+    background: var(--error-subtle);
     border: 1px solid #fee2e2;
     border-radius: 16px;
     padding: 1.25rem;
@@ -157,7 +157,7 @@
 
 .admin-advanced-panel .btn-danger:hover {
     background: #b91c1c;
-    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
+    box-shadow: var(--shadow-md);
     transform: translateY(-1px);
 }
 
@@ -217,14 +217,14 @@
     font-size: 1.25rem;
     font-weight: 800;
     margin: 0;
-    color: #1e293b;
+    color: var(--slate-800);
 }
 
 .log-content {
     flex: 1;
     overflow: auto;
     padding: 1.5rem;
-    background: #0f172a;
+    background: var(--text-primary);
     color: #cbd5e1;
     font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
     font-size: 0.9rem;
@@ -242,7 +242,7 @@
     display: flex;
     justify-content: flex-end;
     gap: 1rem;
-    background: #f8fafc;
+    background: var(--bg-secondary);
 }
 
 .close-btn {
@@ -253,8 +253,8 @@
 }
 
 .close-btn:hover {
-    background: #f1f5f9;
-    color: #1e293b;
+    background: var(--bg-tertiary);
+    color: var(--slate-800);
 }
 
 .log-content .stats-grid {
@@ -313,7 +313,7 @@
 /* Purge Confirmation */
 .purge-confirm .log-content {
     background: white;
-    color: #1e293b;
+    color: var(--slate-800);
     font-family: inherit;
     font-size: 1.1rem;
     text-align: center;

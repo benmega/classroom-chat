@@ -362,7 +362,7 @@ const ScreenRecorder = ({ isOpen, onClose, onRecordingComplete }) => {
                     style={{cursor: 'pointer', justifyContent: 'center'}}
                     onClick={() => setSettings({...settings, includeMicrophone: !settings.includeMicrophone})}
                   >
-                    {settings.includeMicrophone ? <Mic size={24} color="#334155" /> : <MicOff size={24} color="#ef4444" />}
+                    {settings.includeMicrophone ? <Mic size={24} color="var(--text-secondary)" /> : <MicOff size={24} color="var(--error-color)" />}
                   </div>
                 </div>
               </div>
@@ -380,7 +380,7 @@ const ScreenRecorder = ({ isOpen, onClose, onRecordingComplete }) => {
               <button onClick={handleTogglePause} className="screen-recorder-btn screen-recorder-btn-secondary">
                 {isPaused ? <Play size={18} /> : <Pause size={18} />} {isPaused ? 'Resume' : 'Pause'}
               </button>
-              <button onClick={handleStopRecording} className="screen-recorder-btn screen-recorder-btn-secondary" style={{background: '#ef4444', borderColor: '#b91c1c'}}>
+              <button onClick={handleStopRecording} className="screen-recorder-btn screen-recorder-btn-secondary" style={{background: 'var(--error-color)', borderColor: 'var(--error-dark)'}}>
                 <Square size={18} /> Stop
               </button>
             </div>

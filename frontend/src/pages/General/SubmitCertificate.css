@@ -150,14 +150,14 @@
     border-radius: 12px;
     cursor: pointer;
     transition: all 0.2s ease;
-    box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.4);
+    box-shadow: var(--shadow-md);
     margin-top: 0.5rem;
 }
 
 .submit-button:hover:not(:disabled) {
     background: var(--primary-color-dark, var(--blue-600));
     transform: translateY(-2px);
-    box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.4);
+    box-shadow: var(--shadow-lg);
 }
 
 .submit-button:disabled {

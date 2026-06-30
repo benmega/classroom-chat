@@ -72,12 +72,12 @@
 /* Active nodes */
 .skill-node-cell.active .skill-card.codecombat {
     border-color: #2b91af;
-    box-shadow: 0 4px 12px rgba(43, 145, 175, 0.15);
+    box-shadow: var(--shadow-md);
 }
 
 .skill-node-cell.active .skill-card.ozaria {
     border-color: #902edb;
-    box-shadow: 0 4px 12px rgba(144, 46, 219, 0.15);
+    box-shadow: var(--shadow-md);
 }
 
 /* Locked nodes removed as per request */
@@ -188,19 +188,27 @@
     filter: grayscale(20%);
 }
 
-.report-back-btn {
-    margin-top: 1rem;
+.subtle-back-btn {
+    position: absolute;
+    top: 1.5rem;
+    left: 1.5rem;
     cursor: pointer;
-    transition: transform 0.2s;
+    background: transparent;
+    border: none;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     color: var(--text-secondary);
+    transition: all 0.2s;
+    z-index: 100;
+    padding: 0.5rem;
+    border-radius: 50%;
 }
 
-.report-back-btn:hover {
-    transform: translateX(-4px);
+.subtle-back-btn:hover {
     color: var(--text-primary);
+    background: var(--surface-secondary);
+    transform: translateX(-2px);
 }
 
 @media (min-width: 1024px) {
@@ -309,7 +317,7 @@
     position: relative;
     display: flex;
     flex-direction: column;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    box-shadow: var(--shadow-soft);
 }
 
 .course-modal-close {
@@ -381,7 +389,7 @@
 
 .level-item.completed .level-item-icon {
     background: #22c55e;
-    color: #fff;
+    color: var(--bg-primary);
 }
 
 .level-item span {
@@ -441,7 +449,7 @@
     visibility: hidden;
     transition: all 0.2s ease;
     z-index: 10;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    box-shadow: var(--shadow-md);
     pointer-events: none;
 }
 
