@@ -20,32 +20,43 @@ def get_feed():
         limit = request.args.get("limit", 50, type=int)
         before_id = request.args.get("before_id", type=int)
 
-        query = Message.query.filter(Message.deleted_at.is_(None))
-
         # Admin gets everything
-        if not user.is_admin:
-            # User classrooms
+        if user.is_admin:
+            query = Message.query.filter(Message.deleted_at.is_(None))
+            if before_id:
+                query = query.filter(Message.id < before_id)
+            messages = query.order_by(Message.id.desc()).limit(limit).all()
+        else:
+            from application.models.message import message_classrooms, message_users
+            
             user_classroom_ids = [c.id for c in user.classrooms]
 
-            # Condition 1: Global messages
-            # Condition 2: Authored by user
-            # Condition 3: Targeted to user
-            # Condition 4: Targeted to one of user's classrooms
-            
-            # Using SQLAlchemy any() or direct joins for associations
-            query = query.filter(
-                db.or_(
-                    Message.is_global.is_(True),
-                    Message.user_id == user.id,
-                    Message.target_users.any(User.id == user.id),
-                    Message.target_classrooms.any(Message.target_classrooms.property.mapper.class_.id.in_(user_classroom_ids)) if user_classroom_ids else False
-                )
-            )
+            # Use UNION to avoid massive table scan with OR + EXISTS
+            base_query = db.session.query(Message.id).filter(Message.deleted_at.is_(None))
+            if before_id:
+                base_query = base_query.filter(Message.id < before_id)
 
-        if before_id:
-            query = query.filter(Message.id < before_id)
+            q1 = base_query.filter(Message.is_global.is_(True))
+            q2 = base_query.filter(Message.user_id == user.id)
+            q3 = base_query.join(message_users, Message.id == message_users.c.message_id)\
+                           .filter(message_users.c.user_id == user.id)
 
-        messages = query.order_by(Message.id.desc()).limit(limit).all()
+            queries = [q1, q2, q3]
+
+            if user_classroom_ids:
+                q4 = base_query.join(message_classrooms, Message.id == message_classrooms.c.message_id)\
+                               .filter(message_classrooms.c.classroom_id.in_(user_classroom_ids))
+                queries.append(q4)
+
+            from sqlalchemy import desc
+            union_query = queries[0].union(*queries[1:]).order_by(desc(Message.id)).limit(limit)
+            message_ids = [row[0] for row in union_query.all()]
+
+            if message_ids:
+                # Fetch full models only for the matched IDs
+                messages = Message.query.filter(Message.id.in_(message_ids)).order_by(Message.id.desc()).all()
+            else:
+                messages = []
 
         message_data = []
         for msg in messages:
