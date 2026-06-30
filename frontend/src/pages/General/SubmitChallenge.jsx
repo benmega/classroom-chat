@@ -34,43 +34,7 @@ const SubmitChallenge = () => {
             alert('🚨 This bookmarklet only works when you are on a CodeCombat or Ozaria level!');
             return;
         }
-        
-        const p=new URLSearchParams();
-        p.append('url', url);
-        p.append('helpers', '');
-        p.append('notes', '');
-        
-        fetch('${fullApiUrl}/challenge/submit', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-                'Accept': 'application/json'
-            },
-            body: p,
-            credentials: 'include'
-        })
-        .then(async r => {
-            let data;
-            try {
-                data = await r.json();
-            } catch (e) {
-                data = { success: false, message: 'Server returned an invalid response (' + r.status + ').' };
-            }
-
-            if (r.status === 401) {
-                alert('🔑 Please log in to the Classroom Chat app first!');
-                return;
-            }
-            if (data.success) {
-                alert('✅ Success! ' + (data.message || 'Challenge submitted successfully.'));
-            } else {
-                alert('❌ Submission Failed:\\n\\n' + (data.message || data.error || 'Unknown error occurred.'));
-            }
-        })
-        .catch(e => {
-            console.error('Submission Error:', e);
-            alert('⚠️ Network Error:\\n\\nCould not reach the Classroom Chat server. Make sure you are logged in and the server is running!');
-        });
+        window.open('${fullApiUrl}/challenge/submit?url=' + encodeURIComponent(url), '_blank');
     })();`.replace(/\n\s+/g, ' '); // Compact for bookmarklet use
 
     useEffect(() => {
