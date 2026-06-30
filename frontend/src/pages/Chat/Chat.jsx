@@ -63,7 +63,7 @@ const Chat = () => {
                   placeholder={`What's on your mind, ${user?.nickname || user?.username || 'Student'}?`}
                   className="feed-input-field"
                   rows={2}
-                  maxLength={4000}
+                  maxLength={user?.is_admin ? 4000 : 500}
                 />
                 
                 <div className="feed-toolbar">
