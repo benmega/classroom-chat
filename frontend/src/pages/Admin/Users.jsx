@@ -2,7 +2,8 @@ import React from 'react';
 import { 
     Search, 
     Plus, 
-    ArrowUpCircle, 
+    ArrowUpCircle,
+    Package,
     Key, 
     Trash2, 
     RefreshCw,
@@ -176,7 +177,7 @@ const Users = () => {
                                     <td>
                                         <div className="economy-info">
                                             <div className="duck-count">🦆 {(u.duck_balance ?? 0).toLocaleString(undefined, { maximumFractionDigits: 2 })}</div>
-                                            <div className="packet-count" style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>📦 {(u.packets ?? 0).toLocaleString(undefined, { maximumFractionDigits: 3 })}</div>
+                                            <div className="packet-count" style={{ fontSize: '0.8rem', color: (u.packets < 0 ? 'var(--error-color, #ff4444)' : 'var(--text-muted)') }}>📦 {(u.packets ?? 0).toLocaleString(undefined, { maximumFractionDigits: 3 })}</div>
                                             <div className="level-info">Lvl: {u.total_levels || 0}</div>
                                         </div>
                                     </td>
@@ -201,7 +202,7 @@ const Users = () => {
                                                 title="Adjust Packets"
                                                 style={{ color: 'var(--accent-color)' }}
                                             >
-                                                <ArrowUpCircle size={16} />
+                                                <Package size={16} />
                                             </button>
                                             {u.role === 'student' && (
                                                 <button 

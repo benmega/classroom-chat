@@ -91,13 +91,13 @@ const Layout = ({ children }) => {
                                         </Link>
                                     </li>
 
-                                    {user.packets > 0.001 && (
+                                    {Math.abs(user.packets) > 0.001 && (
                                         <li className="nav-stat-item">
                                             <Link className="stat-badge packets" to="/shop">
                                                 <Package size={20} className="stat-icon" />
                                                 <div className="stat-content">
                                                     <span className="stat-label">Packets</span>
-                                                    <span className="stat-value">{Number(user.packets || 0).toLocaleString(undefined, { 
+                                                    <span className="stat-value" style={{ color: user.packets < 0 ? 'var(--error-color, #ff4444)' : 'inherit' }}>{Number(user.packets || 0).toLocaleString(undefined, { 
                                                         minimumFractionDigits: 0, 
                                                         maximumFractionDigits: 3 
                                                     })}</span>
@@ -143,13 +143,13 @@ const Layout = ({ children }) => {
                                                         </div>
                                                     </Link>
                                                 </li>
-                                                {user.packets > 0.001 && (
+                                                {Math.abs(user.packets) > 0.001 && (
                                                     <li className="mobile-only-stat mobile-only">
                                                         <Link to="/shop" onClick={() => setIsDropdownOpen(false)} className="dropdown-stat-link packets" style={{ textDecoration: 'none' }}>
                                                             <Package size={20} />
                                                             <div className="dropdown-stat-info">
                                                                 <span className="dropdown-stat-label">Packets</span>
-                                                                <span className="dropdown-stat-value">
+                                                                <span className="dropdown-stat-value" style={{ color: user.packets < 0 ? 'var(--error-color, #ff4444)' : 'inherit' }}>
                                                                     {Number(user.packets || 0).toLocaleString(undefined, { 
                                                                         minimumFractionDigits: 0, 
                                                                         maximumFractionDigits: 3 
