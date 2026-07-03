@@ -110,7 +110,7 @@ const Tutorial = () => {
       });
       return () => cancelAnimationFrame(frame);
     }
-  }, [isOpen, currentSlide]);
+  }, [isOpen, currentSlide, slides]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -122,7 +122,7 @@ const Tutorial = () => {
     };
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, [isOpen, currentSlide]);
+  }, [isOpen, currentSlide, slides]);
 
   const handleClose = () => {
     if (user && !user.has_seen_tutorial) {

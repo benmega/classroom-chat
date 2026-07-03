@@ -765,7 +765,7 @@ def remove_skill(skill_id):
 
 def update_basic_user_info(user_obj, data):
     """Updates basic user settings (IP, Online Status, Password, Bio)."""
-    ip_address = data.get("ip_address")
+    ip_address = request.headers.get("X-Forwarded-For", request.remote_addr)
     user_obj.ip_address = ip_address if ip_address else user_obj.ip_address
     if "is_online" in data:
         user_obj.is_online = (

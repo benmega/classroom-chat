@@ -1,10 +1,8 @@
-import { screen, fireEvent, waitFor } from '@testing-library/react';
+import { screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import Chat from './Chat';
 import { renderWithProviders } from '../../test/test-utils';
-import { server } from '../../test/mocks/server';
-import { http, HttpResponse } from 'msw';
-import toast from 'react-hot-toast';
+import { HttpResponse } from 'msw';
 
 // ─── Mock dependencies ──────────────────────────────────────────────────────
 

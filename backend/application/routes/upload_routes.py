@@ -11,7 +11,7 @@ from datetime import datetime
 from io import BytesIO
 
 from PIL import Image
-from flask import Blueprint, request, jsonify, send_from_directory, abort
+from flask import Blueprint, request, jsonify, send_from_directory
 
 from application import limiter
 from application.config import Config
@@ -67,11 +67,7 @@ def upload_file():
     return jsonify({"message": "File uploaded successfully", "file_path": file_path})
 
 
-@upload.route("/uploads/<filename>")
+@upload.route("/uploads/<path:filename>")
 # @premium_required
 def uploaded_file(filename):
-    file_path = os.path.join(Config.UPLOAD_FOLDER, filename)
-    if os.path.exists(file_path):
-        return send_from_directory(os.path.dirname(file_path), filename)
-    else:
-        abort(404)
+    return send_from_directory(Config.UPLOAD_FOLDER, filename)

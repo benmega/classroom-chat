@@ -26,12 +26,13 @@ parent = c.fetchone()
 if parent:
     parent_id = parent[0]
     print(f"\nTest parent already exists with id={parent_id}")
+    c.execute("UPDATE users SET has_seen_tutorial = 1 WHERE id = ?", (parent_id,))
 else:
     # Create test parent account
     pw_hash = generate_password_hash("parent123")
     c.execute(
-        "INSERT INTO users (username, password_hash, nickname, role, is_approved, slug, ducks) VALUES (?, ?, ?, ?, ?, ?, ?)",
-        ("test_parent", pw_hash, "Test Parent", "parent", 1, "test-parent", 0)
+        "INSERT INTO users (username, password_hash, nickname, role, is_approved, slug, duck_balance, has_seen_tutorial) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        ("test_parent", pw_hash, "Test Parent", "parent", 1, "test-parent", 0, 1)
     )
     parent_id = c.lastrowid
     print(f"\nCreated test parent account: id={parent_id}, username=test_parent, password=parent123")
