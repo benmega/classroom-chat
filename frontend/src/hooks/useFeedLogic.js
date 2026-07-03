@@ -132,19 +132,26 @@ export const useFeedLogic = () => {
     if (e) e.preventDefault();
     if (!newMessage.trim()) return;
 
-    sendMessage({
-      content: newMessage.trim(),
-      is_global: isGlobal,
-      target_live: targetLive,
-      target_classrooms: targetClassrooms,
-      target_users: targetUsers
-    });
+    const messageToSend = newMessage.trim();
 
     setNewMessage('');
     setShowEmojiPicker(false);
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
     }
+
+    sendMessage({
+      content: messageToSend,
+      is_global: isGlobal,
+      target_live: targetLive,
+      target_classrooms: targetClassrooms,
+      target_users: targetUsers
+    }, (response) => {
+      if (response && !response.success) {
+        toast.error(response.error || 'Failed to send message.');
+        setNewMessage(messageToSend);
+      }
+    });
   };
 
   const handleTextareaKeyDown = (e) => {
