@@ -67,7 +67,7 @@ def get_achievements_json():
         "chat_count": db.session.query(func.count(Message.id))
         .filter(Message.user_id == current_user.id)
         .scalar(),
-        "consistency_streak": _calculate_consistency(current_user.username),
+        "consistency_streak": _calculate_consistency(current_user.id),
         "community_count": db.session.query(func.count(ChallengeLog.id))
         .filter(func.lower(ChallengeLog.helper) == current_user.username.lower())
         .scalar(),

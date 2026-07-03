@@ -40,7 +40,7 @@ def check_achievement(user, achievement, stats=None):
         "consistency": lambda: (
             stats.get("consistency_streak")
             if "consistency_streak" in stats
-            else _calculate_consistency(user.username)
+            else _calculate_consistency(user.id)
         ),
         # Count how many times someone entered them as a helper
         "community": lambda: (
@@ -61,7 +61,7 @@ def check_achievement(user, achievement, stats=None):
             stats.get("trade_count")
             if "trade_count" in stats
             else db.session.query(func.count(DuckTradeLog.id))
-            .filter(func.lower(DuckTradeLog.username) == user.username.lower())
+            .filter(DuckTradeLog.user_id == user.id)
             .scalar()
         ),
         # Certificate submitted or not
@@ -104,7 +104,7 @@ def get_achievement_progress(user, achievement, stats=None):
         "consistency": lambda: (
             stats.get("consistency_streak")
             if "consistency_streak" in stats
-            else _calculate_consistency(user.username)
+            else _calculate_consistency(user.id)
         ),
         "community": lambda: (
             stats.get("community_count")
@@ -122,7 +122,7 @@ def get_achievement_progress(user, achievement, stats=None):
             stats.get("trade_count")
             if "trade_count" in stats
             else db.session.query(func.count(DuckTradeLog.id))
-            .filter(func.lower(DuckTradeLog.username) == user.username.lower())
+            .filter(DuckTradeLog.user_id == user.id)
             .scalar()
         ),
         "certificate": lambda: (
@@ -138,13 +138,13 @@ def get_achievement_progress(user, achievement, stats=None):
     return value, requirement
 
 
-def _calculate_consistency(username):
+def _calculate_consistency(user_id):
     """
     Count how many consecutive weeks the user has challenge logs.
     """
     logs = (
         db.session.query(ChallengeLog.timestamp)
-        .filter(func.lower(ChallengeLog.username) == username.lower())
+        .filter(ChallengeLog.user_id == user_id)
         .order_by(ChallengeLog.timestamp.asc())
         .all()
     )
@@ -196,13 +196,13 @@ def evaluate_user(user, force=False):
         "chat_count": db.session.query(func.count(Message.id))
         .filter(Message.user_id == user.id)
         .scalar(),
-        "consistency_streak": _calculate_consistency(user.username),
+        "consistency_streak": _calculate_consistency(user.id),
         "community_count": db.session.query(func.count(ChallengeLog.id))
         .filter(func.lower(ChallengeLog.helper) == user.username.lower())
         .scalar(),
         "max_session": longest_session_minutes(user.id),
         "trade_count": db.session.query(func.count(DuckTradeLog.id))
-        .filter(func.lower(DuckTradeLog.username) == user.username.lower())
+        .filter(DuckTradeLog.user_id == user.id)
         .scalar(),
     }
 
