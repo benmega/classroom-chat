@@ -129,6 +129,9 @@ def handle_send_message(data):
         if len(content) > 500:
             return
 
+        if not getattr(user, 'can_chat', True):
+            return
+
         from .models.configuration import Configuration
         config = Configuration.query.first()
         if config and not config.message_sending_enabled:

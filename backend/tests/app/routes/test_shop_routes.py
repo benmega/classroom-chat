@@ -3,8 +3,8 @@ from application.models.user_item_purchase import UserItemPurchase
 from application.extensions import db
 
 def test_get_store_items(client, sample_user, init_db):
-    item1 = StoreItem(name="Test Item 1", description="desc", base_price=10.0, is_crowdfunded=False)
-    item2 = StoreItem(name="Test Item 2", description="desc", base_price=20.0, is_crowdfunded=True, crowdfund_goal=100.0)
+    item1 = StoreItem(name="Test Item 1", description="desc", base_price=10.0)
+    item2 = StoreItem(name="Test Item 2", description="desc", base_price=20.0)
     db.session.add_all([item1, item2])
     db.session.commit()
 
@@ -26,9 +26,8 @@ def test_get_store_items(client, sample_user, init_db):
             assert d["is_purchased"] is False
 
 def test_purchase_item(client, sample_user, init_db):
-    item1 = StoreItem(name="Chat Font Color", description="desc", base_price=10.0, is_crowdfunded=False)
-    item2 = StoreItem(name="Crowdfunded", description="desc", base_price=10.0, is_crowdfunded=True)
-    db.session.add_all([item1, item2])
+    item1 = StoreItem(name="Chat Font Color", description="desc", base_price=10.0)
+    db.session.add(item1)
     db.session.commit()
 
     sample_user.packets = 5.0
@@ -40,10 +39,6 @@ def test_purchase_item(client, sample_user, init_db):
     # Item not found
     resp = client.post("/api/shop/purchase/999")
     assert resp.status_code == 404
-
-    # Crowdfunded
-    resp = client.post(f"/api/shop/purchase/{item2.id}")
-    assert resp.status_code == 400
 
     # Not enough packets
     resp = client.post(f"/api/shop/purchase/{item1.id}")
@@ -72,7 +67,7 @@ def test_purchase_all_perks(client, sample_user, init_db):
         sess["user"] = sample_user.id
 
     for p in perks:
-        item = StoreItem(name=p, description="desc", base_price=10.0, is_crowdfunded=False)
+        item = StoreItem(name=p, description="desc", base_price=10.0)
         db.session.add(item)
         db.session.commit()
         resp = client.post(f"/api/shop/purchase/{item.id}")

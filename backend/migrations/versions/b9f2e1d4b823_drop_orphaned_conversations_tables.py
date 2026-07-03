@@ -1,6 +1,6 @@
 """drop_orphaned_conversations_tables
 
-Revision ID: a9f2e1d4b823
+Revision ID: b9f2e1d4b823
 Revises: f88dd28bd832
 Create Date: 2026-06-19 16:44:00.000000
 
@@ -16,7 +16,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'a9f2e1d4b823'
+revision = 'b9f2e1d4b823'
 down_revision = 'f88dd28bd832'
 branch_labels = None
 depends_on = None

@@ -274,7 +274,7 @@ const Users = () => {
                                                 </button>
                                             )}
                                             
-                                            {u.role === 'parent' && (
+                                            {!u.is_admin && (
                                                 <button 
                                                     className="action-btn delete" 
                                                     onClick={() => handleRemoveUser(u.username)}

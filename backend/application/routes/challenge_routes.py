@@ -174,7 +174,7 @@ def submit_challenge():
     
     if is_get_submission:
         # Escape single quotes in the message for JS alert
-        safe_msg = msg.replace(\"'\", \"\\\\'\")
+        safe_msg = msg.replace("'", "\\'")
         return f"<html><body><script>alert('Failed: {safe_msg}'); window.close();</script>Failed: {msg}</body></html>", 400
 
     return jsonify({"success": False, "message": msg}), 400

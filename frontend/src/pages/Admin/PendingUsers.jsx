@@ -15,7 +15,9 @@ import AdminPageHeader from '../../components/admin/AdminPageHeader';
 
 const PendingUsers = () => {
     const [users, setUsers] = useState([]);
+    const [requests, setRequests] = useState([]);
     const [isLoadingUsers, setIsLoadingUsers] = useState(true);
+    const [isLoadingRequests, setIsLoadingRequests] = useState(true);
     const [isProcessing, setIsProcessing] = useState(null);
 
     const fetchPendingUsers = async () => {
@@ -23,7 +25,7 @@ const PendingUsers = () => {
         try {
             const response = await client.get('/api/admin/pending_users');
             if (response.data.status === 'success') {
-                setUsers(response.data.data.users);
+                setUsers(response.data.data.users || []);
             }
         } catch {
             toast.error('Failed to load pending users.');
@@ -32,8 +34,23 @@ const PendingUsers = () => {
         }
     };
 
+    const fetchPendingRequests = async () => {
+        setIsLoadingRequests(true);
+        try {
+            const response = await client.get('/api/admin/connection_requests');
+            if (response.data.status === 'success') {
+                setRequests(response.data.data.requests || []);
+            }
+        } catch {
+            toast.error('Failed to load connection requests.');
+        } finally {
+            setIsLoadingRequests(false);
+        }
+    };
+
     useEffect(() => {
         fetchPendingUsers();
+        fetchPendingRequests();
     }, []);
 
     // --- User Approvals ---
@@ -68,7 +85,34 @@ const PendingUsers = () => {
         }
     };
 
-    if (isLoadingUsers) return (
+    // --- Connection Requests ---
+    const handleApproveRequest = async (reqId) => {
+        setIsProcessing(`req-${reqId}`);
+        try {
+            await client.post(`/api/admin/connection_requests/${reqId}/approve`);
+            toast.success('Connection approved!');
+            setRequests(prev => prev.filter(r => r.id !== reqId));
+        } catch {
+            toast.error('Failed to approve request.');
+        } finally {
+            setIsProcessing(null);
+        }
+    };
+
+    const handleRejectRequest = async (reqId) => {
+        setIsProcessing(`req-${reqId}`);
+        try {
+            await client.post(`/api/admin/connection_requests/${reqId}/reject`);
+            toast.success('Connection rejected.');
+            setRequests(prev => prev.filter(r => r.id !== reqId));
+        } catch {
+            toast.error('Failed to reject request.');
+        } finally {
+            setIsProcessing(null);
+        }
+    };
+
+    if (isLoadingUsers || isLoadingRequests) return (
         <div className="admin-loading-container">
             <div className="admin-loader"></div>
             <p>Loading Account Approvals...</p>
