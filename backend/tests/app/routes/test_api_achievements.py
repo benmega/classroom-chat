@@ -323,3 +323,51 @@ def test_check_achievements_content_type(logged_in_client, init_db):
         mock_evaluate.return_value = []
         response = logged_in_client.get("/api/achievements/check")
         assert response.content_type == "application/json"
+
+
+def test_api_achievements_all_integration(logged_in_client, init_db, sample_user, sample_multiple_achievements):
+    """
+    Comprehensive integration test for /api/achievements/all.
+    Ensures that the JSON structure and 200 OK status are verified
+    WITHOUT mocking evaluate_user.
+    """
+    response = logged_in_client.get("/api/achievements/all")
+    
+    assert response.status_code == 200
+    assert response.is_json
+    
+    data = response.get_json()
+    assert data["status"] == "success"
+    assert "data" in data
+    
+    response_data = data["data"]
+    assert "achievements" in response_data
+    assert "user_achievements" in response_data
+    
+    # Verify that the achievements are properly serialized
+    achievements = response_data["achievements"]
+    assert len(achievements) >= len(sample_multiple_achievements)
+    
+    # Check that required fields are present in the serialized achievements
+    slugs = [ach["slug"] for ach in achievements]
+    for sample_ach in sample_multiple_achievements:
+        assert sample_ach.slug in slugs
+        
+        # Verify structure has current_progress and requirement_value
+        ach_dict = next(ach for ach in achievements if ach["slug"] == sample_ach.slug)
+        assert "current_progress" in ach_dict
+        assert "requirement_value" in ach_dict
+        assert "name" in ach_dict
+        assert "description" in ach_dict
+
+
+def test_api_achievements_all_not_logged_in(client, init_db):
+    """Test /api/achievements/all returns 404 with JSON error if not logged in."""
+    response = client.get("/api/achievements/all")
+    
+    assert response.status_code == 404
+    assert response.is_json
+    
+    data = response.get_json()
+    assert data["success"] is False
+    assert data["error"] == "User not found!"
