@@ -20,7 +20,7 @@ Set-Location "$PSScriptRoot\..\backend"
 
 # Linting
 Write-Host " -> Running Ruff (Linter)..." -ForegroundColor DarkGray
-ruff check . ; Assert-Success
+ruff check "$PSScriptRoot\.." ; Assert-Success
 
 # Testing
 Write-Host " -> Running Pytest with Coverage..." -ForegroundColor DarkGray
