@@ -101,7 +101,12 @@ function App() {
     return <ServerOffline />;
   }
 
-  const authRedirect = user?.role === 'parent' ? '/parent/dashboard' : '/chat';
+  let authRedirect = '/chat';
+  if (user?.role === 'parent') {
+    authRedirect = '/parent/dashboard';
+  } else if (user?.is_admin) {
+    authRedirect = '/admin/dashboard';
+  }
 
   return (
     <Router>

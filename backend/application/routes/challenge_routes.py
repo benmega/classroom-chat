@@ -68,6 +68,8 @@ def submit_challenge():
     """Handle challenge submission form."""
     session_userid = session.get("user", None)
     if not session_userid:
+        if request.method == "GET" and request.args.get("url"):
+            return "<html><body><script>alert('Please log in to the Classroom Chat app first.'); window.close();</script>Please log in.</body></html>", 401
         if request.is_json or request.accept_mimetypes.accept_json:
             return {
                 "success": False,
@@ -86,21 +88,30 @@ def submit_challenge():
         flash("Configuration missing", "error")
         return redirect(url_for("general.index"))
 
-    if request.method != "POST":
-        if request.is_json or request.accept_mimetypes.accept_json:
-            return jsonify({"status": "ready"})
-        return redirect("/challenges/submit")
-
-    # Handle both Form and JSON data
-    if request.is_json:
-        data = request.get_json()
-        url = data.get("url")
-        helper = data.get("helpers", "").strip()
-        notes = data.get("notes", "").strip()
+    is_get_submission = False
+    if request.method == "GET":
+        url = request.args.get("url")
+        if url:
+            is_get_submission = True
+            helper = request.args.get("helpers", "") or ""
+            notes = request.args.get("notes", "") or ""
+            helper = helper.strip()
+            notes = notes.strip()
+        else:
+            if request.is_json or request.accept_mimetypes.accept_json:
+                return jsonify({"status": "ready"})
+            return redirect("/challenges/submit")
     else:
-        url = request.form.get("url")
-        helper = request.form.get("helpers", "").strip()
-        notes = request.form.get("notes", "").strip()
+        # Handle both Form and JSON data
+        if request.is_json:
+            data = request.get_json()
+            url = data.get("url")
+            helper = (data.get("helpers") or "").strip()
+            notes = (data.get("notes") or "").strip()
+        else:
+            url = request.form.get("url")
+            helper = (request.form.get("helpers") or "").strip()
+            notes = (request.form.get("notes") or "").strip()
 
     if not url:
         msg = "Challenge URL is required"
@@ -143,6 +154,9 @@ def submit_challenge():
         if classroom_id:
             _enroll_user_in_classroom(user, classroom_id)
 
+        if is_get_submission:
+            return f"<html><body><script>alert('{message}'); window.close();</script>{message}</body></html>"
+
         return jsonify(
             {
                 "success": True,
@@ -157,6 +171,11 @@ def submit_challenge():
         "message",
         "Mr. Mega does not recognize this challenge. Are you sure this is the right link?",
     )
+    
+    if is_get_submission:
+        # Escape single quotes in the message for JS alert
+        safe_msg = msg.replace(\"'\", \"\\\\'\")
+        return f"<html><body><script>alert('Failed: {safe_msg}'); window.close();</script>Failed: {msg}</body></html>", 400
 
     return jsonify({"success": False, "message": msg}), 400
 

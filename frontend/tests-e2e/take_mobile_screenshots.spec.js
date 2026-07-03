@@ -3,12 +3,10 @@ import { test, devices } from '@playwright/test';
 test.use({ ...devices['Pixel 5'] });
 
 test('take admin mobile screenshots', async ({ page }) => {
+  test.slow();
   // Login via dev endpoint
   await page.goto('http://localhost:8000/dev-login?role=admin');
-  await page.waitForTimeout(1000);
-
-  // Dashboard
-  await page.goto('http://localhost:5173/');
+  await page.waitForURL('**/admin/dashboard', { timeout: 15000, waitUntil: 'domcontentloaded' });
   await page.waitForTimeout(2000);
   await page.screenshot({ path: '../issues/screenshots/mobile_admin_dashboard.png', fullPage: true });
 
@@ -40,6 +38,7 @@ test('take admin mobile screenshots', async ({ page }) => {
 });
 
 test('take parent mobile screenshots', async ({ page }) => {
+  test.slow();
   // Clear any existing session by going to /logout if it exists, or just clear cookies
   await page.context().clearCookies();
 

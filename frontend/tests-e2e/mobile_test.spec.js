@@ -23,11 +23,10 @@ test.describe('Mobile UI Audit Navigation', () => {
 
     console.log('Logging in as admin...');
     await page.goto('http://localhost:8000/dev-login?role=admin');
-    await page.waitForURL('**/localhost:5173/**', { timeout: 10000 });
+    await page.waitForURL('**/admin/dashboard', { timeout: 10000, waitUntil: 'domcontentloaded' });
     
-    // 1. Home / Chat Page
-    console.log('Navigating to Chat...');
-    await page.goto('http://localhost:5173/');
+    // 1. Home / Chat Page (Admin dashboard serves as home here)
+    console.log('Taking Admin Dashboard screenshot...');
     await page.waitForTimeout(3000);
     await page.screenshot({ path: path.join(screenshotsDir, 'mobile_home.png') });
 

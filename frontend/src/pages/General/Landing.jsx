@@ -7,15 +7,21 @@ import LandingMobile from './LandingMobile';
 
 const Landing = () => {
     const navigate = useNavigate();
-    const { isAuthenticated } = useAuthStore();
+    const { isAuthenticated, user } = useAuthStore();
     const { isMobile } = useViewport();
 
-    // If authenticated, automatically go to chat
+    // If authenticated, automatically go to the appropriate dashboard/home
     useEffect(() => {
-        if (isAuthenticated) {
-            navigate('/chat');
+        if (isAuthenticated && user) {
+            if (user.role === 'parent') {
+                navigate('/parent/dashboard');
+            } else if (user.is_admin) {
+                navigate('/admin/dashboard');
+            } else {
+                navigate('/chat');
+            }
         }
-    }, [isAuthenticated, navigate]);
+    }, [isAuthenticated, user, navigate]);
 
     if (isMobile) {
         return <LandingMobile />;
