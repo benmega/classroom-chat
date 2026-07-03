@@ -23,7 +23,7 @@ from .utilities.db_helpers import save_message_to_db
 from sqlalchemy import select
 
 # Track active socket connections per user to handle multiple tabs correctly
-_active_sessions = {}  # {user_id: set([sid1, sid2, ...])}
+_active_sessions: dict = {}  # {user_id: set([sid1, sid2, ...])}
 
 
 def _get_enrolled_classroom_ids(user_id: int) -> list:
