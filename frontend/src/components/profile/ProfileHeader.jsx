@@ -5,7 +5,7 @@ import SmartImage from '../common/SmartImage';
 import { formatLargeNumber } from '../../utils/formatters';
 import { getApiUrl } from '../../utils/apiUrl';
 
-const ProfileHeader = ({ target, isOwner, pfpInputRef, onPfpChange }) => {
+const ProfileHeader = ({ target, isOwner, pfpInputRef, onPfpChange, editLink }) => {
     const borderSpeed = target.animated_border_speed === 'slow' ? '3s' : target.animated_border_speed === 'fast' ? '0.5s' : '1.5s';
     return (
         <div className="profile-header-card">
@@ -50,7 +50,7 @@ const ProfileHeader = ({ target, isOwner, pfpInputRef, onPfpChange }) => {
                     <h1 className="student-name">{target.nickname || target.username}</h1>
                     <p className="student-title">@{target.username}</p>
                     {isOwner && (
-                        <Link to="/profile/edit" className="btn-settings">
+                        <Link to={editLink || "/settings"} className="btn-settings">
                             <User size={14} /> Edit Profile
                         </Link>
                     )}
