@@ -39,8 +39,12 @@ export const useProfile = () => {
     }, [navigate, slug]);
 
     useEffect(() => {
+        if (slug === 'edit' || slug === 'settings') {
+            navigate('/settings', { replace: true });
+            return;
+        }
         fetchProfile();
-    }, [slug, fetchProfile]);
+    }, [slug, fetchProfile, navigate]);
 
     const isOwner = !!profileData?.viewer && (profileData?.viewer?.id === profileData?.target?.id || profileData?.viewer?.is_admin);
 
