@@ -1,10 +1,8 @@
-import os
 import time
 from application import create_app
 from application.extensions import db
 from application.models.message import Message, message_classrooms, message_users
 from application.models.user import User
-from application.models.classroom import Classroom
 
 app = create_app()
 

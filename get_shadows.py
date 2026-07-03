@@ -1,5 +1,4 @@
 import os
-import re
 
 src_dir = r"c:\Users\Ben\AntiGravity\classroom-chat\frontend\src"
 variables_path = r"c:\Users\Ben\AntiGravity\classroom-chat\frontend\src\assets\css\variables.css"
