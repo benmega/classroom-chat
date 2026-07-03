@@ -765,7 +765,7 @@ def remove_skill(skill_id):
 
 def update_basic_user_info(user_obj, data):
     """Updates basic user settings (IP, Online Status, Password, Bio)."""
-    ip_address = data.get("ip_address")
+    ip_address = request.headers.get("X-Forwarded-For", request.remote_addr)
     user_obj.ip_address = ip_address if ip_address else user_obj.ip_address
     if "is_online" in data:
         user_obj.is_online = (
@@ -889,5 +889,8 @@ def handle_video_s3_upload(file, user_obj, project_name, project_id):
 
         return True
     except Exception as e:
+        # TODO: If S3 uploads or the transcriber Lambda fail, ensure AWS credentials 
+        # and S3 bucket permissions are correctly configured. The Lambda trigger might 
+        # need to be manually re-enabled if it was detached.
         current_app.logger.error(f"S3 Upload Error: {e}")
         return False

@@ -162,13 +162,13 @@
 
 .amount-badge.positive {
     background: rgba(16, 185, 129, 0.1);
-    color: #10b981;
+    color: var(--success-color);
     border: 1px solid rgba(16, 185, 129, 0.2);
 }
 
 .amount-badge.negative {
     background: rgba(239, 68, 68, 0.1);
-    color: #ef4444;
+    color: var(--error-color);
     border: 1px solid rgba(239, 68, 68, 0.2);
 }
 

@@ -223,7 +223,7 @@ def test_edit_profile_post(client, init_db, sample_user):
     # Verify changes
     db.session.refresh(sample_user)
     assert len(sample_user.skills) == 2
-    assert sample_user.ip_address == "192.168.1.1"
+    assert sample_user.ip_address == "127.0.0.1"
     assert sample_user.is_online is True
 
 

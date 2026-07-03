@@ -151,7 +151,7 @@ const ResetPassword = () => {
                 </form>
                 
                 <div className="auth-footer" style={{ marginTop: '1.5rem' }}>
-                    <Link to="/login" className="auth-link" style={{ marginLeft: 0 }}>Back to Log In</Link>
+                    <Link to="/login" className="auth-link auth-link-no-margin">Back to Log In</Link>
                 </div>
             </div>
         </div>

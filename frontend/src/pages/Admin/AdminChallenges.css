@@ -186,6 +186,30 @@
     border-radius: var(--radius-sm);
 }
 
+.stat-item-column {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+}
+
+.stat-status-loaded {
+    color: var(--success-color);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.stat-status-waiting {
+    color: var(--text-muted);
+}
+
+.stat-preview-list {
+    margin: 0;
+    padding-left: 1.5rem;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
 .stat-label {
     font-weight: 500;
     color: var(--text-secondary);
@@ -206,6 +230,10 @@
     border-radius: var(--radius-md);
     color: var(--color-primary);
     font-size: 0.9rem;
+}
+
+.pro-tip-icon {
+    flex-shrink: 0;
 }
 
 .pro-tip p {

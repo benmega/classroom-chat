@@ -85,16 +85,16 @@ const Analytics = () => {
             {
                 label: 'Ducks Earned',
                 data: chart_data.earned,
-                borderColor: '#10b981',
-                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                borderColor: 'var(--success-color)',
+                backgroundColor: 'var(--success-color)',
                 fill: true,
                 tension: 0.4,
             },
             {
                 label: 'Ducks Spent',
                 data: chart_data.spent,
-                borderColor: '#ef4444',
-                backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                borderColor: 'var(--error-color)',
+                backgroundColor: 'var(--error-color)',
                 fill: true,
                 tension: 0.4,
             }
@@ -110,7 +110,7 @@ const Analytics = () => {
                 users.filter(u => u.role === 'parent').length,
                 users.filter(u => u.is_admin).length
             ],
-            backgroundColor: ['#10b981', '#94a3b8', '#8b5cf6', '#6366f1'],
+            backgroundColor: ['var(--success-color)', 'var(--border-rich)', 'var(--secondary-color)', 'var(--primary-color)'],
             borderWidth: 0,
         }]
     };
@@ -175,7 +175,7 @@ const Analytics = () => {
                                         }
                                     },
                                     scales: {
-                                        y: { beginAtZero: true, grid: { color: '#f1f5f9' } },
+                                        y: { beginAtZero: true, grid: { color: 'var(--bg-tertiary)' } },
                                         x: { grid: { display: false } }
                                     }
                                 }} 

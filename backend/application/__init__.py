@@ -19,7 +19,6 @@ from application.constants import (
     GLOBAL_CLASSROOM_ID as GLOBAL_CLASSROOM_ID,
 )  # imported for side-effect availability
 
-from .license_checker import load_license
 from application.utilities.helper_functions import format_number
 from application.utilities.schema_check import check_for_schema_drift
 from flask_wtf.csrf import generate_csrf
@@ -101,18 +100,6 @@ def create_app(config_class=None):
     app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_port=1)
 
     app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(hours=10)
-
-    base_dir = os.path.abspath(os.path.dirname(__file__))
-    license_dir = os.path.abspath(os.path.join(base_dir, "..", "license"))
-
-    public_key_path = os.path.join(license_dir, "public_key.pem")
-    license_path = os.path.join(license_dir, "license.lic")
-
-    license_data = load_license(
-        public_key_path=public_key_path, license_path=license_path
-    )
-    app.config["IS_PREMIUM"] = license_data["is_premium"]
-    app.config["LICENSEE"] = license_data.get("licensee", "Unknown")
 
     db.init_app(app)
     migrate.init_app(app, db)
@@ -263,12 +250,12 @@ def seed_global_data():
 
         # 3. Ensure store items exist
         default_store_items = [
-            {"name": "Chat Font Color", "description": "Unlock the ability to change the color of your chat messages.", "base_price": 0.008, "is_crowdfunded": False, "crowdfund_goal": None},
-            {"name": "Animated Profile Border", "description": "Stand out with an animated border around your profile picture.", "base_price": 0.01, "is_crowdfunded": False, "crowdfund_goal": None},
-            {"name": "Custom Profile Wallpaper", "description": "Set a custom wallpaper for your user profile page.", "base_price": 0.015, "is_crowdfunded": False, "crowdfund_goal": None},
-            {"name": "Auto Bitshift", "description": "Automatically perform bitshift operations on your packets.", "base_price": 0.025, "is_crowdfunded": False, "crowdfund_goal": 0.5},
-            {"name": "Auto Challenge Claimer", "description": "Automatically claim rewards from completed challenges.", "base_price": 0.018, "is_crowdfunded": False, "crowdfund_goal": 1.0},
-            {"name": "Permanent Double Duck", "description": "Permanently double all your duck earnings! This stacks with global multipliers.", "base_price": 0.05, "is_crowdfunded": False, "crowdfund_goal": None},
+            {"name": "Chat Font Color", "description": "Unlock the ability to change the color of your chat messages.", "base_price": 0.008},
+            {"name": "Animated Profile Border", "description": "Stand out with an animated border around your profile picture.", "base_price": 0.01},
+            {"name": "Custom Profile Wallpaper", "description": "Set a custom wallpaper for your user profile page.", "base_price": 0.015},
+            {"name": "Auto Bitshift", "description": "Automatically perform bitshift operations on your packets.", "base_price": 0.025},
+            {"name": "Auto Challenge Claimer", "description": "Automatically claim rewards from completed challenges.", "base_price": 0.018},
+            {"name": "Permanent Double Duck", "description": "Permanently double all your duck earnings! This stacks with global multipliers.", "base_price": 0.05},
         ]
 
         for item_data in default_store_items:

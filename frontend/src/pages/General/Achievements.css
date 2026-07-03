@@ -242,7 +242,7 @@
 
 .achievement-card {
     background: white;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--border-subtle);
     border-radius: 20px;
     padding: 1.5rem;
     display: flex;
@@ -255,12 +255,12 @@
 
 .achievement-card:hover {
     transform: translateY(-4px);
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+    box-shadow: var(--shadow-soft);
 }
 
 .achievement-card.earned {
     border-color: #dcfce7;
-    background: linear-gradient(180deg, #ffffff 0%, #f0fdf4 100%);
+    background: linear-gradient(180deg, var(--bg-primary) 0%, #f0fdf4 100%);
 }
 
 .badge-wrapper {
@@ -309,7 +309,7 @@
     align-items: center;
     justify-content: center;
     gap: 6px;
-    background: #f1f5f9;
+    background: var(--bg-tertiary);
     padding: 4px 10px;
     border-radius: 6px;
     font-size: 0.75rem;
@@ -323,7 +323,7 @@
 .achievement-name {
     font-size: 1.1rem;
     font-weight: 800;
-    color: #1e293b;
+    color: var(--slate-800);
 }
 
 .achievement-desc {
@@ -356,7 +356,7 @@
     font-size: 0.7rem;
     font-weight: 800;
     text-transform: uppercase;
-    box-shadow: 0 2px 4px rgba(34, 197, 94, 0.2);
+    box-shadow: var(--shadow-sm);
 }
 
 .empty-achievements {
@@ -368,7 +368,7 @@
 
 .empty-achievements h3 {
     margin: 1rem 0 0.5rem;
-    color: #1e293b;
+    color: var(--slate-800);
 }
 
 .ach-loading-container {
@@ -383,7 +383,7 @@
 .ach-loader {
     width: 48px;
     height: 48px;
-    border: 4px solid #f1f5f9;
+    border: 4px solid var(--bg-tertiary);
     border-top: 4px solid #3b82f6;
     border-radius: 50%;
     animation: spin 1s linear infinite;
@@ -400,7 +400,7 @@
     flex-direction: column;
     gap: 6px;
     padding-top: 8px;
-    border-top: 1px dashed #e2e8f0;
+    border-top: 1px dashed var(--border-subtle);
 }
 
 .progress-info {
@@ -413,7 +413,7 @@
 
 .progress-track-mini {
     height: 6px;
-    background: #f1f5f9;
+    background: var(--bg-tertiary);
     border-radius: 3px;
     overflow: hidden;
 }

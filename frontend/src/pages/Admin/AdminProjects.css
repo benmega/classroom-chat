@@ -5,7 +5,7 @@
 /* Filter Tabs */
 .filter-tabs {
     display: flex;
-    background: #f1f5f9;
+    background: var(--bg-tertiary);
     padding: 4px;
     border-radius: 12px;
     gap: 4px;
@@ -29,11 +29,11 @@
 .filter-tabs button.active {
     background: white;
     color: var(--primary-color);
-    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+    box-shadow: var(--shadow-md);
 }
 
 .count-badge {
-    background: #e2e8f0;
+    background: var(--border-subtle);
     color: var(--text-secondary);
     padding: 2px 8px;
     border-radius: 8px;
@@ -75,7 +75,7 @@
 
 .select-control {
     padding: 10px 12px 10px 38px;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--border-subtle);
     border-radius: 10px;
     background: white;
     font-size: 0.95rem;
@@ -96,6 +96,38 @@
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
+.back-btn-container {
+    margin-bottom: 1.5rem;
+}
+
+.admin-project-back-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: var(--bg-primary, white);
+    border: 1px solid var(--border-subtle, #e2e8f0);
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 700;
+    color: var(--text-secondary, #475569);
+    font-size: 0.95rem;
+    transition: all 0.2s;
+}
+
+.admin-project-back-btn:hover {
+    background: var(--bg-secondary, #f8fafc);
+    border-color: var(--border-rich, #cbd5e1);
+}
+
+.p-content-padded {
+    padding: 20px;
+}
+
+.skeleton-mt {
+    margin-top: 15px;
+}
+
 /* List Grid */
 .projects-list-grid {
     display: grid;
@@ -106,7 +138,7 @@
 .admin-project-card {
     background: white;
     border-radius: 16px;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--border-subtle);
     overflow: hidden;
     cursor: pointer;
     transition: all 0.2s;
@@ -123,7 +155,7 @@
 .p-thumb {
     height: 140px;
     position: relative;
-    background: #f1f5f9;
+    background: var(--bg-tertiary);
 }
 
 .p-thumb img {
@@ -145,7 +177,7 @@
 .p-content h3 {
     font-size: 1.15rem;
     font-weight: 700;
-    color: #1e293b;
+    color: var(--slate-800);
     margin-bottom: 6px;
 }
 
@@ -167,7 +199,7 @@
 }
 
 .id-pill {
-    background: #f1f5f9;
+    background: var(--bg-tertiary);
     color: var(--text-muted);
     padding: 2px 6px;
     border-radius: 4px;
@@ -180,10 +212,10 @@
     flex-direction: column;
     gap: 8px;
     margin-bottom: 16px;
-    background: #f8fafc;
+    background: var(--bg-secondary);
     padding: 12px;
     border-radius: 10px;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--border-subtle);
 }
 
 .checklist-item {
@@ -195,11 +227,11 @@
 }
 
 .checklist-item.pending {
-    color: #ef4444;
+    color: var(--error-color);
 }
 
 .checklist-item.completed {
-    color: #10b981;
+    color: var(--success-color);
 }
 
 .checklist-item span {
@@ -216,7 +248,7 @@
 .card-footer {
     margin-top: auto;
     padding-top: 0.75rem;
-    border-top: 1px solid #f1f5f9;
+    border-top: 1px solid var(--bg-tertiary);
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -229,8 +261,8 @@
     letter-spacing: 0.05em;
 }
 
-.status-text.pending { color: #ef4444; }
-.status-text.approved { color: #10b981; }
+.status-text.pending { color: var(--error-color); }
+.status-text.approved { color: var(--success-color); }
 
 /* Detail View */
 /* Back button in detail view now handled by secondary button style or component */
@@ -263,14 +295,14 @@
     background: white;
     padding: 2.5rem;
     border-radius: 24px;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--border-subtle);
     box-shadow: var(--shadow-sm);
 }
 
 .project-info-panel h2 { 
     font-size: 1.75rem; 
     margin: 0; 
-    color: #1e293b;
+    color: var(--slate-800);
 }
 
 .student-profile-link {
@@ -291,7 +323,7 @@
 .student-profile-link:hover {
     background: var(--primary-color);
     color: white;
-    box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.2);
+    box-shadow: var(--shadow-md);
 }
 
 .project-info-panel .description { 
@@ -309,7 +341,7 @@
 }
 
 .project-info-panel .description::-webkit-scrollbar-thumb {
-    background: #e2e8f0;
+    background: var(--border-subtle);
     border-radius: 3px;
 }
 
@@ -325,7 +357,7 @@
     gap: 8px;
     padding: 8px 16px;
     background: #eff6ff;
-    color: #2563eb;
+    color: var(--blue-600);
     text-decoration: none;
     border-radius: 10px;
     font-weight: 700;
@@ -335,11 +367,11 @@
 
 .project-link:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+    box-shadow: var(--shadow-md);
 }
 
-.project-link.github { background: #f8fafc; color: #334155; border: 1px solid #e2e8f0; }
-.project-link.github:hover { background: #f1f5f9; }
+.project-link.github { background: var(--bg-secondary); color: var(--text-secondary); border: 1px solid var(--border-subtle); }
+.project-link.github:hover { background: var(--bg-tertiary); }
 
 .project-link.video { background: #fff1f2; color: #e11d48; }
 .project-link.video:hover { background: #ffe4e6; }
@@ -349,8 +381,8 @@
     max-height: 450px;
     border-radius: 16px;
     overflow: hidden;
-    background: #f1f5f9;
-    border: 1px solid #e2e8f0;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-subtle);
     margin-bottom: 2rem;
 }
 
@@ -367,7 +399,7 @@
     background: white;
     padding: 2rem;
     border-radius: 24px;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--border-subtle);
     box-shadow: var(--shadow-md);
 }
 
@@ -375,9 +407,9 @@
     width: 100%;
     padding: 1.25rem;
     border-radius: 12px;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--border-subtle);
     font-size: 0.95rem;
-    background: #f8fafc;
+    background: var(--bg-secondary);
     margin: 1rem 0 1.5rem 0;
     resize: none;
     line-height: 1.5;
@@ -402,7 +434,7 @@
 }
 
 .btn-approve { background: #065f46; color: white; } /* Darker green for contrast */
-.btn-reject { background: #f1f5f9; color: #ef4444; }
+.btn-reject { background: var(--bg-tertiary); color: var(--error-color); }
 
 .extra-context-section {
     margin-top: 2rem;
@@ -412,10 +444,10 @@
 }
 
 .context-block {
-    background: #f8fafc;
+    background: var(--bg-secondary);
     border-radius: 16px;
     padding: 1.5rem;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--border-subtle);
 }
 
 .context-block h4 {
@@ -424,14 +456,14 @@
     gap: 8px;
     font-size: 1rem;
     font-weight: 700;
-    color: #1e293b;
+    color: var(--slate-800);
     margin-bottom: 1rem;
     margin-top: 0;
 }
 
 .code-view {
-    background: #1e293b;
-    color: #e2e8f0;
+    background: var(--slate-800);
+    color: var(--border-subtle);
     padding: 1.25rem;
     border-radius: 12px;
     font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
@@ -472,7 +504,7 @@
     background: white;
     padding: 1.25rem;
     border-radius: 12px;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--border-subtle);
 }
 
 /* Scrollbar for transcript */
@@ -481,7 +513,7 @@
 }
 
 .transcript-view::-webkit-scrollbar-track {
-    background: #f1f5f9;
+    background: var(--bg-tertiary);
     border-radius: 4px;
 }
 

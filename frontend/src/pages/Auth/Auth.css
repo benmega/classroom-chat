@@ -418,3 +418,66 @@
     box-shadow: var(--shadow-sm) !important;
 }
 
+
+
+.auth-footer-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+.auth-footer-links {
+    display: flex;
+    gap: 1.25rem;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.05rem;
+}
+.auth-link-no-margin {
+    margin: 0;
+}
+.auth-divider {
+    color: var(--border-subtle);
+    user-select: none;
+}
+.auth-center {
+    text-align: center;
+}
+.auth-link-forgot {
+    margin: 0;
+    font-size: 0.95rem;
+}
+.auth-role-selector-container {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+}
+.auth-role-btn {
+    flex: 1;
+    padding: 0.75rem;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.auth-role-btn.active {
+    background: var(--primary-color);
+    color: white;
+    font-weight: bold;
+}
+.auth-role-btn.inactive {
+    background: transparent;
+    color: var(--text-primary);
+    font-weight: normal;
+}
+.auth-info-box {
+    text-align: center;
+    padding: 2rem 1rem;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-subtle);
+}
+.auth-info-text {
+    margin: 0;
+    font-size: 1.1rem;
+    color: var(--text-primary);
+}

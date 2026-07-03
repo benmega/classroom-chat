@@ -18,10 +18,6 @@ def get_store_items():
     user_purchases = UserItemPurchase.query.filter_by(user_id=user_id).all()
     purchased_item_ids = [p.item_id for p in user_purchases]
 
-    # Calculate crowd-fund progress for crowd-funded items
-    # In a real scenario we'd query total purchases by all users, 
-    # but since it's just marked 'coming soon' for now, we'll return 0 progress.
-    
     result = []
     for item in items:
         result.append({
@@ -29,9 +25,6 @@ def get_store_items():
             "name": item.name,
             "description": item.description,
             "base_price": item.base_price,
-            "is_crowdfunded": item.is_crowdfunded,
-            "crowdfund_goal": item.crowdfund_goal,
-            "crowdfund_progress": 0.0,
             "is_purchased": item.id in purchased_item_ids
         })
         
@@ -47,8 +40,6 @@ def purchase_item(item_id):
     if not item:
         return jsonify({"message": "Item not found"}), 404
         
-    if item.is_crowdfunded:
-        return jsonify({"message": "Crowd-funded items are coming soon!"}), 400
 
     # Check if already purchased
     existing_purchase = UserItemPurchase.query.filter_by(user_id=user_id, item_id=item.id).first()
@@ -131,6 +122,21 @@ def configure_perk():
         
         return jsonify({
             "message": "Profile wallpaper updated successfully!",
+            "user": current_user.to_dict_auth()
+        })
+        
+    elif perk_name == "animated_border_speed":
+        if not current_user.has_animated_border:
+            return jsonify({"message": "You do not own this perk."}), 403
+            
+        if value not in ["slow", "normal", "fast"]:
+            return jsonify({"message": "Invalid speed value."}), 400
+            
+        current_user.animated_border_speed = value
+        db.session.commit()
+        
+        return jsonify({
+            "message": "Animated border speed updated successfully!",
             "user": current_user.to_dict_auth()
         })
         

@@ -51,28 +51,26 @@ const ForgotPassword = () => {
                 </div>
                 
                 <form onSubmit={handleSubmit} className="auth-form" id="forgot-password-form">
-                    <div className="role-selector" style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem' }}>
+                    <div className="auth-role-selector-container">
                         <button 
                             type="button"
-                            className={`role-btn ${selectedRole === 'student' ? 'active' : ''}`}
+                            className={`auth-role-btn ${selectedRole === 'student' ? 'active' : 'inactive'}`}
                             onClick={() => setSelectedRole('student')}
-                            style={{ flex: 1, padding: '0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', background: selectedRole === 'student' ? 'var(--primary-color)' : 'transparent', color: selectedRole === 'student' ? 'white' : 'var(--text-primary)', cursor: 'pointer', transition: 'all 0.2s', fontWeight: selectedRole === 'student' ? 'bold' : 'normal' }}
                         >
                             Student
                         </button>
                         <button 
                             type="button"
-                            className={`role-btn ${selectedRole === 'parent' ? 'active' : ''}`}
+                            className={`auth-role-btn ${selectedRole === 'parent' ? 'active' : 'inactive'}`}
                             onClick={() => setSelectedRole('parent')}
-                            style={{ flex: 1, padding: '0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', background: selectedRole === 'parent' ? 'var(--primary-color)' : 'transparent', color: selectedRole === 'parent' ? 'white' : 'var(--text-primary)', cursor: 'pointer', transition: 'all 0.2s', fontWeight: selectedRole === 'parent' ? 'bold' : 'normal' }}
                         >
                             Parent
                         </button>
                     </div>
 
                     {selectedRole === 'student' ? (
-                        <div style={{ textAlign: 'center', padding: '2rem 1rem', background: 'var(--bg-secondary)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
-                            <p style={{ margin: 0, fontSize: '1.1rem', color: 'var(--text-primary)' }}>
+                        <div className="auth-info-box">
+                            <p className="auth-info-text">
                                 Please ask your teacher to reset your password.
                             </p>
                         </div>
@@ -116,7 +114,7 @@ const ForgotPassword = () => {
                 </form>
                 
                 <div className="auth-footer" style={{ marginTop: '1.5rem' }}>
-                    <Link to="/login" className="auth-link" style={{ marginLeft: 0 }}>Back to Log In</Link>
+                    <Link to="/login" className="auth-link auth-link-no-margin">Back to Log In</Link>
                 </div>
             </div>
         </div>

@@ -45,10 +45,10 @@
 .simple-stat .value {
     font-size: 1.5rem;
     font-weight: 800;
-    color: #1e293b;
+    color: var(--slate-800);
 }
 
-.simple-stat .value.positive { color: #10b981; }
+.simple-stat .value.positive { color: var(--success-color); }
 
 .pie-container {
     height: 180px;
@@ -70,14 +70,14 @@
     justify-content: space-between;
     align-items: center;
     padding: 8px;
-    background: #f8fafc;
+    background: var(--bg-secondary);
     border-radius: 12px;
 }
 
 .earner-item .name {
     font-weight: 700;
     font-size: 0.9rem;
-    color: #1e293b;
+    color: var(--slate-800);
 }
 
 .earner-item .handle {
@@ -99,7 +99,7 @@
 }
 
 .admin-analytics-page .stat-box {
-    background: #f8fafc;
+    background: var(--bg-secondary);
     padding: 1rem;
     border-radius: 12px;
     text-align: center;
@@ -122,7 +122,7 @@
 .range-select {
     padding: 10px 14px;
     border-radius: 10px;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--border-subtle);
     background: white;
     font-weight: 600;
     color: var(--text-secondary);

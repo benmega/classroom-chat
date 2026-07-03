@@ -415,4 +415,49 @@ def test_admin_transactions_route(client, test_app, sample_user, sample_admin):
         assert resp_search.status_code == 200
         data_search = resp_search.get_json()["data"]
         assert len(data_search["transactions"]) > 0
-        assert any("Earned" in t["reason"] for t in data_search["transactions"])
+        assert any("Earned" in t["reason"] for t in data_search["transactions"])
+
+
+def test_adjust_packets(client, sample_admin, sample_user, test_app):
+    """Test adjusting a user's packets."""
+    # Test non-admin access (unauthenticated)
+    client.delete_cookie("session")
+    resp_unauth = client.post("/api/admin/adjust_packets", data={"username": sample_user.username, "amount": 10})
+    assert resp_unauth.status_code == 401
+
+    # Login as admin
+    login_as_admin(client, sample_admin)
+
+    with test_app.app_context():
+        initial_packets = sample_user.packets
+
+        # Test positive amount
+        resp_positive = client.post("/api/admin/adjust_packets", data={"username": sample_user.username, "amount": 10})
+        data_pos = json.loads(resp_positive.data)
+        assert resp_positive.status_code == 200
+        assert data_pos["success"] is True
+
+        updated_user = db.session.get(User, sample_user.id)
+        assert updated_user.packets == initial_packets + 10
+
+        # Test negative amount
+        resp_negative = client.post("/api/admin/adjust_packets", data={"username": sample_user.username, "amount": -5})
+        data_neg = json.loads(resp_negative.data)
+        assert resp_negative.status_code == 200
+        assert data_neg["success"] is True
+
+        updated_user_neg = db.session.get(User, sample_user.id)
+        assert updated_user_neg.packets == initial_packets + 5
+
+        # Test missing fields (no username)
+        resp_missing = client.post("/api/admin/adjust_packets", data={"amount": 10})
+        assert resp_missing.status_code == 400
+
+        # Test missing fields (no amount)
+        resp_missing2 = client.post("/api/admin/adjust_packets", data={"username": sample_user.username})
+        assert resp_missing2.status_code == 400
+        
+        # Test user not found
+        resp_not_found = client.post("/api/admin/adjust_packets", data={"username": "nonexistent_user", "amount": 10})
+        assert resp_not_found.status_code == 404
+

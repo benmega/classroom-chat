@@ -22,7 +22,7 @@
 .search-box input {
     width: 100%;
     padding: 12px 12px 12px 42px;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--border-subtle);
     border-radius: 12px;
     background: white;
     font-size: 0.95rem;
@@ -38,7 +38,7 @@
 .cert-review-card {
     background: white;
     border-radius: 16px;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--border-subtle);
     padding: 1rem;
     display: flex;
     gap: 1.25rem;
@@ -54,13 +54,13 @@
 
 .cert-thumbnail {
     width: 140px;
-    background: #f8fafc;
+    background: var(--bg-secondary);
     border-radius: 8px;
     overflow: hidden;
     position: relative;
     flex-shrink: 0;
     display: block;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--border-subtle);
 }
 
 .cert-thumbnail iframe {
@@ -100,6 +100,35 @@
     justify-content: space-between;
 }
 
+.bulk-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.admin-cert-action-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    text-decoration: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-subtle);
+    color: var(--text-primary);
+}
+
+.admin-cert-action-btn-primary {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 6px;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
 .cert-header-info {
     display: flex;
     flex-direction: column;
@@ -110,7 +139,7 @@
 .cert-header-info h3 {
     margin: 0;
     font-size: 1.1rem;
-    color: #1e293b;
+    color: var(--slate-800);
     font-weight: 800;
 }
 
@@ -168,11 +197,11 @@
     transition: background 0.2s;
 }
 
-.btn-approve:hover { background: #2563eb; }
+.btn-approve:hover { background: var(--blue-600); }
 
 .btn-icon {
     padding: 8px;
-    background: #f1f5f9;
+    background: var(--bg-tertiary);
     color: var(--text-secondary);
     border-radius: 8px;
     display: flex;
@@ -181,8 +210,8 @@
     transition: all 0.2s;
 }
 .btn-icon:hover {
-    background: #e2e8f0;
-    color: #1e293b;
+    background: var(--border-subtle);
+    color: var(--slate-800);
 }
 
 @media (max-width: 768px) {
@@ -213,6 +242,6 @@
 }
 
 .empty-state svg { color: #cbd5e1; }
-.empty-state h3 { font-size: 1.5rem; color: #1e293b; margin: 0; }
+.empty-state h3 { font-size: 1.5rem; color: var(--slate-800); margin: 0; }
 .empty-state p { color: var(--text-muted); }
 

@@ -9,6 +9,19 @@ export default defineConfig({
     environment: 'happy-dom',
     setupFiles: './src/test/setup.js',
     exclude: ['node_modules', 'dist', 'tests-e2e/**'],
+    coverage: {
+      provider: 'v8',
+      exclude: [
+        'node_modules/**',
+        'dist/**',
+        'tests-e2e/**',
+        'static/**',          // legacy pre-React vanilla JS, not part of the Vite build
+        'coverage/**',
+        'src/test/**',        // test utilities themselves
+        '**/*.config.*',
+        'src/main.jsx',       // entry point, trivial to cover
+      ],
+    },
   },
   server: {
     proxy: {

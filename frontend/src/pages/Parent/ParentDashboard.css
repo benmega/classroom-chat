@@ -178,7 +178,7 @@
     background: white;
     border: 1px solid var(--border-subtle);
     border-radius: 6px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--shadow-md);
     min-width: 160px;
     margin-top: 0.5rem;
     z-index: 30;
@@ -203,7 +203,7 @@
 }
 
 .menu-item.disconnect {
-    color: #ef4444;
+    color: var(--error-color);
 }
 
 .menu-item.disconnect:hover {
@@ -223,7 +223,7 @@
     border-color: var(--primary-color, #0f766e);
     background: var(--primary-light, #f0fdfa);
     transform: translateY(-2px);
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    box-shadow: var(--shadow-md);
 }
 
 .ghost-card .ghost-text {
@@ -250,7 +250,7 @@
 }
 
 .ghost-card:hover .ghost-card-icon {
-    background: #ffffff;
+    background: var(--bg-primary);
 }
 
 .child-avatar {
@@ -259,7 +259,7 @@
     border-radius: 50%;
     object-fit: cover;
     margin-bottom: 0.75rem;
-    border: 2px solid #ffffff;
+    border: 2px solid var(--bg-primary);
     box-shadow: 0 0 0 1px var(--border-subtle, #e5e7eb);
 }
 
@@ -318,6 +318,25 @@
     font-size: 0.875rem;
 }
 
+.parent-loader-icon {
+    animation: spin 1s linear infinite;
+    color: var(--primary-color);
+}
+
+.parent-loading-text {
+    text-align: center;
+}
+
+.child-card-clickable {
+    cursor: pointer;
+    flex: 1;
+}
+
+.connect-submit-btn {
+    width: 100%;
+    justify-content: center;
+}
+
 /* ─── Empty State ─── */
 .parent-empty-state {
     grid-column: 1 / -1;
@@ -326,7 +345,7 @@
     align-items: center;
     justify-content: center;
     padding: 4rem 2rem;
-    background: #ffffff;
+    background: var(--bg-primary);
     border: 1px dashed var(--border-subtle, #d1d5db);
     border-radius: var(--radius-lg, 0.5rem);
     text-align: center;
@@ -361,7 +380,7 @@
     align-items: center;
     justify-content: center;
     padding: 3rem 2rem;
-    background: #fef2f2;
+    background: var(--error-subtle);
     border: 1px solid #fecaca;
     border-radius: var(--radius-lg, 0.5rem);
     text-align: center;
@@ -384,7 +403,7 @@
 .connect-card {
     background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(240, 253, 250, 0.9) 100%);
     border: 2px dashed var(--primary-light, #ccfbf1);
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    box-shadow: var(--shadow-md);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -397,7 +416,7 @@
     border-style: solid;
     border-color: var(--primary-color, #0f766e);
     transform: translateY(-4px);
-    box-shadow: 0 10px 15px -3px rgba(15, 118, 110, 0.1), 0 4px 6px -2px rgba(15, 118, 110, 0.05);
+    box-shadow: var(--shadow-md);
 }
 
 .connect-card h3 {
@@ -427,7 +446,7 @@
     padding: 0.75rem 1rem;
     border: 1.5px solid var(--border-subtle, #e5e7eb);
     border-radius: 8px;
-    background: #ffffff;
+    background: var(--bg-primary);
     font-size: 1rem;
     font-weight: 600;
     text-align: center;
@@ -449,7 +468,7 @@
 }
 
 .connect-error-msg {
-    color: #ef4444;
+    color: var(--error-color);
     font-size: 0.8rem;
     margin-top: 0.25rem;
     text-align: center;

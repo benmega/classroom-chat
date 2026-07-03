@@ -152,7 +152,7 @@ a.stat-badge:hover {
     background: white;
     border-color: var(--primary-color);
     transform: translateY(-1px);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    box-shadow: var(--shadow-sm);
 }
 
 .stat-badge .stat-icon {

@@ -7,13 +7,13 @@ Summary: Flask routes for ai routes functionality.
 from flask import Blueprint, jsonify, request
 
 from application.ai.ai_teacher import get_ai_response
-from application.decorators.licensing import premium_required
+
 
 ai = Blueprint("ai", __name__)
 
 
 @ai.route("/get_ai_response", methods=["POST"])
-@premium_required
+
 def handle_ai_query():
     user_message = request.form["message"]
     username = request.form["username"]

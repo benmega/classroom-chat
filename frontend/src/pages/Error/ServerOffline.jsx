@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import useAuthStore from '../../store/useAuthStore';
+import './ServerOffline.css';
+
 const FUN_MESSAGES = [
   "🔌 Plugging in...",
   "🧹 Dusting off...",
@@ -91,158 +93,61 @@ const ServerOffline = () => {
   }, []);
 
   return (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      minHeight: '100vh',
-      padding: '2rem',
-      backgroundColor: 'var(--bg-secondary)',
-      backgroundImage: 'var(--gradient-mesh)',
-      fontFamily: 'var(--font-body)',
-      textAlign: 'center',
-    }}>
-      <div 
-        className="glass-panel" 
-        style={{
-          maxWidth: '580px',
-          width: '100%',
-          padding: '3rem',
-          borderRadius: 'var(--radius-lg)',
-          boxShadow: 'var(--shadow-rich)',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-        }}
-      >
+    <div className="server-offline-container">
+      <div className="glass-panel server-offline-card">
         <img 
           src="/sleeping_duck.gif" 
           alt="Sleeping Duck" 
-          style={{
-            width: '200px',
-            height: 'auto',
-            marginBottom: '1.5rem',
-            filter: 'drop-shadow(0 8px 16px rgba(0,0,0,0.12))',
-          }}
+          className="server-offline-img"
         />
 
         {!isWakingUp ? (
-          <div style={{ width: '100%' }}>
-            <h1 style={{
-              fontSize: '2.5rem',
-              color: 'var(--primary-color)',
-              fontFamily: 'var(--font-heading)',
-              fontWeight: 800,
-              marginBottom: '1rem',
-              lineHeight: 1.2,
-            }}>
+          <div className="server-offline-box">
+            <h1 className="server-offline-title">
               Classroom Chat is Sleeping
             </h1>
-            <p style={{
-              fontSize: '1.2rem',
-              color: 'var(--text-secondary)',
-              marginBottom: '2.5rem',
-              opacity: 0.85,
-            }}>
+            <p className="server-offline-subtitle">
               Wake it up so students can chat and earn ducks!
             </p>
             <button 
               onClick={handleWakeUp}
-              className="btn-premium"
-              style={{
-                width: '100%',
-                maxWidth: '400px',
-                fontSize: '1.25rem',
-                padding: '16px 32px',
-                borderRadius: 'var(--radius-md)',
-              }}
+              className="btn-premium server-offline-btn"
             >
               Wake Up the Classroom Chat
             </button>
             {errorMsg && (
-              <div style={{
-                marginTop: '1.5rem',
-                color: 'var(--error-color)',
-                fontWeight: 600,
-                fontSize: '1.1rem',
-              }}>
+              <div className="server-offline-error">
                 {errorMsg}
               </div>
             )}
           </div>
         ) : (
-          <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <div style={{
-              fontSize: '4.5rem',
-              marginBottom: '1.5rem',
-              animation: 'bounce 1s infinite',
-            }}>
+          <div className="server-offline-waking-box">
+            <div className="server-offline-rocket">
               🚀
             </div>
 
-            <div style={{
-              width: '100%',
-              backgroundColor: 'rgba(0, 0, 0, 0.06)',
-              borderRadius: 'var(--radius-full)',
-              height: '32px',
-              overflow: 'hidden',
-              boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.08)',
-              marginBottom: '1.5rem',
-            }}>
-              <div style={{
-                height: '100%',
-                width: `${progress}%`,
-                borderRadius: 'var(--radius-full)',
-                background: 'linear-gradient(90deg, var(--primary-color), var(--secondary-color), var(--primary-color))',
-                backgroundSize: '200% 100%',
-                animation: 'shimmer 2s infinite, widthTransition 0.3s ease',
-              }} />
+            <div className="server-offline-progress-container">
+              <div 
+                className="server-offline-progress-bar"
+                style={{ width: `${progress}%` }} 
+              />
             </div>
 
-            <div style={{
-              fontSize: '2.25rem',
-              fontWeight: 800,
-              color: 'var(--secondary-color)',
-              fontFamily: 'var(--font-heading)',
-              marginBottom: '0.75rem',
-            }}>
+            <div className="server-offline-time">
               {formatTime(timeLeft)}
             </div>
 
-            <div style={{
-              fontSize: '1.2rem',
-              fontWeight: 600,
-              color: 'var(--text-primary)',
-              opacity: 0.85,
-              marginBottom: '1.25rem',
-            }}>
+            <div className="server-offline-status">
               Starting up...
             </div>
 
-            <div style={{
-              fontSize: '1.25rem',
-              fontStyle: 'italic',
-              fontWeight: 600,
-              color: 'var(--primary-color)',
-              minHeight: '32px',
-            }}>
+            <div className="server-offline-fun-msg">
               {FUN_MESSAGES[currentMessageIndex]}
             </div>
           </div>
         )}
       </div>
-
-      <style>{`
-        @keyframes bounce {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-15px); }
-        }
-        @keyframes shimmer {
-          0% { background-position: 200% 0; }
-          100% { background-position: -200% 0; }
-        }
-      `}</style>
     </div>
   );
 };

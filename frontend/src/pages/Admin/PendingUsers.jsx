@@ -82,7 +82,7 @@ const PendingUsers = () => {
             />
 
             {/* Pending Signups Section */}
-            <h2 className="section-title" style={{ marginTop: '2rem', marginBottom: '1rem', paddingLeft: '0.5rem' }}>Pending Signups</h2>
+            <h2 className="section-title pending-section-title">Pending Signups</h2>
             <div className="users-list">
                 {users.length > 0 ? (
                     users.map(user => (
@@ -141,14 +141,74 @@ const PendingUsers = () => {
                         </div>
                     ))
                 ) : (
-                    <div className="empty-state-card" style={{ padding: '2rem', minHeight: 'auto' }}>
-                        <Shield size={32} style={{ color: 'var(--primary-color)', marginBottom: '1rem' }} />
+                    <div className="empty-state-card pending-empty-state">
+                        <Shield size={32} className="pending-empty-icon" />
                         <h3>No Pending Signups</h3>
                         <p>All signups have been processed.</p>
                     </div>
                 )}
             </div>
 
+            {/* Parent Connection Requests Section */}
+            <h2 className="section-title pending-section-title-mt3">Parent Connection Requests</h2>
+            <div className="users-list">
+                {requests.length > 0 ? (
+                    requests.map(req => (
+                        <div key={req.id} className="user-card card">
+                            <div className="user-card-header">
+                                <div className="user-info">
+                                    <div className="avatar-placeholder">
+                                        <Users size={24} />
+                                    </div>
+                                    <div>
+                                        <h3>{req.parent?.username}</h3>
+                                        <p className="nickname text-muted">{req.relationship}</p>
+                                    </div>
+                                </div>
+                                <div className="user-badge pending">
+                                    Pending
+                                </div>
+                            </div>
+
+                            <div className="user-details">
+                                <div className="detail-row">
+                                    <span className="label">Student</span>
+                                    <span className="value">@{req.student?.username}</span>
+                                </div>
+                                {req.message && (
+                                    <div className="detail-row detail-row-column">
+                                        <span className="label">Message</span>
+                                        <span className="value pending-message-value">"{req.message}"</span>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="user-actions">
+                                <button 
+                                    className="btn-reject"
+                                    onClick={() => handleRejectRequest(req.id)}
+                                    disabled={isProcessing === `req-${req.id}`}
+                                >
+                                    <XCircle size={18} /> Reject
+                                </button>
+                                <button 
+                                    className="btn-approve"
+                                    onClick={() => handleApproveRequest(req.id)}
+                                    disabled={isProcessing === `req-${req.id}`}
+                                >
+                                    <CheckCircle size={18} /> Approve
+                                </button>
+                            </div>
+                        </div>
+                    ))
+                ) : (
+                    <div className="empty-state-card pending-empty-state">
+                        <Shield size={32} className="pending-empty-icon" />
+                        <h3>No Pending Connection Requests</h3>
+                        <p>There are no pending parent-student connection requests.</p>
+                    </div>
+                )}
+            </div>
         </div>
     );
 };

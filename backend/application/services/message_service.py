@@ -18,6 +18,7 @@ def serialize_message(msg):
         slug = None
 
     has_animated_border = getattr(msg, "has_animated_border", False)
+    animated_border_speed = getattr(msg, "animated_border_speed", "normal")
     chat_font_color = getattr(msg, "chat_font_color", None)
 
     timestamp = getattr(msg, "created_at", None)
@@ -45,5 +46,6 @@ def serialize_message(msg):
         "is_global": classroom_id == GLOBAL_CLASSROOM_ID,
         "conversation_id": msg.conversation_id,
         "has_animated_border": has_animated_border,
+        "animated_border_speed": animated_border_speed,
         "chat_font_color": chat_font_color,
     }

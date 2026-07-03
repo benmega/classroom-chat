@@ -56,7 +56,7 @@
     font-family: var(--font-heading);
     font-size: var(--font-2xl);
     font-weight: 800;
-    color: #ffffff;
+    color: var(--bg-primary);
     letter-spacing: -0.02em;
 }
 
@@ -253,7 +253,20 @@
 .report-loading p {
     margin: 0;
     color: var(--text-muted);
-    font-size: var(--font-sm);
+    font-size: 0.875rem;
+}
+
+.report-loader-icon {
+    animation: spin 1s linear infinite;
+    color: var(--primary-color);
+}
+
+.report-loading-text {
+    text-align: center;
+}
+
+.report-dashboard-grid-spaced {
+    margin-top: 20px;
 }
 
 /* ─── Error State ─── */
@@ -286,7 +299,7 @@
     gap: 8px;
     padding: 10px 24px;
     background: var(--gradient-primary);
-    color: #ffffff;
+    color: var(--bg-primary);
     border: none;
     border-radius: var(--radius-sm);
     font-size: var(--font-sm);

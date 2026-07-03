@@ -96,58 +96,77 @@ export const AdjustDucksModal = ({ isOpen, onClose, onSubmit, user, users, formE
     </Modal>
 );
 
-export const SetDrawerModal = ({ isOpen, onClose, onSubmit, user, loading }) => {
-    const [drawerInput, setDrawerInput] = useState('');
-
-    useEffect(() => {
-        if (isOpen && user?.drawer) {
-            // eslint-disable-next-line react-hooks/set-state-in-effect
-            setDrawerInput(user.drawer.replace(/^0x/i, ''));
-        } else {
-            setDrawerInput('');
-        }
-    }, [isOpen, user]);
-
-    const handleInputChange = (e) => {
-        let val = e.target.value;
-        if (val.toLowerCase().startsWith('0x')) {
-            val = val.substring(2);
-        }
-        val = val.replace(/[^0-9a-fA-F]/g, '').slice(0, 2).toUpperCase();
-        setDrawerInput(val);
-    };
-
-    return (
-        <Modal isOpen={isOpen} onClose={onClose} title="Set User Drawer">
-            <form onSubmit={onSubmit} className="admin-form">
-                <div className="form-group">
-                    <label>Target User</label>
-                    <input type="text" value={user ? user.username : ''} readOnly className="readonly" />
-                    <input type="hidden" name="username" value={user ? user.username : ''} />
-                </div>
-                <div className="form-group">
-                    <label>Drawer Number</label>
-                    <div style={{ display: 'flex', alignItems: 'center', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '8px', overflow: 'hidden' }}>
-                        <span style={{ padding: '0.75rem 1rem', background: 'var(--bg-secondary)', color: 'var(--text-muted)', borderRight: '1px solid var(--border-color)', fontWeight: 'bold' }}>0x</span>
-                        <input 
-                            type="text" 
-                            value={drawerInput} 
-                            onChange={handleInputChange}
-                            placeholder="e.g. A6" 
-                            maxLength={4}
-                            style={{ border: 'none', borderRadius: 0, margin: 0, flex: 1, boxShadow: 'none' }}
+export const AdjustPacketsModal = ({ isOpen, onClose, onSubmit, user, users, formErrors, loading }) => (
+    <Modal isOpen={isOpen} onClose={onClose} title="Adjust Packets Balance">
+        <form onSubmit={onSubmit} className="admin-form" noValidate>
+            <div className="form-group">
+                <label>Target User</label>
+                {user ? (
+                    <div className="user-badge-display">
+                        <SmartImage 
+                            src={user.profile_picture ? getApiUrl(`/user/profile_pictures/${user.profile_picture}`) : ''} 
+                            alt="" 
+                            className="avatar-small"
+                            fallbackType="avatar"
                         />
-                        <input type="hidden" name="drawer" value={drawerInput ? `0x${drawerInput}` : ''} />
+                        <div className="user-info-text">
+                            <span className="user-nickname">{user.nickname || user.username}</span>
+                            <span className="user-handle">@{user.username}</span>
+                        </div>
+                        <input type="hidden" name="username" value={user.username} />
                     </div>
-                    <small>Hex format expected. Max value 23 (35). Leave blank to clear.</small>
-                </div>
-                <button type="submit" className="btn-primary" disabled={loading}>
-                    {loading ? 'Saving...' : 'Set Drawer'}
-                </button>
-            </form>
-        </Modal>
-    );
-};
+                ) : (
+                    <select name="username" className="admin-select">
+                        <option value="">Select a user...</option>
+                        {users.map(u => (
+                            <option key={u.id} value={u.username}>
+                                {u.username} (Balance: 📦 {(u.packets ?? 0).toFixed(3)})
+                            </option>
+                        ))}
+                    </select>
+                )}
+            </div>
+            <div className={`form-group ${formErrors.amount ? 'has-error' : ''}`}>
+                <label>Adjustment Amount</label>
+                <input type="number" name="amount" step="any" placeholder="e.g. 10 or -5" />
+                {formErrors.amount ? (
+                    <span className="error-message">{formErrors.amount}</span>
+                ) : (
+                    <small>Positive to add, negative to subtract.</small>
+                )}
+            </div>
+            <button type="submit" className="btn-primary" disabled={loading}>
+                {loading ? 'Applying...' : 'Apply Adjustment'}
+            </button>
+        </form>
+    </Modal>
+);
+
+export const SetDrawerModal = ({ isOpen, onClose, onSubmit, user, loading }) => (
+    <Modal isOpen={isOpen} onClose={onClose} title="Set User Drawer">
+        <form onSubmit={onSubmit} className="admin-form">
+            <div className="form-group">
+                <label>Target User</label>
+                <input type="text" value={user ? user.username : ''} readOnly className="readonly" />
+                <input type="hidden" name="username" value={user ? user.username : ''} />
+            </div>
+            <div className="form-group">
+                <label>Drawer Number</label>
+                <input 
+                    type="text" 
+                    name="drawer" 
+                    defaultValue={user?.drawer || ''} 
+                    placeholder="e.g. 0xA6" 
+                    maxLength={4}
+                />
+                <small>Hex format expected, max 4 characters (e.g. 0x01, 0xA6). Leave blank to clear.</small>
+            </div>
+            <button type="submit" className="btn-primary" disabled={loading}>
+                {loading ? 'Saving...' : 'Set Drawer'}
+            </button>
+        </form>
+    </Modal>
+);
 
 export const ResetPasswordModal = ({ isOpen, onClose, onSubmit, user, formErrors, loading }) => {
     const [showNewPassword, setShowNewPassword] = useState(false);
@@ -260,14 +279,14 @@ export const ManageChildrenModal = ({ isOpen, onClose, parent, users, parentChil
             <div className="admin-form">
                 <div className="form-group">
                     <label>Select Students to Link</label>
-                    <div style={{ maxHeight: '300px', overflowY: 'auto', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '10px', background: '#f8fafc' }}>
+                    <div style={{ maxHeight: '300px', overflowY: 'auto', border: '1px solid var(--border-subtle)', borderRadius: '8px', padding: '10px', background: 'var(--bg-secondary)' }}>
                         {students.length === 0 ? (
                             <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', textAlign: 'center' }}>No students found.</p>
                         ) : (
                             students.map(s => {
                                 const isLinked = childIds.has(s.id);
                                 return (
-                                    <div key={s.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px', borderBottom: '1px solid #e2e8f0' }}>
+                                    <div key={s.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px', borderBottom: '1px solid var(--border-subtle)' }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                                             <SmartImage 
                                                 src={s.profile_picture ? getApiUrl(`/user/profile_pictures/${s.profile_picture}`) : ''} 
@@ -297,7 +316,7 @@ export const ManageChildrenModal = ({ isOpen, onClose, parent, users, parentChil
                     </div>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '20px' }}>
-                    <button type="button" className="btn-secondary" onClick={onClose} style={{ padding: '10px 20px', borderRadius: '8px', border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer' }}>
+                    <button type="button" className="btn-secondary" onClick={onClose} style={{ padding: '10px 20px', borderRadius: '8px', border: '1px solid var(--border-subtle)', background: 'white', cursor: 'pointer' }}>
                         Close
                     </button>
                 </div>
@@ -318,13 +337,13 @@ export const ConnectionCardModal = ({ isOpen, onClose, student, connectionCode }
                 <p style={{ marginBottom: '1.5rem', color: 'var(--text-muted)' }}>
                     Print or show this card to the parent. They can scan the QR code or enter the code manually to connect.
                 </p>
-                <div style={{ background: 'white', padding: '1.5rem', borderRadius: '12px', display: 'inline-block', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}>
-                    <h3 style={{ margin: '0 0 0.25rem 0', color: '#1e293b' }}>{student.nickname || student.username}</h3>
-                    <div style={{ fontSize: '0.9rem', color: '#64748b', marginBottom: '1rem' }}>@{student.username}</div>
+                <div style={{ background: 'white', padding: '1.5rem', borderRadius: '12px', display: 'inline-block', border: '1px solid var(--border-subtle)', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}>
+                    <h3 style={{ margin: '0 0 0.25rem 0', color: 'var(--slate-800)' }}>{student.nickname || student.username}</h3>
+                    <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>@{student.username}</div>
                     <img src={qrUrl} alt="QR Code" style={{ width: '200px', height: '200px' }} />
-                    <div style={{ marginTop: '1rem', padding: '0.75rem', background: '#f1f5f9', borderRadius: '8px', border: '1px dashed #cbd5e1' }}>
-                        <span style={{ fontSize: '0.9rem', color: '#64748b', display: 'block', marginBottom: '4px' }}>Connection Code</span>
-                        <span style={{ fontSize: '1.5rem', fontWeight: 'bold', letterSpacing: '4px', color: '#0f172a' }}>{connectionCode}</span>
+                    <div style={{ marginTop: '1rem', padding: '0.75rem', background: 'var(--bg-tertiary)', borderRadius: '8px', border: '1px dashed var(--border-rich)' }}>
+                        <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Connection Code</span>
+                        <span style={{ fontSize: '1.5rem', fontWeight: 'bold', letterSpacing: '4px', color: 'var(--text-primary)' }}>{connectionCode}</span>
                     </div>
                 </div>
                 <div style={{ marginTop: '2rem', display: 'flex', gap: '1rem', justifyContent: 'center' }}>
@@ -426,7 +445,7 @@ export const BulkConnectionCardsModal = ({ isOpen, onClose, classrooms, fetchCla
                                 return (
                                     <div key={card.id} className="bulk-print-card">
                                         <h3 className="card-student-name" style={{ marginBottom: '2px' }}>{card.nickname || card.username}</h3>
-                                        <div style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '0.75rem', textAlign: 'center', wordBreak: 'break-all' }}>@{card.username}</div>
+                                        <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.75rem', textAlign: 'center', wordBreak: 'break-all' }}>@{card.username}</div>
                                         <div className="card-qr-wrapper">
                                             <img src={qrUrl} alt={`QR Code for ${card.username}`} className="card-qr-img" />
                                         </div>
@@ -462,7 +481,7 @@ export const BulkConnectionCardsModal = ({ isOpen, onClose, classrooms, fetchCla
                 
                 .bulk-print-card {
                     background: white;
-                    border: 1.5px dashed #cbd5e1;
+                    border: 1.5px dashed var(--border-rich);
                     border-radius: 12px;
                     padding: 1.25rem;
                     display: flex;
@@ -482,7 +501,7 @@ export const BulkConnectionCardsModal = ({ isOpen, onClose, classrooms, fetchCla
                 
                 .card-student-name {
                     margin: 0 0 0.75rem 0;
-                    color: #0f172a;
+                    color: var(--text-primary);
                     font-size: 1.1rem;
                     font-weight: 700;
                     text-align: center;
@@ -490,10 +509,10 @@ export const BulkConnectionCardsModal = ({ isOpen, onClose, classrooms, fetchCla
                 }
                 
                 .card-qr-wrapper {
-                    background: #f8fafc;
+                    background: var(--bg-secondary);
                     padding: 8px;
                     border-radius: 8px;
-                    border: 1px solid #e2e8f0;
+                    border: 1px solid var(--border-subtle);
                     margin-bottom: 0.75rem;
                     display: flex;
                     justify-content: center;
@@ -509,15 +528,15 @@ export const BulkConnectionCardsModal = ({ isOpen, onClose, classrooms, fetchCla
                 .card-code-wrapper {
                     width: 100%;
                     padding: 0.5rem;
-                    background: #f1f5f9;
+                    background: var(--bg-tertiary);
                     border-radius: 8px;
-                    border: 1px solid #e2e8f0;
+                    border: 1px solid var(--border-subtle);
                     text-align: center;
                 }
                 
                 .card-code-label {
                     font-size: 0.7rem;
-                    color: #64748b;
+                    color: var(--text-muted);
                     display: block;
                     text-transform: uppercase;
                     letter-spacing: 0.5px;
@@ -528,7 +547,7 @@ export const BulkConnectionCardsModal = ({ isOpen, onClose, classrooms, fetchCla
                     font-size: 1.25rem;
                     font-weight: 800;
                     letter-spacing: 2px;
-                    color: #0f172a;
+                    color: var(--text-primary);
                 }
 
                 /* Printing Overrides */
@@ -581,7 +600,7 @@ export const BulkConnectionCardsModal = ({ isOpen, onClose, classrooms, fetchCla
                     }
                     
                     .bulk-print-card {
-                        border: 1px dashed #94a3b8 !important;
+                        border: 1px dashed var(--border-rich) !important;
                         border-radius: 8px !important;
                         padding: 10px !important;
                         box-shadow: none !important;
@@ -602,7 +621,7 @@ export const BulkConnectionCardsModal = ({ isOpen, onClose, classrooms, fetchCla
                     }
 
                     .card-code-wrapper {
-                        background: #f1f5f9 !important;
+                        background: var(--bg-tertiary) !important;
                         -webkit-print-color-adjust: exact !important; /* Keep background color in print */
                         print-color-adjust: exact !important;
                     }

@@ -42,4 +42,9 @@ export const handlers = [
   http.get('*/user/logout', () => {
     return HttpResponse.json({ success: true });
   }),
+
+  // Silence session heartbeat requests in tests
+  http.post('*/api/session/heartbeat', () => {
+    return HttpResponse.json({ success: true });
+  }),
 ];

@@ -128,14 +128,14 @@ const Login = () => {
                     </button>
                 </form>
                 
-                <div className="auth-footer" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                    <div style={{ display: 'flex', gap: '1.25rem', justifyContent: 'center', alignItems: 'center', fontSize: '1.05rem' }}>
-                        <Link to="/signup" className="auth-link" style={{ margin: 0 }}>New Student</Link>
-                        <span style={{ color: 'var(--border-subtle)', userSelect: 'none' }}>|</span>
-                        <Link to="/signup?role=parent" className="auth-link" style={{ margin: 0 }}>New Parent</Link>
+                <div className="auth-footer auth-footer-container">
+                    <div className="auth-footer-links">
+                        <Link to="/signup" className="auth-link auth-link-no-margin">New Student</Link>
+                        <span className="auth-divider">|</span>
+                        <Link to="/signup?role=parent" className="auth-link auth-link-no-margin">New Parent</Link>
                     </div>
-                    <div style={{ textAlign: 'center' }}>
-                        <Link to="/forgot-password" className="auth-link" style={{ margin: 0, fontSize: '0.95rem' }}>Forgot Password?</Link>
+                    <div className="auth-center">
+                        <Link to="/forgot-password" className="auth-link auth-link-forgot">Forgot Password?</Link>
                     </div>
                 </div>
             </div>

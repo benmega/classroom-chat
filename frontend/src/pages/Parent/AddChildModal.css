@@ -13,12 +13,12 @@
 }
 
 .add-child-modal {
-    background: #ffffff;
+    background: var(--bg-primary);
     border: 1px solid var(--border-subtle, #e5e7eb);
     border-radius: 12px;
     width: 90%;
     max-width: 480px;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--shadow-xl);
     overflow: hidden;
     animation: slideUp 0.3s ease-out;
     color: var(--text-primary, #111827);
@@ -169,7 +169,7 @@
     padding: 0.75rem;
     border-radius: 8px;
     border: 1px solid var(--border-subtle, #d1d5db);
-    background: #ffffff;
+    background: var(--bg-primary);
     color: var(--text-primary, #111827);
     font-family: inherit;
     font-size: 1rem;
@@ -186,7 +186,7 @@
 
 .error-message {
     color: #b91c1c;
-    background: #fef2f2;
+    background: var(--error-subtle);
     padding: 0.75rem;
     border-radius: 6px;
     font-size: 0.9rem;
@@ -231,12 +231,16 @@
 .submit-btn:hover:not(:disabled) {
     background: var(--primary-dark, #0d9488);
     transform: translateY(-1px);
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--shadow-md);
 }
 
 .submit-btn:disabled {
-    opacity: 0.5;
+    opacity: 0.6;
     cursor: not-allowed;
-    transform: none;
-    box-shadow: none;
+}
+
+.modal-tab-desc {
+    margin-bottom: 1.5rem;
+    line-height: 1.5;
+    color: var(--text-muted);
 }

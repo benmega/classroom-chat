@@ -22,7 +22,7 @@
     gap: 6px;
     padding: 8px 16px;
     background: white;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--border-subtle);
     border-radius: 10px;
     color: var(--text-muted);
     font-weight: 600;
@@ -38,14 +38,14 @@
 .page-header.standardized .back-btn:hover {
     color: var(--primary-color);
     border-color: var(--primary-color);
-    background: #f8fafc;
+    background: var(--bg-secondary);
     transform: translateX(-2px);
 }
 
 .page-header.standardized h1 {
     font-size: 1.75rem;
     font-weight: 800;
-    color: #1e293b;
+    color: var(--slate-800);
     margin: 0;
     margin-bottom: 0.25rem;
     line-height: 1.2;

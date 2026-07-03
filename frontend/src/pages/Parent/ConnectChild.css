@@ -15,7 +15,7 @@
     width: 100%;
     max-width: 400px;
     text-align: center;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    box-shadow: var(--shadow-md);
 }
 
 .connect-child-card h2 {
@@ -42,12 +42,12 @@
 }
 
 .icon-success {
-    color: var(--success-color, #10b981);
+    color: var(--success-color, var(--success-color));
     margin: 0 auto;
 }
 
 .icon-error {
-    color: #ef4444;
+    color: var(--error-color);
     margin: 0 auto;
 }
 
@@ -64,6 +64,6 @@
 }
 
 .btn-primary:hover {
-    background: var(--primary-color-hover, #2563eb);
+    background: var(--primary-color-hover, var(--blue-600));
     transform: translateY(-1px);
 }

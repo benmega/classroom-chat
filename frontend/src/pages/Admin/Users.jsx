@@ -3,7 +3,8 @@ import { Link } from 'react-router-dom';
 import { 
     Search, 
     Plus, 
-    ArrowUpCircle, 
+    ArrowUpCircle,
+    Package,
     Key, 
     Trash2, 
     RefreshCw,
@@ -17,6 +18,7 @@ import SmartImage from '../../components/common/SmartImage';
 import { 
     CreateUserModal, 
     AdjustDucksModal, 
+    AdjustPacketsModal,
     SetDrawerModal,
     ResetPasswordModal,
     ManageChildrenModal,
@@ -48,6 +50,7 @@ const Users = () => {
         fetchUsers,
         handleCreateUser,
         handleAdjustDucks,
+        handleAdjustPackets,
         handleSetDrawer,
         handleResetPassword,
         handleRemoveUser,
@@ -79,7 +82,7 @@ const Users = () => {
             </header>
             <div className="users-table-container card">
                 {[1, 2, 3, 4, 5].map(i => (
-                    <div key={i} style={{ padding: '20px', borderBottom: '1px solid #eee' }}>
+                    <div key={i} className="users-skeleton-row">
                         <Skeleton height="60px" />
                     </div>
                 ))}
@@ -104,7 +107,7 @@ const Users = () => {
                 <button className="primary-btn" onClick={() => setActiveModal('create')}>
                     <Plus size={18} /> Add User
                 </button>
-                <button className="primary-btn" onClick={() => setActiveModal('bulk_connection_cards')} style={{ background: '#10b981', color: 'white', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <button className="primary-btn bulk-conn-btn" onClick={() => setActiveModal('bulk_connection_cards')}>
                     <Key size={18} /> Print Cohort Cards
                 </button>
                 <button 
@@ -159,11 +162,9 @@ const Users = () => {
                                                 fallbackType="avatar"
                                             />
                                             <div className="info">
-                                                <Link to={`/profile/${u.username}`} className="user-profile-link">
-                                                    <div className="name">{u.nickname || u.username}</div>
-                                                    <div className="handle">@{u.username}</div>
-                                                </Link>
-                                                {u.role === 'student' && u.drawer && <div className="drawer-info" style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '2px' }}>Drawer: <span style={{ fontFamily: 'monospace', fontWeight: 'bold' }}>{u.drawer}</span></div>}
+                                                <div className="name">{u.nickname || u.username}</div>
+                                                <div className="handle">@{u.username}</div>
+                                                {u.role === 'student' && u.drawer && <div className="drawer-info drawer-info-text">Drawer: <span className="drawer-code">{u.drawer}</span></div>}
                                             </div>
                                         </div>
                                     </td>
@@ -181,6 +182,7 @@ const Users = () => {
                                     <td>
                                         <div className="economy-info">
                                             <div className="duck-count">🦆 {(u.duck_balance ?? 0).toLocaleString(undefined, { maximumFractionDigits: 2 })}</div>
+                                            <div className="packet-count" style={{ fontSize: '0.8rem', color: (u.packets < 0 ? 'var(--error-color, #ff4444)' : 'var(--text-muted)') }}>📦 {(u.packets ?? 0).toLocaleString(undefined, { maximumFractionDigits: 3 })}</div>
                                             <div className="level-info">Lvl: {u.total_levels || 0}</div>
                                         </div>
                                     </td>
@@ -195,16 +197,23 @@ const Users = () => {
                                             <button 
                                                 className="action-btn adjust" 
                                                 onClick={() => { setModalUser(u); setActiveModal('adjust'); }}
-                                                title="Adjust Balance"
+                                                title="Adjust Ducks"
                                             >
                                                 <ArrowUpCircle size={16} />
                                             </button>
+                                            <button 
+                                                className="action-btn adjust-packets" 
+                                                onClick={() => { setModalUser(u); setActiveModal('adjust_packets'); }}
+                                                title="Adjust Packets"
+                                                style={{ color: 'var(--accent-color)' }}
+                                            >
+                                                <Package size={16} />
+                                            </button>
                                             {u.role === 'student' && (
                                                 <button 
-                                                    className="action-btn" 
+                                                    className="action-btn action-btn-blue" 
                                                     onClick={() => { setModalUser(u); setActiveModal('drawer'); }}
                                                     title="Set Drawer"
-                                                    style={{ color: '#0ea5e9' }}
                                                 >
                                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"></path><path d="m3.3 7 8.7 5 8.7-5"></path><path d="M12 22V12"></path></svg>
                                                 </button>
@@ -218,21 +227,20 @@ const Users = () => {
                                             </button>
                                             {u.role === 'parent' && (
                                                 <button 
-                                                    className="action-btn" 
+                                                    className="action-btn action-btn-indigo" 
                                                     onClick={() => { 
                                                         setModalUser(u); 
                                                         fetchParentChildren(u.id);
                                                         setActiveModal('manage_children'); 
                                                     }}
                                                     title="Manage Children"
-                                                    style={{ color: '#4f46e5' }}
                                                 >
                                                     <UsersIcon size={16} />
                                                 </button>
                                             )}
                                             {!u.is_admin && u.role === 'student' && (
                                                 <button 
-                                                    className="action-btn" 
+                                                    className="action-btn action-btn-green" 
                                                     onClick={async () => { 
                                                         const success = await fetchConnectionCard(u.id);
                                                         if (success) {
@@ -241,9 +249,8 @@ const Users = () => {
                                                         }
                                                     }}
                                                     title="Get Connection Card"
-                                                    style={{ color: '#059669', border: '1px solid #10b981', padding: '4px 8px', borderRadius: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}
                                                 >
-                                                    <Key size={14} /> <span style={{ fontSize: '0.75rem', fontWeight: 'bold' }}>Card</span>
+                                                    <Key size={14} /> <span className="card-btn-text">Card</span>
                                                 </button>
                                             )}
                                             {!u.is_admin && (
@@ -310,7 +317,7 @@ const Users = () => {
                             onClick={() => fetchUsers(page + 1)}
                             disabled={page >= totalPages || isRefreshing}
                         >
-                            Next <ChevronLeft size={16} style={{ transform: 'rotate(180deg)' }} />
+                            Next <ChevronLeft size={16} className="icon-rotate-180" />
                         </button>
                     </div>
                 </div>
@@ -328,6 +335,16 @@ const Users = () => {
                 isOpen={activeModal === 'adjust'} 
                 onClose={() => { setActiveModal(null); setModalUser(null); }} 
                 onSubmit={handleAdjustDucks} 
+                user={modalUser} 
+                users={users} 
+                formErrors={formErrors} 
+                loading={formLoading} 
+            />
+
+            <AdjustPacketsModal 
+                isOpen={activeModal === 'adjust_packets'} 
+                onClose={() => { setActiveModal(null); setModalUser(null); }} 
+                onSubmit={handleAdjustPackets} 
                 user={modalUser} 
                 users={users} 
                 formErrors={formErrors} 

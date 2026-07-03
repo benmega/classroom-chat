@@ -163,14 +163,19 @@ const AdminCourseInstances = () => {
     if (isLoading) {
         return (
             <div className="admin-course-instances-page">
-                <header className="page-header">
-                    <Skeleton height="40px" width="300px" className="skeleton-title" />
-                    <Skeleton height="20px" width="500px" />
-                </header>
+                <AdminPageHeader title="Course Instances">
+                    <Skeleton height="36px" width="200px" borderRadius="18px" />
+                    <Skeleton height="36px" width="120px" borderRadius="18px" />
+                </AdminPageHeader>
+                <div className="instances-stats-row" style={{ display: 'flex', gap: '16px', marginBottom: '24px' }}>
+                    <Skeleton height="80px" style={{ flex: 1 }} borderRadius="8px" />
+                    <Skeleton height="80px" style={{ flex: 1 }} borderRadius="8px" />
+                    <Skeleton height="80px" style={{ flex: 1 }} borderRadius="8px" />
+                </div>
                 <div className="instances-table-container card">
                     {[1, 2, 3, 4, 5].map(i => (
-                        <div key={i} style={{ padding: '20px', borderBottom: '1px solid #eee' }}>
-                            <Skeleton height="50px" />
+                        <div key={i} style={{ padding: '12px 24px' }}>
+                            <Skeleton height="40px" />
                         </div>
                     ))}
                 </div>
@@ -245,7 +250,7 @@ const AdminCourseInstances = () => {
                                     </td>
                                     <td>
                                         <span className="course-pill">
-                                            <BookOpen size={12} style={{ marginRight: '6px' }} />
+                                            <BookOpen size={12} className="course-icon-margin" />
                                             {getCourseName(inst.course_id)}
                                         </span>
                                     </td>

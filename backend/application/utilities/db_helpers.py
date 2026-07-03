@@ -69,6 +69,7 @@ def save_message_to_db(user_id, message, is_global=False, target_live=False, tar
             is_global=is_global,
             target_live=target_live,
             has_animated_border=user.has_animated_border,
+            animated_border_speed=user.animated_border_speed,
             chat_font_color=user.chat_font_color
         )
         

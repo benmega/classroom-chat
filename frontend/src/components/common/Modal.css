@@ -67,8 +67,8 @@
 }
 
 .close-btn:hover { 
-    background: #fee2e2;
-    color: #ef4444; 
+    background: var(--error-subtle);
+    color: var(--error-color); 
     transform: rotate(90deg) scale(1.1);
 }
 

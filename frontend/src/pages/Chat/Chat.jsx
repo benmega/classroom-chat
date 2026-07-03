@@ -47,6 +47,8 @@ const Chat = () => {
     handleScroll
   } = useFeedLogic();
 
+  if (loading) return <div className="container feed-loading">Loading Feed...</div>;
+
   return (
     <div className="feed-container">
       <div className="feed-main">
@@ -61,7 +63,7 @@ const Chat = () => {
                   placeholder={`What's on your mind, ${user?.nickname || user?.username || 'Student'}?`}
                   className="feed-input-field"
                   rows={2}
-                  maxLength={4000}
+                  maxLength={user?.is_admin ? 4000 : 500}
                 />
                 
                 <div className="feed-toolbar">
@@ -112,7 +114,7 @@ const Chat = () => {
                   </div>
 
                   <div className="feed-actions">
-                    <div style={{ position: 'relative' }} ref={emojiPickerRef}>
+                    <div className="emoji-picker-wrapper" ref={emojiPickerRef}>
                         <button
                           type="button"
                           className="toolbar-btn"
@@ -122,7 +124,7 @@ const Chat = () => {
                           <Smile size={20} color={showEmojiPicker ? "var(--primary-color)" : "inherit"} />
                         </button>
                         {showEmojiPicker && (
-                          <div className="emoji-picker-container" style={{ position: 'absolute', bottom: '100%', right: 0, zIndex: 100 }}>
+                          <div className="emoji-picker-container emoji-picker-container-absolute">
                             <EmojiPicker
                               onEmojiClick={onEmojiClick}
                               autoFocusSearch={false}
@@ -152,12 +154,8 @@ const Chat = () => {
           onScroll={handleScroll}
         >
           <div className="feed-messages-inner">
-            {loading ? (
-              <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
-                Loading feed...
-              </div>
-            ) : messages.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
+            {messages.length === 0 ? (
+              <div className="feed-empty-msg">
                 No messages to display. Be the first to post!
               </div>
             ) : (
@@ -172,13 +170,13 @@ const Chat = () => {
             )}
             
             {isLoadingMore && (
-              <div style={{ textAlign: 'center', padding: '1rem', color: 'var(--text-muted)' }}>
+              <div className="feed-loading-more">
                 Loading more...
               </div>
             )}
             
             {!hasMore && messages.length > 0 && (
-              <div style={{ textAlign: 'center', padding: '1rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>
+              <div className="feed-end-msg">
                 You've reached the end of the feed.
               </div>
             )}
