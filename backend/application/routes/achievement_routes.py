@@ -73,7 +73,7 @@ def get_achievements_json():
         .scalar(),
         "max_session": longest_session_minutes(current_user.id),
         "trade_count": db.session.query(func.count(DuckTradeLog.id))
-        .filter(func.lower(DuckTradeLog.username) == current_user.username.lower())
+        .filter(DuckTradeLog.user_id == current_user.id)
         .scalar(),
     }
 
