@@ -48,6 +48,7 @@ def toggle_message_sending():
 
 
 @admin_bp.route("/update_duck_multiplier", methods=["POST"])
+@admin_only
 def update_duck_multiplier():
     data = request.get_json()
     new_multiplier = data.get("multiplier")

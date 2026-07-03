@@ -13,6 +13,7 @@ This workflow automates running the preflight script and proactively fixing any 
     - If the script fails, identify the failing stage (e.g., Ruff linting, Pytest, Frontend Vitest, ESLint, Database Migrations, or Playwright E2E).
 3.  **Resolve Issues**:
     - **Linting/Formatting (Ruff/ESLint)**: Locate the problematic files and fix the syntax or formatting errors.
+    - **Security and Performance**: If `check_admin_auth.py` fails, add proper `@admin_only` or `@login_required` decorators to the flagged admin routes. If `check_n_plus_one.py` warns of N+1 queries, verify the queries and ensure `joinedload` or `selectinload` is used where necessary.
     - **Unit Tests (Pytest/Vitest)**: Read the test outputs to understand the failure. Modify the source code or the test code (whichever is appropriate) to resolve the bug.
     - **Database Migrations (`flask db check`)**: If migrations are out of sync, generate a new migration using `flask db migrate -m "Auto migration"` and apply it using `flask db upgrade head`.
     - **End-to-End Tests (Playwright)**: Debug the UI/integration failure. You may need to review the frontend source code or backend API endpoints to fix the bug.

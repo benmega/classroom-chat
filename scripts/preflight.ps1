@@ -22,6 +22,12 @@ Set-Location "$PSScriptRoot\..\backend"
 Write-Host " -> Running Ruff (Linter)..." -ForegroundColor DarkGray
 ruff check "$PSScriptRoot\.." ; Assert-Success
 
+# Security and Performance Analysis
+Write-Host " -> Running Admin Authorization Check..." -ForegroundColor DarkGray
+python scripts/check_admin_auth.py ; Assert-Success
+Write-Host " -> Running N+1 Query Heuristic Check..." -ForegroundColor DarkGray
+python scripts/check_n_plus_one.py ; Assert-Success
+
 # Testing
 Write-Host " -> Running Pytest with Coverage..." -ForegroundColor DarkGray
 python -m pytest --cov=. --cov-report=term ; Assert-Success

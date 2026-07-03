@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">17.24% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>5/29</span>
+                <span class='fraction'>29/29</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/0</span>
+                <span class='fraction'>17/17</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/2</span>
+                <span class='fraction'>2/2</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">17.24% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>5/29</span>
+                <span class='fraction'>29/29</span>
             </div>
         
             
@@ -93,63 +93,63 @@
 <a name='L28'></a><a href='#L28'>28</a>
 <a name='L29'></a><a href='#L29'>29</a>
 <a name='L30'></a><a href='#L30'>30</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">10x</span>
+<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-yes">10x</span>
+<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-yes">10x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">export const formatLargeNumber = <span class="fstat-no" title="function not covered" >(num) =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >    if (num === null || num === undefined) return '0';</span>
-<span class="cstat-no" title="statement not covered" >    const val = Number(num);</span>
-<span class="cstat-no" title="statement not covered" >    if (isNaN(val)) return '0';</span>
-<span class="cstat-no" title="statement not covered" >    </span>
-<span class="cstat-no" title="statement not covered" >    if (val &lt; 10000) {</span>
-<span class="cstat-no" title="statement not covered" >        return val.toLocaleString(undefined, { maximumFractionDigits: 3 });</span>
-<span class="cstat-no" title="statement not covered" >    }</span>
-<span class="cstat-no" title="statement not covered" >    </span>
-<span class="cstat-no" title="statement not covered" >    const formatter = new Intl.NumberFormat('en-US', {</span>
-<span class="cstat-no" title="statement not covered" >        notation: 'compact',</span>
-<span class="cstat-no" title="statement not covered" >        compactDisplay: 'short',</span>
-<span class="cstat-no" title="statement not covered" >        maximumFractionDigits: 1</span>
-<span class="cstat-no" title="statement not covered" >    });</span>
-<span class="cstat-no" title="statement not covered" >    return formatter.format(val);</span>
-<span class="cstat-no" title="statement not covered" >};</span>
+<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">export const formatLargeNumber = (num) =&gt; {
+    if (num === null || num === undefined) return '0';
+    const val = Number(num);
+    if (isNaN(val)) return '0';
+    
+    if (val &lt; 10000) {
+        return val.toLocaleString(undefined, { maximumFractionDigits: 3 });
+    }
+    
+    const formatter = new Intl.NumberFormat('en-US', {
+        notation: 'compact',
+        compactDisplay: 'short',
+        maximumFractionDigits: 1
+    });
+    return formatter.format(val);
+};
 &nbsp;
 import { getApiUrl } from './apiUrl';
 &nbsp;
-export const formatStaticUrl = <span class="fstat-no" title="function not covered" >(url) =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >    if (!url) return null;</span>
-<span class="cstat-no" title="statement not covered" >    if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {</span>
-<span class="cstat-no" title="statement not covered" >        return url;</span>
-<span class="cstat-no" title="statement not covered" >    }</span>
-<span class="cstat-no" title="statement not covered" >    </span>
-<span class="cstat-no" title="statement not covered" >    // Pass through getApiUrl so that dynamic /user/... assets are routed to the backend</span>
-<span class="cstat-no" title="statement not covered" >    const formattedUrl = url.startsWith('/') ? url : `/static/${url}`;</span>
-<span class="cstat-no" title="statement not covered" >    return getApiUrl(formattedUrl);</span>
-<span class="cstat-no" title="statement not covered" >};</span>
+export const formatStaticUrl = (url) =&gt; {
+    if (!url) return null;
+    if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
+        return url;
+    }
+    
+    // Pass through getApiUrl so that dynamic /user/... assets are routed to the backend
+    const formattedUrl = url.startsWith('/') ? url : `/static/${url}`;
+    return getApiUrl(formattedUrl);
+};
 &nbsp;</pre></td></tr></table></pre>
 
                 <div class='push'></div><!-- for sticky footer -->
@@ -157,7 +157,7 @@ export const formatStaticUrl = <span class="fstat-no" title="function not covere
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-07-03T02:19:15.158Z
+                at 2026-07-03T03:14:45.254Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

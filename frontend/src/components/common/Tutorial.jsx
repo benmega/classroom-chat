@@ -130,8 +130,9 @@ const Tutorial = () => {
         }
       });
     };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    updateRect();
+    window.addEventListener('resize', updateRect);
+    return () => window.removeEventListener('resize', updateRect);
   }, [isOpen, currentSlide, slides]);
 
   const handleClose = () => {

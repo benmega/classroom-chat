@@ -239,6 +239,7 @@ const Shop = () => {
                         <div key={item.id} className={`shop-item-card ${item.is_purchased ? 'purchased' : ''}`}>
                             <div className="shop-item-header" style={{ alignItems: 'center' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    {getIconForItem(item)}
                                     <h3 style={{ margin: 0, fontSize: '1.1rem' }}>
                                         {item.name.replace('Profile ', '').replace('Permanent ', '').replace('Challenge ', '').replace('Font ', '')}
                                     </h3>

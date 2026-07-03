@@ -30,7 +30,7 @@ const ProfileHeader = ({ target, isOwner, pfpInputRef, onPfpChange }) => {
                         className="avatar-img"
                         fallbackType="avatar"
                     />
-                    {isTargetUser && (
+                    {isOwner && (
                         <>
                             <div className="upload-overlay">
                                 <span>Change Photo</span>
@@ -50,7 +50,7 @@ const ProfileHeader = ({ target, isOwner, pfpInputRef, onPfpChange }) => {
                     <h1 className="student-name">{target.nickname || target.username}</h1>
                     <p className="student-title">@{target.username}</p>
                     {isOwner && (
-                        <Link to={editLink || "/settings"} className="btn-settings">
+                        <Link to="/profile/edit" className="btn-settings">
                             <User size={14} /> Edit Profile
                         </Link>
                     )}

@@ -23,16 +23,16 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">95.38% </span>
+                <span class="strong">95.52% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>124/130</span>
+                <span class='fraction'>128/134</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">72.72% </span>
+                <span class="strong">66.66% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>8/11</span>
+                <span class='fraction'>10/15</span>
             </div>
         
             
@@ -44,9 +44,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">95.38% </span>
+                <span class="strong">95.52% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>124/130</span>
+                <span class='fraction'>128/134</span>
             </div>
         
             
@@ -221,7 +221,11 @@
 <a name='L156'></a><a href='#L156'>156</a>
 <a name='L157'></a><a href='#L157'>157</a>
 <a name='L158'></a><a href='#L158'>158</a>
-<a name='L159'></a><a href='#L159'>159</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
+<a name='L159'></a><a href='#L159'>159</a>
+<a name='L160'></a><a href='#L160'>160</a>
+<a name='L161'></a><a href='#L161'>161</a>
+<a name='L162'></a><a href='#L162'>162</a>
+<a name='L163'></a><a href='#L163'>163</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
@@ -272,19 +276,23 @@
 <span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-yes">3x</span>
@@ -429,7 +437,9 @@ const Profile = () =&gt; {
     if (isLoading) return &lt;div className="profile-loading"&gt;Loading Profile...&lt;/div&gt;;
     if (!profileData) return &lt;div className="profile-error"&gt;Profile not found.&lt;/div&gt;;
 &nbsp;
-    const { target } = profileData;
+    const { target, viewer } = profileData;
+    const isTargetUser = <span class="branch-0 cbranch-no" title="branch not covered" >viewer?.id === t</span>arget?.id;
+    const editLink = isTargetUser ? <span class="branch-0 cbranch-no" title="branch not covered" >'/settings' : `/admin/advanced-crud/User/${target?.id}`;</span>
 &nbsp;
     return (
         &lt;&gt;
@@ -437,6 +447,8 @@ const Profile = () =&gt; {
             &lt;ProfileHeader 
                 target={target} 
                 isOwner={isOwner} 
+                isTargetUser={isTargetUser}
+                editLink={editLink}
                 pfpInputRef={pfpInputRef}
                 onPfpChange={handlePfpChange}
             /&gt;
@@ -449,7 +461,7 @@ const Profile = () =&gt; {
                                 &lt;h2&gt;&lt;User size={20} /&gt; About Me&lt;/h2&gt;
                                 {isOwner &amp;&amp; (
                                     &lt;button 
-                                        onClick={() =&gt; navigate('/settings')}
+                                        onClick={() =&gt; navigate(editLink)}
                                         className="btn-icon"
                                         title="Edit Profile"
                                     &gt;
@@ -544,7 +556,7 @@ export default Profile;
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-07-03T02:19:15.158Z
+                at 2026-07-03T03:14:45.254Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>
