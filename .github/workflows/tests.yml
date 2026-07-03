@@ -40,6 +40,9 @@ jobs:
           FLASK_APP: main.py
           FLASK_ENV: development
           
+      - name: Run Mypy
+        run: python -m mypy .
+
       - name: Run Pytest
         env:
           FLASK_ENV: testing

@@ -9,7 +9,7 @@ from datetime import datetime
 from ..extensions import db
 
 
-class Achievement(db.Model):
+class Achievement(db.Model):  # type: ignore[name-defined,misc]
     __tablename__ = "achievement"
     id = db.Column(db.Integer, primary_key=True)
     slug = db.Column(db.String(64), unique=True, nullable=False)
@@ -36,7 +36,7 @@ class Achievement(db.Model):
         }
 
 
-class UserAchievement(db.Model):
+class UserAchievement(db.Model):  # type: ignore[name-defined,misc]
     __tablename__ = "user_achievement"
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(

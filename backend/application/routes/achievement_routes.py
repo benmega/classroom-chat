@@ -169,11 +169,11 @@ def add_achievement():
         # We save to frontend/static/images/achievement_badges/
         # which is current_app.static_folder / "images" / "achievement_badges"
         badge_dir = os.path.join(
-            current_app.static_folder, "images", "achievement_badges"
+            str(current_app.static_folder), "images", "achievement_badges"
         )
         os.makedirs(badge_dir, exist_ok=True)
 
-        ext = badge_file.filename.rsplit(".", 1)[1].lower()
+        ext = (badge_file.filename or "").rsplit(".", 1)[1].lower()
         filename = f"{slug}.{ext}"
         filepath = os.path.join(badge_dir, filename)
         badge_file.save(filepath)
