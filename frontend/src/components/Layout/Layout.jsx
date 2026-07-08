@@ -49,7 +49,6 @@ const Layout = ({ children }) => {
                 <DesktopNavRail user={user} location={location} handleLogout={handleLogout} />
             )}
 
-<<<<<<< HEAD
             <div className="main-layout-content">
                 <header className={`${!isAuthenticated || isGuestPage ? 'guest-mode' : ''} ${isChatPage ? 'mobile-hidden' : ''}`}>
                     <div className="header-content">
@@ -71,36 +70,6 @@ const Layout = ({ children }) => {
                                 <span className="logo-text">ClassroomChat</span>
                             </Link>
                         </div>
-=======
-                    <nav>
-                        <ul>
-                            {isAuthenticated && user && user.role !== 'parent' && (
-                                <>
-                                    {user.drawer && (
-                                        <li className="nav-stat-item">
-                                            <div className="stat-badge drawer" data-testid="nav-drawer" title="Drawer Number">
-                                                <Archive size={20} className="stat-icon" />
-                                                <div className="stat-content">
-                                                    <span className="stat-label">Drawer</span>
-                                                    <span className="stat-value">{user.drawer}</span>
-                                                </div>
-                                            </div>
-                                        </li>
-                                    )}
-                                    <li className="nav-stat-item">
-                                        <Link className="stat-badge ducks" to="/bit-shift" data-testid="nav-bit-shift">
-                                            <DuckIcon size={20} className="stat-icon" color="var(--primary-color)" />
-                                            <div className="stat-content">
-                                                <span className="stat-label">Ducks</span>
-                                                <span className="stat-value">
-                                                    {(user.duck_balance ?? 0).toLocaleString(undefined, { 
-                                                        minimumFractionDigits: 0, 
-                                                        maximumFractionDigits: 3 
-                                                    })}
-                                                </span>
-                                            </div>
-                                        </Link>
-                                    </li>
 
                         {isAuthenticated && !isParent && <UserSearch />}
 
@@ -122,8 +91,6 @@ const Layout = ({ children }) => {
                                                 </div>
                                             </Link>
                                         </li>
-
-<<<<<<< HEAD
 
                                         {Math.abs(user.packets) > 0.001 && (
                                             <li className="nav-stat-item">
@@ -161,21 +128,65 @@ const Layout = ({ children }) => {
                                                 <HamburgerIcon progress={user?.role === 'student' ? hamburgerProgress : 1} size={20} />
                                             </span>
                                         </button>
-                                        <ul className={dropdown-menu }>
+                                        <ul className={`dropdown-menu ${isDropdownOpen ? 'show' : ''}`}>
                                             {user?.role !== 'parent' && (
                                                 <>
-                                                {user.drawer && (
-                                                    <li className="mobile-only-stat mobile-only">
-                                                        <div className="dropdown-stat-link drawer" style={{ textDecoration: 'none' }}>
-                                                            <Archive size={20} />
-                                                            <div className="dropdown-stat-info">
-                                                                <span className="dropdown-stat-label">Drawer</span>
-                                                                <span className="dropdown-stat-value">{user.drawer}</span>
+                                                    {user.drawer && (
+                                                        <li className="mobile-only-stat mobile-only">
+                                                            <div className="dropdown-stat-link drawer" style={{ textDecoration: 'none' }}>
+                                                                <Archive size={20} />
+                                                                <div className="dropdown-stat-info">
+                                                                    <span className="dropdown-stat-label">Drawer</span>
+                                                                    <span className="dropdown-stat-value">{user.drawer}</span>
+                                                                </div>
                                                             </div>
-                                                        </div>
+                                                        </li>
+                                                    )}
+                                                    <li className="mobile-only-stat mobile-only">
+                                                        <Link to="/bit-shift" onClick={() => setIsDropdownOpen(false)} className="dropdown-stat-link">
+                                                            <DuckIcon size={20} />
+                                                            <div className="dropdown-stat-info">
+                                                                <span className="dropdown-stat-label">Ducks</span>
+                                                                <span className="dropdown-stat-value">
+                                                                    {(user.duck_balance ?? 0).toLocaleString(undefined, { 
+                                                                        minimumFractionDigits: 0, 
+                                                                        maximumFractionDigits: 3 
+                                                                    })}
+                                                                </span>
+                                                            </div>
+                                                        </Link>
                                                     </li>
-                                                )}
-
+                                                    {Math.abs(user.packets) > 0.001 && (
+                                                        <li className="mobile-only-stat mobile-only">
+                                                            <Link to="/shop" onClick={() => setIsDropdownOpen(false)} className="dropdown-stat-link packets" style={{ textDecoration: 'none' }}>
+                                                                <Package size={20} />
+                                                                <div className="dropdown-stat-info">
+                                                                    <span className="dropdown-stat-label">Packets</span>
+                                                                    <span className="dropdown-stat-value" style={{ color: user.packets < 0 ? 'var(--error-color, #ff4444)' : 'inherit' }}>
+                                                                        {Number(user.packets || 0).toLocaleString(undefined, { 
+                                                                            minimumFractionDigits: 0, 
+                                                                            maximumFractionDigits: 3 
+                                                                        })}
+                                                                    </span>
+                                                                </div>
+                                                            </Link>
+                                                        </li>
+                                                    )}
+                                                </>
+                                            )}
+                                            {user?.role !== 'parent' && <li className="mobile-only-stat mobile-only dropdown-divider"></li>}
+                                            {!isParent && (
+                                                <li>
+                                                    <Link to="/profile" onClick={() => setIsDropdownOpen(false)} data-testid="nav-profile">
+                                                        <span className="flex items-center gap-2">Profile</span>
+                                                    </Link>
+                                                </li>
+                                            )}
+                                            {user?.is_admin && (
+                                                <li><Link to="/admin" onClick={() => setIsDropdownOpen(false)}>Admin Panel</Link></li>
+                                            )}
+                                            {!isParent && (
+                                                <>
                                                     <li><Link to="/submit-work" onClick={() => setIsDropdownOpen(false)}>Submit Work</Link></li>
                                                     {(user?.duck_balance ?? 0) > 0 && (
                                                         <li><Link to="/bit-shift" onClick={() => setIsDropdownOpen(false)}>Bit Shift</Link></li>
