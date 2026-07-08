@@ -6,8 +6,9 @@ def generate_kebab_slug(text):
     """Generate a clean kebab-case slug."""
     if not text:
         return ""
-    # Remove "- Locked" suffix commonly found in Ozaria data
+    # Remove suffixes commonly found in Ozaria data
     text = text.replace(" - Locked", "")
+    text = text.replace(" - In Progress", "")
     # Lowercase, replace spaces/underscores with dashes
     slug = re.sub(r'[_\s]+', '-', text.lower())
     # Remove non-alphanumeric (except dashes)
@@ -51,6 +52,8 @@ def seed_challenges_data(conn, seed_file_path):
             reader = csv.DictReader(f)
             for row in reader:
                 name = row.get('name', '').strip()
+                if name.endswith(" - In Progress"):
+                    name = name[:-14]
                 domain = row.get('domain', '').strip()
                 if not name or not domain:
                     continue

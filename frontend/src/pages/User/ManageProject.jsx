@@ -6,6 +6,7 @@ import useAuthStore from '../../store/useAuthStore';
 import './ManageProject.css';
 import SmartImage from '../../components/common/SmartImage';
 import ScreenRecorder from '../../components/common/ScreenRecorder';
+import Skeleton from '../../components/common/Skeleton';
 import { formatStaticUrl } from '../../utils/formatters';
 
 // Hooks
@@ -17,12 +18,15 @@ const ManageProject = () => {
         projectId,
         projectData,
         students,
+        templates,
+        selectedTemplate,
         isLoading,
         isSaving,
         imagePreview,
         projectVideo,
         error,
         handleInputChange,
+        handleTemplateChange,
         handleFileChange,
         handleRecordedVideo,
         handleSubmit,
@@ -56,7 +60,47 @@ const ManageProject = () => {
         else if (activeTab === 'media') setActiveTab('core');
     };
 
-    if (isLoading) return <div className="loading-container">Loading...</div>;
+    if (isLoading) return (
+        <div className="manage-project-page" style={{ padding: '0' }}>
+            <div className="manage-project-grid">
+                <div className="form-column">
+                    <div className="form-wizard-header">
+                        <Skeleton height="40px" width="30%" borderRadius="8px" />
+                        <Skeleton height="40px" width="30%" borderRadius="8px" />
+                        <Skeleton height="40px" width="30%" borderRadius="8px" />
+                    </div>
+                    <div className="form-wizard-content" style={{ marginTop: '1.5rem' }}>
+                        <div className="form-section">
+                            <Skeleton height="32px" width="40%" style={{ marginBottom: '1.5rem' }} />
+                            <div className="form-group" style={{ marginBottom: '1.5rem' }}>
+                                <Skeleton height="20px" width="100px" style={{ marginBottom: '0.5rem' }} />
+                                <Skeleton height="45px" borderRadius="8px" />
+                            </div>
+                            <div className="form-group" style={{ marginBottom: '1.5rem' }}>
+                                <Skeleton height="20px" width="100px" style={{ marginBottom: '0.5rem' }} />
+                                <Skeleton height="120px" borderRadius="8px" />
+                            </div>
+                            <div className="form-group" style={{ marginBottom: '1.5rem' }}>
+                                <Skeleton height="20px" width="120px" style={{ marginBottom: '0.5rem' }} />
+                                <Skeleton height="45px" borderRadius="8px" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div className="preview-column">
+                    <div className="project-presentation-card card" style={{ padding: '0', overflow: 'hidden', borderRadius: '12px', border: '1px solid var(--border-subtle)' }}>
+                        <Skeleton height="220px" borderRadius="12px 12px 0 0" />
+                        <div style={{ padding: '1.5rem' }}>
+                            <Skeleton height="32px" width="60%" style={{ marginBottom: '1rem' }} />
+                            <Skeleton height="18px" width="90%" style={{ marginBottom: '0.5rem' }} />
+                            <Skeleton height="18px" width="80%" style={{ marginBottom: '0.5rem' }} />
+                            <Skeleton height="18px" width="40%" style={{ marginBottom: '1.5rem' }} />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
 
     if (error === 'forbidden') return <AccessDenied />;
     if (error === 'not_found') return <NotFound message="The project you are looking for does not exist or you do not have permission to view it." />;
@@ -95,6 +139,20 @@ const ManageProject = () => {
                             <div className="form-section fade-in">
                                 <h3>Core Information</h3>
                                 <div className="form-group">
+                                    <label>Project Type / Template</label>
+                                    <select
+                                        name="project_template"
+                                        value={selectedTemplate}
+                                        onChange={handleTemplateChange}
+                                        className="form-control"
+                                    >
+                                        <option value="custom">Custom Project</option>
+                                        {Object.keys(templates).map(t => (
+                                            <option key={t} value={t}>{t}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div className="form-group">
                                     <label>Project Name</label>
                                     <input
                                         type="text"
@@ -102,8 +160,9 @@ const ManageProject = () => {
                                         value={projectData.name || ''}
                                         onChange={handleInputChange}
                                         placeholder="e.g. My Awesome Platformer"
-                                        className="form-control title-input-left"
+                                        className={`form-control title-input-left ${selectedTemplate !== 'custom' ? 'read-only-input' : ''}`}
                                         required
+                                        readOnly={selectedTemplate !== 'custom'}
                                     />
                                 </div>
                                 <div className="form-group">
@@ -189,6 +248,7 @@ const ManageProject = () => {
                                         onChange={handleInputChange}
                                         className="form-control inline-code-editor"
                                         placeholder="def my_awesome_function():\n    pass"
+                                        rows={12}
                                     />
                                 </div>
                             </div>

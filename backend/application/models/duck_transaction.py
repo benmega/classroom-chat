@@ -10,7 +10,7 @@ class DuckTransaction(db.Model):
     reason = db.Column(db.String(200), nullable=True)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
 
-    user = db.relationship("User", backref=db.backref("transactions", lazy=True))
+    user = db.relationship("User", backref=db.backref("transactions", lazy=True, cascade="all, delete-orphan"))
 
     def to_dict(self):
         return {

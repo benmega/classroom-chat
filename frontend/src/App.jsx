@@ -27,17 +27,21 @@ import EditProfile from './pages/User/EditProfile';
 import ManageProject from './pages/User/ManageProject';
 import AdminDashboard from './pages/Admin/AdminDashboard';
 import AdminProjects from './pages/Admin/AdminProjects';
+import AdminProjectTemplates from './pages/Admin/AdminProjectTemplates';
 import AdminCertificates from './pages/Admin/AdminCertificates';
 import AdminAchievements from './pages/Admin/AdminAchievements';
 import AdminChallenges from './pages/Admin/AdminChallenges';
 import AdminDocuments from './pages/Admin/AdminDocuments';
 import Users from './pages/Admin/Users';
+import AdminUserDashboard from './pages/Admin/AdminUserDashboard';
+import AdminConnections from './pages/Admin/AdminConnections';
 import Analytics from './pages/Admin/Analytics';
 import PendingTrades from './pages/Admin/PendingTrades';
 import PendingUsers from './pages/Admin/PendingUsers';
 import AdvancedPanel from './pages/Admin/AdvancedPanel';
 import AdminCourseInstances from './pages/Admin/AdminCourseInstances';
 import DuckTransactions from './pages/Admin/DuckTransactions';
+import AdminStudentActivity from './pages/Admin/AdminStudentActivity';
 import ParentDashboard from './pages/Parent/ParentDashboard';
 import ParentReportCard from './pages/Parent/ParentReportCard';
 import ConnectChild from './pages/Parent/ConnectChild';
@@ -275,8 +279,11 @@ function App() {
                 <Route index element={<AdminDashboard />} />
                 <Route path="dashboard" element={<AdminDashboard />} />
                 <Route path="projects" element={<AdminProjects />} />
+                <Route path="project-templates" element={<AdminProjectTemplates />} />
                 <Route path="certificates" element={<AdminCertificates />} />
                 <Route path="users" element={<Users />} />
+                <Route path="users/:userId" element={<AdminUserDashboard />} />
+                <Route path="connections" element={<AdminConnections />} />
                 <Route path="analytics" element={<Analytics />} />
                 <Route path="add-achievement" element={<AdminAchievements />} />
                 <Route path="add-challenges" element={<AdminChallenges />} />
@@ -286,6 +293,7 @@ function App() {
                 <Route path="course-instances" element={<AdminCourseInstances />} />
                 <Route path="advanced" element={<AdvancedPanel />} />
                 <Route path="transactions" element={<DuckTransactions />} />
+                <Route path="student-activity" element={<AdminStudentActivity />} />
               </Routes>
             </AdminLayout>
           </ProtectedRoute>

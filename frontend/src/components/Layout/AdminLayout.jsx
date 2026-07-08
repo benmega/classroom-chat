@@ -5,33 +5,46 @@ import {
     LogOut,
     Shield,
     LayoutDashboard,
-    BarChart3,
     FolderKanban,
-    Trophy,
     FileCheck,
-    FileText,
     ShieldAlert,
     Users,
     Menu,
     X,
-    ChevronLeft,
-    ChevronRight,
     ShoppingBag,
-    GraduationCap
+    GraduationCap,
+    ScrollText,
+    Link2
 } from 'lucide-react';
 import useAuthStore from '../../store/useAuthStore';
 import useSidebar from '../../hooks/useSidebar';
+import client from '../../api/client';
 import './AdminLayout.css';
-import SmartImage from '../common/SmartImage';
-import { getApiUrl } from '../../utils/apiUrl';
 
 const AdminLayout = ({ children }) => {
     const { user, isAuthenticated } = useAuthStore();
-    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
     const { isSidebarOpen, setSidebarOpen } = useSidebar();
     const location = useLocation();
+    const [pendingCount, setPendingCount] = useState(0);
 
-    const toggleSidebarDesktop = () => setIsSidebarCollapsed(!isSidebarCollapsed);
+    useEffect(() => {
+        const fetchPendingCount = async () => {
+            try {
+                const response = await client.get('/api/admin/pending_users');
+                if (response.data.status === 'success') {
+                    setPendingCount(response.data.data.users?.length || 0);
+                }
+            } catch (err) {
+                console.error("Failed to fetch pending count", err);
+            }
+        };
+
+        if (isAuthenticated && user?.is_admin) {
+            fetchPendingCount();
+            const interval = setInterval(fetchPendingCount, 15000); // refresh every 15s
+            return () => clearInterval(interval);
+        }
+    }, [isAuthenticated, user]);
 
     // Close mobile menu on route change
     useEffect(() => {
@@ -56,105 +69,124 @@ const AdminLayout = ({ children }) => {
     const navItems = [
         { path: '/admin', label: 'Dashboard', icon: LayoutDashboard, end: true },
         { path: '/admin/users', label: 'Users', icon: Users },
+        { path: '/admin/connections', label: 'Parent-Child Links', icon: Link2 },
         { path: '/admin/pending-trades', label: 'Pending Trades', icon: ShoppingBag },
         { path: '/admin/projects', label: 'Projects', icon: FolderKanban },
+        { path: '/admin/project-templates', label: 'Project Templates', icon: ScrollText },
         { path: '/admin/course-instances', label: 'Course Instances', icon: GraduationCap },
         { path: '/admin/certificates', label: 'Certificates', icon: FileCheck },
         { path: '/admin/advanced', label: 'Advanced Panel', icon: ShieldAlert },
         { path: '/chat', label: 'Back to Site', icon: Home },
-        { path: '/logout', label: 'Logout', icon: LogOut },
     ];
 
+    const isItemActive = (item) => {
+        if (item.end) return location.pathname === item.path;
+        return item.path !== '/admin' && location.pathname.startsWith(item.path);
+    };
+
     return (
-        <div className={`admin-app-container ${isSidebarCollapsed ? 'collapsed' : ''} ${isSidebarOpen ? 'mobile-open' : ''}`}>
+        <div className={`admin-app-container ${isSidebarOpen ? 'mobile-open' : ''}`}>
             {/* Mobile Overlay */}
-            <div className="mobile-overlay" onClick={() => setSidebarOpen(false)}></div>
+            <div className="admin-mobile-overlay" onClick={() => setSidebarOpen(false)}></div>
 
             {/* Sidebar */}
             <aside className="admin-sidebar">
-                <div className="sidebar-header">
-                    <Link className="sidebar-brand" to="/admin">
-                        <img src="/images/logo.ico" alt="Admin HQ Logo" className="brand-logo-img" />
-                        <span className="brand-text">Admin HQ</span>
-                    </Link>
-                    <button className="sidebar-toggle-btn desktop-only" onClick={toggleSidebarDesktop} aria-label="Toggle Sidebar">
-                        {isSidebarCollapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
-                    </button>
-                    <button className="mobile-close-btn mobile-only" onClick={() => setSidebarOpen(false)}>
-                        <X size={24} />
-                    </button>
-                </div>
+                {/* Logo */}
+                <Link
+                    className="admin-rail-logo"
+                    to="/admin"
+                    data-tooltip="Admin HQ"
+                >
+                    <img src="/images/logo.ico" alt="Admin HQ Logo" />
+                    <span className="admin-brand-text">Admin HQ</span>
+                </Link>
 
-                <nav className="sidebar-nav">
-                    <div className="nav-group">
-                        <span className="nav-group-label">Management</span>
-                        {navItems.map((item) => {
-                            if (item.path === '/logout') {
-                                return (
-                                    <button
-                                        key={item.path}
-                                        onClick={async (e) => {
-                                            e.preventDefault();
-                                            await useAuthStore.getState().logout();
-                                            window.location.href = '/';
-                                        }}
-                                        className="nav-item"
-                                        title={item.label}
-                                        style={{ width: '100%', textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
-                                    >
-                                        <item.icon size={22} className="nav-icon" />
-                                        <span className="nav-label">{item.label}</span>
-                                    </button>
-                                );
-                            }
+                {/* Mobile close button */}
+                <button
+                    className="admin-mobile-close mobile-only"
+                    onClick={() => setSidebarOpen(false)}
+                    aria-label="Close sidebar"
+                >
+                    <X size={22} />
+                </button>
 
-                            return (
+                {/* Nav items — center section */}
+                <div className="admin-rail-center">
+                    <span className="admin-nav-group-label mobile-only">Management</span>
+
+                    {navItems.map((item) => {
+                        const active = isItemActive(item);
+                        return (
+                            <div
+                                key={item.path}
+                                className={`admin-rail-item-container${active ? ' active' : ''}`}
+                            >
+                                <div className="admin-rail-indicator" />
                                 <NavLink
-                                    key={item.path}
                                     to={item.path}
                                     end={item.end}
-                                    className={({ isActive }) => `nav-item ${isActive || (item.path !== '/admin' && location.pathname.startsWith(item.path)) ? 'active' : ''}`}
-                                    title={item.label}
+                                    className={({ isActive }) =>
+                                        `admin-rail-item${isActive || active ? ' active' : ''}`
+                                    }
+                                    data-tooltip={item.label}
                                 >
-                                    <item.icon size={22} className="nav-icon" />
-                                    <span className="nav-label">{item.label}</span>
-                                    {item.badge && (
-                                        <span className="nav-badge">NEW</span>
+                                    <span className="admin-rail-icon-wrap">
+                                        <item.icon size={20} />
+                                        {item.path === '/admin/users' && pendingCount > 0 && (
+                                            <span className="admin-nav-badge">{pendingCount}</span>
+                                        )}
+                                    </span>
+                                    <span className="admin-nav-label">{item.label}</span>
+                                    {item.path === '/admin/users' && pendingCount > 0 && (
+                                        <span className="admin-nav-badge mobile-badge">{pendingCount}</span>
                                     )}
                                 </NavLink>
-                            );
-                        })}
-                    </div>
+                            </div>
+                        );
+                    })}
+                </div>
 
-                    {/* Secondary system group removed; Logout now in primary navigation */}
-                </nav>
-
-                <div className="sidebar-user">
-                    <SmartImage
-                        src={user?.profile_picture ? getApiUrl(`/user/profile_pictures/${user.profile_picture}`) : ''}
-                        alt="Profile"
-                        className="user-avatar"
-                        fallbackType="avatar"
-                    />
-                    <div className="user-info">
-                        <span className="user-name">{user?.nickname || user?.username}</span>
-                        <span className="user-role">Administrator</span>
+                {/* Bottom section — logout */}
+                <div className="admin-rail-bottom">
+                    <div className="admin-rail-item-container admin-logout-container">
+                        <div className="admin-rail-indicator" />
+                        <button
+                            onClick={async () => {
+                                await useAuthStore.getState().logout();
+                                window.location.href = '/';
+                            }}
+                            className="admin-rail-item admin-logout-btn"
+                            data-tooltip="Logout"
+                            aria-label="Logout"
+                        >
+                            <span className="admin-rail-icon-wrap">
+                                <LogOut size={20} />
+                            </span>
+                            <span className="admin-nav-label">Logout</span>
+                        </button>
                     </div>
                 </div>
             </aside>
 
-            {/* Main Content Area */}
+            {/* Mobile Hamburger Button + Main Content */}
             <div className="admin-main-wrapper">
-                <main 
-                    key={location.pathname.startsWith('/admin/advanced-crud') ? '/admin/advanced-crud' : location.pathname} 
+                <div className="admin-mobile-top-bar mobile-only">
+                    <button
+                        className="admin-hamburger"
+                        onClick={() => setSidebarOpen(true)}
+                        aria-label="Open Sidebar"
+                    >
+                        <Menu size={24} />
+                    </button>
+                </div>
+
+                {/* Main Content Area */}
+                <main
+                    key={location.pathname.startsWith('/admin/advanced-crud') ? '/admin/advanced-crud' : location.pathname}
                     className="admin-body animate-page-entry"
                 >
                     {children}
                 </main>
-
-                <footer className="admin-site-footer">
-                    <p><span>Version 2.4.0 (Alpha)</span></p>
-                </footer>
             </div>
         </div>
     );

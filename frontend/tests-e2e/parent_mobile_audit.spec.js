@@ -24,7 +24,7 @@ test.describe('Parent Portal Mobile UI Audit', () => {
     page.on('pageerror', err => console.log(`BROWSER ERROR: ${err.message}`));
 
     console.log('1. Navigating to parent dev-login...');
-    await page.goto('http://localhost:8000/dev-login?role=parent');
+    await page.goto('/api/dev-login?role=parent');
     
     console.log('2. Waiting for redirection to parent dashboard...');
     // The Flask page redirects to http://localhost:5173/ which redirects to /parent/dashboard
@@ -54,7 +54,7 @@ test.describe('Parent Portal Mobile UI Audit', () => {
       // The child-card has a click handler on a div inside it for navigation
       // Click the first card that is not the connect card.
       // The connect-card contains the class 'connect-card'. Let's select one without 'connect-card'.
-      const childLink = page.locator('.child-card:not(.connect-card)').first();
+      const childLink = page.locator('.child-card-clickable').first();
       await childLink.click();
       
       console.log('6. Waiting for report card page to load...');

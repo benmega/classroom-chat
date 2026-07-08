@@ -25,7 +25,7 @@ def update_user_ducks():
         ) or 0
 
         user.earned_ducks = total_ducks
-        user.packets = total_ducks / (2**14)
+        # user.packets = total_ducks / (2**14)  # DEPRECATED: Packets are decoupled from ducks
         updated += 1
 
         print(

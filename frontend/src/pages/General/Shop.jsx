@@ -5,6 +5,7 @@ import useAuthStore from '../../store/useAuthStore';
 import client from '../../api/client';
 import './Shop.css'; // Let's use a standard CSS file
 import WallpaperCropModal from '../../components/profile/WallpaperCropModal';
+import Skeleton from '../../components/common/Skeleton';
 
 const Shop = () => {
     const { user, checkAuth } = useAuthStore();
@@ -221,8 +222,22 @@ const Shop = () => {
 
     if (isLoading) {
         return (
-            <div className="shop-loading">
-                <Loader2 className="spinner" size={48} />
+            <div className="shop-loading" style={{ display: 'block', height: 'auto', padding: '2rem' }}>
+                <div className="shop-items-grid">
+                    {[1, 2, 3, 4, 5, 6].map(i => (
+                        <div key={i} className="shop-item-card skeleton-mt" style={{ minHeight: '220px', padding: '1.5rem', background: 'var(--bg-secondary)', borderRadius: '12px', border: '1px solid var(--border-subtle)' }}>
+                            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '1rem' }}>
+                                <Skeleton height="40px" width="40px" borderRadius="8px" />
+                                <div style={{ flexGrow: 1 }}>
+                                    <Skeleton height="18px" width="60%" style={{ marginBottom: '8px' }} />
+                                    <Skeleton height="14px" width="40%" />
+                                </div>
+                            </div>
+                            <Skeleton height="80px" borderRadius="8px" style={{ marginBottom: '1rem' }} />
+                            <Skeleton height="36px" width="100%" borderRadius="6px" />
+                        </div>
+                    ))}
+                </div>
             </div>
         );
     }

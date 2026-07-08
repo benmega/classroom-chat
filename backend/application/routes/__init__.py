@@ -27,12 +27,14 @@ from .user_routes import user
 from .parent_routes import parent
 from .cognito_routes import cognito_bp
 from .shop_routes import shop_bp
+from .project_template_routes import project_templates_bp
 
 
 def register_blueprints(app: Flask):
     app.register_blueprint(admin_bp, url_prefix="/api/admin")
     app.register_blueprint(parent, url_prefix="/api/parents")
     app.register_blueprint(user, url_prefix="/user")
+    app.register_blueprint(project_templates_bp, url_prefix="/api/project-templates")
     app.register_blueprint(ai, url_prefix="/ai")
     app.register_blueprint(upload, url_prefix="/upload")
     app.register_blueprint(message, url_prefix="/message")

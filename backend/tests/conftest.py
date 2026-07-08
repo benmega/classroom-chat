@@ -167,6 +167,8 @@ def logged_in_client(client, sample_user):
 def init_db(test_app):
     with test_app.app_context():
         db.create_all()
+        from application import seed_global_data
+        seed_global_data()
         yield db
         db.session.rollback()
         db.drop_all()

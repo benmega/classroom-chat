@@ -32,6 +32,7 @@ const AdminProjects = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [selectedProject, setSelectedProject] = useState(null);
     const [teacherComment, setTeacherComment] = useState('');
+    const [packetReward, setPacketReward] = useState(0.006);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const fetchProjects = useCallback(async () => {
@@ -67,6 +68,7 @@ const AdminProjects = () => {
             const response = await client.post(`/api/admin/handle-project-review/${projectId}`, {
                 action,
                 teacher_comment: teacherComment,
+                packet_reward: packetReward,
                 filter_context: filter
             });
 
@@ -74,6 +76,7 @@ const AdminProjects = () => {
                 toast.success(response.data.message);
                 setSelectedProject(null);
                 setTeacherComment('');
+                setPacketReward(0.006);
                 fetchProjects();
             }
         } catch {
@@ -181,6 +184,35 @@ const AdminProjects = () => {
                         </div>
 
                         <div className="review-actions-panel">
+                            <h3 className="section-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                Packet Reward
+                            </h3>
+                            <div style={{ marginBottom: '20px' }}>
+                                <input 
+                                    type="number"
+                                    step="0.001"
+                                    min="0"
+                                    value={packetReward}
+                                    onChange={(e) => setPacketReward(parseFloat(e.target.value) || 0)}
+                                    className="review-input"
+                                    style={{
+                                        width: '100%',
+                                        padding: '12px 16px',
+                                        borderRadius: '8px',
+                                        border: '1px solid var(--border-color)',
+                                        backgroundColor: 'var(--bg-card)',
+                                        color: 'var(--text-main)',
+                                        fontSize: '15px',
+                                        fontWeight: '500',
+                                        transition: 'border-color 0.2s, box-shadow 0.2s',
+                                        outline: 'none'
+                                    }}
+                                />
+                                <span style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'block', marginTop: '6px' }}>
+                                    Adjust reward based on project quality. Prepopulated with system average.
+                                </span>
+                            </div>
+
                             <h3 className="section-title"><MessageSquare size={18} /> Teacher Feedback</h3>
                             <textarea 
                                 value={teacherComment}
@@ -284,6 +316,7 @@ const AdminProjects = () => {
                             <div key={p.id} className="admin-project-card" onClick={() => {
                                 setSelectedProject(p);
                                 setTeacherComment(p.teacher_comment || '');
+                                setPacketReward(p.packets_awarded !== undefined && p.packets_awarded !== null && p.packets_awarded > 0 ? p.packets_awarded : 0.006);
                             }}>
                                 <div className="p-thumb">
                                     {p.image_url ? (

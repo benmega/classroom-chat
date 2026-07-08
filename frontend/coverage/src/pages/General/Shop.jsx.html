@@ -23,16 +23,16 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">76.52% </span>
+                <span class="strong">77.5% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>264/345</span>
+                <span class='fraction'>279/360</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">68.96% </span>
+                <span class="strong">69.49% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>40/58</span>
+                <span class='fraction'>41/59</span>
             </div>
         
             
@@ -44,9 +44,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">76.52% </span>
+                <span class="strong">77.5% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>264/345</span>
+                <span class='fraction'>279/360</span>
             </div>
         
             
@@ -479,7 +479,23 @@
 <a name='L414'></a><a href='#L414'>414</a>
 <a name='L415'></a><a href='#L415'>415</a>
 <a name='L416'></a><a href='#L416'>416</a>
-<a name='L417'></a><a href='#L417'>417</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
+<a name='L417'></a><a href='#L417'>417</a>
+<a name='L418'></a><a href='#L418'>418</a>
+<a name='L419'></a><a href='#L419'>419</a>
+<a name='L420'></a><a href='#L420'>420</a>
+<a name='L421'></a><a href='#L421'>421</a>
+<a name='L422'></a><a href='#L422'>422</a>
+<a name='L423'></a><a href='#L423'>423</a>
+<a name='L424'></a><a href='#L424'>424</a>
+<a name='L425'></a><a href='#L425'>425</a>
+<a name='L426'></a><a href='#L426'>426</a>
+<a name='L427'></a><a href='#L427'>427</a>
+<a name='L428'></a><a href='#L428'>428</a>
+<a name='L429'></a><a href='#L429'>429</a>
+<a name='L430'></a><a href='#L430'>430</a>
+<a name='L431'></a><a href='#L431'>431</a>
+<a name='L432'></a><a href='#L432'>432</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
@@ -705,6 +721,20 @@
 <span class="cline-any cline-yes">12x</span>
 <span class="cline-any cline-yes">12x</span>
 <span class="cline-any cline-yes">12x</span>
+<span class="cline-any cline-yes">72x</span>
+<span class="cline-any cline-yes">72x</span>
+<span class="cline-any cline-yes">72x</span>
+<span class="cline-any cline-yes">72x</span>
+<span class="cline-any cline-yes">72x</span>
+<span class="cline-any cline-yes">72x</span>
+<span class="cline-any cline-yes">72x</span>
+<span class="cline-any cline-yes">72x</span>
+<span class="cline-any cline-yes">72x</span>
+<span class="cline-any cline-yes">72x</span>
+<span class="cline-any cline-yes">72x</span>
+<span class="cline-any cline-yes">12x</span>
+<span class="cline-any cline-yes">12x</span>
+<span class="cline-any cline-yes">12x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">12x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -902,6 +932,7 @@ import useAuthStore from '../../store/useAuthStore';
 import client from '../../api/client';
 import './Shop.css'; // Let's use a standard CSS file
 import WallpaperCropModal from '../../components/profile/WallpaperCropModal';
+import Skeleton from '../../components/common/Skeleton';
 &nbsp;
 const Shop = () =&gt; {
     const { user, checkAuth } = useAuthStore();
@@ -1118,8 +1149,22 @@ const Shop = () =&gt; {
 &nbsp;
     if (isLoading) {
         return (
-            &lt;div className="shop-loading"&gt;
-                &lt;Loader2 className="spinner" size={48} /&gt;
+            &lt;div className="shop-loading" style={{ display: 'block', height: 'auto', padding: '2rem' }}&gt;
+                &lt;div className="shop-items-grid"&gt;
+                    {[1, 2, 3, 4, 5, 6].map(i =&gt; (
+                        &lt;div key={i} className="shop-item-card skeleton-mt" style={{ minHeight: '220px', padding: '1.5rem', background: 'var(--bg-secondary)', borderRadius: '12px', border: '1px solid var(--border-subtle)' }}&gt;
+                            &lt;div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '1rem' }}&gt;
+                                &lt;Skeleton height="40px" width="40px" borderRadius="8px" /&gt;
+                                &lt;div style={{ flexGrow: 1 }}&gt;
+                                    &lt;Skeleton height="18px" width="60%" style={{ marginBottom: '8px' }} /&gt;
+                                    &lt;Skeleton height="14px" width="40%" /&gt;
+                                &lt;/div&gt;
+                            &lt;/div&gt;
+                            &lt;Skeleton height="80px" borderRadius="8px" style={{ marginBottom: '1rem' }} /&gt;
+                            &lt;Skeleton height="36px" width="100%" borderRadius="6px" /&gt;
+                        &lt;/div&gt;
+                    ))}
+                &lt;/div&gt;
             &lt;/div&gt;
         );
     }
@@ -1318,7 +1363,7 @@ export default Shop;
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-07-03T02:19:15.158Z
+                at 2026-07-08T03:53:20.994Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

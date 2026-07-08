@@ -97,6 +97,7 @@ export const RESOURCES = [
     "UserAchievement",
     "UserCertificate",
     "Project",
+    "ProjectTemplate",
     "Challenge",
     "AISettings",
     "BannedWords",

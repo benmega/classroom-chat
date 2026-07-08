@@ -264,6 +264,37 @@ def seed_global_data():
                 db.session.add(StoreItem(**item_data))
                 logger.info(f"Seeded store item '{item_data['name']}'.")
 
+        # 4. Ensure default project templates exist
+        from application.models.project_template import ProjectTemplate
+        default_templates = [
+            {
+                "name": "CS1 Capstone",
+                "description": "Students create a custom Python project utilizing Turtle graphics to design artwork, draw shapes, and build animations. They learn how to control turtle movement, use variables, loops, and conditions to structure their drawing logic, and organize code into functions. By the end, students understand coordinate systems, color maps, and procedural drawing."
+            },
+            {
+                "name": "CS2 Capstone",
+                "description": "Students design and build a 2D interactive game or simulation using conditional logic, keyboard controls, and collision detection. They learn to manage game state, implement loops, handle player input, and dynamically update game elements on screen. By the end, students understand key game design principles and state-driven program flow."
+            },
+            {
+                "name": "Tabula Rasa",
+                "description": "In this project students create a CodeCombat game level from scratch by spawning all the objects enemies and goals needed to make the game playable. They learn how to use coordinates to position items on the grid set object properties to control behavior and define victory conditions through goals."
+            },
+            {
+                "name": "Text-Based Adventure",
+                "description": "In this project students create a text-based adventure game where players navigate through different scenarios solving puzzles and making choices that affect the outcome. The game introduces basic coding concepts such as variables loops and conditionals. It offers an interactive and engaging way to learn programming while creating a fun story-driven experience."
+            },
+            {
+                "name": "Dangerous Skies",
+                "description": "Create an obstacle course using for and while loops based on player performance. Learning Goals: Use for and while loops to build an obstacle course. Concepts Covered: Data Types For Loops Iteration Nesting While Loops"
+            }
+        ]
+
+        for template_data in default_templates:
+            template = ProjectTemplate.query.filter_by(name=template_data["name"]).first()
+            if not template:
+                db.session.add(ProjectTemplate(**template_data))
+                logger.info(f"Seeded project template '{template_data['name']}'.")
+
         db.session.commit()
 
     except sqlalchemy.exc.OperationalError as exc:

@@ -6,6 +6,7 @@ import client from '../../api/client';
 
 import DesktopNotice from '../../components/common/DesktopNotice';
 import './ParentDashboard.css';
+import Skeleton from '../../components/common/Skeleton';
 
 const ParentDashboard = () => {
     const navigate = useNavigate();
@@ -68,16 +69,27 @@ const ParentDashboard = () => {
 
     if (isLoading) {
         return (
-            <div className="parent-loading">
-                <Loader2
-                    size={56}
-                    strokeWidth={1.5}
-                    className="parent-loader-icon"
-                />
-                <div className="parent-loading-text">
-                    <h2>Classroom Chat</h2>
-                    <p>Loading your dashboard…</p>
-                </div>
+            <div className="parent-dashboard animate-page-entry" style={{ padding: '2rem' }}>
+                <main className="parent-body">
+                    <div className="children-grid">
+                        {[1, 2].map(i => (
+                            <div key={i} className="child-card glass-panel" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1.5rem', borderRadius: '12px' }}>
+                                <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                                    <Skeleton height="64px" width="64px" borderRadius="50%" />
+                                    <div style={{ flexGrow: 1 }}>
+                                        <Skeleton height="24px" width="60%" style={{ marginBottom: '8px' }} />
+                                        <Skeleton height="16px" width="40%" />
+                                    </div>
+                                </div>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: 'auto' }}>
+                                    <Skeleton height="40px" borderRadius="8px" />
+                                    <Skeleton height="40px" borderRadius="8px" />
+                                    <Skeleton height="40px" borderRadius="8px" />
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </main>
             </div>
         );
     }

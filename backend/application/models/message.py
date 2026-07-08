@@ -76,7 +76,7 @@ class Message(db.Model):
 
     # Relationships
     user = db.relationship(
-        "User", backref=db.backref("messages", lazy="selectin"), lazy="selectin"
+        "User", backref=db.backref("messages", lazy="selectin", cascade="all, delete-orphan"), lazy="selectin"
     )
     
     target_classrooms = db.relationship(

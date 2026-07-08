@@ -1,7 +1,7 @@
 .course-progress-page {
-    max-width: 1200px;
+    max-width: 1600px;
     margin: 0 auto;
-    padding: 2rem 1rem;
+    padding: 2rem 1.5rem;
     padding-bottom: 6rem;
     height: 100dvh;
     overflow-y: auto;

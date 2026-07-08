@@ -1,6 +1,7 @@
 import os
 import re
 import uuid
+from datetime import datetime
 
 from PIL import Image
 from flask import Blueprint, jsonify, send_from_directory, current_app, abort, render_template
@@ -327,6 +328,10 @@ def new_project():
         )
 
         db.session.add(new_proj)
+        
+        target_user.current_activity = f"Working on project: {new_proj.name}"
+        target_user.last_activity_time = datetime.utcnow()
+        
         db.session.flush()
 
         if "project_image" in request.files:

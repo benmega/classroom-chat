@@ -291,6 +291,8 @@ def _log_challenge(details, user, helper=None):
             helper=helper,
         )
         db.session.add(challenge_log)
+        user.current_activity = f"Working on {challenge.name}"
+        user.last_activity_time = datetime.utcnow()
         db.session.commit()
 
         return {

@@ -4,7 +4,7 @@ import { Plus, Code, Play, Settings, CheckCircle, ExternalLink, Layers } from 'l
 import SmartImage from '../common/SmartImage';
 import { formatStaticUrl } from '../../utils/formatters';
 
-const ProjectPortfolio = ({ projects, isOwner, setSelectedProject }) => {
+const ProjectPortfolio = ({ projects, isOwner, setSelectedProject, studentId }) => {
     const navigate = useNavigate();
 
     return (
@@ -12,7 +12,7 @@ const ProjectPortfolio = ({ projects, isOwner, setSelectedProject }) => {
             <div className="panel-header between">
                 <h2><Layers size={20} /> Projects Portfolio</h2>
                 {isOwner && (
-                    <Link to="/project/new" className="btn-add">
+                    <Link to={studentId ? `/project/new?student_id=${studentId}` : "/project/new"} className="btn-add">
                         <Plus size={16} /> Add Project
                     </Link>
                 )}

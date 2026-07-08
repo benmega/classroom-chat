@@ -49,6 +49,12 @@ const ProfileHeader = ({ target, isOwner, pfpInputRef, onPfpChange }) => {
                 <div className="student-identity">
                     <h1 className="student-name">{target.nickname || target.username}</h1>
                     <p className="student-title">@{target.username}</p>
+                    {target.current_activity && (
+                        <p className="student-activity" style={{ marginTop: '0.5rem', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+                            <span style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', backgroundColor: 'var(--primary-color)', marginRight: '6px' }}></span>
+                            {target.current_activity}
+                        </p>
+                    )}
                     {isOwner && (
                         <Link to="/settings" className="btn-settings">
                             <User size={14} /> Edit Profile

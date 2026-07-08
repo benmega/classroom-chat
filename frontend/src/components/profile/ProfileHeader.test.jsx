@@ -18,7 +18,7 @@ describe('ProfileHeader Component', () => {
 
         render(
             <MemoryRouter>
-                <ProfileHeader profile={mockProfile} isOwnProfile={true} />
+                <ProfileHeader target={mockProfile} isOwner={true} />
             </MemoryRouter>
         );
 
@@ -35,7 +35,7 @@ describe('ProfileHeader Component', () => {
 
         render(
             <MemoryRouter>
-                <ProfileHeader profile={mockProfile} isOwnProfile={true} />
+                <ProfileHeader target={mockProfile} isOwner={true} />
             </MemoryRouter>
         );
 
@@ -51,7 +51,7 @@ describe('ProfileHeader Component', () => {
 
         render(
             <MemoryRouter>
-                <ProfileHeader profile={mockProfile} isOwnProfile={false} />
+                <ProfileHeader target={mockProfile} isOwner={false} />
             </MemoryRouter>
         );
 

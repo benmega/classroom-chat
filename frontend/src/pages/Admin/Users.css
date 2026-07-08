@@ -128,6 +128,27 @@
     border-bottom: 1px solid var(--bg-tertiary);
 }
 
+.users-table tr.clickable-row {
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.users-table tr.clickable-row:hover {
+    background-color: var(--bg-hover, rgba(0, 0, 0, 0.03));
+}
+
+.users-table tr.admin-row {
+    background-color: rgba(245, 158, 11, 0.03);
+}
+
+.users-table tr.admin-row.clickable-row:hover {
+    background-color: rgba(245, 158, 11, 0.08);
+}
+
+.users-table tr:hover td {
+    border-color: var(--border-medium);
+}
+
 .users-table tr:last-child td {
     border-bottom: none;
 }
@@ -169,22 +190,84 @@
     max-width: 140px;
 }
 
-.user-role-badge {
-    padding: 4px 10px;
-    border-radius: 8px;
-    font-size: 0.75rem;
-    font-weight: 700;
-    display: inline-flex;
+.handle-row {
+    display: flex;
     align-items: center;
     gap: 6px;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    box-shadow: var(--shadow-sm);
+    margin-top: 2px;
 }
 
-.user-role-badge.student { background: linear-gradient(135deg, #eff6ff, #dbeafe); color: #1e40af; border: 1px solid #bfdbfe; }
-.user-role-badge.admin { background: linear-gradient(135deg, var(--error-subtle), #fee2e2); color: #b91c1c; border: 1px solid #fecaca; }
-.user-role-badge.parent { background: linear-gradient(135deg, #f5f3ff, #ede9fe); color: #6d28d9; border: 1px solid #ddd6fe; }
+.inline-role-label {
+    font-size: 0.65rem;
+    padding: 1px 6px;
+    border-radius: 4px;
+    background: #f1f5f9;
+    color: var(--text-muted);
+    border: 1px solid var(--border-subtle);
+    text-transform: uppercase;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+}
+
+.inline-role-label.admin {
+    background: #fef2f2;
+    color: #b91c1c;
+    border-color: #fecaca;
+}
+
+.inline-role-label.parent {
+    background: #f5f3ff;
+    color: #6d28d9;
+    border-color: #ddd6fe;
+}
+
+.inline-role-label.student {
+    background: #eff6ff;
+    color: #1e40af;
+    border-color: #bfdbfe;
+}
+
+.inline-role-label.pending {
+    background: #fffbeb;
+    color: #b45309;
+    border-color: #fde68a;
+}
+
+.levels-today-badge {
+    color: #16a34a;
+    background-color: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 1px 5px;
+    border-radius: 5px;
+    margin-left: 6px;
+    display: inline-flex;
+    align-items: center;
+    line-height: 1;
+}
+
+.activity-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    max-width: 200px;
+}
+
+.activity-text {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--slate-800);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.activity-idle {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    font-style: italic;
+}
 
 
 .economy-info .duck-count {
@@ -432,5 +515,58 @@
         gap: 12px;
         align-items: flex-start;
     }
+}
+
+/* Dropdown Actions Menu styling */
+.actions-dropdown-container {
+    position: relative;
+    display: inline-block;
+}
+
+.dropdown-menu {
+    position: absolute;
+    right: 0;
+    top: 100%;
+    margin-top: 4px;
+    background: white;
+    border: 1px solid var(--border-subtle);
+    border-radius: 12px;
+    box-shadow: var(--shadow-lg);
+    z-index: 1000;
+    min-width: 180px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    padding: 6px 0;
+}
+
+.dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+    width: 100%;
+    transition: all 0.2s;
+}
+
+.dropdown-item:hover {
+    background: var(--bg-secondary);
+    color: var(--slate-800);
+}
+
+.dropdown-item.delete {
+    color: var(--error-color);
+}
+
+.dropdown-item.delete:hover {
+    background: var(--error-subtle);
+    color: #b91c1c;
 }
 

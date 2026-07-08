@@ -76,7 +76,7 @@ const ChatMessage = React.memo(({ msg, user, onDelete }) => {
                         <div className={`message-bubble ${msg.chat_font_color ? "perk-chat-font" : ""}`} style={{ flex: 1, minWidth: 0, ...(msg.chat_font_color ? { "--chat-font-color": msg.chat_font_color } : {}) }}>
                             <Linkify text={msg.content} isUserMessage={false} />
                         </div>
-                        {user?.is_admin && (
+                        {(user?.is_admin || user?.id === msg.user_id) && (
                             <button 
                                 onClick={() => onDelete(msg.id)}
                                 className="delete-message-btn"

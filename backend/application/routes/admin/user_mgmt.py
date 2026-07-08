@@ -9,6 +9,40 @@ from flask import current_app
 from ..admin_routes import admin_bp
 
 
+@admin_bp.route("/student_activity", methods=["GET"])
+@admin_only
+@api_response
+def student_activity():
+    is_online = request.args.get("is_online", "false").lower() == "true"
+    
+    query = User.query.filter_by(role="student")
+    if is_online:
+        query = query.filter_by(is_online=True)
+        
+    students = query.all()
+    
+    # We can use to_dict_summary or a custom lightweight dict
+    # We don't precompute counts here to keep it fast for this specific view
+    return {
+        "students": [
+            {
+                "id": u.id,
+                "username": u.username,
+                "nickname": u.nickname,
+                "profile_picture_url": (
+                    f"/user/profile_pictures/{u.profile_picture}"
+                    if u.profile_picture
+                    else "/static/images/Default_pfp.jpg"
+                ),
+                "slug": u.slug,
+                "is_online": u.is_online,
+                "current_activity": u.current_activity,
+                "last_activity_time": u.last_activity_time.isoformat() if u.last_activity_time else None,
+            }
+            for u in students
+        ]
+    }
+
 @admin_bp.route("/pending_users", methods=["GET"])
 @admin_only
 @api_response
@@ -71,6 +105,7 @@ def get_users():
             User._username.ilike(f"%{search}%"),
             User.nickname.ilike(f"%{search}%")
         ))
+    query = query.order_by(User.is_approved.asc(), User.last_activity_time.desc().nullslast(), User.id.desc())
 
     pagination = query.paginate(page=page, per_page=per_page, error_out=False)
     users = pagination.items
@@ -88,9 +123,23 @@ def get_users():
     id_to_username = {u.id: u._username for u in users}
     precomputed = {(id_to_username[user_id], domain): count for user_id, domain, count in counts}
 
+    # Fetch levels completed today (UTC day start to match log timestamps)
+    from datetime import datetime, time
+    today_start = datetime.combine(datetime.utcnow().date(), time.min)
+
+    today_counts = (
+        db.session.query(ChallengeLog.user_id, func.count(ChallengeLog.id))
+        .filter(ChallengeLog.user_id.in_(user_ids))
+        .filter(ChallengeLog.timestamp >= today_start)
+        .group_by(ChallengeLog.user_id)
+        .all()
+    )
+    levels_today_map = {user_id: count for user_id, count in today_counts}
+
     user_data = []
     for u in users:
         d = u.to_dict_summary(precomputed)
+        d["levels_today"] = levels_today_map.get(u.id, 0)
         # Defensive pop redundant but kept for safety with existing patterns
         for field in ["password_hash", "salt", "ip_address"]:
             d.pop(field, None)
@@ -368,42 +417,6 @@ def unlink_parent_child(parent_id, student_id):
         return jsonify({"success": True, "message": f"Unlinked {student.username} from {parent.username}"})
     return jsonify({"success": True, "message": "Not linked"})
 
-@admin_bp.route("/connection_requests", methods=["GET"])
-@admin_only
-@api_response
-def get_connection_requests():
-    from application.models.parent_connection_request import ParentConnectionRequest
-    requests = ParentConnectionRequest.query.filter_by(status="pending").all()
-    return {"requests": [r.to_dict() for r in requests]}
-
-@admin_bp.route("/connection_requests/<int:req_id>/approve", methods=["POST"])
-@admin_only
-@api_response
-def approve_connection_request(req_id):
-    from application.models.parent_connection_request import ParentConnectionRequest
-    req = db.session.get(ParentConnectionRequest, req_id)
-    if not req or req.status != "pending":
-        return "Request not found or not pending.", 404
-    
-    req.status = "approved"
-    if req.student not in req.parent.children:
-        req.parent.children.append(req.student)
-    db.session.commit()
-    return {"message": "Request approved."}
-
-@admin_bp.route("/connection_requests/<int:req_id>/reject", methods=["POST"])
-@admin_only
-@api_response
-def reject_connection_request(req_id):
-    from application.models.parent_connection_request import ParentConnectionRequest
-    req = db.session.get(ParentConnectionRequest, req_id)
-    if not req or req.status != "pending":
-        return "Request not found or not pending.", 404
-    
-    req.status = "rejected"
-    db.session.commit()
-    return {"message": "Request rejected."}
-
 @admin_bp.route("/user/<int:user_id>/connection_card", methods=["GET"])
 @admin_only
 @api_response
@@ -497,4 +510,74 @@ def set_drawer():
     except sqlalchemy.exc.IntegrityError:
         db.session.rollback()
         return "Drawer number is already assigned to another student", 409
+
+
+@admin_bp.route("/user/<int:user_id>", methods=["GET"])
+@admin_only
+def get_user_details(user_id):
+    from application.models.challenge_log import ChallengeLog
+    from sqlalchemy import func
+
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    counts = (
+        db.session.query(
+            ChallengeLog.domain, func.count(ChallengeLog.id)
+        )
+        .filter(ChallengeLog.user_id == user.id)
+        .group_by(ChallengeLog.domain)
+        .all()
+    )
+    precomputed = {(user._username, domain): count for domain, count in counts}
+
+    d = user.to_dict_summary(precomputed)
+    for field in ["password_hash", "salt", "ip_address"]:
+        d.pop(field, None)
+    
+    return jsonify({"user": d})
+
+
+@admin_bp.route("/students/<int:student_id>/parents", methods=["GET"])
+@admin_only
+def get_student_parents(student_id):
+    student = db.session.get(User, student_id)
+    if not student or student.role != "student":
+        return jsonify({"success": False, "message": "Student not found"}), 404
+        
+    parents = [
+        {
+            "id": parent.id,
+            "username": parent.username,
+            "nickname": parent.nickname,
+            "profile_picture": parent.profile_picture
+        }
+        for parent in student.parents
+    ]
+    return jsonify({"success": True, "parents": parents})
+
+
+@admin_bp.route("/parents/connections", methods=["GET"])
+@admin_only
+def get_parent_child_connections():
+    parents = User.query.filter_by(role="parent").all()
+    connections = []
+    for parent in parents:
+        for child in parent.children:
+            connections.append({
+                "parent": {
+                    "id": parent.id,
+                    "username": parent.username,
+                    "nickname": parent.nickname,
+                    "profile_picture": parent.profile_picture
+                },
+                "student": {
+                    "id": child.id,
+                    "username": child.username,
+                    "nickname": child.nickname,
+                    "profile_picture": child.profile_picture
+                }
+            })
+    return jsonify({"success": True, "connections": connections})
 

@@ -106,6 +106,7 @@ const Profile = () => {
                         projects={target.projects} 
                         isOwner={isOwner} 
                         setSelectedProject={setSelectedProject}
+                        studentId={target.id}
                     />
 
                     <section className="dashboard-panel">

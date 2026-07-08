@@ -131,8 +131,18 @@ describe('Users Page', () => {
     expect(mockFetchUsers).toHaveBeenCalledWith(1);
   });
 
-  it('triggers action modals for a student user', () => {
-    const studentUser = { id: 2, username: 'student1', role: 'student', is_admin: false };
+  it('renders new activity, levels today, role badge, and status info', () => {
+    const studentUser = { 
+      id: 2, 
+      username: 'student1', 
+      nickname: 'Student One', 
+      role: 'student', 
+      is_admin: false,
+      levels_today: 5,
+      current_activity: 'Working on loops',
+      last_activity_time: new Date(Date.now() - 5 * 60 * 1000).toISOString(), // 5m ago
+      is_online: false
+    };
     useUsersManagement.mockReturnValue({
       ...defaultMockState,
       users: [studentUser],
@@ -140,68 +150,17 @@ describe('Users Page', () => {
     });
 
     renderComponent();
-    
-    // adjust ducks
-    const adjustDuckBtn = document.querySelector('.action-btn.adjust');
-    fireEvent.click(adjustDuckBtn);
-    expect(mockSetModalUser).toHaveBeenCalledWith(studentUser);
-    expect(mockSetActiveModal).toHaveBeenCalledWith('adjust');
 
-    // adjust packets
-    const adjustPacketBtn = document.querySelector('.action-btn.adjust-packets');
-    fireEvent.click(adjustPacketBtn);
-    expect(mockSetActiveModal).toHaveBeenCalledWith('adjust_packets');
+    // Verify inline role tag
+    expect(screen.getByText('student')).toBeInTheDocument();
 
-    // set drawer
-    const drawerBtn = document.querySelector('.action-btn-blue'); // blue is set drawer
-    fireEvent.click(drawerBtn);
-    expect(mockSetActiveModal).toHaveBeenCalledWith('drawer');
+    // Verify current activity
+    expect(screen.getByText('Working on loops')).toBeInTheDocument();
 
-    // reset password
-    const resetBtn = document.querySelector('.action-btn.pass');
-    fireEvent.click(resetBtn);
-    expect(mockSetActiveModal).toHaveBeenCalledWith('reset');
+    // Verify levels completed today
+    expect(screen.getByText('+5 today')).toBeInTheDocument();
 
-    // permanently remove
-    const deleteBtn = document.querySelector('.action-btn.delete');
-    fireEvent.click(deleteBtn);
-    expect(mockHandleRemoveUser).toHaveBeenCalledWith('student1');
-  });
-
-  it('triggers manage children modal for a parent user', () => {
-    const parentUser = { id: 3, username: 'parent1', role: 'parent', is_admin: false };
-    useUsersManagement.mockReturnValue({
-      ...defaultMockState,
-      users: [parentUser],
-      totalUsers: 1
-    });
-
-    renderComponent();
-    
-    const manageChildrenBtn = document.querySelector('.action-btn-indigo');
-    fireEvent.click(manageChildrenBtn);
-    expect(mockSetModalUser).toHaveBeenCalledWith(parentUser);
-    expect(mockFetchParentChildren).toHaveBeenCalledWith(3);
-    expect(mockSetActiveModal).toHaveBeenCalledWith('manage_children');
-  });
-
-  it('triggers connection card for a student user', async () => {
-    const studentUser = { id: 2, username: 'student1', role: 'student', is_admin: false };
-    useUsersManagement.mockReturnValue({
-      ...defaultMockState,
-      users: [studentUser],
-      totalUsers: 1
-    });
-
-    renderComponent();
-    
-    const connectionBtn = document.querySelector('.action-btn-green');
-    fireEvent.click(connectionBtn);
-    
-    await screen.findByText('Card'); // wait for state tick
-    
-    expect(mockFetchConnectionCard).toHaveBeenCalledWith(2);
-    expect(mockSetModalUser).toHaveBeenCalledWith(studentUser);
-    expect(mockSetActiveModal).toHaveBeenCalledWith('connection_card');
+    // Verify relative last active time
+    expect(screen.getByText('5m ago')).toBeInTheDocument();
   });
 });

@@ -77,7 +77,6 @@ def test_upload_note_s3_failure(mock_get_s3_client, logged_in_client, sample_use
         "note_image": (io.BytesIO(b"img"), "fail.png")
     }
 
-    # To force a 500, we also need to mock local failure
     with patch("application.routes.notes_routes.handle_local_note_upload", return_value=None):
         response = logged_in_client.post(
             "/notes/upload",
@@ -87,3 +86,70 @@ def test_upload_note_s3_failure(mock_get_s3_client, logged_in_client, sample_use
 
     assert response.status_code == 500
     assert response.json["error"] == "Upload failed"
+
+def test_upload_note_local_success(logged_in_client, sample_user, init_db):
+    logged_in_client.application.config["USE_S3"] = False
+
+    with logged_in_client.session_transaction() as sess:
+        sess["user"] = sample_user.id
+
+    data = {
+        "note_image": (io.BytesIO(b"local note bytes"), "test_local_note.png")
+    }
+
+    response = logged_in_client.post(
+        "/notes/upload",
+        data=data,
+        content_type="multipart/form-data"
+    )
+    assert response.status_code == 200
+    assert response.json["status"] == "success"
+    
+    note_id = response.json["note"]["id"]
+    note_url = response.json["note"]["url"]
+    
+    # Verify file is served
+    filename = note_url.split("/")[-1]
+    resp_view = logged_in_client.get(f"/notes/view/{filename}")
+    assert resp_view.status_code == 200
+    assert resp_view.data == b"local note bytes"
+    resp_view.close()  # Release file lock on Windows
+
+    # Unauthorized delete
+    # Let's log in as another user to test unauthorized delete:
+    from application.models.user import User
+    other_user = User(username="other_note_user", is_approved=True)
+    other_user.set_password("pass123")
+    db.session.add(other_user)
+    db.session.commit()
+
+    with logged_in_client.session_transaction() as sess:
+        sess["user"] = other_user.id
+
+    resp_del_unauth = logged_in_client.post(f"/notes/delete/{note_id}")
+    assert resp_del_unauth.status_code == 403
+
+    # Success delete by owner
+    with logged_in_client.session_transaction() as sess:
+        sess["user"] = sample_user.id
+
+    resp_del = logged_in_client.post(f"/notes/delete/{note_id}")
+    assert resp_del.status_code == 200
+    assert resp_del.json["status"] == "success"
+
+@patch(f"{ROUTE_MODULE_PATH}.get_s3_client")
+def test_delete_note_s3(mock_get_s3_client, logged_in_client, sample_user, init_db):
+    mock_s3 = mock_get_s3_client.return_value
+    mock_s3.delete_object.return_value = {}
+
+    note = Note(user_id=sample_user.id, filename="notes/user/s3_note.png")
+    db.session.add(note)
+    db.session.commit()
+
+    with logged_in_client.session_transaction() as sess:
+        sess["user"] = sample_user.id
+
+    resp = logged_in_client.post(f"/notes/delete/{note.id}")
+    assert resp.status_code == 200
+    assert resp.json["status"] == "success"
+    mock_s3.delete_object.assert_called_once()

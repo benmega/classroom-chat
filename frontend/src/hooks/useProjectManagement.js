@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import client from '../api/client';
 import toast from 'react-hot-toast';
 import useAuthStore from '../store/useAuthStore';
@@ -9,6 +9,8 @@ import { extractVideoThumbnail } from '../utils/video';
 export const useProjectManagement = () => {
     const { projectId } = useParams();
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
+    const studentIdParam = searchParams.get('student_id');
     const { user: currentUser } = useAuthStore();
     
     const [projectData, setProjectData] = useState({
@@ -19,10 +21,12 @@ export const useProjectManagement = () => {
         video_url: '',
         code_snippet: '',
         teacher_comment: '',
-        student_id: ''
+        student_id: studentIdParam || ''
     });
     
     const [students, setStudents] = useState([]);
+    const [templates, setTemplates] = useState({});
+    const [selectedTemplate, setSelectedTemplate] = useState('custom');
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
     const [projectImage, setProjectImage] = useState(null);
@@ -32,13 +36,23 @@ export const useProjectManagement = () => {
     const [error, setError] = useState(null);
 
     useEffect(() => {
+        if (!projectId && studentIdParam) {
+            setProjectData(prev => ({ ...prev, student_id: studentIdParam }));
+        }
+    }, [projectId, studentIdParam]);
+
+    useEffect(() => {
         const fetchData = async () => {
             setIsLoading(true);
             try {
-                const [studentRes, projectRes] = await Promise.all([
+                const [studentRes, projectRes, templatesRes] = await Promise.all([
                     currentUser?.is_admin ? client.get('/user/project/new') : Promise.resolve(null),
-                    projectId ? client.get(`/user/project/edit/${projectId}`) : Promise.resolve(null)
+                    projectId ? client.get(`/user/project/edit/${projectId}`) : Promise.resolve(null),
+                    client.get('/api/project-templates')
                 ]);
+
+                const fetchedTemplates = templatesRes?.data?.data?.templates || {};
+                setTemplates(fetchedTemplates);
 
                 if (studentRes) {
                     setStudents(studentRes.data.data.students || []);
@@ -60,6 +74,14 @@ export const useProjectManagement = () => {
                         setImagePreview(formatStaticUrl(p.image_url));
                         setIsCustomImage(true);
                     }
+                    
+                    // Match project name against default templates
+                    let matchingTemplate = 'custom';
+                    if (p.name) {
+                        const matched = Object.keys(fetchedTemplates).find(t => p.name.toLowerCase().includes(t.toLowerCase()));
+                        if (matched) matchingTemplate = matched;
+                    }
+                    setSelectedTemplate(matchingTemplate);
                 }
             } catch (error) {
                 console.error('Error fetching project data:', error);
@@ -90,6 +112,20 @@ export const useProjectManagement = () => {
         
         if (e.target.tagName.toLowerCase() === 'textarea') {
             adjustTextareaHeight(e.target);
+        }
+    };
+
+    const handleTemplateChange = (e) => {
+        const template = e.target.value;
+        setSelectedTemplate(template);
+        if (template !== 'custom') {
+            setProjectData(prev => ({ 
+                ...prev, 
+                name: template,
+                description: templates[template]?.description || ''
+            }));
+        } else {
+            setProjectData(prev => ({ ...prev, name: '' }));
         }
     };
 
@@ -212,12 +248,15 @@ export const useProjectManagement = () => {
         projectId,
         projectData,
         students,
+        templates,
+        selectedTemplate,
         isLoading,
         isSaving,
         imagePreview,
         projectVideo,
         error,
         handleInputChange,
+        handleTemplateChange,
         handleFileChange,
         handleRecordedVideo,
         handleSubmit,

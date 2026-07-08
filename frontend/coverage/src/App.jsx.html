@@ -23,9 +23,9 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">99.3% </span>
+                <span class="strong">99.31% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>284/286</span>
+                <span class='fraction'>292/294</span>
             </div>
         
             
@@ -44,9 +44,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">99.3% </span>
+                <span class="strong">99.31% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>284/286</span>
+                <span class='fraction'>292/294</span>
             </div>
         
             
@@ -396,7 +396,15 @@
 <a name='L331'></a><a href='#L331'>331</a>
 <a name='L332'></a><a href='#L332'>332</a>
 <a name='L333'></a><a href='#L333'>333</a>
-<a name='L334'></a><a href='#L334'>334</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
+<a name='L334'></a><a href='#L334'>334</a>
+<a name='L335'></a><a href='#L335'>335</a>
+<a name='L336'></a><a href='#L336'>336</a>
+<a name='L337'></a><a href='#L337'>337</a>
+<a name='L338'></a><a href='#L338'>338</a>
+<a name='L339'></a><a href='#L339'>339</a>
+<a name='L340'></a><a href='#L340'>340</a>
+<a name='L341'></a><a href='#L341'>341</a>
+<a name='L342'></a><a href='#L342'>342</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
@@ -408,6 +416,10 @@
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
@@ -688,6 +700,10 @@
 <span class="cline-any cline-yes">7x</span>
 <span class="cline-any cline-yes">7x</span>
 <span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-yes">7x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">7x</span>
@@ -758,17 +774,21 @@ import EditProfile from './pages/User/EditProfile';
 import ManageProject from './pages/User/ManageProject';
 import AdminDashboard from './pages/Admin/AdminDashboard';
 import AdminProjects from './pages/Admin/AdminProjects';
+import AdminProjectTemplates from './pages/Admin/AdminProjectTemplates';
 import AdminCertificates from './pages/Admin/AdminCertificates';
 import AdminAchievements from './pages/Admin/AdminAchievements';
 import AdminChallenges from './pages/Admin/AdminChallenges';
 import AdminDocuments from './pages/Admin/AdminDocuments';
 import Users from './pages/Admin/Users';
+import AdminUserDashboard from './pages/Admin/AdminUserDashboard';
+import AdminConnections from './pages/Admin/AdminConnections';
 import Analytics from './pages/Admin/Analytics';
 import PendingTrades from './pages/Admin/PendingTrades';
 import PendingUsers from './pages/Admin/PendingUsers';
 import AdvancedPanel from './pages/Admin/AdvancedPanel';
 import AdminCourseInstances from './pages/Admin/AdminCourseInstances';
 import DuckTransactions from './pages/Admin/DuckTransactions';
+import AdminStudentActivity from './pages/Admin/AdminStudentActivity';
 import ParentDashboard from './pages/Parent/ParentDashboard';
 import ParentReportCard from './pages/Parent/ParentReportCard';
 import ConnectChild from './pages/Parent/ConnectChild';
@@ -1006,8 +1026,11 @@ function App() {
                 &lt;Route index element={&lt;AdminDashboard /&gt;} /&gt;
                 &lt;Route path="dashboard" element={&lt;AdminDashboard /&gt;} /&gt;
                 &lt;Route path="projects" element={&lt;AdminProjects /&gt;} /&gt;
+                &lt;Route path="project-templates" element={&lt;AdminProjectTemplates /&gt;} /&gt;
                 &lt;Route path="certificates" element={&lt;AdminCertificates /&gt;} /&gt;
                 &lt;Route path="users" element={&lt;Users /&gt;} /&gt;
+                &lt;Route path="users/:userId" element={&lt;AdminUserDashboard /&gt;} /&gt;
+                &lt;Route path="connections" element={&lt;AdminConnections /&gt;} /&gt;
                 &lt;Route path="analytics" element={&lt;Analytics /&gt;} /&gt;
                 &lt;Route path="add-achievement" element={&lt;AdminAchievements /&gt;} /&gt;
                 &lt;Route path="add-challenges" element={&lt;AdminChallenges /&gt;} /&gt;
@@ -1017,6 +1040,7 @@ function App() {
                 &lt;Route path="course-instances" element={&lt;AdminCourseInstances /&gt;} /&gt;
                 &lt;Route path="advanced" element={&lt;AdvancedPanel /&gt;} /&gt;
                 &lt;Route path="transactions" element={&lt;DuckTransactions /&gt;} /&gt;
+                &lt;Route path="student-activity" element={&lt;AdminStudentActivity /&gt;} /&gt;
               &lt;/Routes&gt;
             &lt;/AdminLayout&gt;
           &lt;/ProtectedRoute&gt;
@@ -1069,7 +1093,7 @@ export default App;
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-07-03T02:19:15.158Z
+                at 2026-07-08T03:53:20.994Z
             </div>
         <script src="../prettify.js"></script>
         <script>

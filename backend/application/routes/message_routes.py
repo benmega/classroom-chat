@@ -106,16 +106,19 @@ def get_me_context():
 @message.route("/delete_message/<int:message_id>", methods=["DELETE"])
 @require_login
 def delete_message(message_id):
-    """Admin-only endpoint to strike/delete a message."""
+    """Admin or author endpoint to strike/delete a message."""
     user = g.get("user")
-    if not user or not user.is_admin:
-        return jsonify({"error": "Forbidden: Admin access required"}), 403
+    if not user:
+        return jsonify({"error": "Forbidden: Login required"}), 401
 
     try:
         from datetime import datetime
         msg = db.session.get(Message, message_id)
         if not msg:
             return jsonify({"error": "Message not found"}), 404
+
+        if not user.is_admin and msg.user_id != user.id:
+            return jsonify({"error": "Forbidden: Admin access or message author required"}), 403
 
         msg.is_struck = True
         msg.deleted_at = datetime.utcnow()

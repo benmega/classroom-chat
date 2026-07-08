@@ -3,6 +3,7 @@ import { Copy, RefreshCw, AlertCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import client from '../../api/client';
 import './StudentParentCode.css';
+import Skeleton from '../../components/common/Skeleton';
 
 const StudentParentCode = () => {
     const [code, setCode] = useState(null);
@@ -32,7 +33,19 @@ const StudentParentCode = () => {
         toast.success('Connection code copied!');
     };
 
-    if (isLoading) return <div className="student-code-loading">Loading...</div>;
+    if (isLoading) return (
+        <div className="student-parent-code-section">
+            <div className="code-card glass-panel" style={{ minHeight: '200px' }}>
+                <Skeleton height="28px" width="200px" style={{ marginBottom: '0.75rem' }} />
+                <Skeleton height="16px" width="300px" style={{ marginBottom: '2rem' }} />
+                <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem' }}>
+                    <Skeleton height="56px" style={{ flexGrow: 1 }} borderRadius="8px" />
+                    <Skeleton height="56px" width="56px" borderRadius="6px" />
+                </div>
+                <Skeleton height="40px" width="150px" borderRadius="6px" />
+            </div>
+        </div>
+    );
 
     if (error) {
         return (

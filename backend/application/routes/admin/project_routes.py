@@ -46,7 +46,20 @@ def handle_project_review(project_id):
     action = data.get("action")
     comment = data.get("teacher_comment")
 
+    # Decoupled packets: handle reward input
+    try:
+        packet_reward = float(data.get("packet_reward", 0.006))
+    except (ValueError, TypeError):
+        packet_reward = 0.006
+
     if action == "reject":
+        # Retract previously awarded packets if any
+        if project.packets_awarded and project.packets_awarded > 0:
+            student = project.user
+            if student:
+                student.packets = max(0.0, student.packets - project.packets_awarded)
+        
+        project.packets_awarded = 0.0
         project.teacher_comment = None
         db.session.commit()
         return jsonify(
@@ -56,10 +69,17 @@ def handle_project_review(project_id):
             }
         )
     elif action == "approve":
+        student = project.user
+        if student:
+            previous_award = project.packets_awarded or 0.0
+            diff = packet_reward - previous_award
+            student.packets += diff
+        
+        project.packets_awarded = packet_reward
         project.teacher_comment = comment
         db.session.commit()
         return jsonify(
-            {"status": "success", "message": f"Project '{project.name}' approved."}
+            {"status": "success", "message": f"Project '{project.name}' approved with {packet_reward:.3f} packets."}
         )
 
     return jsonify({"status": "error", "message": "Invalid action."}), 400

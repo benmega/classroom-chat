@@ -14,6 +14,7 @@ import client from '../../api/client';
 import toast from 'react-hot-toast';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
 import './DuckTransactions.css';
+import Skeleton from '../../components/common/Skeleton';
 
 const DuckTransactions = () => {
     const navigate = useNavigate();
@@ -187,9 +188,19 @@ const DuckTransactions = () => {
 
             <div className="transactions-table-container card">
                 {isLoading ? (
-                    <div className="loading-state">
-                        <RefreshCw size={32} className="spinning" />
-                        <p>Loading transactions...</p>
+                    <div className="transactions-skeleton" style={{ padding: '1rem' }}>
+                        <span style={{ display: 'none' }}>Loading transactions...</span>
+                        {[1, 2, 3, 4, 5].map(i => (
+                            <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '16px 0', borderBottom: '1px solid var(--border-subtle)' }}>
+                                <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                                    <Skeleton height="36px" width="36px" borderRadius="50%" />
+                                    <Skeleton height="18px" width="120px" />
+                                </div>
+                                <Skeleton height="18px" width="60px" />
+                                <Skeleton height="18px" width="200px" />
+                                <Skeleton height="18px" width="100px" />
+                            </div>
+                        ))}
                     </div>
                 ) : (
                     <>

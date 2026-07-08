@@ -1,21 +1,19 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { 
-    Award, 
     TrendingUp, 
     Coins, 
     Lock, 
-    Info, 
     Search,
     ChevronDown,
     Filter,
-    Shield,
     Users,
     Activity,
     Code,
     MessageCircle,
     Repeat,
     Briefcase,
-    FileText
+    FileText,
+    X
 } from 'lucide-react';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
@@ -29,7 +27,9 @@ const Achievements = () => {
     const [userAchievements, setUserAchievements] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
-    const [selectedType, setSelectedType] = useState('all');
+    const [selectedTypes, setSelectedTypes] = useState([]);
+    const [dropdownOpen, setDropdownOpen] = useState(false);
+    const dropdownRef = useRef(null);
 
     useEffect(() => {
         const fetchAchievements = async () => {
@@ -47,6 +47,17 @@ const Achievements = () => {
         };
 
         fetchAchievements();
+    }, []);
+
+    // Close dropdown on outside click
+    useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+                setDropdownOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
     const stats = useMemo(() => {
@@ -75,11 +86,25 @@ const Achievements = () => {
     const filteredAchievements = useMemo(() => {
         return achievements.filter(a => {
             const matchesSearch = a.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                                 a.description.toLowerCase().includes(searchTerm.toLowerCase());
-            const matchesType = selectedType === 'all' || a.type === selectedType;
+                                 (a.description || '').toLowerCase().includes(searchTerm.toLowerCase());
+            const matchesType = selectedTypes.length === 0 || selectedTypes.includes(a.type);
             return matchesSearch && matchesType;
         });
-    }, [achievements, searchTerm, selectedType]);
+    }, [achievements, searchTerm, selectedTypes]);
+
+    const toggleType = (type) => {
+        setSelectedTypes(prev =>
+            prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type]
+        );
+    };
+
+    const clearTypes = () => setSelectedTypes([]);
+
+    const filterLabel = selectedTypes.length === 0
+        ? 'All Categories'
+        : selectedTypes.length === 1
+            ? categories.find(c => c.id === selectedTypes[0])?.label ?? selectedTypes[0]
+            : `${selectedTypes.length} categories`;
 
     const getTypeIcon = (type) => {
         switch (type) {
@@ -92,8 +117,18 @@ const Achievements = () => {
             case 'session': return <Code size={14} />;
             case 'trade': return <Repeat size={14} />;
             case 'certificate': return <FileText size={14} />;
-            default: return <Award size={14} />;
+            default: return null;
         }
+    };
+
+    // Shorten descriptions for tooltip display
+    const shortenDescription = (desc, _type) => {
+        if (!desc) return '';
+        // Already short enough
+        if (desc.length <= 80) return desc;
+        // Trim at word boundary
+        const trimmed = desc.slice(0, 77);
+        return trimmed.slice(0, trimmed.lastIndexOf(' ')) + '…';
     };
 
     if (isLoading) {
@@ -101,7 +136,6 @@ const Achievements = () => {
             <div className="achievements-page">
                 <div className="ach-controls card">
                     <div className="header-container">
-                        <Skeleton height="44px" width="44px" borderRadius="12px" />
                         <Skeleton height="44px" width="300px" />
                     </div>
                     <Skeleton height="40px" />
@@ -109,11 +143,10 @@ const Achievements = () => {
                 <div className="achievements-grid">
                     {[1, 2, 3, 4, 5, 6].map(i => (
                         <div key={i} className="achievement-card locked">
-                            <Skeleton height="120px" className="skeleton-card" />
+                            <Skeleton height="80px" className="skeleton-card" />
                             <div className="ach-info">
-                                <Skeleton height="20px" width="70%" className="skeleton-title" />
-                                <Skeleton height="15px" width="90%" />
-                                <Skeleton height="15px" width="40%" />
+                                <Skeleton height="16px" width="70%" className="skeleton-title" />
+                                <Skeleton height="13px" width="90%" />
                             </div>
                         </div>
                     ))}
@@ -127,7 +160,6 @@ const Achievements = () => {
             <div className="ach-controls card">
                 <div className="ach-upper-controls">
                     <div className="ach-brand">
-                        <Award size={32} />
                         <div>
                             <h1>Hall of Achievements</h1>
                             <p>Track your progress and earn badges.</p>
@@ -157,17 +189,47 @@ const Achievements = () => {
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
                     </div>
-                    <div className="filter-scroll">
-                        {categories.map(cat => (
-                            <button 
-                                key={cat.id}
-                                className={`filter-chip ${selectedType === cat.id ? 'active' : ''}`}
-                                onClick={() => setSelectedType(cat.id)}
-                            >
-                                {cat.label}
-                                <span className="count">{cat.count}</span>
-                            </button>
-                        ))}
+                    <div className="filter-dropdown-wrapper" ref={dropdownRef}>
+                        <button
+                            className={`filter-dropdown-trigger ${dropdownOpen ? 'open' : ''} ${selectedTypes.length > 0 ? 'has-selection' : ''}`}
+                            onClick={() => setDropdownOpen(o => !o)}
+                        >
+                            <Filter size={15} />
+                            <span>{filterLabel}</span>
+                            {selectedTypes.length > 0 && (
+                                <span
+                                    className="filter-clear-btn"
+                                    onClick={(e) => { e.stopPropagation(); clearTypes(); }}
+                                    title="Clear filters"
+                                >
+                                    <X size={13} />
+                                </span>
+                            )}
+                            <ChevronDown size={15} className={`chevron ${dropdownOpen ? 'rotated' : ''}`} />
+                        </button>
+
+                        {dropdownOpen && (
+                            <div className="filter-dropdown-menu">
+                                {categories.filter(c => c.id !== 'all').map(cat => {
+                                    const isSelected = selectedTypes.includes(cat.id);
+                                    return (
+                                        <label
+                                            key={cat.id}
+                                            className={`filter-dropdown-item ${isSelected ? 'selected' : ''}`}
+                                        >
+                                            <input
+                                                type="checkbox"
+                                                checked={isSelected}
+                                                onChange={() => toggleType(cat.id)}
+                                            />
+                                            <span className="filter-item-icon">{getTypeIcon(cat.id)}</span>
+                                            <span className="filter-item-label">{cat.label}</span>
+                                            <span className="filter-item-count">{cat.count}</span>
+                                        </label>
+                                    );
+                                })}
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
@@ -176,50 +238,42 @@ const Achievements = () => {
                 {filteredAchievements.length > 0 ? (
                     filteredAchievements.map((ach) => {
                         const isEarned = userAchievements.includes(ach.id);
+                        const progressPct = ach.requirement_value
+                            ? Math.min(100, (ach.current_progress / ach.requirement_value) * 100)
+                            : 0;
+                        const hasProgress = ach.type !== 'certificate' && !isEarned && ach.requirement_value;
+                        const tooltipText = shortenDescription(ach.description, ach.type);
+
                         return (
-                            <div key={ach.id} className={`achievement-card ${isEarned ? 'earned' : 'locked'}`}>
+                            <div
+                                key={ach.id}
+                                className={`achievement-card ${isEarned ? 'earned' : 'locked'} ach-type-${ach.type}`}
+                                title={tooltipText}
+                            >
                                 <div className="badge-wrapper">
                                     <div className={`badge badge-${ach.slug}`}>&nbsp;</div>
                                     {!isEarned && (
                                         <div className="lock-overlay">
-                                            <Lock size={32} />
+                                            <Lock size={20} />
                                         </div>
                                     )}
                                 </div>
 
                                 <div className="ach-info">
-                                    <div className="ach-type-badge">
-                                        {getTypeIcon(ach.type)}
-                                        <span>{ach.type}</span>
-                                    </div>
                                     <h3 className="achievement-name">{ach.name}</h3>
-                                    <p className="achievement-desc">{ach.description}</p>
-                                    
                                     <div className="ach-reward">
-                                        <Coins size={14} />
-                                        <span>+{ach.reward} Ducks</span>
+                                        <Coins size={13} />
+                                        <span>+{ach.reward}</span>
                                     </div>
                                 </div>
 
-                                {isEarned ? (
-                                    <div className="earned-check">
-                                        <Shield size={16} />
-                                        <span>Earned</span>
+                                {hasProgress && (
+                                    <div className="ach-progress-bar-bottom">
+                                        <div
+                                            className="ach-progress-fill-bottom"
+                                            style={{ width: `${progressPct}%` }}
+                                        />
                                     </div>
-                                ) : (
-                                    ach.type !== 'certificate' && (
-                                        <div className="ach-card-progress">
-                                            <div className="progress-info">
-                                                <span>{ach.current_progress} / {ach.requirement_value}</span>
-                                            </div>
-                                            <div className="progress-track-mini">
-                                                <div 
-                                                    className="progress-fill-mini" 
-                                                    style={{ width: `${Math.min(100, (ach.current_progress / ach.requirement_value) * 100)}%` }}
-                                                ></div>
-                                            </div>
-                                        </div>
-                                    )
                                 )}
                             </div>
                         );
@@ -229,7 +283,7 @@ const Achievements = () => {
                         <Search size={48} />
                         <h3>No matches found</h3>
                         <p>Try adjusting your search or filters to find more badges.</p>
-                        <button className="text-btn" onClick={() => { setSearchTerm(''); setSelectedType('all'); }}>Clear all filters</button>
+                        <button className="text-btn" onClick={() => { setSearchTerm(''); clearTypes(); }}>Clear all filters</button>
                     </div>
                 )}
             </div>
@@ -238,4 +292,3 @@ const Achievements = () => {
 };
 
 export default Achievements;
-

@@ -1,36 +1,29 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
     Search, 
     Plus, 
-    ArrowUpCircle,
-    Package,
     Key, 
-    Trash2, 
     RefreshCw,
     Shield,
-    ChevronLeft,
-    Users as UsersIcon
+    ChevronLeft
 } from 'lucide-react';
 import SmartImage from '../../components/common/SmartImage';
 import { 
     CreateUserModal, 
-    AdjustDucksModal, 
-    AdjustPacketsModal,
-    SetDrawerModal,
-    ResetPasswordModal,
-    ManageChildrenModal,
-    ConnectionCardModal,
     BulkConnectionCardsModal
 } from '../../components/admin/AdminModals';
 import './Users.css';
 import Skeleton from '../../components/common/Skeleton';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
 import { getApiUrl } from '../../utils/apiUrl';
+import { formatRelativeTime } from '../../utils/formatters';
 
 // Hooks
 import { useUsersManagement } from '../../hooks/useUsersManagement';
 
 const Users = () => {
+    const navigate = useNavigate();
     const {
         users,
         isLoading,
@@ -40,23 +33,10 @@ const Users = () => {
         totalUsers,
         activeModal,
         setActiveModal,
-        modalUser,
-        setModalUser,
         formLoading,
         formErrors,
         fetchUsers,
         handleCreateUser,
-        handleAdjustDucks,
-        handleAdjustPackets,
-        handleSetDrawer,
-        handleResetPassword,
-        handleRemoveUser,
-        parentChildren,
-        fetchParentChildren,
-        handleToggleChildLink,
-        connectionCode,
-        setConnectionCode,
-        fetchConnectionCard,
         classrooms,
         fetchClassrooms,
         classroomCards,
@@ -87,9 +67,7 @@ const Users = () => {
 
     return (
         <div className="admin-users-page">
-            <AdminPageHeader 
-                title="User Directory" 
-            >
+            <AdminPageHeader title="User Directory">
                 <div className="search-bar">
                     <Search size={18} />
                     <input 
@@ -113,41 +91,24 @@ const Users = () => {
                     <RefreshCw size={18} />
                 </button>
             </AdminPageHeader>
-
-            <div className="users-stats-row">
-                <div className="stat-mini-card">
-                    <span className="label">Total Users</span>
-                    <span className="value">{totalUsers || users.length}</span>
-                </div>
-                <div className="stat-mini-card">
-                    <span className="label">Online Now</span>
-                    <span className="value">{users.filter(u => u.is_online).length}</span>
-                </div>
-                <div className="stat-mini-card">
-                    <span className="label">Admins</span>
-                    <span className="value">{users.filter(u => u.is_admin).length}</span>
-                </div>
-                <div className="stat-mini-card">
-                    <span className="label">Pending Approval</span>
-                    <span className="value">{users.filter(u => !u.is_approved && !u.is_admin).length}</span>
-                </div>
-            </div>
-
             <div className="users-table-container card">
                 <table className="users-table">
                     <thead>
                         <tr>
                             <th>User Profile</th>
-                            <th>Account Type</th>
-                            <th>Economy</th>
-                            <th>Status</th>
-                            <th>Actions</th>
+                            <th>Current Activity</th>
+                            <th>Economy & Levels</th>
+                            <th>Last Active</th>
                         </tr>
                     </thead>
                     <tbody>
                         {filteredUsers.length > 0 ? (
                             filteredUsers.map(u => (
-                                <tr key={u.id} className={u.is_admin ? 'admin-row' : ''}>
+                                <tr 
+                                    key={u.id} 
+                                    className={`clickable-row ${u.is_admin ? 'admin-row' : ''}`}
+                                    onClick={() => navigate(`/admin/users/${u.id}`)}
+                                >
                                     <td>
                                         <div className="user-profile-cell">
                                             <SmartImage 
@@ -158,19 +119,27 @@ const Users = () => {
                                             />
                                             <div className="info">
                                                 <div className="name">{u.nickname || u.username}</div>
-                                                <div className="handle">@{u.username}</div>
+                                                <div className="handle-row">
+                                                    <span className="handle">@{u.username}</span>
+                                                    <span className={`inline-role-label ${u.is_admin ? 'admin' : u.role || 'student'}`}>
+                                                        {u.is_admin ? 'admin' : u.role || 'student'}
+                                                    </span>
+                                                    {!u.is_approved && !u.is_admin && (
+                                                        <span className="inline-role-label pending">
+                                                            Pending
+                                                        </span>
+                                                    )}
+                                                </div>
                                                 {u.role === 'student' && u.drawer && <div className="drawer-info drawer-info-text">Drawer: <span className="drawer-code">{u.drawer}</span></div>}
                                             </div>
                                         </div>
                                     </td>
                                     <td>
-                                        <div className="type-badge">
-                                            {u.is_admin ? (
-                                                <span className="user-role-badge admin"><Shield size={12} /> Administrator</span>
-                                            ) : u.role === 'parent' ? (
-                                                <span className="user-role-badge parent">Parent</span>
+                                        <div className="activity-cell">
+                                            {u.current_activity ? (
+                                                <span className="activity-text">{u.current_activity}</span>
                                             ) : (
-                                                <span className="user-role-badge student">Student</span>
+                                                <span className="activity-idle">Idle</span>
                                             )}
                                         </div>
                                     </td>
@@ -178,92 +147,25 @@ const Users = () => {
                                         <div className="economy-info">
                                             <div className="duck-count">🦆 {(u.duck_balance ?? 0).toLocaleString(undefined, { maximumFractionDigits: 2 })}</div>
                                             <div className="packet-count" style={{ fontSize: '0.8rem', color: (u.packets < 0 ? 'var(--error-color, #ff4444)' : 'var(--text-muted)') }}>📦 {(u.packets ?? 0).toLocaleString(undefined, { maximumFractionDigits: 3 })}</div>
-                                            <div className="level-info">Lvl: {u.total_levels || 0}</div>
+                                            <div className="level-info">
+                                                Lvl: {u.total_levels || 0}
+                                                {u.levels_today > 0 && (
+                                                    <span className="levels-today-badge">+{u.levels_today} today</span>
+                                                )}
+                                            </div>
                                         </div>
                                     </td>
                                     <td>
                                         <div className={`status-indicator ${u.is_online ? 'online' : 'offline'}`}>
                                             <span className="dot"></span>
-                                            {u.is_online ? 'Active' : 'Offline'}
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div className="action-group">
-                                            <button 
-                                                className="action-btn adjust" 
-                                                onClick={() => { setModalUser(u); setActiveModal('adjust'); }}
-                                                title="Adjust Ducks"
-                                            >
-                                                <ArrowUpCircle size={16} />
-                                            </button>
-                                            <button 
-                                                className="action-btn adjust-packets" 
-                                                onClick={() => { setModalUser(u); setActiveModal('adjust_packets'); }}
-                                                title="Adjust Packets"
-                                                style={{ color: 'var(--accent-color)' }}
-                                            >
-                                                <Package size={16} />
-                                            </button>
-                                            {u.role === 'student' && (
-                                                <button 
-                                                    className="action-btn action-btn-blue" 
-                                                    onClick={() => { setModalUser(u); setActiveModal('drawer'); }}
-                                                    title="Set Drawer"
-                                                >
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"></path><path d="m3.3 7 8.7 5 8.7-5"></path><path d="M12 22V12"></path></svg>
-                                                </button>
-                                            )}
-                                            <button 
-                                                className="action-btn pass"  
-                                                onClick={() => { setModalUser(u); setActiveModal('reset'); }}
-                                                title="Reset Password"
-                                            >
-                                                <Key size={16} />
-                                            </button>
-                                            {u.role === 'parent' && (
-                                                <button 
-                                                    className="action-btn action-btn-indigo" 
-                                                    onClick={() => { 
-                                                        setModalUser(u); 
-                                                        fetchParentChildren(u.id);
-                                                        setActiveModal('manage_children'); 
-                                                    }}
-                                                    title="Manage Children"
-                                                >
-                                                    <UsersIcon size={16} />
-                                                </button>
-                                            )}
-                                            {!u.is_admin && u.role === 'student' && (
-                                                <button 
-                                                    className="action-btn action-btn-green" 
-                                                    onClick={async () => { 
-                                                        const success = await fetchConnectionCard(u.id);
-                                                        if (success) {
-                                                            setModalUser(u); 
-                                                            setActiveModal('connection_card'); 
-                                                        }
-                                                    }}
-                                                    title="Get Connection Card"
-                                                >
-                                                    <Key size={14} /> <span className="card-btn-text">Card</span>
-                                                </button>
-                                            )}
-                                            {!u.is_admin && (
-                                                <button 
-                                                    className="action-btn delete" 
-                                                    onClick={() => handleRemoveUser(u.username)}
-                                                    title="Permanently Remove"
-                                                >
-                                                    <Trash2 size={16} />
-                                                </button>
-                                            )}
+                                            {u.is_online ? 'Active' : formatRelativeTime(u.last_activity_time)}
                                         </div>
                                     </td>
                                 </tr>
                             ))
                         ) : (
                             <tr>
-                                <td colSpan="5" className="empty-row">
+                                <td colSpan="4" className="empty-row">
                                     No users found matching your search.
                                 </td>
                             </tr>
@@ -303,60 +205,6 @@ const Users = () => {
                 onSubmit={handleCreateUser} 
                 formErrors={formErrors} 
                 loading={formLoading} 
-            />
-
-            <AdjustDucksModal 
-                isOpen={activeModal === 'adjust'} 
-                onClose={() => { setActiveModal(null); setModalUser(null); }} 
-                onSubmit={handleAdjustDucks} 
-                user={modalUser} 
-                users={users} 
-                formErrors={formErrors} 
-                loading={formLoading} 
-            />
-
-            <AdjustPacketsModal 
-                isOpen={activeModal === 'adjust_packets'} 
-                onClose={() => { setActiveModal(null); setModalUser(null); }} 
-                onSubmit={handleAdjustPackets} 
-                user={modalUser} 
-                users={users} 
-                formErrors={formErrors} 
-                loading={formLoading} 
-            />
-
-            <SetDrawerModal 
-                isOpen={activeModal === 'drawer'} 
-                onClose={() => { setActiveModal(null); setModalUser(null); }} 
-                onSubmit={handleSetDrawer} 
-                user={modalUser} 
-                loading={formLoading} 
-            />
-
-            <ResetPasswordModal 
-                isOpen={activeModal === 'reset'} 
-                onClose={() => { setActiveModal(null); setModalUser(null); }} 
-                onSubmit={handleResetPassword} 
-                user={modalUser} 
-                formErrors={formErrors} 
-                loading={formLoading} 
-            />
-
-            <ManageChildrenModal 
-                isOpen={activeModal === 'manage_children'} 
-                onClose={() => { setActiveModal(null); setModalUser(null); }} 
-                parent={modalUser}
-                users={users}
-                parentChildren={parentChildren}
-                onToggleLink={handleToggleChildLink}
-                loading={formLoading}
-            />
-
-            <ConnectionCardModal 
-                isOpen={activeModal === 'connection_card'} 
-                onClose={() => { setActiveModal(null); setModalUser(null); setConnectionCode(null); }} 
-                student={modalUser}
-                connectionCode={connectionCode}
             />
 
             <BulkConnectionCardsModal

@@ -32,7 +32,7 @@ def main():
         host="0.0.0.0",  # 0.0.0.0 allows the server to be accessible network-wide
         port=port,
         log_output=True,  # Enables or disables the logging output by the server
-        use_reloader=not getattr(
+        use_reloader=os.getenv("FLASK_USE_RELOADER", "True").lower() in ("true", "1", "t") and not getattr(
             sys, "frozen", False
         ),  # Enable or disable the reloader
         allow_unsafe_werkzeug=True,

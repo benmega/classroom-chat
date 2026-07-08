@@ -195,6 +195,9 @@ const AdminDashboard = () => {
                                 <button className="add-user-btn" onClick={() => setActiveModal('create')}>
                                     <Plus size={18} /> Create User
                                 </button>
+                                <button className="view-all-btn" onClick={() => navigate('/admin/student-activity')}>
+                                    Activity
+                                </button>
                                 <button className="view-all-btn" onClick={() => navigate('/admin/users')}>
                                     Directory
                                 </button>

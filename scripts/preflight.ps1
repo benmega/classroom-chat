@@ -59,6 +59,8 @@ Write-Host " -> Starting temporary backend instance..." -ForegroundColor DarkGra
 
 # Start backend in background
 Set-Location "$PSScriptRoot\..\backend"
+$env:FLASK_USE_RELOADER = "False"
+$env:FLASK_DEBUG = "True"
 $backendProcess = Start-Process python -ArgumentList "main.py" -PassThru -NoNewWindow
 Start-Sleep -Seconds 3 # Wait for backend to be ready
 

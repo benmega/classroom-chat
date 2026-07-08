@@ -511,3 +511,28 @@ def test_user_achievement_earned_at_timestamp(init_db, sample_user, sample_achie
     assert user_achievement.earned_at is not None
     # Allow for small time differences in test execution
     assert before_time <= user_achievement.earned_at <= after_time
+
+
+def test_calculate_consistency_year_transition(init_db, sample_user):
+    """Test that consistency streak handles 53-week year transitions correctly."""
+    from datetime import datetime
+    from application.models.challenge_log import ChallengeLog
+    from application.services.achievement_engine import _calculate_consistency
+
+    # 2020 was a 53-week year:
+    # 2020 ISO week 52 Monday is 2020-12-21
+    # 2020 ISO week 53 Monday is 2020-12-28
+    # 2021 ISO week 1 Monday is 2021-01-04
+    ts_w52 = datetime(2020, 12, 22)
+    ts_w53 = datetime(2020, 12, 29)
+    ts_w1 = datetime(2021, 1, 5)
+
+    log1 = ChallengeLog(user_id=sample_user.id, domain="python", challenge_slug="challenge-1", timestamp=ts_w52)
+    log2 = ChallengeLog(user_id=sample_user.id, domain="python", challenge_slug="challenge-2", timestamp=ts_w53)
+    log3 = ChallengeLog(user_id=sample_user.id, domain="python", challenge_slug="challenge-3", timestamp=ts_w1)
+
+    db.session.add_all([log1, log2, log3])
+    db.session.commit()
+
+    streak = _calculate_consistency(sample_user.id)
+    assert streak == 3

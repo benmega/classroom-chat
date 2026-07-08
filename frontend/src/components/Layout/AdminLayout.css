@@ -1,373 +1,415 @@
+/* ==========================================================================
+   Admin Layout — Dark-Mode Nav Rail
+   Mirrors the structure of .desktop-nav-rail in Layout.css
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   Dark-mode color tokens (scoped to admin)
+   -------------------------------------------------------------------------- */
 :root {
-    --sidebar-width: 280px;
-    --sidebar-collapsed-width: 88px;
-    --top-bar-height: 72px;
-    --admin-primary: #3b82f6;
-    --admin-primary-glow: rgba(59, 130, 246, 0.5);
-    --admin-bg: var(--bg-tertiary);
-    --admin-card-bg: var(--bg-primary);
-    --admin-sidebar-bg: var(--text-primary);
-    --admin-text: var(--slate-800);
-    --admin-text-muted: var(--text-muted);
-    --admin-border: var(--border-subtle);
-    --admin-glass: rgba(15, 23, 42, 0.8);
-    --transition-standard: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    --transition-bounce: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    --admin-dark-bg:        #0f172a;   /* slate-900 */
+    --admin-dark-surface:   #1e293b;   /* slate-800 */
+    --admin-dark-border:    rgba(255, 255, 255, 0.07);
+    --admin-dark-text:      rgba(255, 255, 255, 0.65);
+    --admin-dark-text-hover: #ffffff;
+    --admin-accent:         #3b82f6;   /* blue-500 */
+    --admin-accent-glow:    rgba(59, 130, 246, 0.35);
+    --admin-accent-hover:   rgba(59, 130, 246, 0.15);
+    --admin-rail-width:     72px;
+    --admin-top-bar-height: 56px;
 }
 
+/* ==========================================================================
+   App Container
+   ========================================================================== */
 .admin-app-container {
     display: flex;
-    height: 100vh;
-    background-color: var(--admin-bg);
-    color: var(--admin-text);
-    overflow: hidden;
-}
-
-/* Sidebar Styling */
-.admin-sidebar {
-    width: var(--sidebar-width);
-    background-color: var(--admin-sidebar-bg);
-    background-image: linear-gradient(180deg, var(--admin-sidebar-bg) 0%, var(--slate-800) 100%);
-    color: white;
-    display: flex;
-    flex-direction: column;
-    position: fixed;
+    flex-direction: row;
     height: 100dvh;
-    left: 0;
-    top: 0;
-    z-index: 1000;
-    transition: var(--transition-standard);
-    box-shadow: var(--shadow-rich);
-    border-right: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-.admin-app-container.collapsed .admin-sidebar {
-    width: var(--sidebar-collapsed-width);
-}
-
-.sidebar-header {
-    height: var(--top-bar-height);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 1.5rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-.sidebar-brand {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    text-decoration: none;
-    color: white;
-    font-weight: 800;
-    font-size: 1.4rem;
     overflow: hidden;
-    letter-spacing: -0.02em;
-    font-family: 'Outfit', sans-serif;
+    background-color: var(--bg-tertiary);
 }
 
-.brand-icon,
-.brand-logo-img {
-    color: var(--admin-primary);
+/* ==========================================================================
+   Sidebar — base (matches .desktop-nav-rail)
+   ========================================================================== */
+.admin-sidebar {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: var(--admin-rail-width);
+    height: 100dvh;
+    background: var(--admin-dark-bg);
+    border-right: 1px solid var(--admin-dark-border);
+    padding: 1rem 0;
     flex-shrink: 0;
-    width: 28px;
-    height: 28px;
-    object-fit: contain;
-}
-
-.brand-text {
-    white-space: nowrap;
-    opacity: 1;
-    transition: var(--transition-standard);
-}
-
-.admin-app-container.collapsed .brand-text {
-    opacity: 0;
-    width: 0;
-}
-
-.sidebar-toggle-btn {
-    background: rgba(255, 255, 255, 0.05);
-    border: none;
-    color: white;
-    width: 28px;
-    height: 28px;
-    border-radius: 6px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.sidebar-toggle-btn:hover {
-    background: rgba(255, 255, 255, 0.1);
-}
-
-.sidebar-nav {
-    flex: 1;
-    padding: 1.5rem 0.75rem;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 2rem;
-}
-
-.nav-group {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-
-.nav-group-label {
-    padding: 0 1rem;
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    font-weight: 700;
-    color: rgba(255, 255, 255, 0.55); /* Increased for contrast */
-    margin-bottom: 8px;
-    letter-spacing: 0.05em;
-    white-space: nowrap;
-}
-
-.admin-app-container.collapsed .nav-group-label {
-    opacity: 0;
-}
-
-.nav-item {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    padding: 0.85rem 1.25rem;
-    text-decoration: none;
-    color: rgba(255, 255, 255, 0.7); /* Increased for contrast */
-    border-radius: 14px;
-    font-weight: 600;
-    transition: var(--transition-standard);
-    white-space: nowrap;
+    z-index: 1010;
+    overflow: hidden; /* prevents any horizontal scroll */
     position: relative;
-    overflow: hidden;
 }
 
-.nav-item:hover {
-    background: rgba(255, 255, 255, 0.08);
-    color: white;
-    transform: translateX(4px);
-}
-
-.nav-item.active {
-    background: var(--admin-primary);
-    color: white;
-    box-shadow: 0 8px 16px var(--admin-primary-glow);
-}
-
-.nav-item.active::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 20%;
-    height: 60%;
-    width: 4px;
-    background: white;
-    border-radius: 0 4px 4px 0;
-}
-
-.nav-badge {
-    background: linear-gradient(135deg, var(--warning-color), #d97706);
-    color: white;
-    font-size: 0.62rem;
-    font-weight: 800;
-    padding: 1px 6px;
-    border-radius: 5px;
-    margin-left: 10px; /* Fixed spacing instead of 'auto' to keep it integrated */
-    box-shadow: var(--shadow-sm);
-    transition: var(--transition-bounce);
-    display: inline-flex;
+/* ==========================================================================
+   Logo (matches .nav-rail-logo — dark mode version)
+   ========================================================================== */
+.admin-rail-logo {
+    display: flex;
     align-items: center;
     justify-content: center;
-    line-height: 1;
-    height: 18px;
-    vertical-align: middle;
-    align-self: center;
+    width: 40px;
+    height: 40px;
+    background: rgba(59, 130, 246, 0.15);
+    border-radius: var(--radius-md, 10px);
+    border: 2px solid var(--admin-accent);
+    box-shadow: 0 0 12px var(--admin-accent-glow);
+    transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+    flex-shrink: 0;
+    text-decoration: none;
 }
 
-.nav-item:hover .nav-badge {
-    transform: scale(1.1);
+.admin-rail-logo img {
+    height: 24px;
+    width: auto;
+    display: block;
+    object-fit: contain;
+    transition: transform 0.22s ease;
+    filter: brightness(1.1);
 }
 
-.admin-app-container.collapsed .nav-badge {
+.admin-rail-logo:hover {
+    transform: scale(1.05);
+    border-color: #60a5fa;
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+}
+
+.admin-rail-logo:hover img {
+    transform: scale(1.1) rotate(-5deg);
+}
+
+/* Brand text — only shown on mobile drawer */
+.admin-brand-text {
+    display: none;
+    color: white;
+    font-weight: 800;
+    font-size: 1.1rem;
+    letter-spacing: -0.02em;
+    white-space: nowrap;
+    font-family: 'Outfit', sans-serif;
+    margin-left: 10px;
+}
+
+/* ==========================================================================
+   Center nav section (matches .nav-rail-center)
+   ========================================================================== */
+.admin-rail-center {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    flex-grow: 1;
+    margin-top: 2rem;
+    width: 100%;
+    overflow-y: auto;
+    overflow-x: hidden; /* critical — prevents horizontal scroll */
+    scrollbar-width: none;
+}
+
+.admin-rail-center::-webkit-scrollbar {
     display: none;
 }
 
-.admin-app-container.collapsed .nav-label {
+/* Group label — desktop hidden, mobile shown */
+.admin-nav-group-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.4);
+    letter-spacing: 0.06em;
+    white-space: nowrap;
+    padding: 0 1.25rem;
+    margin-bottom: 4px;
+    align-self: flex-start;
+}
+
+/* ==========================================================================
+   Bottom section (matches .nav-rail-bottom)
+   ========================================================================== */
+.admin-rail-bottom {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    width: 100%;
+    margin-top: auto;
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--admin-dark-border);
+    overflow: hidden;
+}
+
+/* ==========================================================================
+   Nav Item Container + Indicator Pill
+   (matches .nav-rail-item-container + .nav-rail-indicator)
+   ========================================================================== */
+.admin-rail-item-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 48px;
+    flex-shrink: 0;
+}
+
+.admin-rail-indicator {
+    position: absolute;
+    left: 0;
+    width: 4px;
+    background-color: var(--admin-accent);
+    border-radius: 0 4px 4px 0;
+    transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+    height: 0;
     opacity: 0;
     pointer-events: none;
 }
 
-.logout-btn {
-    width: 100%;
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    text-align: left;
+.admin-rail-item-container:hover .admin-rail-indicator {
+    height: 16px;
+    opacity: 0.6;
 }
 
-.logout-btn:hover {
-    background: rgba(239, 68, 68, 0.1);
-    color: var(--error-color);
+.admin-rail-item-container.active .admin-rail-indicator {
+    height: 28px;
+    opacity: 1;
 }
 
-.sidebar-user {
-    padding: 1rem;
-    background: rgba(255, 255, 255, 0.03);
-    backdrop-filter: blur(10px);
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin: 1rem;
-    border-radius: 16px;
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    transition: var(--transition-standard);
+.admin-logout-container .admin-rail-indicator {
+    background-color: var(--error-color, #ef4444);
 }
 
-.user-avatar {
-    width: 44px !important;
-    height: 44px !important;
-    max-width: 100%;
-    max-height: 100%;
-    border-radius: 12px;
-    object-fit: cover;
-    flex-shrink: 0;
-    border: 2px solid rgba(255, 255, 255, 0.1);
-}
-
-.user-info {
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    transition: var(--transition-standard);
-}
-
-.user-name {
-    font-weight: 700;
-    font-size: 0.95rem;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-    overflow: hidden;
-    color: white;
-}
-
-.user-role {
-    font-size: 0.7rem;
-    color: var(--admin-primary);
-    text-transform: uppercase;
-    font-weight: 700;
-    letter-spacing: 0.05em;
-}
-
-.admin-app-container.collapsed .user-info {
-    opacity: 0;
-    width: 0;
-    margin-left: -10px;
-}
-
-/* Main Content Area Styling */
-.admin-main-wrapper {
-    flex: 1;
-    min-width: 0;
-    margin-left: var(--sidebar-width);
-    max-width: calc(100% - var(--sidebar-width));
-    transition: var(--transition-standard);
-    display: flex;
-    flex-direction: column;
-    height: 100dvh;
-    background: var(--admin-bg);
-    overflow: hidden;
-}
-
-.admin-app-container.collapsed .admin-main-wrapper {
-    margin-left: var(--sidebar-collapsed-width);
-    max-width: calc(100% - var(--sidebar-collapsed-width));
-}
-
-.admin-top-bar {
-    height: var(--top-bar-height);
-    background: transparent;
-    border-bottom: none;
-    padding: 0 2rem;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    position: sticky;
-    top: 0;
-    z-index: 999;
-}
-
-.top-bar-left {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-}
-
-.hamburger-toggle {
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    color: var(--admin-text);
-    padding: 8px;
-    margin-left: -8px; /* Offset to match global layout */
+/* ==========================================================================
+   Nav Item (matches .nav-rail-item)
+   ========================================================================== */
+.admin-rail-item {
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 8px;
-    transition: background 0.2s;
+    width: 48px;
+    height: 48px;
+    border-radius: var(--radius-md, 10px);
+    color: var(--admin-dark-text);
+    background: transparent;
+    transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    border: none;
+    padding: 0;
+    text-decoration: none;
     position: relative;
-    z-index: 50;
     flex-shrink: 0;
 }
 
-.hamburger-toggle:hover {
-    background: rgba(0, 0, 0, 0.05);
+.admin-rail-item svg {
+    width: 20px;
+    height: 20px;
+    transition: transform 0.22s ease, color 0.22s ease;
 }
 
-.page-title {
-    font-size: 1.25rem;
-    font-weight: 700;
-    margin: 0;
-    color: var(--slate-800);
+/* Hover */
+.admin-rail-item:hover {
+    background: var(--admin-accent-hover);
+    color: var(--admin-accent);
+    border-radius: 35%;
 }
 
-.top-bar-right {
-    display: flex;
+.admin-rail-item:hover svg {
+    transform: scale(1.1);
+}
+
+/* Active */
+.admin-rail-item.active {
+    background: var(--admin-accent);
+    color: white;
+    border-radius: 30%;
+    box-shadow: 0 0 20px var(--admin-accent-glow);
+}
+
+.admin-rail-item.active svg {
+    color: white;
+}
+
+/* Logout button */
+.admin-logout-btn {
+    color: rgba(239, 68, 68, 0.75);
+}
+
+.admin-logout-btn:hover {
+    background: rgba(239, 68, 68, 0.12);
+    color: #ef4444;
+    border-radius: 35%;
+}
+
+/* ==========================================================================
+   Icon wrapper (for badge positioning)
+   ========================================================================== */
+.admin-rail-icon-wrap {
+    position: relative;
+    display: inline-flex;
     align-items: center;
-    gap: 1.5rem;
+    justify-content: center;
 }
 
-.system-status {
-    display: flex;
+/* ==========================================================================
+   Pending badge (desktop — overlay on icon)
+   ========================================================================== */
+.admin-nav-badge {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    background: linear-gradient(135deg, #ef4444, #b91c1c);
+    color: white;
+    font-size: 0.58rem;
+    font-weight: 800;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    border-radius: 9999px;
+    display: inline-flex;
     align-items: center;
-    gap: 8px;
-    background: var(--bg-tertiary);
-    padding: 6px 12px;
-    border-radius: 20px;
+    justify-content: center;
+    line-height: 1;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+    z-index: 5;
 }
 
-.status-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
+/* Mobile badge — inline after label */
+.admin-nav-badge.mobile-badge {
+    position: static;
+    top: unset;
+    right: unset;
+    margin-left: auto;
+    border-radius: 5px;
+    font-size: 0.62rem;
+    height: 18px;
+    padding: 1px 6px;
 }
 
-.status-dot.online {
-    background: var(--success-color);
-    box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
+/* ==========================================================================
+   Nav label — hidden on desktop, visible on mobile
+   ========================================================================== */
+.admin-nav-label {
+    display: none;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-.status-text {
+/* ==========================================================================
+   Tooltips (matches .nav-rail-item[data-tooltip] from Layout.css)
+   ========================================================================== */
+.admin-rail-item[data-tooltip] {
+    overflow: visible;
+}
+
+.admin-rail-item[data-tooltip]::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    left: 68px;
+    top: 50%;
+    transform: translateY(-50%) translateX(-8px);
+    background: #1e293b;
+    color: white;
+    padding: 6px 10px;
+    border-radius: 8px;
     font-size: 0.75rem;
     font-weight: 600;
-    color: var(--text-secondary);
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    z-index: 1200;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.admin-rail-item[data-tooltip]::before {
+    content: '';
+    position: absolute;
+    left: 62px;
+    top: 50%;
+    transform: translateY(-50%) translateX(-4px);
+    border: 5px solid transparent;
+    border-right-color: #1e293b;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1200;
+}
+
+.admin-rail-item[data-tooltip]:hover::after {
+    opacity: 1;
+    transform: translateY(-50%) translateX(0);
+}
+
+.admin-rail-item[data-tooltip]:hover::before {
+    opacity: 1;
+    transform: translateY(-50%) translateX(0);
+}
+
+/* Also apply tooltip to logo link */
+.admin-rail-logo[data-tooltip]::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    left: 68px;
+    top: 50%;
+    transform: translateY(-50%) translateX(-8px);
+    background: #1e293b;
+    color: white;
+    padding: 6px 10px;
+    border-radius: 8px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    z-index: 1200;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.admin-rail-logo[data-tooltip]::before {
+    content: '';
+    position: absolute;
+    left: 62px;
+    top: 50%;
+    transform: translateY(-50%) translateX(-4px);
+    border: 5px solid transparent;
+    border-right-color: #1e293b;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1200;
+}
+
+.admin-rail-logo[data-tooltip]:hover::after {
+    opacity: 1;
+    transform: translateY(-50%) translateX(0);
+}
+
+.admin-rail-logo[data-tooltip]:hover::before {
+    opacity: 1;
+    transform: translateY(-50%) translateX(0);
+}
+
+/* ==========================================================================
+   Main wrapper
+   ========================================================================== */
+.admin-main-wrapper {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;
+    background: var(--bg-tertiary);
+    overflow: hidden;
 }
 
 .admin-body {
@@ -379,54 +421,102 @@
     overflow-y: auto;
 }
 
-@keyframes fadeInMain {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
+/* Mobile top bar */
+.admin-mobile-top-bar {
+    display: none;
+    align-items: center;
+    padding: 0 1rem;
+    height: var(--admin-top-bar-height);
+    background: var(--bg-primary);
+    border-bottom: 1px solid var(--border-subtle);
+    flex-shrink: 0;
 }
 
-.page-transition {
-  animation: fadeInMain 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-.admin-site-footer {
-    padding: 1.5rem 2rem;
-    border-top: 1px solid var(--admin-border);
-    background: white;
-    color: var(--admin-text-muted);
-    font-size: 0.85rem;
-    display: flex;
-    justify-content: space-between;
-}
-
-.admin-site-footer span {
-    color: var(--admin-primary);
-    font-weight: 600;
-}
-
-/* Access Denied Styling */
-.access-denied-container {
-    height: 100vh;
+.admin-hamburger {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: var(--text-primary);
+    padding: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--text-primary);
+    border-radius: 8px;
+    transition: background 0.2s;
+}
+
+.admin-hamburger:hover {
+    background: var(--bg-tertiary);
+}
+
+/* Mobile overlay */
+.admin-mobile-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    z-index: 1009;
+}
+
+/* Mobile close button inside sidebar */
+.admin-mobile-close {
+    display: none;
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.7);
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 8px;
+    transition: background 0.2s;
+}
+
+.admin-mobile-close:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+/* ==========================================================================
+   Page animations
+   ========================================================================== */
+@keyframes adminPageEntry {
+    from { opacity: 0; transform: translateY(8px); filter: blur(2px); }
+    to   { opacity: 1; transform: translateY(0);   filter: blur(0); }
+}
+
+.animate-page-entry {
+    animation: adminPageEntry 0.3s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* ==========================================================================
+   Access Denied
+   ========================================================================== */
+.access-denied-container {
+    height: 100dvh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--admin-dark-bg);
     padding: 2rem;
 }
 
 .access-denied-card {
-    background: white;
+    background: var(--bg-primary);
     padding: 3rem;
     border-radius: 24px;
     text-align: center;
     max-width: 500px;
-    box-shadow: var(--shadow-xl);
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.4);
 }
 
 .access-denied-card h1 {
     margin: 1.5rem 0 0.5rem;
     font-size: 2rem;
     font-weight: 800;
-    color: var(--slate-800);
+    color: var(--text-primary);
 }
 
 .access-denied-card p {
@@ -439,7 +529,7 @@
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    background: var(--slate-800);
+    background: var(--admin-dark-surface);
     color: white;
     padding: 0.75rem 1.5rem;
     border-radius: 12px;
@@ -449,58 +539,161 @@
 }
 
 .btn-back:hover {
-    background: var(--text-secondary);
+    background: var(--admin-dark-bg);
     transform: translateY(-2px);
 }
 
+/* ==========================================================================
+   MOBILE (≤ 800px)
+   ========================================================================== */
 @media (max-width: 800px) {
-    .admin-sidebar {
-        transform: translateX(-100%);
+    .admin-app-container {
+        flex-direction: column;
     }
 
-    .admin-main-wrapper {
-        margin-left: 0 !important;
-        max-width: 100% !important;
+    /* Sidebar slides in from left */
+    .admin-sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100dvh;
+        width: 280px;
+        align-items: flex-start;
+        padding: 1.25rem 0.75rem 1.25rem 0;
+        transform: translateX(-100%);
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: none;
+        overflow-y: auto;
+        overflow-x: hidden;
     }
 
     .admin-app-container.mobile-open .admin-sidebar {
         transform: translateX(0);
-        width: 280px;
-        box-shadow: var(--shadow-rich);
+        box-shadow: 0 0 60px rgba(0, 0, 0, 0.6);
     }
 
-    .admin-app-container.mobile-open .mobile-overlay {
+    .admin-app-container.mobile-open .admin-mobile-overlay {
         display: block;
-        position: fixed;
-        inset: 0;
-        background: rgba(15, 23, 42, 0.6);
-        backdrop-filter: blur(4px);
-        z-index: 999;
     }
 
-    .sidebar-header {
-        justify-content: space-between;
-    }
-
-    .mobile-close-btn {
+    /* Logo row on mobile */
+    .admin-rail-logo {
+        width: auto;
+        height: 48px;
         background: transparent;
         border: none;
-        color: white;
-        cursor: pointer;
-    }
-    
-    .admin-body {
-        padding: 1.5rem;
+        box-shadow: none;
+        border-radius: 0;
+        justify-content: flex-start;
+        padding: 0 1.25rem;
+        margin-bottom: 0.5rem;
     }
 
-    .admin-top-bar {
-        padding: 0 1rem;
+    .admin-rail-logo img {
+        height: 28px;
     }
-}
 
-@media (max-width: 640px) {
-    .system-status {
+    .admin-brand-text {
+        display: inline;
+    }
+
+    .admin-mobile-close {
+        display: flex;
+    }
+
+    /* Center section */
+    .admin-rail-center {
+        width: 100%;
+        align-items: flex-start;
+        gap: 2px;
+        margin-top: 0.5rem;
+        overflow-y: visible;
+    }
+
+    .admin-nav-group-label {
+        display: block;
+    }
+
+    /* Item containers full width */
+    .admin-rail-item-container {
+        height: auto;
+        width: 100%;
+        justify-content: flex-start;
+    }
+
+    .admin-rail-indicator {
         display: none;
     }
+
+    /* Nav items full-width rows */
+    .admin-rail-item {
+        width: 100%;
+        height: auto;
+        justify-content: flex-start;
+        padding: 0.8rem 1.25rem;
+        border-radius: 12px;
+        gap: 14px;
+    }
+
+    .admin-rail-item:hover {
+        border-radius: 12px;
+    }
+
+    .admin-rail-item.active {
+        border-radius: 12px;
+    }
+
+    .admin-rail-icon-wrap {
+        flex-shrink: 0;
+    }
+
+    /* Show labels on mobile */
+    .admin-nav-label {
+        display: inline;
+        font-size: 0.925rem;
+        font-weight: 600;
+        color: inherit;
+    }
+
+    /* Hide desktop badge overlay; show inline mobile badge */
+    .admin-nav-badge:not(.mobile-badge) {
+        display: none;
+    }
+
+    .admin-nav-badge.mobile-badge {
+        display: inline-flex;
+    }
+
+    /* Bottom section */
+    .admin-rail-bottom {
+        width: 100%;
+        align-items: flex-start;
+        border-top: 1px solid var(--admin-dark-border);
+        padding-top: 0.75rem;
+        margin-top: 1rem;
+    }
+
+    /* Tooltips off on mobile */
+    .admin-rail-item[data-tooltip]::after,
+    .admin-rail-item[data-tooltip]::before,
+    .admin-rail-logo[data-tooltip]::after,
+    .admin-rail-logo[data-tooltip]::before {
+        display: none;
+    }
+
+    /* Mobile top bar + hamburger visible */
+    .admin-mobile-top-bar {
+        display: flex;
+    }
+
+    .admin-body {
+        padding: 1rem;
+    }
 }
 
+/* mobile-only utility (used in JSX) */
+@media (min-width: 801px) {
+    .mobile-only {
+        display: none !important;
+    }
+}

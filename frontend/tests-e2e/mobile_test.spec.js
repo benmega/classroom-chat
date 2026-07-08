@@ -22,8 +22,8 @@ test.describe('Mobile UI Audit Navigation', () => {
     page.on('console', msg => console.log(`BROWSER CONSOLE: [${msg.type()}] ${msg.text()}`));
 
     console.log('Logging in as admin...');
-    await page.goto('http://localhost:8000/dev-login?role=admin');
-    await page.waitForURL('**/localhost:5173/**', { timeout: 10000 });
+    await page.goto('/api/dev-login?role=admin');
+    await page.waitForURL('**/chat', { timeout: 15000 });
     
     // 1. Home / Chat Page
     console.log('Navigating to Chat...');

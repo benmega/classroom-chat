@@ -4,7 +4,7 @@ test.use({ ...devices['Pixel 5'] });
 
 test('take admin mobile screenshots', async ({ page }) => {
   // Login via dev endpoint
-  await page.goto('http://localhost:8000/dev-login?role=admin');
+  await page.goto('/api/dev-login?role=admin');
   await page.waitForTimeout(1000);
 
   // Dashboard

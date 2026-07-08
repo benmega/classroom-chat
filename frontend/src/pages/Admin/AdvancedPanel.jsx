@@ -17,6 +17,7 @@ import toast from 'react-hot-toast';
 import './AdvancedPanel.css';
 import { X } from 'lucide-react';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
+import Skeleton from '../../components/common/Skeleton';
 
 const AdvancedPanel = () => {
     const navigate = useNavigate();
@@ -87,7 +88,25 @@ const AdvancedPanel = () => {
 
 
 
-    if (isLoading) return <div className="admin-loading">Loading Advanced Panel...</div>;
+    if (isLoading) return (
+        <div className="admin-advanced-panel animate-page-entry" style={{ padding: '2rem' }}>
+            <header className="page-header">
+                <Skeleton height="40px" width="300px" className="skeleton-title" style={{ marginBottom: '2rem' }} />
+            </header>
+            <div className="advanced-grid">
+                {[1, 2, 3, 4, 5, 6].map(i => (
+                    <div key={i} className="utility-card card" style={{ display: 'flex', gap: '1.5rem', padding: '1.5rem', background: 'var(--bg-secondary)', borderRadius: '12px', border: '1px solid var(--border-subtle)' }}>
+                        <Skeleton height="48px" width="48px" borderRadius="8px" style={{ flexShrink: 0 }} />
+                        <div style={{ flexGrow: 1 }}>
+                            <Skeleton height="24px" width="50%" style={{ marginBottom: '8px' }} />
+                            <Skeleton height="16px" width="90%" style={{ marginBottom: '1.25rem' }} />
+                            <Skeleton height="36px" width="120px" borderRadius="6px" />
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
 
     return (
         <div className="admin-advanced-panel">

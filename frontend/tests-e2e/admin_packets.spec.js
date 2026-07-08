@@ -17,44 +17,39 @@ test.describe('Admin Packets Adjustment', () => {
     await expect(page.locator('.users-table')).toBeVisible({ timeout: 15000 });
 
     // Wait for at least one user row that has a student role
-    // Using the text "Student" inside the user role badge
-    const studentRow = page.locator('tr:has(.user-role-badge.student)').first();
+    // Using the class inline-role-label student
+    const studentRow = page.locator('tr:has(.inline-role-label.student)').first();
     await expect(studentRow).toBeVisible();
 
-    // Get the initial packets count string
-    const initialPacketsText = await studentRow.locator('.packet-count').innerText();
-    const initialPackets = parseFloat(initialPacketsText.replace('📦', '').trim());
+    // Click the row to navigate to the user's dashboard
+    await studentRow.click();
+    await page.waitForURL('**/admin/users/*', { timeout: 15000 });
 
-    // Click the Adjust Packets button for this specific student
-    await studentRow.locator('button.adjust-packets').click();
+    // Get the initial packets count string from the HUD
+    const initialPacketsText = await page.locator('.hud-stat-box:has-text("Packets") .val.packets').innerText();
+    const initialPackets = parseFloat(initialPacketsText.replace('📦', '').replace(/,/g, '').trim());
 
-    // Wait for modal
-    const modal = page.locator('.admin-modal-content:has-text("Adjust Packets Balance")');
-    await expect(modal).toBeVisible();
+    // Locate the Packets adjustment form in the Economy panel
+    const packetsForm = page.locator('form:has-text("Packets")');
+    await expect(packetsForm).toBeVisible();
 
     // Fill in positive amount
-    await modal.locator('input[name="amount"]').fill('5');
+    await packetsForm.locator('input[name="amount"]').fill('5');
     
     // Submit
-    await modal.locator('button[type="submit"]:has-text("Apply")').click();
+    await packetsForm.locator('button[type="submit"]').click();
 
-    // Wait for modal to disappear and success toast
-    await expect(modal).toBeHidden();
-    
-    // Check UI updated
-    await expect(studentRow.locator('.packet-count')).toHaveText(
+    // Check UI updated in the HUD
+    await expect(page.locator('.hud-stat-box:has-text("Packets") .val.packets')).toHaveText(
       new RegExp(`📦\\s*${(initialPackets + 5).toLocaleString(undefined, { maximumFractionDigits: 3 })}`)
     );
 
     // Now test negative amount
-    await studentRow.locator('button.adjust-packets').click();
-    await expect(modal).toBeVisible();
-    await modal.locator('input[name="amount"]').fill('-20');
-    await modal.locator('button[type="submit"]:has-text("Apply")').click();
-    await expect(modal).toBeHidden();
+    await packetsForm.locator('input[name="amount"]').fill('-20');
+    await packetsForm.locator('button[type="submit"]').click();
     
     // Check UI updated to negative adjustment
-    await expect(studentRow.locator('.packet-count')).toHaveText(
+    await expect(page.locator('.hud-stat-box:has-text("Packets") .val.packets')).toHaveText(
       new RegExp(`📦\\s*${(initialPackets - 15).toLocaleString(undefined, { maximumFractionDigits: 3 })}`)
     );
   });

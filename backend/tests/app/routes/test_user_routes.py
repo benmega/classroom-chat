@@ -514,3 +514,21 @@ def test_pfp_integrity_cleanup(init_db, sample_user):
     db.session.refresh(sample_user)
     assert fixed_count == 1
     assert sample_user.profile_picture == "Default_pfp.jpg"
+
+
+def test_get_project_templates(client, init_db, sample_user):
+    """Test retrieving list of default projects."""
+    with client.session_transaction() as sess:
+        sess["user"] = sample_user.id
+
+    response = client.get("/api/project-templates")
+    assert response.status_code == 200
+
+    data = json.loads(response.data)
+    assert data["status"] == "success"
+    templates = data["data"]["templates"]
+    assert isinstance(templates, dict)
+    assert "CS1 Capstone" in templates
+    assert "description" in templates["CS1 Capstone"]
+    assert "Dangerous Skies" in templates
+

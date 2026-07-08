@@ -16,6 +16,7 @@ class Project(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
 
     teacher_comment = db.Column(db.Text, nullable=True)
+    packets_awarded = db.Column(db.Double, default=0.0, nullable=False)
     code_snippet = db.Column(
         db.Text, nullable=True
     )  # For younger students (direct code)
@@ -25,6 +26,7 @@ class Project(db.Model):
     )  # Link to recording (e.g., YouTube/Vimeo/Cloud)
     video_transcript = db.Column(db.Text, nullable=True)
     image_url = db.Column(db.String(255), nullable=True)  # Thumbnail for the card
+    created_at = db.Column(db.DateTime, default=db.func.now())
 
     def __repr__(self):
         return f"<Project {self.name}>"
@@ -37,6 +39,7 @@ class Project(db.Model):
             "link": self.link,
             "user_id": self.user_id,
             "teacher_comment": self.teacher_comment,
+            "packets_awarded": self.packets_awarded,
             "code_snippet": self.code_snippet,
             "github_link": self.github_link,
             "video_url": self.video_url,
@@ -44,4 +47,5 @@ class Project(db.Model):
             "image_url": self.image_url,
             "user_nickname": self.user.nickname if self.user else "Unknown Student",
             "user_slug": self.user.slug if self.user else None,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
         }

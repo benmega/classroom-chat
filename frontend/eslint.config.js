@@ -47,7 +47,7 @@ export default defineConfig([
     },
   },
   {
-    files: ['**/*.test.js', '**/tests-e2e/**/*.spec.js'],
+    files: ['**/*.test.{js,jsx}', '**/tests-e2e/**/*.spec.js'],
     languageOptions: {
       globals: {
         ...globals.jest,

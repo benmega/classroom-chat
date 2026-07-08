@@ -12,6 +12,7 @@ import CourseProgress from '../../components/profile/CourseProgress';
 import '../../assets/css/sprite.css';
 import '../Profile/Profile.css';
 import './ParentReportCard.css';
+import Skeleton from '../../components/common/Skeleton';
 
 const ParentReportCard = () => {
     const { studentId } = useParams();
@@ -38,15 +39,38 @@ const ParentReportCard = () => {
 
     if (isLoading) {
         return (
-            <div className="report-loading">
-                <Loader2
-                    size={56}
-                    strokeWidth={1.5}
-                    className="report-loader-icon"
-                />
-                <div className="report-loading-text">
-                    <h2>Loading Report Card</h2>
-                    <p>Fetching your child's progress…</p>
+            <div className="report-card-page animate-page-entry" style={{ padding: '2rem' }}>
+                <header className="report-header glass-panel" style={{ padding: '1.5rem', marginBottom: '2rem', borderRadius: '12px' }}>
+                    <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                        <Skeleton height="36px" width="36px" borderRadius="8px" />
+                        <Skeleton height="48px" width="48px" borderRadius="50%" />
+                        <div style={{ flexGrow: 1 }}>
+                            <Skeleton height="24px" width="150px" style={{ marginBottom: '6px' }} />
+                            <Skeleton height="14px" width="100px" />
+                        </div>
+                    </div>
+                </header>
+                <div className="dashboard-grid report-dashboard-grid report-dashboard-grid-spaced" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '2rem' }}>
+                    <div className="column-left" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                        <div className="dashboard-panel" style={{ padding: '1.5rem', background: 'var(--bg-secondary)', borderRadius: '12px' }}>
+                            <Skeleton height="28px" width="200px" style={{ marginBottom: '1.5rem' }} />
+                            <Skeleton height="180px" borderRadius="8px" />
+                        </div>
+                        <div className="dashboard-panel" style={{ padding: '1.5rem', background: 'var(--bg-secondary)', borderRadius: '12px' }}>
+                            <Skeleton height="28px" width="180px" style={{ marginBottom: '1.5rem' }} />
+                            <div style={{ display: 'flex', gap: '1rem' }}>
+                                <Skeleton height="80px" width="80px" borderRadius="8px" />
+                                <Skeleton height="80px" width="80px" borderRadius="8px" />
+                                <Skeleton height="80px" width="80px" borderRadius="8px" />
+                            </div>
+                        </div>
+                    </div>
+                    <div className="column-right">
+                        <div className="dashboard-panel" style={{ padding: '1.5rem', background: 'var(--bg-secondary)', borderRadius: '12px' }}>
+                            <Skeleton height="28px" width="150px" style={{ marginBottom: '1.5rem' }} />
+                            <Skeleton height="120px" borderRadius="8px" />
+                        </div>
+                    </div>
                 </div>
             </div>
         );
@@ -104,6 +128,12 @@ const ParentReportCard = () => {
                             {reportData.nickname && (
                                 <p className="report-student-id">
                                     {reportData.username}
+                                </p>
+                            )}
+                            {reportData.current_activity && (
+                                <p className="student-activity" style={{ marginTop: '0.5rem', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+                                    <span style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', backgroundColor: 'var(--primary-color)', marginRight: '6px' }}></span>
+                                    {reportData.current_activity}
                                 </p>
                             )}
                         </div>

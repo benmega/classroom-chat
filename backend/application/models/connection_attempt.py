@@ -16,7 +16,7 @@ class ConnectionAttempt(db.Model):
     code_attempted = db.Column(db.String(10), nullable=False)
     success = db.Column(db.Boolean, default=False)
 
-    parent = db.relationship("User", backref=db.backref("connection_attempts", lazy="dynamic"))
+    parent = db.relationship("User", backref=db.backref("connection_attempts", lazy="dynamic", cascade="all, delete-orphan"))
 
     @staticmethod
     def check_rate_limits(parent_id):

@@ -33,6 +33,8 @@ class User(db.Model):
     bio = db.Column(db.String(500), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     has_seen_tutorial = db.Column(db.Boolean, default=False)
+    current_activity = db.Column(db.String(255), nullable=True)
+    last_activity_time = db.Column(db.DateTime, nullable=True)
 
     # Gamification
     packets = db.Column(db.Double, nullable=False, default=0)
@@ -96,6 +98,7 @@ class User(db.Model):
         primaryjoin="User.id == parent_students.c.parent_id",
         secondaryjoin="User.id == parent_students.c.student_id",
         lazy="selectin",
+        backref=db.backref("parents", lazy="selectin"),
     )
 
     def __repr__(self):
@@ -167,6 +170,9 @@ class User(db.Model):
             "has_auto_claimer": self.has_auto_claimer,
             "has_double_duck": self.has_double_duck,
             "drawer": self.drawer,
+            "current_activity": self.current_activity,
+            "last_activity_time": self.last_activity_time.isoformat() if self.last_activity_time else None,
+            "achievement_count": len(self.achievements),
         }
 
     def to_dict_summary(self, precomputed_progress=None):
@@ -240,6 +246,11 @@ class User(db.Model):
             "profile_wallpaper": self.profile_wallpaper,
             "has_auto_claimer": self.has_auto_claimer,
             "drawer": self.drawer,
+            "current_activity": self.current_activity,
+            "last_activity_time": self.last_activity_time.isoformat() if self.last_activity_time else None,
+            "recent_project": {
+                "name": self.projects[-1].name,
+            } if self.projects else None,
         }
         return d
 
@@ -350,6 +361,9 @@ class User(db.Model):
         oz_levels = self.get_progress("www.ozaria.com")
         oz_percent = self.get_progress_percent("www.ozaria.com")
 
+        # Query all courses at once to avoid N+1 queries during breakdown generation
+        courses_dict = {course.id: course.name for course in Course.query.all()}
+
         def get_course_breakdown(domain):
             from .challenge import Challenge
             
@@ -370,8 +384,7 @@ class User(db.Model):
             for course_id, challenges in courses_map.items():
                 course_name = "Other"
                 if course_id:
-                    course = db.session.get(Course, course_id)
-                    course_name = course.name if course else course_id
+                    course_name = courses_dict.get(course_id, course_id)
                 
                 levels = []
                 completed_count = 0
@@ -408,10 +421,10 @@ class User(db.Model):
                         })
                         
             for course_id, levels in legacy_courses.items():
-                course = db.session.get(Course, course_id)
+                course_name = courses_dict.get(course_id, course_id) if course_id else "Other"
                 breakdown.append({
                     "course_id": course_id,
-                    "course_name": course.name if course else course_id,
+                    "course_name": course_name,
                     "levels_completed": len(levels),
                     "levels_total": len(levels),
                     "levels": levels
@@ -467,7 +480,7 @@ class User(db.Model):
 
         if amount > 0:
             self.earned_ducks += amount
-            self.packets += amount / (2**14)
+            # Note: Packets are no longer earned here. They are earned via projects or admin adjustment.
 
         self.duck_balance += amount
 

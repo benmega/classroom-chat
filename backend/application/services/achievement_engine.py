@@ -61,7 +61,7 @@ def check_achievement(user, achievement, stats=None):
             stats.get("trade_count")
             if "trade_count" in stats
             else db.session.query(func.count(DuckTradeLog.id))
-            .filter(DuckTradeLog.user_id == user.id)
+            .filter(DuckTradeLog.user_id == user.id, DuckTradeLog.status == "approved")
             .scalar()
         ),
         # Certificate submitted or not
@@ -122,7 +122,7 @@ def get_achievement_progress(user, achievement, stats=None):
             stats.get("trade_count")
             if "trade_count" in stats
             else db.session.query(func.count(DuckTradeLog.id))
-            .filter(DuckTradeLog.user_id == user.id)
+            .filter(DuckTradeLog.user_id == user.id, DuckTradeLog.status == "approved")
             .scalar()
         ),
         "certificate": lambda: (
@@ -153,17 +153,19 @@ def _calculate_consistency(user_id):
 
     # Extract weeks (year, weeknum)
     weeks = sorted({ts[0].isocalendar()[:2] for ts in logs})
+    if not weeks:
+        return 0
+
+    from datetime import date
+
+    # Convert each (year, week) to the Monday date of that ISO week
+    week_mondays = sorted([date.fromisocalendar(year, week, 1) for year, week in weeks])
 
     streak = 1
     best_streak = 1
-    for i in range(1, len(weeks)):
-        prev_year, prev_week = weeks[i - 1]
-        curr_year, curr_week = weeks[i]
-
-        # Handle year transition
-        if (curr_year == prev_year and curr_week == prev_week + 1) or (
-            curr_year == prev_year + 1 and prev_week == 52 and curr_week == 1
-        ):
+    for i in range(1, len(week_mondays)):
+        diff = (week_mondays[i] - week_mondays[i - 1]).days
+        if diff == 7:
             streak += 1
             best_streak = max(best_streak, streak)
         else:
@@ -202,7 +204,7 @@ def evaluate_user(user, force=False):
         .scalar(),
         "max_session": longest_session_minutes(user.id),
         "trade_count": db.session.query(func.count(DuckTradeLog.id))
-        .filter(DuckTradeLog.user_id == user.id)
+        .filter(DuckTradeLog.user_id == user.id, DuckTradeLog.status == "approved")
         .scalar(),
     }
 
@@ -237,9 +239,8 @@ def longest_session_minutes(user_id):
     logs = SessionLog.query.filter_by(user_id=user_id).all()
 
     max_duration = 0
-    now = datetime.utcnow()
     for log in logs:
-        end = log.end_time or now
+        end = log.end_time or log.last_seen
         duration = (end - log.start_time).total_seconds()
         if duration > max_duration:
             max_duration = duration

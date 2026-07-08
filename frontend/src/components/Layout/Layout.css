@@ -521,6 +521,14 @@ footer {
     }
 }
 
+/* Hide mobile sidebar and overlay entirely on desktop */
+@media (min-width: 801px) {
+    .mobile-sidebar,
+    .mobile-overlay {
+        display: none !important;
+    }
+}
+
 /* Mobile Sidebar & Overlay */
 .mobile-overlay {
     position: fixed;
@@ -640,10 +648,255 @@ footer {
 }
 
 @media (min-width: 801px) {
+    .app-container {
+        flex-direction: row;
+    }
+    .main-layout-content {
+        display: flex;
+        flex-direction: column;
+        flex-grow: 1;
+        height: 100dvh;
+        overflow: hidden;
+    }
     main.main-full {
         overflow-y: auto;
     }
     .desktop-hidden-footer {
         display: none !important;
     }
+
+    /* Desktop header: hide logo, hamburger toggle, and profile menu (rail covers all nav) */
+    .main-layout-content #logo-container,
+    .main-layout-content .header-logo-wrap {
+        display: none !important;
+    }
+    .main-layout-content .hamburger-toggle {
+        display: none !important;
+    }
+    .main-layout-content .profile-menu {
+        display: none !important;
+    }
+
+    /* Center the header content and apply matching vertical padding to nav rail icons */
+    .main-layout-content .header-content {
+        justify-content: center;
+        padding: 1rem 1.5rem;
+        gap: 1rem;
+        min-height: 56px;
+    }
+
+    /* Center the search bar with a reasonable max-width and no extra margin */
+    .main-layout-content .user-search-container {
+        flex: 0 1 420px;
+        max-width: 420px;
+        margin: 0;
+    }
 }
+
+/* ==========================================================================
+   Desktop Navigation Rail (Option B - Compact Icons)
+   ========================================================================== */
+
+.desktop-nav-rail {
+    display: none;
+}
+
+@media (min-width: 801px) {
+    .desktop-nav-rail {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        align-items: center;
+        width: 72px;
+        height: 100dvh;
+        background: var(--bg-primary);
+        border-right: 1px solid var(--border-subtle);
+        padding: 1rem 0;
+        flex-shrink: 0;
+        z-index: 1010;
+    }
+}
+
+.nav-rail-logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background: var(--primary-light);
+    border-radius: var(--radius-md);
+    border: 2px solid var(--primary-color);
+    box-shadow: var(--shadow-sm);
+    transition: var(--transition-smooth);
+}
+
+.nav-rail-logo img {
+    height: 24px;
+    width: auto;
+    display: block;
+    object-fit: contain;
+    transition: var(--transition-smooth);
+}
+
+.nav-rail-logo:hover {
+    transform: scale(1.05);
+    border-color: var(--secondary-color);
+}
+
+.nav-rail-logo:hover img {
+    transform: scale(1.1) rotate(-5deg);
+}
+
+.nav-rail-center {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    align-items: center;
+    flex-grow: 1;
+    margin-top: 2rem;
+    width: 100%;
+}
+
+.nav-rail-bottom {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    align-items: center;
+    width: 100%;
+    margin-top: auto;
+}
+
+.nav-rail-item-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 48px;
+}
+
+.nav-rail-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    border-radius: var(--radius-md);
+    color: var(--text-secondary);
+    background: transparent;
+    transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    border: none;
+    padding: 0;
+}
+
+.nav-rail-item svg {
+    width: 20px;
+    height: 20px;
+    transition: transform 0.22s ease, color 0.22s ease;
+}
+
+/* Hover State */
+.nav-rail-item:hover {
+    background: var(--primary-light);
+    color: var(--primary-color);
+    border-radius: 35%; /* Discord-like morph */
+}
+
+.nav-rail-item:hover svg {
+    transform: scale(1.1);
+}
+
+/* Active State */
+.nav-rail-item.active {
+    background: var(--primary-color);
+    color: var(--bg-primary);
+    box-shadow: var(--shadow-glow);
+    border-radius: 30%;
+}
+
+.nav-rail-item.active svg {
+    color: var(--bg-primary) !important;
+}
+
+/* Active indicator bar on left */
+.nav-rail-indicator {
+    position: absolute;
+    left: 0;
+    width: 4px;
+    background-color: var(--primary-color);
+    border-radius: 0 4px 4px 0;
+    transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+    height: 0;
+    opacity: 0;
+}
+
+.nav-rail-item-container:hover .nav-rail-indicator {
+    height: 16px;
+    opacity: 0.6;
+}
+
+.nav-rail-item-container.active .nav-rail-indicator {
+    height: 28px;
+    opacity: 1;
+}
+
+/* Special Logout Button styling */
+.nav-rail-item.logout-btn-rail {
+    color: var(--error-color);
+}
+
+.nav-rail-item.logout-btn-rail:hover {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--error-color);
+}
+
+.nav-rail-item-container.logout-container .nav-rail-indicator {
+    background-color: var(--error-color);
+}
+
+/* Custom Tooltips (pure CSS) */
+.nav-rail-item[data-tooltip]::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    left: 68px;
+    top: 50%;
+    transform: translateY(-50%) translateX(-8px);
+    background: var(--slate-800);
+    color: white;
+    padding: 6px 10px;
+    border-radius: var(--radius-sm);
+    font-size: var(--font-xs);
+    font-weight: 600;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: var(--shadow-md);
+    z-index: 1200;
+}
+
+.nav-rail-item[data-tooltip]::before {
+    content: '';
+    position: absolute;
+    left: 62px;
+    top: 50%;
+    transform: translateY(-50%) translateX(-4px);
+    border: 5px solid transparent;
+    border-right-color: var(--slate-800);
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1200;
+}
+
+.nav-rail-item[data-tooltip]:hover::after {
+    opacity: 1;
+    transform: translateY(-50%) translateX(0);
+}
+
+.nav-rail-item[data-tooltip]:hover::before {
+    opacity: 1;
+    transform: translateY(-50%) translateX(0);
+}
+

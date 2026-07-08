@@ -1,5 +1,6 @@
-import React, { useLayoutEffect, useRef, useState, useMemo } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import React, { useLayoutEffect, useRef, useState, useMemo, useEffect } from 'react';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import client from '../../api/client';
 import { ArrowLeft, Star } from 'lucide-react';
 import codecombatLogo from '../../assets/codecombat-logo.png';
 import ozariaLogo from '../../assets/ozaria-logo.png';
@@ -114,6 +115,7 @@ const getPrerequisiteTitles = (nodeId, processedNodes) => {
 const CourseProgressTree = () => {
     const location = useLocation();
     const navigate = useNavigate();
+    const { slug } = useParams();
     
     const containerRef = useRef(null);
     const nodeRefs = useRef({});
@@ -121,8 +123,30 @@ const CourseProgressTree = () => {
     
     const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 1024);
     const [hoveredNodeId, setHoveredNodeId] = useState(null);
-    
-    const progressData = location.state?.course_progress || location.state?.target?.course_progress;
+    const [isFetching, setIsFetching] = useState(false);
+    const [fetchedProgressData, setFetchedProgressData] = useState(null);
+
+    const stateProgressData = location.state?.course_progress || location.state?.target?.course_progress;
+
+    // If no data was passed via navigation state, fetch from API using the slug
+    useEffect(() => {
+        if (!stateProgressData && slug) {
+            setIsFetching(true);
+            client.get(`/user/profile/${slug}`)
+                .then(res => {
+                    const target = res.data?.data?.target;
+                    if (target?.course_progress) {
+                        setFetchedProgressData(target.course_progress);
+                    }
+                })
+                .catch(() => {
+                    // fetchedProgressData stays null → error state shown below
+                })
+                .finally(() => setIsFetching(false));
+        }
+    }, [slug, stateProgressData]);
+
+    const progressData = stateProgressData || fetchedProgressData;
 
     const ccBreakdown = progressData?.codecombat?.breakdown || [];
     const ozBreakdown = progressData?.ozaria?.breakdown || [];
@@ -270,6 +294,17 @@ const CourseProgressTree = () => {
         }
     }, [location.state, processedNodes]);
 
+    if (isFetching) {
+        return (
+            <div className="report-card-page animate-page-entry" style={{ padding: '2rem', textAlign: 'center' }}>
+                <div className="report-error glass-panel">
+                    <h2>Loading...</h2>
+                    <p>Fetching your course progress.</p>
+                </div>
+            </div>
+        );
+    }
+
     if (!progressData) {
         return (
             <div className="report-card-page animate-page-entry" style={{ padding: '2rem', textAlign: 'center' }}>
@@ -395,15 +430,7 @@ const CourseProgressTree = () => {
     );
 
     return (
-        <div className="course-progress-page animate-page-entry" style={{ position: 'relative' }}>
-            <button
-                className="subtle-back-btn"
-                onClick={() => navigate(-1)}
-                title="Go Back"
-            >
-                <ArrowLeft size={20} />
-            </button>
-
+        <div className="course-progress-page animate-page-entry">
             {treeContent}
         </div>
     );

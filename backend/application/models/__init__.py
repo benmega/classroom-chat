@@ -16,6 +16,7 @@ def setup_models():
     from .course import Course  # noqa: F401
     from .message import Message  # noqa: F401
     from .project import Project  # noqa: F401
+    from .project_template import ProjectTemplate  # noqa: F401
     from .skill import Skill  # noqa: F401
     from .user import User  # noqa: F401
     from .duck_trade import DuckTradeLog  # noqa: F401
@@ -27,7 +28,7 @@ def setup_models():
     from .user_certificate import UserCertificate  # noqa: F401
     from .duck_transaction import DuckTransaction  # noqa: F401
     from .parent_student import parent_students  # noqa: F401
-    from .parent_connection_request import ParentConnectionRequest  # noqa: F401
+
     from .connection_attempt import ConnectionAttempt  # noqa: F401
     from .store_item import StoreItem  # noqa: F401
     from .user_item_purchase import UserItemPurchase  # noqa: F401

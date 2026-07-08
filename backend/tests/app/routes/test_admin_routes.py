@@ -352,6 +352,7 @@ def test_get_users(client, test_app, sample_users, sample_admin, init_db):
             u for u in user_list if u["username"] == sample_users[0].username
         )
         assert user_data["username"] == sample_users[0].username
+        assert "levels_today" in user_data
 
 
 def test_set_username_proper_case_handling(client, test_app, sample_user, sample_admin):
@@ -460,4 +461,236 @@ def test_adjust_packets(client, sample_admin, sample_user, test_app):
         # Test user not found
         resp_not_found = client.post("/api/admin/adjust_packets", data={"username": "nonexistent_user", "amount": 10})
         assert resp_not_found.status_code == 404
+
+
+def test_project_template_crud_admin(client, sample_admin, test_app):
+    """Test CRUD operations on ProjectTemplate resource as an admin."""
+    from application.models.project_template import ProjectTemplate
+
+    # 1. Unauthenticated access to GET list should be blocked (401)
+    client.delete_cookie("session")
+    resp = client.get("/api/project-templates", headers={"Accept": "application/json"})
+    assert resp.status_code == 401
+
+    # 2. Login as admin
+    login_as_admin(client, sample_admin)
+
+    with test_app.app_context():
+        # 3. Read (List) - should return seeded templates
+        resp = client.get("/api/project-templates")
+        assert resp.status_code == 200
+        data = resp.get_json()
+        assert "data" in data
+        assert "templates" in data["data"]
+        templates_map = data["data"]["templates"]
+        assert len(templates_map) >= 5
+        
+        # 4. Create
+        payload = {
+            "name": "New Custom Test Template",
+            "description": "Test description for new custom template."
+        }
+        resp_create = client.post(
+            "/api/project-templates",
+            json=payload
+        )
+        assert resp_create.status_code == 200
+        new_template = resp_create.get_json()["data"]["template"]
+        assert new_template["name"] == "New Custom Test Template"
+        new_id = new_template["id"]
+
+        # 5. Update
+        update_payload = {
+            "description": "Updated custom description."
+        }
+        resp_update = client.put(
+            f"/api/project-templates/{new_id}",
+            json=update_payload
+        )
+        assert resp_update.status_code == 200
+        assert resp_update.get_json()["data"]["template"]["description"] == "Updated custom description."
+
+        # 6. Delete
+        resp_delete = client.delete(f"/api/project-templates/{new_id}")
+        assert resp_delete.status_code == 200
+        
+        # Verify deleted
+        assert db.session.get(ProjectTemplate, new_id) is None
+
+
+def test_project_review_packets(client, sample_admin, sample_user, test_app):
+    """Test project review packet rewards and retraction."""
+    from application.models.project import Project
+
+    # Login as admin
+    login_as_admin(client, sample_admin)
+
+    with test_app.app_context():
+        # Create a test project for sample_user
+        project = Project(
+            name="Test Project",
+            description="A test project description",
+            user_id=sample_user.id
+        )
+        db.session.add(project)
+        db.session.commit()
+        project_id = project.id
+
+        # Verify initial state
+        initial_packets = sample_user.packets
+        assert project.packets_awarded == 0.0
+
+        # 1. Approve project with custom packet_reward
+        resp_approve = client.post(
+            f"/api/admin/handle-project-review/{project_id}",
+            json={
+                "action": "approve",
+                "teacher_comment": "Excellent work!",
+                "packet_reward": 0.015
+            }
+        )
+        assert resp_approve.status_code == 200
+        data_approve = resp_approve.get_json()
+        assert data_approve["status"] == "success"
+
+        # Check DB states
+        db.session.expire_all()
+        updated_project = db.session.get(Project, project_id)
+        updated_user = db.session.get(User, sample_user.id)
+        assert updated_project.teacher_comment == "Excellent work!"
+        assert updated_project.packets_awarded == 0.015
+        assert updated_user.packets == initial_packets + 0.015
+
+        # 2. Re-approve with a different packet_reward (differential calculation check)
+        resp_reapprove = client.post(
+            f"/api/admin/handle-project-review/{project_id}",
+            json={
+                "action": "approve",
+                "teacher_comment": "Updated feedback",
+                "packet_reward": 0.025
+            }
+        )
+        assert resp_reapprove.status_code == 200
+        
+        db.session.expire_all()
+        updated_project2 = db.session.get(Project, project_id)
+        updated_user2 = db.session.get(User, sample_user.id)
+        assert updated_project2.teacher_comment == "Updated feedback"
+        assert updated_project2.packets_awarded == 0.025
+        assert updated_user2.packets == initial_packets + 0.025
+
+        # 3. Reject project (should retract packets)
+        resp_reject = client.post(
+            f"/api/admin/handle-project-review/{project_id}",
+            json={
+                "action": "reject"
+            }
+        )
+        assert resp_reject.status_code == 200
+        
+        db.session.expire_all()
+        updated_project3 = db.session.get(Project, project_id)
+        updated_user3 = db.session.get(User, sample_user.id)
+        assert updated_project3.teacher_comment is None
+        assert updated_project3.packets_awarded == 0.0
+        assert updated_user3.packets == initial_packets
+
+
+def test_parent_child_endpoints(client, test_app, sample_admin):
+    """Test the admin parent-student connection retrieval and listing endpoints."""
+    from application.models.user import User
+
+    login_as_admin(client, sample_admin)
+
+    # 1. Create a sample parent and student inside app context
+    with client.application.app_context():
+        parent = User(username="testparent", role="parent", password_hash="test")
+        student = User(username="teststudent", role="student", password_hash="test")
+        db.session.add(parent)
+        db.session.add(student)
+        db.session.commit()
+        parent_id = parent.id
+        student_id = student.id
+
+    # 2. Establish link using post endpoint
+    link_resp = client.post(f"/api/admin/parents/{parent_id}/link/{student_id}")
+    assert link_resp.status_code == 200
+    assert link_resp.get_json()["success"] is True
+
+    # 3. Test get_student_parents endpoint
+    parents_resp = client.get(f"/api/admin/students/{student_id}/parents")
+    assert parents_resp.status_code == 200
+    p_data = parents_resp.get_json()
+    assert p_data["success"] is True
+    assert len(p_data["parents"]) == 1
+    assert p_data["parents"][0]["username"] == "testparent"
+
+    # 4. Test get_parent_child_connections endpoint
+    conn_resp = client.get("/api/admin/parents/connections")
+    assert conn_resp.status_code == 200
+    c_data = conn_resp.get_json()
+    assert c_data["success"] is True
+    # Verify that the test connection is in the list
+    found = False
+    for conn in c_data["connections"]:
+        if conn["parent"]["id"] == parent_id and conn["student"]["id"] == student_id:
+            found = True
+            break
+    assert found is True
+
+    # 5. Unlink using post endpoint
+    unlink_resp = client.post(f"/api/admin/parents/{parent_id}/unlink/{student_id}")
+    assert unlink_resp.status_code == 200
+    assert unlink_resp.get_json()["success"] is True
+
+    # 6. Verify they are unlinked
+    parents_resp2 = client.get(f"/api/admin/students/{student_id}/parents")
+    assert parents_resp2.status_code == 200
+    assert len(parents_resp2.get_json()["parents"]) == 0
+
+
+def test_reject_user(client, test_app, sample_admin):
+    """Test that rejecting/deleting a user cascades and deletes all related transactions, messages, and connection attempts."""
+    from application.models.user import User
+    from application.models.duck_transaction import DuckTransaction
+    from application.models.message import Message
+    from application.models.connection_attempt import ConnectionAttempt
+
+    login_as_admin(client, sample_admin)
+
+    # 1. Create a user with related data
+    with client.application.app_context():
+        user = User(username="rejectme", password_hash="testpass")
+        db.session.add(user)
+        db.session.commit()
+        user_id = user.id
+
+        # Add DuckTransaction
+        tx = DuckTransaction(user_id=user_id, amount=10.0, reason="Test Reject Cascade")
+        db.session.add(tx)
+
+        # Add Message
+        msg = Message(user_id=user_id, content="Test message by rejected user")
+        db.session.add(msg)
+
+        # Add ConnectionAttempt
+        attempt = ConnectionAttempt(parent_id=user_id, code_attempted="XYZ123", success=False)
+        db.session.add(attempt)
+
+        db.session.commit()
+
+    # 2. Reject/delete the user
+    response = client.post(f"/api/admin/reject_user/{user_id}")
+    assert response.status_code == 200
+    assert response.get_json()["status"] == "success"
+
+    # 3. Verify user and all cascading relations are deleted
+    with client.application.app_context():
+        assert db.session.get(User, user_id) is None
+        assert DuckTransaction.query.filter_by(user_id=user_id).first() is None
+        assert Message.query.filter_by(user_id=user_id).first() is None
+        assert ConnectionAttempt.query.filter_by(parent_id=user_id).first() is None
+
+
+
 

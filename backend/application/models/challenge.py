@@ -13,8 +13,12 @@ from ..extensions import db
 class Challenge(db.Model):
     __tablename__ = "challenges"
 
+    __table_args__ = (
+        db.UniqueConstraint("name", "domain", name="uq_challenges_name_domain"),
+    )
+
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(255), nullable=False, unique=True)
+    name = db.Column(db.String(255), nullable=False)
     slug = db.Column(db.String(255), nullable=False, unique=True)
     domain = db.Column(db.String(100), nullable=False)
     difficulty = db.Column(db.String(50), nullable=False, default="medium")
