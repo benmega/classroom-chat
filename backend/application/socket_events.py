@@ -108,15 +108,15 @@ def handle_send_message(data):
     """
     user_id = session.get("user")
     if not user_id:
-        return
+        return {"success": False, "error": "Not authenticated"}
 
     user = db.session.get(User, user_id)
     if not user:
-        return
+        return {"success": False, "error": "User not found"}
 
     content = data.get("content")
     if not content or len(content) > 4000:
-        return
+        return {"success": False, "error": "Invalid message length"}
 
     # Parse targeting parameters from frontend
     is_global = data.get("is_global", False)
@@ -127,12 +127,15 @@ def handle_send_message(data):
     # Server-side validation
     if not user.is_admin:
         if len(content) > 500:
-            return
+            return {"success": False, "error": "Message too long"}
+
+        if not getattr(user, 'can_chat', True):
+            return {"success": False, "error": "You are currently muted"}
 
         from .models.configuration import Configuration
         config = Configuration.query.first()
         if config and not config.message_sending_enabled:
-            return
+            return {"success": False, "error": "Chat is currently disabled"}
         # Students can't send global messages
         is_global = False
         # Students can only target their own classrooms
@@ -158,7 +161,7 @@ def handle_send_message(data):
     )
 
     if not save_result.get("success"):
-        return
+        return {"success": False, "error": save_result.get("error", "Failed to save message")}
 
     from .models.message import Message
     msg = db.session.get(Message, save_result.get("message_id"))
@@ -204,6 +207,8 @@ def handle_send_message(data):
                 # Basic dedup: if u in target_users, we already sent
                 if u.id not in target_users and u.id != user.id:
                     emit("message_received", payload, room=f"user:{u.id}")
+
+    return {"success": True}
 
 
 def emit_classroom_enrolled(user_id: int, classroom_dict: dict):

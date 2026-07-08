@@ -10,7 +10,7 @@ const ContributionGraph = ({ data }) => {
             <div className="graph-header">
                 {data.months?.map((m, i) => (
                     <span key={i} className="month-label" style={{ gridColumn: `span ${m.colspan}` }}>
-                        {m.name}
+                        {i === 0 && m.colspan <= 2 ? '' : m.name}
                     </span>
                 ))}
             </div>

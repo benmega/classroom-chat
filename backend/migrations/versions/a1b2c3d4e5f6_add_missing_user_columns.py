@@ -11,7 +11,7 @@ from sqlalchemy.engine.reflection import Inspector
 
 
 revision = 'a1b2c3d4e5f6'
-down_revision = None
+down_revision = '3a10e78a7fd0'
 branch_labels = None
 depends_on = None
 

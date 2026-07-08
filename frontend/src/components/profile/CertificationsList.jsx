@@ -1,6 +1,7 @@
 import React from 'react';
 import { Award, Plus } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { getApiUrl } from '../../utils/apiUrl';
 
 const CertificationsList = ({ certificates }) => {
     if (!certificates || certificates.length === 0) return null;
@@ -16,7 +17,7 @@ const CertificationsList = ({ certificates }) => {
             <div className="cert-list-container">
                 <div className="cert-list">
                     {certificates.map(cert => (
-                        <div key={cert.id} className="cert-item" onClick={() => cert.file_path && window.open(`/api/achievements/view_certificate/${cert.id}`, '_blank')}>
+                        <div key={cert.id} className="cert-item" onClick={() => cert.file_path && window.open(getApiUrl(`/api/achievements/view_certificate/${cert.id}`), '_blank')}>
                             <div className="cert-icon">
                                 <div className={`badge badge-${cert.achievement?.slug || 'default'}`}></div>
                             </div>

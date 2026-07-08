@@ -158,7 +158,7 @@ def client(test_app):
 @pytest.fixture
 def logged_in_client(client, sample_user):
     with client.session_transaction() as sess:
-        sess["user"] = sample_user.username
+        sess["user"] = sample_user.id
         sess["_user_id"] = str(sample_user.id)
     return client
 
@@ -270,9 +270,9 @@ def sample_admin(init_db):
 
 
 @pytest.fixture
-def logged_in_admin(client, sample_user):
+def logged_in_admin(client, sample_admin):
     with client.session_transaction() as sess:
-        sess["user"] = sample_user.username
+        sess["user"] = sample_admin.id
     return client
 
 

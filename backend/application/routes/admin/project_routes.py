@@ -83,3 +83,41 @@ def handle_project_review(project_id):
         )
 
     return jsonify({"status": "error", "message": "Invalid action."}), 400
+
+
+@admin_bp.route("/assign-project", methods=["POST"])
+@admin_only
+def assign_project():
+    data = request.get_json()
+    
+    user_id = data.get("user_id")
+    name = data.get("name")
+    
+    if not user_id or not name:
+        return jsonify({"status": "error", "message": "Student ID and Project Name are required."}), 400
+        
+    description = data.get("description")
+    link = data.get("link")
+    github_link = data.get("github_link")
+    video_url = data.get("video_url")
+    code_snippet = data.get("code_snippet")
+    image_url = data.get("image_url")
+    
+    project = Project(
+        user_id=user_id,
+        name=name,
+        description=description,
+        link=link,
+        github_link=github_link,
+        video_url=video_url,
+        code_snippet=code_snippet,
+        image_url=image_url
+    )
+    
+    db.session.add(project)
+    db.session.commit()
+    
+    return jsonify({
+        "status": "success",
+        "message": f"Project '{name}' has been assigned to student #{user_id}."
+    })

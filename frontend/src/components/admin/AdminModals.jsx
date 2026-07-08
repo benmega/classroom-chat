@@ -250,6 +250,26 @@ export const StartConversationModal = ({ isOpen, onClose, onSubmit, loading, cla
     </Modal>
 );
 
+export const AddBannedWordModal = ({ isOpen, onClose, onSubmit, newWord, setNewWord, loading }) => (
+    <Modal isOpen={isOpen} onClose={onClose} title="Add Banned Word">
+        <form onSubmit={onSubmit} className="admin-form">
+            <div className="form-group">
+                <label>Word to Ban</label>
+                <input 
+                    type="text" 
+                    value={newWord}
+                    onChange={(e) => setNewWord(e.target.value)}
+                    placeholder="e.g. badword" 
+                    required
+                />
+            </div>
+            <button type="submit" className="btn-primary" style={{ background: 'var(--gradient-error)' }} disabled={loading}>
+                {loading ? 'Adding...' : 'Ban Word'}
+            </button>
+        </form>
+    </Modal>
+);
+
 export const ManageChildrenModal = ({ isOpen, onClose, parent, users, parentChildren, onToggleLink, loading }) => {
     const students = users.filter(u => u.role === 'student');
     const childIds = new Set(parentChildren.map(c => c.id));

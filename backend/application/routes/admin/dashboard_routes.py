@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 from flask import Response, current_app, request
-from sqlalchemy import func, case
+from sqlalchemy import func
 from application.extensions import db
 from application.models.user import User
 from application.models.configuration import Configuration
@@ -40,12 +40,15 @@ def dashboard_data():
     classrooms = Classroom.query.all()
 
     days_param = request.args.get("days", "7")
-    now = datetime.utcnow()
+    tz_offset = request.args.get("tz_offset", 0, type=int)
+    now_utc = datetime.utcnow()
+    now_local = now_utc - timedelta(minutes=tz_offset)
     
     first_tx = DuckTransaction.query.order_by(DuckTransaction.timestamp.asc()).first()
     max_history_days = 0
     if first_tx and first_tx.timestamp:
-        max_history_days = (now - first_tx.timestamp).days + 1
+        first_tx_local = first_tx.timestamp - timedelta(minutes=tz_offset)
+        max_history_days = (now_local.date() - first_tx_local.date()).days + 1
 
     if days_param == "all":
         days = max_history_days if max_history_days > 0 else 7
@@ -55,37 +58,43 @@ def dashboard_data():
         except ValueError:
             days = 7
 
-    # Generate chart data
-    chart_start = (now - timedelta(days=days - 1)).replace(
+    # Generate chart data based on local midnight boundaries
+    local_chart_start = (now_local - timedelta(days=days - 1)).replace(
         hour=0, minute=0, second=0, microsecond=0
     )
+    chart_start_utc = local_chart_start + timedelta(minutes=tz_offset)
 
     results = (
         db.session.query(
-            func.date(DuckTransaction.timestamp).label("date"),
-            func.sum(
-                case((DuckTransaction.amount > 0, DuckTransaction.amount), else_=0)
-            ).label("earned"),
-            func.sum(
-                case((DuckTransaction.amount < 0, DuckTransaction.amount), else_=0)
-            ).label("spent"),
+            DuckTransaction.timestamp,
+            DuckTransaction.amount
         )
-        .filter(DuckTransaction.timestamp >= chart_start)
-        .group_by(func.date(DuckTransaction.timestamp))
+        .filter(DuckTransaction.timestamp >= chart_start_utc)
         .all()
     )
 
-    # Create a lookup for the results
-    stats_map = {str(r.date): (r.earned or 0, r.spent or 0) for r in results}
+    stats_map = {}
+    for tx in results:
+        local_time = tx.timestamp - timedelta(minutes=tz_offset)
+        date_str = str(local_time.date())
+        
+        if date_str not in stats_map:
+            stats_map[date_str] = {"earned": 0, "spent": 0}
+            
+        if tx.amount > 0:
+            stats_map[date_str]["earned"] += tx.amount
+        else:
+            stats_map[date_str]["spent"] += tx.amount
 
     labels = []
     earned = []
     spent = []
     for i in range(days - 1, -1, -1):
-        day = (now - timedelta(days=i)).date()
+        day = (now_local - timedelta(days=i)).date()
         labels.append(day.strftime("%b %d"))
 
-        e, s = stats_map.get(str(day), (0, 0))
+        e = stats_map.get(str(day), {}).get("earned", 0)
+        s = stats_map.get(str(day), {}).get("spent", 0)
         earned.append(float(e))
         spent.append(abs(float(s)))
 

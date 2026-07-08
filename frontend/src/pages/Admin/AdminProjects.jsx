@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { 
     CheckCircle, 
     XCircle, 
@@ -13,7 +13,8 @@ import {
     ArrowLeft,
     Code,
     Video,
-    Github
+    Github,
+    Plus
 } from 'lucide-react';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
@@ -24,6 +25,7 @@ import AdminPageHeader from '../../components/admin/AdminPageHeader';
 import { formatStaticUrl } from '../../utils/formatters';
 
 const AdminProjects = () => {
+    const navigate = useNavigate();
     const [projects, setProjects] = useState([]);
     const [filter, setFilter] = useState('pending');
     const [statusFilter, setStatusFilter] = useState('all');
@@ -34,7 +36,8 @@ const AdminProjects = () => {
     const [teacherComment, setTeacherComment] = useState('');
     const [packetReward, setPacketReward] = useState(0.006);
     const [isSubmitting, setIsSubmitting] = useState(false);
-
+    
+    // Assign Project state removed - moved to AdminAssignProject.jsx
     const fetchProjects = useCallback(async () => {
         setIsLoading(true);
         try {
@@ -53,9 +56,21 @@ const AdminProjects = () => {
         }
     }, [filter]);
 
+    const fetchStandardProjects = useCallback(async () => {
+        try {
+            const res = await client.get('/api/admin/standard-projects');
+            if (res.data.status === 'success') {
+                // setStandardProjects(res.data.data.standard_projects);
+            }
+        } catch (e) {
+            console.error('Failed to load standard projects', e);
+        }
+    }, []);
+
     useEffect(() => {
         fetchProjects();
-    }, [fetchProjects]);
+        fetchStandardProjects();
+    }, [fetchProjects, fetchStandardProjects]);
 
     const handleReview = async (projectId, action) => {
         if (action === 'approve' && !teacherComment.trim()) {
@@ -85,6 +100,8 @@ const AdminProjects = () => {
             setIsSubmitting(false);
         }
     };
+
+    // User Search for Assignment logic removed - moved to AdminAssignProject.jsx
 
     let processedProjects = [...projects];
 
@@ -263,6 +280,13 @@ const AdminProjects = () => {
                     >
                         All Projects <span className="count-badge">{counts.total}</span>
                     </button>
+                    <button 
+                        className="btn-assign-project"
+                        onClick={() => navigate('/admin/assign-project')}
+                        style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'var(--primary-color)', color: 'white', padding: '8px 16px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: '600' }}
+                    >
+                        <Plus size={18} /> Assign Project
+                    </button>
                 </div>
             </AdminPageHeader>
 
@@ -367,6 +391,8 @@ const AdminProjects = () => {
                     )}
                 </div>
             )}
+
+            {/* Assign Modal logic removed */}
         </div>
     );
 };

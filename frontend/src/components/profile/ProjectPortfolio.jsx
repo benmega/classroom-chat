@@ -1,25 +1,27 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Plus, Code, Play, Settings, CheckCircle, ExternalLink, Layers } from 'lucide-react';
+import { Plus, Code, Play, Settings, CheckCircle, ExternalLink, Layers, Clock } from 'lucide-react';
 import SmartImage from '../common/SmartImage';
 import { formatStaticUrl } from '../../utils/formatters';
 
 const ProjectPortfolio = ({ projects, isOwner, setSelectedProject, studentId }) => {
     const navigate = useNavigate();
 
+    const sortedProjects = projects ? [...projects].sort((a, b) => b.id - a.id) : [];
+
     return (
         <section className="dashboard-panel">
-            <div className="panel-header between">
+            <div className="panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <h2><Layers size={20} /> Projects Portfolio</h2>
                 {isOwner && (
-                    <Link to={studentId ? `/project/new?student_id=${studentId}` : "/project/new"} className="btn-add">
-                        <Plus size={16} /> Add Project
+                    <Link to={studentId ? `/project/new?student_id=${studentId}` : "/project/new"} title="Add Project" style={{ color: 'var(--text-secondary)', display: 'flex', alignItems: 'center' }}>
+                        <Plus size={20} />
                     </Link>
                 )}
             </div>
             <div className="projects-grid-container">
                 <div className="projects-grid">
-                    {projects?.map(project => (
+                    {sortedProjects.map(project => (
                         <div key={project.id} className="project-card">
                             <div className="project-thumb" onClick={() => setSelectedProject(project)}>
                                 <SmartImage 
@@ -28,6 +30,11 @@ const ProjectPortfolio = ({ projects, isOwner, setSelectedProject, studentId }) 
                                     fallbackType="project"
                                 />
                                 {project.video_url && <div className="play-overlay"><Play size={24} fill="currentColor" /></div>}
+                                {!project.teacher_comment && (
+                                    <span className="in-progress-badge" title="Pending Admin Approval">
+                                        <Clock size={12} /> In Progress
+                                    </span>
+                                )}
                             </div>
                             <div className="project-content">
                                 <h3>{project.name}</h3>

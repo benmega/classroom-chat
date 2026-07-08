@@ -32,6 +32,7 @@ def setup_models():
     from .connection_attempt import ConnectionAttempt  # noqa: F401
     from .store_item import StoreItem  # noqa: F401
     from .user_item_purchase import UserItemPurchase  # noqa: F401
+    from .standard_project import StandardProject  # noqa: F401
 
 
 # setup_models() is called by create_app() within app_context

@@ -21,7 +21,7 @@ def toggle_ai():
     return jsonify(
         {
             "success": True,
-            "message": f"AI Teacher has been {'disabled' if config.ai_teacher_enabled else 'enabled'}",
+            "message": f"AI Teacher has been {'enabled' if config.ai_teacher_enabled else 'disabled'}",
             "status": config.ai_teacher_enabled,
         }
     )
@@ -34,20 +34,21 @@ def toggle_message_sending():
     if config is None:
         config = Configuration(message_sending_enabled=False)
         db.session.add(config)
-    else:
-        config.message_sending_enabled = not config.message_sending_enabled
+    
+    config.message_sending_enabled = not config.message_sending_enabled
     db.session.commit()
 
     return jsonify(
         {
             "success": True,
-            "message": f"Message sending has been {'disabled' if config.message_sending_enabled else 'enabled'}",
+            "message": f"Message sending has been {'enabled' if config.message_sending_enabled else 'disabled'}",
             "status": config.message_sending_enabled,
         }
     )
 
 
 @admin_bp.route("/update_duck_multiplier", methods=["POST"])
+@admin_only
 def update_duck_multiplier():
     data = request.get_json()
     new_multiplier = data.get("multiplier")

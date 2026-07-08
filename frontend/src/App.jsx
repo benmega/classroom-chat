@@ -27,7 +27,8 @@ import EditProfile from './pages/User/EditProfile';
 import ManageProject from './pages/User/ManageProject';
 import AdminDashboard from './pages/Admin/AdminDashboard';
 import AdminProjects from './pages/Admin/AdminProjects';
-import AdminProjectTemplates from './pages/Admin/AdminProjectTemplates';
+import AdminAssignProject from './pages/Admin/AdminAssignProject';
+import AdminStandardProjects from './pages/Admin/AdminStandardProjects';
 import AdminCertificates from './pages/Admin/AdminCertificates';
 import AdminAchievements from './pages/Admin/AdminAchievements';
 import AdminChallenges from './pages/Admin/AdminChallenges';
@@ -103,7 +104,12 @@ function App() {
     return <ServerOffline />;
   }
 
-  const authRedirect = user?.role === 'parent' ? '/parent/dashboard' : '/chat';
+  let authRedirect = '/chat';
+  if (user?.role === 'parent') {
+    authRedirect = '/parent/dashboard';
+  } else if (user?.is_admin) {
+    authRedirect = '/admin/dashboard';
+  }
 
   return (
     <Router>
@@ -279,7 +285,8 @@ function App() {
                 <Route index element={<AdminDashboard />} />
                 <Route path="dashboard" element={<AdminDashboard />} />
                 <Route path="projects" element={<AdminProjects />} />
-                <Route path="project-templates" element={<AdminProjectTemplates />} />
+                <Route path="assign-project" element={<AdminAssignProject />} />
+                <Route path="standard-projects" element={<AdminStandardProjects />} />
                 <Route path="certificates" element={<AdminCertificates />} />
                 <Route path="users" element={<Users />} />
                 <Route path="users/:userId" element={<AdminUserDashboard />} />

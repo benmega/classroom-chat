@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
+import { getApiUrl } from '../../utils/apiUrl';
 import './AdminCertificates.css';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
 import Skeleton from '../../components/common/Skeleton';
@@ -137,14 +138,14 @@ const AdminCertificates = () => {
                     filteredCerts.map(cert => (
                         <div key={cert.id} className="cert-review-card">
                             <a 
-                                href={`/api/achievements/view_certificate/${cert.id}`} 
+                                href={getApiUrl(`/api/achievements/view_certificate/${cert.id}`)} 
                                 target="_blank" 
                                 rel="noopener noreferrer" 
                                 className="cert-thumbnail" 
                                 title="Click to view full certificate"
                             >
                                 <iframe 
-                                    src={`/api/achievements/view_certificate/${cert.id}#toolbar=0&navpanes=0&scrollbar=0`} 
+                                    src={getApiUrl(`/api/achievements/view_certificate/${cert.id}#toolbar=0&navpanes=0&scrollbar=0`)} 
                                     title="Certificate Preview" 
                                     frameBorder="0" 
                                     scrolling="no"
@@ -184,7 +185,7 @@ const AdminCertificates = () => {
                                         <CheckCircle size={16} /> Approve
                                     </button>
                                     <a 
-                                        href={`/api/achievements/download_certificate/${cert.id}`} 
+                                        href={getApiUrl(`/api/achievements/download_certificate/${cert.id}`)} 
                                         className="btn-icon"
                                         title="Download PDF"
                                     >

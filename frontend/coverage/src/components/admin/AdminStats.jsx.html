@@ -115,59 +115,59 @@
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">17x</span>
-<span class="cline-any cline-yes">17x</span>
-<span class="cline-any cline-yes">17x</span>
-<span class="cline-any cline-yes">17x</span>
-<span class="cline-any cline-yes">17x</span>
-<span class="cline-any cline-yes">17x</span>
-<span class="cline-any cline-yes">17x</span>
-<span class="cline-any cline-yes">17x</span>
-<span class="cline-any cline-yes">17x</span>
-<span class="cline-any cline-yes">17x</span>
-<span class="cline-any cline-yes">17x</span>
-<span class="cline-any cline-yes">17x</span>
-<span class="cline-any cline-yes">17x</span>
-<span class="cline-any cline-yes">17x</span>
-<span class="cline-any cline-yes">17x</span>
-<span class="cline-any cline-yes">17x</span>
-<span class="cline-any cline-yes">17x</span>
-<span class="cline-any cline-yes">17x</span>
-<span class="cline-any cline-yes">17x</span>
-<span class="cline-any cline-yes">17x</span>
-<span class="cline-any cline-yes">17x</span>
-<span class="cline-any cline-yes">17x</span>
-<span class="cline-any cline-yes">17x</span>
-<span class="cline-any cline-yes">17x</span>
-<span class="cline-any cline-yes">17x</span>
-<span class="cline-any cline-yes">17x</span>
-<span class="cline-any cline-yes">17x</span>
-<span class="cline-any cline-yes">17x</span>
-<span class="cline-any cline-yes">17x</span>
-<span class="cline-any cline-yes">17x</span>
-<span class="cline-any cline-yes">17x</span>
-<span class="cline-any cline-yes">17x</span>
-<span class="cline-any cline-yes">17x</span>
-<span class="cline-any cline-yes">17x</span>
-<span class="cline-any cline-yes">17x</span>
-<span class="cline-any cline-yes">17x</span>
-<span class="cline-any cline-yes">17x</span>
-<span class="cline-any cline-yes">17x</span>
+<span class="cline-any cline-yes">11x</span>
+<span class="cline-any cline-yes">11x</span>
+<span class="cline-any cline-yes">11x</span>
+<span class="cline-any cline-yes">11x</span>
+<span class="cline-any cline-yes">11x</span>
+<span class="cline-any cline-yes">11x</span>
+<span class="cline-any cline-yes">11x</span>
+<span class="cline-any cline-yes">11x</span>
+<span class="cline-any cline-yes">11x</span>
+<span class="cline-any cline-yes">11x</span>
+<span class="cline-any cline-yes">11x</span>
+<span class="cline-any cline-yes">11x</span>
+<span class="cline-any cline-yes">11x</span>
+<span class="cline-any cline-yes">11x</span>
+<span class="cline-any cline-yes">11x</span>
+<span class="cline-any cline-yes">11x</span>
+<span class="cline-any cline-yes">11x</span>
+<span class="cline-any cline-yes">11x</span>
+<span class="cline-any cline-yes">11x</span>
+<span class="cline-any cline-yes">11x</span>
+<span class="cline-any cline-yes">11x</span>
+<span class="cline-any cline-yes">11x</span>
+<span class="cline-any cline-yes">11x</span>
+<span class="cline-any cline-yes">11x</span>
+<span class="cline-any cline-yes">11x</span>
+<span class="cline-any cline-yes">11x</span>
+<span class="cline-any cline-yes">11x</span>
+<span class="cline-any cline-yes">11x</span>
+<span class="cline-any cline-yes">11x</span>
+<span class="cline-any cline-yes">11x</span>
+<span class="cline-any cline-yes">11x</span>
+<span class="cline-any cline-yes">11x</span>
+<span class="cline-any cline-yes">11x</span>
+<span class="cline-any cline-yes">11x</span>
+<span class="cline-any cline-yes">11x</span>
+<span class="cline-any cline-yes">11x</span>
+<span class="cline-any cline-yes">11x</span>
+<span class="cline-any cline-yes">11x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">17x</span>
+<span class="cline-any cline-yes">11x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import React from 'react';
 import { TrendingUp, Clock, Users } from 'lucide-react';
 import DuckIcon from '../Icons/DuckIcon';
 &nbsp;
-const AdminStats = ({ stats, onApprovalClick, onTradeClick, onEarnedWeekClick }) =&gt; {
+const AdminStats = ({ stats, onApprovalClick, onTradeClick, onEarnedWeekClick, onTotalDucksClick, onOnlineUsersClick }) =&gt; {
     return (
         &lt;div className="stats-grid"&gt;
-            &lt;div className="stat-card"&gt;
+            &lt;div className="stat-card clickable" onClick={onTotalDucksClick}&gt;
                 &lt;div className="stat-icon ducks"&gt;&lt;DuckIcon size={32} color="white" /&gt;&lt;/div&gt;
                 &lt;div className="stat-info"&gt;
-                    &lt;span className="stat-label"&gt;Total Ducks In Circulation&lt;/span&gt;
+                    &lt;span className="stat-label"&gt;Ducks In Circulation&lt;/span&gt;
                     &lt;span className="stat-value"&gt;{stats.total_ducks.toLocaleString()}&lt;/span&gt;
                 &lt;/div&gt;
             &lt;/div&gt;
@@ -188,11 +188,11 @@ const AdminStats = ({ stats, onApprovalClick, onTradeClick, onEarnedWeekClick })
             &lt;div className="stat-card clickable" onClick={onApprovalClick}&gt;
                 &lt;div className="stat-icon approval"&gt;&lt;Users size={24} /&gt;&lt;/div&gt;
                 &lt;div className="stat-info"&gt;
-                    &lt;span className="stat-label"&gt;System Approvals&lt;/span&gt;
+                    &lt;span className="stat-label"&gt;Account Approvals&lt;/span&gt;
                     &lt;span className="stat-value"&gt;{stats.<span class="branch-0 cbranch-no" title="branch not covered" >pending_users_count || 0}&lt;</span>/span&gt;
                 &lt;/div&gt;
             &lt;/div&gt;
-            &lt;div className="stat-card"&gt;
+            &lt;div className="stat-card clickable" onClick={onOnlineUsersClick}&gt;
                 &lt;div className="stat-icon active"&gt;&lt;Users size={24} /&gt;&lt;/div&gt;
                 &lt;div className="stat-info"&gt;
                     &lt;span className="stat-label"&gt;Online Users&lt;/span&gt;
@@ -211,7 +211,11 @@ export default AdminStats;
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
+<<<<<<< HEAD
                 at 2026-07-08T04:08:07.659Z
+=======
+                at 2026-07-03T03:14:45.254Z
+>>>>>>> origin/deploy
             </div>
         <script src="../../../prettify.js"></script>
         <script>

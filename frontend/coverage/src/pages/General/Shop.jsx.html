@@ -23,30 +23,48 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
+<<<<<<< HEAD
                 <span class="strong">77.5% </span>
                 <span class="quiet">Statements</span>
                 <span class='fraction'>279/360</span>
+=======
+                <span class="strong">77.05% </span>
+                <span class="quiet">Statements</span>
+                <span class='fraction'>272/353</span>
+>>>>>>> origin/deploy
             </div>
         
             
             <div class='fl pad1y space-right2'>
+<<<<<<< HEAD
                 <span class="strong">69.49% </span>
                 <span class="quiet">Branches</span>
                 <span class='fraction'>41/59</span>
+=======
+                <span class="strong">73.97% </span>
+                <span class="quiet">Branches</span>
+                <span class='fraction'>54/73</span>
+>>>>>>> origin/deploy
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">58.82% </span>
+                <span class="strong">63.15% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>10/17</span>
+                <span class='fraction'>12/19</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
+<<<<<<< HEAD
                 <span class="strong">77.5% </span>
                 <span class="quiet">Lines</span>
                 <span class='fraction'>279/360</span>
+=======
+                <span class="strong">77.05% </span>
+                <span class="quiet">Lines</span>
+                <span class='fraction'>272/353</span>
+>>>>>>> origin/deploy
             </div>
         
             
@@ -481,6 +499,7 @@
 <a name='L416'></a><a href='#L416'>416</a>
 <a name='L417'></a><a href='#L417'>417</a>
 <a name='L418'></a><a href='#L418'>418</a>
+<<<<<<< HEAD
 <a name='L419'></a><a href='#L419'>419</a>
 <a name='L420'></a><a href='#L420'>420</a>
 <a name='L421'></a><a href='#L421'>421</a>
@@ -496,6 +515,9 @@
 <a name='L431'></a><a href='#L431'>431</a>
 <a name='L432'></a><a href='#L432'>432</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
+=======
+<a name='L419'></a><a href='#L419'>419</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
+>>>>>>> origin/deploy
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
@@ -527,14 +549,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">23x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">23x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">23x</span>
@@ -739,12 +754,21 @@
 <span class="cline-any cline-yes">12x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">11x</span>
+<span class="cline-any cline-yes">59x</span>
+<span class="cline-any cline-yes">59x</span>
+<span class="cline-any cline-yes">59x</span>
+<span class="cline-any cline-yes">59x</span>
+<span class="cline-any cline-yes">59x</span>
+<span class="cline-any cline-yes">59x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">11x</span>
 <span class="cline-any cline-yes">11x</span>
 <span class="cline-any cline-yes">11x</span>
 <span class="cline-any cline-yes">11x</span>
 <span class="cline-any cline-yes">59x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">59x</span>
 <span class="cline-any cline-yes">59x</span>
 <span class="cline-any cline-yes">59x</span>
 <span class="cline-any cline-yes">59x</span>
@@ -926,7 +950,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import React, { useState, useEffect } from 'react';
-import { Shield, Unlock, Star, Loader2, ShoppingCart } from 'lucide-react';
+import { Shield, Unlock, Star, Loader2, ShoppingCart, Palette, Image as ImageIcon, Zap, Bird } from 'lucide-react';
 import toast from 'react-hot-toast';
 import useAuthStore from '../../store/useAuthStore';
 import client from '../../api/client';
@@ -955,17 +979,10 @@ const Shop = () =&gt; {
     const bookmarkletCode = `javascript:(function(){
         const url = window.location.href;
         if(!url.includes('codecombat.com/play') &amp;&amp; !url.includes('ozaria.com/play') &amp;&amp; !url.includes('codecombat.com/s/')) {
-            alert('≡ƒÜ¿ This bookmarklet only works when you are on a CodeCombat or Ozaria level!');
+            alert('🚨 This bookmarklet only works when you are on a CodeCombat or Ozaria level!');
             return;
         }
-        const p=new URLSearchParams();p.append('url', url);p.append('helpers', '');p.append('notes', '');
-        fetch('${fullApiUrl}/challenge/submit', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Accept': 'application/json' }, body: p, credentials: 'include' })
-        .then(async r =&gt; {
-            let d;try{d=await r.json();}catch(e){d={success:false,message:'Server error ('+r.status+').'};}
-            if(r.status===401){alert('≡ƒöæ Please log in to the Classroom Chat app first!');return;}
-            if(d.success){alert('Γ£à Success! '+(d.message||'Challenge submitted.'));}else{alert('Γ¥î Failed:\\n\\n'+(d.message||d.error||'Unknown error.'));}
-        })
-        .catch(e =&gt; { alert('ΓÜá∩╕Å Network Error: Could not reach Classroom Chat server.'); });
+        window.open('${fullApiUrl}/challenge/submit?url=' + encodeURIComponent(url), '_blank');
     })();`.replace(/\n\s+/g, ' ');
 &nbsp;
     useEffect(() =&gt; {
@@ -1102,11 +1119,11 @@ const Shop = () =&gt; {
 <span class="cstat-no" title="statement not covered" >                if (typeof window.Cropper === 'undefined') {</span>
 <span class="cstat-no" title="statement not covered" >                    const link = document.createElement('link');</span>
 <span class="cstat-no" title="statement not covered" >                    link.rel = 'stylesheet';</span>
-<span class="cstat-no" title="statement not covered" >                    link.href = '/static/lib/cropper.min.css';</span>
+<span class="cstat-no" title="statement not covered" >                    link.href = '/lib/cropper.min.css';</span>
 <span class="cstat-no" title="statement not covered" >                    document.head.appendChild(link);</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >                    const script = document.createElement('script');</span>
-<span class="cstat-no" title="statement not covered" >                    script.src = '/static/lib/cropper.min.js';</span>
+<span class="cstat-no" title="statement not covered" >                    script.src = '/lib/cropper.min.js';</span>
 <span class="cstat-no" title="statement not covered" >                    script.async = true;</span>
 <span class="cstat-no" title="statement not covered" >                    script.onload = () =&gt; initCropper();</span>
 <span class="cstat-no" title="statement not covered" >                    document.body.appendChild(script);</span>
@@ -1169,6 +1186,14 @@ const Shop = () =&gt; {
         );
     }
 &nbsp;
+    const getIconForItem = (item) =&gt; {
+        if (item.name === "Chat Font Color") return &lt;Palette size={24} /&gt;;
+        if (item.name === "Custom Profile Wallpaper") return &lt;ImageIcon size={24} /&gt;;
+        if (item.name === "Auto Challenge Claimer") return &lt;Zap size={24} /&gt;;
+        if (item.name === "Permanent Double Duck") return &lt;Bird size={24} /&gt;;
+        return item.<span class="branch-0 cbranch-no" title="branch not covered" >is_crowdfunded ? &lt;Shield size={24} /&gt; : i</span>tem.is_purchased ? &lt;Unlock size={24} /&gt; : &lt;Star size={24} /&gt;;
+    };
+&nbsp;
     return (
         &lt;div className="shop-page"&gt;
             &lt;div className="shop-items-grid"&gt;
@@ -1180,6 +1205,7 @@ const Shop = () =&gt; {
                         &lt;div key={item.id} className={`shop-item-card ${item.is_purchased ? 'purchased' : ''}`}&gt;
                             &lt;div className="shop-item-header" style={{ alignItems: 'center' }}&gt;
                                 &lt;div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}&gt;
+                                    {getIconForItem(item)}
                                     &lt;h3 style={{ margin: 0, fontSize: '1.1rem' }}&gt;
                                         {item.name.replace('Profile ', '').replace('Permanent ', '').replace('Challenge ', '').replace('Font ', '')}
                                     &lt;/h3&gt;
@@ -1309,7 +1335,7 @@ const Shop = () =&gt; {
                                     ) : item.name === "Auto Challenge Claimer" ? (
                                         &lt;div style={{ width: '100%', textAlign: 'center' }}&gt;
                                             &lt;a 
-                                                href={bookmarkletCode}
+                                                ref={(el) =&gt; { if (el) el.setAttribute('href', bookmarkletCode); }}
                                                 className="shop-btn-purchase" 
                                                 style={{ display: 'inline-block', textDecoration: 'none', width: '100%', boxSizing: 'border-box', cursor: 'grab' }}
                                                 title="Drag this button to your bookmarks bar!"
@@ -1363,7 +1389,11 @@ export default Shop;
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
+<<<<<<< HEAD
                 at 2026-07-08T04:08:07.659Z
+=======
+                at 2026-07-03T03:14:45.254Z
+>>>>>>> origin/deploy
             </div>
         <script src="../../../prettify.js"></script>
         <script>

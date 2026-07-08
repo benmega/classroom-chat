@@ -5,12 +5,12 @@ import SmartImage from '../common/SmartImage';
 import { formatLargeNumber } from '../../utils/formatters';
 import { getApiUrl } from '../../utils/apiUrl';
 
-const ProfileHeader = ({ target, isOwner, pfpInputRef, onPfpChange }) => {
+const ProfileHeader = ({ target, isOwner, pfpInputRef, onPfpChange, editLink }) => {
     const borderSpeed = target.animated_border_speed === 'slow' ? '3s' : target.animated_border_speed === 'fast' ? '0.5s' : '1.5s';
     return (
         <div className="profile-header-card">
             <div 
-                className="header-background"
+                className={`header-background ${target.has_custom_wallpaper ? 'custom-banner' : ''}`}
                 style={target.has_custom_wallpaper && target.profile_wallpaper ? {
                     backgroundImage: `url(${target.profile_wallpaper.startsWith('http') ? target.profile_wallpaper : getApiUrl('/user/profile_wallpapers/' + target.profile_wallpaper)})`,
                     backgroundSize: 'cover',
@@ -56,7 +56,7 @@ const ProfileHeader = ({ target, isOwner, pfpInputRef, onPfpChange }) => {
                         </p>
                     )}
                     {isOwner && (
-                        <Link to="/settings" className="btn-settings">
+                        <Link to={editLink || "/settings"} className="btn-settings">
                             <User size={14} /> Edit Profile
                         </Link>
                     )}

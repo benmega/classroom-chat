@@ -146,7 +146,7 @@ def logout():
         User.set_online(user_id, False)
 
     session.pop("user", None)
-    if request.is_json:
+    if request.is_json or request.accept_mimetypes.accept_json:
         return jsonify({"status": "success", "message": "Logged out"}), 200
     flash("You have been logged out.", "success")
     return redirect("/login")
@@ -780,6 +780,10 @@ def update_basic_user_info(user_obj, data):
     # Update bio if provided
     if "bio" in data:
         user_obj.bio = data.get("bio")
+
+    # Update nickname if provided
+    if "nickname" in data:
+        user_obj.nickname = data.get("nickname")
 
     password = data.get("password")
     confirm_password = data.get("confirm_password")

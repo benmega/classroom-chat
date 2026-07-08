@@ -61,7 +61,11 @@ def check_achievement(user, achievement, stats=None):
             stats.get("trade_count")
             if "trade_count" in stats
             else db.session.query(func.count(DuckTradeLog.id))
+<<<<<<< HEAD
             .filter(DuckTradeLog.user_id == user.id, DuckTradeLog.status == "approved")
+=======
+            .filter(DuckTradeLog.user_id == user.id)
+>>>>>>> origin/deploy
             .scalar()
         ),
         # Certificate submitted or not
@@ -122,7 +126,11 @@ def get_achievement_progress(user, achievement, stats=None):
             stats.get("trade_count")
             if "trade_count" in stats
             else db.session.query(func.count(DuckTradeLog.id))
+<<<<<<< HEAD
             .filter(DuckTradeLog.user_id == user.id, DuckTradeLog.status == "approved")
+=======
+            .filter(DuckTradeLog.user_id == user.id)
+>>>>>>> origin/deploy
             .scalar()
         ),
         "certificate": lambda: (
@@ -204,7 +212,11 @@ def evaluate_user(user, force=False):
         .scalar(),
         "max_session": longest_session_minutes(user.id),
         "trade_count": db.session.query(func.count(DuckTradeLog.id))
+<<<<<<< HEAD
         .filter(DuckTradeLog.user_id == user.id, DuckTradeLog.status == "approved")
+=======
+        .filter(DuckTradeLog.user_id == user.id)
+>>>>>>> origin/deploy
         .scalar(),
     }
 

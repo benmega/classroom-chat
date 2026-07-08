@@ -94,12 +94,6 @@ describe('AdminDashboard', () => {
     expect(screen.getByText('Overview Dashboard')).toBeInTheDocument();
   });
 
-  it('renders banned words in the content moderation section', () => {
-    renderComponent();
-    expect(screen.getByText('badword')).toBeInTheDocument();
-    expect(screen.getByText('anotherbad')).toBeInTheDocument();
-  });
-
   it('renders global config settings', () => {
     renderComponent();
     expect(screen.getByText('AI Teacher')).toBeInTheDocument();
@@ -109,32 +103,29 @@ describe('AdminDashboard', () => {
 
   it('renders AI teacher toggle reflecting config state', () => {
     renderComponent();
-    const checkboxes = screen.getAllByRole('checkbox');
-    // First checkbox is AI Teacher (enabled=true)
-    expect(checkboxes[0].checked).toBe(true);
-    // Second is Public Messaging (enabled=false)
-    expect(checkboxes[1].checked).toBe(false);
+    expect(screen.getByRole('button', { name: /AI Teacher Enabled/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Public Messaging Disabled/i })).toBeInTheDocument();
   });
 
   it('calls handleToggleAI when AI toggle is clicked', () => {
     renderComponent();
-    const checkboxes = screen.getAllByRole('checkbox');
-    fireEvent.click(checkboxes[0]);
+    const aiBtn = screen.getByRole('button', { name: /AI Teacher Enabled/i });
+    fireEvent.click(aiBtn);
     expect(defaultHookReturn.handleToggleAI).toHaveBeenCalledTimes(1);
   });
 
   it('calls handleToggleMessages when messages toggle is clicked', () => {
     renderComponent();
-    const checkboxes = screen.getAllByRole('checkbox');
-    fireEvent.click(checkboxes[1]);
+    const msgBtn = screen.getByRole('button', { name: /Public Messaging Disabled/i });
+    fireEvent.click(msgBtn);
     expect(defaultHookReturn.handleToggleMessages).toHaveBeenCalledTimes(1);
   });
 
-  it('opens create user modal when Create User button is clicked', () => {
+  it('opens bannedWord modal when Content Moderation button is clicked', () => {
     renderComponent();
-    const createBtn = screen.getAllByText(/Create User/i)[0];
-    fireEvent.click(createBtn);
-    expect(defaultHookReturn.setActiveModal).toHaveBeenCalledWith('create');
+    const modBtn = screen.getByRole('button', { name: /Content Moderation/i });
+    fireEvent.click(modBtn);
+    expect(defaultHookReturn.setActiveModal).toHaveBeenCalledWith('bannedWord');
   });
 
   it('calls fetchDashboardData when refresh button is clicked', () => {
@@ -144,31 +135,13 @@ describe('AdminDashboard', () => {
     expect(defaultHookReturn.fetchDashboardData).toHaveBeenCalled();
   });
 
-  it('filters users based on search input', () => {
-    renderComponent();
-    const searchInput = screen.getByPlaceholderText(/Search top results/i);
-    fireEvent.change(searchInput, { target: { value: 'alice' } });
-    // After filtering, 'alice' would be in DOM; 'bob' would not (handled client-side)
-    expect(searchInput.value).toBe('alice');
-  });
-
-  it('opens startConv modal from Quick Actions', () => {
-    renderComponent();
-    const newConvBtn = screen.getByText('New Conversation');
-    fireEvent.click(newConvBtn);
-    expect(defaultHookReturn.setActiveModal).toHaveBeenCalledWith('startConv');
-  });
-
-  it('opens adjust modal from Quick Actions', () => {
-    renderComponent();
-    const adjustBtn = screen.getByText('Adjust Wealth');
-    fireEvent.click(adjustBtn);
-    expect(defaultHookReturn.setActiveModal).toHaveBeenCalledWith('adjust');
-  });
-
   it('submits banned word form', async () => {
+    useAdminDashboard.mockReturnValue({
+      ...defaultHookReturn,
+      activeModal: 'bannedWord',
+    });
     renderComponent();
-    const wordInput = screen.getByPlaceholderText(/Add banned word/i);
+    const wordInput = screen.getByPlaceholderText(/e.g. badword/i);
     fireEvent.change(wordInput, { target: { value: 'testword' } });
     const form = wordInput.closest('form');
     fireEvent.submit(form);
@@ -186,14 +159,5 @@ describe('AdminDashboard', () => {
     const select = screen.getByRole('combobox', { hidden: true });
     fireEvent.change(select, { target: { value: '30' } });
     expect(defaultHookReturn.setTimeframe).toHaveBeenCalledWith(30);
-  });
-
-  it('shows "showing X of Y total users" footer when total_users_count > 10', () => {
-    useAdminDashboard.mockReturnValue({
-      ...defaultHookReturn,
-      dashboardData: { ...mockDashboardData, total_users_count: 50 },
-    });
-    renderComponent();
-    expect(screen.getByText(/Showing 10 of 50 total users/i)).toBeInTheDocument();
   });
 });

@@ -11,7 +11,7 @@ from botocore.exceptions import ClientError
 from flask import Blueprint, request, jsonify, session, current_app
 from jose import jwt
 
-from application.extensions import db
+from application.extensions import db, limiter
 from application.models.user import User
 from application.models.session_log import SessionLog
 
@@ -58,6 +58,7 @@ def sync_cognito_user(email, cognito_sub):
     return user
 
 @cognito_bp.route("/register", methods=["POST"])
+@limiter.limit("10 per minute")
 def register():
     data = request.json
     email = data.get("email")
@@ -67,6 +68,10 @@ def register():
         return jsonify({"error": "Missing email or password"}), 400
         
     client_id = current_app.config.get("COGNITO_CLIENT_ID")
+    if not client_id:
+        current_app.logger.error("COGNITO_CLIENT_ID is not configured")
+        return jsonify({"error": "Cognito is not configured on this server"}), 503
+
     client = get_boto_client()
     kwargs = {
         "ClientId": client_id,
@@ -95,6 +100,10 @@ def verify():
         return jsonify({"error": "Missing email or code"}), 400
         
     client_id = current_app.config.get("COGNITO_CLIENT_ID")
+    if not client_id:
+        current_app.logger.error("COGNITO_CLIENT_ID is not configured")
+        return jsonify({"error": "Cognito is not configured on this server"}), 503
+
     client = get_boto_client()
     kwargs = {
         "ClientId": client_id,
@@ -113,6 +122,7 @@ def verify():
         return jsonify({"error": e.response['Error']['Message']}), 400
 
 @cognito_bp.route("/login", methods=["POST"])
+@limiter.limit("20 per minute")
 def login():
     data = request.json
     email = data.get("email")
@@ -122,6 +132,10 @@ def login():
         return jsonify({"error": "Missing email or password"}), 400
         
     client_id = current_app.config.get("COGNITO_CLIENT_ID")
+    if not client_id:
+        current_app.logger.error("COGNITO_CLIENT_ID is not configured")
+        return jsonify({"error": "Cognito is not configured on this server"}), 503
+
     client = get_boto_client()
     
     auth_parameters = {
@@ -161,6 +175,7 @@ def login():
         return jsonify({"error": e.response['Error']['Message']}), 401
 
 @cognito_bp.route("/forgot-password", methods=["POST"])
+@limiter.limit("5 per minute")
 def forgot_password():
     data = request.json
     email = data.get("email")

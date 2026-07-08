@@ -23,9 +23,9 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">4.97% </span>
+                <span class="strong">5.06% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>11/221</span>
+                <span class='fraction'>11/217</span>
             </div>
         
             
@@ -44,9 +44,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">4.97% </span>
+                <span class="strong">5.06% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>11/221</span>
+                <span class='fraction'>11/217</span>
             </div>
         
             
@@ -305,13 +305,7 @@
 <a name='L240'></a><a href='#L240'>240</a>
 <a name='L241'></a><a href='#L241'>241</a>
 <a name='L242'></a><a href='#L242'>242</a>
-<a name='L243'></a><a href='#L243'>243</a>
-<a name='L244'></a><a href='#L244'>244</a>
-<a name='L245'></a><a href='#L245'>245</a>
-<a name='L246'></a><a href='#L246'>246</a>
-<a name='L247'></a><a href='#L247'>247</a>
-<a name='L248'></a><a href='#L248'>248</a>
-<a name='L249'></a><a href='#L249'>249</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
+<a name='L243'></a><a href='#L243'>243</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
@@ -403,7 +397,6 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -415,11 +408,6 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -647,28 +635,22 @@ const EditProfile = <span class="fstat-no" title="function not covered" >() =&gt
 <span class="cstat-no" title="statement not covered" >    return (</span>
 <span class="cstat-no" title="statement not covered" >        &lt;div className="edit-profile-page"&gt;</span>
 <span class="cstat-no" title="statement not covered" >            &lt;div className="settings-container"&gt;</span>
-<span class="cstat-no" title="statement not covered" >                &lt;div className="settings-header"&gt;</span>
-<span class="cstat-no" title="statement not covered" >                    &lt;h2&gt;Account Settings&lt;/h2&gt;</span>
-<span class="cstat-no" title="statement not covered" >                    &lt;p&gt;Modify your public profile and account security.&lt;/p&gt;</span>
-<span class="cstat-no" title="statement not covered" >                &lt;/div&gt;</span>
-&nbsp;
 <span class="cstat-no" title="statement not covered" >                &lt;form onSubmit={handleSave} className="settings-form"&gt;</span>
-<span class="cstat-no" title="statement not covered" >                    &lt;section className="profile-pic-section"&gt;</span>
-<span class="cstat-no" title="statement not covered" >                        &lt;div className="avatar-wrapper"&gt;</span>
-<span class="cstat-no" title="statement not covered" >                            &lt;SmartImage </span>
-<span class="cstat-no" title="statement not covered" >                                src={previewUrl} </span>
-<span class="cstat-no" title="statement not covered" >                                alt="Profile Preview" </span>
-<span class="cstat-no" title="statement not covered" >                                className="preview-avatar" </span>
-<span class="cstat-no" title="statement not covered" >                                fallbackType="avatar"</span>
-<span class="cstat-no" title="statement not covered" >                            /&gt;</span>
-<span class="cstat-no" title="statement not covered" >                            &lt;label htmlFor="pfp-upload" className="upload-overlay"&gt;</span>
-<span class="cstat-no" title="statement not covered" >                                &lt;span&gt;Change Photo&lt;/span&gt;</span>
-<span class="cstat-no" title="statement not covered" >                                &lt;input type="file" id="pfp-upload" hidden onChange={handleFileChange} accept="image/*" /&gt;</span>
-<span class="cstat-no" title="statement not covered" >                            &lt;/label&gt;</span>
-<span class="cstat-no" title="statement not covered" >                        &lt;/div&gt;</span>
-<span class="cstat-no" title="statement not covered" >                    &lt;/section&gt;</span>
-&nbsp;
 <span class="cstat-no" title="statement not covered" >                    &lt;div className="form-sections-grid"&gt;</span>
+<span class="cstat-no" title="statement not covered" >                        &lt;section className="profile-pic-section"&gt;</span>
+<span class="cstat-no" title="statement not covered" >                            &lt;div className="avatar-wrapper"&gt;</span>
+<span class="cstat-no" title="statement not covered" >                                &lt;SmartImage </span>
+<span class="cstat-no" title="statement not covered" >                                    src={previewUrl} </span>
+<span class="cstat-no" title="statement not covered" >                                    alt="Profile Preview" </span>
+<span class="cstat-no" title="statement not covered" >                                    className="preview-avatar" </span>
+<span class="cstat-no" title="statement not covered" >                                    fallbackType="avatar"</span>
+<span class="cstat-no" title="statement not covered" >                                /&gt;</span>
+<span class="cstat-no" title="statement not covered" >                                &lt;label htmlFor="pfp-upload" className="upload-overlay"&gt;</span>
+<span class="cstat-no" title="statement not covered" >                                    &lt;span&gt;Change Photo&lt;/span&gt;</span>
+<span class="cstat-no" title="statement not covered" >                                    &lt;input type="file" id="pfp-upload" hidden onChange={handleFileChange} accept="image/*" /&gt;</span>
+<span class="cstat-no" title="statement not covered" >                                &lt;/label&gt;</span>
+<span class="cstat-no" title="statement not covered" >                            &lt;/div&gt;</span>
+<span class="cstat-no" title="statement not covered" >                        &lt;/section&gt;</span>
 <span class="cstat-no" title="statement not covered" >                        &lt;section className="settings-section"&gt;</span>
 <span class="cstat-no" title="statement not covered" >                            &lt;h3 className="section-title"&gt;&lt;UserIcon size={18} /&gt; Basic Information&lt;/h3&gt;</span>
 <span class="cstat-no" title="statement not covered" >                            &lt;div className="form-group"&gt;</span>
@@ -814,7 +796,11 @@ export default EditProfile;
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
+<<<<<<< HEAD
                 at 2026-07-08T04:08:07.659Z
+=======
+                at 2026-07-03T03:14:45.254Z
+>>>>>>> origin/deploy
             </div>
         <script src="../../../prettify.js"></script>
         <script>

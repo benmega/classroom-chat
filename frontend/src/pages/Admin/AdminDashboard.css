@@ -1,6 +1,9 @@
 /* --- Admin Dashboard Premium Styles --- */
 
 .admin-dashboard {
+    padding: 1.5rem;
+    max-width: 1600px;
+    margin: 0 auto;
     animation: fadeIn var(--transition-smooth);
 }
 
@@ -187,7 +190,7 @@
 /* Dashboard Content Grid */
 .dashboard-layout {
     display: grid;
-    grid-template-columns: 1fr 340px;
+    grid-template-columns: 1fr;
     gap: 1.5rem;
 }
 
@@ -331,12 +334,10 @@
 
 @media (max-width: 1400px) {
     .dashboard-layout { grid-template-columns: 1fr; }
-    .side-content { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
 }
 
 @media (max-width: 800px) {
     .dashboard-header h1 { font-size: 1.5rem; word-break: break-word; white-space: normal; }
-    .side-content { grid-template-columns: 1fr; }
     .search-box { width: 100%; }
 }
 

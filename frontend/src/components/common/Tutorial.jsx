@@ -113,15 +113,26 @@ const Tutorial = () => {
   }, [isOpen, currentSlide, slides]);
 
   useEffect(() => {
-    const handleResize = () => {
-      if (isOpen) {
+    if (!isOpen) return;
+
+    let frameId;
+    const updateRect = () => {
+      if (frameId) cancelAnimationFrame(frameId);
+      frameId = requestAnimationFrame(() => {
         const slide = slides[currentSlide];
+        if (slide.target === 'body') {
+          setSpotlightRect(null);
+          return;
+        }
         const element = document.querySelector(slide.target);
-        if (element) setSpotlightRect(element.getBoundingClientRect());
-      }
+        if (element) {
+          setSpotlightRect(element.getBoundingClientRect());
+        }
+      });
     };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    updateRect();
+    window.addEventListener('resize', updateRect);
+    return () => window.removeEventListener('resize', updateRect);
   }, [isOpen, currentSlide, slides]);
 
   const handleClose = () => {

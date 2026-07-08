@@ -13,8 +13,8 @@ import {
     X,
     ShoppingBag,
     GraduationCap,
-    ScrollText,
-    Link2
+    Link2,
+    BookOpen
 } from 'lucide-react';
 import useAuthStore from '../../store/useAuthStore';
 import useSidebar from '../../hooks/useSidebar';
@@ -72,7 +72,7 @@ const AdminLayout = ({ children }) => {
         { path: '/admin/connections', label: 'Parent-Child Links', icon: Link2 },
         { path: '/admin/pending-trades', label: 'Pending Trades', icon: ShoppingBag },
         { path: '/admin/projects', label: 'Projects', icon: FolderKanban },
-        { path: '/admin/project-templates', label: 'Project Templates', icon: ScrollText },
+        { path: '/admin/standard-projects', label: 'Standard Projects', icon: BookOpen },
         { path: '/admin/course-instances', label: 'Course Instances', icon: GraduationCap },
         { path: '/admin/certificates', label: 'Certificates', icon: FileCheck },
         { path: '/admin/advanced', label: 'Advanced Panel', icon: ShieldAlert },

@@ -25,14 +25,22 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
+<<<<<<< HEAD
                 <span class='fraction'>79/79</span>
+=======
+                <span class='fraction'>52/52</span>
+>>>>>>> origin/deploy
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Branches</span>
+<<<<<<< HEAD
                 <span class='fraction'>12/12</span>
+=======
+                <span class='fraction'>10/10</span>
+>>>>>>> origin/deploy
             </div>
         
             
@@ -46,7 +54,11 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
+<<<<<<< HEAD
                 <span class='fraction'>79/79</span>
+=======
+                <span class='fraction'>52/52</span>
+>>>>>>> origin/deploy
             </div>
         
             
@@ -119,6 +131,7 @@
 <a name='L54'></a><a href='#L54'>54</a>
 <a name='L55'></a><a href='#L55'>55</a>
 <a name='L56'></a><a href='#L56'>56</a>
+<<<<<<< HEAD
 <a name='L57'></a><a href='#L57'>57</a>
 <a name='L58'></a><a href='#L58'>58</a>
 <a name='L59'></a><a href='#L59'>59</a>
@@ -144,6 +157,14 @@
 <a name='L79'></a><a href='#L79'>79</a>
 <a name='L80'></a><a href='#L80'>80</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
+=======
+<a name='L57'></a><a href='#L57'>57</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+>>>>>>> origin/deploy
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
@@ -194,6 +215,7 @@
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
+<<<<<<< HEAD
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
@@ -298,6 +320,62 @@ describe('formatters', () =&gt; {
             expect(formatRelativeTime(wayPast)).not.toBe('Never');
             expect(formatRelativeTime(wayPast)).not.toContain('ago');
         });
+=======
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { describe, it, expect, vi } from 'vitest';
+import { formatLargeNumber, formatStaticUrl } from './formatters';
+import * as apiUrlModule from './apiUrl';
+&nbsp;
+vi.mock('./apiUrl', () =&gt; ({
+    getApiUrl: vi.fn((url) =&gt; `MOCKED_API_URL${url}`)
+}));
+&nbsp;
+describe('formatLargeNumber', () =&gt; {
+    it('returns "0" for null or undefined', () =&gt; {
+        expect(formatLargeNumber(null)).toBe('0');
+        expect(formatLargeNumber(undefined)).toBe('0');
+    });
+&nbsp;
+    it('returns "0" for invalid numbers', () =&gt; {
+        expect(formatLargeNumber('invalid')).toBe('0');
+    });
+&nbsp;
+    it('formats numbers less than 10000 normally', () =&gt; {
+        expect(formatLargeNumber(9999)).toBe('9,999');
+        expect(formatLargeNumber(1234.567)).toBe('1,234.567');
+        expect(formatLargeNumber(1234.5678)).toBe('1,234.568'); // rounds
+    });
+&nbsp;
+    it('formats large numbers compactly', () =&gt; {
+        expect(formatLargeNumber(10000)).toBe('10K');
+        expect(formatLargeNumber(15000)).toBe('15K');
+        expect(formatLargeNumber(1500000)).toBe('1.5M');
+        expect(formatLargeNumber(1000000000)).toBe('1B');
+    });
+});
+&nbsp;
+describe('formatStaticUrl', () =&gt; {
+    it('returns null for falsy values', () =&gt; {
+        expect(formatStaticUrl(null)).toBeNull();
+        expect(formatStaticUrl('')).toBeNull();
+    });
+&nbsp;
+    it('returns the same url if it already starts with http, https, or data', () =&gt; {
+        expect(formatStaticUrl('http://example.com')).toBe('http://example.com');
+        expect(formatStaticUrl('https://example.com')).toBe('https://example.com');
+        expect(formatStaticUrl('data:image/png;base64,...')).toBe('data:image/png;base64,...');
+    });
+&nbsp;
+    it('prefixes with /static/ if it does not start with /', () =&gt; {
+        const result = formatStaticUrl('images/logo.png');
+        expect(result).toBe('MOCKED_API_URL/static/images/logo.png');
+        expect(apiUrlModule.getApiUrl).toHaveBeenCalledWith('/static/images/logo.png');
+    });
+&nbsp;
+    it('does not prefix with /static/ if it already starts with /', () =&gt; {
+        const result = formatStaticUrl('/user/assets/logo.png');
+        expect(result).toBe('MOCKED_API_URL/user/assets/logo.png');
+        expect(apiUrlModule.getApiUrl).toHaveBeenCalledWith('/user/assets/logo.png');
+>>>>>>> origin/deploy
     });
 });
 &nbsp;</pre></td></tr></table></pre>
@@ -307,7 +385,11 @@ describe('formatters', () =&gt; {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
+<<<<<<< HEAD
                 at 2026-07-08T04:08:07.659Z
+=======
+                at 2026-07-03T03:14:45.254Z
+>>>>>>> origin/deploy
             </div>
         <script src="../../prettify.js"></script>
         <script>

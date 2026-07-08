@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { Loader2, MoreVertical, User } from 'lucide-react';
 import toast from 'react-hot-toast';
 import client from '../../api/client';
+import { getApiUrl } from '../../utils/apiUrl';
+
 
 import DesktopNotice from '../../components/common/DesktopNotice';
 import './ParentDashboard.css';
@@ -150,7 +152,7 @@ const ParentDashboard = () => {
                                         {child.profile_picture_url && !child.profile_picture_url.includes('Default_pfp.jpg') ? (
                                             <img
                                                 className="child-avatar"
-                                                src={child.profile_picture_url}
+                                                src={getApiUrl(child.profile_picture_url)}
                                                 alt={child.username}
                                             />
                                         ) : (

@@ -35,23 +35,23 @@ jobs:
             git reset --hard origin/deploy
 
             # Inject production environment variables
-            cat > "$APP_DIR/backend/.env" <<ENVFILE
-            FLASK_ENV=production
-            SECRET_KEY=${{ secrets.SECRET_KEY }}
-            ADMIN_USERNAME=${{ secrets.ADMIN_USERNAME }}
-            ADMIN_PASSWORD=${{ secrets.ADMIN_PASSWORD }}
-            DATABASE_URL=sqlite:////home/ubuntu/classroom-chat/backend/instance/prod_users.db
-            OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
-            WEBHOOK_SECRET=${{ secrets.WEBHOOK_SECRET }}
-            COGNITO_REGION=${{ secrets.COGNITO_REGION }}
-            COGNITO_USER_POOL_ID=${{ secrets.COGNITO_USER_POOL_ID }}
-            COGNITO_CLIENT_ID=${{ secrets.COGNITO_CLIENT_ID }}
-            COGNITO_CLIENT_SECRET=${{ secrets.COGNITO_CLIENT_SECRET }}
-            COGNITO_DOMAIN=${{ secrets.COGNITO_DOMAIN }}
-            COGNITO_REDIRECT_URI=${{ secrets.COGNITO_REDIRECT_URI }}
-            AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
-            AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
-            ENVFILE
+            {
+              printf 'FLASK_ENV=production\n'
+              printf 'SECRET_KEY=%s\n' '${{ secrets.SECRET_KEY }}'
+              printf 'ADMIN_USERNAME=%s\n' '${{ secrets.ADMIN_USERNAME }}'
+              printf 'ADMIN_PASSWORD=%s\n' '${{ secrets.ADMIN_PASSWORD }}'
+              printf 'DATABASE_URL=sqlite:////home/ubuntu/classroom-chat/backend/instance/prod_users.db\n'
+              printf 'OPENAI_API_KEY=%s\n' '${{ secrets.OPENAI_API_KEY }}'
+              printf 'WEBHOOK_SECRET=%s\n' '${{ secrets.WEBHOOK_SECRET }}'
+              printf 'COGNITO_REGION=%s\n' '${{ secrets.COGNITO_REGION }}'
+              printf 'COGNITO_USER_POOL_ID=%s\n' '${{ secrets.COGNITO_USER_POOL_ID }}'
+              printf 'COGNITO_CLIENT_ID=%s\n' '${{ secrets.COGNITO_CLIENT_ID }}'
+              printf 'COGNITO_CLIENT_SECRET=%s\n' '${{ secrets.COGNITO_CLIENT_SECRET }}'
+              printf 'COGNITO_DOMAIN=%s\n' '${{ secrets.COGNITO_DOMAIN }}'
+              printf 'COGNITO_REDIRECT_URI=%s\n' '${{ secrets.COGNITO_REDIRECT_URI }}'
+              printf 'AWS_ACCESS_KEY_ID=%s\n' '${{ secrets.AWS_ACCESS_KEY_ID }}'
+              printf 'AWS_SECRET_ACCESS_KEY=%s\n' '${{ secrets.AWS_SECRET_ACCESS_KEY }}'
+            } > "$APP_DIR/backend/.env"
 
             # Execute the deployment script
             chmod +x "$APP_DIR/deploy.sh"

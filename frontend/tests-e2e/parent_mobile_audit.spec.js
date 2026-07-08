@@ -19,6 +19,7 @@ test.describe('Parent Portal Mobile UI Audit', () => {
   });
 
   test('Navigate parent portal and capture mobile screenshots', async ({ page }) => {
+    test.slow(); // This audit test visits multiple pages and can exceed 30s
     // Listen to browser console and page errors
     page.on('console', msg => console.log(`BROWSER CONSOLE: [${msg.type()}] ${msg.text()}`));
     page.on('pageerror', err => console.log(`BROWSER ERROR: ${err.message}`));

@@ -103,13 +103,21 @@ const useChatSocket = (onMessageReceived, onClassroomEnrolled, lifecycleCallback
   /**
    * Emit 'send_message' event to the server
    * @param {Object} messageData - The message object containing content, conversation_id, etc.
+   * @param {Function} callback - Optional callback for acknowledgment
    */
-  const sendMessage = useCallback((messageData) => {
+  const sendMessage = useCallback((messageData, callback) => {
     const socket = socketRef.current;
     if (socket && socket.connected) {
-      socket.emit('send_message', messageData);
+      if (callback) {
+        socket.emit('send_message', messageData, callback);
+      } else {
+        socket.emit('send_message', messageData);
+      }
     } else {
       console.warn('Socket not connected. Message not sent:', messageData);
+      if (callback) {
+        callback({ success: false, error: 'Socket not connected.' });
+      }
     }
   }, []);
 

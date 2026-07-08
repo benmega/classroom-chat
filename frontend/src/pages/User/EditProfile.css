@@ -12,31 +12,16 @@
     border-radius: 28px;
     box-shadow: var(--shadow-lg);
     border: 1px solid var(--border-subtle);
-    max-width: 900px;
+    max-width: 1200px;
     width: 100%;
 }
 
-.settings-header {
-    margin-bottom: 1.5rem;
-    text-align: center;
-}
 
-.settings-header h2 {
-    font-size: 2.5rem;
-    font-weight: 800;
-    color: var(--text-primary);
-    margin-bottom: 0.75rem;
-}
-
-.settings-header p {
-    color: var(--text-secondary);
-    font-size: 1.1rem;
-}
 
 .profile-pic-section {
     display: flex;
     justify-content: center;
-    margin-bottom: 2rem;
+    padding-top: 1rem;
 }
 
 .avatar-wrapper {
@@ -81,9 +66,9 @@
 
 .form-sections-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 2rem;
-    margin-bottom: 2rem;
+    margin-bottom: 1.5rem;
 }
 
 .section-title {
@@ -180,10 +165,10 @@
     background: var(--border-subtle);
 }
 
-@media (max-width: 800px) {
+@media (max-width: 900px) {
     .form-sections-grid {
         grid-template-columns: 1fr;
-        gap: 2rem;
+        gap: 1.5rem;
     }
 }
 

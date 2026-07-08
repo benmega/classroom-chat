@@ -9,7 +9,7 @@ const ConnectChild = () => {
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
     const location = useLocation();
-    const { user, isAuthenticated } = useAuthStore();
+    const { user, isAuthenticated, completeTutorial } = useAuthStore();
     const [status, setStatus] = useState('loading'); // loading, success, error
     const [message, setMessage] = useState('Connecting to student...');
     
@@ -44,6 +44,9 @@ const ConnectChild = () => {
                 await client.post('/api/parents/connect/code', { code });
                 setStatus('success');
                 setMessage('Successfully linked student account!');
+                if (!user.has_seen_tutorial) {
+                    completeTutorial();
+                }
                 localStorage.removeItem('pendingConnectionCode');
                 setTimeout(() => {
                     navigate('/parent/dashboard');
@@ -56,7 +59,7 @@ const ConnectChild = () => {
         };
 
         connectChild();
-    }, [code, isAuthenticated, user, navigate, location]);
+    }, [code, isAuthenticated, user, navigate, location, completeTutorial]);
 
     return (
         <div className="connect-child-page">

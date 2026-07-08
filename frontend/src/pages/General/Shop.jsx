@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Shield, Unlock, Star, Loader2, ShoppingCart } from 'lucide-react';
+import { Shield, Unlock, Star, Loader2, ShoppingCart, Palette, Image as ImageIcon, Zap, Bird } from 'lucide-react';
 import toast from 'react-hot-toast';
 import useAuthStore from '../../store/useAuthStore';
 import client from '../../api/client';
@@ -28,17 +28,10 @@ const Shop = () => {
     const bookmarkletCode = `javascript:(function(){
         const url = window.location.href;
         if(!url.includes('codecombat.com/play') && !url.includes('ozaria.com/play') && !url.includes('codecombat.com/s/')) {
-            alert('≡ƒÜ¿ This bookmarklet only works when you are on a CodeCombat or Ozaria level!');
+            alert('🚨 This bookmarklet only works when you are on a CodeCombat or Ozaria level!');
             return;
         }
-        const p=new URLSearchParams();p.append('url', url);p.append('helpers', '');p.append('notes', '');
-        fetch('${fullApiUrl}/challenge/submit', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Accept': 'application/json' }, body: p, credentials: 'include' })
-        .then(async r => {
-            let d;try{d=await r.json();}catch(e){d={success:false,message:'Server error ('+r.status+').'};}
-            if(r.status===401){alert('≡ƒöæ Please log in to the Classroom Chat app first!');return;}
-            if(d.success){alert('Γ£à Success! '+(d.message||'Challenge submitted.'));}else{alert('Γ¥î Failed:\\n\\n'+(d.message||d.error||'Unknown error.'));}
-        })
-        .catch(e => { alert('ΓÜá∩╕Å Network Error: Could not reach Classroom Chat server.'); });
+        window.open('${fullApiUrl}/challenge/submit?url=' + encodeURIComponent(url), '_blank');
     })();`.replace(/\n\s+/g, ' ');
 
     useEffect(() => {
@@ -175,11 +168,11 @@ const Shop = () => {
                 if (typeof window.Cropper === 'undefined') {
                     const link = document.createElement('link');
                     link.rel = 'stylesheet';
-                    link.href = '/static/lib/cropper.min.css';
+                    link.href = '/lib/cropper.min.css';
                     document.head.appendChild(link);
 
                     const script = document.createElement('script');
-                    script.src = '/static/lib/cropper.min.js';
+                    script.src = '/lib/cropper.min.js';
                     script.async = true;
                     script.onload = () => initCropper();
                     document.body.appendChild(script);
@@ -242,6 +235,14 @@ const Shop = () => {
         );
     }
 
+    const getIconForItem = (item) => {
+        if (item.name === "Chat Font Color") return <Palette size={24} />;
+        if (item.name === "Custom Profile Wallpaper") return <ImageIcon size={24} />;
+        if (item.name === "Auto Challenge Claimer") return <Zap size={24} />;
+        if (item.name === "Permanent Double Duck") return <Bird size={24} />;
+        return item.is_crowdfunded ? <Shield size={24} /> : item.is_purchased ? <Unlock size={24} /> : <Star size={24} />;
+    };
+
     return (
         <div className="shop-page">
             <div className="shop-items-grid">
@@ -253,6 +254,7 @@ const Shop = () => {
                         <div key={item.id} className={`shop-item-card ${item.is_purchased ? 'purchased' : ''}`}>
                             <div className="shop-item-header" style={{ alignItems: 'center' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    {getIconForItem(item)}
                                     <h3 style={{ margin: 0, fontSize: '1.1rem' }}>
                                         {item.name.replace('Profile ', '').replace('Permanent ', '').replace('Challenge ', '').replace('Font ', '')}
                                     </h3>
@@ -382,7 +384,7 @@ const Shop = () => {
                                     ) : item.name === "Auto Challenge Claimer" ? (
                                         <div style={{ width: '100%', textAlign: 'center' }}>
                                             <a 
-                                                href={bookmarkletCode}
+                                                ref={(el) => { if (el) el.setAttribute('href', bookmarkletCode); }}
                                                 className="shop-btn-purchase" 
                                                 style={{ display: 'inline-block', textDecoration: 'none', width: '100%', boxSizing: 'border-box', cursor: 'grab' }}
                                                 title="Drag this button to your bookmarks bar!"

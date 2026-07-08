@@ -141,6 +141,7 @@ def _award_skill(user, name, category, icon, level, existing_map, awarded_list):
     if existing_skill:
         if existing_skill.proficiency >= level:
             return  # Already have it at this level or higher
+<<<<<<< HEAD
         # Upgrade in-place to avoid UNIQUE constraint violations on flush
         existing_skill.proficiency = level
         existing_skill.icon = icon
@@ -150,11 +151,22 @@ def _award_skill(user, name, category, icon, level, existing_map, awarded_list):
         for s in [s for s in user.skills if s.name == name and s.proficiency < level]:
             db.session.delete(s)
             
+=======
+        # Otherwise, update the existing one in place
+        existing_skill.proficiency = level
+        existing_skill.category = category
+        existing_skill.icon = icon
+    else:
+>>>>>>> origin/deploy
         new_skill = Skill(
             name=name, user_id=user.id, category=category, icon=icon, proficiency=level
         )
         db.session.add(new_skill)
+<<<<<<< HEAD
 
+=======
+        
+>>>>>>> origin/deploy
     awarded_list.append(f"{name} (Lvl {level})")
 
 

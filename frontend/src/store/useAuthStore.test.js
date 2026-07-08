@@ -20,6 +20,14 @@ describe('useAuthStore', () => {
     expect(state.isAuthenticated).toBe(false);
     expect(state.isLoading).toBe(true);
     expect(state.isServerOffline).toBe(false);
+    expect(state.hamburgerProgress).toBe(0);
+  });
+
+  it('setHamburgerProgress sets progress and saves to localStorage if user exists', () => {
+    useAuthStore.setState({ user: { username: 'testuser' } });
+    useAuthStore.getState().setHamburgerProgress(0.5);
+    expect(useAuthStore.getState().hamburgerProgress).toBe(0.5);
+    expect(localStorage.getItem('hamburger_override_testuser')).toBe('0.5');
   });
 
   it('checkAuth sets user when logged in', async () => {
@@ -64,6 +72,28 @@ describe('useAuthStore', () => {
     expect(result.error).toBeDefined();
     const state = useAuthStore.getState();
     expect(state.isAuthenticated).toBe(false);
+  });
+
+  it('loginParentCognito updates state on success', async () => {
+    server.use(
+      http.post('*/api/auth/cognito/login', () => {
+        return HttpResponse.json({ success: true, role: 'parent' });
+      })
+    );
+    const result = await useAuthStore.getState().loginParentCognito('parent@test.com', 'password');
+    expect(result.success).toBe(true);
+  });
+
+  it('completeTutorial updates user state', async () => {
+    server.use(
+      http.post('*/user/api/auth/tutorial/complete', () => {
+        return HttpResponse.json({ success: true });
+      })
+    );
+    useAuthStore.setState({ user: { username: 'testuser', has_seen_tutorial: false } });
+    await useAuthStore.getState().completeTutorial();
+    const state = useAuthStore.getState();
+    expect(state.user.has_seen_tutorial).toBe(true);
   });
 
   it('logout clears state', async () => {
