@@ -18,3 +18,10 @@ Medium - Blocks content interaction.
 
 ## Screenshots
 ![Admin Dashboard Footer Overlap](file:///C:/Users/Ben/.gemini/antigravity/brain/d5795b34-a7bc-4bbb-b110-494656adce59/admin-dashboard-bug.png)
+
+## Technical Analysis & Proposed Fix
+* **Root Cause**:
+  - The main container for admin routes `.admin-body` does not have a bottom padding or margin offset to clear the height of the fixed footer.
+  - On mobile, this causes tables and scrollable lists to extend underneath the sticky/fixed footer bar, blocking text and click targets.
+* **Proposed CSS & Code Fix**:
+  - Add a bottom padding or margin (e.g. `padding-bottom: 80px;`) to `.admin-body` in `AdminLayout.css` to ensure all elements clear the footer height when scrolled to the bottom.

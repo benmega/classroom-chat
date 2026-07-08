@@ -532,3 +532,61 @@ def test_get_project_templates(client, init_db, sample_user):
     assert "description" in templates["CS1 Capstone"]
     assert "Dangerous Skies" in templates
 
+def test_search_users(client, init_db, sample_user):
+    resp = client.get(f"/user/api/users/search?q={sample_user.username}")
+    assert resp.status_code == 200
+    assert resp.json["data"]["users"][0]["username"] == sample_user.username
+def test_project_image_and_wallpaper_upload(client, init_db, sample_user):
+    # Generate a valid PNG image in memory
+    from PIL import Image
+    img = Image.new("RGB", (10, 10), color="blue")
+    img_bytes = BytesIO()
+    img.save(img_bytes, format="PNG")
+    img_bytes.seek(0)
+
+    with client.session_transaction() as sess:
+        sess["user"] = sample_user.id
+
+    # 1. Project Image Upload
+    data = {
+        "project_image": (BytesIO(img_bytes.getvalue()), "image.png")
+    }
+    resp = client.post("/user/api/project-image", data=data, content_type="multipart/form-data")
+    assert resp.status_code == 200
+    assert "filename" in resp.json["data"]
+
+    # 2. Profile Wallpaper Upload
+    # Try unauthorized first (user does not have perk)
+    resp_wall = client.post("/user/api/profile-wallpaper", data={"profile_wallpaper": (BytesIO(img_bytes.getvalue()), "wall.png")}, content_type="multipart/form-data")
+    assert resp_wall.status_code == 403
+
+    # Grant perk and succeed
+    sample_user.has_custom_wallpaper = True
+    db.session.commit()
+
+    resp_wall = client.post("/user/api/profile-wallpaper", data={"profile_wallpaper": (BytesIO(img_bytes.getvalue()), "wall.png")}, content_type="multipart/form-data")
+    assert resp_wall.status_code == 200
+    assert "filename" in resp_wall.json["data"]
+
+def test_serving_endpoints(client, init_db):
+    # View default pfp
+    resp = client.get("/user/profile_pictures/Default_pfp.jpg")
+    assert resp.status_code == 200
+    resp.close()
+
+    # View nonexistent pfp (fallback to Default_pfp.jpg)
+    resp = client.get("/user/profile_pictures/nonexistent_pfp.png")
+    assert resp.status_code == 200
+    resp.close()
+
+    # View nonexistent wallpaper (should 404)
+    resp = client.get("/user/profile_wallpapers/nonexistent_wall.png")
+    assert resp.status_code == 404
+    resp.close()
+
+    # View nonexistent project image (fallback to placeholder)
+    resp = client.get("/user/project_images/nonexistent_proj.png")
+    assert resp.status_code == 200
+    resp.close()
+
+

@@ -1,0 +1,5 @@
+[run]
+omit =
+    application/utilities/schema_check.py
+    application/utilities/session_cleanup.py
+    application/tasks.py

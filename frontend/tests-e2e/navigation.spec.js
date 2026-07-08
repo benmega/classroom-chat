@@ -64,9 +64,14 @@ test.describe('Navigation', () => {
   });
 
   test('should navigate to profile from dashboard', async ({ page }) => {
-    await expect(page.getByTestId('profile-toggle')).toBeVisible({ timeout: 15000 });
-    await page.getByTestId('profile-toggle').click();
-    await page.getByTestId('nav-profile').click();
+    const profileRail = page.locator('.nav-rail-item[data-tooltip="Profile"]');
+    if (await profileRail.isVisible()) {
+      await profileRail.click();
+    } else {
+      await expect(page.getByTestId('profile-toggle')).toBeVisible({ timeout: 15000 });
+      await page.getByTestId('profile-toggle').click();
+      await page.getByTestId('nav-profile').click();
+    }
     await expect(page).toHaveURL(/\/profile/);
   });
 

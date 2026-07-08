@@ -261,6 +261,7 @@ const Achievements = () => {
 
                                 <div className="ach-info">
                                     <h3 className="achievement-name">{ach.name}</h3>
+                                    <p className="achievement-desc">{ach.description}</p>
                                     <div className="ach-reward">
                                         <Coins size={13} />
                                         <span>+{ach.reward}</span>

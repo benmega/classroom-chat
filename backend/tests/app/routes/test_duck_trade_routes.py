@@ -93,3 +93,44 @@ def test_bit_shift_get(client, test_app):
         response = client.get(url_for("duck_trade.bit_shift"), headers={"Accept": "application/json"})
         assert response.status_code == 200
         assert b"Bit Shift interface has migrated to React" in response.data
+
+def test_submit_trade_ajax_success(client, sample_user_with_ducks, test_app):
+    with test_app.app_context():
+        DuckTradeLog.query.filter_by(user_id=sample_user_with_ducks.id).delete()
+        db.session.commit()
+
+        with client.session_transaction() as sess:
+            sess["user"] = sample_user_with_ducks.id
+
+        resp = client.post(
+            url_for("duck_trade.submit_trade"),
+            json={
+                "digital_ducks": 5,
+                "bit_ducks": [0] * 7,
+                "byte_ducks": [0] * 7
+            },
+            headers={"X-Requested-With": "XMLHttpRequest"}
+        )
+        assert resp.status_code == 200
+        assert resp.json["status"] == "success"
+
+def test_submit_trade_ajax_invalid(client, sample_user_with_ducks, test_app):
+    with test_app.app_context():
+        with client.session_transaction() as sess:
+            sess["user"] = sample_user_with_ducks.id
+
+        # Zero ducks
+        resp = client.post(
+            url_for("duck_trade.submit_trade"),
+            json={"digital_ducks": 0},
+            headers={"X-Requested-With": "XMLHttpRequest"}
+        )
+        assert resp.status_code == 400
+
+        # String ducks
+        resp = client.post(
+            url_for("duck_trade.submit_trade"),
+            json={"digital_ducks": "invalid"},
+            headers={"X-Requested-With": "XMLHttpRequest"}
+        )
+        assert resp.status_code == 400

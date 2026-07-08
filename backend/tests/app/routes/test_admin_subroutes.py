@@ -183,3 +183,27 @@ def test_document_routes(client, sample_admin, test_app):
     finally:
         if os.path.exists(test_file):
             os.remove(test_file)
+
+def test_advanced_ops(client, sample_admin):
+    # Mock psutil
+    import sys
+    from unittest.mock import MagicMock
+    mock_psutil = MagicMock()
+    mock_psutil.Process.return_value.memory_info.return_value.rss = 100 * 1024 * 1024
+    mock_psutil.Process.return_value.cpu_percent.return_value = 5.0
+    mock_psutil.Process.return_value.create_time.return_value = 1000.0
+    mock_psutil.time.time.return_value = 2000.0
+    sys.modules['psutil'] = mock_psutil
+
+    login_as_admin(client, sample_admin)
+
+    # stats-extended
+    resp = client.get("/api/admin/advanced/stats-extended")
+    assert resp.status_code == 200
+    assert "memory_usage_mb" in resp.json["data"]
+
+    # purge-history
+    resp = client.post("/api/admin/advanced/purge-history")
+    assert resp.status_code == 200
+    assert resp.json["data"]["deleted_messages"] >= 0
+
