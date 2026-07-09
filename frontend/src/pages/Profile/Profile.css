@@ -1096,13 +1096,14 @@
         flex-direction: column;
         align-items: center;
         text-align: center;
-        margin-top: -60px;
+        margin-top: 0;
         padding: 0 15px 15px;
     }
 
     .avatar-wrapper {
         width: 120px;
         height: 120px;
+        margin-top: -60px;
     }
 
     .student-name {

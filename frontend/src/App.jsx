@@ -115,7 +115,7 @@ function App() {
     <Router>
       <SidebarProvider>
         <Toaster 
-            position="bottom-right"
+            position="top-center"
             gutter={12}
             containerStyle={{
                 top: 40,

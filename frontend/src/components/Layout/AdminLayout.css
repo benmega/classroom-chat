@@ -415,6 +415,7 @@
 .admin-body {
     flex: 1;
     padding: 1.25rem;
+    padding-bottom: 80px;
     max-width: 1600px;
     width: 100%;
     margin: 0 auto;
@@ -688,6 +689,7 @@
 
     .admin-body {
         padding: 1rem;
+        padding-bottom: 80px;
     }
 }
 

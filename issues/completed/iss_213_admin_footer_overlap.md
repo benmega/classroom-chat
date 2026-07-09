@@ -25,3 +25,7 @@ Medium - Blocks content interaction.
   - On mobile, this causes tables and scrollable lists to extend underneath the sticky/fixed footer bar, blocking text and click targets.
 * **Proposed CSS & Code Fix**:
   - Add a bottom padding or margin (e.g. `padding-bottom: 80px;`) to `.admin-body` in `AdminLayout.css` to ensure all elements clear the footer height when scrolled to the bottom.
+
+* **Resolution**: Added `padding-bottom: 80px;` to `.admin-body` for both desktop and mobile viewports.
+* **Changed Files**:
+  - `frontend/src/components/Layout/AdminLayout.css`

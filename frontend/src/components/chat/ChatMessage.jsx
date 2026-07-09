@@ -7,8 +7,10 @@ import { getApiUrl } from '../../utils/apiUrl';
 
 const ChatMessage = React.memo(({ msg, user, onDelete }) => {
     const borderSpeed = msg.animated_border_speed === 'slow' ? '3s' : msg.animated_border_speed === 'fast' ? '0.5s' : '1.5s';
+    const isOwnMessage = user && msg && user.id === msg.user_id;
+
     return (
-        <div className="chat-message-group">
+        <div className={`chat-message-group ${isOwnMessage ? 'own-message' : 'other-message'}`}>
             <div className="message-row">
                 <Link 
                     to={msg.slug ? `/profile/${msg.slug}` : '#'} 
@@ -72,7 +74,7 @@ const ChatMessage = React.memo(({ msg, user, onDelete }) => {
                             {msg.created_at ? new Date(typeof msg.created_at === 'string' && !msg.created_at.endsWith('Z') ? msg.created_at + 'Z' : msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Just now'}
                         </span>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', minWidth: 0, width: '100%' }}>
+                    <div className="message-body-row">
                         <div className={`message-bubble ${msg.chat_font_color ? "perk-chat-font" : ""}`} style={{ flex: 1, minWidth: 0, ...(msg.chat_font_color ? { "--chat-font-color": msg.chat_font_color } : {}) }}>
                             <Linkify text={msg.content} isUserMessage={false} />
                         </div>

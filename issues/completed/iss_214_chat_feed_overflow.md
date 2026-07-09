@@ -25,3 +25,9 @@ Medium - Breaks layout.
   - Under CSS Flexbox rules, flex items will expand to fit long unbroken words if `min-width` is not explicitly set to `0`.
 * **Proposed CSS & Code Fix**:
   - Add `min-width: 0;` to `.message-row` and `.chat-message-group` in `Chat.css` to allow the containers to shrink below their child elements' default size, forcing text wrapping to occur.
+
+## Root Cause
+As analyzed, `.message-row` and `.chat-message-group` flex containers needed `min-width: 0` to shrink correctly and allow `word-break` to work on `.message-bubble`.
+
+## Changed Files
+- `frontend/src/pages/Chat/Chat.css`

@@ -18,3 +18,9 @@ Medium - Blocks primary user flows temporarily, creating a frustrating user expe
 
 ## Screenshots
 ![Toast Overlap](c:\Users\Ben\AntiGravity\classroom-chat\issues\screenshots\mobile_parent_dashboard.png)
+
+## Root Cause & Resolution
+* **Root Cause**: The toast notification was configured to appear at `bottom-right`, which on mobile viewports translated to overlapping the bottom center of the screen, blocking primary action buttons.
+* **Resolution**: Updated `position` prop in `<Toaster>` to `top-center`.
+* **Changed Files**:
+  - `frontend/src/App.jsx`

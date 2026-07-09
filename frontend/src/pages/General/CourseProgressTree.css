@@ -218,6 +218,12 @@
         grid-auto-rows: auto;
         gap: 1.25rem 1rem;
     }
+
+    .track-headers-container {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1rem;
+    }
     
     .desktop-header {
         display: block;

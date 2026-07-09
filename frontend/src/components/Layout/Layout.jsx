@@ -45,14 +45,14 @@ const Layout = ({ children }) => {
                 <ParentNavRail location={location} handleLogout={handleLogout} />
             )}
 
-            {isAuthenticated && !isParent && (
+            {isAuthenticated && user && user.role !== 'parent' && (
                 <DesktopNavRail user={user} location={location} handleLogout={handleLogout} />
             )}
 
             <div className="main-layout-content">
-                <header className={`${!isAuthenticated || isGuestPage ? 'guest-mode' : ''} ${isChatPage ? 'mobile-hidden' : ''}`}>
+                <header className={`${!isAuthenticated || isGuestPage ? 'guest-mode' : ''}`}>
                     <div className="header-content">
-                        {isAuthenticated && !isParent && (
+                        {isAuthenticated && user && user.role !== 'parent' && (
                             <button 
                                 className="hamburger-toggle mobile-only" 
                                 onClick={toggleSidebar}
@@ -71,7 +71,7 @@ const Layout = ({ children }) => {
                             </Link>
                         </div>
 
-                        {isAuthenticated && !isParent && <UserSearch />}
+                        {isAuthenticated && user && user.role !== 'parent' && <UserSearch />}
 
                         <nav>
                             <ul>
@@ -211,7 +211,7 @@ const Layout = ({ children }) => {
                 </main>
                 
                 {/* Mobile Navigation Sidebar */}
-                {!isChatPage && !isParent && (
+                {user && user.role !== 'parent' && (
                     <MobileSidebar 
                         user={user} 
                         isParent={isParent} 

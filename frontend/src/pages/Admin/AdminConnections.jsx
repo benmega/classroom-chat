@@ -2,10 +2,12 @@ import React, { useState, useEffect, useCallback } from 'react';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
 import { 
-    Link2, Search, Plus, RefreshCw, Users, Trash2
+    Search, Plus, RefreshCw, Users as UsersIcon, Trash2, ChevronDown, ChevronUp
 } from 'lucide-react';
 import SmartImage from '../../components/common/SmartImage';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
+import Modal from '../../components/common/Modal';
+import Skeleton from '../../components/common/Skeleton';
 import { getApiUrl } from '../../utils/apiUrl';
 import './AdminConnections.css';
 
@@ -18,6 +20,12 @@ const AdminConnections = () => {
     
     // Search & Filter State
     const [searchTerm, setSearchTerm] = useState('');
+    
+    // Expand State
+    const [expandedParents, setExpandedParents] = useState(new Set());
+    
+    // Modal State
+    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     
     // Linking Form State
     const [selectedParentId, setSelectedParentId] = useState('');
@@ -74,6 +82,7 @@ const AdminConnections = () => {
             if (response.data.success) {
                 toast.success(response.data.message || 'Linked successfully!');
                 setSelectedStudentId('');
+                setIsCreateModalOpen(false);
                 fetchConnections();
             } else {
                 toast.error(response.data.message || 'Failed to link accounts.');
@@ -106,6 +115,13 @@ const AdminConnections = () => {
         }
     };
 
+    const toggleExpand = (parentId) => {
+        const next = new Set(expandedParents);
+        if (next.has(parentId)) next.delete(parentId);
+        else next.add(parentId);
+        setExpandedParents(next);
+    };
+
     // Filter parents and students for linking dropdowns
     const parentsList = allUsers.filter(u => u.role === 'parent').sort((a, b) => 
         (a.nickname || a.username).localeCompare(b.nickname || b.username)
@@ -114,34 +130,107 @@ const AdminConnections = () => {
         (a.nickname || a.username).localeCompare(b.nickname || b.username)
     );
 
-    // Filter existing connections by search term
-    const filteredConnections = connections.filter(conn => {
+    // Calculate stats
+    const uniqueParentsCount = new Set(connections.map(c => c.parent?.id)).size;
+    const uniqueStudentsCount = new Set(connections.map(c => c.student?.id)).size;
+    const connectedStudentIds = new Set(connections.map(c => c.student?.id));
+    const unlinkedStudentsCount = studentsList.filter(s => !connectedStudentIds.has(s.id)).length;
+
+    // Group connections by parent
+    const groupedConnections = React.useMemo(() => {
+        const groups = {};
+        for (const conn of connections) {
+            const parentId = conn.parent.id;
+            if (!groups[parentId]) {
+                groups[parentId] = {
+                    parent: conn.parent,
+                    students: []
+                };
+            }
+            groups[parentId].students.push(conn.student);
+        }
+        return Object.values(groups);
+    }, [connections]);
+
+    // Filter grouped connections by search term
+    const filteredGroupedConnections = React.useMemo(() => {
         const query = searchTerm.toLowerCase();
-        const parentName = (conn.parent.nickname || conn.parent.username).toLowerCase();
-        const parentHandle = conn.parent.username.toLowerCase();
-        const studentName = (conn.student.nickname || conn.student.username).toLowerCase();
-        const studentHandle = conn.student.username.toLowerCase();
+        if (!query) return groupedConnections;
         
-        return parentName.includes(query) || 
-               parentHandle.includes(query) || 
-               studentName.includes(query) || 
-               studentHandle.includes(query);
-    });
+        return groupedConnections.filter(group => {
+            const parentName = (group.parent.nickname || group.parent.username).toLowerCase();
+            const parentHandle = group.parent.username.toLowerCase();
+            
+            if (parentName.includes(query) || parentHandle.includes(query)) return true;
+            
+            return group.students.some(student => {
+                const studentName = (student.nickname || student.username).toLowerCase();
+                const studentHandle = student.username.toLowerCase();
+                return studentName.includes(query) || studentHandle.includes(query);
+            });
+        });
+    }, [groupedConnections, searchTerm]);
 
     if (isLoading) {
         return (
-            <div className="admin-connections-page">
-                <AdminPageHeader title="Parent-Child Links" />
-                <div className="loading-container">
-                    <RefreshCw className="spinning" size={40} />
-                    <p>Loading connection lists...</p>
+            <div className="admin-connections-page animate-page-entry">
+                <AdminPageHeader title="Parent-Child Links">
+                    <div className="search-bar">
+                        <Search size={18} />
+                        <input 
+                            type="text" 
+                            placeholder="Search connections..." 
+                            value={searchTerm}
+                            disabled
+                        />
+                    </div>
+                    <button className="primary-btn" disabled>
+                        <Plus size={18} /> Add Link
+                    </button>
+                    <button className="refresh-btn" disabled>
+                        <RefreshCw size={18} />
+                    </button>
+                </AdminPageHeader>
+
+                <div className="users-stats-row">
+                    {[1, 2, 3, 4].map(i => (
+                        <div key={i} className="stat-mini-card">
+                            <Skeleton height="15px" width="100px" style={{ marginBottom: '8px' }} />
+                            <Skeleton height="28px" width="50px" />
+                        </div>
+                    ))}
+                </div>
+
+                <div className="users-table-container card">
+                    <div className="table-responsive">
+                        <table className="users-table">
+                            <thead>
+                                <tr>
+                                    <th>Parent Profile</th>
+                                    <th>Linked Children</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {[1, 2, 3, 4, 5].map(i => (
+                                    <tr key={i}>
+                                        <td colSpan="3" style={{ padding: 0 }}>
+                                            <div className="connections-skeleton-row" style={{ padding: '20px' }}>
+                                                <Skeleton height="40px" />
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="admin-connections-page">
+        <div className="admin-connections-page animate-page-entry">
             <AdminPageHeader title="Parent-Child Links">
                 <div className="search-bar">
                     <Search size={18} />
@@ -153,6 +242,12 @@ const AdminConnections = () => {
                     />
                 </div>
                 <button 
+                    className="primary-btn" 
+                    onClick={() => setIsCreateModalOpen(true)}
+                >
+                    <Plus size={18} /> Add Link
+                </button>
+                <button 
                     className={`refresh-btn ${isRefreshing ? 'spinning' : ''}`}
                     onClick={handleRefresh}
                     disabled={isRefreshing || formLoading}
@@ -161,142 +256,177 @@ const AdminConnections = () => {
                 </button>
             </AdminPageHeader>
 
-            <div className="connections-grid">
-                {/* Global Connection Creator Card */}
-                <div className="connection-creator-card card">
-                    <div className="card-header">
-                        <h3><Link2 size={20} /> Create New Connection Link</h3>
-                    </div>
-                    <form onSubmit={handleLink} className="creator-form">
-                        <div className="form-group">
-                            <label htmlFor="parent-select">Parent User</label>
-                            <select 
-                                id="parent-select"
-                                value={selectedParentId}
-                                onChange={(e) => setSelectedParentId(e.target.value)}
-                                required
-                            >
-                                <option value="">-- Choose Parent --</option>
-                                {parentsList.map(p => (
-                                    <option key={p.id} value={p.id}>
-                                        {p.nickname ? `${p.nickname} (@${p.username})` : `@${p.username}`}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-
-                        <div className="form-group">
-                            <label htmlFor="student-select">Student User</label>
-                            <select 
-                                id="student-select"
-                                value={selectedStudentId}
-                                onChange={(e) => setSelectedStudentId(e.target.value)}
-                                required
-                            >
-                                <option value="">-- Choose Student --</option>
-                                {studentsList.map(s => (
-                                    <option key={s.id} value={s.id}>
-                                        {s.nickname ? `${s.nickname} (@${s.username})` : `@${s.username}`}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-
-                        <button 
-                            type="submit" 
-                            className="primary-btn link-action-btn" 
-                            disabled={formLoading || !selectedParentId || !selectedStudentId}
-                        >
-                            <Plus size={18} /> Establish Connection Link
-                        </button>
-                    </form>
+            <div className="users-stats-row">
+                <div className="stat-mini-card">
+                    <span className="label">Total Links</span>
+                    <span className="value">{connections.length}</span>
                 </div>
-
-                {/* Connections Table Card */}
-                <div className="connections-table-container card">
-                    <div className="card-header">
-                        <div className="title-group">
-                            <h3><Users size={20} /> Active Connection Links</h3>
-                            <span className="count-badge">Total Links: {connections.length}</span>
-                        </div>
-                    </div>
-                    <div className="table-wrapper">
-                        <table className="connections-table">
-                            <thead>
-                                <tr>
-                                    <th>Parent Profile</th>
-                                    <th>Link Status</th>
-                                    <th>Child Profile</th>
-                                    <th>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {filteredConnections.length > 0 ? (
-                                    filteredConnections.map(conn => (
-                                        <tr key={`${conn.parent.id}-${conn.student.id}`}>
-                                            <td>
-                                                <div className="user-profile-cell">
-                                                    <SmartImage 
-                                                        src={conn.parent.profile_picture ? getApiUrl(`/user/profile_pictures/${conn.parent.profile_picture}`) : ''} 
-                                                        alt="" 
-                                                        className="avatar"
-                                                        fallbackType="avatar"
-                                                    />
-                                                    <div className="info">
-                                                        <div className="name">{conn.parent.nickname || conn.parent.username}</div>
-                                                        <div className="handle">@{conn.parent.username}</div>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <div className="link-status-badge">
-                                                    <span className="connector-line"></span>
-                                                    <Link2 size={14} className="link-icon-badge" />
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <div className="user-profile-cell">
-                                                    <SmartImage 
-                                                        src={conn.student.profile_picture ? getApiUrl(`/user/profile_pictures/${conn.student.profile_picture}`) : ''} 
-                                                        alt="" 
-                                                        className="avatar"
-                                                        fallbackType="avatar"
-                                                    />
-                                                    <div className="info">
-                                                        <div className="name">{conn.student.nickname || conn.student.username}</div>
-                                                        <div className="handle">@{conn.student.username}</div>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <button 
-                                                    className="btn-action-sm danger" 
-                                                    onClick={() => handleUnlink(
-                                                        conn.parent.id, 
-                                                        conn.student.id, 
-                                                        conn.parent.nickname || conn.parent.username, 
-                                                        conn.student.nickname || conn.student.username
-                                                    )}
-                                                    disabled={formLoading}
-                                                    title="Unlink Accounts"
-                                                >
-                                                    <Trash2 size={16} /> Unlink
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    ))
-                                ) : (
-                                    <tr>
-                                        <td colSpan="4" className="empty-row">
-                                            No parent-child links found.
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
+                <div className="stat-mini-card">
+                    <span className="label">Connected Parents</span>
+                    <span className="value">{uniqueParentsCount}</span>
+                </div>
+                <div className="stat-mini-card">
+                    <span className="label">Connected Students</span>
+                    <span className="value">{uniqueStudentsCount}</span>
+                </div>
+                <div className="stat-mini-card">
+                    <span className="label">Unlinked Students</span>
+                    <span className="value">{unlinkedStudentsCount}</span>
                 </div>
             </div>
+
+            <div className="users-table-container card">
+                <div className="table-responsive">
+                    <table className="users-table">
+                        <thead>
+                            <tr>
+                                <th>Parent Profile</th>
+                                <th>Linked Children</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {filteredGroupedConnections.length > 0 ? (
+                                filteredGroupedConnections.map(group => (
+                                    <React.Fragment key={`parent-${group.parent.id}`}>
+                                        <tr>
+                                            <td>
+                                                <div className="user-profile-cell">
+                                                    <SmartImage 
+                                                        src={group.parent.profile_picture ? getApiUrl(`/user/profile_pictures/${group.parent.profile_picture}`) : ''} 
+                                                        alt="" 
+                                                        className="avatar"
+                                                        fallbackType="avatar"
+                                                    />
+                                                    <div className="info">
+                                                        <div className="name">{group.parent.nickname || group.parent.username}</div>
+                                                        <div className="handle">@{group.parent.username}</div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div className="connections-count-badge">
+                                                    <UsersIcon size={14} /> {group.students.length} {group.students.length === 1 ? 'Child' : 'Children'}
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div className="action-group">
+                                                    <button 
+                                                        className="action-btn expand-btn"
+                                                        onClick={() => toggleExpand(group.parent.id)}
+                                                        title={expandedParents.has(group.parent.id) ? "Collapse" : "Expand"}
+                                                    >
+                                                        {expandedParents.has(group.parent.id) ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {expandedParents.has(group.parent.id) && (
+                                            <tr className="expanded-children-row">
+                                                <td colSpan="3">
+                                                    <div className="children-list-container">
+                                                        <div className="children-list">
+                                                            {group.students.map(student => (
+                                                                <div className="child-item" key={`child-${student.id}`}>
+                                                                    <div className="user-profile-cell">
+                                                                        <SmartImage 
+                                                                            src={student.profile_picture ? getApiUrl(`/user/profile_pictures/${student.profile_picture}`) : ''} 
+                                                                            alt="" 
+                                                                            className="avatar"
+                                                                            fallbackType="avatar"
+                                                                        />
+                                                                        <div className="info">
+                                                                            <div className="name">{student.nickname || student.username}</div>
+                                                                            <div className="handle">@{student.username}</div>
+                                                                        </div>
+                                                                    </div>
+                                                                    <button 
+                                                                        className="action-btn delete child-unlink-btn" 
+                                                                        onClick={() => handleUnlink(
+                                                                            group.parent.id, 
+                                                                            student.id, 
+                                                                            group.parent.nickname || group.parent.username, 
+                                                                            student.nickname || student.username
+                                                                        )}
+                                                                        disabled={formLoading}
+                                                                        title="Unlink Account"
+                                                                    >
+                                                                        <Trash2 size={16} /> Unlink
+                                                                    </button>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </React.Fragment>
+                                ))
+                            ) : (
+                                <tr>
+                                    <td colSpan="3" className="empty-row">
+                                        No parent-child links found.
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <Modal 
+                isOpen={isCreateModalOpen} 
+                onClose={() => {
+                    setIsCreateModalOpen(false);
+                    setSelectedParentId('');
+                    setSelectedStudentId('');
+                }}
+                title="Create New Connection Link"
+            >
+                <form onSubmit={handleLink} className="admin-form">
+                    <div className="form-group">
+                        <label htmlFor="parent-select">Parent User</label>
+                        <select 
+                            id="parent-select"
+                            value={selectedParentId}
+                            onChange={(e) => setSelectedParentId(e.target.value)}
+                            required
+                        >
+                            <option value="">-- Choose Parent --</option>
+                            {parentsList.map(p => (
+                                <option key={p.id} value={p.id}>
+                                    {p.nickname ? `${p.nickname} (@${p.username})` : `@${p.username}`}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
+                    <div className="form-group">
+                        <label htmlFor="student-select">Student User</label>
+                        <select 
+                            id="student-select"
+                            value={selectedStudentId}
+                            onChange={(e) => setSelectedStudentId(e.target.value)}
+                            required
+                        >
+                            <option value="">-- Choose Student --</option>
+                            {studentsList.map(s => (
+                                <option key={s.id} value={s.id}>
+                                    {s.nickname ? `${s.nickname} (@${s.username})` : `@${s.username}`}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
+                    <button 
+                        type="submit" 
+                        className="submit-btn btn-primary" 
+                        disabled={formLoading || !selectedParentId || !selectedStudentId}
+                    >
+                        {formLoading ? 'Establishing Link...' : 'Establish Connection Link'}
+                    </button>
+                </form>
+            </Modal>
         </div>
     );
 };

@@ -19,3 +19,9 @@ Low - Visual bug that occurs in edge cases but degrades the premium feel of the 
 
 ## Screenshots
 ![Chat Feed Overflow](file:///c:/Users/Ben/AntiGravity/classroom-chat/issues/screenshots/desktop_chat_audit.png)
+
+## Root Cause
+The flexbox containers `.message-row` and `.chat-message-group` had a default `min-width: auto`, which prevented them from shrinking below their content's intrinsic size when filled with unbroken long strings. This caused the text to overflow rather than wrap.
+
+## Changed Files
+- `frontend/src/pages/Chat/Chat.css`

@@ -52,16 +52,6 @@ const Chat = () => {
     <div className="feed-loading-skeleton-container" style={{ padding: '2rem' }}>
       <span style={{ display: 'none' }}>Loading Feed...</span>
       <div className="feed-main" style={{ width: '100%' }}>
-        {/* Mock Input Area */}
-        <div className="feed-input-area" style={{ marginBottom: '2rem', opacity: 0.6 }}>
-          <div className="feed-input-wrapper-container" style={{ padding: '1rem', background: 'var(--bg-secondary)', borderRadius: '12px', border: '1px solid var(--border-subtle)' }}>
-            <Skeleton height="60px" style={{ marginBottom: '1rem' }} />
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Skeleton height="36px" width="120px" borderRadius="18px" />
-              <Skeleton height="36px" width="80px" borderRadius="18px" />
-            </div>
-          </div>
-        </div>
         {/* Mock Messages List */}
         <div className="feed-messages-list" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           {[1, 2, 3].map(i => (
@@ -78,6 +68,16 @@ const Chat = () => {
             </div>
           ))}
         </div>
+        {/* Mock Input Area */}
+        <div className="feed-input-area" style={{ marginTop: '2rem', opacity: 0.6 }}>
+          <div className="feed-input-wrapper-container" style={{ padding: '1rem', background: 'var(--bg-secondary)', borderRadius: '12px', border: '1px solid var(--border-subtle)' }}>
+            <Skeleton height="60px" style={{ marginBottom: '1rem' }} />
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Skeleton height="36px" width="120px" borderRadius="18px" />
+              <Skeleton height="36px" width="80px" borderRadius="18px" />
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -85,6 +85,40 @@ const Chat = () => {
   return (
     <div className="feed-container">
       <div className="feed-main">
+        <div 
+          className="feed-messages"
+          onScroll={handleScroll}
+        >
+          <div className="feed-messages-inner">
+            {messages.length === 0 ? (
+              <div className="feed-empty-msg">
+                No messages to display. Be the first to post!
+              </div>
+            ) : (
+              messages.map((msg, index) => (
+                <ChatMessage 
+                  key={msg.id || index}
+                  msg={msg}
+                  user={user}
+                  onDelete={handleDeleteMessage}
+                />
+              ))
+            )}
+            
+            {isLoadingMore && (
+              <div className="feed-loading-more">
+                Loading more...
+              </div>
+            )}
+            
+            {!hasMore && messages.length > 0 && (
+              <div className="feed-end-msg">
+                You've reached the end of the feed.
+              </div>
+            )}
+          </div>
+        </div>
+
         <div className="feed-input-area">
           <form onSubmit={handleSendMessage} className="feed-input-wrapper-container">
             <div className="feed-input-form-mockup">
@@ -180,40 +214,6 @@ const Chat = () => {
                 </div>
             </div>
           </form>
-        </div>
-
-        <div 
-          className="feed-messages"
-          onScroll={handleScroll}
-        >
-          <div className="feed-messages-inner">
-            {messages.length === 0 ? (
-              <div className="feed-empty-msg">
-                No messages to display. Be the first to post!
-              </div>
-            ) : (
-              messages.map((msg, index) => (
-                <ChatMessage 
-                  key={msg.id || index}
-                  msg={msg}
-                  user={user}
-                  onDelete={handleDeleteMessage}
-                />
-              ))
-            )}
-            
-            {isLoadingMore && (
-              <div className="feed-loading-more">
-                Loading more...
-              </div>
-            )}
-            
-            {!hasMore && messages.length > 0 && (
-              <div className="feed-end-msg">
-                You've reached the end of the feed.
-              </div>
-            )}
-          </div>
         </div>
       </div>
     </div>

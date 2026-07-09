@@ -24,7 +24,7 @@
 
 .feed-input-area {
     padding: 1.5rem;
-    border-bottom: 1px solid var(--border-subtle);
+    border-top: 1px solid var(--border-subtle);
     background: var(--bg-secondary);
     position: relative;
     z-index: 20;
@@ -160,12 +160,14 @@
     display: flex;
     align-items: flex-start;
     gap: 1rem;
+    min-width: 0;
 }
 
 .chat-message-group {
     display: flex;
     flex-direction: column;
     width: 100%;
+    min-width: 0;
 }
 
 .avatar-link {
@@ -246,18 +248,66 @@
     color: var(--text-muted);
 }
 
+.message-body-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    min-width: 0;
+    width: 100%;
+}
+
+.chat-message-group.own-message .message-row {
+    flex-direction: row-reverse;
+}
+
+.chat-message-group.own-message .message-content-wrapper {
+    align-items: flex-end;
+}
+
+.chat-message-group.own-message .message-header {
+    flex-direction: row-reverse;
+}
+
+.chat-message-group.own-message .message-body-row {
+    flex-direction: row-reverse;
+}
+
 .message-bubble {
     font-size: var(--font-md);
     line-height: 1.5;
-    color: var(--text-primary);
     overflow-wrap: anywhere;
     word-break: break-word;
     white-space: pre-wrap;
-    padding: 0;
-    background: transparent;
-    border: none;
-    box-shadow: none;
-    border-radius: 0;
+}
+
+.other-message .message-bubble {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-subtle);
+    border-radius: 16px 16px 16px 4px;
+    padding: 0.75rem 1.25rem;
+    box-shadow: var(--shadow-sm);
+    color: var(--text-primary);
+    max-width: 75%;
+    flex: 0 1 auto !important;
+}
+
+.own-message .message-bubble {
+    background: var(--gradient-primary);
+    border-radius: 16px 16px 4px 16px;
+    padding: 0.75rem 1.25rem;
+    box-shadow: var(--shadow-md);
+    color: white;
+    max-width: 75%;
+    flex: 0 1 auto !important;
+}
+
+.own-message .message-bubble a {
+    color: white;
+    text-decoration: underline;
+}
+
+.own-message .message-bubble a:hover {
+    color: var(--accent-color);
 }
 
 .chat-send-btn {

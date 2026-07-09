@@ -18,3 +18,9 @@ Low - Mostly an aesthetic nuisance, though it degrades the premium feel of the m
 
 ## Screenshots
 ![Long String Wrapping](c:\Users\Ben\AntiGravity\classroom-chat\issues\screenshots\mobile_admin_dashboard.png)
+
+## Root Cause
+The flexbox containers `.message-row` and `.chat-message-group` lacked a `min-width: 0` constraint. This default CSS flexbox behavior prevented the elements from shrinking and correctly handling the `word-break: break-word` applied to the text bubble for long strings.
+
+## Changed Files
+- `frontend/src/pages/Chat/Chat.css`

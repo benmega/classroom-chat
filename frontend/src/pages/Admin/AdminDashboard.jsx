@@ -31,6 +31,7 @@ import AdminStats from '../../components/admin/AdminStats';
 import { 
     AddBannedWordModal
 } from '../../components/admin/AdminModals';
+import AdminPageHeader from '../../components/admin/AdminPageHeader';
 
 // Hooks & Utils
 import { useAdminDashboard } from '../../hooks/useAdminDashboard';
@@ -107,15 +108,7 @@ const AdminDashboard = () => {
 
     return (
         <div className="admin-dashboard">
-            <div className="dashboard-header">
-                <div className="dashboard-header-left">
-                    <button className="hamburger-toggle mobile-only" onClick={toggleSidebar}>
-                        <Menu size={24} />
-                    </button>
-                    <div>
-                        <h1>Overview Dashboard</h1>
-                    </div>
-                </div>
+            <AdminPageHeader title="Overview Dashboard">
                 <button 
                     onClick={() => fetchDashboardData(timeframe)} 
                     className={`refresh-btn ${isRefreshing ? 'spinning' : ''}`}
@@ -123,7 +116,7 @@ const AdminDashboard = () => {
                 >
                     <RefreshCw size={20} />
                 </button>
-            </div>
+            </AdminPageHeader>
 
             <AdminStats 
                 stats={dashboardData} 
@@ -156,9 +149,9 @@ const AdminDashboard = () => {
                         </div>
                     </div>
 
-                    <div className="admin-controls-card card" style={{ padding: '2rem' }}>
+                    <div className="admin-controls-card card">
                         {/* Unified Controls Grid */}
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '0.75rem' }}>
                             <button className="action-item" onClick={() => navigate('/admin/users')} style={{ display: 'flex', alignItems: 'center', gap: '12px', textAlign: 'left', padding: '12px 16px', borderRadius: '12px', border: '1px solid var(--border-subtle)', background: 'var(--bg-secondary)', cursor: 'pointer' }}>
                                 <div className="icon" style={{ width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '10px', background: 'var(--primary-color)', color: 'white' }}><Users size={20} /></div>
                                 <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>User Directory</span>

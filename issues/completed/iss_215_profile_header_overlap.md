@@ -25,3 +25,7 @@ Medium - Aesthetic and readability issue.
   - While this is intended on desktop to partially overlay the avatar, on mobile viewports (where `flex-direction` shifts to `column`), this negative margin pulls the textual name, handle, and action buttons upward as well, positioning them directly on top of the banner graphic instead of in the readable content area below.
 * **Proposed CSS & Code Fix**:
   - Adjust the mobile media query in `Profile.css` for `.profile-header-content` to remove or reduce the negative margin, or position only the avatar wrapper using absolute positioning so the text elements remain correctly flow-aligned in the light-colored body section.
+
+* **Resolution**: Adjusted the mobile media query for `.profile-header-content` to remove `margin-top: -60px` and applied it only to `.avatar-wrapper` so that the rest of the text content flows properly below the banner.
+* **Changed Files**:
+  - `frontend/src/pages/Profile/Profile.css`
