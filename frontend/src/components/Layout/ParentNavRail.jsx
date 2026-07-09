@@ -39,11 +39,11 @@ const ParentNavRail = ({ location, handleLogout }) => {
                     </Link>
                 </div>
 
-                {/* Message Teacher — links to dashboard (contact form lives there) */}
+                {/* Message Teacher — links to dashboard (contact form lives there via hash) */}
                 <div className={`nav-rail-item-container`}>
                     <div className="nav-rail-indicator" />
                     <Link
-                        to="/parent/dashboard"
+                        to="/parent/dashboard#contact"
                         className="nav-rail-item"
                         data-tooltip="Message Teacher"
                         aria-label="Message Teacher"

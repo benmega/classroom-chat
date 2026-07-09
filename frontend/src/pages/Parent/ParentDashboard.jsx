@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Loader2, MoreVertical, User, Trophy, Bell, Activity, Zap, Clock, Star } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { Loader2, MoreVertical, User, Trophy, Bell, Activity, Zap, Clock, Star, MessageCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import client from '../../api/client';
 import { getApiUrl } from '../../utils/apiUrl';
 import DuckIcon from '../../components/Icons/DuckIcon';
+import ParentContactTeacher from './ParentContactTeacher';
 
 import DesktopNotice from '../../components/common/DesktopNotice';
 import './ParentDashboard.css';
@@ -48,6 +49,21 @@ const ParentDashboard = () => {
     // Per-child report data keyed by child ID
     const [childReports, setChildReports] = useState({});
     const [reportsLoading, setReportsLoading] = useState(false);
+
+    // Contact Teacher modal
+    const [contactModalOpen, setContactModalOpen] = useState(false);
+    const [selectedChild, setSelectedChild] = useState(null);
+
+    // Auto-open contact modal when navigating here via #contact hash (from nav rail)
+    const routerLocation = useLocation();
+    useEffect(() => {
+        if (routerLocation.hash === '#contact') {
+            setSelectedChild(null);
+            setContactModalOpen(true);
+            // Clean the hash without a page reload
+            window.history.replaceState(null, '', window.location.pathname);
+        }
+    }, [routerLocation.hash]);
 
     // ── Data Fetching ──────────────────────────────────────────────────────────
     const fetchChildren = useCallback(async () => {
@@ -231,6 +247,7 @@ const ParentDashboard = () => {
 
     // ── Render ─────────────────────────────────────────────────────────────────
     return (
+        <>
         <div className="parent-dashboard animate-page-entry" onClick={() => setOpenMenu(null)}>
             <main className="parent-body">
                 <DesktopNotice />
@@ -441,6 +458,20 @@ const ParentDashboard = () => {
                                             </span>
                                         </div>
                                     )}
+
+                                    {/* Message Teacher trigger */}
+                                    <button
+                                        className="btn-secondary btn-secondary-sm card-msg-teacher-btn"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setSelectedChild(child);
+                                            setContactModalOpen(true);
+                                        }}
+                                        style={{ marginTop: '0.75rem', width: '100%' }}
+                                    >
+                                        <MessageCircle size={14} />
+                                        Message Teacher
+                                    </button>
                                 </div>
                             </div>
                         );
@@ -478,6 +509,19 @@ const ParentDashboard = () => {
                 </div>
             </main>
         </div>
+
+        {/* Contact Teacher Modal */}
+        <ParentContactTeacher
+            isOpen={contactModalOpen}
+            onClose={() => { setContactModalOpen(false); setSelectedChild(null); }}
+        >
+            {selectedChild
+                ? `Regarding: ${selectedChild.nickname || selectedChild.username}`
+                : children.length > 0
+                    ? `Regarding: ${children.map(c => c.nickname || c.username).join(', ')}`
+                    : ''}
+        </ParentContactTeacher>
+        </>
     );
 };
 
