@@ -4,7 +4,6 @@ import { Loader2, MoreVertical, User, Trophy, Bell, Activity, Zap, Clock, Star, 
 import toast from 'react-hot-toast';
 import client from '../../api/client';
 import { getApiUrl } from '../../utils/apiUrl';
-import DuckIcon from '../../components/Icons/DuckIcon';
 
 import DesktopNotice from '../../components/common/DesktopNotice';
 import './ParentDashboard.css';
@@ -39,6 +38,7 @@ const ParentDashboard = () => {
     const [connectCode, setConnectCode] = useState('');
     const [connectError, setConnectError] = useState(null);
     const [isConnecting, setIsConnecting] = useState(false);
+    const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
 
     // Per-child report and history data
     const [childReports, setChildReports] = useState({});
@@ -110,6 +110,7 @@ const ParentDashboard = () => {
             await client.post('/api/parents/connect/code', { code: connectCode });
             toast.success('Child connected successfully!');
             setConnectCode('');
+            setIsLinkModalOpen(false);
             const list = await fetchChildren();
             if (list.length > 0) fetchChildReports(list);
         } catch (err) {
@@ -157,8 +158,6 @@ const ParentDashboard = () => {
         const achievements = events.filter(e => e.type === 'achievement');
         const challenges = events.filter(e => e.type === 'challenge');
 
-        // Combine prioritizing projects -> notes -> achievements -> challenges
-        // Limit to top 10 most recent cohesive activities
         return [...projects, ...notes, ...achievements, ...challenges]
             .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
             .slice(0, 10);
@@ -347,19 +346,41 @@ const ParentDashboard = () => {
                         </section>
                     </div>
 
-                    {/* Right Column: Family List + Connections */}
+                    {/* Right Column: Family List */}
                     <div className="right-column" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                         
                         {/* Children List */}
                         <section className="dashboard-panel" style={{ padding: '1.5rem', background: 'var(--bg-primary)', borderRadius: '16px', border: '1px solid var(--border-subtle)' }}>
-                            <h3 style={{ fontSize: '1.1rem', margin: '0 0 1.25rem 0', fontWeight: '700', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '0.75rem' }}>
-                                Family Members
-                            </h3>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '0.75rem', marginBottom: '1.25rem' }}>
+                                <h3 style={{ fontSize: '1.1rem', margin: 0, fontWeight: '700' }}>
+                                    Family Members
+                                </h3>
+                                <button 
+                                    onClick={() => setIsLinkModalOpen(true)}
+                                    style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        width: '28px',
+                                        height: '28px',
+                                        borderRadius: '50%',
+                                        background: 'rgba(99, 102, 241, 0.1)',
+                                        color: '#6366f1',
+                                        border: '1px solid rgba(99, 102, 241, 0.2)',
+                                        cursor: 'pointer',
+                                        transition: 'background 0.2s, transform 0.2s'
+                                    }}
+                                    onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(99, 102, 241, 0.2)'}
+                                    onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(99, 102, 241, 0.1)'}
+                                    title="Link another child"
+                                >
+                                    <Plus size={16} />
+                                </button>
+                            </div>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                                 {children.map((child) => {
                                     const report = childReports[child.id];
                                     const isActive = report?.last_activity_time && isWithinHours(report.last_activity_time, 2);
-                                    const duckBalance = report?.duck_balance ?? child.duck_balance ?? 0;
                                     const displayName = child.nickname || child.username;
 
                                     return (
@@ -401,13 +422,8 @@ const ParentDashboard = () => {
                                                 </div>
                                             </div>
 
-                                            {/* Ducks & Options */}
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }} onClick={(e) => e.stopPropagation()}>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '3px', background: 'var(--bg-primary)', padding: '0.2rem 0.4rem', borderRadius: '6px', border: '1px solid var(--border-subtle)', fontSize: '0.75rem' }}>
-                                                    <DuckIcon size={12} color="#f59e0b" />
-                                                    <span style={{ fontWeight: '700' }}>{duckBalance.toLocaleString()}</span>
-                                                </div>
-                                                
+                                            {/* Options Menu Only (No Duck Balance) */}
+                                            <div style={{ display: 'flex', alignItems: 'center' }} onClick={(e) => e.stopPropagation()}>
                                                 <div className="child-card-menu" style={{ position: 'relative', top: 'auto', right: 'auto' }}>
                                                     <button
                                                         className="menu-btn"
@@ -436,41 +452,81 @@ const ParentDashboard = () => {
                                 })}
                             </div>
                         </section>
-
-                        {/* Add Child Form */}
-                        {!error && (
-                            <section className="dashboard-panel connect-card glass-panel" style={{ padding: '1.5rem', background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(240, 253, 250, 0.9) 100%)', borderRadius: '16px' }}>
-                                <h3 style={{ fontSize: '1.05rem', margin: '0 0 0.5rem 0', fontWeight: '700' }}>Link Another Child</h3>
-                                <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', margin: '0 0 1rem 0', lineHeight: 1.4 }}>
-                                    Enter the 6-character connection code to link another student.
-                                </p>
-                                <form onSubmit={handleConnectChild} className="connect-form" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                                    <input
-                                        type="text"
-                                        placeholder="CODE"
-                                        value={connectCode}
-                                        onChange={(e) => setConnectCode(e.target.value)}
-                                        maxLength={10}
-                                        className="connect-input"
-                                        style={{ padding: '0.5rem', fontSize: '0.9rem', textAlign: 'center', letterSpacing: '1px' }}
-                                    />
-                                    <button
-                                        type="submit"
-                                        className="btn-premium btn-premium-sm connect-submit-btn"
-                                        disabled={isConnecting || !connectCode.trim()}
-                                        style={{ display: 'flex', width: '100%', justifyContent: 'center', padding: '0.5rem', fontSize: '0.8rem' }}
-                                    >
-                                        <Plus size={14} /> Link Child
-                                    </button>
-                                    {connectError && (
-                                        <div className="connect-error-msg" style={{ fontSize: '0.7rem' }}>{connectError}</div>
-                                    )}
-                                </form>
-                            </section>
-                        )}
                     </div>
                 </div>
             </main>
+
+            {/* Link Another Child Modal */}
+            {isLinkModalOpen && (
+                <div 
+                    style={{
+                        position: 'fixed',
+                        inset: 0,
+                        background: 'rgba(15, 23, 42, 0.6)',
+                        backdropFilter: 'blur(4px)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        zIndex: 1000,
+                        animation: 'fadeIn 0.25s ease'
+                    }}
+                    onClick={() => setIsLinkModalOpen(false)}
+                >
+                    <div 
+                        className="glass-panel"
+                        style={{
+                            width: '90%',
+                            maxWidth: '400px',
+                            padding: '2rem',
+                            background: 'var(--bg-primary)',
+                            borderRadius: '16px',
+                            boxShadow: 'var(--shadow-xl)',
+                            position: 'relative'
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <h3 style={{ fontSize: '1.2rem', margin: '0 0 0.5rem 0', fontWeight: '700' }}>Link Another Child</h3>
+                        <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '0 0 1.25rem 0', lineHeight: 1.4 }}>
+                            Enter the 6-character connection code to link another student.
+                        </p>
+                        <form onSubmit={handleConnectChild} className="connect-form" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                            <input
+                                type="text"
+                                placeholder="CODE"
+                                value={connectCode}
+                                onChange={(e) => setConnectCode(e.target.value)}
+                                maxLength={10}
+                                className="connect-input"
+                                style={{ padding: '0.75rem', fontSize: '1.1rem', textAlign: 'center', letterSpacing: '2px', textTransform: 'uppercase' }}
+                                autoFocus
+                            />
+                            <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem' }}>
+                                <button
+                                    type="button"
+                                    className="btn-secondary"
+                                    onClick={() => setIsLinkModalOpen(false)}
+                                    style={{ flex: 1, justifyContent: 'center', fontSize: '0.85rem' }}
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    className="btn-premium"
+                                    disabled={isConnecting || !connectCode.trim()}
+                                    style={{ flex: 1, justifyContent: 'center', fontSize: '0.85rem' }}
+                                >
+                                    {isConnecting ? 'Linking...' : 'Link Child'}
+                                </button>
+                            </div>
+                            {connectError && (
+                                <div className="connect-error-msg" style={{ fontSize: '0.75rem', color: 'var(--error-color)', textAlign: 'center', marginTop: '0.25rem' }}>
+                                    {connectError}
+                                </div>
+                            )}
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
