@@ -755,3 +755,22 @@
         grid-template-columns: 1fr;
     }
 }
+
+/* ─── Unified Timeline Layout ────────────────────────────────────────────────── */
+.timeline-item {
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease, border-color 0.2s ease;
+}
+.timeline-item:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--primary-color) !important;
+    background: var(--bg-primary) !important;
+}
+
+@media (max-width: 900px) {
+    .dashboard-layout {
+        grid-template-columns: 1fr !important;
+        gap: 1.5rem !important;
+    }
+}
+

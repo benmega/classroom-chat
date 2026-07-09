@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Loader2, MoreVertical, User, Trophy, Bell, Activity, Zap, Clock, Star, BookOpen, Folder, Award } from 'lucide-react';
+import { Loader2, MoreVertical, User, Trophy, Bell, Activity, Zap, Clock, Star, BookOpen, Folder, Award, ChevronRight, AlertCircle, Plus } from 'lucide-react';
 import toast from 'react-hot-toast';
 import client from '../../api/client';
 import { getApiUrl } from '../../utils/apiUrl';
@@ -27,11 +27,6 @@ const timeAgo = (isoString) => {
 const isWithinHours = (isoString, hours) => {
     if (!isoString) return false;
     return Date.now() - new Date(isoString).getTime() < hours * 3600000;
-};
-
-const isWithinDays = (isoString, days) => {
-    if (!isoString) return false;
-    return Date.now() - new Date(isoString).getTime() < days * 86400000;
 };
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -139,265 +134,341 @@ const ParentDashboard = () => {
         }
     };
 
-    // Helper to filter, prioritize (projects > notes > achievements > challenges), and slice events
-    const getPrioritizedEvents = (events) => {
-        if (!events) return [];
+    // ── Merge and Prioritize Activity across all children ──────────────────────
+    const mergedActivityFeed = useMemo(() => {
+        const events = [];
+        children.forEach((child) => {
+            const history = childHistories[child.id];
+            if (!history?.recent_events) return;
+
+            history.recent_events.forEach((event) => {
+                events.push({
+                    ...event,
+                    childName: child.nickname || child.username,
+                    childId: child.id,
+                    childAvatar: child.profile_picture_url
+                });
+            });
+        });
+
+        // Separate and prioritize projects over levels
         const projects = events.filter(e => e.type === 'project');
         const notes = events.filter(e => e.type === 'note');
         const achievements = events.filter(e => e.type === 'achievement');
         const challenges = events.filter(e => e.type === 'challenge');
-        return [...projects, ...notes, ...achievements, ...challenges].slice(0, 5);
-    };
+
+        // Combine prioritizing projects -> notes -> achievements -> challenges
+        // Limit to top 10 most recent cohesive activities
+        return [...projects, ...notes, ...achievements, ...challenges]
+            .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+            .slice(0, 10);
+    }, [children, childHistories]);
 
     // ── Loading skeleton ───────────────────────────────────────────────────────
     if (isLoading) {
         return (
             <div className="parent-dashboard animate-page-entry" style={{ padding: '2rem' }}>
                 <main className="parent-body">
-                    <div className="children-grid">
-                        {[1, 2].map(i => (
-                            <div key={i} className="child-card glass-panel" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1.5rem', borderRadius: '12px' }}>
-                                <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                                    <Skeleton height="64px" width="64px" borderRadius="50%" />
-                                    <div style={{ flexGrow: 1 }}>
-                                        <Skeleton height="24px" width="60%" style={{ marginBottom: '8px' }} />
-                                        <Skeleton height="16px" width="40%" />
-                                    </div>
-                                </div>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: 'auto' }}>
-                                    <Skeleton height="40px" borderRadius="8px" />
-                                    <Skeleton height="40px" borderRadius="8px" />
-                                    <Skeleton height="40px" borderRadius="8px" />
-                                </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '2rem' }}>
+                        <div className="glass-panel" style={{ padding: '2rem', height: '400px' }}>
+                            <Skeleton height="32px" width="40%" style={{ marginBottom: '1.5rem' }} />
+                            <Skeleton height="80px" style={{ marginBottom: '1rem' }} />
+                            <Skeleton height="80px" style={{ marginBottom: '1rem' }} />
+                            <Skeleton height="80px" />
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                            <div className="glass-panel" style={{ padding: '2rem', height: '200px' }}>
+                                <Skeleton height="24px" width="60%" style={{ marginBottom: '1rem' }} />
+                                <Skeleton height="40px" />
                             </div>
-                        ))}
+                        </div>
                     </div>
                 </main>
             </div>
         );
     }
 
-    // ── Grid class helper ──────────────────────────────────────────────────────
-    const totalCards = children.length + 1;
-    let gridClass = 'children-grid';
-    if (totalCards <= 2) gridClass += ' grid-few';
-    else if (totalCards <= 4) gridClass += ' grid-medium';
-    else gridClass += ' grid-many';
-
-    // ── Render ─────────────────────────────────────────────────────────────────
     return (
         <div className="parent-dashboard animate-page-entry" onClick={() => setOpenMenu(null)}>
             <main className="parent-body">
                 <DesktopNotice />
 
-                {/* Header */}
-                <div className="children-section-header">
-                    <h2 className="section-title">
-                        <Activity size={18} className="section-icon children-icon" />
-                        Children Activity Summary
-                    </h2>
-                </div>
+                {/* Cohesive Dashboard Layout */}
+                <div className="dashboard-layout" style={{ display: 'grid', gridTemplateColumns: '2.2fr 1fr', gap: '2rem', marginTop: '1rem' }}>
+                    
+                    {/* Left Column: Cohesive Activity Feed */}
+                    <div className="left-column">
+                        <section className="dashboard-panel" style={{ padding: '2rem', background: 'var(--bg-primary)', borderRadius: '16px', border: '1px solid var(--border-subtle)' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '1rem' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                    <Activity size={22} color="var(--primary-color)" />
+                                    <h2 style={{ fontSize: '1.4rem', margin: 0, fontWeight: '700' }}>Recent Family Activity</h2>
+                                </div>
+                                <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: '500' }}>Past 30 Days</span>
+                            </div>
 
-                <div className={gridClass}>
-                    {error && (
-                        <div className="parent-error">
-                            <h3>Something went wrong</h3>
-                            <p>{error}</p>
-                        </div>
-                    )}
+                            {reportsLoading && Object.keys(childHistories).length === 0 ? (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                                    <Skeleton height="64px" borderRadius="12px" />
+                                    <Skeleton height="64px" borderRadius="12px" />
+                                    <Skeleton height="64px" borderRadius="12px" />
+                                </div>
+                            ) : mergedActivityFeed.length > 0 ? (
+                                <div className="activity-timeline" style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                                    {mergedActivityFeed.map((event, idx) => {
+                                        let IconComponent = Zap;
+                                        let iconColor = 'var(--primary-color)';
+                                        let iconBg = 'rgba(15,118,110,0.08)';
 
-                    {children.map((child) => {
-                        const report = childReports[child.id] || null;
-                        const history = childHistories[child.id] || null;
-                        const isActive = report?.last_activity_time && isWithinHours(report.last_activity_time, 2);
-                        const duckBalance = report?.duck_balance ?? child.duck_balance ?? null;
-                        const displayName = child.nickname || child.username;
+                                        if (event.type === 'project') {
+                                            IconComponent = Folder;
+                                            iconColor = '#6366f1';
+                                            iconBg = 'rgba(99,102,241,0.08)';
+                                        } else if (event.type === 'note') {
+                                            IconComponent = BookOpen;
+                                            iconColor = '#ec4899';
+                                            iconBg = 'rgba(236,72,153,0.08)';
+                                        } else if (event.type === 'achievement') {
+                                            IconComponent = Award;
+                                            iconColor = '#f59e0b';
+                                            iconBg = 'rgba(245,158,11,0.08)';
+                                        }
 
-                        // Focus on 30-day activity events
-                        const allEvents = history?.recent_events || [];
-                        const hasActivity = allEvents.length > 0;
-                        const hasAnyActivityEver = history?.has_any_activity_ever ?? true;
-                        const displayEvents = getPrioritizedEvents(allEvents);
-
-                        return (
-                            <div
-                                key={child.id}
-                                className="child-card glass-panel child-dashboard-summary-card"
-                                onClick={() => navigate(`/parent/report/${child.id}`)}
-                                style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'stretch', textAlign: 'left' }}
-                            >
-                                {/* Card Header with Options Menu */}
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
-                                    <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                                        <div style={{ position: 'relative' }}>
-                                            {child.profile_picture_url && !child.profile_picture_url.includes('Default_pfp.jpg') ? (
-                                                <img
-                                                    className="child-avatar"
-                                                    src={getApiUrl(child.profile_picture_url)}
-                                                    alt={child.username}
-                                                    style={{ margin: 0, width: '48px', height: '48px' }}
-                                                />
-                                            ) : (
-                                                <div className="child-avatar-initials" style={{ margin: 0, width: '48px', height: '48px' }}>
-                                                    <User size={24} strokeWidth={1.5} />
-                                                </div>
-                                            )}
-                                            <span
-                                                className={`activity-dot ${isActive ? 'activity-dot--active' : 'activity-dot--idle'}`}
-                                                style={{ position: 'absolute', bottom: 0, right: 0, width: '12px', height: '12px', border: '2px solid white' }}
-                                            />
-                                        </div>
-                                        <div>
-                                            <h3 className="child-name" style={{ margin: 0, fontSize: '1.15rem' }}>{displayName}</h3>
-                                            <p className="child-nickname" style={{ margin: 0, fontSize: '0.8rem' }}>@{child.username}</p>
-                                        </div>
-                                    </div>
-
-                                    {/* Duck Balance & Menu */}
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                        {duckBalance !== null && (
-                                            <div className="child-duck-balance" style={{ margin: 0, padding: '0.2rem 0.5rem', borderRadius: '8px', background: 'var(--bg-tertiary)' }}>
-                                                <DuckIcon size={14} color="#f59e0b" />
-                                                <span className="duck-count" style={{ fontSize: '0.8rem' }}>{duckBalance.toLocaleString()}</span>
-                                            </div>
-                                        )}
-                                        <div className="child-card-menu" onClick={(e) => e.stopPropagation()} style={{ position: 'relative', top: 'auto', right: 'auto' }}>
-                                            <button
-                                                className="menu-btn"
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    setOpenMenu(openMenu === child.id ? null : child.id);
+                                        return (
+                                            <div 
+                                                key={idx} 
+                                                className="timeline-item"
+                                                onClick={() => navigate(`/parent/report/${event.childId}`)}
+                                                style={{
+                                                    display: 'flex', 
+                                                    gap: '1.25rem', 
+                                                    alignItems: 'center', 
+                                                    background: 'var(--bg-secondary)', 
+                                                    padding: '1rem 1.25rem', 
+                                                    borderRadius: '12px',
+                                                    border: '1px solid var(--border-subtle)',
+                                                    cursor: 'pointer',
+                                                    transition: 'transform 0.2s, box-shadow 0.2s'
                                                 }}
-                                                title="Options"
                                             >
-                                                <MoreVertical size={18} />
-                                            </button>
-                                            {openMenu === child.id && (
-                                                <div className="child-menu-dropdown">
-                                                    <button
-                                                        className="menu-item disconnect"
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            setOpenMenu(null);
-                                                            handleDisconnect(child.id, displayName);
+                                                {/* Child Avatar indicator */}
+                                                <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                                                    {event.childAvatar && !event.childAvatar.includes('Default_pfp.jpg') ? (
+                                                        <img
+                                                            src={getApiUrl(event.childAvatar)}
+                                                            alt={event.childName}
+                                                            style={{ width: '36px', height: '36px', borderRadius: '50%', objectFit: 'cover' }}
+                                                        />
+                                                    ) : (
+                                                        <div className="child-avatar-initials" style={{ width: '36px', height: '36px', margin: 0, fontSize: '0.8rem' }}>
+                                                            <User size={16} />
+                                                        </div>
+                                                    )}
+                                                    {/* Event Type Icon Badge */}
+                                                    <div 
+                                                        style={{ 
+                                                            position: 'absolute', 
+                                                            bottom: '-4px', 
+                                                            right: '-4px', 
+                                                            display: 'flex', 
+                                                            alignItems: 'center', 
+                                                            justifyContent: 'center', 
+                                                            width: '18px', 
+                                                            height: '18px', 
+                                                            borderRadius: '50%', 
+                                                            background: iconBg, 
+                                                            color: iconColor,
+                                                            border: '2px solid var(--bg-primary)',
+                                                            boxShadow: 'var(--shadow-sm)'
                                                         }}
                                                     >
-                                                        Remove Child
-                                                    </button>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Summary Content */}
-                                <div style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                                    <h4 style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '0.5rem', margin: 0 }}>
-                                        Activity (Past 30 Days)
-                                    </h4>
-
-                                    {reportsLoading && !history ? (
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                            <Skeleton height="32px" />
-                                            <Skeleton height="32px" />
-                                            <Skeleton height="32px" />
-                                        </div>
-                                    ) : hasActivity ? (
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                                            {displayEvents.map((event, idx) => {
-                                                let IconComponent = Zap;
-                                                let iconColor = 'var(--primary-color)';
-                                                let iconBg = 'rgba(15,118,110,0.08)';
-
-                                                if (event.type === 'project') {
-                                                    IconComponent = Folder;
-                                                    iconColor = '#6366f1';
-                                                    iconBg = 'rgba(99,102,241,0.08)';
-                                                } else if (event.type === 'note') {
-                                                    IconComponent = BookOpen;
-                                                    iconColor = '#ec4899';
-                                                    iconBg = 'rgba(236,72,153,0.08)';
-                                                } else if (event.type === 'achievement') {
-                                                    IconComponent = Award;
-                                                    iconColor = '#f59e0b';
-                                                    iconBg = 'rgba(245,158,11,0.08)';
-                                                }
-
-                                                return (
-                                                    <div key={idx} style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', background: 'var(--bg-secondary)', padding: '0.5rem', borderRadius: '8px' }}>
-                                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '28px', height: '28px', borderRadius: '50%', background: iconBg, color: iconColor }}>
-                                                            <IconComponent size={14} />
-                                                        </div>
-                                                        <div style={{ flexGrow: 1, minWidth: 0 }}>
-                                                            <div style={{ fontSize: '0.8rem', fontWeight: '600', color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                                                {event.label}
-                                                            </div>
-                                                            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                                                <Clock size={10} /> {timeAgo(event.timestamp)}
-                                                            </div>
-                                                        </div>
+                                                        <IconComponent size={10} />
                                                     </div>
-                                                );
-                                            })}
-                                            {allEvents.length > 5 && (
-                                                <div style={{ fontSize: '0.75rem', color: 'var(--primary-color)', fontWeight: '600', textAlign: 'center', marginTop: '0.25rem' }}>
-                                                    + {allEvents.length - 5} more activities. Click to view full report.
                                                 </div>
-                                            )}
-                                        </div>
-                                    ) : !hasAnyActivityEver ? (
-                                        /* Welcome & encourage (new student) */
-                                        <div style={{ padding: '1rem', background: 'rgba(15,118,110,0.05)', border: '1px dashed var(--primary-color)', borderRadius: '12px', textAlign: 'center' }}>
-                                            <span style={{ fontSize: '1.5rem', display: 'block', marginBottom: '0.5rem' }}>👋</span>
-                                            <h5 style={{ margin: '0 0 0.25rem 0', color: 'var(--primary-color)' }}>Welcome to Classroom Chat!</h5>
-                                            <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-                                                We're excited to have {displayName} start their coding journey. Encourage them to complete their first levels and build their first projects to earn badges and Ducks!
-                                            </p>
-                                        </div>
-                                    ) : (
-                                        /* Taking a break */
-                                        <div style={{ padding: '1rem', background: 'rgba(245,158,11,0.05)', border: '1px dashed #f59e0b', borderRadius: '12px', textAlign: 'center' }}>
-                                            <span style={{ fontSize: '1.5rem', display: 'block', marginBottom: '0.5rem' }}>☕</span>
-                                            <h5 style={{ margin: '0 0 0.25rem 0', color: '#b45309' }}>Taking a Break</h5>
-                                            <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-                                                It looks like {displayName} is taking a break. Encourage them to jump back in, attempt some more levels, or work on a project to show off their skills!
-                                            </p>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                        );
-                    })}
 
-                    {/* ── Connect Card ── */}
-                    {!error && (
-                        <div className="child-card connect-card glass-panel" onClick={(e) => e.stopPropagation()}>
-                            <h3>Enter Your Code</h3>
-                            <p className="connect-card-desc">
-                                If you received a physical card or connection code from the school, enter the 6-character code below to instantly link the student.
-                            </p>
-                            <form onSubmit={handleConnectChild} className="connect-form">
-                                <input
-                                    type="text"
-                                    placeholder="Enter connection code..."
-                                    value={connectCode}
-                                    onChange={(e) => setConnectCode(e.target.value)}
-                                    maxLength={10}
-                                    className="connect-input"
-                                />
-                                <button
-                                    type="submit"
-                                    className="btn-premium btn-premium-sm connect-submit-btn"
-                                    disabled={isConnecting || !connectCode.trim()}
-                                >
-                                    {isConnecting ? 'Connecting...' : 'Connect'}
-                                </button>
-                                {connectError && (
-                                    <div className="connect-error-msg">{connectError}</div>
-                                )}
-                            </form>
-                        </div>
-                    )}
+                                                {/* Event Info */}
+                                                <div style={{ flexGrow: 1, minWidth: 0 }}>
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem' }}>
+                                                        <span style={{ fontSize: '0.9rem', fontWeight: '700', color: 'var(--text-primary)' }}>
+                                                            {event.childName}
+                                                        </span>
+                                                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                            <Clock size={11} /> {timeAgo(event.timestamp)}
+                                                        </span>
+                                                    </div>
+                                                    <p style={{ margin: '0.2rem 0 0', fontSize: '0.85rem', color: 'var(--text-secondary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                                        {event.label}
+                                                    </p>
+                                                </div>
+                                                <ChevronRight size={16} color="var(--text-muted)" style={{ flexShrink: 0 }} />
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            ) : (
+                                /* Encouragement section if there's no activity */
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                                    {children.map((child) => {
+                                        const history = childHistories[child.id];
+                                        const hasAnyActivityEver = history?.has_any_activity_ever ?? true;
+                                        const displayName = child.nickname || child.username;
+
+                                        return (
+                                            <div 
+                                                key={child.id}
+                                                onClick={() => navigate(`/parent/report/${child.id}`)}
+                                                style={{ 
+                                                    padding: '1.5rem', 
+                                                    background: hasAnyActivityEver ? 'rgba(245,158,11,0.03)' : 'rgba(15,118,110,0.03)', 
+                                                    border: hasAnyActivityEver ? '1px dashed #f59e0b' : '1px dashed var(--primary-color)', 
+                                                    borderRadius: '12px',
+                                                    cursor: 'pointer'
+                                                }}
+                                            >
+                                                <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
+                                                    <span style={{ fontSize: '1.75rem' }}>{hasAnyActivityEver ? '☕' : '👋'}</span>
+                                                    <div>
+                                                        <h4 style={{ margin: '0 0 0.35rem 0', color: hasAnyActivityEver ? '#b45309' : 'var(--primary-color)', fontSize: '1rem' }}>
+                                                            {hasAnyActivityEver ? `${displayName} is taking a break` : `Welcome ${displayName}!`}
+                                                        </h4>
+                                                        <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+                                                            {hasAnyActivityEver 
+                                                                ? `It looks like ${displayName} hasn't been active in the last 30 days. Try encouraging them to attempt some levels or showcase their skills in a project!` 
+                                                                : `We're excited to have ${displayName} get started on their coding journey! Encourage them to complete their first challenges or build a project to earn Ducks.`
+                                                            }
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                        </section>
+                    </div>
+
+                    {/* Right Column: Family List + Connections */}
+                    <div className="right-column" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                        
+                        {/* Children List */}
+                        <section className="dashboard-panel" style={{ padding: '1.5rem', background: 'var(--bg-primary)', borderRadius: '16px', border: '1px solid var(--border-subtle)' }}>
+                            <h3 style={{ fontSize: '1.1rem', margin: '0 0 1.25rem 0', fontWeight: '700', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '0.75rem' }}>
+                                Family Members
+                            </h3>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                                {children.map((child) => {
+                                    const report = childReports[child.id];
+                                    const isActive = report?.last_activity_time && isWithinHours(report.last_activity_time, 2);
+                                    const duckBalance = report?.duck_balance ?? child.duck_balance ?? 0;
+                                    const displayName = child.nickname || child.username;
+
+                                    return (
+                                        <div 
+                                            key={child.id} 
+                                            onClick={() => navigate(`/parent/report/${child.id}`)}
+                                            style={{ 
+                                                display: 'flex', 
+                                                alignItems: 'center', 
+                                                justifyContent: 'space-between',
+                                                padding: '0.75rem 1rem',
+                                                background: 'var(--bg-secondary)',
+                                                borderRadius: '12px',
+                                                border: '1px solid var(--border-subtle)',
+                                                cursor: 'pointer'
+                                            }}
+                                        >
+                                            <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                                                <div style={{ position: 'relative' }}>
+                                                    {child.profile_picture_url && !child.profile_picture_url.includes('Default_pfp.jpg') ? (
+                                                        <img
+                                                            src={getApiUrl(child.profile_picture_url)}
+                                                            alt={child.username}
+                                                            style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover' }}
+                                                        />
+                                                    ) : (
+                                                        <div className="child-avatar-initials" style={{ width: '32px', height: '32px', margin: 0, fontSize: '0.75rem' }}>
+                                                            <User size={14} />
+                                                        </div>
+                                                    )}
+                                                    <span
+                                                        className={`activity-dot ${isActive ? 'activity-dot--active' : 'activity-dot--idle'}`}
+                                                        style={{ position: 'absolute', bottom: '-2px', right: '-2px', width: '9px', height: '9px', border: '1.5px solid white' }}
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <div style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-primary)' }}>{displayName}</div>
+                                                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>@{child.username}</div>
+                                                </div>
+                                            </div>
+
+                                            {/* Ducks & Options */}
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }} onClick={(e) => e.stopPropagation()}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '3px', background: 'var(--bg-primary)', padding: '0.2rem 0.4rem', borderRadius: '6px', border: '1px solid var(--border-subtle)', fontSize: '0.75rem' }}>
+                                                    <DuckIcon size={12} color="#f59e0b" />
+                                                    <span style={{ fontWeight: '700' }}>{duckBalance.toLocaleString()}</span>
+                                                </div>
+                                                
+                                                <div className="child-card-menu" style={{ position: 'relative', top: 'auto', right: 'auto' }}>
+                                                    <button
+                                                        className="menu-btn"
+                                                        onClick={() => setOpenMenu(openMenu === child.id ? null : child.id)}
+                                                        title="Options"
+                                                    >
+                                                        <MoreVertical size={16} />
+                                                    </button>
+                                                    {openMenu === child.id && (
+                                                        <div className="child-menu-dropdown">
+                                                            <button
+                                                                className="menu-item disconnect"
+                                                                onClick={() => {
+                                                                    setOpenMenu(null);
+                                                                    handleDisconnect(child.id, displayName);
+                                                                }}
+                                                            >
+                                                                Remove Child
+                                                            </button>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </section>
+
+                        {/* Add Child Form */}
+                        {!error && (
+                            <section className="dashboard-panel connect-card glass-panel" style={{ padding: '1.5rem', background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(240, 253, 250, 0.9) 100%)', borderRadius: '16px' }}>
+                                <h3 style={{ fontSize: '1.05rem', margin: '0 0 0.5rem 0', fontWeight: '700' }}>Link Another Child</h3>
+                                <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', margin: '0 0 1rem 0', lineHeight: 1.4 }}>
+                                    Enter the 6-character connection code to link another student.
+                                </p>
+                                <form onSubmit={handleConnectChild} className="connect-form" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                    <input
+                                        type="text"
+                                        placeholder="CODE"
+                                        value={connectCode}
+                                        onChange={(e) => setConnectCode(e.target.value)}
+                                        maxLength={10}
+                                        className="connect-input"
+                                        style={{ padding: '0.5rem', fontSize: '0.9rem', textAlign: 'center', letterSpacing: '1px' }}
+                                    />
+                                    <button
+                                        type="submit"
+                                        className="btn-premium btn-premium-sm connect-submit-btn"
+                                        disabled={isConnecting || !connectCode.trim()}
+                                        style={{ display: 'flex', width: '100%', justifyContent: 'center', padding: '0.5rem', fontSize: '0.8rem' }}
+                                    >
+                                        <Plus size={14} /> Link Child
+                                    </button>
+                                    {connectError && (
+                                        <div className="connect-error-msg" style={{ fontSize: '0.7rem' }}>{connectError}</div>
+                                    )}
+                                </form>
+                            </section>
+                        )}
+                    </div>
                 </div>
             </main>
         </div>
