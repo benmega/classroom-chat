@@ -415,3 +415,135 @@
     .report-dashboard-grid > .column-right > :nth-child(2) { order: 4; } /* Activity */
     .report-dashboard-grid > .column-right > :nth-child(3) { order: 5; } /* Notebook */
 }
+
+/* ─── Print Report Button ─── */
+.print-report-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: auto;
+    flex-shrink: 0;
+    padding: 0 14px;
+    height: 38px;
+    border-radius: var(--radius-sm);
+    font-size: 0.82rem;
+    font-weight: 600;
+    transition: var(--transition-fast);
+    white-space: nowrap;
+}
+
+.print-report-btn:hover {
+    transform: translateY(-1px);
+}
+
+/* ─── History Charts Section ─── */
+.history-charts-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 1.75rem;
+}
+
+.history-charts-loading {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.chart-block {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.chart-label {
+    margin: 0;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.chart-empty {
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-sm);
+    border: 1px dashed var(--border-subtle);
+}
+
+/* ─── Recent Events Feed ─── */
+.events-feed {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.event-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border-subtle);
+    animation: fadeInUp 0.3s ease both;
+}
+
+.event-item:last-child {
+    border-bottom: none;
+}
+
+.event-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.event-item--achievement .event-icon {
+    background: rgba(250, 204, 21, 0.15);
+    color: #facc15;
+}
+
+.event-item--challenge .event-icon {
+    background: rgba(16, 185, 129, 0.15);
+    color: #10b981;
+}
+
+.event-body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+    min-width: 0;
+}
+
+.event-label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.event-time {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+/* ─── Print Styles ─── */
+@media print {
+    .report-back-btn, .print-report-btn { display: none !important; }
+    .report-card-page { height: auto; overflow: visible; }
+    .dashboard-panel { break-inside: avoid; }
+}

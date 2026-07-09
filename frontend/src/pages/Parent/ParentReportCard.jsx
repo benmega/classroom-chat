@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { Loader2, ArrowLeft, Activity, Award, BookOpen, User, ChevronDown, ChevronUp } from 'lucide-react';
+import { Loader2, ArrowLeft, Activity, Award, BookOpen, User, ChevronDown, ChevronUp, Printer, Zap, TrendingUp, BarChart2 } from 'lucide-react';
 import client from '../../api/client';
 import { getApiUrl } from '../../utils/apiUrl';
 import ContributionGraph from '../../components/profile/ContributionGraph';
@@ -10,10 +10,52 @@ import ProjectModal from '../../components/profile/ProjectModal';
 import NoteSlideshow from '../../components/profile/NoteSlideshow';
 import DesktopNotice from '../../components/common/DesktopNotice';
 import CourseProgress from '../../components/profile/CourseProgress';
+import { Line, Bar } from 'react-chartjs-2';
+import {
+    Chart as ChartJS,
+    CategoryScale,
+    LinearScale,
+    PointElement,
+    LineElement,
+    BarElement,
+    Title,
+    Tooltip,
+    Legend,
+    Filler
+} from 'chart.js';
 import '../../assets/css/sprite.css';
 import '../Profile/Profile.css';
 import './ParentReportCard.css';
 import Skeleton from '../../components/common/Skeleton';
+
+ChartJS.register(
+    CategoryScale,
+    LinearScale,
+    PointElement,
+    LineElement,
+    BarElement,
+    Title,
+    Tooltip,
+    Legend,
+    Filler
+);
+
+/** Returns a human-readable relative time string (e.g. "2 hours ago"). */
+function timeAgo(isoString) {
+    if (!isoString) return '';
+    const now = new Date();
+    const then = new Date(isoString);
+    const diffMs = now - then;
+    const diffSecs = Math.floor(diffMs / 1000);
+    if (diffSecs < 60) return 'just now';
+    const diffMins = Math.floor(diffSecs / 60);
+    if (diffMins < 60) return `${diffMins}m ago`;
+    const diffHrs = Math.floor(diffMins / 60);
+    if (diffHrs < 24) return `${diffHrs}h ago`;
+    const diffDays = Math.floor(diffHrs / 24);
+    if (diffDays < 30) return `${diffDays}d ago`;
+    return then.toLocaleDateString();
+}
 
 const ParentReportCard = () => {
     const { studentId } = useParams();
@@ -23,12 +65,15 @@ const ParentReportCard = () => {
     const [error, setError] = useState(null);
     const [selectedProject, setSelectedProject] = useState(null);
     const [slideshowIndex, setSlideshowIndex] = useState(null);
+    const [historyData, setHistoryData] = useState(null);
 
     useEffect(() => {
         const fetchReport = async () => {
             try {
                 const response = await client.get(`/api/parents/student/${studentId}/report`);
                 setReportData(response.data.data);
+                // Persist so the nav rail can offer a quick-return link
+                localStorage.setItem('parent_last_report_child_id', studentId);
             } catch (err) {
                 setError(err.response?.data?.error || 'Failed to load report card');
             } finally {
@@ -36,6 +81,21 @@ const ParentReportCard = () => {
             }
         };
         fetchReport();
+    }, [studentId]);
+
+    // Fetch historical progress data separately after the main report loads
+    useEffect(() => {
+        if (!studentId) return;
+        const fetchHistory = async () => {
+            try {
+                const response = await client.get(`/api/parents/student/${studentId}/history`);
+                setHistoryData(response.data.data);
+            } catch (err) {
+                // Non-critical: silently fail if history is unavailable
+                console.warn('Could not load history data:', err);
+            }
+        };
+        fetchHistory();
     }, [studentId]);
 
     if (isLoading) {
@@ -95,6 +155,63 @@ const ParentReportCard = () => {
         );
     }
 
+    // Chart.js data configurations
+    const duckChartData = historyData?.duck_history ? {
+        labels: historyData.duck_history.labels,
+        datasets: [{
+            label: 'Duck Balance',
+            data: historyData.duck_history.data,
+            borderColor: '#0eb2bb',
+            backgroundColor: 'rgba(14, 178, 187, 0.12)',
+            pointBackgroundColor: '#0eb2bb',
+            pointBorderColor: '#fff',
+            pointBorderWidth: 2,
+            pointRadius: 4,
+            tension: 0.4,
+            fill: true,
+        }],
+    } : null;
+
+    const challengeChartData = historyData?.challenge_history ? {
+        labels: historyData.challenge_history.labels,
+        datasets: [{
+            label: 'Challenges Completed',
+            data: historyData.challenge_history.data,
+            backgroundColor: 'rgba(16, 185, 129, 0.75)',
+            borderColor: '#10b981',
+            borderRadius: 6,
+            borderSkipped: false,
+        }],
+    } : null;
+
+    const sharedChartOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { display: false },
+            tooltip: {
+                backgroundColor: 'rgba(15, 15, 25, 0.92)',
+                titleColor: '#e2e8f0',
+                bodyColor: '#94a3b8',
+                borderColor: 'rgba(255,255,255,0.08)',
+                borderWidth: 1,
+                padding: 10,
+                cornerRadius: 8,
+            },
+        },
+        scales: {
+            x: {
+                grid: { color: 'rgba(255,255,255,0.05)' },
+                ticks: { color: 'var(--text-muted)', font: { size: 11 }, maxTicksLimit: 8 },
+            },
+            y: {
+                grid: { color: 'rgba(255,255,255,0.05)' },
+                ticks: { color: 'var(--text-muted)', font: { size: 11 } },
+                beginAtZero: true,
+            },
+        },
+    };
+
     return (
         <>
         <div className="report-card-page animate-page-entry">
@@ -139,6 +256,17 @@ const ParentReportCard = () => {
                             )}
                         </div>
                     </div>
+
+                    {/* Feature 6: Print Report Button */}
+                    <button
+                        className="btn-secondary btn-secondary-sm print-report-btn"
+                        onClick={() => window.print()}
+                        title="Print Report"
+                        aria-label="Print Report"
+                    >
+                        <Printer size={14} />
+                        <span>Print</span>
+                    </button>
                 </div>
             </header>
 
@@ -185,6 +313,76 @@ const ParentReportCard = () => {
                             </div>
                         )}
                     </section>
+
+                    {/* Feature 4: Historical Progress Charts */}
+                    <section className="dashboard-panel">
+                        <div className="panel-header">
+                            <h2><TrendingUp size={20} /> Progress Over Time</h2>
+                        </div>
+
+                        {!historyData ? (
+                            <div className="history-charts-loading">
+                                <Skeleton height="200px" borderRadius="8px" style={{ marginBottom: '1.5rem' }} />
+                                <Skeleton height="200px" borderRadius="8px" />
+                            </div>
+                        ) : (
+                            <div className="history-charts-wrapper">
+                                {/* Duck Balance Line Chart */}
+                                <div className="chart-block">
+                                    <p className="chart-label">
+                                        🦆 Duck Balance (last 30 days)
+                                    </p>
+                                    {duckChartData && duckChartData.labels.length > 0 ? (
+                                        <div style={{ height: '200px', position: 'relative' }}>
+                                            <Line data={duckChartData} options={sharedChartOptions} />
+                                        </div>
+                                    ) : (
+                                        <div className="chart-empty">No duck transactions in the last 30 days.</div>
+                                    )}
+                                </div>
+
+                                {/* Challenge Completions Bar Chart */}
+                                <div className="chart-block">
+                                    <p className="chart-label">
+                                        <BarChart2 size={14} style={{ display: 'inline', marginRight: '6px', verticalAlign: 'middle' }} />
+                                        Daily Challenge Completions
+                                    </p>
+                                    {challengeChartData && challengeChartData.labels.length > 0 ? (
+                                        <div style={{ height: '200px', position: 'relative' }}>
+                                            <Bar data={challengeChartData} options={sharedChartOptions} />
+                                        </div>
+                                    ) : (
+                                        <div className="chart-empty">No challenge completions in the last 30 days.</div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+                    </section>
+
+                    {/* Recent Events Feed */}
+                    {historyData?.recent_events && historyData.recent_events.length > 0 && (
+                        <section className="dashboard-panel">
+                            <div className="panel-header">
+                                <h2><Activity size={20} /> Recent Activity</h2>
+                            </div>
+                            <div className="events-feed">
+                                {historyData.recent_events.map((event, idx) => (
+                                    <div key={idx} className={`event-item event-item--${event.type}`}>
+                                        <div className="event-icon">
+                                            {event.icon === 'award'
+                                                ? <Award size={15} />
+                                                : <Zap size={15} />
+                                            }
+                                        </div>
+                                        <div className="event-body">
+                                            <span className="event-label">{event.label}</span>
+                                            <span className="event-time">{timeAgo(event.timestamp)}</span>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </section>
+                    )}
                 </div>
 
                 <div className="column-right">
