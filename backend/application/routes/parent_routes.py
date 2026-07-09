@@ -192,7 +192,7 @@ def _fmt_date(dt):
 @require_login
 @api_response
 def get_student_history(student_id):
-    """Returns 30-day historical duck balance and daily challenge completion counts for a linked student."""
+    """Returns 30-day historical data and activity feed for a student."""
     user_id = session.get("user")
     user_obj = db.session.get(User, user_id)
 
@@ -212,7 +212,14 @@ def get_student_history(student_id):
 
     cutoff = datetime.utcnow() - timedelta(days=30)
 
-    # --- Duck balance over time (last 30 days of transactions) ---
+    # Check if student has any activity ever
+    total_challenges = ChallengeLog.query.filter_by(user_id=student_id).count()
+    total_achievements = len(student.achievements)
+    total_projects = len(student.projects)
+    total_notes = len(student.notes)
+    has_any_activity_ever = (total_challenges + total_achievements + total_projects + total_notes) > 0
+
+    # --- Duck balance over time (last 30 days) ---
     transactions = (
         DuckTransaction.query
         .filter(DuckTransaction.user_id == student_id, DuckTransaction.timestamp >= cutoff)
@@ -220,8 +227,6 @@ def get_student_history(student_id):
         .all()
     )
 
-    # Build a running-balance series from the transactions
-    # Start from 30 days ago: current balance minus all tx amounts in window
     tx_total_in_window = sum(t.amount for t in transactions)
     balance_at_start = (student.duck_balance or 0) - tx_total_in_window
 
@@ -233,7 +238,6 @@ def get_student_history(student_id):
         duck_labels.append(_fmt_date(tx.timestamp) if hasattr(tx.timestamp, "strftime") else str(tx.timestamp))
         duck_data.append(round(running, 2))
 
-    # Add today's current balance as the final point if there are transactions
     if transactions:
         duck_labels.append("Now")
         duck_data.append(round(student.duck_balance or 0, 2))
@@ -246,7 +250,6 @@ def get_student_history(student_id):
         .all()
     )
 
-    # Aggregate by date
     daily_counts = {}
     for log in challenge_logs:
         date_str = _fmt_date(log.timestamp) if hasattr(log.timestamp, "strftime") else str(log.timestamp)[:10]
@@ -255,30 +258,55 @@ def get_student_history(student_id):
     challenge_labels = list(daily_counts.keys())
     challenge_data = list(daily_counts.values())
 
-    # --- Recent events feed (achievements + challenges, last 14 days) ---
+    # --- Build complete activity feed (last 30 days) ---
     events = []
-    event_cutoff = datetime.utcnow() - timedelta(days=14)
 
+    # 1. Achievements
     for ua in student.achievements:
-        if ua.earned_at and ua.earned_at >= event_cutoff:
+        if ua.earned_at and ua.earned_at >= cutoff:
             ach = ua.achievement
             events.append({
                 "type": "achievement",
                 "label": f"Earned \"{ach.name if ach else 'an achievement'}\"",
                 "timestamp": ua.earned_at.isoformat(),
                 "icon": "award",
+                "priority": 2  # Higher priority than challenge
             })
 
+    # 2. Challenge logs
     for log in challenge_logs:
-        if log.timestamp >= event_cutoff:
+        events.append({
+            "type": "challenge",
+            "label": f"Completed level: {log.challenge_slug} ({log.domain})",
+            "timestamp": log.timestamp.isoformat(),
+            "icon": "zap",
+            "priority": 1  # Lower priority
+        })
+
+    # 3. Projects
+    for project in student.projects:
+        if project.created_at and project.created_at >= cutoff:
             events.append({
-                "type": "challenge",
-                "label": f"Completed challenge: {log.challenge_slug}",
-                "timestamp": log.timestamp.isoformat(),
-                "icon": "zap",
+                "type": "project",
+                "label": f"Created project: \"{project.name}\"",
+                "timestamp": project.created_at.isoformat(),
+                "icon": "folder",
+                "priority": 4  # Highest priority
             })
 
-    events.sort(key=lambda e: e["timestamp"], reverse=True)
+    # 4. Notes
+    for note in student.notes:
+        if note.created_at and note.created_at >= cutoff:
+            events.append({
+                "type": "note",
+                "label": "Uploaded a new coding note / screenshot",
+                "timestamp": note.created_at.isoformat(),
+                "icon": "book-open",
+                "priority": 3  # High priority
+            })
+
+    # Sort: first by date (newest first), and secondarily by priority desc (projects > notes > achievements > challenges)
+    events.sort(key=lambda e: (e["timestamp"], e["priority"]), reverse=True)
 
     return {
         "duck_history": {
@@ -289,8 +317,9 @@ def get_student_history(student_id):
             "labels": challenge_labels,
             "data": challenge_data,
         },
-        "recent_events": events[:20],
+        "recent_events": events,
         "current_balance": round(student.duck_balance or 0, 2),
+        "has_any_activity_ever": has_any_activity_ever
     }
 
 

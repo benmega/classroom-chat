@@ -1,21 +1,27 @@
-import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Home, MessageCircle, BarChart2, LogOut } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { Home, LogOut, User } from 'lucide-react';
+import client from '../../api/client';
+import { getApiUrl } from '../../utils/apiUrl';
 
-const ParentNavRail = ({ location, handleLogout }) => {
-    const navigate = useNavigate();
+const ParentNavRail = ({ handleLogout }) => {
+    const location = useLocation();
+    const [children, setChildren] = useState([]);
 
-    const handleReportCardNav = () => {
-        const lastReport = localStorage.getItem('parent_last_report_child_id');
-        if (lastReport) {
-            navigate(`/parent/report/${lastReport}`);
-        } else {
-            navigate('/parent/dashboard');
-        }
-    };
+    useEffect(() => {
+        const fetchChildren = async () => {
+            try {
+                const response = await client.get(`/api/parents/children?t=${new Date().getTime()}`);
+                setChildren(response.data.data?.children || response.data.children || []);
+            } catch (err) {
+                console.error('Failed to load children in nav rail:', err);
+            }
+        };
+        fetchChildren();
+    }, []);
 
     const isActive = (path) => location.pathname === path;
-    const isReportActive = location.pathname.startsWith('/parent/report');
+    const isReportActive = (childId) => location.pathname === `/parent/report/${childId}`;
 
     return (
         <aside className="desktop-nav-rail">
@@ -25,7 +31,7 @@ const ParentNavRail = ({ location, handleLogout }) => {
             </Link>
 
             {/* Center nav items */}
-            <div className="nav-rail-center">
+            <div className="nav-rail-center" style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', alignItems: 'center' }}>
                 {/* Home / Dashboard */}
                 <div className={`nav-rail-item-container ${isActive('/parent/dashboard') ? 'active' : ''}`}>
                     <div className="nav-rail-indicator" />
@@ -39,31 +45,61 @@ const ParentNavRail = ({ location, handleLogout }) => {
                     </Link>
                 </div>
 
-                {/* Message Teacher — links to dashboard (contact form lives there via hash) */}
-                <div className={`nav-rail-item-container`}>
-                    <div className="nav-rail-indicator" />
-                    <Link
-                        to="/parent/dashboard#contact"
-                        className="nav-rail-item"
-                        data-tooltip="Message Teacher"
-                        aria-label="Message Teacher"
-                    >
-                        <MessageCircle size={20} />
-                    </Link>
-                </div>
+                {/* Divider if we have children */}
+                {children.length > 0 && (
+                    <div style={{ width: '20px', height: '1px', background: 'var(--border-subtle)', margin: '0.5rem 0' }} />
+                )}
 
-                {/* Report Card — smart navigation */}
-                <div className={`nav-rail-item-container ${isReportActive ? 'active' : ''}`}>
-                    <div className="nav-rail-indicator" />
-                    <button
-                        onClick={handleReportCardNav}
-                        className={`nav-rail-item ${isReportActive ? 'active' : ''}`}
-                        data-tooltip="Report Card"
-                        aria-label="Report Card"
-                    >
-                        <BarChart2 size={20} />
-                    </button>
-                </div>
+                {/* Dynamic Child Links */}
+                {children.map((child) => {
+                    const active = isReportActive(child.id);
+                    const displayName = child.nickname || child.username;
+                    
+                    return (
+                        <div key={child.id} className={`nav-rail-item-container ${active ? 'active' : ''}`}>
+                            <div className="nav-rail-indicator" />
+                            <Link
+                                to={`/parent/report/${child.id}`}
+                                className={`nav-rail-item ${active ? 'active' : ''}`}
+                                data-tooltip={`${displayName}'s Report`}
+                                aria-label={`${displayName}'s Report`}
+                                style={{ padding: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                            >
+                                {child.profile_picture_url && !child.profile_picture_url.includes('Default_pfp.jpg') ? (
+                                    <img
+                                        src={getApiUrl(child.profile_picture_url)}
+                                        alt={displayName}
+                                        style={{
+                                            width: '24px',
+                                            height: '24px',
+                                            borderRadius: '50%',
+                                            objectFit: 'cover',
+                                            border: active ? '2px solid var(--primary-color)' : '1px solid var(--border-subtle)'
+                                        }}
+                                    />
+                                ) : (
+                                    <div
+                                        style={{
+                                            width: '24px',
+                                            height: '24px',
+                                            borderRadius: '50%',
+                                            background: active ? 'var(--primary-light)' : 'var(--bg-tertiary)',
+                                            color: active ? 'var(--primary-color)' : 'var(--text-muted)',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            fontSize: '10px',
+                                            fontWeight: 'bold',
+                                            border: active ? '2px solid var(--primary-color)' : '1px solid var(--border-subtle)'
+                                        }}
+                                    >
+                                        {displayName.slice(0, 2).toUpperCase()}
+                                    </div>
+                                )}
+                            </Link>
+                        </div>
+                    );
+                })}
             </div>
 
             {/* Bottom — logout */}

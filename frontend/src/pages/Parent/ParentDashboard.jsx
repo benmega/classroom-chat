@@ -1,11 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { Loader2, MoreVertical, User, Trophy, Bell, Activity, Zap, Clock, Star, MessageCircle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Loader2, MoreVertical, User, Trophy, Bell, Activity, Zap, Clock, Star, BookOpen, Folder, Award } from 'lucide-react';
 import toast from 'react-hot-toast';
 import client from '../../api/client';
 import { getApiUrl } from '../../utils/apiUrl';
 import DuckIcon from '../../components/Icons/DuckIcon';
-import ParentContactTeacher from './ParentContactTeacher';
 
 import DesktopNotice from '../../components/common/DesktopNotice';
 import './ParentDashboard.css';
@@ -46,24 +45,10 @@ const ParentDashboard = () => {
     const [connectError, setConnectError] = useState(null);
     const [isConnecting, setIsConnecting] = useState(false);
 
-    // Per-child report data keyed by child ID
+    // Per-child report and history data
     const [childReports, setChildReports] = useState({});
+    const [childHistories, setChildHistories] = useState({});
     const [reportsLoading, setReportsLoading] = useState(false);
-
-    // Contact Teacher modal
-    const [contactModalOpen, setContactModalOpen] = useState(false);
-    const [selectedChild, setSelectedChild] = useState(null);
-
-    // Auto-open contact modal when navigating here via #contact hash (from nav rail)
-    const routerLocation = useLocation();
-    useEffect(() => {
-        if (routerLocation.hash === '#contact') {
-            setSelectedChild(null);
-            setContactModalOpen(true);
-            // Clean the hash without a page reload
-            window.history.replaceState(null, '', window.location.pathname);
-        }
-    }, [routerLocation.hash]);
 
     // ── Data Fetching ──────────────────────────────────────────────────────────
     const fetchChildren = useCallback(async () => {
@@ -87,16 +72,29 @@ const ParentDashboard = () => {
             const results = await Promise.all(
                 childList.map(async (child) => {
                     try {
-                        const res = await client.get(`/api/parents/student/${child.id}/report`);
-                        return { id: child.id, data: res.data.data };
-                    } catch {
-                        return { id: child.id, data: null };
+                        const [resReport, resHistory] = await Promise.all([
+                            client.get(`/api/parents/student/${child.id}/report`),
+                            client.get(`/api/parents/student/${child.id}/history`)
+                        ]);
+                        return {
+                            id: child.id,
+                            report: resReport.data.data,
+                            history: resHistory.data.data
+                        };
+                    } catch (err) {
+                        console.error(`Failed to load details for child ${child.id}:`, err);
+                        return { id: child.id, report: null, history: null };
                     }
                 })
             );
-            const map = {};
-            results.forEach(({ id, data }) => { map[id] = data; });
-            setChildReports(map);
+            const reportMap = {};
+            const historyMap = {};
+            results.forEach(({ id, report, history }) => {
+                reportMap[id] = report;
+                historyMap[id] = history;
+            });
+            setChildReports(reportMap);
+            setChildHistories(historyMap);
         } finally {
             setReportsLoading(false);
         }
@@ -141,74 +139,15 @@ const ParentDashboard = () => {
         }
     };
 
-    // ── Derived: Recent Wins ───────────────────────────────────────────────────
-    const recentWins = React.useMemo(() => {
-        const wins = [];
-        children.forEach((child) => {
-            const report = childReports[child.id];
-            if (!report?.unlocked_achievements) return;
-            report.unlocked_achievements.forEach((ua) => {
-                wins.push({
-                    childName: child.nickname || child.username,
-                    childId: child.id,
-                    achievementName: ua.name || ua.achievement_name || 'Achievement Unlocked',
-                    earnedAt: ua.earned_at || ua.unlocked_at || null,
-                    icon: ua.icon || '🏆',
-                });
-            });
-        });
-        // Sort descending by date, take top 3
-        wins.sort((a, b) => new Date(b.earnedAt || 0) - new Date(a.earnedAt || 0));
-        return wins.slice(0, 3);
-    }, [children, childReports]);
-
-    // ── Derived: Activity Notifications ───────────────────────────────────────
-    const activityNotifications = React.useMemo(() => {
-        const items = [];
-        children.forEach((child) => {
-            const report = childReports[child.id];
-            const childName = child.nickname || child.username;
-
-            // Recent activity within last 24h
-            if (report?.last_activity_time && isWithinDays(report.last_activity_time, 1)) {
-                items.push({
-                    type: 'activity',
-                    icon: Activity,
-                    childName,
-                    childId: child.id,
-                    description: report.current_activity
-                        ? `Started "${report.current_activity}"`
-                        : 'Was recently active',
-                    time: report.last_activity_time,
-                    color: 'var(--primary-color)',
-                    bgColor: 'rgba(15,118,110,0.08)',
-                });
-            }
-
-            // New achievements within last 7 days
-            if (report?.unlocked_achievements) {
-                report.unlocked_achievements
-                    .filter((ua) => isWithinDays(ua.earned_at || ua.unlocked_at, 7))
-                    .slice(0, 2)
-                    .forEach((ua) => {
-                        items.push({
-                            type: 'achievement',
-                            icon: Star,
-                            childName,
-                            childId: child.id,
-                            description: `Earned "${ua.name || ua.achievement_name || 'an achievement'}"`,
-                            time: ua.earned_at || ua.unlocked_at,
-                            color: '#f59e0b',
-                            bgColor: 'rgba(245,158,11,0.08)',
-                        });
-                    });
-            }
-        });
-
-        // Sort by most recent
-        items.sort((a, b) => new Date(b.time || 0) - new Date(a.time || 0));
-        return items.slice(0, 5);
-    }, [children, childReports]);
+    // Helper to filter, prioritize (projects > notes > achievements > challenges), and slice events
+    const getPrioritizedEvents = (events) => {
+        if (!events) return [];
+        const projects = events.filter(e => e.type === 'project');
+        const notes = events.filter(e => e.type === 'note');
+        const achievements = events.filter(e => e.type === 'achievement');
+        const challenges = events.filter(e => e.type === 'challenge');
+        return [...projects, ...notes, ...achievements, ...challenges].slice(0, 5);
+    };
 
     // ── Loading skeleton ───────────────────────────────────────────────────────
     if (isLoading) {
@@ -247,106 +186,15 @@ const ParentDashboard = () => {
 
     // ── Render ─────────────────────────────────────────────────────────────────
     return (
-        <>
         <div className="parent-dashboard animate-page-entry" onClick={() => setOpenMenu(null)}>
             <main className="parent-body">
                 <DesktopNotice />
 
-                {/* ── Feature 2: Recent Wins Feed ── */}
-                {recentWins.length > 0 && (
-                    <section className="recent-wins-section">
-                        <div className="section-header">
-                            <Trophy size={20} className="section-icon wins-icon" />
-                            <h2 className="section-title">Recent Wins</h2>
-                            <span className="section-badge">{recentWins.length}</span>
-                        </div>
-                        <div className="wins-strip">
-                            {recentWins.map((win, i) => (
-                                <div
-                                    key={i}
-                                    className="win-card"
-                                    onClick={() => navigate(`/parent/report/${win.childId}`)}
-                                    style={{ animationDelay: `${i * 80}ms` }}
-                                >
-                                    <div className="win-trophy-glow">
-                                        <span className="win-achievement-icon">{win.icon}</span>
-                                        <Trophy size={16} className="win-trophy-overlay" />
-                                    </div>
-                                    <div className="win-info">
-                                        <span className="win-child-name">{win.childName}</span>
-                                        <span className="win-achievement-name">{win.achievementName}</span>
-                                        {win.earnedAt && (
-                                            <span className="win-time">
-                                                <Clock size={11} /> {timeAgo(win.earnedAt)}
-                                            </span>
-                                        )}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </section>
-                )}
-
-                {/* Empty state for wins (only show if children are loaded & have reports) */}
-                {recentWins.length === 0 && children.length > 0 && !reportsLoading && (
-                    <section className="recent-wins-section recent-wins-empty">
-                        <div className="section-header">
-                            <Trophy size={20} className="section-icon wins-icon" />
-                            <h2 className="section-title">Recent Wins</h2>
-                        </div>
-                        <div className="wins-empty-state">
-                            <span className="wins-empty-emoji">🌟</span>
-                            <p>Achievements will appear here as your children earn them — keep them motivated!</p>
-                        </div>
-                    </section>
-                )}
-
-                {/* ── Feature 3: Activity Notifications ── */}
-                {activityNotifications.length > 0 && (
-                    <section className="activity-feed-section">
-                        <div className="section-header">
-                            <Bell size={20} className="section-icon notif-icon" />
-                            <h2 className="section-title">What's New</h2>
-                            <span className="section-badge notif-badge">{activityNotifications.length}</span>
-                        </div>
-                        <div className="activity-feed">
-                            {activityNotifications.map((item, i) => {
-                                const Icon = item.icon;
-                                return (
-                                    <div
-                                        key={i}
-                                        className="activity-item"
-                                        onClick={() => navigate(`/parent/report/${item.childId}`)}
-                                        style={{ animationDelay: `${i * 60}ms` }}
-                                    >
-                                        <div
-                                            className="activity-icon-wrap"
-                                            style={{ background: item.bgColor, color: item.color }}
-                                        >
-                                            <Icon size={15} />
-                                        </div>
-                                        <div className="activity-item-body">
-                                            <span className="activity-child">{item.childName}</span>
-                                            <span className="activity-desc">{item.description}</span>
-                                        </div>
-                                        {item.time && (
-                                            <span className="activity-time">
-                                                <Clock size={11} />
-                                                {timeAgo(item.time)}
-                                            </span>
-                                        )}
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </section>
-                )}
-
-                {/* ── Feature 1: Children Grid ── */}
+                {/* Header */}
                 <div className="children-section-header">
                     <h2 className="section-title">
-                        <Zap size={18} className="section-icon children-icon" />
-                        Your Children
+                        <Activity size={18} className="section-icon children-icon" />
+                        Children Activity Summary
                     </h2>
                 </div>
 
@@ -360,118 +208,162 @@ const ParentDashboard = () => {
 
                     {children.map((child) => {
                         const report = childReports[child.id] || null;
+                        const history = childHistories[child.id] || null;
                         const isActive = report?.last_activity_time && isWithinHours(report.last_activity_time, 2);
                         const duckBalance = report?.duck_balance ?? child.duck_balance ?? null;
-                        const latestAchievement = report?.unlocked_achievements?.[0] ?? null;
                         const displayName = child.nickname || child.username;
+
+                        // Focus on 30-day activity events
+                        const allEvents = history?.recent_events || [];
+                        const hasActivity = allEvents.length > 0;
+                        const hasAnyActivityEver = history?.has_any_activity_ever ?? true;
+                        const displayEvents = getPrioritizedEvents(allEvents);
 
                         return (
                             <div
                                 key={child.id}
-                                className="child-card glass-panel"
-                                onClick={(e) => e.stopPropagation()}
+                                className="child-card glass-panel child-dashboard-summary-card"
+                                onClick={() => navigate(`/parent/report/${child.id}`)}
+                                style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'stretch', textAlign: 'left' }}
                             >
-                                {/* ── Menu ── */}
-                                <div className="child-card-menu">
-                                    <button
-                                        className="menu-btn"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            setOpenMenu(openMenu === child.id ? null : child.id);
-                                        }}
-                                        title="Options"
-                                    >
-                                        <MoreVertical size={18} />
-                                    </button>
-                                    {openMenu === child.id && (
-                                        <div className="child-menu-dropdown">
-                                            <button
-                                                className="menu-item disconnect"
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    setOpenMenu(null);
-                                                    handleDisconnect(child.id, displayName);
-                                                }}
-                                            >
-                                                Remove Child
-                                            </button>
-                                        </div>
-                                    )}
-                                </div>
-
-                                {/* ── Clickable content → report ── */}
-                                <div onClick={() => navigate(`/parent/report/${child.id}`)} className="child-card-clickable">
-
-                                    {/* Avatar + activity dot */}
-                                    <div className="child-avatar-wrap">
-                                        {child.profile_picture_url && !child.profile_picture_url.includes('Default_pfp.jpg') ? (
-                                            <img
-                                                className="child-avatar"
-                                                src={getApiUrl(child.profile_picture_url)}
-                                                alt={child.username}
+                                {/* Card Header with Options Menu */}
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+                                    <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                                        <div style={{ position: 'relative' }}>
+                                            {child.profile_picture_url && !child.profile_picture_url.includes('Default_pfp.jpg') ? (
+                                                <img
+                                                    className="child-avatar"
+                                                    src={getApiUrl(child.profile_picture_url)}
+                                                    alt={child.username}
+                                                    style={{ margin: 0, width: '48px', height: '48px' }}
+                                                />
+                                            ) : (
+                                                <div className="child-avatar-initials" style={{ margin: 0, width: '48px', height: '48px' }}>
+                                                    <User size={24} strokeWidth={1.5} />
+                                                </div>
+                                            )}
+                                            <span
+                                                className={`activity-dot ${isActive ? 'activity-dot--active' : 'activity-dot--idle'}`}
+                                                style={{ position: 'absolute', bottom: 0, right: 0, width: '12px', height: '12px', border: '2px solid white' }}
                                             />
-                                        ) : (
-                                            <div className="child-avatar-initials">
-                                                <User size={36} strokeWidth={1.5} />
-                                            </div>
-                                        )}
-                                        <span
-                                            className={`activity-dot ${isActive ? 'activity-dot--active' : 'activity-dot--idle'}`}
-                                            title={isActive ? 'Active recently' : 'Not recently active'}
-                                        />
+                                        </div>
+                                        <div>
+                                            <h3 className="child-name" style={{ margin: 0, fontSize: '1.15rem' }}>{displayName}</h3>
+                                            <p className="child-nickname" style={{ margin: 0, fontSize: '0.8rem' }}>@{child.username}</p>
+                                        </div>
                                     </div>
 
-                                    {/* Name & username */}
-                                    <h3 className="child-name">{displayName}</h3>
-                                    <p className="child-nickname">@{child.username}</p>
-
-                                    {/* Duck balance */}
-                                    {duckBalance !== null ? (
-                                        <div className="child-duck-balance">
-                                            <DuckIcon size={16} color="#f59e0b" />
-                                            <span className="duck-count">{duckBalance.toLocaleString()}</span>
-                                            <span className="duck-label">ducks</span>
+                                    {/* Duck Balance & Menu */}
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                        {duckBalance !== null && (
+                                            <div className="child-duck-balance" style={{ margin: 0, padding: '0.2rem 0.5rem', borderRadius: '8px', background: 'var(--bg-tertiary)' }}>
+                                                <DuckIcon size={14} color="#f59e0b" />
+                                                <span className="duck-count" style={{ fontSize: '0.8rem' }}>{duckBalance.toLocaleString()}</span>
+                                            </div>
+                                        )}
+                                        <div className="child-card-menu" onClick={(e) => e.stopPropagation()} style={{ position: 'relative', top: 'auto', right: 'auto' }}>
+                                            <button
+                                                className="menu-btn"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setOpenMenu(openMenu === child.id ? null : child.id);
+                                                }}
+                                                title="Options"
+                                            >
+                                                <MoreVertical size={18} />
+                                            </button>
+                                            {openMenu === child.id && (
+                                                <div className="child-menu-dropdown">
+                                                    <button
+                                                        className="menu-item disconnect"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setOpenMenu(null);
+                                                            handleDisconnect(child.id, displayName);
+                                                        }}
+                                                    >
+                                                        Remove Child
+                                                    </button>
+                                                </div>
+                                            )}
                                         </div>
-                                    ) : reportsLoading ? (
-                                        <div className="child-duck-balance loading-shimmer">
-                                            <DuckIcon size={16} color="#d1d5db" />
-                                            <span className="duck-count" style={{ color: 'var(--text-muted)' }}>—</span>
-                                        </div>
-                                    ) : null}
+                                    </div>
+                                </div>
 
-                                    {/* Latest achievement badge */}
-                                    {latestAchievement && (
-                                        <div className="child-achievement-badge">
-                                            <Star size={11} />
-                                            <span>{latestAchievement.name || latestAchievement.achievement_name || 'Achievement'}</span>
+                                {/* Summary Content */}
+                                <div style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                                    <h4 style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '0.5rem', margin: 0 }}>
+                                        Activity (Past 30 Days)
+                                    </h4>
+
+                                    {reportsLoading && !history ? (
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                            <Skeleton height="32px" />
+                                            <Skeleton height="32px" />
+                                            <Skeleton height="32px" />
+                                        </div>
+                                    ) : hasActivity ? (
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                            {displayEvents.map((event, idx) => {
+                                                let IconComponent = Zap;
+                                                let iconColor = 'var(--primary-color)';
+                                                let iconBg = 'rgba(15,118,110,0.08)';
+
+                                                if (event.type === 'project') {
+                                                    IconComponent = Folder;
+                                                    iconColor = '#6366f1';
+                                                    iconBg = 'rgba(99,102,241,0.08)';
+                                                } else if (event.type === 'note') {
+                                                    IconComponent = BookOpen;
+                                                    iconColor = '#ec4899';
+                                                    iconBg = 'rgba(236,72,153,0.08)';
+                                                } else if (event.type === 'achievement') {
+                                                    IconComponent = Award;
+                                                    iconColor = '#f59e0b';
+                                                    iconBg = 'rgba(245,158,11,0.08)';
+                                                }
+
+                                                return (
+                                                    <div key={idx} style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', background: 'var(--bg-secondary)', padding: '0.5rem', borderRadius: '8px' }}>
+                                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '28px', height: '28px', borderRadius: '50%', background: iconBg, color: iconColor }}>
+                                                            <IconComponent size={14} />
+                                                        </div>
+                                                        <div style={{ flexGrow: 1, minWidth: 0 }}>
+                                                            <div style={{ fontSize: '0.8rem', fontWeight: '600', color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                                                {event.label}
+                                                            </div>
+                                                            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                                <Clock size={10} /> {timeAgo(event.timestamp)}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                            {allEvents.length > 5 && (
+                                                <div style={{ fontSize: '0.75rem', color: 'var(--primary-color)', fontWeight: '600', textAlign: 'center', marginTop: '0.25rem' }}>
+                                                    + {allEvents.length - 5} more activities. Click to view full report.
+                                                </div>
+                                            )}
+                                        </div>
+                                    ) : !hasAnyActivityEver ? (
+                                        /* Welcome & encourage (new student) */
+                                        <div style={{ padding: '1rem', background: 'rgba(15,118,110,0.05)', border: '1px dashed var(--primary-color)', borderRadius: '12px', textAlign: 'center' }}>
+                                            <span style={{ fontSize: '1.5rem', display: 'block', marginBottom: '0.5rem' }}>👋</span>
+                                            <h5 style={{ margin: '0 0 0.25rem 0', color: 'var(--primary-color)' }}>Welcome to Classroom Chat!</h5>
+                                            <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                                                We're excited to have {displayName} start their coding journey. Encourage them to complete their first levels and build their first projects to earn badges and Ducks!
+                                            </p>
+                                        </div>
+                                    ) : (
+                                        /* Taking a break */
+                                        <div style={{ padding: '1rem', background: 'rgba(245,158,11,0.05)', border: '1px dashed #f59e0b', borderRadius: '12px', textAlign: 'center' }}>
+                                            <span style={{ fontSize: '1.5rem', display: 'block', marginBottom: '0.5rem' }}>☕</span>
+                                            <h5 style={{ margin: '0 0 0.25rem 0', color: '#b45309' }}>Taking a Break</h5>
+                                            <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                                                It looks like {displayName} is taking a break. Encourage them to jump back in, attempt some more levels, or work on a project to show off their skills!
+                                            </p>
                                         </div>
                                     )}
-
-                                    {/* Activity status line */}
-                                    {report?.last_activity_time && (
-                                        <div className={`child-activity-status ${isActive ? 'status--active' : 'status--idle'}`}>
-                                            <Activity size={12} />
-                                            <span>
-                                                {report.current_activity
-                                                    ? `In "${report.current_activity}"`
-                                                    : `Last seen ${timeAgo(report.last_activity_time)}`}
-                                            </span>
-                                        </div>
-                                    )}
-
-                                    {/* Message Teacher trigger */}
-                                    <button
-                                        className="btn-secondary btn-secondary-sm card-msg-teacher-btn"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            setSelectedChild(child);
-                                            setContactModalOpen(true);
-                                        }}
-                                        style={{ marginTop: '0.75rem', width: '100%' }}
-                                    >
-                                        <MessageCircle size={14} />
-                                        Message Teacher
-                                    </button>
                                 </div>
                             </div>
                         );
@@ -509,19 +401,6 @@ const ParentDashboard = () => {
                 </div>
             </main>
         </div>
-
-        {/* Contact Teacher Modal */}
-        <ParentContactTeacher
-            isOpen={contactModalOpen}
-            onClose={() => { setContactModalOpen(false); setSelectedChild(null); }}
-        >
-            {selectedChild
-                ? `Regarding: ${selectedChild.nickname || selectedChild.username}`
-                : children.length > 0
-                    ? `Regarding: ${children.map(c => c.nickname || c.username).join(', ')}`
-                    : ''}
-        </ParentContactTeacher>
-        </>
     );
 };
 
