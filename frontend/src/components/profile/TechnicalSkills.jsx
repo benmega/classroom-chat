@@ -2,7 +2,8 @@ import React from 'react';
 import { Code } from 'lucide-react';
 
 const TechnicalSkills = ({ skills }) => {
-    if (!skills || skills.length === 0) return null;
+    const visibleSkills = skills?.filter(s => s.category !== 'concept') || [];
+    if (visibleSkills.length === 0) return null;
 
     const iconMap = {
         "Python": "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/python/python-original.svg",
@@ -32,7 +33,7 @@ const TechnicalSkills = ({ skills }) => {
             </div>
             <div className="skill-grid-container">
                 <div className="skill-grid">
-                    {skills.filter(s => s.category !== 'concept').map(skill => (
+                    {visibleSkills.map(skill => (
                         <div 
                             key={skill.id} 
                             className={`tech-skill-card proficiency-${skill.proficiency}`}

@@ -27,6 +27,8 @@ const CourseProgress = ({ target, isParentView = false, studentId = null }) => {
     const ozLevels = target.oz_levels !== undefined ? target.oz_levels : (target.course_progress?.ozaria?.levels_completed || 0);
     const totalLevels = ccLevels + ozLevels;
 
+    if (totalLevels === 0) return null;
+
     const handleNavigate = (e, courseName = null) => {
         if (e) {
             e.stopPropagation();

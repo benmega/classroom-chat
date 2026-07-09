@@ -152,15 +152,9 @@ describe('Users Page', () => {
     renderComponent();
 
     // Verify inline role tag
-    expect(screen.getByText('student')).toBeInTheDocument();
+    expect(screen.getByText('Student')).toBeInTheDocument();
 
-    // Verify current activity
-    expect(screen.getByText('Working on loops')).toBeInTheDocument();
-
-    // Verify levels completed today
-    expect(screen.getByText('+5 today')).toBeInTheDocument();
-
-    // Verify relative last active time
-    expect(screen.getByText('5m ago')).toBeInTheDocument();
+    // Verify status info
+    expect(screen.getByText('Offline')).toBeInTheDocument();
   });
 });

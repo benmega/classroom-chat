@@ -113,14 +113,16 @@ const Profile = () => {
                         studentId={target.id}
                     />
 
-                    <section className="dashboard-panel">
-                        <div className="panel-header">
-                            <h2><User size={20} /> Coding Activity</h2>
-                        </div>
-                        <div className="activity-visual">
-                            <ContributionGraph data={target.contribution_data} />
-                        </div>
-                    </section>
+                    {target.contribution_data?.rows?.some(row => row && row.some(cell => cell && cell.level > 0)) && (
+                        <section className="dashboard-panel">
+                            <div className="panel-header">
+                                <h2><User size={20} /> Coding Activity</h2>
+                            </div>
+                            <div className="activity-visual">
+                                <ContributionGraph data={target.contribution_data} />
+                            </div>
+                        </section>
+                    )}
 
                     <DigitalNotebook 
                         notes={target.notes}

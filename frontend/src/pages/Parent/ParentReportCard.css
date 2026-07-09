@@ -543,7 +543,74 @@
 
 /* ─── Print Styles ─── */
 @media print {
-    .report-back-btn, .print-report-btn { display: none !important; }
-    .report-card-page { height: auto; overflow: visible; }
-    .dashboard-panel { break-inside: avoid; }
+    /* Override global visibility: hidden from admin dashboard print styles */
+    body * {
+        visibility: hidden;
+    }
+    .report-card-page,
+    .report-card-page * {
+        visibility: visible !important;
+    }
+
+    /* Position the report card relative to the page */
+    .report-card-page {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100% !important;
+        height: auto !important;
+        min-height: 0 !important;
+        overflow: visible !important;
+        padding: 1.5rem !important;
+        background: transparent !important;
+    }
+
+    /* Hide layout chrome */
+    .desktop-nav-rail,
+    header,
+    .report-back-btn,
+    .print-report-btn,
+    .tutorial-overlay,
+    .no-print {
+        display: none !important;
+    }
+
+    /* Reset layout container heights, widths, and scroll behaviors */
+    html,
+    body,
+    #root,
+    .app-container,
+    .main-layout-content,
+    main {
+        height: auto !important;
+        min-height: 0 !important;
+        overflow: visible !important;
+        display: block !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+    }
+
+    /* Retain original layout grid structure, panel styling, and backgrounds for WYSIWYG */
+    .dashboard-grid {
+        display: grid !important;
+    }
+
+    .dashboard-panel {
+        break-inside: avoid;
+        page-break-inside: avoid;
+        box-shadow: var(--shadow-sm) !important;
+    }
+
+    .chart-block {
+        page-break-inside: avoid;
+        break-inside: avoid;
+    }
+
+    /* Ensure original backgrounds, gradients, and text colors print exactly as on screen */
+    * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
 }

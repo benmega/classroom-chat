@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { Loader2, ArrowLeft, Activity, Award, BookOpen, User, ChevronDown, ChevronUp, Printer, Zap, TrendingUp, BarChart2 } from 'lucide-react';
+import { Loader2, ArrowLeft, Activity, Award, BookOpen, User, ChevronDown, ChevronUp, Zap, TrendingUp, BarChart2 } from 'lucide-react';
 import client from '../../api/client';
 import { getApiUrl } from '../../utils/apiUrl';
 import ContributionGraph from '../../components/profile/ContributionGraph';
@@ -212,6 +212,22 @@ const ParentReportCard = () => {
         },
     };
 
+    const ccLevels = reportData.cc_levels !== undefined ? reportData.cc_levels : (reportData.course_progress?.codecombat?.levels_completed || 0);
+    const ozLevels = reportData.oz_levels !== undefined ? reportData.oz_levels : (reportData.course_progress?.ozaria?.levels_completed || 0);
+    const totalLevels = ccLevels + ozLevels;
+
+    const isReportEmpty = 
+        totalLevels === 0 &&
+        (!reportData.unlocked_achievements || reportData.unlocked_achievements.length === 0) &&
+        (!reportData.projects || reportData.projects.length === 0) &&
+        (!reportData.notes || reportData.notes.length === 0) &&
+        (!historyData?.recent_events || historyData.recent_events.length === 0) &&
+        (!reportData.contribution_data?.rows || !reportData.contribution_data.rows.some(row => row && row.some(cell => cell && cell.level > 0))) &&
+        (!historyData || (
+            (!historyData.duck_history?.labels || historyData.duck_history.labels.length === 0) &&
+            (!historyData.challenge_history?.labels || historyData.challenge_history.labels.length === 0)
+        ));
+
     return (
         <>
         <div className="report-card-page animate-page-entry">
@@ -256,159 +272,159 @@ const ParentReportCard = () => {
                             )}
                         </div>
                     </div>
-
-                    {/* Feature 6: Print Report Button */}
-                    <button
-                        className="btn-secondary btn-secondary-sm print-report-btn"
-                        onClick={() => window.print()}
-                        title="Print Report"
-                        aria-label="Print Report"
-                    >
-                        <Printer size={14} />
-                        <span>Print</span>
-                    </button>
                 </div>
             </header>
 
             {/* ── Body Sections ── */}
             <DesktopNotice />
-            <div className="dashboard-grid report-dashboard-grid report-dashboard-grid-spaced">
-                <div className="column-left">
-                    <CourseProgress target={reportData} isParentView={true} studentId={studentId} />
+            
+            {isReportEmpty ? (
+                <div className="report-empty-state glass-panel animate-page-entry" style={{ padding: '3rem', textAlign: 'center', margin: '2rem auto', maxWidth: '600px', borderRadius: '12px' }}>
+                    <p style={{ fontSize: '1.2rem', color: 'var(--text-secondary)', margin: 0, fontWeight: '500', lineHeight: '1.6' }}>
+                        Welcome to the classroom chat. You'll be able to see your child's activity here.
+                    </p>
+                </div>
+            ) : (
+                <div className="dashboard-grid report-dashboard-grid report-dashboard-grid-spaced">
+                    <div className="column-left">
+                        <CourseProgress target={reportData} isParentView={true} studentId={studentId} />
 
-                    {/* Achievements */}
-                    <section className="dashboard-panel">
-                        <div className="panel-header">
-                            <h2><Award size={20} /> Achievements</h2>
-                        </div>
-                        {(!reportData.unlocked_achievements || reportData.unlocked_achievements.length === 0) ? (
-                            <div className="report-empty-achievements">
-                                <Award size={32} strokeWidth={1.2} />
-                                <p>No achievements earned yet.</p>
-                            </div>
-                        ) : (
-                            <div className="achievement-strip-container">
-                                <div className="achievement-strip">
-                                    {reportData.unlocked_achievements.map((ua) => (
-                                        <div key={ua.id} className="ach-strip-item">
-                                            <div className={`badge badge-${ua.achievement?.slug || ua.slug || 'default'} mini`}>&nbsp;</div>
-                                            <div className="ach-strip-info">
-                                                <span className="ach-name">
-                                                    {ua.achievement?.name || ua.name}
-                                                </span>
-                                                {(ua.achievement?.description || ua.description) && (
-                                                    <span className="ach-desc">
-                                                        {ua.achievement?.description || ua.description}
+                        {/* Achievements */}
+                        {reportData.unlocked_achievements && reportData.unlocked_achievements.length > 0 && (
+                            <section className="dashboard-panel">
+                                <div className="panel-header">
+                                    <h2><Award size={20} /> Achievements</h2>
+                                </div>
+                                <div className="achievement-strip-container">
+                                    <div className="achievement-strip">
+                                        {reportData.unlocked_achievements.map((ua) => (
+                                            <div key={ua.id} className="ach-strip-item">
+                                                <div className={`badge badge-${ua.achievement?.slug || ua.slug || 'default'} mini`}>&nbsp;</div>
+                                                <div className="ach-strip-info">
+                                                    <span className="ach-name">
+                                                        {ua.achievement?.name || ua.name}
                                                     </span>
-                                                )}
-                                                {ua.earned_at && (
-                                                    <span className="ach-date">
-                                                        Earned {new Date(ua.earned_at).toLocaleDateString()}
-                                                    </span>
-                                                )}
+                                                    {(ua.achievement?.description || ua.description) && (
+                                                        <span className="ach-desc">
+                                                            {ua.achievement?.description || ua.description}
+                                                        </span>
+                                                    )}
+                                                    {ua.earned_at && (
+                                                        <span className="ach-date">
+                                                            Earned {new Date(ua.earned_at).toLocaleDateString()}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </section>
+                        )}
+
+                        {/* Feature 4: Historical Progress Charts */}
+                        {(!historyData || (
+                            (historyData.duck_history?.labels && historyData.duck_history.labels.length > 0) ||
+                            (historyData.challenge_history?.labels && historyData.challenge_history.labels.length > 0)
+                        )) && (
+                            <section className="dashboard-panel">
+                                <div className="panel-header">
+                                    <h2><TrendingUp size={20} /> Progress Over Time</h2>
+                                </div>
+
+                                {!historyData ? (
+                                    <div className="history-charts-loading">
+                                        <Skeleton height="200px" borderRadius="8px" style={{ marginBottom: '1.5rem' }} />
+                                        <Skeleton height="200px" borderRadius="8px" />
+                                    </div>
+                                ) : (
+                                    <div className="history-charts-wrapper">
+                                        {/* Duck Balance Line Chart */}
+                                        <div className="chart-block">
+                                            <p className="chart-label">
+                                                🦆 Duck Balance (last 30 days)
+                                            </p>
+                                            {duckChartData && duckChartData.labels.length > 0 ? (
+                                                <div style={{ height: '200px', position: 'relative' }}>
+                                                    <Line data={duckChartData} options={sharedChartOptions} />
+                                                </div>
+                                            ) : (
+                                                <div className="chart-empty">No duck transactions in the last 30 days.</div>
+                                            )}
+                                        </div>
+
+                                        {/* Challenge Completions Bar Chart */}
+                                        <div className="chart-block">
+                                            <p className="chart-label">
+                                                <BarChart2 size={14} style={{ display: 'inline', marginRight: '6px', verticalAlign: 'middle' }} />
+                                                Daily Challenge Completions
+                                            </p>
+                                            {challengeChartData && challengeChartData.labels.length > 0 ? (
+                                                <div style={{ height: '200px', position: 'relative' }}>
+                                                    <Bar data={challengeChartData} options={sharedChartOptions} />
+                                                </div>
+                                            ) : (
+                                                <div className="chart-empty">No challenge completions in the last 30 days.</div>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+                            </section>
+                        )}
+
+                        {/* Recent Events Feed */}
+                        {historyData?.recent_events && historyData.recent_events.length > 0 && (
+                            <section className="dashboard-panel">
+                                <div className="panel-header">
+                                    <h2><Activity size={20} /> Recent Activity</h2>
+                                </div>
+                                <div className="events-feed">
+                                    {historyData.recent_events.map((event, idx) => (
+                                        <div key={idx} className={`event-item event-item--${event.type}`}>
+                                            <div className="event-icon">
+                                                {event.icon === 'award'
+                                                    ? <Award size={15} />
+                                                    : <Zap size={15} />
+                                                }
+                                            </div>
+                                            <div className="event-body">
+                                                <span className="event-label">{event.label}</span>
+                                                <span className="event-time">{timeAgo(event.timestamp)}</span>
                                             </div>
                                         </div>
                                     ))}
                                 </div>
-                            </div>
+                            </section>
                         )}
-                    </section>
+                    </div>
 
-                    {/* Feature 4: Historical Progress Charts */}
-                    <section className="dashboard-panel">
-                        <div className="panel-header">
-                            <h2><TrendingUp size={20} /> Progress Over Time</h2>
-                        </div>
+                    <div className="column-right">
+                        <ProjectPortfolio 
+                            projects={reportData.projects} 
+                            isOwner={false} 
+                            setSelectedProject={setSelectedProject}
+                        />
 
-                        {!historyData ? (
-                            <div className="history-charts-loading">
-                                <Skeleton height="200px" borderRadius="8px" style={{ marginBottom: '1.5rem' }} />
-                                <Skeleton height="200px" borderRadius="8px" />
-                            </div>
-                        ) : (
-                            <div className="history-charts-wrapper">
-                                {/* Duck Balance Line Chart */}
-                                <div className="chart-block">
-                                    <p className="chart-label">
-                                        🦆 Duck Balance (last 30 days)
-                                    </p>
-                                    {duckChartData && duckChartData.labels.length > 0 ? (
-                                        <div style={{ height: '200px', position: 'relative' }}>
-                                            <Line data={duckChartData} options={sharedChartOptions} />
-                                        </div>
-                                    ) : (
-                                        <div className="chart-empty">No duck transactions in the last 30 days.</div>
-                                    )}
+                        {/* Activity / Contribution Graph */}
+                        {reportData.contribution_data?.rows?.some(row => row && row.some(cell => cell && cell.level > 0)) && (
+                            <section className="dashboard-panel">
+                                <div className="panel-header">
+                                    <h2><Activity size={20} /> Coding Activity</h2>
                                 </div>
-
-                                {/* Challenge Completions Bar Chart */}
-                                <div className="chart-block">
-                                    <p className="chart-label">
-                                        <BarChart2 size={14} style={{ display: 'inline', marginRight: '6px', verticalAlign: 'middle' }} />
-                                        Daily Challenge Completions
-                                    </p>
-                                    {challengeChartData && challengeChartData.labels.length > 0 ? (
-                                        <div style={{ height: '200px', position: 'relative' }}>
-                                            <Bar data={challengeChartData} options={sharedChartOptions} />
-                                        </div>
-                                    ) : (
-                                        <div className="chart-empty">No challenge completions in the last 30 days.</div>
-                                    )}
+                                <div className="contribution-container">
+                                    <ContributionGraph data={reportData.contribution_data} />
                                 </div>
-                            </div>
+                            </section>
                         )}
-                    </section>
 
-                    {/* Recent Events Feed */}
-                    {historyData?.recent_events && historyData.recent_events.length > 0 && (
-                        <section className="dashboard-panel">
-                            <div className="panel-header">
-                                <h2><Activity size={20} /> Recent Activity</h2>
-                            </div>
-                            <div className="events-feed">
-                                {historyData.recent_events.map((event, idx) => (
-                                    <div key={idx} className={`event-item event-item--${event.type}`}>
-                                        <div className="event-icon">
-                                            {event.icon === 'award'
-                                                ? <Award size={15} />
-                                                : <Zap size={15} />
-                                            }
-                                        </div>
-                                        <div className="event-body">
-                                            <span className="event-label">{event.label}</span>
-                                            <span className="event-time">{timeAgo(event.timestamp)}</span>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </section>
-                    )}
+                        <DigitalNotebook 
+                            notes={reportData.notes}
+                            isOwner={false}
+                            setSlideshowIndex={setSlideshowIndex}
+                        />
+                    </div>
                 </div>
-
-                <div className="column-right">
-                    <ProjectPortfolio 
-                        projects={reportData.projects} 
-                        isOwner={false} 
-                        setSelectedProject={setSelectedProject}
-                    />
-
-                    {/* Activity / Contribution Graph */}
-                    <section className="dashboard-panel">
-                        <div className="panel-header">
-                            <h2><Activity size={20} /> Coding Activity</h2>
-                        </div>
-                        <div className="contribution-container">
-                            <ContributionGraph data={reportData.contribution_data} />
-                        </div>
-                    </section>
-
-                    <DigitalNotebook 
-                        notes={reportData.notes}
-                        isOwner={false}
-                        setSlideshowIndex={setSlideshowIndex}
-                    />
-                </div>
-            </div>
+            )}
         </div>
 
         <ProjectModal 

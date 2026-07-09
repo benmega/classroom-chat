@@ -60,7 +60,11 @@ describe('Profile Page Component', () => {
       achievements: [],
       skills: [],
       projects: [],
-      contribution_data: {},
+      contribution_data: {
+        rows: [
+          [{ level: 1, count: 1, date: '2026-07-09' }]
+        ]
+      },
       notes: [],
     }
   };

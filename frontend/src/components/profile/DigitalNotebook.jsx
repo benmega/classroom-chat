@@ -3,6 +3,8 @@ import { StickyNote, Camera, Upload, Trash2 } from 'lucide-react';
 import SmartImage from '../common/SmartImage';
 
 const DigitalNotebook = ({ notes, isOwner, onFileUpload, onDeleteNote, setSlideshowIndex, fileInputRef, cameraInputRef }) => {
+    if (!notes || notes.length === 0) return null;
+
     return (
         <section className="dashboard-panel">
             <div className="panel-header between">

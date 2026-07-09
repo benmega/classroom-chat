@@ -9,6 +9,8 @@ const ProjectPortfolio = ({ projects, isOwner, setSelectedProject, studentId }) 
 
     const sortedProjects = projects ? [...projects].sort((a, b) => b.id - a.id) : [];
 
+    if (sortedProjects.length === 0) return null;
+
     return (
         <section className="dashboard-panel">
             <div className="panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
