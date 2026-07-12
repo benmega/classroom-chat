@@ -719,7 +719,7 @@ const AdminUserDashboard = () => {
                             <p style={{color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '0.5rem'}}>
                                 Removing a user will permanently delete all of their data and progress. This action cannot be undone.
                             </p>
-                            <button className="hud-btn danger-outline" className="w-fit-content" onClick={handleRemoveUser}>
+                            <button   onClick={handleRemoveUser} className="hud-btn danger-outline w-fit-content">
                                 <Trash2 size={16} /> Remove User
                             </button>
                         </div>

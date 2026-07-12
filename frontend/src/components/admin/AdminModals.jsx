@@ -263,7 +263,7 @@ export const AddBannedWordModal = ({ isOpen, onClose, onSubmit, newWord, setNewW
                     required
                 />
             </div>
-            <button type="submit" className="btn-primary" className="bg-gradient-error" disabled={loading}>
+            <button type="submit"   disabled={loading} className="btn-primary bg-gradient-error">
                 {loading ? 'Adding...' : 'Ban Word'}
             </button>
         </form>
@@ -291,10 +291,8 @@ export const ManageChildrenModal = ({ isOpen, onClose, parent, users, parentChil
                                             <SmartImage 
                                                 src={s.profile_picture ? getApiUrl(`/user/profile_pictures/${s.profile_picture}`) : ''} 
                                                 alt="" 
-                                                className="avatar-small"
-                                                fallbackType="avatar"
-                                                className="w-32px h-32px radius-8 object-cover"
-                                            />
+                                                
+                                                fallbackType="avatar" className="avatar-small w-32px h-32px radius-8 object-cover" />
                                             <div>
                                                 <div className="fw-semibold text-sm">{s.nickname || s.username}</div>
                                                 <div className="text-xs text-muted">@{s.username}</div>
@@ -302,9 +300,9 @@ export const ManageChildrenModal = ({ isOpen, onClose, parent, users, parentChil
                                         </div>
                                         <button 
                                             type="button"
-                                            className={`btn-primary ${isLinked ? 'danger' : ''}`}
-                                            className="btn-small-link"
-                                            onClick={() => onToggleLink(parent.id, s.id, isLinked)}
+                                            
+                                            
+                                            onClick={() = className={`btn-primary ${isLinked ? 'danger' : ''} btn-small-link`}> onToggleLink(parent.id, s.id, isLinked)}
                                             disabled={loading}
                                         >
                                             {isLinked ? 'Unlink' : 'Link'}
@@ -316,7 +314,7 @@ export const ManageChildrenModal = ({ isOpen, onClose, parent, users, parentChil
                     </div>
                 </div>
                 <div className="d-flex justify-end mt-20px">
-                    <button type="button" className="btn-secondary" onClick={onClose} className="btn-secondary-styled">
+                    <button type="button"  onClick={onClose} className="btn-secondary btn-secondary-styled">
                         Close
                     </button>
                 </div>
@@ -333,7 +331,7 @@ export const ConnectionCardModal = ({ isOpen, onClose, student, connectionCode }
 
     return (
         <Modal isOpen={isOpen} onClose={onClose} title={`Connection Card: ${student.username}`}>
-            <div className="connection-card-container" className="text-center p-1rem">
+            <div className="connection-card-container text-center p-1rem">
                 <p className="mb-1-5rem text-muted">
                     Print or show this card to the parent. They can scan the QR code or enter the code manually to connect.
                 </p>
@@ -396,15 +394,12 @@ export const BulkConnectionCardsModal = ({ isOpen, onClose, classrooms, fetchCla
 
     return (
         <Modal isOpen={isOpen} onClose={onClose} title="Bulk Print Cohort Connection Cards" width="80%">
-            <div className="bulk-cards-modal-content" className="p-1rem">
-                <div className="form-group no-print" className="mb-1-5rem">
+            <div className="bulk-cards-modal-content p-1rem">
+                <div className="form-group no-print mb-1-5rem">
                     <label className="fw-semibold mb-sm d-block">Select Cohort (Classroom)</label>
                     <select 
                         value={selectedClassroomId} 
-                        onChange={handleClassroomChange} 
-                        className="admin-select"
-                        className="select-styled-full"
-                    >
+                        onChange={handleClassroomChange} className="admin-select select-styled-full">
                         <option value="">Select a classroom...</option>
                         <option value="all">All Students (Entire Directory)</option>
                         {classrooms.map(c => (
@@ -414,16 +409,16 @@ export const BulkConnectionCardsModal = ({ isOpen, onClose, classrooms, fetchCla
                 </div>
 
                 {isFetchingCards ? (
-                    <div className="text-center p-3rem text-muted" className="no-print">
+                    <div className="text-center p-3rem text-muted no-print">
                         <p>Generating cards and connection codes...</p>
                     </div>
                 ) : selectedClassroomId && classroomCards.length === 0 ? (
-                    <div className="text-center p-3rem text-muted" className="no-print">
+                    <div className="text-center p-3rem text-muted no-print">
                         <p>No students found in this classroom.</p>
                     </div>
                 ) : classroomCards.length > 0 ? (
                     <div>
-                        <div className="d-flex justify-between align-center mb-1-5rem" className="no-print">
+                        <div className="d-flex justify-between align-center mb-1-5rem no-print">
                             <span className="text-muted text-sm">
                                 Found <strong>{classroomCards.length}</strong> connection cards. Ready for printing.
                             </span>
@@ -444,7 +439,7 @@ export const BulkConnectionCardsModal = ({ isOpen, onClose, classrooms, fetchCla
 
                                 return (
                                     <div key={card.id} className="bulk-print-card">
-                                        <h3 className="card-student-name" className="mb-2px">{card.nickname || card.username}</h3>
+                                        <h3 className="card-student-name mb-2px">{card.nickname || card.username}</h3>
                                         <div className="text-0-85rem text-muted mb-0-75rem text-center break-all">@{card.username}</div>
                                         <div className="card-qr-wrapper">
                                             <img src={qrUrl} alt={`QR Code for ${card.username}`} className="card-qr-img" />
@@ -459,7 +454,7 @@ export const BulkConnectionCardsModal = ({ isOpen, onClose, classrooms, fetchCla
                         </div>
                     </div>
                 ) : (
-                    <div className="text-center p-4rem-2rem text-muted border-dashed-2 radius-12" className="no-print">
+                    <div className="text-center p-4rem-2rem text-muted border-dashed-2 radius-12 no-print">
                         <p className="text-1-1rem m-0">Please select a classroom cohort above to generate and preview connection cards.</p>
                     </div>
                 )}

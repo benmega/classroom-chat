@@ -285,9 +285,9 @@ const Signup = () => {
                     </form>
                 )}
                 
-                <div className="auth-footer" className="mt-1-5rem">
+                <div className="auth-footer mt-1-5rem">
                     Already have an account? 
-                    <Link to="/login" className="auth-link" className="ml-sm">Log In</Link>
+                    <Link to="/login" className="auth-link ml-sm">Log In</Link>
                 </div>
             </div>
         </div>

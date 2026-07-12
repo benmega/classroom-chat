@@ -82,9 +82,9 @@ const PendingTrades = () => {
     };
 
     if (isLoading) return (
-        <div className="admin-pending-trades-page animate-page-entry" className="p-2rem">
+        <div className="admin-pending-trades-page animate-page-entry p-2rem">
             <header className="page-header">
-                <Skeleton height="40px" width="200px" className="skeleton-title" className="mb-2rem" />
+                <Skeleton height="40px" width="200px" className="skeleton-title mb-2rem" />
             </header>
             <div className="trades-list">
                 {[1, 2, 3].map(i => (

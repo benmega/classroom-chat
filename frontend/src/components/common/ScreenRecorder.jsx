@@ -357,10 +357,10 @@ const ScreenRecorder = ({ isOpen, onClose, onRecordingComplete }) => {
                     />
                   </div>
                   <div 
-                    className="hud-control" 
+                     
                     title="Toggle Microphone" 
-                    className="cursor-pointer justify-center"
-                    onClick={() => setSettings({...settings, includeMicrophone: !settings.includeMicrophone})}
+                    
+                    onClick={() = className="hud-control cursor-pointer justify-center"> setSettings({...settings, includeMicrophone: !settings.includeMicrophone})}
                   >
                     {settings.includeMicrophone ? <Mic size={24} color="var(--text-secondary)" /> : <MicOff size={24} color="var(--error-color)" />}
                   </div>

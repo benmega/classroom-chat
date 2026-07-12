@@ -89,9 +89,9 @@ const AdvancedPanel = () => {
 
 
     if (isLoading) return (
-        <div className="admin-advanced-panel animate-page-entry" className="p-2rem">
+        <div className="admin-advanced-panel animate-page-entry p-2rem">
             <header className="page-header">
-                <Skeleton height="40px" width="300px" className="skeleton-title" className="mb-2rem" />
+                <Skeleton height="40px" width="300px" className="skeleton-title mb-2rem" />
             </header>
             <div className="advanced-grid">
                 {[1, 2, 3, 4, 5, 6].map(i => (

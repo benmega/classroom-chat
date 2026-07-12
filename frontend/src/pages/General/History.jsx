@@ -69,11 +69,11 @@ const History = () => {
                 </div>
                 <div className="history-list">
                     {[1, 2, 3, 4, 5].map(i => (
-                        <div key={i} className="history-card" className="cursor-default">
+                        <div key={i} className="history-card cursor-default">
                             <div className="card-icon">
                                 <Skeleton height="24px" width="24px" borderRadius="50%" />
                             </div>
-                            <div className="card-content" className="flex-1">
+                            <div className="card-content flex-1">
                                 <Skeleton height="20px" width="60%" className="skeleton-title" />
                                 <Skeleton height="16px" width="90%" />
                                 <Skeleton height="14px" width="30%" className="mt-10px" />

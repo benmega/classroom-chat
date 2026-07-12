@@ -10,7 +10,7 @@ const CourseLevelBreakdown = () => {
 
     if (!selectedNode) {
         return (
-            <div className="course-progress-container" className="p-2rem">
+            <div className="course-progress-container p-2rem">
                 <button className="back-button" onClick={() => navigate(-1)} className="mb-2rem">
                     <ArrowLeft size={20} />
                     <span>Back</span>
@@ -22,16 +22,16 @@ const CourseLevelBreakdown = () => {
     }
 
     return (
-        <div className="course-progress-container" className="course-progress-modal-container">
+        <div className="course-progress-container course-progress-modal-container">
             <button className="back-button" onClick={() => navigate(-1)} className="mb-2rem">
                 <ArrowLeft size={20} />
                 <span>Back to Skill Tree</span>
             </button>
             
-            <div className="course-modal-content" className="course-modal-content-styled">
+            <div className="course-modal-content course-modal-content-styled">
                 <h1 className="mb-1-5rem text-primary">{selectedNode.title}</h1>
-                <div className="course-modal-progress" className="mb-2-5rem">
-                    <div className="course-progress-bar" className="h-12px">
+                <div className="course-modal-progress mb-2-5rem">
+                    <div className="course-progress-bar h-12px">
                         <div 
                             className="course-progress-fill" 
                             style={{ 
@@ -46,10 +46,10 @@ const CourseLevelBreakdown = () => {
                 </div>
                 
                 <h3 className="mb-md text-primary">Levels Breakdown</h3>
-                <div className="levels-list" className="overflow-y-visible gap-0-75rem">
+                <div className="levels-list overflow-y-visible gap-0-75rem">
                     {selectedNode.levels && selectedNode.levels.length > 0 ? (
                         selectedNode.levels.map((lvl, index) => (
-                            <div key={index} className={`level-item ${lvl.is_completed ? 'completed' : 'uncompleted'}`} className="p-1rem-1-25rem">
+                            <div key={index} className={`level-item ${lvl.is_completed ? 'completed' : 'uncompleted'} p-1rem-1-25rem`}>
                                 <div className="level-item-icon">
                                     {lvl.is_completed && <Check size={18} />}
                                 </div>

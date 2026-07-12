@@ -21,7 +21,7 @@ const LandingDesktop = () => {
             <main className="landing-main">
                 <section className="hero-section hero-desktop">
                     <div className="hero-content">
-                        <h2 className="animate-fade-in" className="landing-title">
+                        <h2 className="animate-fade-in landing-title">
                             Ready to <span className="text-primary-color">level up</span> your coding?
                         </h2>
                         <p className="hero-subtitle animate-fade-in landing-subtitle">

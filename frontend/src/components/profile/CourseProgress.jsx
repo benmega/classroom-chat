@@ -43,9 +43,9 @@ const CourseProgress = ({ target, isParentView = false, studentId = null }) => {
     return (
         <section className="dashboard-panel">
             <div 
-                className="panel-header" 
-                className="d-flex justify-between align-center cursor-pointer"
-                onClick={(e) => handleNavigate(e)}
+                 
+                
+                onClick={(e) = className="panel-header d-flex justify-between align-center cursor-pointer"> handleNavigate(e)}
                 title="View Detailed Tree"
             >
                 <h2 className="pointer-events-none"><Activity size={20} /> Course Progress</h2>

@@ -296,7 +296,7 @@ const CourseProgressTree = () => {
 
     if (isFetching) {
         return (
-            <div className="report-card-page animate-page-entry" className="p-2rem text-center">
+            <div className="report-card-page animate-page-entry p-2rem text-center">
                 <div className="report-error glass-panel">
                     <h2>Loading...</h2>
                     <p>Fetching your course progress.</p>
@@ -307,7 +307,7 @@ const CourseProgressTree = () => {
 
     if (!progressData) {
         return (
-            <div className="report-card-page animate-page-entry" className="p-2rem text-center">
+            <div className="report-card-page animate-page-entry p-2rem text-center">
                 <div className="report-error glass-panel">
                     <h2>No Progress Data</h2>
                     <p>Could not load the course progress tree. Please return to the profile.</p>
@@ -337,7 +337,7 @@ const CourseProgressTree = () => {
                     const isComplete = trackNodes.length > 0 && trackNodes.every(n => n.has_started && n.levels_completed >= (n.levels_total || 1));
                     
                     return (
-                        <div key={track.id} className={`branch-header glass-panel desktop-header ${isComplete ? 'track-completed' : ''}`} className="pos-rel overflow-hidden">
+                        <div key={track.id} className={`branch-header glass-panel desktop-header ${isComplete ? 'track-completed' : ''} pos-rel overflow-hidden`}>
                             <div className="track-progress-bg" style={{ width: `${percent}%` }}></div>
                             <h2 className="pos-rel z-1 d-flex flex-col align-center gap-4px">
                                 <span>{track.title}</span>
@@ -395,7 +395,7 @@ const CourseProgressTree = () => {
                         onMouseLeave={() => setHoveredNodeId(null)}
                         onClick={() => navigate(`${location.pathname}/breakdown`, { state: { selectedNode: node } })}
                     >
-                        <div className={`skill-card ${node.domain}`} className="cursor-pointer">
+                        <div className={`skill-card ${node.domain} cursor-pointer`}>
                             <div className="skill-icon">
                                 <img 
                                     src={node.domain === 'codecombat' ? codecombatLogo : ozariaLogo} 

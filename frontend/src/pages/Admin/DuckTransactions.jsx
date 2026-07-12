@@ -188,7 +188,7 @@ const DuckTransactions = () => {
 
             <div className="transactions-table-container card">
                 {isLoading ? (
-                    <div className="transactions-skeleton" className="p-1rem">
+                    <div className="transactions-skeleton p-1rem">
                         <span className="d-none">Loading transactions...</span>
                         {[1, 2, 3, 4, 5].map(i => (
                             <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '16px 0', borderBottom: '1px solid var(--border-subtle)' }}>

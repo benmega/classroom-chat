@@ -49,13 +49,13 @@ const Chat = () => {
   } = useFeedLogic();
 
   if (loading) return (
-    <div className="feed-loading-skeleton-container" className="p-2rem">
+    <div className="feed-loading-skeleton-container p-2rem">
       <span className="d-none">Loading Feed...</span>
-      <div className="feed-main" className="w-100">
+      <div className="feed-main w-100">
         {/* Mock Messages List */}
-        <div className="feed-messages-list" className="d-flex flex-col gap-1-5rem">
+        <div className="feed-messages-list d-flex flex-col gap-1-5rem">
           {[1, 2, 3].map(i => (
-            <div key={i} className="message-wrapper" className="chat-skeleton-message">
+            <div key={i} className="message-wrapper chat-skeleton-message">
               <Skeleton height="40px" width="40px" borderRadius="50%" className="flex-shrink-0" />
               <div className="flex-1">
                 <div className="d-flex gap-sm mb-sm align-center">
@@ -69,8 +69,8 @@ const Chat = () => {
           ))}
         </div>
         {/* Mock Input Area */}
-        <div className="feed-input-area" className="mt-2rem opacity-60">
-          <div className="feed-input-wrapper-container" className="chat-skeleton-input">
+        <div className="feed-input-area mt-2rem opacity-60">
+          <div className="feed-input-wrapper-container chat-skeleton-input">
             <Skeleton height="60px" className="mb-md" />
             <div className="d-flex justify-between align-center">
               <Skeleton height="36px" width="120px" borderRadius="18px" />

@@ -407,7 +407,7 @@ const AdminProjects = () => {
                         <thead>
                             <tr>
                                 <th className="th-filter-container pos-rel">
-                                    <div className="header-cell-content" className="d-flex align-center gap-6">
+                                    <div className="header-cell-content d-flex align-center gap-6">
                                         <span>Project Name</span>
                                         <button className="filter-trigger-btn" onClick={() => setActiveFilterDropdown(activeFilterDropdown === 'name' ? null : 'name')}>
                                             <Filter size={12} style={{ color: nameSearch ? 'var(--primary-color)' : 'inherit' }} />
@@ -435,7 +435,7 @@ const AdminProjects = () => {
                                     )}
                                 </th>
                                 <th className="th-filter-container pos-rel">
-                                    <div className="header-cell-content" className="d-flex align-center gap-6">
+                                    <div className="header-cell-content d-flex align-center gap-6">
                                         <span>Student</span>
                                         <button className="filter-trigger-btn" onClick={() => setActiveFilterDropdown(activeFilterDropdown === 'student' ? null : 'student')}>
                                             <Filter size={12} style={{ color: selectedStudents.length > 0 ? 'var(--primary-color)' : 'inherit' }} />
@@ -480,7 +480,7 @@ const AdminProjects = () => {
                                     )}
                                 </th>
                                 <th className="th-filter-container text-center pos-rel">
-                                    <div className="header-cell-content centered" className="d-flex align-center justify-center gap-6">
+                                    <div className="header-cell-content centered d-flex align-center justify-center gap-6">
                                         <span>Feedback</span>
                                         <button className="filter-trigger-btn" onClick={() => setActiveFilterDropdown(activeFilterDropdown === 'feedback' ? null : 'feedback')}>
                                             <Filter size={12} style={{ color: selectedFeedbacks.length < 2 ? 'var(--primary-color)' : 'inherit' }} />
@@ -530,7 +530,7 @@ const AdminProjects = () => {
                                     )}
                                 </th>
                                 <th className="th-filter-container text-center pos-rel">
-                                    <div className="header-cell-content centered" className="d-flex align-center justify-center gap-6">
+                                    <div className="header-cell-content centered d-flex align-center justify-center gap-6">
                                         <span>Video</span>
                                         <button className="filter-trigger-btn" onClick={() => setActiveFilterDropdown(activeFilterDropdown === 'video' ? null : 'video')}>
                                             <Filter size={12} style={{ color: selectedVideos.length < 2 ? 'var(--primary-color)' : 'inherit' }} />
@@ -580,7 +580,7 @@ const AdminProjects = () => {
                                     )}
                                 </th>
                                 <th className="th-filter-container text-center pos-rel">
-                                    <div className="header-cell-content centered" className="d-flex align-center justify-center gap-6">
+                                    <div className="header-cell-content centered d-flex align-center justify-center gap-6">
                                         <span>Work</span>
                                         <button className="filter-trigger-btn" onClick={() => setActiveFilterDropdown(activeFilterDropdown === 'work' ? null : 'work')}>
                                             <Filter size={12} style={{ color: selectedWorks.length < 2 ? 'var(--primary-color)' : 'inherit' }} />
@@ -630,7 +630,7 @@ const AdminProjects = () => {
                                     )}
                                 </th>
                                 <th className="th-filter-container pos-rel">
-                                    <div className="header-cell-content" className="d-flex align-center gap-6">
+                                    <div className="header-cell-content d-flex align-center gap-6">
                                         <span>Status</span>
                                         <button className="filter-trigger-btn" onClick={() => setActiveFilterDropdown(activeFilterDropdown === 'status' ? null : 'status')}>
                                             <Filter size={12} style={{ color: selectedStatuses.length < 2 ? 'var(--primary-color)' : 'inherit' }} />

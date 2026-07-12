@@ -165,17 +165,17 @@ const ParentDashboard = () => {
     // ── Loading skeleton ───────────────────────────────────────────────────────
     if (isLoading) {
         return (
-            <div className="parent-dashboard animate-page-entry" className="p-2rem">
+            <div className="parent-dashboard animate-page-entry p-2rem">
                 <main className="parent-body">
                     <div className="parent-grid-layout">
-                        <div className="glass-panel" className="p-2rem h-400px">
+                        <div className="glass-panel p-2rem h-400px">
                             <Skeleton height="32px" width="40%" className="mb-1-5rem" />
                             <Skeleton height="80px" className="mb-md" />
                             <Skeleton height="80px" className="mb-md" />
                             <Skeleton height="80px" />
                         </div>
                         <div className="d-flex flex-col gap-1-5rem">
-                            <div className="glass-panel" className="p-2rem h-200px">
+                            <div className="glass-panel p-2rem h-200px">
                                 <Skeleton height="24px" width="60%" className="mb-md" />
                                 <Skeleton height="40px" />
                             </div>
@@ -192,11 +192,11 @@ const ParentDashboard = () => {
                 <DesktopNotice />
 
                 {/* Cohesive Dashboard Layout */}
-                <div className="dashboard-layout" className="parent-dashboard-layout">
+                <div className="dashboard-layout parent-dashboard-layout">
                     
                     {/* Left Column: Cohesive Activity Feed */}
                     <div className="left-column">
-                        <section className="dashboard-panel" className="dashboard-panel-styled">
+                        <section className="dashboard-panel dashboard-panel-styled">
                             <div className="panel-header-styled">
                                 <div className="d-flex align-center gap-0-75rem">
                                     <Activity size={22} color="var(--primary-color)" />
@@ -212,7 +212,7 @@ const ParentDashboard = () => {
                                     <Skeleton height="64px" borderRadius="12px" />
                                 </div>
                             ) : mergedActivityFeed.length > 0 ? (
-                                <div className="activity-timeline" className="d-flex flex-col gap-1-25rem">
+                                <div className="activity-timeline d-flex flex-col gap-1-25rem">
                                     {mergedActivityFeed.map((event, idx) => {
                                         let IconComponent = Zap;
                                         let iconColor = 'var(--primary-color)';
@@ -258,7 +258,7 @@ const ParentDashboard = () => {
                                                             className="w-36px h-36px radius-50 object-cover"
                                                         />
                                                     ) : (
-                                                        <div className="child-avatar-initials" className="w-36px h-36px m-0 text-0-8rem">
+                                                        <div className="child-avatar-initials w-36px h-36px m-0 text-0-8rem">
                                                             <User size={16} />
                                                         </div>
                                                     )}
@@ -346,10 +346,10 @@ const ParentDashboard = () => {
                     </div>
 
                     {/* Right Column: Family List */}
-                    <div className="right-column" className="d-flex flex-col gap-1-5rem">
+                    <div className="right-column d-flex flex-col gap-1-5rem">
                         
                         {/* Children List */}
-                        <section className="dashboard-panel" className="dashboard-panel-styled-small">
+                        <section className="dashboard-panel dashboard-panel-styled-small">
                             <div className="panel-header-styled-small">
                                 <h3 className="panel-title-small">
                                     Family Members
@@ -410,10 +410,7 @@ const ParentDashboard = () => {
                                                             <User size={14} />
                                                         </div>
                                                     )}
-                                                    <span
-                                                        className={`activity-dot ${isActive ? 'activity-dot--active' : 'activity-dot--idle'}`}
-                                                        className="status-dot-small"
-                                                    />
+                                                    <span className={`activity-dot ${isActive ? 'activity-dot--active' : 'activity-dot--idle'} status-dot-small`} />
                                                 </div>
                                                 <div>
                                                     <div className="text-0-85rem fw-bold text-primary">{displayName}</div>
@@ -423,7 +420,7 @@ const ParentDashboard = () => {
 
                                             {/* Options Menu Only (No Duck Balance) */}
                                             <div className="d-flex align-center" onClick={(e) => e.stopPropagation()}>
-                                                <div className="child-card-menu" className="pos-rel top-auto right-auto">
+                                                <div className="child-card-menu pos-rel top-auto right-auto">
                                                     <button
                                                         className="menu-btn"
                                                         onClick={() => setOpenMenu(openMenu === child.id ? null : child.id)}
@@ -488,7 +485,7 @@ const ParentDashboard = () => {
                         <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '0 0 1.25rem 0', lineHeight: 1.4 }}>
                             Enter the 6-character connection code to link another student.
                         </p>
-                        <form onSubmit={handleConnectChild} className="connect-form" className="d-flex flex-col gap-md">
+                        <form onSubmit={handleConnectChild} className="connect-form d-flex flex-col gap-md">
                             <input
                                 type="text"
                                 placeholder="CODE"

@@ -117,7 +117,7 @@ const Classes = () => {
                 </div>
                 <div className="stat-mini-card">
                     <span className="label">Active Languages</span>
-                    <span className="value" className="text-truncate">
+                    <span className="value text-truncate">
                         {activeLanguages}
                     </span>
                 </div>
@@ -139,7 +139,7 @@ const Classes = () => {
                             filteredClassrooms.map(c => (
                                 <tr key={c.id}>
                                     <td onClick={() => navigate(`/admin/classes/${c.id}`)} className="cursor-pointer">
-                                        <div className="class-name-cell" className="fw-semibold">
+                                        <div className="class-name-cell fw-semibold">
                                             {c.name}
                                         </div>
                                     </td>

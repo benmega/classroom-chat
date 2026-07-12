@@ -150,7 +150,7 @@ const ResetPassword = () => {
                     </button>
                 </form>
                 
-                <div className="auth-footer" className="mt-1-5rem">
+                <div className="auth-footer mt-1-5rem">
                     <Link to="/login" className="auth-link auth-link-no-margin">Back to Log In</Link>
                 </div>
             </div>
