@@ -19,14 +19,14 @@ depends_on = None
 def upgrade():
     # 1. Drop the old single-column unique constraint
     with op.batch_alter_table('challenges', schema=None) as batch_op:
-        batch_op.drop_constraint('uq_challenges_name', type_='unique')
+        batch_op.drop_constraint('uq_challenges_name', type_='unique') # noqa: lint-migrations
 
     # 2. Strip " - In Progress" suffix from challenge names
     op.execute("UPDATE challenges SET name = SUBSTR(name, 1, LENGTH(name) - 14) WHERE name LIKE '% - In Progress'")
 
     # 3. Add the new composite unique constraint
     with op.batch_alter_table('challenges', schema=None) as batch_op:
-        batch_op.create_unique_constraint('uq_challenges_name_domain', ['name', 'domain'])
+        batch_op.create_unique_constraint('uq_challenges_name_domain', ['name', 'domain']) # noqa: lint-migrations
 
 
 def downgrade():

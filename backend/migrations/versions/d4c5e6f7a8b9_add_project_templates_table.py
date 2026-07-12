@@ -17,13 +17,17 @@ depends_on = None
 
 
 def upgrade():
-    op.create_table('project_templates',
-        sa.Column('id', sa.Integer(), nullable=False),
-        sa.Column('name', sa.String(length=100), nullable=False),
-        sa.Column('description', sa.Text(), nullable=False),
-        sa.PrimaryKeyConstraint('id'),
-        sa.UniqueConstraint('name')
-    )
+    conn = op.get_bind()
+    inspector = sa.inspect(conn)
+    tables = inspector.get_table_names()
+    if 'project_templates' not in tables:
+        op.create_table('project_templates',
+            sa.Column('id', sa.Integer(), nullable=False),
+            sa.Column('name', sa.String(length=100), nullable=False),
+            sa.Column('description', sa.Text(), nullable=False),
+            sa.PrimaryKeyConstraint('id'),
+            sa.UniqueConstraint('name')
+        )
 
 
 def downgrade():

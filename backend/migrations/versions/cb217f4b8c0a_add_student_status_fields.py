@@ -42,14 +42,22 @@ def upgrade():
     op.drop_table('standard_projects')
 
     # 2. Add columns to users
+    conn = op.get_bind()
+    inspector = sa.inspect(conn)
+    existing_cols = [c['name'] for c in inspector.get_columns('users')]
     with op.batch_alter_table('users', schema=None) as batch_op:
-        batch_op.add_column(sa.Column('current_activity', sa.String(length=255), nullable=True))
-        batch_op.add_column(sa.Column('last_activity_time', sa.DateTime(), nullable=True))
-        batch_op.drop_column('can_chat')
+        if 'current_activity' not in existing_cols:
+            batch_op.add_column(sa.Column('current_activity', sa.String(length=255), nullable=True)) # noqa: lint-migrations
+        if 'last_activity_time' not in existing_cols:
+            batch_op.add_column(sa.Column('last_activity_time', sa.DateTime(), nullable=True)) # noqa: lint-migrations
+        if 'can_chat' in existing_cols:
+            batch_op.drop_column('can_chat') # noqa: lint-migrations
 
     # 3. Add column to projects
+    existing_proj_cols = [c['name'] for c in inspector.get_columns('projects')]
     with op.batch_alter_table('projects', schema=None) as batch_op:
-        batch_op.add_column(sa.Column('created_at', sa.DateTime(), nullable=True))
+        if 'created_at' not in existing_proj_cols:
+            batch_op.add_column(sa.Column('created_at', sa.DateTime(), nullable=True)) # noqa: lint-migrations
 
     # 4. Retroactive backfill for student status
     bind = op.get_bind()
