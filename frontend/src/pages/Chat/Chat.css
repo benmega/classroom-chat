@@ -11,12 +11,14 @@
 
 .feed-main {
     width: 100%;
-    max-width: 1200px;
+    max-width: 1440px;
     display: flex;
     flex-direction: column;
-    background: var(--bg-primary);
-    border-left: 1px solid var(--border-subtle);
-    border-right: 1px solid var(--border-subtle);
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border-left: 1px solid var(--glass-border);
+    border-right: 1px solid var(--glass-border);
     height: 100%;
 }
 
@@ -31,8 +33,10 @@
 }
 
 .feed-input-form-mockup {
-    background: var(--bg-primary);
-    border: 1px solid var(--border-subtle);
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-sm);
     transition: all 0.2s ease;

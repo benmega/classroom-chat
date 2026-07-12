@@ -7,8 +7,10 @@
 
 header {
     flex-shrink: 0;
-    background: var(--bg-primary);
-    border-bottom: 1px solid var(--border-subtle);
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border-bottom: 1px solid var(--glass-border);
     box-shadow: var(--shadow-sm);
     z-index: 1000;
     width: 100%;
@@ -313,8 +315,10 @@ a.stat-badge:hover {
     right: 0;
     left: auto; /* Ensure left is not set */
     max-width: calc(100vw - 2rem); /* Prevent from going off-screen on mobile */
-    background: var(--bg-primary);
-    border: 1px solid var(--border-subtle);
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border);
     border-radius: var(--radius-md);
     padding: 0.5rem;
     min-width: 240px;
@@ -447,7 +451,7 @@ main {
     display: flex;
     flex-direction: column;
     min-height: 0; /* Critical for nested flex scrolling */
-    max-width: 1500px; /* Matching header max-width */
+    max-width: 1440px; /* Matching header max-width */
     margin: 0 auto;
     width: 100%;
     padding: var(--spacing-md);
@@ -561,7 +565,10 @@ footer {
     left: 0;
     bottom: 0;
     width: 280px;
-    background: var(--bg-primary);
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border-right: 1px solid var(--glass-border);
     z-index: 1002;
     transform: translateX(-100%);
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -718,8 +725,10 @@ footer {
         align-items: center;
         width: 72px;
         height: 100dvh;
-        background: var(--bg-primary);
-        border-right: 1px solid var(--border-subtle);
+        background: var(--glass-bg);
+        backdrop-filter: var(--glass-blur);
+        -webkit-backdrop-filter: var(--glass-blur);
+        border-right: 1px solid var(--glass-border);
         padding: 1rem 0;
         flex-shrink: 0;
         z-index: 1010;

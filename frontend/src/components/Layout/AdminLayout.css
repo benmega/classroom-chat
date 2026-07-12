@@ -39,7 +39,9 @@
     align-items: center;
     width: var(--admin-rail-width);
     height: 100dvh;
-    background: var(--admin-dark-bg);
+    background: rgba(15, 23, 42, 0.75);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
     border-right: 1px solid var(--admin-dark-border);
     padding: 1rem 0;
     flex-shrink: 0;
@@ -416,7 +418,7 @@
     flex: 1;
     padding: 1.25rem;
     padding-bottom: 80px;
-    max-width: 1600px;
+    max-width: 1440px;
     width: 100%;
     margin: 0 auto;
     overflow-y: auto;
