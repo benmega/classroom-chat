@@ -300,9 +300,8 @@ export const ManageChildrenModal = ({ isOpen, onClose, parent, users, parentChil
                                         </div>
                                         <button 
                                             type="button"
-                                            
-                                            
-                                            onClick={() = className={`btn-primary ${isLinked ? 'danger' : ''} btn-small-link`}> onToggleLink(parent.id, s.id, isLinked)}
+                                            className={`btn-primary ${isLinked ? 'danger' : ''} btn-small-link`}
+                                            onClick={() => onToggleLink(parent.id, s.id, isLinked)}
                                             disabled={loading}
                                         >
                                             {isLinked ? 'Unlink' : 'Link'}
