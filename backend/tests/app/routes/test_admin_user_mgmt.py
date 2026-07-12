@@ -254,7 +254,8 @@ def test_classrooms_and_connection_cards(client, sample_admin, sample_user, init
     # List classrooms
     resp = client.get("/api/admin/classrooms")
     assert resp.status_code == 200
-    assert len(resp.get_json()["data"]["classrooms"]) == 1
+    classrooms = resp.get_json()["data"]["classrooms"]
+    assert any(c["id"] == "class_101" for c in classrooms)
 
     # Classroom cards list
     resp = client.get(f"/api/admin/classrooms/{classroom.id}/connection_cards")
@@ -325,3 +326,60 @@ def test_set_drawer(client, sample_admin, sample_user, init_db):
     })
     assert resp.status_code == 200
     assert other_student.drawer is None
+
+
+def test_classroom_detail_management(client, sample_admin, init_db):
+    login_as_admin(client, sample_admin)
+
+    # Create classroom
+    c = Classroom(id="testclass", name="Test Classroom", language="Python", url="https://test.local")
+    db.session.add(c)
+    db.session.commit()
+
+    # Create a student
+    student = User(username="testclassroomstudent", role="student", password_hash="dummy")
+    db.session.add(student)
+    db.session.commit()
+
+    # Get details
+    resp = client.get(f"/api/admin/classrooms/{c.id}")
+    assert resp.status_code == 200
+    data = resp.get_json()["classroom"]
+    assert data["name"] == "Test Classroom"
+    assert len(data["students"]) == 0
+
+    # Update settings
+    resp = client.put(f"/api/admin/classrooms/{c.id}", json={
+        "name": "Updated Classroom Name",
+        "language": "Scratch"
+    })
+    assert resp.status_code == 200
+    assert c.name == "Updated Classroom Name"
+    assert c.language == "Scratch"
+
+    # Enroll student
+    resp = client.post(f"/api/admin/classrooms/{c.id}/enroll", json={
+        "student_id": student.id
+    })
+    assert resp.status_code == 200
+    assert student in c.users
+
+    # Verify student is in GET details roster
+    resp = client.get(f"/api/admin/classrooms/{c.id}")
+    assert resp.status_code == 200
+    data = resp.get_json()["classroom"]
+    assert len(data["students"]) == 1
+    assert data["students"][0]["username"] == "testclassroomstudent"
+
+    # Unenroll student
+    resp = client.post(f"/api/admin/classrooms/{c.id}/unenroll", json={
+        "student_id": student.id
+    })
+    assert resp.status_code == 200
+    assert student not in c.users
+
+    # Delete classroom
+    resp = client.delete(f"/api/admin/classrooms/{c.id}")
+    assert resp.status_code == 200
+    assert db.session.get(Classroom, "testclass") is None
+

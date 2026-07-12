@@ -74,4 +74,5 @@ class Classroom(db.Model):
             "id": self.id,
             "name": self.name,
             "language": self.language,
+            "student_count": len(self.users) if self.users else 0
         }

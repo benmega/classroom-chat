@@ -119,6 +119,9 @@ def get_users():
             User._username.ilike(f"%{search}%"),
             User.nickname.ilike(f"%{search}%")
         ))
+    role = request.args.get("role", "", type=str)
+    if role:
+        query = query.filter_by(role=role)
     query = query.order_by(User.is_approved.asc(), User.last_activity_time.desc().nullslast(), User.id.desc())
 
     online_count = query.filter(User.is_online.is_(True)).count()
@@ -620,4 +623,132 @@ def get_parent_child_connections():
                 }
             })
     return jsonify({"success": True, "connections": connections})
+
+
+@admin_bp.route("/classrooms/<classroom_id>", methods=["GET"])
+@admin_only
+def get_classroom_details(classroom_id):
+    from application.models.classroom import Classroom
+    classroom = Classroom.query.get(classroom_id)
+    if not classroom:
+        return jsonify({"error": "Classroom not found"}), 404
+    
+    # Convert users (roster)
+    students = [
+        {
+            "id": u.id,
+            "username": u.username,
+            "nickname": u.nickname,
+            "profile_picture": u.profile_picture,
+            "is_online": u.is_online
+        }
+        for u in classroom.users if u.role == "student"
+    ]
+    
+    # Convert course assignments
+    course_assignments = [
+        {
+            "id": assignment.id,
+            "course_id": assignment.course_id,
+            "created_at": assignment.created_at.isoformat() if assignment.created_at else None
+        }
+        for assignment in classroom.course_assignments
+    ]
+    
+    return jsonify({
+        "classroom": {
+            "id": classroom.id,
+            "name": classroom.name,
+            "language": classroom.language,
+            "url": classroom.url,
+            "course_id": classroom.course_id,
+            "created_at": classroom.created_at.isoformat() if classroom.created_at else None,
+            "students": students,
+            "course_assignments": course_assignments
+        }
+    })
+
+
+@admin_bp.route("/classrooms/<classroom_id>", methods=["PUT"])
+@admin_only
+def update_classroom(classroom_id):
+    from application.models.classroom import Classroom
+    classroom = Classroom.query.get(classroom_id)
+    if not classroom:
+        return jsonify({"error": "Classroom not found"}), 404
+    
+    data = request.get_json() or {}
+    if "name" in data:
+        classroom.name = data["name"]
+    if "language" in data:
+        classroom.language = data["language"]
+    if "url" in data:
+        classroom.url = data["url"]
+    if "course_id" in data:
+        classroom.course_id = data["course_id"]
+        
+    db.session.commit()
+    return jsonify({"success": True, "message": "Classroom updated successfully"})
+
+
+@admin_bp.route("/classrooms/<classroom_id>", methods=["DELETE"])
+@admin_only
+def delete_classroom(classroom_id):
+    from application.models.classroom import Classroom
+    classroom = Classroom.query.get(classroom_id)
+    if not classroom:
+        return jsonify({"error": "Classroom not found"}), 404
+    
+    db.session.delete(classroom)
+    db.session.commit()
+    return jsonify({"success": True, "message": "Classroom deleted successfully"})
+
+
+@admin_bp.route("/classrooms/<classroom_id>/enroll", methods=["POST"])
+@admin_only
+def enroll_student_in_classroom(classroom_id):
+    from application.models.classroom import Classroom
+    classroom = Classroom.query.get(classroom_id)
+    if not classroom:
+        return jsonify({"error": "Classroom not found"}), 404
+        
+    data = request.get_json() or {}
+    student_id = data.get("student_id")
+    if not student_id:
+        return jsonify({"error": "Student ID is required"}), 400
+        
+    student = User.query.filter_by(id=student_id, role="student").first()
+    if not student:
+        return jsonify({"error": "Student not found"}), 404
+        
+    if student not in classroom.users:
+        classroom.users.append(student)
+        db.session.commit()
+        
+    return jsonify({"success": True, "message": "Student enrolled successfully"})
+
+
+@admin_bp.route("/classrooms/<classroom_id>/unenroll", methods=["POST"])
+@admin_only
+def unenroll_student_from_classroom(classroom_id):
+    from application.models.classroom import Classroom
+    classroom = Classroom.query.get(classroom_id)
+    if not classroom:
+        return jsonify({"error": "Classroom not found"}), 404
+        
+    data = request.get_json() or {}
+    student_id = data.get("student_id")
+    if not student_id:
+        return jsonify({"error": "Student ID is required"}), 400
+        
+    student = User.query.get(student_id)
+    if not student:
+        return jsonify({"error": "Student not found"}), 404
+        
+    if student in classroom.users:
+        classroom.users.remove(student)
+        db.session.commit()
+        
+    return jsonify({"success": True, "message": "Student unenrolled successfully"})
+
 
