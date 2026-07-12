@@ -63,7 +63,7 @@ const CourseProgress = ({ target, isParentView = false, studentId = null }) => {
                         <img src={codecombatLogo} alt="CodeCombat" className="header-logo-img" />
                     </a>
                     <a 
-                        href="https://ozaria.com" 
+                        href="https://ozeria.com" 
                         target="_blank" 
                         rel="noopener noreferrer" 
                         className="header-logo-card"

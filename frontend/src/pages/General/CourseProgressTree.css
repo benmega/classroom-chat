@@ -495,3 +495,48 @@
     box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
 }
 
+/* Header logos as links with no background/border, matching chapter card logos */
+.header-logo-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: transform 0.2s ease;
+}
+
+.header-logo-link:hover {
+    transform: scale(1.08);
+}
+
+.header-logo-img-flat {
+    height: 36px;
+    width: auto;
+    object-fit: contain;
+}
+
+.gap-md {
+    gap: 12px;
+}
+
+@media (min-width: 1024px) {
+    .branch-header.desktop-header {
+        display: flex;
+        align-items: center;
+        padding: 0.75rem 1rem;
+        background: var(--surface-primary);
+        border: 2px solid var(--border-subtle);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-sm);
+        margin-bottom: 0;
+        height: 64px;
+        transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+        text-decoration: none;
+    }
+
+    .branch-header.desktop-header:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+        border-color: var(--primary-color);
+    }
+}
+

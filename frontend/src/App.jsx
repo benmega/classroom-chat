@@ -116,45 +116,41 @@ function App() {
     <Router>
       <SidebarProvider>
         <Toaster 
-            position="top-center"
+            position="bottom-right"
             gutter={12}
             containerStyle={{
-                top: 40,
-                left: 40,
-                bottom: 40,
-                right: 40,
+                bottom: 24,
+                right: 24,
             }}
             toastOptions={{
                 duration: 4500,
                 style: {
-                    background: THEME.colors.slate800,
-                    color: 'var(--bg-primary)',
-                    borderRadius: THEME.radius.md,
-                    padding: '16px 24px',
-                    boxShadow: THEME.shadows.xl,
-                    fontSize: '0.95rem',
+                    background: 'var(--bg-primary)',
+                    color: 'var(--text-primary)',
+                    borderRadius: 'var(--radius-md)',
+                    padding: '12px 20px',
+                    boxShadow: 'var(--shadow-md)',
+                    fontSize: 'var(--font-sm)',
                     fontWeight: '600',
                     maxWidth: '420px',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    border: '2px solid var(--border-strong)',
                 },
                 success: {
                     style: {
-                        background: THEME.colors.success,
-                        border: `1px solid ${THEME.colors.successDark}`,
+                        border: '2px solid var(--success-color)',
                     },
                     iconTheme: {
-                        primary: 'var(--bg-primary)',
-                        secondary: THEME.colors.success,
+                        primary: 'var(--success-color)',
+                        secondary: 'var(--bg-primary)',
                     },
                 },
                 error: {
                     style: {
-                        background: THEME.colors.error,
-                        border: `1px solid ${THEME.colors.errorDark}`,
+                        border: '2px solid var(--error-color)',
                     },
                     iconTheme: {
-                        primary: 'var(--bg-primary)',
-                        secondary: THEME.colors.error,
+                        primary: 'var(--error-color)',
+                        secondary: 'var(--bg-primary)',
                     },
                 },
             }}

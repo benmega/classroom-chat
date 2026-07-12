@@ -100,7 +100,7 @@ describe('CourseProgressTree - Chapter Recommendation', () => {
     });
   });
 
-  it('suggests Computer Science 5 when Ozaria Chapter 4 (Ozeria Column) is completed', async () => {
+  it('suggests Computer Science 5 when Ozaria Chapter 4 (Ozaria Column) is completed', async () => {
     mockLocation.state = {
       course_progress: {
         codecombat: { breakdown: [] },

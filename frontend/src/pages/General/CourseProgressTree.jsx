@@ -14,34 +14,34 @@ const TRACKS = [
 ];
 
 const ALIGNED_NODES = [
-  { id: 'cc-junior', title: 'Code Combat Junior', aliases: ['Code Combat Junior', 'Junior'], domain: 'codecombat', track: 'cs', row: 1 },
-  { id: 'cs-1', title: 'Introduction to Computer Science', aliases: ['Introduction to Computer Science', 'Computer Science 1', 'CS1'], domain: 'codecombat', track: 'cs', row: 2 },
-  { id: 'oz-1', title: 'Sky Mountain', aliases: ['Sky Mountain', 'Ozaria 1', 'Chapter1', 'Chapter 1'], domain: 'ozaria', track: 'ozaria', row: 3 },
-  { id: 'gd-1', title: 'Game Development 1', aliases: ['Game Development 1', 'GD1'], domain: 'codecombat', track: 'gd', row: 3 },
-  { id: 'cs-2', title: 'Computer Science 2', aliases: ['Computer Science 2', 'CS2'], domain: 'codecombat', track: 'cs', row: 4 },
-  { id: 'oz-2', title: 'Ozaria Chapter 2', aliases: ['Ozaria Chapter 2', 'Chapter 2', 'Ozaria 2', 'Chapter2'], domain: 'ozaria', track: 'ozaria', row: 5 },
-  { id: 'wd-1', title: 'Web Development 1', aliases: ['Web Development 1', 'WD1'], domain: 'codecombat', track: 'wd', row: 5 },
-  { id: 'cs-3', title: 'Computer Science 3', aliases: ['Computer Science 3', 'CS3'], domain: 'codecombat', track: 'cs', row: 6 },
-  { id: 'oz-3', title: 'Ozaria Chapter 3', aliases: ['Ozaria Chapter 3', 'Chapter 3', 'Ozaria 3', 'Chapter3'], domain: 'ozaria', track: 'ozaria', row: 7 },
-  { id: 'gd-2', title: 'Game Development 2', aliases: ['Game Development 2', 'GD2'], domain: 'codecombat', track: 'gd', row: 7 },
-  { id: 'wd-2', title: 'Web Development 2', aliases: ['Web Development 2', 'WD2'], domain: 'codecombat', track: 'wd', row: 7 },
-  { id: 'cs-4', title: 'Computer Science 4', aliases: ['Computer Science 4', 'CS4'], domain: 'codecombat', track: 'cs', row: 8 },
-  { id: 'oz-4', title: 'Ozaria 4', aliases: ['Ozaria 4', 'Ozaria Chapter 4', 'Chapter 4', 'Chapter4'], domain: 'ozaria', track: 'ozaria', row: 9 },
-  { id: 'gd-3', title: 'Game Development 3', aliases: ['Game Development 3', 'GD3'], domain: 'codecombat', track: 'gd', row: 9 },
-  { id: 'cs-5', title: 'Computer Science 5', aliases: ['Computer Science 5', 'CS5'], domain: 'codecombat', track: 'cs', row: 10 },
-  { id: 'cs-6', title: 'Computer Science 6', aliases: ['Computer Science 6', 'CS6'], domain: 'codecombat', track: 'cs', row: 11 },
+    { id: 'cc-junior', title: 'Code Combat Junior', aliases: ['Code Combat Junior', 'Junior'], domain: 'codecombat', track: 'cs', row: 1 },
+    { id: 'cs-1', title: 'Introduction to Computer Science', aliases: ['Introduction to Computer Science', 'Computer Science 1', 'CS1'], domain: 'codecombat', track: 'cs', row: 2 },
+    { id: 'oz-1', title: 'Sky Mountain', aliases: ['Sky Mountain', 'Ozaria 1', 'Chapter1', 'Chapter 1'], domain: 'ozaria', track: 'ozaria', row: 3 },
+    { id: 'gd-1', title: 'Game Development 1', aliases: ['Game Development 1', 'GD1'], domain: 'codecombat', track: 'gd', row: 3 },
+    { id: 'cs-2', title: 'Computer Science 2', aliases: ['Computer Science 2', 'CS2'], domain: 'codecombat', track: 'cs', row: 4 },
+    { id: 'oz-2', title: 'Ozaria Chapter 2', aliases: ['Ozaria Chapter 2', 'Chapter 2', 'Ozaria 2', 'Chapter2'], domain: 'ozaria', track: 'ozaria', row: 5 },
+    { id: 'wd-1', title: 'Web Development 1', aliases: ['Web Development 1', 'WD1'], domain: 'codecombat', track: 'wd', row: 5 },
+    { id: 'cs-3', title: 'Computer Science 3', aliases: ['Computer Science 3', 'CS3'], domain: 'codecombat', track: 'cs', row: 6 },
+    { id: 'oz-3', title: 'Ozaria Chapter 3', aliases: ['Ozaria Chapter 3', 'Chapter 3', 'Ozaria 3', 'Chapter3'], domain: 'ozaria', track: 'ozaria', row: 7 },
+    { id: 'gd-2', title: 'Game Development 2', aliases: ['Game Development 2', 'GD2'], domain: 'codecombat', track: 'gd', row: 7 },
+    { id: 'wd-2', title: 'Web Development 2', aliases: ['Web Development 2', 'WD2'], domain: 'codecombat', track: 'wd', row: 7 },
+    { id: 'cs-4', title: 'Computer Science 4', aliases: ['Computer Science 4', 'CS4'], domain: 'codecombat', track: 'cs', row: 8 },
+    { id: 'oz-4', title: 'Ozaria 4', aliases: ['Ozaria 4', 'Ozaria Chapter 4', 'Chapter 4', 'Chapter4'], domain: 'ozaria', track: 'ozaria', row: 9 },
+    { id: 'gd-3', title: 'Game Development 3', aliases: ['Game Development 3', 'GD3'], domain: 'codecombat', track: 'gd', row: 9 },
+    { id: 'cs-5', title: 'Computer Science 5', aliases: ['Computer Science 5', 'CS5'], domain: 'codecombat', track: 'cs', row: 10 },
+    { id: 'cs-6', title: 'Computer Science 6', aliases: ['Computer Science 6', 'CS6'], domain: 'codecombat', track: 'cs', row: 11 },
 ];
 
 const BRANCH_EDGES = [
-  { from: 'cs-1', to: 'gd-1' },
-  { from: 'cs-2', to: 'wd-1' },
-  { from: 'cs-3', to: 'gd-2' },
-  { from: 'cs-3', to: 'wd-2' },
-  { from: 'cs-4', to: 'gd-3' },
-  { from: 'cs-1', to: 'oz-1' },
-  { from: 'cs-2', to: 'oz-2' },
-  { from: 'cs-3', to: 'oz-3' },
-  { from: 'cs-4', to: 'oz-4' }
+    { from: 'cs-1', to: 'gd-1' },
+    { from: 'cs-2', to: 'wd-1' },
+    { from: 'cs-3', to: 'gd-2' },
+    { from: 'cs-3', to: 'wd-2' },
+    { from: 'cs-4', to: 'gd-3' },
+    { from: 'cs-1', to: 'oz-1' },
+    { from: 'cs-2', to: 'oz-2' },
+    { from: 'cs-3', to: 'oz-3' },
+    { from: 'cs-4', to: 'oz-4' }
 ];
 
 const matchCourse = (courseName, aliases) => {
@@ -116,11 +116,11 @@ const CourseProgressTree = () => {
     const location = useLocation();
     const navigate = useNavigate();
     const { slug } = useParams();
-    
+
     const containerRef = useRef(null);
     const nodeRefs = useRef({});
     const [lines, setLines] = useState([]);
-    
+
     const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 1024);
     const [hoveredNodeId, setHoveredNodeId] = useState(null);
     const [isFetching, setIsFetching] = useState(false);
@@ -263,7 +263,7 @@ const CourseProgressTree = () => {
                     const toNode = trackNodes[i + 1];
                     const fromEl = nodeRefs.current[fromNode.id];
                     const toEl = nodeRefs.current[toNode.id];
-                    
+
                     if (fromEl && toEl) {
                         const x = fromEl.offsetLeft + fromEl.offsetWidth / 2;
                         const y1 = fromEl.offsetTop + fromEl.offsetHeight;
@@ -295,7 +295,7 @@ const CourseProgressTree = () => {
                 hasScrolledRef.current = true;
                 setTimeout(() => {
                     nodeRefs.current[targetNode.id].scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    
+
                     // Optional: add a temporary highlight effect
                     const el = nodeRefs.current[targetNode.id];
                     el.style.transition = 'box-shadow 0.5s ease';
@@ -349,15 +349,32 @@ const CourseProgressTree = () => {
                     });
                     const percent = trackNodes.length > 0 ? (totalPercent / trackNodes.length) * 100 : 0;
                     const isComplete = trackNodes.length > 0 && trackNodes.every(n => n.has_started && n.levels_completed >= (n.levels_total || 1));
-                    
+
+                    const isOzaria = track.id === 'ozaria';
+                    const logoSrc = isOzaria ? ozariaLogo : codecombatLogo;
+                    const linkUrl = isOzaria ? 'https://ozeria.com' : 'https://codecombat.com';
+                    const linkTitle = isOzaria ? 'Visit Ozaria' : 'Visit CodeCombat';
+
                     return (
-                        <div key={track.id} className={`branch-header glass-panel desktop-header ${isComplete ? 'track-completed' : ''} pos-rel overflow-hidden`}>
+                        <a 
+                            key={track.id} 
+                            href={linkUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={`branch-header glass-panel desktop-header ${isComplete ? 'track-completed' : ''} pos-rel overflow-hidden cursor-pointer`}
+                            title={linkTitle}
+                        >
                             <div className="track-progress-bg" style={{ width: `${percent}%` }}></div>
-                            <h2 className="pos-rel z-1 d-flex flex-col align-center gap-4px">
-                                <span>{track.title}</span>
-                                <span className="text-sm opacity-80 fw-normal">{Math.round(percent)}%</span>
-                            </h2>
-                        </div>
+                            <div className="pos-rel z-1 d-flex align-center gap-md w-100">
+                                <span className="header-logo-link">
+                                    <img src={logoSrc} alt={track.title} className="header-logo-img-flat" />
+                                </span>
+                                <h2 className="d-flex flex-col align-start gap-4px m-0 text-left">
+                                    <span>{track.title}</span>
+                                    <span className="text-sm opacity-80 fw-normal">{Math.round(percent)}%</span>
+                                </h2>
+                            </div>
+                        </a>
                     );
                 })}
             </div>
@@ -375,75 +392,75 @@ const CourseProgressTree = () => {
                         {lines.map(line => {
                             const isDimmed = hoveredNodeId && (!connectedNodes.has(line.fromId) || !connectedNodes.has(line.toId));
                             return (
-                                <line 
-                                    key={line.id} 
-                                    x1={line.x1} 
-                                    y1={line.y1} 
-                                    x2={line.x2} 
-                                    y2={line.y2} 
+                                <line
+                                    key={line.id}
+                                    x1={line.x1}
+                                    y1={line.y1}
+                                    x2={line.x2}
+                                    y2={line.y2}
                                     className={`tree-line ${line.isActive ? 'active-line' : 'locked-line'} ${line.isActive ? line.lineDomain : ''} ${isDimmed ? 'dimmed' : ''}`}
                                 />
                             );
                         })}
                     </svg>
                 )}
-            
-            {/* Nodes */}
-            {processedNodes.map(node => {
-                const trackInfo = TRACKS.find(t => t.id === node.track);
-                const isRecommended = node.id === recommendedNodeId;
-                const isDimmed = hoveredNodeId && !connectedNodes.has(node.id);
-                const prereqs = !node.has_started ? getPrerequisiteTitles(node.id, processedNodes) : "";
-                const isComplete = node.levels_total && node.levels_completed >= node.levels_total;
 
-                return (
-                    <div 
-                        key={node.id} 
-                        ref={el => nodeRefs.current[node.id] = el}
-                        className={`skill-node-cell ${node.has_started ? 'active' : 'locked'} ${node.is_extra ? 'extra-node' : ''} ${isRecommended ? 'recommended' : ''} ${isDimmed ? 'dimmed' : ''} ${isComplete ? 'completed' : ''}`}
-                        style={{ 
-                            gridColumn: trackInfo?.col || 1, 
-                            gridRow: node.row + 1
-                        }}
-                        onMouseEnter={() => setHoveredNodeId(node.id)}
-                        onMouseLeave={() => setHoveredNodeId(null)}
-                        onClick={() => navigate(`${location.pathname}/breakdown`, { state: { selectedNode: node } })}
-                    >
-                        <div className={`skill-card ${node.domain} cursor-pointer`}>
-                            <div className="skill-icon">
-                                <img 
-                                    src={node.domain === 'codecombat' ? codecombatLogo : ozariaLogo} 
-                                    alt={`${node.domain} logo`} 
-                                    className="domain-logo"
-                                />
-                            </div>
-                            <div className="skill-content">
-                                <h3>{node.title}</h3>
-                                {node.is_extra && <p className="domain-label">Extra Quest</p>}
-                                <div className="course-progress-container">
-                                    <div className="course-progress-bar">
-                                        <div 
-                                            className="course-progress-fill" 
-                                            style={{ width: `${node.levels_total ? Math.min((node.levels_completed / node.levels_total) * 100, 100) : (node.levels_completed > 0 ? 100 : 0)}%` }}
-                                        ></div>
-                                    </div>
-                                    {node.levels_completed > 0 && (
-                                        <div className="course-progress-text">
-                                            <Star size={12} className="mr-4px align-middle mb-2px"/>
-                                            {node.levels_completed} Levels Completed
+                {/* Nodes */}
+                {processedNodes.map(node => {
+                    const trackInfo = TRACKS.find(t => t.id === node.track);
+                    const isRecommended = node.id === recommendedNodeId;
+                    const isDimmed = hoveredNodeId && !connectedNodes.has(node.id);
+                    const prereqs = !node.has_started ? getPrerequisiteTitles(node.id, processedNodes) : "";
+                    const isComplete = node.levels_total && node.levels_completed >= node.levels_total;
+
+                    return (
+                        <div
+                            key={node.id}
+                            ref={el => nodeRefs.current[node.id] = el}
+                            className={`skill-node-cell ${node.has_started ? 'active' : 'locked'} ${node.is_extra ? 'extra-node' : ''} ${isRecommended ? 'recommended' : ''} ${isDimmed ? 'dimmed' : ''} ${isComplete ? 'completed' : ''}`}
+                            style={{
+                                gridColumn: trackInfo?.col || 1,
+                                gridRow: node.row + 1
+                            }}
+                            onMouseEnter={() => setHoveredNodeId(node.id)}
+                            onMouseLeave={() => setHoveredNodeId(null)}
+                            onClick={() => navigate(`${location.pathname}/breakdown`, { state: { selectedNode: node } })}
+                        >
+                            <div className={`skill-card ${node.domain} cursor-pointer`}>
+                                <div className="skill-icon">
+                                    <img
+                                        src={node.domain === 'codecombat' ? codecombatLogo : ozariaLogo}
+                                        alt={`${node.domain} logo`}
+                                        className="domain-logo"
+                                    />
+                                </div>
+                                <div className="skill-content">
+                                    <h3>{node.title}</h3>
+                                    {node.is_extra && <p className="domain-label">Extra Quest</p>}
+                                    <div className="course-progress-container">
+                                        <div className="course-progress-bar">
+                                            <div
+                                                className="course-progress-fill"
+                                                style={{ width: `${node.levels_total ? Math.min((node.levels_completed / node.levels_total) * 100, 100) : (node.levels_completed > 0 ? 100 : 0)}%` }}
+                                            ></div>
                                         </div>
-                                    )}
+                                        {node.levels_completed > 0 && (
+                                            <div className="course-progress-text">
+                                                <Star size={12} className="mr-4px align-middle mb-2px" />
+                                                {node.levels_completed} Levels Completed
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
+                            {!node.has_started && prereqs && (
+                                <div className="node-tooltip">
+                                    Required: {prereqs}
+                                </div>
+                            )}
                         </div>
-                        {!node.has_started && prereqs && (
-                            <div className="node-tooltip">
-                                Required: {prereqs}
-                            </div>
-                        )}
-                    </div>
-                );
-            })}
+                    );
+                })}
             </div>
         </div>
     );
