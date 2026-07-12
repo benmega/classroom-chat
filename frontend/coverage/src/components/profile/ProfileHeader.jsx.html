@@ -30,9 +30,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">23.07% </span>
+                <span class="strong">21.42% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>3/13</span>
+                <span class='fraction'>3/14</span>
             </div>
         
             
@@ -258,23 +258,13 @@ import SmartImage from '../common/SmartImage';
 import { formatLargeNumber } from '../../utils/formatters';
 import { getApiUrl } from '../../utils/apiUrl';
 &nbsp;
-<<<<<<< HEAD
-const ProfileHeader = ({ target, isOwner, pfpInputRef, onPfpChange }) =&gt; {
+const ProfileHeader = ({ target, isOwner, pfpInputRef, onPfpChange, editLink }) =&gt; {
     const borderSpeed = target.animated_border_speed === <span class="branch-0 cbranch-no" title="branch not covered" >'slow' ? '3s' : t</span>arget.animated_border_speed === <span class="branch-0 cbranch-no" title="branch not covered" >'fast' ? '0.5s' : '</span>1.5s';
     return (
         &lt;div className="profile-header-card"&gt;
             &lt;div 
-                className="header-background"
+                className={`header-background ${target.<span class="branch-0 cbranch-no" title="branch not covered" >has_custom_wallpaper ? 'custom-banner' : '</span>'}`}
                 style={target.<span class="branch-0 cbranch-no" title="branch not covered" >has_custom_wallpaper &amp;&amp; target.<span class="branch-0 cbranch-no" title="branch not covered" >profile_wallpaper ? {</span></span>
-=======
-<span class="cstat-no" title="statement not covered" >const ProfileHeader = ({ target, isOwner, pfpInputRef, onPfpChange }) =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >    const borderSpeed = target.animated_border_speed === 'slow' ? '3s' : target.animated_border_speed === 'fast' ? '0.5s' : '1.5s';</span>
-<span class="cstat-no" title="statement not covered" >    return (</span>
-<span class="cstat-no" title="statement not covered" >        &lt;div className="profile-header-card"&gt;</span>
-<span class="cstat-no" title="statement not covered" >            &lt;div </span>
-<span class="cstat-no" title="statement not covered" >                className={`header-background ${target.has_custom_wallpaper ? 'custom-banner' : ''}`}</span>
-<span class="cstat-no" title="statement not covered" >                style={target.has_custom_wallpaper &amp;&amp; target.profile_wallpaper ? {</span>
->>>>>>> origin/deploy
 <span class="cstat-no" title="statement not covered" >                    backgroundImage: `url(${target.profile_wallpaper.startsWith('http') ? target.profile_wallpaper : getApiUrl('/user/profile_wallpapers/' + target.profile_wallpaper)})`,</span>
 <span class="cstat-no" title="statement not covered" >                    backgroundSize: 'cover',</span>
 <span class="cstat-no" title="statement not covered" >                    backgroundPosition: 'center',</span>
@@ -309,7 +299,6 @@ const ProfileHeader = ({ target, isOwner, pfpInputRef, onPfpChange }) =&gt; {
                     )}
                 &lt;/div&gt;
 &nbsp;
-<<<<<<< HEAD
                 &lt;div className="student-identity"&gt;
                     &lt;h1 className="student-name"&gt;{target.<span class="branch-0 cbranch-no" title="branch not covered" >nickname || target.username}&lt;</span>/h1&gt;
                     &lt;p className="student-title"&gt;@{target.username}&lt;/p&gt;
@@ -318,18 +307,9 @@ const ProfileHeader = ({ target, isOwner, pfpInputRef, onPfpChange }) =&gt; {
 <span class="cstat-no" title="statement not covered" >                            &lt;span style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', backgroundColor: 'var(--primary-color)', marginRight: '6px' }}&gt;&lt;/span&gt;</span>
 <span class="cstat-no" title="statement not covered" >                            {target.current_activity}</span>
 <span class="cstat-no" title="statement not covered" >                        &lt;/p&gt;</span>
-=======
-<span class="cstat-no" title="statement not covered" >                &lt;div className="student-identity"&gt;</span>
-<span class="cstat-no" title="statement not covered" >                    &lt;h1 className="student-name"&gt;{target.nickname || target.username}&lt;/h1&gt;</span>
-<span class="cstat-no" title="statement not covered" >                    &lt;p className="student-title"&gt;@{target.username}&lt;/p&gt;</span>
-<span class="cstat-no" title="statement not covered" >                    {isOwner &amp;&amp; (</span>
-<span class="cstat-no" title="statement not covered" >                        &lt;Link to="/profile/edit" className="btn-settings"&gt;</span>
-<span class="cstat-no" title="statement not covered" >                            &lt;User size={14} /&gt; Edit Profile</span>
-<span class="cstat-no" title="statement not covered" >                        &lt;/Link&gt;</span>
->>>>>>> origin/deploy
                     )}
                     {isOwner &amp;&amp; (
-                        &lt;Link to="/settings" className="btn-settings"&gt;
+                        &lt;Link to={editLink || "/settings"} className="btn-settings"&gt;
                             &lt;User size={14} /&gt; Edit Profile
                         &lt;/Link&gt;
                     )}
@@ -372,11 +352,7 @@ export default ProfileHeader;
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-<<<<<<< HEAD
-                at 2026-07-08T04:08:07.659Z
-=======
-                at 2026-07-03T03:14:45.254Z
->>>>>>> origin/deploy
+                at 2026-07-09T16:06:35.385Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>
