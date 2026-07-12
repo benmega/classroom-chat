@@ -469,8 +469,8 @@ export const BulkConnectionCardsModal = ({ isOpen, onClose, classrooms, fetchCla
                     padding: 10px;
                     max-height: 60vh;
                     overflow-y: auto;
-                    background: var(--bg-card);
-                    border: 1px solid var(--border-color);
+                    background: var(--bg-primary);
+                    border: 1px solid var(--border-subtle);
                     border-radius: 12px;
                 }
                 

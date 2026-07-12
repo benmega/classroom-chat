@@ -9,7 +9,7 @@
 
 .connect-child-card {
     background: var(--surface-light);
-    border: 1px solid var(--border-color);
+    border: 1px solid var(--border-subtle);
     border-radius: 12px;
     padding: 3rem 2rem;
     width: 100%;
@@ -19,7 +19,7 @@
 }
 
 .connect-child-card h2 {
-    color: var(--text-color);
+    color: var(--text-primary);
     margin: 1.5rem 0 0.5rem;
 }
 

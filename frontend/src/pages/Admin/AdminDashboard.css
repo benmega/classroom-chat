@@ -380,7 +380,7 @@
     width: 60px;
     padding: 4px 8px;
     border-radius: 6px;
-    border: 1px solid var(--border-color);
+    border: 1px solid var(--border-subtle);
     background: var(--bg-tertiary);
     color: var(--text-primary);
 }

@@ -30,7 +30,7 @@
     padding: 1rem;
     margin-bottom: 1rem;
     border-radius: var(--radius-md);
-    background: var(--surface-secondary);
+    background: var(--bg-secondary);
 }
 
 .branch-header h2 {
@@ -116,7 +116,7 @@
 .skill-content h3 {
     margin: 0;
     font-size: 1.1rem;
-    color: var(--text-color);
+    color: var(--text-primary);
 }
 
 .domain-label {
@@ -207,7 +207,7 @@
 
 .subtle-back-btn:hover {
     color: var(--text-primary);
-    background: var(--surface-secondary);
+    background: var(--bg-secondary);
     transform: translateX(-2px);
 }
 
@@ -343,7 +343,7 @@
 }
 
 .course-modal-close:hover {
-    background: var(--surface-secondary);
+    background: var(--bg-secondary);
     color: var(--text-primary);
 }
 
@@ -370,7 +370,7 @@
     align-items: center;
     gap: 1rem;
     padding: 0.75rem 1rem;
-    background: var(--surface-secondary);
+    background: var(--bg-secondary);
     border-radius: var(--radius-md);
     transition: opacity 0.2s;
 }

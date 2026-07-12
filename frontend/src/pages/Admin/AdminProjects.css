@@ -759,7 +759,7 @@
 .filter-search-input { width: 100%; padding: 6px; border: 1px solid var(--border-subtle); border-radius: 4px; outline: none; font-size: 0.85rem; }
 .title-bold { font-weight: 700; color: var(--slate-800); }
 .title-semi { font-weight: 600; color: var(--text-secondary); }
-.packet-reward-input { width: 100%; padding: 12px 16px; border-radius: 8px; border: 1px solid var(--border-color); background-color: var(--bg-card); color: var(--text-main); font-size: 15px; font-weight: 500; transition: border-color 0.2s, box-shadow 0.2s; outline: none; }
+.packet-reward-input { width: 100%; padding: 12px 16px; border-radius: 8px; border: 1px solid var(--border-subtle); background-color: var(--bg-primary); color: var(--text-primary); font-size: 15px; font-weight: 500; transition: border-color 0.2s, box-shadow 0.2s; outline: none; }
 .reward-help-text { font-size: 12px; color: var(--text-muted); display: block; margin-top: 6px; }
 .btn-assign-project-styled { display: flex; align-items: center; gap: 6px; background: var(--primary-color); color: white; padding: 8px 16px; border-radius: 8px; border: none; cursor: pointer; font-weight: 600; }
 .admin-projects-controls-wrapper { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; min-height: 38px; }

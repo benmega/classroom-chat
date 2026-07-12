@@ -25,7 +25,7 @@
 
 /* Horizontal Identity HUD at Top */
 .admin-user-hud {
-    background: var(--bg-card, #ffffff);
+    background: var(--bg-primary, #ffffff);
     border: 1px solid var(--border-subtle);
     border-radius: 16px;
     padding: 1rem 1.5rem;
@@ -244,7 +244,7 @@
 }
 
 .control-panel-card {
-    background: var(--bg-card, #ffffff);
+    background: var(--bg-primary, #ffffff);
     border: 1px solid var(--border-subtle);
     border-radius: 16px;
     padding: 1rem;
@@ -353,7 +353,7 @@
     padding: 0.6rem 0.75rem;
     border-radius: 8px;
     border: 1px solid var(--border-subtle);
-    background: var(--bg-card);
+    background: var(--bg-primary);
     color: var(--text-primary);
     font-size: 1rem;
     font-weight: 500;
@@ -436,7 +436,7 @@
     padding: 0.6rem 2.5rem 0.6rem 1rem;
     border-radius: 8px;
     border: 1px solid var(--border-subtle);
-    background: var(--bg-card);
+    background: var(--bg-primary);
     color: var(--text-primary);
     font-size: 1rem;
     font-weight: 500;
@@ -481,7 +481,7 @@
     width: 40px;
     height: 40px;
     border-radius: 10px;
-    background: var(--bg-card);
+    background: var(--bg-primary);
     box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
 
