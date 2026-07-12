@@ -98,7 +98,7 @@ const Layout = ({ children }) => {
                                                     <Package size={20} className="stat-icon" />
                                                     <div className="stat-content">
                                                         <span className="stat-label">Packets</span>
-                                                        <span className="stat-value" style={{ color: user.packets < 0 ? 'var(--error-color, #ff4444)' : 'inherit' }}>
+                                                        <span className={`stat-value ${user.packets < 0 ? 'text-error' : ''}`}>
                                                             {Number(user.packets || 0).toLocaleString(undefined, { 
                                                                 minimumFractionDigits: 0, 
                                                                 maximumFractionDigits: 3 
@@ -133,7 +133,7 @@ const Layout = ({ children }) => {
                                                 <>
                                                     {user.drawer && (
                                                         <li className="mobile-only-stat mobile-only">
-                                                            <div className="dropdown-stat-link drawer" style={{ textDecoration: 'none' }}>
+                                                            <div className="dropdown-stat-link drawer">
                                                                 <Archive size={20} />
                                                                 <div className="dropdown-stat-info">
                                                                     <span className="dropdown-stat-label">Drawer</span>
@@ -158,11 +158,11 @@ const Layout = ({ children }) => {
                                                     </li>
                                                     {Math.abs(user.packets) > 0.001 && (
                                                         <li className="mobile-only-stat mobile-only">
-                                                            <Link to="/shop" onClick={() => setIsDropdownOpen(false)} className="dropdown-stat-link packets" style={{ textDecoration: 'none' }}>
+                                                            <Link to="/shop" onClick={() => setIsDropdownOpen(false)} className="dropdown-stat-link packets">
                                                                 <Package size={20} />
                                                                 <div className="dropdown-stat-info">
                                                                     <span className="dropdown-stat-label">Packets</span>
-                                                                    <span className="dropdown-stat-value" style={{ color: user.packets < 0 ? 'var(--error-color, #ff4444)' : 'inherit' }}>
+                                                                    <span className={`dropdown-stat-value ${user.packets < 0 ? 'text-error' : ''}`}>
                                                                         {Number(user.packets || 0).toLocaleString(undefined, { 
                                                                             minimumFractionDigits: 0, 
                                                                             maximumFractionDigits: 3 

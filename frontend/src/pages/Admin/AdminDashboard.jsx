@@ -128,7 +128,7 @@ const AdminDashboard = () => {
             <div className="dashboard-layout">
                 <div className="main-content">
                     <div className="chart-card card">
-                        <div className="chart-header" style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '0.5rem' }}>
+                        <div className="chart-header justify-end mb-sm">
                             <select 
                                 value={timeframe} 
                                 onChange={(e) => setTimeframe(e.target.value === 'all' ? 'all' : Number(e.target.value))}
@@ -148,64 +148,52 @@ const AdminDashboard = () => {
 
                     <div className="admin-controls-card card">
                         {/* Unified Controls Grid */}
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '0.75rem' }}>
-                            <button className="action-item" onClick={() => navigate('/admin/users')} style={{ display: 'flex', alignItems: 'center', gap: '12px', textAlign: 'left', padding: '12px 16px', borderRadius: '12px', border: '1px solid var(--border-subtle)', background: 'var(--bg-secondary)', cursor: 'pointer' }}>
-                                <div className="icon" style={{ width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '10px', background: 'var(--primary-color)', color: 'white' }}><Users size={20} /></div>
-                                <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>User Directory</span>
+                        <div className="admin-controls-grid">
+                            <button className="action-item" onClick={() => navigate('/admin/users')}>
+                                <div className="icon icon-primary"><Users size={20} /></div>
+                                <span className="action-text-main">User Directory</span>
                             </button>
-                            <button className="action-item" onClick={() => navigate('/admin/pending-users')} style={{ display: 'flex', alignItems: 'center', gap: '12px', textAlign: 'left', padding: '12px 16px', borderRadius: '12px', border: '1px solid var(--border-subtle)', background: 'var(--bg-secondary)', cursor: 'pointer' }}>
-                                <div className="icon approval" style={{ width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '10px', background: 'var(--primary-color)', color: 'white' }}><Shield size={20} /></div>
-                                <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>Account Approvals</span>
+                            <button className="action-item" onClick={() => navigate('/admin/pending-users')}>
+                                <div className="icon icon-primary approval"><Shield size={20} /></div>
+                                <span className="action-text-main">Account Approvals</span>
                             </button>
                             
                             <button 
                                 onClick={handleToggleAI}
-                                style={{ 
-                                    display: 'flex', alignItems: 'center', gap: '12px', textAlign: 'left', 
-                                    padding: '12px 16px', borderRadius: '12px', 
-                                    border: config?.ai_teacher_enabled ? '1px solid var(--success-color)' : '1px solid var(--error-color)', 
-                                    background: config?.ai_teacher_enabled ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)', 
-                                    cursor: 'pointer' 
-                                }}
+                                className={`action-item ${config?.ai_teacher_enabled ? 'action-item-success' : 'action-item-error'}`}
                             >
-                                <div className="icon" style={{ width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '10px', background: config?.ai_teacher_enabled ? 'var(--success-color)' : 'var(--error-color)', color: 'white' }}><Bot size={20} /></div>
+                                <div className={`icon ${config?.ai_teacher_enabled ? 'icon-success' : 'icon-error'}`}><Bot size={20} /></div>
                                 <div>
-                                    <span style={{ fontWeight: 600, color: 'var(--text-primary)', display: 'block' }}>AI Teacher</span>
-                                    <small style={{ color: 'var(--text-secondary)' }}>{config?.ai_teacher_enabled ? 'Enabled' : 'Disabled'}</small>
+                                    <span className="action-text-main d-block">AI Teacher</span>
+                                    <small className="action-text-sub">{config?.ai_teacher_enabled ? 'Enabled' : 'Disabled'}</small>
                                 </div>
                             </button>
                             
                             <button 
                                 onClick={handleToggleMessages}
-                                style={{ 
-                                    display: 'flex', alignItems: 'center', gap: '12px', textAlign: 'left', 
-                                    padding: '12px 16px', borderRadius: '12px', 
-                                    border: config?.message_sending_enabled ? '1px solid var(--success-color)' : '1px solid var(--error-color)', 
-                                    background: config?.message_sending_enabled ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)', 
-                                    cursor: 'pointer' 
-                                }}
+                                className={`action-item ${config?.message_sending_enabled ? 'action-item-success' : 'action-item-error'}`}
                             >
-                                <div className="icon" style={{ width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '10px', background: config?.message_sending_enabled ? 'var(--success-color)' : 'var(--error-color)', color: 'white' }}><MessageSquare size={20} /></div>
+                                <div className={`icon ${config?.message_sending_enabled ? 'icon-success' : 'icon-error'}`}><MessageSquare size={20} /></div>
                                 <div>
-                                    <span style={{ fontWeight: 600, color: 'var(--text-primary)', display: 'block' }}>Public Messaging</span>
-                                    <small style={{ color: 'var(--text-secondary)' }}>{config?.message_sending_enabled ? 'Enabled' : 'Disabled'}</small>
+                                    <span className="action-text-main d-block">Public Messaging</span>
+                                    <small className="action-text-sub">{config?.message_sending_enabled ? 'Enabled' : 'Disabled'}</small>
                                 </div>
                             </button>
 
-                            <button className="action-item" onClick={() => setActiveModal('bannedWord')} style={{ display: 'flex', alignItems: 'center', gap: '12px', textAlign: 'left', padding: '12px 16px', borderRadius: '12px', border: '1px solid var(--border-subtle)', background: 'var(--bg-secondary)', cursor: 'pointer' }}>
-                                <div className="icon" style={{ width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '10px', background: 'var(--error-color)', color: 'white' }}><AlertTriangle size={20} /></div>
-                                <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>Content Moderation</span>
+                            <button className="action-item" onClick={() => setActiveModal('bannedWord')}>
+                                <div className="icon icon-error"><AlertTriangle size={20} /></div>
+                                <span className="action-text-main">Content Moderation</span>
                             </button>
                             
-                            <div className="setting-item multiplier" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-secondary)', padding: '12px 16px', borderRadius: '12px', border: '1px solid var(--border-subtle)' }}>
-                                <label style={{ fontWeight: 600, color: 'var(--text-primary)' }}>Duck Multiplier</label>
-                                <div className="multiplier-input" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <div className="setting-item multiplier">
+                                <label className="setting-label">Duck Multiplier</label>
+                                <div className="multiplier-input-wrapper">
                                     <input 
                                         type="number" 
                                         step="0.1" 
                                         defaultValue={config?.duck_multiplier || 1.0} 
                                         onBlur={(e) => handleUpdateMultiplier(e.target.value)}
-                                        style={{ width: '60px', padding: '4px 8px', borderRadius: '6px', border: '1px solid var(--border-color)', background: 'var(--bg-tertiary)', color: 'var(--text-primary)' }}
+                                        className="multiplier-input-field"
                                     />
                                     <RefreshCw size={14} color="var(--text-secondary)" />
                                 </div>

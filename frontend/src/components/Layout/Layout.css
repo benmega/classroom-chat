@@ -384,6 +384,7 @@ a.stat-badge:hover {
     border-radius: var(--radius-sm);
     margin-bottom: 2px;
     border: 1px solid var(--border-subtle);
+    text-decoration: none !important;
 }
 
 .dropdown-stat-info {
@@ -796,6 +797,49 @@ footer {
     cursor: pointer;
     border: none;
     padding: 0;
+}
+
+.nav-rail-divider {
+    width: 20px;
+    height: 1px;
+    background: var(--border-subtle);
+    margin: 0.5rem 0;
+}
+
+.nav-rail-item-child {
+    padding: 4px;
+}
+
+.nav-rail-avatar {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1px solid var(--border-subtle);
+}
+
+.nav-rail-avatar-fallback {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: bold;
+    background: var(--bg-tertiary);
+    color: var(--text-muted);
+    border: 1px solid var(--border-subtle);
+}
+
+.active .nav-rail-avatar,
+.active .nav-rail-avatar-fallback {
+    border: 2px solid var(--primary-color) !important;
+}
+
+.active .nav-rail-avatar-fallback {
+    background: var(--primary-light) !important;
+    color: var(--primary-color) !important;
 }
 
 .nav-rail-item svg {

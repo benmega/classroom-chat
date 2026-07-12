@@ -297,24 +297,93 @@
 .status-pill.online { background: #064e3b; color: white; } /* Much darker green */
 
 /* Quick Actions Sidebar */
+.admin-controls-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 0.75rem;
+}
+
 .action-item {
-    background: var(--glass-bg);
-    border-radius: 14px;
-    padding: 1rem;
-    border: 1px solid var(--glass-border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-align: left;
+    padding: 12px 16px;
+    border-radius: 12px;
+    border: 1px solid var(--border-subtle);
+    background: var(--bg-secondary);
+    cursor: pointer;
+    transition: var(--transition-fast);
 }
 
 .action-item:hover {
-    background: white;
+    background: var(--bg-tertiary);
     transform: translateX(8px);
 }
 
-.action-item .icon {
-    width: 40px;
-    height: 40px;
-    border-radius: 12px;
+.action-item-success {
+    border: 1px solid var(--success-color);
+    background: rgba(16, 185, 129, 0.1);
 }
 
+.action-item-error {
+    border: 1px solid var(--error-color);
+    background: rgba(239, 68, 68, 0.1);
+}
+
+.action-item .icon {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    color: white;
+}
+
+.icon-primary { background: var(--primary-color); }
+.icon-success { background: var(--success-color); }
+.icon-error { background: var(--error-color); }
+
+.action-text-main {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.action-text-sub {
+    color: var(--text-secondary);
+}
+
+/* Settings Multiplier */
+.setting-item.multiplier {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--bg-secondary);
+    padding: 12px 16px;
+    border-radius: 12px;
+    border: 1px solid var(--border-subtle);
+}
+
+.setting-label {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.multiplier-input-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.multiplier-input-field {
+    width: 60px;
+    padding: 4px 8px;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+}
 /* Banned Words */
 .word-chip {
     background: var(--gradient-error);

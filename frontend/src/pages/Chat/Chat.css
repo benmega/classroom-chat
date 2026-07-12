@@ -280,6 +280,15 @@
     white-space: pre-wrap;
 }
 
+.message-bubble-container {
+    flex: 1;
+    min-width: 0;
+}
+
+.icon-globe {
+    margin-top: 2px;
+}
+
 .other-message .message-bubble {
     background: var(--bg-tertiary);
     border: 1px solid var(--border-subtle);

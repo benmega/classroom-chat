@@ -37,7 +37,7 @@ const ChatMessage = React.memo(({ msg, user, onDelete }) => {
                         
                         <div className="message-targeting-info">
                             {msg.is_global && (
-                                <Globe size={12} color="var(--primary-color)" style={{ marginTop: '2px' }} title="Global Post" />
+                                <Globe size={12} color="var(--primary-color)" className="icon-globe" title="Global Post" />
                             )}
                             
                             {(user?.is_admin || user?.id === msg.user_id) && !msg.is_global && (
@@ -75,7 +75,7 @@ const ChatMessage = React.memo(({ msg, user, onDelete }) => {
                         </span>
                     </div>
                     <div className="message-body-row">
-                        <div className={`message-bubble ${msg.chat_font_color ? "perk-chat-font" : ""}`} style={{ flex: 1, minWidth: 0, ...(msg.chat_font_color ? { "--chat-font-color": msg.chat_font_color } : {}) }}>
+                        <div className={`message-bubble message-bubble-container ${msg.chat_font_color ? "perk-chat-font" : ""}`} style={msg.chat_font_color ? { "--chat-font-color": msg.chat_font_color } : {}}>
                             <Linkify text={msg.content} isUserMessage={false} />
                         </div>
                         {(user?.is_admin || user?.id === msg.user_id) && (
