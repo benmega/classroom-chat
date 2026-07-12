@@ -37,9 +37,9 @@ const StudentParentCode = () => {
         <div className="student-parent-code-section">
             <div className="code-card glass-panel" style={{ minHeight: '200px' }}>
                 <Skeleton height="28px" width="200px" style={{ marginBottom: '0.75rem' }} />
-                <Skeleton height="16px" width="300px" style={{ marginBottom: '2rem' }} />
+                <Skeleton height="16px" width="300px" className="mb-2rem" />
                 <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem' }}>
-                    <Skeleton height="56px" style={{ flexGrow: 1 }} borderRadius="8px" />
+                    <Skeleton height="56px" className="flex-1" borderRadius="8px" />
                     <Skeleton height="56px" width="56px" borderRadius="6px" />
                 </div>
                 <Skeleton height="40px" width="150px" borderRadius="6px" />

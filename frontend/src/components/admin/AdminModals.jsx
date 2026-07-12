@@ -21,16 +21,16 @@ export const CreateUserModal = ({ isOpen, onClose, onSubmit, formErrors, loading
             </div>
             <div className={`form-group ${formErrors.password ? 'has-error' : ''}`}>
                 <label>Initial Password</label>
-                <div style={{ position: 'relative' }}>
+                <div className="pos-rel">
                     <input 
                         type={showPassword ? "text" : "password"} 
                         name="password" 
-                        style={{ paddingRight: '2.5rem' }}
+                        className="pr-2-5rem"
                     />
                     <button 
                         type="button" 
                         onClick={() => setShowPassword(!showPassword)}
-                        style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                        className="password-toggle-btn"
                         tabIndex="-1"
                     >
                         {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -181,16 +181,16 @@ export const ResetPasswordModal = ({ isOpen, onClose, onSubmit, user, formErrors
             </div>
             <div className={`form-group ${formErrors.new_password ? 'has-error' : ''}`}>
                 <label>New Password</label>
-                <div style={{ position: 'relative' }}>
+                <div className="pos-rel">
                     <input 
                         type={showNewPassword ? "text" : "password"} 
                         name="new_password" 
-                        style={{ paddingRight: '2.5rem' }}
+                        className="pr-2-5rem"
                     />
                     <button 
                         type="button" 
                         onClick={() => setShowNewPassword(!showNewPassword)}
-                        style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                        className="password-toggle-btn"
                         tabIndex="-1"
                     >
                         {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -200,16 +200,16 @@ export const ResetPasswordModal = ({ isOpen, onClose, onSubmit, user, formErrors
             </div>
             <div className={`form-group ${formErrors.confirm_password ? 'has-error' : ''}`}>
                 <label>Confirm Password</label>
-                <div style={{ position: 'relative' }}>
+                <div className="pos-rel">
                     <input 
                         type={showConfirmPassword ? "text" : "password"} 
                         name="confirm_password" 
-                        style={{ paddingRight: '2.5rem' }}
+                        className="pr-2-5rem"
                     />
                     <button 
                         type="button" 
                         onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                        style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                        className="password-toggle-btn"
                         tabIndex="-1"
                     >
                         {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -229,7 +229,7 @@ export const StartConversationModal = ({ isOpen, onClose, onSubmit, loading, cla
     <Modal isOpen={isOpen} onClose={onClose} title="Start New Conversation">
         <form onSubmit={onSubmit} className="admin-form">
             <div className="form-group">
-                <label>Target Classroom <span style={{ color: 'var(--error-color)' }}>*</span></label>
+                <label>Target Classroom <span className="text-error">*</span></label>
                 <select name="classroom_id" className="admin-select" required defaultValue="">
                     <option value="" disabled>Select a classroom...</option>
                     {classrooms.map(c => (
@@ -263,7 +263,7 @@ export const AddBannedWordModal = ({ isOpen, onClose, onSubmit, newWord, setNewW
                     required
                 />
             </div>
-            <button type="submit" className="btn-primary" style={{ background: 'var(--gradient-error)' }} disabled={loading}>
+            <button type="submit" className="btn-primary" className="bg-gradient-error" disabled={loading}>
                 {loading ? 'Adding...' : 'Ban Word'}
             </button>
         </form>
@@ -279,31 +279,31 @@ export const ManageChildrenModal = ({ isOpen, onClose, parent, users, parentChil
             <div className="admin-form">
                 <div className="form-group">
                     <label>Select Students to Link</label>
-                    <div style={{ maxHeight: '300px', overflowY: 'auto', border: '1px solid var(--border-subtle)', borderRadius: '8px', padding: '10px', background: 'var(--bg-secondary)' }}>
+                    <div className="students-list-container">
                         {students.length === 0 ? (
-                            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', textAlign: 'center' }}>No students found.</p>
+                            <p className="text-muted text-sm text-center">No students found.</p>
                         ) : (
                             students.map(s => {
                                 const isLinked = childIds.has(s.id);
                                 return (
-                                    <div key={s.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px', borderBottom: '1px solid var(--border-subtle)' }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                    <div key={s.id} className="student-list-item">
+                                        <div className="d-flex align-center gap-10px">
                                             <SmartImage 
                                                 src={s.profile_picture ? getApiUrl(`/user/profile_pictures/${s.profile_picture}`) : ''} 
                                                 alt="" 
                                                 className="avatar-small"
                                                 fallbackType="avatar"
-                                                style={{ width: '32px', height: '32px', borderRadius: '8px', objectFit: 'cover' }}
+                                                className="w-32px h-32px radius-8 object-cover"
                                             />
                                             <div>
-                                                <div style={{ fontWeight: '600', fontSize: '0.9rem' }}>{s.nickname || s.username}</div>
-                                                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>@{s.username}</div>
+                                                <div className="fw-semibold text-sm">{s.nickname || s.username}</div>
+                                                <div className="text-xs text-muted">@{s.username}</div>
                                             </div>
                                         </div>
                                         <button 
                                             type="button"
                                             className={`btn-primary ${isLinked ? 'danger' : ''}`}
-                                            style={{ padding: '6px 12px', fontSize: '0.8rem', borderRadius: '6px' }}
+                                            className="btn-small-link"
                                             onClick={() => onToggleLink(parent.id, s.id, isLinked)}
                                             disabled={loading}
                                         >
@@ -315,8 +315,8 @@ export const ManageChildrenModal = ({ isOpen, onClose, parent, users, parentChil
                         )}
                     </div>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '20px' }}>
-                    <button type="button" className="btn-secondary" onClick={onClose} style={{ padding: '10px 20px', borderRadius: '8px', border: '1px solid var(--border-subtle)', background: 'white', cursor: 'pointer' }}>
+                <div className="d-flex justify-end mt-20px">
+                    <button type="button" className="btn-secondary" onClick={onClose} className="btn-secondary-styled">
                         Close
                     </button>
                 </div>
@@ -333,21 +333,21 @@ export const ConnectionCardModal = ({ isOpen, onClose, student, connectionCode }
 
     return (
         <Modal isOpen={isOpen} onClose={onClose} title={`Connection Card: ${student.username}`}>
-            <div className="connection-card-container" style={{ textAlign: 'center', padding: '1rem' }}>
-                <p style={{ marginBottom: '1.5rem', color: 'var(--text-muted)' }}>
+            <div className="connection-card-container" className="text-center p-1rem">
+                <p className="mb-1-5rem text-muted">
                     Print or show this card to the parent. They can scan the QR code or enter the code manually to connect.
                 </p>
-                <div style={{ background: 'white', padding: '1.5rem', borderRadius: '12px', display: 'inline-block', border: '1px solid var(--border-subtle)', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}>
-                    <h3 style={{ margin: '0 0 0.25rem 0', color: 'var(--slate-800)' }}>{student.nickname || student.username}</h3>
-                    <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>@{student.username}</div>
-                    <img src={qrUrl} alt="QR Code" style={{ width: '200px', height: '200px' }} />
-                    <div style={{ marginTop: '1rem', padding: '0.75rem', background: 'var(--bg-tertiary)', borderRadius: '8px', border: '1px dashed var(--border-rich)' }}>
-                        <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Connection Code</span>
-                        <span style={{ fontSize: '1.5rem', fontWeight: 'bold', letterSpacing: '4px', color: 'var(--text-primary)' }}>{connectionCode}</span>
+                <div className="connection-card-preview">
+                    <h3 className="m-0 mb-xs text-slate-800">{student.nickname || student.username}</h3>
+                    <div className="text-sm text-muted mb-md">@{student.username}</div>
+                    <img src={qrUrl} alt="QR Code" className="w-200px h-200px" />
+                    <div className="connection-code-container">
+                        <span className="text-sm text-muted d-block mb-4px">Connection Code</span>
+                        <span className="connection-code-text">{connectionCode}</span>
                     </div>
                 </div>
-                <div style={{ marginTop: '2rem', display: 'flex', gap: '1rem', justifyContent: 'center' }}>
-                    <button className="btn-secondary" onClick={() => window.print()} style={{ padding: '0.5rem 1rem', borderRadius: '6px', cursor: 'pointer', border: '1px solid var(--border-color)', background: 'transparent', color: 'var(--text-color)' }}>
+                <div className="mt-2rem d-flex gap-md justify-center">
+                    <button className="btn-secondary" onClick={() => window.print()} className="btn-secondary-print">
                         Print Card
                     </button>
                     <button className="btn-primary" onClick={onClose}>
@@ -396,14 +396,14 @@ export const BulkConnectionCardsModal = ({ isOpen, onClose, classrooms, fetchCla
 
     return (
         <Modal isOpen={isOpen} onClose={onClose} title="Bulk Print Cohort Connection Cards" width="80%">
-            <div className="bulk-cards-modal-content" style={{ padding: '1rem' }}>
-                <div className="form-group no-print" style={{ marginBottom: '1.5rem' }}>
-                    <label style={{ fontWeight: '600', marginBottom: '0.5rem', display: 'block' }}>Select Cohort (Classroom)</label>
+            <div className="bulk-cards-modal-content" className="p-1rem">
+                <div className="form-group no-print" className="mb-1-5rem">
+                    <label className="fw-semibold mb-sm d-block">Select Cohort (Classroom)</label>
                     <select 
                         value={selectedClassroomId} 
                         onChange={handleClassroomChange} 
                         className="admin-select"
-                        style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-color)' }}
+                        className="select-styled-full"
                     >
                         <option value="">Select a classroom...</option>
                         <option value="all">All Students (Entire Directory)</option>
@@ -414,23 +414,23 @@ export const BulkConnectionCardsModal = ({ isOpen, onClose, classrooms, fetchCla
                 </div>
 
                 {isFetchingCards ? (
-                    <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }} className="no-print">
+                    <div className="text-center p-3rem text-muted" className="no-print">
                         <p>Generating cards and connection codes...</p>
                     </div>
                 ) : selectedClassroomId && classroomCards.length === 0 ? (
-                    <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }} className="no-print">
+                    <div className="text-center p-3rem text-muted" className="no-print">
                         <p>No students found in this classroom.</p>
                     </div>
                 ) : classroomCards.length > 0 ? (
                     <div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }} className="no-print">
-                            <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+                        <div className="d-flex justify-between align-center mb-1-5rem" className="no-print">
+                            <span className="text-muted text-sm">
                                 Found <strong>{classroomCards.length}</strong> connection cards. Ready for printing.
                             </span>
                             <button 
                                 className="btn-primary" 
                                 onClick={() => window.print()} 
-                                style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '0.6rem 1.2rem', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
+                                className="btn-primary-styled-print"
                             >
                                 Print {classroomCards.length} Cards
                             </button>
@@ -444,8 +444,8 @@ export const BulkConnectionCardsModal = ({ isOpen, onClose, classrooms, fetchCla
 
                                 return (
                                     <div key={card.id} className="bulk-print-card">
-                                        <h3 className="card-student-name" style={{ marginBottom: '2px' }}>{card.nickname || card.username}</h3>
-                                        <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.75rem', textAlign: 'center', wordBreak: 'break-all' }}>@{card.username}</div>
+                                        <h3 className="card-student-name" className="mb-2px">{card.nickname || card.username}</h3>
+                                        <div className="text-0-85rem text-muted mb-0-75rem text-center break-all">@{card.username}</div>
                                         <div className="card-qr-wrapper">
                                             <img src={qrUrl} alt={`QR Code for ${card.username}`} className="card-qr-img" />
                                         </div>
@@ -459,8 +459,8 @@ export const BulkConnectionCardsModal = ({ isOpen, onClose, classrooms, fetchCla
                         </div>
                     </div>
                 ) : (
-                    <div style={{ textAlign: 'center', padding: '4rem 2rem', color: 'var(--text-muted)', border: '2px dashed var(--border-color)', borderRadius: '12px' }} className="no-print">
-                        <p style={{ fontSize: '1.1rem', margin: 0 }}>Please select a classroom cohort above to generate and preview connection cards.</p>
+                    <div className="text-center p-4rem-2rem text-muted border-dashed-2 radius-12" className="no-print">
+                        <p className="text-1-1rem m-0">Please select a classroom cohort above to generate and preview connection cards.</p>
                     </div>
                 )}
             </div>

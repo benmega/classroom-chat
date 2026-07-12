@@ -165,18 +165,18 @@ const ParentDashboard = () => {
     // ── Loading skeleton ───────────────────────────────────────────────────────
     if (isLoading) {
         return (
-            <div className="parent-dashboard animate-page-entry" style={{ padding: '2rem' }}>
+            <div className="parent-dashboard animate-page-entry" className="p-2rem">
                 <main className="parent-body">
-                    <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '2rem' }}>
-                        <div className="glass-panel" style={{ padding: '2rem', height: '400px' }}>
-                            <Skeleton height="32px" width="40%" style={{ marginBottom: '1.5rem' }} />
-                            <Skeleton height="80px" style={{ marginBottom: '1rem' }} />
-                            <Skeleton height="80px" style={{ marginBottom: '1rem' }} />
+                    <div className="parent-grid-layout">
+                        <div className="glass-panel" className="p-2rem h-400px">
+                            <Skeleton height="32px" width="40%" className="mb-1-5rem" />
+                            <Skeleton height="80px" className="mb-md" />
+                            <Skeleton height="80px" className="mb-md" />
                             <Skeleton height="80px" />
                         </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                            <div className="glass-panel" style={{ padding: '2rem', height: '200px' }}>
-                                <Skeleton height="24px" width="60%" style={{ marginBottom: '1rem' }} />
+                        <div className="d-flex flex-col gap-1-5rem">
+                            <div className="glass-panel" className="p-2rem h-200px">
+                                <Skeleton height="24px" width="60%" className="mb-md" />
                                 <Skeleton height="40px" />
                             </div>
                         </div>
@@ -192,27 +192,27 @@ const ParentDashboard = () => {
                 <DesktopNotice />
 
                 {/* Cohesive Dashboard Layout */}
-                <div className="dashboard-layout" style={{ display: 'grid', gridTemplateColumns: '2.2fr 1fr', gap: '2rem', marginTop: '1rem' }}>
+                <div className="dashboard-layout" className="parent-dashboard-layout">
                     
                     {/* Left Column: Cohesive Activity Feed */}
                     <div className="left-column">
-                        <section className="dashboard-panel" style={{ padding: '2rem', background: 'var(--bg-primary)', borderRadius: '16px', border: '1px solid var(--border-subtle)' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '1rem' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                        <section className="dashboard-panel" className="dashboard-panel-styled">
+                            <div className="panel-header-styled">
+                                <div className="d-flex align-center gap-0-75rem">
                                     <Activity size={22} color="var(--primary-color)" />
-                                    <h2 style={{ fontSize: '1.4rem', margin: 0, fontWeight: '700' }}>Recent Family Activity</h2>
+                                    <h2 className="panel-title-text">Recent Family Activity</h2>
                                 </div>
-                                <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: '500' }}>Past 30 Days</span>
+                                <span className="panel-subtitle-text">Past 30 Days</span>
                             </div>
 
                             {reportsLoading && Object.keys(childHistories).length === 0 ? (
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                                <div className="d-flex flex-col gap-md">
                                     <Skeleton height="64px" borderRadius="12px" />
                                     <Skeleton height="64px" borderRadius="12px" />
                                     <Skeleton height="64px" borderRadius="12px" />
                                 </div>
                             ) : mergedActivityFeed.length > 0 ? (
-                                <div className="activity-timeline" style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                                <div className="activity-timeline" className="d-flex flex-col gap-1-25rem">
                                     {mergedActivityFeed.map((event, idx) => {
                                         let IconComponent = Zap;
                                         let iconColor = 'var(--primary-color)';
@@ -250,15 +250,15 @@ const ParentDashboard = () => {
                                                 }}
                                             >
                                                 {/* Child Avatar indicator */}
-                                                <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                                                <div className="pos-rel d-flex align-center">
                                                     {event.childAvatar && !event.childAvatar.includes('Default_pfp.jpg') ? (
                                                         <img
                                                             src={getApiUrl(event.childAvatar)}
                                                             alt={event.childName}
-                                                            style={{ width: '36px', height: '36px', borderRadius: '50%', objectFit: 'cover' }}
+                                                            className="w-36px h-36px radius-50 object-cover"
                                                         />
                                                     ) : (
-                                                        <div className="child-avatar-initials" style={{ width: '36px', height: '36px', margin: 0, fontSize: '0.8rem' }}>
+                                                        <div className="child-avatar-initials" className="w-36px h-36px m-0 text-0-8rem">
                                                             <User size={16} />
                                                         </div>
                                                     )}
@@ -285,27 +285,27 @@ const ParentDashboard = () => {
                                                 </div>
 
                                                 {/* Event Info */}
-                                                <div style={{ flexGrow: 1, minWidth: 0 }}>
-                                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem' }}>
-                                                        <span style={{ fontSize: '0.9rem', fontWeight: '700', color: 'var(--text-primary)' }}>
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="d-flex justify-between align-center gap-sm">
+                                                        <span className="text-0-9rem fw-bold text-primary">
                                                             {event.childName}
                                                         </span>
-                                                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                        <span className="text-xs text-muted d-flex align-center gap-4px">
                                                             <Clock size={11} /> {timeAgo(event.timestamp)}
                                                         </span>
                                                     </div>
-                                                    <p style={{ margin: '0.2rem 0 0', fontSize: '0.85rem', color: 'var(--text-secondary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                                    <p className="text-ellipsis-desc">
                                                         {event.label}
                                                     </p>
                                                 </div>
-                                                <ChevronRight size={16} color="var(--text-muted)" style={{ flexShrink: 0 }} />
+                                                <ChevronRight size={16} color="var(--text-muted)" className="flex-shrink-0" />
                                             </div>
                                         );
                                     })}
                                 </div>
                             ) : (
                                 /* Encouragement section if there's no activity */
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                                <div className="d-flex flex-col gap-1-25rem">
                                     {children.map((child) => {
                                         const history = childHistories[child.id];
                                         const hasAnyActivityEver = history?.has_any_activity_ever ?? true;
@@ -323,13 +323,13 @@ const ParentDashboard = () => {
                                                     cursor: 'pointer'
                                                 }}
                                             >
-                                                <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
-                                                    <span style={{ fontSize: '1.75rem' }}>{hasAnyActivityEver ? '☕' : '👋'}</span>
+                                                <div className="d-flex gap-md align-start">
+                                                    <span className="text-1-75rem">{hasAnyActivityEver ? '☕' : '👋'}</span>
                                                     <div>
                                                         <h4 style={{ margin: '0 0 0.35rem 0', color: hasAnyActivityEver ? '#b45309' : 'var(--primary-color)', fontSize: '1rem' }}>
                                                             {hasAnyActivityEver ? `${displayName} is taking a break` : `Welcome ${displayName}!`}
                                                         </h4>
-                                                        <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+                                                        <p className="m-0 text-xs text-secondary lh-1-5">
                                                             {hasAnyActivityEver 
                                                                 ? `It looks like ${displayName} hasn't been active in the last 30 days. Try encouraging them to attempt some levels or showcase their skills in a project!` 
                                                                 : `We're excited to have ${displayName} get started on their coding journey! Encourage them to complete their first challenges or build a project to earn Ducks.`
@@ -346,12 +346,12 @@ const ParentDashboard = () => {
                     </div>
 
                     {/* Right Column: Family List */}
-                    <div className="right-column" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                    <div className="right-column" className="d-flex flex-col gap-1-5rem">
                         
                         {/* Children List */}
-                        <section className="dashboard-panel" style={{ padding: '1.5rem', background: 'var(--bg-primary)', borderRadius: '16px', border: '1px solid var(--border-subtle)' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '0.75rem', marginBottom: '1.25rem' }}>
-                                <h3 style={{ fontSize: '1.1rem', margin: 0, fontWeight: '700' }}>
+                        <section className="dashboard-panel" className="dashboard-panel-styled-small">
+                            <div className="panel-header-styled-small">
+                                <h3 className="panel-title-small">
                                     Family Members
                                 </h3>
                                 <button 
@@ -376,7 +376,7 @@ const ParentDashboard = () => {
                                     <Plus size={16} />
                                 </button>
                             </div>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                            <div className="d-flex flex-col gap-md">
                                 {children.map((child) => {
                                     const report = childReports[child.id];
                                     const isActive = report?.last_activity_time && isWithinHours(report.last_activity_time, 2);
@@ -397,8 +397,8 @@ const ParentDashboard = () => {
                                                 cursor: 'pointer'
                                             }}
                                         >
-                                            <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-                                                <div style={{ position: 'relative' }}>
+                                            <div className="d-flex gap-0-75rem align-center">
+                                                <div className="pos-rel">
                                                     {child.profile_picture_url && !child.profile_picture_url.includes('Default_pfp.jpg') ? (
                                                         <img
                                                             src={getApiUrl(child.profile_picture_url)}
@@ -412,18 +412,18 @@ const ParentDashboard = () => {
                                                     )}
                                                     <span
                                                         className={`activity-dot ${isActive ? 'activity-dot--active' : 'activity-dot--idle'}`}
-                                                        style={{ position: 'absolute', bottom: '-2px', right: '-2px', width: '9px', height: '9px', border: '1.5px solid white' }}
+                                                        className="status-dot-small"
                                                     />
                                                 </div>
                                                 <div>
-                                                    <div style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-primary)' }}>{displayName}</div>
-                                                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>@{child.username}</div>
+                                                    <div className="text-0-85rem fw-bold text-primary">{displayName}</div>
+                                                    <div className="text-xs text-muted">@{child.username}</div>
                                                 </div>
                                             </div>
 
                                             {/* Options Menu Only (No Duck Balance) */}
-                                            <div style={{ display: 'flex', alignItems: 'center' }} onClick={(e) => e.stopPropagation()}>
-                                                <div className="child-card-menu" style={{ position: 'relative', top: 'auto', right: 'auto' }}>
+                                            <div className="d-flex align-center" onClick={(e) => e.stopPropagation()}>
+                                                <div className="child-card-menu" className="pos-rel top-auto right-auto">
                                                     <button
                                                         className="menu-btn"
                                                         onClick={() => setOpenMenu(openMenu === child.id ? null : child.id)}
@@ -488,7 +488,7 @@ const ParentDashboard = () => {
                         <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '0 0 1.25rem 0', lineHeight: 1.4 }}>
                             Enter the 6-character connection code to link another student.
                         </p>
-                        <form onSubmit={handleConnectChild} className="connect-form" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                        <form onSubmit={handleConnectChild} className="connect-form" className="d-flex flex-col gap-md">
                             <input
                                 type="text"
                                 placeholder="CODE"

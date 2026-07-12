@@ -207,7 +207,7 @@ const SubmitChallenge = () => {
                         </div>
 
                         {isCertificate && isSubmitting && uploadProgress > 0 && (
-                            <div className="progress-container" style={{ marginTop: '1rem' }}>
+                            <div className="progress-container" className="mt-md">
                                 <div className="progress-bar-wrapper">
                                     <div 
                                         className="progress-bar-fill" 

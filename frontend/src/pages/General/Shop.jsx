@@ -221,12 +221,12 @@ const Shop = () => {
                         <div key={i} className="shop-item-card skeleton-mt" style={{ minHeight: '220px', padding: '1.5rem', background: 'var(--bg-secondary)', borderRadius: '12px', border: '1px solid var(--border-subtle)' }}>
                             <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '1rem' }}>
                                 <Skeleton height="40px" width="40px" borderRadius="8px" />
-                                <div style={{ flexGrow: 1 }}>
+                                <div className="flex-1">
                                     <Skeleton height="18px" width="60%" style={{ marginBottom: '8px' }} />
                                     <Skeleton height="14px" width="40%" />
                                 </div>
                             </div>
-                            <Skeleton height="80px" borderRadius="8px" style={{ marginBottom: '1rem' }} />
+                            <Skeleton height="80px" borderRadius="8px" className="mb-md" />
                             <Skeleton height="36px" width="100%" borderRadius="6px" />
                         </div>
                     ))}

@@ -49,30 +49,30 @@ const Chat = () => {
   } = useFeedLogic();
 
   if (loading) return (
-    <div className="feed-loading-skeleton-container" style={{ padding: '2rem' }}>
-      <span style={{ display: 'none' }}>Loading Feed...</span>
-      <div className="feed-main" style={{ width: '100%' }}>
+    <div className="feed-loading-skeleton-container" className="p-2rem">
+      <span className="d-none">Loading Feed...</span>
+      <div className="feed-main" className="w-100">
         {/* Mock Messages List */}
-        <div className="feed-messages-list" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+        <div className="feed-messages-list" className="d-flex flex-col gap-1-5rem">
           {[1, 2, 3].map(i => (
-            <div key={i} className="message-wrapper" style={{ display: 'flex', gap: '1rem', padding: '1.25rem', background: 'var(--bg-secondary)', borderRadius: '12px', border: '1px solid var(--border-subtle)' }}>
-              <Skeleton height="40px" width="40px" borderRadius="50%" style={{ flexShrink: 0 }} />
-              <div style={{ flexGrow: 1 }}>
-                <div style={{ display: 'flex', gap: '8px', marginBottom: '8px', alignItems: 'center' }}>
+            <div key={i} className="message-wrapper" className="chat-skeleton-message">
+              <Skeleton height="40px" width="40px" borderRadius="50%" className="flex-shrink-0" />
+              <div className="flex-1">
+                <div className="d-flex gap-sm mb-sm align-center">
                   <Skeleton height="18px" width="100px" />
                   <Skeleton height="14px" width="60px" />
                 </div>
-                <Skeleton height="16px" style={{ marginBottom: '6px' }} />
+                <Skeleton height="16px" className="mb-6px" />
                 <Skeleton height="16px" width="80%" />
               </div>
             </div>
           ))}
         </div>
         {/* Mock Input Area */}
-        <div className="feed-input-area" style={{ marginTop: '2rem', opacity: 0.6 }}>
-          <div className="feed-input-wrapper-container" style={{ padding: '1rem', background: 'var(--bg-secondary)', borderRadius: '12px', border: '1px solid var(--border-subtle)' }}>
-            <Skeleton height="60px" style={{ marginBottom: '1rem' }} />
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div className="feed-input-area" className="mt-2rem opacity-60">
+          <div className="feed-input-wrapper-container" className="chat-skeleton-input">
+            <Skeleton height="60px" className="mb-md" />
+            <div className="d-flex justify-between align-center">
               <Skeleton height="36px" width="120px" borderRadius="18px" />
               <Skeleton height="36px" width="80px" borderRadius="18px" />
             </div>

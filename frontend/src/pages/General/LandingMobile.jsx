@@ -9,16 +9,16 @@ const LandingMobile = () => {
         <div className="landing-page landing-page-mobile animate-page-entry">
             <nav className="landing-nav glass-panel mobile-nav">
                 <div className="landing-nav-brand">
-                    <img src="/images/logo.ico" alt="Classroom Chat Logo" className="brand-icon" style={{ width: '28px', height: '28px' }} />
-                    <h1 style={{ fontSize: '1.25rem' }}>Classroom Chat</h1>
+                    <img src="/images/logo.ico" alt="Classroom Chat Logo" className="brand-icon w-28px h-28px" />
+                    <h1 className="text-1-25rem">Classroom Chat</h1>
                 </div>
             </nav>
 
             <main className="landing-main">
                 <section className="hero-section hero-mobile">
-                    <div className="hero-content" style={{ alignItems: 'center', textAlign: 'center' }}>
-                        <h2 className="animate-fade-in" style={{ fontSize: '2.5rem', lineHeight: '1.1' }}>
-                            Ready to <span style={{color: 'var(--primary-color)'}}>level up</span> your coding?
+                    <div className="hero-content align-center text-center">
+                        <h2 className="animate-fade-in landing-mobile-title">
+                            Ready to <span className="text-primary-color">level up</span> your coding?
                         </h2>
                         <p className="hero-subtitle animate-fade-in" style={{ animationDelay: '0.1s', fontSize: '1.1rem', margin: '0 auto' }}>
                             A space for students to build projects and parents to track progress.
@@ -28,11 +28,11 @@ const LandingMobile = () => {
                             <div className="slideshow-window glass-panel" style={{ width: '100%', maxWidth: '100%', borderRadius: '16px' }}>
                                 {/* RULE: All slideshow images below must be close to a 16:9 aspect ratio (e.g. 1024x576) to avoid awkward cropping */}
                                 <div className="slideshow-track">
-                                    <img src="/images/code_combat.png" alt="Code Combat" className="slide" style={{ objectFit: 'cover' }} />
-                                    <img src="/images/ozaria.png" alt="Ozaria" className="slide" style={{ objectFit: 'cover' }} />
-                                    <img src="/images/pycharm.png" alt="PyCharm IDE" className="slide" style={{ objectFit: 'cover' }} />
-                                    <img src="/images/turtle_code.png" alt="Turtle Code" className="slide" style={{ objectFit: 'cover' }} />
-                                    <img src="/images/printed_ducks.png" alt="3D Printed Ducks" className="slide" style={{ objectFit: 'cover' }} />
+                                    <img src="/images/code_combat.png" alt="Code Combat" className="slide object-cover" />
+                                    <img src="/images/ozaria.png" alt="Ozaria" className="slide object-cover" />
+                                    <img src="/images/pycharm.png" alt="PyCharm IDE" className="slide object-cover" />
+                                    <img src="/images/turtle_code.png" alt="Turtle Code" className="slide object-cover" />
+                                    <img src="/images/printed_ducks.png" alt="3D Printed Ducks" className="slide object-cover" />
                                 </div>
                             </div>
                         </div>
@@ -42,7 +42,7 @@ const LandingMobile = () => {
                             <button onClick={() => navigate('/signup?role=student')} className="btn-secondary" style={{ width: '100%', padding: '0.8rem' }}>
                                 I'm a Student
                             </button>
-                            <button onClick={() => navigate('/signup?role=parent')} className="btn-premium btn-premium-lg" style={{ width: '100%' }}>
+                            <button onClick={() => navigate('/signup?role=parent')} className="btn-premium btn-premium-lg" className="w-100">
                                 I'm a Parent
                             </button>
                         </div>

@@ -296,7 +296,7 @@ const CourseProgressTree = () => {
 
     if (isFetching) {
         return (
-            <div className="report-card-page animate-page-entry" style={{ padding: '2rem', textAlign: 'center' }}>
+            <div className="report-card-page animate-page-entry" className="p-2rem text-center">
                 <div className="report-error glass-panel">
                     <h2>Loading...</h2>
                     <p>Fetching your course progress.</p>
@@ -307,11 +307,11 @@ const CourseProgressTree = () => {
 
     if (!progressData) {
         return (
-            <div className="report-card-page animate-page-entry" style={{ padding: '2rem', textAlign: 'center' }}>
+            <div className="report-card-page animate-page-entry" className="p-2rem text-center">
                 <div className="report-error glass-panel">
                     <h2>No Progress Data</h2>
                     <p>Could not load the course progress tree. Please return to the profile.</p>
-                    <button className="btn-primary" onClick={() => navigate(-1)} style={{ marginTop: '1rem' }}>
+                    <button className="btn-primary" onClick={() => navigate(-1)} className="mt-md">
                         <ArrowLeft size={16} /> Go Back
                     </button>
                 </div>
@@ -337,11 +337,11 @@ const CourseProgressTree = () => {
                     const isComplete = trackNodes.length > 0 && trackNodes.every(n => n.has_started && n.levels_completed >= (n.levels_total || 1));
                     
                     return (
-                        <div key={track.id} className={`branch-header glass-panel desktop-header ${isComplete ? 'track-completed' : ''}`} style={{ position: 'relative', overflow: 'hidden' }}>
+                        <div key={track.id} className={`branch-header glass-panel desktop-header ${isComplete ? 'track-completed' : ''}`} className="pos-rel overflow-hidden">
                             <div className="track-progress-bg" style={{ width: `${percent}%` }}></div>
-                            <h2 style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+                            <h2 className="pos-rel z-1 d-flex flex-col align-center gap-4px">
                                 <span>{track.title}</span>
-                                <span style={{ fontSize: '0.8rem', opacity: 0.8, fontWeight: 'normal' }}>{Math.round(percent)}%</span>
+                                <span className="text-sm opacity-80 fw-normal">{Math.round(percent)}%</span>
                             </h2>
                         </div>
                     );
@@ -395,7 +395,7 @@ const CourseProgressTree = () => {
                         onMouseLeave={() => setHoveredNodeId(null)}
                         onClick={() => navigate(`${location.pathname}/breakdown`, { state: { selectedNode: node } })}
                     >
-                        <div className={`skill-card ${node.domain}`} style={{ cursor: 'pointer' }}>
+                        <div className={`skill-card ${node.domain}`} className="cursor-pointer">
                             <div className="skill-icon">
                                 <img 
                                     src={node.domain === 'codecombat' ? codecombatLogo : ozariaLogo} 
@@ -415,7 +415,7 @@ const CourseProgressTree = () => {
                                     </div>
                                     {node.levels_completed > 0 && (
                                         <div className="course-progress-text">
-                                            <Star size={12} style={{ marginRight: '4px', verticalAlign: 'middle', marginBottom: '2px' }}/>
+                                            <Star size={12} className="mr-4px align-middle mb-2px"/>
                                             {node.levels_completed} Levels Completed
                                         </div>
                                     )}

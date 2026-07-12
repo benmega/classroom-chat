@@ -10,8 +10,8 @@ const CourseLevelBreakdown = () => {
 
     if (!selectedNode) {
         return (
-            <div className="course-progress-container" style={{ padding: '2rem' }}>
-                <button className="back-button" onClick={() => navigate(-1)} style={{ marginBottom: '2rem' }}>
+            <div className="course-progress-container" className="p-2rem">
+                <button className="back-button" onClick={() => navigate(-1)} className="mb-2rem">
                     <ArrowLeft size={20} />
                     <span>Back</span>
                 </button>
@@ -22,16 +22,16 @@ const CourseLevelBreakdown = () => {
     }
 
     return (
-        <div className="course-progress-container" style={{ padding: '2rem', maxWidth: '800px', margin: '0 auto', height: '100dvh', overflowY: 'auto', WebkitOverflowScrolling: 'touch' }}>
-            <button className="back-button" onClick={() => navigate(-1)} style={{ marginBottom: '2rem' }}>
+        <div className="course-progress-container" className="course-progress-modal-container">
+            <button className="back-button" onClick={() => navigate(-1)} className="mb-2rem">
                 <ArrowLeft size={20} />
                 <span>Back to Skill Tree</span>
             </button>
             
-            <div className="course-modal-content" style={{ maxWidth: '100%', boxShadow: 'none', padding: '0', background: 'transparent' }}>
-                <h1 style={{ marginBottom: '1.5rem', color: 'var(--text-primary)' }}>{selectedNode.title}</h1>
-                <div className="course-modal-progress" style={{ marginBottom: '2.5rem' }}>
-                    <div className="course-progress-bar" style={{ height: '12px' }}>
+            <div className="course-modal-content" className="course-modal-content-styled">
+                <h1 className="mb-1-5rem text-primary">{selectedNode.title}</h1>
+                <div className="course-modal-progress" className="mb-2-5rem">
+                    <div className="course-progress-bar" className="h-12px">
                         <div 
                             className="course-progress-fill" 
                             style={{ 
@@ -40,24 +40,24 @@ const CourseLevelBreakdown = () => {
                             }}
                         ></div>
                     </div>
-                    <span style={{ fontSize: '1rem', color: 'var(--text-secondary)', display: 'block', marginTop: '0.75rem' }}>
+                    <span className="text-md text-secondary d-block mt-0-75rem">
                         {selectedNode.levels_completed} {selectedNode.levels_total ? `/ ${selectedNode.levels_total}` : ''} Levels Completed
                     </span>
                 </div>
                 
-                <h3 style={{ marginBottom: '1rem', color: 'var(--text-primary)' }}>Levels Breakdown</h3>
-                <div className="levels-list" style={{ overflowY: 'visible', gap: '0.75rem' }}>
+                <h3 className="mb-md text-primary">Levels Breakdown</h3>
+                <div className="levels-list" className="overflow-y-visible gap-0-75rem">
                     {selectedNode.levels && selectedNode.levels.length > 0 ? (
                         selectedNode.levels.map((lvl, index) => (
-                            <div key={index} className={`level-item ${lvl.is_completed ? 'completed' : 'uncompleted'}`} style={{ padding: '1rem 1.25rem' }}>
+                            <div key={index} className={`level-item ${lvl.is_completed ? 'completed' : 'uncompleted'}`} className="p-1rem-1-25rem">
                                 <div className="level-item-icon">
                                     {lvl.is_completed && <Check size={18} />}
                                 </div>
-                                <span style={{ fontSize: '1.05rem' }}>{lvl.name}</span>
+                                <span className="text-1-05rem">{lvl.name}</span>
                             </div>
                         ))
                     ) : (
-                        <p style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '2rem', background: 'var(--surface-secondary)', borderRadius: 'var(--radius-md)' }}>
+                        <p className="text-muted text-center p-2rem bg-surface-sec radius-md">
                             No levels found for this course.
                         </p>
                     )}

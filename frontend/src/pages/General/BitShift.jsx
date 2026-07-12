@@ -123,7 +123,7 @@ const BitShift = () => {
                 <div className="toggle-wrapper">
                     <div className="toggle-switch compact">
                         <span className={`toggle-text bit-text ${!isByteMode ? 'active' : ''}`}>bit</span>
-                        <div style={{ position: 'relative', display: 'inline-block' }}>
+                        <div className="pos-rel d-inline-block">
                             <input
                                 type="checkbox"
                                 id="duck-type-toggle"
@@ -135,7 +135,7 @@ const BitShift = () => {
                                     setDigitalDucks(0);
                                     setHasAttemptedSubmit(false);
                                 }}
-                                style={{ display: 'none' }}
+                                className="d-none"
                             />
                             <label htmlFor="duck-type-toggle" className="toggle-slider"></label>
                         </div>
@@ -152,7 +152,7 @@ const BitShift = () => {
 
                 <form onSubmit={handleSubmit} className="trade-form">
                     <div className="form-group main-input">
-                        <div style={{ position: 'relative' }}>
+                        <div className="pos-rel">
                             <input
                                 type="number"
                                 id="digital_ducks"
@@ -195,7 +195,7 @@ const BitShift = () => {
                     </div>
 
                     {user?.has_auto_bitshift && (
-                        <div style={{ display: 'flex', justifyContent: 'center', marginTop: '0.5rem' }}>
+                        <div className="d-flex justify-center mt-sm">
                             <button
                                 type="button"
                                 onClick={autoCalculate}
