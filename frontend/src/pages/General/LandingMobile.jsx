@@ -42,7 +42,7 @@ const LandingMobile = () => {
                             <button onClick={() => navigate('/signup?role=student')} className="btn-secondary" style={{ width: '100%', padding: '0.8rem' }}>
                                 I'm a Student
                             </button>
-                            <button onClick={() => navigate('/signup?role=parent')} className="btn-premium btn-premium-lg" className="w-100">
+                            <button onClick={() => navigate('/signup?role=parent')} className="btn-premium btn-premium-lg w-100">
                                 I'm a Parent
                             </button>
                         </div>

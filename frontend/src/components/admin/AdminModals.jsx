@@ -344,7 +344,7 @@ export const ConnectionCardModal = ({ isOpen, onClose, student, connectionCode }
                     </div>
                 </div>
                 <div className="mt-2rem d-flex gap-md justify-center">
-                    <button className="btn-secondary" onClick={() => window.print()} className="btn-secondary-print">
+                    <button className="btn-secondary btn-secondary-print" onClick={() => window.print()}>
                         Print Card
                     </button>
                     <button className="btn-primary" onClick={onClose}>
@@ -422,9 +422,8 @@ export const BulkConnectionCardsModal = ({ isOpen, onClose, classrooms, fetchCla
                                 Found <strong>{classroomCards.length}</strong> connection cards. Ready for printing.
                             </span>
                             <button 
-                                className="btn-primary" 
+                                className="btn-primary btn-primary-styled-print" 
                                 onClick={() => window.print()} 
-                                className="btn-primary-styled-print"
                             >
                                 Print {classroomCards.length} Cards
                             </button>

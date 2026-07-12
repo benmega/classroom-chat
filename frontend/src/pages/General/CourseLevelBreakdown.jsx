@@ -11,7 +11,7 @@ const CourseLevelBreakdown = () => {
     if (!selectedNode) {
         return (
             <div className="course-progress-container p-2rem">
-                <button className="back-button" onClick={() => navigate(-1)} className="mb-2rem">
+                <button className="back-button mb-2rem" onClick={() => navigate(-1)}>
                     <ArrowLeft size={20} />
                     <span>Back</span>
                 </button>
@@ -23,7 +23,7 @@ const CourseLevelBreakdown = () => {
 
     return (
         <div className="course-progress-container course-progress-modal-container">
-            <button className="back-button" onClick={() => navigate(-1)} className="mb-2rem">
+            <button className="back-button mb-2rem" onClick={() => navigate(-1)}>
                 <ArrowLeft size={20} />
                 <span>Back to Skill Tree</span>
             </button>

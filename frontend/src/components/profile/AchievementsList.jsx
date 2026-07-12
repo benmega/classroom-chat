@@ -18,7 +18,7 @@ const AchievementsList = ({ achievements }) => {
             <div className="achievement-strip-container">
                 <div className="achievement-strip">
                     {achievements.map(ua => (
-                        <div key={ua.id} className="ach-strip-item" title={ua.achievement?.description} onClick={() => navigate('/achievements')} className="cursor-pointer">
+                        <div key={ua.id} className="ach-strip-item clickable cursor-pointer" title={ua.achievement?.description} onClick={() => navigate('/achievements')}>
                             <div className={`badge badge-${ua.achievement?.slug || 'default'} mini`}>&nbsp;</div>
                             <div className="ach-strip-info">
                                 <span className="ach-name">{ua.achievement?.name}</span>

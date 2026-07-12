@@ -1,6 +1,8 @@
 import React from 'react';
 import { Activity, Plus } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
+import codecombatLogo from '../../assets/codecombat-logo.png';
+import ozariaLogo from '../../assets/ozaria-logo.png';
 
 const CourseProgress = ({ target, isParentView = false, studentId = null }) => {
     const navigate = useNavigate();
@@ -47,9 +49,31 @@ const CourseProgress = ({ target, isParentView = false, studentId = null }) => {
                 onClick={(e) => handleNavigate(e)}
                 title="View Detailed Tree"
             >
-                <h2 className="pointer-events-none"><Activity size={20} /> Course Progress</h2>
+                <h2 className="pointer-events-none d-flex align-center gap-sm">
+                    <Activity size={20} /> Course Progress
+                </h2>
+                <div className="d-flex align-center gap-sm ml-auto mr-xs" onClick={e => e.stopPropagation()}>
+                    <a 
+                        href="https://codecombat.com" 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className="header-logo-card"
+                        title="Visit CodeCombat"
+                    >
+                        <img src={codecombatLogo} alt="CodeCombat" className="header-logo-img" />
+                    </a>
+                    <a 
+                        href="https://ozaria.com" 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className="header-logo-card"
+                        title="Visit Ozaria"
+                    >
+                        <img src={ozariaLogo} alt="Ozaria" className="header-logo-img" />
+                    </a>
+                </div>
                 {!isParentView && (
-                    <Link to="/submit-work#challenge" title="Submit Challenge" className="text-secondary d-flex align-center" onClick={e => e.stopPropagation()}>
+                    <Link to="/submit-work#challenge" title="Submit Challenge" className="text-secondary d-flex align-center ml-xs" onClick={e => e.stopPropagation()}>
                         <Plus size={20} />
                     </Link>
                 )}
@@ -61,10 +85,9 @@ const CourseProgress = ({ target, isParentView = false, studentId = null }) => {
                         const isOzaria = c.course_name.toLowerCase().includes('ozaria') || c.course_id?.toLowerCase().includes('ozaria');
                         return (
                             <div 
-                                className="progress-item" 
                                 key={idx}
                                 onClick={(e) => handleNavigate(e, c.course_name)}
-                                className="cursor-pointer transition-bg"
+                                className="progress-item cursor-pointer transition-bg"
                                 onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--panel-hover-bg, rgba(255,255,255,0.05))'}
                                 onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                                 title="View in Course Tree"

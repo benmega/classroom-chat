@@ -344,9 +344,8 @@ const AdminProjects = () => {
                 title="Project Submissions"
             >
                 <button 
-                    className="btn-assign-project"
+                    className="btn-assign-project btn-assign-project-styled"
                     onClick={() => navigate('/admin/assign-project')}
-                    className="btn-assign-project-styled"
                 >
                     <Plus size={18} /> Assign Project
                 </button>

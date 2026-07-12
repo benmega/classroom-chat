@@ -323,6 +323,50 @@
     justify-content: space-between;
 }
 
+/* Header logos as mini cards */
+.header-logo-card {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 12px;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-sm);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    height: 32px;
+}
+
+.header-logo-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--primary-color);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.header-logo-img {
+    height: 100%;
+    width: auto;
+    object-fit: contain;
+    max-height: 20px;
+}
+
+.ml-auto {
+    margin-left: auto;
+}
+
+.gap-sm {
+    gap: 8px;
+}
+
+.mr-xs {
+    margin-right: 4px;
+}
+
+.ml-xs {
+    margin-left: 4px;
+}
+
 /* =================================================================
    4. PROGRESS BARS
    ================================================================= */

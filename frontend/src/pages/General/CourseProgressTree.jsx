@@ -195,31 +195,45 @@ const CourseProgressTree = () => {
     }, []);
 
     const recommendedNodeId = useMemo(() => {
-        const candidates = processedNodes.filter(_n => true);
-        const sorted = [...candidates].sort((a, b) => a.row - b.row);
-        
-        for (const node of sorted) {
-            if (node.has_started && node.levels_completed < (node.levels_total || 999)) {
-                return node.id;
+        const isCompleted = (node) => {
+            return !!node.levels_total && node.levels_completed >= node.levels_total;
+        };
+
+        const completedNodes = processedNodes.filter(n => !n.is_extra && isCompleted(n));
+
+        if (completedNodes.length > 0) {
+            // Sort completed nodes by row descending to find the last completed node
+            const sortedCompleted = [...completedNodes].sort((a, b) => b.row - a.row);
+            const lastCompletedNode = sortedCompleted[0];
+
+            // 1. Try to find the next node in the same track
+            const trackNodes = processedNodes.filter(n => n.track === lastCompletedNode.track && !n.is_extra);
+            const nextInTrack = trackNodes.find(n => n.row > lastCompletedNode.row && !isCompleted(n));
+            if (nextInTrack) {
+                return nextInTrack.id;
             }
-            const ancestors = getAncestors(node.id, processedNodes);
-            ancestors.delete(node.id);
-            if (ancestors.size === 0) return node.id;
-            
-            let hasActiveParent = false;
-            const trackNodes = processedNodes.filter(n => n.track === node.track && !n.is_extra);
-            const myIndex = trackNodes.findIndex(n => n.id === node.id);
-            if (myIndex > 0 && trackNodes[myIndex - 1].has_started) {
-                hasActiveParent = true;
+
+            // 2. Column is completed, "look down" (find any incomplete node below lastCompletedNode's row)
+            const nextDownNodes = processedNodes.filter(n => n.row > lastCompletedNode.row && !n.is_extra && !isCompleted(n));
+            if (nextDownNodes.length > 0) {
+                // Sort by row ascending to get the closest one down
+                const sortedDown = [...nextDownNodes].sort((a, b) => a.row - b.row);
+                return sortedDown[0].id;
             }
-            BRANCH_EDGES.forEach(edge => {
-                if (edge.to === node.id) {
-                    const p = processedNodes.find(n => n.id === edge.from);
-                    if (p && p.has_started) hasActiveParent = true;
-                }
-            });
-            
-            if (hasActiveParent) return node.id;
+
+            // 3. Very last/bottom completed or no next chapter down: go up and find the most farthest down incomplete chapter
+            const allIncomplete = processedNodes.filter(n => !n.is_extra && !isCompleted(n));
+            if (allIncomplete.length > 0) {
+                const sortedIncomplete = [...allIncomplete].sort((a, b) => b.row - a.row);
+                return sortedIncomplete[0].id;
+            }
+        } else {
+            // If none are completed, suggest the first/topmost incomplete chapter
+            const allIncomplete = processedNodes.filter(n => !n.is_extra && !isCompleted(n));
+            if (allIncomplete.length > 0) {
+                const sortedIncomplete = [...allIncomplete].sort((a, b) => a.row - b.row);
+                return sortedIncomplete[0].id;
+            }
         }
         return null;
     }, [processedNodes]);
@@ -311,7 +325,7 @@ const CourseProgressTree = () => {
                 <div className="report-error glass-panel">
                     <h2>No Progress Data</h2>
                     <p>Could not load the course progress tree. Please return to the profile.</p>
-                    <button className="btn-primary" onClick={() => navigate(-1)} className="mt-md">
+                    <button className="btn-primary mt-md" onClick={() => navigate(-1)}>
                         <ArrowLeft size={16} /> Go Back
                     </button>
                 </div>
