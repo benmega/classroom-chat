@@ -117,7 +117,7 @@ const Classes = () => {
                 </div>
                 <div className="stat-mini-card">
                     <span className="label">Active Languages</span>
-                    <span className="value" style={{ fontSize: '1rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    <span className="value" className="text-truncate">
                         {activeLanguages}
                     </span>
                 </div>
@@ -138,23 +138,23 @@ const Classes = () => {
                         {filteredClassrooms.length > 0 ? (
                             filteredClassrooms.map(c => (
                                 <tr key={c.id}>
-                                    <td onClick={() => navigate(`/admin/classes/${c.id}`)} style={{ cursor: 'pointer' }}>
-                                        <div className="class-name-cell" style={{ fontWeight: '600' }}>
+                                    <td onClick={() => navigate(`/admin/classes/${c.id}`)} className="cursor-pointer">
+                                        <div className="class-name-cell" className="fw-semibold">
                                             {c.name}
                                         </div>
                                     </td>
-                                    <td onClick={() => navigate(`/admin/classes/${c.id}`)} style={{ cursor: 'pointer' }}>
+                                    <td onClick={() => navigate(`/admin/classes/${c.id}`)} className="cursor-pointer">
                                         <span className="class-id-badge" style={{ fontFamily: 'monospace', padding: '4px 8px', background: 'var(--bg-secondary)', borderRadius: '6px' }}>
                                             {c.id}
                                         </span>
                                     </td>
-                                    <td onClick={() => navigate(`/admin/classes/${c.id}`)} style={{ cursor: 'pointer' }}>
+                                    <td onClick={() => navigate(`/admin/classes/${c.id}`)} className="cursor-pointer">
                                         <span className="language-badge" style={{ padding: '4px 8px', background: 'rgba(59, 130, 246, 0.1)', color: 'var(--primary-color)', borderRadius: '6px', fontSize: '0.85rem', fontWeight: '500' }}>
                                             {c.language}
                                         </span>
                                     </td>
-                                    <td onClick={() => navigate(`/admin/classes/${c.id}`)} style={{ cursor: 'pointer' }}>
-                                        <div style={{ fontWeight: '500' }}>
+                                    <td onClick={() => navigate(`/admin/classes/${c.id}`)} className="cursor-pointer">
+                                        <div className="fw-medium">
                                             {c.student_count || 0} Students
                                         </div>
                                     </td>

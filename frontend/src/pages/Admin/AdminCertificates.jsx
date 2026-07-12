@@ -81,13 +81,13 @@ const AdminCertificates = () => {
                 </div>
                 <div className="certs-grid">
                     {[1, 2, 3, 4].map(i => (
-                        <div key={i} className="cert-review-card" style={{ display: 'flex', gap: '16px', padding: '16px' }}>
+                        <div key={i} className="cert-review-card skeleton-card-layout">
                             <Skeleton width="200px" height="140px" borderRadius="8px" />
-                            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                            <div className="skeleton-content-layout">
                                 <Skeleton width="60%" height="24px" />
                                 <Skeleton width="40%" height="16px" />
                                 <Skeleton width="30%" height="16px" />
-                                <div style={{ marginTop: 'auto', display: 'flex', gap: '8px' }}>
+                                <div className="skeleton-actions-layout">
                                     <Skeleton width="100px" height="36px" borderRadius="6px" />
                                     <Skeleton width="40px" height="36px" borderRadius="6px" />
                                 </div>

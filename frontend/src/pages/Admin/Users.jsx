@@ -291,7 +291,7 @@ const Users = () => {
                                     {/* ── All tab row ─────────────────────────────────── */}
                                     {activeRole === '' && (
                                         <tr className={u.is_admin ? 'admin-row' : ''}>
-                                            <td onClick={() => navigate(`/admin/users/${u.id}`)} style={{ cursor: 'pointer' }}>
+                                            <td onClick={() => navigate(`/admin/users/${u.id}`)} className="cursor-pointer">
                                                 <div className="user-profile-cell">
                                                     <SmartImage 
                                                         src={u.profile_picture ? getApiUrl(`/user/profile_pictures/${u.profile_picture}`) : ''} 
@@ -306,7 +306,7 @@ const Users = () => {
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td onClick={() => navigate(`/admin/users/${u.id}`)} style={{ cursor: 'pointer' }}>
+                                            <td onClick={() => navigate(`/admin/users/${u.id}`)} className="cursor-pointer">
                                                 <div className="type-badge">
                                                     {u.is_admin ? (
                                                         <span className="user-role-badge admin"><Shield size={12} /> Administrator</span>
@@ -317,7 +317,7 @@ const Users = () => {
                                                     )}
                                                 </div>
                                             </td>
-                                            <td onClick={() => navigate(`/admin/users/${u.id}`)} style={{ cursor: 'pointer' }}>
+                                            <td onClick={() => navigate(`/admin/users/${u.id}`)} className="cursor-pointer">
                                                 {u.role === 'student' ? (
                                                     <div className="economy-info">
                                                         <div className="duck-count">🦆 {(u.duck_balance ?? 0).toLocaleString(undefined, { maximumFractionDigits: 2 })}</div>
@@ -328,7 +328,7 @@ const Users = () => {
                                                     <div style={{ color: 'var(--text-muted)', textAlign: 'center' }}>—</div>
                                                 )}
                                             </td>
-                                            <td onClick={() => navigate(`/admin/users/${u.id}`)} style={{ cursor: 'pointer' }}>
+                                            <td onClick={() => navigate(`/admin/users/${u.id}`)} className="cursor-pointer">
                                                 <div className={`status-indicator ${u.is_online ? 'online' : 'offline'}`}>
                                                     <span className="dot"></span>
                                                     {u.is_online ? 'Active' : 'Offline'}
@@ -424,7 +424,7 @@ const Users = () => {
                                     {/* ── Students tab row ────────────────────────────── */}
                                     {activeRole === 'student' && (
                                         <tr>
-                                            <td onClick={() => navigate(`/admin/users/${u.id}`)} style={{ cursor: 'pointer' }}>
+                                            <td onClick={() => navigate(`/admin/users/${u.id}`)} className="cursor-pointer">
                                                 <div className="user-profile-cell">
                                                     <SmartImage 
                                                         src={u.profile_picture ? getApiUrl(`/user/profile_pictures/${u.profile_picture}`) : ''} 
@@ -439,14 +439,14 @@ const Users = () => {
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td onClick={() => navigate(`/admin/users/${u.id}`)} style={{ cursor: 'pointer' }}>
+                                            <td onClick={() => navigate(`/admin/users/${u.id}`)} className="cursor-pointer">
                                                 <div className="economy-info">
                                                     <div className="duck-count">🦆 {(u.duck_balance ?? 0).toLocaleString(undefined, { maximumFractionDigits: 2 })}</div>
                                                     <div className="packet-count" style={{ fontSize: '0.8rem', color: (u.packets < 0 ? 'var(--error-color, #ff4444)' : 'var(--text-muted)') }}>📦 {(u.packets ?? 0).toLocaleString(undefined, { maximumFractionDigits: 3 })}</div>
                                                     <div className="level-info">Lvl: {u.total_levels || 0}</div>
                                                 </div>
                                             </td>
-                                            <td onClick={() => navigate(`/admin/users/${u.id}`)} style={{ cursor: 'pointer' }}>
+                                            <td onClick={() => navigate(`/admin/users/${u.id}`)} className="cursor-pointer">
                                                 <div className={`status-indicator ${u.is_online ? 'online' : 'offline'}`}>
                                                     <span className="dot"></span>
                                                     {u.is_online ? 'Active' : 'Offline'}
@@ -524,7 +524,7 @@ const Users = () => {
                                     {activeRole === 'parent' && (
                                         <>
                                             <tr>
-                                                <td onClick={() => navigate(`/admin/users/${u.id}`)} style={{ cursor: 'pointer' }}>
+                                                <td onClick={() => navigate(`/admin/users/${u.id}`)} className="cursor-pointer">
                                                     <div className="user-profile-cell">
                                                         <SmartImage 
                                                             src={u.profile_picture ? getApiUrl(`/user/profile_pictures/${u.profile_picture}`) : ''} 
@@ -555,7 +555,7 @@ const Users = () => {
                                                         </button>
                                                     </div>
                                                 </td>
-                                                <td onClick={() => navigate(`/admin/users/${u.id}`)} style={{ cursor: 'pointer' }}>
+                                                <td onClick={() => navigate(`/admin/users/${u.id}`)} className="cursor-pointer">
                                                     <div className={`status-indicator ${u.is_online ? 'online' : 'offline'}`}>
                                                         <span className="dot"></span>
                                                         {u.is_online ? 'Active' : 'Offline'}

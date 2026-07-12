@@ -122,7 +122,7 @@ const AdminStandardProjects = () => {
                 <div className="standard-projects-grid">
                     {projects.map(p => (
                         <div key={p.id} className="standard-project-card">
-                            <h3><BookOpen size={18} style={{marginRight: '8px', verticalAlign: 'text-bottom'}} /> {p.name}</h3>
+                            <h3><BookOpen size={18} className="icon-book-open" /> {p.name}</h3>
                             <p>{p.description || <em>No description</em>}</p>
                             <div className="sp-actions">
                                 <button className="btn-edit-sp" onClick={() => openModal(p)}>
@@ -191,7 +191,7 @@ const AdminStandardProjects = () => {
                                     value={form.code_snippet}
                                     onChange={e => setForm({...form, code_snippet: e.target.value})}
                                     rows="3"
-                                    style={{fontFamily: 'monospace'}}
+                                    className="font-mono"
                                 />
                             </div>
 

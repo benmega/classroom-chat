@@ -50,17 +50,17 @@ const AdminStudentActivity = () => {
 
             <main className="admin-content">
                 {isLoading ? (
-                    <div className="activity-list" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    <div className="activity-list skeleton-list">
                         {[1, 2, 3, 4].map(i => (
-                            <div key={i} className="student-activity-card card" style={{ padding: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-secondary)', borderRadius: '12px', border: '1px solid var(--border-subtle)' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                            <div key={i} className="student-activity-card card skeleton-card">
+                                <div className="skeleton-card-left">
                                     <Skeleton height="40px" width="40px" borderRadius="50%" />
                                     <div>
-                                        <Skeleton height="18px" width="120px" style={{ marginBottom: '4px' }} />
+                                        <Skeleton height="18px" width="120px" className="mb-4px" />
                                         <Skeleton height="14px" width="80px" />
                                     </div>
                                 </div>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <div className="skeleton-card-right">
                                     <Skeleton height="10px" width="10px" borderRadius="50%" />
                                     <Skeleton height="16px" width="60px" />
                                 </div>

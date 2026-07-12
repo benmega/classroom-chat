@@ -277,10 +277,10 @@ const AdminProjects = () => {
                         </div>
 
                         <div className="review-actions-panel">
-                            <h3 className="section-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <h3 className="section-title d-flex align-center gap-8">
                                 Packet Reward
                             </h3>
-                            <div style={{ marginBottom: '20px' }}>
+                            <div className="mb-20">
                                 <input 
                                     type="number"
                                     step="0.001"
@@ -301,7 +301,7 @@ const AdminProjects = () => {
                                         outline: 'none'
                                     }}
                                 />
-                                <span style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'block', marginTop: '6px' }}>
+                                <span className="reward-help-text">
                                     Adjust reward based on project quality. Prepopulated with system average.
                                 </span>
                             </div>
@@ -346,14 +346,14 @@ const AdminProjects = () => {
                 <button 
                     className="btn-assign-project"
                     onClick={() => navigate('/admin/assign-project')}
-                    style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'var(--primary-color)', color: 'white', padding: '8px 16px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: '600' }}
+                    className="btn-assign-project-styled"
                 >
                     <Plus size={18} /> Assign Project
                 </button>
             </AdminPageHeader>
 
-            <div className="controls-bar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', minHeight: '38px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div className="controls-bar admin-projects-controls-wrapper">
+                <div className="d-flex align-center gap-8">
                     {(selectedStudents.length > 0 || selectedFeedbacks.length < 2 || selectedVideos.length < 2 || selectedWorks.length < 2 || selectedStatuses.length < 2 || nameSearch !== '' || sortConfig.key !== null) && (
                         <button 
                             onClick={() => {
@@ -381,9 +381,9 @@ const AdminProjects = () => {
                             <tr>
                                 <th>Project Name</th>
                                 <th>Student</th>
-                                <th style={{ textAlign: 'center' }}>Feedback</th>
-                                <th style={{ textAlign: 'center' }}>Video</th>
-                                <th style={{ textAlign: 'center' }}>Work</th>
+                                <th className="text-center">Feedback</th>
+                                <th className="text-center">Video</th>
+                                <th className="text-center">Work</th>
                                 <th>Status</th>
                             </tr>
                         </thead>
@@ -392,9 +392,9 @@ const AdminProjects = () => {
                                 <tr key={i}>
                                     <td><Skeleton height="20px" width="150px" /></td>
                                     <td><Skeleton height="20px" width="100px" /></td>
-                                    <td style={{ textAlign: 'center' }}><Skeleton height="20px" width="24px" style={{ margin: '0 auto' }} /></td>
-                                    <td style={{ textAlign: 'center' }}><Skeleton height="20px" width="24px" style={{ margin: '0 auto' }} /></td>
-                                    <td style={{ textAlign: 'center' }}><Skeleton height="20px" width="24px" style={{ margin: '0 auto' }} /></td>
+                                    <td className="text-center"><Skeleton height="20px" width="24px" className="mx-auto" /></td>
+                                    <td className="text-center"><Skeleton height="20px" width="24px" className="mx-auto" /></td>
+                                    <td className="text-center"><Skeleton height="20px" width="24px" className="mx-auto" /></td>
                                     <td><Skeleton height="20px" width="80px" /></td>
                                 </tr>
                             ))}
@@ -402,12 +402,12 @@ const AdminProjects = () => {
                     </table>
                 </div>
             ) : (
-                <div className="users-table-container card" style={{ overflow: 'visible' }}>
-                    <table className="users-table" style={{ overflow: 'visible' }}>
+                <div className="users-table-container card overflow-visible">
+                    <table className="users-table overflow-visible">
                         <thead>
                             <tr>
-                                <th className="th-filter-container" style={{ position: 'relative' }}>
-                                    <div className="header-cell-content" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <th className="th-filter-container pos-rel">
+                                    <div className="header-cell-content" className="d-flex align-center gap-6">
                                         <span>Project Name</span>
                                         <button className="filter-trigger-btn" onClick={() => setActiveFilterDropdown(activeFilterDropdown === 'name' ? null : 'name')}>
                                             <Filter size={12} style={{ color: nameSearch ? 'var(--primary-color)' : 'inherit' }} />
@@ -428,14 +428,14 @@ const AdminProjects = () => {
                                                     placeholder="Search projects..." 
                                                     value={nameSearch}
                                                     onChange={(e) => setNameSearch(e.target.value)}
-                                                    style={{ width: '100%', padding: '6px', border: '1px solid var(--border-subtle)', borderRadius: '4px', outline: 'none', fontSize: '0.85rem' }}
+                                                    className="filter-search-input"
                                                 />
                                             </div>
                                         </div>
                                     )}
                                 </th>
-                                <th className="th-filter-container" style={{ position: 'relative' }}>
-                                    <div className="header-cell-content" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <th className="th-filter-container pos-rel">
+                                    <div className="header-cell-content" className="d-flex align-center gap-6">
                                         <span>Student</span>
                                         <button className="filter-trigger-btn" onClick={() => setActiveFilterDropdown(activeFilterDropdown === 'student' ? null : 'student')}>
                                             <Filter size={12} style={{ color: selectedStudents.length > 0 ? 'var(--primary-color)' : 'inherit' }} />
@@ -479,15 +479,15 @@ const AdminProjects = () => {
                                         </div>
                                     )}
                                 </th>
-                                <th className="th-filter-container" style={{ textAlign: 'center', position: 'relative' }}>
-                                    <div className="header-cell-content centered" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                                <th className="th-filter-container text-center pos-rel">
+                                    <div className="header-cell-content centered" className="d-flex align-center justify-center gap-6">
                                         <span>Feedback</span>
                                         <button className="filter-trigger-btn" onClick={() => setActiveFilterDropdown(activeFilterDropdown === 'feedback' ? null : 'feedback')}>
                                             <Filter size={12} style={{ color: selectedFeedbacks.length < 2 ? 'var(--primary-color)' : 'inherit' }} />
                                         </button>
                                     </div>
                                     {activeFilterDropdown === 'feedback' && (
-                                        <div className="excel-filter-dropdown" style={{ left: '50%', transform: 'translateX(-50%)' }}>
+                                        <div className="excel-filter-dropdown center-dropdown">
                                             <div className="filter-checkbox-list">
                                                 <label className="checkbox-label">
                                                     <input 
@@ -529,15 +529,15 @@ const AdminProjects = () => {
                                         </div>
                                     )}
                                 </th>
-                                <th className="th-filter-container" style={{ textAlign: 'center', position: 'relative' }}>
-                                    <div className="header-cell-content centered" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                                <th className="th-filter-container text-center pos-rel">
+                                    <div className="header-cell-content centered" className="d-flex align-center justify-center gap-6">
                                         <span>Video</span>
                                         <button className="filter-trigger-btn" onClick={() => setActiveFilterDropdown(activeFilterDropdown === 'video' ? null : 'video')}>
                                             <Filter size={12} style={{ color: selectedVideos.length < 2 ? 'var(--primary-color)' : 'inherit' }} />
                                         </button>
                                     </div>
                                     {activeFilterDropdown === 'video' && (
-                                        <div className="excel-filter-dropdown" style={{ left: '50%', transform: 'translateX(-50%)' }}>
+                                        <div className="excel-filter-dropdown center-dropdown">
                                             <div className="filter-checkbox-list">
                                                 <label className="checkbox-label">
                                                     <input 
@@ -579,15 +579,15 @@ const AdminProjects = () => {
                                         </div>
                                     )}
                                 </th>
-                                <th className="th-filter-container" style={{ textAlign: 'center', position: 'relative' }}>
-                                    <div className="header-cell-content centered" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                                <th className="th-filter-container text-center pos-rel">
+                                    <div className="header-cell-content centered" className="d-flex align-center justify-center gap-6">
                                         <span>Work</span>
                                         <button className="filter-trigger-btn" onClick={() => setActiveFilterDropdown(activeFilterDropdown === 'work' ? null : 'work')}>
                                             <Filter size={12} style={{ color: selectedWorks.length < 2 ? 'var(--primary-color)' : 'inherit' }} />
                                         </button>
                                     </div>
                                     {activeFilterDropdown === 'work' && (
-                                        <div className="excel-filter-dropdown" style={{ left: '50%', transform: 'translateX(-50%)' }}>
+                                        <div className="excel-filter-dropdown center-dropdown">
                                             <div className="filter-checkbox-list">
                                                 <label className="checkbox-label">
                                                     <input 
@@ -629,15 +629,15 @@ const AdminProjects = () => {
                                         </div>
                                     )}
                                 </th>
-                                <th className="th-filter-container" style={{ position: 'relative' }}>
-                                    <div className="header-cell-content" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <th className="th-filter-container pos-rel">
+                                    <div className="header-cell-content" className="d-flex align-center gap-6">
                                         <span>Status</span>
                                         <button className="filter-trigger-btn" onClick={() => setActiveFilterDropdown(activeFilterDropdown === 'status' ? null : 'status')}>
                                             <Filter size={12} style={{ color: selectedStatuses.length < 2 ? 'var(--primary-color)' : 'inherit' }} />
                                         </button>
                                     </div>
                                     {activeFilterDropdown === 'status' && (
-                                        <div className="excel-filter-dropdown" style={{ right: 0 }}>
+                                        <div className="excel-filter-dropdown right-dropdown">
                                             <button className="filter-sort-option" onClick={() => { setSortConfig({ key: 'status', direction: 'asc' }); setActiveFilterDropdown(null); }}>
                                                 Sort A to Z
                                             </button>
@@ -695,28 +695,28 @@ const AdminProjects = () => {
                                         setSelectedProject(p);
                                         setTeacherComment(p.teacher_comment || '');
                                         setPacketReward(p.packets_awarded !== undefined && p.packets_awarded !== null && p.packets_awarded > 0 ? p.packets_awarded : 0.006);
-                                    }} style={{ cursor: 'pointer' }}>
+                                    }} className="cursor-pointer">
                                         <td>
-                                            <div className="project-title-cell" style={{ fontWeight: '700', color: 'var(--slate-800)' }}>
+                                            <div className="project-title-cell title-bold">
                                                 {p.name}
                                             </div>
                                         </td>
                                         <td>
-                                            <div className="student-info-cell" style={{ fontWeight: '600', color: 'var(--text-secondary)' }}>
+                                            <div className="student-info-cell title-semi">
                                                 {p.user_nickname} <span className="id-pill">#{p.user_id}</span>
                                             </div>
                                         </td>
-                                        <td style={{ textAlign: 'center' }}>
+                                        <td className="text-center">
                                             <span className={`checklist-icon ${p.teacher_comment ? 'completed' : 'pending'}`}>
                                                 {p.teacher_comment ? <CheckCircle size={18}/> : <XCircle size={18}/>}
                                             </span>
                                         </td>
-                                        <td style={{ textAlign: 'center' }}>
+                                        <td className="text-center">
                                             <span className={`checklist-icon ${p.video_url ? 'completed' : 'pending'}`}>
                                                 {p.video_url ? <CheckCircle size={18}/> : <XCircle size={18}/>}
                                             </span>
                                         </td>
-                                        <td style={{ textAlign: 'center' }}>
+                                        <td className="text-center">
                                             <span className={`checklist-icon ${(!p.link && !p.github_link && !p.code_snippet) ? 'pending' : 'completed'}`}>
                                                 {(!p.link && !p.github_link && !p.code_snippet) ? <XCircle size={18}/> : <CheckCircle size={18}/>}
                                             </span>

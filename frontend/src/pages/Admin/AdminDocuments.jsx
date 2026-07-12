@@ -83,26 +83,26 @@ const AdminDocuments = () => {
         return (
             <div className="admin-documents-page">
                 <AdminPageHeader title="Asset & Document Management" />
-                <div className="storage-overview" style={{ display: 'flex', gap: '16px', marginBottom: '24px' }}>
+                <div className="storage-overview storage-overview-skeleton">
                     <Skeleton height="120px" width="300px" borderRadius="12px" />
-                    <div className="storage-stats-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', flex: 1 }}>
+                    <div className="storage-stats-grid storage-stats-grid-skeleton">
                         <Skeleton height="56px" borderRadius="8px" />
                         <Skeleton height="56px" borderRadius="8px" />
                         <Skeleton height="56px" borderRadius="8px" />
                         <Skeleton height="56px" borderRadius="8px" />
                     </div>
                 </div>
-                <div className="controls-bar card" style={{ padding: '16px', marginBottom: '24px' }}>
+                <div className="controls-bar card controls-bar-skeleton">
                     <Skeleton height="40px" width="400px" />
                 </div>
-                <div className="documents-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '20px' }}>
+                <div className="documents-grid documents-grid-skeleton">
                     {[1, 2, 3, 4, 5, 6].map(i => (
-                        <div key={i} className="doc-card card" style={{ padding: '0', overflow: 'hidden' }}>
+                        <div key={i} className="doc-card card doc-card-skeleton">
                             <Skeleton height="150px" borderRadius="12px 12px 0 0" />
-                            <div style={{ padding: '16px' }}>
+                            <div className="doc-card-body-skeleton">
                                 <Skeleton height="20px" width="80%" />
-                                <Skeleton height="14px" width="60%" style={{ marginTop: '8px' }} />
-                                <div style={{ display: 'flex', gap: '8px', marginTop: '16px' }}>
+                                <Skeleton height="14px" width="60%" className="mt-sm" />
+                                <div className="doc-actions-skeleton">
                                     <Skeleton height="32px" width="50%" borderRadius="6px" />
                                     <Skeleton height="32px" width="50%" borderRadius="6px" />
                                 </div>

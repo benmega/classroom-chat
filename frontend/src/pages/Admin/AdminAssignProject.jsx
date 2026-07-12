@@ -110,10 +110,10 @@ const AdminAssignProject = () => {
     };
 
     return (
-        <div className="admin-projects-page" style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+        <div className="admin-projects-page h-100 d-flex-col">
             <AdminPageHeader title="Assign Project" />
             
-            <div className="manage-project-page split-layout" style={{ flex: 1, margin: 0 }}>
+            <div className="manage-project-page split-layout flex-1 m-0">
                 <div className="editor-pane">
                     <div className="tab-navigation">
                         <button 
@@ -147,14 +147,14 @@ const AdminAssignProject = () => {
                                         <label>Assign to Student *</label>
                                         {!selectedUser ? (
                                             <>
-                                                <div className="search-input-wrapper" style={{ border: '1px solid var(--border-subtle)', borderRadius: '12px', background: 'var(--bg-secondary)', padding: '0 16px' }}>
-                                                    <Search size={18} style={{ color: 'var(--text-muted)' }} />
+                                                <div className="search-input-wrapper search-input-wrapper-styled">
+                                                    <Search size={18} className="text-muted" />
                                                     <input 
                                                         type="text" 
                                                         placeholder="Type to search by username or nickname..." 
                                                         value={userSearchQuery}
                                                         onChange={(e) => setUserSearchQuery(e.target.value)}
-                                                        style={{ border: 'none', background: 'transparent', padding: '12px', flexGrow: 1, outline: 'none' }}
+                                                        className="search-input-field-styled"
                                                     />
                                                     {isSearchingUsers && <div className="spinner-small" />}
                                                 </div>
@@ -336,7 +336,7 @@ const AdminAssignProject = () => {
                             <div className="project-content">
                                 <h3>{assignForm.name || 'Project Name'}</h3>
 
-                                <p className="preview-desc" style={{ wordBreak: 'break-word', whiteSpace: 'pre-wrap' }}>
+                                <p className="preview-desc text-pre-wrap-break">
                                     {assignForm.description ? 
                                         (assignForm.description.length > 150 ? assignForm.description.substring(0, 150) + '...' : assignForm.description) 
                                         : 'A short description of your project will appear here...'}

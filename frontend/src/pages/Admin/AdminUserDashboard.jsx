@@ -714,12 +714,12 @@ const AdminUserDashboard = () => {
                 {/* Danger Zone */}
                 {!user.is_admin && (
                     <div className="control-panel-card full-width danger-zone">
-                        <h3 style={{color: '#ef4444'}}><Trash2 size={20} /> Danger Zone</h3>
+                        <h3 className="danger-zone-title"><Trash2 size={20} /> Danger Zone</h3>
                         <div className="panel-forms">
                             <p style={{color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '0.5rem'}}>
                                 Removing a user will permanently delete all of their data and progress. This action cannot be undone.
                             </p>
-                            <button className="hud-btn danger-outline" style={{width: 'fit-content'}} onClick={handleRemoveUser}>
+                            <button className="hud-btn danger-outline" className="w-fit-content" onClick={handleRemoveUser}>
                                 <Trash2 size={16} /> Remove User
                             </button>
                         </div>

@@ -82,24 +82,24 @@ const PendingTrades = () => {
     };
 
     if (isLoading) return (
-        <div className="admin-pending-trades-page animate-page-entry" style={{ padding: '2rem' }}>
+        <div className="admin-pending-trades-page animate-page-entry" className="p-2rem">
             <header className="page-header">
-                <Skeleton height="40px" width="200px" className="skeleton-title" style={{ marginBottom: '2rem' }} />
+                <Skeleton height="40px" width="200px" className="skeleton-title" className="mb-2rem" />
             </header>
             <div className="trades-list">
                 {[1, 2, 3].map(i => (
                     <div key={i} className="trade-card card" style={{ padding: '1.5rem', marginBottom: '1rem', background: 'var(--bg-secondary)', borderRadius: '12px', border: '1px solid var(--border-subtle)' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <div className="d-flex justify-between align-center mb-md">
+                            <div className="d-flex align-center gap-12">
                                 <Skeleton height="48px" width="48px" borderRadius="50%" />
                                 <div>
-                                    <Skeleton height="18px" width="120px" style={{ marginBottom: '4px' }} />
+                                    <Skeleton height="18px" width="120px" className="mb-4px" />
                                     <Skeleton height="14px" width="80px" />
                                 </div>
                             </div>
                             <Skeleton height="24px" width="100px" borderRadius="12px" />
                         </div>
-                        <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
+                        <div className="d-flex gap-md mt-1-5rem">
                             <Skeleton height="36px" width="100px" borderRadius="6px" />
                             <Skeleton height="36px" width="100px" borderRadius="6px" />
                         </div>

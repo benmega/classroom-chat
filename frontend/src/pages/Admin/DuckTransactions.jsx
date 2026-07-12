@@ -188,11 +188,11 @@ const DuckTransactions = () => {
 
             <div className="transactions-table-container card">
                 {isLoading ? (
-                    <div className="transactions-skeleton" style={{ padding: '1rem' }}>
-                        <span style={{ display: 'none' }}>Loading transactions...</span>
+                    <div className="transactions-skeleton" className="p-1rem">
+                        <span className="d-none">Loading transactions...</span>
                         {[1, 2, 3, 4, 5].map(i => (
                             <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '16px 0', borderBottom: '1px solid var(--border-subtle)' }}>
-                                <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                                <div className="d-flex align-center gap-12">
                                     <Skeleton height="36px" width="36px" borderRadius="50%" />
                                     <Skeleton height="18px" width="120px" />
                                 </div>

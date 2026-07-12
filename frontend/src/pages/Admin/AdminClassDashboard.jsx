@@ -246,7 +246,7 @@ const AdminClassDashboard = () => {
                             <div className="roster-list">
                                 {filteredRoster.map(student => (
                                     <div key={student.id} className="roster-item">
-                                        <div className="student-info" onClick={() => navigate(`/admin/users/${student.id}`)} style={{ cursor: 'pointer' }}>
+                                        <div className="student-info cursor-pointer" onClick={() => navigate(`/admin/users/${student.id}`)}>
                                             <SmartImage 
                                                 src={student.profile_picture ? getApiUrl(`/user/profile_pictures/${student.profile_picture}`) : ''} 
                                                 alt="" 

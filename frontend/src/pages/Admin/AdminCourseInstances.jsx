@@ -169,7 +169,7 @@ const AdminCourseInstances = () => {
                 </AdminPageHeader>
                 <div className="instances-table-container card">
                     {[1, 2, 3, 4, 5].map(i => (
-                        <div key={i} style={{ padding: '12px 24px' }}>
+                        <div key={i} className="skeleton-row-padded">
                             <Skeleton height="40px" />
                         </div>
                     ))}

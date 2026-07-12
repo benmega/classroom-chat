@@ -142,11 +142,11 @@ const AdminProjectTemplates = () => {
                     <Skeleton width="150px" height="40px" borderRadius="8px" />
                 </div>
                 <div className="card table-card">
-                    <div style={{ padding: '20px' }}>
+                    <div className="skeleton-table-container">
                         <Skeleton height="40px" width="100%" />
-                        <Skeleton height="50px" width="100%" style={{ marginTop: '12px' }} />
-                        <Skeleton height="50px" width="100%" style={{ marginTop: '12px' }} />
-                        <Skeleton height="50px" width="100%" style={{ marginTop: '12px' }} />
+                        <Skeleton height="50px" width="100%" className="mt-12px" />
+                        <Skeleton height="50px" width="100%" className="mt-12px" />
+                        <Skeleton height="50px" width="100%" className="mt-12px" />
                     </div>
                 </div>
             </div>
@@ -187,10 +187,10 @@ const AdminProjectTemplates = () => {
                     <table className="templates-table">
                         <thead>
                             <tr>
-                                <th style={{ width: '80px' }}>ID</th>
-                                <th style={{ width: '220px' }}>Template Name</th>
+                                <th className="col-id">ID</th>
+                                <th className="col-template-name">Template Name</th>
                                 <th>Description</th>
-                                <th style={{ width: '120px', textAlign: 'center' }}>Actions</th>
+                                <th className="col-actions">Actions</th>
                             </tr>
                         </thead>
                         <tbody>

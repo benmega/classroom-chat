@@ -388,3 +388,11 @@
     opacity: 0.6;
     cursor: not-allowed;
 }
+
+
+/* --- Added for Inline Style Cleanup --- */
+.skeleton-table-container { padding: 20px; }
+.mt-12px { margin-top: 12px; }
+.col-id { width: 80px; }
+.col-template-name { width: 220px; }
+.col-actions { width: 120px; text-align: center; }

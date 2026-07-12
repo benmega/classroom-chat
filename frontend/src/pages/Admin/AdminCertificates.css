@@ -245,3 +245,9 @@
 .empty-state h3 { font-size: 1.5rem; color: var(--slate-800); margin: 0; }
 .empty-state p { color: var(--text-muted); }
 
+
+
+/* --- Added for Inline Style Cleanup --- */
+.skeleton-card-layout { display: flex; gap: 16px; padding: 16px; }
+.skeleton-content-layout { flex: 1; display: flex; flex-direction: column; gap: 12px; }
+.skeleton-actions-layout { margin-top: auto; display: flex; gap: 8px; }

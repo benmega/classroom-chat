@@ -243,3 +243,7 @@
     gap: 12px;
     margin-top: 28px;
 }
+
+
+/* --- Added for Inline Style Cleanup --- */
+.skeleton-row-padded { padding: 12px 24px; }

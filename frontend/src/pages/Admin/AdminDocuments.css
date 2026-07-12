@@ -254,3 +254,13 @@
     }
 }
 
+
+
+/* --- Added for Inline Style Cleanup --- */
+.storage-overview-skeleton { display: flex; gap: 16px; margin-bottom: 24px; }
+.storage-stats-grid-skeleton { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; flex: 1; }
+.controls-bar-skeleton { padding: 16px; margin-bottom: 24px; }
+.documents-grid-skeleton { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; }
+.doc-card-skeleton { padding: 0; overflow: hidden; }
+.doc-card-body-skeleton { padding: 16px; }
+.doc-actions-skeleton { display: flex; gap: 8px; margin-top: 16px; }
