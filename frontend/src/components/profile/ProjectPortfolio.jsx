@@ -13,10 +13,10 @@ const ProjectPortfolio = ({ projects, isOwner, setSelectedProject, studentId }) 
 
     return (
         <section className="dashboard-panel">
-            <div className="panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div className="panel-header d-flex justify-between align-center">
                 <h2><Layers size={20} /> Projects Portfolio</h2>
                 {isOwner && (
-                    <Link to={studentId ? `/project/new?student_id=${studentId}` : "/project/new"} title="Add Project" style={{ color: 'var(--text-secondary)', display: 'flex', alignItems: 'center' }}>
+                    <Link to={studentId ? `/project/new?student_id=${studentId}` : "/project/new"} title="Add Project" className="text-secondary d-flex align-center">
                         <Plus size={20} />
                     </Link>
                 )}

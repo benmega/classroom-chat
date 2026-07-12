@@ -359,7 +359,7 @@ const ScreenRecorder = ({ isOpen, onClose, onRecordingComplete }) => {
                   <div 
                     className="hud-control" 
                     title="Toggle Microphone" 
-                    style={{cursor: 'pointer', justifyContent: 'center'}}
+                    className="cursor-pointer justify-center"
                     onClick={() => setSettings({...settings, includeMicrophone: !settings.includeMicrophone})}
                   >
                     {settings.includeMicrophone ? <Mic size={24} color="var(--text-secondary)" /> : <MicOff size={24} color="var(--error-color)" />}
@@ -380,7 +380,7 @@ const ScreenRecorder = ({ isOpen, onClose, onRecordingComplete }) => {
               <button onClick={handleTogglePause} className="screen-recorder-btn screen-recorder-btn-secondary">
                 {isPaused ? <Play size={18} /> : <Pause size={18} />} {isPaused ? 'Resume' : 'Pause'}
               </button>
-              <button onClick={handleStopRecording} className="screen-recorder-btn screen-recorder-btn-secondary" style={{background: 'var(--error-color)', borderColor: 'var(--error-dark)'}}>
+              <button onClick={handleStopRecording} className="screen-recorder-btn screen-recorder-btn-secondary screen-recorder-btn-error">
                 <Square size={18} /> Stop
               </button>
             </div>

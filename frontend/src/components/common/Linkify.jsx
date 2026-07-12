@@ -48,7 +48,7 @@ const Linkify = ({ text, isUserMessage }) => {
             </a>
           );
         }
-        return <span key={index} style={{ overflowWrap: 'anywhere', wordBreak: 'break-word' }}>{part}</span>;
+        return <span key={index} className="text-break-word">{part}</span>;
       })}
     </>
   );

@@ -8,9 +8,9 @@ const CertificationsList = ({ certificates }) => {
 
     return (
         <section className="dashboard-panel">
-            <div className="panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div className="panel-header d-flex justify-between align-center">
                 <h2><Award size={20} /> Certifications</h2>
-                <Link to="/submit-work#certificate" title="Submit Certificate" style={{ color: 'var(--text-secondary)', display: 'flex', alignItems: 'center' }}>
+                <Link to="/submit-work#certificate" title="Submit Certificate" className="text-secondary d-flex align-center">
                     <Plus size={20} />
                 </Link>
             </div>

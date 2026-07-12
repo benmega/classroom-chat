@@ -50,8 +50,8 @@ const ProfileHeader = ({ target, isOwner, pfpInputRef, onPfpChange, editLink }) 
                     <h1 className="student-name">{target.nickname || target.username}</h1>
                     <p className="student-title">@{target.username}</p>
                     {target.current_activity && (
-                        <p className="student-activity" style={{ marginTop: '0.5rem', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
-                            <span style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', backgroundColor: 'var(--primary-color)', marginRight: '6px' }}></span>
+                        <p className="student-activity mt-sm text-sm text-secondary">
+                            <span className="activity-dot"></span>
                             {target.current_activity}
                         </p>
                     )}

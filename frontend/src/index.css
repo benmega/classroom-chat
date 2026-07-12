@@ -432,3 +432,17 @@ button:disabled {
 .utility-card-styled { display: flex; gap: 1.5rem; padding: 1.5rem; background: var(--bg-secondary); border-radius: 12px; border: 1px solid var(--border-subtle); }
 .transaction-item-styled { display: flex; justify-content: space-between; padding: 16px 0; border-bottom: 1px solid var(--border-subtle); }
 .trade-card-styled { padding: 1.5rem; margin-bottom: 1rem; background: var(--bg-secondary); border-radius: 12px; border: 1px solid var(--border-subtle); }
+
+
+/* --- Phase 3 Extras --- */
+.pointer-events-none { pointer-events: none; }
+.transition-bg { transition: background-color 0.2s; }
+.text-sm { font-size: 0.9rem; }
+.max-w-100 { max-width: 100%; }
+.activity-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: var(--primary-color); margin-right: 6px; }
+.linkify-link { color: #1a73e8; text-decoration: none; }
+.text-break-word { overflow-wrap: anywhere; word-break: break-word; }
+.screen-recorder-btn-error { background: var(--error-color) !important; border-color: var(--error-dark) !important; }
+.smart-image-placeholder { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; background-color: var(--bg-secondary); color: var(--text-muted); }
+.smart-image-placeholder-text { font-size: 0.75rem; margin-top: 8px; font-weight: 500; }
+.smart-image-img { transition: opacity 0.3s ease; display: block; width: 100%; height: 100%; object-fit: cover; }

@@ -45,7 +45,7 @@ const SmartImage = ({
         }}
       >
         {fallbackType === 'avatar' ? <User size={24} /> : <Code size={32} />}
-        <span style={{ fontSize: '0.75rem', marginTop: '8px', fontWeight: 500 }}>
+        <span className="smart-image-placeholder-text">
           {fallbackType === 'avatar' ? 'No Avatar' : 'No Preview'}
         </span>
       </div>

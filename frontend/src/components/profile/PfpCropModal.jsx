@@ -13,7 +13,7 @@ const PfpCropModal = ({ isCropping, cropImgRef, cropImage, isUploadingPic, onCan
                     <button className="close-modal" onClick={onCancel}><X size={24} /></button>
                 </div>
                 <div className="crop-area">
-                    <img ref={cropImgRef} src={cropImage} alt="To crop" style={{ maxWidth: '100%' }} />
+                    <img ref={cropImgRef} src={cropImage} alt="To crop" className="max-w-100" />
                 </div>
                 <div className="modal-footer">
                     <button className="btn-secondary" onClick={onCancel}>Cancel</button>

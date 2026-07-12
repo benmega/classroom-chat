@@ -44,13 +44,13 @@ const CourseProgress = ({ target, isParentView = false, studentId = null }) => {
         <section className="dashboard-panel">
             <div 
                 className="panel-header" 
-                style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}
+                className="d-flex justify-between align-center cursor-pointer"
                 onClick={(e) => handleNavigate(e)}
                 title="View Detailed Tree"
             >
-                <h2 style={{ pointerEvents: 'none' }}><Activity size={20} /> Course Progress</h2>
+                <h2 className="pointer-events-none"><Activity size={20} /> Course Progress</h2>
                 {!isParentView && (
-                    <Link to="/submit-work#challenge" title="Submit Challenge" style={{ color: 'var(--text-secondary)', display: 'flex', alignItems: 'center' }} onClick={e => e.stopPropagation()}>
+                    <Link to="/submit-work#challenge" title="Submit Challenge" className="text-secondary d-flex align-center" onClick={e => e.stopPropagation()}>
                         <Plus size={20} />
                     </Link>
                 )}
@@ -65,7 +65,7 @@ const CourseProgress = ({ target, isParentView = false, studentId = null }) => {
                                 className="progress-item" 
                                 key={idx}
                                 onClick={(e) => handleNavigate(e, c.course_name)}
-                                style={{ cursor: 'pointer', transition: 'background-color 0.2s' }}
+                                className="cursor-pointer transition-bg"
                                 onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--panel-hover-bg, rgba(255,255,255,0.05))'}
                                 onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                                 title="View in Course Tree"
@@ -81,12 +81,12 @@ const CourseProgress = ({ target, isParentView = false, studentId = null }) => {
                             </div>
                         );
                     }) : (
-                        <p style={{ textAlign: 'center', color: 'var(--text-muted)' }}>No courses started yet.</p>
+                        <p className="text-center text-muted">No courses started yet.</p>
                     )}
                 </div>
             </div>
             <div 
-                style={{ marginTop: '1rem', textAlign: 'center', fontSize: '0.9rem', color: 'var(--text-secondary)', cursor: 'pointer' }}
+                className="mt-md text-center text-secondary text-sm cursor-pointer"
                 onClick={(e) => handleNavigate(e)}
             >
                 <strong>{totalLevels}</strong> Total Levels Completed
