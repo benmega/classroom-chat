@@ -21,7 +21,7 @@
 }
 
 .back-btn-text:hover {
-    color: var(--primary-color);
+    color: var(--primary-accessible);
 }
 
 .class-hud-row {
@@ -61,7 +61,7 @@
 }
 
 .lang-badge {
-    color: var(--primary-color) !important;
+    color: var(--primary-accessible) !important;
 }
 
 .admin-class-grid {
@@ -301,7 +301,7 @@
 
 .badge-course {
     background: rgba(59, 130, 246, 0.1);
-    color: var(--primary-color);
+    color: var(--primary-accessible);
     padding: 2px 6px;
     border-radius: 4px;
     font-size: 0.8rem;

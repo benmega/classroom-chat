@@ -81,7 +81,7 @@
 }
 
 .stat-card svg {
-    color: var(--primary-color);
+    color: var(--primary-accessible);
     margin-bottom: 1rem;
     opacity: 0.9;
 }
@@ -132,7 +132,7 @@
     width: 60px;
     height: 60px;
     background: var(--primary-light);
-    color: var(--primary-color);
+    color: var(--primary-accessible);
     border-radius: var(--radius-md);
     display: flex;
     align-items: center;
@@ -186,7 +186,7 @@
 }
 
 .card-meta span svg {
-    color: var(--primary-color);
+    color: var(--primary-accessible);
     opacity: 0.6;
 }
 
@@ -197,7 +197,7 @@
 }
 
 .history-card:hover .card-action {
-    color: var(--primary-color);
+    color: var(--primary-accessible);
     transform: translateX(6px);
     opacity: 1;
 }

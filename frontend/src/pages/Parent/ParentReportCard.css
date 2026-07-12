@@ -254,7 +254,7 @@
 
 .report-loader-icon {
     animation: spin 1s linear infinite;
-    color: var(--primary-color);
+    color: var(--primary-accessible);
 }
 
 .report-loading-text {

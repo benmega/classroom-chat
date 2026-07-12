@@ -73,7 +73,7 @@
 }
 
 .refresh-btn:hover {
-    color: var(--primary-color);
+    color: var(--primary-accessible);
     transform: rotate(30deg) scale(1.1);
     box-shadow: var(--shadow-glow);
 }
@@ -219,7 +219,7 @@
 }
 
 .card-header h3 svg {
-    color: var(--primary-color);
+    color: var(--primary-accessible);
 }
 
 /* User Management Refinements */

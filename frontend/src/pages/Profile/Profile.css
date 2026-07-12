@@ -144,7 +144,7 @@
 
 .student-title {
     margin: 2px 0 10px 0;
-    color: var(--primary-color);
+    color: var(--primary-accessible);
     font-weight: 600;
     font-size: 1.1rem;
 }
@@ -186,7 +186,7 @@
 
 .btn-settings:hover {
     background: var(--primary-light);
-    color: var(--primary-color);
+    color: var(--primary-accessible);
     border-color: var(--primary-color);
 }
 
@@ -311,7 +311,7 @@
 }
 
 .panel-header svg {
-    color: var(--primary-color);
+    color: var(--primary-accessible);
 }
 
 .panel-header.between {
@@ -442,7 +442,7 @@
 .tech-skill-card i, .tech-skill-card svg {
     font-size: 1.8rem;
     margin-bottom: 8px;
-    color: var(--primary-color);
+    color: var(--primary-accessible);
 }
 
 .tech-skill-card span {
@@ -648,7 +648,7 @@
 
 .btn-add {
     background: var(--primary-light);
-    color: var(--primary-color);
+    color: var(--primary-accessible);
     border: 1px solid var(--primary-color);
     flex: none;
 }
@@ -670,7 +670,7 @@
 
 .link-icon {
     background: var(--primary-light);
-    color: var(--primary-color);
+    color: var(--primary-accessible);
     border: 1px solid var(--border-subtle);
     padding: 8px 12px;
     border-radius: var(--radius-sm);
@@ -864,7 +864,7 @@
 }
 
 .btn-icon:hover {
-    color: var(--primary-color);
+    color: var(--primary-accessible);
     border-color: var(--primary-color);
 }
 
@@ -1207,7 +1207,7 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    color: var(--primary-color);
+    color: var(--primary-accessible);
 }
 
 .teacher-feedback {
@@ -1424,7 +1424,7 @@
     align-self: flex-start;
     font-size: 0.75rem;
     font-weight: 700;
-    color: var(--primary-color);
+    color: var(--primary-accessible);
     background: transparent;
     border: none;
     padding: 4px 0;

@@ -30,7 +30,7 @@
 }
 
 .pending-empty-icon {
-    color: var(--primary-color);
+    color: var(--primary-accessible);
     margin-bottom: 0.5rem;
 }
 

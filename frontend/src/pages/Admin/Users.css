@@ -405,7 +405,7 @@
 }
 
 .pagination-btn:hover:not(:disabled) {
-    color: var(--primary-color);
+    color: var(--primary-accessible);
     border-color: var(--primary-color);
     background: var(--bg-secondary);
 }
@@ -423,7 +423,7 @@
 }
 
 .page-indicator strong {
-    color: var(--primary-color);
+    color: var(--primary-accessible);
 }
 
 @media (max-width: 640px) {
@@ -443,7 +443,7 @@
 .user-profile-link:hover .name,
 .user-profile-link:hover .handle {
     text-decoration: underline;
-    color: var(--primary-color);
+    color: var(--primary-accessible);
 }
 
 /* ── Tab Bar ─────────────────────────────────────────────── */
@@ -468,7 +468,7 @@
 
 .role-tab:hover {
     border-color: var(--primary-color);
-    color: var(--primary-color);
+    color: var(--primary-accessible);
     background: var(--bg-secondary);
 }
 

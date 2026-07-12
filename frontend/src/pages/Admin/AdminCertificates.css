@@ -152,7 +152,7 @@
 
 .achievement-title {
     font-weight: 700;
-    color: var(--primary-color);
+    color: var(--primary-accessible);
     font-size: 0.95rem;
     display: flex;
     align-items: center;

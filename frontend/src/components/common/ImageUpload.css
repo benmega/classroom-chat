@@ -84,7 +84,7 @@
 }
 
 .image-upload-container:hover .upload-icon {
-  color: var(--primary-color);
+  color: var(--primary-accessible);
 }
 
 .upload-text {
@@ -157,7 +157,7 @@
 
 .spinner {
   animation: rotate 2s linear infinite;
-  color: var(--primary-color);
+  color: var(--primary-accessible);
 }
 
 @keyframes rotate {

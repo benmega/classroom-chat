@@ -28,7 +28,7 @@
 }
 
 .search-input-wrapper-common:focus-within .search-icon-common {
-    color: var(--primary-color);
+    color: var(--primary-accessible);
 }
 
 .user-search-input-common {
@@ -57,7 +57,7 @@
 }
 
 .search-loader-common {
-    color: var(--primary-color);
+    color: var(--primary-accessible);
     animation: spin-common 1s linear infinite;
 }
 
@@ -80,7 +80,7 @@
 
 .clear-search-common:hover {
     background: var(--primary-light);
-    color: var(--primary-color);
+    color: var(--primary-accessible);
 }
 
 .search-results-dropdown-common {

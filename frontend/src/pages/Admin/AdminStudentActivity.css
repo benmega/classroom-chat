@@ -116,7 +116,7 @@
     align-items: flex-start;
     gap: 0.5rem;
     font-size: 0.95rem;
-    color: var(--primary-color);
+    color: var(--primary-accessible);
     font-weight: 500;
 }
 

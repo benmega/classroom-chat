@@ -208,7 +208,7 @@
     display: flex;
     align-items: center;
     gap: 12px;
-    color: var(--primary-color);
+    color: var(--primary-accessible);
 }
 
 .log-modal-header h3 {
@@ -306,7 +306,7 @@
 }
 
 .log-content .table-row span { color: var(--text-muted); }
-.log-content .table-row strong { color: var(--primary-color); }
+.log-content .table-row strong { color: var(--primary-accessible); }
 
 /* Purge Confirmation */
 .purge-confirm .log-content {

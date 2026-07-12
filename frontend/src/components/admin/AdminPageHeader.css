@@ -36,7 +36,7 @@
 }
 
 .page-header.standardized .back-btn:hover {
-    color: var(--primary-color);
+    color: var(--primary-accessible);
     border-color: var(--primary-color);
     background: var(--bg-secondary);
     transform: translateX(-2px);

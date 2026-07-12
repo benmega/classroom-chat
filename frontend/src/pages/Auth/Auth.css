@@ -139,7 +139,7 @@
 }
 
 .auth-input:focus + .input-icon {
-    color: var(--primary-color);
+    color: var(--primary-accessible);
 }
 
 .toggle-password-btn {
@@ -220,7 +220,7 @@
 }
 
 .auth-link:hover {
-    color: var(--primary-color);
+    color: var(--primary-accessible);
     text-decoration: underline;
 }
 

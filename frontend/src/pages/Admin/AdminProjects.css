@@ -28,7 +28,7 @@
 
 .filter-tabs button.active {
     background: white;
-    color: var(--primary-color);
+    color: var(--primary-accessible);
     box-shadow: var(--shadow-md);
 }
 
@@ -262,7 +262,7 @@
     gap: 8px;
     padding: 8px 16px;
     background: white;
-    color: var(--primary-color);
+    color: var(--primary-accessible);
     text-decoration: none;
     border-radius: 12px;
     font-weight: 700;
@@ -667,7 +667,7 @@
 
 .filter-trigger-btn:hover {
     background-color: var(--bg-tertiary);
-    color: var(--primary-color);
+    color: var(--primary-accessible);
 }
 
 .excel-filter-dropdown {
@@ -702,7 +702,7 @@
 
 .filter-sort-option:hover {
     background-color: var(--bg-secondary);
-    color: var(--primary-color);
+    color: var(--primary-accessible);
 }
 
 .divider {

@@ -16,7 +16,7 @@
 }
 
 .back-link:hover {
-    color: var(--primary-color);
+    color: var(--primary-accessible);
     transform: translateX(-4px);
 }
 
@@ -245,7 +245,7 @@
 
 .transactions-table-container .pagination-btn:hover:not(:disabled) {
     border-color: var(--primary-color);
-    color: var(--primary-color);
+    color: var(--primary-accessible);
     background: rgba(14, 178, 187, 0.05);
 }
 

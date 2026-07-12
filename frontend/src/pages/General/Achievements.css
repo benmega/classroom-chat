@@ -39,7 +39,7 @@
 }
 
 .ach-brand svg {
-    color: var(--primary-color);
+    color: var(--primary-accessible);
     background: var(--bg-primary);
     padding: 10px;
     border-radius: 14px;
@@ -85,7 +85,7 @@
 .ach-progress-info .percent {
     font-size: 0.9rem;
     font-weight: 800;
-    color: var(--primary-color);
+    color: var(--primary-accessible);
 }
 
 .progress-track-outer {
@@ -170,13 +170,13 @@
 .filter-dropdown-trigger:hover,
 .filter-dropdown-trigger.open {
     border-color: var(--primary-color);
-    color: var(--primary-color);
+    color: var(--primary-accessible);
     background: white;
 }
 
 .filter-dropdown-trigger.has-selection {
     border-color: var(--primary-color);
-    color: var(--primary-color);
+    color: var(--primary-accessible);
     background: white;
 }
 
@@ -245,7 +245,7 @@
 
 .filter-dropdown-item.selected {
     background: color-mix(in srgb, var(--primary-color) 10%, transparent);
-    color: var(--primary-color);
+    color: var(--primary-accessible);
 }
 
 .filter-dropdown-item input[type="checkbox"] {

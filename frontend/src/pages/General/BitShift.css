@@ -76,7 +76,7 @@
     border: 2px solid var(--border-rich) !important;
     border-radius: var(--radius-lg) !important;
     background: white !important;
-    color: var(--primary-color) !important;
+    color: var(--primary-accessible) !important;
     transition: var(--transition-bounce) !important;
     box-shadow: var(--shadow-md) !important;
 }
@@ -185,7 +185,7 @@
     border-color: var(--primary-alpha);
     background: var(--bg-tertiary);
     transform: translateY(-2px);
-    color: var(--primary-color);
+    color: var(--primary-accessible);
 }
 
 .bit-toggle.active {
@@ -382,7 +382,7 @@
 }
 
 .toggle-text.active {
-    color: var(--primary-color);
+    color: var(--primary-accessible);
     text-shadow: 0 0 15px rgba(14, 178, 187, 0.3);
 }
 
@@ -498,7 +498,7 @@
     content: "/* bit of wisdom */";
     display: block;
     font-size: 0.75rem;
-    color: var(--primary-color);
+    color: var(--primary-accessible);
     margin-bottom: 0.75rem;
     text-transform: uppercase;
     letter-spacing: 0.15em;

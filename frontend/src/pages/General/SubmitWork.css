@@ -53,7 +53,7 @@
 }
 
 .tab-btn.active {
-    color: var(--primary-color);
+    color: var(--primary-accessible);
     border-bottom-color: var(--primary-color);
 }
 

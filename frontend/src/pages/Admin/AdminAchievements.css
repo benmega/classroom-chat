@@ -216,7 +216,7 @@
 .file-label:hover {
     border-color: var(--primary-color);
     background: #eff6ff;
-    color: var(--primary-color);
+    color: var(--primary-accessible);
 }
 
 .preview-badge.custom {
