@@ -24,7 +24,7 @@ test.describe('Desktop UI Audit', () => {
     await page.goto('/api/dev-login?role=admin');
     
     console.log('2. Waiting for redirection to dashboard...');
-    await page.waitForURL('**/chat', { timeout: 15000 });
+    await page.waitForURL('**/admin/dashboard', { timeout: 15000 });
     
     // Wait for the loading screen to disappear
     await page.waitForTimeout(2000);

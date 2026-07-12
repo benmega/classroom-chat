@@ -65,11 +65,18 @@ test.describe('Navigation', () => {
 
   test('should navigate to profile from dashboard', async ({ page }) => {
     const profileRail = page.locator('.nav-rail-item[data-tooltip="Profile"]');
+    const profileToggle = page.getByTestId('profile-toggle');
+
+    await expect(async () => {
+      const isRailVisible = await profileRail.isVisible();
+      const isToggleVisible = await profileToggle.isVisible();
+      expect(isRailVisible || isToggleVisible).toBe(true);
+    }).toPass({ timeout: 15000 });
+
     if (await profileRail.isVisible()) {
       await profileRail.click();
     } else {
-      await expect(page.getByTestId('profile-toggle')).toBeVisible({ timeout: 15000 });
-      await page.getByTestId('profile-toggle').click();
+      await profileToggle.click();
       await page.getByTestId('nav-profile').click();
     }
     await expect(page).toHaveURL(/\/profile/);

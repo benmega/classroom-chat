@@ -6,7 +6,7 @@ test.describe('Admin Packets Adjustment', () => {
     await page.goto('/api/dev-login?role=admin');
     
     // Wait to be redirected to home or dashboard
-    await page.waitForURL('**/', { timeout: 15000 });
+    await page.waitForURL('**/admin/dashboard', { timeout: 15000 });
 
     // Navigate to admin users page
     await page.goto('/admin/users');
@@ -16,9 +16,8 @@ test.describe('Admin Packets Adjustment', () => {
     // Wait for the users table to load
     await expect(page.locator('.users-table')).toBeVisible({ timeout: 15000 });
 
-    // Wait for at least one user row that has a student role
-    // Using the class inline-role-label student
-    const studentRow = page.locator('tr:has(.inline-role-label.student)').first();
+    // Using the class user-role-badge student
+    const studentRow = page.locator('tr:has(.user-role-badge.student)').first();
     await expect(studentRow).toBeVisible();
 
     // Click the row to navigate to the user's dashboard
