@@ -447,3 +447,85 @@
     color: var(--primary-color);
 }
 
+/* ── Tab Bar ─────────────────────────────────────────────── */
+.admin-role-tabs {
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+    margin-bottom: 1rem;
+}
+
+.role-tab {
+    padding: 8px 20px;
+    border-radius: 999px;
+    border: 1px solid var(--border-subtle);
+    background: white;
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.18s;
+}
+
+.role-tab:hover {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+    background: var(--bg-secondary);
+}
+
+.role-tab.active {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+}
+
+/* ── Expanded Children Row ───────────────────────────────── */
+.expanded-children-row td {
+    border-top: none !important;
+    background: var(--bg-secondary, #f8fafc);
+    padding: 0 !important;
+}
+
+.children-list-container {
+    padding: 12px 20px 16px 48px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.child-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    background: white;
+    border: 1px solid var(--border-subtle);
+    border-radius: 10px;
+    max-width: 520px;
+}
+
+.child-item .user-profile-cell {
+    flex: 1;
+}
+
+.child-unlink-btn {
+    display: flex !important;
+    align-items: center;
+    gap: 4px;
+    width: auto !important;
+    padding: 0 10px !important;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+/* ── Children Count Badge ────────────────────────────────── */
+.children-count-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+

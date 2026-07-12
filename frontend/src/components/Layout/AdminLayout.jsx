@@ -13,7 +13,6 @@ import {
     X,
     ShoppingBag,
     GraduationCap,
-    Link2,
     BookOpen
 } from 'lucide-react';
 import useAuthStore from '../../store/useAuthStore';
@@ -69,7 +68,7 @@ const AdminLayout = ({ children }) => {
     const navItems = [
         { path: '/admin', label: 'Dashboard', icon: LayoutDashboard, end: true },
         { path: '/admin/users', label: 'Users', icon: Users },
-        { path: '/admin/connections', label: 'Parent-Child Links', icon: Link2 },
+        { path: '/admin/classes', label: 'Classes', icon: BookOpen },
         { path: '/admin/pending-trades', label: 'Pending Trades', icon: ShoppingBag },
         { path: '/admin/projects', label: 'Projects', icon: FolderKanban },
         { path: '/admin/standard-projects', label: 'Standard Projects', icon: BookOpen },

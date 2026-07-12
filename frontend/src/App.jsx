@@ -34,8 +34,9 @@ import AdminAchievements from './pages/Admin/AdminAchievements';
 import AdminChallenges from './pages/Admin/AdminChallenges';
 import AdminDocuments from './pages/Admin/AdminDocuments';
 import Users from './pages/Admin/Users';
+import Classes from './pages/Admin/Classes';
 import AdminUserDashboard from './pages/Admin/AdminUserDashboard';
-import AdminConnections from './pages/Admin/AdminConnections';
+import AdminClassDashboard from './pages/Admin/AdminClassDashboard';
 import Analytics from './pages/Admin/Analytics';
 import PendingTrades from './pages/Admin/PendingTrades';
 import PendingUsers from './pages/Admin/PendingUsers';
@@ -289,8 +290,12 @@ function App() {
                 <Route path="standard-projects" element={<AdminStandardProjects />} />
                 <Route path="certificates" element={<AdminCertificates />} />
                 <Route path="users" element={<Users />} />
+                <Route path="students" element={<Navigate to="/admin/users?role=student" replace />} />
+                <Route path="parents" element={<Navigate to="/admin/users?role=parent" replace />} />
+                <Route path="classes" element={<Classes />} />
+                <Route path="classes/:classId" element={<AdminClassDashboard />} />
                 <Route path="users/:userId" element={<AdminUserDashboard />} />
-                <Route path="connections" element={<AdminConnections />} />
+                <Route path="connections" element={<Navigate to="/admin/users?role=parent" replace />} />
                 <Route path="analytics" element={<Analytics />} />
                 <Route path="add-achievement" element={<AdminAchievements />} />
                 <Route path="add-challenges" element={<AdminChallenges />} />

@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import client from '../api/client';
 import toast from 'react-hot-toast';
 
-export const useUsersManagement = () => {
+export const useUsersManagement = (role = '') => {
     const [users, setUsers] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isRefreshing, setIsRefreshing] = useState(false);
@@ -34,6 +34,9 @@ export const useUsersManagement = () => {
         setIsRefreshing(true);
         try {
             let url = `/api/admin/users?page=${targetPage}&per_page=50`;
+            if (role) {
+                url += `&role=${role}`;
+            }
             if (debouncedSearchTerm) {
                 url += `&search=${encodeURIComponent(debouncedSearchTerm)}`;
             }
@@ -58,7 +61,7 @@ export const useUsersManagement = () => {
             setIsLoading(false);
             setIsRefreshing(false);
         }
-    }, [page, debouncedSearchTerm]);
+    }, [page, debouncedSearchTerm, role]);
 
     useEffect(() => {
         fetchUsers(page);
