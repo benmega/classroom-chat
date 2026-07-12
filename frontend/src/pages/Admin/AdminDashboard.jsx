@@ -35,7 +35,6 @@ import AdminPageHeader from '../../components/admin/AdminPageHeader';
 
 // Hooks & Utils
 import { useAdminDashboard } from '../../hooks/useAdminDashboard';
-import useSidebar from '../../hooks/useSidebar';
 import { getChartConfig, chartOptions } from './chartConfig';
 
 ChartJS.register(
@@ -53,7 +52,6 @@ const AdminDashboard = () => {
     const navigate = useNavigate();
     const [newWord, setNewWord] = useState('');
     const [banReason, setBanReason] = useState('');
-    const { toggleSidebar } = useSidebar();
 
     const {
         dashboardData,
@@ -130,8 +128,7 @@ const AdminDashboard = () => {
             <div className="dashboard-layout">
                 <div className="main-content">
                     <div className="chart-card card">
-                        <div className="card-header chart-header">
-                            <h3><TrendingUp size={20} /> Duck Transactions</h3>
+                        <div className="chart-header" style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '0.5rem' }}>
                             <select 
                                 value={timeframe} 
                                 onChange={(e) => setTimeframe(e.target.value === 'all' ? 'all' : Number(e.target.value))}

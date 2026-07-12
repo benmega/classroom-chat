@@ -388,22 +388,24 @@ const AdminUserDashboard = () => {
                     </div>
                 </div>
 
-                <div className="hud-stats-grid">
-                    <div className="hud-stat-box">
-                        <span className="lbl">Ducks</span>
-                        <span className="val ducks">🦆 {(user.duck_balance ?? 0).toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
+                {user.role === 'student' && (
+                    <div className="hud-stats-grid">
+                        <div className="hud-stat-box">
+                            <span className="lbl">Ducks</span>
+                            <span className="val ducks">🦆 {(user.duck_balance ?? 0).toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
+                        </div>
+                        <div className="hud-stat-box">
+                            <span className="lbl">Packets</span>
+                            <span className="val packets" style={{ color: (user.packets < 0 ? 'var(--error-color, #ff4444)' : '') }}>
+                                📦 {(user.packets ?? 0).toLocaleString(undefined, { maximumFractionDigits: 3 })}
+                            </span>
+                        </div>
+                        <div className="hud-stat-box">
+                            <span className="lbl">Level</span>
+                            <span className="val level"><Star size={14} /> {user.total_levels || 0}</span>
+                        </div>
                     </div>
-                    <div className="hud-stat-box">
-                        <span className="lbl">Packets</span>
-                        <span className="val packets" style={{ color: (user.packets < 0 ? 'var(--error-color, #ff4444)' : '') }}>
-                            📦 {(user.packets ?? 0).toLocaleString(undefined, { maximumFractionDigits: 3 })}
-                        </span>
-                    </div>
-                    <div className="hud-stat-box">
-                        <span className="lbl">Level</span>
-                        <span className="val level"><Star size={14} /> {user.total_levels || 0}</span>
-                    </div>
-                </div>
+                )}
             </div>
 
             {/* Grid of Control Panels */}
@@ -411,7 +413,6 @@ const AdminUserDashboard = () => {
 
                 {/* Activity & Status */}
                 <div className="control-panel-card">
-                    <h3><Activity size={18} /> Activity</h3>
                     <div className="panel-forms">
                         <div className="activity-info-block">
                             <div className="activity-row">
@@ -420,10 +421,12 @@ const AdminUserDashboard = () => {
                                     {user.is_online ? 'Active Now' : 'Offline'}
                                 </span>
                             </div>
-                            <div className="activity-row">
-                                <span className="lbl">Current Task</span>
-                                <span className="val">{user.current_activity || 'None'}</span>
-                            </div>
+                            {user.role === 'student' && (
+                                <div className="activity-row">
+                                    <span className="lbl">Current Task</span>
+                                    <span className="val">{user.current_activity || 'None'}</span>
+                                </div>
+                            )}
                             <div className="activity-row">
                                 <span className="lbl">Last Active</span>
                                 <span className="val">
@@ -437,36 +440,36 @@ const AdminUserDashboard = () => {
                 </div>
 
                 {/* Panel 1: Economy */}
-                <div className="control-panel-card">
-                    <h3><Activity size={20} /> Economy</h3>
-                    <div className="panel-forms">
-                        <form onSubmit={handleAdjustDucks} className="action-form-inline" noValidate>
-                            <input type="hidden" name="username" value={user.username} />
-                            <label>Ducks</label>
-                            <div className="input-group">
-                                <input type="number" name="amount" step="any" placeholder="+ / -" required />
-                                <button type="submit" className="btn-action primary" disabled={formLoading}>
-                                    {formLoading ? '...' : <Check size={18} />}
-                                </button>
-                            </div>
-                        </form>
-                        <form onSubmit={handleAdjustPackets} className="action-form-inline" noValidate>
-                            <input type="hidden" name="username" value={user.username} />
-                            <label>Packets</label>
-                            <div className="input-group">
-                                <input type="number" name="amount" step="any" placeholder="+ / -" required />
-                                <button type="submit" className="btn-action primary" disabled={formLoading}>
-                                    {formLoading ? '...' : <Check size={18} />}
-                                </button>
-                            </div>
-                        </form>
+                {user.role === 'student' && (
+                    <div className="control-panel-card">
+                        <div className="panel-forms">
+                            <form onSubmit={handleAdjustDucks} className="action-form-inline" noValidate>
+                                <input type="hidden" name="username" value={user.username} />
+                                <label>Ducks</label>
+                                <div className="input-group">
+                                    <input type="number" name="amount" step="any" placeholder="+ / -" required />
+                                    <button type="submit" className="btn-action primary" disabled={formLoading}>
+                                        {formLoading ? '...' : <Check size={18} />}
+                                    </button>
+                                </div>
+                            </form>
+                            <form onSubmit={handleAdjustPackets} className="action-form-inline" noValidate>
+                                <input type="hidden" name="username" value={user.username} />
+                                <label>Packets</label>
+                                <div className="input-group">
+                                    <input type="number" name="amount" step="any" placeholder="+ / -" required />
+                                    <button type="submit" className="btn-action primary" disabled={formLoading}>
+                                        {formLoading ? '...' : <Check size={18} />}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
                     </div>
-                </div>
+                )}
 
                 {/* Panel 2: Projects */}
                 {user.role === 'student' && (
                     <div className="control-panel-card">
-                        <h3><FolderPlus size={20} /> Projects</h3>
                         <div className="panel-forms role-specific-student">
                             <form onSubmit={handleAssignProjectSubmit} className="action-form-inline">
                                 <label>New</label>
@@ -507,7 +510,6 @@ const AdminUserDashboard = () => {
 
                 {/* Panel 3: Security */}
                 <div className="control-panel-card full-width">
-                    <h3><Shield size={20} /> Security & Auth</h3>
                     <div className="panel-forms">
                         {user.role === 'student' && (
                             <form onSubmit={handleSetDrawer} className="action-form-inline" noValidate>
@@ -597,7 +599,6 @@ const AdminUserDashboard = () => {
 
                 {user.role === 'parent' && (
                     <div className="control-panel-card parent-links-card">
-                        <h3><UsersIcon size={20} /> Children</h3>
                         <div className="panel-forms">
                             <div className="compact-search-box">
                                 <input 
@@ -655,7 +656,6 @@ const AdminUserDashboard = () => {
 
                 {user.role === 'student' && (
                     <div className="control-panel-card parent-links-card">
-                        <h3><UsersIcon size={20} /> Parents</h3>
                         <div className="panel-forms">
                             <div className="compact-search-box">
                                 <input 

@@ -33,7 +33,6 @@ const ParentDashboard = () => {
     const navigate = useNavigate();
     const [children, setChildren] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState(null);
     const [openMenu, setOpenMenu] = useState(null);
     const [connectCode, setConnectCode] = useState('');
     const [connectError, setConnectError] = useState(null);
@@ -53,7 +52,7 @@ const ParentDashboard = () => {
             setChildren(list);
             return list;
         } catch (err) {
-            setError(err.response?.data?.error || 'Failed to load children');
+            toast.error(err.response?.data?.error || 'Failed to load children');
             return [];
         } finally {
             setIsLoading(false);
