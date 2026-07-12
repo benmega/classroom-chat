@@ -9,13 +9,12 @@
 }
 
 .form-card {
-    background: var(--glass-bg);
-    backdrop-filter: var(--glass-blur);
-    -webkit-backdrop-filter: var(--glass-blur);
+    background: var(--bg-primary);
+
     padding: 2.5rem;
     border-radius: var(--radius-xl);
     box-shadow: var(--shadow-rich);
-    border: 1px solid var(--glass-border);
+    border: 1px solid var(--border-subtle);
     max-width: 100%;
     width: 100%;
     position: relative;
@@ -24,7 +23,7 @@
 }
 
 .form-card:hover {
-    background: var(--glass-bg-hover);
+    background: var(--bg-secondary);
     box-shadow: var(--shadow-glow), var(--shadow-rich);
     border-color: var(--primary-color);
 }
@@ -333,6 +332,4 @@
         box-sizing: border-box;
     }
 }
-
-
 

@@ -129,7 +129,6 @@
     right: 0;
     bottom: 0;
     background: rgba(15, 23, 42, 0.6);
-    backdrop-filter: blur(4px);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -243,7 +242,6 @@
     gap: 12px;
     margin-top: 28px;
 }
-
 
 /* --- Added for Inline Style Cleanup --- */
 .skeleton-row-padded { padding: 12px 24px; }

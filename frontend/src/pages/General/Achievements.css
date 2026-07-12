@@ -12,11 +12,10 @@
 }
 
 .ach-controls {
-    background: var(--glass-bg);
-    backdrop-filter: var(--glass-blur);
+    background: var(--bg-primary);
     padding: 1rem 1.25rem;
     border-radius: 20px;
-    border: 1px solid var(--glass-border);
+    border: 1px solid var(--border-subtle);
     margin-bottom: 1rem;
     display: flex;
     flex-direction: column;
@@ -30,7 +29,7 @@
     align-items: center;
     gap: 1rem;
     padding-bottom: 0.75rem;
-    border-bottom: 1px solid var(--glass-border);
+    border-bottom: 1px solid var(--border-subtle);
 }
 
 .ach-brand {
@@ -41,10 +40,10 @@
 
 .ach-brand svg {
     color: var(--primary-color);
-    background: var(--glass-bg);
+    background: var(--bg-primary);
     padding: 10px;
     border-radius: 14px;
-    border: 1px solid var(--glass-border);
+    border: 1px solid var(--border-subtle);
     box-shadow: var(--shadow-sm);
     flex-shrink: 0;
 }
@@ -209,7 +208,7 @@
     left: 0;
     z-index: 200;
     background: var(--bg-primary, white);
-    border: 1px solid var(--glass-border);
+    border: 1px solid var(--border-subtle);
     border-radius: 14px;
     box-shadow: var(--shadow-soft);
     padding: 6px;
@@ -400,7 +399,6 @@
     position: absolute;
     inset: 0;
     background: rgba(15, 23, 42, 0.6);
-    backdrop-filter: blur(4px);
     display: flex;
     align-items: center;
     justify-content: center;

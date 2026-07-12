@@ -39,14 +39,12 @@
     align-items: center;
     width: var(--admin-rail-width);
     height: 100dvh;
-    background: rgba(15, 23, 42, 0.75);
-    backdrop-filter: var(--glass-blur);
-    -webkit-backdrop-filter: var(--glass-blur);
+    background: var(--admin-dark-bg);
     border-right: 1px solid var(--admin-dark-border);
     padding: 1rem 0;
     flex-shrink: 0;
     z-index: 1010;
-    overflow: hidden; /* prevents any horizontal scroll */
+    overflow: hidden;
     position: relative;
 }
 
@@ -78,13 +76,11 @@
 }
 
 .admin-rail-logo:hover {
-    transform: scale(1.05);
     border-color: #60a5fa;
-    box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
 }
 
 .admin-rail-logo:hover img {
-    transform: scale(1.1) rotate(-5deg);
+    transform: none;
 }
 
 /* Brand text — only shown on mobile drawer */
@@ -218,7 +214,7 @@
 .admin-rail-item:hover {
     background: var(--admin-accent-hover);
     color: var(--admin-accent);
-    border-radius: 35%;
+    border-radius: var(--radius-md);
 }
 
 .admin-rail-item:hover svg {
@@ -229,8 +225,7 @@
 .admin-rail-item.active {
     background: var(--admin-accent);
     color: white;
-    border-radius: 30%;
-    box-shadow: 0 0 20px var(--admin-accent-glow);
+    border-radius: var(--radius-md);
 }
 
 .admin-rail-item.active svg {
@@ -245,7 +240,7 @@
 .admin-logout-btn:hover {
     background: rgba(239, 68, 68, 0.12);
     color: #ef4444;
-    border-radius: 35%;
+    border-radius: var(--radius-md);
 }
 
 /* ==========================================================================
@@ -457,8 +452,7 @@
     display: none;
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(4px);
+    background: rgba(0, 0, 0, 0.65);
     z-index: 1009;
 }
 
@@ -486,12 +480,12 @@
    Page animations
    ========================================================================== */
 @keyframes adminPageEntry {
-    from { opacity: 0; transform: translateY(8px); filter: blur(2px); }
-    to   { opacity: 1; transform: translateY(0);   filter: blur(0); }
+    from { opacity: 0; }
+    to   { opacity: 1; }
 }
 
 .animate-page-entry {
-    animation: adminPageEntry 0.3s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    animation: adminPageEntry 0.2s ease forwards;
 }
 
 /* ==========================================================================

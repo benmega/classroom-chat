@@ -51,10 +51,8 @@
     width: 100%;
     max-width: 480px;
     padding: 3.5rem;
-    background: var(--glass-bg);
-    backdrop-filter: var(--glass-blur);
-    -webkit-backdrop-filter: var(--glass-blur);
-    border: 1px solid var(--glass-border);
+    background: var(--bg-primary);
+    border: 1px solid var(--border-subtle);
     border-radius: var(--radius-xl);
     box-shadow: var(--shadow-rich);
     animation: fadeIn var(--transition-smooth);
@@ -417,8 +415,6 @@
     background: var(--bg-secondary) !important;
     box-shadow: var(--shadow-sm) !important;
 }
-
-
 
 .auth-footer-container {
     display: flex;

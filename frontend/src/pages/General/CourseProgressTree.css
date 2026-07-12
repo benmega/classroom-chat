@@ -111,8 +111,6 @@
 /* User wants CodeCombat and Ozaria colors */
 /* Re-add if you want specific borders or subtle backgrounds behind logos */
 
-
-
 .skill-content h3 {
     margin: 0;
     font-size: 1.1rem;
@@ -310,7 +308,6 @@
     justify-content: center;
     z-index: 1000;
     padding: 1rem;
-    backdrop-filter: blur(4px);
 }
 
 .course-modal-content {
@@ -482,8 +479,6 @@
 .canvas-wrapper:active {
     cursor: grabbing;
 }
-
-
 
 .track-progress-bg {
     position: absolute;

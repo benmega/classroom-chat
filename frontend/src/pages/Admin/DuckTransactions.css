@@ -22,8 +22,8 @@
 
 /* Header Actions Adjustments */
 .admin-transactions-page .export-btn {
-    background: var(--glass-bg);
-    border: 1px solid var(--glass-border);
+    background: var(--bg-primary);
+    border: 1px solid var(--border-subtle);
     color: var(--text-primary);
     box-shadow: var(--shadow-sm);
     display: inline-flex;
@@ -53,8 +53,8 @@
 .filter-tabs {
     display: flex;
     gap: 0.5rem;
-    background: var(--glass-bg);
-    border: 1px solid var(--glass-border);
+    background: var(--bg-primary);
+    border: 1px solid var(--border-subtle);
     padding: 6px;
     border-radius: 14px;
     width: fit-content;
@@ -86,9 +86,8 @@
 
 /* Table Container Card */
 .transactions-table-container.card {
-    background: var(--glass-bg);
-    backdrop-filter: var(--glass-blur);
-    border: 1px solid var(--glass-border);
+    background: var(--bg-primary);
+    border: 1px solid var(--border-subtle);
     border-radius: 20px;
     box-shadow: var(--shadow-soft);
     overflow: hidden;
@@ -109,12 +108,12 @@
     color: var(--text-secondary);
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    border-bottom: 1px solid var(--glass-border);
+    border-bottom: 1px solid var(--border-subtle);
 }
 
 .transactions-table td {
     padding: 16px 24px;
-    border-bottom: 1px solid var(--glass-border);
+    border-bottom: 1px solid var(--border-subtle);
     vertical-align: middle;
 }
 
@@ -213,7 +212,7 @@
     justify-content: space-between;
     align-items: center;
     padding: 16px 24px;
-    border-top: 1px solid var(--glass-border);
+    border-top: 1px solid var(--border-subtle);
     flex-wrap: wrap;
     gap: 1rem;
 }
@@ -231,8 +230,8 @@
 
 .transactions-table-container .pagination-btn {
     padding: 8px 16px;
-    border: 1px solid var(--glass-border);
-    background: var(--glass-bg);
+    border: 1px solid var(--border-subtle);
+    background: var(--bg-primary);
     color: var(--text-primary);
     border-radius: 10px;
     font-weight: 700;

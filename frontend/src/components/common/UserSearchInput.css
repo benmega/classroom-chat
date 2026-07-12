@@ -88,19 +88,18 @@
     top: calc(100% + 8px);
     left: 0;
     width: 100%;
-    background: var(--glass-bg);
-    backdrop-filter: var(--glass-blur);
-    border: 1px solid var(--glass-border);
+    background: var(--bg-primary);
+    border: 1px solid var(--border-subtle);
     border-radius: var(--radius-md);
-    box-shadow: var(--shadow-rich);
+    box-shadow: var(--shadow-lg);
     overflow: hidden;
     z-index: 1001;
-    animation: dropdownFade-common 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    animation: dropdownFade-common 0.15s ease;
 }
 
 @keyframes dropdownFade-common {
-    from { opacity: 0; transform: translateY(-10px) scale(0.95); }
-    to { opacity: 1; transform: translateY(0) scale(1); }
+    from { opacity: 0; }
+    to { opacity: 1; }
 }
 
 .search-result-item-common {

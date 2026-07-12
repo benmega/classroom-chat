@@ -63,9 +63,8 @@
 
 .refresh-btn {
     padding: 14px;
-    background: var(--glass-bg);
-    backdrop-filter: var(--glass-blur);
-    border: 1px solid var(--glass-border);
+    background: var(--bg-primary);
+    border: 1px solid var(--border-subtle);
     border-radius: 16px;
     color: var(--text-secondary);
     cursor: pointer;
@@ -105,14 +104,13 @@
 }
 
 .stat-card {
-    background: var(--glass-bg);
-    backdrop-filter: var(--glass-blur);
+    background: var(--bg-primary);
     padding: 0.5rem;
     border-radius: 16px;
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    border: 1px solid var(--glass-border);
+    border: 1px solid var(--border-subtle);
     box-shadow: var(--shadow-soft);
     position: relative;
     overflow: hidden;
@@ -193,11 +191,10 @@
 }
 
 .card {
-    background: var(--glass-bg);
-    backdrop-filter: var(--glass-blur);
+    background: var(--bg-primary);
     padding: 1rem;
     border-radius: 20px;
-    border: 1px solid var(--glass-border);
+    border: 1px solid var(--border-subtle);
     box-shadow: var(--shadow-rich);
     margin-bottom: 1rem;
     transition: var(--transition-smooth);
@@ -209,7 +206,7 @@
 
 .card-header {
     margin-bottom: 0.5rem;
-    border-bottom: 1px solid var(--glass-border);
+    border-bottom: 1px solid var(--border-subtle);
     padding-bottom: 0.5rem;
 }
 

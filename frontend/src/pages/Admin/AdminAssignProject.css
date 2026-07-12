@@ -58,7 +58,6 @@
     to { transform: rotate(360deg); }
 }
 
-
 /* --- Added for Inline Style Cleanup --- */
 .search-input-wrapper-styled { border: 1px solid var(--border-subtle); border-radius: 12px; background: var(--bg-secondary); padding: 0 16px; }
 .search-input-field-styled { border: none; background: transparent; padding: 12px; flex-grow: 1; outline: none; }

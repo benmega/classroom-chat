@@ -17,8 +17,6 @@ body {
   font-family: var(--font-body);
   font-size: var(--font-md);
   background-color: var(--bg-secondary);
-  background-image: var(--gradient-mesh);
-  background-attachment: fixed;
   color: var(--text-primary);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
@@ -105,18 +103,10 @@ input {
 }
 
 .glass-panel {
-  background: var(--glass-bg);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  border: 1px solid var(--glass-border);
-  box-shadow: var(--shadow-soft);
+  background: var(--bg-primary);
+  border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg);
   transition: var(--transition-smooth);
-}
-
-.glass-panel:hover {
-  background: var(--glass-bg-hover);
-  box-shadow: var(--shadow-lg);
 }
 
 .card-premium {
@@ -129,8 +119,7 @@ input {
 }
 
 .card-premium:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-xl);
+  border-color: var(--border-rich);
 }
 
 .btn-premium {
@@ -161,13 +150,11 @@ input {
 }
 
 .btn-premium:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-glow);
-  filter: brightness(1.1);
+  filter: brightness(1.08);
 }
 
 .btn-premium:active {
-  transform: translateY(0);
+  filter: brightness(0.96);
 }
 
 .btn-secondary {
@@ -197,13 +184,12 @@ input {
 }
 
 .btn-secondary:hover {
-  background: var(--border-subtle);
+  background: var(--bg-tertiary);
   border-color: var(--border-rich);
-  transform: translateY(-2px);
 }
 
 .btn-secondary:active {
-  transform: translateY(0);
+  background: var(--border-subtle);
 }
 
 .smart-image-base {
@@ -247,38 +233,17 @@ input {
   to { opacity: 1; transform: translateY(0); }
 }
 
-@keyframes premiumPageEntry {
-  0% {
-    opacity: 0;
-    filter: blur(8px);
-  }
-  100% {
-    opacity: 1;
-    filter: blur(0);
-  }
-}
-
-@keyframes float {
-  0% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
-  100% { transform: translateY(0px); }
-}
-
 @keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
 
 .animate-fade-in {
-  animation: fadeIn var(--transition-smooth);
+  animation: fadeIn 200ms ease;
 }
 
 .animate-page-entry {
-  animation: premiumPageEntry 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-.animate-float {
-  animation: float 4s ease-in-out infinite;
+  animation: fadeIn 200ms ease forwards;
 }
 
 /* Global Form Controls - Accessibility & Premium Feel */
@@ -307,12 +272,11 @@ select:hover:not(:focus) {
   border-color: var(--text-muted);
 }
 
-input:focus, 
+input:focus,
 textarea:focus,
 select:focus {
   outline: none;
   border-color: var(--primary-color);
-  box-shadow: var(--shadow-glow);
   background: white;
 }
 

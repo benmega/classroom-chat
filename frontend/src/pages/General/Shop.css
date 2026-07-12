@@ -78,8 +78,6 @@
     box-shadow: var(--shadow-lg);
 }
 
-
-
 .shop-item-card.purchased {
     border-color: var(--primary-color, var(--success-color));
     background: var(--bg-secondary);
@@ -173,8 +171,6 @@
     border: 1px solid var(--primary-color, var(--success-color));
     cursor: default;
 }
-
-
 
 .shop-loading {
     display: flex;

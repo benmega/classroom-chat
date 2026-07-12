@@ -15,9 +15,8 @@
     display: flex;
     gap: 1rem;
     padding: 1rem;
-    background: var(--glass-bg);
-    backdrop-filter: var(--glass-blur);
-    border: 1px solid var(--glass-border);
+    background: var(--bg-primary);
+    border: 1px solid var(--border-subtle);
     border-radius: 16px;
     box-shadow: var(--shadow-soft);
     transition: var(--transition-smooth);
@@ -26,7 +25,7 @@
 .admin-advanced-panel .utility-card:hover {
     transform: translateY(-4px);
     box-shadow: var(--shadow-lg);
-    background: var(--glass-bg-hover);
+    background: var(--bg-secondary);
     border-color: var(--primary-color);
 }
 
@@ -179,7 +178,6 @@
     position: fixed;
     inset: 0;
     background: rgba(15, 23, 42, 0.4);
-    backdrop-filter: blur(8px);
     z-index: 2000;
     display: flex;
     align-items: center;

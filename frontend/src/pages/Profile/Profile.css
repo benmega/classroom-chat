@@ -14,14 +14,13 @@
    ================================================================= */
 .profile-header-card {
     position: relative;
-    background: var(--glass-bg);
-    backdrop-filter: var(--glass-blur);
-    -webkit-backdrop-filter: var(--glass-blur);
+    background: var(--bg-primary);
+
     border-radius: var(--radius-md);
     overflow: visible; /* Changed from hidden to allow avatar overflow */
     margin: 20px auto;
     max-width: 1440px; /* Increased from 1200px */
-    border: 1px solid var(--glass-border);
+    border: 1px solid var(--border-subtle);
     box-shadow: var(--shadow-soft);
 }
 
@@ -97,8 +96,6 @@
     transform: scale(1.02);
 }
 
-
-
 /* Crop Modal Specifics */
 .crop-modal-content {
     max-width: 500px !important;
@@ -151,7 +148,6 @@
     font-weight: 600;
     font-size: 1.1rem;
 }
-
 
 .bio-panel-content {
     padding: 5px 0;
@@ -266,14 +262,13 @@
 }
 
 .dashboard-panel {
-    background: var(--glass-bg);
-    backdrop-filter: var(--glass-blur);
-    -webkit-backdrop-filter: var(--glass-blur);
+    background: var(--bg-primary);
+
     border-radius: var(--radius-md);
     padding: 24px;
     margin-bottom: 25px;
     box-shadow: var(--shadow-soft);
-    border: 1px solid var(--glass-border);
+    border: 1px solid var(--border-subtle);
     display: flex;
     flex-direction: column;
 }
@@ -329,8 +324,8 @@
     align-items: center;
     justify-content: center;
     padding: 6px 12px;
-    background: var(--glass-bg);
-    border: 1px solid var(--glass-border);
+    background: var(--bg-primary);
+    border: 1px solid var(--border-subtle);
     border-radius: var(--radius-sm);
     box-shadow: var(--shadow-sm);
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
@@ -547,7 +542,6 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    backdrop-filter: blur(4px);
 }
 
 .edit-overlay {
@@ -780,7 +774,6 @@
     box-shadow: var(--shadow-md);
 }
 
-
 .ach-strip-item .badge.mini {
     transform: scale(0.25);
     transform-origin: center;
@@ -967,7 +960,6 @@
     right: 0;
     bottom: 0;
     background: rgba(15, 23, 42, 0.8);
-    backdrop-filter: blur(8px);
     display: flex;
     align-items: center;
     justify-content: center;

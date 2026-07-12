@@ -110,11 +110,10 @@
 }
 
 .history-card {
-    background: var(--glass-bg);
-    backdrop-filter: var(--glass-blur);
+    background: var(--bg-primary);
     padding: 1.25rem 2rem;
     border-radius: var(--radius-md);
-    border: 1px solid var(--glass-border);
+    border: 1px solid var(--border-subtle);
     display: flex;
     align-items: center;
     gap: 2rem;
@@ -125,7 +124,7 @@
 .history-card:hover {
     transform: translateY(-4px) scale(1.005);
     border-color: var(--primary-color);
-    background: var(--glass-bg-hover);
+    background: var(--bg-secondary);
     box-shadow: var(--shadow-lg);
 }
 

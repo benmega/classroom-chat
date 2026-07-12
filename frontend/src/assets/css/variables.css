@@ -1,68 +1,59 @@
 /* variables.css */
 :root {
-    /* Colors - Premium Palette (More vibrant and curated) */
-    --primary-color: #0EB2BB; 
+    /* Colors — Clean Flat Palette */
+    --primary-color: #0EB2BB;
     --primary-light: #E0F7FA;
     --primary-dark: #008891;
     --secondary-color: #6366F1; /* Indigo */
     --secondary-light: #EEF2FF;
     --accent-color: #FACC15; /* Golden Yellow */
     --accent-glow: rgba(250, 204, 21, 0.4);
-    
+
     --success-color: #10B981;
     --success-dark: #059669;
     --error-color: #EF4444;
     --error-light: #FCA5A5;
     --error-subtle: #FEF2F2;
     --warning-color: #F59E0B;
-    
-    /* Neutral - Deep & Sophisticated */
+
+    /* Neutral — Light & Clean */
     --bg-primary: #FFFFFF;
-    --bg-secondary: #F8FAFC;
-    --bg-tertiary: #F1F5F9;
+    --bg-secondary: #F5F7FA;
+    --bg-tertiary: #EAECF0;
     --text-primary: #0F172A;
     --text-secondary: #334155;
     --text-muted: #64748B; /* Slate 500 */
     --border-subtle: #E2E8F0;
     --border-rich: #94A3B8; /* Slate 400 */
     --border-strong: var(--text-secondary);
-    
-    /* Scrollbar Variables */
-    --scrollbar-width: 8px;
-    --scrollbar-track-bg: transparent;
-    --scrollbar-thumb-bg: rgba(148, 163, 184, 0.45); /* Slate 400 with improved visibility */
-    --scrollbar-thumb-hover: rgba(14, 178, 187, 0.75); /* Primary with better hover contrast */
 
+    /* Scrollbar Variables */
+    --scrollbar-width: 6px;
+    --scrollbar-track-bg: transparent;
+    --scrollbar-thumb-bg: rgba(148, 163, 184, 0.5);
+    --scrollbar-thumb-hover: rgba(14, 178, 187, 0.7);
 
     --slate-800: #1E293B;
     --blue-600: #2563EB;
 
-    /* Gradients - Deep & Dynamic */
+    /* Gradients — Kept minimal, functional only */
     --gradient-primary: linear-gradient(135deg, #0EB2BB 0%, #6366F1 100%);
     --gradient-warning: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
     --gradient-error: linear-gradient(135deg, #EF4444 0%, #991B1B 100%);
     --gradient-success: linear-gradient(135deg, #10B981 0%, #065F46 100%);
-    --gradient-surface: linear-gradient(180deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.7) 100%);
-    --gradient-mesh: radial-gradient(at 0% 0%, rgba(14, 178, 187, 0.15) 0, transparent 50%), 
-                     radial-gradient(at 50% 0%, rgba(99, 102, 241, 0.1) 0, transparent 50%),
-                     radial-gradient(at 100% 0%, rgba(250, 204, 21, 0.05) 0, transparent 50%);
+    --gradient-surface: linear-gradient(180deg, #FFFFFF 0%, #F5F7FA 100%);
 
-    /* Shadows - Multi-layered & Soft */
-    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-    --shadow-soft: 0 2px 15px -3px rgba(0, 0, 0, 0.07), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-    --shadow-rich: 0 20px 50px -12px rgba(0, 0, 0, 0.15);
-    --shadow-glow: 0 0 20px rgba(14, 178, 187, 0.3);
+    /* Shadows — Flat: barely-there, structural only */
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    --shadow-md: 0 2px 6px 0 rgba(0, 0, 0, 0.08);
+    --shadow-lg: 0 4px 12px 0 rgba(0, 0, 0, 0.1);
+    --shadow-xl: 0 8px 24px 0 rgba(0, 0, 0, 0.1);
+    --shadow-soft: 0 1px 4px 0 rgba(0, 0, 0, 0.06);
+    --shadow-rich: 0 4px 16px 0 rgba(0, 0, 0, 0.1);
+    --shadow-glow: none;
+    --shadow-inner: inset 0 1px 2px rgba(0, 0, 0, 0.04);
 
-    /* Glassmorphism - Premium & Clear */
-    --glass-bg: rgba(255, 255, 255, 0.7);
-    --glass-bg-hover: rgba(255, 255, 255, 0.85);
-    --glass-border: rgba(255, 255, 255, 0.8);
-    --glass-blur: blur(16px);
-
-    /* Typography - Standardized Scale */
+    /* Typography — Standardized Scale */
     --font-xs: 0.75rem;   /* 12px */
     --font-sm: 0.875rem;  /* 14px */
     --font-md: 1rem;      /* 16px */
@@ -75,7 +66,7 @@
     --font-heading: 'Outfit', 'Inter', system-ui, sans-serif;
     --font-body: 'Inter', system-ui, sans-serif;
 
-    /* Spacing & Sizes - Standardized */
+    /* Spacing & Sizes — Standardized */
     --spacing-xs: 0.25rem; /* 4px */
     --spacing-sm: 0.5rem;  /* 8px */
     --spacing-md: 1rem;    /* 16px */
@@ -86,21 +77,20 @@
     --btn-padding-sm: 6px 12px;
     --btn-padding-md: 10px 20px;
     --btn-padding-lg: 14px 28px;
-    
+
     --btn-font-sm: var(--font-sm);
     --btn-font-md: var(--font-md);
     --btn-font-lg: var(--font-lg);
 
-    /* Borders & Spacing */
-    --radius-sm: 8px;
-    --radius-md: 12px;
-    --radius-lg: 24px;
-    --radius-xl: 32px;
+    /* Borders & Radii — Tighter for flat design */
+    --radius-sm: 6px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --radius-xl: 16px;
     --radius-full: 9999px;
 
-    /* Transitions */
-    --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
-    --transition-smooth: 400ms cubic-bezier(0.4, 0, 0.2, 1);
-    --transition-bounce: 500ms cubic-bezier(0.68, -0.6, 0.32, 1.6);
+    /* Transitions — Snappy, no bounce */
+    --transition-fast: 120ms ease;
+    --transition-smooth: 200ms ease;
+    --transition-bounce: 200ms ease; /* intentionally same as smooth — no bounce in flat theme */
 }
-

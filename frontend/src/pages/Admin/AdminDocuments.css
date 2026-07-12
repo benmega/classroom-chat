@@ -169,7 +169,6 @@
     font-weight: 800;
     text-transform: uppercase;
     color: var(--slate-800);
-    backdrop-filter: blur(4px);
 }
 
 .doc-info {
@@ -253,8 +252,6 @@
         grid-template-columns: 1fr;
     }
 }
-
-
 
 /* --- Added for Inline Style Cleanup --- */
 .storage-overview-skeleton { display: flex; gap: 16px; margin-bottom: 24px; }

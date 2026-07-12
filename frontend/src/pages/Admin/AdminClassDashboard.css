@@ -32,8 +32,8 @@
 }
 
 .class-hud-row .hud-stat-box {
-    background: var(--glass-bg);
-    border: 1px solid var(--glass-border);
+    background: var(--bg-primary);
+    border: 1px solid var(--border-subtle);
     border-radius: 16px;
     padding: 1.25rem;
     display: flex;

@@ -120,7 +120,7 @@
 }
 
 .remove-btn {
-  background: var(--glass-bg);
+  background: var(--bg-primary);
   border: none;
   border-radius: 50%;
   width: 28px;
@@ -134,15 +134,13 @@
 }
 
 .remove-btn:hover {
-  background: var(--bg-primary);
-  transform: scale(1.1);
+  background: var(--error-subtle);
 }
 
 .upload-progress-overlay {
   position: absolute;
   inset: 0;
-  background: var(--glass-bg-hover);
-  backdrop-filter: blur(2px);
+  background: rgba(255, 255, 255, 0.9);
   display: flex;
   justify-content: center;
   align-items: center;

@@ -259,7 +259,6 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    backdrop-filter: blur(4px);
 }
 
 .preview-section-core {
@@ -550,5 +549,4 @@
     line-height: 1.5;
     resize: vertical;
 }
-
 
