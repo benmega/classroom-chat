@@ -167,11 +167,6 @@ const AdminCourseInstances = () => {
                     <Skeleton height="36px" width="200px" borderRadius="18px" />
                     <Skeleton height="36px" width="120px" borderRadius="18px" />
                 </AdminPageHeader>
-                <div className="instances-stats-row" style={{ display: 'flex', gap: '16px', marginBottom: '24px' }}>
-                    <Skeleton height="80px" style={{ flex: 1 }} borderRadius="8px" />
-                    <Skeleton height="80px" style={{ flex: 1 }} borderRadius="8px" />
-                    <Skeleton height="80px" style={{ flex: 1 }} borderRadius="8px" />
-                </div>
                 <div className="instances-table-container card">
                     {[1, 2, 3, 4, 5].map(i => (
                         <div key={i} style={{ padding: '12px 24px' }}>
@@ -206,21 +201,6 @@ const AdminCourseInstances = () => {
                     <RefreshCw size={18} />
                 </button>
             </AdminPageHeader>
-
-            <div className="instances-stats-row">
-                <div className="stat-mini-card">
-                    <span className="label">Total Instances</span>
-                    <span className="value">{instances.length}</span>
-                </div>
-                <div className="stat-mini-card">
-                    <span className="label">Assigned Classrooms</span>
-                    <span className="value">{new Set(instances.map(i => i.classroom_id)).size}</span>
-                </div>
-                <div className="stat-mini-card">
-                    <span className="label">Assigned Courses</span>
-                    <span className="value">{new Set(instances.map(i => i.course_id)).size}</span>
-                </div>
-            </div>
 
             <div className="instances-table-container card">
                 <table className="instances-table">

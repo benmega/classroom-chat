@@ -1,24 +1,6 @@
 .admin-course-instances-page {
     padding: 0 24px;
 }
-
-.instances-stats-row {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 16px;
-    margin-bottom: 24px;
-}
-
-.stat-mini-card {
-    background: var(--bg-secondary, var(--bg-primary));
-    padding: 20px;
-    border-radius: var(--radius-lg, 12px);
-    box-shadow: var(--shadow-soft, 0 4px 6px -1px rgba(0, 0, 0, 0.05));
-    border: 1px solid var(--border-subtle, var(--border-subtle));
-    display: flex;
-    flex-direction: column;
-}
-
 .skeleton-row-padding {
     padding: 20px;
     border-bottom: 1px solid var(--border-subtle);
@@ -26,19 +8,6 @@
 
 .course-icon-margin {
     margin-right: 6px;
-}
-
-.stat-mini-card .label {
-    font-size: 0.875rem;
-    color: var(--text-muted, var(--text-muted));
-    font-weight: 500;
-}
-
-.stat-mini-card .value {
-    font-size: 1.75rem;
-    font-weight: 700;
-    color: var(--text-primary, var(--text-primary));
-    margin-top: 4px;
 }
 
 .instances-table-container {

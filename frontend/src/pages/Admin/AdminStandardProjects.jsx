@@ -142,7 +142,7 @@ const AdminStandardProjects = () => {
                 <div className="sp-modal-overlay" onClick={closeModal}>
                     <div className="sp-modal-card" onClick={e => e.stopPropagation()}>
                         <div className="sp-modal-header">
-                            <h3>{editingProject ? 'Edit Standard Project' : 'New Standard Project'}</h3>
+                            <h3>{editingProject ? 'Edit Standard Project' : ''}</h3>
                             <button className="sp-close-btn" onClick={closeModal}><XCircle size={24}/></button>
                         </div>
                         <form onSubmit={handleSubmit} className="sp-form">
