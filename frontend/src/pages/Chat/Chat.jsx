@@ -95,14 +95,18 @@ const Chat = () => {
                 No messages to display. Be the first to post!
               </div>
             ) : (
-              messages.map((msg, index) => (
-                <ChatMessage 
-                  key={msg.id || index}
-                  msg={msg}
-                  user={user}
-                  onDelete={handleDeleteMessage}
-                />
-              ))
+              messages.map((msg, index) => {
+                const isConsecutive = index > 0 && messages[index - 1].user_id === msg.user_id;
+                return (
+                  <ChatMessage 
+                    key={msg.id || index}
+                    msg={msg}
+                    user={user}
+                    onDelete={handleDeleteMessage}
+                    isConsecutive={isConsecutive}
+                  />
+                );
+              })
             )}
             
             {isLoadingMore && (

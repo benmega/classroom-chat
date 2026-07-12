@@ -5,75 +5,81 @@ import SmartImage from '../common/SmartImage';
 import Linkify from '../common/Linkify';
 import { getApiUrl } from '../../utils/apiUrl';
 
-const ChatMessage = React.memo(({ msg, user, onDelete }) => {
+const ChatMessage = React.memo(({ msg, user, onDelete, isConsecutive }) => {
     const borderSpeed = msg.animated_border_speed === 'slow' ? '3s' : msg.animated_border_speed === 'fast' ? '0.5s' : '1.5s';
     const isOwnMessage = user && msg && user.id === msg.user_id;
 
     return (
-        <div className={`chat-message-group ${isOwnMessage ? 'own-message' : 'other-message'}`}>
+        <div className={`chat-message-group ${isOwnMessage ? 'own-message' : 'other-message'} ${isConsecutive ? 'consecutive' : ''}`}>
             <div className="message-row">
-                <Link 
-                    to={msg.slug ? `/profile/${msg.slug}` : '#'} 
-                    className="avatar-link"
-                >
-                    <div 
-                        className={`avatar-container ${msg.has_animated_border ? "perk-animated-border" : ""}`}
-                        style={msg.has_animated_border ? { '--border-speed': borderSpeed } : {}}
+                {!isConsecutive ? (
+                    <Link 
+                        to={msg.slug ? `/profile/${msg.slug}` : '#'} 
+                        className="avatar-link"
                     >
-                        {msg.user_profile_pic ? (
-                            <SmartImage 
-                                src={getApiUrl(`/user/profile_pictures/${msg.user_profile_pic}`)} 
-                                alt={msg.user_name || 'User'} 
-                                fallbackType="avatar"
-                            />
-                        ) : (
-                            <UserIcon size={20} />
-                        )}
-                    </div>
-                </Link>
-                <div className="message-content-wrapper">
-                    <div className="message-header">
-                        <span className="message-author">{msg.user_name || 'Unknown'}</span>
-                        
-                        <div className="message-targeting-info">
-                            {msg.is_global && (
-                                <Globe size={12} color="var(--primary-color)" className="icon-globe" title="Global Post" />
-                            )}
-                            
-                            {(user?.is_admin || user?.id === msg.user_id) && !msg.is_global && (
-                                <>
-                                    {msg.target_live && (
-                                        <span className="targeting-badge">
-                                            <Radio size={10} /> Live
-                                        </span>
-                                    )}
-                                    {msg.target_classrooms?.length === 1 ? (
-                                        <span className="targeting-badge">
-                                            <Users size={10} /> {msg.target_classrooms[0]}
-                                        </span>
-                                    ) : msg.target_classrooms?.length > 1 ? (
-                                        <span className="targeting-badge" title={msg.target_classrooms.join(', ')}>
-                                            <Users size={10} /> {msg.target_classrooms.length} Classes
-                                        </span>
-                                    ) : null}
-
-                                    {msg.target_users?.length === 1 ? (
-                                        <span className="targeting-badge user-badge">
-                                            <UserPlus size={10} /> {msg.target_users[0]}
-                                        </span>
-                                    ) : msg.target_users?.length > 1 ? (
-                                        <span className="targeting-badge user-badge" title={msg.target_users.join(', ')}>
-                                            <UserPlus size={10} /> {msg.target_users.length} Students
-                                        </span>
-                                    ) : null}
-                                </>
+                        <div 
+                            className={`avatar-container ${msg.has_animated_border ? "perk-animated-border" : ""}`}
+                            style={msg.has_animated_border ? { '--border-speed': borderSpeed } : {}}
+                        >
+                            {msg.user_profile_pic ? (
+                                <SmartImage 
+                                    src={getApiUrl(`/user/profile_pictures/${msg.user_profile_pic}`)} 
+                                    alt={msg.user_name || 'User'} 
+                                    fallbackType="avatar"
+                                />
+                            ) : (
+                                <UserIcon size={20} />
                             )}
                         </div>
+                    </Link>
+                ) : (
+                    <div className="chat-avatar-placeholder" />
+                )}
+                <div className="message-content-wrapper">
+                    {!isConsecutive && (
+                        <div className="message-header">
+                            <span className="message-author">{msg.user_name || 'Unknown'}</span>
+                            
+                            <div className="message-targeting-info">
+                                {msg.is_global && (
+                                    <Globe size={12} color="var(--primary-color)" className="icon-globe" title="Global Post" />
+                                )}
+                                
+                                {(user?.is_admin || user?.id === msg.user_id) && !msg.is_global && (
+                                    <>
+                                        {msg.target_live && (
+                                            <span className="targeting-badge">
+                                                <Radio size={10} /> Live
+                                            </span>
+                                        )}
+                                        {msg.target_classrooms?.length === 1 ? (
+                                            <span className="targeting-badge">
+                                                <Users size={10} /> {msg.target_classrooms[0]}
+                                            </span>
+                                        ) : msg.target_classrooms?.length > 1 ? (
+                                            <span className="targeting-badge" title={msg.target_classrooms.join(', ')}>
+                                                <Users size={10} /> {msg.target_classrooms.length} Classes
+                                            </span>
+                                        ) : null}
 
-                        <span className="chat-message-timestamp">
-                            {msg.created_at ? new Date(typeof msg.created_at === 'string' && !msg.created_at.endsWith('Z') ? msg.created_at + 'Z' : msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Just now'}
-                        </span>
-                    </div>
+                                        {msg.target_users?.length === 1 ? (
+                                            <span className="targeting-badge user-badge">
+                                                <UserPlus size={10} /> {msg.target_users[0]}
+                                            </span>
+                                        ) : msg.target_users?.length > 1 ? (
+                                            <span className="targeting-badge user-badge" title={msg.target_users.join(', ')}>
+                                                <UserPlus size={10} /> {msg.target_users.length} Students
+                                            </span>
+                                        ) : null}
+                                    </>
+                                )}
+                            </div>
+
+                            <span className="chat-message-timestamp">
+                                {msg.created_at ? new Date(typeof msg.created_at === 'string' && !msg.created_at.endsWith('Z') ? msg.created_at + 'Z' : msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Just now'}
+                            </span>
+                        </div>
+                    )}
                     <div className="message-body-row">
                         <div className={`message-bubble message-bubble-container ${msg.chat_font_color ? "perk-chat-font" : ""}`} style={msg.chat_font_color ? { "--chat-font-color": msg.chat_font_color } : {}}>
                             <Linkify text={msg.content} isUserMessage={false} />

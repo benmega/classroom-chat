@@ -193,6 +193,16 @@
     box-shadow: var(--shadow-sm);
 }
 
+.chat-avatar-placeholder {
+    width: 48px;
+    height: 48px;
+    flex-shrink: 0;
+}
+
+.chat-message-group.consecutive {
+    margin-top: -1rem;
+}
+
 .avatar-container img, .avatar-container svg {
     border-radius: 50%;
     width: 100%;
@@ -408,10 +418,10 @@
         padding: 1rem;
     }
 
-    .avatar-container {
+    .avatar-container, .chat-avatar-placeholder {
         width: 40px;
         height: 40px;
-    }
+     }
 }
 
 .feed-loading {
