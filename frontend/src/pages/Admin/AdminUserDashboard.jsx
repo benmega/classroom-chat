@@ -35,6 +35,12 @@ const AdminUserDashboard = () => {
     const [selectedTemplateName, setSelectedTemplateName] = useState('');
     const [templatesSaving, setTemplatesSaving] = useState(false);
 
+    // Pass chapter state
+    const [passChapterLoading, setPassChapterLoading] = useState(false);
+    const [selectedChapterId, setSelectedChapterId] = useState('');
+    const [passPreview, setPassPreview] = useState(null);
+
+
     const fetchUser = async () => {
         setIsLoading(true);
         try {
@@ -68,6 +74,42 @@ const AdminUserDashboard = () => {
             toast.error('Failed to load project templates.');
         }
     };
+
+    const handlePassChapterPreview = async (e) => {
+        e.preventDefault();
+        setPassChapterLoading(true);
+        try {
+            const res = await client.post(`/api/admin/user/${userId}/pass_chapter_preview`, { course_id: selectedChapterId });
+            if (res.data.success) {
+                setPassPreview(res.data.preview);
+            }
+        } catch {
+            toast.error('Failed to preview chapter pass');
+        } finally {
+            setPassChapterLoading(false);
+        }
+    };
+
+    const handlePassChapterConfirm = async () => {
+        if (!window.confirm("Are you sure you want to pass this chapter? They will receive all achievements, certificates, and ducks.")) {
+            return;
+        }
+        setPassChapterLoading(true);
+        try {
+            const res = await client.post(`/api/admin/user/${userId}/pass_chapter`, { course_id: selectedChapterId });
+            if (res.data.success) {
+                toast.success(res.data.message);
+                setPassPreview(null);
+                setSelectedChapterId('');
+                fetchUser();
+            }
+        } catch {
+            toast.error('Failed to pass chapter');
+        } finally {
+            setPassChapterLoading(false);
+        }
+    };
+
 
     // Action Handlers
     const handleAdjustDucks = async (e) => {
@@ -504,6 +546,71 @@ const AdminUserDashboard = () => {
                                     <span className="no-projects">No projects yet</span>
                                 )}
                             </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Panel 2.5: Course Override */}
+                {user.role === 'student' && (
+                    <div className="control-panel-card">
+                        <div className="panel-forms role-specific-student">
+                            <form onSubmit={handlePassChapterPreview} className="action-form-inline">
+                                <label>Course Pass</label>
+                                <div className="input-group">
+                                    <select
+                                        value={selectedChapterId}
+                                        onChange={(e) => {
+                                            setSelectedChapterId(e.target.value);
+                                            setPassPreview(null);
+                                        }}
+                                        required
+                                    >
+                                        <option value="">-- Select Course --</option>
+                                        <option value="codecombat-junior">Code Combat Junior</option>
+                                        <option value="cs1">Introduction to Computer Science</option>
+                                        <option value="cs2">Computer Science 2</option>
+                                        <option value="cs3">Computer Science 3</option>
+                                        <option value="cs4">Computer Science 4</option>
+                                        <option value="cs5">Computer Science 5</option>
+                                        <option value="cs6">Computer Science 6</option>
+                                        <option value="ozaria1">Sky Mountain (Ozaria 1)</option>
+                                        <option value="ozaria2">Ozaria Chapter 2</option>
+                                        <option value="ozaria3">Ozaria Chapter 3</option>
+                                        <option value="ozaria4">Ozaria Chapter 4</option>
+                                        <option value="gd1">Game Development 1</option>
+                                        <option value="gd2">Game Development 2</option>
+                                        <option value="gd3">Game Development 3</option>
+                                        <option value="wd1">Web Development 1</option>
+                                        <option value="wd2">Web Development 2</option>
+                                    </select>
+                                    <button 
+                                        type="submit" 
+                                        className="btn-action primary" 
+                                        disabled={passChapterLoading || !selectedChapterId}
+                                        title="Preview Chapter Pass"
+                                    >
+                                        {passChapterLoading ? '...' : <Eye size={18} />}
+                                    </button>
+                                </div>
+                            </form>
+                            
+                            {passPreview && (
+                                <div className="pass-chapter-preview p-2 border-radius-sm" style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', marginTop: '1rem', fontSize: '0.9rem' }}>
+                                    <h4 className="mb-2">Preview Overview</h4>
+                                    <ul className="mb-3" style={{ paddingLeft: '1.2rem', margin: '0.5rem 0' }}>
+                                        <li><strong>Missing Challenges:</strong> {passPreview.challenges_to_complete}</li>
+                                        <li><strong>Ducks to Award:</strong> {passPreview.ducks_to_award}</li>
+                                        <li><strong>Certificates:</strong> {passPreview.certificates_to_award.length > 0 ? passPreview.certificates_to_award.join(", ") : "None"}</li>
+                                    </ul>
+                                    <button 
+                                        className="btn-primary w-100" 
+                                        onClick={handlePassChapterConfirm}
+                                        disabled={passChapterLoading}
+                                    >
+                                        Confirm & Pass Chapter
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     </div>
                 )}

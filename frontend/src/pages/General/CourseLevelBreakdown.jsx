@@ -208,7 +208,6 @@ const CourseLevelBreakdown = () => {
                         />
                     </div>
                     <div>
-                        <span className="text-secondary text-sm uppercase tracking-wide font-bold">{isCodeCombat ? 'CodeCombat' : 'Ozaria'}</span>
                         <h1 className="text-primary mt-4px mb-4px">{selectedNode.title}</h1>
                     </div>
                 </div>
@@ -235,10 +234,6 @@ const CourseLevelBreakdown = () => {
                     
                     {/* Play Game CTA Card */}
                     <div className="glass-panel p-1-5rem d-flex flex-col gap-md pos-rel overflow-hidden border-top-glow">
-                        <h3 className="m-0 text-primary d-flex align-center gap-sm">
-                            <Trophy className="text-accent" size={20} />
-                            <span>{selectedNode.track === activeTrack ? 'Play' : 'Access'}</span>
-                        </h3>
                         {selectedNode.track === activeTrack ? (
                             <a 
                                 href={mainGameLink} 
@@ -305,7 +300,6 @@ const CourseLevelBreakdown = () => {
                     {/* Suggested Next Level Card */}
                     <div className="glass-panel p-1-5rem">
                         <h3 className="m-0 text-primary d-flex align-center gap-sm mb-1rem">
-                            <Sparkles className="text-accent" size={20} style={{ color: isCodeCombat ? '#2b91af' : '#902edb' }} />
                             <span>Next Level</span>
                         </h3>
                         
@@ -316,7 +310,6 @@ const CourseLevelBreakdown = () => {
                                     borderLeft: isCodeCombat ? '4px solid #2b91af' : '4px solid #902edb',
                                 }}
                             >
-                                <span className="text-secondary text-xs font-bold uppercase tracking-wider">Suggested Level</span>
                                 <span className="font-semibold text-primary text-md">{nextLevel.name}</span>
                                 <span className="text-secondary text-xs">Level {nextLevelIndex + 1} of {levels.length}</span>
                             </div>
@@ -333,17 +326,9 @@ const CourseLevelBreakdown = () => {
                 <div className="dashboard-column flex-1 d-flex flex-col gap-lg min-w-300px">
                     <div className="glass-panel p-1-5rem h-100 d-flex flex-col gap-lg justify-between">
                         <div className="d-flex flex-col gap-md">
-                            <h3 className="m-0 text-primary d-flex align-center gap-sm">
-                                <GraduationCap className="text-primary" size={22} />
-                                <span>Info</span>
-                            </h3>
 
                             {/* Concept Badges */}
                             <div>
-                                <h4 className="text-xs uppercase tracking-wide text-secondary mb-0-5rem d-flex align-center gap-xs">
-                                    <Brain size={14} />
-                                    <span>Concepts</span>
-                                </h4>
                                 <div className="d-flex flex-wrap gap-xs">
                                     {courseDetails.concepts.map((concept, idx) => (
                                         <span 
@@ -373,7 +358,6 @@ const CourseLevelBreakdown = () => {
                         {/* Cognitive Skills List */}
                         <div>
                             <h4 className="text-xs uppercase tracking-wide text-secondary mb-0-5rem d-flex align-center gap-xs">
-                                <BookOpen size={14} />
                                 <span>Skills</span>
                             </h4>
                             <ul className="skills-checklist m-0 p-0 pl-1rem text-sm text-secondary">
@@ -390,7 +374,6 @@ const CourseLevelBreakdown = () => {
             {/* Full Levels Checklist */}
             <div className="glass-panel p-2rem mt-2rem">
                 <h3 className="mb-1rem text-primary d-flex align-center gap-sm">
-                    <BookOpen size={20} />
                     <span>Syllabus</span>
                 </h3>
                 <div className="levels-grid-checklist d-flex flex-col gap-sm mt-1-5rem">

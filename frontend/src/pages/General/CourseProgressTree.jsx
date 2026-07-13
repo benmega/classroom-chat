@@ -2,9 +2,10 @@ import React, { useLayoutEffect, useRef, useState, useMemo, useEffect } from 're
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
-import { ArrowLeft, Star } from 'lucide-react';
+import { ArrowLeft, Star, ZoomIn, ZoomOut, Maximize2, CheckCircle } from 'lucide-react';
 import codecombatLogo from '../../assets/codecombat-logo.png';
 import ozariaLogo from '../../assets/ozaria-logo.png';
+import useAuthStore from '../../store/useAuthStore';
 import './CourseProgressTree.css';
 
 const TRACKS = [
@@ -117,6 +118,8 @@ const CourseProgressTree = () => {
     const location = useLocation();
     const navigate = useNavigate();
     const { slug } = useParams();
+    const { user: authUser } = useAuthStore();
+    const isAdmin = authUser?.is_admin;
 
     const containerRef = useRef(null);
     const nodeRefs = useRef({});
@@ -128,6 +131,7 @@ const CourseProgressTree = () => {
     const [fetchedUser, setFetchedUser] = useState(null);
     const [fetchedProgressData, setFetchedProgressData] = useState(null);
     const [localPendingRequest, setLocalPendingRequest] = useState(null);
+    const [zoom, setZoom] = useState(1.0);
 
     const stateProgressData = location.state?.course_progress || location.state?.target?.course_progress;
 
@@ -297,8 +301,30 @@ const CourseProgressTree = () => {
     }, [processedNodes, isDesktop]);
 
     const hasScrolledRef = useRef(false);
-
     const hasCenteredActiveTrackRef = useRef(false);
+
+    const handleAdminPass = async (e, node) => {
+        e.stopPropagation();
+        if (!userObj?.id) return;
+        
+        try {
+            const previewRes = await client.post(`/api/admin/user/${userObj.id}/pass_chapter_preview`, { course_id: node.id });
+            if (previewRes.data.success) {
+                const p = previewRes.data.preview;
+                const msg = `Preview for passing ${node.title}:\n- Missing Challenges: ${p.challenges_to_complete}\n- Ducks to award: ${p.ducks_to_award}\n- Certificates: ${p.certificates_to_award.join(', ') || 'None'}\n\nAre you sure you want to pass this chapter?`;
+                if (window.confirm(msg)) {
+                    const passRes = await client.post(`/api/admin/user/${userObj.id}/pass_chapter`, { course_id: node.id });
+                    if (passRes.data.success) {
+                        toast.success(passRes.data.message);
+                        // Reload data via full refresh since state may not auto-update cleanly here
+                        window.location.reload();
+                    }
+                }
+            }
+        } catch (err) {
+            toast.error('Failed to pass chapter');
+        }
+    };
 
     useEffect(() => {
         if (progressData && Object.keys(nodeRefs.current).length > 0 && !hasCenteredActiveTrackRef.current) {
@@ -387,8 +413,18 @@ const CourseProgressTree = () => {
                 )}
             </div>
 
-            {/* Desktop Headers */}
-            <div className={`track-headers-container ${activeTrack ? 'has-active-track' : ''}`}>
+            <div 
+                className="zoomable-map-wrapper"
+                style={{
+                    transform: `scale(${zoom})`,
+                    transformOrigin: 'top center',
+                    transition: 'transform 0.15s ease-out',
+                    width: 'max-content',
+                    margin: '0 auto',
+                }}
+            >
+                {/* Desktop Headers */}
+                <div className={`track-headers-container ${activeTrack ? 'has-active-track' : ''}`}>
                 {TRACKS.map(track => {
                     const trackNodes = processedNodes.filter(n => n.track === track.id && !n.is_extra);
                     let totalPercent = 0;
@@ -486,6 +522,16 @@ const CourseProgressTree = () => {
                                 } 
                             })}
                         >
+                            {isAdmin && (
+                                <button 
+                                    className="btn-admin-pass-chapter"
+                                    onClick={(e) => handleAdminPass(e, node)}
+                                    title="Admin Override: Pass Chapter"
+                                    style={{ position: 'absolute', top: '-10px', right: '-10px', zIndex: 10, background: 'var(--success-color, #28a745)', border: 'none', color: '#fff', borderRadius: '50%', padding: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 5px rgba(0,0,0,0.3)' }}
+                                >
+                                    <CheckCircle size={16} />
+                                </button>
+                            )}
                             <div className={`skill-card ${node.domain} cursor-pointer`}>
                                 <div className="skill-icon">
                                     <img
@@ -522,12 +568,42 @@ const CourseProgressTree = () => {
                     );
                 })}
             </div>
+            </div>
         </div>
     );
 
     return (
         <div className="course-progress-page animate-page-entry">
             {treeContent}
+            
+            {/* Zoom Controls */}
+            <div className="zoom-controls glass-panel">
+                <button 
+                    onClick={() => setZoom(z => Math.max(0.5, z - 0.1))} 
+                    className="zoom-btn"
+                    title="Zoom Out"
+                    disabled={zoom <= 0.5}
+                >
+                    <ZoomOut size={18} />
+                </button>
+                <span className="zoom-value">{Math.round(zoom * 100)}%</span>
+                <button 
+                    onClick={() => setZoom(z => Math.min(2.0, z + 0.1))} 
+                    className="zoom-btn"
+                    title="Zoom In"
+                    disabled={zoom >= 2.0}
+                >
+                    <ZoomIn size={18} />
+                </button>
+                <button 
+                    onClick={() => setZoom(1.0)} 
+                    className="zoom-btn reset-btn"
+                    title="Reset Zoom"
+                    disabled={zoom === 1.0}
+                >
+                    <Maximize2 size={16} />
+                </button>
+            </div>
         </div>
     );
 };

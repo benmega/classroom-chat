@@ -575,7 +575,7 @@ def get_user_details(user_id):
     )
     precomputed = {(user._username, domain): count for domain, count in counts}
 
-    d = user.to_dict_summary(precomputed)
+    d = user.to_dict()
     for field in ["password_hash", "salt", "ip_address"]:
         d.pop(field, None)
     
@@ -752,3 +752,118 @@ def unenroll_student_from_classroom(classroom_id):
     return jsonify({"success": True, "message": "Student unenrolled successfully"})
 
 
+@admin_bp.route("/user/<int:user_id>/pass_chapter_preview", methods=["POST"])
+@admin_only
+@api_response
+def pass_chapter_preview(user_id):
+    from application.models.challenge import Challenge
+    from application.models.challenge_log import ChallengeLog
+    from application.models.achievements import Achievement
+
+    user_obj = db.get_or_404(User, user_id)
+    data = request.get_json() or {}
+    course_id = data.get("course_id")
+    
+    if not course_id:
+        return {"error": "course_id is required"}, 400
+
+    challenges = Challenge.query.filter_by(course_id=course_id).all()
+    if not challenges:
+        return {"error": "No challenges found for this course_id"}, 404
+
+    existing_logs = ChallengeLog.query.filter_by(user_id=user_obj.id).all()
+    existing_slugs = {cl.challenge_slug for cl in existing_logs}
+    
+    missing_challenges = [c for c in challenges if c.slug not in existing_slugs]
+    
+    total_ducks = sum(c.scale_value() for c in missing_challenges)
+    
+    # Check if there are any certificates related to this course
+    # Assuming certificate achievement source is course_id
+    certificate_achievements = Achievement.query.filter_by(type="certificate", source=course_id).all()
+    
+    from application.models.user_certificate import UserCertificate
+    existing_certs = {uc.achievement_id for uc in UserCertificate.query.filter_by(user_id=user_obj.id).all()}
+    
+    missing_certs = [cert.name for cert in certificate_achievements if cert.id not in existing_certs]
+
+    return {
+        "success": True,
+        "preview": {
+            "challenges_to_complete": len(missing_challenges),
+            "ducks_to_award": total_ducks,
+            "certificates_to_award": missing_certs
+        }
+    }
+
+
+@admin_bp.route("/user/<int:user_id>/pass_chapter", methods=["POST"])
+@admin_only
+@api_response
+def pass_chapter(user_id):
+    from application.models.challenge import Challenge
+    from application.models.challenge_log import ChallengeLog
+    from application.models.achievements import Achievement
+    from application.models.user_certificate import UserCertificate
+    from application.services.achievement_engine import evaluate_user
+    import datetime
+
+    user_obj = db.get_or_404(User, user_id)
+    data = request.get_json() or {}
+    course_id = data.get("course_id")
+    
+    if not course_id:
+        return {"error": "course_id is required"}, 400
+
+    challenges = Challenge.query.filter_by(course_id=course_id).all()
+    if not challenges:
+        return {"error": "No challenges found for this course_id"}, 404
+
+    existing_logs = ChallengeLog.query.filter_by(user_id=user_obj.id).all()
+    existing_slugs = {cl.challenge_slug for cl in existing_logs}
+    
+    missing_challenges = [c for c in challenges if c.slug not in existing_slugs]
+    total_ducks = 0
+    
+    for c in missing_challenges:
+        # Create log
+        log = ChallengeLog(
+            user_id=user_obj.id, 
+            domain=c.domain, 
+            challenge_slug=c.slug
+        )
+        db.session.add(log)
+        total_ducks += c.scale_value()
+        
+    # Manually bypass duck caps for this admin override
+    if total_ducks > 0:
+        user_obj.earned_ducks += total_ducks
+        user_obj.duck_balance += total_ducks
+        from application.models.duck_transaction import DuckTransaction
+        tx = DuckTransaction(user_id=user_obj.id, amount=total_ducks, reason=f"Admin Pass Chapter Override for {course_id}")
+        db.session.add(tx)
+        
+    certificate_achievements = Achievement.query.filter_by(type="certificate", source=course_id).all()
+    existing_certs = {uc.achievement_id for uc in UserCertificate.query.filter_by(user_id=user_obj.id).all()}
+    
+    for cert in certificate_achievements:
+        if cert.id not in existing_certs:
+            uc = UserCertificate(
+                user_id=user_obj.id,
+                achievement_id=cert.id,
+                url="Honorary Degree",
+                reviewed=True,
+                reviewed_at=datetime.datetime.utcnow()
+            )
+            db.session.add(uc)
+            
+    # Need to commit before evaluate_user so logs are readable
+    db.session.commit()
+    
+    # Run evaluation to grant any progress achievements
+    evaluate_user(user_obj, force=True)
+    
+    return {
+        "success": True,
+        "message": f"Successfully passed {course_id} for user. Awarded {total_ducks} ducks and completed {len(missing_challenges)} challenges."
+    }

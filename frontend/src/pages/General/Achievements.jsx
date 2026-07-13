@@ -1,19 +1,7 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
-    TrendingUp, 
     Coins, 
-    Lock, 
-    Search,
-    ChevronDown,
-    Filter,
-    Users,
-    Activity,
-    Code,
-    MessageCircle,
-    Repeat,
-    Briefcase,
-    FileText,
-    X
+    Lock 
 } from 'lucide-react';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
@@ -26,10 +14,6 @@ const Achievements = () => {
     const [achievements, setAchievements] = useState([]);
     const [userAchievements, setUserAchievements] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [searchTerm, setSearchTerm] = useState('');
-    const [selectedTypes, setSelectedTypes] = useState([]);
-    const [dropdownOpen, setDropdownOpen] = useState(false);
-    const dropdownRef = useRef(null);
 
     useEffect(() => {
         const fetchAchievements = async () => {
@@ -49,77 +33,83 @@ const Achievements = () => {
         fetchAchievements();
     }, []);
 
-    // Close dropdown on outside click
-    useEffect(() => {
-        const handleClickOutside = (e) => {
-            if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
-                setDropdownOpen(false);
+    const groupedAchievements = useMemo(() => {
+        const groups = {};
+        const result = [];
+
+        achievements.forEach(ach => {
+            if (ach.type === 'certificate') {
+                if (ach.name === 'Junior') {
+                    const key = 'cert-CS';
+                    if (!groups[key]) groups[key] = [];
+                    ach._certLevel = 0;
+                    groups[key].push(ach);
+                } else {
+                    const match = ach.name.match(/^([a-zA-Z\s]+?)(\d+)$/);
+                    if (match) {
+                        const key = `cert-${match[1].trim()}`;
+                        if (!groups[key]) groups[key] = [];
+                        ach._certLevel = parseInt(match[2], 10);
+                        groups[key].push(ach);
+                    } else {
+                        result.push(ach);
+                    }
+                }
+            } else {
+                const key = `${ach.type}-${ach.source || ''}`;
+                if (!groups[key]) groups[key] = [];
+                groups[key].push(ach);
             }
-        };
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, []);
-
-    const stats = useMemo(() => {
-        if (!achievements.length) return null;
-        
-        const totalPossible = achievements.length;
-        const earnedCount = userAchievements.length;
-        const percent = Math.round((earnedCount / totalPossible) * 100);
-        
-        const totalDucks = achievements
-            .filter(a => userAchievements.includes(a.id))
-            .reduce((sum, a) => sum + (a.reward || 0), 0);
-            
-        return { totalPossible, earnedCount, percent, totalDucks };
-    }, [achievements, userAchievements]);
-
-    const categories = useMemo(() => {
-        const types = ['all', ...new Set(achievements.map(a => a.type))];
-        return types.map(t => ({
-            id: t,
-            label: t.charAt(0).toUpperCase() + t.slice(1),
-            count: t === 'all' ? achievements.length : achievements.filter(a => a.type === t).length
-        }));
-    }, [achievements]);
-
-    const filteredAchievements = useMemo(() => {
-        return achievements.filter(a => {
-            const matchesSearch = a.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                                 (a.description || '').toLowerCase().includes(searchTerm.toLowerCase());
-            const matchesType = selectedTypes.length === 0 || selectedTypes.includes(a.type);
-            return matchesSearch && matchesType;
         });
-    }, [achievements, searchTerm, selectedTypes]);
 
-    const toggleType = (type) => {
-        setSelectedTypes(prev =>
-            prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type]
-        );
-    };
+        Object.values(groups).forEach(group => {
+            const isCertGroup = group.length > 0 && group[0].type === 'certificate';
 
-    const clearTypes = () => setSelectedTypes([]);
+            if (isCertGroup) {
+                group.sort((a, b) => a._certLevel - b._certLevel);
+                
+                const lowestUnearnedIndex = group.findIndex(ach => !userAchievements.includes(ach.id));
+                const lowestUnearned = lowestUnearnedIndex >= 0 ? group[lowestUnearnedIndex] : null;
+                
+                const highestContiguousEarned = lowestUnearnedIndex > 0 ? group[lowestUnearnedIndex - 1] 
+                                             : (lowestUnearnedIndex === -1 ? group[group.length - 1] : null);
+                
+                if (highestContiguousEarned) {
+                    result.push({ ...highestContiguousEarned, nextLevel: lowestUnearned, isGrouped: true, isEarned: true });
+                } else if (lowestUnearned) {
+                    result.push({ ...lowestUnearned, nextLevel: null, isGrouped: true, isEarned: false });
+                }
 
-    const filterLabel = selectedTypes.length === 0
-        ? 'All Categories'
-        : selectedTypes.length === 1
-            ? categories.find(c => c.id === selectedTypes[0])?.label ?? selectedTypes[0]
-            : `${selectedTypes.length} categories`;
+                const outOfOrderStartIndex = lowestUnearnedIndex === -1 ? group.length : lowestUnearnedIndex + 1;
+                for (let i = outOfOrderStartIndex; i < group.length; i++) {
+                    if (userAchievements.includes(group[i].id)) {
+                        result.push({ ...group[i], nextLevel: null, isGrouped: true, isEarned: true });
+                    }
+                }
+            } else {
+                group.sort((a, b) => Number(a.requirement_value || 0) - Number(b.requirement_value || 0));
+                
+                let highestEarnedIndex = -1;
+                for (let i = group.length - 1; i >= 0; i--) {
+                    if (userAchievements.includes(group[i].id)) {
+                        highestEarnedIndex = i;
+                        break;
+                    }
+                }
 
-    const getTypeIcon = (type) => {
-        switch (type) {
-            case 'ducks': return <Coins size={14} />;
-            case 'project': return <Briefcase size={14} />;
-            case 'progress': return <TrendingUp size={14} />;
-            case 'chat': return <MessageCircle size={14} />;
-            case 'consistency': return <Activity size={14} />;
-            case 'community': return <Users size={14} />;
-            case 'session': return <Code size={14} />;
-            case 'trade': return <Repeat size={14} />;
-            case 'certificate': return <FileText size={14} />;
-            default: return null;
-        }
-    };
+                const highestEarned = highestEarnedIndex >= 0 ? group[highestEarnedIndex] : null;
+                const nextLevel = highestEarnedIndex + 1 < group.length ? group[highestEarnedIndex + 1] : null;
+
+                if (highestEarned) {
+                    result.push({ ...highestEarned, nextLevel, isGrouped: true, isEarned: true });
+                } else if (nextLevel) {
+                    result.push({ ...nextLevel, nextLevel: null, isGrouped: true, isEarned: false });
+                }
+            }
+        });
+
+        return result;
+    }, [achievements, userAchievements]);
 
     // Shorten descriptions for tooltip display
     const shortenDescription = (desc, _type) => {
@@ -134,12 +124,6 @@ const Achievements = () => {
     if (isLoading) {
         return (
             <div className="achievements-page">
-                <div className="ach-controls card">
-                    <div className="header-container">
-                        <Skeleton height="44px" width="300px" />
-                    </div>
-                    <Skeleton height="40px" />
-                </div>
                 <div className="achievements-grid">
                     {[1, 2, 3, 4, 5, 6].map(i => (
                         <div key={i} className="achievement-card locked">
@@ -157,92 +141,21 @@ const Achievements = () => {
 
     return (
         <div className="achievements-page">
-            <div className="ach-controls card">
-                <div className="ach-upper-controls">
-                    <div className="ach-brand">
-                        <div>
-                            <h1>Hall of Achievements</h1>
-                            <p>Track your progress and earn badges.</p>
-                        </div>
-                    </div>
-
-                    {stats && (
-                        <div className="ach-global-stats">
-                            <div className="ach-progress-info">
-                                <span className="stat-text"><strong>{stats.earnedCount}</strong> / {stats.totalPossible} Badges</span>
-                                <span className="percent">{stats.percent}%</span>
-                            </div>
-                            <div className="progress-track-outer">
-                                <div className="progress-fill-outer" style={{ width: `${stats.percent}%` }}></div>
-                            </div>
-                        </div>
-                    )}
-                </div>
-
-                <div className="ach-lower-controls">
-                    <div className="search-box">
-                        <Search size={20} />
-                        <input 
-                            type="text" 
-                            placeholder="Search badges..." 
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                        />
-                    </div>
-                    <div className="filter-dropdown-wrapper" ref={dropdownRef}>
-                        <button
-                            className={`filter-dropdown-trigger ${dropdownOpen ? 'open' : ''} ${selectedTypes.length > 0 ? 'has-selection' : ''}`}
-                            onClick={() => setDropdownOpen(o => !o)}
-                        >
-                            <Filter size={15} />
-                            <span>{filterLabel}</span>
-                            {selectedTypes.length > 0 && (
-                                <span
-                                    className="filter-clear-btn"
-                                    onClick={(e) => { e.stopPropagation(); clearTypes(); }}
-                                    title="Clear filters"
-                                >
-                                    <X size={13} />
-                                </span>
-                            )}
-                            <ChevronDown size={15} className={`chevron ${dropdownOpen ? 'rotated' : ''}`} />
-                        </button>
-
-                        {dropdownOpen && (
-                            <div className="filter-dropdown-menu">
-                                {categories.filter(c => c.id !== 'all').map(cat => {
-                                    const isSelected = selectedTypes.includes(cat.id);
-                                    return (
-                                        <label
-                                            key={cat.id}
-                                            className={`filter-dropdown-item ${isSelected ? 'selected' : ''}`}
-                                        >
-                                            <input
-                                                type="checkbox"
-                                                checked={isSelected}
-                                                onChange={() => toggleType(cat.id)}
-                                            />
-                                            <span className="filter-item-icon">{getTypeIcon(cat.id)}</span>
-                                            <span className="filter-item-label">{cat.label}</span>
-                                            <span className="filter-item-count">{cat.count}</span>
-                                        </label>
-                                    );
-                                })}
-                            </div>
-                        )}
-                    </div>
-                </div>
-            </div>
-
             <div className="achievements-grid">
-                {filteredAchievements.length > 0 ? (
-                    filteredAchievements.map((ach) => {
-                        const isEarned = userAchievements.includes(ach.id);
-                        const progressPct = ach.requirement_value
-                            ? Math.min(100, (ach.current_progress / ach.requirement_value) * 100)
+                {groupedAchievements.length > 0 ? (
+                    groupedAchievements.map((ach) => {
+                        const isEarned = ach.isGrouped ? ach.isEarned : userAchievements.includes(ach.id);
+                        
+                        // Show progress for the next level if grouped and earned
+                        const showNextLevelProgress = ach.isGrouped && ach.isEarned && ach.nextLevel;
+                        const progressTarget = showNextLevelProgress ? ach.nextLevel : ach;
+                        
+                        const progressPct = progressTarget.requirement_value
+                            ? Math.min(100, (progressTarget.current_progress / progressTarget.requirement_value) * 100)
                             : 0;
-                        const hasProgress = ach.type !== 'certificate' && !isEarned && ach.requirement_value;
+                        const hasProgress = progressTarget.type !== 'certificate' && (!isEarned || showNextLevelProgress) && progressTarget.requirement_value;
                         const tooltipText = shortenDescription(ach.description, ach.type);
+                        const nextAchievement = !isEarned ? ach : (ach.isGrouped ? ach.nextLevel : null);
 
                         return (
                             <div
@@ -250,30 +163,50 @@ const Achievements = () => {
                                 className={`achievement-card ${isEarned ? 'earned' : 'locked'} ach-type-${ach.type}`}
                                 title={tooltipText}
                             >
-                                <div className="badge-wrapper">
-                                    <div className={`badge badge-${ach.slug}`}>&nbsp;</div>
-                                    {!isEarned && (
-                                        <div className="lock-overlay">
-                                            <Lock size={20} />
-                                        </div>
-                                    )}
-                                </div>
+                                <div className="ach-card-top">
+                                    <div className="badge-wrapper">
+                                        <div className={`badge badge-${ach.slug}`}>&nbsp;</div>
+                                        {!isEarned && (
+                                            <div className="lock-overlay">
+                                                <Lock size={20} />
+                                            </div>
+                                        )}
+                                    </div>
 
-                                <div className="ach-info">
-                                    <h3 className="achievement-name">{ach.name}</h3>
-                                    <p className="achievement-desc">{ach.description}</p>
-                                    <div className="ach-reward">
-                                        <Coins size={13} />
-                                        <span>+{ach.reward}</span>
+                                    <div className="ach-info">
+                                        <h3 className="achievement-name">{ach.name}</h3>
+                                        {nextAchievement && (
+                                            <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '2px', fontWeight: '600' }}>
+                                                Next: {nextAchievement.name}
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
 
-                                {hasProgress && (
-                                    <div className="ach-progress-bar-bottom">
-                                        <div
-                                            className="ach-progress-fill-bottom"
-                                            style={{ width: `${progressPct}%` }}
-                                        />
+                                {nextAchievement ? (
+                                    <div className="ach-card-footer">
+                                        <div className="ach-progress-container">
+                                            {hasProgress ? (
+                                                <div className="ach-progress-bar-wrapper">
+                                                    <div className="ach-progress-bar-fill" style={{ width: `${progressPct}%` }} />
+                                                    <span className="ach-progress-text">
+                                                        {progressTarget.current_progress || 0} / {progressTarget.requirement_value}
+                                                    </span>
+                                                </div>
+                                            ) : (
+                                                <div className="ach-no-progress-text">
+                                                    Ready to Unlock
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="ach-reward-indicator">
+                                            <Coins size={14} />
+                                            <span>+{nextAchievement.reward}</span>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="ach-card-footer completed">
+                                        <span className="ach-completed-text">🎉 Fully Completed</span>
                                     </div>
                                 )}
                             </div>
@@ -281,10 +214,8 @@ const Achievements = () => {
                     })
                 ) : (
                     <div className="empty-achievements">
-                        <Search size={48} />
-                        <h3>No matches found</h3>
-                        <p>Try adjusting your search or filters to find more badges.</p>
-                        <button className="text-btn" onClick={() => { setSearchTerm(''); clearTypes(); }}>Clear all filters</button>
+                        <h3>No achievements found</h3>
+                        <p>Start completing tasks to earn achievements!</p>
                     </div>
                 )}
             </div>

@@ -321,20 +321,15 @@
     background: white;
     border: 1px solid var(--border-subtle);
     border-radius: 16px;
-    padding: 0.9rem 1rem 0;
+    padding: 0;
     display: flex;
-    flex-direction: row;
-    align-items: center;
-    gap: 0.9rem;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: stretch;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
     overflow: hidden;
-    /* Left accent border driven by category type */
-    border-left-width: 3px;
-    border-left-style: solid;
     cursor: default;
-    /* Reserve bottom space for progress bar */
-    padding-bottom: 6px;
 }
 
 .achievement-card:hover {
@@ -346,28 +341,6 @@
     border-color: #dcfce7;
     background: linear-gradient(180deg, var(--bg-primary) 0%, #f0fdf4 100%);
 }
-
-/* ── Category accent colours (left border + subtle bg tint) ── */
-.ach-type-ducks        { border-left-color: #f59e0b; }
-.ach-type-project      { border-left-color: #6366f1; }
-.ach-type-progress     { border-left-color: #10b981; }
-.ach-type-chat         { border-left-color: #3b82f6; }
-.ach-type-consistency  { border-left-color: #f97316; }
-.ach-type-community    { border-left-color: #ec4899; }
-.ach-type-session      { border-left-color: #8b5cf6; }
-.ach-type-trade        { border-left-color: #14b8a6; }
-.ach-type-certificate  { border-left-color: #ef4444; }
-
-/* Earned variants keep green right edge but restore left-color tint */
-.achievement-card.earned.ach-type-ducks        { border-left-color: #f59e0b; }
-.achievement-card.earned.ach-type-project      { border-left-color: #6366f1; }
-.achievement-card.earned.ach-type-progress     { border-left-color: #10b981; }
-.achievement-card.earned.ach-type-chat         { border-left-color: #3b82f6; }
-.achievement-card.earned.ach-type-consistency  { border-left-color: #f97316; }
-.achievement-card.earned.ach-type-community    { border-left-color: #ec4899; }
-.achievement-card.earned.ach-type-session      { border-left-color: #8b5cf6; }
-.achievement-card.earned.ach-type-trade        { border-left-color: #14b8a6; }
-.achievement-card.earned.ach-type-certificate  { border-left-color: #ef4444; }
 
 /* ── Badge image centering ────────────────────────── */
 .badge-wrapper {
@@ -437,24 +410,93 @@
     font-size: 0.75rem;
 }
 
-/* ── Bottom progress bar ──────────────────────────── */
-.ach-progress-bar-bottom {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 3px;
-    background: var(--border-subtle, #e2e8f0);
-    border-radius: 0 0 16px 16px;
-    overflow: hidden;
+/* Card inner layout and footer styling */
+.ach-card-top {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.9rem;
+    padding: 0.9rem 1.0rem;
+    flex: 1;
+    min-width: 0;
 }
 
-.ach-progress-fill-bottom {
-    height: 100%;
-    background: linear-gradient(90deg, var(--primary-color, #6366f1), #818cf8);
-    border-radius: 0 0 16px 16px;
+.ach-card-footer {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--bg-secondary);
+    padding: 0.6rem 0.9rem;
+    border-top: 1px solid var(--border-subtle);
+    gap: 0.5rem;
+}
+
+.ach-card-footer.completed {
+    justify-content: center;
+    background: #f0fdf4;
+    border-top-color: #dcfce7;
+}
+
+.ach-completed-text {
+    font-size: 0.8rem;
+    font-weight: 800;
+    color: #166534;
+}
+
+.ach-progress-container {
+    flex: 1;
+    min-width: 0;
+}
+
+.ach-progress-bar-wrapper {
+    position: relative;
+    height: 20px;
+    background: var(--bg-tertiary);
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid var(--border-subtle);
+    display: flex;
+    align-items: center;
+}
+
+.ach-progress-bar-fill {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    background: var(--gradient-primary);
     transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
-    opacity: 0.55;
+}
+
+.ach-progress-text {
+    position: relative;
+    z-index: 1;
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    margin-left: 8px;
+    line-height: 1;
+}
+
+.ach-no-progress-text {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text-muted);
+}
+
+.ach-reward-indicator {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: #b45309;
+    font-weight: 800;
+    font-size: 0.8rem;
+    background: var(--bg-tertiary);
+    padding: 3px 6px;
+    border-radius: 6px;
+    border: 1px solid var(--border-subtle);
+    white-space: nowrap;
 }
 
 .empty-achievements {
