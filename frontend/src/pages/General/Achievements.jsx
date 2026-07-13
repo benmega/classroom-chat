@@ -194,8 +194,11 @@ const Achievements = () => {
                                                     </span>
                                                 </div>
                                             ) : (
-                                                <div className="ach-no-progress-text">
-                                                    Ready to Unlock
+                                                <div className="ach-progress-bar-wrapper">
+                                                    <div className="ach-progress-bar-fill" style={{ width: '0%' }} />
+                                                    <span className="ach-progress-text">
+                                                        0 / 1
+                                                    </span>
                                                 </div>
                                             )}
                                         </div>
