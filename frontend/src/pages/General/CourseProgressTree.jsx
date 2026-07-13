@@ -395,24 +395,6 @@ const CourseProgressTree = () => {
 
     const treeContent = (
         <div className="skill-tree-container">
-            {/* Active Track Banner */}
-            <div className="active-track-banner glass-panel">
-                <div className="track-info-section">
-                    <div className="vertical-emphasis-bar"></div>
-                    <div className="track-details">
-                        <span className="track-banner-label">CURRENT TRACK</span>
-                        <span className="track-banner-value">{(TRACKS.find(t => t.id === activeTrack)?.title || activeTrack).toUpperCase()}</span>
-                    </div>
-                </div>
-                {!isParentView && pendingRequest && (
-                    <div className="track-action-section">
-                        <span className="pending-badge">
-                            ⏳ Request Pending: {pendingRequest.requested_track.toUpperCase()}
-                        </span>
-                    </div>
-                )}
-            </div>
-
             <div 
                 className="zoomable-map-wrapper"
                 style={{

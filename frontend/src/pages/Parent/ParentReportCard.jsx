@@ -291,7 +291,7 @@ const ParentReportCard = () => {
                             )}
                             {reportData.current_activity && (
                                 <p className="student-activity" style={{ marginTop: '0.5rem', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
-                                    <span style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', backgroundColor: 'var(--primary-color)', marginRight: '6px' }}></span>
+                                    <span className="activity-dot"></span>
                                     {reportData.current_activity}
                                 </p>
                             )}

@@ -1,7 +1,8 @@
 import React from 'react';
 import { Activity, Plus } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
-
+import codecombatLogo from '../../assets/codecombat-logo.png';
+import ozariaLogo from '../../assets/ozaria-logo.png';
 
 const CourseProgress = ({ target, isParentView = false, studentId = null }) => {
     const navigate = useNavigate();
@@ -12,16 +13,16 @@ const CourseProgress = ({ target, isParentView = false, studentId = null }) => {
             const started = breakdown.filter(c => c.levels_completed > 0);
             const inProgress = started.filter(c => c.levels_total && c.levels_completed < c.levels_total);
             inProgress.forEach(c => activeCourses.push(c));
-            
+
             // Append completed courses if we need more to fill top 3
             const completed = started.filter(c => !c.levels_total || c.levels_completed >= c.levels_total);
             completed.forEach(c => activeCourses.push(c));
         };
-        
+
         addActive(target.course_progress.codecombat?.breakdown);
         addActive(target.course_progress.ozaria?.breakdown);
     }
-    
+
     // De-duplicate if needed and get top 3
     const displayCourses = activeCourses.slice(0, 3);
     const ccLevels = target.cc_levels !== undefined ? target.cc_levels : (target.course_progress?.codecombat?.levels_completed || 0);
@@ -43,7 +44,7 @@ const CourseProgress = ({ target, isParentView = false, studentId = null }) => {
 
     return (
         <section className="dashboard-panel">
-            <div 
+            <div
                 className="panel-header d-flex justify-between align-center cursor-pointer"
                 onClick={(e) => handleNavigate(e)}
                 title="View Detailed Tree"
@@ -51,7 +52,26 @@ const CourseProgress = ({ target, isParentView = false, studentId = null }) => {
                 <h2 className="pointer-events-none d-flex align-center gap-sm">
                     <Activity size={20} /> Course Progress
                 </h2>
-
+                <div className="d-flex align-center gap-sm ml-auto mr-xs" onClick={e => e.stopPropagation()}>
+                    <a
+                        href="https://codecombat.com"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="header-logo-card"
+                        title="Visit CodeCombat"
+                    >
+                        <img src={codecombatLogo} alt="CodeCombat" className="header-logo-img" />
+                    </a>
+                    <a
+                        href="https://ozaria.com"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="header-logo-card"
+                        title="Visit Ozaria"
+                    >
+                        <img src={ozariaLogo} alt="Ozaria" className="header-logo-img" />
+                    </a>
+                </div>
                 {!isParentView && (
                     <Link to="/submit-work#challenge" title="Submit Challenge" className="text-secondary d-flex align-center ml-xs" onClick={e => e.stopPropagation()}>
                         <Plus size={20} />
@@ -64,7 +84,7 @@ const CourseProgress = ({ target, isParentView = false, studentId = null }) => {
                         const percent = c.levels_total ? Math.round((c.levels_completed / c.levels_total) * 100) : 100;
                         const isOzaria = c.course_name.toLowerCase().includes('ozaria') || c.course_id?.toLowerCase().includes('ozaria');
                         return (
-                            <div 
+                            <div
                                 key={idx}
                                 onClick={(e) => handleNavigate(e, c.course_name)}
                                 className="progress-item cursor-pointer transition-bg"
@@ -87,7 +107,7 @@ const CourseProgress = ({ target, isParentView = false, studentId = null }) => {
                     )}
                 </div>
             </div>
-            <div 
+            <div
                 className="mt-md text-center text-secondary text-sm cursor-pointer"
                 onClick={(e) => handleNavigate(e)}
             >

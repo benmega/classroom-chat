@@ -842,6 +842,7 @@
 
 .skills-checklist {
     list-style-type: square;
+    padding-left: 1.5rem;
 }
 
 .skills-checklist li {
@@ -868,4 +869,59 @@
     opacity: 0.9;
     transform: scale(1.02);
 }
+
+/* Zoom Controls Styles */
+.zoom-controls {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    border-radius: var(--radius-full, 9999px);
+    z-index: 1000;
+    background: var(--surface-primary);
+    border: 2px solid var(--border-subtle);
+    box-shadow: var(--shadow-lg);
+    backdrop-filter: blur(10px);
+}
+
+.zoom-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: none;
+    background: transparent;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.zoom-btn:hover:not(:disabled) {
+    background: var(--bg-secondary);
+    transform: scale(1.05);
+}
+
+.zoom-btn:active:not(:disabled) {
+    transform: scale(0.95);
+}
+
+.zoom-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.zoom-value {
+    font-size: 0.85rem;
+    font-weight: 700;
+    min-width: 48px;
+    text-align: center;
+    color: var(--text-primary);
+    user-select: none;
+}
+
 

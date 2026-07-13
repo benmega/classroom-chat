@@ -1,25 +1,42 @@
 .edit-profile-page {
-    padding: 2rem 1rem;
+    padding: 2rem;
     display: flex;
     justify-content: center;
     align-items: flex-start;
     min-height: 80vh;
 }
 
-.settings-container {
-    background: white;
-    padding: 2rem;
-    border-radius: 28px;
-    box-shadow: var(--shadow-lg);
-    border: 1px solid var(--border-subtle);
-    max-width: 1200px;
+.settings-form {
+    width: 100%;
+    max-width: 1400px;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.settings-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     width: 100%;
 }
+
+.settings-header h2 {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.settings-actions {
+    display: flex;
+    gap: 1rem;
+}
+
 
 .profile-pic-section {
     display: flex;
     justify-content: center;
-    padding-top: 1rem;
 }
 
 .avatar-wrapper {
@@ -62,11 +79,76 @@
     opacity: 1;
 }
 
-.form-sections-grid {
+.settings-layout {
+    display: flex;
+    gap: 2.5rem;
+    align-items: flex-start;
+}
+
+.settings-sidebar {
+    width: 220px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+    flex-shrink: 0;
+}
+
+.settings-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    width: 100%;
+}
+
+.btn-block {
+    width: 100%;
+    justify-content: center;
+    padding: 12px 16px;
+}
+
+.settings-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.form-row {
+    display: flex;
+    gap: 1.5rem;
+}
+
+.form-row.columns-2 {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 2rem;
-    margin-bottom: 1.5rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.5rem;
+}
+
+.form-col {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.flex-1 {
+    flex: 1;
+}
+
+.about-me-group {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.about-me-textarea {
+    flex: 1;
+    resize: none;
+    min-height: 110px;
+}
+
+.copy-btn {
+    padding: 0 16px;
 }
 
 .section-title {
@@ -82,13 +164,13 @@
 }
 
 .form-group {
-    margin-bottom: 1rem;
+    margin-bottom: 0.5rem;
 }
 
 .form-group label {
     display: block;
     font-weight: 600;
-    margin-bottom: 0.75rem;
+    margin-bottom: 0.5rem;
     color: var(--text-secondary);
     font-size: 0.9rem;
 }
@@ -118,10 +200,11 @@
 
 .settings-footer {
     display: flex;
-    justify-content: center;
+    justify-content: flex-end;
     gap: 1.5rem;
     padding-top: 1.5rem;
-    border-top: 1px solid var(--bg-tertiary);
+    border-top: 1px solid var(--border-subtle);
+    margin-top: 1.5rem;
 }
 
 .btn-primary {
@@ -164,9 +247,36 @@
 }
 
 @media (max-width: 900px) {
-    .form-sections-grid {
-        grid-template-columns: 1fr;
+    .settings-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 1rem;
+        text-align: center;
+    }
+    .settings-actions {
+        display: flex;
+        justify-content: stretch;
+    }
+    .settings-actions button {
+        flex: 1;
+        justify-content: center;
+    }
+    .settings-layout {
+        flex-direction: column;
+        align-items: center;
         gap: 1.5rem;
+    }
+    .settings-sidebar {
+        width: 100%;
+        max-width: 320px;
+    }
+    .form-row {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    .form-row.columns-2 {
+        grid-template-columns: 1fr;
+        gap: 1rem;
     }
 }
 

@@ -232,55 +232,40 @@ const CourseLevelBreakdown = () => {
                 {/* COLUMN 1: Student Play & Missed Levels Zone */}
                 <div className="dashboard-column flex-1 d-flex flex-col gap-lg min-w-300px">
                     
-                    {/* Play Game CTA Card */}
+                    {/* Merged Play/Next Level Card */}
                     <div className="glass-panel p-1-5rem d-flex flex-col gap-md pos-rel overflow-hidden border-top-glow">
                         {selectedNode.track === activeTrack ? (
-                            <a 
-                                href={mainGameLink} 
-                                target="_blank" 
-                                rel="noopener noreferrer" 
-                                className={`btn-play-game d-flex align-center justify-center gap-sm p-1rem font-bold text-center radius-md cursor-pointer border-none no-decoration btn-${selectedNode.domain}`}
-                                style={{
-                                    color: '#ffffff',
-                                    backgroundColor: isCodeCombat ? '#2b91af' : '#902edb',
-                                    transition: 'background-color 0.2s, transform 0.2s',
-                                }}
-                                onMouseOver={(e) => {
-                                    e.currentTarget.style.backgroundColor = isCodeCombat ? '#217088' : '#7122ad';
-                                    e.currentTarget.style.transform = 'translateY(-1px)';
-                                }}
-                                onMouseOut={(e) => {
-                                    e.currentTarget.style.backgroundColor = isCodeCombat ? '#2b91af' : '#902edb';
-                                    e.currentTarget.style.transform = 'none';
-                                }}
-                            >
-                                <Play size={18} fill="currentColor" />
-                                <span>Play</span>
-                                <ExternalLink size={16} />
-                            </a>
-                        ) : (
-                            pendingRequest && pendingRequest.requested_track === selectedNode.track ? (
-                                <button
-                                    disabled
-                                    className="d-flex align-center justify-center gap-sm p-1rem font-bold text-center radius-md border-none"
-                                    style={{
-                                        color: '#ffffff',
-                                        backgroundColor: '#9ca3af',
-                                        cursor: 'not-allowed',
-                                        width: '100%'
-                                    }}
-                                >
-                                    <span>Request Pending</span>
-                                </button>
-                            ) : (
-                                <button
-                                    onClick={() => setIsModalOpen(true)}
-                                    className={`btn-play-game d-flex align-center justify-center gap-sm p-1rem font-bold text-center radius-md cursor-pointer border-none btn-${selectedNode.domain}`}
+                            <>
+                                <h3 className="m-0 text-primary d-flex align-center gap-sm">
+                                    <span>Next Level</span>
+                                </h3>
+                                
+                                {nextLevel ? (
+                                    <div 
+                                        className="next-level-card-content p-1rem bg-surface-sec radius-md d-flex flex-col gap-sm"
+                                        style={{
+                                            borderLeft: isCodeCombat ? '4px solid #2b91af' : '4px solid #902edb',
+                                        }}
+                                    >
+                                        <span className="font-semibold text-primary text-md">{nextLevel.name}</span>
+                                        <span className="text-secondary text-xs">Level {nextLevelIndex + 1} of {levels.length}</span>
+                                    </div>
+                                ) : (
+                                    <div className="text-center p-1-5rem bg-success-subtle radius-md border-success" style={{ borderColor: '#10b981' }}>
+                                        <Trophy className="text-success mb-0-5rem" size={32} />
+                                        <h4 className="m-0 text-success font-bold">100% Done</h4>
+                                    </div>
+                                )}
+
+                                <a 
+                                    href={mainGameLink} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer" 
+                                    className={`btn-play-game d-flex align-center justify-center gap-sm p-1rem font-bold text-center radius-md cursor-pointer border-none no-decoration btn-${selectedNode.domain}`}
                                     style={{
                                         color: '#ffffff',
                                         backgroundColor: isCodeCombat ? '#2b91af' : '#902edb',
                                         transition: 'background-color 0.2s, transform 0.2s',
-                                        width: '100%'
                                     }}
                                     onMouseOver={(e) => {
                                         e.currentTarget.style.backgroundColor = isCodeCombat ? '#217088' : '#7122ad';
@@ -291,33 +276,55 @@ const CourseLevelBreakdown = () => {
                                         e.currentTarget.style.transform = 'none';
                                     }}
                                 >
-                                    <span>Request Access</span>
-                                </button>
-                            )
-                        )}
-                    </div>
-
-                    {/* Suggested Next Level Card */}
-                    <div className="glass-panel p-1-5rem">
-                        <h3 className="m-0 text-primary d-flex align-center gap-sm mb-1rem">
-                            <span>Next Level</span>
-                        </h3>
-                        
-                        {nextLevel ? (
-                            <div 
-                                className="next-level-card-content p-1rem bg-surface-sec radius-md d-flex flex-col gap-sm"
-                                style={{
-                                    borderLeft: isCodeCombat ? '4px solid #2b91af' : '4px solid #902edb',
-                                }}
-                            >
-                                <span className="font-semibold text-primary text-md">{nextLevel.name}</span>
-                                <span className="text-secondary text-xs">Level {nextLevelIndex + 1} of {levels.length}</span>
-                            </div>
+                                    <Play size={18} fill="currentColor" />
+                                    <span>Continue</span>
+                                    <ExternalLink size={16} />
+                                </a>
+                            </>
                         ) : (
-                            <div className="text-center p-2rem bg-success-subtle radius-md border-success" style={{ borderColor: '#10b981' }}>
-                                <Trophy className="text-success mb-0-5rem" size={32} />
-                                <h4 className="m-0 text-success font-bold">100% Done</h4>
-                            </div>
+                            <>
+                                <h3 className="m-0 text-primary d-flex align-center gap-sm">
+                                    <span>Get Started Now</span>
+                                </h3>
+                                <p className="text-secondary text-sm m-0">
+                                    Request access to this track to unlock the curriculum and start coding!
+                                </p>
+                                {pendingRequest && pendingRequest.requested_track === selectedNode.track ? (
+                                    <button
+                                        disabled
+                                        className="d-flex align-center justify-center gap-sm p-1rem font-bold text-center radius-md border-none"
+                                        style={{
+                                            color: '#ffffff',
+                                            backgroundColor: '#9ca3af',
+                                            cursor: 'not-allowed',
+                                            width: '100%'
+                                        }}
+                                    >
+                                        <span>Request Pending</span>
+                                    </button>
+                                ) : (
+                                    <button
+                                        onClick={() => setIsModalOpen(true)}
+                                        className={`btn-play-game d-flex align-center justify-center gap-sm p-1rem font-bold text-center radius-md cursor-pointer border-none btn-${selectedNode.domain}`}
+                                        style={{
+                                            color: '#ffffff',
+                                            backgroundColor: isCodeCombat ? '#2b91af' : '#902edb',
+                                            transition: 'background-color 0.2s, transform 0.2s',
+                                            width: '100%'
+                                        }}
+                                        onMouseOver={(e) => {
+                                            e.currentTarget.style.backgroundColor = isCodeCombat ? '#217088' : '#7122ad';
+                                            e.currentTarget.style.transform = 'translateY(-1px)';
+                                        }}
+                                        onMouseOut={(e) => {
+                                            e.currentTarget.style.backgroundColor = isCodeCombat ? '#2b91af' : '#902edb';
+                                            e.currentTarget.style.transform = 'none';
+                                        }}
+                                    >
+                                        <span>Request Access</span>
+                                    </button>
+                                )}
+                            </>
                         )}
                     </div>
                 </div>
@@ -327,9 +334,17 @@ const CourseLevelBreakdown = () => {
                     <div className="glass-panel p-1-5rem h-100 d-flex flex-col gap-lg justify-between">
                         <div className="d-flex flex-col gap-md">
 
+                            {/* Friendly Concept Explanation */}
+                            <div>
+                                <h4 className="text-sm font-bold text-primary mb-0-25rem">Summary</h4>
+                                <p className="text-secondary text-sm line-height-relaxed m-0">
+                                    {courseDetails.description}
+                                </p>
+                            </div>
+
                             {/* Concept Badges */}
                             <div>
-                                <div className="d-flex flex-wrap gap-xs">
+                                <div className="d-flex flex-wrap" style={{ gap: '12px' }}>
                                     {courseDetails.concepts.map((concept, idx) => (
                                         <span 
                                             key={idx} 
@@ -346,13 +361,6 @@ const CourseLevelBreakdown = () => {
                                 </div>
                             </div>
 
-                            {/* Friendly Concept Explanation */}
-                            <div className="bg-surface-sec p-1rem radius-md">
-                                <h4 className="text-sm font-bold text-primary mb-0-25rem">Summary</h4>
-                                <p className="text-secondary text-sm line-height-relaxed m-0">
-                                    {courseDetails.description}
-                                </p>
-                            </div>
                         </div>
 
                         {/* Cognitive Skills List */}
@@ -360,7 +368,7 @@ const CourseLevelBreakdown = () => {
                             <h4 className="text-xs uppercase tracking-wide text-secondary mb-0-5rem d-flex align-center gap-xs">
                                 <span>Skills</span>
                             </h4>
-                            <ul className="skills-checklist m-0 p-0 pl-1rem text-sm text-secondary">
+                            <ul className="skills-checklist m-0 text-sm text-secondary">
                                 {courseDetails.skills.map((skill, idx) => (
                                     <li key={idx} className="mb-4px">{skill}</li>
                                 ))}

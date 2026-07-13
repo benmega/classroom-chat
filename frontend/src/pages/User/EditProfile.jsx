@@ -85,9 +85,9 @@ const EditProfile = () => {
 
     return (
         <div className="edit-profile-page">
-            <div className="settings-container">
-                <form onSubmit={handleSave} className="settings-form">
-                    <div className="form-sections-grid">
+            <form onSubmit={handleSave} className="settings-form">
+                <div className="settings-layout">
+                    <div className="settings-sidebar">
                         <section className="profile-pic-section">
                             <div className="avatar-wrapper">
                                 <SmartImage 
@@ -102,57 +102,15 @@ const EditProfile = () => {
                                 </label>
                             </div>
                         </section>
-                        <section className="settings-section">
-                            <h3 className="section-title"><UserIcon size={18} /> Basic Information</h3>
-                            <div className="form-group">
+                    </div>
+
+                    <div className="settings-main">
+                        <div className="form-row">
+                            <div className="form-group flex-1">
                                 <label>Username (readonly)</label>
                                 <input type="text" value={user?.username || ''} disabled className="form-control readonly" />
                             </div>
-                            {user?.role !== 'parent' && (
-                                <div className="form-group">
-                                    <label>Parent Connection Code</label>
-                                    <div className="connection-code-row">
-                                        <input 
-                                            type="text" 
-                                            value={connectionCode || 'Loading...'} 
-                                            disabled 
-                                            className="form-control readonly connection-code-input" 
-                                        />
-                                        <button 
-                                            type="button" 
-                                            className="btn-secondary" 
-                                            onClick={() => {
-                                                if (connectionCode) {
-                                                    navigator.clipboard.writeText(connectionCode);
-                                                    toast.success('Code copied to clipboard!');
-                                                }
-                                            }}
-                                            disabled={!connectionCode}
-                                            title="Copy Code"
-                                        >
-                                            <Copy size={18} />
-                                        </button>
-                                    </div>
-                                    <small className="form-help-text">
-                                        Share this code with your parents to allow them to connect to your account.
-                                    </small>
-                                </div>
-                            )}
-                            {user?.drawer && (
-                                <div className="form-group">
-                                    <label>Assigned Drawer (readonly)</label>
-                                    <input 
-                                        type="text" 
-                                        value={user.drawer} 
-                                        disabled 
-                                        className="form-control readonly drawer-input" 
-                                    />
-                                    <small className="form-help-text">
-                                        This is your physical drawer assignment in the classroom.
-                                    </small>
-                                </div>
-                            )}
-                            <div className="form-group">
+                            <div className="form-group flex-1">
                                 <label>Nickname</label>
                                 <input 
                                     type="text" 
@@ -162,25 +120,76 @@ const EditProfile = () => {
                                     className="form-control" 
                                 />
                             </div>
-                            <div className="form-group">
-                                <label>About Me</label>
-                                <textarea 
-                                    value={bio}
-                                    onChange={(e) => setBio(e.target.value)}
-                                    placeholder="Tell us about yourself..." 
-                                    className="form-control" 
-                                    rows="4"
-                                    maxLength="500"
-                                />
-                                <small className="char-count">
-                                    {bio?.length || 0}/500
-                                </small>
-                            </div>
-                        </section>
+                        </div>
 
-                        <section className="settings-section">
-                            <h3 className="section-title"><Lock size={18} /> Password Security</h3>
-                            <div className="form-group">
+                        <div className="form-row columns-2">
+                            <div className="form-col">
+                                {user?.role !== 'parent' && (
+                                    <div className="form-group">
+                                        <label>Parent Connection Code</label>
+                                        <div className="connection-code-row">
+                                            <input 
+                                                type="text" 
+                                                value={connectionCode || 'Loading...'} 
+                                                disabled 
+                                                className="form-control readonly connection-code-input" 
+                                            />
+                                            <button 
+                                                type="button" 
+                                                className="btn-secondary copy-btn" 
+                                                onClick={() => {
+                                                    if (connectionCode) {
+                                                        navigator.clipboard.writeText(connectionCode);
+                                                        toast.success('Code copied to clipboard!');
+                                                    }
+                                                }}
+                                                disabled={!connectionCode}
+                                                title="Copy Code"
+                                            >
+                                                <Copy size={18} />
+                                            </button>
+                                        </div>
+                                        <small className="form-help-text">
+                                            Share this code with parents to connect.
+                                        </small>
+                                    </div>
+                                )}
+                                {user?.drawer && (
+                                    <div className="form-group">
+                                        <label>Assigned Drawer (readonly)</label>
+                                        <input 
+                                            type="text" 
+                                            value={user.drawer} 
+                                            disabled 
+                                            className="form-control readonly drawer-input" 
+                                        />
+                                        <small className="form-help-text">
+                                            Your physical classroom drawer assignment.
+                                        </small>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="form-col">
+                                <div className="form-group about-me-group">
+                                    <label>About Me</label>
+                                    <textarea 
+                                        value={bio}
+                                        onChange={(e) => setBio(e.target.value)}
+                                        placeholder="Tell us about yourself..." 
+                                        className="form-control about-me-textarea" 
+                                        rows="3"
+                                        maxLength="500"
+                                    />
+                                    <small className="char-count">
+                                        {bio?.length || 0}/500
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="form-row">
+                            <div className="form-group flex-1">
                                 <label>New Password</label>
                                 <div className="password-input-wrapper">
                                     <input 
@@ -201,7 +210,7 @@ const EditProfile = () => {
                                     </button>
                                 </div>
                             </div>
-                            <div className="form-group">
+                            <div className="form-group flex-1">
                                 <label>Confirm New Password</label>
                                 <div className="password-input-wrapper">
                                     <input 
@@ -222,19 +231,19 @@ const EditProfile = () => {
                                     </button>
                                 </div>
                             </div>
-                        </section>
+                        </div>
                     </div>
+                </div>
 
-                    <div className="settings-footer">
-                        <button type="button" onClick={() => navigate('/profile')} className="btn-secondary">
-                            <X size={18} /> Cancel
-                        </button>
-                        <button type="submit" disabled={isSaving} className="btn-primary">
-                            <Save size={18} /> {isSaving ? 'Saving...' : 'Save Changes'}
-                        </button>
-                    </div>
-                </form>
-            </div>
+                <div className="settings-footer">
+                    <button type="button" onClick={() => navigate('/profile')} className="btn-secondary">
+                        <X size={18} /> Cancel
+                    </button>
+                    <button type="submit" disabled={isSaving} className="btn-primary">
+                        <Save size={18} /> {isSaving ? 'Saving...' : 'Save Changes'}
+                    </button>
+                </div>
+            </form>
         </div>
     );
 };
