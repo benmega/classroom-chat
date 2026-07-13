@@ -1,10 +1,11 @@
 .course-progress-page {
-    max-width: 1600px;
-    margin: 0 auto;
+    max-width: 100%;
+    margin: 0;
     padding: 2rem 1.5rem;
     padding-bottom: 6rem;
     height: 100dvh;
     overflow-y: auto;
+    overflow-x: auto;
     -webkit-overflow-scrolling: touch;
 }
 
@@ -210,17 +211,32 @@
 }
 
 @media (min-width: 1024px) {
+    .course-progress-page {
+        padding-left: 0;
+        padding-right: 0;
+    }
+
+    .skill-tree-container {
+        width: max-content;
+        padding-left: calc(50vw - 260px - 4rem);
+        padding-right: calc(50vw - 260px - 4rem);
+    }
+
     .skill-tree-grid {
         display: grid;
-        grid-template-columns: repeat(4, 1fr);
+        grid-template-columns: repeat(4, 520px);
         grid-auto-rows: auto;
-        gap: 1.25rem 1rem;
+        gap: 2.5rem 4rem;
+        width: max-content;
+        margin: 0 auto;
     }
 
     .track-headers-container {
         display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 1rem;
+        grid-template-columns: repeat(4, 520px);
+        gap: 4rem;
+        width: max-content;
+        margin: 0 auto;
     }
     
     .desktop-header {
@@ -230,32 +246,34 @@
     }
 
     .skill-card {
-        padding: 0.75rem 1rem;
-        gap: 0.75rem;
+        padding: 1.5rem 2rem;
+        gap: 1.5rem;
+        border-radius: var(--radius-xl);
+        max-width: 520px;
     }
 
     .skill-icon {
-        width: 36px;
-        height: 36px;
-        min-width: 36px;
-        min-height: 36px;
+        width: 72px;
+        height: 72px;
+        min-width: 72px;
+        min-height: 72px;
     }
 
     .domain-logo {
-        max-width: 36px;
-        max-height: 36px;
+        max-width: 72px;
+        max-height: 72px;
     }
 
     .skill-content h3 {
-        font-size: 0.95rem;
+        font-size: 1.8rem;
     }
 
     .course-progress-container {
-        margin-top: 0.4rem;
+        margin-top: 0.8rem;
     }
 
     .course-progress-bar {
-        height: 6px;
+        height: 12px;
     }
 
     .skill-tree-svg-overlay {
@@ -269,7 +287,7 @@
     }
 
     .tree-line {
-        stroke-width: 4px;
+        stroke-width: 8px;
         stroke-linecap: round;
         transition: stroke 0.3s ease;
     }
@@ -509,7 +527,7 @@
 }
 
 .header-logo-img-flat {
-    height: 36px;
+    height: 72px;
     width: auto;
     object-fit: contain;
 }
@@ -522,13 +540,13 @@
     .branch-header.desktop-header {
         display: flex;
         align-items: center;
-        padding: 0.75rem 1rem;
+        padding: 1.5rem 2rem;
         background: var(--surface-primary);
         border: 2px solid var(--border-subtle);
-        border-radius: var(--radius-lg);
+        border-radius: var(--radius-xl);
         box-shadow: var(--shadow-sm);
         margin-bottom: 0;
-        height: 64px;
+        height: 120px;
         transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
         text-decoration: none;
     }
@@ -538,5 +556,316 @@
         box-shadow: var(--shadow-md);
         border-color: var(--primary-color);
     }
+
+    .branch-header h2 {
+        font-size: 1.8rem;
+    }
+
+    .branch-header h2 .text-sm {
+        font-size: 1.2rem;
+    }
+}
+
+/* Active Track Banner Styles */
+.active-track-banner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--radius-lg);
+    background: var(--surface-primary);
+    border: 2px solid var(--border-subtle);
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.track-info-section {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.vertical-emphasis-bar {
+    width: 6px;
+    height: 2.8rem;
+    background: linear-gradient(to bottom, var(--primary-color), var(--primary-accessible));
+    border-radius: var(--radius-sm);
+}
+
+.track-details {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.15rem;
+}
+
+.track-banner-label {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+}
+
+.track-banner-value {
+    font-size: 1.4rem;
+    color: var(--primary-color);
+    font-weight: 800;
+    line-height: 1.1;
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-accessible));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.track-action-section {
+    display: flex;
+    align-items: center;
+}
+
+.btn-request-change {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    border-radius: var(--radius-md);
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    cursor: pointer;
+    transition: var(--transition-bounce);
+}
+
+.btn-request-change:hover {
+    background: var(--primary-accessible);
+    transform: translateY(-1px);
+}
+
+.pending-badge {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    border-radius: var(--radius-md);
+    background: rgba(245, 158, 11, 0.15);
+    color: #f59e0b;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+/* Modal Overlay Styles */
+.modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    animation: fadeIn 0.2s ease-out;
+}
+
+.modal-card {
+    background: var(--surface-primary);
+    border: 2px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    width: 100%;
+    max-width: 400px;
+    padding: 1.5rem;
+    box-shadow: var(--shadow-xl);
+    animation: scaleUp 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.modal-header h3 {
+    margin: 0 0 1.25rem 0;
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: var(--text-primary);
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+}
+
+.modal-actions .btn-secondary {
+    padding: 0.5rem 1rem;
+    font-weight: 600;
+    border-radius: var(--radius-md);
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-subtle);
+    cursor: pointer;
+}
+
+.modal-actions .btn-secondary:hover {
+    background: var(--panel-hover-bg, rgba(255,255,255,0.05));
+}
+
+.modal-actions .btn-primary {
+    padding: 0.5rem 1rem;
+    font-weight: 600;
+    border-radius: var(--radius-md);
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+.modal-actions .btn-primary:hover {
+    background: var(--primary-accessible);
+}
+
+@keyframes scaleUp {
+    from { transform: scale(0.95); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+/* Active Learning Track Focus & De-emphasis Styles */
+
+/* 1. De-emphasize other tracks on desktop */
+.track-headers-container.has-active-track .branch-header.desktop-header:not(.active-track-header),
+.skill-tree-grid.has-active-track .skill-node-cell:not(.active-track-node) {
+    opacity: 0.35;
+    filter: grayscale(85%) contrast(0.9);
+    transition: opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1), filter 0.35s cubic-bezier(0.4, 0, 0.2, 1), transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 2. De-emphasize connection lines of other tracks */
+.skill-tree-svg-overlay.has-active-track .tree-line.de-emphasized-track-line {
+    opacity: 0.15;
+    transition: opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 3. Focus recovery on hover for accessibility */
+.track-headers-container.has-active-track .branch-header.desktop-header:not(.active-track-header):hover,
+.skill-tree-grid.has-active-track .skill-node-cell:not(.active-track-node):hover {
+    opacity: 0.85;
+    filter: grayscale(20%) contrast(1);
+}
+
+/* 4. Highlight & Accentuate the Active Track Header & Cards */
+.track-headers-container .branch-header.desktop-header.active-track-header {
+    border-color: var(--primary-color, #4a90e2);
+    box-shadow: 0 0 16px rgba(74, 144, 226, 0.25);
+    transform: scale(1.02);
+    z-index: 10;
+}
+
+.skill-node-cell.active-track-node {
+    z-index: 5;
+    transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.skill-node-cell.active-track-node:hover {
+    transform: scale(1.02);
+}
+
+/* 5. Highlight connecting lines of the active track */
+.skill-tree-svg-overlay.has-active-track .tree-line.active-track-line {
+    opacity: 1;
+    stroke-width: 10px;
+    filter: drop-shadow(0 0 2px rgba(74, 144, 226, 0.3));
+}
+
+/* Course Progress Level Breakdown Redesign Styles */
+.breakdown-page-wrapper {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding-bottom: 5rem;
+}
+
+.breakdown-header-card {
+    background: var(--surface-primary);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    transition: all 0.3s ease;
+}
+
+.breakdown-header-card.border-codecombat {
+    border-left: 6px solid #2b91af !important;
+}
+
+.breakdown-header-card.border-ozaria {
+    border-left: 6px solid #902edb !important;
+}
+
+.breakdown-logo-img {
+    height: 44px;
+    width: auto;
+    object-fit: contain;
+}
+
+.breakdown-dashboard-grid {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)) !important;
+    gap: 1.5rem !important;
+    width: 100%;
+}
+
+.btn-play-game {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: var(--shadow-sm);
+}
+
+.btn-play-game:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.missed-levels-list {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-subtle) transparent;
+}
+
+.missed-level-card {
+    transition: transform 0.2s ease, background-color 0.2s ease;
+    border-left: 3px solid var(--border-subtle);
+}
+
+.missed-level-card:hover {
+    background-color: var(--bg-tertiary);
+    transform: translateX(2px);
+}
+
+.badge-concept {
+    transition: transform 0.15s ease;
+}
+
+.badge-concept:hover {
+    transform: scale(1.05);
+}
+
+.skills-checklist {
+    list-style-type: square;
+}
+
+.skills-checklist li {
+    margin-bottom: 0.5rem;
+    line-height: 1.4;
+}
+
+.level-row-item {
+    transition: transform 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+    border: 1px solid var(--border-subtle);
+}
+
+.level-row-item:hover {
+    background-color: var(--bg-tertiary);
+    transform: translateX(4px);
+    box-shadow: var(--shadow-sm);
+}
+
+.btn-play-level, .btn-play-syllabus {
+    transition: all 0.2s ease;
+}
+
+.btn-play-level:hover, .btn-play-syllabus:hover {
+    opacity: 0.9;
+    transform: scale(1.02);
 }
 

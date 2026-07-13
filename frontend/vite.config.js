@@ -65,6 +65,8 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': 'http://localhost:8000',
+      '/track-requests': 'http://localhost:8000',
+      '/admin/track-requests': 'http://localhost:8000',
       '/message': 'http://localhost:8000',
       '/user': 'http://localhost:8000',
       '/session': 'http://localhost:8000',

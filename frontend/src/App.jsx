@@ -110,6 +110,8 @@ function App() {
     authRedirect = '/parent/dashboard';
   } else if (user?.is_admin) {
     authRedirect = '/admin/dashboard';
+  } else if (user?.role === 'student' && user?.slug) {
+    authRedirect = `/course-progress/${user.slug}`;
   }
 
   return (

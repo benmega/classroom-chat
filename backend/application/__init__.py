@@ -127,7 +127,8 @@ def create_app(config_class=None):
 
         # Only use create_all in non-production environments to avoid schema drift issues.
         # Production should use migrations via 'flask db upgrade'.
-        if app.config.get("ENV") != "production":
+        import sys
+        if app.config.get("ENV") != "production" and "db" not in sys.argv:
             db.create_all()
             if app.config.get("ENV") == "development":
                 check_for_schema_drift(app)

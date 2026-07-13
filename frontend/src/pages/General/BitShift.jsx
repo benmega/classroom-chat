@@ -152,7 +152,7 @@ const BitShift = () => {
 
                 <form onSubmit={handleSubmit} className="trade-form">
                     <div className="form-group main-input">
-                        <div className="pos-rel">
+                        <div className="input-combined-container">
                             <input
                                 type="number"
                                 id="digital_ducks"
@@ -167,20 +167,15 @@ const BitShift = () => {
                                 max={user?.duck_balance || 0}
                                 required
                             />
-                        </div>
-                        <div className="balance-info">
-                            <DuckIcon size={16} />
-                            <span>Cache: {(user?.duck_balance ?? 0).toLocaleString(undefined, { maximumFractionDigits: 3 })}</span>
+                            <div className="balance-info-inline">
+                                <span>Cache: {(user?.duck_balance ?? 0).toLocaleString(undefined, { maximumFractionDigits: 3 })}</span>
+                            </div>
                         </div>
                     </div>
 
                     <div className="ducks-grid">
                         {[7, 6, 5, 4, 3, 2, 1, 0].map((i) => (
                             <div key={i} className="small-input-group">
-                                <label className="duck-label">
-                                    {(Math.pow(2, i)).toString(2).padStart(i + 1, '0')}{isByteMode ? 'B' : 'b'}
-                                    {/* Parenthetic hints removed to force students to calculate bit values manually */}
-                                </label>
                                 <button
                                     type="button"
                                     id={`duck_${i}`}
@@ -188,7 +183,51 @@ const BitShift = () => {
                                     className={`bit-toggle ${duckCounts[i] === 1 ? 'active' : ''}`}
                                     aria-pressed={duckCounts[i] === 1}
                                 >
-                                    {duckCounts[i]}
+                                    <svg viewBox="0 0 24 24" className="duck-toggle-svg" width="100%" height="100%">
+                                        <defs>
+                                            <radialGradient id={`duckGradient-${i}`} cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(13 10) rotate(45) scale(15)">
+                                                <stop stopColor="white" stopOpacity="0.4" />
+                                                <stop offset="1" stopColor="white" stopOpacity="0" />
+                                            </radialGradient>
+                                        </defs>
+
+                                        {/* Body */}
+                                        <path 
+                                            className="duck-body"
+                                            d="M15.5 13.5C15.5 16.5 13.5 19.5 9.5 19.5C5.5 19.5 3.5 16.5 3.5 13.5C3.5 10.5 5.5 9 8.5 9C9.5 9 10.5 9.5 11.5 10.5C12.5 9.5 13.5 9 14.5 9C15.5 9 15.5 11.5 15.5 13.5Z" 
+                                        />
+                                        
+                                        {/* Body Highlight */}
+                                        <path 
+                                            d="M15.5 13.5C15.5 16.5 13.5 19.5 9.5 19.5C5.5 19.5 3.5 16.5 3.5 13.5C3.5 10.5 5.5 9 8.5 9" 
+                                            fill={`url(#duckGradient-${i})`}
+                                        />
+
+                                        {/* Head */}
+                                        <circle className="duck-head" cx="16.5" cy="8.5" r="4" />
+                                        
+                                        {/* Head Highlight */}
+                                        <circle cx="16.5" cy="8.5" r="4" fill={`url(#duckGradient-${i})`} />
+
+                                        {/* Beak */}
+                                        <path 
+                                            className="duck-beak"
+                                            d="M20 8.5C21.5 8.5 22.5 9 22.5 10C22.5 11 21.5 11.5 20 11.5L19.5 10L20 8.5Z" 
+                                        />
+
+                                        {/* Eye */}
+                                        <circle className="duck-eye" cx="17.5" cy="7.5" r="0.8" />
+                                        <circle className="duck-eye-shine" cx="17.7" cy="7.3" r="0.3" fill="white" />
+
+                                        {/* Text for 0/1 */}
+                                        <text 
+                                            x="9.5" 
+                                            y="15.5" 
+                                            className="duck-text"
+                                        >
+                                            {(Math.pow(2, i)).toString(2).padStart(i + 1, '0')}{isByteMode ? 'B' : 'b'}
+                                        </text>
+                                    </svg>
                                 </button>
                             </div>
                         ))}

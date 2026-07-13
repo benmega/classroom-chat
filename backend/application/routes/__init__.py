@@ -28,6 +28,7 @@ from .parent_routes import parent
 from .cognito_routes import cognito_bp
 from .shop_routes import shop_bp
 from .project_template_routes import project_templates_bp
+from .track_request_routes import track_request_bp
 
 
 def register_blueprints(app: Flask):
@@ -49,6 +50,7 @@ def register_blueprints(app: Flask):
     app.register_blueprint(general)
     app.register_blueprint(server_info)
     app.register_blueprint(shop_bp, url_prefix="/api/shop")
+    app.register_blueprint(track_request_bp)
 
     # ── Swagger UI ───────────────────────────────────────────────────────────
     SWAGGER_URL = "/api/docs"

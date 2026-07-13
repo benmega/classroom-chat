@@ -1,6 +1,7 @@
 import React, { useLayoutEffect, useRef, useState, useMemo, useEffect } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import client from '../../api/client';
+import toast from 'react-hot-toast';
 import { ArrowLeft, Star } from 'lucide-react';
 import codecombatLogo from '../../assets/codecombat-logo.png';
 import ozariaLogo from '../../assets/ozaria-logo.png';
@@ -124,19 +125,24 @@ const CourseProgressTree = () => {
     const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 1024);
     const [hoveredNodeId, setHoveredNodeId] = useState(null);
     const [isFetching, setIsFetching] = useState(false);
+    const [fetchedUser, setFetchedUser] = useState(null);
     const [fetchedProgressData, setFetchedProgressData] = useState(null);
+    const [localPendingRequest, setLocalPendingRequest] = useState(null);
 
     const stateProgressData = location.state?.course_progress || location.state?.target?.course_progress;
 
     // If no data was passed via navigation state, fetch from API using the slug
     useEffect(() => {
-        if (!stateProgressData && slug) {
+        if ((!stateProgressData || !location.state?.target) && slug) {
             setIsFetching(true);
             client.get(`/user/profile/${slug}`)
                 .then(res => {
                     const target = res.data?.data?.target;
-                    if (target?.course_progress) {
-                        setFetchedProgressData(target.course_progress);
+                    if (target) {
+                        setFetchedUser(target);
+                        if (target.course_progress) {
+                            setFetchedProgressData(target.course_progress);
+                        }
                     }
                 })
                 .catch(() => {
@@ -144,7 +150,12 @@ const CourseProgressTree = () => {
                 })
                 .finally(() => setIsFetching(false));
         }
-    }, [slug, stateProgressData]);
+    }, [slug, stateProgressData, location.state]);
+
+    const userObj = location.state?.target || fetchedUser;
+    const activeTrack = userObj?.active_track || 'cs';
+    const pendingRequest = localPendingRequest || userObj?.pending_request;
+    const isParentView = location.pathname.startsWith('/parent');
 
     const progressData = stateProgressData || fetchedProgressData;
 
@@ -272,7 +283,7 @@ const CourseProgressTree = () => {
                         const isActive = fromNode.has_started && toNode.has_started;
                         const lineDomain = track.id === 'ozaria' ? 'ozaria' : 'codecombat';
 
-                        newLines.push({ id: `track-${track.id}-${lineIdCounter++}`, x1: x, y1, x2: x, y2, isActive, lineDomain, fromId: fromNode.id, toId: toNode.id });
+                        newLines.push({ id: `track-${track.id}-${lineIdCounter++}`, x1: x, y1, x2: x, y2, isActive, lineDomain, fromId: fromNode.id, toId: toNode.id, trackId: track.id });
                     }
                 }
             });
@@ -287,12 +298,35 @@ const CourseProgressTree = () => {
 
     const hasScrolledRef = useRef(false);
 
+    const hasCenteredActiveTrackRef = useRef(false);
+
+    useEffect(() => {
+        if (progressData && Object.keys(nodeRefs.current).length > 0 && !hasCenteredActiveTrackRef.current) {
+            const activeTrackNodes = processedNodes.filter(n => n.track === activeTrack && !n.is_extra);
+            const targetNode = activeTrackNodes.find(n => n.id === recommendedNodeId) || activeTrackNodes[0];
+            
+            if (targetNode && nodeRefs.current[targetNode.id]) {
+                hasCenteredActiveTrackRef.current = true;
+                setTimeout(() => {
+                    if (nodeRefs.current[targetNode.id]?.scrollIntoView) {
+                        nodeRefs.current[targetNode.id].scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'center',
+                            inline: 'center'
+                        });
+                    }
+                }, 300);
+            }
+        }
+    }, [progressData, activeTrack, recommendedNodeId, processedNodes]);
+
     useLayoutEffect(() => {
         if (location.state?.highlightCourseName && Object.keys(nodeRefs.current).length > 0 && !hasScrolledRef.current) {
             const highlightName = location.state.highlightCourseName;
             const targetNode = processedNodes.find(n => n.title === highlightName || matchCourse(highlightName, n.aliases || []));
             if (targetNode && nodeRefs.current[targetNode.id]) {
                 hasScrolledRef.current = true;
+                hasCenteredActiveTrackRef.current = true; // Skip active track centering if we are explicitly highlighting a specific course
                 setTimeout(() => {
                     nodeRefs.current[targetNode.id].scrollIntoView({ behavior: 'smooth', block: 'center' });
 
@@ -335,8 +369,26 @@ const CourseProgressTree = () => {
 
     const treeContent = (
         <div className="skill-tree-container">
+            {/* Active Track Banner */}
+            <div className="active-track-banner glass-panel">
+                <div className="track-info-section">
+                    <div className="vertical-emphasis-bar"></div>
+                    <div className="track-details">
+                        <span className="track-banner-label">CURRENT TRACK</span>
+                        <span className="track-banner-value">{(TRACKS.find(t => t.id === activeTrack)?.title || activeTrack).toUpperCase()}</span>
+                    </div>
+                </div>
+                {!isParentView && pendingRequest && (
+                    <div className="track-action-section">
+                        <span className="pending-badge">
+                            ⏳ Request Pending: {pendingRequest.requested_track.toUpperCase()}
+                        </span>
+                    </div>
+                )}
+            </div>
+
             {/* Desktop Headers */}
-            <div className="track-headers-container">
+            <div className={`track-headers-container ${activeTrack ? 'has-active-track' : ''}`}>
                 {TRACKS.map(track => {
                     const trackNodes = processedNodes.filter(n => n.track === track.id && !n.is_extra);
                     let totalPercent = 0;
@@ -361,7 +413,7 @@ const CourseProgressTree = () => {
                             href={linkUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className={`branch-header glass-panel desktop-header ${isComplete ? 'track-completed' : ''} pos-rel overflow-hidden cursor-pointer`}
+                            className={`branch-header glass-panel desktop-header ${isComplete ? 'track-completed' : ''} pos-rel overflow-hidden cursor-pointer ${track.id === activeTrack ? 'active-track-header' : 'de-emphasized-track-header'}`}
                             title={linkTitle}
                         >
                             <div className="track-progress-bg" style={{ width: `${percent}%` }}></div>
@@ -379,10 +431,10 @@ const CourseProgressTree = () => {
                 })}
             </div>
 
-            <div className="skill-tree-grid" ref={containerRef}>
+            <div className={`skill-tree-grid ${activeTrack ? 'has-active-track' : ''}`} ref={containerRef}>
                 {/* SVG Overlay for Connections */}
                 {lines.length > 0 && (
-                    <svg className="skill-tree-svg-overlay">
+                    <svg className={`skill-tree-svg-overlay ${activeTrack ? 'has-active-track' : ''}`}>
                         <defs>
                             <linearGradient id="oz-cs-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
                                 <stop offset="0%" stopColor="#902edb" />
@@ -391,6 +443,7 @@ const CourseProgressTree = () => {
                         </defs>
                         {lines.map(line => {
                             const isDimmed = hoveredNodeId && (!connectedNodes.has(line.fromId) || !connectedNodes.has(line.toId));
+                            const isActiveTrackLine = line.trackId === activeTrack;
                             return (
                                 <line
                                     key={line.id}
@@ -398,7 +451,7 @@ const CourseProgressTree = () => {
                                     y1={line.y1}
                                     x2={line.x2}
                                     y2={line.y2}
-                                    className={`tree-line ${line.isActive ? 'active-line' : 'locked-line'} ${line.isActive ? line.lineDomain : ''} ${isDimmed ? 'dimmed' : ''}`}
+                                    className={`tree-line ${line.isActive ? 'active-line' : 'locked-line'} ${line.isActive ? line.lineDomain : ''} ${isDimmed ? 'dimmed' : ''} ${isActiveTrackLine ? 'active-track-line' : 'de-emphasized-track-line'}`}
                                 />
                             );
                         })}
@@ -417,14 +470,21 @@ const CourseProgressTree = () => {
                         <div
                             key={node.id}
                             ref={el => nodeRefs.current[node.id] = el}
-                            className={`skill-node-cell ${node.has_started ? 'active' : 'locked'} ${node.is_extra ? 'extra-node' : ''} ${isRecommended ? 'recommended' : ''} ${isDimmed ? 'dimmed' : ''} ${isComplete ? 'completed' : ''}`}
+                            className={`skill-node-cell ${node.has_started ? 'active' : 'locked'} ${node.is_extra ? 'extra-node' : ''} ${isRecommended ? 'recommended' : ''} ${isDimmed ? 'dimmed' : ''} ${isComplete ? 'completed' : ''} ${node.track === activeTrack ? 'active-track-node' : 'de-emphasized-track-node'}`}
                             style={{
                                 gridColumn: trackInfo?.col || 1,
                                 gridRow: node.row + 1
                             }}
                             onMouseEnter={() => setHoveredNodeId(node.id)}
                             onMouseLeave={() => setHoveredNodeId(null)}
-                            onClick={() => navigate(`${location.pathname}/breakdown`, { state: { selectedNode: node } })}
+                            onClick={() => navigate(`${location.pathname}/breakdown`, { 
+                                state: { 
+                                    selectedNode: node,
+                                    activeTrack: activeTrack,
+                                    pendingRequest: pendingRequest,
+                                    userObj: userObj
+                                } 
+                            })}
                         >
                             <div className={`skill-card ${node.domain} cursor-pointer`}>
                                 <div className="skill-icon">

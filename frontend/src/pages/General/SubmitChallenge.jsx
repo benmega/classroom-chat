@@ -99,17 +99,24 @@ const SubmitChallenge = () => {
                 });
 
                 if (response.data.success) {
-                    toast.success(response.data.message || 'Challenge submitted successfully!');
-                    
-                    const duckReward = response.data.duck_reward || 10;
-                    const pCount = Math.min(50 + (duckReward * 10), 500);
-                    
-                    confetti({
-                        particleCount: pCount,
-                        spread: Math.min(70 + (duckReward * 2), 160),
-                        origin: { y: 0.6 },
-                        zIndex: 9999
-                    });
+                    if (response.data.reward_issued === false) {
+                        toast(
+                            "Challenge complete! But since you aren't assigned to this track, you didn't get a duck. Ask your teacher to change your track!",
+                            { icon: '⚠️', duration: 6000 }
+                        );
+                    } else {
+                        toast.success(response.data.message || 'Challenge submitted successfully!');
+                        
+                        const duckReward = response.data.duck_reward || 10;
+                        const pCount = Math.min(50 + (duckReward * 10), 500);
+                        
+                        confetti({
+                            particleCount: pCount,
+                            spread: Math.min(70 + (duckReward * 2), 160),
+                            origin: { y: 0.6 },
+                            zIndex: 9999
+                        });
+                    }
                     
                     setUrl('');
                     setHelpers('');

@@ -405,3 +405,142 @@
     .search-box { width: 100%; }
 }
 
+/* Track Requests Widget Card Styles */
+.track-requests-card {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-subtle);
+    border-radius: 20px;
+    padding: 1.5rem;
+    box-shadow: var(--shadow-rich);
+    margin-bottom: 1.5rem;
+}
+
+.requests-count-badge {
+    padding: 0.25rem 0.6rem;
+    background: var(--gradient-primary);
+    color: white;
+    font-size: 0.8rem;
+    font-weight: 700;
+    border-radius: 12px;
+    box-shadow: var(--shadow-sm);
+}
+
+.no-requests-message {
+    color: var(--text-secondary);
+    text-align: center;
+    padding: 1.5rem 0;
+    font-size: 0.95rem;
+}
+
+.requests-table-wrapper {
+    overflow-x: auto;
+    margin-top: 0.75rem;
+}
+
+.requests-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+.requests-table th, .requests-table td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--border-subtle);
+    font-size: 0.9rem;
+    vertical-align: middle;
+}
+
+.requests-table th {
+    font-weight: 700;
+    color: var(--text-secondary);
+    background-color: var(--bg-secondary);
+}
+
+.student-info-cell {
+    display: flex;
+    flex-direction: column;
+}
+
+.student-name-text {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.student-username-text {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.requester-type-badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.requester-type-badge.student {
+    background: rgba(43, 145, 175, 0.15);
+    color: #2b91af;
+    border: 1px solid rgba(43, 145, 175, 0.3);
+}
+
+.requester-type-badge.parent {
+    background: rgba(16, 185, 129, 0.15);
+    color: #10b981;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.track-badge-current, .track-badge-requested {
+    padding: 0.25rem 0.5rem;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.track-badge-current {
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-subtle);
+}
+
+.track-badge-requested {
+    background: rgba(144, 46, 219, 0.15);
+    color: #902edb;
+    border: 1px solid rgba(144, 46, 219, 0.3);
+}
+
+.actions-button-group {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.btn-action {
+    padding: 0.35rem 0.75rem;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: var(--transition-bounce);
+}
+
+.btn-action.approve {
+    background: #10b981;
+    color: white;
+}
+
+.btn-action.approve:hover {
+    background: #059669;
+    transform: translateY(-1px);
+}
+
+.btn-action.deny {
+    background: #ef4444;
+    color: white;
+}
+
+.btn-action.deny:hover {
+    background: #dc2626;
+    transform: translateY(-1px);
+}
+

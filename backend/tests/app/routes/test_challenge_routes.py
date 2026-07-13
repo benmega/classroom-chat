@@ -289,6 +289,7 @@ def test_detect_and_handle_challenge_url_with_multiplier(
     """Test challenge URL handling with duck multiplier."""
     from application.routes.challenge_routes import detect_and_handle_challenge_url
 
+    sample_user.active_track = "cs"
     sample_challenge_active.course_id = sample_course.id
     db.session.commit()
 
@@ -664,3 +665,49 @@ def test_detect_and_handle_ozaria_domain(
 
     assert result["handled"] is True
     assert result["details"]["success"] is True
+
+
+def test_submit_challenge_off_track(
+    client, init_db, sample_user, sample_configuration, sample_challenges_multi_domain, sample_course, sample_course_instance
+):
+    """Test challenge completion on mismatched track. Ducks should be withheld."""
+    with client.session_transaction() as sess:
+        sess["user"] = sample_user.id
+
+    # Make student active_track 'ozaria' (which is the default)
+    sample_user.active_track = "ozaria"
+    
+    # Setup course to belong to 'cs' (Computer Science) track
+    # sample_course.name = "CS1" (which maps to 'cs' track)
+    sample_course.name = "CS1"
+    
+    cc_challenge = sample_challenges_multi_domain[0]
+    cc_challenge.course_id = sample_course.id
+    db.session.commit()
+
+    url = f"https://codecombat.com/play/level/dungeons-of-kithgard?course={sample_course.id}&course-instance={sample_course_instance.id}"
+    
+    # Initial balance
+    initial_ducks = sample_user.duck_balance
+
+    response = client.post(
+        "/challenge/submit",
+        json={
+            "url": url,
+            "helpers": "",
+            "notes": "Off-track complete",
+        },
+    )
+
+    assert response.status_code == 200
+    res_json = response.get_json()
+    assert res_json["success"] is True
+    assert res_json["reward_issued"] is False
+    assert res_json["warning"] == "Off-track completion"
+    assert res_json["duck_reward"] == 0
+    assert "you didn't get a duck" in res_json["message"]
+    assert "Ask your teacher to change your track" in res_json["message"]
+
+    # Ensure duck balance did not change
+    db.session.refresh(sample_user)
+    assert sample_user.duck_balance == initial_ducks

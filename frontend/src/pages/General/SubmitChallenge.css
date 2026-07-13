@@ -23,7 +23,6 @@
 }
 
 .form-card:hover {
-    background: var(--bg-secondary);
     box-shadow: var(--shadow-glow), var(--shadow-rich);
     border-color: var(--primary-color);
 }

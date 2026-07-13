@@ -7,6 +7,11 @@ const useAuthStore = create((set) => ({
   isLoading: true,
   isServerOffline: false,
   hamburgerProgress: 0,
+  unreadCount: 0,
+  lastReadMessageId: null,
+
+  setUnreadCount: (count) => set({ unreadCount: count }),
+  setLastReadMessageId: (id) => set({ lastReadMessageId: id }),
 
   setServerOffline: (isOffline) => set({ isServerOffline: isOffline }),
   

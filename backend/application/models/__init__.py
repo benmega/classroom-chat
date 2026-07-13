@@ -28,6 +28,7 @@ def setup_models():
     from .user_certificate import UserCertificate  # noqa: F401
     from .duck_transaction import DuckTransaction  # noqa: F401
     from .parent_student import parent_students  # noqa: F401
+    from .track_requests import TrackChangeRequest  # noqa: F401
 
     from .connection_attempt import ConnectionAttempt  # noqa: F401
     from .store_item import StoreItem  # noqa: F401

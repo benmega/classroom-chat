@@ -21,20 +21,26 @@ vi.mock('./useSidebar', () => ({
 vi.mock('../api/client', () => ({
   default: {
     post: vi.fn().mockResolvedValue({}),
+    get: vi.fn().mockResolvedValue({ data: { messages: [] } }),
   },
 }));
 
 let currentStoreState = {
-  user: { username: 'testuser', duck_balance: 10 },
+  user: { id: 1, username: 'testuser', duck_balance: 10 },
   logout: vi.fn(),
   isAuthenticated: true,
   hamburgerProgress: 0,
+  unreadCount: 0,
+  setUnreadCount: vi.fn(),
+  setLastReadMessageId: vi.fn(),
 };
 
 // Mock useAuthStore
-vi.mock('../store/useAuthStore', () => ({
-  default: () => currentStoreState,
-}));
+vi.mock('../store/useAuthStore', () => {
+  const store = () => currentStoreState;
+  store.getState = () => currentStoreState;
+  return { default: store };
+});
 
 describe('useLayout - Quack sound for earning ducks', () => {
   let playMock;
@@ -44,12 +50,14 @@ describe('useLayout - Quack sound for earning ducks', () => {
     vi.clearAllMocks();
     vi.useFakeTimers();
 
-    // Reset initial mock store state
     currentStoreState = {
-      user: { username: 'testuser', duck_balance: 10 },
+      user: { id: 1, username: 'testuser', duck_balance: 10 },
       logout: vi.fn(),
       isAuthenticated: true,
       hamburgerProgress: 0,
+      unreadCount: 0,
+      setUnreadCount: vi.fn(),
+      setLastReadMessageId: vi.fn(),
     };
 
     // Spy on Audio

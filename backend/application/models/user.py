@@ -26,6 +26,7 @@ class User(db.Model):
     is_admin = db.Column(db.Boolean, default=False)
     is_approved = db.Column(db.Boolean, default=False)
     role = db.Column(db.String(20), default="student", nullable=False)
+    active_track = db.Column(db.String(50), default="cs", server_default="cs", nullable=False)
     can_chat = db.Column(db.Boolean, default=True)
     
     # OAuth / Cognito fields
@@ -144,6 +145,8 @@ class User(db.Model):
 
     def to_dict_auth(self):
         """Ultra-lightweight dictionary for frequent auth status checks."""
+        from .track_requests import TrackChangeRequest
+        pending_request = TrackChangeRequest.query.filter_by(student_id=self.id, status="pending").first()
         return {
             "id": self.id,
             "user_id": self.id,
@@ -157,6 +160,12 @@ class User(db.Model):
             "is_admin": self.is_admin,
             "is_approved": self.is_approved,
             "role": self.role,
+            "active_track": self.active_track,
+            "pending_request": {
+                "id": pending_request.id,
+                "requested_track": pending_request.requested_track,
+                "created_at": pending_request.created_at.isoformat() if pending_request.created_at else None
+            } if pending_request else None,
             "slug": self.slug,
             "duck_balance": self.duck_balance,
             "packets": self.packets,
@@ -210,6 +219,9 @@ class User(db.Model):
             cc_percent = self.get_progress_percent("codecombat.com")
             oz_percent = self.get_progress_percent("www.ozaria.com")
 
+        from .track_requests import TrackChangeRequest
+        pending_request = TrackChangeRequest.query.filter_by(student_id=self.id, status="pending").first()
+
         d = {
             "id": self.id,
             "user_id": self.id,
@@ -225,6 +237,12 @@ class User(db.Model):
             "is_admin": self.is_admin,
             "is_approved": self.is_approved,
             "role": self.role,
+            "active_track": self.active_track,
+            "pending_request": {
+                "id": pending_request.id,
+                "requested_track": pending_request.requested_track,
+                "created_at": pending_request.created_at.isoformat() if pending_request.created_at else None
+            } if pending_request else None,
             "bio": self.bio,
             "slug": self.slug,
             # Gamification

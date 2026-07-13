@@ -1,8 +1,7 @@
 import React from 'react';
 import { Activity, Plus } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
-import codecombatLogo from '../../assets/codecombat-logo.png';
-import ozariaLogo from '../../assets/ozaria-logo.png';
+
 
 const CourseProgress = ({ target, isParentView = false, studentId = null }) => {
     const navigate = useNavigate();
@@ -52,26 +51,7 @@ const CourseProgress = ({ target, isParentView = false, studentId = null }) => {
                 <h2 className="pointer-events-none d-flex align-center gap-sm">
                     <Activity size={20} /> Course Progress
                 </h2>
-                <div className="d-flex align-center gap-sm ml-auto mr-xs" onClick={e => e.stopPropagation()}>
-                    <a 
-                        href="https://codecombat.com" 
-                        target="_blank" 
-                        rel="noopener noreferrer" 
-                        className="header-logo-card"
-                        title="Visit CodeCombat"
-                    >
-                        <img src={codecombatLogo} alt="CodeCombat" className="header-logo-img" />
-                    </a>
-                    <a 
-                        href="https://ozeria.com" 
-                        target="_blank" 
-                        rel="noopener noreferrer" 
-                        className="header-logo-card"
-                        title="Visit Ozaria"
-                    >
-                        <img src={ozariaLogo} alt="Ozaria" className="header-logo-img" />
-                    </a>
-                </div>
+
                 {!isParentView && (
                     <Link to="/submit-work#challenge" title="Submit Challenge" className="text-secondary d-flex align-center ml-xs" onClick={e => e.stopPropagation()}>
                         <Plus size={20} />

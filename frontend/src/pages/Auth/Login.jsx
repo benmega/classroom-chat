@@ -39,7 +39,12 @@ const Login = () => {
                 } else if (result.role === 'parent') {
                     navigate('/parent/dashboard');
                 } else {
-                    navigate('/chat');
+                    const currentUser = useAuthStore.getState().user;
+                    if (currentUser?.role === 'student' && currentUser?.slug) {
+                        navigate(`/course-progress/${currentUser.slug}`);
+                    } else {
+                        navigate('/chat');
+                    }
                 }
             } else {
                 toast.error(result.error || 'Invalid credentials.');

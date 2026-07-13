@@ -141,8 +141,13 @@ def submit_challenge():
         duck_reward = details.get("duck_reward", 0)
         duck_word = "duck" if duck_reward == 1 else "ducks"
         
+        reward_issued = details.get("reward_issued", True)
+        warning = details.get("warning")
+        
         challenge_name = details.get("challenge_name")
-        if challenge_name:
+        if not reward_issued:
+            message = "Challenge complete! But since you aren't assigned to this track, you didn't get a duck. Ask your teacher to change your track!"
+        elif challenge_name:
             message = f"Congratulations on completing {challenge_name}! You earned {duck_reward} {duck_word}!"
         else:
             message = f"Congrats {user.username}, you earned {duck_reward} {duck_word}!"
@@ -163,6 +168,8 @@ def submit_challenge():
                 "message": message,
                 "duck_reward": duck_reward,
                 "quack_count": duck_reward,
+                "reward_issued": reward_issued,
+                "warning": warning,
             }
         )
 
@@ -180,6 +187,28 @@ def submit_challenge():
     return jsonify({"success": False, "message": msg}), 400
 
 
+def get_track_for_course_id(course_id):
+    if not course_id:
+        return None
+    from application.models.course import Course
+    course = Course.query.get(course_id)
+    if not course:
+        return None
+    name_upper = course.name.upper()
+    if "CHAPTER" in name_upper:
+        return "ozaria"
+    elif "GD" in name_upper:
+        return "gd"
+    elif "WD" in name_upper:
+        return "wd"
+    elif "CS" in name_upper or "JUNIOR" in name_upper:
+        return "cs"
+    
+    if "ozaria" in course.domain:
+        return "ozaria"
+    return "cs"
+
+
 def detect_and_handle_challenge_url(message, user, duck_multiplier=1, helper=None):
     """
     Detect and handle a challenge URL in a message.
@@ -194,11 +223,30 @@ def detect_and_handle_challenge_url(message, user, duck_multiplier=1, helper=Non
         return {"handled": True, "details": log_result}
 
     try:
-        # Calculate rewards
-        duck_reward = _update_user_ducks(
-            user, match["challenge_slug"], duck_multiplier
-        )
-        log_result["duck_reward"] = duck_reward
+        # Determine challenge track
+        challenge_slug = match["challenge_slug"]
+        challenge = Challenge.query.filter(
+            (Challenge.slug.ilike(challenge_slug))
+            | (Challenge.slug.ilike(challenge_slug.replace("-", " ")))
+        ).first()
+
+        challenge_track = get_track_for_course_id(challenge.course_id) if challenge else None
+
+        # Compare challenge track with user's active track
+        if challenge_track == user.active_track:
+            # Match: Save progress, grant the duck reward
+            duck_reward = _update_user_ducks(
+                user, match["challenge_slug"], duck_multiplier
+            )
+            log_result["duck_reward"] = duck_reward
+            log_result["reward_issued"] = True
+            log_result["warning"] = None
+        else:
+            # Mismatch: Save progress, skip the duck reward
+            log_result["duck_reward"] = 0
+            log_result["reward_issued"] = False
+            log_result["warning"] = "Off-track completion"
+
         return {"handled": True, "details": log_result}
     except ValueError as e:
         return {"handled": True, "details": {"success": False, "message": str(e)}}

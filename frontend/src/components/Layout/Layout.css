@@ -939,3 +939,59 @@ footer {
     transform: translateY(-50%) translateX(0);
 }
 
+/* Unread message badge styling */
+.nav-badge-container {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.nav-unread-badge {
+    position: absolute;
+    top: -6px;
+    right: -8px;
+    background: var(--error-color, #ef4444);
+    color: white;
+    font-size: 10px;
+    font-weight: 700;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    border-radius: 9999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid var(--bg-primary, #ffffff);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    line-height: 1;
+    z-index: 10;
+    animation: badge-pop 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.mobile-badge {
+    position: static;
+    margin-left: auto;
+    font-size: 11px;
+    min-width: 18px;
+    height: 18px;
+    border-radius: 9999px;
+    background: var(--error-color, #ef4444);
+    color: white;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    box-shadow: none;
+}
+
+@keyframes badge-pop {
+    0% {
+        transform: scale(0);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
     Users, 
     TrendingUp, 
@@ -25,6 +25,8 @@ import { Line } from 'react-chartjs-2';
 import { useNavigate } from 'react-router-dom';
 import './AdminDashboard.css';
 import Skeleton from '../../components/common/Skeleton';
+import client from '../../api/client';
+import toast from 'react-hot-toast';
 
 // Extracted Components
 import AdminStats from '../../components/admin/AdminStats';
@@ -52,6 +54,46 @@ const AdminDashboard = () => {
     const navigate = useNavigate();
     const [newWord, setNewWord] = useState('');
     const [banReason, setBanReason] = useState('');
+    const [trackRequests, setTrackRequests] = useState([]);
+
+    const fetchTrackRequests = async () => {
+        try {
+            const response = await client.get('/admin/track-requests/');
+            if (response.data.success) {
+                setTrackRequests(response.data.requests || []);
+            }
+        } catch (err) {
+            console.error("Failed to fetch track requests:", err);
+        }
+    };
+
+    useEffect(() => {
+        fetchTrackRequests();
+    }, []);
+
+    const handleApproveRequest = async (id) => {
+        try {
+            const response = await client.put(`/admin/track-requests/${id}`, { status: 'approved' });
+            if (response.data.success) {
+                toast.success("Track change request approved!");
+                setTrackRequests(prev => prev.filter(r => r.id !== id));
+            }
+        } catch (err) {
+            toast.error("Failed to approve request.");
+        }
+    };
+
+    const handleDenyRequest = async (id) => {
+        try {
+            const response = await client.put(`/admin/track-requests/${id}`, { status: 'denied' });
+            if (response.data.success) {
+                toast.success("Track change request denied.");
+                setTrackRequests(prev => prev.filter(r => r.id !== id));
+            }
+        } catch (err) {
+            toast.error("Failed to deny request.");
+        }
+    };
 
     const {
         dashboardData,
@@ -127,6 +169,74 @@ const AdminDashboard = () => {
 
             <div className="dashboard-layout">
                 <div className="main-content">
+                    {/* Pending Track Change Requests Widget */}
+                    <div className="track-requests-card card">
+                        <div className="card-header d-flex justify-between align-center">
+                            <h3>Pending Track Change Requests</h3>
+                            {trackRequests.length > 0 && (
+                                <span className="requests-count-badge">{trackRequests.length} pending</span>
+                            )}
+                        </div>
+                        <div className="requests-widget-body">
+                            {trackRequests.length === 0 ? (
+                                <p className="no-requests-message">No pending track change requests.</p>
+                            ) : (
+                                <div className="requests-table-wrapper">
+                                    <table className="requests-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Student</th>
+                                                <th>Requester</th>
+                                                <th>Current Track</th>
+                                                <th>Requested Track</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {trackRequests.map(req => (
+                                                <tr key={req.id}>
+                                                    <td>
+                                                        <div className="student-info-cell">
+                                                            <span className="student-name-text">{req.student_name || req.student_username}</span>
+                                                            <span className="student-username-text">({req.student_username})</span>
+                                                        </div>
+                                                    </td>
+                                                    <td>
+                                                        <span className={`requester-type-badge ${req.requester_type}`}>
+                                                            {req.requester_type}
+                                                        </span>
+                                                    </td>
+                                                    <td>
+                                                        <span className="track-badge-current">{req.student_current_track}</span>
+                                                    </td>
+                                                    <td>
+                                                        <span className="track-badge-requested">{req.requested_track}</span>
+                                                    </td>
+                                                    <td>
+                                                        <div className="actions-button-group">
+                                                            <button 
+                                                                onClick={() => handleApproveRequest(req.id)}
+                                                                className="btn-action approve"
+                                                            >
+                                                                Approve
+                                                            </button>
+                                                            <button 
+                                                                onClick={() => handleDenyRequest(req.id)}
+                                                                className="btn-action deny"
+                                                            >
+                                                                Deny
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
                     <div className="chart-card card">
                         <div className="chart-header justify-end mb-sm">
                             <select 

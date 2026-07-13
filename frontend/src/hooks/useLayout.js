@@ -1,11 +1,19 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import useAuthStore from '../store/useAuthStore';
 import client from '../api/client';
 import useSidebar from './useSidebar';
+import useChatSocket from './useChatSocket';
 
 export const useLayout = () => {
-    const { user, logout, isAuthenticated, hamburgerProgress } = useAuthStore();
+    const { 
+        user, 
+        logout, 
+        isAuthenticated, 
+        hamburgerProgress,
+        setUnreadCount,
+        setLastReadMessageId
+    } = useAuthStore();
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const dropdownRef = useRef(null);
     const navigate = useNavigate();
@@ -16,6 +24,50 @@ export const useLayout = () => {
         if (e) e.stopPropagation();
         setIsDropdownOpen(!isDropdownOpen);
     };
+
+    const isChatRoute = location.pathname === '/chat';
+
+    // Hook to listen to new messages and update unread count
+    useChatSocket(useCallback((data) => {
+        if (!isChatRoute && user && user.role !== 'parent') {
+            setUnreadCount(useAuthStore.getState().unreadCount + 1);
+        }
+    }, [isChatRoute, user, setUnreadCount]), () => {});
+
+    // Fetch initial unread count on login/load
+    useEffect(() => {
+        if (!isAuthenticated || !user || user.role === 'parent') return;
+
+        const fetchInitialUnread = async () => {
+            try {
+                const key = `last_read_message_id_${user.id}`;
+                const lastReadIdVal = localStorage.getItem(key);
+                const lastReadId = lastReadIdVal ? parseInt(lastReadIdVal, 10) : null;
+
+                const response = await client.get('/message/api/feed?limit=50');
+                const feed = response.data.messages || [];
+
+                if (feed.length > 0) {
+                    const latestMsgId = feed[0].id;
+                    if (lastReadId === null) {
+                        localStorage.setItem(key, latestMsgId.toString());
+                        setUnreadCount(0);
+                        setLastReadMessageId(latestMsgId);
+                    } else {
+                        const count = feed.filter(msg => msg.id > lastReadId).length;
+                        setUnreadCount(count);
+                        setLastReadMessageId(lastReadId);
+                    }
+                } else {
+                    setUnreadCount(0);
+                }
+            } catch (err) {
+                console.error('Failed to load initial unread messages count:', err);
+            }
+        };
+
+        fetchInitialUnread();
+    }, [isAuthenticated, user, setUnreadCount, setLastReadMessageId]);
 
     // --- Duck Balance Tracking for Quack Sound ---
     const prevDuckBalanceRef = useRef(user?.duck_balance);

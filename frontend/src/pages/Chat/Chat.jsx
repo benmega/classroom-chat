@@ -36,8 +36,11 @@ const Chat = () => {
     setTargetLive,
     targetClassrooms,
     setTargetClassrooms,
+    toggleTargetClassroom,
     targetUsers,
     setTargetUsers,
+    toggleTargetUser,
+    scrollRef,
     textareaRef,
     emojiPickerRef,
     handleSendMessage,
@@ -86,17 +89,30 @@ const Chat = () => {
     <div className="feed-container">
       <div className="feed-main">
         <div 
+          ref={scrollRef}
           className="feed-messages"
           onScroll={handleScroll}
         >
           <div className="feed-messages-inner">
+            {!hasMore && messages.length > 0 && (
+              <div className="feed-end-msg">
+                You've reached the end of the feed.
+              </div>
+            )}
+
+            {isLoadingMore && (
+              <div className="feed-loading-more">
+                Loading more...
+              </div>
+            )}
+
             {messages.length === 0 ? (
               <div className="feed-empty-msg">
                 No messages to display. Be the first to post!
               </div>
             ) : (
-              messages.map((msg, index) => {
-                const isConsecutive = index > 0 && messages[index - 1].user_id === msg.user_id;
+              [...messages].reverse().map((msg, index, arr) => {
+                const isConsecutive = index > 0 && arr[index - 1].user_id === msg.user_id;
                 return (
                   <ChatMessage 
                     key={msg.id || index}
@@ -107,18 +123,6 @@ const Chat = () => {
                   />
                 );
               })
-            )}
-            
-            {isLoadingMore && (
-              <div className="feed-loading-more">
-                Loading more...
-              </div>
-            )}
-            
-            {!hasMore && messages.length > 0 && (
-              <div className="feed-end-msg">
-                You've reached the end of the feed.
-              </div>
             )}
           </div>
         </div>

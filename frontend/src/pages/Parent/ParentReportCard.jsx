@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Loader2, ArrowLeft, Activity, Award, BookOpen, User, ChevronDown, ChevronUp, Zap, TrendingUp, BarChart2 } from 'lucide-react';
 import client from '../../api/client';
+import toast from 'react-hot-toast';
 import { getApiUrl } from '../../utils/apiUrl';
 import ContributionGraph from '../../components/profile/ContributionGraph';
 import ProjectPortfolio from '../../components/profile/ProjectPortfolio';
@@ -66,6 +67,30 @@ const ParentReportCard = () => {
     const [selectedProject, setSelectedProject] = useState(null);
     const [slideshowIndex, setSlideshowIndex] = useState(null);
     const [historyData, setHistoryData] = useState(null);
+
+    // Track request states
+    const [parentSelectedTrack, setParentSelectedTrack] = useState('ozaria');
+    const [isSubmittingParentRequest, setIsSubmittingParentRequest] = useState(false);
+    const [localPendingRequest, setLocalPendingRequest] = useState(null);
+
+    const handleParentRequestSubmit = async () => {
+        setIsSubmittingParentRequest(true);
+        try {
+            const response = await client.post('/track-requests/', {
+                requester_type: 'parent',
+                requested_track: parentSelectedTrack,
+                student_id: studentId
+            });
+            if (response.data.success) {
+                toast.success("Track change request submitted to the teacher!");
+                setLocalPendingRequest({ requested_track: parentSelectedTrack });
+            }
+        } catch (err) {
+            toast.error(err.response?.data?.message || "Failed to submit request.");
+        } finally {
+            setIsSubmittingParentRequest(false);
+        }
+    };
 
     useEffect(() => {
         const fetchReport = async () => {
@@ -270,6 +295,37 @@ const ParentReportCard = () => {
                                     {reportData.current_activity}
                                 </p>
                             )}
+                            <div className="parent-track-settings" style={{ marginTop: '1rem', display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+                                <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', fontWeight: '600' }}>
+                                    Learning Track: <span style={{ color: 'var(--primary-color)', fontWeight: '800' }}>{reportData.active_track?.toUpperCase() || 'CS'}</span>
+                                </span>
+                                {reportData.pending_request || localPendingRequest ? (
+                                    <span className="pending-badge-parent" style={{ padding: '0.25rem 0.75rem', borderRadius: '8px', fontSize: '0.8rem', background: 'rgba(245, 158, 11, 0.15)', color: '#f59e0b', border: '1px solid rgba(245, 158, 11, 0.3)' }}>
+                                        ⏳ Change Request Pending: {(localPendingRequest?.requested_track || reportData.pending_request?.requested_track).toUpperCase()}
+                                    </span>
+                                ) : (
+                                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                                        <select 
+                                            value={parentSelectedTrack} 
+                                            onChange={e => setParentSelectedTrack(e.target.value)}
+                                            style={{ padding: '0.35rem 0.5rem', borderRadius: '6px', background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)', color: 'var(--text-primary)', fontSize: '0.85rem' }}
+                                        >
+                                            <option value="ozaria">Ozaria</option>
+                                            <option value="cs">Computer Science (CS)</option>
+                                            <option value="gd">Game Development (GD)</option>
+                                            <option value="wd">Web Development (WD)</option>
+                                        </select>
+                                        <button 
+                                            onClick={handleParentRequestSubmit} 
+                                            disabled={isSubmittingParentRequest}
+                                            className="btn-primary"
+                                            style={{ padding: '0.35rem 0.75rem', fontSize: '0.85rem', borderRadius: '6px', fontWeight: '600' }}
+                                        >
+                                            {isSubmittingParentRequest ? 'Requesting...' : 'Request Track Change'}
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
                 </div>

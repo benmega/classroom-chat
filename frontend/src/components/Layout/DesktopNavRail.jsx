@@ -12,8 +12,11 @@ import {
     Map,
     Settings
 } from 'lucide-react';
+import useAuthStore from '../../store/useAuthStore';
 
 const DesktopNavRail = ({ user, location, handleLogout }) => {
+    const { unreadCount } = useAuthStore();
+
     return (
         <aside className="desktop-nav-rail">
             <Link to="/chat" className="nav-rail-logo" data-tooltip="Classroom Chat">
@@ -28,7 +31,12 @@ const DesktopNavRail = ({ user, location, handleLogout }) => {
                         className={`nav-rail-item ${location.pathname === '/chat' ? 'active' : ''}`}
                         data-tooltip="Chat"
                     >
-                        <MessageSquare size={20} />
+                        <div className="nav-badge-container">
+                            <MessageSquare size={20} />
+                            {unreadCount > 0 && (
+                                <span className="nav-unread-badge">{unreadCount}</span>
+                            )}
+                        </div>
                     </Link>
                 </div>
 

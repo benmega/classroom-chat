@@ -1,8 +1,11 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Home, User, Shield, FileCheck, RefreshCw, X, LogOut } from 'lucide-react';
+import { Home, User, Shield, FileCheck, RefreshCw, X, LogOut, MessageSquare } from 'lucide-react';
+import useAuthStore from '../../store/useAuthStore';
 
 const MobileSidebar = ({ user, isParent, isSidebarOpen, setSidebarOpen, handleLogout }) => {
+    const { unreadCount } = useAuthStore();
+
     return (
         <>
             <div 
@@ -19,10 +22,28 @@ const MobileSidebar = ({ user, isParent, isSidebarOpen, setSidebarOpen, handleLo
                         <X size={24} />
                     </button>
                 </div>
-
+ 
                 <nav className="sidebar-nav">
                     <ul>
-                        <li><Link to={isParent ? "/parent/dashboard" : "/"} onClick={() => setSidebarOpen(false)}><Home size={18} /> {isParent ? 'Dashboard' : 'Chat'}</Link></li>
+                        {isParent ? (
+                            <li>
+                                <Link to="/parent/dashboard" onClick={() => setSidebarOpen(false)}>
+                                    <Home size={18} /> Dashboard
+                                </Link>
+                            </li>
+                        ) : (
+                            <li>
+                                <Link to="/chat" onClick={() => setSidebarOpen(false)}>
+                                    <div className="nav-badge-container" style={{ display: 'inline-flex', alignItems: 'center', width: '100%' }}>
+                                        <MessageSquare size={18} />
+                                        <span style={{ marginLeft: '12px', flexGrow: 1 }}>Chat</span>
+                                        {unreadCount > 0 && (
+                                            <span className="nav-unread-badge mobile-badge">{unreadCount}</span>
+                                        )}
+                                    </div>
+                                </Link>
+                            </li>
+                        )}
                         {!isParent && (
                             <li><Link to="/profile" onClick={() => setSidebarOpen(false)}><User size={18} /> Profile</Link></li>
                         )}

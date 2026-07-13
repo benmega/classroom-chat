@@ -37,7 +37,12 @@ const DevLogin = () => {
                 if (res.data?.success) {
                     setStatus(`Logged in as ${res.data.user?.username} (${role}). Redirecting…`);
                     await checkAuth();
-                    navigate('/chat');
+                    const currentUser = useAuthStore.getState().user;
+                    if (currentUser?.role === 'student' && currentUser?.slug) {
+                        navigate(`/course-progress/${currentUser.slug}`);
+                    } else {
+                        navigate('/chat');
+                    }
                 } else {
                     setError(res.data?.error || 'Dev login returned an unexpected response.');
                 }

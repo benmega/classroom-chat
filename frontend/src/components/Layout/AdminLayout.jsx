@@ -25,22 +25,30 @@ const AdminLayout = ({ children }) => {
     const { isSidebarOpen, setSidebarOpen } = useSidebar();
     const location = useLocation();
     const [pendingCount, setPendingCount] = useState(0);
+    const [pendingTrackRequestsCount, setPendingTrackRequestsCount] = useState(0);
 
     useEffect(() => {
-        const fetchPendingCount = async () => {
+        const fetchData = async () => {
             try {
-                const response = await client.get('/api/admin/pending_users');
-                if (response.data.status === 'success') {
-                    setPendingCount(response.data.data.users?.length || 0);
+                const [usersRes, requestsRes] = await Promise.all([
+                    client.get('/api/admin/pending_users').catch(() => ({ data: {} })),
+                    client.get('/admin/track-requests/').catch(() => ({ data: {} }))
+                ]);
+                
+                if (usersRes.data?.status === 'success') {
+                    setPendingCount(usersRes.data.data?.users?.length || 0);
+                }
+                if (requestsRes.data?.success) {
+                    setPendingTrackRequestsCount(requestsRes.data.requests?.length || 0);
                 }
             } catch (err) {
-                console.error("Failed to fetch pending count", err);
+                console.error("Failed to fetch pending counts", err);
             }
         };
 
         if (isAuthenticated && user?.is_admin) {
-            fetchPendingCount();
-            const interval = setInterval(fetchPendingCount, 15000); // refresh every 15s
+            fetchData();
+            const interval = setInterval(fetchData, 15000); // refresh every 15s
             return () => clearInterval(interval);
         }
     }, [isAuthenticated, user]);
@@ -134,10 +142,16 @@ const AdminLayout = ({ children }) => {
                                         {item.path === '/admin/users' && pendingCount > 0 && (
                                             <span className="admin-nav-badge">{pendingCount}</span>
                                         )}
+                                        {item.path === '/admin' && pendingTrackRequestsCount > 0 && (
+                                            <span className="admin-nav-badge">{pendingTrackRequestsCount}</span>
+                                        )}
                                     </span>
                                     <span className="admin-nav-label">{item.label}</span>
                                     {item.path === '/admin/users' && pendingCount > 0 && (
                                         <span className="admin-nav-badge mobile-badge">{pendingCount}</span>
+                                    )}
+                                    {item.path === '/admin' && pendingTrackRequestsCount > 0 && (
+                                        <span className="admin-nav-badge mobile-badge">{pendingTrackRequestsCount}</span>
                                     )}
                                 </NavLink>
                             </div>

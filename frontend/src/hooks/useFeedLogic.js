@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useLayoutEffect, useRef, useCallback } from 'react';
 import toast from 'react-hot-toast';
 import useAuthStore from '../store/useAuthStore';
 import client from '../api/client';
@@ -27,6 +27,43 @@ export const useFeedLogic = () => {
   const scrollRef = useRef(null);
   const textareaRef = useRef(null);
   const emojiPickerRef = useRef(null);
+  
+  const prevMessagesLength = useRef(0);
+  const prevScrollHeight = useRef(0);
+  const lastFirstMessageId = useRef(null);
+
+  useLayoutEffect(() => {
+    const container = scrollRef.current;
+    if (!container) return;
+
+    const lenDiff = messages.length - prevMessagesLength.current;
+    
+    if (lenDiff > 0) {
+      // Check if we loaded older messages.
+      // Older messages are added to the end of the messages array (when index 0 is newest).
+      // So if the first elements of messages are the same, it means we prepended older messages to the UI.
+      const isLoadMore = prevMessagesLength.current > 0 && messages[0]?.id === lastFirstMessageId.current;
+      
+      if (isLoadMore) {
+        // Adjust scroll position to prevent jumping
+        const heightDiff = container.scrollHeight - prevScrollHeight.current;
+        container.scrollTop = container.scrollTop + heightDiff;
+      } else {
+        // Initial load or new message
+        // Scroll to bottom if it's initial load or the user was already near the bottom
+        const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 200;
+        const isOwnNewMessage = messages[0]?.user_id === user?.id;
+        
+        if (prevMessagesLength.current === 0 || isNearBottom || isOwnNewMessage) {
+          container.scrollTop = container.scrollHeight;
+        }
+      }
+    }
+
+    prevMessagesLength.current = messages.length;
+    prevScrollHeight.current = container.scrollHeight;
+    lastFirstMessageId.current = messages[0]?.id;
+  }, [messages, user?.id]);
 
   const onMessageReceived = useCallback((data) => {
     setMessages(prev => {
@@ -90,9 +127,9 @@ export const useFeedLogic = () => {
   }, [isLoadingMore, hasMore, messages, fetchFeed]);
 
   const handleScroll = (e) => {
-    const { scrollTop, scrollHeight, clientHeight } = e.target;
-    // Load more when user scrolls close to the bottom
-    if (scrollHeight - scrollTop <= clientHeight + 100) {
+    const { scrollTop } = e.target;
+    // Load more when user scrolls close to the top
+    if (scrollTop <= 100) {
       handleLoadMore();
     }
   };
@@ -207,6 +244,17 @@ export const useFeedLogic = () => {
       prev.includes(id) ? prev.filter(u => u !== id) : [...prev, id]
     );
   };
+
+  // Mark messages as read when feed updates
+  useEffect(() => {
+    if (user?.id && messages.length > 0) {
+      const latestMsgId = messages[0].id;
+      const key = `last_read_message_id_${user.id}`;
+      localStorage.setItem(key, latestMsgId.toString());
+      useAuthStore.getState().setUnreadCount(0);
+      useAuthStore.getState().setLastReadMessageId(latestMsgId);
+    }
+  }, [messages, user?.id]);
 
   return {
     user,
