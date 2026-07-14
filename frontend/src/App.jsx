@@ -129,17 +129,18 @@ function App() {
                 style: {
                     background: 'var(--bg-primary)',
                     color: 'var(--text-primary)',
-                    borderRadius: 'var(--radius-md)',
-                    padding: '12px 20px',
-                    boxShadow: 'var(--shadow-md)',
+                    borderRadius: 'var(--radius-lg)',
+                    padding: '14px 20px',
+                    boxShadow: 'var(--shadow-xl)',
                     fontSize: 'var(--font-sm)',
                     fontWeight: '600',
                     maxWidth: '420px',
-                    border: '2px solid var(--border-strong)',
+                    border: '1px solid var(--border-subtle)',
+                    fontFamily: 'var(--font-body)',
                 },
                 success: {
                     style: {
-                        border: '2px solid var(--success-color)',
+                        borderLeft: '4px solid var(--success-color)',
                     },
                     iconTheme: {
                         primary: 'var(--success-color)',
@@ -148,7 +149,7 @@ function App() {
                 },
                 error: {
                     style: {
-                        border: '2px solid var(--error-color)',
+                        borderLeft: '4px solid var(--error-color)',
                     },
                     iconTheme: {
                         primary: 'var(--error-color)',
