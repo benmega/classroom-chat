@@ -383,3 +383,44 @@ def test_classroom_detail_management(client, sample_admin, init_db):
     assert resp.status_code == 200
     assert db.session.get(Classroom, "testclass") is None
 
+
+def test_pass_chapter_preview_and_pass_chapter(client, sample_admin, sample_user, init_db):
+    from application.models.challenge import Challenge
+    from application.models.achievements import Achievement
+    from application.models.user_certificate import UserCertificate
+
+    login_as_admin(client, sample_admin)
+
+    # Create dummy challenges for the mapped course CS1 (560f1a9f22961295f9427742)
+    course_db_id = "560f1a9f22961295f9427742"
+    c1 = Challenge(name="Challenge 1", slug="ch-1", domain="codecombat.com", course_id=course_db_id, value=5)
+    c2 = Challenge(name="Challenge 2", slug="ch-2", domain="codecombat.com", course_id=course_db_id, value=10)
+    db.session.add_all([c1, c2])
+
+    # Create a certificate achievement for this course
+    ach = Achievement(name="CS1 Certificate", slug=course_db_id, type="certificate", reward=0)
+    db.session.add(ach)
+    db.session.commit()
+
+    # Call preview with frontend ID "cs-1"
+    resp = client.post(f"/api/admin/user/{sample_user.id}/pass_chapter_preview", json={"course_id": "cs-1"})
+    assert resp.status_code == 200
+    data = resp.get_json()["data"]
+    assert data["success"] is True
+    assert data["preview"]["challenges_to_complete"] == 2
+    assert data["preview"]["ducks_to_award"] == 15
+    assert "CS1 Certificate" in data["preview"]["certificates_to_award"]
+
+    # Call pass chapter with frontend ID "cs-1"
+    resp = client.post(f"/api/admin/user/{sample_user.id}/pass_chapter", json={"course_id": "cs-1"})
+    assert resp.status_code == 200
+    data = resp.get_json()["data"]
+    assert data["success"] is True
+    assert "Successfully passed" in data["message"]
+
+    # Verify logs and cert were created
+    assert sample_user.challenge_logs.count() == 2
+    cert = UserCertificate.query.filter_by(user_id=sample_user.id, achievement_id=ach.id).first()
+    assert cert is not None
+
+

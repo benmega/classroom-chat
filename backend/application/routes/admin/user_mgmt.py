@@ -752,6 +752,26 @@ def unenroll_student_from_classroom(classroom_id):
     return jsonify({"success": True, "message": "Student unenrolled successfully"})
 
 
+NODE_MAP = {
+    "cc-junior": "65f32b6c87c07dbeb5ba1936",
+    "cs-1": "560f1a9f22961295f9427742",
+    "oz-1": "5d41d731a8d1836b5aa3cba1",
+    "gd-1": "5789587aad86a6efb573701e",
+    "cs-2": "5632661322961295f9428638",
+    "oz-2": "5d8a57abe8919b28d5113af1",
+    "wd-1": "5789587aad86a6efb573701f",
+    "cs-3": "56462f935afde0c6fd30fc8c",
+    "oz-3": "5e27600d1c9d440000ac3ee7",
+    "gd-2": "57b621e7ad86a6efb5737e64",
+    "wd-2": "5789587aad86a6efb5737020",
+    "cs-4": "56462f935afde0c6fd30fc8d",
+    "oz-4": "5f0cb0b7a2492bba0b3520df",
+    "gd-3": "5a0df02b8f2391437740f74f",
+    "cs-5": "569ed916efa72b0ced971447",
+    "cs-6": "5817d673e85d1220db624ca4",
+}
+
+
 @admin_bp.route("/user/<int:user_id>/pass_chapter_preview", methods=["POST"])
 @admin_only
 @api_response
@@ -767,9 +787,10 @@ def pass_chapter_preview(user_id):
     if not course_id:
         return {"error": "course_id is required"}, 400
 
-    challenges = Challenge.query.filter_by(course_id=course_id).all()
+    db_course_id = NODE_MAP.get(course_id, course_id)
+    challenges = Challenge.query.filter_by(course_id=db_course_id).all()
     if not challenges:
-        return {"error": "No challenges found for this course_id"}, 404
+        return {"error": f"No challenges found for course_id: {db_course_id}"}, 404
 
     existing_logs = ChallengeLog.query.filter_by(user_id=user_obj.id).all()
     existing_slugs = {cl.challenge_slug for cl in existing_logs}
@@ -780,7 +801,10 @@ def pass_chapter_preview(user_id):
     
     # Check if there are any certificates related to this course
     # Assuming certificate achievement source is course_id
-    certificate_achievements = Achievement.query.filter_by(type="certificate", source=course_id).all()
+    certificate_achievements = Achievement.query.filter(
+        (Achievement.type == "certificate") &
+        ((Achievement.source == db_course_id) | (Achievement.slug == db_course_id))
+    ).all()
     
     from application.models.user_certificate import UserCertificate
     existing_certs = {uc.achievement_id for uc in UserCertificate.query.filter_by(user_id=user_obj.id).all()}
@@ -815,9 +839,10 @@ def pass_chapter(user_id):
     if not course_id:
         return {"error": "course_id is required"}, 400
 
-    challenges = Challenge.query.filter_by(course_id=course_id).all()
+    db_course_id = NODE_MAP.get(course_id, course_id)
+    challenges = Challenge.query.filter_by(course_id=db_course_id).all()
     if not challenges:
-        return {"error": "No challenges found for this course_id"}, 404
+        return {"error": f"No challenges found for course_id: {db_course_id}"}, 404
 
     existing_logs = ChallengeLog.query.filter_by(user_id=user_obj.id).all()
     existing_slugs = {cl.challenge_slug for cl in existing_logs}
@@ -843,7 +868,10 @@ def pass_chapter(user_id):
         tx = DuckTransaction(user_id=user_obj.id, amount=total_ducks, reason=f"Admin Pass Chapter Override for {course_id}")
         db.session.add(tx)
         
-    certificate_achievements = Achievement.query.filter_by(type="certificate", source=course_id).all()
+    certificate_achievements = Achievement.query.filter(
+        (Achievement.type == "certificate") &
+        ((Achievement.source == db_course_id) | (Achievement.slug == db_course_id))
+    ).all()
     existing_certs = {uc.achievement_id for uc in UserCertificate.query.filter_by(user_id=user_obj.id).all()}
     
     for cert in certificate_achievements:
