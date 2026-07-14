@@ -23,6 +23,7 @@ import Landing from './pages/General/Landing';
 import CourseProgressTree from './pages/General/CourseProgressTree';
 import CourseLevelBreakdown from './pages/General/CourseLevelBreakdown';
 import Shop from './pages/General/Shop';
+import ProjectInfo from './pages/General/ProjectInfo';
 import EditProfile from './pages/User/EditProfile';
 import ManageProject from './pages/User/ManageProject';
 import AdminDashboard from './pages/Admin/AdminDashboard';
@@ -207,6 +208,14 @@ function App() {
           <ProtectedRoute>
             <Layout>
               <CourseLevelBreakdown />
+            </Layout>
+          </ProtectedRoute>
+        } />
+
+        <Route path="/project-info/:projectId" element={
+          <ProtectedRoute>
+            <Layout>
+              <ProjectInfo />
             </Layout>
           </ProtectedRoute>
         } />

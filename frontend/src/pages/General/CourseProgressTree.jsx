@@ -2,7 +2,7 @@ import React, { useLayoutEffect, useRef, useState, useMemo, useEffect } from 're
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
-import { ArrowLeft, Star, ZoomIn, ZoomOut, Maximize2, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Star, ZoomIn, ZoomOut, Maximize2, CheckCircle, Code } from 'lucide-react';
 import codecombatLogo from '../../assets/codecombat-logo.png';
 import ozariaLogo from '../../assets/ozaria-logo.png';
 import useAuthStore from '../../store/useAuthStore';
@@ -132,6 +132,7 @@ const CourseProgressTree = () => {
     const [fetchedProgressData, setFetchedProgressData] = useState(null);
     const [localPendingRequest, setLocalPendingRequest] = useState(null);
     const [zoom, setZoom] = useState(1.0);
+    const [chapterProjects, setChapterProjects] = useState({});
 
     const stateProgressData = location.state?.course_progress || location.state?.target?.course_progress;
 
@@ -155,6 +156,28 @@ const CourseProgressTree = () => {
                 .finally(() => setIsFetching(false));
         }
     }, [slug, stateProgressData, location.state]);
+
+    useEffect(() => {
+        client.get('/api/project-templates')
+            .then(res => {
+                const templates = res.data?.data?.templates || {};
+                const projectsMap = {};
+                
+                Object.values(templates).forEach(template => {
+                    if (!template.chapter) return;
+                    
+                    const node = ALIGNED_NODES.find(n => matchCourse(template.chapter, n.aliases));
+                    if (node) {
+                        if (!projectsMap[node.id]) projectsMap[node.id] = [];
+                        projectsMap[node.id].push(template);
+                    }
+                });
+                console.log('Fetched templates:', templates);
+                console.log('Mapped projects to nodes:', projectsMap);
+                setChapterProjects(projectsMap);
+            })
+            .catch(err => console.error("Failed to fetch project templates", err));
+    }, []);
 
     const userObj = location.state?.target || fetchedUser;
     const activeTrack = userObj?.active_track || 'cs';
@@ -514,7 +537,16 @@ const CourseProgressTree = () => {
                                     <CheckCircle size={16} />
                                 </button>
                             )}
-                            <div className={`skill-card ${node.domain} cursor-pointer`}>
+                            <div className={`skill-card ${node.domain} ${node.levels_total && node.levels_completed >= node.levels_total ? 'complete' : ''} cursor-pointer`}>
+                                <div 
+                                    className={`skill-card-bg-fill ${node.domain} ${node.levels_total && node.levels_completed >= node.levels_total ? 'complete' : ''}`}
+                                    style={{ width: `${node.levels_total ? Math.min((node.levels_completed / node.levels_total) * 100, 100) : (node.levels_completed > 0 ? 100 : 0)}%` }}
+                                ></div>
+                                {node.levels_total && node.levels_completed >= node.levels_total && (
+                                    <div className={`complete-badge ${node.domain}`} title="100% Complete">
+                                        <CheckCircle size={16} />
+                                    </div>
+                                )}
                                 <div className="skill-icon">
                                     <img
                                         src={node.domain === 'codecombat' ? codecombatLogo : ozariaLogo}
@@ -525,22 +557,35 @@ const CourseProgressTree = () => {
                                 <div className="skill-content">
                                     <h3>{node.title}</h3>
                                     {node.is_extra && <p className="domain-label">Extra Quest</p>}
-                                    <div className="course-progress-container">
-                                        <div className="course-progress-bar">
-                                            <div
-                                                className="course-progress-fill"
-                                                style={{ width: `${node.levels_total ? Math.min((node.levels_completed / node.levels_total) * 100, 100) : (node.levels_completed > 0 ? 100 : 0)}%` }}
-                                            ></div>
-                                        </div>
-                                        {node.levels_completed > 0 && (
+                                    {node.levels_completed > 0 && (
+                                        <div className="course-progress-container">
                                             <div className="course-progress-text">
-                                                <Star size={12} className="mr-4px align-middle mb-2px" />
-                                                {node.levels_completed} Levels Completed
+                                                {node.levels_completed}{node.levels_total ? `/${node.levels_total}` : ''} levels
                                             </div>
-                                        )}
-                                    </div>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
+                            
+                            {/* Project Nodes */}
+                            {chapterProjects[node.id] && chapterProjects[node.id].length > 0 && (
+                                <div className="chapter-projects-col">
+                                    {chapterProjects[node.id].map(project => (
+                                        <button
+                                            key={project.id}
+                                            className="project-node-btn"
+                                            title={project.name}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                navigate(`/project-info/${project.id}`, { state: { project } });
+                                            }}
+                                        >
+                                            <Code size={20} className="project-icon" />
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+
                             {!node.has_started && prereqs && (
                                 <div className="node-tooltip">
                                     Required: {prereqs}
