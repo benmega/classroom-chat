@@ -16,7 +16,9 @@ def list_templates():
     templates_info = {
         t.name: {
             "id": t.id,
-            "description": t.description
+            "description": t.description,
+            "chapter": t.chapter,
+            "name": t.name
         } for t in templates
     }
     return {"templates": templates_info}
@@ -37,7 +39,7 @@ def create_template():
     if existing:
         return {"error": "A template with this name already exists"}, 400
 
-    template = ProjectTemplate(name=name, description=description)
+    template = ProjectTemplate(name=name, description=description, chapter=data.get("chapter"))
     db.session.add(template)
     db.session.commit()
 
@@ -66,6 +68,8 @@ def update_template(template_id):
         template.name = name
     if description:
         template.description = description
+    if "chapter" in data:
+        template.chapter = data.get("chapter")
 
     db.session.commit()
 

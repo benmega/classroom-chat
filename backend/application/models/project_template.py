@@ -12,6 +12,9 @@ class ProjectTemplate(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False, unique=True)
     description = db.Column(db.Text, nullable=False)
+    # Chapter name/alias that maps this template to an ALIGNED_NODE in the progress tree.
+    # Nullable — templates without a chapter are hidden from the tree view.
+    chapter = db.Column(db.String(100), nullable=True)
 
     def __repr__(self):
         return f"<ProjectTemplate {self.name}>"
@@ -21,4 +24,5 @@ class ProjectTemplate(db.Model):
             "id": self.id,
             "name": self.name,
             "description": self.description,
+            "chapter": self.chapter,
         }
