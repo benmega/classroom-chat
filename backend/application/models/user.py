@@ -152,6 +152,8 @@ class User(db.Model):
             "user_id": self.id,
             "username": self._username,
             "nickname": self.nickname,
+            "bio": self.bio,
+            "profile_picture": self.profile_picture,
             "profile_picture_url": (
                 f"/user/profile_pictures/{self.profile_picture}"
                 if self.profile_picture

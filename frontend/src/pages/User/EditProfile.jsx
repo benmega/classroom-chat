@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Save, X, Lock, User as UserIcon, Eye, EyeOff, Copy } from 'lucide-react';
+import { Save, X, Eye, EyeOff, Copy } from 'lucide-react';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
 import useAuthStore from '../../store/useAuthStore';
@@ -37,6 +37,13 @@ const EditProfile = () => {
         }
     }, [user]);
 
+    const hasChanges = 
+        nickname !== (user?.nickname || user?.username || '') ||
+        bio !== (user?.bio || '') ||
+        password !== '' ||
+        confirmPassword !== '' ||
+        profilePic !== null;
+
     const handleFileChange = (e) => {
         const file = e.target.files[0];
         if (file) {
@@ -45,8 +52,21 @@ const EditProfile = () => {
         }
     };
 
+    const handleCancel = () => {
+        if (user) {
+            setNickname(user.nickname || user.username);
+            setBio(user.bio || '');
+            setPassword('');
+            setConfirmPassword('');
+            setProfilePic(null);
+            setPreviewUrl(user.profile_picture ? getApiUrl(`/user/profile_pictures/${user.profile_picture}`) : getApiUrl('/static/images/Default_pfp.jpg'));
+        }
+    };
+
     const handleSave = async (e) => {
         e.preventDefault();
+        
+        if (!hasChanges) return;
         
         if (password && password !== confirmPassword) {
             toast.error('Passwords do not match!');
@@ -73,8 +93,12 @@ const EditProfile = () => {
             await client.post('/user/edit_profile', payload);
             
             toast.success('Profile updated successfully!');
-            await checkAuth();
-            navigate('/profile');
+            
+            setPassword('');
+            setConfirmPassword('');
+            setProfilePic(null);
+            
+            await checkAuth(true);
         } catch (error) {
             console.error('Update error:', error);
             toast.error(error.response?.data?.error || 'Failed to update profile.');
@@ -98,7 +122,14 @@ const EditProfile = () => {
                                 />
                                 <label htmlFor="pfp-upload" className="upload-overlay">
                                     <span>Change Photo</span>
-                                    <input type="file" id="pfp-upload" hidden onChange={handleFileChange} accept="image/*" />
+                                    <input 
+                                        key={profilePic ? 'pfp-selected' : 'pfp-empty'}
+                                        type="file" 
+                                        id="pfp-upload" 
+                                        hidden 
+                                        onChange={handleFileChange} 
+                                        accept="image/*" 
+                                    />
                                 </label>
                             </div>
                         </section>
@@ -235,14 +266,16 @@ const EditProfile = () => {
                     </div>
                 </div>
 
-                <div className="settings-footer">
-                    <button type="button" onClick={() => navigate('/profile')} className="btn-secondary">
-                        <X size={18} /> Cancel
-                    </button>
-                    <button type="submit" disabled={isSaving} className="btn-primary">
-                        <Save size={18} /> {isSaving ? 'Saving...' : 'Save Changes'}
-                    </button>
-                </div>
+                {hasChanges && (
+                    <div className="settings-footer">
+                        <button type="button" onClick={handleCancel} className="btn-secondary">
+                            <X size={18} /> Cancel
+                        </button>
+                        <button type="submit" disabled={isSaving} className="btn-primary">
+                            <Save size={18} /> {isSaving ? 'Saving...' : 'Save Changes'}
+                        </button>
+                    </div>
+                )}
             </form>
         </div>
     );
