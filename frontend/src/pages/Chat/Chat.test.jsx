@@ -448,4 +448,18 @@ describe('Chat Component', () => {
 
     expect(mockHandleDeleteMessage).toHaveBeenCalledWith(10);
   });
+
+  // ─── Cooldown / Rate Limiting ─────────────────────────────────────────────
+
+  it('disables the textarea and Post button during cooldown', () => {
+    useFeedLogic.mockReturnValue(buildFeedLogic({ cooldown: 25, newMessage: 'Hello' }));
+    renderWithProviders(<Chat />);
+
+    const textarea = screen.getByPlaceholderText(/please wait 25s/i);
+    expect(textarea).toBeDisabled();
+
+    const postBtn = screen.getByRole('button', { name: /post message/i });
+    expect(postBtn).toBeDisabled();
+    expect(postBtn).toHaveTextContent(/wait \(25s\)/i);
+  });
 });

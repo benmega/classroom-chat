@@ -48,7 +48,8 @@ const Chat = () => {
     handleTextareaChange,
     onEmojiClick,
     handleDeleteMessage,
-    handleScroll
+    handleScroll,
+    cooldown
   } = useFeedLogic();
 
   if (loading) return (
@@ -135,10 +136,11 @@ const Chat = () => {
                   value={newMessage}
                   onChange={handleTextareaChange}
                   onKeyDown={handleTextareaKeyDown}
-                  placeholder={`What's on your mind, ${user?.nickname || user?.username || 'Student'}?`}
+                  placeholder={cooldown > 0 ? `Please wait ${cooldown}s...` : `What's on your mind, ${user?.nickname || user?.username || 'Student'}?`}
                   className="feed-input-field"
                   rows={2}
                   maxLength={user?.is_admin ? 4000 : 500}
+                  disabled={cooldown > 0}
                 />
                 
                 <div className="feed-toolbar">
@@ -152,7 +154,7 @@ const Chat = () => {
                         options={classrooms.filter(c => c.id !== 'global')}
                         selectedValues={targetClassrooms}
                         onChange={setTargetClassrooms}
-                        disabled={isGlobal}
+                        disabled={isGlobal || cooldown > 0}
                       />
                     )}
 
@@ -163,7 +165,7 @@ const Chat = () => {
                         options={users}
                         selectedValues={targetUsers}
                         onChange={setTargetUsers}
-                        disabled={isGlobal}
+                        disabled={isGlobal || cooldown > 0}
                       />
                     )}
 
@@ -173,6 +175,7 @@ const Chat = () => {
                           type="checkbox" 
                           checked={isGlobal} 
                           onChange={(e) => setIsGlobal(e.target.checked)}
+                          disabled={cooldown > 0}
                         />
                         <Globe size={16} /> Global
                       </label>
@@ -183,6 +186,7 @@ const Chat = () => {
                         type="checkbox" 
                         checked={targetLive} 
                         onChange={(e) => setTargetLive(e.target.checked)}
+                        disabled={cooldown > 0}
                       />
                       <Radio size={16} /> Live
                     </label>
@@ -195,6 +199,7 @@ const Chat = () => {
                           className="toolbar-btn"
                           onClick={() => setShowEmojiPicker(!showEmojiPicker)}
                           title="Add emoji"
+                          disabled={cooldown > 0}
                         >
                           <Smile size={20} color={showEmojiPicker ? "var(--primary-color)" : "inherit"} />
                         </button>
@@ -212,11 +217,11 @@ const Chat = () => {
                     </div>
                     <button
                       type="submit"
-                      disabled={!newMessage.trim()}
+                      disabled={!newMessage.trim() || cooldown > 0}
                       className="chat-send-btn"
                       aria-label="Post message"
                     >
-                      <Send size={18} /> Post
+                      <Send size={18} /> {cooldown > 0 ? `Wait (${cooldown}s)` : 'Post'}
                     </button>
                   </div>
                 </div>

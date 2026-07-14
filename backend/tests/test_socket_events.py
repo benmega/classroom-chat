@@ -144,3 +144,44 @@ def test_socket_send_message_admin_global(app, sample_admin, init_db):
     assert msg_received[0]["args"][0]["is_global"] is True
 
     socket_client.disconnect()
+
+def test_socket_send_message_rate_limit(app, sample_user, init_db):
+    flask_client = app.test_client()
+    with flask_client.session_transaction() as sess:
+        sess["user"] = sample_user.id
+
+    classroom = Classroom(id="cs_101", name="CS 101", language="Python", url="http://example.com")
+    classroom.users.append(sample_user)
+    db.session.add(classroom)
+
+    config = Configuration(message_sending_enabled=True)
+    db.session.add(config)
+    db.session.commit()
+
+    socket_client = socketio.test_client(app, flask_test_client=flask_client)
+    assert socket_client.is_connected()
+
+    # Emit first message - should succeed
+    socket_client.emit("send_message", {
+        "content": "First message",
+        "target_classrooms": [classroom.id]
+    })
+    received = socket_client.get_received()
+    assert any(e["name"] == "message_received" for e in received)
+
+    # Emit second message immediately - should fail due to rate limit
+    socket_client.emit("send_message", {
+        "content": "Second message",
+        "target_classrooms": [classroom.id]
+    })
+    received2 = socket_client.get_received()
+    # Check that it did NOT broadcast message_received
+    assert not any(e["name"] == "message_received" for e in received2)
+
+    # Verify second message not saved in DB
+    with app.app_context():
+        msg2 = Message.query.filter_by(content="Second message").first()
+        assert msg2 is None
+
+    socket_client.disconnect()
+

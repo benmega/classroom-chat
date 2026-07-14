@@ -132,6 +132,14 @@ def handle_send_message(data):
         if not getattr(user, 'can_chat', True):
             return {"success": False, "error": "You are currently muted"}
 
+        from .models.message import Message
+        last_message = Message.query.filter_by(user_id=user.id).order_by(Message.id.desc()).first()
+        if last_message:
+            time_elapsed = (datetime.utcnow() - last_message.created_at).total_seconds()
+            if time_elapsed < 30:
+                remaining = int(30 - time_elapsed)
+                return {"success": False, "error": f"Please wait {remaining} seconds before sending another message."}
+
         from .models.configuration import Configuration
         config = Configuration.query.first()
         if config and not config.message_sending_enabled:

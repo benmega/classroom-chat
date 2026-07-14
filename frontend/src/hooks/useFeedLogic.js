@@ -13,6 +13,15 @@ export const useFeedLogic = () => {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
+
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const interval = setInterval(() => {
+      setCooldown(prev => prev - 1);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [cooldown]);
 
   // Targeting states
   const [targetClassrooms, setTargetClassrooms] = useState([]);
@@ -167,7 +176,7 @@ export const useFeedLogic = () => {
 
   const handleSendMessage = async (e) => {
     if (e) e.preventDefault();
-    if (!newMessage.trim()) return;
+    if (!newMessage.trim() || cooldown > 0) return;
 
     const messageToSend = newMessage.trim();
 
@@ -175,6 +184,10 @@ export const useFeedLogic = () => {
     setShowEmojiPicker(false);
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
+    }
+
+    if (!user?.is_admin) {
+      setCooldown(30);
     }
 
     sendMessage({
@@ -187,6 +200,7 @@ export const useFeedLogic = () => {
       if (response && !response.success) {
         toast.error(response.error || 'Failed to send message.');
         setNewMessage(messageToSend);
+        setCooldown(0);
       }
     });
   };
@@ -286,6 +300,7 @@ export const useFeedLogic = () => {
     onEmojiClick,
     handleDeleteMessage,
     handleScroll,
-    handleLoadMore
+    handleLoadMore,
+    cooldown
   };
 };
