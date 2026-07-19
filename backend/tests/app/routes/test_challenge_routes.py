@@ -15,7 +15,6 @@ from application.models.challenge_log import ChallengeLog
 from application.models.configuration import Configuration
 
 
-# --- ROUTE TESTS ---
 
 
 def test_submit_challenge_get(
@@ -220,7 +219,6 @@ def test_submit_challenge_with_notes(
         assert response.status_code == 200
 
 
-# --- LOGIC & MODEL TESTS ---
 
 
 def test_detect_and_handle_challenge_url_valid(
@@ -628,19 +626,16 @@ def test_extract_challenge_details_domains():
     """Test extracting details from various domain URLs."""
     from application.routes.challenge_routes import _extract_challenge_details
 
-    # Test CodeCombat
     cc_url = "https://codecombat.com/play/level/dungeons-of-kithgard"
     cc_res = _extract_challenge_details(cc_url)
     assert cc_res["domain"] == "codecombat.com"
     assert cc_res["challenge_slug"] == "dungeons-of-kithgard"
 
-    # Test Ozaria
     oz_url = "https://www.ozaria.com/play/ozaria/level/chapter-1-sky-mountain"
     oz_res = _extract_challenge_details(oz_url)
     assert oz_res["domain"] == "www.ozaria.com"
     assert oz_res["challenge_slug"] == "chapter-1-sky-mountain"
 
-    # Test CodeCombat Junior
     junior_url = "https://codecombat.com/play/junior/level/step-change"
     junior_res = _extract_challenge_details(junior_url)
     assert junior_res["domain"] == "codecombat.com"
@@ -708,6 +703,5 @@ def test_submit_challenge_off_track(
     assert "you didn't get a duck" in res_json["message"]
     assert "Ask your teacher to change your track" in res_json["message"]
 
-    # Ensure duck balance did not change
     db.session.refresh(sample_user)
     assert sample_user.duck_balance == initial_ducks

@@ -51,7 +51,6 @@ def test_dev_login_missing_user_in_db(client, init_db):
 def test_dev_login_success_get_and_post(client, make_agent_users):
     admin, student, parent = make_agent_users
     with patch("application.routes.dev_login_routes._is_dev_environment", return_value=True):
-        # GET test
         resp = client.get("/api/dev-login?role=admin")
         assert resp.status_code == 200
         # Should render HTML template for GET /api/dev-login or /dev-login
@@ -64,6 +63,5 @@ def test_dev_login_success_get_and_post(client, make_agent_users):
         assert resp.json["role"] == "student"
         assert resp.json["user"]["username"] == "blossomstudent01"
 
-        # GET browser_dev_login /dev-login
         resp = client.get("/dev-login?role=parent")
         assert resp.status_code == 200

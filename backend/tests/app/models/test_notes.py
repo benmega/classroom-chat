@@ -7,11 +7,9 @@ def test_classroom_creation(sample_classroom):
 
 def test_course_instance_relationship(sample_course_instance, sample_classroom):
     """Test the one-to-many relationship between Classroom and CourseInstance."""
-    # Test linkage from the Instance side
     assert sample_course_instance.classroom_id == sample_classroom.id
     assert sample_course_instance.classroom == sample_classroom
 
-    # Test linkage from the Classroom side (backref)
     assert len(sample_classroom.course_assignments) == 1
     assert sample_classroom.course_assignments[0].id == sample_course_instance.id
 
@@ -31,5 +29,4 @@ def test_note_user_relationship(sample_note, sample_user):
     """Test that a note correctly resolves its user."""
     assert sample_note.user_id == sample_user.id
     assert sample_note.user == sample_user
-    # Ensure it appears in the user's list of notes
     assert sample_note in sample_user.notes

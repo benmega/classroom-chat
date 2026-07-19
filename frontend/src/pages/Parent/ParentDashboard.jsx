@@ -422,8 +422,13 @@ const ParentDashboard = () => {
                                             <div className="d-flex align-center" onClick={(e) => e.stopPropagation()}>
                                                 <div className="child-card-menu pos-rel top-auto right-auto">
                                                     <button
+                                                        type="button"
                                                         className="menu-btn"
-                                                        onClick={() => setOpenMenu(openMenu === child.id ? null : child.id)}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            e.preventDefault();
+                                                            setOpenMenu(openMenu === child.id ? null : child.id);
+                                                        }}
                                                         title="Options"
                                                     >
                                                         <MoreVertical size={16} />

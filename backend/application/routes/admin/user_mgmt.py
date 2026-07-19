@@ -558,22 +558,12 @@ def set_drawer():
 @admin_bp.route("/user/<int:user_id>", methods=["GET"])
 @admin_only
 def get_user_details(user_id):
-    from application.models.challenge_log import ChallengeLog
-    from sqlalchemy import func
 
     user = User.query.get(user_id)
     if not user:
         return jsonify({"error": "User not found"}), 404
 
-    counts = (
-        db.session.query(
-            ChallengeLog.domain, func.count(ChallengeLog.id)
-        )
-        .filter(ChallengeLog.user_id == user.id)
-        .group_by(ChallengeLog.domain)
-        .all()
-    )
-    precomputed = {(user._username, domain): count for domain, count in counts}
+
 
     d = user.to_dict()
     for field in ["password_hash", "salt", "ip_address"]:

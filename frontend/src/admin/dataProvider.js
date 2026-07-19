@@ -24,8 +24,6 @@ const dataProvider = {
     },
 
     getManyReference: async (resource, params) => {
-        // Simple implementation: just get all and filter locally for now
-        // A production implementation would use backend filtering
         const response = await client.get(`/api/admin/crud/${resource}`);
         const data = response.data.data.filter(item => item[params.target] === params.id);
         return {

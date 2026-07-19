@@ -65,7 +65,6 @@ def test_login_success(mock_get_claims, client, mock_boto_client, init_db):
     assert resp.json["success"] is True
     assert resp.json["role"] == "parent"
 
-    # Verify user was synced
     user = User.query.filter_by(email="parent@example.com").first()
     assert user is not None
     assert user.cognito_sub == "test-sub-123"

@@ -81,7 +81,6 @@ def test_login_success(client, init_db, sample_user):
     assert b"user" in response.data
     assert b"awarded_duck" in response.data
 
-    # Verify session was set
     with client.session_transaction() as sess:
         assert sess.get("user") == sample_user.id
         # The conversation_id might be set asynchronously or based on seeded data
@@ -129,11 +128,9 @@ def test_logout(client, init_db, sample_user):
     assert response.status_code == 200
     assert b"logged out" in response.data.lower()
 
-    # Verify session was cleared
     with client.session_transaction() as sess:
         assert "user" not in sess
 
-    # Verify user is offline
     db.session.refresh(sample_user)
     assert sample_user.is_online is False
 
@@ -156,7 +153,6 @@ def test_signup_success(client, init_db):
     assert response.status_code == 201
     assert b"Account created" in response.data
 
-    # Verify user was created
     user = User.query.filter_by(username=username.lower()).first()
     assert user is not None
     assert user.check_password("newpassword123")
@@ -220,7 +216,6 @@ def test_edit_profile_post(client, init_db, sample_user):
     assert response.status_code == 200
     assert b"Account settings updated successfully" in response.data
 
-    # Verify changes
     db.session.refresh(sample_user)
     assert len(sample_user.skills) == 2
     assert sample_user.ip_address == "127.0.0.1"
@@ -347,7 +342,6 @@ def test_edit_profile_picture_api(client, init_db, sample_user):
     with client.session_transaction() as sess:
         sess["user"] = sample_user.id
 
-    # Create a test image
     img = Image.new("RGB", (100, 100), color="red")
     img_io = BytesIO()
     img.save(img_io, "PNG")
@@ -395,7 +389,6 @@ def test_delete_profile_picture(client, init_db, sample_user):
 
 def test_profile_picture_endpoint(client, init_db):
     """Test serving profile pictures."""
-    # Mock send_from_directory since we don't have actual files
     with patch("application.routes.user_routes.send_from_directory") as mock_send:
         mock_send.return_value = "file_content"
         client.get("/user/profile_pictures/test.png")
@@ -547,7 +540,6 @@ def test_project_image_and_wallpaper_upload(client, init_db, sample_user):
     with client.session_transaction() as sess:
         sess["user"] = sample_user.id
 
-    # 1. Project Image Upload
     data = {
         "project_image": (BytesIO(img_bytes.getvalue()), "image.png")
     }
@@ -555,7 +547,6 @@ def test_project_image_and_wallpaper_upload(client, init_db, sample_user):
     assert resp.status_code == 200
     assert "filename" in resp.json["data"]
 
-    # 2. Profile Wallpaper Upload
     # Try unauthorized first (user does not have perk)
     resp_wall = client.post("/user/api/profile-wallpaper", data={"profile_wallpaper": (BytesIO(img_bytes.getvalue()), "wall.png")}, content_type="multipart/form-data")
     assert resp_wall.status_code == 403

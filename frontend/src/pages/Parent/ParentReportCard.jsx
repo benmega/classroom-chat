@@ -301,7 +301,7 @@ const ParentReportCard = () => {
                                 </span>
                                 {reportData.pending_request || localPendingRequest ? (
                                     <span className="pending-badge-parent" style={{ padding: '0.25rem 0.75rem', borderRadius: '8px', fontSize: '0.8rem', background: 'rgba(245, 158, 11, 0.15)', color: '#f59e0b', border: '1px solid rgba(245, 158, 11, 0.3)' }}>
-                                        ⏳ Change Request Pending: {(localPendingRequest?.requested_track || reportData.pending_request?.requested_track).toUpperCase()}
+                                        ⏳ Change Request Pending: {(localPendingRequest?.requested_track || reportData.pending_request?.requested_track)?.toUpperCase()}
                                     </span>
                                 ) : (
                                     <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>

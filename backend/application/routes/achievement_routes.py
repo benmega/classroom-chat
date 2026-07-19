@@ -1,4 +1,6 @@
 import os
+import subprocess
+import sys
 import re
 from datetime import datetime
 
@@ -180,9 +182,6 @@ def add_achievement():
 
         # Trigger sprite sheet rebuild
         try:
-            import subprocess
-            import sys
-
             tools_dir = os.path.join(current_app.config["BASE_DIR"], "backend", "tools")
             script_path = os.path.join(tools_dir, "make_sprite_sheet.py")
             subprocess.run(
@@ -352,6 +351,9 @@ def mark_reviewed(cert_id):
     cert.reviewed_at = datetime.utcnow()
     db.session.commit()
 
+    from application.services.achievement_engine import evaluate_user
+    evaluate_user(cert.user, force=True)
+
     msg = "Certificate marked as reviewed."
 
     if request.is_json or request.headers.get("X-Requested-With") == "XMLHttpRequest":
@@ -385,10 +387,16 @@ def download_certificate(cert_id):
 def mark_all_reviewed():
     certs = db.session.query(UserCertificate).filter_by(reviewed=False).all()
     now = datetime.utcnow()
+    users_to_evaluate = set()
     for cert in certs:
         cert.reviewed = True
         cert.reviewed_at = now
+        users_to_evaluate.add(cert.user)
     db.session.commit()
+
+    from application.services.achievement_engine import evaluate_user
+    for user in users_to_evaluate:
+        evaluate_user(user, force=True)
 
     msg = f"{len(certs)} certificates marked as reviewed."
 

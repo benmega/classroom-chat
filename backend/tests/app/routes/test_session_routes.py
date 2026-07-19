@@ -20,12 +20,10 @@ def test_heartbeat_unauthenticated(client):
 @patch("application.routes.session_routes.get_cloudwatch_client")
 @patch("application.routes.session_routes.requests.get")
 def test_heartbeat_authenticated(mock_get, mock_cw_client, logged_in_client_with_session):
-    # Mock EC2 metadata response
     mock_resp = MagicMock()
     mock_resp.json.return_value = {"instanceId": "i-test12345", "region": "us-west-2"}
     mock_get.return_value = mock_resp
 
-    # Mock CloudWatch client
     mock_cw = MagicMock()
     mock_cw_client.return_value = mock_cw
 
@@ -34,7 +32,6 @@ def test_heartbeat_authenticated(mock_get, mock_cw_client, logged_in_client_with
     assert resp.json["success"] is True
     assert "timestamp" in resp.json
 
-    # Check CloudWatch put_metric_data was called
     mock_cw.put_metric_data.assert_called_once()
 
 @patch("application.routes.session_routes.get_cloudwatch_client")

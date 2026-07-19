@@ -3,9 +3,7 @@ import os
 
 import requests
 
-# --------------------------------------------------------------------------------
 # 1. CONFIGURATION
-# --------------------------------------------------------------------------------
 # Replace with your actual teacher/owner ID
 OWNER_ID = "62d23d975dafd60025f8c520"
 
@@ -28,9 +26,7 @@ HEADERS = {
 }
 
 
-# --------------------------------------------------------------------------------
 # 2. HELPER FUNCTIONS
-# --------------------------------------------------------------------------------
 def fetch_json(url, description, cookie_string):
     print(f"Fetching {description}...")
 
@@ -47,22 +43,18 @@ def fetch_json(url, description, cookie_string):
         return []
 
 
-# --------------------------------------------------------------------------------
 # 3. MAIN EXECUTION
-# --------------------------------------------------------------------------------
 def process_domain(domain):
     print("\n========================================================")
     print(f"Processing '{domain}'...")
     print("========================================================")
 
-    # 1. Grab the manual cookie string from our config dictionary
     cookie_string = MANUAL_COOKIES.get(domain, "")
 
     if not cookie_string or "YOUR_" in cookie_string:
         print(f"  -> Skipping {domain}: No manual cookie provided in config.")
         return []
 
-    # 2. Fetch Classrooms dynamically via Teacher's Course Instances
     url_teacher_instances = f"https://{domain}/db/course_instance?ownerID={OWNER_ID}"
     teacher_instances = fetch_json(url_teacher_instances, "Teacher Class List", cookie_string)
 
@@ -80,12 +72,10 @@ def process_domain(domain):
 
     all_rows = []
 
-    # 3. Loop through every dynamically found classroom ID
     for idx, cid in enumerate(classroom_ids, 1):
         print(f"\n--- Classroom {idx}/{len(classroom_ids)}: {cid} ---")
         url = f"https://{domain}/db/course_instance?classroomID={cid}"
 
-        # Fetch data from API
         instances_data = fetch_json(url, "Course Instances", cookie_string)
 
         if not instances_data:
@@ -107,12 +97,10 @@ def process_domain(domain):
 def main():
     total_rows = []
 
-    # 1. Iterate over both domains
     for domain in DOMAINS:
         domain_rows = process_domain(domain)
         total_rows.extend(domain_rows)
 
-    # 2. Save all collected data to a single CSV
     if total_rows:
         os.makedirs(os.path.dirname(FILENAME), exist_ok=True)
 

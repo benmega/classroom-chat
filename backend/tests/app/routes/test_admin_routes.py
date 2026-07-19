@@ -30,7 +30,6 @@ def login_as_admin(client, admin_user):
 
 def test_get_users_requires_auth(client, sample_user):
     """Test that the users endpoint requires authentication."""
-    # Ensure no session exists
     client.delete_cookie("session")
 
     response = client.get("/api/admin/users", headers={"Accept": "application/json"})
@@ -48,7 +47,6 @@ def test_get_users_with_auth(client, sample_admin, sample_users):
     user_list = data.get("users", data)
     assert len(user_list) >= 2  # At least the sample users we created
 
-    # Verify the returned data contains the expected usernames
     usernames = [user["username"] for user in user_list]
     for user in sample_users:
         assert user.username in usernames
@@ -77,7 +75,6 @@ def test_verify_password_success(client, test_app, sample_admin):
 
     login_as_admin(client, sample_admin)
 
-    # Test with correct password using the logged-in admin
     with patch(
         "application.routes.admin_routes.admin_pass",
         TestingConfig.ADMIN_PASSWORD,
@@ -97,7 +94,6 @@ def test_verify_password_success(client, test_app, sample_admin):
     data = json.loads(response.data)
     assert data["success"] is True
 
-    # Verify username was updated
     with test_app.app_context():
         updated_user = db.session.get(User, sample_admin.id)
         assert updated_user.username == "verified_username"
@@ -167,7 +163,7 @@ def test_clear_partial_history(client, test_app, init_db, sample_admin):
     """Test clearing partial conversation history."""
     login_as_admin(client, sample_admin)
 
-    pass # test deprecated
+    pass
 
 
 def test_add_banned_word(client, sample_admin, test_app):
@@ -188,7 +184,6 @@ def test_add_banned_word(client, sample_admin, test_app):
         assert banned_word is not None
         assert banned_word.reason == "testing purposes"
 
-        # Test adding duplicate word
         response = client.post(
             "/api/admin/add-banned-word", data={"word": "testbadword"}
         )
@@ -202,7 +197,7 @@ def test_strike_message(client, sample_admin, sample_message):
     """Test striking a message."""
     login_as_admin(client, sample_admin)
 
-    pass # test deprecated
+    pass
 
 
 def test_adjust_ducks(client, sample_admin, sample_user, test_app):
@@ -297,13 +292,11 @@ def test_admin_transactions(client, test_app, sample_admin, sample_user):
         # Clear existing transactions if any to start fresh
         DuckTransaction.query.delete()
         
-        # Add a couple of sample transactions
         tx1 = DuckTransaction(user_id=sample_user.id, amount=10.0, reason="Earned daily bonus")
         tx2 = DuckTransaction(user_id=sample_user.id, amount=-5.0, reason="Spent on emoji pack")
         db.session.add_all([tx1, tx2])
         db.session.commit()
 
-        # Test all transactions
         response = client.get("/api/admin/transactions")
         assert response.status_code == 200
         data = json.loads(response.data)
@@ -311,7 +304,6 @@ def test_admin_transactions(client, test_app, sample_admin, sample_user):
         txs = data["data"]["transactions"]
         assert len(txs) == 2
 
-        # Test earned transactions
         response = client.get("/api/admin/transactions?type=earned")
         assert response.status_code == 200
         data = json.loads(response.data)
@@ -319,7 +311,6 @@ def test_admin_transactions(client, test_app, sample_admin, sample_user):
         assert len(txs) == 1
         assert all(t["amount"] > 0 for t in txs)
 
-        # Test spent transactions
         response = client.get("/api/admin/transactions?type=spent")
         assert response.status_code == 200
         data = json.loads(response.data)
@@ -327,7 +318,6 @@ def test_admin_transactions(client, test_app, sample_admin, sample_user):
         assert len(txs) == 1
         assert all(t["amount"] < 0 for t in txs)
 
-        # Test search query
         response = client.get("/api/admin/transactions?search=emoji")
         assert response.status_code == 200
         data = json.loads(response.data)
@@ -379,33 +369,27 @@ def test_admin_transactions_route(client, test_app, sample_user, sample_admin):
     """Test that the /transactions route works, filters correctly, and requires admin."""
     from application.models.duck_transaction import DuckTransaction
 
-    # 1. Test requires auth
     response = client.get("/api/admin/transactions")
     assert response.status_code == 401
 
-    # 2. Test works with admin auth
     login_as_admin(client, sample_admin)
 
     with test_app.app_context():
-        # Add a couple of dummy transactions
         tx1 = DuckTransaction(user_id=sample_user.id, amount=10.0, reason="Test Earned")
         tx2 = DuckTransaction(user_id=sample_user.id, amount=-5.0, reason="Test Spent")
         db.session.add_all([tx1, tx2])
         db.session.commit()
 
-        # Fetch all
         resp = client.get("/api/admin/transactions")
         assert resp.status_code == 200
         data = resp.get_json()["data"]
         assert len(data["transactions"]) >= 2
 
-        # Fetch earned only
         resp_earned = client.get("/api/admin/transactions?type=earned")
         assert resp_earned.status_code == 200
         data_earned = resp_earned.get_json()["data"]
         assert all(t["amount"] > 0 for t in data_earned["transactions"])
 
-        # Fetch spent only
         resp_spent = client.get("/api/admin/transactions?type=spent")
         assert resp_spent.status_code == 200
         data_spent = resp_spent.get_json()["data"]
@@ -421,7 +405,6 @@ def test_admin_transactions_route(client, test_app, sample_user, sample_admin):
 
 def test_adjust_packets(client, sample_admin, sample_user, test_app):
     """Test adjusting a user's packets."""
-    # Test non-admin access (unauthenticated)
     client.delete_cookie("session")
     resp_unauth = client.post("/api/admin/adjust_packets", data={"username": sample_user.username, "amount": 10})
     assert resp_unauth.status_code == 401
@@ -432,7 +415,6 @@ def test_adjust_packets(client, sample_admin, sample_user, test_app):
     with test_app.app_context():
         initial_packets = sample_user.packets
 
-        # Test positive amount
         resp_positive = client.post("/api/admin/adjust_packets", data={"username": sample_user.username, "amount": 10})
         data_pos = json.loads(resp_positive.data)
         assert resp_positive.status_code == 200
@@ -441,7 +423,6 @@ def test_adjust_packets(client, sample_admin, sample_user, test_app):
         updated_user = db.session.get(User, sample_user.id)
         assert updated_user.packets == initial_packets + 10
 
-        # Test negative amount
         resp_negative = client.post("/api/admin/adjust_packets", data={"username": sample_user.username, "amount": -5})
         data_neg = json.loads(resp_negative.data)
         assert resp_negative.status_code == 200
@@ -450,15 +431,12 @@ def test_adjust_packets(client, sample_admin, sample_user, test_app):
         updated_user_neg = db.session.get(User, sample_user.id)
         assert updated_user_neg.packets == initial_packets + 5
 
-        # Test missing fields (no username)
         resp_missing = client.post("/api/admin/adjust_packets", data={"amount": 10})
         assert resp_missing.status_code == 400
 
-        # Test missing fields (no amount)
         resp_missing2 = client.post("/api/admin/adjust_packets", data={"username": sample_user.username})
         assert resp_missing2.status_code == 400
         
-        # Test user not found
         resp_not_found = client.post("/api/admin/adjust_packets", data={"username": "nonexistent_user", "amount": 10})
         assert resp_not_found.status_code == 404
 
@@ -467,16 +445,13 @@ def test_project_template_crud_admin(client, sample_admin, test_app):
     """Test CRUD operations on ProjectTemplate resource as an admin."""
     from application.models.project_template import ProjectTemplate
 
-    # 1. Unauthenticated access to GET list should be blocked (401)
     client.delete_cookie("session")
     resp = client.get("/api/project-templates", headers={"Accept": "application/json"})
     assert resp.status_code == 401
 
-    # 2. Login as admin
     login_as_admin(client, sample_admin)
 
     with test_app.app_context():
-        # 3. Read (List) - should return seeded templates
         resp = client.get("/api/project-templates")
         assert resp.status_code == 200
         data = resp.get_json()
@@ -485,7 +460,6 @@ def test_project_template_crud_admin(client, sample_admin, test_app):
         templates_map = data["data"]["templates"]
         assert len(templates_map) >= 5
         
-        # 4. Create
         payload = {
             "name": "New Custom Test Template",
             "description": "Test description for new custom template."
@@ -499,7 +473,6 @@ def test_project_template_crud_admin(client, sample_admin, test_app):
         assert new_template["name"] == "New Custom Test Template"
         new_id = new_template["id"]
 
-        # 5. Update
         update_payload = {
             "description": "Updated custom description."
         }
@@ -510,11 +483,9 @@ def test_project_template_crud_admin(client, sample_admin, test_app):
         assert resp_update.status_code == 200
         assert resp_update.get_json()["data"]["template"]["description"] == "Updated custom description."
 
-        # 6. Delete
         resp_delete = client.delete(f"/api/project-templates/{new_id}")
         assert resp_delete.status_code == 200
         
-        # Verify deleted
         assert db.session.get(ProjectTemplate, new_id) is None
 
 
@@ -526,7 +497,6 @@ def test_project_review_packets(client, sample_admin, sample_user, test_app):
     login_as_admin(client, sample_admin)
 
     with test_app.app_context():
-        # Create a test project for sample_user
         project = Project(
             name="Test Project",
             description="A test project description",
@@ -536,11 +506,9 @@ def test_project_review_packets(client, sample_admin, sample_user, test_app):
         db.session.commit()
         project_id = project.id
 
-        # Verify initial state
         initial_packets = sample_user.packets
         assert project.packets_awarded == 0.0
 
-        # 1. Approve project with custom packet_reward
         resp_approve = client.post(
             f"/api/admin/handle-project-review/{project_id}",
             json={
@@ -553,7 +521,6 @@ def test_project_review_packets(client, sample_admin, sample_user, test_app):
         data_approve = resp_approve.get_json()
         assert data_approve["status"] == "success"
 
-        # Check DB states
         db.session.expire_all()
         updated_project = db.session.get(Project, project_id)
         updated_user = db.session.get(User, sample_user.id)
@@ -561,7 +528,6 @@ def test_project_review_packets(client, sample_admin, sample_user, test_app):
         assert updated_project.packets_awarded == 0.015
         assert updated_user.packets == initial_packets + 0.015
 
-        # 2. Re-approve with a different packet_reward (differential calculation check)
         resp_reapprove = client.post(
             f"/api/admin/handle-project-review/{project_id}",
             json={
@@ -579,7 +545,6 @@ def test_project_review_packets(client, sample_admin, sample_user, test_app):
         assert updated_project2.packets_awarded == 0.025
         assert updated_user2.packets == initial_packets + 0.025
 
-        # 3. Reject project (should retract packets)
         resp_reject = client.post(
             f"/api/admin/handle-project-review/{project_id}",
             json={
@@ -602,7 +567,6 @@ def test_parent_child_endpoints(client, test_app, sample_admin):
 
     login_as_admin(client, sample_admin)
 
-    # 1. Create a sample parent and student inside app context
     with client.application.app_context():
         parent = User(username="testparent", role="parent", password_hash="test")
         student = User(username="teststudent", role="student", password_hash="test")
@@ -612,12 +576,10 @@ def test_parent_child_endpoints(client, test_app, sample_admin):
         parent_id = parent.id
         student_id = student.id
 
-    # 2. Establish link using post endpoint
     link_resp = client.post(f"/api/admin/parents/{parent_id}/link/{student_id}")
     assert link_resp.status_code == 200
     assert link_resp.get_json()["success"] is True
 
-    # 3. Test get_student_parents endpoint
     parents_resp = client.get(f"/api/admin/students/{student_id}/parents")
     assert parents_resp.status_code == 200
     p_data = parents_resp.get_json()
@@ -625,12 +587,10 @@ def test_parent_child_endpoints(client, test_app, sample_admin):
     assert len(p_data["parents"]) == 1
     assert p_data["parents"][0]["username"] == "testparent"
 
-    # 4. Test get_parent_child_connections endpoint
     conn_resp = client.get("/api/admin/parents/connections")
     assert conn_resp.status_code == 200
     c_data = conn_resp.get_json()
     assert c_data["success"] is True
-    # Verify that the test connection is in the list
     found = False
     for conn in c_data["connections"]:
         if conn["parent"]["id"] == parent_id and conn["student"]["id"] == student_id:
@@ -638,12 +598,10 @@ def test_parent_child_endpoints(client, test_app, sample_admin):
             break
     assert found is True
 
-    # 5. Unlink using post endpoint
     unlink_resp = client.post(f"/api/admin/parents/{parent_id}/unlink/{student_id}")
     assert unlink_resp.status_code == 200
     assert unlink_resp.get_json()["success"] is True
 
-    # 6. Verify they are unlinked
     parents_resp2 = client.get(f"/api/admin/students/{student_id}/parents")
     assert parents_resp2.status_code == 200
     assert len(parents_resp2.get_json()["parents"]) == 0
@@ -658,33 +616,27 @@ def test_reject_user(client, test_app, sample_admin):
 
     login_as_admin(client, sample_admin)
 
-    # 1. Create a user with related data
     with client.application.app_context():
         user = User(username="rejectme", password_hash="testpass")
         db.session.add(user)
         db.session.commit()
         user_id = user.id
 
-        # Add DuckTransaction
         tx = DuckTransaction(user_id=user_id, amount=10.0, reason="Test Reject Cascade")
         db.session.add(tx)
 
-        # Add Message
         msg = Message(user_id=user_id, content="Test message by rejected user")
         db.session.add(msg)
 
-        # Add ConnectionAttempt
         attempt = ConnectionAttempt(parent_id=user_id, code_attempted="XYZ123", success=False)
         db.session.add(attempt)
 
         db.session.commit()
 
-    # 2. Reject/delete the user
     response = client.post(f"/api/admin/reject_user/{user_id}")
     assert response.status_code == 200
     assert response.get_json()["status"] == "success"
 
-    # 3. Verify user and all cascading relations are deleted
     with client.application.app_context():
         assert db.session.get(User, user_id) is None
         assert DuckTransaction.query.filter_by(user_id=user_id).first() is None
@@ -692,5 +644,184 @@ def test_reject_user(client, test_app, sample_admin):
         assert ConnectionAttempt.query.filter_by(parent_id=user_id).first() is None
 
 
+def test_dashboard_extended(client, sample_admin, test_app, sample_user):
+    """Test dashboard with various parameters for coverage."""
+    from application.models.duck_transaction import DuckTransaction
+    
+    login_as_admin(client, sample_admin)
+    
+    with test_app.app_context():
+        tx = DuckTransaction(user_id=sample_user.id, amount=15.0, reason="Test Earned Dashboard")
+        db.session.add(tx)
+        
+        # Spent transaction
+        tx2 = DuckTransaction(user_id=sample_user.id, amount=-5.0, reason="Test Spent Dashboard")
+        db.session.add(tx2)
+        db.session.commit()
+        
+        resp = client.get("/api/admin/dashboard?days=all&tz_offset=120")
+        assert resp.status_code == 200
+        
+        resp2 = client.get("/api/admin/dashboard?days=invalid")
+        assert resp2.status_code == 200
+        
 
-
+def test_admin_stats(client, sample_admin, test_app):
+    """Test the /stats route."""
+    login_as_admin(client, sample_admin)
+    
+    resp = client.get("/api/admin/stats")
+    assert resp.status_code == 200
+    data = resp.get_json()
+    assert "user_count" in data["data"]
+    assert "total_ducks" in data["data"]
+
+
+def test_admin_logs(client, sample_admin, test_app):
+    """Test the /logs route."""
+    import os
+    login_as_admin(client, sample_admin)
+    
+    log_path = os.path.join(test_app.config.get("INSTANCE_FOLDER"), "app.log")
+    
+    os.makedirs(os.path.dirname(log_path), exist_ok=True)
+    with open(log_path, "w") as f:
+        f.write("Line 1\nLine 2\n")
+        
+    resp = client.get("/api/admin/logs")
+    assert resp.status_code == 200
+    assert "Line 1" in resp.get_json()["data"]["logs"]
+    try:
+        os.remove(log_path)
+    except PermissionError:
+        pass
+    
+    test_app.config["INSTANCE_FOLDER"] = "/tmp/does_not_exist_log_path"
+    resp2 = client.get("/api/admin/logs")
+    assert resp2.status_code == 200
+    assert "Log file not found." in resp2.get_json()["data"]["logs"]
+
+
+def test_export_transactions(client, sample_admin, test_app, sample_user):
+    """Test exporting transactions to CSV."""
+    from application.models.duck_transaction import DuckTransaction
+    
+    login_as_admin(client, sample_admin)
+    
+    with test_app.app_context():
+        tx = DuckTransaction(user_id=sample_user.id, amount=20.0, reason="Export Test")
+        db.session.add(tx)
+        db.session.commit()
+    
+    resp = client.get("/api/admin/export/transactions")
+    assert resp.status_code == 200
+    assert resp.headers["Content-Type"].startswith("text/csv")
+    
+    data = resp.data.decode("utf-8")
+    assert "ID,User,Amount,Reason,Timestamp" in data
+    assert "Export Test" in data
+
+
+def test_manage_projects(client, sample_admin, sample_user, test_app):
+    """Test the /manage-projects endpoint."""
+    from application.models.project import Project
+    
+    login_as_admin(client, sample_admin)
+    
+    with test_app.app_context():
+        # Pending project
+        p1 = Project(name="Pending P", user_id=sample_user.id)
+        # Approved project
+        p2 = Project(name="Approved P", user_id=sample_user.id, teacher_comment="Good")
+        db.session.add_all([p1, p2])
+        db.session.commit()
+    
+    resp = client.get("/api/admin/manage-projects?filter=pending")
+    assert resp.status_code == 200
+    data = resp.get_json()["data"]
+    assert data["pending_count"] >= 1
+    assert data["total_count"] >= 2
+    assert any(p["name"] == "Pending P" for p in data["projects"])
+    assert all(not p.get("teacher_comment") for p in data["projects"])
+    
+    resp2 = client.get("/api/admin/manage-projects?filter=all")
+    assert resp2.status_code == 200
+    assert len(resp2.get_json()["data"]["projects"]) >= 2
+
+
+def test_handle_project_review_errors(client, sample_admin, sample_user, test_app):
+    """Test error handling in handle-project-review."""
+    from application.models.project import Project
+    login_as_admin(client, sample_admin)
+    
+    with test_app.app_context():
+        project = Project(name="Test Error P", user_id=sample_user.id)
+        db.session.add(project)
+        db.session.commit()
+        p_id = project.id
+        
+    resp = client.post(f"/api/admin/handle-project-review/{p_id}", json={
+        "action": "unknown"
+    })
+    assert resp.status_code == 400
+    
+    resp2 = client.post(f"/api/admin/handle-project-review/{p_id}", json={
+        "action": "approve",
+        "packet_reward": "invalid_number"
+    })
+    assert resp2.status_code == 200  # Defaults to 0.006
+
+
+def test_assign_project(client, sample_admin, sample_user, test_app):
+    """Test assigning a project."""
+    from application.models.project import Project
+    login_as_admin(client, sample_admin)
+    
+    resp = client.post("/api/admin/assign-project", json={})
+    assert resp.status_code == 400
+    
+    # Valid payload
+    resp2 = client.post("/api/admin/assign-project", json={
+        "user_id": sample_user.id,
+        "name": "Assigned Project",
+        "description": "Desc"
+    })
+    assert resp2.status_code == 200
+    
+    with test_app.app_context():
+        p = Project.query.filter_by(name="Assigned Project").first()
+        assert p is not None
+        assert p.description == "Desc"
+
+
+def test_standard_project_crud(client, sample_admin, test_app):
+    """Test CRUD operations for standard projects."""
+    from application.models.standard_project import StandardProject
+    login_as_admin(client, sample_admin)
+    
+    resp = client.post("/api/admin/standard-projects", json={"name": "Test Standard", "description": "Desc"})
+    assert resp.status_code == 200
+    data = resp.get_json()
+    assert data["status"] == "success"
+    p_id = data["data"]["id"]
+    
+    resp_err = client.post("/api/admin/standard-projects", json={"description": "Desc"})
+    assert resp_err.status_code == 400
+    
+    resp_get = client.get("/api/admin/standard-projects")
+    assert resp_get.status_code == 200
+    assert any(p["name"] == "Test Standard" for p in resp_get.get_json()["data"]["standard_projects"])
+    
+    resp_put = client.put(f"/api/admin/standard-projects/{p_id}", json={"name": "Updated Standard", "link": "http://link.com"})
+    assert resp_put.status_code == 200
+    
+    resp_put_err = client.put(f"/api/admin/standard-projects/{p_id}", json={"description": "Desc"})
+    assert resp_put_err.status_code == 400
+    
+    resp_del = client.delete(f"/api/admin/standard-projects/{p_id}")
+    assert resp_del.status_code == 200
+    
+    with test_app.app_context():
+        assert db.session.get(StandardProject, p_id) is None
+
+

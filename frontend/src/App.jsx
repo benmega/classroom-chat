@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { Loader2 } from 'lucide-react';
@@ -10,51 +10,71 @@ import { THEME } from './utils/theme';
 import Layout from './components/Layout/Layout';
 import AdminLayout from './components/Layout/AdminLayout';
 
+// --- Core pages: eagerly loaded (needed on first render for all users) ---
 import Login from './pages/Auth/Login';
 import Signup from './pages/Auth/Signup';
 import ForgotPassword from './pages/Auth/ForgotPassword';
 import ResetPassword from './pages/Auth/ResetPassword';
-import Profile from './pages/Profile/index';
-import Chat from './pages/Chat/Chat';
-import Achievements from './pages/General/Achievements';
-import BitShift from './pages/General/BitShift';
-import SubmitWork from './pages/General/SubmitWork';
 import Landing from './pages/General/Landing';
-import CourseProgressTree from './pages/General/CourseProgressTree';
-import CourseLevelBreakdown from './pages/General/CourseLevelBreakdown';
-import Shop from './pages/General/Shop';
-import ProjectInfo from './pages/General/ProjectInfo';
-import EditProfile from './pages/User/EditProfile';
-import ManageProject from './pages/User/ManageProject';
-import AdminDashboard from './pages/Admin/AdminDashboard';
-import AdminProjects from './pages/Admin/AdminProjects';
-import AdminAssignProject from './pages/Admin/AdminAssignProject';
-import AdminStandardProjects from './pages/Admin/AdminStandardProjects';
-import AdminCertificates from './pages/Admin/AdminCertificates';
-import AdminAchievements from './pages/Admin/AdminAchievements';
-import AdminChallenges from './pages/Admin/AdminChallenges';
-import AdminDocuments from './pages/Admin/AdminDocuments';
-import Users from './pages/Admin/Users';
-import Classes from './pages/Admin/Classes';
-import AdminUserDashboard from './pages/Admin/AdminUserDashboard';
-import AdminClassDashboard from './pages/Admin/AdminClassDashboard';
-import Analytics from './pages/Admin/Analytics';
-import PendingTrades from './pages/Admin/PendingTrades';
-import PendingUsers from './pages/Admin/PendingUsers';
-import AdvancedPanel from './pages/Admin/AdvancedPanel';
-import AdminCourseInstances from './pages/Admin/AdminCourseInstances';
-import DuckTransactions from './pages/Admin/DuckTransactions';
-import AdminStudentActivity from './pages/Admin/AdminStudentActivity';
-import ParentDashboard from './pages/Parent/ParentDashboard';
-import ParentReportCard from './pages/Parent/ParentReportCard';
-import ConnectChild from './pages/Parent/ConnectChild';
-
-import AdminCRUD from './admin/AdminPanel';
+import Chat from './pages/Chat/Chat';
+import Profile from './pages/Profile/index';
 import AccessDenied from './pages/Error/AccessDenied';
 import ServerOffline from './pages/Error/ServerOffline';
+
+// --- Student pages: lazily loaded ---
+const Achievements = React.lazy(() => import('./pages/General/Achievements'));
+const BitShift = React.lazy(() => import('./pages/General/BitShift'));
+const SubmitWork = React.lazy(() => import('./pages/General/SubmitWork'));
+const CourseProgressTree = React.lazy(() => import('./pages/General/CourseProgressTree'));
+const CourseLevelBreakdown = React.lazy(() => import('./pages/General/CourseLevelBreakdown'));
+const Shop = React.lazy(() => import('./pages/General/Shop'));
+const ProjectInfo = React.lazy(() => import('./pages/General/ProjectInfo'));
+const EditProfile = React.lazy(() => import('./pages/User/EditProfile'));
+const ManageProject = React.lazy(() => import('./pages/User/ManageProject'));
+
+// --- Admin pages: lazily loaded (students never need these) ---
+const AdminDashboard = React.lazy(() => import('./pages/Admin/AdminDashboard'));
+const AdminProjects = React.lazy(() => import('./pages/Admin/AdminProjects'));
+const AdminAssignProject = React.lazy(() => import('./pages/Admin/AdminAssignProject'));
+const AdminStandardProjects = React.lazy(() => import('./pages/Admin/AdminStandardProjects'));
+const AdminCertificates = React.lazy(() => import('./pages/Admin/AdminCertificates'));
+const AdminAchievements = React.lazy(() => import('./pages/Admin/AdminAchievements'));
+const AdminChallenges = React.lazy(() => import('./pages/Admin/AdminChallenges'));
+const AdminDocuments = React.lazy(() => import('./pages/Admin/AdminDocuments'));
+const Users = React.lazy(() => import('./pages/Admin/Users'));
+const Classes = React.lazy(() => import('./pages/Admin/Classes'));
+const AdminUserDashboard = React.lazy(() => import('./pages/Admin/AdminUserDashboard'));
+const AdminClassDashboard = React.lazy(() => import('./pages/Admin/AdminClassDashboard'));
+const Analytics = React.lazy(() => import('./pages/Admin/Analytics'));
+const PendingTrades = React.lazy(() => import('./pages/Admin/PendingTrades'));
+const PendingUsers = React.lazy(() => import('./pages/Admin/PendingUsers'));
+const AdvancedPanel = React.lazy(() => import('./pages/Admin/AdvancedPanel'));
+const AdminCourseInstances = React.lazy(() => import('./pages/Admin/AdminCourseInstances'));
+const DuckTransactions = React.lazy(() => import('./pages/Admin/DuckTransactions'));
+const AdminStudentActivity = React.lazy(() => import('./pages/Admin/AdminStudentActivity'));
+const AdminCRUD = React.lazy(() => import('./admin/AdminPanel'));
+
+// --- Parent pages: lazily loaded (students never need these) ---
+const ParentDashboard = React.lazy(() => import('./pages/Parent/ParentDashboard'));
+const ParentReportCard = React.lazy(() => import('./pages/Parent/ParentReportCard'));
+const ConnectChild = React.lazy(() => import('./pages/Parent/ConnectChild'));
+
 // Development-only shortcut page — Vite's tree-shaking removes this module
 // from production builds because it is only referenced inside the DEV guard below.
 import DevLogin from './pages/Auth/DevLogin';
+
+// Fallback spinner shown while lazy chunks are loading
+const PageLoader = () => (
+  <div style={{
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: '100vh',
+    background: 'var(--bg-primary)',
+  }}>
+    <Loader2 style={{ animation: 'spin 1s linear infinite' }} size={40} strokeWidth={1.5} color={THEME.colors.blue600} />
+  </div>
+);
 
 
 const ProtectedRoute = ({ children, adminOnly = false, parentOnly = false }) => {
@@ -82,12 +102,10 @@ const ProtectedRoute = ({ children, adminOnly = false, parentOnly = false }) => 
   if (!isAuthenticated) return <Navigate to="/login" />;
   if (adminOnly && !user?.is_admin) return <AccessDenied />;
 
-  // Redirect parents away from student/admin routes to their dashboard
-  if (user?.role === 'parent' && !location.pathname.startsWith('/parent/')) {
+  if (user?.role === 'parent' && !location.pathname.startsWith('/parent/') && !location.pathname.startsWith('/chat') && !location.pathname.startsWith('/profile')) {
     return <Navigate to="/parent/dashboard" replace />;
   }
 
-  // Restrict parent-only routes to parent role
   if (parentOnly && user?.role !== 'parent') {
     return <Navigate to="/chat" replace />;
   }
@@ -159,6 +177,7 @@ function App() {
                 },
             }}
         />
+      <Suspense fallback={<PageLoader />}>
       <Routes>
         <Route path="/login" element={isAuthenticated ? <Navigate to={authRedirect} /> : <Login />} />
         <Route path="/signup" element={isAuthenticated ? <Navigate to={authRedirect} /> : <Signup />} />
@@ -319,7 +338,6 @@ function App() {
           </ProtectedRoute>
         } />
 
-        {/* Parent Routes */}
         <Route path="/parent/dashboard" element={
           <ProtectedRoute parentOnly={true}>
             <Layout>
@@ -350,9 +368,9 @@ function App() {
           </ProtectedRoute>
         } />
 
-        {/* Fallback */}
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
+      </Suspense>
       </SidebarProvider>
     </Router>
   );

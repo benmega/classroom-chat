@@ -34,14 +34,19 @@ def get_challenge_counts_by_language(user):
         "wd2": "HTML/CSS",
     }
 
+    # Materialise the dynamic relationship once to avoid firing two separate
+    # DB queries (one from get_completed_levels() and one from the loop below).
+    challenge_logs = list(user.challenge_logs)
+
     # 1. Check Course Progress for WD1/WD2 (Legacy/Special handling)
-    for level_slug in user.get_completed_levels():
+    completed_slugs = {getattr(log, "challenge_slug", "") for log in challenge_logs}
+    for level_slug in completed_slugs:
         if "wd1" in level_slug or "wd2" in level_slug:
             counts["HTML/CSS"] += 1
             counts["JavaScript"] += 1
 
     # 2. Tally challenge logs using the domain field directly
-    for log in user.challenge_logs:
+    for log in challenge_logs:
         domain = (log.domain or "").strip().lower()
         if not domain:
             continue

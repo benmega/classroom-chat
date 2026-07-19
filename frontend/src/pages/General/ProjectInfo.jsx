@@ -234,7 +234,7 @@ const ProjectInfo = () => {
         while (cleanSlug.includes('__')) {
             cleanSlug = cleanSlug.replace(/__/g, '_');
         }
-        cleanSlug = cleanSlug.replace(/(^_+|+$)/g, '');
+        cleanSlug = cleanSlug.replace(/^_+/g, '').replace(/_+$/g, '');
         
         return `/static/images/project_templates/${cleanSlug}.png`;
     };

@@ -49,7 +49,6 @@ def test_upload_file_multiple_file_types(client):
     with client.application.app_context():
         """Test uploading various file types and ensure they are handled correctly."""
 
-        # Test data for different file types
         file_types = {
             "image/png": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAAAAAA6fptVAAAAC0lEQVR42mP8/w8AAwAB/0HPaSoAAAAASUVORK5CYII=",
             "application/pdf": "data:application/pdf;base64,JVBERi0xLjQKJeLjz9MKMyAwIG9iago8PC9EZWNvZGVQYXJtcygkRlRQQSkgL1R5cGUvWC9TdWJ0eXBlL0ltYWdlL0xlbmd0aCAxNi9CaXRzUGVyQ29tcG9uZW50IDggL0NvbG9yU3BhY2UvRGV2aWNlUkdCIGdycmlkL0ZpbHRlci9BbC1DIC9XaWR0aCAxNi9IZWlnaHQgOS9CYXNlRm9udC9UaW1lcy1Sb21hbi9NYXhXaWR0aCAxNi9NYXhIZWlnaHQgOS9NYXhWZXJzaW9uIC9Bc2NpSGVpZ2h0LzExL0RlY29kZUNvcnJlY3QgL1lFU0NvbnRyb2wgL1Blcm1zL1JHQj4+CmVuZG9iago=",
@@ -73,10 +72,8 @@ def test_uploaded_file(client):
         filename = "file_20230101_120000.png"
         file_path = os.path.join(Config.UPLOAD_FOLDER, filename)
 
-        # Ensure the directory exists
         os.makedirs(os.path.dirname(file_path), exist_ok=True)
 
-        # Create a fake file
         with open(file_path, "wb") as f:
             f.write(b"fake image data")
 

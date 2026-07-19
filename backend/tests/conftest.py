@@ -40,9 +40,6 @@ from application.models.user import User
 
 db_fd, db_path = tempfile.mkstemp(suffix=".db")
 
-# ============================================================================
-# ORIGINAL CORE FIXTURES (RESTORED)
-# ============================================================================
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -62,7 +59,6 @@ def test_app():
             "SQLALCHEMY_DATABASE_URI": f"sqlite:///{db_path}",
         }
     )
-    # --------------------
 
     if not hasattr(app, "login_manager"):
         login_manager = LoginManager()
@@ -80,7 +76,6 @@ def test_app():
         db.drop_all()
 
 
-# Ensure we clean up the temp file after all tests are done
 @pytest.fixture(scope="session", autouse=True)
 def cleanup_temp_db(request):
     def remove_db():
@@ -91,18 +86,14 @@ def cleanup_temp_db(request):
     request.addfinalizer(remove_db)
 
 
-# ============================================================================
 # NEW HELPERS & OVERRIDES
-# ============================================================================
 
 
-# 1. Alias fixture: pytest-flask specifically looks for a fixture named "app"
 @pytest.fixture(scope="session")
 def app(test_app):
     return test_app
 
 
-# 2. License Fix: Create a dummy license file so the app doesn't complain
 @pytest.fixture(scope="session", autouse=True)
 def create_dummy_license():
     license_dir = os.path.join(os.getcwd(), "license")
@@ -117,7 +108,6 @@ def create_dummy_license():
     yield
 
 
-# 3. OVERRIDE: Custom live_server for Windows compatibility
 @pytest.fixture(scope="session")
 def live_server(test_app):  # <--- CHANGED: Request 'test_app' explicitly
     """
@@ -130,7 +120,6 @@ def live_server(test_app):  # <--- CHANGED: Request 'test_app' explicitly
     port = sock.getsockname()[1]
     sock.close()
 
-    # Create the server using the Flask app object from test_app fixture
     server = make_server("localhost", port, test_app)
 
     # Start the server in a thread
@@ -555,9 +544,6 @@ def sample_multiple_achievements(init_db):
     return achievements
 
 
-# ============================================================================
-# NEW FIXTURES (REQUIRED FOR CHALLENGE TESTS)
-# ============================================================================
 
 
 @pytest.fixture
@@ -610,15 +596,12 @@ def mock_render_template(client):
     """
 
     def side_effect(template_name_or_list, **context):
-        # 1. Check if 'message' was passed explicitly as a keyword argument
         if "message" in context:
             return context["message"]
 
-        # 2. Check if it's inside a 'context' dict
         if "context" in context and isinstance(context["context"], dict):
             return context["context"].get("message", "Mocked Template Content")
 
-        # 3. Fallback
         return "Mocked Template Content"
 
     with patch(

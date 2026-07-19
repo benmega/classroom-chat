@@ -50,19 +50,16 @@ def test_webhook_transcribe_success(client, mock_webhook_secret, sample_user):
     resp = client.post("/api/webhooks/transcribe", json={"project_id": p.id, "transcript": "some text"})
     assert resp.status_code == 401
 
-    # Missing fields
     resp = client.post("/api/webhooks/transcribe", 
                        json={"project_id": p.id}, 
                        headers={"X-API-KEY": mock_webhook_secret})
     assert resp.status_code == 400
 
-    # Project not found
     resp = client.post("/api/webhooks/transcribe", 
                        json={"project_id": 9999, "transcript": "some text"}, 
                        headers={"X-API-KEY": mock_webhook_secret})
     assert resp.status_code == 404
 
-    # Success
     resp = client.post("/api/webhooks/transcribe", 
                        json={"project_id": p.id, "transcript": "hello world transcript"}, 
                        headers={"X-API-KEY": mock_webhook_secret})

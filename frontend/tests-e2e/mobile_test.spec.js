@@ -18,26 +18,22 @@ test.describe('Mobile UI Audit Navigation', () => {
 
   test('Explore all routes', async ({ page }) => {
     test.slow(); // This audit test visits many pages — triple the default timeout
-    // Enable console logging
     page.on('console', msg => console.log(`BROWSER CONSOLE: [${msg.type()}] ${msg.text()}`));
 
     console.log('Logging in as admin...');
     await page.goto('/api/dev-login?role=admin');
     await page.waitForURL('**/admin/dashboard', { timeout: 15000 });
     
-    // 1. Home / Chat Page
     console.log('Navigating to Chat...');
     await page.goto('http://localhost:5173/chat');
     await page.waitForTimeout(3000);
     await page.screenshot({ path: path.join(screenshotsDir, 'mobile_home.png') });
 
-    // 2. Profile page
     console.log('Navigating to Profile...');
     await page.goto('http://localhost:5173/profile');
     await page.waitForTimeout(3000);
     await page.screenshot({ path: path.join(screenshotsDir, 'mobile_profile.png') });
 
-    // 3. Open Sidebar / Hamburger Menu (on Profile page where it's visible)
     console.log('Opening hamburger menu on Profile page...');
     const hamburger = page.locator('header button.hamburger-toggle').first();
     if (await hamburger.isVisible()) {
@@ -45,7 +41,6 @@ test.describe('Mobile UI Audit Navigation', () => {
       await page.waitForTimeout(1000);
       await page.screenshot({ path: path.join(screenshotsDir, 'mobile_sidebar_open.png') });
       
-      // Close sidebar by clicking overlay or close button
       const closeBtn = page.locator('.mobile-sidebar .sidebar-close, .mobile-overlay').first();
       await closeBtn.click({ force: true });
       await page.waitForTimeout(500);
@@ -53,25 +48,21 @@ test.describe('Mobile UI Audit Navigation', () => {
       console.log('Hamburger menu not found on Profile page!');
     }
 
-    // 4. Achievements page
     console.log('Navigating to Achievements...');
     await page.goto('http://localhost:5173/achievements');
     await page.waitForTimeout(3000);
     await page.screenshot({ path: path.join(screenshotsDir, 'mobile_achievements.png') });
 
-    // 5. Bit-Shift page
     console.log('Navigating to Bit-Shift...');
     await page.goto('http://localhost:5173/bit-shift');
     await page.waitForTimeout(3000);
     await page.screenshot({ path: path.join(screenshotsDir, 'mobile_bit_shift.png') });
 
-    // 6. Admin Panel
     console.log('Navigating to Admin Panel...');
     await page.goto('http://localhost:5173/admin');
     await page.waitForTimeout(3000);
     await page.screenshot({ path: path.join(screenshotsDir, 'mobile_admin.png') });
 
-    // 7. Admin Advanced Panel
     console.log('Navigating to Admin Advanced...');
     await page.goto('http://localhost:5173/admin/advanced');
     await page.waitForTimeout(3000);

@@ -1,4 +1,4 @@
-import { useState, useEffect, useLayoutEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useRef, useCallback } from 'react';
 import toast from 'react-hot-toast';
 import useAuthStore from '../store/useAuthStore';
 import client from '../api/client';
@@ -135,11 +135,17 @@ export const useFeedLogic = () => {
     await fetchFeed(lastMessageId);
   }, [isLoadingMore, hasMore, messages, fetchFeed]);
 
+  const _scrollThrottle = React.useRef(null);
   const handleScroll = (e) => {
+    // Throttle to 150ms to prevent multiple concurrent load-more requests
+    // while React state (isLoadingMore) hasn't settled yet between renders.
+    if (_scrollThrottle.current) return;
     const { scrollTop } = e.target;
-    // Load more when user scrolls close to the top
     if (scrollTop <= 100) {
-      handleLoadMore();
+      _scrollThrottle.current = setTimeout(() => {
+        _scrollThrottle.current = null;
+        handleLoadMore();
+      }, 150);
     }
   };
 

@@ -28,7 +28,7 @@ export const useLayout = () => {
     const isChatRoute = location.pathname === '/chat';
 
     // Hook to listen to new messages and update unread count
-    useChatSocket(useCallback((data) => {
+    useChatSocket(useCallback((_data) => {
         if (!isChatRoute && user && user.role !== 'parent') {
             setUnreadCount(useAuthStore.getState().unreadCount + 1);
         }

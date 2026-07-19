@@ -48,6 +48,6 @@ with app.app_context():
             pt.chapter = chapter
             
     db.session.commit()
-    print(f"Seeded standard projects and templates.")    
+    print("Seeded standard projects and templates.")    
     db.session.commit()
     print(f"Seeded {count} standard projects.")

@@ -21,7 +21,6 @@ const AdminClassDashboard = () => {
     const [formLoading, setFormLoading] = useState(false);
     const [allStudents, setAllStudents] = useState([]);
     const [selectedStudentId, setSelectedStudentId] = useState('');
-    const [studentSearchQuery, setStudentSearchQuery] = useState('');
     const [rosterSearchQuery, setRosterSearchQuery] = useState('');
 
     // Connection cards states
@@ -35,6 +34,7 @@ const AdminClassDashboard = () => {
             const res = await client.get(`/api/admin/classrooms/${classId}`);
             setClassroom(res.data.classroom);
         } catch (err) {
+            console.error('Failed to fetch classroom:', err);
             toast.error('Failed to load classroom details.');
             navigate('/admin/classes');
         } finally {

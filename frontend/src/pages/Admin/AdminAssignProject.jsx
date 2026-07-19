@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { Save, LayoutTemplate, ImageIcon, Code, User, Search, XCircle, Play, CheckCircle, ExternalLink } from 'lucide-react';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
-// removed useAuthStore import
 import SmartImage from '../../components/common/SmartImage';
 import { formatStaticUrl } from '../../utils/formatters';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
@@ -12,7 +11,6 @@ import './AdminAssignProject.css';
 
 const AdminAssignProject = () => {
     const navigate = useNavigate();
-    // removed unused user
     
     const [activeTab, setActiveTab] = useState('core');
     const [isSubmitting, setIsSubmitting] = useState(false);

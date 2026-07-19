@@ -21,8 +21,7 @@ from application.utilities.db_helpers import get_user
 
 challenge = Blueprint("challenge", __name__, url_prefix="/challenge")
 
-# Robust pattern from the working version
-# Robust base pattern for CodeCombat and Ozaria URLs
+# Base pattern for CodeCombat and Ozaria URLs
 BASE_PATTERN = (
     r"https://(?P<domain>[\w\.-]+)"
     r"(?:"
@@ -129,8 +128,6 @@ def submit_challenge():
     if not isinstance(challenge_check, dict):
         challenge_check = {}
 
-    if notes:
-        print(f"{user.nickname} said: {notes}")
 
     details = challenge_check.get("details") or {}
 
@@ -383,7 +380,7 @@ def _update_user_ducks(user, challenge_slug, duck_multiplier=1):
         if not user:
             raise ValueError("User not found")
 
-        # UPDATED: Try finding by slug, then try relaxed matching (spaces vs dashes)
+        # Try finding by slug, then try relaxed matching (spaces vs dashes)
         challenge = Challenge.query.filter(Challenge.slug.ilike(challenge_slug)).first()
 
         if not challenge:
@@ -398,11 +395,9 @@ def _update_user_ducks(user, challenge_slug, duck_multiplier=1):
 
         duck_reward = challenge.value * duck_multiplier
 
-        if duck_multiplier > 1:
-            print(f"Duck multiplier of {duck_multiplier} in effect.")
 
         user.add_ducks(duck_reward, reason=f"Challenge: {challenge.slug}")
-        print(f"{user.username} was granted {duck_reward} duck(s).")
+
 
         return duck_reward
 
@@ -445,9 +440,8 @@ def _enroll_user_in_classroom(user, classroom_id: str):
 
         classroom = db.session.get(Classroom, classroom_id)
         if not classroom:
-            print(
-                f"[Enrollment] Classroom '{classroom_id}' not found — skipping enrollment."
-            )
+            import logging
+            logging.warning(f"[Enrollment] Classroom '{classroom_id}' not found — skipping enrollment.")
             return
 
         db.session.execute(
@@ -458,7 +452,8 @@ def _enroll_user_in_classroom(user, classroom_id: str):
             )
         )
         db.session.commit()
-        print(f"[Enrollment] User {user.id} enrolled in classroom '{classroom_id}'.")
+        import logging
+        logging.info(f"[Enrollment] User {user.id} enrolled in classroom '{classroom_id}'.")
 
         # Emit enrollment event via centralised helper so the sidebar updates live
         from application.socket_events import emit_classroom_enrolled
@@ -467,4 +462,5 @@ def _enroll_user_in_classroom(user, classroom_id: str):
 
     except Exception as exc:
         db.session.rollback()
-        print(f"[Enrollment] Failed for user {user.id} → '{classroom_id}': {exc}")
+        import logging
+        logging.error(f"[Enrollment] Failed for user {user.id} → '{classroom_id}': {exc}")

@@ -11,8 +11,8 @@ class ConnectionAttempt(db.Model):
     __tablename__ = "connection_attempts"
 
     id = db.Column(db.Integer, primary_key=True)
-    parent_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
-    attempted_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    parent_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False, index=True)
+    attempted_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False, index=True)
     code_attempted = db.Column(db.String(10), nullable=False)
     success = db.Column(db.Boolean, default=False)
 

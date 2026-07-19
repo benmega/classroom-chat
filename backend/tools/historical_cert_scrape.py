@@ -4,9 +4,7 @@ import time
 
 import requests
 
-# --------------------------------------------------------------------------------
 # 1. CONFIGURATION
-# --------------------------------------------------------------------------------
 YOUR_COOKIE = """__stripe_mid=1ebd10bd-7567-4df5-816f-79a9b780842852846f; _fbp=fb.1.1699689886954.171100771; cf_clearance=_RJjbBs.CVgd42U1MO1ZKjKuTD.GNdDOVgzwpbDpooA-1746367538-1.2.1.1-9jqn.40lzWGvjocpB2ne1Z7IAWofVjqtuHrd4LYso32hZrN5Ri4ZJqE8nJFCsyZJGvzRmWB9t2WgydqSbzPQXINuNBt96YNSCAs6LIxbRXQnfqDBxaFLdIyQQgDorw_ckX1lgMQ0u8fZm82pMQTZGEdokVgLMMtyZkUrHHvI18M3RlTPA_Vda.NVdh5Ow_Zd477nSREgoYYn2LeePfSBPiK78Z8zx9bxvesYdaoE36RN1_hlWxuD_sPev4R3SS.MWaHLIMIVpOKsW9Ybsp4XL3uE7DmvRJOn2vEdlYdw0NbcOkzcIBb3OJ8YBmSMrHJQeXHZwuKp.qqlyiJZJASLtd76vgcO4Qgh1FVSf4lnRHlNSmftqVLs0STLWgdTy262; _ga_CLTH4TL5L8=deleted; _gid=GA1.2.590278429.1765512323; shaTagVal=production-2025-12-11-09-35-36; g_state={"i_l":0,"i_ll":1765612960132}; _ga=GA1.1.1923261573.1699063009; fs_lua=1.1765613059660; fs_uid=#RQW5S#ee6f16b5-763c-410a-9ab0-03a5dde36753:59948c97-fcdd-42df-a99b-5540ff238a79:1765612957311::3#8d074e9c#/1790492809; _gat=1; codecombat.sess=eyJwYXNzcG9ydCI6eyJ1c2VyIjp7ImlkIjoiNjJkMjNkOTc1ZGFmZDYwMDI1ZjhjNTIwIiwiY3JlYXRlZCI6IjIwMjUtMTItMTNUMDg6MDQ6NTgrMDA6MDAiLCJleHBpcmVzIjoiMjAyNi0wMS0xM1QwODowNDo1OCswMDowMCJ9fX0=; codecombat.sess.sig=0jr8Ykuo2KAq3Dj8b4NsyQcWeXI; _ga_CLTH4TL5L8=GS2.1.s1765611399$o401$g1$t1765613112$j6$l0$h0"""
 
 HEADERS = {
@@ -19,9 +17,7 @@ OWNER_ID = "62d23d975dafd60025f8c520"
 FILENAME = "../instance/migration/certificate_log.csv"
 
 
-# --------------------------------------------------------------------------------
 # 2. HELPER FUNCTIONS
-# --------------------------------------------------------------------------------
 def fetch_json(url, description):
     print(f"Fetching {description}...")
     try:
@@ -57,11 +53,8 @@ def build_course_name_map(levels_data):
     return c_map
 
 
-# --------------------------------------------------------------------------------
 # 3. MAIN EXECUTION LOOP
-# --------------------------------------------------------------------------------
 def main(DOMAIN, URL_LEVELS):
-    # 1. Fetch Classrooms (via Teacher's Course Instances)
     # This endpoint lists all instances belonging to the teacher, which allows us to find all classroom IDs.
     url_teacher_instances = f"https://{DOMAIN}/db/course_instance?ownerID={OWNER_ID}"
     teacher_instances = fetch_json(url_teacher_instances, "Teacher Class List")
@@ -70,7 +63,6 @@ def main(DOMAIN, URL_LEVELS):
         print("No classes found or API error.")
         return
 
-    # Create a map of Classroom ID -> Classroom Name
     classroom_map = {}
     for item in teacher_instances:
         if "classroomID" in item and "classroomName" in item:
@@ -81,13 +73,11 @@ def main(DOMAIN, URL_LEVELS):
     unique_classrooms = list(classroom_map.keys())
     print(f"Found {len(unique_classrooms)} unique classrooms.")
 
-    # 2. Fetch Global Course Data (To get course names like 'CS1', 'Game Dev 2')
     levels_data = fetch_json(URL_LEVELS, "Global Course Data")
     course_name_map = build_course_name_map(levels_data)
 
     all_rows = []
 
-    # 3. Iterate Through Each Classroom
     for index, class_id in enumerate(unique_classrooms):
         class_name = classroom_map.get(class_id, class_id)
         print(
@@ -145,7 +135,6 @@ def main(DOMAIN, URL_LEVELS):
         print(f"Found {count} certificates in this class.")
         time.sleep(1)  # Be nice to API
 
-    # 4. Save to CSV
     if all_rows:
         os.makedirs(os.path.dirname(FILENAME), exist_ok=True)
         fields = [

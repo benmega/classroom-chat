@@ -56,18 +56,17 @@ const AdminDashboard = () => {
     const [banReason, setBanReason] = useState('');
     const [trackRequests, setTrackRequests] = useState([]);
 
-    const fetchTrackRequests = async () => {
-        try {
-            const response = await client.get('/admin/track-requests/');
-            if (response.data.success) {
-                setTrackRequests(response.data.requests || []);
-            }
-        } catch (err) {
-            console.error("Failed to fetch track requests:", err);
-        }
-    };
-
     useEffect(() => {
+        const fetchTrackRequests = async () => {
+            try {
+                const response = await client.get('/admin/track-requests/');
+                if (response.data.success) {
+                    setTrackRequests(response.data.requests || []);
+                }
+            } catch (err) {
+                console.error("Failed to fetch track requests:", err);
+            }
+        };
         fetchTrackRequests();
     }, []);
 
@@ -79,6 +78,7 @@ const AdminDashboard = () => {
                 setTrackRequests(prev => prev.filter(r => r.id !== id));
             }
         } catch (err) {
+            console.error(err);
             toast.error("Failed to approve request.");
         }
     };
@@ -91,6 +91,7 @@ const AdminDashboard = () => {
                 setTrackRequests(prev => prev.filter(r => r.id !== id));
             }
         } catch (err) {
+            console.error(err);
             toast.error("Failed to deny request.");
         }
     };

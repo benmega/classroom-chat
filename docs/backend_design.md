@@ -30,6 +30,11 @@ API endpoints are structured into logical modules using **Flask Blueprints**. Th
 - **`ai`**: Integration with AI teaching logic and settings.
 - **`achievements`**: Badge and milestone tracking.
 - **`upload`**: Handling of profile pictures and static assets.
+- **`cognito`** / **`dev_login`**: External Authentication flows (AWS Cognito SSO) and development-only auto-login.
+- **`shop`** / **`duck_trade`**: Economy systems for virtual storefront purchases and peer trading.
+- **`parent`**: APIs handling the parent portal data and parent-student linkages.
+- **`api_webhooks`**: Ingress for external systems (e.g., Stripe, analytics).
+- **`track_requests`**: Analytics and request logging endpoints.
 
 ### Proxy & WSGI Support
 - **ProxyFix**: Configured to trust headers when running behind a reverse proxy (like Nginx).
@@ -53,7 +58,10 @@ The system uses **SQLite** (or PostgreSQL in production) via the SQLAlchemy ORM.
 ---
 
 ### Session Management & Authentication
-The backend implements a custom **Session-based Authentication** system:
+The backend implements a multi-layered **Authentication** system:
+- **AWS Cognito / External SSO**: The `cognito_routes` handles robust OAuth/SSO login flows.
+- **Development Login**: The `dev_login_routes` allows for quick authentication bypasses during local development.
+- **Custom Sessions**: For standard users, the app relies on cookie-based Flask sessions.
 - **`require_login` Decorator**: A central security decorator (`application/decorators/login_required.py`) used to protect API routes. It returns a `401 Unauthorized` response for JSON requests or redirects to the login page for browser requests if no session is found.
 - **`before_request` Hook**: Automatically loads the logged-in user from the session into Flask's `g` object for easy access across the application.
 - **CSRF Protection**: Enabled via `Flask-WTF` to prevent cross-site request forgery.

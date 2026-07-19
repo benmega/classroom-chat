@@ -1,9 +1,24 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
-// https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
+  build: {
+    rollupOptions: {
+      output: {
+        // Split heavy vendor libs into separate cached chunks.
+        // Each chunk is independently cached — an app code change no longer
+        // busts the MUI / react-admin / chart.js cache in the browser.
+        manualChunks: {
+          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+          'vendor-mui': ['@mui/material', '@emotion/react', '@emotion/styled'],
+          'vendor-charts': ['chart.js', 'react-chartjs-2'],
+          'vendor-react-admin': ['react-admin', 'ra-core'],
+          'vendor-emoji': ['emoji-picker-react'],
+        },
+      },
+    },
+  },
   test: {
     globals: true,
     environment: 'happy-dom',
@@ -16,12 +31,11 @@ export default defineConfig({
         'dist/**',
         'tests-e2e/**',
         'tests/**',
-        'static/**',          // legacy pre-React vanilla JS, not part of the Vite build
+        'static/**',
         'coverage/**',
-        'src/test/**',        // test utilities themselves
+        'src/test/**',
         '**/*.config.*',
-        'src/main.jsx',       // entry point, trivial to cover
-        // Admin detail modules (separate CRUD panels)
+        'src/main.jsx',
         'src/pages/Admin/AdminAchievements.jsx',
         'src/pages/Admin/AdminCertificates.jsx',
         'src/pages/Admin/AdminChallenges.jsx',
@@ -34,18 +48,14 @@ export default defineConfig({
         'src/pages/Admin/AdminUserDashboard.jsx',
         'src/pages/Admin/AdvancedPanel.jsx',
         'src/pages/Admin/PendingTrades.jsx',
-        // Parent feature views (non-student portal)
         'src/pages/Parent/**',
-        // Error helper views
         'src/pages/Error/ServerOffline.jsx',
-        // Legacy widgets / unused modules
         'src/components/common/ImageUpload.jsx',
         'src/components/common/ScreenRecorder.jsx',
         'src/components/common/SmartImage.jsx',
         'src/components/common/Tutorial.jsx',
         'src/components/common/UserSearchInput.jsx',
         'src/utils/video.js',
-        // Complex student modules and legacy landing/game files
         'src/pages/General/Achievements.jsx',
         'src/pages/General/BitShift.jsx',
         'src/pages/General/CourseLevelBreakdown.jsx',
@@ -55,7 +65,6 @@ export default defineConfig({
         'src/pages/General/LandingDesktop.jsx',
         'src/pages/General/LandingMobile.jsx',
         'src/pages/General/SubmitWork.jsx',
-        // Unused/legacy hooks
         'src/hooks/useFeedLogic.js',
         'src/hooks/useProfile.js',
         'src/hooks/useViewport.js',

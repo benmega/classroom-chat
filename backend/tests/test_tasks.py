@@ -18,14 +18,12 @@ def test_scheduled_cleanup_no_app_instance():
 def test_scheduled_cleanup_success(app):
     set_app_instance(app)
     
-    # 1. Stale sessions closed > 0
     with patch("application.tasks.close_stale_sessions", return_value=3) as mock_cleanup, \
          patch("application.tasks.logger") as mock_logger:
         scheduled_cleanup()
         mock_cleanup.assert_called_once()
         mock_logger.info.assert_any_call("Closed 3 stale sessions")
 
-    # 2. No stale sessions found
     with patch("application.tasks.close_stale_sessions", return_value=0) as mock_cleanup, \
          patch("application.tasks.logger") as mock_logger:
         scheduled_cleanup()

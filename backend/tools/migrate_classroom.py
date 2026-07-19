@@ -56,9 +56,7 @@ def run():
         print("Classroom Data Seeding -- starting")
         print("=" * 60)
 
-        # ------------------------------------------------------------------
         # Step 1: Seed the reserved 'global' classroom
-        # ------------------------------------------------------------------
         # The 'global' classroom is the site-wide announcements feed.
         # It must exist before any conversation or challenge can reference it.
         print("\n[1/6] Seeding 'global' classroom ...")
@@ -77,9 +75,7 @@ def run():
         else:
             print(f"       - classroom id='{GLOBAL_CLASSROOM_ID}' already exists, skipping")
 
-        # ------------------------------------------------------------------
         # Step 2: Seed the reserved 'archive' classroom
-        # ------------------------------------------------------------------
         # Conversations with no classroom are moved here so they remain
         # accessible without breaking the NOT NULL constraint.
         print("\n[2/6] Seeding 'archive' classroom ...")
@@ -96,9 +92,7 @@ def run():
         else:
             print("       - classroom id='archive' already exists, skipping")
 
-        # ------------------------------------------------------------------
         # Step 3: Migrate legacy users.classroom_id → user_classrooms rows
-        # ------------------------------------------------------------------
         # Some older user rows have a direct classroom_id column that pre-dates
         # the many-to-many join table.  Copy those rows across if the column
         # still exists on the users table (SQLite makes column drops hard, so
@@ -133,9 +127,7 @@ def run():
         else:
             print("       - users.classroom_id column not present, skipping")
 
-        # ------------------------------------------------------------------
         # Step 4: Retroactively enrol users from challenge_logs
-        # ------------------------------------------------------------------
         # Users who completed challenges in a classroom before the join table
         # existed should be retroactively enrolled.
         #
@@ -156,9 +148,7 @@ def run():
         else:
             print("       - challenge_logs missing course_instance or user_id column, skipping")
 
-        # ------------------------------------------------------------------
         # Step 5: Retroactively enrol users from conversation_users
-        # ------------------------------------------------------------------
         # Users who participated in classroom conversations are also enrolled.
         print("\n[5/6] Retroactively enrolling users from conversation_users ...")
         cu_cols = [row[1] for row in conn.execute(text("PRAGMA table_info(conversation_users)")).fetchall()]
@@ -176,9 +166,7 @@ def run():
         else:
             print("       - conversation_users table not present, skipping")
 
-        # ------------------------------------------------------------------
         # Step 6: Archive orphaned conversations and seed the global one
-        # ------------------------------------------------------------------
         # Any conversation with a NULL classroom_id (left over from before the
         # schema migration) gets moved to 'archive' so the NOT NULL constraint
         # is satisfied without data loss.
@@ -191,7 +179,6 @@ def run():
             conn.commit()
             print(f"       [OK] Archived {result.rowcount} orphaned conversation(s)")
 
-            # Ensure exactly one conversation exists in the global classroom.
             global_conv = conn.execute(
                 text("SELECT id FROM conversations WHERE classroom_id = :cid LIMIT 1"),
                 {"cid": GLOBAL_CLASSROOM_ID}

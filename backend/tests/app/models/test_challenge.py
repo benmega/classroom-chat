@@ -16,15 +16,12 @@ from application.models.challenge_log import ChallengeLog
 # tests/app/models/test_challenge.py
 
 
-# Test challenge completion logging
 def test_complete_challenge(sample_challenge, sample_user):
-    # Ensure no ChallengeLog entries exist before completion
     assert ChallengeLog.query.count() == 0
 
     # Call complete_challenge method
     sample_challenge.complete_challenge(sample_user)
 
-    # Ensure a new log entry is created
     log_entry = ChallengeLog.query.filter_by(user_id=sample_user.id).first()
     assert log_entry is not None
 
@@ -33,7 +30,6 @@ def test_complete_challenge(sample_challenge, sample_user):
     assert log_entry.user_id == sample_user.id
 
 
-# Test scaling of challenge value based on difficulty
 @pytest.mark.parametrize(
     "difficulty, expected_value",
     [
@@ -47,7 +43,6 @@ def test_scale_value(sample_challenge, difficulty, expected_value):
     assert sample_challenge.scale_value() == expected_value
 
 
-# Test that the slug is automatically set if not provided (via event listener)
 def test_slug_auto_set(init_db):
     challenge_without_slug = Challenge(
         name="Challenge Without Slug", domain="Test Domain"
@@ -59,7 +54,6 @@ def test_slug_auto_set(init_db):
     assert challenge_without_slug.slug == "Challenge Without Slug"
 
 
-# Test setting default value for 'created_at' timestamp
 def test_created_at_timestamp(init_db):
     challenge_with_timestamp = Challenge(
         name="Timestamp Challenge", slug="timestamp-challenge", domain="Test Domain"
@@ -72,7 +66,6 @@ def test_created_at_timestamp(init_db):
     assert isinstance(challenge_with_timestamp.created_at, datetime)
 
 
-# Test scaling with a custom difficulty multiplier
 def test_scale_value_with_custom_multiplier(sample_challenge):
     sample_challenge.difficulty = "medium"
     assert (
@@ -117,7 +110,6 @@ def test_complete_challenge_logs_slug(init_db, sample_user):
     Test that completing a challenge creates a log entry using the SLUG,
     not the name.
     """
-    # 1. Create a challenge
     challenge_name = "Super Hard Level"
     challenge_slug = "super-hard-level-slug"
 
@@ -127,10 +119,8 @@ def test_complete_challenge_logs_slug(init_db, sample_user):
     db.session.add(challenge)
     db.session.commit()
 
-    # 2. Complete the challenge
     challenge.complete_challenge(sample_user)
 
-    # 3. Verify the log
     log = ChallengeLog.query.filter_by(user_id=sample_user.id).first()
 
     assert log is not None
@@ -144,7 +134,6 @@ def test_challenge_log_model_structure(init_db):
     Verify the ChallengeLog model has the correct columns after migration.
     This ensures the SQLAlchemy model matches our expectation.
     """
-    # Create a log entry directly
     log = ChallengeLog(
         user_id=1, domain="test.com", challenge_slug="test-slug"
     )
@@ -154,7 +143,6 @@ def test_challenge_log_model_structure(init_db):
     # Retrieve and inspect
     saved_log = ChallengeLog.query.first()
 
-    # Check that challenge_slug exists and challenge_name does NOT exist
     assert hasattr(saved_log, "challenge_slug")
     assert not hasattr(saved_log, "challenge_name")
 
@@ -166,14 +154,12 @@ def test_challenge_name_uniqueness_scoped_by_domain(init_db):
     """
     from sqlalchemy.exc import IntegrityError
     
-    # 1. Create two challenges with same name in different domains
     c1 = Challenge(name="Unique Test Name", slug="slug-c1", domain="codecombat.com")
     c2 = Challenge(name="Unique Test Name", slug="slug-c2", domain="www.ozaria.com")
     db.session.add(c1)
     db.session.add(c2)
     db.session.commit() # Should succeed
     
-    # 2. Try creating a challenge with same name in the same domain as c1
     c3 = Challenge(name="Unique Test Name", slug="slug-c3", domain="codecombat.com")
     db.session.add(c3)
     with pytest.raises(IntegrityError):

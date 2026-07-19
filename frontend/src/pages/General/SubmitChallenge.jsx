@@ -22,9 +22,6 @@ const SubmitChallenge = () => {
     const [isCertificate, setIsCertificate] = useState(false);
     const [certificateFile, setCertificateFile] = useState(null);
     const [uploadProgress, setUploadProgress] = useState(0);
-
-    // removed unused apiBase
-    // removed unused fullApiUrl
     
     useEffect(() => {
         if (CERT_URL_PATTERN.test(url.trim())) {

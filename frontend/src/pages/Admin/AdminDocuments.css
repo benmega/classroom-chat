@@ -253,7 +253,7 @@
     }
 }
 
-/* --- Added for Inline Style Cleanup --- */
+
 .storage-overview-skeleton { display: flex; gap: 16px; margin-bottom: 24px; }
 .storage-stats-grid-skeleton { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; flex: 1; }
 .controls-bar-skeleton { padding: 16px; margin-bottom: 24px; }

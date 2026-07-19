@@ -64,11 +64,11 @@ def check_achievement(user, achievement, stats=None):
             .filter(DuckTradeLog.user_id == user.id)
             .scalar()
         ),
-        # Certificate submitted or not
+        # Certificate submitted and reviewed
         "certificate": lambda: (
             1
             if UserCertificate.query.filter_by(
-                user_id=user.id, achievement_id=achievement.id
+                user_id=user.id, achievement_id=achievement.id, reviewed=True
             ).first()
             else 0
         ),
@@ -128,7 +128,7 @@ def get_achievement_progress(user, achievement, stats=None):
         "certificate": lambda: (
             1
             if UserCertificate.query.filter_by(
-                user_id=user.id, achievement_id=achievement.id
+                user_id=user.id, achievement_id=achievement.id, reviewed=True
             ).first()
             else 0
         ),
@@ -234,14 +234,20 @@ def evaluate_user(user, force=False):
 
 
 def longest_session_minutes(user_id):
-    """Calculate max session duration for a specific user."""
-    # Fixed: Filter by user_id instead of querying .all()
-    logs = SessionLog.query.filter_by(user_id=user_id).all()
+    """Calculate max session duration for a specific user.
 
-    max_duration = 0
-    for log in logs:
-        end = log.end_time or log.last_seen
-        duration = (end - log.start_time).total_seconds()
-        if duration > max_duration:
-            max_duration = duration
-    return max_duration / 60
+    Uses a SQL-level MAX() with julianday() to avoid loading all session rows
+    into Python memory — duration grows unboundedly with usage otherwise.
+    """
+    result = (
+        db.session.query(
+            func.max(
+                func.julianday(func.coalesce(SessionLog.end_time, SessionLog.last_seen))
+                - func.julianday(SessionLog.start_time)
+            )
+        )
+        .filter(SessionLog.user_id == user_id)
+        .scalar()
+    )
+    # julianday diff is in fractional days; convert to minutes
+    return (result or 0) * 24 * 60

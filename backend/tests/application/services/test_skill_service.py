@@ -19,13 +19,11 @@ def test_evaluate_user_skills_with_projects_and_challenges(client, init_db):
     db.session.add(user)
     db.session.commit()
 
-    # 1. Add projects
     p1 = Project(name="CS1 Capstone Project", user_id=user.id, github_link="https://github.com/test")
     p2 = Project(name="Dangerous Skies Project", user_id=user.id)
     db.session.add_all([p1, p2])
     db.session.commit()
 
-    # 2. Add challenge logs
     # Let's add 12 python logs to hit Lvl 1 (Bronze)
     for i in range(12):
         cl = ChallengeLog(user_id=user.id, domain="python", challenge_slug=f"py-{i}")

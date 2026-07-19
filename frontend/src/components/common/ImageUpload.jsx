@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import axios from '../../api/client';
-import { Upload, X, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
+import { Upload, X, CheckCircle, Loader2 } from 'lucide-react';
+import toast from 'react-hot-toast';
 import './ImageUpload.css';
 import SmartImage from './SmartImage';
 
@@ -25,7 +26,6 @@ const ImageUpload = ({
   const [preview, setPreview] = useState(initialImage);
   const [isUploading, setIsUploading] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
   const fileInputRef = useRef(null);
 
@@ -33,11 +33,10 @@ const ImageUpload = ({
     const file = e.target.files[0];
     if (!file) return;
 
-    setError(null);
     setSuccess(false);
 
     if (file.size > 10 * 1024 * 1024) {
-      setError('File is too large (max 10MB)');
+      toast.error('File is too large (max 10MB)');
       return;
     }
 
@@ -53,7 +52,6 @@ const ImageUpload = ({
   const uploadFile = async (file) => {
     setIsUploading(true);
     setProgress(0);
-    setError(null);
 
     const formData = new FormData();
     formData.append(fieldName, file);
@@ -70,14 +68,15 @@ const ImageUpload = ({
       if (response.data.status === 'success') {
         const { new_url, filename } = response.data.data;
         setSuccess(true);
+        toast.success('Image uploaded successfully');
         onUploadSuccess({ new_url, filename });
       } else {
-        setError(response.data.error || 'Upload failed');
+        toast.error(response.data.error || 'Upload failed');
       }
     } catch (err) {
       console.error('Upload error:', err);
       const errorMessage = err.response?.data?.error || 'Server error during upload';
-      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setIsUploading(false);
     }
@@ -86,7 +85,6 @@ const ImageUpload = ({
   const clearPreview = () => {
     setPreview(initialImage);
     setSuccess(false);
-    setError(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
@@ -97,7 +95,7 @@ const ImageUpload = ({
       </div>
       
       <div 
-        className={`image-upload-container ${isUploading ? 'uploading' : ''} ${error ? 'error' : ''} ${success ? 'success' : ''}`}
+        className={`image-upload-container ${isUploading ? 'uploading' : ''} ${success ? 'success' : ''}`}
         onClick={() => !isUploading && fileInputRef.current.click()}
       >
         <input 
@@ -157,13 +155,6 @@ const ImageUpload = ({
           </div>
         )}
       </div>
-
-      {error && (
-        <div className="upload-error-message">
-          <AlertCircle size={14} />
-          <span>{error}</span>
-        </div>
-      )}
     </div>
   );
 };

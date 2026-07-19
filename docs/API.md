@@ -26,9 +26,6 @@ All API endpoints (except `/login` and `/signup`) require a valid session cookie
   - Description: Submit challenge completion.
 
 ## Ducks Endpoints (Require Authentication)
-- **GET /leaderboard**
-  - Description: Retrieve the top performers based on duck balance.
-
 - **GET /profile/<username>**
   - Description: Retrieve detailed profile, including achievements and duck balance.
 

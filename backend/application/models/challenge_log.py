@@ -15,5 +15,11 @@ class ChallengeLog(db.Model):
     course_instance = db.Column(db.String(100), nullable=True)
     helper = db.Column(db.String(100), nullable=True)
 
+    __table_args__ = (
+        # Composite index: speeds up filter_by(user_id=..., challenge_slug=..., course_instance=...)
+        # on every challenge submission (uniqueness check on the critical path).
+        db.Index("ix_challenge_log_user_slug_instance", "user_id", "challenge_slug", "course_instance"),
+    )
+
     def __repr__(self):
         return f"<ChallengeLog(user_id={self.user_id}, domain={self.domain}, slug={self.challenge_slug}, timestamp={self.timestamp})>"

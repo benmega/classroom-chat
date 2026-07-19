@@ -4,10 +4,8 @@ Type: py
 Summary: Unit tests for track change request Flask routes.
 """
 
-import pytest
 from application import db
 from application.models.track_requests import TrackChangeRequest
-from application.models.user import User
 
 
 def test_create_track_request_student(client, init_db, sample_user):
@@ -87,7 +85,6 @@ def test_create_track_request_parent_unlinked(client, init_db, sample_user, samp
 
 def test_create_track_request_duplicate(client, init_db, sample_user):
     """Test that a student cannot have multiple pending requests."""
-    # Create an existing pending request
     req = TrackChangeRequest(
         student_id=sample_user.id,
         requester_type="student",

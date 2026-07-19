@@ -12,12 +12,10 @@ def login_as_admin(client, admin_user):
 def test_pending_users(client, sample_admin, init_db):
     login_as_admin(client, sample_admin)
 
-    # Create a pending user
     pending_user = User(username="pendingstudent", is_approved=False, role="student", password_hash="dummy")
     db.session.add(pending_user)
     db.session.commit()
 
-    # Create challenge log for pending user
     cl = ChallengeLog(user_id=pending_user.id, domain="python", challenge_slug="slug1")
     db.session.add(cl)
     db.session.commit()
@@ -81,7 +79,6 @@ def test_get_users_pagination_and_search(client, sample_admin, sample_user):
 def test_reset_password(client, sample_admin, sample_user):
     login_as_admin(client, sample_admin)
 
-    # Success
     resp = client.post("/api/admin/reset_password", json={
         "username": sample_user.username,
         "new_password": "newsecurepassword123"
@@ -101,21 +98,18 @@ def test_reset_password(client, sample_admin, sample_user):
     assert resp.status_code == 403
     assert resp.get_json()["success"] is False
 
-    # User not found
     resp = client.post("/api/admin/reset_password", json={
         "username": "nonexistentuser",
         "new_password": "password"
     })
     assert resp.status_code == 404
 
-    # Missing arguments
     resp = client.post("/api/admin/reset_password", json={})
     assert resp.status_code == 400
 
 def test_create_user(client, sample_admin, init_db):
     login_as_admin(client, sample_admin)
 
-    # Success with ducks
     resp = client.post("/api/admin/create_user", data={
         "username": "newstudent",
         "password": "password123",
@@ -128,7 +122,6 @@ def test_create_user(client, sample_admin, init_db):
     assert u is not None
     assert u.duck_balance == 5
 
-    # Invalid username format
     resp = client.post("/api/admin/create_user", data={
         "username": "new student!", # invalid characters
         "password": "password",
@@ -144,14 +137,12 @@ def test_create_user(client, sample_admin, init_db):
     })
     assert resp.status_code == 409
 
-    # Missing fields
     resp = client.post("/api/admin/create_user", data={})
     assert resp.status_code == 400
 
 def test_remove_user(client, sample_admin, sample_user):
     login_as_admin(client, sample_admin)
 
-    # Success
     resp = client.post("/api/admin/remove_user", data={"username": sample_user.username})
     assert resp.status_code == 200
     assert resp.get_json()["success"] is True
@@ -165,11 +156,9 @@ def test_remove_user(client, sample_admin, sample_user):
     resp = client.post("/api/admin/remove_user", data={"username": "otheradmin2"})
     assert resp.status_code == 403
 
-    # Not found
     resp = client.post("/api/admin/remove_user", data={"username": "notfounduser"})
     assert resp.status_code == 404
 
-    # Missing username
     resp = client.post("/api/admin/remove_user", data={})
     assert resp.status_code == 400
 
@@ -179,7 +168,6 @@ def test_adjust_ducks(client, sample_admin, sample_user):
     sample_user.duck_balance = 10
     db.session.commit()
 
-    # Success
     resp = client.post("/api/admin/adjust_ducks", data={
         "username": sample_user.username,
         "amount": 15
@@ -187,14 +175,12 @@ def test_adjust_ducks(client, sample_admin, sample_user):
     assert resp.status_code == 200
     assert sample_user.duck_balance == 25
 
-    # User not found
     resp = client.post("/api/admin/adjust_ducks", data={
         "username": "notfound",
         "amount": 10
     })
     assert resp.status_code == 404
 
-    # Missing args
     resp = client.post("/api/admin/adjust_ducks", data={})
     assert resp.status_code == 400
 
@@ -211,7 +197,6 @@ def test_parent_linking(client, sample_admin, init_db):
     assert resp.status_code == 200
     assert child in parent.children
 
-    # Get parent's children
     resp = client.get(f"/api/admin/parents/{parent.id}/children")
     assert resp.status_code == 200
     assert len(resp.get_json()["children"]) == 1
@@ -222,7 +207,6 @@ def test_parent_linking(client, sample_admin, init_db):
     assert resp.status_code == 200
     assert child not in parent.children
 
-    # Parent not found
     resp = client.get("/api/admin/parents/9999/children")
     assert resp.status_code == 404
 
@@ -239,7 +223,6 @@ def test_connection_card(client, sample_admin, sample_user):
     assert resp.status_code == 200
     assert "connection_code" in resp.get_json()["data"]
 
-    # Student not found
     resp = client.get("/api/admin/user/9999/connection_card")
     assert resp.status_code == 404
 
@@ -266,7 +249,6 @@ def test_classrooms_and_connection_cards(client, sample_admin, sample_user, init
     resp = client.get("/api/admin/classrooms/all/connection_cards")
     assert resp.status_code == 200
     
-    # Classroom not found
     resp = client.get("/api/admin/classrooms/nonexistent/connection_cards")
     assert resp.status_code == 404
 
@@ -275,7 +257,6 @@ def test_set_drawer(client, sample_admin, sample_user, init_db):
     sample_user.role = "student"
     db.session.commit()
 
-    # Success assigning 0x05
     resp = client.post("/api/admin/set_drawer", json={
         "username": sample_user.username,
         "drawer": "0x05"
@@ -283,7 +264,6 @@ def test_set_drawer(client, sample_admin, sample_user, init_db):
     assert resp.status_code == 200
     assert sample_user.drawer == "0x05"
 
-    # Success assigning without 0x prefix
     resp = client.post("/api/admin/set_drawer", json={
         "username": sample_user.username,
         "drawer": "06"
@@ -331,24 +311,20 @@ def test_set_drawer(client, sample_admin, sample_user, init_db):
 def test_classroom_detail_management(client, sample_admin, init_db):
     login_as_admin(client, sample_admin)
 
-    # Create classroom
     c = Classroom(id="testclass", name="Test Classroom", language="Python", url="https://test.local")
     db.session.add(c)
     db.session.commit()
 
-    # Create a student
     student = User(username="testclassroomstudent", role="student", password_hash="dummy")
     db.session.add(student)
     db.session.commit()
 
-    # Get details
     resp = client.get(f"/api/admin/classrooms/{c.id}")
     assert resp.status_code == 200
     data = resp.get_json()["classroom"]
     assert data["name"] == "Test Classroom"
     assert len(data["students"]) == 0
 
-    # Update settings
     resp = client.put(f"/api/admin/classrooms/{c.id}", json={
         "name": "Updated Classroom Name",
         "language": "Scratch"
@@ -364,7 +340,6 @@ def test_classroom_detail_management(client, sample_admin, init_db):
     assert resp.status_code == 200
     assert student in c.users
 
-    # Verify student is in GET details roster
     resp = client.get(f"/api/admin/classrooms/{c.id}")
     assert resp.status_code == 200
     data = resp.get_json()["classroom"]
@@ -378,7 +353,6 @@ def test_classroom_detail_management(client, sample_admin, init_db):
     assert resp.status_code == 200
     assert student not in c.users
 
-    # Delete classroom
     resp = client.delete(f"/api/admin/classrooms/{c.id}")
     assert resp.status_code == 200
     assert db.session.get(Classroom, "testclass") is None
@@ -391,13 +365,11 @@ def test_pass_chapter_preview_and_pass_chapter(client, sample_admin, sample_user
 
     login_as_admin(client, sample_admin)
 
-    # Create dummy challenges for the mapped course CS1 (560f1a9f22961295f9427742)
     course_db_id = "560f1a9f22961295f9427742"
     c1 = Challenge(name="Challenge 1", slug="ch-1", domain="codecombat.com", course_id=course_db_id, value=5)
     c2 = Challenge(name="Challenge 2", slug="ch-2", domain="codecombat.com", course_id=course_db_id, value=10)
     db.session.add_all([c1, c2])
 
-    # Create a certificate achievement for this course
     ach = Achievement(name="CS1 Certificate", slug=course_db_id, type="certificate", reward=0)
     db.session.add(ach)
     db.session.commit()
@@ -418,9 +390,151 @@ def test_pass_chapter_preview_and_pass_chapter(client, sample_admin, sample_user
     assert data["success"] is True
     assert "Successfully passed" in data["message"]
 
-    # Verify logs and cert were created
     assert sample_user.challenge_logs.count() == 2
     cert = UserCertificate.query.filter_by(user_id=sample_user.id, achievement_id=ach.id).first()
     assert cert is not None
+
+
+def test_student_activity_and_get_users_roles(client, sample_admin, sample_user):
+    login_as_admin(client, sample_admin)
+    
+    # student_activity online
+    resp = client.get("/api/admin/student_activity?is_online=true")
+    assert resp.status_code == 200
+    
+    # get_users role filter
+    resp2 = client.get("/api/admin/users?role=student")
+    assert resp2.status_code == 200
+    
+    
+def test_user_mgmt_error_branches(client, sample_admin, sample_user, init_db):
+    login_as_admin(client, sample_admin)
+    
+    resp = client.post("/api/admin/set_username", data={})
+    assert resp.status_code == 400  # Missing arguments
+    
+    resp = client.post("/api/admin/set_username", data={"user_id": sample_user.id, "username": "Inval!d"})
+    assert resp.status_code == 400  # Invalid regex
+    
+    resp = client.post("/api/admin/set_username", data={"user_id": 99999, "username": "validname"})
+    assert resp.status_code == 404  # Not found
+    
+    # We test IntegrityError via verify_password later or set_username by mock
+    
+    resp = client.post("/api/admin/verify_password", data={
+        "password": "duckduck",
+        "username": "Inval!d",
+        "user_id": sample_user.id
+    })
+    assert resp.status_code == 400  # Invalid format
+    
+    parent = User(username="parent_error", role="parent", password_hash="dummy")
+    db.session.add(parent)
+    db.session.commit()
+    
+    resp = client.post(f"/api/admin/parents/{parent.id}/link/99999")
+    assert resp.status_code == 404  # Student not found
+    
+    resp = client.post(f"/api/admin/parents/{parent.id}/link/{sample_user.id}")
+    assert resp.status_code == 200
+    # Already linked
+    resp = client.post(f"/api/admin/parents/{parent.id}/link/{sample_user.id}")
+    assert resp.status_code == 200
+    assert "Already linked" in resp.get_json()["message"]
+    
+    resp = client.post(f"/api/admin/parents/{parent.id}/unlink/99999")
+    assert resp.status_code == 404
+    
+    resp = client.post(f"/api/admin/parents/{parent.id}/unlink/{sample_user.id}")
+    assert resp.status_code == 200
+    # Not linked
+    resp = client.post(f"/api/admin/parents/{parent.id}/unlink/{sample_user.id}")
+    assert resp.status_code == 200
+    assert "Not linked" in resp.get_json()["message"]
+    
+    resp = client.get("/api/admin/students/99999/parents")
+    assert resp.status_code == 404
+    
+    resp = client.post("/api/admin/set_drawer", json={})
+    assert resp.status_code == 400  # Missing username
+    
+    resp = client.post("/api/admin/set_drawer", json={"username": "notfounduser"})
+    assert resp.status_code == 404
+    
+    admin_user = User(username="draweradmin", role="admin", password_hash="dummy")
+    db.session.add(admin_user)
+    db.session.commit()
+    
+    resp = client.post("/api/admin/set_drawer", json={"username": "draweradmin", "drawer": "0x01"})
+    assert resp.status_code == 403  # Not student
+    
+    resp = client.post("/api/admin/set_drawer", json={"username": sample_user.username, "drawer": "invalid_hex"})
+    assert resp.status_code == 400
+    
+    resp = client.post("/api/admin/set_drawer", json={"username": sample_user.username, "drawer": "0xXX"})
+    assert resp.status_code == 400
+
+    resp = client.get("/api/admin/user/99999")
+    assert resp.status_code == 404
+    
+    resp = client.get("/api/admin/classrooms/notfoundclass")
+    assert resp.status_code == 404
+    
+    resp = client.put("/api/admin/classrooms/notfoundclass", json={})
+    assert resp.status_code == 404
+    
+    resp = client.delete("/api/admin/classrooms/notfoundclass")
+    assert resp.status_code == 404
+    
+    c = Classroom(id="errclass", name="errclass", language="python", url="errclass")
+    db.session.add(c)
+    db.session.commit()
+    
+    resp = client.post("/api/admin/classrooms/notfoundclass/enroll", json={})
+    assert resp.status_code == 404
+    resp = client.post(f"/api/admin/classrooms/{c.id}/enroll", json={})
+    assert resp.status_code == 400
+    resp = client.post(f"/api/admin/classrooms/{c.id}/enroll", json={"student_id": 99999})
+    assert resp.status_code == 404
+    
+    resp = client.post("/api/admin/classrooms/notfoundclass/unenroll", json={})
+    assert resp.status_code == 404
+    resp = client.post(f"/api/admin/classrooms/{c.id}/unenroll", json={})
+    assert resp.status_code == 400
+    resp = client.post(f"/api/admin/classrooms/{c.id}/unenroll", json={"student_id": 99999})
+    assert resp.status_code == 404
+    
+    resp = client.post(f"/api/admin/user/{sample_user.id}/pass_chapter_preview", json={})
+    assert resp.status_code == 400
+    resp = client.post(f"/api/admin/user/{sample_user.id}/pass_chapter_preview", json={"course_id": "nonexistent_course"})
+    assert resp.status_code == 404
+    
+    # Exception mocking for create/remove user
+    from unittest.mock import patch
+    import sqlalchemy.exc
+    
+    with patch("application.extensions.db.session.commit", side_effect=Exception("DB Error")):
+        resp = client.post("/api/admin/create_user", data={"username": "erruser", "password": "abc", "ducks": 5})
+        assert resp.status_code == 500
+        
+        resp = client.post("/api/admin/remove_user", data={"username": sample_user.username})
+        assert resp.status_code == 500
+
+    # IntegrityError mocking for set_username
+    with patch("application.extensions.db.session.commit", side_effect=sqlalchemy.exc.IntegrityError("x", "y", "z")):
+        resp = client.post("/api/admin/set_username", data={"user_id": sample_user.id, "username": "takenname"})
+        assert resp.status_code == 409
+        
+        # also for verify_password
+        resp = client.post("/api/admin/verify_password", data={
+            "password": "duckduck",
+            "username": "takenname",
+            "user_id": sample_user.id
+        })
+        assert resp.status_code == 409
+        
+        # also for set_drawer
+        resp = client.post("/api/admin/set_drawer", json={"username": sample_user.username, "drawer": "0x09"})
+        assert resp.status_code == 409
 
 

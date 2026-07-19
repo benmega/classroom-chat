@@ -20,7 +20,6 @@ test.describe('Parent Portal Mobile UI Audit', () => {
 
   test('Navigate parent portal and capture mobile screenshots', async ({ page }) => {
     test.slow(); // This audit test visits multiple pages and can exceed 30s
-    // Listen to browser console and page errors
     page.on('console', msg => console.log(`BROWSER CONSOLE: [${msg.type()}] ${msg.text()}`));
     page.on('pageerror', err => console.log(`BROWSER ERROR: ${err.message}`));
 
@@ -28,15 +27,12 @@ test.describe('Parent Portal Mobile UI Audit', () => {
     await page.goto('/api/dev-login?role=parent');
     
     console.log('2. Waiting for redirection to parent dashboard...');
-    // The Flask page redirects to http://localhost:5173/ which redirects to /parent/dashboard
     await page.waitForURL('**/parent/dashboard', { timeout: 30000, waitUntil: 'domcontentloaded' });
     
     console.log('3. Waiting for dashboard content to load...');
-    // Wait for the loading screen to disappear, and child cards or connection card to appear
     await page.waitForSelector('.parent-loading', { state: 'detached', timeout: 15000 });
     await page.waitForSelector('.parent-dashboard', { state: 'visible', timeout: 15000 });
     
-    // Add a small delay for any animations/charts to settle
     await page.waitForTimeout(2000);
     
     const dashboardPath = path.join(screenshotsDir, 'parent_dashboard_mobile_audit.png');
@@ -48,13 +44,7 @@ test.describe('Parent Portal Mobile UI Audit', () => {
     const childCardCount = await page.locator('.child-card').count();
     console.log(`Found ${childCardCount} cards on dashboard.`);
     
-    // Find the link to a child's report card. Usually a child card exists or we connect one.
-    // If child card is available, click it. Otherwise print a warning or handle it.
-    if (childCardCount > 1) { // 1 connect card + child cards
-      console.log('5. Clicking on the child card to open report card...');
-      // The child-card has a click handler on a div inside it for navigation
-      // Click the first card that is not the connect card.
-      // The connect-card contains the class 'connect-card'. Let's select one without 'connect-card'.
+    if (childCardCount > 1) {
       const childLink = page.locator('.child-card-clickable').first();
       await childLink.click();
       
@@ -62,11 +52,9 @@ test.describe('Parent Portal Mobile UI Audit', () => {
       await page.waitForURL(/\/parent\/report\/\d+/, { timeout: 15000 });
       console.log(`Arrived at report card URL: ${page.url()}`);
       
-      // Wait for loading to finish
       await page.waitForSelector('.report-loading', { state: 'detached', timeout: 15000 });
       await page.waitForSelector('.report-card-page', { state: 'visible', timeout: 15000 });
       
-      // Add a small delay for content to fully render
       await page.waitForTimeout(2000);
       
       const reportPath = path.join(screenshotsDir, 'parent_report_mobile_audit.png');

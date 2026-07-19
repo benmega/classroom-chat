@@ -21,6 +21,15 @@ The project is more than just a chat app; it is an integration of several specia
 
 ### 2.3 The Admin Engine
 - A powerful backend for educators to manage user accounts, approve submissions, moderate content, and control global system settings (e.g., multipliers for currency rewards).
+- **Classroom Management**: Organizes students into specific Courses and Classrooms.
+
+### 2.4 Economy & Shop
+- Students earn virtual currency ("Ducks") through learning activities.
+- A virtual **Shop** allows them to spend Ducks on avatars, profile cosmetics, or in-class rewards.
+- **Peer Trading** lets students send Ducks to one another.
+
+### 2.5 The Parent Portal
+- Provides parents with a dedicated, read-only view of their linked student's progress, achievements, and recent activities.
 
 ---
 

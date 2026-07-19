@@ -13,7 +13,6 @@ from application import db
 from application.models.achievements import Achievement
 
 
-# --- FIXTURES ---
 
 
 @pytest.fixture
@@ -66,14 +65,12 @@ def sample_multiple_achievements(
     return [sample_ducks_achievement, sample_chat_achievement]
 
 
-# --- TESTS ---
 
 
 def test_check_achievements_success(
     logged_in_client, init_db, sample_user, sample_new_achievements
 ):
     """Test successful achievement check with new awards."""
-    # Patch both the achievement evaluator AND the skill evaluator to prevent 500 errors
     with patch(
         "application.routes.api_achievements.evaluate_user"
     ) as mock_evaluate, patch(
@@ -344,16 +341,13 @@ def test_api_achievements_all_integration(logged_in_client, init_db, sample_user
     assert "achievements" in response_data
     assert "user_achievements" in response_data
     
-    # Verify that the achievements are properly serialized
     achievements = response_data["achievements"]
     assert len(achievements) >= len(sample_multiple_achievements)
     
-    # Check that required fields are present in the serialized achievements
     slugs = [ach["slug"] for ach in achievements]
     for sample_ach in sample_multiple_achievements:
         assert sample_ach.slug in slugs
         
-        # Verify structure has current_progress and requirement_value
         ach_dict = next(ach for ach in achievements if ach["slug"] == sample_ach.slug)
         assert "current_progress" in ach_dict
         assert "requirement_value" in ach_dict

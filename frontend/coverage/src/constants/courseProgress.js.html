@@ -1,0 +1,400 @@
+
+<!doctype html>
+<html lang="en">
+
+<head>
+    <title>Code coverage report for src/constants/courseProgress.js</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../../prettify.css" />
+    <link rel="stylesheet" href="../../base.css" />
+    <link rel="shortcut icon" type="image/x-icon" href="../../favicon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style type='text/css'>
+        .coverage-summary .sorter {
+            background-image: url(../../sort-arrow-sprite.png);
+        }
+    </style>
+</head>
+    
+<body>
+<div class='wrapper'>
+    <div class='pad1'>
+        <h1><a href="../../index.html">All files</a> / <a href="index.html">src/constants</a> courseProgress.js</h1>
+        <div class='clearfix'>
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">59.59% </span>
+                <span class="quiet">Statements</span>
+                <span class='fraction'>59/99</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">92.3% </span>
+                <span class="quiet">Branches</span>
+                <span class='fraction'>12/13</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">60% </span>
+                <span class="quiet">Functions</span>
+                <span class='fraction'>3/5</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">59.59% </span>
+                <span class="quiet">Lines</span>
+                <span class='fraction'>59/99</span>
+            </div>
+        
+            
+        </div>
+        <p class="quiet">
+            Press <em>n</em> or <em>j</em> to go to the next uncovered block, <em>b</em>, <em>p</em> or <em>k</em> for the previous block.
+        </p>
+        <template id="filterTemplate">
+            <div class="quiet">
+                Filter:
+                <input type="search" id="fileSearch">
+            </div>
+        </template>
+    </div>
+    <div class='status-line medium'></div>
+    <pre><table class="coverage">
+<tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
+<a name='L2'></a><a href='#L2'>2</a>
+<a name='L3'></a><a href='#L3'>3</a>
+<a name='L4'></a><a href='#L4'>4</a>
+<a name='L5'></a><a href='#L5'>5</a>
+<a name='L6'></a><a href='#L6'>6</a>
+<a name='L7'></a><a href='#L7'>7</a>
+<a name='L8'></a><a href='#L8'>8</a>
+<a name='L9'></a><a href='#L9'>9</a>
+<a name='L10'></a><a href='#L10'>10</a>
+<a name='L11'></a><a href='#L11'>11</a>
+<a name='L12'></a><a href='#L12'>12</a>
+<a name='L13'></a><a href='#L13'>13</a>
+<a name='L14'></a><a href='#L14'>14</a>
+<a name='L15'></a><a href='#L15'>15</a>
+<a name='L16'></a><a href='#L16'>16</a>
+<a name='L17'></a><a href='#L17'>17</a>
+<a name='L18'></a><a href='#L18'>18</a>
+<a name='L19'></a><a href='#L19'>19</a>
+<a name='L20'></a><a href='#L20'>20</a>
+<a name='L21'></a><a href='#L21'>21</a>
+<a name='L22'></a><a href='#L22'>22</a>
+<a name='L23'></a><a href='#L23'>23</a>
+<a name='L24'></a><a href='#L24'>24</a>
+<a name='L25'></a><a href='#L25'>25</a>
+<a name='L26'></a><a href='#L26'>26</a>
+<a name='L27'></a><a href='#L27'>27</a>
+<a name='L28'></a><a href='#L28'>28</a>
+<a name='L29'></a><a href='#L29'>29</a>
+<a name='L30'></a><a href='#L30'>30</a>
+<a name='L31'></a><a href='#L31'>31</a>
+<a name='L32'></a><a href='#L32'>32</a>
+<a name='L33'></a><a href='#L33'>33</a>
+<a name='L34'></a><a href='#L34'>34</a>
+<a name='L35'></a><a href='#L35'>35</a>
+<a name='L36'></a><a href='#L36'>36</a>
+<a name='L37'></a><a href='#L37'>37</a>
+<a name='L38'></a><a href='#L38'>38</a>
+<a name='L39'></a><a href='#L39'>39</a>
+<a name='L40'></a><a href='#L40'>40</a>
+<a name='L41'></a><a href='#L41'>41</a>
+<a name='L42'></a><a href='#L42'>42</a>
+<a name='L43'></a><a href='#L43'>43</a>
+<a name='L44'></a><a href='#L44'>44</a>
+<a name='L45'></a><a href='#L45'>45</a>
+<a name='L46'></a><a href='#L46'>46</a>
+<a name='L47'></a><a href='#L47'>47</a>
+<a name='L48'></a><a href='#L48'>48</a>
+<a name='L49'></a><a href='#L49'>49</a>
+<a name='L50'></a><a href='#L50'>50</a>
+<a name='L51'></a><a href='#L51'>51</a>
+<a name='L52'></a><a href='#L52'>52</a>
+<a name='L53'></a><a href='#L53'>53</a>
+<a name='L54'></a><a href='#L54'>54</a>
+<a name='L55'></a><a href='#L55'>55</a>
+<a name='L56'></a><a href='#L56'>56</a>
+<a name='L57'></a><a href='#L57'>57</a>
+<a name='L58'></a><a href='#L58'>58</a>
+<a name='L59'></a><a href='#L59'>59</a>
+<a name='L60'></a><a href='#L60'>60</a>
+<a name='L61'></a><a href='#L61'>61</a>
+<a name='L62'></a><a href='#L62'>62</a>
+<a name='L63'></a><a href='#L63'>63</a>
+<a name='L64'></a><a href='#L64'>64</a>
+<a name='L65'></a><a href='#L65'>65</a>
+<a name='L66'></a><a href='#L66'>66</a>
+<a name='L67'></a><a href='#L67'>67</a>
+<a name='L68'></a><a href='#L68'>68</a>
+<a name='L69'></a><a href='#L69'>69</a>
+<a name='L70'></a><a href='#L70'>70</a>
+<a name='L71'></a><a href='#L71'>71</a>
+<a name='L72'></a><a href='#L72'>72</a>
+<a name='L73'></a><a href='#L73'>73</a>
+<a name='L74'></a><a href='#L74'>74</a>
+<a name='L75'></a><a href='#L75'>75</a>
+<a name='L76'></a><a href='#L76'>76</a>
+<a name='L77'></a><a href='#L77'>77</a>
+<a name='L78'></a><a href='#L78'>78</a>
+<a name='L79'></a><a href='#L79'>79</a>
+<a name='L80'></a><a href='#L80'>80</a>
+<a name='L81'></a><a href='#L81'>81</a>
+<a name='L82'></a><a href='#L82'>82</a>
+<a name='L83'></a><a href='#L83'>83</a>
+<a name='L84'></a><a href='#L84'>84</a>
+<a name='L85'></a><a href='#L85'>85</a>
+<a name='L86'></a><a href='#L86'>86</a>
+<a name='L87'></a><a href='#L87'>87</a>
+<a name='L88'></a><a href='#L88'>88</a>
+<a name='L89'></a><a href='#L89'>89</a>
+<a name='L90'></a><a href='#L90'>90</a>
+<a name='L91'></a><a href='#L91'>91</a>
+<a name='L92'></a><a href='#L92'>92</a>
+<a name='L93'></a><a href='#L93'>93</a>
+<a name='L94'></a><a href='#L94'>94</a>
+<a name='L95'></a><a href='#L95'>95</a>
+<a name='L96'></a><a href='#L96'>96</a>
+<a name='L97'></a><a href='#L97'>97</a>
+<a name='L98'></a><a href='#L98'>98</a>
+<a name='L99'></a><a href='#L99'>99</a>
+<a name='L100'></a><a href='#L100'>100</a>
+<a name='L101'></a><a href='#L101'>101</a>
+<a name='L102'></a><a href='#L102'>102</a>
+<a name='L103'></a><a href='#L103'>103</a>
+<a name='L104'></a><a href='#L104'>104</a>
+<a name='L105'></a><a href='#L105'>105</a>
+<a name='L106'></a><a href='#L106'>106</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">170x</span>
+<span class="cline-any cline-yes">170x</span>
+<span class="cline-any cline-yes">170x</span>
+<span class="cline-any cline-yes">170x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">65x</span>
+<span class="cline-any cline-yes">65x</span>
+<span class="cline-any cline-yes">65x</span>
+<span class="cline-any cline-yes">65x</span>
+<span class="cline-any cline-yes">65x</span>
+<span class="cline-any cline-yes">65x</span>
+<span class="cline-any cline-yes">49x</span>
+<span class="cline-any cline-yes">49x</span>
+<span class="cline-any cline-yes">65x</span>
+<span class="cline-any cline-yes">585x</span>
+<span class="cline-any cline-yes">37x</span>
+<span class="cline-any cline-yes">37x</span>
+<span class="cline-any cline-yes">37x</span>
+<span class="cline-any cline-yes">65x</span>
+<span class="cline-any cline-yes">65x</span>
+<span class="cline-any cline-yes">65x</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">export const TRACKS = [
+    { id: 'ozaria', title: 'Ozaria', col: 1 },
+    { id: 'cs', title: 'Computer Science', col: 2 },
+    { id: 'gd', title: 'Game Development', col: 3 },
+    { id: 'wd', title: 'Web Development', col: 4 }
+];
+&nbsp;
+export const ALIGNED_NODES = [
+    { id: 'cc-junior', title: 'Code Combat Junior', aliases: ['Code Combat Junior', 'Junior'], domain: 'codecombat', track: 'cs', row: 1 },
+    { id: 'cs-1', title: 'Introduction to Computer Science', aliases: ['Introduction to Computer Science', 'Computer Science 1', 'CS1'], domain: 'codecombat', track: 'cs', row: 2 },
+    { id: 'oz-1', title: 'Sky Mountain', aliases: ['Sky Mountain', 'Ozaria 1', 'Chapter1', 'Chapter 1'], domain: 'ozaria', track: 'ozaria', row: 3 },
+    { id: 'gd-1', title: 'Game Development 1', aliases: ['Game Development 1', 'GD1'], domain: 'codecombat', track: 'gd', row: 3 },
+    { id: 'cs-2', title: 'Computer Science 2', aliases: ['Computer Science 2', 'CS2'], domain: 'codecombat', track: 'cs', row: 4 },
+    { id: 'oz-2', title: 'Ozaria Chapter 2', aliases: ['Ozaria Chapter 2', 'Chapter 2', 'Ozaria 2', 'Chapter2'], domain: 'ozaria', track: 'ozaria', row: 5 },
+    { id: 'wd-1', title: 'Web Development 1', aliases: ['Web Development 1', 'WD1'], domain: 'codecombat', track: 'wd', row: 5 },
+    { id: 'cs-3', title: 'Computer Science 3', aliases: ['Computer Science 3', 'CS3'], domain: 'codecombat', track: 'cs', row: 6 },
+    { id: 'oz-3', title: 'Ozaria Chapter 3', aliases: ['Ozaria Chapter 3', 'Chapter 3', 'Ozaria 3', 'Chapter3'], domain: 'ozaria', track: 'ozaria', row: 7 },
+    { id: 'gd-2', title: 'Game Development 2', aliases: ['Game Development 2', 'GD2'], domain: 'codecombat', track: 'gd', row: 7 },
+    { id: 'wd-2', title: 'Web Development 2', aliases: ['Web Development 2', 'WD2'], domain: 'codecombat', track: 'wd', row: 7 },
+    { id: 'cs-4', title: 'Computer Science 4', aliases: ['Computer Science 4', 'CS4'], domain: 'codecombat', track: 'cs', row: 8 },
+    { id: 'oz-4', title: 'Ozaria 4', aliases: ['Ozaria 4', 'Ozaria Chapter 4', 'Chapter 4', 'Chapter4'], domain: 'ozaria', track: 'ozaria', row: 9 },
+    { id: 'gd-3', title: 'Game Development 3', aliases: ['Game Development 3', 'GD3'], domain: 'codecombat', track: 'gd', row: 9 },
+    { id: 'cs-5', title: 'Computer Science 5', aliases: ['Computer Science 5', 'CS5'], domain: 'codecombat', track: 'cs', row: 10 },
+    { id: 'cs-6', title: 'Computer Science 6', aliases: ['Computer Science 6', 'CS6'], domain: 'codecombat', track: 'cs', row: 11 },
+];
+&nbsp;
+export const BRANCH_EDGES = [
+    { from: 'cs-1', to: 'gd-1' },
+    { from: 'cs-2', to: 'wd-1' },
+    { from: 'cs-3', to: 'gd-2' },
+    { from: 'cs-3', to: 'wd-2' },
+    { from: 'cs-4', to: 'gd-3' },
+    { from: 'cs-1', to: 'oz-1' },
+    { from: 'cs-2', to: 'oz-2' },
+    { from: 'cs-3', to: 'oz-3' },
+    { from: 'cs-4', to: 'oz-4' }
+];
+&nbsp;
+export const matchCourse = (courseName, aliases) =&gt; {
+    const normalize = (str) =&gt; str.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const normName = normalize(courseName);
+    return aliases.some(alias =&gt; normalize(alias) === normName);
+};
+&nbsp;
+export const getAncestors = <span class="fstat-no" title="function not covered" >(nodeId, processedNodes) =&gt; {</span>
+<span class="cstat-no" title="statement not covered" >    const ancestors = new Set([nodeId]);</span>
+<span class="cstat-no" title="statement not covered" >    let added = true;</span>
+<span class="cstat-no" title="statement not covered" >    while (added) {</span>
+<span class="cstat-no" title="statement not covered" >        added = false;</span>
+<span class="cstat-no" title="statement not covered" >        TRACKS.forEach(track =&gt; {</span>
+<span class="cstat-no" title="statement not covered" >            const trackNodes = processedNodes.filter(n =&gt; n.track === track.id &amp;&amp; !n.is_extra);</span>
+<span class="cstat-no" title="statement not covered" >            for (let i = 0; i &lt; trackNodes.length - 1; i++) {</span>
+<span class="cstat-no" title="statement not covered" >                if (ancestors.has(trackNodes[i + 1].id) &amp;&amp; !ancestors.has(trackNodes[i].id)) {</span>
+<span class="cstat-no" title="statement not covered" >                    ancestors.add(trackNodes[i].id); added = true;</span>
+<span class="cstat-no" title="statement not covered" >                }</span>
+<span class="cstat-no" title="statement not covered" >            }</span>
+<span class="cstat-no" title="statement not covered" >        });</span>
+<span class="cstat-no" title="statement not covered" >        BRANCH_EDGES.forEach(edge =&gt; {</span>
+<span class="cstat-no" title="statement not covered" >            if (ancestors.has(edge.to) &amp;&amp; !ancestors.has(edge.from)) {</span>
+<span class="cstat-no" title="statement not covered" >                ancestors.add(edge.from); added = true;</span>
+<span class="cstat-no" title="statement not covered" >            }</span>
+<span class="cstat-no" title="statement not covered" >        });</span>
+<span class="cstat-no" title="statement not covered" >    }</span>
+<span class="cstat-no" title="statement not covered" >    return ancestors;</span>
+<span class="cstat-no" title="statement not covered" >};</span>
+&nbsp;
+export const getDescendants = <span class="fstat-no" title="function not covered" >(nodeId, processedNodes) =&gt; {</span>
+<span class="cstat-no" title="statement not covered" >    const descendants = new Set([nodeId]);</span>
+<span class="cstat-no" title="statement not covered" >    let added = true;</span>
+<span class="cstat-no" title="statement not covered" >    while (added) {</span>
+<span class="cstat-no" title="statement not covered" >        added = false;</span>
+<span class="cstat-no" title="statement not covered" >        TRACKS.forEach(track =&gt; {</span>
+<span class="cstat-no" title="statement not covered" >            const trackNodes = processedNodes.filter(n =&gt; n.track === track.id &amp;&amp; !n.is_extra);</span>
+<span class="cstat-no" title="statement not covered" >            for (let i = 0; i &lt; trackNodes.length - 1; i++) {</span>
+<span class="cstat-no" title="statement not covered" >                if (descendants.has(trackNodes[i].id) &amp;&amp; !descendants.has(trackNodes[i + 1].id)) {</span>
+<span class="cstat-no" title="statement not covered" >                    descendants.add(trackNodes[i + 1].id); added = true;</span>
+<span class="cstat-no" title="statement not covered" >                }</span>
+<span class="cstat-no" title="statement not covered" >            }</span>
+<span class="cstat-no" title="statement not covered" >        });</span>
+<span class="cstat-no" title="statement not covered" >        BRANCH_EDGES.forEach(edge =&gt; {</span>
+<span class="cstat-no" title="statement not covered" >            if (descendants.has(edge.from) &amp;&amp; !descendants.has(edge.to)) {</span>
+<span class="cstat-no" title="statement not covered" >                descendants.add(edge.to); added = true;</span>
+<span class="cstat-no" title="statement not covered" >            }</span>
+<span class="cstat-no" title="statement not covered" >        });</span>
+<span class="cstat-no" title="statement not covered" >    }</span>
+<span class="cstat-no" title="statement not covered" >    return descendants;</span>
+<span class="cstat-no" title="statement not covered" >};</span>
+&nbsp;
+export const getPrerequisiteTitles = (nodeId, processedNodes) =&gt; {
+    const titles = [];
+    const node = processedNodes.find(n =&gt; n.id === nodeId);
+    if (!node) <span class="branch-0 cbranch-no" title="branch not covered" >return "";</span>
+    const trackNodes = processedNodes.filter(n =&gt; n.track === node.track &amp;&amp; !n.is_extra);
+    const myIndex = trackNodes.findIndex(n =&gt; n.id === node.id);
+    if (myIndex &gt; 0) {
+        titles.push(trackNodes[myIndex - 1].title);
+    }
+    BRANCH_EDGES.forEach(edge =&gt; {
+        if (edge.to === node.id) {
+            const p = processedNodes.find(n =&gt; n.id === edge.from);
+            if (p) titles.push(p.title);
+        }
+    });
+    return titles.join(" or ");
+};
+&nbsp;</pre></td></tr></table></pre>
+
+                <div class='push'></div><!-- for sticky footer -->
+            </div><!-- /wrapper -->
+            <div class='footer quiet pad2 space-top1 center small'>
+                Code coverage generated by
+                <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
+                at 2026-07-19T07:06:46.962Z
+            </div>
+        <script src="../../prettify.js"></script>
+        <script>
+            window.onload = function () {
+                prettyPrint();
+            };
+        </script>
+        <script src="../../sorter.js"></script>
+        <script src="../../block-navigation.js"></script>
+    </body>
+</html>
+    

@@ -34,7 +34,9 @@ def dashboard_data():
 
     total_users_count = User.query.count()
     users = User.query.limit(10).all()
-    all_users = User.query.all()
+    # Column-only projection: avoids loading full ORM objects (and lazy relationship
+    # triggers) just to produce the slim {id, username, duck_balance} list below.
+    all_users = db.session.query(User.id, User._username, User.duck_balance).all()
     config = Configuration.query.first()
     banned_words = BannedWords.query.all()
     classrooms = Classroom.query.all()
@@ -107,7 +109,7 @@ def dashboard_data():
         "total_users_count": total_users_count,
         "users": [u.to_dict_summary() for u in users],
         "all_users": [
-            {"id": u.id, "username": u.username, "duck_balance": u.duck_balance}
+            {"id": u.id, "username": u._username, "duck_balance": u.duck_balance}
             for u in all_users
         ],
         "classrooms": [c.to_dict() for c in classrooms],

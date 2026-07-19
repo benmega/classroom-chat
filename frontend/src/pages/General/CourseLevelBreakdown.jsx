@@ -137,7 +137,6 @@ const CourseLevelBreakdown = () => {
 
     const activeTrack = userObj?.active_track || location.state?.activeTrack || 'cs';
     const pendingRequest = localPendingRequest || userObj?.pending_request || location.state?.pendingRequest;
-    const isParentView = location.pathname.startsWith('/parent');
 
     const handleRequestSubmit = async (e) => {
         e.preventDefault();

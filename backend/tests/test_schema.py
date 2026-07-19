@@ -10,10 +10,8 @@ def test_schema_matches_models(app):
     but forgets to create a migration script.
     """
     with app.app_context():
-        # Get the current database connection
         connection = db.engine.connect()
         
-        # Create an Alembic migration context
         context = MigrationContext.configure(connection)
         
         # Compare the database metadata with the model metadata

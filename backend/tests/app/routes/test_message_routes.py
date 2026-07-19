@@ -14,7 +14,6 @@ def test_get_feed_admin(client, init_db, sample_user):
     sample_user.is_admin = True
     db.session.commit()
     
-    # Create some messages
     msg1 = Message(user_id=sample_user.id, content="msg1", is_global=False)
     msg2 = Message(user_id=sample_user.id, content="msg2", is_global=True)
     db.session.add_all([msg1, msg2])
@@ -109,7 +108,6 @@ def test_delete_message(client, init_db, sample_user):
     assert resp.status_code == 200
     assert resp.json["success"] is True
 
-    # Delete non-existent
     resp = client.delete("/message/delete_message/99999")
     assert resp.status_code == 404
 

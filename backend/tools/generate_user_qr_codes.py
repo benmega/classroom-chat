@@ -7,7 +7,6 @@ Summary: Generate QR codes for all users linking to their profile pages.
 import os
 import sys
 
-# Add parent directory to path to import application modules
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import qrcode
@@ -27,7 +26,6 @@ def generate_qr_codes():
             print("No users found in the database.")
             return
 
-        # Create output directory for QR codes
         output_dir = os.path.join(os.path.dirname(__file__), '..', 'userData', 'qr_codes')
         os.makedirs(output_dir, exist_ok=True)
 
@@ -43,7 +41,6 @@ def generate_qr_codes():
             # Generate profile URL
             profile_url = f"https://blossom.benmega.com/user/profile/{user.slug}"
 
-            # Create QR code
             qr = qrcode.QRCode(
                 version=1,
                 error_correction=qrcode.constants.ERROR_CORRECT_L,

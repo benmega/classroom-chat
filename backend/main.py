@@ -7,7 +7,6 @@ Summary: Entry point for starting the Flask application.
 import os
 import sys
 
-# Ensure backend directory is in sys.path so we can import application modules
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 # Monkey patch for gevent if it's the selected async mode
@@ -29,15 +28,15 @@ def main():
     
     socketio.run(
         app,
-        host="0.0.0.0",  # 0.0.0.0 allows the server to be accessible network-wide
+        host="0.0.0.0",
         port=port,
-        log_output=True,  # Enables or disables the logging output by the server
+        log_output=True,
         use_reloader=os.getenv("FLASK_USE_RELOADER", "True").lower() in ("true", "1", "t") and not getattr(
             sys, "frozen", False
-        ),  # Enable or disable the reloader
+        ),
         allow_unsafe_werkzeug=True,
         debug=debug,
-    )  # Toggle debug mode for Flask and SocketIO
+    )
 
 
 if __name__ == "__main__":

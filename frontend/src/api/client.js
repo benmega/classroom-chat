@@ -11,7 +11,7 @@ const client = axios.create({
   xsrfHeaderName: 'X-CSRFToken',
 });
 
-// Helper to read cookies safely
+
 const getCookie = (name) => {
   const value = `; ${document.cookie}`;
   const parts = value.split(`; ${name}=`);
@@ -26,11 +26,10 @@ client.interceptors.request.use((config) => {
   return config;
 });
 
-// Global response interceptor for handling common errors
+
 client.interceptors.response.use(
   (response) => response,
   (error) => {
-    // If the server returns 401 Unauthorized, the session has expired or user is not logged in
     if (error.response && error.response.status === 401) {
       // Avoid redirect loops if we are already on the login page
       if (!window.location.pathname.startsWith('/login') && !window.location.pathname.startsWith('/api/dev-login')) {

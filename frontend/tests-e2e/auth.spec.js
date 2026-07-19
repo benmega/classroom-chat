@@ -2,7 +2,6 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Authentication Flow', () => {
   test.beforeEach(async ({ page }) => {
-    // Mock the status endpoint to return not logged in initially
     await page.route('**/user/api/auth/status', async (route) => {
       await route.fulfill({
         status: 200,
@@ -15,7 +14,6 @@ test.describe('Authentication Flow', () => {
   });
 
   test('should log in successfully with valid credentials', async ({ page }) => {
-    // Mock successful login
     await page.route('**/user/login', async (route) => {
       await route.fulfill({
         status: 200,
@@ -27,17 +25,14 @@ test.describe('Authentication Flow', () => {
       });
     });
 
-    // Fill login form
     await page.fill('input#usernameOrEmail', 'testuser');
     await page.fill('input[placeholder="Password"]', 'password123');
     await page.click('button[id="login-submit-btn"]');
 
-    // Should show success toast and navigate to home
     await expect(page).toHaveURL('/chat');
   });
 
   test('should show error on invalid credentials', async ({ page }) => {
-    // Mock failed login
     await page.route('**/user/login', async (route) => {
       await route.fulfill({
         status: 401,
@@ -50,8 +45,6 @@ test.describe('Authentication Flow', () => {
     await page.fill('input[placeholder="Password"]', 'wrongpass');
     await page.click('button[id="login-submit-btn"]');
 
-    // Should stay on login page and show error message
     await expect(page).toHaveURL('/login');
-    // Note: react-hot-toast uses aria-live elements
   });
 });

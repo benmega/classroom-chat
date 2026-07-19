@@ -2,11 +2,9 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Navigation', () => {
   test.beforeEach(async ({ page }) => {
-    // Enable browser console logging in tests
     page.on('console', msg => console.log(`BROWSER CONSOLE: [${msg.type()}] ${msg.text()}`));
     page.on('pageerror', err => console.log(`BROWSER ERROR: ${err.message}`));
 
-    // Mock user session
     await page.route('**/auth/status', async (route) => {
       await route.fulfill({
         status: 200,
@@ -20,7 +18,6 @@ test.describe('Navigation', () => {
       });
     });
 
-    // Mock heartbeat
     await page.route('**/heartbeat', async (route) => {
       await route.fulfill({
         status: 200,
@@ -29,7 +26,6 @@ test.describe('Navigation', () => {
       });
     });
 
-    // Mock all message endpoints to return a safe empty or mock response
     await page.route('**/message/**', async (route) => {
       const url = route.request().url();
       if (url.includes('/message/api/me/context')) {

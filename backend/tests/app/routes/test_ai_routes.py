@@ -35,7 +35,6 @@ def test_ai_user_not_found(client, enable_ai):
 
 @patch("application.ai.ai_teacher.requests.post")
 def test_ai_teacher_success(mock_post, client, enable_ai, sample_user):
-    # Mock Ollama response
     mock_resp = MagicMock()
     mock_resp.ok = True
     mock_resp.json.return_value = {"response": "I am your teacher."}
@@ -46,13 +45,11 @@ def test_ai_teacher_success(mock_post, client, enable_ai, sample_user):
     assert resp.json["success"] is True
     assert resp.json["ai_response"] == "I am your teacher."
 
-    # Verify that AI teacher user was created in DB
     ai_teacher = db.session.get(User, 0)
     assert ai_teacher is not None
 
 @patch("application.ai.ai_teacher.requests.post")
 def test_ai_teacher_ollama_failure(mock_post, client, enable_ai, sample_user):
-    # Mock Ollama API returning 500 error
     mock_resp = MagicMock()
     mock_resp.ok = False
     mock_resp.status_code = 500

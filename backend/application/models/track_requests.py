@@ -18,6 +18,12 @@ class TrackChangeRequest(db.Model):
     status = db.Column(db.String(20), default="pending", nullable=False)  # 'pending', 'approved', 'denied'
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
 
+    __table_args__ = (
+        # Composite index: speeds up filter_by(student_id=..., status="pending") on every
+        # auth status check and admin user list page load (previously a full table scan).
+        db.Index("ix_track_change_requests_student_id_status", "student_id", "status"),
+    )
+
     # Relationship to user
     student = db.relationship("User", backref=db.backref("track_change_requests", lazy="dynamic"))
 

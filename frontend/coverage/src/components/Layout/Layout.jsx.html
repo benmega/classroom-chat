@@ -23,16 +23,16 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">76.71% </span>
+                <span class="strong">76.59% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>145/189</span>
+                <span class='fraction'>144/188</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">68% </span>
+                <span class="strong">60.86% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>17/25</span>
+                <span class='fraction'>14/23</span>
             </div>
         
             
@@ -44,9 +44,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">76.71% </span>
+                <span class="strong">76.59% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>145/189</span>
+                <span class='fraction'>144/188</span>
             </div>
         
             
@@ -289,9 +289,7 @@
 <a name='L224'></a><a href='#L224'>224</a>
 <a name='L225'></a><a href='#L225'>225</a>
 <a name='L226'></a><a href='#L226'>226</a>
-<a name='L227'></a><a href='#L227'>227</a>
-<a name='L228'></a><a href='#L228'>228</a>
-<a name='L229'></a><a href='#L229'>229</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
+<a name='L227'></a><a href='#L227'>227</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -469,12 +467,10 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -619,7 +615,7 @@ const Layout = ({ children }) =&gt; {
 <span class="cstat-no" title="statement not covered" >                                                    &lt;Package size={20} className="stat-icon" /&gt;</span>
 <span class="cstat-no" title="statement not covered" >                                                    &lt;div className="stat-content"&gt;</span>
 <span class="cstat-no" title="statement not covered" >                                                        &lt;span className="stat-label"&gt;Packets&lt;/span&gt;</span>
-<span class="cstat-no" title="statement not covered" >                                                        &lt;span className="stat-value" style={{ color: user.packets &lt; 0 ? 'var(--error-color, #ff4444)' : 'inherit' }}&gt;</span>
+<span class="cstat-no" title="statement not covered" >                                                        &lt;span className={`stat-value ${user.packets &lt; 0 ? 'text-error' : ''}`}&gt;</span>
 <span class="cstat-no" title="statement not covered" >                                                            {Number(user.packets || 0).toLocaleString(undefined, { </span>
 <span class="cstat-no" title="statement not covered" >                                                                minimumFractionDigits: 0, </span>
 <span class="cstat-no" title="statement not covered" >                                                                maximumFractionDigits: 3 </span>
@@ -654,7 +650,7 @@ const Layout = ({ children }) =&gt; {
                                                 &lt;&gt;
                                                     {user.<span class="branch-0 cbranch-no" title="branch not covered" >drawer &amp;&amp; (</span>
 <span class="cstat-no" title="statement not covered" >                                                        &lt;li className="mobile-only-stat mobile-only"&gt;</span>
-<span class="cstat-no" title="statement not covered" >                                                            &lt;div className="dropdown-stat-link drawer" style={{ textDecoration: 'none' }}&gt;</span>
+<span class="cstat-no" title="statement not covered" >                                                            &lt;div className="dropdown-stat-link drawer"&gt;</span>
 <span class="cstat-no" title="statement not covered" >                                                                &lt;Archive size={20} /&gt;</span>
 <span class="cstat-no" title="statement not covered" >                                                                &lt;div className="dropdown-stat-info"&gt;</span>
 <span class="cstat-no" title="statement not covered" >                                                                    &lt;span className="dropdown-stat-label"&gt;Drawer&lt;/span&gt;</span>
@@ -679,11 +675,11 @@ const Layout = ({ children }) =&gt; {
                                                     &lt;/li&gt;
                                                     {Math.abs(user.packets) &gt; <span class="branch-0 cbranch-no" title="branch not covered" >0.001 &amp;&amp; (</span>
 <span class="cstat-no" title="statement not covered" >                                                        &lt;li className="mobile-only-stat mobile-only"&gt;</span>
-<span class="cstat-no" title="statement not covered" >                                                            &lt;Link to="/shop" onClick={<span class="fstat-no" title="function not covered" >() =&gt; setIsDropdownOpen(false)} c</span>lassName="dropdown-stat-link packets" style={{ textDecoration: 'none' }}&gt;</span>
+<span class="cstat-no" title="statement not covered" >                                                            &lt;Link to="/shop" onClick={<span class="fstat-no" title="function not covered" >() =&gt; setIsDropdownOpen(false)} c</span>lassName="dropdown-stat-link packets"&gt;</span>
 <span class="cstat-no" title="statement not covered" >                                                                &lt;Package size={20} /&gt;</span>
 <span class="cstat-no" title="statement not covered" >                                                                &lt;div className="dropdown-stat-info"&gt;</span>
 <span class="cstat-no" title="statement not covered" >                                                                    &lt;span className="dropdown-stat-label"&gt;Packets&lt;/span&gt;</span>
-<span class="cstat-no" title="statement not covered" >                                                                    &lt;span className="dropdown-stat-value" style={{ color: user.packets &lt; 0 ? 'var(--error-color, #ff4444)' : 'inherit' }}&gt;</span>
+<span class="cstat-no" title="statement not covered" >                                                                    &lt;span className={`dropdown-stat-value ${user.packets &lt; 0 ? 'text-error' : ''}`}&gt;</span>
 <span class="cstat-no" title="statement not covered" >                                                                        {Number(user.packets || 0).toLocaleString(undefined, { </span>
 <span class="cstat-no" title="statement not covered" >                                                                            minimumFractionDigits: 0, </span>
 <span class="cstat-no" title="statement not covered" >                                                                            maximumFractionDigits: 3 </span>
@@ -696,13 +692,11 @@ const Layout = ({ children }) =&gt; {
                                                 &lt;/&gt;
                                             )}
                                             {user?.role !== 'parent' &amp;&amp; &lt;li className="mobile-only-stat mobile-only dropdown-divider"&gt;&lt;/li&gt;}
-                                            {!isParent &amp;&amp; (
-                                                &lt;li&gt;
-                                                    &lt;Link to="/profile" onClick={<span class="fstat-no" title="function not covered" >() =&gt; setIsDropdownOpen(false)} d</span>ata-testid="nav-profile"&gt;
-                                                        &lt;span className="flex items-center gap-2"&gt;Profile&lt;/span&gt;
-                                                    &lt;/Link&gt;
-                                                &lt;/li&gt;
-                                            )}
+                                            &lt;li&gt;
+                                                &lt;Link to="/profile" onClick={<span class="fstat-no" title="function not covered" >() =&gt; setIsDropdownOpen(false)} d</span>ata-testid="nav-profile"&gt;
+                                                    &lt;span className="flex items-center gap-2"&gt;Profile&lt;/span&gt;
+                                                &lt;/Link&gt;
+                                            &lt;/li&gt;
                                             {user?.<span class="branch-0 cbranch-no" title="branch not covered" >is_admin &amp;&amp; (</span>
 <span class="cstat-no" title="statement not covered" >                                                &lt;li&gt;&lt;Link to="/admin" onClick={<span class="fstat-no" title="function not covered" >() =&gt; setIsDropdownOpen(false)}&gt;A</span>dmin Panel&lt;/Link&gt;&lt;/li&gt;</span>
                                             )}
@@ -727,7 +721,7 @@ const Layout = ({ children }) =&gt; {
                     &lt;/div&gt;
                 &lt;/header&gt;
 &nbsp;
-                &lt;main key={location.pathname} className={`${isChatPage ? 'main-full' : ''} animate-page-entry`}&gt;
+                &lt;main key={location.pathname} className={`${isChatPage ? <span class="branch-0 cbranch-no" title="branch not covered" >'main-full' : ''}</span> animate-page-entry`}&gt;
                     {children}
                 &lt;/main&gt;
                 
@@ -754,7 +748,7 @@ export default Layout;
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-07-09T16:06:35.385Z
+                at 2026-07-19T07:06:46.962Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

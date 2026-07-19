@@ -34,16 +34,44 @@ The central entity for authentication and student tracking.
     - Fields: `id`, `name`, `description`, `icon`, `points`.
 - **`user_achievements`**: Pivot table marking which users have which badges.
     - Fields: `id`, `user_id` (FK), `achievement_id` (FK), `earned_at`.
-- **`duck_trade_logs`**: History of currency transfers and adjustments.
-    - Fields: `id`, `from_user`, `to_user`, `amount`, `timestamp`, `reason`.
+- **`duck_trades` / `duck_transactions`**: History of currency transfers between students and system adjustments.
+    - Fields: `id`, `from_user_id`, `to_user_id`, `amount`, `timestamp`, `status`.
 
 ### 2.5 User Portfolio
 - **`projects`**: Student-created projects.
     - Fields: `id`, `name`, `description`, `link`, `user_id` (FK).
+- **`standard_projects`** / **`project_templates`**: Admin-defined project outlines that students can instantiate.
+    - Fields: `id`, `title`, `description`, `template_repo`.
 - **`skills`**: Individual skills listed on user profiles.
     - Fields: `id`, `name`, `user_id` (FK).
 - **`user_certificates`**: Official milestones or external certs.
     - Fields: `id`, `user_id` (FK), `certificate_type`, `issued_at`.
+
+### 2.6 Economy & Shop
+- **`store_items`**: Virtual items available for purchase with Ducks.
+    - Fields: `id`, `name`, `description`, `cost`, `image_url`, `stock`.
+- **`user_item_purchases`**: Log of items bought by users.
+    - Fields: `id`, `user_id` (FK), `store_item_id` (FK), `purchased_at`.
+
+### 2.7 Classrooms & Courses
+- **`courses`**: Master definition of a subject (e.g., "Python 101").
+    - Fields: `id`, `name`, `description`.
+- **`classrooms`**: Physical or virtual locations/times for a class.
+    - Fields: `id`, `name`, `capacity`.
+- **`course_instances`**: A specific cohort of a Course held in a Classroom (e.g., "Python 101 - Fall 2026").
+    - Fields: `id`, `course_id` (FK), `classroom_id` (FK), `start_date`, `end_date`.
+
+### 2.8 Roles & Connections
+- **`parent_student`**: Linking parent accounts to their children's accounts.
+    - Fields: `id`, `parent_id` (FK), `student_id` (FK), `linked_at`.
+
+### 2.9 System & Moderation
+- **`notes`**: Private teacher notes attached to a user profile.
+    - Fields: `id`, `user_id` (FK), `author_id` (FK), `content`, `created_at`.
+- **`banned_words`**: List of prohibited words for chat moderation.
+    - Fields: `id`, `word`, `severity`.
+- **`ai_settings` / `configuration`**: Global settings and AI toggles.
+- **`track_requests`**: Webhook endpoint logging.
 
 ---
 
@@ -53,10 +81,13 @@ The central entity for authentication and student tracking.
 - **User -> Projects**: One student can have multiple portfolio items.
 - **User -> Skills**: One student can list multiple skills.
 - **User -> Messages**: One user authors many individual messages.
+- **User -> Item Purchases**: A user can buy multiple items.
 - **Conversation -> Messages**: One thread contains many messages.
+- **Course Instance -> Students**: (Assumed via relationship) A course cohort contains multiple students.
 
 ### Many-to-Many (via Pivot Tables)
 - **Users <-> Achievements**: Users earn many achievements; achievements are earned by many users. (Handled by `user_achievements`).
+- **Parents <-> Students**: A parent can have multiple students; a student can have multiple parents. (Handled by `parent_student`).
 - **Users <-> Conversations**: Participants in a chat. (Generally handled by the `messages` table association or a dedicated `participants` table if implemented).
 
 ---

@@ -42,7 +42,6 @@ def test_challenge_log_timestamp(init_db):
     db.session.add(challenge_log)
     db.session.commit()
 
-    # Check if timestamp is automatically set to the current time
     assert isinstance(challenge_log.timestamp, datetime)
     assert challenge_log.timestamp <= datetime.utcnow()
 
@@ -52,7 +51,6 @@ def test_challenge_log_repr(sample_challenge_log):
     challenge_log = sample_challenge_log
     repr_output = repr(challenge_log)
 
-    # Check that the user_id in the repr_output is correct
     assert repr_output.startswith("<ChallengeLog(user_id=")
     assert "domain=codecombat.com" in repr_output
 
@@ -81,12 +79,10 @@ def test_challenge_log_with_optional_fields(init_db):
         user_id=123,
         domain="HackerRank",
         challenge_slug="sample-challenge-slug",
-        # Missing course_id and course_instance, which are optional
     )
     db.session.add(challenge_log)
     db.session.commit()
 
-    # Assert the ChallengeLog was created without errors
     assert challenge_log.user_id == 123
     assert challenge_log.domain == "HackerRank"
 

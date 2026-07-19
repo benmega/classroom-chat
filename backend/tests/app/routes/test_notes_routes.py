@@ -5,7 +5,6 @@ from application.models.note import Note
 from application.models.user import User
 from application.extensions import db
 
-# Ensure this matches your file structure
 ROUTE_MODULE_PATH = "application.routes.notes_routes"
 
 def test_upload_note_no_auth(client):
@@ -27,13 +26,11 @@ def test_upload_note_success(mock_get_s3_client, logged_in_client, sample_user, 
     mock_s3_client.upload_fileobj.return_value = None
     logged_in_client.application.config["USE_S3"] = True
 
-    # 1. Ensure user exists in DB
     db_user = db.session.get(User, sample_user.id)
     if not db_user:
         init_db.session.add(sample_user)
         init_db.session.commit()
 
-    # 2. CRITICAL FIX: Update session to use ID instead of Username
     with logged_in_client.session_transaction() as sess:
         sess["user"] = sample_user.id  # <--- This fixes the lookup error
 
@@ -63,13 +60,11 @@ def test_upload_note_s3_failure(mock_get_s3_client, logged_in_client, sample_use
     mock_s3_client.upload_fileobj.side_effect = Exception("AWS Down")
     logged_in_client.application.config["USE_S3"] = True
 
-    # 1. Ensure user exists in DB
     db_user = db.session.get(User, sample_user.id)
     if not db_user:
         init_db.session.add(sample_user)
         init_db.session.commit()
 
-    # 2. CRITICAL FIX: Update session to use ID
     with logged_in_client.session_transaction() as sess:
         sess["user"] = sample_user.id
 
@@ -108,7 +103,6 @@ def test_upload_note_local_success(logged_in_client, sample_user, init_db):
     note_id = response.json["note"]["id"]
     note_url = response.json["note"]["url"]
     
-    # Verify file is served
     filename = note_url.split("/")[-1]
     resp_view = logged_in_client.get(f"/notes/view/{filename}")
     assert resp_view.status_code == 200
@@ -129,7 +123,6 @@ def test_upload_note_local_success(logged_in_client, sample_user, init_db):
     resp_del_unauth = logged_in_client.post(f"/notes/delete/{note_id}")
     assert resp_del_unauth.status_code == 403
 
-    # Success delete by owner
     with logged_in_client.session_transaction() as sess:
         sess["user"] = sample_user.id
 
@@ -152,4 +145,4 @@ def test_delete_note_s3(mock_get_s3_client, logged_in_client, sample_user, init_
     resp = logged_in_client.post(f"/notes/delete/{note.id}")
     assert resp.status_code == 200
     assert resp.json["status"] == "success"
-    mock_s3.delete_object.assert_called_once()
+    mock_s3.delete_object.assert_called_once()

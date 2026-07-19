@@ -14,10 +14,8 @@ def test_get_children_non_parent(client, sample_user):
     assert response.status_code == 403
 
 def test_parent_flow_success(client, init_db):
-    # Create parent
     parent_user = User(username="parent_1", role="parent", is_approved=True)
     parent_user.set_password("pass123")
-    # Create student
     student_user = User(username="student_1", role="student", nickname="Stu", connection_code="CONN123", is_approved=True)
     student_user.set_password("pass123")
     
@@ -29,21 +27,17 @@ def test_parent_flow_success(client, init_db):
         sess["user"] = parent_user.id
         sess["_user_id"] = str(parent_user.id)
 
-    # 1. Check children (should be empty initially)
     resp = client.get("/api/parents/children")
     assert resp.status_code == 200
     assert resp.json["data"]["children"] == []
 
-    # 2. Connect student via code
     # Empty code check
     resp = client.post("/api/parents/connect/code", json={})
     assert resp.status_code == 400
 
-    # Invalid code
     resp = client.post("/api/parents/connect/code", json={"code": "INVALID"})
     assert resp.status_code == 404
 
-    # Success code
     resp = client.post("/api/parents/connect/code", json={"code": "CONN123"})
     assert resp.status_code == 200
     assert resp.json["data"]["student"]["id"] == student_user.id
@@ -52,13 +46,11 @@ def test_parent_flow_success(client, init_db):
     resp = client.post("/api/parents/connect/code", json={"code": "CONN123"})
     assert resp.status_code == 400
 
-    # 3. Check children list now
     resp = client.get("/api/parents/children")
     assert resp.status_code == 200
     assert len(resp.json["data"]["children"]) == 1
     assert resp.json["data"]["children"][0]["id"] == student_user.id
 
-    # 4. Get student report
     # Try report for unlinked student
     resp = client.get("/api/parents/student/999/report")
     assert resp.status_code == 403
@@ -68,7 +60,6 @@ def test_parent_flow_success(client, init_db):
     assert resp.status_code == 200
     assert resp.json["data"]["username"] == "student_1"
 
-    # 5. Disconnect student
     # Disconnect non-existent student
     resp = client.post("/api/parents/disconnect/999")
     assert resp.status_code == 404
@@ -85,6 +76,5 @@ def test_parent_flow_success(client, init_db):
     resp = client.post(f"/api/parents/disconnect/{student_user.id}")
     assert resp.status_code == 200
 
-    # Verify disconnected
     resp = client.get("/api/parents/children")
     assert resp.json["data"]["children"] == []

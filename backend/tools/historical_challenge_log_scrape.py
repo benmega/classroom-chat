@@ -5,9 +5,7 @@ import time
 
 import requests
 
-# --------------------------------------------------------------------------------
 # 1. CONFIGURATION
-# --------------------------------------------------------------------------------
 # PASTE YOUR COOKIE HERE
 YOUR_COOKIE = """_ga=GA1.2.1818552674.1665805079; _fbp=fb.1.1665805090786.306764578; __stripe_mid=3291438a-ab74-4a95-81de-083406d17536128861; cf_clearance=hRI_WhIEPkZTlnEFl1Epd83ilpf.LQgn0zUQksuHu3A-1746342968-1.2.1.1-h.o9x1I4k1pRqSONn66lo6oPTH588wxXUV7GWliEzUEpncLGVsAqXGakcPMZPFkVTq0b1TdsgSPxOH3OZb899XLzBRqV.7KyzKsvJHsMwBpUMfJydmzzHr1uYW2h7667M0T76nYtDHIJq.aAQFvvoZwWsbulwqqVba8E46I8F93X6RzO8.kuzwKAZ8O8C_AW.Bulp9ub8SAw3vIH6c1akg7mmQTv_Cc6DXfBzNHopHn4uicVoNDlImOxTrT2ib6ye.cKjiXyqiG9tgD6a0.EECQyWPQ25YporprSESSjESyh20qtAJ3GPT3Cpk4a2LhPzP4jIe1x0h6PgK0ETUPsSo9iexrLFZOOszBxRBDX_W4l4xOJje3MmUEhHE_JjSUQ; _gcl_au=1.1.462457496.1761962615; g_state={"i_l":0,"i_ll":1765088852115}; shaTagVal=production-2025-12-05-08-10-20; _gid=GA1.2.1240164609.1765378129; codecombat.sess=eyJwYXNzcG9ydCI6eyJ1c2VyIjp7ImlkIjoiNjJkMjNkOTc1ZGFmZDYwMDI1ZjhjNTIwIiwiY3JlYXRlZCI6IjIwMjUtMTItMTBUMTQ6NTY6MDcrMDA6MDAiLCJleHBpcmVzIjoiMjAyNi0wMS0xMFQxNDo1NjowNyswMDowMCJ9fX0=; codecombat.sess.sig=bPj6gzsM_4BYzOtl1AGeKY-f6mg; fs_lua=1.1765378568744; fs_uid=#RQW5S#1d9cf541-7531-42eb-8f75-c5ef2280d761:e9962044-7e56-4741-b520-586330a04f76:1765378132171::2#e29d7b99#/1787464886; _gat=1; _ga_6D0ZC7L5M1=GS2.2.s1765378132$o528$g1$t1765378569$j60$l0$h0; _dd_s=logs=1&id=71bfbfd9-c19a-4008-acab-a92d8519a9a9&created=1765378129054&expire=1765379469374"""
 
@@ -25,9 +23,7 @@ OWNER_ID = "62d23d975dafd60025f8c520"
 FILENAME = "../instance/migration/master_challenge_log.csv"
 
 
-# --------------------------------------------------------------------------------
 # 2. HELPER FUNCTIONS
-# --------------------------------------------------------------------------------
 def fetch_json(url, description):
     print(f"Fetching {description}...")
     try:
@@ -71,11 +67,8 @@ def get_context(url):
     return domain, instance
 
 
-# --------------------------------------------------------------------------------
 # 3. MAIN EXECUTION LOOP
-# --------------------------------------------------------------------------------
 def main(DOMAIN, URL_LEVELS):
-    # 1. Fetch Course Instances Dynamically
     url_course_instances = f"https://{DOMAIN}/db/course_instance?ownerID={OWNER_ID}"
     course_instances = fetch_json(url_course_instances, "Course Instances List")
 
@@ -91,13 +84,11 @@ def main(DOMAIN, URL_LEVELS):
         f"Found {len(course_instances)} course instances across {len(unique_classrooms)} unique classrooms."
     )
 
-    # 2. Fetch Global Level Data (Once)
     levels_data = fetch_json(URL_LEVELS, "Global Course Data")
     level_map = build_level_map(levels_data)
 
     all_rows = []
 
-    # 3. Iterate Through Each Classroom
     for index, class_id in enumerate(unique_classrooms):
         print(
             f"\n--- Processing Classroom {index + 1}/{len(unique_classrooms)} (ID: {class_id}) ---"
@@ -109,7 +100,6 @@ def main(DOMAIN, URL_LEVELS):
             f"https://{DOMAIN}/db/classroom/{class_id}/member-sessions?memberLimit=100"
         )
 
-        # Fetch Data
         members_data = fetch_json(url_members, "Members")
         sessions_data = fetch_json(url_sessions, "Sessions")
 
@@ -147,9 +137,7 @@ def main(DOMAIN, URL_LEVELS):
         # Sleep briefly to be nice to the API
         time.sleep(1)
 
-        # 4. Save Master CSV
         if all_rows:
-            # Ensure directory exists
             os.makedirs(os.path.dirname(FILENAME), exist_ok=True)
 
             fields = [
@@ -162,7 +150,6 @@ def main(DOMAIN, URL_LEVELS):
                 "helper",
             ]
 
-            # Check if the file already exists to avoid duplicate headers
             file_exists = os.path.isfile(FILENAME)
 
             # Open in 'a' (append) mode instead of 'w' (write)

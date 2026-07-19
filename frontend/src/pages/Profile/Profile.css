@@ -1196,7 +1196,6 @@
     }
 }
 
-/* --- Added for iss_009, iss_011, iss_012 fixes --- */
 .modal-actions {
     display: flex;
     gap: 10px;

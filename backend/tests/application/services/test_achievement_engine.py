@@ -17,7 +17,6 @@ from application.services.achievement_engine import (
 )
 
 def test_check_achievement_requirement_parsing(init_db, sample_user):
-    # Invalid requirement_value should parse as 0
     achievement = Achievement(
         name="Invalid Requirement",
         slug="invalid-req",
@@ -62,7 +61,6 @@ def test_check_achievement_types_with_stats(init_db, sample_user):
     assert check_achievement(sample_user, ach_project) is True
 
     # Progress type
-    # Mock user.get_progress
     class MockUser:
         def __init__(self):
             self.projects = []
@@ -75,7 +73,6 @@ def test_check_achievement_types_with_stats(init_db, sample_user):
     mock_user = MockUser()
     assert check_achievement(mock_user, ach_progress) is True
 
-    # Test checking with precomputed stats dict
     stats = {
         "chat_count": 5,
         "consistency_streak": 3,
@@ -90,7 +87,7 @@ def test_check_achievement_types_with_stats(init_db, sample_user):
     assert check_achievement(sample_user, ach_trade, stats=stats) is True
 
     # Certificate type
-    cert = UserCertificate(user_id=sample_user.id, achievement_id=ach_cert.id, url="http://example.com/cert.pdf")
+    cert = UserCertificate(user_id=sample_user.id, achievement_id=ach_cert.id, url="http://example.com/cert.pdf", reviewed=True)
     db.session.add(cert)
     db.session.commit()
     assert check_achievement(sample_user, ach_cert) is True
@@ -107,14 +104,12 @@ def test_check_achievement_types_no_stats(init_db, sample_user):
     db.session.add_all([ach_chat, ach_community, ach_session, ach_trade])
     db.session.commit()
 
-    # 1. Chat (querying Message table)
     m1 = Message(user_id=sample_user.id, content="Hi")
     m2 = Message(user_id=sample_user.id, content="Hello")
     db.session.add_all([m1, m2])
     db.session.commit()
     assert check_achievement(sample_user, ach_chat) is True
 
-    # 2. Community (querying ChallengeLog with helper = user.username)
     # Make sure we use a unique helper name that is case insensitive
     cl1 = ChallengeLog(user_id=999, domain="x", challenge_slug="slug1", helper=sample_user.username.upper())
     cl2 = ChallengeLog(user_id=999, domain="x", challenge_slug="slug2", helper=sample_user.username.lower())
@@ -122,13 +117,11 @@ def test_check_achievement_types_no_stats(init_db, sample_user):
     db.session.commit()
     assert check_achievement(sample_user, ach_community) is True
 
-    # 3. Session (querying SessionLog)
     slog = SessionLog(user_id=sample_user.id, start_time=datetime.utcnow() - timedelta(minutes=20), end_time=datetime.utcnow())
     db.session.add(slog)
     db.session.commit()
     assert check_achievement(sample_user, ach_session) is True
 
-    # 4. Trade (querying DuckTradeLog)
     tlog1 = DuckTradeLog(user_id=sample_user.id, status="completed", digital_ducks=1, bit_ducks=[], byte_ducks=[])
     tlog2 = DuckTradeLog(user_id=sample_user.id, status="completed", digital_ducks=1, bit_ducks=[], byte_ducks=[])
     db.session.add_all([tlog1, tlog2])
@@ -145,13 +138,11 @@ def test_get_achievement_progress(init_db, sample_user):
     assert val == 35
     assert req == 50
 
-    # Test ValueError requirement
     ach.requirement_value = "invalid"
     db.session.commit()
     val, req = get_achievement_progress(sample_user, ach)
     assert req == 0
 
-    # Test unknown type
     ach.type = "unknown"
     db.session.commit()
     val, req = get_achievement_progress(sample_user, ach)
@@ -161,7 +152,6 @@ def test_calculate_consistency(init_db, sample_user):
     # No logs
     assert _calculate_consistency(sample_user.id) == 0
 
-    # Create logs on specific weeks
     # isocalendar returns (year, week, weekday)
     # Let's generate dates in specific ISO weeks
     # Week 1, 2025: 2025-01-01 (is Wednesday, week 1)

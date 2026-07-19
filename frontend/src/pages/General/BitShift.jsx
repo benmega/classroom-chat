@@ -39,7 +39,6 @@ const BitShift = () => {
             // INTENTIONAL FRICTION: We deliberately DO NOT auto-sync the digitalDucks 
             // value to the new binary total here. Students MUST calculate and enter 
             // the decimal equivalent manually to reinforce binary-to-decimal learning.
-            // (Removed autofill feature)
             
             return newCounts;
         });

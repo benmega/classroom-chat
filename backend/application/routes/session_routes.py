@@ -82,12 +82,7 @@ def heartbeat():
                 ],
                 Namespace="ClassroomChat/Activity",
             )
-        except Exception as e:
-            print(f"Error publishing metric to CloudWatch: {e}")
-
-        # --- END MODIFIED CODE ---
-
-    else:
-        print(f"No log found for {user_id}")
+        except Exception:
+            pass
 
     return jsonify(success=True, timestamp=datetime.utcnow().isoformat())

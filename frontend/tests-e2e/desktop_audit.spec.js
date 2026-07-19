@@ -26,14 +26,12 @@ test.describe('Desktop UI Audit', () => {
     console.log('2. Waiting for redirection to dashboard...');
     await page.waitForURL('**/admin/dashboard', { timeout: 15000 });
     
-    // Wait for the loading screen to disappear
     await page.waitForTimeout(2000);
     
     const dashboardPath = path.join(screenshotsDir, 'desktop_dashboard_audit.png');
     console.log(`4. Capturing dashboard screenshot to: ${dashboardPath}`);
     await page.screenshot({ path: dashboardPath, fullPage: true });
 
-    // Navigate to Chat
     console.log('5. Clicking on the chat link...');
     const chatLink = page.locator('a[href="/chat"], a[href="/channels"]').first();
     if (await chatLink.count() > 0) {
@@ -46,7 +44,6 @@ test.describe('Desktop UI Audit', () => {
       console.log('WARNING: No chat link found.');
     }
 
-    // Navigate to Profile via URL (link may not be visible on desktop layout)
     console.log('7. Navigating to profile page...');
     await page.goto('http://localhost:5173/profile');
     await page.waitForTimeout(3000);

@@ -121,8 +121,6 @@ def submit_trade():
                 return jsonify({"status": "error", "message": msg}), 401
             flash(msg, "danger")
             return redirect("/login")
-
-        # --- NEW CODE: Check for existing pending trades ---
         existing_trade = DuckTradeLog.query.filter_by(
             user_id=user.id, status="pending"
         ).first()
@@ -134,7 +132,6 @@ def submit_trade():
                 return jsonify({"status": "error", "message": msg}), 400
             flash(msg, "warning")
             return redirect("/trade")
-        # ---------------------------------------------------
 
         if is_ajax and request.is_json:
             data = request.get_json()

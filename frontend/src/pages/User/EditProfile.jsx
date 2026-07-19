@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+
 import { Save, X, Eye, EyeOff, Copy } from 'lucide-react';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
@@ -10,7 +10,6 @@ import { getApiUrl } from '../../utils/apiUrl';
 
 const EditProfile = () => {
     const { user, checkAuth } = useAuthStore();
-    const navigate = useNavigate();
     
     const [nickname, setNickname] = useState('');
     const [bio, setBio] = useState('');

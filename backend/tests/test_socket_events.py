@@ -22,7 +22,6 @@ def test_socket_connect_disconnect_student(app, sample_user, init_db):
     with flask_client.session_transaction() as sess:
         sess["user"] = sample_user.id
 
-    # Add student to a classroom to cover room joining
     classroom = Classroom(id="cs_101", name="CS 101", language="Python", url="http://example.com")
     classroom.users.append(sample_user)
     db.session.add(classroom)
@@ -31,7 +30,6 @@ def test_socket_connect_disconnect_student(app, sample_user, init_db):
     socket_client = socketio.test_client(app, flask_test_client=flask_client)
     assert socket_client.is_connected()
 
-    # Verify status broadcast on connect
     received = socket_client.get_received()
     status_change_events = [e for e in received if e["name"] == "user_status_change"]
     assert len(status_change_events) == 1
@@ -40,7 +38,6 @@ def test_socket_connect_disconnect_student(app, sample_user, init_db):
     # Clean up/Disconnect
     socket_client.disconnect()
     
-    # Verify user offline status change is emitted (note: disconnect doesn't emit to itself, but we can verify DB/session status)
     with app.app_context():
         u = db.session.get(User, sample_user.id)
         assert u.is_online is False
@@ -87,7 +84,6 @@ def test_socket_send_message_student_success(app, sample_user, init_db):
     assert args["content"] == "Hello class!"
     assert args["is_global"] is False # Forced to False for students
 
-    # Verify saved in DB
     with app.app_context():
         msg = Message.query.filter_by(content="Hello class!").first()
         assert msg is not None
@@ -100,7 +96,6 @@ def test_socket_send_message_disabled_or_muted(app, sample_user, init_db):
     with flask_client.session_transaction() as sess:
         sess["user"] = sample_user.id
 
-    # 1. Message sending disabled globally
     config = Configuration(message_sending_enabled=False)
     db.session.add(config)
     db.session.commit()
@@ -111,7 +106,6 @@ def test_socket_send_message_disabled_or_muted(app, sample_user, init_db):
     assert not any(e["name"] == "message_received" for e in received)
     socket_client.disconnect()
 
-    # 2. User muted (can_chat = False)
     config.message_sending_enabled = True
     sample_user.can_chat = False
     db.session.commit()
@@ -127,7 +121,6 @@ def test_socket_send_message_admin_global(app, sample_admin, init_db):
     with flask_client.session_transaction() as sess:
         sess["user"] = sample_admin.id
 
-    # Create config
     config = Configuration(message_sending_enabled=True)
     db.session.add(config)
     db.session.commit()
@@ -175,10 +168,8 @@ def test_socket_send_message_rate_limit(app, sample_user, init_db):
         "target_classrooms": [classroom.id]
     })
     received2 = socket_client.get_received()
-    # Check that it did NOT broadcast message_received
     assert not any(e["name"] == "message_received" for e in received2)
 
-    # Verify second message not saved in DB
     with app.app_context():
         msg2 = Message.query.filter_by(content="Second message").first()
         assert msg2 is None

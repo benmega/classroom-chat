@@ -23,16 +23,16 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">73.75% </span>
+                <span class="strong">73.49% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>59/80</span>
+                <span class='fraction'>61/83</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">30% </span>
+                <span class="strong">28.12% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>9/30</span>
+                <span class='fraction'>9/32</span>
             </div>
         
             
@@ -44,9 +44,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">73.75% </span>
+                <span class="strong">73.49% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>59/80</span>
+                <span class='fraction'>61/83</span>
             </div>
         
             
@@ -160,7 +160,13 @@
 <a name='L95'></a><a href='#L95'>95</a>
 <a name='L96'></a><a href='#L96'>96</a>
 <a name='L97'></a><a href='#L97'>97</a>
-<a name='L98'></a><a href='#L98'>98</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
+<a name='L98'></a><a href='#L98'>98</a>
+<a name='L99'></a><a href='#L99'>99</a>
+<a name='L100'></a><a href='#L100'>100</a>
+<a name='L101'></a><a href='#L101'>101</a>
+<a name='L102'></a><a href='#L102'>102</a>
+<a name='L103'></a><a href='#L103'>103</a>
+<a name='L104'></a><a href='#L104'>104</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
@@ -177,12 +183,13 @@
 <span class="cline-any cline-yes">7x</span>
 <span class="cline-any cline-yes">7x</span>
 <span class="cline-any cline-yes">7x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">7x</span>
-<span class="cline-any cline-yes">7x</span>
 <span class="cline-any cline-yes">7x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">7x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -192,6 +199,10 @@
 <span class="cline-any cline-yes">7x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">7x</span>
 <span class="cline-any cline-yes">7x</span>
 <span class="cline-any cline-yes">7x</span>
@@ -236,6 +247,7 @@
 <span class="cline-any cline-yes">7x</span>
 <span class="cline-any cline-yes">7x</span>
 <span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">7x</span>
 <span class="cline-any cline-yes">7x</span>
 <span class="cline-any cline-yes">7x</span>
@@ -264,77 +276,83 @@ import SmartImage from '../common/SmartImage';
 import Linkify from '../common/Linkify';
 import { getApiUrl } from '../../utils/apiUrl';
 &nbsp;
-const ChatMessage = React.memo(({ msg, user, onDelete }) =&gt; {
+const ChatMessage = React.memo(({ msg, user, onDelete, isConsecutive }) =&gt; {
     const borderSpeed = msg.animated_border_speed === <span class="branch-0 cbranch-no" title="branch not covered" >'slow' ? '3s' : m</span>sg.animated_border_speed === <span class="branch-0 cbranch-no" title="branch not covered" >'fast' ? '0.5s' : '</span>1.5s';
     const isOwnMessage = user &amp;&amp; msg &amp;&amp; user.id === msg.user_id;
 &nbsp;
     return (
-        &lt;div className={`chat-message-group ${isOwnMessage ? 'own-message' : 'other-message'}`}&gt;
+        &lt;div className={`chat-message-group ${isOwnMessage ? 'own-message' : 'other-message'} ${<span class="branch-0 cbranch-no" title="branch not covered" >isConsecutive ? 'consecutive' : '</span>'}`}&gt;
             &lt;div className="message-row"&gt;
-                &lt;Link 
-                    to={msg.<span class="branch-0 cbranch-no" title="branch not covered" >slug ? `/profile/${msg.slug}` : '</span>#'} 
-                    className="avatar-link"
-                &gt;
-                    &lt;div 
-                        className={`avatar-container ${msg.<span class="branch-0 cbranch-no" title="branch not covered" >has_animated_border ? "perk-animated-border" : "</span>"}`}
-                        style={msg.<span class="branch-0 cbranch-no" title="branch not covered" >has_animated_border ? { '--border-speed': borderSpeed } : {</span>}}
+                {!isConsecutive ? (
+                    &lt;Link 
+                        to={msg.<span class="branch-0 cbranch-no" title="branch not covered" >slug ? `/profile/${msg.slug}` : '</span>#'} 
+                        className="avatar-link"
                     &gt;
-                        {msg.<span class="branch-0 cbranch-no" title="branch not covered" >user_profile_pic ? (</span>
-<span class="cstat-no" title="statement not covered" >                            &lt;SmartImage </span>
-<span class="cstat-no" title="statement not covered" >                                src={getApiUrl(`/user/profile_pictures/${msg.user_profile_pic}`)} </span>
-<span class="cstat-no" title="statement not covered" >                                alt={msg.user_name || 'User'} </span>
-<span class="cstat-no" title="statement not covered" >                                fallbackType="avatar"</span>
-<span class="cstat-no" title="statement not covered" >                            /&gt;</span>
-                        ) : (
-                            &lt;UserIcon size={20} /&gt;
-                        )}
-                    &lt;/div&gt;
-                &lt;/Link&gt;
-                &lt;div className="message-content-wrapper"&gt;
-                    &lt;div className="message-header"&gt;
-                        &lt;span className="message-author"&gt;{msg.<span class="branch-0 cbranch-no" title="branch not covered" >user_name || 'Unknown'}&lt;</span>/span&gt;
-                        
-                        &lt;div className="message-targeting-info"&gt;
-                            {msg.<span class="branch-0 cbranch-no" title="branch not covered" >is_global &amp;&amp; (</span>
-<span class="cstat-no" title="statement not covered" >                                &lt;Globe size={12} color="var(--primary-color)" style={{ marginTop: '2px' }} title="Global Post" /&gt;</span>
-                            )}
-                            
-                            {(user?.is_admin || user?.id === msg.user_id) &amp;&amp; !msg.is_global &amp;&amp; (
-                                &lt;&gt;
-                                    {msg.<span class="branch-0 cbranch-no" title="branch not covered" >target_live &amp;&amp; (</span>
-<span class="cstat-no" title="statement not covered" >                                        &lt;span className="targeting-badge"&gt;</span>
-<span class="cstat-no" title="statement not covered" >                                            &lt;Radio size={10} /&gt; Live</span>
-<span class="cstat-no" title="statement not covered" >                                        &lt;/span&gt;</span>
-                                    )}
-                                    {msg.<span class="branch-0 cbranch-no" title="branch not covered" >target_classrooms?.length === <span class="branch-0 cbranch-no" title="branch not covered" >1</span> ? (</span>
-<span class="cstat-no" title="statement not covered" >                                        &lt;span className="targeting-badge"&gt;</span>
-<span class="cstat-no" title="statement not covered" >                                            &lt;Users size={10} /&gt; {msg.target_classrooms[0]}</span>
-<span class="cstat-no" title="statement not covered" >                                        &lt;/span&gt;</span>
-                                    ) : msg.<span class="branch-0 cbranch-no" title="branch not covered" >target_classrooms?.length &gt; <span class="branch-0 cbranch-no" title="branch not covered" >1</span> ? (</span>
-<span class="cstat-no" title="statement not covered" >                                        &lt;span className="targeting-badge" title={msg.target_classrooms.join(', ')}&gt;</span>
-<span class="cstat-no" title="statement not covered" >                                            &lt;Users size={10} /&gt; {msg.target_classrooms.length} Classes</span>
-<span class="cstat-no" title="statement not covered" >                                        &lt;/span&gt;</span>
-                                    ) : null}
-&nbsp;
-                                    {msg.<span class="branch-0 cbranch-no" title="branch not covered" >target_users?.length === <span class="branch-0 cbranch-no" title="branch not covered" >1</span> ? (</span>
-<span class="cstat-no" title="statement not covered" >                                        &lt;span className="targeting-badge user-badge"&gt;</span>
-<span class="cstat-no" title="statement not covered" >                                            &lt;UserPlus size={10} /&gt; {msg.target_users[0]}</span>
-<span class="cstat-no" title="statement not covered" >                                        &lt;/span&gt;</span>
-                                    ) : msg.<span class="branch-0 cbranch-no" title="branch not covered" >target_users?.length &gt; <span class="branch-0 cbranch-no" title="branch not covered" >1</span> ? (</span>
-<span class="cstat-no" title="statement not covered" >                                        &lt;span className="targeting-badge user-badge" title={msg.target_users.join(', ')}&gt;</span>
-<span class="cstat-no" title="statement not covered" >                                            &lt;UserPlus size={10} /&gt; {msg.target_users.length} Students</span>
-<span class="cstat-no" title="statement not covered" >                                        &lt;/span&gt;</span>
-                                    ) : null}
-                                &lt;/&gt;
+                        &lt;div 
+                            className={`avatar-container ${msg.<span class="branch-0 cbranch-no" title="branch not covered" >has_animated_border ? "perk-animated-border" : "</span>"}`}
+                            style={msg.<span class="branch-0 cbranch-no" title="branch not covered" >has_animated_border ? { '--border-speed': borderSpeed } : {</span>}}
+                        &gt;
+                            {msg.<span class="branch-0 cbranch-no" title="branch not covered" >user_profile_pic ? (</span>
+<span class="cstat-no" title="statement not covered" >                                &lt;SmartImage </span>
+<span class="cstat-no" title="statement not covered" >                                    src={getApiUrl(`/user/profile_pictures/${msg.user_profile_pic}`)} </span>
+<span class="cstat-no" title="statement not covered" >                                    alt={msg.user_name || 'User'} </span>
+<span class="cstat-no" title="statement not covered" >                                    fallbackType="avatar"</span>
+<span class="cstat-no" title="statement not covered" >                                /&gt;</span>
+                            ) : (
+                                &lt;UserIcon size={20} /&gt;
                             )}
                         &lt;/div&gt;
+<span class="branch-0 cbranch-no" title="branch not covered" >                    &lt;/Link&gt;</span>
+                ) : (
+<span class="cstat-no" title="statement not covered" >                    &lt;div className="chat-avatar-placeholder" /&gt;</span>
+                )}
+                &lt;div className="message-content-wrapper"&gt;
+                    {!isConsecutive &amp;&amp; (
+                        &lt;div className="message-header"&gt;
+                            &lt;span className="message-author"&gt;{msg.<span class="branch-0 cbranch-no" title="branch not covered" >user_name || 'Unknown'}&lt;</span>/span&gt;
+                            
+                            &lt;div className="message-targeting-info"&gt;
+                                {msg.<span class="branch-0 cbranch-no" title="branch not covered" >is_global &amp;&amp; (</span>
+<span class="cstat-no" title="statement not covered" >                                    &lt;Globe size={12} color="var(--primary-color)" className="icon-globe" title="Global Post" /&gt;</span>
+                                )}
+                                
+                                {(user?.is_admin || user?.id === msg.user_id) &amp;&amp; !msg.is_global &amp;&amp; (
+                                    &lt;&gt;
+                                        {msg.<span class="branch-0 cbranch-no" title="branch not covered" >target_live &amp;&amp; (</span>
+<span class="cstat-no" title="statement not covered" >                                            &lt;span className="targeting-badge"&gt;</span>
+<span class="cstat-no" title="statement not covered" >                                                &lt;Radio size={10} /&gt; Live</span>
+<span class="cstat-no" title="statement not covered" >                                            &lt;/span&gt;</span>
+                                        )}
+                                        {msg.<span class="branch-0 cbranch-no" title="branch not covered" >target_classrooms?.length === <span class="branch-0 cbranch-no" title="branch not covered" >1</span> ? (</span>
+<span class="cstat-no" title="statement not covered" >                                            &lt;span className="targeting-badge"&gt;</span>
+<span class="cstat-no" title="statement not covered" >                                                &lt;Users size={10} /&gt; {msg.target_classrooms[0]}</span>
+<span class="cstat-no" title="statement not covered" >                                            &lt;/span&gt;</span>
+                                        ) : msg.<span class="branch-0 cbranch-no" title="branch not covered" >target_classrooms?.length &gt; <span class="branch-0 cbranch-no" title="branch not covered" >1</span> ? (</span>
+<span class="cstat-no" title="statement not covered" >                                            &lt;span className="targeting-badge" title={msg.target_classrooms.join(', ')}&gt;</span>
+<span class="cstat-no" title="statement not covered" >                                                &lt;Users size={10} /&gt; {msg.target_classrooms.length} Classes</span>
+<span class="cstat-no" title="statement not covered" >                                            &lt;/span&gt;</span>
+                                        ) : null}
 &nbsp;
-                        &lt;span className="chat-message-timestamp"&gt;
-                            {msg.created_at ? new Date(typeof msg.created_at === 'string' &amp;&amp; !msg.created_at.endsWith('Z'<span class="branch-0 cbranch-no" title="branch not covered" >) ? msg.created_at + 'Z' : m</span>sg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }<span class="branch-0 cbranch-no" title="branch not covered" >) : 'Just now'}</span>
-                        &lt;/span&gt;
-                    &lt;/div&gt;
+                                        {msg.<span class="branch-0 cbranch-no" title="branch not covered" >target_users?.length === <span class="branch-0 cbranch-no" title="branch not covered" >1</span> ? (</span>
+<span class="cstat-no" title="statement not covered" >                                            &lt;span className="targeting-badge user-badge"&gt;</span>
+<span class="cstat-no" title="statement not covered" >                                                &lt;UserPlus size={10} /&gt; {msg.target_users[0]}</span>
+<span class="cstat-no" title="statement not covered" >                                            &lt;/span&gt;</span>
+                                        ) : msg.<span class="branch-0 cbranch-no" title="branch not covered" >target_users?.length &gt; <span class="branch-0 cbranch-no" title="branch not covered" >1</span> ? (</span>
+<span class="cstat-no" title="statement not covered" >                                            &lt;span className="targeting-badge user-badge" title={msg.target_users.join(', ')}&gt;</span>
+<span class="cstat-no" title="statement not covered" >                                                &lt;UserPlus size={10} /&gt; {msg.target_users.length} Students</span>
+<span class="cstat-no" title="statement not covered" >                                            &lt;/span&gt;</span>
+                                        ) : null}
+                                    &lt;/&gt;
+                                )}
+                            &lt;/div&gt;
+&nbsp;
+                            &lt;span className="chat-message-timestamp"&gt;
+                                {msg.created_at ? new Date(typeof msg.created_at === 'string' &amp;&amp; !msg.created_at.endsWith('Z'<span class="branch-0 cbranch-no" title="branch not covered" >) ? msg.created_at + 'Z' : m</span>sg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }<span class="branch-0 cbranch-no" title="branch not covered" >) : 'Just now'}</span>
+                            &lt;/span&gt;
+                        &lt;/div&gt;
+                    )}
                     &lt;div className="message-body-row"&gt;
-                        &lt;div className={`message-bubble ${msg.<span class="branch-0 cbranch-no" title="branch not covered" >chat_font_color ? "perk-chat-font" : "</span>"}`} style={{ flex: 1, minWidth: 0, ...(msg.<span class="branch-0 cbranch-no" title="branch not covered" >chat_font_color ? { "--chat-font-color": msg.chat_font_color } : {</span>}) }}&gt;
+                        &lt;div className={`message-bubble message-bubble-container ${msg.<span class="branch-0 cbranch-no" title="branch not covered" >chat_font_color ? "perk-chat-font" : "</span>"}`} style={msg.<span class="branch-0 cbranch-no" title="branch not covered" >chat_font_color ? { "--chat-font-color": msg.chat_font_color } : {</span>}}&gt;
                             &lt;Linkify text={msg.content} isUserMessage={false} /&gt;
                         &lt;/div&gt;
                         {(user?.is_admin || user?.id === msg.user_id) &amp;&amp; (
@@ -361,7 +379,7 @@ export default ChatMessage;
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-07-09T16:06:35.385Z
+                at 2026-07-19T07:06:46.962Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

@@ -2,6 +2,7 @@ import os
 import re
 import uuid
 from datetime import datetime
+from sqlalchemy.orm import selectinload
 
 from PIL import Image
 from flask import Blueprint, jsonify, send_from_directory, current_app, abort, render_template
@@ -191,12 +192,18 @@ def profile():
     if not user_id:
         return "Authentication required. Please log in.", 401
         
-    user_obj = db.session.get(User, user_id)
+    user_obj = User.query.options(
+        selectinload(User.skills),
+        selectinload(User.projects),
+        selectinload(User.certificates),
+        selectinload(User.achievements),
+        selectinload(User.notes)
+    ).filter_by(id=user_id).first()
     if not user_obj:
         return "User not found", 404
 
     if request.accept_mimetypes.best == "application/json" or request.is_json:
-        return {"target": user_obj.to_dict(), "viewer": user_obj.to_dict()}
+        return {"target": user_obj.to_dict(), "viewer": user_obj.to_dict_summary()}
 
     return redirect("/profile")
 
@@ -205,7 +212,13 @@ def profile():
 @api_response
 def view_user_profile(slug):
     # Use slug column for the lookup
-    target_profile = User.query.filter_by(slug=slug).first_or_404()
+    target_profile = User.query.options(
+        selectinload(User.skills),
+        selectinload(User.projects),
+        selectinload(User.certificates),
+        selectinload(User.achievements),
+        selectinload(User.notes)
+    ).filter_by(slug=slug).first_or_404()
 
     # Determine who is looking at the page
     viewer_id = session.get("user")
@@ -214,7 +227,7 @@ def view_user_profile(slug):
     if request.accept_mimetypes.best == "application/json" or request.is_json:
         return {
             "target": target_profile.to_dict(),
-            "viewer": viewer.to_dict() if viewer else None,
+            "viewer": viewer.to_dict_summary() if viewer else None,
         }
 
     return redirect(f"/profile/{slug}")

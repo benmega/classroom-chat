@@ -1,12 +1,10 @@
-﻿import { test, expect } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 
 test.describe('Achievements Page', () => {
   test.beforeEach(async ({ page }) => {
-    // Enable browser console logging in tests
     page.on('console', msg => console.log(`BROWSER CONSOLE: [${msg.type()}] ${msg.text()}`));
     page.on('pageerror', err => console.log(`BROWSER ERROR: ${err.message}`));
 
-    // Mock user session
     await page.route('**/auth/status', async (route) => {
       await route.fulfill({
         status: 200,
@@ -20,7 +18,6 @@ test.describe('Achievements Page', () => {
       });
     });
 
-    // Mock achievements API
     await page.route('**/api/achievements/all', async (route) => {
       await route.fulfill({
         status: 200,
@@ -45,7 +42,6 @@ test.describe('Achievements Page', () => {
       });
     });
 
-    // Mock heartbeat
     await page.route('**/heartbeat', async (route) => {
       await route.fulfill({
         status: 200,
@@ -54,7 +50,6 @@ test.describe('Achievements Page', () => {
       });
     });
 
-    // Mock message endpoints
     await page.route('**/message/**', async (route) => {
       await route.fulfill({
         status: 200,
@@ -65,13 +60,10 @@ test.describe('Achievements Page', () => {
   });
 
   test('should display achievements successfully', async ({ page }) => {
-    // Navigate to the Achievements page
     await page.goto('/achievements');
     
-    // Wait for the achievement name to be visible
     await expect(page.locator('.achievement-name', { hasText: 'First Steps' })).toBeVisible({ timeout: 10000 });
     
-    // Wait for the description to be visible
-    await expect(page.locator('.achievement-desc', { hasText: 'Log in for the first time' })).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('.achievement-card[title="Log in for the first time"]')).toBeVisible({ timeout: 10000 });
   });
 });

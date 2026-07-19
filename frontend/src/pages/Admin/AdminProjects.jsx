@@ -55,7 +55,6 @@ const AdminProjects = () => {
 
     const uniqueStudents = Array.from(new Set(projects.map(p => p.user_nickname))).filter(Boolean).sort();
     
-    // Assign Project state removed - moved to AdminAssignProject.jsx
     const fetchProjects = useCallback(async () => {
         setIsLoading(true);
         try {
@@ -97,8 +96,7 @@ const AdminProjects = () => {
             const response = await client.post(`/api/admin/handle-project-review/${projectId}`, {
                 action,
                 teacher_comment: teacherComment,
-                packet_reward: packetReward,
-                filter_context: filter
+                packet_reward: packetReward
             });
 
             if (response.data.status === 'success') {
@@ -114,8 +112,6 @@ const AdminProjects = () => {
             setIsSubmitting(false);
         }
     };
-
-    // User Search for Assignment logic removed - moved to AdminAssignProject.jsx
 
     let processedProjects = [...projects];
 

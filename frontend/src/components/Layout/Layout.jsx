@@ -175,13 +175,11 @@ const Layout = ({ children }) => {
                                                 </>
                                             )}
                                             {user?.role !== 'parent' && <li className="mobile-only-stat mobile-only dropdown-divider"></li>}
-                                            {!isParent && (
-                                                <li>
-                                                    <Link to="/profile" onClick={() => setIsDropdownOpen(false)} data-testid="nav-profile">
-                                                        <span className="flex items-center gap-2">Profile</span>
-                                                    </Link>
-                                                </li>
-                                            )}
+                                            <li>
+                                                <Link to="/profile" onClick={() => setIsDropdownOpen(false)} data-testid="nav-profile">
+                                                    <span className="flex items-center gap-2">Profile</span>
+                                                </Link>
+                                            </li>
                                             {user?.is_admin && (
                                                 <li><Link to="/admin" onClick={() => setIsDropdownOpen(false)}>Admin Panel</Link></li>
                                             )}

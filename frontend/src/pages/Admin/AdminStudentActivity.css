@@ -156,7 +156,7 @@
     to { transform: rotate(360deg); }
 }
 
-/* --- Added for Inline Style Cleanup --- */
+
 .skeleton-list { display: flex; flex-direction: column; gap: 1rem; }
 .skeleton-card { padding: 1.5rem; display: flex; justify-content: space-between; align-items: center; background: var(--bg-secondary); border-radius: 12px; border: 1px solid var(--border-subtle); }
 .skeleton-card-left { display: flex; align-items: center; gap: 12px; }

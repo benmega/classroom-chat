@@ -339,7 +339,7 @@ button:disabled {
 /* --- Shop Perks --- */
 @keyframes borderPulse {
     0% { box-shadow: 0 0 0 0 rgba(250, 204, 21, 0.9); border-color: var(--accent-color); }
-    50% { box-shadow: 0 0 0 15px rgba(250, 204, 21, 0); border-color: #fef08a; }
+    50% { box-shadow: 0 0 0 15px rgba(250, 204, 21, 0); border-color: var(--accent-color); }
     100% { box-shadow: 0 0 0 0 rgba(250, 204, 21, 0); border-color: var(--accent-color); }
 }
 
@@ -401,7 +401,7 @@ button:disabled {
 .badge-rounded { padding: 4px 8px; border-radius: 6px; }
 .bg-secondary { background: var(--bg-secondary); }
 .font-mono { font-family: monospace; }
-.language-badge-styled { padding: 4px 8px; background: rgba(59, 130, 246, 0.1); color: var(--primary-accessible); border-radius: 6px; font-size: 0.85rem; font-weight: 500; }
+.language-badge-styled { padding: 4px 8px; background: var(--primary-light); color: var(--primary-accessible); border-radius: 6px; font-size: 0.85rem; font-weight: 500; }
 .d-none { display: none; }
 .w-fit-content { width: fit-content; }
 .p-2rem { padding: 2rem; }
@@ -410,7 +410,7 @@ button:disabled {
 .mb-1-25rem { margin-bottom: 1.25rem; }
 .mt-1-5rem { margin-top: 1.5rem; }
 .flex-shrink-0 { flex-shrink: 0; }
-.danger-zone-title { color: #ef4444; }
+.danger-zone-title { color: var(--error-color); }
 .danger-zone-desc { color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0.5rem; }
 .utility-card-styled { display: flex; gap: 1.5rem; padding: 1.5rem; background: var(--bg-secondary); border-radius: 12px; border: 1px solid var(--border-subtle); }
 .transaction-item-styled { display: flex; justify-content: space-between; padding: 16px 0; border-bottom: 1px solid var(--border-subtle); }
@@ -423,7 +423,7 @@ button:disabled {
 .text-sm { font-size: var(--font-sm); }
 .max-w-100 { max-width: 100%; }
 .activity-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: var(--primary-color); margin-right: 6px; }
-.linkify-link { color: #1a73e8; text-decoration: none; }
+.linkify-link { color: var(--blue-600); text-decoration: none; }
 .text-break-word { overflow-wrap: anywhere; word-break: break-word; }
 .screen-recorder-btn-error { background: var(--error-color) !important; border-color: var(--error-dark) !important; }
 .smart-image-placeholder { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; background-color: var(--bg-secondary); color: var(--text-muted); }
