@@ -97,7 +97,7 @@ describe('ForgotPassword', () => {
             expect(toast.success).toHaveBeenCalledWith('Verification code sent to your email!');
         });
         
-        expect(screen.getByTestId('reset-page')).toBeInTheDocument();
+        expect(await screen.findByTestId('reset-page')).toBeInTheDocument();
     });
 
     it('shows error toast if submission fails', async () => {
