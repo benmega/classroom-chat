@@ -157,9 +157,8 @@ describe('ManageProject', () => {
 
         await waitFor(() => {
             expect(toast.success).toHaveBeenCalledWith('Project created!');
+            expect(screen.getByTestId('profile-page')).toBeInTheDocument();
         });
-        
-        expect(screen.getByTestId('profile-page')).toBeInTheDocument();
     });
 
     it('updates project successfully', async () => {
@@ -223,9 +222,8 @@ describe('ManageProject', () => {
 
         await waitFor(() => {
             expect(toast.success).toHaveBeenCalledWith('Project deleted.');
+            expect(screen.getByTestId('profile-page')).toBeInTheDocument();
         });
-        
-        expect(screen.getByTestId('profile-page')).toBeInTheDocument();
     });
 
     it('does not delete if confirmation is cancelled', async () => {

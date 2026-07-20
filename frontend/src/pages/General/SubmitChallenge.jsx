@@ -3,6 +3,7 @@ import client from '../../api/client';
 import toast from 'react-hot-toast';
 import useAuthStore from '../../store/useAuthStore';
 import UserSearchInput from '../../components/common/UserSearchInput';
+import Modal from '../../components/common/Modal';
 import confetti from 'canvas-confetti';
 import './SubmitChallenge.css';
 import './SubmitCertificate.css';
@@ -17,6 +18,7 @@ const SubmitChallenge = () => {
     const [notes, setNotes] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [showOptional, setShowOptional] = useState(false);
+    const [pendingCourseRequest, setPendingCourseRequest] = useState(null);
 
     // Certificate support
     const [isCertificate, setIsCertificate] = useState(false);
@@ -43,6 +45,21 @@ const SubmitChallenge = () => {
                 e.target.value = null;
                 setCertificateFile(null);
             }
+        }
+    };
+
+    const handleCourseRequest = async () => {
+        try {
+            const response = await client.post('/api/course-requests/submit', pendingCourseRequest);
+            if (response.data.success) {
+                toast.success(response.data.message);
+                setPendingCourseRequest(null);
+                setUrl('');
+                setHelpers('');
+                setNotes('');
+            }
+        } catch (error) {
+            toast.error(error.response?.data?.message || 'Failed to submit request');
         }
     };
 
@@ -126,8 +143,17 @@ const SubmitChallenge = () => {
             }
         } catch (error) {
             console.error('Submission error:', error);
-            toast.error(error.response?.data?.message || error.response?.data?.error || 'An error occurred during submission.');
-            setUrl('');
+            const data = error.response?.data;
+            if (data?.course_instance_not_found) {
+                setPendingCourseRequest({
+                    course_instance_id: data.course_instance_id,
+                    requested_course_id: data.requested_course_id,
+                    url: url
+                });
+            } else {
+                toast.error(data?.message || data?.error || 'An error occurred during submission.');
+                setUrl('');
+            }
         } finally {
             setIsSubmitting(false);
         }
@@ -235,6 +261,22 @@ const SubmitChallenge = () => {
                     </div>
                 </form>
             </div>
+            
+            {pendingCourseRequest && (
+                <Modal 
+                    isOpen={!!pendingCourseRequest} 
+                    onClose={() => setPendingCourseRequest(null)}
+                    title="Course Instance Not Found"
+                >
+                    <p style={{marginBottom: '1rem'}}>
+                        The challenge you submitted belongs to an unrecognized course instance. Would you like to request an admin to add it?
+                    </p>
+                    <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+                        <button type="button" className="btn-secondary" onClick={() => setPendingCourseRequest(null)}>Cancel</button>
+                        <button type="button" className="btn-premium" onClick={handleCourseRequest}>Request Course Addition</button>
+                    </div>
+                </Modal>
+            )}
         </div>
     );
 };

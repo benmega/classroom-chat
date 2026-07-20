@@ -278,6 +278,7 @@
 
 /* Mobile badge — inline after label */
 .admin-nav-badge.mobile-badge {
+    display: none;
     position: static;
     top: unset;
     right: unset;

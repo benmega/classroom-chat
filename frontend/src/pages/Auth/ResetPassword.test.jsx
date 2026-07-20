@@ -125,9 +125,8 @@ describe('ResetPassword', () => {
 
         await waitFor(() => {
             expect(toast.success).toHaveBeenCalledWith('Password reset successfully! Please log in.');
+            expect(screen.getByTestId('login-page')).toBeInTheDocument();
         });
-        
-        expect(screen.getByTestId('login-page')).toBeInTheDocument();
     });
 
     it('shows error toast on submission failure', async () => {

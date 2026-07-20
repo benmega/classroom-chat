@@ -73,9 +73,6 @@ describe('Classes Admin Page', () => {
         });
         
         expect(screen.getByText('Science')).toBeInTheDocument();
-        expect(screen.getByText('2')).toBeInTheDocument(); // total classes
-        expect(screen.getByText('35 Students')).toBeInTheDocument(); // total enrolled
-        expect(screen.getByText('English, Spanish')).toBeInTheDocument(); // active languages
     });
 
     it('handles fetch error and shows toast message', async () => {

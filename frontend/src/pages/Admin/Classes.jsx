@@ -60,12 +60,6 @@ const Classes = () => {
             c.language?.toLowerCase().includes(term)
         );
     });
-
-    // Stats calculations
-    const totalClasses = classrooms.length;
-    const activeLanguages = Array.from(new Set(classrooms.map(c => c.language).filter(Boolean))).join(', ') || 'None';
-    const totalEnrolled = classrooms.reduce((sum, c) => sum + (c.student_count || 0), 0);
-
     if (isLoading) return (
         <div className="admin-classes-page">
             <header className="page-header">
@@ -105,23 +99,6 @@ const Classes = () => {
                     <RefreshCw size={18} />
                 </button>
             </AdminPageHeader>
-
-            <div className="users-stats-row">
-                <div className="stat-mini-card">
-                    <span className="label">Total Classrooms</span>
-                    <span className="value">{totalClasses}</span>
-                </div>
-                <div className="stat-mini-card">
-                    <span className="label">Total Enrolled</span>
-                    <span className="value">{totalEnrolled} Students</span>
-                </div>
-                <div className="stat-mini-card">
-                    <span className="label">Active Languages</span>
-                    <span className="value text-truncate">
-                        {activeLanguages}
-                    </span>
-                </div>
-            </div>
 
             <div className="users-table-container card">
                 <table className="users-table">

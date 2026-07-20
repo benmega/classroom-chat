@@ -188,7 +188,13 @@ const AdminProjects = () => {
             return 0;
         });
     } else {
-        processedProjects.sort((a, b) => b.id - a.id);
+        processedProjects.sort((a, b) => {
+            const aPending = !a.teacher_comment;
+            const bPending = !b.teacher_comment;
+            if (aPending && !bPending) return -1;
+            if (!aPending && bPending) return 1;
+            return b.id - a.id;
+        });
     }
 
     if (selectedProject) {

@@ -7,7 +7,8 @@ import {
     Search,
     BookOpen,
     X,
-    FolderKanban
+    FolderKanban,
+    Check
 } from 'lucide-react';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
@@ -19,13 +20,15 @@ const AdminCourseInstances = () => {
     const [instances, setInstances] = useState([]);
     const [classrooms, setClassrooms] = useState([]);
     const [courses, setCourses] = useState([]);
+    const [pendingRequests, setPendingRequests] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isRefreshing, setIsRefreshing] = useState(false);
     
     // Modal states
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [modalMode, setModalMode] = useState('create'); // 'create' | 'edit'
+    const [modalMode, setModalMode] = useState('create'); // 'create' | 'edit' | 'approve'
     const [selectedInstance, setSelectedInstance] = useState(null);
+    const [selectedRequest, setSelectedRequest] = useState(null);
     
     // Form fields
     const [formId, setFormId] = useState('');
@@ -42,15 +45,17 @@ const AdminCourseInstances = () => {
         else setIsRefreshing(true);
         
         try {
-            const [instancesRes, classroomsRes, coursesRes] = await Promise.all([
+            const [instancesRes, classroomsRes, coursesRes, requestsRes] = await Promise.all([
                 client.get('/api/admin/crud/courseinstance'),
                 client.get('/api/admin/crud/classroom'),
-                client.get('/api/admin/crud/course')
+                client.get('/api/admin/crud/course'),
+                client.get('/api/course-requests/pending').catch(_e => ({ data: { requests: [] } }))
             ]);
             
             setInstances(instancesRes.data.data || []);
             setClassrooms(classroomsRes.data.data || []);
             setCourses(coursesRes.data.data || []);
+            setPendingRequests(requestsRes.data.requests || []);
         } catch (error) {
             toast.error('Failed to load course instances data.');
             console.error(error);
@@ -79,6 +84,29 @@ const AdminCourseInstances = () => {
         setFormId(instance.id);
         setFormClassroomId(instance.classroom_id || '');
         setFormCourseId(instance.course_id || '');
+        setFormErrors({});
+        setIsModalOpen(true);
+    };
+
+    const handleOpenApproveModal = (req) => {
+        setModalMode('approve');
+        setSelectedRequest(req);
+        setFormId(req.course_instance_id);
+        
+        let defaultClassroom = classrooms[0]?.id || '';
+        if (req.student_classrooms && req.student_classrooms.length > 0) {
+            defaultClassroom = req.student_classrooms[0].id;
+        }
+        
+        let defaultCourse = courses[0]?.id || '';
+        if (req.requested_course_id) {
+            // check if requested_course_id exists in courses
+            const courseExists = courses.some(c => c.id === req.requested_course_id);
+            if (courseExists) defaultCourse = req.requested_course_id;
+        }
+
+        setFormClassroomId(defaultClassroom);
+        setFormCourseId(defaultCourse);
         setFormErrors({});
         setIsModalOpen(true);
     };
@@ -113,9 +141,15 @@ const AdminCourseInstances = () => {
             if (modalMode === 'create') {
                 await client.post('/api/admin/crud/courseinstance', payload);
                 toast.success('Course Instance created successfully.');
-            } else {
+            } else if (modalMode === 'edit') {
                 await client.put(`/api/admin/crud/courseinstance/${selectedInstance.id}`, payload);
                 toast.success('Course Instance updated successfully.');
+            } else if (modalMode === 'approve') {
+                await client.post(`/api/course-requests/${selectedRequest.id}/approve`, {
+                    classroom_id: formClassroomId,
+                    course_id: formCourseId
+                });
+                toast.success('Course Instance Request approved.');
             }
             setIsModalOpen(false);
             fetchData(true);
@@ -135,6 +169,17 @@ const AdminCourseInstances = () => {
             fetchData(true);
         } catch {
             toast.error('Failed to delete course instance.');
+        }
+    };
+
+    const handleRejectRequest = async (id) => {
+        if (!window.confirm('Are you sure you want to reject this request?')) return;
+        try {
+            await client.post(`/api/course-requests/${id}/reject`);
+            toast.success('Request rejected.');
+            fetchData(true);
+        } catch {
+            toast.error('Failed to reject request.');
         }
     };
 
@@ -201,6 +246,73 @@ const AdminCourseInstances = () => {
                     <RefreshCw size={18} />
                 </button>
             </AdminPageHeader>
+
+            {pendingRequests.length > 0 && (
+                <div className="instances-table-container card" style={{marginBottom: '2rem'}}>
+                    <h3 style={{padding: '1rem', borderBottom: '1px solid var(--border-color)', margin: 0}}>Pending Student Requests</h3>
+                    <table className="instances-table">
+                        <thead>
+                            <tr>
+                                <th>Student</th>
+                                <th>Requested Instance ID</th>
+                                <th>Requested Course</th>
+                                <th>URL</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {pendingRequests.map(req => (
+                                <tr key={req.id}>
+                                    <td>
+                                        <div style={{fontWeight: 500}}>{req.student_username}</div>
+                                        {req.student_classrooms?.map(c => (
+                                            <span key={c.id} className="classroom-pill" style={{fontSize: '0.75rem', padding: '0.1rem 0.4rem', marginTop: '4px'}}>
+                                                {c.name}
+                                            </span>
+                                        ))}
+                                    </td>
+                                    <td>
+                                        <div className="instance-id-cell">
+                                            <FolderKanban size={16} className="icon" />
+                                            <span className="id-text">{req.course_instance_id}</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {req.requested_course_id ? (
+                                            <span className="course-pill">
+                                                <BookOpen size={12} className="course-icon-margin" />
+                                                {getCourseName(req.requested_course_id)}
+                                            </span>
+                                        ) : 'None'}
+                                    </td>
+                                    <td>
+                                        <a href={req.url} target="_blank" rel="noreferrer" style={{color: 'var(--primary-color)', fontSize: '0.85rem', maxWidth: '200px', display: 'inline-block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}>{req.url}</a>
+                                    </td>
+                                    <td>
+                                        <div className="action-group">
+                                            <button 
+                                                className="action-btn" 
+                                                onClick={() => handleOpenApproveModal(req)}
+                                                title="Approve Request"
+                                                style={{color: 'var(--success-color)'}}
+                                            >
+                                                <Check size={16} />
+                                            </button>
+                                            <button 
+                                                className="action-btn delete" 
+                                                onClick={() => handleRejectRequest(req.id)}
+                                                title="Reject Request"
+                                            >
+                                                <X size={16} />
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            )}
 
             <div className="instances-table-container card">
                 <table className="instances-table">
@@ -275,7 +387,7 @@ const AdminCourseInstances = () => {
                 <div className="modal-overlay">
                     <div className="modal-card">
                         <div className="modal-header">
-                            <h3>{modalMode === 'create' ? 'Create Course Instance' : 'Edit Course Instance'}</h3>
+                            <h3>{modalMode === 'create' ? 'Create Course Instance' : modalMode === 'approve' ? 'Approve Course Instance' : 'Edit Course Instance'}</h3>
                             <button className="close-btn" onClick={() => setIsModalOpen(false)}>
                                 <X size={20} />
                             </button>
@@ -289,7 +401,7 @@ const AdminCourseInstances = () => {
                                     value={formId}
                                     onChange={(e) => setFormId(e.target.value)}
                                     placeholder="e.g. Sat1030CS4PY or 678b56dc..."
-                                    disabled={modalMode === 'edit'}
+                                    disabled={modalMode === 'edit' || modalMode === 'approve'}
                                     className={formErrors.id ? 'error' : ''}
                                 />
                                 {formErrors.id && <span className="error-text">{formErrors.id}</span>}

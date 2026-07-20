@@ -93,7 +93,6 @@ const Users = () => {
         fetchClassroomCards,
         searchTerm,
         setSearchTerm,
-        stats,
         handleToggleChat
     } = useUsersManagement(activeRole);
 
@@ -201,57 +200,7 @@ const Users = () => {
                 ))}
             </div>
 
-            {/* Stats Row — conditional by tab */}
-            <div className="users-stats-row">
-                {activeRole === '' && (
-                    <>
-                        <div className="stat-mini-card">
-                            <span className="label">Total Users</span>
-                            <span className="value">{totalUsers || users.length}</span>
-                        </div>
-                        <div className="stat-mini-card">
-                            <span className="label">Online Now</span>
-                            <span className="value">{stats?.online ?? users.filter(u => u.is_online).length}</span>
-                        </div>
-                        <div className="stat-mini-card">
-                            <span className="label">Admins</span>
-                            <span className="value">{stats?.admins ?? users.filter(u => u.is_admin).length}</span>
-                        </div>
-                        <div className="stat-mini-card">
-                            <span className="label">Pending Approval</span>
-                            <span className="value">{stats?.pending ?? users.filter(u => !u.is_approved && !u.is_admin).length}</span>
-                        </div>
-                    </>
-                )}
-                {activeRole === 'student' && (
-                    <>
-                        <div className="stat-mini-card">
-                            <span className="label">Total Students</span>
-                            <span className="value">{totalUsers || users.length}</span>
-                        </div>
-                        <div className="stat-mini-card">
-                            <span className="label">Online Now</span>
-                            <span className="value">{stats?.online ?? users.filter(u => u.is_online).length}</span>
-                        </div>
-                        <div className="stat-mini-card">
-                            <span className="label">Pending Approval</span>
-                            <span className="value">{stats?.pending ?? users.filter(u => !u.is_approved && !u.is_admin).length}</span>
-                        </div>
-                    </>
-                )}
-                {activeRole === 'parent' && (
-                    <>
-                        <div className="stat-mini-card">
-                            <span className="label">Total Parents</span>
-                            <span className="value">{totalUsers || users.length}</span>
-                        </div>
-                        <div className="stat-mini-card">
-                            <span className="label">Online Now</span>
-                            <span className="value">{stats?.online ?? users.filter(u => u.is_online).length}</span>
-                        </div>
-                    </>
-                )}
-            </div>
+
 
             <div className="users-table-container card">
                 <table className="users-table">
