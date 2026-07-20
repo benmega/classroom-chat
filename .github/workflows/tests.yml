@@ -34,7 +34,7 @@ jobs:
         
       - name: Check for pending migrations
         run: |
-          flask db stamp head
+          flask db upgrade
           flask db check
         env:
           FLASK_APP: main.py
@@ -68,4 +68,4 @@ jobs:
         run: npm ci
         
       - name: Run Vitest
-        run: npm run test -- --run
+        run: npm run test -- --run
