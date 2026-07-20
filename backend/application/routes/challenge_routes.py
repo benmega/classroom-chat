@@ -181,7 +181,13 @@ def submit_challenge():
         safe_msg = msg.replace("'", "\\'")
         return f"<html><body><script>alert('Failed: {safe_msg}'); window.close();</script>Failed: {msg}</body></html>", 400
 
-    return jsonify({"success": False, "message": msg}), 400
+    return jsonify({
+        "success": False, 
+        "message": msg,
+        "course_instance_not_found": details.get("course_instance_not_found"),
+        "course_instance_id": details.get("course_instance_id"),
+        "requested_course_id": details.get("requested_course_id")
+    }), 400
 
 
 def get_track_for_course_id(course_id):
@@ -301,6 +307,9 @@ def _log_challenge(details, user, helper=None):
             return {
                 "success": False,
                 "message": "This level doesn't seem to be part of a valid course instance.",
+                "course_instance_not_found": True,
+                "course_instance_id": provided_id,
+                "requested_course_id": details.get("course_id")
             }
 
         # Get the parent course ID mapped to this instance

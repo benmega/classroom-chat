@@ -34,6 +34,7 @@ def setup_models():
     from .store_item import StoreItem  # noqa: F401
     from .user_item_purchase import UserItemPurchase  # noqa: F401
     from .standard_project import StandardProject  # noqa: F401
+    from .course_instance_request import CourseInstanceRequest  # noqa: F401
 
 
 # setup_models() is called by create_app() within app_context
