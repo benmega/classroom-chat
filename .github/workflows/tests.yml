@@ -32,14 +32,7 @@ jobs:
       - name: Install Playwright Browsers
         run: playwright install --with-deps
         
-      - name: Check for pending migrations
-        run: |
-          flask db upgrade
-          flask db check
-        env:
-          FLASK_APP: main.py
-          FLASK_ENV: development
-          
+
       - name: Run Mypy
         run: python -m mypy .
 

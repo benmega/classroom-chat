@@ -133,13 +133,14 @@ def create_app(config_class=None):
             if app.config.get("ENV") == "development":
                 check_for_schema_drift(app)
         inspector = inspect(db.engine)
-        if not inspector.has_table("users"):
-            # This part is now redundant for create_all, but we still want to ensure default config if it was a fresh DB
-            ensure_default_configuration()
-            logger.info("Database initialized for the first time.")
-        else:
-            # Still check if we need to ensure default configuration even if users exists
-            ensure_default_configuration()
+        if "db" not in sys.argv:
+            if not inspector.has_table("users"):
+                # This part is now redundant for create_all, but we still want to ensure default config if it was a fresh DB
+                ensure_default_configuration()
+                logger.info("Database initialized for the first time.")
+            else:
+                # Still check if we need to ensure default configuration even if users exists
+                ensure_default_configuration()
 
         scheduler.start()
 
