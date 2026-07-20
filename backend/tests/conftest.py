@@ -57,6 +57,8 @@ def test_app():
             "TESTING": True,
             "WTF_CSRF_ENABLED": False,
             "SQLALCHEMY_DATABASE_URI": f"sqlite:///{db_path}",
+            "COGNITO_CLIENT_ID": "test_client_id",
+            "COGNITO_USER_POOL_ID": "test_user_pool_id",
         }
     )
 
