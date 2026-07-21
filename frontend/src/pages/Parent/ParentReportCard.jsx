@@ -76,7 +76,7 @@ const ParentReportCard = () => {
     const handleParentRequestSubmit = async () => {
         setIsSubmittingParentRequest(true);
         try {
-            const response = await client.post('/track-requests/', {
+            const response = await client.post('/api/track-requests/', {
                 requester_type: 'parent',
                 requested_track: parentSelectedTrack,
                 student_id: studentId

@@ -32,7 +32,7 @@ const AdminLayout = ({ children }) => {
             try {
                 const [usersRes, requestsRes] = await Promise.all([
                     client.get('/api/admin/pending_users').catch(() => ({ data: {} })),
-                    client.get('/admin/track-requests/').catch(() => ({ data: {} }))
+                    client.get('/api/admin/track-requests/').catch(() => ({ data: {} }))
                 ]);
                 
                 if (usersRes.data?.status === 'success') {

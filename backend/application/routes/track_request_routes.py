@@ -10,7 +10,7 @@ from application.models.user import User
 from application.models.track_requests import TrackChangeRequest
 from application.utilities.db_helpers import get_user
 
-track_request_bp = Blueprint("track_request", __name__)
+track_request_bp = Blueprint("track_request", __name__, url_prefix="/api")
 
 
 @track_request_bp.route("/track-requests/", methods=["POST"])
