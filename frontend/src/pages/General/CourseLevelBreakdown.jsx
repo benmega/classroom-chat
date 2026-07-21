@@ -142,7 +142,7 @@ const CourseLevelBreakdown = () => {
         e.preventDefault();
         setIsSubmittingRequest(true);
         try {
-            const response = await client.post('/track-requests/', {
+            const response = await client.post('/api/track-requests/', {
                 requester_type: 'student',
                 requested_track: selectedNode.track
             });
