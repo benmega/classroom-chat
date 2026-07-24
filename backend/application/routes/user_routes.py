@@ -45,6 +45,7 @@ class LoginForm(FlaskForm):
 
 @csrf.exempt
 @user.route("/login", methods=["GET", "POST"])
+@limiter.limit("10 per minute; 100 per hour", methods=["POST"])
 def login():
     form = LoginForm()
     if request.is_json:
@@ -155,6 +156,7 @@ def logout():
 
 @csrf.exempt
 @user.route("/signup", methods=["POST"])
+@limiter.limit("5 per minute; 30 per hour")
 @api_response
 def signup():
     data = request.get_json()
@@ -163,6 +165,9 @@ def signup():
 
     if not username or not password:
         return "Username and password are required.", 400
+
+    if len(password) < 8:
+        return "Password must be at least 8 characters long.", 400
 
     if not re.fullmatch(r"[a-z0-9_]{3,30}", username):
         return (
@@ -211,6 +216,12 @@ def profile():
 @user.route("/profile/<slug>", methods=["GET"])
 @api_response
 def view_user_profile(slug):
+    # Intentionally public: profile pages are shareable, and this tradeoff is
+    # disclosed and accepted during onboarding.
+    # Determine who is looking at the page
+    viewer_id = session.get("user")
+    viewer = db.session.get(User, viewer_id) if viewer_id else None
+
     # Use slug column for the lookup
     target_profile = User.query.options(
         selectinload(User.skills),
@@ -219,10 +230,6 @@ def view_user_profile(slug):
         selectinload(User.achievements),
         selectinload(User.notes)
     ).filter_by(slug=slug).first_or_404()
-
-    # Determine who is looking at the page
-    viewer_id = session.get("user")
-    viewer = db.session.get(User, viewer_id) if viewer_id else None
 
     if request.accept_mimetypes.best == "application/json" or request.is_json:
         return {
@@ -727,6 +734,7 @@ def get_users_simple_list():
 
 
 @user.route("/api/users/search", methods=["GET"])
+@require_login
 @api_response
 def search_users():
     query = request.args.get("q", "").strip()

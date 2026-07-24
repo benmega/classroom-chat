@@ -1,9 +1,10 @@
 import os
 import uuid
-from flask import Blueprint, request, jsonify, session, current_app, send_from_directory
+from flask import Blueprint, request, jsonify, session, g, current_app, send_from_directory
 from werkzeug.utils import secure_filename
 
 from application import limiter
+from application.decorators.login_required import require_login
 from application.extensions import db
 from application.models.note import Note
 from application.models.user import User
@@ -105,9 +106,18 @@ def handle_local_note_upload(file):
 
 
 @notes_bp.route("/view/<filename>")
+@require_login
 @limiter.limit("500 per minute")
 def serve_note(filename):
-    """Serve a locally stored note."""
+    """Serve a locally stored note to its owner, their parents, or an admin."""
+    viewer = g.get("user")
+    note = Note.query.filter_by(filename=os.path.basename(filename)).first()
+    if note is not None and viewer is not None:
+        is_owner = note.user_id == viewer.id
+        is_parent = viewer in (note.user.parents or [])
+        if not (is_owner or is_parent or viewer.is_admin):
+            return jsonify({"error": "Not authorized to view this note"}), 403
+
     notes_dir = os.path.join(current_app.config["UPLOAD_FOLDER"], "notes")
 
     # Security: prevent traversal

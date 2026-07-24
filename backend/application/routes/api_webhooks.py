@@ -49,7 +49,7 @@ def youtube_callback():
         return jsonify({"success": True, "message": "YouTube info updated"})
     except Exception as e:
         db.session.rollback()
-        return jsonify({"success": False, "error": str(e)}), 500
+        return jsonify({"success": False, "error": "Internal server error"}), 500
 
 
 @webhooks_api.route("/transcribe", methods=["POST"])
@@ -78,4 +78,4 @@ def transcribe_callback():
         return jsonify({"success": True, "message": "Transcript updated"})
     except Exception as e:
         db.session.rollback()
-        return jsonify({"success": False, "error": str(e)}), 500
+        return jsonify({"success": False, "error": "Internal server error"}), 500

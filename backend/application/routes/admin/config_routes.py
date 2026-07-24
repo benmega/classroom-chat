@@ -68,7 +68,7 @@ def update_duck_multiplier():
         return jsonify({"success": False, "error": "Invalid multiplier value"}), 400
     except Exception as e:
         db.session.rollback()
-        return jsonify({"success": False, "error": str(e)}), 500
+        return jsonify({"success": False, "error": "Internal server error"}), 500
 
 
 @admin_bp.route("/add-banned-word", methods=["POST"])

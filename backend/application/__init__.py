@@ -96,8 +96,12 @@ def create_app(config_class=None):
         supports_credentials=True,
     )
 
-    # x_for=1 tells Flask to trust the first X-Forwarded-For header
-    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_port=1)
+    # x_for=1 tells Flask to trust the first X-Forwarded-For header.
+    # Only trust proxy headers in production, where nginx sets them. Trusting
+    # them in development would let anyone on the network spoof
+    # X-Forwarded-For: 127.0.0.1 and pass dev-login's localhost-only guard.
+    if os.getenv("FLASK_ENV", "development").lower() == "production":
+        app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_port=1)
 
     app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(hours=10)
 

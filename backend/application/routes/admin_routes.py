@@ -1,6 +1,9 @@
 from flask import Blueprint
 
-admin_pass = "duckduck"
+# Test-only override hook: leave None in production so verify_password falls
+# through to the real ADMIN_PASSWORD config value. Tests monkeypatch this
+# module attribute directly (see tests/app/routes/test_admin_routes.py).
+admin_pass = None
 admin_bp = Blueprint("admin", __name__)
 
 # Import routes to register them on the admin blueprint

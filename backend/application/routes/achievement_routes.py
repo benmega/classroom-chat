@@ -315,6 +315,8 @@ def submit_certificate():
 
 @achievements.route("/view_certificate/<int:cert_id>")
 def view_certificate(cert_id):
+    # Intentionally public: certificates are shareable achievements, and this
+    # tradeoff is disclosed and accepted during onboarding.
     cert = db.get_or_404(UserCertificate, cert_id)
     full_path = os.path.abspath(cert.file_path)
     directory = os.path.dirname(full_path)
@@ -365,6 +367,7 @@ def mark_reviewed(cert_id):
 
 @achievements.route("/download_certificate/<int:cert_id>")
 def download_certificate(cert_id):
+    # Intentionally public — see view_certificate.
     cert = db.get_or_404(UserCertificate, cert_id)
     full_path = os.path.abspath(cert.file_path)
     directory = os.path.dirname(full_path)

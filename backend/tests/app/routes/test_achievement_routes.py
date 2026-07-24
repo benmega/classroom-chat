@@ -711,6 +711,19 @@ def test_view_certificate(client, init_db, sample_admin, sample_user, sample_ach
         assert response.status_code == 200
 
 
+def test_view_certificate_is_public(client, init_db, sample_user, sample_achievement):
+    """Certificate viewing is intentionally public (no login required) —
+    this is a disclosed and accepted tradeoff, not an oversight."""
+    cert = UserCertificate(user_id=sample_user.id, achievement_id=sample_achievement.id, url="http://test", file_path="test.pdf")
+    db.session.add(cert)
+    db.session.commit()
+
+    with patch("application.routes.achievement_routes.os.path.exists", return_value=True), \
+         patch("application.routes.achievement_routes.send_from_directory", return_value="fake_file"):
+        response = client.get(f"/achievements/view_certificate/{cert.id}")
+        assert response.status_code == 200
+
+
 def test_admin_certificates(client, init_db, sample_admin):
     with client.session_transaction() as sess:
         sess["user"] = sample_admin.id

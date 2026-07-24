@@ -4,12 +4,15 @@ Type: py
 Summary: Database helper functions for users, messages, and conversations.
 """
 
+import logging
 import uuid
 
 from flask import abort
 
 from application.models.message import Message
 from application.models.user import User, db
+
+logger = logging.getLogger(__name__)
 
 
 def get_user(identifier):
@@ -58,10 +61,20 @@ def save_message_to_db(user_id, message, is_global=False, target_live=False, tar
     """
     try:
         from application.models.classroom import Classroom
+        from application.services.moderation_service import message_is_appropriate
+
         user = db.session.get(User, user_id)
         if not user:
             return {"success": False, "error": "User not found"}
-        
+
+        # Screen every non-admin message (students, parents, and AI output)
+        # against the banned-words list before it is stored or broadcast.
+        if not user.is_admin and not message_is_appropriate(message):
+            return {
+                "success": False,
+                "error": "Your message contains language that isn't allowed here.",
+            }
+
         new_message = Message(
             user_id=user_id,
             content=message,
@@ -93,18 +106,16 @@ def save_message_to_db(user_id, message, is_global=False, target_live=False, tar
         db.session.add(new_message)
         db.session.commit()
 
-        print(
-            f"Message saved with ID: {new_message.id} for user {user_id}"
-        )
+        logger.info(f"Message saved with ID: {new_message.id} for user {user_id}")
         return {
             "success": True,
             "message_id": new_message.id,
         }
 
-    except Exception as e:
-        print(f"Error saving message to database: {e}")
+    except Exception:
+        logger.exception("Error saving message to database")
         db.session.rollback()
-        return {"success": False, "error": str(e)}
+        return {"success": False, "error": "Failed to save message"}
 
 
 def generate_unique_username():

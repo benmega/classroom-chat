@@ -99,7 +99,7 @@ def get_feed():
 
     except Exception as e:
         logger.error(f"Error fetching feed: {e}")
-        return jsonify({"success": False, "error": str(e)}), 500
+        return jsonify({"success": False, "error": "Internal server error"}), 500
 
 @message.route("/api/me/context", methods=["GET"])
 @require_login
@@ -127,7 +127,7 @@ def get_me_context():
         })
     except Exception as e:
         logger.error(f"Error fetching context: {e}")
-        return jsonify({"success": False, "error": str(e)}), 500
+        return jsonify({"success": False, "error": "Internal server error"}), 500
 
 @message.route("/delete_message/<int:message_id>", methods=["DELETE"])
 @require_login
@@ -169,4 +169,4 @@ def delete_message(message_id):
         return jsonify({"success": True})
     except Exception as e:
         logger.error(f"Error deleting message: {e}")
-        return jsonify({"success": False, "error": str(e)}), 500
+        return jsonify({"success": False, "error": "Internal server error"}), 500

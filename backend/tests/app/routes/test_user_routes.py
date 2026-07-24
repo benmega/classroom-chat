@@ -188,6 +188,16 @@ def test_profile_not_authenticated(client, init_db):
     assert response.status_code == 401
 
 
+def test_view_user_profile_by_slug_is_public(client, init_db, sample_user):
+    """Profile pages are intentionally public (no login required) — this is
+    a disclosed and accepted tradeoff, not an oversight."""
+    response = client.get(
+        f"/user/profile/{sample_user.slug}", headers={"Accept": "application/json"}
+    )
+    assert response.status_code == 200
+    assert response.json["data"]["target"]["username"] == sample_user.username
+
+
 def test_edit_profile_get(client, init_db, sample_user):
     """Test GET request to edit profile page."""
     with client.session_transaction() as sess:
@@ -525,7 +535,13 @@ def test_get_project_templates(client, init_db, sample_user):
     assert "description" in templates["CS1 Capstone"]
     assert "Dangerous Skies" in templates
 
+def test_search_users_requires_login(client, init_db, sample_user):
+    resp = client.get(f"/user/api/users/search?q={sample_user.username}")
+    assert resp.status_code in (302, 401)
+
 def test_search_users(client, init_db, sample_user):
+    with client.session_transaction() as sess:
+        sess["user"] = sample_user.id
     resp = client.get(f"/user/api/users/search?q={sample_user.username}")
     assert resp.status_code == 200
     assert resp.json["data"]["users"][0]["username"] == sample_user.username

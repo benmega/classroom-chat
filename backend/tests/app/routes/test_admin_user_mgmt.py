@@ -431,8 +431,9 @@ def test_user_mgmt_error_branches(client, sample_admin, sample_user, init_db):
     
     # We test IntegrityError via verify_password later or set_username by mock
     
+    from application.config import TestingConfig
     resp = client.post("/api/admin/verify_password", data={
-        "password": "duckduck",
+        "password": TestingConfig.ADMIN_PASSWORD,
         "username": "Inval!d",
         "user_id": sample_user.id
     })
@@ -536,8 +537,9 @@ def test_user_mgmt_error_branches(client, sample_admin, sample_user, init_db):
         assert resp.status_code == 409
         
         # also for verify_password
+        from application.config import TestingConfig
         resp = client.post("/api/admin/verify_password", data={
-            "password": "duckduck",
+            "password": TestingConfig.ADMIN_PASSWORD,
             "username": "takenname",
             "user_id": sample_user.id
         })

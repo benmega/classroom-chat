@@ -94,7 +94,9 @@ describe('AdminStandardProjects', () => {
             data: { status: 'success', message: 'Created successfully.' }
         });
 
-        const saveButtonsNew = screen.getAllByRole('button', { name: /Save Template/i });
+        // The modal overlay divs also expose role="button", so pick the real submit <button>
+        const saveButtonsNew = screen.getAllByRole('button', { name: /Save Template/i })
+            .filter(el => el.tagName === 'BUTTON');
         fireEvent.submit(saveButtonsNew[0].closest('form'));
         
         await waitFor(() => {
@@ -131,7 +133,9 @@ describe('AdminStandardProjects', () => {
             data: { status: 'success', message: 'Updated successfully.' }
         });
 
-        const saveButtons = screen.getAllByRole('button', { name: /Save Template/i });
+        // The modal overlay divs also expose role="button", so pick the real submit <button>
+        const saveButtons = screen.getAllByRole('button', { name: /Save Template/i })
+            .filter(el => el.tagName === 'BUTTON');
         fireEvent.submit(saveButtons[0].closest('form'));
         
         await waitFor(() => {

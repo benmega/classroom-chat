@@ -361,14 +361,12 @@ def verify_password():
     username = request.form.get("username")
     user_id = request.form.get("user_id", type=int)
 
-    # testing patch is done against application.routes.admin_routes.admin_pass by test framework
-    # so we should use current_app for normal usage but support testing
-    try:
-        from application.routes.admin_routes import admin_pass
+    # Tests monkeypatch application.routes.admin_routes.admin_pass to inject a
+    # known value; in normal operation it's None, so we use the real
+    # ADMIN_PASSWORD from config.
+    from application.routes.admin_routes import admin_pass
 
-        app_admin_pass = admin_pass
-    except ImportError:
-        app_admin_pass = current_app.config.get("ADMIN_PASSWORD", "duckduck")
+    app_admin_pass = admin_pass if admin_pass is not None else current_app.config.get("ADMIN_PASSWORD")
 
     if password == app_admin_pass:
         if user_id and username:
