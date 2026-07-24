@@ -7,11 +7,22 @@ import {
     Check, Plus, Settings, Globe, Link2, BookOpen
 } from 'lucide-react';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
+import Chat from '../Chat/Chat';
 import Skeleton from '../../components/common/Skeleton';
 import SmartImage from '../../components/common/SmartImage';
 import { getApiUrl } from '../../utils/apiUrl';
 import { BulkConnectionCardsModal } from '../../components/admin/AdminModals';
 import './AdminClassDashboard.css';
+
+const getLanguageIconUrl = (language) => {
+    const lang = (language || '').toLowerCase();
+    if (lang.includes('python')) return "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/python/python-original.svg";
+    if (lang.includes('javascript') || lang.includes('js')) return "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/javascript/javascript-original.svg";
+    if (lang.includes('html') || lang.includes('css')) return "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/html5/html5-original.svg";
+    if (lang.includes('java') && !lang.includes('javascript')) return "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/java/java-original.svg";
+    if (lang.includes('c++') || lang.includes('cpp')) return "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/cplusplus/cplusplus-original.svg";
+    return null;
+};
 
 const AdminClassDashboard = () => {
     const { classId } = useParams();
@@ -22,6 +33,8 @@ const AdminClassDashboard = () => {
     const [allStudents, setAllStudents] = useState([]);
     const [selectedStudentId, setSelectedStudentId] = useState('');
     const [rosterSearchQuery, setRosterSearchQuery] = useState('');
+    const [activeTab, setActiveTab] = useState('stream');
+    const [joinCode, setJoinCode] = useState(null);
 
     // Connection cards states
     const [activeModal, setActiveModal] = useState(null);
@@ -33,6 +46,16 @@ const AdminClassDashboard = () => {
         try {
             const res = await client.get(`/api/admin/classrooms/${classId}`);
             setClassroom(res.data.classroom);
+
+            // Fetch join code
+            try {
+                const codeRes = await client.get(`/api/admin/classrooms/${classId}/join-code`);
+                if (codeRes.data.success) {
+                    setJoinCode(codeRes.data.join_code);
+                }
+            } catch (err) {
+                console.error("Failed to fetch join code:", err);
+            }
         } catch (err) {
             console.error('Failed to fetch classroom:', err);
             toast.error('Failed to load classroom details.');
@@ -181,52 +204,89 @@ const AdminClassDashboard = () => {
     return (
         <div className="admin-class-dashboard">
             <div className="back-navigation">
-                <button onClick={() => navigate('/admin/classes')} className="back-btn-text">
-                    <ChevronLeft size={16} /> Back to Directory
+                <button 
+                    onClick={() => navigate('/admin/classes')} 
+                    className="back-btn-text"
+                    aria-label="Back to Classroom Directory"
+                >
+                    <ChevronLeft size={16} aria-hidden="true" /> Back to Directory
                 </button>
             </div>
 
-            <AdminPageHeader title={classroom.name}>
-                <div className="header-actions">
-                    <button 
-                        className="secondary-btn" 
-                        onClick={async () => {
-                            await fetchClassroomCards();
-                            setActiveModal('bulk_connection_cards');
-                        }}
-                    >
+            <div className="classroom-banner">
+                <div className="banner-content">
+                    <h1>
+                        {classroom.name}
+                        {classroom.language && getLanguageIconUrl(classroom.language) ? (
+                            <img src={getLanguageIconUrl(classroom.language)} alt={classroom.language} className="banner-lang-icon" />
+                        ) : classroom.language && (
+                            <span className="banner-lang-badge">{classroom.language}</span>
+                        )}
+                    </h1>
+                </div>
+                <div className="banner-actions">
+                    {joinCode && (
+                        <div className="banner-join-code" title="Classroom Join Code">
+                            <span className="join-code-label">Code:</span>
+                            <span className="join-code-val">{joinCode}</span>
+                        </div>
+                    )}
+                    <button className="secondary-btn" onClick={async () => { await fetchClassroomDetails(); setActiveModal('bulk_connection_cards'); }}>
                         Print Connection Cards
                     </button>
                     <button onClick={fetchClassroomDetails} className="refresh-btn">
                         <RefreshCw size={18} />
                     </button>
                 </div>
-            </AdminPageHeader>
-
-            {/* Premium HUD Row */}
-            <div className="class-hud-row">
-                <div className="hud-stat-box">
-                    <span className="lbl">Classroom ID</span>
-                    <span className="val class-id-text">{classroom.id}</span>
-                </div>
-                <div className="hud-stat-box">
-                    <span className="lbl">Language</span>
-                    <span className="val lang-badge">{classroom.language}</span>
-                </div>
-                <div className="hud-stat-box">
-                    <span className="lbl">Enrolled</span>
-                    <span className="val">{classroom.students?.length || 0} Students</span>
-                </div>
-                <div className="hud-stat-box">
-                    <span className="lbl">Course ID</span>
-                    <span className="val">{classroom.course_id || 'None'}</span>
-                </div>
             </div>
 
-            <div className="admin-class-grid">
-                
-                {/* Roster Panel (Left column / Major column) */}
-                <div className="control-panel-card roster-card">
+            <div className="classroom-tabs">
+                <button className={`tab-btn ${activeTab === 'stream' ? 'active' : ''}`} onClick={() => setActiveTab('stream')}>Stream</button>
+                <button className={`tab-btn ${activeTab === 'classwork' ? 'active' : ''}`} onClick={() => setActiveTab('classwork')}>Classwork</button>
+                <button className={`tab-btn ${activeTab === 'people' ? 'active' : ''}`} onClick={() => setActiveTab('people')}>People</button>
+                <button className={`tab-btn ${activeTab === 'settings' ? 'active' : ''}`} onClick={() => setActiveTab('settings')}>Settings</button>
+            </div>
+
+            <div className="tab-content">
+                {activeTab === 'stream' && (
+                    <div className="tab-pane stream-pane">
+                        <div className="stream-chat-wrapper">
+                            <Chat filterClassroomId={Number(classId)} />
+                        </div>
+                    </div>
+                )}
+
+                {activeTab === 'classwork' && (
+                    <div className="tab-pane classwork-pane">
+                        <div className="admin-class-grid single-column">
+                            <div className="control-panel-card assignments-card">
+                        <div className="card-custom-header">
+                            <BookOpen size={20} />
+                            <h3>Connected Courses</h3>
+                        </div>
+                        <div className="assignments-list">
+                            {classroom.course_assignments && classroom.course_assignments.length > 0 ? (
+                                classroom.course_assignments.map(assign => (
+                                    <div key={assign.id} className="assignment-item">
+                                        <div className="assign-details">
+                                            <span className="assign-id-lbl">Course</span>
+                                            <span className="assign-id-val badge-course">{assign.course_name || assign.course_id || 'None'}</span>
+                                        </div>
+                                    </div>
+                                ))
+                            ) : (
+                                <div className="empty-roster-msg">No courses connected.</div>
+                            )}
+                        </div>
+                    </div>
+                        </div>
+                    </div>
+                )}
+
+                {activeTab === 'people' && (
+                    <div className="tab-pane people-pane">
+                        <div className="admin-class-grid single-column">
+                            <div className="control-panel-card roster-card">
                     <div className="card-custom-header">
                         <div className="title-section">
                             <Users size={20} />
@@ -246,7 +306,7 @@ const AdminClassDashboard = () => {
                             <div className="roster-list">
                                 {filteredRoster.map(student => (
                                     <div key={student.id} className="roster-item">
-                                        <div className="student-info cursor-pointer" onClick={() => navigate(`/admin/users/${student.id}`)}>
+                                        <div role="button" tabIndex={0} className="student-info cursor-pointer" onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={() => navigate(`/admin/users/${student.id}`)}>
                                             <SmartImage 
                                                 src={student.profile_picture ? getApiUrl(`/user/profile_pictures/${student.profile_picture}`) : ''} 
                                                 alt="" 
@@ -304,12 +364,14 @@ const AdminClassDashboard = () => {
                         </form>
                     </div>
                 </div>
+                        </div>
+                    </div>
+                )}
 
-                {/* Right Column / Settings and Course Assignment */}
-                <div className="sidebar-panels">
-                    
-                    {/* Settings Panel */}
-                    <div className="control-panel-card settings-card">
+                {activeTab === 'settings' && (
+                    <div className="tab-pane settings-pane">
+                        <div className="admin-class-grid single-column centered-column">
+                            <div className="control-panel-card settings-card">
                         <div className="card-custom-header">
                             <Settings size={20} />
                             <h3>Classroom Settings</h3>
@@ -317,8 +379,8 @@ const AdminClassDashboard = () => {
 
                         <form onSubmit={handleUpdateSettings} className="settings-form">
                             <div className="form-group">
-                                <label>Classroom Name</label>
-                                <input 
+                                <label htmlFor="input-368">Classroom Name</label>
+                                <input id="input-368" 
                                     type="text" 
                                     name="name" 
                                     defaultValue={classroom.name} 
@@ -328,71 +390,30 @@ const AdminClassDashboard = () => {
                             </div>
 
                             <div className="form-group">
-                                <label>Language</label>
-                                <input 
-                                    type="text" 
+                                <label htmlFor="input-379">Language</label>
+                                <select 
+                                    id="input-379" 
                                     name="language" 
-                                    defaultValue={classroom.language} 
-                                    placeholder="e.g. Python, Scratch"
-                                    required 
-                                />
-                            </div>
-
-                            <div className="form-group">
-                                <label>Course ID</label>
-                                <input 
-                                    type="text" 
-                                    name="course_id" 
-                                    defaultValue={classroom.course_id || ''} 
-                                    placeholder="e.g. Python_Level_1"
-                                />
-                            </div>
-
-                            <div className="form-group">
-                                <label>Web App / Project URL</label>
-                                <input 
-                                    type="url" 
-                                    name="url" 
-                                    defaultValue={classroom.url || ''} 
-                                    placeholder="https://..."
+                                    defaultValue={classroom.language}
                                     required
-                                />
+                                >
+                                    <option value="" disabled>Select a language</option>
+                                    <option value="python">Python</option>
+                                    <option value="javascript">JavaScript</option>
+                                    <option value="html">HTML/CSS</option>
+                                    <option value="java">Java</option>
+                                    <option value="cpp">C++</option>
+                                </select>
                             </div>
 
-                            <button type="submit" className="btn-save" disabled={formLoading}>
-                                {formLoading ? 'Saving...' : 'Save Settings'}
-                            </button>
+                            <div className="form-actions">
+                                <button type="submit" className="btn-save" disabled={formLoading}>
+                                    {formLoading ? 'Saving...' : 'Save Settings'}
+                                </button>
+                            </div>
                         </form>
                     </div>
-
-                    {/* Course Assignments Card */}
-                    <div className="control-panel-card assignments-card">
-                        <div className="card-custom-header">
-                            <BookOpen size={20} />
-                            <h3>Course Instances</h3>
-                        </div>
-                        <div className="assignments-list">
-                            {classroom.course_assignments && classroom.course_assignments.length > 0 ? (
-                                classroom.course_assignments.map(assign => (
-                                    <div key={assign.id} className="assignment-item">
-                                        <div className="assign-details">
-                                            <span className="assign-id-lbl">Instance ID</span>
-                                            <span className="assign-id-val">{assign.id}</span>
-                                        </div>
-                                        <div className="assign-details">
-                                            <span className="assign-id-lbl">Course ID</span>
-                                            <span className="assign-id-val badge-course">{assign.course_id || 'None'}</span>
-                                        </div>
-                                    </div>
-                                ))
-                            ) : (
-                                <div className="empty-roster-msg">No course instances assigned.</div>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Danger Zone */}
-                    <div className="control-panel-card danger-zone-card">
+                            <div className="control-panel-card danger-zone-card">
                         <div className="card-custom-header">
                             <Trash2 size={20} />
                             <h3>Danger Zone</h3>
@@ -406,10 +427,11 @@ const AdminClassDashboard = () => {
                             Delete Classroom
                         </button>
                     </div>
-                </div>
-
+                
+                        </div>
+                    </div>
+                )}
             </div>
-
             <BulkConnectionCardsModal
                 isOpen={activeModal === 'bulk_connection_cards'}
                 onClose={() => setActiveModal(null)}

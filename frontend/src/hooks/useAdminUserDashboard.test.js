@@ -13,6 +13,7 @@ vi.mock('../api/client', () => ({
     default: {
         get: vi.fn(),
         post: vi.fn(),
+        put: vi.fn(),
     },
 }));
 
@@ -28,9 +29,11 @@ describe('useAdminUserDashboard', () => {
         vi.clearAllMocks();
         client.get.mockReset();
         client.post.mockReset();
+        if (client.put && client.put.mockReset) client.put.mockReset();
         mockNavigate.mockReset();
         vi.spyOn(window, 'confirm').mockReturnValue(true);
     });
+
 
     it('fetches user and dependent data successfully on mount for student', async () => {
         client.get.mockImplementation((url) => {
@@ -294,4 +297,21 @@ describe('useAdminUserDashboard', () => {
         expect(client.post).toHaveBeenCalledWith('/user/project/new', expect.any(FormData));
         expect(toast.success).toHaveBeenCalledWith('Assigned Template1 to nick!');
     });
+
+    it('updates user profile via handleUpdateUser', async () => {
+        client.get.mockResolvedValue({ data: { user: { id: 1, role: 'student', nickname: 'oldnick' } } });
+        client.put.mockResolvedValueOnce({ data: { message: 'Updated profile for @newnick', user: { id: 1, nickname: 'newnick' } } });
+
+        const { result } = renderHook(() => useAdminUserDashboard(1));
+        await act(async () => { await new Promise(r => setTimeout(r, 10)); });
+
+        await act(async () => {
+            await result.current.handleUpdateUser({ nickname: 'newnick', active_track: 'gd' });
+        });
+
+        expect(client.put).toHaveBeenCalledWith('/api/admin/user/1', { nickname: 'newnick', active_track: 'gd' });
+        expect(toast.success).toHaveBeenCalledWith('Updated profile for @newnick');
+        expect(result.current.user.nickname).toBe('newnick');
+    });
 });
+

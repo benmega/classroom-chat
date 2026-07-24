@@ -92,8 +92,8 @@
 }
 
 .select-control:focus {
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    border-color: var(--primary-accessible, #006D74);
+    box-shadow: var(--focus-ring);
 }
 
 .back-btn-container {
@@ -324,7 +324,7 @@
 .project-link.github { background: var(--bg-secondary); color: var(--text-secondary); border: 1px solid var(--border-subtle); }
 .project-link.github:hover { background: var(--bg-tertiary); }
 
-.project-link.video { background: #fff1f2; color: #e11d48; }
+.project-link.video { background: #fff1f2; color: #be123c; }
 .project-link.video:hover { background: #ffe4e6; }
 
 .review-image-container {
@@ -589,7 +589,7 @@
 }
 
 .selected-user-pill button:hover {
-    color: #ef4444;
+    color: #dc2626;
 }
 
 .form-row {
@@ -633,7 +633,7 @@
 
 .btn-cancel {
     background: white;
-    border: 1px solid #cbd5e1;
+    border: 1px solid #64748b;
     color: #475569;
 }
 
@@ -642,7 +642,7 @@
 }
 
 .btn-submit {
-    background: var(--primary-color, #3b82f6);
+    background: var(--primary-accessible, #006D74);
     color: white;
 }
 

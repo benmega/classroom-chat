@@ -347,6 +347,28 @@ export const useAdminUserDashboard = (userId) => {
         }
     }, [user?.id]);
 
+    const handleUpdateUser = async (updatedFields) => {
+        setFormLoading(true);
+        try {
+            const res = await client.put(`/api/admin/user/${userId}`, updatedFields);
+            const responseData = res.data?.data || res.data;
+            if (responseData.user || responseData.message) {
+                toast.success(responseData.message || 'User profile updated successfully');
+                if (responseData.user) {
+                    setUser(responseData.user);
+                } else {
+                    fetchUser();
+                }
+            } else {
+                toast.error(responseData.error || 'Failed to update user profile');
+            }
+        } catch (err) {
+            toast.error(err.response?.data?.error || err.response?.data?.message || 'Failed to update user profile.');
+        } finally {
+            setFormLoading(false);
+        }
+    };
+
     return {
         user, isLoading, formLoading, parentChildren, connectionCode, allUsers,
         showNewPassword, setShowNewPassword, showConfirmPassword, setShowConfirmPassword,
@@ -356,6 +378,7 @@ export const useAdminUserDashboard = (userId) => {
         fetchUser, handlePassChapterPreview, handlePassChapterConfirm, handleAdjustDucks,
         handleAdjustPackets, handleSetDrawer, handleResetPassword, handleRemoveUser,
         handleApproveUser, handleRejectUser, handleToggleChildLink, handleToggleParentLink,
-        handleAssignProjectSubmit
+        handleAssignProjectSubmit, handleUpdateUser
     };
 };
+

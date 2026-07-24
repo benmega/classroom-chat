@@ -100,7 +100,7 @@
 /* Table Card */
 .users-table-container {
     padding: 0;
-    overflow: hidden;
+    overflow: visible !important;
 }
 
 .table-responsive {
@@ -112,6 +112,11 @@
 .users-table {
     width: 100%;
     border-collapse: collapse;
+}
+
+.users-table tbody,
+.users-table tr {
+    overflow: visible !important;
 }
 
 .users-table th {
@@ -215,7 +220,7 @@
 .status-indicator.online { color: #166534; }
 .status-indicator.online .dot { background: #22c55e; box-shadow: 0 0 8px rgba(34, 197, 94, 0.4); }
 .status-indicator.offline { color: var(--text-muted); }
-.status-indicator.offline .dot { background: #cbd5e1; }
+.status-indicator.offline .dot { background: #64748b; }
 
 .action-group {
     display: flex;
@@ -526,5 +531,66 @@
     font-size: 0.85rem;
     font-weight: 600;
     color: var(--text-secondary);
+}
+
+/* ── Kebab Menu ──────────────────────────────────────────── */
+.kebab-menu-container {
+    position: relative;
+}
+
+.kebab-trigger.active {
+    background: var(--bg-secondary);
+    border-color: #cbd5e1;
+    color: var(--slate-800);
+}
+
+.kebab-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 4px;
+    background: white;
+    border: 1px solid var(--border-subtle);
+    border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    min-width: 180px;
+    z-index: 9999;
+    overflow: hidden;
+    padding: 4px;
+    animation: dropdownFadeIn 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes dropdownFadeIn {
+    from { opacity: 0; transform: translateY(-4px) scale(0.98); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.kebab-item {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding: 10px 12px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--slate-800);
+    background: none;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.2s;
+}
+
+.kebab-item:hover {
+    background: var(--bg-secondary);
+    color: var(--primary-accessible);
+}
+
+.kebab-item.danger {
+    color: var(--error-color);
+}
+
+.kebab-item.danger:hover {
+    background: var(--error-subtle);
 }
 
