@@ -42,9 +42,9 @@ const CourseProgress = ({ target, isParentView = false, studentId = null }) => {
 
     return (
         <section className="dashboard-panel">
-            <div
+            <div role="button" tabIndex={0}
                 className="panel-header d-flex justify-between align-center cursor-pointer"
-                onClick={(e) => handleNavigate(e)}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={(e) => handleNavigate(e)}
                 title="View Detailed Tree"
             >
                 <h2 className="pointer-events-none d-flex align-center gap-sm">
@@ -62,9 +62,9 @@ const CourseProgress = ({ target, isParentView = false, studentId = null }) => {
                         const percent = c.levels_total ? Math.round((c.levels_completed / c.levels_total) * 100) : 100;
                         const isOzaria = c.course_name.toLowerCase().includes('ozaria') || c.course_id?.toLowerCase().includes('ozaria');
                         return (
-                            <div
+                            <div role="button" tabIndex={0}
                                 key={idx}
-                                onClick={(e) => handleNavigate(e, c.course_name)}
+                                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={(e) => handleNavigate(e, c.course_name)}
                                 className="progress-item cursor-pointer transition-bg"
                                 onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--panel-hover-bg, rgba(255,255,255,0.05))'}
                                 onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
@@ -85,9 +85,9 @@ const CourseProgress = ({ target, isParentView = false, studentId = null }) => {
                     )}
                 </div>
             </div>
-            <div
+            <div role="button" tabIndex={0}
                 className="mt-md text-center text-secondary text-sm cursor-pointer"
-                onClick={(e) => handleNavigate(e)}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={(e) => handleNavigate(e)}
             >
                 <strong>{totalLevels}</strong> Total Levels Completed
             </div>

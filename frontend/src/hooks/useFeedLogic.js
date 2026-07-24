@@ -5,7 +5,7 @@ import client from '../api/client';
 import useChatSocket from './useChatSocket';
 import { GLOBAL_CLASSROOM_ID } from '../utils/constants';
 
-export const useFeedLogic = () => {
+export const useFeedLogic = (filterClassroomId = null) => {
   const { user } = useAuthStore();
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
@@ -24,7 +24,7 @@ export const useFeedLogic = () => {
   }, [cooldown]);
 
   // Targeting states
-  const [targetClassrooms, setTargetClassrooms] = useState([]);
+  const [targetClassrooms, setTargetClassrooms] = useState(filterClassroomId ? [filterClassroomId] : []);
   const [targetUsers, setTargetUsers] = useState([]);
   const [isGlobal, setIsGlobal] = useState(false);
   const [targetLive, setTargetLive] = useState(false);
@@ -40,6 +40,13 @@ export const useFeedLogic = () => {
   const prevMessagesLength = useRef(0);
   const prevScrollHeight = useRef(0);
   const lastFirstMessageId = useRef(null);
+
+  // When filterClassroomId changes, reset the feed
+  useEffect(() => {
+    if (filterClassroomId) {
+      setTargetClassrooms([filterClassroomId]);
+    }
+  }, [filterClassroomId]);
 
   useLayoutEffect(() => {
     const container = scrollRef.current;
@@ -75,12 +82,19 @@ export const useFeedLogic = () => {
   }, [messages, user?.id]);
 
   const onMessageReceived = useCallback((data) => {
+    // If filterClassroomId is set and this message isn't global, ensure it targets this class
+    if (filterClassroomId && !data.is_global) {
+      if (!data.target_classroom_ids || !data.target_classroom_ids.includes(String(filterClassroomId))) {
+        return; // Ignore message meant for a different class
+      }
+    }
+
     setMessages(prev => {
       const exists = prev.some(m => m.id === data.id);
       if (exists) return prev;
       return [data, ...prev]; // Prepend new message to feed
     });
-  }, []);
+  }, [filterClassroomId]);
 
   const onMessageDeleted = useCallback((data) => {
     setMessages(prev => prev.filter(m => m.id !== data.message_id));
@@ -90,7 +104,7 @@ export const useFeedLogic = () => {
     onMessageDeleted
   });
 
-  const fetchFeed = useCallback(async (beforeId = null) => {
+  const fetchFeed = useCallback(async (beforeId = null, refresh = false) => {
     if (!user?.id) {
       setLoading(false);
       return;
@@ -98,18 +112,24 @@ export const useFeedLogic = () => {
     if (beforeId) {
       setIsLoadingMore(true);
     }
+    if (refresh) {
+      setLoading(true);
+    }
     try {
       const limit = 20;
       let url = `/message/api/feed?limit=${limit}`;
       if (beforeId) {
         url += `&before_id=${beforeId}`;
       }
+      if (filterClassroomId) {
+        url += `&classroom_id=${filterClassroomId}`;
+      }
       
       const response = await client.get(url);
       const feedData = response.data.messages || [];
       
       setMessages(prev => {
-        if (!beforeId) return feedData;
+        if (!beforeId || refresh) return feedData;
         const merged = [...prev];
         feedData.forEach(newMsg => {
           if (!merged.some(m => m.id === newMsg.id)) {
@@ -127,7 +147,7 @@ export const useFeedLogic = () => {
       setLoading(false);
       setIsLoadingMore(false);
     }
-  }, [user]);
+  }, [user, filterClassroomId]);
 
   const handleLoadMore = useCallback(async () => {
     if (isLoadingMore || !hasMore || messages.length === 0) return;
@@ -170,15 +190,15 @@ export const useFeedLogic = () => {
         setClassrooms(sortedClassrooms);
         setUsers(sortedUsers);
         
-        await fetchFeed();
+        await fetchFeed(null, true);
       } catch (e) {
         console.error(e);
-        await fetchFeed();
+        await fetchFeed(null, true);
       }
     };
 
     initFeed();
-  }, [user, fetchFeed]);
+  }, [user, fetchFeed, filterClassroomId]);
 
   const handleSendMessage = async (e) => {
     if (e) e.preventDefault();
@@ -254,6 +274,7 @@ export const useFeedLogic = () => {
   }, []);
 
   const toggleTargetClassroom = (id) => {
+    if (filterClassroomId) return; // Disable toggling if fixed filter
     setTargetClassrooms(prev => 
       prev.includes(id) ? prev.filter(c => c !== id) : [...prev, id]
     );

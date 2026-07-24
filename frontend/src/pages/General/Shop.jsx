@@ -293,8 +293,8 @@ const Shop = () => {
                                         </div>
                                         {item.is_purchased && (
                                             <div style={{ marginTop: '15px', width: '100%' }}>
-                                                <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '5px' }}>Animation Speed:</label>
-                                                <select 
+                                                <label htmlFor="input-295" style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '5px' }}>Animation Speed:</label>
+                                                <select id="input-295" 
                                                     value={borderSpeed} 
                                                     onChange={(e) => handleBorderSpeedSubmit(e.target.value)}
                                                     className="form-control"

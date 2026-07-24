@@ -266,10 +266,10 @@ const SubmitChallenge = () => {
                 <Modal 
                     isOpen={!!pendingCourseRequest} 
                     onClose={() => setPendingCourseRequest(null)}
-                    title="Course Instance Not Found"
+                    title="Course Not Connected"
                 >
                     <p style={{marginBottom: '1rem'}}>
-                        The challenge you submitted belongs to an unrecognized course instance. Would you like to request an admin to add it?
+                        The challenge you submitted belongs to an unrecognized course connection. Would you like to request an admin to add it?
                     </p>
                     <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
                         <button type="button" className="btn-secondary" onClick={() => setPendingCourseRequest(null)}>Cancel</button>

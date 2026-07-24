@@ -18,7 +18,7 @@ import Skeleton from '../../components/common/Skeleton';
 // Hooks
 import { useFeedLogic } from '../../hooks/useFeedLogic';
 
-const Chat = () => {
+const Chat = ({ filterClassroomId = null }) => {
   const {
     user,
     messages,
@@ -48,7 +48,7 @@ const Chat = () => {
     handleDeleteMessage,
     handleScroll,
     cooldown
-  } = useFeedLogic();
+  } = useFeedLogic(filterClassroomId);
 
   if (loading) return (
     <div className="feed-loading-skeleton-container p-2rem">

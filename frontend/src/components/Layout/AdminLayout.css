@@ -44,7 +44,7 @@
     padding: 1rem 0;
     flex-shrink: 0;
     z-index: 1010;
-    overflow: hidden;
+    overflow: visible;
     position: relative;
 }
 
@@ -64,6 +64,8 @@
     transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
     flex-shrink: 0;
     text-decoration: none;
+    position: relative;
+    overflow: visible;
 }
 
 .admin-rail-logo img {
@@ -106,8 +108,7 @@
     flex-grow: 1;
     margin-top: 2rem;
     width: 100%;
-    overflow-y: auto;
-    overflow-x: hidden; /* critical — prevents horizontal scroll */
+    overflow: visible;
     scrollbar-width: none;
 }
 
@@ -120,7 +121,7 @@
     font-size: 0.7rem;
     text-transform: uppercase;
     font-weight: 700;
-    color: rgba(255, 255, 255, 0.4);
+    color: rgba(255, 255, 255, 0.65);
     letter-spacing: 0.06em;
     white-space: nowrap;
     padding: 0 1.25rem;
@@ -140,7 +141,7 @@
     margin-top: auto;
     padding-top: 0.5rem;
     border-top: 1px solid var(--admin-dark-border);
-    overflow: hidden;
+    overflow: visible;
 }
 
 /* ==========================================================================
@@ -155,6 +156,7 @@
     width: 100%;
     height: 48px;
     flex-shrink: 0;
+    overflow: visible;
 }
 
 .admin-rail-indicator {
@@ -201,6 +203,7 @@
     padding: 0;
     text-decoration: none;
     position: relative;
+    overflow: visible;
     flex-shrink: 0;
 }
 
@@ -234,12 +237,14 @@
 
 /* Logout button */
 .admin-logout-btn {
-    color: rgba(239, 68, 68, 0.75);
+    color: #f87171;
+    opacity: 0.8;
 }
 
 .admin-logout-btn:hover {
-    background: rgba(239, 68, 68, 0.12);
-    color: #ef4444;
+    background: rgba(248, 113, 113, 0.12);
+    color: #fca5a5;
+    opacity: 1;
     border-radius: var(--radius-md);
 }
 
@@ -300,98 +305,51 @@
 }
 
 /* ==========================================================================
-   Tooltips (matches .nav-rail-item[data-tooltip] from Layout.css)
+   Tooltips
    ========================================================================== */
-.admin-rail-item[data-tooltip] {
-    overflow: visible;
-}
-
-.admin-rail-item[data-tooltip]::after {
-    content: attr(data-tooltip);
-    position: absolute;
-    left: 68px;
-    top: 50%;
-    transform: translateY(-50%) translateX(-8px);
-    background: #1e293b;
-    color: white;
-    padding: 6px 10px;
-    border-radius: 8px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    white-space: nowrap;
-    opacity: 0;
-    pointer-events: none;
-    transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-    z-index: 1200;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.admin-rail-item[data-tooltip]::before {
-    content: '';
-    position: absolute;
-    left: 62px;
-    top: 50%;
-    transform: translateY(-50%) translateX(-4px);
-    border: 5px solid transparent;
-    border-right-color: #1e293b;
-    opacity: 0;
-    pointer-events: none;
-    transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
-    z-index: 1200;
-}
-
-.admin-rail-item[data-tooltip]:hover::after {
-    opacity: 1;
-    transform: translateY(-50%) translateX(0);
-}
-
-.admin-rail-item[data-tooltip]:hover::before {
-    opacity: 1;
-    transform: translateY(-50%) translateX(0);
-}
-
-/* Also apply tooltip to logo link */
+.admin-rail-item[data-tooltip]::after,
 .admin-rail-logo[data-tooltip]::after {
     content: attr(data-tooltip);
     position: absolute;
-    left: 68px;
+    left: calc(100% + 14px);
     top: 50%;
-    transform: translateY(-50%) translateX(-8px);
-    background: #1e293b;
-    color: white;
-    padding: 6px 10px;
+    transform: translateY(-50%) translateX(-6px);
+    background: rgba(15, 23, 42, 0.95);
+    color: #f8fafc;
+    padding: 6px 12px;
     border-radius: 8px;
     font-size: 0.75rem;
     font-weight: 600;
+    letter-spacing: 0.01em;
     white-space: nowrap;
     opacity: 0;
     pointer-events: none;
-    transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-    z-index: 1200;
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1), transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.4);
+    z-index: 9999;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
 }
 
+.admin-rail-item[data-tooltip]::before,
 .admin-rail-logo[data-tooltip]::before {
     content: '';
     position: absolute;
-    left: 62px;
+    left: calc(100% + 4px);
     top: 50%;
-    transform: translateY(-50%) translateX(-4px);
+    transform: translateY(-50%) translateX(-6px);
     border: 5px solid transparent;
-    border-right-color: #1e293b;
+    border-right-color: rgba(15, 23, 42, 0.95);
     opacity: 0;
     pointer-events: none;
-    transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
-    z-index: 1200;
+    transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1), transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 9999;
 }
 
-.admin-rail-logo[data-tooltip]:hover::after {
-    opacity: 1;
-    transform: translateY(-50%) translateX(0);
-}
-
+.admin-rail-item[data-tooltip]:hover::after,
+.admin-rail-item[data-tooltip]:hover::before,
+.admin-rail-logo[data-tooltip]:hover::after,
 .admin-rail-logo[data-tooltip]:hover::before {
     opacity: 1;
     transform: translateY(-50%) translateX(0);

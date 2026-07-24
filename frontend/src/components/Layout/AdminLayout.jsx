@@ -6,14 +6,15 @@ import {
     Shield,
     LayoutDashboard,
     FolderKanban,
-    FileCheck,
-    ShieldAlert,
+    Award,
+    Settings2,
     Users,
     Menu,
     X,
-    ShoppingBag,
-    GraduationCap,
-    BookOpen
+    ArrowLeftRight,
+    BookMarked,
+    School,
+    ClipboardList
 } from 'lucide-react';
 import useAuthStore from '../../store/useAuthStore';
 import useSidebar from '../../hooks/useSidebar';
@@ -24,25 +25,25 @@ const AdminLayout = ({ children }) => {
     const { user, isAuthenticated } = useAuthStore();
     const { isSidebarOpen, setSidebarOpen } = useSidebar();
     const location = useLocation();
-    const [pendingCount, setPendingCount] = useState(0);
-    const [pendingTrackRequestsCount, setPendingTrackRequestsCount] = useState(0);
+    const [reviewCounts, setReviewCounts] = useState({
+        pending_users: 0,
+        pending_trades: 0,
+        pending_projects: 0,
+        pending_certificates: 0,
+        pending_track_requests: 0,
+        pending_course_requests: 0,
+        total_incomplete: 0
+    });
 
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const [usersRes, requestsRes] = await Promise.all([
-                    client.get('/api/admin/pending_users').catch(() => ({ data: {} })),
-                    client.get('/api/admin/track-requests/').catch(() => ({ data: {} }))
-                ]);
-                
-                if (usersRes.data?.status === 'success') {
-                    setPendingCount(usersRes.data.data?.users?.length || 0);
-                }
-                if (requestsRes.data?.success) {
-                    setPendingTrackRequestsCount(requestsRes.data.requests?.length || 0);
+                const response = await client.get('/api/admin/review_counts');
+                if (response.data?.status === 'success') {
+                    setReviewCounts(response.data.data);
                 }
             } catch (err) {
-                console.error("Failed to fetch pending counts", err);
+                console.error("Failed to fetch review counts", err);
             }
         };
 
@@ -74,16 +75,13 @@ const AdminLayout = ({ children }) => {
     }
 
     const navItems = [
-        { path: '/admin', label: 'Dashboard', icon: LayoutDashboard, end: true },
-        { path: '/admin/users', label: 'Users', icon: Users },
-        { path: '/admin/classes', label: 'Classes', icon: BookOpen },
-        { path: '/admin/pending-trades', label: 'Pending Trades', icon: ShoppingBag },
-        { path: '/admin/projects', label: 'Projects', icon: FolderKanban },
-        { path: '/admin/standard-projects', label: 'Standard Projects', icon: BookOpen },
-        { path: '/admin/course-instances', label: 'Course Instances', icon: GraduationCap },
-        { path: '/admin/certificates', label: 'Certificates', icon: FileCheck },
-        { path: '/admin/advanced', label: 'Advanced Panel', icon: ShieldAlert },
-        { path: '/chat', label: 'Back to Site', icon: Home },
+        { path: '/admin', label: 'Dashboard', tooltip: 'Admin Dashboard', icon: LayoutDashboard, end: true },
+        { path: '/admin/to-review', label: 'To Review', tooltip: 'Items To Review', icon: ClipboardList },
+        { path: '/admin/users', label: 'Users', tooltip: 'User Management', icon: Users },
+        { path: '/admin/classes', label: 'Classes', tooltip: 'Classes & Enrolments', icon: School },
+        { path: '/admin/standard-projects', label: 'Standard Projects', tooltip: 'Standard Project Templates', icon: BookMarked },
+        { path: '/admin/advanced', label: 'Advanced Panel', tooltip: 'Advanced System CRUD', icon: Settings2 },
+        { path: '/chat', label: 'Back to Site', tooltip: 'Return to Main App', icon: Home },
     ];
 
     const isItemActive = (item) => {
@@ -94,7 +92,7 @@ const AdminLayout = ({ children }) => {
     return (
         <div className={`admin-app-container ${isSidebarOpen ? 'mobile-open' : ''}`}>
             {/* Mobile Overlay */}
-            <div className="admin-mobile-overlay" onClick={() => setSidebarOpen(false)}></div>
+            <div role="button" tabIndex={0} className="admin-mobile-overlay" onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={() => setSidebarOpen(false)}></div>
 
             {/* Sidebar */}
             <aside className="admin-sidebar">
@@ -102,7 +100,9 @@ const AdminLayout = ({ children }) => {
                 <Link
                     className="admin-rail-logo"
                     to="/admin"
-                    data-tooltip="Admin HQ"
+                    data-tooltip="Admin HQ Home"
+                    title="Admin HQ Home"
+                    aria-label="Admin HQ Home"
                 >
                     <img src="/images/logo.ico" alt="Admin HQ Logo" />
                     <span className="admin-brand-text">Admin HQ</span>
@@ -123,6 +123,7 @@ const AdminLayout = ({ children }) => {
 
                     {navItems.map((item) => {
                         const active = isItemActive(item);
+                        const tooltipText = item.tooltip || item.label;
                         return (
                             <div
                                 key={item.path}
@@ -135,23 +136,49 @@ const AdminLayout = ({ children }) => {
                                     className={({ isActive }) =>
                                         `admin-rail-item${isActive || active ? ' active' : ''}`
                                     }
-                                    data-tooltip={item.label}
+                                    data-tooltip={tooltipText}
+                                    title={tooltipText}
+                                    aria-label={tooltipText}
                                 >
                                     <span className="admin-rail-icon-wrap">
                                         <item.icon size={20} />
-                                        {item.path === '/admin/users' && pendingCount > 0 && (
-                                            <span className="admin-nav-badge">{pendingCount}</span>
+                                        {item.path === '/admin/to-review' && reviewCounts.total_incomplete > 0 && (
+                                            <span className="admin-nav-badge">{reviewCounts.total_incomplete}</span>
                                         )}
-                                        {item.path === '/admin' && pendingTrackRequestsCount > 0 && (
-                                            <span className="admin-nav-badge">{pendingTrackRequestsCount}</span>
+                                        {item.path === '/admin/users' && reviewCounts.pending_users > 0 && (
+                                            <span className="admin-nav-badge">{reviewCounts.pending_users}</span>
+                                        )}
+                                        {item.path === '/admin/pending-trades' && reviewCounts.pending_trades > 0 && (
+                                            <span className="admin-nav-badge">{reviewCounts.pending_trades}</span>
+                                        )}
+                                        {item.path === '/admin/projects' && reviewCounts.pending_projects > 0 && (
+                                            <span className="admin-nav-badge">{reviewCounts.pending_projects}</span>
+                                        )}
+                                        {item.path === '/admin/certificates' && reviewCounts.pending_certificates > 0 && (
+                                            <span className="admin-nav-badge">{reviewCounts.pending_certificates}</span>
+                                        )}
+                                        {item.path === '/admin' && reviewCounts.pending_track_requests > 0 && (
+                                            <span className="admin-nav-badge">{reviewCounts.pending_track_requests}</span>
                                         )}
                                     </span>
                                     <span className="admin-nav-label">{item.label}</span>
-                                    {item.path === '/admin/users' && pendingCount > 0 && (
-                                        <span className="admin-nav-badge mobile-badge">{pendingCount}</span>
+                                    {item.path === '/admin/to-review' && reviewCounts.total_incomplete > 0 && (
+                                        <span className="admin-nav-badge mobile-badge">{reviewCounts.total_incomplete}</span>
                                     )}
-                                    {item.path === '/admin' && pendingTrackRequestsCount > 0 && (
-                                        <span className="admin-nav-badge mobile-badge">{pendingTrackRequestsCount}</span>
+                                    {item.path === '/admin/users' && reviewCounts.pending_users > 0 && (
+                                        <span className="admin-nav-badge mobile-badge">{reviewCounts.pending_users}</span>
+                                    )}
+                                    {item.path === '/admin/pending-trades' && reviewCounts.pending_trades > 0 && (
+                                        <span className="admin-nav-badge mobile-badge">{reviewCounts.pending_trades}</span>
+                                    )}
+                                    {item.path === '/admin/projects' && reviewCounts.pending_projects > 0 && (
+                                        <span className="admin-nav-badge mobile-badge">{reviewCounts.pending_projects}</span>
+                                    )}
+                                    {item.path === '/admin/certificates' && reviewCounts.pending_certificates > 0 && (
+                                        <span className="admin-nav-badge mobile-badge">{reviewCounts.pending_certificates}</span>
+                                    )}
+                                    {item.path === '/admin' && reviewCounts.pending_track_requests > 0 && (
+                                        <span className="admin-nav-badge mobile-badge">{reviewCounts.pending_track_requests}</span>
                                     )}
                                 </NavLink>
                             </div>
@@ -170,6 +197,7 @@ const AdminLayout = ({ children }) => {
                             }}
                             className="admin-rail-item admin-logout-btn"
                             data-tooltip="Logout"
+                            title="Logout"
                             aria-label="Logout"
                         >
                             <span className="admin-rail-icon-wrap">

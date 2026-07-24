@@ -7,12 +7,12 @@ const NoteSlideshow = ({ notes, currentIndex, onClose, onPrev, onNext }) => {
     if (currentIndex === null || !notes[currentIndex]) return null;
 
     return createPortal(
-        <div className="slideshow-overlay" onClick={onClose}>
+        <div role="button" tabIndex={0} className="slideshow-overlay" onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={onClose}>
             <button className="close-slideshow" onClick={onClose}><X size={32} /></button>
             <button className="nav-slide prev" onClick={(e) => { e.stopPropagation(); onPrev(); }}>
                 <ChevronLeft size={48} />
             </button>
-            <div className="slide-content" onClick={e => e.stopPropagation()}>
+            <div role="button" tabIndex={0} className="slide-content" onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={e => e.stopPropagation()}>
                 <SmartImage 
                     src={notes[currentIndex].url} 
                     alt="Note full view" 

@@ -266,11 +266,11 @@ const CourseLevelBreakdown = () => {
                                         backgroundColor: isCodeCombat ? '#2b91af' : '#902edb',
                                         transition: 'background-color 0.2s, transform 0.2s',
                                     }}
-                                    onMouseOver={(e) => {
+                                    onFocus={() => {}} onMouseOver={(e) => {
                                         e.currentTarget.style.backgroundColor = isCodeCombat ? '#217088' : '#7122ad';
                                         e.currentTarget.style.transform = 'translateY(-1px)';
                                     }}
-                                    onMouseOut={(e) => {
+                                    onBlur={() => {}} onMouseOut={(e) => {
                                         e.currentTarget.style.backgroundColor = isCodeCombat ? '#2b91af' : '#902edb';
                                         e.currentTarget.style.transform = 'none';
                                     }}
@@ -311,11 +311,11 @@ const CourseLevelBreakdown = () => {
                                             transition: 'background-color 0.2s, transform 0.2s',
                                             width: '100%'
                                         }}
-                                        onMouseOver={(e) => {
+                                        onFocus={() => {}} onMouseOver={(e) => {
                                             e.currentTarget.style.backgroundColor = isCodeCombat ? '#217088' : '#7122ad';
                                             e.currentTarget.style.transform = 'translateY(-1px)';
                                         }}
-                                        onMouseOut={(e) => {
+                                        onBlur={() => {}} onMouseOut={(e) => {
                                             e.currentTarget.style.backgroundColor = isCodeCombat ? '#2b91af' : '#902edb';
                                             e.currentTarget.style.transform = 'none';
                                         }}
@@ -449,8 +449,8 @@ const CourseLevelBreakdown = () => {
                 </div>
             </div>
             {isModalOpen && (
-                <div className="modal-backdrop" onClick={() => setIsModalOpen(false)}>
-                    <div className="modal-card glass-panel" onClick={e => e.stopPropagation()}>
+                <div role="button" tabIndex={0} className="modal-backdrop" onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={() => setIsModalOpen(false)}>
+                    <div role="button" tabIndex={0} className="modal-card glass-panel" onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={e => e.stopPropagation()}>
                         <div className="modal-header">
                             <h3>Request Track Access</h3>
                         </div>
