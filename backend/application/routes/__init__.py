@@ -30,6 +30,7 @@ from .shop_routes import shop_bp
 from .project_template_routes import project_templates_bp
 from .track_request_routes import track_request_bp
 from .course_request_routes import course_request_bp
+from .classroom_routes import classroom_bp
 
 
 def register_blueprints(app: Flask):
@@ -53,6 +54,7 @@ def register_blueprints(app: Flask):
     app.register_blueprint(shop_bp, url_prefix="/api/shop")
     app.register_blueprint(track_request_bp)
     app.register_blueprint(course_request_bp)
+    app.register_blueprint(classroom_bp, url_prefix="/api/classroom")
 
     # ── Swagger UI ───────────────────────────────────────────────────────────
     SWAGGER_URL = "/api/docs"

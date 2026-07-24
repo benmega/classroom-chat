@@ -19,17 +19,22 @@ def get_feed():
 
         limit = request.args.get("limit", 50, type=int)
         before_id = request.args.get("before_id", type=int)
+        classroom_id = request.args.get("classroom_id", type=int)
 
-        # Admin gets everything
-        if user.is_admin:
+        from application.models.message import message_classrooms, message_users
+
+        # Admin gets everything, UNLESS a classroom_id is specified
+        if user.is_admin and not classroom_id:
             query = Message.query.filter(Message.deleted_at.is_(None))
             if before_id:
                 query = query.filter(Message.id < before_id)
             messages = query.order_by(Message.id.desc()).limit(limit).all()
         else:
-            from application.models.message import message_classrooms, message_users
-            
-            user_classroom_ids = [c.id for c in user.classrooms]
+            if classroom_id:
+                # If classroom_id is provided, limit to that classroom (and global messages)
+                user_classroom_ids = [classroom_id]
+            else:
+                user_classroom_ids = [c.id for c in user.classrooms]
 
             # Use UNION to avoid massive table scan with OR + EXISTS
             base_query = db.session.query(Message.id).filter(Message.deleted_at.is_(None))
@@ -37,11 +42,20 @@ def get_feed():
                 base_query = base_query.filter(Message.id < before_id)
 
             q1 = base_query.filter(Message.is_global.is_(True))
-            q2 = base_query.filter(Message.user_id == user.id)
-            q3 = base_query.join(message_users, Message.id == message_users.c.message_id)\
-                           .filter(message_users.c.user_id == user.id)
+            
+            queries = [q1]
 
-            queries = [q1, q2, q3]
+            if not classroom_id:
+                # If a specific classroom filter is NOT applied, include direct messages
+                q2 = base_query.filter(Message.user_id == user.id)
+                q3 = base_query.join(message_users, Message.id == message_users.c.message_id)\
+                               .filter(message_users.c.user_id == user.id)
+                queries.extend([q2, q3])
+            
+            # If a specific classroom filter IS applied, include messages by this user 
+            # to ensure they see their own messages in the stream even if they are missing from classroom target somehow
+            # Wait, no, we only want messages targeted at this classroom or global.
+            # But the user might want to see their own global/classroom messages. Those will be caught by q1 and q4.
 
             if user_classroom_ids:
                 q4 = base_query.join(message_classrooms, Message.id == message_classrooms.c.message_id)\
@@ -72,6 +86,7 @@ def get_feed():
                 "is_global": msg.is_global,
                 "target_live": msg.target_live,
                 "target_classrooms": [c.name for c in msg.target_classrooms] if msg.target_classrooms else [],
+                "target_classroom_ids": [c.id for c in msg.target_classrooms] if msg.target_classrooms else [],
                 "target_users": [(u.nickname or u.username) for u in msg.target_users] if msg.target_users else [],
                 "is_struck": msg.is_struck,
                 "has_animated_border": msg.has_animated_border,

@@ -618,8 +618,7 @@ def sample_classroom(init_db):
     classroom = Classroom(
         id="678b56dc12345",  # Simulating the MongoDB/JSON ID format
         name="Sat1030 CS 4 PY",
-        language="python",
-        url="test-classroom-url"
+        language="python"
     )
     db.session.add(classroom)
     db.session.commit()

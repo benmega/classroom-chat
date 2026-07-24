@@ -563,13 +563,99 @@ def get_user_details(user_id):
     if not user:
         return jsonify({"error": "User not found"}), 404
 
-
-
     d = user.to_dict()
     for field in ["password_hash", "salt", "ip_address"]:
         d.pop(field, None)
     
     return jsonify({"user": d})
+
+
+@admin_bp.route("/user/<int:user_id>", methods=["PUT", "POST"])
+@admin_only
+@api_response
+def update_user_details(user_id):
+    user_obj = db.session.get(User, user_id)
+    if not user_obj:
+        return {"error": "User not found"}, 404
+
+    data = request.get_json() or request.form.to_dict()
+
+    # Username
+    if "username" in data and data["username"]:
+        new_username = str(data["username"]).strip().lower()
+        if new_username != user_obj.username:
+            if not re.fullmatch(r"[a-z0-9_]{3,30}", new_username):
+                return {"error": "Username must be 3-30 chars: lowercase letters, numbers, or underscores only"}, 400
+            existing = User.query.filter_by(_username=new_username).first()
+            if existing and existing.id != user_obj.id:
+                return {"error": f"Username '{new_username}' is already taken"}, 409
+            user_obj.username = new_username
+
+    # Nickname
+    if "nickname" in data:
+        new_nick = str(data["nickname"]).strip() if data["nickname"] is not None else ""
+        user_obj.nickname = new_nick if new_nick else user_obj.username
+        user_obj.slug = user_obj.generate_slug()
+
+    # Active track (current course track)
+    if "active_track" in data and data["active_track"]:
+        user_obj.active_track = str(data["active_track"]).strip()
+
+    # Bio
+    if "bio" in data:
+        user_obj.bio = str(data["bio"]) if data["bio"] is not None else None
+
+    # Email
+    if "email" in data:
+        user_obj.email = str(data["email"]).strip() if data["email"] else None
+
+    # Role
+    if "role" in data and data["role"] in ["student", "parent", "teacher"]:
+        user_obj.role = data["role"]
+
+    # Boolean flags & permissions
+    if "is_admin" in data:
+        val = data["is_admin"]
+        user_obj.is_admin = val if isinstance(val, bool) else (str(val).lower() == "true")
+
+    if "is_approved" in data:
+        val = data["is_approved"]
+        user_obj.is_approved = val if isinstance(val, bool) else (str(val).lower() == "true")
+
+    if "can_chat" in data:
+        val = data["can_chat"]
+        user_obj.can_chat = val if isinstance(val, bool) else (str(val).lower() == "true")
+
+    # Profile Picture
+    if "profile_picture" in data and data["profile_picture"]:
+        user_obj.profile_picture = str(data["profile_picture"]).strip()
+
+    # Shop Perk Toggles
+    perk_fields = [
+        "has_chat_font", "chat_font_color", "has_animated_border",
+        "animated_border_speed", "has_auto_bitshift", "has_custom_wallpaper",
+        "profile_wallpaper", "has_auto_claimer", "has_double_duck"
+    ]
+    for perk in perk_fields:
+        if perk in data:
+            val = data[perk]
+            if perk.startswith("has_"):
+                bool_val = val if isinstance(val, bool) else (str(val).lower() == "true")
+                setattr(user_obj, perk, bool_val)
+            else:
+                setattr(user_obj, perk, str(val) if val is not None else None)
+
+    import sqlalchemy.exc
+    try:
+        db.session.commit()
+        d = user_obj.to_dict()
+        for field in ["password_hash", "salt", "ip_address"]:
+            d.pop(field, None)
+        return {"message": f"Updated profile for @{user_obj.username}", "user": d}
+    except sqlalchemy.exc.IntegrityError:
+        db.session.rollback()
+        return {"error": "Database integrity error updating user fields"}, 409
+
 
 
 @admin_bp.route("/students/<int:student_id>/parents", methods=["GET"])
@@ -640,6 +726,7 @@ def get_classroom_details(classroom_id):
         {
             "id": assignment.id,
             "course_id": assignment.course_id,
+            "course_name": assignment.course.name if assignment.course else None,
             "created_at": assignment.created_at.isoformat() if assignment.created_at else None
         }
         for assignment in classroom.course_assignments
@@ -650,13 +737,46 @@ def get_classroom_details(classroom_id):
             "id": classroom.id,
             "name": classroom.name,
             "language": classroom.language,
-            "url": classroom.url,
-            "course_id": classroom.course_id,
             "created_at": classroom.created_at.isoformat() if classroom.created_at else None,
             "students": students,
             "course_assignments": course_assignments
         }
     })
+
+
+@admin_bp.route("/classrooms/<classroom_id>/join-code", methods=["GET"])
+@admin_only
+@api_response
+def get_classroom_join_code(classroom_id):
+    """Returns the classroom's join code, generating one if it doesn't exist yet."""
+    from application.models.classroom import Classroom
+    classroom = db.session.get(Classroom, classroom_id)
+    if not classroom:
+        return "Classroom not found.", 404
+    code = classroom.get_join_code()
+    base_url = request.host_url.rstrip('/')
+    return {
+        "join_code": code,
+        "join_url": f"{base_url}/join-class?code={code}"
+    }
+
+
+@admin_bp.route("/classrooms/<classroom_id>/join-code/regenerate", methods=["POST"])
+@admin_only
+@api_response
+def regenerate_classroom_join_code(classroom_id):
+    """Generates a new join code for the classroom, invalidating the old one."""
+    from application.models.classroom import Classroom
+    classroom = db.session.get(Classroom, classroom_id)
+    if not classroom:
+        return "Classroom not found.", 404
+    classroom.join_code = classroom.generate_join_code()
+    db.session.commit()
+    base_url = request.host_url.rstrip('/')
+    return {
+        "join_code": classroom.join_code,
+        "join_url": f"{base_url}/join-class?code={classroom.join_code}"
+    }
 
 
 @admin_bp.route("/classrooms/<classroom_id>", methods=["PUT"])
@@ -672,10 +792,6 @@ def update_classroom(classroom_id):
         classroom.name = data["name"]
     if "language" in data:
         classroom.language = data["language"]
-    if "url" in data:
-        classroom.url = data["url"]
-    if "course_id" in data:
-        classroom.course_id = data["course_id"]
         
     db.session.commit()
     return jsonify({"success": True, "message": "Classroom updated successfully"})

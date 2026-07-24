@@ -186,6 +186,7 @@ def handle_send_message(data):
         "is_global": msg.is_global,
         "target_live": msg.target_live,
         "target_classrooms": [c.name for c in msg.target_classrooms] if msg.target_classrooms else [],
+        "target_classroom_ids": [c.id for c in msg.target_classrooms] if msg.target_classrooms else [],
         "target_users": [(u.nickname or u.username) for u in msg.target_users] if msg.target_users else [],
         "is_struck": msg.is_struck,
         "has_animated_border": msg.has_animated_border,

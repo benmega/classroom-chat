@@ -18,14 +18,13 @@ def test_user_creation(init_db):
     assert user.is_approved is True
 
 def test_classroom_creation(init_db):
-    classroom = Classroom(id="class_123", name="Test Class", language="python", url="test-url")
+    classroom = Classroom(id="class_123", name="Test Class", language="python")
     init_db.session.add(classroom)
     init_db.session.commit()
     
     assert classroom.id == "class_123"
     assert classroom.name == "Test Class"
     assert classroom.language == "python"
-    assert classroom.url == "test-url"
 
 def test_course_creation(init_db):
     course = Course(id="course_abc", name="Python Basics", domain="codecombat.com", is_active=True)

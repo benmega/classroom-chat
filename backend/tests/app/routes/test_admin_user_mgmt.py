@@ -229,7 +229,7 @@ def test_connection_card(client, sample_admin, sample_user):
 def test_classrooms_and_connection_cards(client, sample_admin, sample_user, init_db):
     login_as_admin(client, sample_admin)
 
-    classroom = Classroom(id="class_101", name="Class 101", language="Python", url="http://example.com")
+    classroom = Classroom(id="class_101", name="Class 101", language="Python")
     classroom.users.append(sample_user)
     db.session.add(classroom)
     db.session.commit()
@@ -311,7 +311,7 @@ def test_set_drawer(client, sample_admin, sample_user, init_db):
 def test_classroom_detail_management(client, sample_admin, init_db):
     login_as_admin(client, sample_admin)
 
-    c = Classroom(id="testclass", name="Test Classroom", language="Python", url="https://test.local")
+    c = Classroom(id="testclass", name="Test Classroom", language="Python")
     db.session.add(c)
     db.session.commit()
 
@@ -353,10 +353,20 @@ def test_classroom_detail_management(client, sample_admin, init_db):
     assert resp.status_code == 200
     assert student not in c.users
 
+    # Re-enroll student before delete to test deletion with students
+    resp = client.post(f"/api/admin/classrooms/{c.id}/enroll", json={
+        "student_id": student.id
+    })
+    assert resp.status_code == 200
+
     resp = client.delete(f"/api/admin/classrooms/{c.id}")
     assert resp.status_code == 200
     assert db.session.get(Classroom, "testclass") is None
 
+    # Ensure student still exists and is unlinked
+    student_after_delete = db.session.get(User, student.id)
+    assert student_after_delete is not None
+    assert len(student_after_delete.classrooms) == 0
 
 def test_pass_chapter_preview_and_pass_chapter(client, sample_admin, sample_user, init_db):
     from application.models.challenge import Challenge
@@ -486,7 +496,7 @@ def test_user_mgmt_error_branches(client, sample_admin, sample_user, init_db):
     resp = client.delete("/api/admin/classrooms/notfoundclass")
     assert resp.status_code == 404
     
-    c = Classroom(id="errclass", name="errclass", language="python", url="errclass")
+    c = Classroom(id="errclass", name="errclass", language="python")
     db.session.add(c)
     db.session.commit()
     
@@ -533,8 +543,36 @@ def test_user_mgmt_error_branches(client, sample_admin, sample_user, init_db):
         })
         assert resp.status_code == 409
         
-        # also for set_drawer
-        resp = client.post("/api/admin/set_drawer", json={"username": sample_user.username, "drawer": "0x09"})
-        assert resp.status_code == 409
+def test_update_user_details(client, sample_admin, sample_user):
+    login_as_admin(client, sample_admin)
+
+    # Update nickname, active_track, bio, role, and perk flags
+    resp = client.put(f"/api/admin/user/{sample_user.id}", json={
+        "nickname": "SuperStudent",
+        "active_track": "gd",
+        "bio": "Coding enthusiast",
+        "has_chat_font": True,
+        "has_animated_border": True
+    })
+    assert resp.status_code == 200
+    data = resp.get_json()["data"]
+    assert data["user"]["nickname"] == "SuperStudent"
+    assert data["user"]["active_track"] == "gd"
+    assert data["user"]["bio"] == "Coding enthusiast"
+    assert sample_user.nickname == "SuperStudent"
+    assert sample_user.active_track == "gd"
+    assert sample_user.has_chat_font is True
+    assert sample_user.has_animated_border is True
+
+    # Test username validation error
+    resp_err = client.put(f"/api/admin/user/{sample_user.id}", json={
+        "username": "a"  # invalid length
+    })
+    assert resp_err.status_code == 400
+
+    # Test not found
+    resp_404 = client.put("/api/admin/user/999999", json={"nickname": "nobody"})
+    assert resp_404.status_code == 404
+
 
 

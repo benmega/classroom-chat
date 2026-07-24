@@ -22,7 +22,7 @@ def test_socket_connect_disconnect_student(app, sample_user, init_db):
     with flask_client.session_transaction() as sess:
         sess["user"] = sample_user.id
 
-    classroom = Classroom(id="cs_101", name="CS 101", language="Python", url="http://example.com")
+    classroom = Classroom(id="cs_101", name="CS 101", language="Python")
     classroom.users.append(sample_user)
     db.session.add(classroom)
     db.session.commit()
@@ -56,7 +56,7 @@ def test_socket_send_message_student_success(app, sample_user, init_db):
     with flask_client.session_transaction() as sess:
         sess["user"] = sample_user.id
 
-    classroom = Classroom(id="cs_101", name="CS 101", language="Python", url="http://example.com")
+    classroom = Classroom(id="cs_101", name="CS 101", language="Python")
     classroom.users.append(sample_user)
     db.session.add(classroom)
     db.session.commit()
@@ -143,7 +143,7 @@ def test_socket_send_message_rate_limit(app, sample_user, init_db):
     with flask_client.session_transaction() as sess:
         sess["user"] = sample_user.id
 
-    classroom = Classroom(id="cs_101", name="CS 101", language="Python", url="http://example.com")
+    classroom = Classroom(id="cs_101", name="CS 101", language="Python")
     classroom.users.append(sample_user)
     db.session.add(classroom)
 

@@ -192,6 +192,9 @@ def create_app(config_class=None):
         )
         return response
 
+    from application.commands.seed import seed_command
+    app.cli.add_command(seed_command)
+
     return app
 
 
@@ -233,8 +236,7 @@ def seed_global_data():
                 Classroom(
                     id=_constants.GLOBAL_CLASSROOM_ID,
                     name="Global Announcements",
-                    language="python",
-                    url="global",
+                    language="python"
                 )
             )
             db.session.flush()
@@ -244,7 +246,7 @@ def seed_global_data():
         if not db.session.get(Classroom, "archive"):
             db.session.add(
                 Classroom(
-                    id="archive", name="Archive", language="python", url="archive"
+                    id="archive", name="Archive", language="python"
                 )
             )
             db.session.flush()

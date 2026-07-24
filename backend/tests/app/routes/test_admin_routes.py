@@ -825,3 +825,21 @@ def test_standard_project_crud(client, sample_admin, test_app):
         assert db.session.get(StandardProject, p_id) is None
 
 
+def test_review_counts_route(client, sample_admin):
+    """Test retrieving review counts as admin."""
+    login_as_admin(client, sample_admin)
+
+    resp = client.get("/api/admin/review_counts")
+    assert resp.status_code == 200
+    data = resp.get_json()
+    assert data["status"] == "success"
+    assert "pending_users" in data["data"]
+    assert "pending_trades" in data["data"]
+    assert "pending_projects" in data["data"]
+    assert "pending_certificates" in data["data"]
+    assert "pending_track_requests" in data["data"]
+    assert "pending_course_requests" in data["data"]
+    assert "total_incomplete" in data["data"]
+
+
+

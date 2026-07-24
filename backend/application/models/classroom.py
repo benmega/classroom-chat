@@ -4,6 +4,8 @@ Type: py
 Summary: SQLAlchemy model for Classroom and the user_classrooms join table.
 """
 
+import random
+import string
 from datetime import datetime
 
 from ..extensions import db
@@ -51,9 +53,8 @@ class Classroom(db.Model):
     id = db.Column(db.String(64), primary_key=True)
     name = db.Column(db.String(255), nullable=False)
     language = db.Column(db.String(64), nullable=False)
-    url = db.Column(db.String(255), nullable=False)
-    course_id = db.Column(db.String(64), nullable=True)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    join_code = db.Column(db.String(5), unique=True, nullable=True, index=True)
 
     # Course assignments this classroom has ever had
     course_assignments = db.relationship("CourseInstance", backref="classroom")
@@ -69,7 +70,26 @@ class Classroom(db.Model):
     def __repr__(self):
         return f"<Classroom(id={self.id}, name={self.name})>"
 
+    @staticmethod
+    def generate_join_code():
+        """Generate a unique 5-character uppercase alphanumeric join code."""
+        chars = string.ascii_uppercase + string.digits
+        while True:
+            code = ''.join(random.choices(chars, k=5))
+            exists = Classroom.query.filter_by(join_code=code).first()
+            if not exists:
+                return code
+
+    def get_join_code(self):
+        """Lazy: generate and commit a join code if one doesn't exist yet."""
+        if not self.join_code:
+            self.join_code = self.generate_join_code()
+            from ..extensions import db as _db
+            _db.session.commit()
+        return self.join_code
+
     def to_dict(self):
+        # join_code is intentionally omitted; fetch it via /api/admin/classrooms/<id>/join-code
         return {
             "id": self.id,
             "name": self.name,

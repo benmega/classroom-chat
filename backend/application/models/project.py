@@ -47,5 +47,6 @@ class Project(db.Model):
             "image_url": self.image_url,
             "user_nickname": self.user.nickname if self.user else "Unknown Student",
             "user_slug": self.user.slug if self.user else None,
+            "user_username": self.user.username if self.user else None,
             "created_at": self.created_at.isoformat() if self.created_at else None,
         }
