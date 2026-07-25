@@ -47,7 +47,7 @@ def youtube_callback():
         project.image_url = f"https://img.youtube.com/vi/{video_id}/hqdefault.jpg"
         db.session.commit()
         return jsonify({"success": True, "message": "YouTube info updated"})
-    except Exception as e:
+    except Exception:
         db.session.rollback()
         return jsonify({"success": False, "error": "Internal server error"}), 500
 
@@ -76,6 +76,6 @@ def transcribe_callback():
         project.video_transcript = transcript
         db.session.commit()
         return jsonify({"success": True, "message": "Transcript updated"})
-    except Exception as e:
+    except Exception:
         db.session.rollback()
         return jsonify({"success": False, "error": "Internal server error"}), 500

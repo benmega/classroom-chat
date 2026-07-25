@@ -66,7 +66,7 @@ def update_duck_multiplier():
         return jsonify({"success": True, "new_multiplier": new_multiplier})
     except (ValueError, TypeError):
         return jsonify({"success": False, "error": "Invalid multiplier value"}), 400
-    except Exception as e:
+    except Exception:
         db.session.rollback()
         return jsonify({"success": False, "error": "Internal server error"}), 500
 
