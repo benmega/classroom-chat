@@ -127,6 +127,25 @@ describe('Classes Admin Page', () => {
         expect(mockNavigate).toHaveBeenCalledWith('/admin/classes/c1');
     });
 
+    it('navigates to class details when clicking anywhere on the card body', async () => {
+        const mockClassrooms = [
+            { id: 'c1', name: 'Math 101', language: 'English', student_count: 20 }
+        ];
+
+        client.get.mockResolvedValueOnce({
+            data: { classrooms: mockClassrooms }
+        });
+
+        renderWithRouter(<Classes />);
+        
+        await waitFor(() => {
+            expect(screen.getByText('20')).toBeInTheDocument();
+        });
+
+        fireEvent.click(screen.getByText('20'));
+        expect(mockNavigate).toHaveBeenCalledWith('/admin/classes/c1');
+    });
+
     it('opens bulk connection modal on global button click', async () => {
         client.get.mockResolvedValue({
             data: { classrooms: [] }

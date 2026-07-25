@@ -11,7 +11,7 @@ import Chat from '../Chat/Chat';
 import Skeleton from '../../components/common/Skeleton';
 import SmartImage from '../../components/common/SmartImage';
 import { getApiUrl } from '../../utils/apiUrl';
-import { BulkConnectionCardsModal } from '../../components/admin/AdminModals';
+import { BulkConnectionCardsModal, ConnectCourseModal } from '../../components/admin/AdminModals';
 import './AdminClassDashboard.css';
 
 const getLanguageIconUrl = (language) => {
@@ -173,6 +173,28 @@ const AdminClassDashboard = () => {
         }
     };
 
+    const handleConnectCourse = async (e) => {
+        e.preventDefault();
+        setFormLoading(true);
+        const formData = new FormData(e.target);
+        const data = {
+            classroom_id: classId,
+            course_id: formData.get('course_id'),
+            id: formData.get('instance_id')
+        };
+
+        try {
+            await client.post('/api/admin/courseinstances', data);
+            toast.success('Course connected successfully');
+            setActiveModal(null);
+            fetchClassroomDetails();
+        } catch (err) {
+            toast.error(err.response?.data?.error || 'Failed to connect course.');
+        } finally {
+            setFormLoading(false);
+        }
+    };
+
     if (isLoading) {
         return (
             <div className="admin-class-dashboard">
@@ -261,8 +283,18 @@ const AdminClassDashboard = () => {
                         <div className="admin-class-grid single-column">
                             <div className="control-panel-card assignments-card">
                         <div className="card-custom-header">
-                            <BookOpen size={20} />
-                            <h3>Connected Courses</h3>
+                            <div className="title-section">
+                                <BookOpen size={20} />
+                                <h3>Connected Courses</h3>
+                            </div>
+                            <button 
+                                type="button" 
+                                className="btn-action-sm primary"
+                                onClick={() => setActiveModal('connect_course')}
+                                title="Connect Course"
+                            >
+                                <Plus size={16} />
+                            </button>
                         </div>
                         <div className="assignments-list">
                             {classroom.course_assignments && classroom.course_assignments.length > 0 ? (
@@ -441,6 +473,12 @@ const AdminClassDashboard = () => {
                 setClassroomCards={setClassroomCards}
                 isFetchingCards={isFetchingCards}
                 fetchClassroomCards={fetchClassroomCards}
+            />
+            <ConnectCourseModal
+                isOpen={activeModal === 'connect_course'}
+                onClose={() => setActiveModal(null)}
+                onSubmit={handleConnectCourse}
+                loading={formLoading}
             />
         </div>
     );

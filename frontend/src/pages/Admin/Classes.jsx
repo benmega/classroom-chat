@@ -208,12 +208,28 @@ const Classes = () => {
                 {filteredClassrooms.length > 0 ? (
                     <div className="classes-grid" aria-label="Classroom Directory Grid">
                         {filteredClassrooms.map(c => (
-                            <div className="class-card" key={c.id}>
+                            <div 
+                                className="class-card" 
+                                key={c.id}
+                                onClick={() => navigate(`/admin/classes/${c.id}`)}
+                                role="button"
+                                tabIndex={0}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter' || e.key === ' ') {
+                                        if (e.target === e.currentTarget) {
+                                            navigate(`/admin/classes/${c.id}`);
+                                        }
+                                    }
+                                }}
+                            >
                                 <div className="class-card-header">
                                     <Link 
                                         to={`/admin/classes/${c.id}`} 
                                         className="class-card-title-link"
-                                        onClick={() => navigate(`/admin/classes/${c.id}`)}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            navigate(`/admin/classes/${c.id}`);
+                                        }}
                                         aria-label={`Manage classroom ${c.name}`}
                                     >
                                         {c.name}
@@ -232,7 +248,8 @@ const Classes = () => {
                                     <button 
                                         className="secondary-btn" 
                                         style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', padding: '6px 12px' }}
-                                        onClick={() => {
+                                        onClick={(e) => {
+                                            e.stopPropagation();
                                             fetchClassroomCards(c.id);
                                             setActiveModal('bulk_connection_cards');
                                         }}

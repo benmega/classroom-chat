@@ -628,3 +628,22 @@ export const BulkConnectionCardsModal = ({ isOpen, onClose, classrooms, fetchCla
         </Modal>
     );
 };
+
+export const ConnectCourseModal = ({ isOpen, onClose, onSubmit, loading }) => (
+    <Modal isOpen={isOpen} onClose={onClose} title="Connect Course">
+        <form onSubmit={onSubmit} className="admin-form" noValidate>
+            <div className="form-group">
+                <label>Course ID</label>
+                <input type="text" name="course_id" required placeholder="e.g. IntroToPython" />
+            </div>
+            <div className="form-group">
+                <label>Instance ID</label>
+                <input type="text" name="instance_id" required placeholder="e.g. 678b56dc... or random unique ID" />
+                <small>The unique instance ID for this course mapping.</small>
+            </div>
+            <button type="submit" className="btn-primary" disabled={loading}>
+                {loading ? 'Connecting...' : 'Connect Course'}
+            </button>
+        </form>
+    </Modal>
+);
