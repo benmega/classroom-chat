@@ -8,7 +8,7 @@ from datetime import datetime
 
 from sqlalchemy import inspect, text
 
-from application import create_app, DevelopmentConfig
+from application import DevelopmentConfig, create_app
 from application.extensions import db
 
 # --- PATH CONFIGURATION ---
@@ -90,7 +90,7 @@ def export_tables_to_csv(output_dir=None):
             print(f"Exported table '{table_name}' with {row_count} rows to {file_path}")
 
         except Exception as e:
-            print(f"Error exporting table '{table_name}': {str(e)}")
+            print(f"Error exporting table '{table_name}': {e!s}")
             import traceback
 
             traceback.print_exc()
@@ -148,7 +148,7 @@ def export_to_json(output_dir=None):
             print(f"Exported table '{table_name}' to JSON: {file_path}")
 
         except Exception as e:
-            print(f"Error exporting table '{table_name}' to JSON: {str(e)}")
+            print(f"Error exporting table '{table_name}' to JSON: {e!s}")
 
     return full_output_path
 
@@ -244,7 +244,7 @@ def export_to_sql(output_dir=None):
             print(f"Exported table '{table_name}' to SQL: {file_path}")
 
         except Exception as e:
-            print(f"Error exporting table '{table_name}' to SQL: {str(e)}")
+            print(f"Error exporting table '{table_name}' to SQL: {e!s}")
             import traceback
 
             traceback.print_exc()

@@ -1,11 +1,13 @@
 from application.extensions import socketio
 from application.models.message import Message
 
+
 def test_socket_unauthenticated_connection(app):
     # Unauthenticated connection should be rejected
     flask_client = app.test_client()
     socket_client = socketio.test_client(app, flask_test_client=flask_client)
     assert not socket_client.is_connected()
+
 
 def test_socket_flow(app, sample_user, init_db):
     flask_client = app.test_client()
@@ -16,10 +18,9 @@ def test_socket_flow(app, sample_user, init_db):
     socket_client = socketio.test_client(app, flask_test_client=flask_client)
     assert socket_client.is_connected()
 
-    socket_client.emit("send_message", {
-        "content": "Hello Socket World!",
-        "is_global": True
-    })
+    socket_client.emit(
+        "send_message", {"content": "Hello Socket World!", "is_global": True}
+    )
 
     # Read received messages
     received = socket_client.get_received()

@@ -21,7 +21,7 @@ def test_message_creation(init_db, sample_user, sample_classroom):
         message_type="text",
         target_classrooms=[sample_classroom],
         is_global=False,
-        target_live=False
+        target_live=False,
     )
     db.session.add(message)
     db.session.commit()

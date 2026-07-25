@@ -63,7 +63,7 @@ def get_or_create_ai_teacher() -> User:
 
     except SQLAlchemyError as e:
         db.session.rollback()
-        logger.error(f"Database error creating AI Teacher user: {e}")
+        logger.exception(f"Database error creating AI Teacher user: {e}")
         raise AITeacherError("Failed to create AI Teacher user") from e
 
 
@@ -73,7 +73,7 @@ def get_recent_messages(user: User, limit: int = 50) -> List[Dict[str, str]]:
     """
     try:
         query = Message.query.filter(Message.deleted_at.is_(None))
-        
+
         if not user.is_admin:
             user_classroom_ids = [c.id for c in user.classrooms]
             query = query.filter(
@@ -81,20 +81,28 @@ def get_recent_messages(user: User, limit: int = 50) -> List[Dict[str, str]]:
                     Message.is_global.is_(True),
                     Message.user_id == user.id,
                     Message.target_users.any(User.id == user.id),
-                    Message.target_classrooms.any(Message.target_classrooms.property.mapper.class_.id.in_(user_classroom_ids)) if user_classroom_ids else False
+                    Message.target_classrooms.any(
+                        Message.target_classrooms.property.mapper.class_.id.in_(
+                            user_classroom_ids
+                        )
+                    )
+                    if user_classroom_ids
+                    else False,
                 )
             )
-            
+
         messages = query.order_by(Message.created_at.desc()).limit(limit).all()
         return [
             {
-                "role": "assistant" if message.user_id == AI_TEACHER_USER_ID else "user",
+                "role": "assistant"
+                if message.user_id == AI_TEACHER_USER_ID
+                else "user",
                 "content": message.content,
             }
             for message in reversed(messages)
         ]
     except SQLAlchemyError as e:
-        logger.error(f"Database error getting messages: {e}")
+        logger.exception(f"Database error getting messages: {e}")
         return []
 
 
@@ -163,10 +171,10 @@ def call_ollama_api(prompt: str, model: str) -> str:
         return ai_response
 
     except requests.exceptions.RequestException as e:
-        logger.error(f"Network error calling Ollama API: {e}")
+        logger.exception(f"Network error calling Ollama API: {e}")
         raise AITeacherError("Failed to connect to AI service") from e
     except ValueError as e:
-        logger.error(f"Invalid JSON response from Ollama API: {e}")
+        logger.exception(f"Invalid JSON response from Ollama API: {e}")
         raise AITeacherError("Invalid response from AI service") from e
 
 
@@ -231,14 +239,12 @@ def get_local_llm_response(
     except AITeacherError:
         raise
     except Exception as e:
-        logger.error(f"Unexpected error generating AI response: {e}")
+        logger.exception(f"Unexpected error generating AI response: {e}")
         raise AITeacherError("Failed to generate AI response") from e
 
 
 @limiter.limit("1 per minute; 10 per day")
-def get_ai_response(
-    user_message: str, username: str
-) -> str:
+def get_ai_response(user_message: str, username: str) -> str:
     """
     Main function to get AI response for a user message.
 
@@ -257,7 +263,7 @@ def get_ai_response(
 
         # Ensure AI teacher user exists
         get_or_create_ai_teacher()
-        
+
         user = User.query.filter_by(username=username).first()
         if not user:
             return "Error: User not found."
@@ -276,8 +282,8 @@ def get_ai_response(
         return get_local_llm_response(user_message, conversation_history)
 
     except AITeacherError as e:
-        logger.error(f"AI Teacher error: {e}")
-        return f"Error: {str(e)}"
+        logger.exception(f"AI Teacher error: {e}")
+        return f"Error: {e!s}"
     except Exception as e:
-        logger.error(f"Unexpected error in get_ai_response: {e}")
+        logger.exception(f"Unexpected error in get_ai_response: {e}")
         return "Error: Could not process the AI response."

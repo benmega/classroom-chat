@@ -1,3 +1,6 @@
-# pyproject.toml
+[tool.ruff]
+line-length = 120
+
 [tool.ruff.lint]
-ignore = ["E701"]
+select = ["E", "F", "W", "I", "BLE", "TRY", "RUF"]
+ignore = ["E501", "E701", "TRY003", "TRY401", "TRY300"]

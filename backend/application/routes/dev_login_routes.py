@@ -13,12 +13,13 @@ import os
 
 from flask import (
     Blueprint,
+    current_app,
     jsonify,
+    render_template,
     request,
     session,
-    current_app,
-    render_template,
 )
+
 from application.models.user import User
 
 dev_login = Blueprint("dev_login", __name__)

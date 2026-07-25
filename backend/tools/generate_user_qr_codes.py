@@ -7,9 +7,10 @@ Summary: Generate QR codes for all users linking to their profile pages.
 import os
 import sys
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 import qrcode
+
 from application import create_app
 from application.models.user import User
 
@@ -26,7 +27,9 @@ def generate_qr_codes():
             print("No users found in the database.")
             return
 
-        output_dir = os.path.join(os.path.dirname(__file__), '..', 'userData', 'qr_codes')
+        output_dir = os.path.join(
+            os.path.dirname(__file__), "..", "userData", "qr_codes"
+        )
         os.makedirs(output_dir, exist_ok=True)
 
         print(f"Generating QR codes for {len(users)} users...")

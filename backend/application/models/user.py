@@ -1,11 +1,12 @@
 import re
-from datetime import date, timedelta, datetime
+from datetime import date, datetime, timedelta
 
 from sqlalchemy import event
 from sqlalchemy.ext.hybrid import hybrid_property
-from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.security import check_password_hash, generate_password_hash
 
 from ..extensions import db
+
 # Models are imported locally within methods to prevent circular dependencies
 
 
@@ -26,9 +27,11 @@ class User(db.Model):
     is_admin = db.Column(db.Boolean, default=False)
     is_approved = db.Column(db.Boolean, default=False)
     role = db.Column(db.String(20), default="student", nullable=False)
-    active_track = db.Column(db.String(50), default="cs", server_default="cs", nullable=False)
+    active_track = db.Column(
+        db.String(50), default="cs", server_default="cs", nullable=False
+    )
     can_chat = db.Column(db.Boolean, default=True)
-    
+
     # OAuth / Cognito fields
     email = db.Column(db.String(120), unique=True, nullable=True)
     cognito_sub = db.Column(db.String(50), unique=True, nullable=True)
@@ -137,7 +140,7 @@ class User(db.Model):
 
         # Grid data - Extremely expensive
         d["contribution_data"] = self.get_contribution_data()
-        
+
         # Course progress tree breakdown
         d["course_progress"] = self.get_course_progress_data()
 
@@ -146,7 +149,10 @@ class User(db.Model):
     def to_dict_auth(self):
         """Ultra-lightweight dictionary for frequent auth status checks."""
         from .track_requests import TrackChangeRequest
-        pending_request = TrackChangeRequest.query.filter_by(student_id=self.id, status="pending").first()
+
+        pending_request = TrackChangeRequest.query.filter_by(
+            student_id=self.id, status="pending"
+        ).first()
         return {
             "id": self.id,
             "user_id": self.id,
@@ -166,8 +172,12 @@ class User(db.Model):
             "pending_request": {
                 "id": pending_request.id,
                 "requested_track": pending_request.requested_track,
-                "created_at": pending_request.created_at.isoformat() if pending_request.created_at else None
-            } if pending_request else None,
+                "created_at": pending_request.created_at.isoformat()
+                if pending_request.created_at
+                else None,
+            }
+            if pending_request
+            else None,
             "slug": self.slug,
             "duck_balance": self.duck_balance,
             "packets": self.packets,
@@ -183,9 +193,11 @@ class User(db.Model):
             "has_double_duck": self.has_double_duck,
             "drawer": self.drawer,
             "current_activity": self.current_activity,
-            "last_activity_time": self.last_activity_time.isoformat() if self.last_activity_time else None,
+            "last_activity_time": self.last_activity_time.isoformat()
+            if self.last_activity_time
+            else None,
             "achievement_count": len(self.achievements),
-            "can_chat": getattr(self, 'can_chat', True),
+            "can_chat": getattr(self, "can_chat", True),
         }
 
     def to_dict_summary(self, precomputed_progress=None):
@@ -222,7 +234,10 @@ class User(db.Model):
             oz_percent = self.get_progress_percent("www.ozaria.com")
 
         from .track_requests import TrackChangeRequest
-        pending_request = TrackChangeRequest.query.filter_by(student_id=self.id, status="pending").first()
+
+        pending_request = TrackChangeRequest.query.filter_by(
+            student_id=self.id, status="pending"
+        ).first()
 
         d = {
             "id": self.id,
@@ -243,8 +258,12 @@ class User(db.Model):
             "pending_request": {
                 "id": pending_request.id,
                 "requested_track": pending_request.requested_track,
-                "created_at": pending_request.created_at.isoformat() if pending_request.created_at else None
-            } if pending_request else None,
+                "created_at": pending_request.created_at.isoformat()
+                if pending_request.created_at
+                else None,
+            }
+            if pending_request
+            else None,
             "bio": self.bio,
             "slug": self.slug,
             # Gamification
@@ -269,11 +288,15 @@ class User(db.Model):
             "has_auto_claimer": self.has_auto_claimer,
             "drawer": self.drawer,
             "current_activity": self.current_activity,
-            "last_activity_time": self.last_activity_time.isoformat() if self.last_activity_time else None,
+            "last_activity_time": self.last_activity_time.isoformat()
+            if self.last_activity_time
+            else None,
             "recent_project": {
                 "name": self.projects[-1].name,
-            } if self.projects else None,
-            "can_chat": getattr(self, 'can_chat', True),
+            }
+            if self.projects
+            else None,
+            "can_chat": getattr(self, "can_chat", True),
         }
         return d
 
@@ -311,8 +334,9 @@ class User(db.Model):
         """Generate a unique 6-character alphanumeric connection code."""
         import random
         import string
+
         while True:
-            code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+            code = "".join(random.choices(string.ascii_uppercase + string.digits, k=6))
             if User.query.filter_by(connection_code=code).first() is None:
                 return code
 
@@ -331,12 +355,14 @@ class User(db.Model):
 
         if online:
             from .session_log import SessionLog
+
             # Start new session if none active
             if not SessionLog.query.filter_by(user_id=user.id, end_time=None).first():
                 SessionLog.start_session(user.id)
             user.is_online = True
         else:
             from .session_log import SessionLog
+
             # End the most recent session
             SessionLog.end_session(user.id)
             user.is_online = False
@@ -348,6 +374,7 @@ class User(db.Model):
     def get_progress(self, domain):
         """Calculate progress based on challenges completed for a specific domain."""
         from .challenge_log import ChallengeLog
+
         total_challenges = ChallengeLog.query.filter_by(
             user_id=self.id, domain=domain
         ).count()
@@ -364,6 +391,7 @@ class User(db.Model):
 
         total_challenges = self._total_challenges_cache[domain]
         from .challenge_log import ChallengeLog
+
         completed_challenges = ChallengeLog.query.filter_by(
             user_id=self.id, domain=domain
         ).count()
@@ -389,70 +417,79 @@ class User(db.Model):
 
         def get_course_breakdown(domain):
             from .challenge import Challenge
-            
+
             user_logs = ChallengeLog.query.filter_by(
                 user_id=self.id, domain=domain
             ).all()
             completed_slugs = {cl.challenge_slug for cl in user_logs}
-            
+
             all_challenges = Challenge.query.filter_by(domain=domain).all()
-            
+
             courses_map = {}
             for c in all_challenges:
                 if c.course_id not in courses_map:
                     courses_map[c.course_id] = []
                 courses_map[c.course_id].append(c)
-                
+
             breakdown = []
             for course_id, challenges in courses_map.items():
                 course_name = "Other"
                 if course_id:
                     course_name = courses_dict.get(course_id, course_id)
-                
+
                 levels = []
                 completed_count = 0
                 for c in challenges:
                     is_completed = c.slug in completed_slugs
                     if is_completed:
                         completed_count += 1
-                    levels.append({
-                        "name": c.name,
-                        "slug": c.slug,
-                        "is_completed": is_completed
-                    })
-                
+                    levels.append(
+                        {"name": c.name, "slug": c.slug, "is_completed": is_completed}
+                    )
+
                 if len(levels) > 0:
-                    breakdown.append({
-                        "course_id": course_id,
-                        "course_name": course_name,
-                        "levels_completed": completed_count,
-                        "levels_total": len(levels),
-                        "levels": levels
-                    })
-            
+                    breakdown.append(
+                        {
+                            "course_id": course_id,
+                            "course_name": course_name,
+                            "levels_completed": completed_count,
+                            "levels_total": len(levels),
+                            "levels": levels,
+                        }
+                    )
+
             handled_course_ids = set(courses_map.keys())
             legacy_courses = {}
             for cl in user_logs:
                 if cl.course_id and cl.course_id not in handled_course_ids:
                     if cl.course_id not in legacy_courses:
                         legacy_courses[cl.course_id] = []
-                    if not any(lvl["slug"] == cl.challenge_slug for lvl in legacy_courses[cl.course_id]):
-                        legacy_courses[cl.course_id].append({
-                            "name": cl.challenge_slug,
-                            "slug": cl.challenge_slug,
-                            "is_completed": True
-                        })
-                        
+                    if not any(
+                        lvl["slug"] == cl.challenge_slug
+                        for lvl in legacy_courses[cl.course_id]
+                    ):
+                        legacy_courses[cl.course_id].append(
+                            {
+                                "name": cl.challenge_slug,
+                                "slug": cl.challenge_slug,
+                                "is_completed": True,
+                            }
+                        )
+
             for course_id, levels in legacy_courses.items():
-                course_name = courses_dict.get(course_id, course_id) if course_id else "Other"
-                breakdown.append({
-                    "course_id": course_id,
-                    "course_name": course_name,
-                    "levels_completed": len(levels),
-                    "levels_total": len(levels),
-                    "levels": levels
-                })
-            
+                course_name = (
+                    courses_dict.get(course_id, course_id) if course_id else "Other"
+                )
+                breakdown.append(
+                    {
+                        "course_id": course_id,
+                        "course_name": course_name,
+                        "levels_completed": len(levels),
+                        "levels_total": len(levels),
+                        "levels": levels,
+                    }
+                )
+
             breakdown.sort(key=lambda x: x["levels_completed"], reverse=True)
             return breakdown
 
@@ -460,23 +497,25 @@ class User(db.Model):
             "codecombat": {
                 "levels_completed": cc_levels,
                 "percent": cc_percent,
-                "breakdown": get_course_breakdown("codecombat.com")
+                "breakdown": get_course_breakdown("codecombat.com"),
             },
             "ozaria": {
                 "levels_completed": oz_levels,
                 "percent": oz_percent,
-                "breakdown": get_course_breakdown("www.ozaria.com")
+                "breakdown": get_course_breakdown("www.ozaria.com"),
             },
         }
 
     def add_skill(self, skill_name):
         from .skill import Skill
+
         new_skill = Skill(name=skill_name, user_id=self.id)
         db.session.add(new_skill)
         db.session.commit()
 
     def remove_skill(self, skill_id):
         from .skill import Skill
+
         skill = db.session.get(Skill, skill_id)
         if skill and skill.user_id == self.id:
             db.session.delete(skill)
@@ -484,6 +523,7 @@ class User(db.Model):
 
     def add_project(self, name, description=None, link=None):
         from .project import Project
+
         new_project = Project(
             name=name, description=description, link=link, user_id=self.id
         )
@@ -492,6 +532,7 @@ class User(db.Model):
 
     def remove_project(self, project_id):
         from .project import Project
+
         project = db.session.get(Project, project_id)
         if project and project.user_id == self.id:
             db.session.delete(project)
@@ -517,11 +558,12 @@ class User(db.Model):
     def award_daily_duck(self, amount=1):
         if self.role == "parent":
             return False
-            
+
         if self.has_double_duck:
             amount *= 2
-        
+
         from datetime import date
+
         today = date.today()
         if self.last_daily_duck != today:
             self.add_ducks(amount, reason="Daily Duck")
@@ -545,18 +587,21 @@ class User(db.Model):
         start_date = end_date - timedelta(weeks=52)
 
         from sqlalchemy import func
+
         from .challenge_log import ChallengeLog
 
-        results = db.session.query(
-            func.date(ChallengeLog.timestamp),
-            func.count(ChallengeLog.id)
-        ).filter(
-            ChallengeLog.user_id == self.id,
-            ChallengeLog.timestamp >= start_date,
-            ChallengeLog.timestamp <= (end_date + timedelta(days=1))
-        ).group_by(
-            func.date(ChallengeLog.timestamp)
-        ).all()
+        results = (
+            db.session.query(
+                func.date(ChallengeLog.timestamp), func.count(ChallengeLog.id)
+            )
+            .filter(
+                ChallengeLog.user_id == self.id,
+                ChallengeLog.timestamp >= start_date,
+                ChallengeLog.timestamp <= (end_date + timedelta(days=1)),
+            )
+            .group_by(func.date(ChallengeLog.timestamp))
+            .all()
+        )
 
         counts = {}
         for row in results:

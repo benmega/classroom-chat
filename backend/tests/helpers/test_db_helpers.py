@@ -7,9 +7,9 @@ Summary: Unit tests for db helpers.
 import pytest
 
 from application.utilities.db_helpers import (
+    generate_unique_username,
     get_user,
     save_message_to_db,
-    generate_unique_username,
 )
 
 
@@ -48,9 +48,13 @@ def test_save_message_to_db_basic(init_db, sample_user, client):
         assert result.get("message_id") is not None
 
 
-def test_save_message_to_db_with_classroom(init_db, sample_user, sample_classroom, client):
+def test_save_message_to_db_with_classroom(
+    init_db, sample_user, sample_classroom, client
+):
     user = sample_user
     with client.application.test_request_context("/"):
-        result = save_message_to_db(user.id, message="Hello again!", target_classrooms=[sample_classroom.id])
+        result = save_message_to_db(
+            user.id, message="Hello again!", target_classrooms=[sample_classroom.id]
+        )
         assert result["success"] is True
         assert result.get("message_id") is not None

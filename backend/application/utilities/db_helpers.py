@@ -39,10 +39,18 @@ def get_user(identifier):
 
         return user
     except Exception as e:
-        abort(500, description=f"An error occurred: {str(e)}")
+        abort(500, description=f"An error occurred: {e!s}")
 
 
-def save_message_to_db(user_id, message, is_global=False, target_live=False, target_classrooms=None, target_user_ids=None, message_type="text"):
+def save_message_to_db(
+    user_id,
+    message,
+    is_global=False,
+    target_live=False,
+    target_classrooms=None,
+    target_user_ids=None,
+    message_type="text",
+):
     """
     Saves a feed post (message) to the database with visibility targeting.
 
@@ -83,14 +91,14 @@ def save_message_to_db(user_id, message, is_global=False, target_live=False, tar
             target_live=target_live,
             has_animated_border=user.has_animated_border,
             animated_border_speed=user.animated_border_speed,
-            chat_font_color=user.chat_font_color
+            chat_font_color=user.chat_font_color,
         )
-        
+
         if target_live:
             # Get currently online users
             online_users = User.query.filter_by(is_online=True).all()
             new_message.target_users.extend(online_users)
-            
+
         if target_user_ids:
             for uid in target_user_ids:
                 u = db.session.get(User, uid)

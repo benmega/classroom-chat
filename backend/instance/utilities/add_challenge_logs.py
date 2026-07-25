@@ -1,6 +1,6 @@
 # Filename: update_challenge_logs.py
 # Description: Script to bulk insert challenge logs into the database.
-from application import create_app, DevelopmentConfig
+from application import DevelopmentConfig, create_app
 from application.extensions import db
 from application.models.challenge import Challenge
 from application.models.challenge_log import ChallengeLog

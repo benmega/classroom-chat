@@ -1,32 +1,32 @@
+import io
 import os
+import re
 import subprocess
 import sys
-import re
+import zipfile
 from datetime import datetime
 
 from flask import (
     Blueprint,
-    jsonify,
-    session,
     flash,
+    jsonify,
     redirect,
-    url_for,
-    request,
-    send_from_directory,
     render_template,
+    request,
     send_file,
+    send_from_directory,
+    session,
+    url_for,
 )
 from sqlalchemy.orm import joinedload
 from werkzeug.utils import secure_filename
-import zipfile
-import io
 
+from application.decorators.admin_required import admin_only
+from application.decorators.api_response import api_response
 from application.extensions import db
 from application.models.achievements import Achievement
 from application.models.user import User
 from application.models.user_certificate import UserCertificate
-from application.decorators.admin_required import admin_only
-from application.decorators.api_response import api_response
 from application.utilities.helper_functions import allowed_file
 
 achievements = Blueprint("achievements", __name__)
@@ -51,16 +51,17 @@ def get_achievements_json():
         return jsonify({"success": False, "error": "User not found!"}), 404
 
     # Automatically check for new achievements when visiting the page
+    from sqlalchemy import func
+
+    from application.models.challenge_log import ChallengeLog
+    from application.models.duck_trade import DuckTradeLog
+    from application.models.message import Message
     from application.services.achievement_engine import (
+        _calculate_consistency,
         evaluate_user,
         get_achievement_progress,
         longest_session_minutes,
-        _calculate_consistency,
     )
-    from application.models.message import Message
-    from application.models.challenge_log import ChallengeLog
-    from application.models.duck_trade import DuckTradeLog
-    from sqlalchemy import func
 
     evaluate_user(current_user)
 
@@ -354,6 +355,7 @@ def mark_reviewed(cert_id):
     db.session.commit()
 
     from application.services.achievement_engine import evaluate_user
+
     evaluate_user(cert.user, force=True)
 
     msg = "Certificate marked as reviewed."
@@ -398,6 +400,7 @@ def mark_all_reviewed():
     db.session.commit()
 
     from application.services.achievement_engine import evaluate_user
+
     for user in users_to_evaluate:
         evaluate_user(user, force=True)
 
@@ -413,14 +416,20 @@ def mark_all_reviewed():
 @achievements.route("/admin/certificates/download_all")
 @admin_only
 def download_all_certificates():
-    certs = db.session.query(UserCertificate).filter_by(reviewed=False).join(User).join(Achievement).all()
+    certs = (
+        db.session.query(UserCertificate)
+        .filter_by(reviewed=False)
+        .join(User)
+        .join(Achievement)
+        .all()
+    )
 
     if not certs:
         flash("No certificates to download.", "error")
         return redirect(request.referrer or url_for("achievements.admin_certificates"))
 
     memory_file = io.BytesIO()
-    with zipfile.ZipFile(memory_file, 'w', zipfile.ZIP_DEFLATED) as zf:
+    with zipfile.ZipFile(memory_file, "w", zipfile.ZIP_DEFLATED) as zf:
         for cert in certs:
             full_path = os.path.abspath(cert.file_path)
             if os.path.exists(full_path):
@@ -432,8 +441,5 @@ def download_all_certificates():
         memory_file,
         mimetype="application/zip",
         as_attachment=True,
-        download_name="all_pending_certificates.zip"
+        download_name="all_pending_certificates.zip",
     )
-
-
-

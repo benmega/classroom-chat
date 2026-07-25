@@ -10,7 +10,6 @@ from datetime import datetime
 
 from ..extensions import db
 
-
 # ---------------------------------------------------------------------------
 # Join table — many-to-many between users and classrooms.
 # A student is enrolled when a row exists here.  The only write path for
@@ -75,7 +74,7 @@ class Classroom(db.Model):
         """Generate a unique 5-character uppercase alphanumeric join code."""
         chars = string.ascii_uppercase + string.digits
         while True:
-            code = ''.join(random.choices(chars, k=5))
+            code = "".join(random.choices(chars, k=5))
             exists = Classroom.query.filter_by(join_code=code).first()
             if not exists:
                 return code
@@ -85,6 +84,7 @@ class Classroom(db.Model):
         if not self.join_code:
             self.join_code = self.generate_join_code()
             from ..extensions import db as _db
+
             _db.session.commit()
         return self.join_code
 
@@ -94,5 +94,5 @@ class Classroom(db.Model):
             "id": self.id,
             "name": self.name,
             "language": self.language,
-            "student_count": len(self.users) if self.users else 0
+            "student_count": len(self.users) if self.users else 0,
         }

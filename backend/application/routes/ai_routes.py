@@ -9,7 +9,6 @@ from flask import Blueprint, g, jsonify, request
 from application.ai.ai_teacher import get_ai_response
 from application.decorators.login_required import require_login
 
-
 ai = Blueprint("ai", __name__)
 
 

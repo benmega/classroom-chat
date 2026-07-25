@@ -11,16 +11,17 @@ Room naming conventions:
 """
 
 from datetime import datetime
+
 from flask import request, session
 from flask_socketio import emit, join_room
-
-from application.extensions import db, socketio
-from application.constants import GLOBAL_CLASSROOM_ID
-from .models.user import User
-from .models.classroom import user_classrooms
-from .utilities.db_helpers import save_message_to_db
-
 from sqlalchemy import select
+
+from application.constants import GLOBAL_CLASSROOM_ID
+from application.extensions import db, socketio
+
+from .models.classroom import user_classrooms
+from .models.user import User
+from .utilities.db_helpers import save_message_to_db
 
 # Track active socket connections per user to handle multiple tabs correctly
 _active_sessions: dict = {}  # {user_id: set([sid1, sid2, ...])}
@@ -129,18 +130,25 @@ def handle_send_message(data):
         if len(content) > 500:
             return {"success": False, "error": "Message too long"}
 
-        if not getattr(user, 'can_chat', True):
+        if not getattr(user, "can_chat", True):
             return {"success": False, "error": "You are currently muted"}
 
         from .models.message import Message
-        last_message = Message.query.filter_by(user_id=user.id).order_by(Message.id.desc()).first()
+
+        last_message = (
+            Message.query.filter_by(user_id=user.id).order_by(Message.id.desc()).first()
+        )
         if last_message:
             time_elapsed = (datetime.utcnow() - last_message.created_at).total_seconds()
             if time_elapsed < 30:
                 remaining = int(30 - time_elapsed)
-                return {"success": False, "error": f"Please wait {remaining} seconds before sending another message."}
+                return {
+                    "success": False,
+                    "error": f"Please wait {remaining} seconds before sending another message.",
+                }
 
         from .models.configuration import Configuration
+
         config = Configuration.query.first()
         if config and not config.message_sending_enabled:
             return {"success": False, "error": "Chat is currently disabled"}
@@ -150,28 +158,34 @@ def handle_send_message(data):
         enrolled_ids = _get_enrolled_classroom_ids(user.id)
         # Filter target_classrooms to only those the student is enrolled in
         if target_classrooms:
-            target_classrooms = [cid for cid in target_classrooms if cid in enrolled_ids]
+            target_classrooms = [
+                cid for cid in target_classrooms if cid in enrolled_ids
+            ]
         else:
             # Default to all their classrooms if not specified
             target_classrooms = enrolled_ids
-            
+
         # Optional: restrict students from targeting specific users unless explicitly allowed.
         # But per the prompt, students can post to live students and their specific classroom.
         target_users = []
 
     save_result = save_message_to_db(
-        user.id, 
-        message=content, 
-        is_global=is_global, 
-        target_live=target_live, 
+        user.id,
+        message=content,
+        is_global=is_global,
+        target_live=target_live,
         target_classrooms=target_classrooms,
-        target_user_ids=target_users
+        target_user_ids=target_users,
     )
 
     if not save_result.get("success"):
-        return {"success": False, "error": save_result.get("error", "Failed to save message")}
+        return {
+            "success": False,
+            "error": save_result.get("error", "Failed to save message"),
+        }
 
     from .models.message import Message
+
     msg = db.session.get(Message, save_result.get("message_id"))
 
     payload = {
@@ -182,16 +196,24 @@ def handle_send_message(data):
         "user_profile_pic": user.profile_picture,
         "content": msg.content,
         "message_type": msg.message_type,
-        "created_at": msg.created_at.isoformat() if msg.created_at else datetime.utcnow().isoformat(),
+        "created_at": msg.created_at.isoformat()
+        if msg.created_at
+        else datetime.utcnow().isoformat(),
         "is_global": msg.is_global,
         "target_live": msg.target_live,
-        "target_classrooms": [c.name for c in msg.target_classrooms] if msg.target_classrooms else [],
-        "target_classroom_ids": [c.id for c in msg.target_classrooms] if msg.target_classrooms else [],
-        "target_users": [(u.nickname or u.username) for u in msg.target_users] if msg.target_users else [],
+        "target_classrooms": [c.name for c in msg.target_classrooms]
+        if msg.target_classrooms
+        else [],
+        "target_classroom_ids": [c.id for c in msg.target_classrooms]
+        if msg.target_classrooms
+        else [],
+        "target_users": [(u.nickname or u.username) for u in msg.target_users]
+        if msg.target_users
+        else [],
         "is_struck": msg.is_struck,
         "has_animated_border": msg.has_animated_border,
         "animated_border_speed": msg.animated_border_speed,
-        "chat_font_color": msg.chat_font_color
+        "chat_font_color": msg.chat_font_color,
     }
 
     # Emit to appropriate rooms
@@ -201,10 +223,10 @@ def handle_send_message(data):
         # Emit to specific classrooms
         for cid in target_classrooms:
             emit("message_received", payload, room=f"classroom:{cid}")
-            
+
         # Emit to sender
         emit("message_received", payload, room=f"user:{user.id}")
-        
+
         # Emit to specifically targeted users
         for uid in target_users:
             if uid != user.id:

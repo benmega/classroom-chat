@@ -1,7 +1,7 @@
 import csv
 import os
 
-from application import db, create_app
+from application import create_app, db
 from application.models.course import Course
 
 

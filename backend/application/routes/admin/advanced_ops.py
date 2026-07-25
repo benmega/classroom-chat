@@ -1,7 +1,8 @@
-from application.extensions import db
-from application.models.message import Message
 from application.decorators.admin_required import admin_only
 from application.decorators.api_response import api_response
+from application.extensions import db
+from application.models.message import Message
+
 from ..admin_routes import admin_bp
 
 
@@ -26,7 +27,7 @@ def purge_history():
         }
     except Exception as e:
         db.session.rollback()
-        return {"error": f"Failed to purge history: {str(e)}"}, 500
+        return {"error": f"Failed to purge history: {e!s}"}, 500
 
 
 @admin_bp.route("/advanced/stats-extended", methods=["GET"])
@@ -36,8 +37,9 @@ def get_extended_stats():
     """
     Returns more detailed server and database statistics.
     """
-    import psutil
     import os
+
+    import psutil
 
     # Process stats
     process = psutil.Process(os.getpid())

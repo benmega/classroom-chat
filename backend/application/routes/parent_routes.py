@@ -6,14 +6,14 @@ Summary: API endpoints for parent accounts to view linked children, student repo
 """
 
 from datetime import datetime, timedelta
-from flask import Blueprint, session, request
+
+from flask import Blueprint, request, session
 
 from application.decorators.api_response import api_response
 from application.decorators.login_required import require_login
 from application.extensions import db
-from application.models.user import User
 from application.models.connection_attempt import ConnectionAttempt
-
+from application.models.user import User
 
 parent = Blueprint("parent", __name__)
 
@@ -41,7 +41,9 @@ def get_children():
             ),
             "slug": child.slug,
             "current_activity": child.current_activity,
-            "last_activity_time": child.last_activity_time.isoformat() if child.last_activity_time else None,
+            "last_activity_time": child.last_activity_time.isoformat()
+            if child.last_activity_time
+            else None,
         }
         for child in user_obj.children
     ]
@@ -74,14 +76,16 @@ def get_student_report(student_id):
     for ua in student.achievements:
         achievement = ua.achievement
         if achievement:
-            unlocked_achievements.append({
-                "id": achievement.id,
-                "slug": achievement.slug,
-                "name": achievement.name,
-                "type": achievement.type,
-                "description": achievement.description,
-                "earned_at": ua.earned_at.isoformat() if ua.earned_at else None,
-            })
+            unlocked_achievements.append(
+                {
+                    "id": achievement.id,
+                    "slug": achievement.slug,
+                    "name": achievement.name,
+                    "type": achievement.type,
+                    "description": achievement.description,
+                    "earned_at": ua.earned_at.isoformat() if ua.earned_at else None,
+                }
+            )
 
     report = {
         "username": student.username,
@@ -107,7 +111,9 @@ def get_student_report(student_id):
         ],
         "course_progress": student.get_course_progress_data(),
         "current_activity": student.current_activity,
-        "last_activity_time": student.last_activity_time.isoformat() if student.last_activity_time else None,
+        "last_activity_time": student.last_activity_time.isoformat()
+        if student.last_activity_time
+        else None,
     }
 
     return report
@@ -151,9 +157,10 @@ def connect_via_code():
     # Log successful attempt
     ConnectionAttempt.log_attempt(user_id, code, success=True)
 
-    return {"message": "Student successfully linked.", "student": {"id": student.id, "nickname": student.nickname}}
-
-
+    return {
+        "message": "Student successfully linked.",
+        "student": {"id": student.id, "nickname": student.nickname},
+    }
 
 
 @parent.route("/disconnect/<int:student_id>", methods=["POST"])
@@ -207,8 +214,8 @@ def get_student_history(student_id):
     if not student:
         return "Student not found.", 404
 
-    from application.models.duck_transaction import DuckTransaction
     from application.models.challenge_log import ChallengeLog
+    from application.models.duck_transaction import DuckTransaction
 
     cutoff = datetime.utcnow() - timedelta(days=30)
 
@@ -217,12 +224,15 @@ def get_student_history(student_id):
     total_achievements = len(student.achievements)
     total_projects = len(student.projects)
     total_notes = len(student.notes)
-    has_any_activity_ever = (total_challenges + total_achievements + total_projects + total_notes) > 0
+    has_any_activity_ever = (
+        total_challenges + total_achievements + total_projects + total_notes
+    ) > 0
 
     # --- Duck balance over time (last 30 days) ---
     transactions = (
-        DuckTransaction.query
-        .filter(DuckTransaction.user_id == student_id, DuckTransaction.timestamp >= cutoff)
+        DuckTransaction.query.filter(
+            DuckTransaction.user_id == student_id, DuckTransaction.timestamp >= cutoff
+        )
         .order_by(DuckTransaction.timestamp.asc())
         .all()
     )
@@ -235,7 +245,11 @@ def get_student_history(student_id):
     running = balance_at_start
     for tx in transactions:
         running += tx.amount
-        duck_labels.append(_fmt_date(tx.timestamp) if hasattr(tx.timestamp, "strftime") else str(tx.timestamp))
+        duck_labels.append(
+            _fmt_date(tx.timestamp)
+            if hasattr(tx.timestamp, "strftime")
+            else str(tx.timestamp)
+        )
         duck_data.append(round(running, 2))
 
     if transactions:
@@ -244,15 +258,20 @@ def get_student_history(student_id):
 
     # --- Daily challenge completions (last 30 days) ---
     challenge_logs = (
-        ChallengeLog.query
-        .filter(ChallengeLog.user_id == student_id, ChallengeLog.timestamp >= cutoff)
+        ChallengeLog.query.filter(
+            ChallengeLog.user_id == student_id, ChallengeLog.timestamp >= cutoff
+        )
         .order_by(ChallengeLog.timestamp.asc())
         .all()
     )
 
     daily_counts = {}
     for log in challenge_logs:
-        date_str = _fmt_date(log.timestamp) if hasattr(log.timestamp, "strftime") else str(log.timestamp)[:10]
+        date_str = (
+            _fmt_date(log.timestamp)
+            if hasattr(log.timestamp, "strftime")
+            else str(log.timestamp)[:10]
+        )
         daily_counts[date_str] = daily_counts.get(date_str, 0) + 1
 
     challenge_labels = list(daily_counts.keys())
@@ -265,45 +284,53 @@ def get_student_history(student_id):
     for ua in student.achievements:
         if ua.earned_at and ua.earned_at >= cutoff:
             ach = ua.achievement
-            events.append({
-                "type": "achievement",
-                "label": f"Earned \"{ach.name if ach else 'an achievement'}\"",
-                "timestamp": ua.earned_at.isoformat(),
-                "icon": "award",
-                "priority": 2  # Higher priority than challenge
-            })
+            events.append(
+                {
+                    "type": "achievement",
+                    "label": f'Earned "{ach.name if ach else "an achievement"}"',
+                    "timestamp": ua.earned_at.isoformat(),
+                    "icon": "award",
+                    "priority": 2,  # Higher priority than challenge
+                }
+            )
 
     # 2. Challenge logs
     for log in challenge_logs:
-        events.append({
-            "type": "challenge",
-            "label": f"Completed level: {log.challenge_slug} ({log.domain})",
-            "timestamp": log.timestamp.isoformat(),
-            "icon": "zap",
-            "priority": 1  # Lower priority
-        })
+        events.append(
+            {
+                "type": "challenge",
+                "label": f"Completed level: {log.challenge_slug} ({log.domain})",
+                "timestamp": log.timestamp.isoformat(),
+                "icon": "zap",
+                "priority": 1,  # Lower priority
+            }
+        )
 
     # 3. Projects
     for project in student.projects:
         if project.created_at and project.created_at >= cutoff:
-            events.append({
-                "type": "project",
-                "label": f"Created project: \"{project.name}\"",
-                "timestamp": project.created_at.isoformat(),
-                "icon": "folder",
-                "priority": 4  # Highest priority
-            })
+            events.append(
+                {
+                    "type": "project",
+                    "label": f'Created project: "{project.name}"',
+                    "timestamp": project.created_at.isoformat(),
+                    "icon": "folder",
+                    "priority": 4,  # Highest priority
+                }
+            )
 
     # 4. Notes
     for note in student.notes:
         if note.created_at and note.created_at >= cutoff:
-            events.append({
-                "type": "note",
-                "label": "Uploaded a new coding note / screenshot",
-                "timestamp": note.created_at.isoformat(),
-                "icon": "book-open",
-                "priority": 3  # High priority
-            })
+            events.append(
+                {
+                    "type": "note",
+                    "label": "Uploaded a new coding note / screenshot",
+                    "timestamp": note.created_at.isoformat(),
+                    "icon": "book-open",
+                    "priority": 3,  # High priority
+                }
+            )
 
     # Sort: first by date (newest first), and secondarily by priority desc (projects > notes > achievements > challenges)
     events.sort(key=lambda e: (e["timestamp"], e["priority"]), reverse=True)
@@ -319,7 +346,7 @@ def get_student_history(student_id):
         },
         "recent_events": events,
         "current_balance": round(student.duck_balance or 0, 2),
-        "has_any_activity_ever": has_any_activity_ever
+        "has_any_activity_ever": has_any_activity_ever,
     }
 
 
@@ -349,9 +376,10 @@ def contact_teacher():
         return "No teacher accounts found. Please contact your school directly.", 404
 
     # Compose the message content
-    child_names = ", ".join(
-        child.nickname or child.username for child in user_obj.children
-    ) or "unknown student"
+    child_names = (
+        ", ".join(child.nickname or child.username for child in user_obj.children)
+        or "unknown student"
+    )
     parent_name = user_obj.nickname or user_obj.username
     full_content = (
         f"📩 **Parent Message** from {parent_name} (re: {child_names})\n\n"
@@ -360,8 +388,8 @@ def contact_teacher():
     )
 
     # Use the existing Message model to create a system message visible to admins
-    from application.models.message import Message
     from application.extensions import db as _db
+    from application.models.message import Message
 
     msg = Message(
         user_id=user_obj.id,

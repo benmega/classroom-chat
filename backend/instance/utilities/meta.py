@@ -26,7 +26,7 @@ def get_metadata():
             columns = cur.fetchall()
             print("Columns:")
             for col in columns:
-                cid, name, col_type, notnull, dflt_value, pk = col
+                _cid, name, col_type, notnull, dflt_value, pk = col
                 print(
                     f"  {name} ({col_type}), NOT NULL={bool(notnull)}, PK={bool(pk)}, Default={dflt_value}"
                 )
@@ -37,7 +37,7 @@ def get_metadata():
             if indexes:
                 print("Indexes:")
                 for idx in indexes:
-                    seq, name, unique, origin, partial = idx
+                    _seq, name, unique, origin, partial = idx
                     print(
                         f"  {name}, Unique={bool(unique)}, Origin={origin}, Partial={bool(partial)}"
                     )

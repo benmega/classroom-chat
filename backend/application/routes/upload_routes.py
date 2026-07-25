@@ -12,8 +12,8 @@ import uuid
 from datetime import datetime
 from io import BytesIO
 
-from PIL import Image, UnidentifiedImageError
 from flask import Blueprint, jsonify, request, send_from_directory
+from PIL import Image, UnidentifiedImageError
 
 from application import limiter
 from application.config import Config

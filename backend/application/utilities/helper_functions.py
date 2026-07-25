@@ -36,17 +36,21 @@ def allowed_file(filename, allowed_extensions=None):
 
 def get_s3_client():
     import os
+
     import boto3
 
     try:
         kwargs = {"region_name": os.environ.get("AWS_REGION", "ap-southeast-1")}
-        if os.environ.get("AWS_ACCESS_KEY_ID") and os.environ.get("AWS_SECRET_ACCESS_KEY"):
+        if os.environ.get("AWS_ACCESS_KEY_ID") and os.environ.get(
+            "AWS_SECRET_ACCESS_KEY"
+        ):
             kwargs["aws_access_key_id"] = os.environ.get("AWS_ACCESS_KEY_ID")
             kwargs["aws_secret_access_key"] = os.environ.get("AWS_SECRET_ACCESS_KEY")
-        
+
         return boto3.client("s3", **kwargs)
     except Exception:
         import traceback
+
         traceback.print_exc()
         return None
 
@@ -78,6 +82,7 @@ def cleanup_missing_user_pfps():
     if the referenced file does not exist on disk.
     """
     import os
+
     from application.models.user import User
 
     upload_folder = os.path.join(Config.UPLOAD_FOLDER, "profile_pictures")

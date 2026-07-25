@@ -70,7 +70,9 @@ def test_course_unique_id_constraint(init_db):
     """Test that Course ID must be unique."""
     course1 = Course(id="course_123", name="Course 1", domain="codecombat.com")
     course2 = Course(
-        id="course_123", name="Course 2", domain="codecombat.com"  # Duplicate ID
+        id="course_123",
+        name="Course 2",
+        domain="codecombat.com",  # Duplicate ID
     )
 
     db.session.add(course1)

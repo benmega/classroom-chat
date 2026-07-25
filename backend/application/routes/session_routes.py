@@ -8,7 +8,8 @@ from datetime import datetime
 
 import boto3
 import requests
-from flask import Blueprint, jsonify, session as flask_session
+from flask import Blueprint, jsonify
+from flask import session as flask_session
 
 from application.extensions import db
 from application.models.session_log import SessionLog

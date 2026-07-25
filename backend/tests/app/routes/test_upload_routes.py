@@ -20,13 +20,13 @@ VALID_PNG = (
 def test_upload_requires_login(client, test_app):
     """Anonymous uploads must be rejected."""
     with test_app.app_context():
-        response = client.post(
-            url_for("upload.upload_file"), json={"file": VALID_PNG}
-        )
+        response = client.post(url_for("upload.upload_file"), json={"file": VALID_PNG})
     assert response.status_code == 401
 
 
-def test_upload_file_valid(logged_in_client, sample_image_data, test_app, setup_directories):
+def test_upload_file_valid(
+    logged_in_client, sample_image_data, test_app, setup_directories
+):
     """Test uploading a valid image while logged in."""
     with test_app.app_context():
         response = logged_in_client.post(
@@ -89,7 +89,9 @@ def test_upload_rejects_fake_pdf(logged_in_client):
     with logged_in_client.application.app_context():
         import base64
 
-        fake = "data:application/pdf;base64," + base64.b64encode(b"MZ not a pdf").decode()
+        fake = (
+            "data:application/pdf;base64," + base64.b64encode(b"MZ not a pdf").decode()
+        )
         response = logged_in_client.post(
             url_for("upload.upload_file"), json={"file": fake}
         )
@@ -107,9 +109,7 @@ def test_upload_rejects_malformed_data_url(logged_in_client):
 def test_uploaded_file_requires_login(client):
     """Serving uploaded files requires an authenticated session."""
     with client.application.app_context():
-        response = client.get(
-            url_for("upload.uploaded_file", filename="anything.png")
-        )
+        response = client.get(url_for("upload.uploaded_file", filename="anything.png"))
     # Browser requests are redirected to login; API requests get 401.
     assert response.status_code in (302, 401)
 

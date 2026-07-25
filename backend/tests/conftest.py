@@ -41,7 +41,6 @@ from application.models.user import User
 db_fd, db_path = tempfile.mkstemp(suffix=".db")
 
 
-
 @pytest.fixture(scope="module", autouse=True)
 def setup_directories():
     os.makedirs("userData/image", exist_ok=True)
@@ -159,6 +158,7 @@ def init_db(test_app):
     with test_app.app_context():
         db.create_all()
         from application import seed_global_data
+
         seed_global_data()
         yield db
         db.session.rollback()
@@ -253,7 +253,11 @@ def sample_admin(init_db):
     username = TestingConfig.ADMIN_USERNAME
     password = TestingConfig.ADMIN_PASSWORD
     admin_user = User(
-        username=username, password_hash=password, earned_ducks=0, duck_balance=0, is_admin=True
+        username=username,
+        password_hash=password,
+        earned_ducks=0,
+        duck_balance=0,
+        is_admin=True,
     )
     db.session.add(admin_user)
     db.session.commit()
@@ -335,9 +339,6 @@ def sample_users(init_db):
     return [user1, user2]
 
 
-
-
-
 @pytest.fixture
 def sample_course(init_db):
     course = Course(
@@ -360,7 +361,7 @@ def sample_message(init_db, sample_user, sample_classroom):
         message_type="text",
         target_classrooms=[sample_classroom],
         is_global=False,
-        target_live=False
+        target_live=False,
     )
     db.session.add(message)
     db.session.commit()
@@ -401,6 +402,7 @@ def sample_image_data():
 @pytest.fixture
 def auth_headers(sample_admin):
     import base64
+
     from application.config import TestingConfig
 
     credentials = f"{TestingConfig.ADMIN_USERNAME}:{TestingConfig.ADMIN_PASSWORD}"
@@ -546,8 +548,6 @@ def sample_multiple_achievements(init_db):
     return achievements
 
 
-
-
 @pytest.fixture
 def sample_challenge_active(init_db):
     """Fixture to create an active challenge with known difficulty."""
@@ -607,7 +607,9 @@ def mock_render_template(client):
         return "Mocked Template Content"
 
     with patch(
-        "application.routes.challenge_routes.render_template", side_effect=side_effect, create=True
+        "application.routes.challenge_routes.render_template",
+        side_effect=side_effect,
+        create=True,
     ) as mock:
         yield mock
 
@@ -618,11 +620,12 @@ def sample_classroom(init_db):
     classroom = Classroom(
         id="678b56dc12345",  # Simulating the MongoDB/JSON ID format
         name="Sat1030 CS 4 PY",
-        language="python"
+        language="python",
     )
     db.session.add(classroom)
     db.session.commit()
     return classroom
+
 
 @pytest.fixture
 def sample_course_instance(init_db, sample_classroom, sample_course):
@@ -630,18 +633,18 @@ def sample_course_instance(init_db, sample_classroom, sample_course):
     instance = CourseInstance(
         id="inst_987654321",
         classroom_id=sample_classroom.id,
-        course_id=sample_course.id
+        course_id=sample_course.id,
     )
     db.session.add(instance)
     db.session.commit()
     return instance
 
+
 @pytest.fixture
 def sample_note(init_db, sample_user):
     """Creates a sample note entry without actual S3 upload."""
     note = Note(
-        user_id=sample_user.id,
-        filename=f"notes/{sample_user.username}/test_image.png"
+        user_id=sample_user.id, filename=f"notes/{sample_user.username}/test_image.png"
     )
     db.session.add(note)
     db.session.commit()

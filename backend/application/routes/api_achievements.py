@@ -4,20 +4,21 @@ Type: py
 Summary: Flask routes for api achievements functionality.
 """
 
-from flask import Blueprint, session, jsonify, url_for
+from flask import Blueprint, jsonify, session, url_for
 
 from application.models.user import User
 from application.services.achievement_engine import evaluate_user
+
 from .achievement_routes import (
-    get_achievements_json, 
-    submit_certificate, 
     add_achievement,
     admin_certificates,
-    mark_reviewed,
-    view_certificate,
+    download_all_certificates,
     download_certificate,
+    get_achievements_json,
     mark_all_reviewed,
-    download_all_certificates
+    mark_reviewed,
+    submit_certificate,
+    view_certificate,
 )
 
 achievements_api = Blueprint(

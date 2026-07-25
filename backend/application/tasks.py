@@ -39,6 +39,6 @@ def scheduled_cleanup():
                 print("No stale sessions found")
 
     except Exception as e:
-        logger.error(f"Error in scheduled cleanup: {str(e)}")
-        print(f"Error in scheduled cleanup: {str(e)}")
+        logger.exception(f"Error in scheduled cleanup: {e!s}")
+        print(f"Error in scheduled cleanup: {e!s}")
         raise

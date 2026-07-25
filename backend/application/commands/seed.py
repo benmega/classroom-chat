@@ -1,8 +1,10 @@
 import csv
 import os
 import re
-from flask.cli import with_appcontext
+
 import click
+from flask.cli import with_appcontext
+
 
 def generate_kebab_slug(text):
     """Generate a clean kebab-case slug."""
@@ -12,50 +14,56 @@ def generate_kebab_slug(text):
     text = text.replace(" - Locked", "")
     text = text.replace(" - In Progress", "")
     # Lowercase, replace spaces/underscores with dashes
-    slug = re.sub(r'[_\s]+', '-', text.lower())
+    slug = re.sub(r"[_\s]+", "-", text.lower())
     # Remove non-alphanumeric (except dashes)
-    slug = re.sub(r'[^a-z0-9-]', '', slug)
+    slug = re.sub(r"[^a-z0-9-]", "", slug)
     # Collapse multiple dashes
-    slug = re.sub(r'-+', '-', slug).strip('-')
+    slug = re.sub(r"-+", "-", slug).strip("-")
     return slug
 
-@click.command('seed')
+
+@click.command("seed")
 @with_appcontext
 def seed_command():
     """Seed the database with challenges and course instances from CSV files."""
+    from flask import current_app
+
     from application.extensions import db
     from application.models.challenge import Challenge
     from application.models.course_instance import CourseInstance
-    from flask import current_app
 
-    base_dir = os.path.join(current_app.config['BASE_DIR'], 'backend', 'instance', 'migration')
-    challenges_csv = os.path.join(base_dir, 'level_seed_data.csv')
-    instances_csv = os.path.join(base_dir, 'course_instances_seed.csv')
+    base_dir = os.path.join(
+        current_app.config["BASE_DIR"], "backend", "instance", "migration"
+    )
+    challenges_csv = os.path.join(base_dir, "level_seed_data.csv")
+    instances_csv = os.path.join(base_dir, "course_instances_seed.csv")
 
     # Seed Course Instances
     if os.path.exists(instances_csv):
         click.echo(f"Seeding course instances from {instances_csv}...")
         inserted_instances = 0
         try:
-            with open(instances_csv, mode='r', encoding='utf-8') as f:
+            with open(instances_csv, mode="r", encoding="utf-8") as f:
                 reader = csv.DictReader(f)
                 for row in reader:
-                    instance_id = row.get('id')
+                    instance_id = row.get("id")
                     if not instance_id:
                         continue
-                    
+
                     exists = CourseInstance.query.filter_by(id=instance_id).first()
                     if not exists:
                         new_instance = CourseInstance(
                             id=instance_id,
-                            classroom_id=row.get('classroom_id'),
-                            course_id=row.get('course_id')
+                            classroom_id=row.get("classroom_id"),
+                            course_id=row.get("course_id"),
                         )
                         db.session.add(new_instance)
                         inserted_instances += 1
-            
+
             db.session.commit()
-            click.echo(f"Successfully inserted {inserted_instances} new course instances.")
+            click.echo(
+                f"Successfully inserted {inserted_instances} new course instances."
+            )
         except Exception as e:
             db.session.rollback()
             click.echo(f"Error seeding course instances: {e}")
@@ -68,25 +76,28 @@ def seed_command():
         inserted_challenges = 0
         updated_challenges = 0
         try:
-            with open(challenges_csv, mode='r', encoding='utf-8') as f:
+            with open(challenges_csv, mode="r", encoding="utf-8") as f:
                 reader = csv.DictReader(f)
                 for row in reader:
-                    name = row.get('name', '').strip()
+                    name = row.get("name", "").strip()
                     if name.endswith(" - In Progress"):
                         name = name[:-14]
-                    domain = row.get('domain', '').strip()
+                    domain = row.get("domain", "").strip()
                     if not name or not domain:
                         continue
 
-                    csv_slug = row.get('slug', '').strip() or generate_kebab_slug(name)
-                    difficulty = row.get('difficulty', 'medium').capitalize()
-                    value = int(float(row.get('value', 1)))
-                    description = row.get('description', 'No description provided.')
-                    course_id = row.get('course_id')
+                    csv_slug = row.get("slug", "").strip() or generate_kebab_slug(name)
+                    difficulty = row.get("difficulty", "medium").capitalize()
+                    value = int(float(row.get("value", 1)))
+                    description = row.get("description", "No description provided.")
+                    course_id = row.get("course_id")
 
                     # Check existence by slug OR (name and domain)
-                    challenge = Challenge.query.filter((Challenge.slug == csv_slug) | ((Challenge.name == name) & (Challenge.domain == domain))).first()
-                    
+                    challenge = Challenge.query.filter(
+                        (Challenge.slug == csv_slug)
+                        | ((Challenge.name == name) & (Challenge.domain == domain))
+                    ).first()
+
                     if challenge:
                         # Update existing
                         challenge.name = name
@@ -107,13 +118,15 @@ def seed_command():
                             description=description,
                             difficulty=difficulty,
                             value=value,
-                            is_active=True
+                            is_active=True,
                         )
                         db.session.add(new_challenge)
                         inserted_challenges += 1
 
             db.session.commit()
-            click.echo(f"Successfully inserted {inserted_challenges} and updated {updated_challenges} challenges.")
+            click.echo(
+                f"Successfully inserted {inserted_challenges} and updated {updated_challenges} challenges."
+            )
         except Exception as e:
             db.session.rollback()
             click.echo(f"Error seeding challenges: {e}")

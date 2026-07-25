@@ -1,6 +1,9 @@
+from unittest.mock import MagicMock, patch
+
 import pytest
-from unittest.mock import patch, MagicMock
+
 from application.models.session_log import SessionLog
+
 
 @pytest.fixture
 def logged_in_client_with_session(client, sample_user):
@@ -12,14 +15,18 @@ def logged_in_client_with_session(client, sample_user):
     SessionLog.start_session(sample_user.id)
     return client
 
+
 def test_heartbeat_unauthenticated(client):
     resp = client.post("/api/session/heartbeat")
     assert resp.status_code == 400
     assert resp.json["success"] is False
 
+
 @patch("application.routes.session_routes.get_cloudwatch_client")
 @patch("application.routes.session_routes.requests.get")
-def test_heartbeat_authenticated(mock_get, mock_cw_client, logged_in_client_with_session):
+def test_heartbeat_authenticated(
+    mock_get, mock_cw_client, logged_in_client_with_session
+):
     mock_resp = MagicMock()
     mock_resp.json.return_value = {"instanceId": "i-test12345", "region": "us-west-2"}
     mock_get.return_value = mock_resp
@@ -33,6 +40,7 @@ def test_heartbeat_authenticated(mock_get, mock_cw_client, logged_in_client_with
     assert "timestamp" in resp.json
 
     mock_cw.put_metric_data.assert_called_once()
+
 
 @patch("application.routes.session_routes.get_cloudwatch_client")
 def test_heartbeat_cloudwatch_error(mock_cw_client, logged_in_client_with_session):

@@ -8,7 +8,6 @@ from application import db
 from application.models.configuration import Configuration
 
 
-
 def test_configuration_default_values(init_db):
     """Test the default values of Configuration fields."""
     config = Configuration()

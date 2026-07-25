@@ -4,16 +4,16 @@ Type: py
 Summary: Flask routes for challenge routes functionality (Merged Version).
 """
 
+import os
 import re
 from datetime import datetime
-
-import os
 from urllib.parse import parse_qs
-from flask import Blueprint, request, session, redirect, url_for, flash, jsonify
+
+from flask import Blueprint, flash, jsonify, redirect, request, session, url_for
 from flask_cors import cross_origin
 
 from application import Configuration
-from application.extensions import db, csrf
+from application.extensions import csrf, db
 from application.models.challenge import Challenge
 from application.models.challenge_log import ChallengeLog
 from application.models.course_instance import CourseInstance
@@ -50,12 +50,14 @@ FRONTEND_ORIGINS = (
     ]
 )
 
-CHALLENGE_ORIGINS = FRONTEND_ORIGINS + [
+CHALLENGE_ORIGINS = [
+    *FRONTEND_ORIGINS,
     "https://codecombat.com",
     "https://www.codecombat.com",
     "https://ozaria.com",
     "https://www.ozaria.com",
 ]
+
 
 @challenge.route("/submit", methods=["GET", "POST"])
 @csrf.exempt
@@ -68,7 +70,10 @@ def submit_challenge():
     session_userid = session.get("user", None)
     if not session_userid:
         if request.method == "GET" and request.args.get("url"):
-            return "<html><body><script>alert('Please log in to the Classroom Chat app first.'); window.close();</script>Please log in.</body></html>", 401
+            return (
+                "<html><body><script>alert('Please log in to the Classroom Chat app first.'); window.close();</script>Please log in.</body></html>",
+                401,
+            )
         if request.is_json or request.accept_mimetypes.accept_json:
             return {
                 "success": False,
@@ -128,7 +133,6 @@ def submit_challenge():
     if not isinstance(challenge_check, dict):
         challenge_check = {}
 
-
     details = challenge_check.get("details") or {}
 
     # Success path
@@ -137,10 +141,10 @@ def submit_challenge():
         db.session.commit()
         duck_reward = details.get("duck_reward", 0)
         duck_word = "duck" if duck_reward == 1 else "ducks"
-        
+
         reward_issued = details.get("reward_issued", True)
         warning = details.get("warning")
-        
+
         challenge_name = details.get("challenge_name")
         if not reward_issued:
             message = "Challenge complete! But since you aren't assigned to this track, you didn't get a duck. Ask your teacher to change your track!"
@@ -175,25 +179,31 @@ def submit_challenge():
         "message",
         "Mr. Mega does not recognize this challenge. Are you sure this is the right link?",
     )
-    
+
     if is_get_submission:
         # Escape single quotes in the message for JS alert
         safe_msg = msg.replace("'", "\\'")
-        return f"<html><body><script>alert('Failed: {safe_msg}'); window.close();</script>Failed: {msg}</body></html>", 400
+        return (
+            f"<html><body><script>alert('Failed: {safe_msg}'); window.close();</script>Failed: {msg}</body></html>",
+            400,
+        )
 
-    return jsonify({
-        "success": False, 
-        "message": msg,
-        "course_instance_not_found": details.get("course_instance_not_found"),
-        "course_instance_id": details.get("course_instance_id"),
-        "requested_course_id": details.get("requested_course_id")
-    }), 400
+    return jsonify(
+        {
+            "success": False,
+            "message": msg,
+            "course_instance_not_found": details.get("course_instance_not_found"),
+            "course_instance_id": details.get("course_instance_id"),
+            "requested_course_id": details.get("requested_course_id"),
+        }
+    ), 400
 
 
 def get_track_for_course_id(course_id):
     if not course_id:
         return None
     from application.models.course import Course
+
     course = Course.query.get(course_id)
     if not course:
         return None
@@ -206,7 +216,7 @@ def get_track_for_course_id(course_id):
         return "wd"
     elif "CS" in name_upper or "JUNIOR" in name_upper:
         return "cs"
-    
+
     if "ozaria" in course.domain:
         return "ozaria"
     return "cs"
@@ -233,7 +243,9 @@ def detect_and_handle_challenge_url(message, user, duck_multiplier=1, helper=Non
             | (Challenge.slug.ilike(challenge_slug.replace("-", " ")))
         ).first()
 
-        challenge_track = get_track_for_course_id(challenge.course_id) if challenge else None
+        challenge_track = (
+            get_track_for_course_id(challenge.course_id) if challenge else None
+        )
 
         # Compare challenge track with user's active track
         if challenge_track == user.active_track:
@@ -309,7 +321,7 @@ def _log_challenge(details, user, helper=None):
                 "message": "This level doesn't seem to be part of a valid course instance.",
                 "course_instance_not_found": True,
                 "course_instance_id": provided_id,
-                "requested_course_id": details.get("course_id")
+                "requested_course_id": details.get("course_id"),
             }
 
         # Get the parent course ID mapped to this instance
@@ -378,7 +390,7 @@ def _log_challenge(details, user, helper=None):
 
     except Exception as e:
         db.session.rollback()
-        return {"success": False, "message": f"Error logging challenge: {str(e)}"}
+        return {"success": False, "message": f"Error logging challenge: {e!s}"}
 
 
 def _update_user_ducks(user, challenge_slug, duck_multiplier=1):
@@ -404,9 +416,7 @@ def _update_user_ducks(user, challenge_slug, duck_multiplier=1):
 
         duck_reward = challenge.value * duck_multiplier
 
-
         user.add_ducks(duck_reward, reason=f"Challenge: {challenge.slug}")
-
 
         return duck_reward
 
@@ -431,9 +441,11 @@ def _enroll_user_in_classroom(user, classroom_id: str):
     This is the ONLY student enrollment path — called exclusively from the
     challenge submission success route.
     """
-    from application.models.classroom import Classroom, user_classrooms
     from datetime import datetime
-    from sqlalchemy import select, insert
+
+    from sqlalchemy import insert, select
+
+    from application.models.classroom import Classroom, user_classrooms
 
     try:
         # Check for existing enrollment
@@ -450,7 +462,10 @@ def _enroll_user_in_classroom(user, classroom_id: str):
         classroom = db.session.get(Classroom, classroom_id)
         if not classroom:
             import logging
-            logging.warning(f"[Enrollment] Classroom '{classroom_id}' not found — skipping enrollment.")
+
+            logging.warning(
+                f"[Enrollment] Classroom '{classroom_id}' not found — skipping enrollment."
+            )
             return
 
         db.session.execute(
@@ -462,7 +477,10 @@ def _enroll_user_in_classroom(user, classroom_id: str):
         )
         db.session.commit()
         import logging
-        logging.info(f"[Enrollment] User {user.id} enrolled in classroom '{classroom_id}'.")
+
+        logging.info(
+            f"[Enrollment] User {user.id} enrolled in classroom '{classroom_id}'."
+        )
 
         # Emit enrollment event via centralised helper so the sidebar updates live
         from application.socket_events import emit_classroom_enrolled
@@ -472,4 +490,7 @@ def _enroll_user_in_classroom(user, classroom_id: str):
     except Exception as exc:
         db.session.rollback()
         import logging
-        logging.error(f"[Enrollment] Failed for user {user.id} → '{classroom_id}': {exc}")
+
+        logging.exception(
+            f"[Enrollment] Failed for user {user.id} → '{classroom_id}': {exc}"
+        )

@@ -60,7 +60,9 @@ def get_context(url):
     domain = (
         "CodeCombat"
         if "codecombat" in url
-        else "www.ozaria.com" if "ozaria" in url else "Studio.Code"
+        else "www.ozaria.com"
+        if "ozaria" in url
+        else "Studio.Code"
     )
     match = re.search(r"/classroom/([a-fA-F0-9]{24})", url)
     instance = match.group(1) if match else None

@@ -53,10 +53,10 @@ def insert_users_from_csv(csv_file_path, overwrite=True):
         logging.info(f"{len(users_to_insert)} users successfully inserted.")
 
     except SQLAlchemyError as e:
-        logging.error(f"Database error: {e}")
+        logging.exception(f"Database error: {e}")
         db.session.rollback()
     except Exception as e:
-        logging.error(f"Unexpected error: {e}")
+        logging.exception(f"Unexpected error: {e}")
 
 
 if __name__ == "__main__":

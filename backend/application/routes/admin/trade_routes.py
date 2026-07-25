@@ -1,9 +1,10 @@
-from flask import request, jsonify
-from application.extensions import db
-from application.models.user import User
-from application.models.duck_trade import DuckTradeLog
-from application.decorators.api_response import api_response
+from flask import jsonify, request
+
 from application.decorators.admin_required import admin_only
+from application.decorators.api_response import api_response
+from application.extensions import db
+from application.models.duck_trade import DuckTradeLog
+from application.models.user import User
 
 from ..admin_routes import admin_bp
 
@@ -13,7 +14,12 @@ from ..admin_routes import admin_bp
 @api_response
 def pending_trades():
     # Join with User to get nickname
-    pend_trades = db.session.query(DuckTradeLog, User).outerjoin(User, DuckTradeLog.user_id == User.id).filter(DuckTradeLog.status == "pending").all()
+    pend_trades = (
+        db.session.query(DuckTradeLog, User)
+        .outerjoin(User, DuckTradeLog.user_id == User.id)
+        .filter(DuckTradeLog.status == "pending")
+        .all()
+    )
 
     trades_list = [
         {
@@ -42,7 +48,9 @@ def trade_action():
         return jsonify({"status": "error", "message": "Trade not found"}), 404
 
     if trade.status != "pending":
-        return jsonify({"status": "error", "message": "Trade has already been processed"}), 400
+        return jsonify(
+            {"status": "error", "message": "Trade has already been processed"}
+        ), 400
 
     if action == "approve":
         user = User.query.filter_by(id=trade.user_id).first()

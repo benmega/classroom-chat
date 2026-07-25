@@ -6,11 +6,9 @@ Summary: Flask routes for duck trade routes functionality.
 
 import logging
 
-from flask import Blueprint, url_for
-from flask import request, jsonify
-from flask import session, flash, redirect
+from flask import Blueprint, flash, jsonify, redirect, request, session, url_for
 from flask_wtf import FlaskForm
-from wtforms import IntegerField, FieldList, FormField, SubmitField
+from wtforms import FieldList, FormField, IntegerField, SubmitField
 from wtforms.validators import DataRequired, NumberRange
 
 from application.extensions import db
@@ -86,8 +84,8 @@ def submit_trade():
     form = DuckTradeForm()
     is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"
 
-    # If it's a JSON request from the React frontend, WTForms validation might fail 
-    # due to structure differences (e.g. nested FormFields). 
+    # If it's a JSON request from the React frontend, WTForms validation might fail
+    # due to structure differences (e.g. nested FormFields).
     # We bypass WTForms validation for JSON AJAX requests and handle it manually.
     if not request.is_json:
         if not form.validate_on_submit():
@@ -139,7 +137,12 @@ def submit_trade():
                 d_ducks = int(data.get("digital_ducks", 0))
                 if d_ducks < 1:
                     return (
-                        jsonify({"status": "error", "message": "Must trade at least 1 duck."}),
+                        jsonify(
+                            {
+                                "status": "error",
+                                "message": "Must trade at least 1 duck.",
+                            }
+                        ),
                         400,
                     )
             except (ValueError, TypeError):

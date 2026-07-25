@@ -180,7 +180,9 @@ def evaluate_user(user, force=False):
 
     # Use pessimistic locking to prevent concurrent evaluations
     # Lock the user row to ensure only one evaluation runs at a time
-    user = db.session.query(user.__class__).with_for_update().filter_by(id=user.id).first()
+    user = (
+        db.session.query(user.__class__).with_for_update().filter_by(id=user.id).first()
+    )
     if not user:
         return []
 

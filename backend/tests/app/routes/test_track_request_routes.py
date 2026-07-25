@@ -59,7 +59,9 @@ def test_create_track_request_parent(client, init_db, sample_user, sample_users)
     assert req.requested_track == "gd"
 
 
-def test_create_track_request_parent_unlinked(client, init_db, sample_user, sample_users):
+def test_create_track_request_parent_unlinked(
+    client, init_db, sample_user, sample_users
+):
     """Test parent cannot submit a request for an unlinked student."""
     parent_user = sample_users[0]
     student_user = sample_users[1]

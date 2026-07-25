@@ -1,6 +1,15 @@
 import os
 import uuid
-from flask import Blueprint, request, jsonify, session, g, current_app, send_from_directory
+
+from flask import (
+    Blueprint,
+    current_app,
+    g,
+    jsonify,
+    request,
+    send_from_directory,
+    session,
+)
 from werkzeug.utils import secure_filename
 
 from application import limiter
@@ -101,7 +110,7 @@ def handle_local_note_upload(file):
                 os.remove(file_path)
             return None
     except Exception as e:
-        current_app.logger.error(f"Local Note Upload Error: {e}")
+        current_app.logger.exception(f"Local Note Upload Error: {e}")
         return None
 
 
@@ -149,7 +158,7 @@ def handle_note_s3_upload(s3_client, file, user_obj):
         )
         return s3_key
     except Exception as e:
-        current_app.logger.error(f"Note S3 Upload Error: {e}")
+        current_app.logger.exception(f"Note S3 Upload Error: {e}")
         return None
 
 
@@ -188,7 +197,7 @@ def delete_note(note_id):
 
     except Exception as e:
         # Log the sensitive details securely to your server
-        current_app.logger.error(f"Error deleting note {note_id}: {str(e)}")
+        current_app.logger.exception(f"Error deleting note {note_id}: {e!s}")
 
         # Return a safe, generic message to the frontend
         return (

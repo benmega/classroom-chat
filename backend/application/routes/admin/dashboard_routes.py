@@ -1,16 +1,17 @@
 from datetime import datetime, timedelta
+
 from flask import Response, current_app, request
 from sqlalchemy import func
+
+from application.decorators.admin_required import admin_only
+from application.decorators.api_response import api_response
 from application.extensions import db
-from application.models.user import User
+from application.models.banned_words import BannedWords
+from application.models.classroom import Classroom
 from application.models.configuration import Configuration
 from application.models.duck_trade import DuckTradeLog
-from application.models.banned_words import BannedWords
 from application.models.duck_transaction import DuckTransaction
-from application.decorators.api_response import api_response
-from application.decorators.admin_required import admin_only
-from application.models.classroom import Classroom
-
+from application.models.user import User
 
 from ..admin_routes import admin_bp
 
@@ -45,7 +46,7 @@ def dashboard_data():
     tz_offset = request.args.get("tz_offset", 0, type=int)
     now_utc = datetime.utcnow()
     now_local = now_utc - timedelta(minutes=tz_offset)
-    
+
     first_tx = DuckTransaction.query.order_by(DuckTransaction.timestamp.asc()).first()
     max_history_days = 0
     if first_tx and first_tx.timestamp:
@@ -67,10 +68,7 @@ def dashboard_data():
     chart_start_utc = local_chart_start + timedelta(minutes=tz_offset)
 
     results = (
-        db.session.query(
-            DuckTransaction.timestamp,
-            DuckTransaction.amount
-        )
+        db.session.query(DuckTransaction.timestamp, DuckTransaction.amount)
         .filter(DuckTransaction.timestamp >= chart_start_utc)
         .all()
     )
@@ -79,10 +77,10 @@ def dashboard_data():
     for tx in results:
         local_time = tx.timestamp - timedelta(minutes=tz_offset)
         date_str = str(local_time.date())
-        
+
         if date_str not in stats_map:
             stats_map[date_str] = {"earned": 0, "spent": 0}
-            
+
         if tx.amount > 0:
             stats_map[date_str]["earned"] += tx.amount
         else:
@@ -115,7 +113,12 @@ def dashboard_data():
         "classrooms": [c.to_dict() for c in classrooms],
         "config": config.to_dict() if config else {},
         "banned_words": [bw.to_dict() for bw in banned_words],
-        "chart_data": {"labels": labels, "earned": earned, "spent": spent, "max_history_days": max_history_days},
+        "chart_data": {
+            "labels": labels,
+            "earned": earned,
+            "spent": spent,
+            "max_history_days": max_history_days,
+        },
     }
 
 
@@ -154,7 +157,7 @@ def get_logs():
             last_lines = lines[-500:]
             return {"logs": "".join(last_lines)}
     except Exception as e:
-        return {"error": f"Failed to read logs: {str(e)}"}, 500
+        return {"error": f"Failed to read logs: {e!s}"}, 500
 
 
 @admin_bp.route("/export/transactions", methods=["GET"])
@@ -163,8 +166,9 @@ def export_transactions():
     """Generates and serves a CSV file of all duck transactions."""
     import csv
     import io
-    from sqlalchemy.orm import joinedload
+
     from flask import stream_with_context
+    from sqlalchemy.orm import joinedload
 
     def generate():
         data = io.StringIO()
@@ -177,11 +181,11 @@ def export_transactions():
         data.truncate(0)
 
         # Fix N+1 and OOM by using joinedload and yield_per
-        transactions = DuckTransaction.query.options(
-            joinedload(DuckTransaction.user)
-        ).order_by(
-            DuckTransaction.timestamp.desc()
-        ).yield_per(100)
+        transactions = (
+            DuckTransaction.query.options(joinedload(DuckTransaction.user))
+            .order_by(DuckTransaction.timestamp.desc())
+            .yield_per(100)
+        )
 
         for tx in transactions:
             writer.writerow(
@@ -258,17 +262,23 @@ def admin_transactions():
 @admin_only
 @api_response
 def get_review_counts():
-    from application.models.project import Project
-    from application.models.user_certificate import UserCertificate
-    from application.models.track_requests import TrackChangeRequest
     from application.models.course_instance_request import CourseInstanceRequest
+    from application.models.project import Project
+    from application.models.track_requests import TrackChangeRequest
+    from application.models.user_certificate import UserCertificate
 
     pending_users = User.query.filter_by(is_approved=False, is_admin=False).count()
     pending_trades = DuckTradeLog.query.filter_by(status="pending").count()
-    pending_projects = Project.query.filter(Project.teacher_comment.is_(None) | (Project.teacher_comment == "")).count()
+    pending_projects = Project.query.filter(
+        Project.teacher_comment.is_(None) | (Project.teacher_comment == "")
+    ).count()
     pending_certificates = UserCertificate.query.filter_by(reviewed=False).count()
-    pending_track_requests = TrackChangeRequest.query.filter_by(status="pending").count()
-    pending_course_requests = CourseInstanceRequest.query.filter_by(status="pending").count()
+    pending_track_requests = TrackChangeRequest.query.filter_by(
+        status="pending"
+    ).count()
+    pending_course_requests = CourseInstanceRequest.query.filter_by(
+        status="pending"
+    ).count()
 
     total_incomplete = (
         pending_users
@@ -288,5 +298,3 @@ def get_review_counts():
         "pending_course_requests": pending_course_requests,
         "total_incomplete": total_incomplete,
     }
-
-

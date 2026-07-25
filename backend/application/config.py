@@ -22,7 +22,7 @@ class Config:
     TEMPLATE_FOLDER = os.path.join(BASE_DIR, "frontend", "templates")
 
     SQLALCHEMY_DATABASE_URI = (
-        f'sqlite:///{os.path.join(INSTANCE_FOLDER, "dev_users.db")}'
+        f"sqlite:///{os.path.join(INSTANCE_FOLDER, 'dev_users.db')}"
     )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ECHO = False
@@ -62,7 +62,7 @@ class DevelopmentConfig(Config):
     DEBUG = True
     SQLALCHEMY_DATABASE_URI = os.getenv(
         "DEV_DATABASE_URI",
-        f'sqlite:///{os.path.join(Config.INSTANCE_FOLDER, "dev_users.db")}',
+        f"sqlite:///{os.path.join(Config.INSTANCE_FOLDER, 'dev_users.db')}",
     )
     WTF_CSRF_ENABLED = False
     RATELIMIT_STORAGE_URI = "memory://"
@@ -79,11 +79,10 @@ class TestingConfig(Config):
 
 
 class ProductionConfig(Config):
-
     DEBUG = False
     SQLALCHEMY_DATABASE_URI = os.getenv(
         "DATABASE_URL",
-        f'sqlite:///{os.path.join(Config.INSTANCE_FOLDER, "prod_users.db")}',
+        f"sqlite:///{os.path.join(Config.INSTANCE_FOLDER, 'prod_users.db')}",
     )
     SESSION_COOKIE_DOMAIN = ".benmega.com"
     SESSION_COOKIE_SAMESITE = "Lax"
@@ -92,7 +91,9 @@ class ProductionConfig(Config):
     WTF_CSRF_DOMAIN = ".benmega.com"
     WTF_CSRF_ENABLED = True
     WTF_CSRF_TIME_LIMIT = None  # Sessions are short, don't expire tokens separately
-    WTF_CSRF_SSL_STRICT = False  # Disable strict referer checking for cross-subdomain requests
+    WTF_CSRF_SSL_STRICT = (
+        False  # Disable strict referer checking for cross-subdomain requests
+    )
 
     # Build folders for Vite
     TEMPLATE_FOLDER = os.path.join(Config.BASE_DIR, "frontend", "dist")

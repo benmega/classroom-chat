@@ -1,5 +1,6 @@
 from functools import wraps
-from flask import session, jsonify, request, redirect, url_for, flash
+
+from flask import flash, jsonify, redirect, request, session, url_for
 
 
 def require_login(view):

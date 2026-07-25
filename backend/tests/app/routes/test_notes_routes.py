@@ -1,17 +1,19 @@
 import io
 from unittest.mock import patch
 
+from application.extensions import db
 from application.models.note import Note
 from application.models.user import User
-from application.extensions import db
 
 ROUTE_MODULE_PATH = "application.routes.notes_routes"
+
 
 def test_upload_note_no_auth(client):
     """Ensure unauthorized users cannot upload notes."""
     # UPDATED URL: /notes/upload
     response = client.post("/notes/upload")
     assert response.status_code == 401
+
 
 def test_upload_note_no_file(logged_in_client):
     """Ensure a 400 error if no file is part of the request."""
@@ -20,8 +22,11 @@ def test_upload_note_no_file(logged_in_client):
     assert response.status_code == 400
     assert b"No file provided" in response.data
 
+
 @patch(f"{ROUTE_MODULE_PATH}.get_s3_client")
-def test_upload_note_success(mock_get_s3_client, logged_in_client, sample_user, init_db):
+def test_upload_note_success(
+    mock_get_s3_client, logged_in_client, sample_user, init_db
+):
     mock_s3_client = mock_get_s3_client.return_value
     mock_s3_client.upload_fileobj.return_value = None
     logged_in_client.application.config["USE_S3"] = True
@@ -36,14 +41,10 @@ def test_upload_note_success(mock_get_s3_client, logged_in_client, sample_user, 
 
     file_content = b"fake image bytes"
     file_name = "homework.png"
-    data = {
-        "note_image": (io.BytesIO(file_content), file_name)
-    }
+    data = {"note_image": (io.BytesIO(file_content), file_name)}
 
     response = logged_in_client.post(
-        "/notes/upload",
-        data=data,
-        content_type="multipart/form-data"
+        "/notes/upload", data=data, content_type="multipart/form-data"
     )
 
     assert response.status_code == 200, f"Response: {response.data}"
@@ -54,8 +55,11 @@ def test_upload_note_success(mock_get_s3_client, logged_in_client, sample_user, 
     assert uploaded_note is not None
     assert f"notes/{sample_user.username}/" in uploaded_note.filename
 
+
 @patch(f"{ROUTE_MODULE_PATH}.get_s3_client")
-def test_upload_note_s3_failure(mock_get_s3_client, logged_in_client, sample_user, init_db):
+def test_upload_note_s3_failure(
+    mock_get_s3_client, logged_in_client, sample_user, init_db
+):
     mock_s3_client = mock_get_s3_client.return_value
     mock_s3_client.upload_fileobj.side_effect = Exception("AWS Down")
     logged_in_client.application.config["USE_S3"] = True
@@ -68,19 +72,18 @@ def test_upload_note_s3_failure(mock_get_s3_client, logged_in_client, sample_use
     with logged_in_client.session_transaction() as sess:
         sess["user"] = sample_user.id
 
-    data = {
-        "note_image": (io.BytesIO(b"img"), "fail.png")
-    }
+    data = {"note_image": (io.BytesIO(b"img"), "fail.png")}
 
-    with patch("application.routes.notes_routes.handle_local_note_upload", return_value=None):
+    with patch(
+        "application.routes.notes_routes.handle_local_note_upload", return_value=None
+    ):
         response = logged_in_client.post(
-            "/notes/upload",
-            data=data,
-            content_type="multipart/form-data"
+            "/notes/upload", data=data, content_type="multipart/form-data"
         )
 
     assert response.status_code == 500
     assert response.json["error"] == "Upload failed"
+
 
 def test_upload_note_local_success(logged_in_client, sample_user, init_db):
     logged_in_client.application.config["USE_S3"] = False
@@ -88,21 +91,17 @@ def test_upload_note_local_success(logged_in_client, sample_user, init_db):
     with logged_in_client.session_transaction() as sess:
         sess["user"] = sample_user.id
 
-    data = {
-        "note_image": (io.BytesIO(b"local note bytes"), "test_local_note.png")
-    }
+    data = {"note_image": (io.BytesIO(b"local note bytes"), "test_local_note.png")}
 
     response = logged_in_client.post(
-        "/notes/upload",
-        data=data,
-        content_type="multipart/form-data"
+        "/notes/upload", data=data, content_type="multipart/form-data"
     )
     assert response.status_code == 200
     assert response.json["status"] == "success"
-    
+
     note_id = response.json["note"]["id"]
     note_url = response.json["note"]["url"]
-    
+
     filename = note_url.split("/")[-1]
     resp_view = logged_in_client.get(f"/notes/view/{filename}")
     assert resp_view.status_code == 200
@@ -112,6 +111,7 @@ def test_upload_note_local_success(logged_in_client, sample_user, init_db):
     # Unauthorized delete
     # Let's log in as another user to test unauthorized delete:
     from application.models.user import User
+
     other_user = User(username="other_note_user", is_approved=True)
     other_user.set_password("pass123")
     db.session.add(other_user)
@@ -129,6 +129,7 @@ def test_upload_note_local_success(logged_in_client, sample_user, init_db):
     resp_del = logged_in_client.post(f"/notes/delete/{note_id}")
     assert resp_del.status_code == 200
     assert resp_del.json["status"] == "success"
+
 
 @patch(f"{ROUTE_MODULE_PATH}.get_s3_client")
 def test_delete_note_s3(mock_get_s3_client, logged_in_client, sample_user, init_db):

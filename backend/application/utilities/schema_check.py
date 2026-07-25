@@ -1,6 +1,8 @@
 import logging
+
 from alembic.autogenerate import compare_metadata
 from alembic.runtime.migration import MigrationContext
+
 from application.extensions import db
 
 logger = logging.getLogger(__name__)
@@ -39,4 +41,4 @@ def check_for_schema_drift(app):
 
     except Exception as e:
         # Don't let the check crash the app if something goes wrong with the check itself
-        logger.error(f"Failed to check for schema drift: {e}")
+        logger.exception(f"Failed to check for schema drift: {e}")

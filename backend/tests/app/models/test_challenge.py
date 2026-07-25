@@ -12,7 +12,6 @@ from application.extensions import db
 from application.models.challenge import Challenge
 from application.models.challenge_log import ChallengeLog
 
-
 # tests/app/models/test_challenge.py
 
 
@@ -134,9 +133,7 @@ def test_challenge_log_model_structure(init_db):
     Verify the ChallengeLog model has the correct columns after migration.
     This ensures the SQLAlchemy model matches our expectation.
     """
-    log = ChallengeLog(
-        user_id=1, domain="test.com", challenge_slug="test-slug"
-    )
+    log = ChallengeLog(user_id=1, domain="test.com", challenge_slug="test-slug")
     db.session.add(log)
     db.session.commit()
 
@@ -153,13 +150,13 @@ def test_challenge_name_uniqueness_scoped_by_domain(init_db):
     but cannot share the same name in the same domain.
     """
     from sqlalchemy.exc import IntegrityError
-    
+
     c1 = Challenge(name="Unique Test Name", slug="slug-c1", domain="codecombat.com")
     c2 = Challenge(name="Unique Test Name", slug="slug-c2", domain="www.ozaria.com")
     db.session.add(c1)
     db.session.add(c2)
-    db.session.commit() # Should succeed
-    
+    db.session.commit()  # Should succeed
+
     c3 = Challenge(name="Unique Test Name", slug="slug-c3", domain="codecombat.com")
     db.session.add(c3)
     with pytest.raises(IntegrityError):

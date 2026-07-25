@@ -19,7 +19,9 @@ def migrate_classrooms_and_instances(conn):
         return
 
     try:
-        print("Migration: Splitting 'course_instances' into Classrooms and Instances...")
+        print(
+            "Migration: Splitting 'course_instances' into Classrooms and Instances..."
+        )
 
         # 2. Rename the old table (which has classroom data) to 'classrooms'
         cursor.execute("ALTER TABLE course_instances RENAME TO classrooms;")
@@ -44,9 +46,11 @@ def migrate_classrooms_and_instances(conn):
         # so we just leave it or rename it if necessary.
 
         conn.commit()
-        print("Migration: Successfully created 'classrooms' and reset 'course_instances'.")
+        print(
+            "Migration: Successfully created 'classrooms' and reset 'course_instances'."
+        )
 
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         conn.rollback()
         print(f"Migration Error: {e}")
 
