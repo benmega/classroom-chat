@@ -383,6 +383,7 @@ const Shop = () => {
                                         </div>
                                     ) : item.name === "Auto Challenge Claimer" ? (
                                         <div style={{ width: '100%', textAlign: 'center' }}>
+                                            {/* eslint-disable-next-line jsx-a11y/anchor-is-valid, jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
                                             <a
                                                 ref={(el) => { if (el) el.href = bookmarkletCode; }}
                                                 className="shop-btn-purchase"

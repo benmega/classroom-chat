@@ -331,6 +331,7 @@ export const useAdminUserDashboard = (userId) => {
 
     useEffect(() => {
         fetchUser();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [userId]);
 
     useEffect(() => {
@@ -345,6 +346,7 @@ export const useAdminUserDashboard = (userId) => {
                 fetchStudentParents();
             }
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [user?.id]);
 
     const handleUpdateUser = async (updatedFields) => {

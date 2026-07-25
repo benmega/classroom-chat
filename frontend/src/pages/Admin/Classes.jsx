@@ -132,10 +132,7 @@ const Classes = () => {
 
     // Statistics calculations
     const totalClassrooms = classrooms.length;
-    const totalStudents = classrooms.reduce((acc, c) => acc + (c.student_count || 0), 0);
-    const uniqueLanguages = new Set(classrooms.map(c => c.language).filter(Boolean)).size;
-    const avgStudents = totalClassrooms > 0 ? (totalStudents / totalClassrooms).toFixed(1) : 0;
-
+    
     if (isLoading) return (
         <div className="admin-classes-page">
             <header className="page-header">

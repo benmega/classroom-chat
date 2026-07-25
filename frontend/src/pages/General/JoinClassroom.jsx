@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { LogIn, CheckCircle, Loader2, ChevronRight } from 'lucide-react';
 import toast from 'react-hot-toast';
 import client from '../../api/client';

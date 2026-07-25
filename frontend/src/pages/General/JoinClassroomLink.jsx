@@ -10,16 +10,13 @@ const JoinClassroomLink = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const { user, isAuthenticated } = useAuthStore();
-    const [status, setStatus] = useState('loading');
-    const [message, setMessage] = useState('Joining classroom...');
-    const [classroomName, setClassroomName] = useState('');
-
     const code = searchParams.get('code');
+    
+    const [status, setStatus] = useState(code ? 'loading' : 'error');
+    const [message, setMessage] = useState(code ? 'Joining classroom...' : 'No classroom code provided.');
 
     useEffect(() => {
         if (!code) {
-            setStatus('error');
-            setMessage('No classroom code provided.');
             return;
         }
 
@@ -31,6 +28,7 @@ const JoinClassroomLink = () => {
         }
 
         if (user?.role === 'parent') {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setStatus('error');
             setMessage('Parent accounts cannot join classrooms.');
             return;
@@ -40,7 +38,6 @@ const JoinClassroomLink = () => {
             try {
                 const res = await client.post('/api/classroom/join', { code });
                 const name = res.data?.data?.classroom?.name || res.data?.classroom?.name || '';
-                setClassroomName(name);
                 setStatus('success');
                 setMessage(name ? `Successfully joined "${name}"!` : 'Successfully joined classroom!');
                 localStorage.removeItem('pendingClassroomCode');
