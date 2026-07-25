@@ -21,16 +21,16 @@ def upgrade():
     with op.batch_alter_table("messages", schema=None) as batch_op:
         batch_op.add_column(
             sa.Column("animated_border_speed", sa.String(length=10), nullable=True)
-        )  # noqa
+        )
 
     with op.batch_alter_table("store_items", schema=None) as batch_op:
-        batch_op.drop_column("crowdfund_goal")  # noqa
-        batch_op.drop_column("is_crowdfunded")  # noqa
+        batch_op.drop_column("crowdfund_goal")
+        batch_op.drop_column("is_crowdfunded")
 
     with op.batch_alter_table("users", schema=None) as batch_op:
         batch_op.add_column(
             sa.Column("animated_border_speed", sa.String(length=10), nullable=True)
-        )  # noqa
+        )
 
     # ### end Alembic commands ###
 

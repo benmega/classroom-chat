@@ -18,7 +18,7 @@ depends_on = None
 def upgrade():
     # 1. Drop the old single-column unique constraint
     with op.batch_alter_table("challenges", schema=None) as batch_op:
-        batch_op.drop_constraint("uq_challenges_name", type_="unique")  # noqa
+        batch_op.drop_constraint("uq_challenges_name", type_="unique")
 
     # 2. Strip " - In Progress" suffix from challenge names
     op.execute(
@@ -29,7 +29,7 @@ def upgrade():
     with op.batch_alter_table("challenges", schema=None) as batch_op:
         batch_op.create_unique_constraint(
             "uq_challenges_name_domain", ["name", "domain"]
-        )  # noqa
+        )
 
 
 def downgrade():

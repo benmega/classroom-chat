@@ -7,7 +7,8 @@ admin_pass = None
 admin_bp = Blueprint("admin", __name__)
 
 # Import routes to register them on the admin blueprint
-from .admin import (  # noqa: F401, E402
+# ruff: noqa: F401, E402
+from .admin import (
     advanced_ops,
     challenge_mgmt,
     config_routes,
@@ -18,7 +19,7 @@ from .admin import (  # noqa: F401, E402
     trade_routes,
     user_mgmt,
 )
-from .admin.crud_routes import crud_bp  # noqa: E402
+from .admin.crud_routes import crud_bp
 
 # React-Admin standalone CRUD blueprint (still nested/prefixed)
 admin_bp.register_blueprint(crud_bp, url_prefix="/crud")

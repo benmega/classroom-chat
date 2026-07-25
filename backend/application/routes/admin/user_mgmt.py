@@ -176,7 +176,7 @@ def get_users():
         .group_by(ChallengeLog.user_id)
         .all()
     )
-    levels_today_map = {user_id: count for user_id, count in today_counts}
+    levels_today_map = dict(today_counts)
 
     user_data = []
     for u in users:

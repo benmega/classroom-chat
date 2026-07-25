@@ -27,7 +27,7 @@ def upgrade():
                 sa.Column(
                     "packets_awarded", sa.Double(), nullable=False, server_default="0.0"
                 )
-            )  # noqa
+            )
     # ### end Alembic commands ###
 
 

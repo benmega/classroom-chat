@@ -46,9 +46,7 @@ def extract_operations(filepath):
                 current_table = parts[1]
         elif "batch_op." in line and current_table:
             stripped = line.strip()
-            if stripped.startswith("batch_op.add_column(") or stripped.startswith(
-                "batch_op.drop_column("
-            ):
+            if stripped.startswith(("batch_op.add_column(", "batch_op.drop_column(")):
                 parts = stripped.split("'")
                 if len(parts) >= 3:
                     col = parts[1]

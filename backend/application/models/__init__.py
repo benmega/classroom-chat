@@ -4,36 +4,38 @@ Type: py
 Summary: Model import helper to register all SQLAlchemy models.
 """
 
+# ruff: noqa: F401
+
 
 def setup_models():
     # Import all models to register them with SQLAlchemy
     # These imports are needed for side effects (model registration)
-    from .achievements import Achievement  # noqa: F401
-    from .ai_settings import AISettings  # noqa: F401
-    from .banned_words import BannedWords  # noqa: F401
-    from .challenge import Challenge  # noqa: F401
-    from .challenge_log import ChallengeLog  # noqa: F401
-    from .classroom import Classroom  # noqa: F401
-    from .configuration import Configuration  # noqa: F401
-    from .connection_attempt import ConnectionAttempt  # noqa: F401
-    from .course import Course  # noqa: F401
-    from .course_instance import CourseInstance  # noqa: F401
-    from .course_instance_request import CourseInstanceRequest  # noqa: F401
-    from .duck_trade import DuckTradeLog  # noqa: F401
-    from .duck_transaction import DuckTransaction  # noqa: F401
-    from .message import Message  # noqa: F401
-    from .note import Note  # noqa: F401
-    from .parent_student import parent_students  # noqa: F401
-    from .project import Project  # noqa: F401
-    from .project_template import ProjectTemplate  # noqa: F401
-    from .session_log import SessionLog  # noqa: F401
-    from .skill import Skill  # noqa: F401
-    from .standard_project import StandardProject  # noqa: F401
-    from .store_item import StoreItem  # noqa: F401
-    from .track_requests import TrackChangeRequest  # noqa: F401
-    from .user import User  # noqa: F401
-    from .user_certificate import UserCertificate  # noqa: F401
-    from .user_item_purchase import UserItemPurchase  # noqa: F401
+    from .achievements import Achievement
+    from .ai_settings import AISettings
+    from .banned_words import BannedWords
+    from .challenge import Challenge
+    from .challenge_log import ChallengeLog
+    from .classroom import Classroom
+    from .configuration import Configuration
+    from .connection_attempt import ConnectionAttempt
+    from .course import Course
+    from .course_instance import CourseInstance
+    from .course_instance_request import CourseInstanceRequest
+    from .duck_trade import DuckTradeLog
+    from .duck_transaction import DuckTransaction
+    from .message import Message
+    from .note import Note
+    from .parent_student import parent_students
+    from .project import Project
+    from .project_template import ProjectTemplate
+    from .session_log import SessionLog
+    from .skill import Skill
+    from .standard_project import StandardProject
+    from .store_item import StoreItem
+    from .track_requests import TrackChangeRequest
+    from .user import User
+    from .user_certificate import UserCertificate
+    from .user_item_purchase import UserItemPurchase
 
 
 # setup_models() is called by create_app() within app_context

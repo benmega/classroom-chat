@@ -163,7 +163,6 @@ def test_clear_partial_history(client, test_app, init_db, sample_admin):
     """Test clearing partial conversation history."""
     login_as_admin(client, sample_admin)
 
-    pass
 
 
 def test_add_banned_word(client, sample_admin, test_app):
@@ -197,7 +196,6 @@ def test_strike_message(client, sample_admin, sample_message):
     """Test striking a message."""
     login_as_admin(client, sample_admin)
 
-    pass
 
 
 def test_adjust_ducks(client, sample_admin, sample_user, test_app):

@@ -50,19 +50,19 @@ def upgrade():
         if "current_activity" not in existing_cols:
             batch_op.add_column(
                 sa.Column("current_activity", sa.String(length=255), nullable=True)
-            )  # noqa
+            )
         if "last_activity_time" not in existing_cols:
             batch_op.add_column(
                 sa.Column("last_activity_time", sa.DateTime(), nullable=True)
-            )  # noqa
+            )
         if "can_chat" in existing_cols:
-            batch_op.drop_column("can_chat")  # noqa
+            batch_op.drop_column("can_chat")
 
     # 3. Add column to projects
     existing_proj_cols = [c["name"] for c in inspector.get_columns("projects")]
     with op.batch_alter_table("projects", schema=None) as batch_op:
         if "created_at" not in existing_proj_cols:
-            batch_op.add_column(sa.Column("created_at", sa.DateTime(), nullable=True))  # noqa
+            batch_op.add_column(sa.Column("created_at", sa.DateTime(), nullable=True))
 
     # 4. Retroactive backfill for student status
     bind = op.get_bind()

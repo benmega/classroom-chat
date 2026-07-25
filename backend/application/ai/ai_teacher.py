@@ -32,7 +32,6 @@ REQUEST_TIMEOUT = 30  # seconds
 class AITeacherError(Exception):
     """Custom exception for AI Teacher operations."""
 
-    pass
 
 
 def get_or_create_ai_teacher() -> User:

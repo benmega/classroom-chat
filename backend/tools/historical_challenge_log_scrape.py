@@ -79,9 +79,7 @@ def main(DOMAIN, URL_LEVELS):
         return
 
     # Extract unique classroom IDs to avoid duplicate API calls
-    unique_classrooms = set(
-        item["classroomID"] for item in course_instances if "classroomID" in item
-    )
+    unique_classrooms = {item["classroomID"] for item in course_instances if "classroomID" in item}
     print(
         f"Found {len(course_instances)} course instances across {len(unique_classrooms)} unique classrooms."
     )

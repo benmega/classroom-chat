@@ -67,7 +67,7 @@ def export_tables_to_csv(output_dir=None):
             result = db.session.execute(text(f"SELECT * FROM {table_name}"))
 
             # Get column names
-            columns = [col for col in result.keys()]
+            columns = list(result.keys())
 
             # Convert result to list of dictionaries more safely
             rows = []
@@ -128,7 +128,7 @@ def export_to_json(output_dir=None):
             result = db.session.execute(text(f"SELECT * FROM {table_name}"))
 
             # Get column names
-            columns = [col for col in result.keys()]
+            columns = list(result.keys())
 
             # Convert result to list of dictionaries more safely
             rows = []

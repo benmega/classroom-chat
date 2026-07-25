@@ -477,7 +477,7 @@ def test_update_user_ducks_challenge_not_found(init_db, sample_user):
     """Test updating ducks for non-existent challenge."""
     from application.routes.challenge_routes import _update_user_ducks
 
-    with pytest.raises(ValueError, match="Challenge .* not found"):
+    with pytest.raises(ValueError, match=r"Challenge .* not found"):
         _update_user_ducks(sample_user, "nonexistent-challenge", duck_multiplier=1)
 
 

@@ -17,10 +17,7 @@ def index(path):
     In production, this allows React Router to take over for non-API paths.
     """
     if (
-        path.startswith("api/")
-        or request.path.startswith("/api/")
-        or path.startswith("achievements/")
-        or request.path.startswith("/achievements/")
+        path.startswith(("api/", "achievements/")) or request.path.startswith("/api/") or request.path.startswith("/achievements/")
     ):
         from flask import jsonify
 
