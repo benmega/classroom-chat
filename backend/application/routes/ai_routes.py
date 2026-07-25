@@ -4,10 +4,9 @@ Type: py
 Summary: Flask routes for ai routes functionality.
 """
 
-from flask import Blueprint, g, jsonify, request
-
 from application.ai.ai_teacher import get_ai_response
 from application.decorators.login_required import require_login
+from flask import Blueprint, g, jsonify, request
 
 ai = Blueprint("ai", __name__)
 

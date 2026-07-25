@@ -1,10 +1,9 @@
-from flask import jsonify, request
-
 from application.decorators.admin_required import admin_only
 from application.decorators.api_response import api_response
 from application.extensions import db
 from application.models.duck_trade import DuckTradeLog
 from application.models.user import User
+from flask import jsonify, request
 
 from ..admin_routes import admin_bp
 

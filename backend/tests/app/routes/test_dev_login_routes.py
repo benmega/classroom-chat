@@ -1,7 +1,6 @@
 from unittest.mock import patch
 
 import pytest
-
 from application.extensions import db
 from application.models.user import User
 

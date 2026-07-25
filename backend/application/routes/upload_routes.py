@@ -12,12 +12,11 @@ import uuid
 from datetime import datetime
 from io import BytesIO
 
-from flask import Blueprint, jsonify, request, send_from_directory
-from PIL import Image, UnidentifiedImageError
-
 from application import limiter
 from application.config import Config
 from application.decorators.login_required import require_login
+from flask import Blueprint, jsonify, request, send_from_directory
+from PIL import Image, UnidentifiedImageError
 
 upload = Blueprint("upload", __name__)
 

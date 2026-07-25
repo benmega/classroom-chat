@@ -2,14 +2,6 @@ import logging
 import os
 from datetime import timedelta
 
-from flask import Flask, g, jsonify, session
-from flask_cors import CORS
-from flask_limiter import RateLimitExceeded
-from flask_wtf.csrf import generate_csrf
-from sqlalchemy import inspect
-from werkzeug.exceptions import RequestEntityTooLarge
-from werkzeug.middleware.proxy_fix import ProxyFix
-
 from application.config import DevelopmentConfig, ProductionConfig, TestingConfig
 from application.constants import (
     GLOBAL_CLASSROOM_ID as GLOBAL_CLASSROOM_ID,
@@ -21,6 +13,13 @@ from application.models.user import User
 from application.routes import register_blueprints
 from application.utilities.helper_functions import format_number
 from application.utilities.schema_check import check_for_schema_drift
+from flask import Flask, g, jsonify, session
+from flask_cors import CORS
+from flask_limiter import RateLimitExceeded
+from flask_wtf.csrf import generate_csrf
+from sqlalchemy import inspect
+from werkzeug.exceptions import RequestEntityTooLarge
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 
 def create_app(config_class=None):

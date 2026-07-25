@@ -9,13 +9,12 @@ import hashlib
 import hmac
 
 import boto3
-from botocore.exceptions import ClientError
-from flask import Blueprint, current_app, jsonify, request, session
-from jose import jwt
-
 from application.extensions import db, limiter
 from application.models.session_log import SessionLog
 from application.models.user import User
+from botocore.exceptions import ClientError
+from flask import Blueprint, current_app, jsonify, request, session
+from jose import jwt
 
 cognito_bp = Blueprint("cognito", __name__)
 

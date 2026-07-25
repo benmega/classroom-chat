@@ -5,6 +5,7 @@ Summary: Configuration classes and settings for different environments.
 """
 
 import os
+from typing import ClassVar
 
 from dotenv import load_dotenv
 
@@ -37,7 +38,8 @@ class Config:
 
     UPLOAD_FOLDER = os.path.join(BASE_DIR, "userData")
     MAX_CONTENT_LENGTH = 500 * 1024 * 1024
-    ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif", "webp"}
+    ALLOWED_EXTENSIONS: ClassVar[set[str]] = {"png", "jpg", "jpeg", "gif", "webp"}
+
 
     ADMIN_USERNAME = os.getenv("ADMIN_USERNAME", "admin")
     ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")

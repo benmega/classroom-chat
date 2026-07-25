@@ -17,9 +17,6 @@ from unittest.mock import patch
 from wsgiref.simple_server import make_server
 
 import pytest
-from flask_login import LoginManager
-from PIL import Image
-
 from application import create_app
 from application.config import TestingConfig
 from application.extensions import db
@@ -37,6 +34,8 @@ from application.models.note import Note
 from application.models.project import Project
 from application.models.skill import Skill
 from application.models.user import User
+from flask_login import LoginManager
+from PIL import Image
 
 db_fd, db_path = tempfile.mkstemp(suffix=".db")
 

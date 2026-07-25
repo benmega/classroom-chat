@@ -4,7 +4,6 @@ Type: py
 Summary: Model import helper to register all SQLAlchemy models.
 """
 
-# ruff: noqa: F401
 
 
 def setup_models():

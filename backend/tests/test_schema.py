@@ -1,7 +1,6 @@
 import pytest
 from alembic.autogenerate import compare_metadata
 from alembic.runtime.migration import MigrationContext
-
 from application.extensions import db
 
 

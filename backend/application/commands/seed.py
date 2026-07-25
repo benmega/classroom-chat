@@ -26,11 +26,10 @@ def generate_kebab_slug(text):
 @with_appcontext
 def seed_command():
     """Seed the database with challenges and course instances from CSV files."""
-    from flask import current_app
-
     from application.extensions import db
     from application.models.challenge import Challenge
     from application.models.course_instance import CourseInstance
+    from flask import current_app
 
     base_dir = os.path.join(
         current_app.config["BASE_DIR"], "backend", "instance", "migration"

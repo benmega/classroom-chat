@@ -1,5 +1,6 @@
 import re
 from datetime import date, datetime, timedelta
+from typing import ClassVar
 
 from sqlalchemy import event
 from sqlalchemy.ext.hybrid import hybrid_property
@@ -369,7 +370,8 @@ class User(db.Model):
 
         db.session.commit()
 
-    _total_challenges_cache = {}
+    _total_challenges_cache: ClassVar[dict] = {}
+
 
     def get_progress(self, domain):
         """Calculate progress based on challenges completed for a specific domain."""

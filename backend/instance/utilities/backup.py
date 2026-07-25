@@ -6,10 +6,9 @@ import json
 import os
 from datetime import datetime
 
-from sqlalchemy import inspect, text
-
 from application import DevelopmentConfig, create_app
 from application.extensions import db
+from sqlalchemy import inspect, text
 
 # --- PATH CONFIGURATION ---
 # Calculate paths relative to this script file

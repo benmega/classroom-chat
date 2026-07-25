@@ -7,7 +7,6 @@ admin_pass = None
 admin_bp = Blueprint("admin", __name__)
 
 # Import routes to register them on the admin blueprint
-# ruff: noqa: F401, E402
 from .admin import (
     advanced_ops,
     challenge_mgmt,

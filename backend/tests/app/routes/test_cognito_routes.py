@@ -1,9 +1,8 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
-from botocore.exceptions import ClientError
-
 from application.models.user import User
+from botocore.exceptions import ClientError
 
 
 @pytest.fixture

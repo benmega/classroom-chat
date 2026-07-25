@@ -1,8 +1,7 @@
 from functools import wraps
 
-from flask import jsonify, render_template, request, session
-
 from application.models.user import User
+from flask import jsonify, render_template, request, session
 
 
 def admin_only(f):

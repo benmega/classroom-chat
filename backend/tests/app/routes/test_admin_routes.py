@@ -4,16 +4,16 @@ Type: py
 Summary: Unit tests for admin routes Flask routes.
 """
 
+import contextlib
 import json
 from unittest.mock import patch
-
-from flask import url_for
 
 from application.extensions import db
 from application.models.banned_words import BannedWords
 from application.models.configuration import Configuration
 from application.models.duck_trade import DuckTradeLog
 from application.models.user import User
+from flask import url_for
 
 
 def login_as_admin(client, admin_user):
@@ -709,10 +709,8 @@ def test_admin_logs(client, sample_admin, test_app):
     resp = client.get("/api/admin/logs")
     assert resp.status_code == 200
     assert "Line 1" in resp.get_json()["data"]["logs"]
-    try:
+    with contextlib.suppress(PermissionError):
         os.remove(log_path)
-    except PermissionError:
-        pass
 
     test_app.config["INSTANCE_FOLDER"] = "/tmp/does_not_exist_log_path"
     resp2 = client.get("/api/admin/logs")

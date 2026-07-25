@@ -22,11 +22,8 @@ def lambda_handler(event, context):
 
     # Check if event is from S3 or Dispatcher
     # Dispatcher sends the inner record directly sometimes, or the full event
-    if "Records" in event:
-        record = event["Records"][0]
-    else:
-        # Handle case where Dispatcher sends just the record payload
-        record = event if "s3" in event else event.get("Records", [{}])[0]
+    record = event["Records"][0] if "Records" in event else (event if "s3" in event else event.get("Records", [{}])[0])
+
 
     bucket = record["s3"]["bucket"]["name"]
     key = unquote_plus(record["s3"]["object"]["key"])

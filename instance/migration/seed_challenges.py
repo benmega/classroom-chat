@@ -72,6 +72,6 @@ def seed_challenges_data(conn, seed_file_path):
             f"Seed: Inserted {inserted_count} new challenges. Skipped {skipped_count} duplicates."
         )
 
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         conn.rollback()
         print(f"Seed Error (Challenges): {e}")

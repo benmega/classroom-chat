@@ -3,6 +3,13 @@ import re
 import uuid
 from datetime import datetime
 
+from application.config import Config
+from application.decorators.api_response import api_response
+from application.extensions import csrf, db, limiter
+from application.models.project import Project
+from application.models.skill import Skill
+from application.models.user import User
+from application.utilities.helper_functions import allowed_file, get_s3_client
 from flask import (
     Blueprint,
     abort,
@@ -23,20 +30,12 @@ from werkzeug.utils import secure_filename
 from wtforms import PasswordField, StringField, SubmitField
 from wtforms.validators import DataRequired
 
-from application.config import Config
-from application.decorators.api_response import api_response
-from application.extensions import csrf, db, limiter
-from application.models.project import Project
-from application.models.skill import Skill
-from application.models.user import User
-from application.utilities.helper_functions import allowed_file, get_s3_client
-
 user = Blueprint("user", __name__)
 
 S3_UPLOAD_BUCKET = "youtube-upload-source-classroom-chat"
 
 
-from application.decorators.login_required import require_login  # noqa: E402
+from application.decorators.login_required import require_login
 
 
 class LoginForm(FlaskForm):

@@ -12,14 +12,13 @@ import sys
 # Add the backend directory to sys.path so we can import application
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from sqlalchemy import insert, select
-
 from application import create_app
 from application.extensions import db
 from application.models.challenge import Challenge
 from application.models.challenge_log import ChallengeLog
 from application.models.classroom import user_classrooms
 from application.models.user import User
+from sqlalchemy import insert, select
 
 
 def run_retroactive_enrollment():

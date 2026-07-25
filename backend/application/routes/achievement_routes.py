@@ -6,6 +6,13 @@ import sys
 import zipfile
 from datetime import datetime
 
+from application.decorators.admin_required import admin_only
+from application.decorators.api_response import api_response
+from application.extensions import db
+from application.models.achievements import Achievement
+from application.models.user import User
+from application.models.user_certificate import UserCertificate
+from application.utilities.helper_functions import allowed_file
 from flask import (
     Blueprint,
     flash,
@@ -20,14 +27,6 @@ from flask import (
 )
 from sqlalchemy.orm import joinedload
 from werkzeug.utils import secure_filename
-
-from application.decorators.admin_required import admin_only
-from application.decorators.api_response import api_response
-from application.extensions import db
-from application.models.achievements import Achievement
-from application.models.user import User
-from application.models.user_certificate import UserCertificate
-from application.utilities.helper_functions import allowed_file
 
 achievements = Blueprint("achievements", __name__)
 
@@ -51,8 +50,6 @@ def get_achievements_json():
         return jsonify({"success": False, "error": "User not found!"}), 404
 
     # Automatically check for new achievements when visiting the page
-    from sqlalchemy import func
-
     from application.models.challenge_log import ChallengeLog
     from application.models.duck_trade import DuckTradeLog
     from application.models.message import Message
@@ -62,6 +59,7 @@ def get_achievements_json():
         get_achievement_progress,
         longest_session_minutes,
     )
+    from sqlalchemy import func
 
     evaluate_user(current_user)
 
@@ -120,10 +118,7 @@ def achievements_page():
 @achievements.route("/add", methods=["GET", "POST"])
 @admin_only
 def add_achievement():
-    if request.is_json:
-        data = request.get_json()
-    else:
-        data = request.form
+    data = request.get_json() if request.is_json else request.form
 
     if request.method == "GET":
         if request.is_json or request.accept_mimetypes.accept_json:

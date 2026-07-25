@@ -1,6 +1,13 @@
 import os
 import uuid
 
+from application import limiter
+from application.decorators.login_required import require_login
+from application.extensions import db
+from application.models.note import Note
+from application.models.user import User
+from application.utilities.db_helpers import get_user
+from application.utilities.helper_functions import allowed_file, get_s3_client
 from flask import (
     Blueprint,
     current_app,
@@ -11,14 +18,6 @@ from flask import (
     session,
 )
 from werkzeug.utils import secure_filename
-
-from application import limiter
-from application.decorators.login_required import require_login
-from application.extensions import db
-from application.models.note import Note
-from application.models.user import User
-from application.utilities.db_helpers import get_user
-from application.utilities.helper_functions import allowed_file, get_s3_client
 
 notes_bp = Blueprint("notes", __name__)
 

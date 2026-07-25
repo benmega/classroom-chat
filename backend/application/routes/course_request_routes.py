@@ -4,12 +4,11 @@ Type: py
 Summary: Flask routes for student course instance requests.
 """
 
-from flask import Blueprint, jsonify, request, session
-
 from application.extensions import db
 from application.models.course_instance import CourseInstance
 from application.models.course_instance_request import CourseInstanceRequest
 from application.utilities.db_helpers import get_user
+from flask import Blueprint, jsonify, request, session
 
 course_request_bp = Blueprint(
     "course_request", __name__, url_prefix="/api/course-requests"

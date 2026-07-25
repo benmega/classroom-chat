@@ -52,18 +52,17 @@ def lint_migration(filepath):
                 "create_foreign_key(",
                 "drop_foreign_key(",
             ]
-        ):
-            if "batch_op." in stripped:
-                context_lines = lines[max(start_line, i - 10) : i]
-                has_if = False
-                for ctx_line in reversed(context_lines):
-                    if ctx_line.strip().startswith("if "):
-                        has_if = True
-                        break
-                if not has_if:
-                    issues.append(
-                        f"Line {i + 1}: possibly unguarded operation: {stripped[:80]}"
-                    )
+        ) and "batch_op." in stripped:
+            context_lines = lines[max(start_line, i - 10) : i]
+            has_if = False
+            for ctx_line in reversed(context_lines):
+                if ctx_line.strip().startswith("if "):
+                    has_if = True
+                    break
+            if not has_if:
+                issues.append(
+                    f"Line {i + 1}: possibly unguarded operation: {stripped[:80]}"
+                )
 
     return issues
 

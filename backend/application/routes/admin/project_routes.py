@@ -1,8 +1,7 @@
-from flask import jsonify, request
-
 from application.decorators.admin_required import admin_only
 from application.extensions import db
 from application.models.project import Project
+from flask import jsonify, request
 
 from ..admin_routes import admin_bp
 

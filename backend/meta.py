@@ -21,7 +21,9 @@ def create_file(path):
     print(f"File created: {path}")
 
 
-def print_directory_structure(startpath, exclude=[]):
+def print_directory_structure(startpath, exclude=None):
+    if exclude is None:
+        exclude = []
     for root, dirs, files in os.walk(startpath):
         # Filtering out excluded directories from the dirs list
         dirs[:] = [d for d in dirs if d not in exclude]

@@ -1,7 +1,6 @@
-from flask import url_for
-
 from application import db
 from application.models.duck_trade import DuckTradeLog
+from flask import url_for
 
 
 def test_submit_trade_valid(client, sample_user_with_ducks, test_app):

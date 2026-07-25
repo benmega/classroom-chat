@@ -7,9 +7,8 @@ Summary: Unit tests for the hardened upload routes: auth required,
 
 import os
 
-from flask import url_for
-
 from application.config import Config
+from flask import url_for
 
 VALID_PNG = (
     "data:image/png;base64,"

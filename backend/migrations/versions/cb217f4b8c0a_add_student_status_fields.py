@@ -70,7 +70,7 @@ def upgrade():
         sa.text("SELECT id, username FROM users WHERE role = 'student'")
     ).fetchall()
 
-    for student_id, username in students:
+    for student_id, _username in students:
         # Get latest challenge log
         latest_log = bind.execute(
             sa.text(

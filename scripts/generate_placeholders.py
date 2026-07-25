@@ -513,7 +513,7 @@ def draw_icon(draw, cx, cy, icon_type):
 # Load font (fall back if not found)
 try:
     font = ImageFont.truetype("C:\\Windows\\Fonts\\segoeuib.ttf", 36)
-except Exception:  # noqa: BLE001
+except Exception:
     font = ImageFont.load_default()
 
 for proj in PROJECTS:

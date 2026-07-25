@@ -1,11 +1,10 @@
 import logging
 
-from flask import Blueprint, g, jsonify, request
-
 from application.decorators.login_required import require_login
 from application.extensions import db
 from application.models.message import Message
 from application.models.user import User
+from flask import Blueprint, g, jsonify, request
 
 logger = logging.getLogger(__name__)
 
@@ -33,11 +32,10 @@ def get_feed():
                 query = query.filter(Message.id < before_id)
             messages = query.order_by(Message.id.desc()).limit(limit).all()
         else:
-            if classroom_id:
-                # If classroom_id is provided, limit to that classroom (and global messages)
-                user_classroom_ids = [classroom_id]
-            else:
-                user_classroom_ids = [c.id for c in user.classrooms]
+            user_classroom_ids = [classroom_id] if classroom_id else [c.id for c in user.classrooms]
+
+
+
 
             # Use UNION to avoid massive table scan with OR + EXISTS
             base_query = db.session.query(Message.id).filter(

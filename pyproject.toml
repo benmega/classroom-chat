@@ -2,12 +2,29 @@
 line-length = 120
 
 [tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "BLE", "DTZ", "TRY", "SIM", "RUF"]
 ignore = [
     "E501",
     "E701",
+    "TRY003",
+    "TRY401",
+    "TRY300",
+    "TRY301",
+
+    "BLE001",
+    "DTZ001",
+    "DTZ003",
+    "DTZ005",
+    "DTZ006",
+    "DTZ007",
+    "DTZ011",
+    "B017",
+    "TRY002",
 ]
 
 [tool.ruff.lint.per-file-ignores]
 "backend/application/models/__init__.py" = ["F401"]
 "backend/application/routes/admin_routes.py" = ["F401", "E402"]
 "backend/application/routes/user_routes.py" = ["E402"]
+
+

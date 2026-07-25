@@ -4,12 +4,11 @@ Type: py
 Summary: Flask routes for track change requests.
 """
 
-from flask import Blueprint, jsonify, request, session
-
 from application.extensions import db
 from application.models.track_requests import TrackChangeRequest
 from application.models.user import User
 from application.utilities.db_helpers import get_user
+from flask import Blueprint, jsonify, request, session
 
 track_request_bp = Blueprint("track_request", __name__, url_prefix="/api")
 

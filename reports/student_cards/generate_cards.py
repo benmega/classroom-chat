@@ -41,7 +41,7 @@ def get_image_from_path(path):
     try:
         img = Image.open(path)
         return img.convert("RGBA")
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         print(f"Error loading image: {e}")
         return None
 

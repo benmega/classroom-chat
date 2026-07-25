@@ -8,7 +8,6 @@ import json
 from unittest.mock import patch
 
 import pytest
-
 from application import db
 from application.models.achievements import Achievement
 

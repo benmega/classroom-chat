@@ -29,7 +29,7 @@ def search_code(query):
             ["grep", "-rnI", query, "."], capture_output=True, text=True
         )
         return result.stdout[:2000]
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         return str(e)
 
 
@@ -39,7 +39,7 @@ def read_file(path):
         with open(path, "r") as f:
             lines = f.readlines()
             return "".join([f"{i + 1}: {line}" for i, line in enumerate(lines)])
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         return str(e)
 
 
@@ -55,7 +55,7 @@ def patch_file(path, start_line, end_line, new_content):
         with open(path, "w") as f:
             f.writelines(lines)
         return f"Updated {path} from line {start_line} to {end_line}."
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         return str(e)
 
 
@@ -88,7 +88,7 @@ def get_discussion_context():
                     f"- REVIEW ({r['state']}) by {r['author']['login']}: {r['body']}\n"
                 )
         return context
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         return f"Error fetching discussion: {e!s}"
 
 

@@ -1,8 +1,7 @@
 import sqlite3
 
-from sqlalchemy import create_engine
-
 from application.config import Config
+from sqlalchemy import create_engine
 
 SQLALCHEMY_DATABASE_URI = Config.SQLALCHEMY_DATABASE_URI
 engine = create_engine(SQLALCHEMY_DATABASE_URI)

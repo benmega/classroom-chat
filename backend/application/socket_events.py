@@ -12,12 +12,11 @@ Room naming conventions:
 
 from datetime import datetime
 
+from application.constants import GLOBAL_CLASSROOM_ID
+from application.extensions import db, socketio
 from flask import request, session
 from flask_socketio import emit, join_room
 from sqlalchemy import select
-
-from application.constants import GLOBAL_CLASSROOM_ID
-from application.extensions import db, socketio
 
 from .models.classroom import user_classrooms
 from .models.user import User

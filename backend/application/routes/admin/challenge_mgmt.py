@@ -1,9 +1,8 @@
-from flask import request
-
 from application.decorators.admin_required import admin_only
 from application.decorators.api_response import api_response
 from application.extensions import db
 from application.models.challenge import Challenge
+from flask import request
 
 from ..admin_routes import admin_bp
 

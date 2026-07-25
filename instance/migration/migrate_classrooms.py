@@ -50,7 +50,7 @@ def migrate_classrooms_and_instances(conn):
             "Migration: Successfully created 'classrooms' and reset 'course_instances'."
         )
 
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         conn.rollback()
         print(f"Migration Error: {e}")
 

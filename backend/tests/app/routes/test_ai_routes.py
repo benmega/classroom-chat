@@ -1,7 +1,6 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
-
 from application.extensions import db
 from application.models.ai_settings import AISettings
 from application.models.user import User

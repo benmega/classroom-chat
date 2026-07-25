@@ -1,11 +1,10 @@
 import csv
 import logging
 
-from sqlalchemy.exc import SQLAlchemyError
-
 from application import create_app
 from application.extensions import db
 from application.models.user import User
+from sqlalchemy.exc import SQLAlchemyError
 
 # Configure logging
 logging.basicConfig(

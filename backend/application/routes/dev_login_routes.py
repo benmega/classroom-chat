@@ -11,6 +11,7 @@ WARNING: This route must NEVER be enabled in production.
 
 import os
 
+from application.models.user import User
 from flask import (
     Blueprint,
     current_app,
@@ -19,8 +20,6 @@ from flask import (
     request,
     session,
 )
-
-from application.models.user import User
 
 dev_login = Blueprint("dev_login", __name__)
 

@@ -10,12 +10,11 @@ from datetime import date
 from io import BytesIO
 from unittest.mock import patch
 
-from PIL import Image
-
 from application import db
 from application.models.project import Project
 from application.models.skill import Skill
 from application.models.user import User
+from PIL import Image
 
 
 def test_get_users(client, init_db, sample_user):

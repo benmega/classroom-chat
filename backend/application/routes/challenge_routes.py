@@ -9,15 +9,14 @@ import re
 from datetime import datetime
 from urllib.parse import parse_qs
 
-from flask import Blueprint, flash, jsonify, redirect, request, session, url_for
-from flask_cors import cross_origin
-
 from application import Configuration
 from application.extensions import csrf, db
 from application.models.challenge import Challenge
 from application.models.challenge_log import ChallengeLog
 from application.models.course_instance import CourseInstance
 from application.utilities.db_helpers import get_user
+from flask import Blueprint, flash, jsonify, redirect, request, session, url_for
+from flask_cors import cross_origin
 
 challenge = Blueprint("challenge", __name__, url_prefix="/challenge")
 
@@ -424,7 +423,8 @@ def _update_user_ducks(user, challenge_slug, duck_multiplier=1):
         raise
     except Exception as e:
         db.session.rollback()
-        raise RuntimeError(f"Error updating user ducks: {e}")
+        raise RuntimeError(f"Error updating user ducks: {e}") from e
+
 
 
 # ============================================================================
@@ -443,9 +443,8 @@ def _enroll_user_in_classroom(user, classroom_id: str):
     """
     from datetime import datetime
 
-    from sqlalchemy import insert, select
-
     from application.models.classroom import Classroom, user_classrooms
+    from sqlalchemy import insert, select
 
     try:
         # Check for existing enrollment

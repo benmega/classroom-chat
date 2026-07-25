@@ -1,11 +1,10 @@
 import re
 
-from flask import current_app, jsonify, request
-
 from application.decorators.admin_required import admin_only
 from application.decorators.api_response import api_response
 from application.extensions import db
 from application.models.user import User
+from flask import current_app, jsonify, request
 
 from ..admin_routes import admin_bp
 
@@ -51,9 +50,8 @@ def student_activity():
 @admin_only
 @api_response
 def pending_users():
-    from sqlalchemy import func
-
     from application.models.challenge_log import ChallengeLog
+    from sqlalchemy import func
 
     pending = User.query.filter_by(is_approved=False, is_admin=False).all()
     user_ids = [u.id for u in pending]
@@ -120,9 +118,8 @@ def get_users():
     per_page = request.args.get("per_page", 50, type=int)
     search = request.args.get("search", "", type=str)
 
-    from sqlalchemy import func
-
     from application.models.challenge_log import ChallengeLog
+    from sqlalchemy import func
 
     query = User.query
     if search:

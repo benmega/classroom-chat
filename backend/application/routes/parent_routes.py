@@ -7,13 +7,12 @@ Summary: API endpoints for parent accounts to view linked children, student repo
 
 from datetime import datetime, timedelta
 
-from flask import Blueprint, request, session
-
 from application.decorators.api_response import api_response
 from application.decorators.login_required import require_login
 from application.extensions import db
 from application.models.connection_attempt import ConnectionAttempt
 from application.models.user import User
+from flask import Blueprint, request, session
 
 parent = Blueprint("parent", __name__)
 

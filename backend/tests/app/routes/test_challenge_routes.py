@@ -8,7 +8,6 @@ import re
 from unittest.mock import patch
 
 import pytest
-
 from application import db
 from application.models.challenge import Challenge
 from application.models.challenge_log import ChallengeLog

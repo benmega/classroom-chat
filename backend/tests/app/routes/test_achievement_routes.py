@@ -8,7 +8,6 @@ from io import BytesIO
 from unittest.mock import patch
 
 import pytest
-
 from application.extensions import db
 from application.models.achievements import Achievement, UserAchievement
 from application.models.user_certificate import UserCertificate

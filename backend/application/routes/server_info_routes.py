@@ -6,9 +6,8 @@ Summary: Flask routes for server info routes functionality.
 
 import socket
 
-from flask import Blueprint, jsonify
-
 from application.extensions import limiter
+from flask import Blueprint, jsonify
 
 server_info = Blueprint("server_info", __name__, url_prefix="/server")
 

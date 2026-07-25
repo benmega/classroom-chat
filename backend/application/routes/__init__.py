@@ -6,10 +6,9 @@ Summary: Blueprint registration for application route modules.
 
 import os
 
+from application.routes.notes_routes import notes_bp
 from flask import Flask
 from flask_swagger_ui import get_swaggerui_blueprint
-
-from application.routes.notes_routes import notes_bp
 
 from .achievement_routes import achievements
 from .admin_routes import admin_bp

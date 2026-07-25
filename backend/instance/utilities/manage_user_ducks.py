@@ -1,12 +1,11 @@
 # manage_user_ducks.py
 import sys
 
-from sqlalchemy import func
-
 from application.extensions import db
 from application.models.challenge import Challenge
 from application.models.challenge_log import ChallengeLog
 from application.models.user import User
+from sqlalchemy import func
 
 
 def update_user_ducks():

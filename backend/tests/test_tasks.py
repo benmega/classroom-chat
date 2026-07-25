@@ -1,7 +1,6 @@
 from unittest.mock import patch
 
 import pytest
-
 from application.tasks import scheduled_cleanup, set_app_instance
 
 
@@ -53,4 +52,7 @@ def test_scheduled_cleanup_exception(app):
     ):
         with pytest.raises(ValueError, match="Test Error"):
             scheduled_cleanup()
-        mock_logger.error.assert_called_with("Error in scheduled cleanup: Test Error")
+        mock_logger.exception.assert_called_with(
+            "Error in scheduled cleanup: Test Error"
+        )
+

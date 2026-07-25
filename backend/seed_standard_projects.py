@@ -25,7 +25,8 @@ seed_data = [
     ),
     (
         "Simulation",
-        "In this capstone project students will create a simulation of their choosing. The project emphasizes applying the Engineering Design Process: defining the problem designing a solution building the simulation revising based on user feedback and reflecting on the process. Students are encouraged to use tools and resources including randomization or other functions to create dynamic simulations. Peer collaboration is key as students will test each other’s simulations and provide constructive feedback to improve the final project.",
+        "In this capstone project students will create a simulation of their choosing. The project emphasizes applying the Engineering Design Process: defining the problem designing a solution building the simulation revising based on user feedback and reflecting on the process. Students are encouraged to use tools and resources including randomization or other functions to create dynamic simulations. Peer collaboration is key as students will test each other's simulations and provide constructive feedback to improve the final project.",
+
         "Computer Science 3",
     ),
     (

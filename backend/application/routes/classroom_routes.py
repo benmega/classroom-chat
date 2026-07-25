@@ -5,14 +5,13 @@ Summary: Student-facing blueprint for classroom join-code enrollment
          and enrolled-classroom listing.
 """
 
-from flask import Blueprint, request, session
-
 from application.decorators.api_response import api_response
 from application.decorators.login_required import require_login
 from application.extensions import db
 from application.models.classroom import Classroom
 from application.models.classroom_join_attempt import ClassroomJoinAttempt
 from application.models.user import User
+from flask import Blueprint, request, session
 
 classroom_bp = Blueprint("classroom_bp", __name__)
 

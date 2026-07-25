@@ -3,14 +3,13 @@ import os
 from datetime import datetime, timedelta, timezone
 
 import qrcode
+from application import create_app
+from application.models.user import User
 from PIL import Image
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.units import inch
 from reportlab.lib.utils import ImageReader
 from reportlab.pdfgen import canvas
-
-from application import create_app
-from application.models.user import User
 
 # ================= CONFIGURATION =================
 
@@ -42,7 +41,7 @@ def get_image_from_path(path):
     try:
         img = Image.open(path)
         return img.convert("RGBA")
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         print(f"Error loading image: {e}")
         return None
 

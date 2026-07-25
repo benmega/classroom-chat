@@ -6,10 +6,9 @@ Summary: Flask routes for external service callbacks (YouTube Uploader & Transcr
 
 import os
 
-from flask import Blueprint, jsonify, request
-
 from application.extensions import csrf, db
 from application.models.project import Project
+from flask import Blueprint, jsonify, request
 
 webhooks_api = Blueprint("webhooks_api", __name__, url_prefix="/api/webhooks")
 

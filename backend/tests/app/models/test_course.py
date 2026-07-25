@@ -7,7 +7,6 @@ Summary: Unit tests for course model.
 from datetime import datetime
 
 import pytest
-
 from application import db
 from application.models.course import Course
 

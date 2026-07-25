@@ -5,7 +5,6 @@ Summary: Unit tests for db helpers.
 """
 
 import pytest
-
 from application.utilities.db_helpers import (
     generate_unique_username,
     get_user,

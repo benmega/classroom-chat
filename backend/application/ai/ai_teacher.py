@@ -7,13 +7,12 @@ import logging
 from typing import Dict, List
 
 import requests
-from sqlalchemy.exc import SQLAlchemyError
-
 from application import db, limiter
 from application.models.ai_settings import get_ai_settings
 from application.models.message import Message
 from application.models.user import User
 from application.utilities.db_helpers import save_message_to_db
+from sqlalchemy.exc import SQLAlchemyError
 
 # Configure logging
 logger = logging.getLogger(__name__)

@@ -7,10 +7,9 @@ Summary: Database helper functions for users, messages, and conversations.
 import logging
 import uuid
 
-from flask import abort
-
 from application.models.message import Message
 from application.models.user import User, db
+from flask import abort
 
 logger = logging.getLogger(__name__)
 
