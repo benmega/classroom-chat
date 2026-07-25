@@ -165,7 +165,7 @@ const ParentDashboard = () => {
     // ── Loading skeleton ───────────────────────────────────────────────────────
     if (isLoading) {
         return (
-            <div className="parent-dashboard animate-page-entry p-2rem">
+            <div className="parent-dashboard parent-loading animate-page-entry p-2rem">
                 <main className="parent-body">
                     <div className="parent-grid-layout">
                         <div className="glass-panel p-2rem h-400px">

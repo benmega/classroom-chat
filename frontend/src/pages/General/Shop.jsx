@@ -383,7 +383,15 @@ const Shop = () => {
                                         </div>
                                     ) : item.name === "Auto Challenge Claimer" ? (
                                         <div style={{ width: '100%', textAlign: 'center' }}>
-                                            <span dangerouslySetInnerHTML={{ __html: `<a href="${bookmarkletCode}" class="shop-btn-purchase" style="display: inline-block; text-decoration: none; width: 100%; box-sizing: border-box; cursor: grab;" title="Drag this button to your bookmarks bar!" onclick="alert('Drag me to your bookmarks bar! Don\\'t click me here!'); return false;">Drag to Bookmarks</a>` }} />
+                                            <a
+                                                ref={(el) => { if (el) el.href = bookmarkletCode; }}
+                                                className="shop-btn-purchase"
+                                                style={{ display: 'inline-block', textDecoration: 'none', width: '100%', boxSizing: 'border-box', cursor: 'grab' }}
+                                                title="Drag this button to your bookmarks bar!"
+                                                onClick={(e) => { e.preventDefault(); alert("Drag me to your bookmarks bar! Don't click me here!"); }}
+                                            >
+                                                Drag to Bookmarks
+                                            </a>
                                             <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '4px', display: 'block' }}>Drag to bookmarks bar</span>
                                         </div>
                                     ) : item.name === "Permanent Double Duck" ? (

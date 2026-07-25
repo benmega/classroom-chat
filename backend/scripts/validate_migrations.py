@@ -53,14 +53,20 @@ def main():
     parser.add_argument('--migrations-dir', default='migrations/versions')
     args = parser.parse_args()
 
-    if not os.path.exists(args.migrations_dir):
-        print(f"Error: {args.migrations_dir} does not exist.")
-        sys.exit(1)
+    migrations_dir = args.migrations_dir
+    if not os.path.exists(migrations_dir):
+        if os.path.exists('migrations/versions'):
+            migrations_dir = 'migrations/versions'
+        elif os.path.exists('backend/migrations/versions'):
+            migrations_dir = 'backend/migrations/versions'
+        else:
+            print(f"Error: {args.migrations_dir} does not exist.")
+            sys.exit(1)
 
     ops_by_rev = {}
-    for filename in os.listdir(args.migrations_dir):
+    for filename in os.listdir(migrations_dir):
         if filename.endswith('.py'):
-            filepath = os.path.join(args.migrations_dir, filename)
+            filepath = os.path.join(migrations_dir, filename)
             rev, _ = extract_revisions(filepath)
             if rev:
                 ops_by_rev[rev] = extract_operations(filepath)
