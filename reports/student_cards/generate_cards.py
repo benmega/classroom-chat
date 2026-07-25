@@ -100,7 +100,7 @@ def draw_card(c, x, y, user, logo_img):
 
 def create_pdf(users):
     c = canvas.Canvas(OUTPUT_FILENAME, pagesize=letter)
-    width, height = letter
+    _width, height = letter
 
     # Debug print to confirm path
     print(f"Looking for logo at: {LOGO_PATH}")

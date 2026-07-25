@@ -1,5 +1,6 @@
-import os
 import math
+import os
+
 from PIL import Image, ImageDraw, ImageFont
 
 # Define target folder
@@ -325,7 +326,7 @@ def draw_icon(draw, cx, cy, icon_type):
 # Load font (fall back if not found)
 try:
     font = ImageFont.truetype("C:\\Windows\\Fonts\\segoeuib.ttf", 36)
-except Exception:
+except Exception:  # noqa: BLE001
     font = ImageFont.load_default()
 
 for proj in PROJECTS:

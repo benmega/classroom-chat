@@ -17,13 +17,13 @@ from unittest.mock import patch
 from wsgiref.simple_server import make_server
 
 import pytest
-from PIL import Image
 from flask_login import LoginManager
+from PIL import Image
 
 from application import create_app
 from application.config import TestingConfig
 from application.extensions import db
-from application.models.achievements import UserAchievement, Achievement
+from application.models.achievements import Achievement, UserAchievement
 from application.models.ai_settings import AISettings
 from application.models.banned_words import BannedWords
 from application.models.challenge import Challenge
@@ -207,9 +207,9 @@ def sample_user_with_ducks(test_app):
             db.session.add(user)
             db.session.commit()
             yield user
-        except Exception as e:
+        except Exception:
             db.session.rollback()
-            raise e
+            raise
         finally:
             try:
                 user_to_delete = (
