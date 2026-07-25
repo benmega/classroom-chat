@@ -165,7 +165,7 @@ const ParentDashboard = () => {
     // ── Loading skeleton ───────────────────────────────────────────────────────
     if (isLoading) {
         return (
-            <div className="parent-dashboard animate-page-entry p-2rem">
+            <div className="parent-dashboard parent-loading animate-page-entry p-2rem">
                 <main className="parent-body">
                     <div className="parent-grid-layout">
                         <div className="glass-panel p-2rem h-400px">
@@ -187,7 +187,7 @@ const ParentDashboard = () => {
     }
 
     return (
-        <div className="parent-dashboard animate-page-entry" onClick={() => setOpenMenu(null)}>
+        <div role="button" tabIndex={0} className="parent-dashboard animate-page-entry" onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={() => setOpenMenu(null)}>
             <main className="parent-body">
                 <DesktopNotice />
 
@@ -233,10 +233,10 @@ const ParentDashboard = () => {
                                         }
 
                                         return (
-                                            <div 
+                                            <div role="button" tabIndex={0} 
                                                 key={idx} 
                                                 className="timeline-item"
-                                                onClick={() => navigate(`/parent/report/${event.childId}`)}
+                                                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={() => navigate(`/parent/report/${event.childId}`)}
                                                 style={{
                                                     display: 'flex', 
                                                     gap: '1.25rem', 
@@ -312,9 +312,9 @@ const ParentDashboard = () => {
                                         const displayName = child.nickname || child.username;
 
                                         return (
-                                            <div 
+                                            <div role="button" tabIndex={0} 
                                                 key={child.id}
-                                                onClick={() => navigate(`/parent/report/${child.id}`)}
+                                                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={() => navigate(`/parent/report/${child.id}`)}
                                                 style={{ 
                                                     padding: '1.5rem', 
                                                     background: hasAnyActivityEver ? 'rgba(245,158,11,0.03)' : 'rgba(15,118,110,0.03)', 
@@ -383,9 +383,9 @@ const ParentDashboard = () => {
                                     const displayName = child.nickname || child.username;
 
                                     return (
-                                        <div 
+                                        <div role="button" tabIndex={0} 
                                             key={child.id} 
-                                            onClick={() => navigate(`/parent/report/${child.id}`)}
+                                            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={() => navigate(`/parent/report/${child.id}`)}
                                             style={{ 
                                                 display: 'flex', 
                                                 alignItems: 'center', 
@@ -419,7 +419,7 @@ const ParentDashboard = () => {
                                             </div>
 
                                             {/* Options Menu Only (No Duck Balance) */}
-                                            <div className="d-flex align-center" onClick={(e) => e.stopPropagation()}>
+                                            <div role="button" tabIndex={0} className="d-flex align-center" onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={(e) => e.stopPropagation()}>
                                                 <div className="child-card-menu pos-rel top-auto right-auto">
                                                     <button
                                                         type="button"
@@ -459,7 +459,7 @@ const ParentDashboard = () => {
 
             {/* Link Another Child Modal */}
             {isLinkModalOpen && (
-                <div 
+                <div role="button" tabIndex={0} 
                     style={{
                         position: 'fixed',
                         inset: 0,
@@ -471,9 +471,9 @@ const ParentDashboard = () => {
                         zIndex: 1000,
                         animation: 'fadeIn 0.25s ease'
                     }}
-                    onClick={() => setIsLinkModalOpen(false)}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={() => setIsLinkModalOpen(false)}
                 >
-                    <div 
+                    <div role="button" tabIndex={0} 
                         className="glass-panel"
                         style={{
                             width: '90%',
@@ -484,7 +484,7 @@ const ParentDashboard = () => {
                             boxShadow: 'var(--shadow-xl)',
                             position: 'relative'
                         }}
-                        onClick={(e) => e.stopPropagation()}
+                        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={(e) => e.stopPropagation()}
                     >
                         <h3 style={{ fontSize: '1.2rem', margin: '0 0 0.5rem 0', fontWeight: '700' }}>Link Another Child</h3>
                         <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '0 0 1.25rem 0', lineHeight: 1.4 }}>
@@ -499,7 +499,7 @@ const ParentDashboard = () => {
                                 maxLength={10}
                                 className="connect-input"
                                 style={{ padding: '0.75rem', fontSize: '1.1rem', textAlign: 'center', letterSpacing: '2px', textTransform: 'uppercase' }}
-                                autoFocus
+                                
                             />
                             <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem' }}>
                                 <button

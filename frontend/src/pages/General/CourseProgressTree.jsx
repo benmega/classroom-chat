@@ -406,7 +406,7 @@ const CourseProgressTree = () => {
                     const isComplete = node.levels_total && node.levels_completed >= node.levels_total;
 
                     return (
-                        <div
+                        <div role="button" tabIndex={0}
                             key={node.id}
                             ref={el => nodeRefs.current[node.id] = el}
                             className={`skill-node-cell ${node.has_started ? 'active' : 'locked'} ${node.is_extra ? 'extra-node' : ''} ${isRecommended ? 'recommended' : ''} ${isDimmed ? 'dimmed' : ''} ${isComplete ? 'completed' : ''} ${node.track === activeTrack ? 'active-track-node' : 'de-emphasized-track-node'}`}
@@ -416,6 +416,7 @@ const CourseProgressTree = () => {
                             }}
                             onMouseEnter={() => setHoveredNodeId(node.id)}
                             onMouseLeave={() => setHoveredNodeId(null)}
+                            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }}
                             onClick={() => navigate(`${location.pathname}/breakdown`, { 
                                 state: { 
                                     selectedNode: node,

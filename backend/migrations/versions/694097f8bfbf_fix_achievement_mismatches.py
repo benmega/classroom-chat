@@ -5,22 +5,28 @@ Revises: 114833c64c05
 Create Date: 2026-07-04 22:08:48.296305
 
 """
-from alembic import op
-import sqlalchemy as sa
 
+import sqlalchemy as sa
+from alembic import op
 
 # revision identifiers, used by Alembic.
-revision = '694097f8bfbf'
-down_revision = '114833c64c05'
+revision = "694097f8bfbf"
+down_revision = "114833c64c05"
 branch_labels = None
 depends_on = None
 
 
 def upgrade():
     # 1. Update requirement values
-    op.execute("UPDATE achievement SET requirement_value = '480' WHERE slug = 'you-there'")
-    op.execute("UPDATE achievement SET requirement_value = '10' WHERE slug = '10-messages'")
-    op.execute("UPDATE achievement SET requirement_value = '50' WHERE slug = '50-messages'")
+    op.execute(
+        "UPDATE achievement SET requirement_value = '480' WHERE slug = 'you-there'"
+    )
+    op.execute(
+        "UPDATE achievement SET requirement_value = '10' WHERE slug = '10-messages'"
+    )
+    op.execute(
+        "UPDATE achievement SET requirement_value = '50' WHERE slug = '50-messages'"
+    )
 
     # 2. Cleanup user achievements for users who no longer meet criteria
     conn = op.get_bind()
@@ -28,8 +34,7 @@ def upgrade():
     # Dynamic ID lookups
     def get_ach_id(slug):
         res = conn.execute(
-            sa.text("SELECT id FROM achievement WHERE slug = :slug"),
-            {"slug": slug}
+            sa.text("SELECT id FROM achievement WHERE slug = :slug"), {"slug": slug}
         ).fetchone()
         return res[0] if res else None
 
@@ -56,15 +61,19 @@ def upgrade():
     # Cleanup 'you-there'
     if yt_id is not None:
         users_with_badge = conn.execute(
-            sa.text("SELECT user_id FROM user_achievement WHERE achievement_id = :ach_id"),
-            {"ach_id": yt_id}
+            sa.text(
+                "SELECT user_id FROM user_achievement WHERE achievement_id = :ach_id"
+            ),
+            {"ach_id": yt_id},
         ).fetchall()
 
         for row in users_with_badge:
             user_id = row[0]
             logs = conn.execute(
-                sa.text("SELECT start_time, end_time, last_seen FROM session_logs WHERE user_id = :user_id"),
-                {"user_id": user_id}
+                sa.text(
+                    "SELECT start_time, end_time, last_seen FROM session_logs WHERE user_id = :user_id"
+                ),
+                {"user_id": user_id},
             ).fetchall()
 
             max_mins = 0.0
@@ -78,52 +87,68 @@ def upgrade():
 
             if max_mins < 480.0:
                 conn.execute(
-                    sa.text("DELETE FROM user_achievement WHERE user_id = :user_id AND achievement_id = :ach_id"),
-                    {"user_id": user_id, "ach_id": yt_id}
+                    sa.text(
+                        "DELETE FROM user_achievement WHERE user_id = :user_id AND achievement_id = :ach_id"
+                    ),
+                    {"user_id": user_id, "ach_id": yt_id},
                 )
 
     # Cleanup '10-messages' (Chatterbox)
     if cb_id is not None:
         users_with_chatterbox = conn.execute(
-            sa.text("SELECT user_id FROM user_achievement WHERE achievement_id = :ach_id"),
-            {"ach_id": cb_id}
+            sa.text(
+                "SELECT user_id FROM user_achievement WHERE achievement_id = :ach_id"
+            ),
+            {"ach_id": cb_id},
         ).fetchall()
 
         for row in users_with_chatterbox:
             user_id = row[0]
             msg_count = conn.execute(
                 sa.text("SELECT COUNT(*) FROM messages WHERE user_id = :user_id"),
-                {"user_id": user_id}
+                {"user_id": user_id},
             ).scalar()
 
             if msg_count < 10:
                 conn.execute(
-                    sa.text("DELETE FROM user_achievement WHERE user_id = :user_id AND achievement_id = :ach_id"),
-                    {"user_id": user_id, "ach_id": cb_id}
+                    sa.text(
+                        "DELETE FROM user_achievement WHERE user_id = :user_id AND achievement_id = :ach_id"
+                    ),
+                    {"user_id": user_id, "ach_id": cb_id},
                 )
 
     # Cleanup '50-messages' (Talkative Duck)
     if td_id is not None:
         users_with_talkative = conn.execute(
-            sa.text("SELECT user_id FROM user_achievement WHERE achievement_id = :ach_id"),
-            {"ach_id": td_id}
+            sa.text(
+                "SELECT user_id FROM user_achievement WHERE achievement_id = :ach_id"
+            ),
+            {"ach_id": td_id},
         ).fetchall()
 
         for row in users_with_talkative:
             user_id = row[0]
             msg_count = conn.execute(
                 sa.text("SELECT COUNT(*) FROM messages WHERE user_id = :user_id"),
-                {"user_id": user_id}
+                {"user_id": user_id},
             ).scalar()
 
             if msg_count < 50:
                 conn.execute(
-                    sa.text("DELETE FROM user_achievement WHERE user_id = :user_id AND achievement_id = :ach_id"),
-                    {"user_id": user_id, "ach_id": td_id}
+                    sa.text(
+                        "DELETE FROM user_achievement WHERE user_id = :user_id AND achievement_id = :ach_id"
+                    ),
+                    {"user_id": user_id, "ach_id": td_id},
                 )
 
 
 def downgrade():
-    op.execute("UPDATE achievement SET requirement_value = '180' WHERE slug = 'you-there'")
-    op.execute("UPDATE achievement SET requirement_value = '5' WHERE slug = '10-messages'")
-    op.execute("UPDATE achievement SET requirement_value = '10' WHERE slug = '50-messages'")
+    op.execute(
+        "UPDATE achievement SET requirement_value = '180' WHERE slug = 'you-there'"
+    )
+    op.execute(
+        "UPDATE achievement SET requirement_value = '5' WHERE slug = '10-messages'"
+    )
+    op.execute(
+        "UPDATE achievement SET requirement_value = '10' WHERE slug = '50-messages'"
+    )

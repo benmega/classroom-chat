@@ -165,7 +165,7 @@ describe('Classes Admin Page', () => {
             expect(screen.getByText('Math 101')).toBeInTheDocument();
         });
 
-        const printBtn = screen.getByTitle('Print Connection Cards');
+        const printBtn = screen.getByTitle(/Print Connection Cards/i);
         fireEvent.click(printBtn);
 
         await waitFor(() => {
@@ -191,7 +191,7 @@ describe('Classes Admin Page', () => {
             expect(screen.getByText('Math 101')).toBeInTheDocument();
         });
 
-        const printBtn = screen.getByTitle('Print Connection Cards');
+        const printBtn = screen.getByTitle(/Print Connection Cards/i);
         fireEvent.click(printBtn);
 
         await waitFor(() => {

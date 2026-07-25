@@ -1,17 +1,15 @@
 import io
 import os
-from datetime import datetime, timezone
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone
 
 import qrcode
+from application import create_app
+from application.models.user import User
 from PIL import Image
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.units import inch
 from reportlab.lib.utils import ImageReader
 from reportlab.pdfgen import canvas
-
-from application import create_app
-from application.models.user import User
 
 # ================= CONFIGURATION =================
 
@@ -33,6 +31,7 @@ MARGIN_Y = 0.5 * inch
 
 
 # =================================================
+
 
 def get_image_from_path(path):
     if not os.path.exists(path):
@@ -72,11 +71,12 @@ def draw_card(c, x, y, user, logo_img):
     if logo_img:
         logo_reader = ImageReader(logo_img)
         # Moved slightly up and left to frame the card
-        c.drawImage(logo_reader, x + 15, y + CARD_HEIGHT - 40, width=30, height=30
-                    , mask='auto')
+        c.drawImage(
+            logo_reader, x + 15, y + CARD_HEIGHT - 40, width=30, height=30, mask="auto"
+        )
 
     # 3. Name (Center Left - Most Prominent)
-    c.setFont("Helvetica-Bold", 28) # Increased size
+    c.setFont("Helvetica-Bold", 28)  # Increased size
     c.setFillColorRGB(0, 0, 0)
     display_name = user.nickname if user.nickname else user.username
     # Vertically centered relative to the white space on the left
@@ -86,21 +86,29 @@ def draw_card(c, x, y, user, logo_img):
     c.setFont("Helvetica", 8)
     c.setFillColorRGB(0, 0, 1)
     full_link = f"blossom.benmega.com/user/profile/{user.slug}"
-    c.drawString(x + 15, y + 35, full_link) # Aligned X with Name
+    c.drawString(x + 15, y + 35, full_link)  # Aligned X with Name
 
     c.setFont("Helvetica-Oblique", 9)
     c.setFillColorRGB(0.5, 0.5, 0.5)
-    c.drawString(x + 15, y + 15, "Scan to view my achievements, projects, and class notes!") # Aligned X with Name
+    c.drawString(
+        x + 15, y + 15, "Scan to view my achievements, projects, and class notes!"
+    )  # Aligned X with Name
 
     # 5. QR Code (UNTOUCHED)
     qr_img = generate_qr(user.slug)
     qr_size = 1.0 * inch
-    c.drawImage(qr_img, x + CARD_WIDTH - qr_size - 10, y + CARD_HEIGHT - qr_size -10 ,  width=qr_size, height=qr_size)
+    c.drawImage(
+        qr_img,
+        x + CARD_WIDTH - qr_size - 10,
+        y + CARD_HEIGHT - qr_size - 10,
+        width=qr_size,
+        height=qr_size,
+    )
 
 
 def create_pdf(users):
     c = canvas.Canvas(OUTPUT_FILENAME, pagesize=letter)
-    width, height = letter
+    _width, height = letter
 
     # Debug print to confirm path
     print(f"Looking for logo at: {LOGO_PATH}")
@@ -144,8 +152,6 @@ def create_pdf(users):
 app = create_app()
 
 
-
-
 if __name__ == "__main__":
     with app.app_context():
         # Calculate 90 days ago in UTC
@@ -154,7 +160,7 @@ if __name__ == "__main__":
         all_students = User.query.filter(
             not User.is_admin,
             ~User.nickname.startswith("blossomstudent"),
-            User.last_daily_duck > ninety_days_ago
+            User.last_daily_duck > ninety_days_ago,
         ).all()
 
         create_pdf(all_students)

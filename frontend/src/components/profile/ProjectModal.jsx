@@ -34,8 +34,8 @@ const ProjectModal = ({ project, onClose }) => {
     if (!project) return null;
 
     return createPortal(
-        <div className="modal-overlay" onClick={onClose}>
-            <div className="modal-content project-modal" onClick={e => e.stopPropagation()}>
+        <div role="button" tabIndex={0} className="modal-overlay" onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={onClose}>
+            <div role="button" tabIndex={0} className="modal-content project-modal" onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={e => e.stopPropagation()}>
                 <button className="close-modal" onClick={onClose}><X size={24} /></button>
                 <div className="modal-header">
                     <h2>{project.name}</h2>
@@ -63,6 +63,7 @@ const ProjectModal = ({ project, onClose }) => {
                                         className="direct-video-player"
                                         poster={project.image_url ? formatStaticUrl(project.image_url) : null}
                                     >
+                                        <track kind="captions" />
                                         Your browser does not support the video tag.
                                     </video>
                                 )

@@ -17,16 +17,13 @@ def index(path):
     In production, this allows React Router to take over for non-API paths.
     """
     if (
-        path.startswith("api/")
-        or request.path.startswith("/api/")
-        or path.startswith("achievements/")
-        or request.path.startswith("/achievements/")
+        path.startswith(("api/", "achievements/")) or request.path.startswith("/api/") or request.path.startswith("/achievements/")
     ):
         from flask import jsonify
 
         return jsonify({"error": "Route not found"}), 404
 
-    from flask import render_template, g
+    from flask import g, render_template
 
     username = g.user.username if hasattr(g, "user") and g.user else None
     return render_template("index.html", username=username)

@@ -1,9 +1,10 @@
 import os
 from datetime import datetime
-from flask import request, jsonify, send_file, current_app
-from application.decorators.api_response import api_response
+
 from application.decorators.admin_required import admin_only
+from application.decorators.api_response import api_response
 from application.utilities.helper_functions import format_file_size
+from flask import current_app, jsonify, request, send_file
 
 from ..admin_routes import admin_bp
 
@@ -114,7 +115,7 @@ def delete_document():
             "message": f"'{filename}' has been deleted successfully",
         }
     except Exception as e:
-        return {"success": False, "message": f"Failed to delete file: {str(e)}"}, 500
+        return {"success": False, "message": f"Failed to delete file: {e!s}"}, 500
 
 
 @admin_bp.route("/documents/stats", methods=["GET"])

@@ -14,7 +14,8 @@ import {
     ChevronUp,
     Users as UsersIcon,
     MessageSquare,
-    MessageSquareOff
+    MessageSquareOff,
+    MoreVertical
 } from 'lucide-react';
 import SmartImage from '../../components/common/SmartImage';
 import { 
@@ -42,6 +43,82 @@ const TABS = [
     { label: 'Students', value: 'student' },
     { label: 'Parents', value: 'parent' },
 ];
+
+const UserRowActions = ({ u, setModalUser, setActiveModal, handleToggleChat, handleRemoveUser, fetchParentChildren, fetchConnectionCard }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const menuRef = React.useRef(null);
+
+    React.useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (menuRef.current && !menuRef.current.contains(event.target)) {
+                setIsOpen(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    return (
+        <div className="action-group">
+            
+            <div className="kebab-menu-container" ref={menuRef}>
+                <button className={`action-btn kebab-trigger ${isOpen ? 'active' : ''}`} onClick={(e) => { e.stopPropagation(); setIsOpen(!isOpen); }}>
+                    <MoreVertical size={16} />
+                </button>
+                {isOpen && (
+                    <div className="kebab-dropdown">
+                        {u.role === 'student' && (
+                            <>
+                                <button className="kebab-item" onClick={(e) => { e.stopPropagation(); setModalUser(u); setActiveModal('adjust'); setIsOpen(false); }}>
+                                    <ArrowUpCircle size={14} style={{marginRight:'8px'}} /> Adjust Ducks
+                                </button>
+                                <button className="kebab-item" onClick={(e) => { e.stopPropagation(); setModalUser(u); setActiveModal('adjust_packets'); setIsOpen(false); }}>
+                                    <Package size={14} style={{marginRight:'8px'}} /> Adjust Packets
+                                </button>
+                                <button className="kebab-item" onClick={(e) => { e.stopPropagation(); setModalUser(u); setActiveModal('drawer'); setIsOpen(false); }}>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{marginRight:'8px'}}><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"></path><path d="m3.3 7 8.7 5 8.7-5"></path><path d="M12 22V12"></path></svg>
+                                    Set Drawer
+                                </button>
+                            </>
+                        )}
+                        <button className="kebab-item" onClick={(e) => { e.stopPropagation(); setModalUser(u); setActiveModal('reset'); setIsOpen(false); }}>
+                            <Key size={14} style={{marginRight:'8px'}} /> Reset Password
+                        </button>
+                        {u.role === 'parent' && (
+                            <button className="kebab-item" onClick={(e) => { e.stopPropagation(); setModalUser(u); fetchParentChildren(u.id); setActiveModal('manage_children'); setIsOpen(false); }}>
+                                <UsersIcon size={14} style={{marginRight:'8px'}} /> Manage Children
+                            </button>
+                        )}
+                        {!u.is_admin && u.role === 'student' && (
+                            <button className="kebab-item" onClick={async (e) => { 
+                                e.stopPropagation();
+                                const success = await fetchConnectionCard(u.id);
+                                if (success) {
+                                    setModalUser(u); 
+                                    setActiveModal('connection_card'); 
+                                }
+                                setIsOpen(false);
+                            }}>
+                                <Key size={14} style={{marginRight:'8px'}} /> Connection Card
+                            </button>
+                        )}
+                        {u.role === 'student' && (
+                            <button className="kebab-item" onClick={(e) => { e.stopPropagation(); handleToggleChat(u.id); setIsOpen(false); }} style={{ color: u.can_chat ? 'var(--primary-color)' : 'var(--error-color)' }}>
+                                {u.can_chat ? <MessageSquare size={14} style={{marginRight:'8px'}} /> : <MessageSquareOff size={14} style={{marginRight:'8px'}} />}
+                                {u.can_chat ? 'Mute Chat' : 'Unmute Chat'}
+                            </button>
+                        )}
+                        {!u.is_admin && (
+                            <button className="kebab-item danger" onClick={(e) => { e.stopPropagation(); handleRemoveUser(u.username); setIsOpen(false); }}>
+                                <Trash2 size={14} style={{marginRight:'8px'}} /> Remove User
+                            </button>
+                        )}
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+};
 
 const Users = () => {
     const navigate = useNavigate();
@@ -284,88 +361,15 @@ const Users = () => {
                                                 </div>
                                             </td>
                                             <td>
-                                                <div className="action-group">
-                                                    {u.role === 'student' && (
-                                                        <>
-                                                            <button 
-                                                                className="action-btn adjust" 
-                                                                onClick={() => { setModalUser(u); setActiveModal('adjust'); }}
-                                                                title="Adjust Ducks"
-                                                            >
-                                                                <ArrowUpCircle size={16} />
-                                                            </button>
-                                                            <button 
-                                                                className="action-btn adjust-packets" 
-                                                                onClick={() => { setModalUser(u); setActiveModal('adjust_packets'); }}
-                                                                title="Adjust Packets"
-                                                                style={{ color: 'var(--accent-color)' }}
-                                                            >
-                                                                <Package size={16} />
-                                                            </button>
-                                                            <button 
-                                                                className="action-btn action-btn-blue" 
-                                                                onClick={() => { setModalUser(u); setActiveModal('drawer'); }}
-                                                                title="Set Drawer"
-                                                            >
-                                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"></path><path d="m3.3 7 8.7 5 8.7-5"></path><path d="M12 22V12"></path></svg>
-                                                            </button>
-                                                        </>
-                                                    )}
-                                                    <button 
-                                                        className="action-btn pass"  
-                                                        onClick={() => { setModalUser(u); setActiveModal('reset'); }}
-                                                        title="Reset Password"
-                                                    >
-                                                        <Key size={16} />
-                                                    </button>
-                                                    {u.role === 'parent' && (
-                                                        <button 
-                                                            className="action-btn action-btn-indigo" 
-                                                            onClick={() => { 
-                                                                setModalUser(u); 
-                                                                fetchParentChildren(u.id);
-                                                                setActiveModal('manage_children'); 
-                                                            }}
-                                                            title="Manage Children"
-                                                        >
-                                                            <UsersIcon size={16} />
-                                                        </button>
-                                                    )}
-                                                    {!u.is_admin && u.role === 'student' && (
-                                                        <button 
-                                                            className="action-btn action-btn-green" 
-                                                            onClick={async () => { 
-                                                                const success = await fetchConnectionCard(u.id);
-                                                                if (success) {
-                                                                    setModalUser(u); 
-                                                                    setActiveModal('connection_card'); 
-                                                                }
-                                                            }}
-                                                            title="Get Connection Card"
-                                                        >
-                                                            <Key size={14} /> <span className="card-btn-text">Card</span>
-                                                        </button>
-                                                    )}
-                                                    {u.role === 'student' && (
-                                                        <button
-                                                            className={`action-btn ${u.can_chat ? 'message' : 'message-off'}`}
-                                                            onClick={() => handleToggleChat(u.id)}
-                                                            title={u.can_chat ? 'Mute Chat' : 'Unmute Chat'}
-                                                            style={{ color: u.can_chat ? 'var(--primary-color)' : 'var(--error-color)' }}
-                                                        >
-                                                            {u.can_chat ? <MessageSquare size={16} /> : <MessageSquareOff size={16} />}
-                                                        </button>
-                                                    )}
-                                                    {!u.is_admin && (
-                                                        <button 
-                                                            className="action-btn delete" 
-                                                            onClick={() => handleRemoveUser(u.username)}
-                                                            title="Permanently Remove"
-                                                        >
-                                                            <Trash2 size={16} />
-                                                        </button>
-                                                    )}
-                                                </div>
+                                                <UserRowActions 
+                                                    u={u} 
+                                                    setModalUser={setModalUser} 
+                                                    setActiveModal={setActiveModal} 
+                                                    handleToggleChat={handleToggleChat} 
+                                                    handleRemoveUser={handleRemoveUser} 
+                                                    fetchParentChildren={fetchParentChildren} 
+                                                    fetchConnectionCard={fetchConnectionCard} 
+                                                />
                                             </td>
                                         </tr>
                                     )}
@@ -402,69 +406,15 @@ const Users = () => {
                                                 </div>
                                             </td>
                                             <td>
-                                                <div className="action-group">
-                                                    <button 
-                                                        className="action-btn adjust" 
-                                                        onClick={() => { setModalUser(u); setActiveModal('adjust'); }}
-                                                        title="Adjust Ducks"
-                                                    >
-                                                        <ArrowUpCircle size={16} />
-                                                    </button>
-                                                    <button 
-                                                        className="action-btn adjust-packets" 
-                                                        onClick={() => { setModalUser(u); setActiveModal('adjust_packets'); }}
-                                                        title="Adjust Packets"
-                                                        style={{ color: 'var(--accent-color)' }}
-                                                    >
-                                                        <Package size={16} />
-                                                    </button>
-                                                    <button 
-                                                        className="action-btn action-btn-blue" 
-                                                        onClick={() => { setModalUser(u); setActiveModal('drawer'); }}
-                                                        title="Set Drawer"
-                                                    >
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"></path><path d="m3.3 7 8.7 5 8.7-5"></path><path d="M12 22V12"></path></svg>
-                                                    </button>
-                                                    <button 
-                                                        className="action-btn pass"  
-                                                        onClick={() => { setModalUser(u); setActiveModal('reset'); }}
-                                                        title="Reset Password"
-                                                    >
-                                                        <Key size={16} />
-                                                    </button>
-                                                    {!u.is_admin && (
-                                                        <button 
-                                                            className="action-btn action-btn-green" 
-                                                            onClick={async () => { 
-                                                                const success = await fetchConnectionCard(u.id);
-                                                                if (success) {
-                                                                    setModalUser(u); 
-                                                                    setActiveModal('connection_card'); 
-                                                                }
-                                                            }}
-                                                            title="Get Connection Card"
-                                                        >
-                                                            <Key size={14} /> <span className="card-btn-text">Card</span>
-                                                        </button>
-                                                    )}
-                                                    <button
-                                                        className={`action-btn ${u.can_chat ? 'message' : 'message-off'}`}
-                                                        onClick={() => handleToggleChat(u.id)}
-                                                        title={u.can_chat ? 'Mute Chat' : 'Unmute Chat'}
-                                                        style={{ color: u.can_chat ? 'var(--primary-color)' : 'var(--error-color)' }}
-                                                    >
-                                                        {u.can_chat ? <MessageSquare size={16} /> : <MessageSquareOff size={16} />}
-                                                    </button>
-                                                    {!u.is_admin && (
-                                                        <button 
-                                                            className="action-btn delete" 
-                                                            onClick={() => handleRemoveUser(u.username)}
-                                                            title="Permanently Remove"
-                                                        >
-                                                            <Trash2 size={16} />
-                                                        </button>
-                                                    )}
-                                                </div>
+                                                <UserRowActions 
+                                                    u={u} 
+                                                    setModalUser={setModalUser} 
+                                                    setActiveModal={setActiveModal} 
+                                                    handleToggleChat={handleToggleChat} 
+                                                    handleRemoveUser={handleRemoveUser} 
+                                                    fetchParentChildren={fetchParentChildren} 
+                                                    fetchConnectionCard={fetchConnectionCard} 
+                                                />
                                             </td>
                                         </tr>
                                     )}
@@ -511,33 +461,15 @@ const Users = () => {
                                                     </div>
                                                 </td>
                                                 <td>
-                                                    <div className="action-group">
-                                                        <button 
-                                                            className="action-btn pass"  
-                                                            onClick={() => { setModalUser(u); setActiveModal('reset'); }}
-                                                            title="Reset Password"
-                                                        >
-                                                            <Key size={16} />
-                                                        </button>
-                                                        <button 
-                                                            className="action-btn action-btn-indigo" 
-                                                            onClick={() => { 
-                                                                setModalUser(u); 
-                                                                fetchParentChildren(u.id);
-                                                                setActiveModal('manage_children'); 
-                                                            }}
-                                                            title="Manage Children"
-                                                        >
-                                                            <UsersIcon size={16} />
-                                                        </button>
-                                                        <button 
-                                                            className="action-btn delete" 
-                                                            onClick={() => handleRemoveUser(u.username)}
-                                                            title="Permanently Remove"
-                                                        >
-                                                            <Trash2 size={16} />
-                                                        </button>
-                                                    </div>
+                                                    <UserRowActions 
+                                                        u={u} 
+                                                        setModalUser={setModalUser} 
+                                                        setActiveModal={setActiveModal} 
+                                                        handleToggleChat={handleToggleChat} 
+                                                        handleRemoveUser={handleRemoveUser} 
+                                                        fetchParentChildren={fetchParentChildren} 
+                                                        fetchConnectionCard={fetchConnectionCard} 
+                                                    />
                                                 </td>
                                             </tr>
                                             {expandedParents.has(u.id) && (

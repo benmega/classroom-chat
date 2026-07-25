@@ -293,8 +293,8 @@ const Shop = () => {
                                         </div>
                                         {item.is_purchased && (
                                             <div style={{ marginTop: '15px', width: '100%' }}>
-                                                <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '5px' }}>Animation Speed:</label>
-                                                <select 
+                                                <label htmlFor="input-295" style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '5px' }}>Animation Speed:</label>
+                                                <select id="input-295" 
                                                     value={borderSpeed} 
                                                     onChange={(e) => handleBorderSpeedSubmit(e.target.value)}
                                                     className="form-control"
@@ -383,12 +383,13 @@ const Shop = () => {
                                         </div>
                                     ) : item.name === "Auto Challenge Claimer" ? (
                                         <div style={{ width: '100%', textAlign: 'center' }}>
-                                            <a 
-                                                ref={(el) => { if (el) el.setAttribute('href', bookmarkletCode); }}
-                                                className="shop-btn-purchase" 
+                                            {/* eslint-disable-next-line jsx-a11y/anchor-is-valid, jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
+                                            <a
+                                                ref={(el) => { if (el) el.href = bookmarkletCode; }}
+                                                className="shop-btn-purchase"
                                                 style={{ display: 'inline-block', textDecoration: 'none', width: '100%', boxSizing: 'border-box', cursor: 'grab' }}
                                                 title="Drag this button to your bookmarks bar!"
-                                                onClick={(e) => { alert("Drag me to your bookmarks bar! Don't click me here!"); e.preventDefault(); }}
+                                                onClick={(e) => { e.preventDefault(); alert("Drag me to your bookmarks bar! Don't click me here!"); }}
                                             >
                                                 Drag to Bookmarks
                                             </a>

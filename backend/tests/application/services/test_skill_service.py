@@ -1,8 +1,9 @@
 from application.extensions import db
-from application.models.user import User
-from application.models.project import Project
 from application.models.challenge_log import ChallengeLog
+from application.models.project import Project
+from application.models.user import User
 from application.services.skill_service import evaluate_user_skills
+
 
 def test_evaluate_user_skills_no_skills(client, init_db):
     user = User(username="test_user", is_approved=True)
@@ -13,13 +14,18 @@ def test_evaluate_user_skills_no_skills(client, init_db):
     skills = evaluate_user_skills(user)
     assert skills is None
 
+
 def test_evaluate_user_skills_with_projects_and_challenges(client, init_db):
     user = User(username="test_user", is_approved=True)
     user.set_password("pass123")
     db.session.add(user)
     db.session.commit()
 
-    p1 = Project(name="CS1 Capstone Project", user_id=user.id, github_link="https://github.com/test")
+    p1 = Project(
+        name="CS1 Capstone Project",
+        user_id=user.id,
+        github_link="https://github.com/test",
+    )
     p2 = Project(name="Dangerous Skies Project", user_id=user.id)
     db.session.add_all([p1, p2])
     db.session.commit()
@@ -40,7 +46,9 @@ def test_evaluate_user_skills_with_projects_and_challenges(client, init_db):
 
     # Try upgrading Python to Level 2 (Silver) by adding 40 more challenges (total 52)
     for i in range(40):
-        cl = ChallengeLog(user_id=user.id, domain="python", challenge_slug=f"py-more-{i}")
+        cl = ChallengeLog(
+            user_id=user.id, domain="python", challenge_slug=f"py-more-{i}"
+        )
         db.session.add(cl)
     db.session.commit()
 

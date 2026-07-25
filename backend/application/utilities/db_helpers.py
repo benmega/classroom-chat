@@ -4,12 +4,14 @@ Type: py
 Summary: Database helper functions for users, messages, and conversations.
 """
 
+import logging
 import uuid
-
-from flask import abort
 
 from application.models.message import Message
 from application.models.user import User, db
+from flask import abort
+
+logger = logging.getLogger(__name__)
 
 
 def get_user(identifier):
@@ -36,10 +38,18 @@ def get_user(identifier):
 
         return user
     except Exception as e:
-        abort(500, description=f"An error occurred: {str(e)}")
+        abort(500, description=f"An error occurred: {e!s}")
 
 
-def save_message_to_db(user_id, message, is_global=False, target_live=False, target_classrooms=None, target_user_ids=None, message_type="text"):
+def save_message_to_db(
+    user_id,
+    message,
+    is_global=False,
+    target_live=False,
+    target_classrooms=None,
+    target_user_ids=None,
+    message_type="text",
+):
     """
     Saves a feed post (message) to the database with visibility targeting.
 
@@ -58,10 +68,20 @@ def save_message_to_db(user_id, message, is_global=False, target_live=False, tar
     """
     try:
         from application.models.classroom import Classroom
+        from application.services.moderation_service import message_is_appropriate
+
         user = db.session.get(User, user_id)
         if not user:
             return {"success": False, "error": "User not found"}
-        
+
+        # Screen every non-admin message (students, parents, and AI output)
+        # against the banned-words list before it is stored or broadcast.
+        if not user.is_admin and not message_is_appropriate(message):
+            return {
+                "success": False,
+                "error": "Your message contains language that isn't allowed here.",
+            }
+
         new_message = Message(
             user_id=user_id,
             content=message,
@@ -70,14 +90,14 @@ def save_message_to_db(user_id, message, is_global=False, target_live=False, tar
             target_live=target_live,
             has_animated_border=user.has_animated_border,
             animated_border_speed=user.animated_border_speed,
-            chat_font_color=user.chat_font_color
+            chat_font_color=user.chat_font_color,
         )
-        
+
         if target_live:
             # Get currently online users
             online_users = User.query.filter_by(is_online=True).all()
             new_message.target_users.extend(online_users)
-            
+
         if target_user_ids:
             for uid in target_user_ids:
                 u = db.session.get(User, uid)
@@ -93,18 +113,16 @@ def save_message_to_db(user_id, message, is_global=False, target_live=False, tar
         db.session.add(new_message)
         db.session.commit()
 
-        print(
-            f"Message saved with ID: {new_message.id} for user {user_id}"
-        )
+        logger.info(f"Message saved with ID: {new_message.id} for user {user_id}")
         return {
             "success": True,
             "message_id": new_message.id,
         }
 
-    except Exception as e:
-        print(f"Error saving message to database: {e}")
+    except Exception:
+        logger.exception("Error saving message to database")
         db.session.rollback()
-        return {"success": False, "error": str(e)}
+        return {"success": False, "error": "Failed to save message"}
 
 
 def generate_unique_username():

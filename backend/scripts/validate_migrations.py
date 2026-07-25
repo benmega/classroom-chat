@@ -1,13 +1,14 @@
-import os
-import ast
-import sys
 import argparse
+import ast
+import os
+import sys
 from collections import defaultdict
+
 
 def extract_revisions(filepath):
     revision = None
     down_revision = None
-    with open(filepath, 'r', encoding='utf-8') as f:
+    with open(filepath, "r", encoding="utf-8") as f:
         source = f.read()
     try:
         tree = ast.parse(source)
@@ -17,50 +18,62 @@ def extract_revisions(filepath):
         if isinstance(node, ast.Assign):
             for target in node.targets:
                 if isinstance(target, ast.Name):
-                    if target.id == 'revision':
+                    if target.id == "revision":
                         if isinstance(node.value, ast.Constant):
                             revision = node.value.value
-                    elif target.id == 'down_revision':
+                    elif target.id == "down_revision":
                         if isinstance(node.value, ast.Constant):
                             down_revision = node.value.value
                         elif isinstance(node.value, ast.Tuple):
-                            down_revision = tuple(elt.value for elt in node.value.elts if isinstance(elt, ast.Constant))
+                            down_revision = tuple(
+                                elt.value
+                                for elt in node.value.elts
+                                if isinstance(elt, ast.Constant)
+                            )
     return revision, down_revision
+
 
 def extract_operations(filepath):
     ops = set()
-    with open(filepath, 'r', encoding='utf-8') as f:
+    with open(filepath, "r", encoding="utf-8") as f:
         lines = f.readlines()
-        
+
     current_table = None
     for line in lines:
-        if 'with op.batch_alter_table(' in line:
+        if "with op.batch_alter_table(" in line:
             parts = line.split("'")
             if len(parts) >= 3:
                 current_table = parts[1]
-        elif 'batch_op.' in line and current_table:
+        elif "batch_op." in line and current_table:
             stripped = line.strip()
-            if stripped.startswith('batch_op.add_column(') or stripped.startswith('batch_op.drop_column('):
+            if stripped.startswith(("batch_op.add_column(", "batch_op.drop_column(")):
                 parts = stripped.split("'")
                 if len(parts) >= 3:
                     col = parts[1]
-                    op_type = 'add' if 'add_column' in stripped else 'drop'
+                    op_type = "add" if "add_column" in stripped else "drop"
                     ops.add((current_table, op_type, col))
     return ops
 
+
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--migrations-dir', default='migrations/versions')
+    parser.add_argument("--migrations-dir", default="migrations/versions")
     args = parser.parse_args()
 
-    if not os.path.exists(args.migrations_dir):
-        print(f"Error: {args.migrations_dir} does not exist.")
-        sys.exit(1)
+    migrations_dir = args.migrations_dir
+    if not os.path.exists(migrations_dir):
+        if os.path.exists("migrations/versions"):
+            migrations_dir = "migrations/versions"
+        elif os.path.exists("backend/migrations/versions"):
+            migrations_dir = "backend/migrations/versions"
+        else:
+            print(f"Error: {args.migrations_dir} does not exist.")
+            sys.exit(1)
 
     ops_by_rev = {}
-    for filename in os.listdir(args.migrations_dir):
-        if filename.endswith('.py'):
-            filepath = os.path.join(args.migrations_dir, filename)
+    for filename in os.listdir(migrations_dir):
+        if filename.endswith(".py"):
+            filepath = os.path.join(migrations_dir, filename)
             rev, _ = extract_revisions(filepath)
             if rev:
                 ops_by_rev[rev] = extract_operations(filepath)
@@ -84,5 +97,6 @@ def main():
         print("No duplicate operations detected.")
         sys.exit(0)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()

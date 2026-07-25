@@ -5,7 +5,7 @@ Summary: Unit tests for ai settings model.
 """
 
 from application import db
-from application.models.ai_settings import get_ai_settings, AISettings
+from application.models.ai_settings import AISettings, get_ai_settings
 
 
 def test_ai_settings_model(init_db):

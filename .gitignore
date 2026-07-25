@@ -21,3 +21,22 @@ backend/reports/certificates/
 certificates/*
 git_log.txt
 .agents/workflows/git-review.md
+
+# Dependencies and build output
+node_modules/
+dist/
+
+# Test and coverage artifacts
+.coverage
+coverage/
+playwright-report/
+test-results/
+eslint_report.json
+lint_output*
+test_output.txt
+
+# Scratch and diff dumps
+backend/scratch/
+git_diff*
+app.log
+${DATABASE_PATH}

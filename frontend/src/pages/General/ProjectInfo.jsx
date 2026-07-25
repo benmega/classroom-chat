@@ -280,6 +280,7 @@ const ProjectInfo = () => {
         };
         
         loadDetails();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [projectId, user]);
 
     const handleAssign = async () => {

@@ -8,11 +8,8 @@ import json
 from unittest.mock import patch
 
 import pytest
-
 from application import db
 from application.models.achievements import Achievement
-
-
 
 
 @pytest.fixture
@@ -65,18 +62,14 @@ def sample_multiple_achievements(
     return [sample_ducks_achievement, sample_chat_achievement]
 
 
-
-
 def test_check_achievements_success(
     logged_in_client, init_db, sample_user, sample_new_achievements
 ):
     """Test successful achievement check with new awards."""
-    with patch(
-        "application.routes.api_achievements.evaluate_user"
-    ) as mock_evaluate, patch(
-        "application.services.skill_service.evaluate_user_skills"
+    with (
+        patch("application.routes.api_achievements.evaluate_user") as mock_evaluate,
+        patch("application.services.skill_service.evaluate_user_skills"),
     ):
-
         mock_evaluate.return_value = sample_new_achievements
 
         response = logged_in_client.get("/api/achievements/check")
@@ -95,12 +88,10 @@ def test_check_achievements_success(
 
 def test_check_achievements_no_new_awards(logged_in_client, init_db):
     """Test achievement check when user has no new awards."""
-    with patch(
-        "application.routes.api_achievements.evaluate_user"
-    ) as mock_evaluate, patch(
-        "application.services.skill_service.evaluate_user_skills"
+    with (
+        patch("application.routes.api_achievements.evaluate_user") as mock_evaluate,
+        patch("application.services.skill_service.evaluate_user_skills"),
     ):
-
         mock_evaluate.return_value = []
 
         response = logged_in_client.get("/api/achievements/check")
@@ -137,12 +128,10 @@ def test_check_achievements_badge_url_format(
     logged_in_client, init_db, sample_ducks_achievement
 ):
     """Test that badge URLs contain the correct image reference."""
-    with patch(
-        "application.routes.api_achievements.evaluate_user"
-    ) as mock_evaluate, patch(
-        "application.services.skill_service.evaluate_user_skills"
+    with (
+        patch("application.routes.api_achievements.evaluate_user") as mock_evaluate,
+        patch("application.services.skill_service.evaluate_user_skills"),
     ):
-
         mock_evaluate.return_value = [sample_ducks_achievement]
 
         response = logged_in_client.get("/api/achievements/check")
@@ -158,12 +147,10 @@ def test_check_achievements_multiple_awards_correct_data(
     logged_in_client, init_db, sample_multiple_achievements
 ):
     """Test that multiple achievements return correct data structure."""
-    with patch(
-        "application.routes.api_achievements.evaluate_user"
-    ) as mock_evaluate, patch(
-        "application.services.skill_service.evaluate_user_skills"
+    with (
+        patch("application.routes.api_achievements.evaluate_user") as mock_evaluate,
+        patch("application.services.skill_service.evaluate_user_skills"),
     ):
-
         mock_evaluate.return_value = sample_multiple_achievements
 
         response = logged_in_client.get("/api/achievements/check")
@@ -182,12 +169,10 @@ def test_check_achievements_evaluate_user_called_correctly(
     logged_in_client, init_db, sample_user
 ):
     """Test that evaluate_user is called with the correct user object."""
-    with patch(
-        "application.routes.api_achievements.evaluate_user"
-    ) as mock_evaluate, patch(
-        "application.services.skill_service.evaluate_user_skills"
+    with (
+        patch("application.routes.api_achievements.evaluate_user") as mock_evaluate,
+        patch("application.services.skill_service.evaluate_user_skills"),
     ):
-
         mock_evaluate.return_value = []
 
         logged_in_client.get("/api/achievements/check")
@@ -201,12 +186,10 @@ def test_check_achievements_single_award(
     logged_in_client, init_db, sample_chat_achievement
 ):
     """Test achievement check with a single new award."""
-    with patch(
-        "application.routes.api_achievements.evaluate_user"
-    ) as mock_evaluate, patch(
-        "application.services.skill_service.evaluate_user_skills"
+    with (
+        patch("application.routes.api_achievements.evaluate_user") as mock_evaluate,
+        patch("application.services.skill_service.evaluate_user_skills"),
     ):
-
         mock_evaluate.return_value = [sample_chat_achievement]
 
         response = logged_in_client.get("/api/achievements/check")
@@ -230,12 +213,10 @@ def test_check_achievements_response_structure(logged_in_client, init_db):
     db.session.add(achievement)
     db.session.commit()
 
-    with patch(
-        "application.routes.api_achievements.evaluate_user"
-    ) as mock_evaluate, patch(
-        "application.services.skill_service.evaluate_user_skills"
+    with (
+        patch("application.routes.api_achievements.evaluate_user") as mock_evaluate,
+        patch("application.services.skill_service.evaluate_user_skills"),
     ):
-
         mock_evaluate.return_value = [achievement]
 
         response = logged_in_client.get("/api/achievements/check")
@@ -250,12 +231,10 @@ def test_check_achievements_session_persistence(logged_in_client, init_db, sampl
     with logged_in_client.session_transaction() as sess:
         sess["test_key"] = "test_value"
 
-    with patch(
-        "application.routes.api_achievements.evaluate_user"
-    ) as mock_evaluate, patch(
-        "application.services.skill_service.evaluate_user_skills"
+    with (
+        patch("application.routes.api_achievements.evaluate_user") as mock_evaluate,
+        patch("application.services.skill_service.evaluate_user_skills"),
     ):
-
         mock_evaluate.return_value = []
         logged_in_client.get("/api/achievements/check")
 
@@ -277,12 +256,10 @@ def test_check_achievements_with_special_characters_in_slug(logged_in_client, in
     db.session.add(achievement)
     db.session.commit()
 
-    with patch(
-        "application.routes.api_achievements.evaluate_user"
-    ) as mock_evaluate, patch(
-        "application.services.skill_service.evaluate_user_skills"
+    with (
+        patch("application.routes.api_achievements.evaluate_user") as mock_evaluate,
+        patch("application.services.skill_service.evaluate_user_skills"),
     ):
-
         mock_evaluate.return_value = [achievement]
 
         response = logged_in_client.get("/api/achievements/check")
@@ -293,12 +270,10 @@ def test_check_achievements_with_special_characters_in_slug(logged_in_client, in
 
 def test_check_achievements_evaluate_user_exception_handling(logged_in_client, init_db):
     """Test handling when evaluate_user raises an exception."""
-    with patch(
-        "application.routes.api_achievements.evaluate_user"
-    ) as mock_evaluate, patch(
-        "application.services.skill_service.evaluate_user_skills"
+    with (
+        patch("application.routes.api_achievements.evaluate_user") as mock_evaluate,
+        patch("application.services.skill_service.evaluate_user_skills"),
     ):
-
         mock_evaluate.side_effect = Exception("Evaluation error")
 
         response = logged_in_client.get("/api/achievements/check")
@@ -311,43 +286,43 @@ def test_check_achievements_evaluate_user_exception_handling(logged_in_client, i
 
 def test_check_achievements_content_type(logged_in_client, init_db):
     """Test that the response has correct content type."""
-    with patch(
-        "application.routes.api_achievements.evaluate_user"
-    ) as mock_evaluate, patch(
-        "application.services.skill_service.evaluate_user_skills"
+    with (
+        patch("application.routes.api_achievements.evaluate_user") as mock_evaluate,
+        patch("application.services.skill_service.evaluate_user_skills"),
     ):
-
         mock_evaluate.return_value = []
         response = logged_in_client.get("/api/achievements/check")
         assert response.content_type == "application/json"
 
 
-def test_api_achievements_all_integration(logged_in_client, init_db, sample_user, sample_multiple_achievements):
+def test_api_achievements_all_integration(
+    logged_in_client, init_db, sample_user, sample_multiple_achievements
+):
     """
     Comprehensive integration test for /api/achievements/all.
     Ensures that the JSON structure and 200 OK status are verified
     WITHOUT mocking evaluate_user.
     """
     response = logged_in_client.get("/api/achievements/all")
-    
+
     assert response.status_code == 200
     assert response.is_json
-    
+
     data = response.get_json()
     assert data["status"] == "success"
     assert "data" in data
-    
+
     response_data = data["data"]
     assert "achievements" in response_data
     assert "user_achievements" in response_data
-    
+
     achievements = response_data["achievements"]
     assert len(achievements) >= len(sample_multiple_achievements)
-    
+
     slugs = [ach["slug"] for ach in achievements]
     for sample_ach in sample_multiple_achievements:
         assert sample_ach.slug in slugs
-        
+
         ach_dict = next(ach for ach in achievements if ach["slug"] == sample_ach.slug)
         assert "current_progress" in ach_dict
         assert "requirement_value" in ach_dict
@@ -358,10 +333,10 @@ def test_api_achievements_all_integration(logged_in_client, init_db, sample_user
 def test_api_achievements_all_not_logged_in(client, init_db):
     """Test /api/achievements/all returns 404 with JSON error if not logged in."""
     response = client.get("/api/achievements/all")
-    
+
     assert response.status_code == 404
     assert response.is_json
-    
+
     data = response.get_json()
     assert data["success"] is False
     assert data["error"] == "User not found!"

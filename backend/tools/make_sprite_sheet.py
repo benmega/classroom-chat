@@ -53,7 +53,7 @@ def build_sprite():
         sheet.paste(img, (x, y), img)
 
         slug = file.stem
-        css = f".badge-{slug} {{ " f"background-position: -{x}px -{y}px; " f"}}"
+        css = f".badge-{slug} {{ background-position: -{x}px -{y}px; }}"
         css_rules.append(css)
 
     # Save sprite

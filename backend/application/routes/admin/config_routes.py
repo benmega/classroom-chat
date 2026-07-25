@@ -1,8 +1,8 @@
-from flask import request, jsonify
-from application.extensions import db
-from application.models.configuration import Configuration
-from application.models.banned_words import BannedWords
 from application.decorators.admin_required import admin_only
+from application.extensions import db
+from application.models.banned_words import BannedWords
+from application.models.configuration import Configuration
+from flask import jsonify, request
 
 from ..admin_routes import admin_bp
 
@@ -34,7 +34,7 @@ def toggle_message_sending():
     if config is None:
         config = Configuration(message_sending_enabled=False)
         db.session.add(config)
-    
+
     config.message_sending_enabled = not config.message_sending_enabled
     db.session.commit()
 
@@ -66,9 +66,9 @@ def update_duck_multiplier():
         return jsonify({"success": True, "new_multiplier": new_multiplier})
     except (ValueError, TypeError):
         return jsonify({"success": False, "error": "Invalid multiplier value"}), 400
-    except Exception as e:
+    except Exception:
         db.session.rollback()
-        return jsonify({"success": False, "error": str(e)}), 500
+        return jsonify({"success": False, "error": "Internal server error"}), 500
 
 
 @admin_bp.route("/add-banned-word", methods=["POST"])

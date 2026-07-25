@@ -77,8 +77,8 @@ const AdminAchievements = () => {
                     <div className="form-section">
                         <h3 className="section-title"><Tag size={18} /> Basic Information</h3>
                         <div className="form-group">
-                            <label>Achievement Name *</label>
-                            <input 
+                            <label htmlFor="input-79">Achievement Name *</label>
+                            <input id="input-79" 
                                 type="text" 
                                 name="name" 
                                 value={formData.name} 
@@ -89,8 +89,8 @@ const AdminAchievements = () => {
                         </div>
 
                         <div className="form-group">
-                            <label>Slug * (Unique Identifier)</label>
-                            <input 
+                            <label htmlFor="input-91">Slug * (Unique Identifier)</label>
+                            <input id="input-91" 
                                 type="text" 
                                 name="slug" 
                                 value={formData.slug} 
@@ -102,8 +102,8 @@ const AdminAchievements = () => {
                         </div>
 
                         <div className="form-group">
-                            <label>Description</label>
-                            <textarea 
+                            <label htmlFor="input-104">Description</label>
+                            <textarea id="input-104" 
                                 name="description" 
                                 value={formData.description} 
                                 onChange={handleInputChange} 
@@ -113,9 +113,9 @@ const AdminAchievements = () => {
                         </div>
 
                         <div className="form-group">
-                            <label>Badge Icon (PNG/JPG/WEBP)</label>
+                            <label htmlFor="input-115">Badge Icon (PNG/JPG/WEBP)</label>
                             <div className="file-upload-wrapper">
-                                <input 
+                                <input id="input-115" 
                                     type="file" 
                                     accept="image/*" 
                                     onChange={handleFileChange}
@@ -134,8 +134,8 @@ const AdminAchievements = () => {
                         <h3 className="section-title"><Coins size={18} /> Logic & Rewards</h3>
                         <div className="form-row">
                             <div className="form-group">
-                                <label>Category Type</label>
-                                <select name="type" value={formData.type} onChange={handleInputChange} required>
+                                <label htmlFor="input-136">Category Type</label>
+                                <select id="input-136" name="type" value={formData.type} onChange={handleInputChange} required>
                                     <option value="ducks">Ducks</option>
                                     <option value="project">Project</option>
                                     <option value="progress">Progress</option>
@@ -149,8 +149,8 @@ const AdminAchievements = () => {
                             </div>
 
                             <div className="form-group">
-                                <label>Duck Reward</label>
-                                <input 
+                                <label htmlFor="input-151">Duck Reward</label>
+                                <input id="input-151" 
                                     type="number" 
                                     name="reward" 
                                     value={formData.reward} 
@@ -162,8 +162,8 @@ const AdminAchievements = () => {
                         </div>
 
                         <div className="form-group">
-                            <label>Requirement Value</label>
-                            <input 
+                            <label htmlFor="input-164">Requirement Value</label>
+                            <input id="input-164" 
                                 type="text" 
                                 name="requirement_value" 
                                 value={formData.requirement_value} 
@@ -174,8 +174,8 @@ const AdminAchievements = () => {
                         </div>
 
                         <div className="form-group">
-                            <label>External Source (Optional)</label>
-                            <input 
+                            <label htmlFor="input-176">External Source (Optional)</label>
+                            <input id="input-176" 
                                 type="text" 
                                 name="source" 
                                 value={formData.source} 

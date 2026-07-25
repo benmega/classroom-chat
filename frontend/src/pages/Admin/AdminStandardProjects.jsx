@@ -25,11 +25,17 @@ const AdminStandardProjects = () => {
         setIsLoading(true);
         try {
             const res = await client.get('/api/admin/standard-projects');
-            if (res.data.status === 'success') {
-                setProjects(res.data.data.standard_projects);
-            }
-        } catch {
+            const data = res.data;
+            const projectList = 
+                data?.data?.standard_projects || 
+                data?.standard_projects || 
+                (Array.isArray(data?.data) ? data.data : null) || 
+                (Array.isArray(data) ? data : []);
+            setProjects(Array.isArray(projectList) ? projectList : []);
+        } catch (error) {
+            console.error('Failed to load standard projects:', error);
             toast.error('Failed to load standard projects.');
+            setProjects([]);
         } finally {
             setIsLoading(false);
         }
@@ -139,16 +145,16 @@ const AdminStandardProjects = () => {
             )}
 
             {isModalOpen && (
-                <div className="sp-modal-overlay" onClick={closeModal}>
-                    <div className="sp-modal-card" onClick={e => e.stopPropagation()}>
+                <div role="button" tabIndex={0} className="sp-modal-overlay" onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={closeModal}>
+                    <div role="button" tabIndex={0} className="sp-modal-card" onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={e => e.stopPropagation()}>
                         <div className="sp-modal-header">
-                            <h3>{editingProject ? 'Edit Standard Project' : ''}</h3>
+                            <h3>{editingProject ? 'Edit Standard Project' : 'Add Standard Project'}</h3>
                             <button className="sp-close-btn" onClick={closeModal}><XCircle size={24}/></button>
                         </div>
                         <form onSubmit={handleSubmit} className="sp-form">
                             <div className="sp-form-group">
-                                <label>Project Name *</label>
-                                <input 
+                                <label htmlFor="input-155">Project Name *</label>
+                                <input id="input-155" 
                                     type="text" 
                                     required
                                     value={form.name}
@@ -157,8 +163,8 @@ const AdminStandardProjects = () => {
                                 />
                             </div>
                             <div className="sp-form-group">
-                                <label>Description</label>
-                                <textarea 
+                                <label htmlFor="input-165">Description</label>
+                                <textarea id="input-165" 
                                     value={form.description}
                                     onChange={e => setForm({...form, description: e.target.value})}
                                     rows="4"
@@ -167,27 +173,27 @@ const AdminStandardProjects = () => {
                             </div>
                             <div className="sp-form-row">
                                 <div className="sp-form-group">
-                                    <label>Default Demo Link</label>
-                                    <input type="text" value={form.link} onChange={e => setForm({...form, link: e.target.value})} />
+                                    <label htmlFor="input-175">Default Demo Link</label>
+                                    <input id="input-175" type="text" value={form.link} onChange={e => setForm({...form, link: e.target.value})} />
                                 </div>
                                 <div className="sp-form-group">
-                                    <label>Default GitHub Link</label>
-                                    <input type="text" value={form.github_link} onChange={e => setForm({...form, github_link: e.target.value})} />
+                                    <label htmlFor="input-179">Default GitHub Link</label>
+                                    <input id="input-179" type="text" value={form.github_link} onChange={e => setForm({...form, github_link: e.target.value})} />
                                 </div>
                             </div>
                             <div className="sp-form-row">
                                 <div className="sp-form-group">
-                                    <label>Default Video URL</label>
-                                    <input type="text" value={form.video_url} onChange={e => setForm({...form, video_url: e.target.value})} />
+                                    <label htmlFor="input-185">Default Video URL</label>
+                                    <input id="input-185" type="text" value={form.video_url} onChange={e => setForm({...form, video_url: e.target.value})} />
                                 </div>
                                 <div className="sp-form-group">
-                                    <label>Default Thumbnail Image URL</label>
-                                    <input type="text" value={form.image_url} onChange={e => setForm({...form, image_url: e.target.value})} />
+                                    <label htmlFor="input-189">Default Thumbnail Image URL</label>
+                                    <input id="input-189" type="text" value={form.image_url} onChange={e => setForm({...form, image_url: e.target.value})} />
                                 </div>
                             </div>
                             <div className="sp-form-group">
-                                <label>Default Code Snippet</label>
-                                <textarea 
+                                <label htmlFor="input-194">Default Code Snippet</label>
+                                <textarea id="input-194" 
                                     value={form.code_snippet}
                                     onChange={e => setForm({...form, code_snippet: e.target.value})}
                                     rows="3"

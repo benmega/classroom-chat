@@ -154,7 +154,7 @@ const PendingTrades = () => {
                                             {formatBits(trade.byte_ducks)} bytes
                                         </div>
                                         <div className="trade-amount-secondary">
-                                            {calculateDecimal(trade.byte_ducks)} in decimal
+                                            {calculateDecimal(trade.byte_ducks)} × 128 = {calculateDecimal(trade.byte_ducks) * 128} ducks
                                         </div>
                                     </div>
                                 )}

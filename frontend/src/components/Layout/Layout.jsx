@@ -111,6 +111,14 @@ const Layout = ({ children }) => {
                                     </>
                                 )}
 
+                                {isAuthenticated && user && (
+                                    <li className="header-username-item">
+                                        <Link to="/profile" className="header-username-link" title="View Profile" data-testid="header-username">
+                                            @{user.username}
+                                        </Link>
+                                    </li>
+                                )}
+
                                 {isAuthenticated ? (
                                     <li className="profile-menu" ref={dropdownRef}>
                                         <button 
@@ -129,6 +137,14 @@ const Layout = ({ children }) => {
                                             </span>
                                         </button>
                                         <ul className={`dropdown-menu ${isDropdownOpen ? 'show' : ''}`}>
+                                            <li className="dropdown-user-header">
+                                                <Link to="/profile" onClick={() => setIsDropdownOpen(false)} className="dropdown-user-link">
+                                                    <span className="dropdown-user-name">{user.nickname || user.username}</span>
+                                                    <span className="dropdown-user-handle">@{user.username}</span>
+                                                </Link>
+                                            </li>
+                                            <li className="dropdown-divider"></li>
+
                                             {user?.role !== 'parent' && (
                                                 <>
                                                     {user.drawer && (

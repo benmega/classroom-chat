@@ -10,12 +10,11 @@ from datetime import date
 from io import BytesIO
 from unittest.mock import patch
 
-from PIL import Image
-
 from application import db
-from application.models.user import User
 from application.models.project import Project
 from application.models.skill import Skill
+from application.models.user import User
+from PIL import Image
 
 
 def test_get_users(client, init_db, sample_user):
@@ -47,7 +46,7 @@ def test_get_user_id_authenticated(client, init_db, sample_user):
 def test_get_user_id_not_authenticated(client, init_db):
     """Test getting user ID without authentication."""
     response = client.get("/user/get_user_id", headers={"Accept": "application/json"})
-    assert response.status_code == 401 
+    assert response.status_code == 401
 
     data = json.loads(response.data)
     assert "error" in data
@@ -61,7 +60,7 @@ def test_login_get(client, init_db):
     # Logged in users get redirected to /chat, so clear session first
     with client.session_transaction() as sess:
         sess.clear()
-        
+
     response = client.get("/user/login")
     assert response.status_code == 200
     assert b"login" in response.data.lower()
@@ -188,6 +187,16 @@ def test_profile_not_authenticated(client, init_db):
     assert response.status_code == 401
 
 
+def test_view_user_profile_by_slug_is_public(client, init_db, sample_user):
+    """Profile pages are intentionally public (no login required) — this is
+    a disclosed and accepted tradeoff, not an oversight."""
+    response = client.get(
+        f"/user/profile/{sample_user.slug}", headers={"Accept": "application/json"}
+    )
+    assert response.status_code == 200
+    assert response.json["data"]["target"]["username"] == sample_user.username
+
+
 def test_edit_profile_get(client, init_db, sample_user):
     """Test GET request to edit profile page."""
     with client.session_transaction() as sess:
@@ -210,7 +219,7 @@ def test_edit_profile_post(client, init_db, sample_user):
             "is_online": "true",
             "skills[]": ["Python", "JavaScript"],
         },
-        headers={"Accept": "application/json"}
+        headers={"Accept": "application/json"},
     )
 
     assert response.status_code == 200
@@ -237,7 +246,7 @@ def test_edit_profile_change_password(client, init_db, sample_user):
             "confirm_password": "newpassword",
             "skills[]": [],
         },
-        headers={"Accept": "application/json"}
+        headers={"Accept": "application/json"},
     )
 
     assert response.status_code == 200
@@ -258,7 +267,7 @@ def test_edit_profile_password_mismatch(client, init_db, sample_user):
             "password": "newpassword",
             "confirm_password": "differentpassword",
         },
-        headers={"Accept": "application/json"}
+        headers={"Accept": "application/json"},
     )
 
     assert b"Passwords do not match" in response.data
@@ -497,13 +506,13 @@ def test_daily_duck_logic(client, init_db, sample_user):
 def test_pfp_integrity_cleanup(init_db, sample_user):
     """Test the cleanup of missing profile picture files."""
     from application.utilities.helper_functions import cleanup_missing_user_pfps
-    
+
     # Set a custom PFP that doesn't exist on disk
     sample_user.profile_picture = "missing_image.png"
     db.session.commit()
-    
+
     fixed_count = cleanup_missing_user_pfps()
-    
+
     db.session.refresh(sample_user)
     assert fixed_count == 1
     assert sample_user.profile_picture == "Default_pfp.jpg"
@@ -525,13 +534,24 @@ def test_get_project_templates(client, init_db, sample_user):
     assert "description" in templates["CS1 Capstone"]
     assert "Dangerous Skies" in templates
 
+
+def test_search_users_requires_login(client, init_db, sample_user):
+    resp = client.get(f"/user/api/users/search?q={sample_user.username}")
+    assert resp.status_code in (302, 401)
+
+
 def test_search_users(client, init_db, sample_user):
+    with client.session_transaction() as sess:
+        sess["user"] = sample_user.id
     resp = client.get(f"/user/api/users/search?q={sample_user.username}")
     assert resp.status_code == 200
     assert resp.json["data"]["users"][0]["username"] == sample_user.username
+
+
 def test_project_image_and_wallpaper_upload(client, init_db, sample_user):
     # Generate a valid PNG image in memory
     from PIL import Image
+
     img = Image.new("RGB", (10, 10), color="blue")
     img_bytes = BytesIO()
     img.save(img_bytes, format="PNG")
@@ -540,24 +560,33 @@ def test_project_image_and_wallpaper_upload(client, init_db, sample_user):
     with client.session_transaction() as sess:
         sess["user"] = sample_user.id
 
-    data = {
-        "project_image": (BytesIO(img_bytes.getvalue()), "image.png")
-    }
-    resp = client.post("/user/api/project-image", data=data, content_type="multipart/form-data")
+    data = {"project_image": (BytesIO(img_bytes.getvalue()), "image.png")}
+    resp = client.post(
+        "/user/api/project-image", data=data, content_type="multipart/form-data"
+    )
     assert resp.status_code == 200
     assert "filename" in resp.json["data"]
 
     # Try unauthorized first (user does not have perk)
-    resp_wall = client.post("/user/api/profile-wallpaper", data={"profile_wallpaper": (BytesIO(img_bytes.getvalue()), "wall.png")}, content_type="multipart/form-data")
+    resp_wall = client.post(
+        "/user/api/profile-wallpaper",
+        data={"profile_wallpaper": (BytesIO(img_bytes.getvalue()), "wall.png")},
+        content_type="multipart/form-data",
+    )
     assert resp_wall.status_code == 403
 
     # Grant perk and succeed
     sample_user.has_custom_wallpaper = True
     db.session.commit()
 
-    resp_wall = client.post("/user/api/profile-wallpaper", data={"profile_wallpaper": (BytesIO(img_bytes.getvalue()), "wall.png")}, content_type="multipart/form-data")
+    resp_wall = client.post(
+        "/user/api/profile-wallpaper",
+        data={"profile_wallpaper": (BytesIO(img_bytes.getvalue()), "wall.png")},
+        content_type="multipart/form-data",
+    )
     assert resp_wall.status_code == 200
     assert "filename" in resp_wall.json["data"]
+
 
 def test_serving_endpoints(client, init_db):
     # View default pfp
@@ -579,5 +608,3 @@ def test_serving_endpoints(client, init_db):
     resp = client.get("/user/project_images/nonexistent_proj.png")
     assert resp.status_code == 200
     resp.close()
-
-

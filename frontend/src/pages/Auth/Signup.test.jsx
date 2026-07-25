@@ -63,8 +63,8 @@ describe('Signup Component', () => {
     const submitBtn = screen.getByRole('button', { name: /Request Access/i });
 
     fireEvent.change(usernameInput, { target: { value: 'student123' } });
-    fireEvent.change(passInput, { target: { value: 'pass123' } });
-    fireEvent.change(confirmInput, { target: { value: 'pass123' } });
+    fireEvent.change(passInput, { target: { value: 'password123' } });
+    fireEvent.change(confirmInput, { target: { value: 'password123' } });
 
     await act(async () => {
       fireEvent.click(submitBtn);
@@ -73,7 +73,7 @@ describe('Signup Component', () => {
     await waitFor(() => {
       expect(client.post).toHaveBeenCalledWith('/user/signup', {
         username: 'student123',
-        password: 'pass123'
+        password: 'password123'
       });
       expect(toast.success).toHaveBeenCalledWith('Signup successful! Awaiting approval.');
       expect(screen.getByText('Request Submitted!')).toBeInTheDocument();
@@ -99,8 +99,8 @@ describe('Signup Component', () => {
     const submitBtn = screen.getByRole('button', { name: /Request Access/i });
 
     fireEvent.change(emailInput, { target: { value: 'parent@example.com' } });
-    fireEvent.change(passInput, { target: { value: 'pass123' } });
-    fireEvent.change(confirmInput, { target: { value: 'pass123' } });
+    fireEvent.change(passInput, { target: { value: 'password123' } });
+    fireEvent.change(confirmInput, { target: { value: 'password123' } });
 
     await act(async () => {
       fireEvent.click(submitBtn);
@@ -109,7 +109,7 @@ describe('Signup Component', () => {
     await waitFor(() => {
       expect(client.post).toHaveBeenCalledWith('/api/auth/cognito/register', {
         email: 'parent@example.com',
-        password: 'pass123'
+        password: 'password123'
       });
       expect(toast.success).toHaveBeenCalledWith('Verification code sent to your email!');
     });

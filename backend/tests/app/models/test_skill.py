@@ -7,8 +7,7 @@ Summary: Unit tests for skill model.
 import random
 
 import pytest
-
-from application import db, User
+from application import User, db
 from application.models.skill import Skill
 
 

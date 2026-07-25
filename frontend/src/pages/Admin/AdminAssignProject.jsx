@@ -39,9 +39,13 @@ const AdminAssignProject = () => {
         const fetchStandardProjects = async () => {
             try {
                 const res = await client.get('/api/admin/standard-projects');
-                if (res.data.status === 'success') {
-                    setStandardProjects(res.data.data.standard_projects);
-                }
+                const data = res.data;
+                const projectList = 
+                    data?.data?.standard_projects || 
+                    data?.standard_projects || 
+                    (Array.isArray(data?.data) ? data.data : null) || 
+                    (Array.isArray(data) ? data : []);
+                setStandardProjects(Array.isArray(projectList) ? projectList : []);
             } catch (e) {
                 console.error('Failed to load standard projects', e);
             }
@@ -142,12 +146,12 @@ const AdminAssignProject = () => {
                             {activeTab === 'core' && (
                                 <section className="form-section fade-in">
                                     <div className="form-group user-search-group">
-                                        <label>Assign to Student *</label>
+                                        <label htmlFor="input-148">Assign to Student *</label>
                                         {!selectedUser ? (
                                             <>
                                                 <div className="search-input-wrapper search-input-wrapper-styled">
                                                     <Search size={18} className="text-muted" />
-                                                    <input 
+                                                    <input id="input-148" 
                                                         type="text" 
                                                         placeholder="Type to search by username or nickname..." 
                                                         value={userSearchQuery}
@@ -159,10 +163,10 @@ const AdminAssignProject = () => {
                                                 {userSearchResults.length > 0 && (
                                                     <div className="search-results-dropdown aap-dropdown">
                                                         {userSearchResults.map(u => (
-                                                            <div 
+                                                            <div role="button" tabIndex={0} 
                                                                 key={u.id} 
                                                                 className="search-result-item"
-                                                                onClick={() => {
+                                                                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={() => {
                                                                     setSelectedUser(u);
                                                                     setUserSearchQuery('');
                                                                     setUserSearchResults([]);
@@ -187,8 +191,8 @@ const AdminAssignProject = () => {
                                     </div>
 
                                     <div className="form-group">
-                                        <label>Standard Project Template (Optional)</label>
-                                        <select 
+                                        <label htmlFor="input-193">Standard Project Template (Optional)</label>
+                                        <select id="input-193" 
                                             className="form-control"
                                             onChange={(e) => {
                                                 if (!e.target.value) return;
@@ -214,8 +218,8 @@ const AdminAssignProject = () => {
                                     </div>
 
                                     <div className="form-group">
-                                        <label>Project Name *</label>
-                                        <input 
+                                        <label htmlFor="input-220">Project Name *</label>
+                                        <input id="input-220" 
                                             type="text" 
                                             name="name" 
                                             value={assignForm.name} 
@@ -226,8 +230,8 @@ const AdminAssignProject = () => {
                                         />
                                     </div>
                                     <div className="form-group">
-                                        <label>Description</label>
-                                        <textarea 
+                                        <label htmlFor="input-232">Description</label>
+                                        <textarea id="input-232" 
                                             name="description" 
                                             value={assignForm.description} 
                                             onChange={(e) => {
@@ -245,8 +249,8 @@ const AdminAssignProject = () => {
                             {activeTab === 'media' && (
                                 <section className="form-section fade-in">
                                     <div className="form-group">
-                                        <label>Thumbnail Image URL</label>
-                                        <input 
+                                        <label htmlFor="input-251">Thumbnail Image URL</label>
+                                        <input id="input-251" 
                                             type="text" 
                                             name="image_url" 
                                             value={assignForm.image_url} 
@@ -256,8 +260,8 @@ const AdminAssignProject = () => {
                                         />
                                     </div>
                                     <div className="form-group">
-                                        <label>Demo Link</label>
-                                        <input 
+                                        <label htmlFor="input-262">Demo Link</label>
+                                        <input id="input-262" 
                                             type="url" 
                                             name="link" 
                                             value={assignForm.link} 
@@ -267,8 +271,8 @@ const AdminAssignProject = () => {
                                         />
                                     </div>
                                     <div className="form-group">
-                                        <label>GitHub Link</label>
-                                        <input 
+                                        <label htmlFor="input-273">GitHub Link</label>
+                                        <input id="input-273" 
                                             type="url" 
                                             name="github_link" 
                                             value={assignForm.github_link} 
@@ -278,8 +282,8 @@ const AdminAssignProject = () => {
                                         />
                                     </div>
                                     <div className="form-group">
-                                        <label>Video URL</label>
-                                        <input 
+                                        <label htmlFor="input-284">Video URL</label>
+                                        <input id="input-284" 
                                             type="url" 
                                             name="video_url" 
                                             value={assignForm.video_url} 
@@ -342,7 +346,7 @@ const AdminAssignProject = () => {
                                 
                                 <div className="project-footer">
                                     {assignForm.link && (
-                                        <a href="#" className="link-icon" onClick={(e) => e.preventDefault()}><ExternalLink size={16} /></a>
+                                        <button type="button" href="#" className="link-icon" onClick={(e) => e.preventDefault()}><ExternalLink size={16} /></button>
                                     )}
                                     <button className="btn-text" onClick={(e) => e.preventDefault()}>Details</button>
                                 </div>

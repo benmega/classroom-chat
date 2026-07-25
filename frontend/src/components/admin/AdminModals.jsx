@@ -11,8 +11,8 @@ export const CreateUserModal = ({ isOpen, onClose, onSubmit, formErrors, loading
     <Modal isOpen={isOpen} onClose={onClose} title="Create New User">
         <form onSubmit={onSubmit} className="admin-form" noValidate>
             <div className={`form-group ${formErrors.username ? 'has-error' : ''}`}>
-                <label>Username</label>
-                <input type="text" name="username" placeholder="lowercase_only" />
+                <label htmlFor="input-13">Username</label>
+                <input id="input-13" type="text" name="username" placeholder="lowercase_only" />
                 {formErrors.username ? (
                     <span className="error-message">{formErrors.username}</span>
                 ) : (
@@ -20,9 +20,9 @@ export const CreateUserModal = ({ isOpen, onClose, onSubmit, formErrors, loading
                 )}
             </div>
             <div className={`form-group ${formErrors.password ? 'has-error' : ''}`}>
-                <label>Initial Password</label>
+                <label htmlFor="input-22">Initial Password</label>
                 <div className="pos-rel">
-                    <input 
+                    <input id="input-22" 
                         type={showPassword ? "text" : "password"} 
                         name="password" 
                         className="pr-2-5rem"
@@ -39,8 +39,8 @@ export const CreateUserModal = ({ isOpen, onClose, onSubmit, formErrors, loading
                 {formErrors.password && <span className="error-message">{formErrors.password}</span>}
             </div>
             <div className="form-group">
-                <label>Starting Duck Balance</label>
-                <input type="number" name="ducks" defaultValue="0" min="0" />
+                <label htmlFor="input-41">Starting Duck Balance</label>
+                <input id="input-41" type="number" name="ducks" defaultValue="0" min="0" />
             </div>
             <button type="submit" className="btn-primary" disabled={loading}>
                 {loading ? 'Creating...' : 'Create User'}
@@ -54,7 +54,7 @@ export const AdjustDucksModal = ({ isOpen, onClose, onSubmit, user, users, formE
     <Modal isOpen={isOpen} onClose={onClose} title="Adjust Duck Balance">
         <form onSubmit={onSubmit} className="admin-form" noValidate>
             <div className="form-group">
-                <label>Target User</label>
+                <label htmlFor="input-56">Target User</label>
                 {user ? (
                     <div className="user-badge-display">
                         <SmartImage 
@@ -67,7 +67,7 @@ export const AdjustDucksModal = ({ isOpen, onClose, onSubmit, user, users, formE
                             <span className="user-nickname">{user.nickname || user.username}</span>
                             <span className="user-handle">@{user.username}</span>
                         </div>
-                        <input type="hidden" name="username" value={user.username} />
+                        <input id="input-56" type="hidden" name="username" value={user.username} />
                     </div>
                 ) : (
                     <select name="username" className="admin-select">
@@ -81,8 +81,8 @@ export const AdjustDucksModal = ({ isOpen, onClose, onSubmit, user, users, formE
                 )}
             </div>
             <div className={`form-group ${formErrors.amount ? 'has-error' : ''}`}>
-                <label>Adjustment Amount</label>
-                <input type="number" name="amount" step="any" placeholder="e.g. 10 or -5" />
+                <label htmlFor="input-83">Adjustment Amount</label>
+                <input id="input-83" type="number" name="amount" step="any" placeholder="e.g. 10 or -5" />
                 {formErrors.amount ? (
                     <span className="error-message">{formErrors.amount}</span>
                 ) : (
@@ -100,7 +100,7 @@ export const AdjustPacketsModal = ({ isOpen, onClose, onSubmit, user, users, for
     <Modal isOpen={isOpen} onClose={onClose} title="Adjust Packets Balance">
         <form onSubmit={onSubmit} className="admin-form" noValidate>
             <div className="form-group">
-                <label>Target User</label>
+                <label htmlFor="input-102">Target User</label>
                 {user ? (
                     <div className="user-badge-display">
                         <SmartImage 
@@ -113,7 +113,7 @@ export const AdjustPacketsModal = ({ isOpen, onClose, onSubmit, user, users, for
                             <span className="user-nickname">{user.nickname || user.username}</span>
                             <span className="user-handle">@{user.username}</span>
                         </div>
-                        <input type="hidden" name="username" value={user.username} />
+                        <input id="input-102" type="hidden" name="username" value={user.username} />
                     </div>
                 ) : (
                     <select name="username" className="admin-select">
@@ -127,8 +127,8 @@ export const AdjustPacketsModal = ({ isOpen, onClose, onSubmit, user, users, for
                 )}
             </div>
             <div className={`form-group ${formErrors.amount ? 'has-error' : ''}`}>
-                <label>Adjustment Amount</label>
-                <input type="number" name="amount" step="any" placeholder="e.g. 10 or -5" />
+                <label htmlFor="input-129">Adjustment Amount</label>
+                <input id="input-129" type="number" name="amount" step="any" placeholder="e.g. 10 or -5" />
                 {formErrors.amount ? (
                     <span className="error-message">{formErrors.amount}</span>
                 ) : (
@@ -146,13 +146,13 @@ export const SetDrawerModal = ({ isOpen, onClose, onSubmit, user, loading }) => 
     <Modal isOpen={isOpen} onClose={onClose} title="Set User Drawer">
         <form onSubmit={onSubmit} className="admin-form">
             <div className="form-group">
-                <label>Target User</label>
-                <input type="text" value={user ? user.username : ''} readOnly className="readonly" />
+                <label htmlFor="input-148">Target User</label>
+                <input id="input-148" type="text" value={user ? user.username : ''} readOnly className="readonly" />
                 <input type="hidden" name="username" value={user ? user.username : ''} />
             </div>
             <div className="form-group">
-                <label>Drawer Number</label>
-                <input 
+                <label htmlFor="input-153">Drawer Number</label>
+                <input id="input-153" 
                     type="text" 
                     name="drawer" 
                     defaultValue={user?.drawer || ''} 
@@ -176,13 +176,13 @@ export const ResetPasswordModal = ({ isOpen, onClose, onSubmit, user, formErrors
     <Modal isOpen={isOpen} onClose={onClose} title="Reset User Password">
         <form onSubmit={onSubmit} className="admin-form" noValidate>
             <div className="form-group">
-                <label>User</label>
-                <input type="text" name="username" value={user?.username || ''} readOnly className="readonly" />
+                <label htmlFor="input-178">User</label>
+                <input id="input-178" type="text" name="username" value={user?.username || ''} readOnly className="readonly" />
             </div>
             <div className={`form-group ${formErrors.new_password ? 'has-error' : ''}`}>
-                <label>New Password</label>
+                <label htmlFor="input-182">New Password</label>
                 <div className="pos-rel">
-                    <input 
+                    <input id="input-182" 
                         type={showNewPassword ? "text" : "password"} 
                         name="new_password" 
                         className="pr-2-5rem"
@@ -199,9 +199,9 @@ export const ResetPasswordModal = ({ isOpen, onClose, onSubmit, user, formErrors
                 {formErrors.new_password && <span className="error-message">{formErrors.new_password}</span>}
             </div>
             <div className={`form-group ${formErrors.confirm_password ? 'has-error' : ''}`}>
-                <label>Confirm Password</label>
+                <label htmlFor="input-201">Confirm Password</label>
                 <div className="pos-rel">
-                    <input 
+                    <input id="input-201" 
                         type={showConfirmPassword ? "text" : "password"} 
                         name="confirm_password" 
                         className="pr-2-5rem"
@@ -229,8 +229,8 @@ export const StartConversationModal = ({ isOpen, onClose, onSubmit, loading, cla
     <Modal isOpen={isOpen} onClose={onClose} title="Start New Conversation">
         <form onSubmit={onSubmit} className="admin-form">
             <div className="form-group">
-                <label>Target Classroom <span className="text-error">*</span></label>
-                <select name="classroom_id" className="admin-select" required defaultValue="">
+                <label htmlFor="input-231">Target Classroom <span className="text-error">*</span></label>
+                <select id="input-231" name="classroom_id" className="admin-select" required defaultValue="">
                     <option value="" disabled>Select a classroom...</option>
                     {classrooms.map(c => (
                         <option key={c.id} value={c.id}>
@@ -240,8 +240,8 @@ export const StartConversationModal = ({ isOpen, onClose, onSubmit, loading, cla
                 </select>
             </div>
             <div className="form-group">
-                <label>Conversation Topic (Optional)</label>
-                <input type="text" name="title" placeholder="Leave empty for default..." />
+                <label htmlFor="input-242">Conversation Topic (Optional)</label>
+                <input id="input-242" type="text" name="title" placeholder="Leave empty for default..." />
             </div>
             <button type="submit" className="btn-primary" disabled={loading}>
                 {loading ? 'Starting...' : 'Start Conversation'}
@@ -254,8 +254,8 @@ export const AddBannedWordModal = ({ isOpen, onClose, onSubmit, newWord, setNewW
     <Modal isOpen={isOpen} onClose={onClose} title="Add Banned Word">
         <form onSubmit={onSubmit} className="admin-form">
             <div className="form-group">
-                <label>Word to Ban</label>
-                <input 
+                <label htmlFor="input-256">Word to Ban</label>
+                <input id="input-256" 
                     type="text" 
                     value={newWord}
                     onChange={(e) => setNewWord(e.target.value)}
@@ -278,7 +278,7 @@ export const ManageChildrenModal = ({ isOpen, onClose, parent, users, parentChil
         <Modal isOpen={isOpen} onClose={onClose} title={`Manage Children: ${parent?.username || ''}`}>
             <div className="admin-form">
                 <div className="form-group">
-                    <label>Select Students to Link</label>
+                    <label htmlFor="input-280">Select Students to Link</label>
                     <div className="students-list-container">
                         {students.length === 0 ? (
                             <p className="text-muted text-sm text-center">No students found.</p>
@@ -395,8 +395,8 @@ export const BulkConnectionCardsModal = ({ isOpen, onClose, classrooms, fetchCla
         <Modal isOpen={isOpen} onClose={onClose} title="Bulk Print Cohort Connection Cards" width="80%">
             <div className="bulk-cards-modal-content p-1rem">
                 <div className="form-group no-print mb-1-5rem">
-                    <label className="fw-semibold mb-sm d-block">Select Cohort (Classroom)</label>
-                    <select 
+                    <label htmlFor="input-397" className="fw-semibold mb-sm d-block">Select Cohort (Classroom)</label>
+                    <select id="input-397" 
                         value={selectedClassroomId} 
                         onChange={handleClassroomChange} className="admin-select select-styled-full">
                         <option value="">Select a classroom...</option>

@@ -2,7 +2,7 @@ import csv
 import os
 import tkinter as tk
 from tkinter import filedialog
-from urllib.parse import urlparse, parse_qs
+from urllib.parse import parse_qs, urlparse
 
 from bs4 import BeautifulSoup
 
@@ -19,22 +19,24 @@ def get_challenge_data(domain, soup):
             name = elem.get("data-level-name", "")
             slug = elem.get("data-level-slug", "")
             description = elem.find("div", class_="level-description")
-            challenge_data.append({
-                "name": name,
-                "slug": slug,
-                "description": description.text.strip() if description else "No description provided."
-            })
+            challenge_data.append(
+                {
+                    "name": name,
+                    "slug": slug,
+                    "description": description.text.strip()
+                    if description
+                    else "No description provided.",
+                }
+            )
 
     elif "studio.code.org" in domain:
         challenge_elements = soup.find_all("a", class_="progress-bubble-link")
         for elem in challenge_elements:
             name = elem.get("title", "")
             slug = name
-            challenge_data.append({
-                "name": name,
-                "slug": slug,
-                "description": "No description provided."
-            })
+            challenge_data.append(
+                {"name": name, "slug": slug, "description": "No description provided."}
+            )
 
     elif "ozaria.com" in domain:
         challenge_elements = soup.find_all("a", class_="level-dot-link")
@@ -43,11 +45,9 @@ def get_challenge_data(domain, soup):
             slug = elem.get("href", "")
             if slug:
                 slug = urlparse(slug).path.split("/")[-1]
-            challenge_data.append({
-                "name": name,
-                "slug": slug,
-                "description": "No description provided."
-            })
+            challenge_data.append(
+                {"name": name, "slug": slug, "description": "No description provided."}
+            )
 
     return challenge_data
 
@@ -73,15 +73,17 @@ def extract_challenges_from_html(url, html_content, difficulty, challenge_value)
     # Enrich and format for the final CSV
     enriched_challenges = []
     for challenge in challenges:
-        enriched_challenges.append({
-            "name": challenge.get("name", "").strip(),
-            "slug": challenge.get("slug", "").strip(),
-            "domain": domain,
-            "course_id": course_id,
-            "description": challenge.get("description", ""),
-            "difficulty": difficulty,
-            "value": challenge_value
-        })
+        enriched_challenges.append(
+            {
+                "name": challenge.get("name", "").strip(),
+                "slug": challenge.get("slug", "").strip(),
+                "domain": domain,
+                "course_id": course_id,
+                "description": challenge.get("description", ""),
+                "difficulty": difficulty,
+                "value": challenge_value,
+            }
+        )
 
     return enriched_challenges
 
@@ -143,7 +145,7 @@ def process_files_and_generate_seed(folder_path):
                 url=file_info["url"],
                 html_content=html_content,
                 difficulty=file_info["difficulty"],
-                challenge_value=file_info["challenge_value"]
+                challenge_value=file_info["challenge_value"],
             )
 
             all_seed_data.extend(extracted_data)
@@ -155,7 +157,15 @@ def process_files_and_generate_seed(folder_path):
     # Generate the final output CSV
     if all_seed_data:
         output_path = os.path.join(folder_path, output_filename)
-        headers = ["name", "slug", "domain", "course_id", "description", "difficulty", "value"]
+        headers = [
+            "name",
+            "slug",
+            "domain",
+            "course_id",
+            "description",
+            "difficulty",
+            "value",
+        ]
 
         try:
             with open(output_path, mode="w", encoding="utf-8", newline="") as out_file:

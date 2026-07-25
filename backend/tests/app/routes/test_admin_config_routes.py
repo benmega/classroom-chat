@@ -1,9 +1,9 @@
-
 def login_as_admin(client, admin_user):
     with client.session_transaction() as sess:
         sess["_user_id"] = str(admin_user.id)
         sess["_fresh"] = True
         sess["user"] = admin_user.id
+
 
 def test_admin_config_routes(client, sample_admin, init_db):
     login_as_admin(client, sample_admin)
@@ -24,10 +24,14 @@ def test_admin_config_routes(client, sample_admin, init_db):
     resp = client.post("/api/admin/update_duck_multiplier", json={})
     assert resp.status_code == 400
 
-    resp = client.post("/api/admin/update_duck_multiplier", json={"multiplier": "invalid"})
+    resp = client.post(
+        "/api/admin/update_duck_multiplier", json={"multiplier": "invalid"}
+    )
     assert resp.status_code == 400
 
-    resp = client.post("/api/admin/add-banned-word", data={"word": "badword", "reason": "offensive"})
+    resp = client.post(
+        "/api/admin/add-banned-word", data={"word": "badword", "reason": "offensive"}
+    )
     assert resp.status_code == 200
     assert resp.json["success"] is True
 

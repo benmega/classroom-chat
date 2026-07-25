@@ -10,11 +10,12 @@ client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 # --- TOOLS ---
 
+
 def list_files():
     """Locate files in the repository."""
     files = []
-    for path in pathlib.Path(".").rglob('*'):
-        if any(x in path.parts for x in {'.git', 'venv', '__pycache__', '.github'}):
+    for path in pathlib.Path(".").rglob("*"):
+        if any(x in path.parts for x in {".git", "venv", "__pycache__", ".github"}):
             continue
         if path.is_file():
             files.append(str(path))
@@ -24,7 +25,9 @@ def list_files():
 def search_code(query):
     """Search for specific strings or patterns using grep."""
     try:
-        result = subprocess.run(["grep", "-rnI", query, "."], capture_output=True, text=True)
+        result = subprocess.run(
+            ["grep", "-rnI", query, "."], capture_output=True, text=True
+        )
         return result.stdout[:2000]
     except Exception as e:
         return str(e)
@@ -47,7 +50,7 @@ def patch_file(path, start_line, end_line, new_content):
             lines = f.readlines()
 
         # Adjust for 1-based indexing
-        lines[int(start_line) - 1: int(end_line)] = [new_content + "\n"]
+        lines[int(start_line) - 1 : int(end_line)] = [new_content + "\n"]
 
         with open(path, "w") as f:
             f.writelines(lines)
@@ -59,7 +62,9 @@ def patch_file(path, start_line, end_line, new_content):
 def run_tests():
     """Execute pytest and return results."""
     result = subprocess.run(["pytest"], capture_output=True, text=True)
-    return f"STDOUT: {result.stdout}\nSTDERR: {result.stderr}\nCode: {result.returncode}"
+    return (
+        f"STDOUT: {result.stdout}\nSTDERR: {result.stderr}\nCode: {result.returncode}"
+    )
 
 
 def get_discussion_context():
@@ -70,7 +75,8 @@ def get_discussion_context():
     try:
         result = subprocess.run(
             ["gh", cmd, "view", obj_num, "--json", "body,comments,reviews"],
-            capture_output=True, text=True
+            capture_output=True,
+            text=True,
         )
         data = json.loads(result.stdout)
         context = f"Main Description: {data.get('body')}\n\nComments:\n"
@@ -78,13 +84,16 @@ def get_discussion_context():
             context += f"- {c['author']['login']}: {c['body']}\n"
         if is_pr:
             for r in data.get("reviews", []):
-                context += f"- REVIEW ({r['state']}) by {r['author']['login']}: {r['body']}\n"
+                context += (
+                    f"- REVIEW ({r['state']}) by {r['author']['login']}: {r['body']}\n"
+                )
         return context
     except Exception as e:
-        return f"Error fetching discussion: {str(e)}"
+        return f"Error fetching discussion: {e!s}"
 
 
 # --- MAIN LOOP ---
+
 
 def main():
     obj_type = "Pull Request" if os.getenv("IS_PR") == "true" else "Issue"
@@ -104,37 +113,84 @@ def main():
             1) Search/List files to locate the problem.
             2) Read files with line numbers.
             3) Patch only the necessary lines (do not overwrite whole files).
-            4) Run tests to verify the fix."""
+            4) Run tests to verify the fix.""",
         },
-        {"role": "user",
-         "content": f"Title: {os.getenv('ISSUE_TITLE')}\nArchitect Plan: {plan_context}\n\nImplement the fix."}
+        {
+            "role": "user",
+            "content": f"Title: {os.getenv('ISSUE_TITLE')}\nArchitect Plan: {plan_context}\n\nImplement the fix.",
+        },
     ]
 
     tools = [
-        {"type": "function", "function": {"name": "list_files", "description": "List all repo files"}},
-        {"type": "function", "function": {"name": "search_code",
-                                          "parameters": {"type": "object", "properties": {"query": {"type": "string"}}},
-                                          "description": "Grep search"}},
-        {"type": "function",
-         "function": {"name": "read_file", "parameters": {"type": "object", "properties": {"path": {"type": "string"}}},
-                      "description": "Read with line numbers"}},
-        {"type": "function", "function": {"name": "patch_file", "parameters": {"type": "object", "properties": {
-            "path": {"type": "string"}, "start_line": {"type": "integer"}, "end_line": {"type": "integer"},
-            "new_content": {"type": "string"}}}, "description": "Replace lines"}},
-        {"type": "function", "function": {"name": "run_tests", "description": "Run pytest"}},
-        {"type": "function",
-         "function": {"name": "get_discussion_context", "description": "Get latest GH comments/reviews"}}
+        {
+            "type": "function",
+            "function": {"name": "list_files", "description": "List all repo files"},
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "search_code",
+                "parameters": {
+                    "type": "object",
+                    "properties": {"query": {"type": "string"}},
+                },
+                "description": "Grep search",
+            },
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "read_file",
+                "parameters": {
+                    "type": "object",
+                    "properties": {"path": {"type": "string"}},
+                },
+                "description": "Read with line numbers",
+            },
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "patch_file",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "path": {"type": "string"},
+                        "start_line": {"type": "integer"},
+                        "end_line": {"type": "integer"},
+                        "new_content": {"type": "string"},
+                    },
+                },
+                "description": "Replace lines",
+            },
+        },
+        {
+            "type": "function",
+            "function": {"name": "run_tests", "description": "Run pytest"},
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "get_discussion_context",
+                "description": "Get latest GH comments/reviews",
+            },
+        },
     ]
 
     for _ in range(12):
-        response = client.chat.completions.create(model="gpt-4o", messages=messages, tools=tools)
+        response = client.chat.completions.create(
+            model="gpt-4o", messages=messages, tools=tools
+        )
         msg = response.choices[0].message
         messages.append(msg)
         if not msg.tool_calls:
             break
 
         for tool_call in msg.tool_calls:
-            name, args = tool_call.function.name, json.loads(tool_call.function.arguments)
+            name, args = (
+                tool_call.function.name,
+                json.loads(tool_call.function.arguments),
+            )
             if name == "list_files":
                 result = list_files()
             elif name == "search_code":
@@ -142,13 +198,20 @@ def main():
             elif name == "read_file":
                 result = read_file(args["path"])
             elif name == "patch_file":
-                result = patch_file(args["path"], args["start_line"], args["end_line"], args["new_content"])
+                result = patch_file(
+                    args["path"],
+                    args["start_line"],
+                    args["end_line"],
+                    args["new_content"],
+                )
             elif name == "run_tests":
                 result = run_tests()
             elif name == "get_discussion_context":
                 result = get_discussion_context()
 
-            messages.append({"role": "tool", "tool_call_id": tool_call.id, "content": result})
+            messages.append(
+                {"role": "tool", "tool_call_id": tool_call.id, "content": result}
+            )
 
 
 if __name__ == "__main__":

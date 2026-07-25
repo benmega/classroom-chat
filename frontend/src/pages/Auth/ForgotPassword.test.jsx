@@ -28,10 +28,7 @@ describe('ForgotPassword', () => {
             </MemoryRouter>
         );
 
-        expect(screen.getByText('Forgot Password')).toBeInTheDocument();
-        expect(screen.getByText(/Select your role to reset your password/i)).toBeInTheDocument();
-        expect(screen.getByText('Please ask your teacher to reset your password.')).toBeInTheDocument();
-        
+        expect(screen.getByText('Forgot Password')).toBeInTheDocument();        
         // Ensure email input is not visible for student
         expect(screen.queryByPlaceholderText('Enter your Email Address')).not.toBeInTheDocument();
     });

@@ -94,7 +94,10 @@ describe('AdminStandardProjects', () => {
             data: { status: 'success', message: 'Created successfully.' }
         });
 
-        fireEvent.submit(screen.getByRole('button', { name: /Save Template/i }).closest('form'));
+        // The modal overlay divs also expose role="button", so pick the real submit <button>
+        const saveButtonsNew = screen.getAllByRole('button', { name: /Save Template/i })
+            .filter(el => el.tagName === 'BUTTON');
+        fireEvent.submit(saveButtonsNew[0].closest('form'));
         
         await waitFor(() => {
             expect(client.post).toHaveBeenCalledWith('/api/admin/standard-projects', expect.objectContaining({
@@ -130,7 +133,10 @@ describe('AdminStandardProjects', () => {
             data: { status: 'success', message: 'Updated successfully.' }
         });
 
-        fireEvent.submit(screen.getByRole('button', { name: /Save Template/i }).closest('form'));
+        // The modal overlay divs also expose role="button", so pick the real submit <button>
+        const saveButtons = screen.getAllByRole('button', { name: /Save Template/i })
+            .filter(el => el.tagName === 'BUTTON');
+        fireEvent.submit(saveButtons[0].closest('form'));
         
         await waitFor(() => {
             expect(client.put).toHaveBeenCalledWith('/api/admin/standard-projects/1', expect.objectContaining({
@@ -188,7 +194,8 @@ describe('AdminStandardProjects', () => {
         fireEvent.click(screen.getByRole('button', { name: /Add Standard Project/i }));
         expect(screen.getByPlaceholderText('e.g. Text-Based Adventure')).toBeInTheDocument();
         
-        fireEvent.click(screen.getByRole('button', { name: /Cancel/i }));
+        const cancelButtons = screen.getAllByRole('button', { name: /Cancel/i });
+        fireEvent.click(cancelButtons[0]);
         
         expect(screen.queryByPlaceholderText('e.g. Text-Based Adventure')).not.toBeInTheDocument();
     });

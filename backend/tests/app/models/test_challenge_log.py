@@ -7,7 +7,6 @@ Summary: Unit tests for challenge log model.
 from datetime import datetime
 
 import pytest
-
 from application.extensions import db
 from application.models.challenge_log import ChallengeLog
 from application.models.user import User

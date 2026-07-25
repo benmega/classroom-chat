@@ -4,13 +4,13 @@ Type: py
 Summary: Flask routes for track change requests.
 """
 
-from flask import Blueprint, jsonify, request, session
 from application.extensions import db
-from application.models.user import User
 from application.models.track_requests import TrackChangeRequest
+from application.models.user import User
 from application.utilities.db_helpers import get_user
+from flask import Blueprint, jsonify, request, session
 
-track_request_bp = Blueprint("track_request", __name__)
+track_request_bp = Blueprint("track_request", __name__, url_prefix="/api")
 
 
 @track_request_bp.route("/track-requests/", methods=["POST"])
@@ -39,25 +39,42 @@ def create_track_request():
         student_id = user.id
     elif requester_type == "parent":
         if not student_id:
-            return jsonify({"success": False, "message": "Student ID is required for parent requests"}), 400
+            return jsonify(
+                {
+                    "success": False,
+                    "message": "Student ID is required for parent requests",
+                }
+            ), 400
         # Verify student is a linked child of the parent
         child_ids = {child.id for child in user.children}
         if int(student_id) not in child_ids:
-            return jsonify({"success": False, "message": "Access denied: student is not linked to this parent"}), 403
+            return jsonify(
+                {
+                    "success": False,
+                    "message": "Access denied: student is not linked to this parent",
+                }
+            ), 403
     else:
         return jsonify({"success": False, "message": "Invalid requester type"}), 400
 
     # Check for existing pending request for this student
-    existing = TrackChangeRequest.query.filter_by(student_id=student_id, status="pending").first()
+    existing = TrackChangeRequest.query.filter_by(
+        student_id=student_id, status="pending"
+    ).first()
     if existing:
-        return jsonify({"success": False, "message": "A track change request is already pending for this student"}), 400
+        return jsonify(
+            {
+                "success": False,
+                "message": "A track change request is already pending for this student",
+            }
+        ), 400
 
     # Create request
     new_request = TrackChangeRequest(
         student_id=student_id,
         requester_type=requester_type,
         requested_track=requested_track,
-        status="pending"
+        status="pending",
     )
     db.session.add(new_request)
     db.session.commit()
@@ -76,10 +93,7 @@ def get_pending_track_requests():
         return jsonify({"success": False, "message": "Forbidden"}), 403
 
     requests = TrackChangeRequest.query.filter_by(status="pending").all()
-    return jsonify({
-        "success": True,
-        "requests": [req.to_dict() for req in requests]
-    })
+    return jsonify({"success": True, "requests": [req.to_dict() for req in requests]})
 
 
 @track_request_bp.route("/admin/track-requests/<int:request_id>", methods=["PUT"])

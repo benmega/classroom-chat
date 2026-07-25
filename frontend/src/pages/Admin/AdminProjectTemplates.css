@@ -204,12 +204,12 @@
 }
 
 .btn-action.delete {
-    color: var(--error-color, #ef4444);
+    color: var(--error-color, #dc2626);
 }
 
 .btn-action.delete:hover {
     background: rgba(239, 68, 68, 0.08);
-    border-color: var(--error-color, #ef4444);
+    border-color: var(--error-color, #dc2626);
 }
 
 .empty-row {
@@ -331,12 +331,12 @@
 
 .form-group input.error,
 .form-group textarea.error {
-    border-color: var(--error-color, #ef4444);
+    border-color: var(--error-color, #dc2626);
 }
 
 .error-message {
     font-size: 0.8rem;
-    color: var(--error-color, #ef4444);
+    color: var(--error-color, #dc2626);
     font-weight: 500;
 }
 

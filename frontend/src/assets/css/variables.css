@@ -66,8 +66,8 @@
     --shadow-glow: none;
     --shadow-inner: inset 0 1px 2px rgba(0, 0, 0, 0.04);
 
-    /* Focus ring — visible keyboard focus (WCAG 2.4.7) */
-    --focus-ring: 0 0 0 3px rgba(0, 109, 116, 0.4);
+    /* Focus ring — visible keyboard focus (WCAG 2.4.7 and 2.2 Focus Appearance) */
+    --focus-ring: 0 0 0 2px var(--bg-primary), 0 0 0 5px var(--primary-accessible);
 
     /* Typography */
     --font-xs: 0.75rem;   /* 12px */

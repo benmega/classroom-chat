@@ -14,7 +14,7 @@ def test_create_track_request_student(client, init_db, sample_user):
         sess["user"] = sample_user.id
 
     response = client.post(
-        "/track-requests/",
+        "/api/track-requests/",
         json={"requester_type": "student", "requested_track": "cs"},
     )
     assert response.status_code == 201
@@ -43,7 +43,7 @@ def test_create_track_request_parent(client, init_db, sample_user, sample_users)
         sess["user"] = parent_user.id
 
     response = client.post(
-        "/track-requests/",
+        "/api/track-requests/",
         json={
             "requester_type": "parent",
             "requested_track": "gd",
@@ -59,7 +59,9 @@ def test_create_track_request_parent(client, init_db, sample_user, sample_users)
     assert req.requested_track == "gd"
 
 
-def test_create_track_request_parent_unlinked(client, init_db, sample_user, sample_users):
+def test_create_track_request_parent_unlinked(
+    client, init_db, sample_user, sample_users
+):
     """Test parent cannot submit a request for an unlinked student."""
     parent_user = sample_users[0]
     student_user = sample_users[1]
@@ -72,7 +74,7 @@ def test_create_track_request_parent_unlinked(client, init_db, sample_user, samp
         sess["user"] = parent_user.id
 
     response = client.post(
-        "/track-requests/",
+        "/api/track-requests/",
         json={
             "requester_type": "parent",
             "requested_track": "gd",
@@ -98,7 +100,7 @@ def test_create_track_request_duplicate(client, init_db, sample_user):
         sess["user"] = sample_user.id
 
     response = client.post(
-        "/track-requests/",
+        "/api/track-requests/",
         json={"requester_type": "student", "requested_track": "cs"},
     )
     assert response.status_code == 400
@@ -110,13 +112,13 @@ def test_get_pending_requests_admin_only(client, init_db, sample_user, sample_ad
     # Non-admin
     with client.session_transaction() as sess:
         sess["user"] = sample_user.id
-    response = client.get("/admin/track-requests/")
+    response = client.get("/api/admin/track-requests/")
     assert response.status_code == 403
 
     # Admin
     with client.session_transaction() as sess:
         sess["user"] = sample_admin.id
-    response = client.get("/admin/track-requests/")
+    response = client.get("/api/admin/track-requests/")
     assert response.status_code == 200
     assert "requests" in response.get_json()
 
@@ -136,7 +138,7 @@ def test_approve_track_request(client, init_db, sample_user, sample_admin):
         sess["user"] = sample_admin.id
 
     response = client.put(
-        f"/admin/track-requests/{req.id}",
+        f"/api/admin/track-requests/{req.id}",
         json={"status": "approved"},
     )
     assert response.status_code == 200
@@ -163,7 +165,7 @@ def test_deny_track_request(client, init_db, sample_user, sample_admin):
         sess["user"] = sample_admin.id
 
     response = client.put(
-        f"/admin/track-requests/{req.id}",
+        f"/api/admin/track-requests/{req.id}",
         json={"status": "denied"},
     )
     assert response.status_code == 200

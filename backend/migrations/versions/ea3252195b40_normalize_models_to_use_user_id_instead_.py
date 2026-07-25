@@ -37,15 +37,16 @@ Key rules that make this migration safe on any database state:
     SQLite does an internal INSERT SELECT.  Any NULL in a NOT NULL column will
     fail that INSERT.  Always DELETE nulls before the batch that enforces NOT NULL.
 """
-from alembic import op
+
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import sqlite
 
 # ---------------------------------------------------------------------------
 # Alembic revision chain
 # ---------------------------------------------------------------------------
-revision = 'ea3252195b40'
-down_revision = 'a1b2c3d4e5f6'
+revision = "ea3252195b40"
+down_revision = "a1b2c3d4e5f6"
 branch_labels = None
 depends_on = None
 
@@ -60,32 +61,32 @@ def upgrade():
     # the end.  A crash between CREATE and RENAME leaves a ghost table that
     # blocks every subsequent attempt.  Dropping it here makes the migration
     # re-entrant with no manual server intervention required.
-    for orphan in ('_alembic_tmp_challenge_logs', '_alembic_tmp_duck_trade_log'):
+    for orphan in ("_alembic_tmp_challenge_logs", "_alembic_tmp_duck_trade_log"):
         if orphan in existing_tables:
             bind.execute(sa.text(f'DROP TABLE "{orphan}"'))
 
     # ── Drop legacy tables (were removed from models) ────────────────────────
-    if 'trade' in existing_tables:
-        op.drop_table('trade')
-    if 'bounties' in existing_tables:
-        op.drop_table('bounties')
+    if "trade" in existing_tables:
+        op.drop_table("trade")
+    if "bounties" in existing_tables:
+        op.drop_table("bounties")
 
     # ── challenge_logs ────────────────────────────────────────────────────────
-    cl_cols = {c['name'] for c in inspector.get_columns('challenge_logs')}
+    cl_cols = {c["name"] for c in inspector.get_columns("challenge_logs")}
 
-    if 'username' not in cl_cols and 'user_id' in cl_cols:
+    if "username" not in cl_cols and "user_id" in cl_cols:
         # Schema already completely converted — nothing to do.
         print("challenge_logs: already on new schema, skipping.")
     else:
         # Old or partially migrated schema detected.
-        
+
         # Step 1: add user_id as nullable (only if it doesn't already exist from a prior failed run)
-        if 'user_id' not in cl_cols:
-            with op.batch_alter_table('challenge_logs', schema=None) as batch_op:
-                batch_op.add_column(sa.Column('user_id', sa.Integer(), nullable=True))
+        if "user_id" not in cl_cols:
+            with op.batch_alter_table("challenge_logs", schema=None) as batch_op:
+                batch_op.add_column(sa.Column("user_id", sa.Integer(), nullable=True))
 
         # Step 2: back-fill user_id from the username column (only if username still exists)
-        if 'username' in cl_cols:
+        if "username" in cl_cols:
             op.execute(
                 "UPDATE challenge_logs "
                 "SET user_id = (SELECT id FROM users "
@@ -96,38 +97,40 @@ def upgrade():
         op.execute("DELETE FROM challenge_logs WHERE user_id IS NULL")
 
         # Step 4: rebuild table — enforce NOT NULL, add index + FK, drop username.
-        with op.batch_alter_table('challenge_logs', schema=None) as batch_op:
-            batch_op.alter_column('user_id', existing_type=sa.Integer(), nullable=False)
-            
+        with op.batch_alter_table("challenge_logs", schema=None) as batch_op:
+            batch_op.alter_column("user_id", existing_type=sa.Integer(), nullable=False)
+
             # Create index only if it doesn't exist
-            cl_indexes = {ix['name'] for ix in inspector.get_indexes('challenge_logs')}
-            if 'ix_challenge_logs_user_id' not in cl_indexes:
+            cl_indexes = {ix["name"] for ix in inspector.get_indexes("challenge_logs")}
+            if "ix_challenge_logs_user_id" not in cl_indexes:
                 batch_op.create_index(
-                    batch_op.f('ix_challenge_logs_user_id'), ['user_id'], unique=False
+                    batch_op.f("ix_challenge_logs_user_id"), ["user_id"], unique=False
                 )
-                
+
             batch_op.create_foreign_key(
-                batch_op.f('fk_challenge_logs_user_id_users'),
-                'users', ['user_id'], ['id'],
+                batch_op.f("fk_challenge_logs_user_id_users"),
+                "users",
+                ["user_id"],
+                ["id"],
             )
-            
-            if 'username' in cl_cols:
-                batch_op.drop_column('username')
+
+            if "username" in cl_cols:
+                batch_op.drop_column("username")
 
     # ── duck_trade_log ────────────────────────────────────────────────────────
     # Re-inspect: the challenge_logs batch may have refreshed the connection state.
-    dtl_cols = {c['name'] for c in sa.inspect(bind).get_columns('duck_trade_log')}
+    dtl_cols = {c["name"] for c in sa.inspect(bind).get_columns("duck_trade_log")}
 
-    if 'username' not in dtl_cols and 'user_id' in dtl_cols:
+    if "username" not in dtl_cols and "user_id" in dtl_cols:
         print("duck_trade_log: already on new schema, skipping.")
     else:
         # Step 1: add user_id as nullable
-        if 'user_id' not in dtl_cols:
-            with op.batch_alter_table('duck_trade_log', schema=None) as batch_op:
-                batch_op.add_column(sa.Column('user_id', sa.Integer(), nullable=True))
+        if "user_id" not in dtl_cols:
+            with op.batch_alter_table("duck_trade_log", schema=None) as batch_op:
+                batch_op.add_column(sa.Column("user_id", sa.Integer(), nullable=True))
 
         # Step 2: back-fill
-        if 'username' in dtl_cols:
+        if "username" in dtl_cols:
             op.execute(
                 "UPDATE duck_trade_log "
                 "SET user_id = (SELECT id FROM users "
@@ -138,61 +141,85 @@ def upgrade():
         op.execute("DELETE FROM duck_trade_log WHERE user_id IS NULL")
 
         # Step 4: rebuild table
-        with op.batch_alter_table('duck_trade_log', schema=None) as batch_op:
-            batch_op.alter_column('user_id', existing_type=sa.Integer(), nullable=False)
-            
-            dtl_indexes = {ix['name'] for ix in inspector.get_indexes('duck_trade_log')}
-            if 'ix_duck_trade_log_user_id' not in dtl_indexes:
+        with op.batch_alter_table("duck_trade_log", schema=None) as batch_op:
+            batch_op.alter_column("user_id", existing_type=sa.Integer(), nullable=False)
+
+            dtl_indexes = {ix["name"] for ix in inspector.get_indexes("duck_trade_log")}
+            if "ix_duck_trade_log_user_id" not in dtl_indexes:
                 batch_op.create_index(
-                    batch_op.f('ix_duck_trade_log_user_id'), ['user_id'], unique=False
+                    batch_op.f("ix_duck_trade_log_user_id"), ["user_id"], unique=False
                 )
-                
+
             batch_op.create_foreign_key(
-                batch_op.f('fk_duck_trade_log_user_id_users'),
-                'users', ['user_id'], ['id'],
+                batch_op.f("fk_duck_trade_log_user_id_users"),
+                "users",
+                ["user_id"],
+                ["id"],
             )
-            
-            if 'username' in dtl_cols:
-                batch_op.drop_column('username')
+
+            if "username" in dtl_cols:
+                batch_op.drop_column("username")
 
 
 def downgrade():
     # ### commands auto generated by Alembic - please adjust! ###
-    with op.batch_alter_table('duck_trade_log', schema=None) as batch_op:
-        batch_op.add_column(sa.Column('username', sa.VARCHAR(length=80), nullable=False))
-        batch_op.drop_constraint(batch_op.f('fk_duck_trade_log_user_id_users'), type_='foreignkey')
-        batch_op.create_foreign_key(batch_op.f('fk_duck_trade_log_username_users'), 'users', ['username'], ['username'])
-        batch_op.drop_index(batch_op.f('ix_duck_trade_log_user_id'))
-        batch_op.create_index(batch_op.f('ix_duck_trade_log_username'), ['username'], unique=False)
-        batch_op.drop_column('user_id')
+    with op.batch_alter_table("duck_trade_log", schema=None) as batch_op:
+        batch_op.add_column(
+            sa.Column("username", sa.VARCHAR(length=80), nullable=False)
+        )
+        batch_op.drop_constraint(
+            batch_op.f("fk_duck_trade_log_user_id_users"), type_="foreignkey"
+        )
+        batch_op.create_foreign_key(
+            batch_op.f("fk_duck_trade_log_username_users"),
+            "users",
+            ["username"],
+            ["username"],
+        )
+        batch_op.drop_index(batch_op.f("ix_duck_trade_log_user_id"))
+        batch_op.create_index(
+            batch_op.f("ix_duck_trade_log_username"), ["username"], unique=False
+        )
+        batch_op.drop_column("user_id")
 
-    with op.batch_alter_table('challenge_logs', schema=None) as batch_op:
-        batch_op.add_column(sa.Column('username', sa.VARCHAR(length=100), nullable=False))
-        batch_op.drop_constraint(batch_op.f('fk_challenge_logs_user_id_users'), type_='foreignkey')
-        batch_op.drop_index(batch_op.f('ix_challenge_logs_user_id'))
-        batch_op.create_index(batch_op.f('ix_challenge_logs_username'), ['username'], unique=False)
-        batch_op.drop_column('user_id')
+    with op.batch_alter_table("challenge_logs", schema=None) as batch_op:
+        batch_op.add_column(
+            sa.Column("username", sa.VARCHAR(length=100), nullable=False)
+        )
+        batch_op.drop_constraint(
+            batch_op.f("fk_challenge_logs_user_id_users"), type_="foreignkey"
+        )
+        batch_op.drop_index(batch_op.f("ix_challenge_logs_user_id"))
+        batch_op.create_index(
+            batch_op.f("ix_challenge_logs_username"), ["username"], unique=False
+        )
+        batch_op.drop_column("user_id")
 
-    op.create_table('bounties',
-    sa.Column('id', sa.INTEGER(), nullable=False),
-    sa.Column('user_id', sa.INTEGER(), nullable=False),
-    sa.Column('description', sa.TEXT(), nullable=False),
-    sa.Column('bounty', sa.VARCHAR(), nullable=False),
-    sa.Column('expected_behavior', sa.TEXT(), nullable=True),
-    sa.Column('timestamp', sa.DATETIME(), nullable=True),
-    sa.Column('status', sa.VARCHAR(), nullable=True),
-    sa.Column('image_path', sa.VARCHAR(length=255), nullable=True),
-    sa.PrimaryKeyConstraint('id')
+    op.create_table(
+        "bounties",
+        sa.Column("id", sa.INTEGER(), nullable=False),
+        sa.Column("user_id", sa.INTEGER(), nullable=False),
+        sa.Column("description", sa.TEXT(), nullable=False),
+        sa.Column("bounty", sa.VARCHAR(), nullable=False),
+        sa.Column("expected_behavior", sa.TEXT(), nullable=True),
+        sa.Column("timestamp", sa.DATETIME(), nullable=True),
+        sa.Column("status", sa.VARCHAR(), nullable=True),
+        sa.Column("image_path", sa.VARCHAR(length=255), nullable=True),
+        sa.PrimaryKeyConstraint("id"),
     )
-    op.create_table('trade',
-    sa.Column('id', sa.INTEGER(), nullable=False),
-    sa.Column('user_id', sa.INTEGER(), nullable=False),
-    sa.Column('digital_ducks_traded', sa.INTEGER(), nullable=False),
-    sa.Column('duck_breakdown', sqlite.JSON(), nullable=False),
-    sa.Column('duck_type', sa.VARCHAR(length=4), nullable=False),
-    sa.Column('timestamp', sa.DATETIME(), nullable=False),
-    sa.Column('status', sa.VARCHAR(length=20), nullable=False),
-    sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
-    sa.PrimaryKeyConstraint('id')
+    op.create_table(
+        "trade",
+        sa.Column("id", sa.INTEGER(), nullable=False),
+        sa.Column("user_id", sa.INTEGER(), nullable=False),
+        sa.Column("digital_ducks_traded", sa.INTEGER(), nullable=False),
+        sa.Column("duck_breakdown", sqlite.JSON(), nullable=False),
+        sa.Column("duck_type", sa.VARCHAR(length=4), nullable=False),
+        sa.Column("timestamp", sa.DATETIME(), nullable=False),
+        sa.Column("status", sa.VARCHAR(length=20), nullable=False),
+        sa.ForeignKeyConstraint(
+            ["user_id"],
+            ["users.id"],
+        ),
+        sa.PrimaryKeyConstraint("id"),
     )
     # ### end Alembic commands ###

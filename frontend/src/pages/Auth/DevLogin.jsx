@@ -38,7 +38,9 @@ const DevLogin = () => {
                     setStatus(`Logged in as ${res.data.user?.username} (${role}). Redirecting…`);
                     await checkAuth();
                     const currentUser = useAuthStore.getState().user;
-                    if (currentUser?.role === 'student' && currentUser?.slug) {
+                    if (currentUser?.role === 'parent') {
+                        navigate('/parent/dashboard');
+                    } else if (currentUser?.role === 'student' && currentUser?.slug) {
                         navigate(`/course-progress/${currentUser.slug}`);
                     } else {
                         navigate('/chat');

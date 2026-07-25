@@ -1,10 +1,11 @@
-from flask import request
-from application.extensions import db
-from application.models.challenge import Challenge
 from application.decorators.admin_required import admin_only
 from application.decorators.api_response import api_response
+from application.extensions import db
+from application.models.challenge import Challenge
+from flask import request
 
 from ..admin_routes import admin_bp
+
 
 @admin_bp.route("/challenges/bulk_add", methods=["POST"])
 @admin_only
@@ -54,7 +55,7 @@ def bulk_add_challenges():
             value=value,
             course_id=course_id,
             description=description,
-            is_active=True
+            is_active=True,
         )
         db.session.add(new_challenge)
         added_count += 1
@@ -63,11 +64,11 @@ def bulk_add_challenges():
         db.session.commit()
     except Exception as e:
         db.session.rollback()
-        return f"Database error: {str(e)}", 500
+        return f"Database error: {e!s}", 500
 
     return {
         "message": f"Successfully added {added_count} challenges. Skipped {skipped_count} existing or invalid entries.",
         "added": added_count,
         "skipped": skipped_count,
-        "errors": errors
+        "errors": errors,
     }

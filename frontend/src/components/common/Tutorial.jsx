@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useLayoutEffect, useRef } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useRef, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import { 
   X, 
@@ -99,6 +99,13 @@ const Tutorial = () => {
     }
   }, [location.pathname, user, isParent]);
 
+  const handleClose = useCallback(() => {
+    if (user && !user.has_seen_tutorial) {
+      completeTutorial();
+    }
+    setIsOpen(false);
+  }, [user, completeTutorial]);
+
   useLayoutEffect(() => {
     if (isOpen) {
       const slide = slides[currentSlide];
@@ -110,7 +117,7 @@ const Tutorial = () => {
       });
       return () => cancelAnimationFrame(frame);
     }
-  }, [isOpen, currentSlide, slides]);
+  }, [isOpen, currentSlide, slides, handleClose]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -135,12 +142,7 @@ const Tutorial = () => {
     return () => window.removeEventListener('resize', updateRect);
   }, [isOpen, currentSlide, slides]);
 
-  const handleClose = () => {
-    if (user && !user.has_seen_tutorial) {
-      completeTutorial();
-    }
-    setIsOpen(false);
-  };
+
 
   const handleNext = () => {
     if (currentSlide < slides.length - 1) {

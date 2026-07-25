@@ -1,9 +1,9 @@
-from flask import Blueprint, request
-from application.extensions import db
-from application.models.project_template import ProjectTemplate
-from application.decorators.login_required import require_login
 from application.decorators.admin_required import admin_only
 from application.decorators.api_response import api_response
+from application.decorators.login_required import require_login
+from application.extensions import db
+from application.models.project_template import ProjectTemplate
+from flask import Blueprint, request
 
 project_templates_bp = Blueprint("project_templates", __name__)
 
@@ -18,8 +18,9 @@ def list_templates():
             "id": t.id,
             "description": t.description,
             "chapter": t.chapter,
-            "name": t.name
-        } for t in templates
+            "name": t.name,
+        }
+        for t in templates
     }
     return {"templates": templates_info}
 
@@ -39,13 +40,15 @@ def create_template():
     if existing:
         return {"error": "A template with this name already exists"}, 400
 
-    template = ProjectTemplate(name=name, description=description, chapter=data.get("chapter"))
+    template = ProjectTemplate(
+        name=name, description=description, chapter=data.get("chapter")
+    )
     db.session.add(template)
     db.session.commit()
 
     return {
         "message": f"Project template '{name}' created successfully.",
-        "template": template.to_dict()
+        "template": template.to_dict(),
     }
 
 
@@ -62,7 +65,9 @@ def update_template(template_id):
     description = data.get("description")
 
     if name:
-        existing = ProjectTemplate.query.filter(ProjectTemplate.name == name, ProjectTemplate.id != template_id).first()
+        existing = ProjectTemplate.query.filter(
+            ProjectTemplate.name == name, ProjectTemplate.id != template_id
+        ).first()
         if existing:
             return {"error": "A template with this name already exists"}, 400
         template.name = name
@@ -75,7 +80,7 @@ def update_template(template_id):
 
     return {
         "message": f"Project template '{template.name}' updated successfully.",
-        "template": template.to_dict()
+        "template": template.to_dict(),
     }
 
 
@@ -90,6 +95,4 @@ def delete_template(template_id):
     db.session.delete(template)
     db.session.commit()
 
-    return {
-        "message": "Project template deleted successfully."
-    }
+    return {"message": "Project template deleted successfully."}

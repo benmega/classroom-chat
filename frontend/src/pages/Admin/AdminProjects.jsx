@@ -69,21 +69,9 @@ const AdminProjects = () => {
         }
     }, []);
 
-    const fetchStandardProjects = useCallback(async () => {
-        try {
-            const res = await client.get('/api/admin/standard-projects');
-            if (res.data.status === 'success') {
-                // setStandardProjects(res.data.data.standard_projects);
-            }
-        } catch (e) {
-            console.error('Failed to load standard projects', e);
-        }
-    }, []);
-
     useEffect(() => {
         fetchProjects();
-        fetchStandardProjects();
-    }, [fetchProjects, fetchStandardProjects]);
+    }, [fetchProjects]);
 
     const handleReview = async (projectId, action) => {
         if (action === 'approve' && !teacherComment.trim()) {

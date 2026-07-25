@@ -8,18 +8,13 @@ import re
 from unittest.mock import patch
 
 import pytest
-
 from application import db
 from application.models.challenge import Challenge
 from application.models.challenge_log import ChallengeLog
 from application.models.configuration import Configuration
 
 
-
-
-def test_submit_challenge_get(
-    client, init_db, sample_user, sample_configuration
-):
+def test_submit_challenge_get(client, init_db, sample_user, sample_configuration):
     """Test GET request to challenge submission page."""
     with client.session_transaction() as sess:
         sess["user"] = sample_user.id
@@ -33,7 +28,9 @@ def test_submit_challenge_no_session(client, init_db):
     """Test submitting challenge without logged in user."""
     response = client.post(
         "/challenge/submit",
-        data={"url": "https://codecombat.com/play/level/dungeons-of-kithgard?course=123&course-instance=456"},
+        data={
+            "url": "https://codecombat.com/play/level/dungeons-of-kithgard?course=123&course-instance=456"
+        },
         follow_redirects=False,
     )
 
@@ -46,9 +43,7 @@ def test_submit_challenge_no_session(client, init_db):
         assert any("No session user found" in m for m in messages)
 
 
-def test_submit_challenge_no_url(
-    client, init_db, sample_user, sample_configuration
-):
+def test_submit_challenge_no_url(client, init_db, sample_user, sample_configuration):
     """Test submitting challenge without URL."""
     with client.session_transaction() as sess:
         sess["user"] = sample_user.id
@@ -100,9 +95,7 @@ def test_submit_challenge_success(
         assert b"10 ducks" in response.data
 
 
-def test_submit_challenge_failed(
-    client, init_db, sample_user, sample_configuration
-):
+def test_submit_challenge_failed(client, init_db, sample_user, sample_configuration):
     """Test failed challenge submission."""
     with client.session_transaction() as sess:
         sess["user"] = sample_user.id
@@ -128,9 +121,7 @@ def test_submit_challenge_failed(
         assert b"Challenge could not be validated" in response.data
 
 
-def test_submit_challenge_no_configuration(
-    client, init_db, sample_user
-):
+def test_submit_challenge_no_configuration(client, init_db, sample_user):
     """Test submitting challenge when configuration is missing."""
     with client.session_transaction() as sess:
         sess["user"] = sample_user.id
@@ -140,7 +131,9 @@ def test_submit_challenge_no_configuration(
 
     response = client.post(
         "/challenge/submit",
-        data={"url": "https://codecombat.com/play/level/test?course=123&course-instance=456"},
+        data={
+            "url": "https://codecombat.com/play/level/test?course=123&course-instance=456"
+        },
         follow_redirects=False,
     )
 
@@ -219,8 +212,6 @@ def test_submit_challenge_with_notes(
         assert response.status_code == 200
 
 
-
-
 def test_detect_and_handle_challenge_url_valid(
     init_db, sample_user, sample_challenge_active, sample_course, sample_course_instance
 ):
@@ -232,9 +223,7 @@ def test_detect_and_handle_challenge_url_valid(
     db.session.commit()
 
     url = f"https://codecombat.com/play/level/dungeons-of-kithgard?course={sample_course.id}&course-instance={sample_course_instance.id}"
-    result = detect_and_handle_challenge_url(
-        url, sample_user, duck_multiplier=1
-    )
+    result = detect_and_handle_challenge_url(url, sample_user, duck_multiplier=1)
 
     assert result["handled"] is True
     assert result["details"]["success"] is True
@@ -246,9 +235,7 @@ def test_detect_and_handle_challenge_url_invalid(init_db, sample_user):
     from application.routes.challenge_routes import detect_and_handle_challenge_url
 
     url = "https://invalid-url.com/not-a-challenge"
-    result = detect_and_handle_challenge_url(
-        url, sample_user, duck_multiplier=1
-    )
+    result = detect_and_handle_challenge_url(url, sample_user, duck_multiplier=1)
 
     assert result["handled"] is False
     assert result["details"] is None
@@ -266,16 +253,12 @@ def test_detect_and_handle_challenge_url_duplicate(
     url = f"https://codecombat.com/play/level/dungeons-of-kithgard?course={sample_course.id}&course-instance={sample_course_instance.id}"
 
     # Submit challenge first time
-    result1 = detect_and_handle_challenge_url(
-        url, sample_user, duck_multiplier=1
-    )
+    result1 = detect_and_handle_challenge_url(url, sample_user, duck_multiplier=1)
     assert result1["handled"] is True
     assert result1["details"]["success"] is True
 
     # Try to submit same challenge again
-    result2 = detect_and_handle_challenge_url(
-        url, sample_user, duck_multiplier=1
-    )
+    result2 = detect_and_handle_challenge_url(url, sample_user, duck_multiplier=1)
     assert result2["handled"] is True
     assert result2["details"]["success"] is False
     assert "already claimed" in result2["details"]["message"]
@@ -292,9 +275,7 @@ def test_detect_and_handle_challenge_url_with_multiplier(
     db.session.commit()
 
     url = f"https://codecombat.com/play/level/dungeons-of-kithgard?course={sample_course.id}&course-instance={sample_course_instance.id}"
-    result = detect_and_handle_challenge_url(
-        url, sample_user, duck_multiplier=3
-    )
+    result = detect_and_handle_challenge_url(url, sample_user, duck_multiplier=3)
 
     assert result["handled"] is True
     assert result["details"]["success"] is True
@@ -358,7 +339,9 @@ def test_extract_challenge_details_no_match():
     assert result is None
 
 
-def test_log_challenge_success(init_db, sample_user, sample_challenge_active, sample_course, sample_course_instance):
+def test_log_challenge_success(
+    init_db, sample_user, sample_challenge_active, sample_course, sample_course_instance
+):
     """Test successful challenge logging."""
     from application.routes.challenge_routes import _log_challenge
 
@@ -383,19 +366,23 @@ def test_log_challenge_success(init_db, sample_user, sample_challenge_active, sa
     assert log is not None
 
 
-def test_log_challenge_duplicate(init_db, sample_user, sample_course, sample_course_instance):
+def test_log_challenge_duplicate(
+    init_db, sample_user, sample_course, sample_course_instance
+):
     """Test logging duplicate challenge."""
     from application.routes.challenge_routes import _log_challenge
 
-    db.session.add(Challenge(
-        name="Test Challenge",
-        slug="test-challenge",
-        domain="codecombat.com",
-        difficulty="easy",
-        value=10,
-        course_id=sample_course.id,
-        is_active=True
-    ))
+    db.session.add(
+        Challenge(
+            name="Test Challenge",
+            slug="test-challenge",
+            domain="codecombat.com",
+            difficulty="easy",
+            value=10,
+            course_id=sample_course.id,
+            is_active=True,
+        )
+    )
     db.session.commit()
 
     details = {
@@ -413,19 +400,23 @@ def test_log_challenge_duplicate(init_db, sample_user, sample_course, sample_cou
     assert "already claimed" in result2["message"]
 
 
-def test_log_challenge_with_helper(init_db, sample_user, sample_course, sample_course_instance):
+def test_log_challenge_with_helper(
+    init_db, sample_user, sample_course, sample_course_instance
+):
     """Test logging challenge with helper."""
     from application.routes.challenge_routes import _log_challenge
 
-    db.session.add(Challenge(
-        name="Helper Challenge",
-        slug="helper-challenge",
-        domain="codecombat.com",
-        difficulty="easy",
-        value=10,
-        course_id=sample_course.id,
-        is_active=True
-    ))
+    db.session.add(
+        Challenge(
+            name="Helper Challenge",
+            slug="helper-challenge",
+            domain="codecombat.com",
+            difficulty="easy",
+            value=10,
+            course_id=sample_course.id,
+            is_active=True,
+        )
+    )
     db.session.commit()
 
     details = {
@@ -450,9 +441,7 @@ def test_update_user_ducks_success(init_db, sample_user, sample_challenge_active
     from application.routes.challenge_routes import _update_user_ducks
 
     initial_ducks = sample_user.duck_balance
-    reward = _update_user_ducks(
-        sample_user, "dungeons-of-kithgard", duck_multiplier=1
-    )
+    reward = _update_user_ducks(sample_user, "dungeons-of-kithgard", duck_multiplier=1)
 
     assert reward == 10
     db.session.commit()
@@ -467,9 +456,7 @@ def test_update_user_ducks_with_multiplier(
     from application.routes.challenge_routes import _update_user_ducks
 
     initial_ducks = sample_user.duck_balance
-    reward = _update_user_ducks(
-        sample_user, "dungeons-of-kithgard", duck_multiplier=5
-    )
+    reward = _update_user_ducks(sample_user, "dungeons-of-kithgard", duck_multiplier=5)
 
     assert reward == 50
     db.session.commit()
@@ -482,19 +469,15 @@ def test_update_user_ducks_user_not_found(init_db):
     from application.routes.challenge_routes import _update_user_ducks
 
     with pytest.raises(ValueError, match="User not found"):
-        _update_user_ducks(
-            None, "dungeons-of-kithgard", duck_multiplier=1
-        )
+        _update_user_ducks(None, "dungeons-of-kithgard", duck_multiplier=1)
 
 
 def test_update_user_ducks_challenge_not_found(init_db, sample_user):
     """Test updating ducks for non-existent challenge."""
     from application.routes.challenge_routes import _update_user_ducks
 
-    with pytest.raises(ValueError, match="Challenge .* not found"):
-        _update_user_ducks(
-            sample_user, "nonexistent-challenge", duck_multiplier=1
-        )
+    with pytest.raises(ValueError, match=r"Challenge .* not found"):
+        _update_user_ducks(sample_user, "nonexistent-challenge", duck_multiplier=1)
 
 
 def test_update_user_ducks_case_insensitive(
@@ -503,9 +486,7 @@ def test_update_user_ducks_case_insensitive(
     """Test that challenge lookup is case-insensitive."""
     from application.routes.challenge_routes import _update_user_ducks
 
-    reward = _update_user_ducks(
-        sample_user, "DUNGEONS-OF-KITHGARD", duck_multiplier=1
-    )
+    reward = _update_user_ducks(sample_user, "DUNGEONS-OF-KITHGARD", duck_multiplier=1)
     assert reward == 10
 
 
@@ -614,7 +595,7 @@ def test_url_pattern_matches_various_formats():
         "https://codecombat.com/play/level/dungeons-of-kithgard?course=intro-to-python",
         "https://codecombat.com/play/level/dungeons-of-kithgard?course=intro-to-python&course-instance=fall2024",
         "https://www.ozaria.com/play/ozaria/level/1upm4l1l2b?course=5d8a57abe8919b28d5113af1&course-instance=634a512688e9fc00249dc9ba",
-        "https://codecombat.com/play/junior/level/step-change?course=65f32b6c87c07dbeb5ba1936"
+        "https://codecombat.com/play/junior/level/step-change?course=65f32b6c87c07dbeb5ba1936",
     ]
 
     for url in test_urls:
@@ -643,7 +624,11 @@ def test_extract_challenge_details_domains():
 
 
 def test_detect_and_handle_ozaria_domain(
-    init_db, sample_user, sample_challenges_multi_domain, sample_course, sample_course_instance
+    init_db,
+    sample_user,
+    sample_challenges_multi_domain,
+    sample_course,
+    sample_course_instance,
 ):
     """Test full flow for an Ozaria domain challenge."""
     from application.routes.challenge_routes import detect_and_handle_challenge_url
@@ -654,16 +639,20 @@ def test_detect_and_handle_ozaria_domain(
 
     url = f"https://www.ozaria.com/play/ozaria/level/chapter-1-sky-mountain?course={sample_course.id}&course-instance={sample_course_instance.id}"
 
-    result = detect_and_handle_challenge_url(
-        url, sample_user, duck_multiplier=1
-    )
+    result = detect_and_handle_challenge_url(url, sample_user, duck_multiplier=1)
 
     assert result["handled"] is True
     assert result["details"]["success"] is True
 
 
 def test_submit_challenge_off_track(
-    client, init_db, sample_user, sample_configuration, sample_challenges_multi_domain, sample_course, sample_course_instance
+    client,
+    init_db,
+    sample_user,
+    sample_configuration,
+    sample_challenges_multi_domain,
+    sample_course,
+    sample_course_instance,
 ):
     """Test challenge completion on mismatched track. Ducks should be withheld."""
     with client.session_transaction() as sess:
@@ -671,17 +660,17 @@ def test_submit_challenge_off_track(
 
     # Make student active_track 'ozaria' (which is the default)
     sample_user.active_track = "ozaria"
-    
+
     # Setup course to belong to 'cs' (Computer Science) track
     # sample_course.name = "CS1" (which maps to 'cs' track)
     sample_course.name = "CS1"
-    
+
     cc_challenge = sample_challenges_multi_domain[0]
     cc_challenge.course_id = sample_course.id
     db.session.commit()
 
     url = f"https://codecombat.com/play/level/dungeons-of-kithgard?course={sample_course.id}&course-instance={sample_course_instance.id}"
-    
+
     # Initial balance
     initial_ducks = sample_user.duck_balance
 

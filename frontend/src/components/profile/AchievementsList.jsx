@@ -18,7 +18,7 @@ const AchievementsList = ({ achievements }) => {
             <div className="achievement-strip-container">
                 <div className="achievement-strip">
                     {achievements.map(ua => (
-                        <div key={ua.id} className="ach-strip-item clickable cursor-pointer" title={ua.achievement?.description} onClick={() => navigate('/achievements')}>
+                        <div role="button" tabIndex={0} key={ua.id} className="ach-strip-item clickable cursor-pointer" title={ua.achievement?.description} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={() => navigate('/achievements')}>
                             <div className={`badge badge-${ua.achievement?.slug || 'default'} mini`}>&nbsp;</div>
                             <div className="ach-strip-info">
                                 <span className="ach-name">{ua.achievement?.name}</span>

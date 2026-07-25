@@ -19,9 +19,9 @@ const ProfileHeader = ({ target, isOwner, pfpInputRef, onPfpChange, editLink }) 
                 } : {}}
             ></div>
             <div className="profile-header-content">
-                <div 
+                <div role="button" tabIndex={0} 
                     className={`avatar-wrapper ${target.has_animated_border ? 'perk-animated-border' : ''}`} 
-                    onClick={() => isOwner && pfpInputRef.current?.click()}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={() => isOwner && pfpInputRef.current?.click()}
                     style={target.has_animated_border ? { '--border-speed': borderSpeed } : {}}
                 >
                     <SmartImage 

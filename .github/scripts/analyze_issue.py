@@ -7,7 +7,6 @@ from openai import OpenAI
 logger = logging.getLogger(__name__)
 
 
-
 def get_directory_summary(root_dir=".", exclude=None):
     """Provides the full file tree so the architect knows where files live."""
     exclude = exclude or {".git", "__pycache__", ".github", "node_modules", "venv"}
@@ -23,11 +22,13 @@ def get_directory_summary(root_dir=".", exclude=None):
 def get_file_headers(root_dir=".", limit=50):
     """Reads the first 10 lines of key files to provide code context."""
     context = []
-    extensions = {'.js', '.py', '.html', '.css'}
+    extensions = {".js", ".py", ".html", ".css"}
     for path in pathlib.Path(root_dir).rglob("*"):
-        if path.suffix in extensions and not any(part.startswith('.') for part in path.parts):
+        if path.suffix in extensions and not any(
+            part.startswith(".") for part in path.parts
+        ):
             try:
-                with open(path, 'r', encoding='utf-8') as f:
+                with open(path, "r", encoding="utf-8") as f:
                     header = "".join([f.readline() for _ in range(10)])
                     context.append(f"FILE: {path}\nCONTENT SUMMARY:\n{header}\n---")
             except (UnicodeDecodeError, PermissionError, OSError) as exc:

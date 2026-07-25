@@ -1,7 +1,8 @@
 import logging
 from functools import wraps
 from typing import Any, Callable, Union
-from flask import jsonify, Response, current_app
+
+from flask import Response, current_app, jsonify
 
 logger = logging.getLogger(__name__)
 
@@ -47,7 +48,7 @@ def api_response(
                 status_code = 500
                 error_msg = str(e) if current_app.debug else "Internal server error"
                 current_app.logger.error(
-                    f"API Error in {f.__name__}: {str(e)}", exc_info=True
+                    f"API Error in {f.__name__}: {e!s}", exc_info=True
                 )
 
             return (

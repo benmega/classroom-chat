@@ -59,7 +59,7 @@ const AdminDashboard = () => {
     useEffect(() => {
         const fetchTrackRequests = async () => {
             try {
-                const response = await client.get('/admin/track-requests/');
+                const response = await client.get('/api/admin/track-requests/');
                 if (response.data.success) {
                     setTrackRequests(response.data.requests || []);
                 }
@@ -72,7 +72,7 @@ const AdminDashboard = () => {
 
     const handleApproveRequest = async (id) => {
         try {
-            const response = await client.put(`/admin/track-requests/${id}`, { status: 'approved' });
+            const response = await client.put(`/api/admin/track-requests/${id}`, { status: 'approved' });
             if (response.data.success) {
                 toast.success("Track change request approved!");
                 setTrackRequests(prev => prev.filter(r => r.id !== id));
@@ -85,7 +85,7 @@ const AdminDashboard = () => {
 
     const handleDenyRequest = async (id) => {
         try {
-            const response = await client.put(`/admin/track-requests/${id}`, { status: 'denied' });
+            const response = await client.put(`/api/admin/track-requests/${id}`, { status: 'denied' });
             if (response.data.success) {
                 toast.success("Track change request denied.");
                 setTrackRequests(prev => prev.filter(r => r.id !== id));
@@ -297,9 +297,9 @@ const AdminDashboard = () => {
                             </button>
                             
                             <div className="setting-item multiplier">
-                                <label className="setting-label">Duck Multiplier</label>
+                                <label htmlFor="input-299" className="setting-label">Duck Multiplier</label>
                                 <div className="multiplier-input-wrapper">
-                                    <input 
+                                    <input id="input-299" 
                                         type="number" 
                                         step="0.1" 
                                         defaultValue={config?.duck_multiplier || 1.0} 

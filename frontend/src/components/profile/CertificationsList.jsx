@@ -17,7 +17,7 @@ const CertificationsList = ({ certificates }) => {
             <div className="cert-list-container">
                 <div className="cert-list">
                     {certificates.map(cert => (
-                        <div key={cert.id} className="cert-item" onClick={() => cert.file_path && window.open(getApiUrl(`/api/achievements/view_certificate/${cert.id}`), '_blank')}>
+                        <div role="button" tabIndex={0} key={cert.id} className="cert-item" onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={() => cert.file_path && window.open(getApiUrl(`/api/achievements/view_certificate/${cert.id}`), '_blank')}>
                             <div className="cert-icon">
                                 <div className={`badge badge-${cert.achievement?.slug || 'default'}`}></div>
                             </div>
