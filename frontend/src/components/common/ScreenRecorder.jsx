@@ -227,7 +227,6 @@ class ScreenRecorderCore {
   }
 }
 
-
 const ScreenRecorder = ({ isOpen, onClose, onRecordingComplete }) => {
   const [stage, setStage] = useState('setup'); // 'setup' | 'recording'
   const [settings, setSettings] = useState({
@@ -243,6 +242,7 @@ const ScreenRecorder = ({ isOpen, onClose, onRecordingComplete }) => {
   
   const recorderRef = useRef(null);
   const previewVideoRef = useRef(null);
+  const modalRef = useRef(null);
 
   useEffect(() => {
     if (!isOpen) {
@@ -251,8 +251,56 @@ const ScreenRecorder = ({ isOpen, onClose, onRecordingComplete }) => {
         recorderRef.current = null;
       }
       setTimeout(() => setStage('setup'), 0);
+      return;
     }
-  }, [isOpen]);
+
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        onClose();
+      } else if (e.key === 'Tab') {
+        if (!modalRef.current) return;
+        const focusableElements = modalRef.current.querySelectorAll(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        if (focusableElements.length === 0) return;
+
+        const firstElement = focusableElements[0];
+        const lastElement = focusableElements[focusableElements.length - 1];
+
+        if (e.shiftKey) {
+          if (document.activeElement === firstElement) {
+            lastElement.focus();
+            e.preventDefault();
+          }
+        } else {
+          if (document.activeElement === lastElement) {
+            firstElement.focus();
+            e.preventDefault();
+          }
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    if (modalRef.current) {
+      const focusableElements = modalRef.current.querySelectorAll(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      if (focusableElements.length > 0) {
+        focusableElements[0].focus();
+      } else {
+        modalRef.current.focus();
+      }
+    }
+    
+    const originalStyle = window.getComputedStyle(document.body).overflow;
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = originalStyle;
+    };
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
@@ -311,28 +359,48 @@ const ScreenRecorder = ({ isOpen, onClose, onRecordingComplete }) => {
     return style;
   };
 
+  const handleKeyDownAction = (e, callback) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      callback();
+    }
+  };
+
   const modalContent = (
-    <div className="screen-recorder-modal-overlay">
-      <div className="screen-recorder-modal">
+    <div className="screen-recorder-modal-overlay" onClick={onClose} role="presentation">
+      {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/click-events-have-key-events */}
+      <div 
+        className="screen-recorder-modal" 
+        onClick={e => e.stopPropagation()}
+        ref={modalRef}
+        tabIndex="-1"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="screen-recorder-title"
+      >
         <header>
-          <h1>{stage === 'setup' ? 'Screen + Camera Setup' : status || 'Recording...'}</h1>
-          <button className="screen-recorder-close-btn" onClick={onClose}><X size={32} /></button>
+          <h1 id="screen-recorder-title">{stage === 'setup' ? 'Screen + Camera Setup' : status || 'Recording...'}</h1>
+          <button className="screen-recorder-close-btn" onClick={onClose} aria-label="Close recorder"><X size={32} /></button>
         </header>
 
         {stage === 'setup' ? (
           <div className="screen-recorder-page">
             <div className="hud-container">
               <div className="layout-preview">
-                <div className="corner-target top-left" onClick={() => setSettings({...settings, overlayPosition: 'top-left'})}></div>
-                <div className="corner-target top-right" onClick={() => setSettings({...settings, overlayPosition: 'top-right'})}></div>
-                <div className="corner-target bottom-left" onClick={() => setSettings({...settings, overlayPosition: 'bottom-left'})}></div>
-                <div className="corner-target bottom-right" onClick={() => setSettings({...settings, overlayPosition: 'bottom-right'})}></div>
+                <div className="corner-target top-left" tabIndex="0" role="button" onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={() => setSettings({...settings, overlayPosition: 'top-left'})} onKeyDown={(e) => handleKeyDownAction(e, () => setSettings({...settings, overlayPosition: 'top-left'}))} aria-label="Position overlay top-left"></div>
+                <div className="corner-target top-right" tabIndex="0" role="button" onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={() => setSettings({...settings, overlayPosition: 'top-right'})} onKeyDown={(e) => handleKeyDownAction(e, () => setSettings({...settings, overlayPosition: 'top-right'}))} aria-label="Position overlay top-right"></div>
+                <div className="corner-target bottom-left" tabIndex="0" role="button" onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={() => setSettings({...settings, overlayPosition: 'bottom-left'})} onKeyDown={(e) => handleKeyDownAction(e, () => setSettings({...settings, overlayPosition: 'bottom-left'}))} aria-label="Position overlay bottom-left"></div>
+                <div className="corner-target bottom-right" tabIndex="0" role="button" onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={() => setSettings({...settings, overlayPosition: 'bottom-right'})} onKeyDown={(e) => handleKeyDownAction(e, () => setSettings({...settings, overlayPosition: 'bottom-right'}))} aria-label="Position overlay bottom-right"></div>
                 
                 <div 
                   className="preview-camera" 
                   style={getCameraStyle()} 
                   onClick={handleShapeClick} 
+                  onKeyDown={(e) => handleKeyDownAction(e, handleShapeClick)}
+                  tabIndex="0"
+                  role="button"
                   title="Click to change shape"
+                  aria-label="Change camera shape"
                 ></div>
               </div>
 
@@ -360,6 +428,10 @@ const ScreenRecorder = ({ isOpen, onClose, onRecordingComplete }) => {
                     className="hud-control cursor-pointer justify-center"
                     title="Toggle Microphone" 
                     onClick={() => setSettings({...settings, includeMicrophone: !settings.includeMicrophone})}
+                    onKeyDown={(e) => handleKeyDownAction(e, () => setSettings({...settings, includeMicrophone: !settings.includeMicrophone}))}
+                    tabIndex="0"
+                    role="switch"
+                    aria-checked={settings.includeMicrophone}
                   >
                     {settings.includeMicrophone ? <Mic size={24} color="var(--text-secondary)" /> : <MicOff size={24} color="var(--error-color)" />}
                   </div>

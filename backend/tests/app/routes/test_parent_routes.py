@@ -1,9 +1,15 @@
 from application.extensions import db
 from application.models.user import User
 
+
 def test_get_children_unauthenticated(client):
     response = client.get("/api/parents/children")
-    assert response.status_code == 302 or response.status_code == 401 or response.status_code == 403
+    assert (
+        response.status_code == 302
+        or response.status_code == 401
+        or response.status_code == 403
+    )
+
 
 def test_get_children_non_parent(client, sample_user):
     with client.session_transaction() as sess:
@@ -13,12 +19,19 @@ def test_get_children_non_parent(client, sample_user):
     response = client.get("/api/parents/children")
     assert response.status_code == 403
 
+
 def test_parent_flow_success(client, init_db):
     parent_user = User(username="parent_1", role="parent", is_approved=True)
     parent_user.set_password("pass123")
-    student_user = User(username="student_1", role="student", nickname="Stu", connection_code="CONN123", is_approved=True)
+    student_user = User(
+        username="student_1",
+        role="student",
+        nickname="Stu",
+        connection_code="CONN123",
+        is_approved=True,
+    )
     student_user.set_password("pass123")
-    
+
     db.session.add_all([parent_user, student_user])
     db.session.commit()
 

@@ -4,21 +4,22 @@ Type: py
 Summary: Flask routes for ai routes functionality.
 """
 
-from flask import Blueprint, jsonify, request
-
 from application.ai.ai_teacher import get_ai_response
-
+from application.decorators.login_required import require_login
+from flask import Blueprint, g, jsonify, request
 
 ai = Blueprint("ai", __name__)
 
 
 @ai.route("/get_ai_response", methods=["POST"])
-
+@require_login
 def handle_ai_query():
-    user_message = request.form["message"]
-    username = request.form["username"]
+    user_message = (request.form.get("message") or "").strip()
+    if not user_message:
+        return jsonify(success=False, error="Message is required"), 400
 
-    response = get_ai_response(user_message, username)
+    # Identity comes from the session — never from a client-supplied username.
+    response = get_ai_response(user_message, g.user.username)
     if response:
         return jsonify(success=True, ai_response=response)
     else:

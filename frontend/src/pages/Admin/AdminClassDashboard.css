@@ -181,7 +181,7 @@
 }
 
 .status-dot.offline {
-    background: var(--text-muted, #94a3b8);
+    background: var(--text-muted, #64748b);
 }
 
 .unenroll-btn {
@@ -321,9 +321,9 @@
 .btn-danger {
     padding: 0.6rem 1rem;
     border-radius: 8px;
-    border: 1px solid var(--error-color, #ef4444);
+    border: 1px solid var(--error-color, #dc2626);
     background: rgba(239, 68, 68, 0.1);
-    color: var(--error-color, #ef4444);
+    color: var(--error-color, #dc2626);
     font-weight: 600;
     cursor: pointer;
     transition: var(--transition-fast);
@@ -331,7 +331,7 @@
 }
 
 .btn-danger:hover {
-    background: var(--error-color, #ef4444);
+    background: var(--error-color, #dc2626);
     color: white;
 }
 
@@ -340,4 +340,329 @@
     font-style: italic;
     padding: 1rem 0;
     text-align: center;
+}
+
+/* Modal Styling */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(15, 23, 42, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    padding: 20px;
+}
+
+.modal-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(12px);
+    border-radius: var(--radius-xl, 12px);
+    width: 100%;
+    max-width: 500px;
+    max-height: calc(100vh - 40px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--border-subtle, #e2e8f0);
+    overflow-y: auto;
+    animation: modal-appear 0.2s ease-out;
+    display: flex;
+    flex-direction: column;
+}
+
+@media (prefers-color-scheme: dark) {
+    .modal-card {
+        background: rgba(30, 41, 59, 0.95);
+    }
+}
+
+@keyframes modal-appear {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border-subtle, #e2e8f0);
+}
+
+.modal-header h3 {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px;
+    border-radius: 9999px;
+    transition: all 0.2s;
+}
+
+.close-btn:hover {
+    background: var(--bg-primary, var(--bg-secondary));
+    color: var(--text-primary);
+}
+
+.modal-form {
+    padding: 16px 20px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-secondary, #475569);
+}
+
+.form-group input,
+.form-group select {
+    padding: 8px 12px;
+    border-radius: var(--radius-md, 6px);
+    border: 1px solid var(--border-subtle, #e2e8f0);
+    background: var(--bg-secondary, var(--bg-primary));
+    color: var(--text-primary);
+    font-size: 0.875rem;
+    transition: all 0.2s;
+    outline: none;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    border-color: var(--primary, #4f46e5);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+}
+
+.form-group input.error,
+.form-group select.error {
+    border-color: var(--error-color);
+}
+
+.error-text {
+    font-size: 0.775rem;
+    color: var(--error-color);
+    font-weight: 500;
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 28px;
+}
+
+.action-btn {
+    background: none;
+    border: 1px solid var(--border-subtle, var(--border-subtle));
+    padding: 6px;
+    border-radius: var(--radius-md, 8px);
+    cursor: pointer;
+    transition: all 0.2s;
+    color: var(--text-secondary, #475569);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.action-btn:hover {
+    background: var(--bg-primary, var(--bg-secondary));
+    transform: translateY(-1px);
+}
+
+.action-btn.edit:hover {
+    color: var(--primary-color, #4f46e5);
+    border-color: var(--primary-color, #4f46e5);
+}
+
+.action-btn.delete:hover {
+    color: var(--error-color);
+    border-color: var(--error-color);
+}
+
+/* Banner Styles */
+.classroom-banner {
+    position: relative;
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color, #4f46e5) 100%);
+    color: white;
+    border-radius: var(--radius-xl, 16px);
+    padding: 2rem 2.5rem;
+    margin-bottom: 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
+}
+
+.classroom-banner::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background: url('data:image/svg+xml;utf8,<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><path d="M0 100 Q 25 50 50 100 T 100 100" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="2"/></svg>') repeat-x bottom/contain;
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.banner-content {
+    z-index: 1;
+}
+
+.banner-content h1 {
+    margin: 0;
+    font-size: 2.5rem;
+    font-weight: 800;
+    line-height: 1.2;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.banner-lang-icon {
+    width: 32px;
+    height: 32px;
+    object-fit: contain;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+}
+
+.banner-lang-badge {
+    font-size: 1rem;
+    padding: 0.25rem 0.75rem;
+    background: rgba(255,255,255,0.2);
+    border-radius: 16px;
+    backdrop-filter: blur(4px);
+    font-weight: 600;
+    vertical-align: middle;
+}
+
+.banner-actions {
+    display: flex;
+    gap: 1rem;
+    z-index: 1;
+}
+
+.banner-actions button {
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.3);
+    color: white;
+    backdrop-filter: blur(4px);
+}
+.banner-actions button:hover {
+    background: rgba(255,255,255,0.25);
+}
+
+.banner-join-code {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(255, 255, 255, 0.2);
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.join-code-label {
+    opacity: 0.8;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.join-code-val {
+    font-weight: 800;
+    font-family: monospace;
+    font-size: 1.4rem;
+    letter-spacing: 2px;
+}
+
+/* Tabs Styles */
+.classroom-tabs {
+    display: flex;
+    gap: 2rem;
+    border-bottom: 2px solid var(--border-subtle);
+    margin-bottom: 2rem;
+    padding: 0 1rem;
+}
+
+.tab-btn {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 1rem;
+    font-weight: 600;
+    padding: 1rem 0;
+    cursor: pointer;
+    position: relative;
+    transition: color var(--transition-fast);
+}
+
+.tab-btn:hover {
+    color: var(--text-primary);
+}
+
+.tab-btn.active {
+    color: var(--primary-color);
+}
+
+.tab-btn.active::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--primary-color);
+    border-radius: 3px 3px 0 0;
+}
+
+/* Tab Panes */
+.tab-pane {
+    animation: fadeIn var(--transition-fast);
+}
+
+.stream-chat-wrapper {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-xl, 16px);
+    height: 600px; /* Give it a fixed height for the embedded chat */
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    flex-direction: column;
+}
+
+.single-column {
+    grid-template-columns: 1fr;
+    max-width: 800px;
+}
+
+.centered-column {
+    margin: 0 auto;
 }

@@ -112,24 +112,24 @@ const ManageProject = () => {
                 {/* LEFT COLUMN: Input Form */}
                 <div className="form-column">
                     <div className="form-wizard-header">
-                        <div className={`step ${activeTab === 'core' ? 'active' : ''}`} onClick={() => setActiveTab('core')}>1. Core Info</div>
-                        <div className={`step ${activeTab === 'media' ? 'active' : ''}`} onClick={() => setActiveTab('media')}>2. Media</div>
-                        <div className={`step ${activeTab === 'code' ? 'active' : ''}`} onClick={() => setActiveTab('code')}>3. Code</div>
+                        <div role="button" tabIndex={0} className={`step ${activeTab === 'core' ? 'active' : ''}`} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={() => setActiveTab('core')}>1. Core Info</div>
+                        <div role="button" tabIndex={0} className={`step ${activeTab === 'media' ? 'active' : ''}`} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={() => setActiveTab('media')}>2. Media</div>
+                        <div role="button" tabIndex={0} className={`step ${activeTab === 'code' ? 'active' : ''}`} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={() => setActiveTab('code')}>3. Code</div>
                     </div>
 
                     {currentUser?.is_admin && (
                         <div className="admin-controls-panel">
                             <h4>Admin Controls</h4>
                             <div className="form-group">
-                                <label>Assign to Student</label>
-                                <select name="student_id" value={projectData.student_id || ''} onChange={handleInputChange} className="form-control" required>
+                                <label htmlFor="input-123">Assign to Student</label>
+                                <select id="input-123" name="student_id" value={projectData.student_id || ''} onChange={handleInputChange} className="form-control" required>
                                     <option value="">Select Student</option>
                                     {students.map(s => <option key={s.id} value={s.id}>{s.username}</option>)}
                                 </select>
                             </div>
                             <div className="form-group">
-                                <label>Teacher Comment</label>
-                                <textarea name="teacher_comment" value={projectData.teacher_comment || ''} onChange={(e) => { handleInputChange(e); adjustTextareaHeight(e.target); }} rows="2" className="form-control admin-textarea" />
+                                <label htmlFor="input-130">Teacher Comment</label>
+                                <textarea id="input-130" name="teacher_comment" value={projectData.teacher_comment || ''} onChange={(e) => { handleInputChange(e); adjustTextareaHeight(e.target); }} rows="2" className="form-control admin-textarea" />
                             </div>
                         </div>
                     )}
@@ -139,8 +139,8 @@ const ManageProject = () => {
                             <div className="form-section fade-in">
                                 <h3>Core Information</h3>
                                 <div className="form-group">
-                                    <label>Project Type / Template</label>
-                                    <select
+                                    <label htmlFor="input-141">Project Type / Template</label>
+                                    <select id="input-141"
                                         name="project_template"
                                         value={selectedTemplate}
                                         onChange={handleTemplateChange}
@@ -153,8 +153,8 @@ const ManageProject = () => {
                                     </select>
                                 </div>
                                 <div className="form-group">
-                                    <label>Project Name</label>
-                                    <input
+                                    <label htmlFor="input-155">Project Name</label>
+                                    <input id="input-155"
                                         type="text"
                                         name="name"
                                         value={projectData.name || ''}
@@ -166,8 +166,8 @@ const ManageProject = () => {
                                     />
                                 </div>
                                 <div className="form-group">
-                                    <label>Description</label>
-                                    <textarea
+                                    <label htmlFor="input-168">Description</label>
+                                    <textarea id="input-168"
                                         ref={descRef}
                                         name="description"
                                         value={projectData.description || ''}
@@ -178,10 +178,10 @@ const ManageProject = () => {
                                     />
                                 </div>
                                 <div className="form-group">
-                                    <label>Demo Link <span className="optional-badge">Optional</span></label>
+                                    <label htmlFor="input-180">Demo Link <span className="optional-badge">Optional</span></label>
                                     <div className="video-input-wrapper">
                                         <LinkIcon size={16} className="input-icon" />
-                                        <input
+                                        <input id="input-180"
                                             type="url"
                                             name="link"
                                             value={projectData.link || ''}

@@ -154,10 +154,10 @@ const UserSearchInput = ({
             {isOpen && results.length > 0 && (
                 <div className={`search-results-dropdown-common ${dropdownClassName}`}>
                     {results.map((user, index) => (
-                        <div
+                        <div role="button" tabIndex={0}
                             key={user.id}
                             className={`search-result-item-common ${index === selectedIndex ? 'selected' : ''}`}
-                            onClick={() => handleSelectInternal(user)}
+                            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={() => handleSelectInternal(user)}
                         >
                             <div className="result-avatar-common">
                                 <SmartImage 

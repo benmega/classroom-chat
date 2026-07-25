@@ -73,7 +73,10 @@
     cursor: pointer;
     display: flex;
     align-items: center;
+    justify-content: center;
     padding: 2px;
+    width: 24px;
+    height: 24px;
     border-radius: 50%;
     transition: var(--transition-fast);
 }

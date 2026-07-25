@@ -33,6 +33,7 @@ const EditProfile = React.lazy(() => import('./pages/User/EditProfile'));
 const ManageProject = React.lazy(() => import('./pages/User/ManageProject'));
 
 // --- Admin pages: lazily loaded (students never need these) ---
+const ToReview = React.lazy(() => import('./pages/Admin/ToReview'));
 const AdminDashboard = React.lazy(() => import('./pages/Admin/AdminDashboard'));
 const AdminProjects = React.lazy(() => import('./pages/Admin/AdminProjects'));
 const AdminAssignProject = React.lazy(() => import('./pages/Admin/AdminAssignProject'));
@@ -49,7 +50,6 @@ const Analytics = React.lazy(() => import('./pages/Admin/Analytics'));
 const PendingTrades = React.lazy(() => import('./pages/Admin/PendingTrades'));
 const PendingUsers = React.lazy(() => import('./pages/Admin/PendingUsers'));
 const AdvancedPanel = React.lazy(() => import('./pages/Admin/AdvancedPanel'));
-const AdminCourseInstances = React.lazy(() => import('./pages/Admin/AdminCourseInstances'));
 const DuckTransactions = React.lazy(() => import('./pages/Admin/DuckTransactions'));
 const AdminStudentActivity = React.lazy(() => import('./pages/Admin/AdminStudentActivity'));
 const AdminCRUD = React.lazy(() => import('./admin/AdminPanel'));
@@ -58,6 +58,7 @@ const AdminCRUD = React.lazy(() => import('./admin/AdminPanel'));
 const ParentDashboard = React.lazy(() => import('./pages/Parent/ParentDashboard'));
 const ParentReportCard = React.lazy(() => import('./pages/Parent/ParentReportCard'));
 const ConnectChild = React.lazy(() => import('./pages/Parent/ConnectChild'));
+const JoinClassroomLink = React.lazy(() => import('./pages/General/JoinClassroomLink'));
 
 // Development-only shortcut page — Vite's tree-shaking removes this module
 // from production builds because it is only referenced inside the DEV guard below.
@@ -312,6 +313,7 @@ function App() {
               <Routes>
                 <Route index element={<AdminDashboard />} />
                 <Route path="dashboard" element={<AdminDashboard />} />
+                <Route path="to-review" element={<ToReview />} />
                 <Route path="projects" element={<AdminProjects />} />
                 <Route path="assign-project" element={<AdminAssignProject />} />
                 <Route path="standard-projects" element={<AdminStandardProjects />} />
@@ -329,7 +331,6 @@ function App() {
                 <Route path="documents" element={<AdminDocuments />} />
                 <Route path="pending-trades" element={<PendingTrades />} />
                 <Route path="pending-users" element={<PendingUsers />} />
-                <Route path="course-instances" element={<AdminCourseInstances />} />
                 <Route path="advanced" element={<AdvancedPanel />} />
                 <Route path="transactions" element={<DuckTransactions />} />
                 <Route path="student-activity" element={<AdminStudentActivity />} />
@@ -353,6 +354,7 @@ function App() {
           </ProtectedRoute>
         } />
         <Route path="/parent/connect" element={<ConnectChild />} />
+        <Route path="/join-class" element={<JoinClassroomLink />} />
         <Route path="/parent/course-progress/:slug" element={
           <ProtectedRoute parentOnly={true}>
             <Layout>

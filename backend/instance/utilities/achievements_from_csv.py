@@ -3,7 +3,7 @@
 
 import csv
 
-from application import create_app, DevelopmentConfig
+from application import DevelopmentConfig, create_app
 from application.extensions import db
 from application.models.achievements import Achievement
 

@@ -10,7 +10,6 @@ from sqlalchemy import Enum
 
 from ..extensions import db
 
-
 # Association tables for message visibility targeting
 message_classrooms = db.Table(
     "message_classrooms",
@@ -76,21 +75,23 @@ class Message(db.Model):
 
     # Relationships
     user = db.relationship(
-        "User", backref=db.backref("messages", lazy="selectin", cascade="all, delete-orphan"), lazy="selectin"
+        "User",
+        backref=db.backref("messages", lazy="selectin", cascade="all, delete-orphan"),
+        lazy="selectin",
     )
-    
+
     target_classrooms = db.relationship(
         "Classroom",
         secondary=message_classrooms,
         lazy="selectin",
-        backref=db.backref("targeted_messages", lazy="selectin")
+        backref=db.backref("targeted_messages", lazy="selectin"),
     )
-    
+
     target_users = db.relationship(
         "User",
         secondary=message_users,
         lazy="selectin",
-        backref=db.backref("targeted_messages", lazy="selectin")
+        backref=db.backref("targeted_messages", lazy="selectin"),
     )
 
     def __repr__(self):

@@ -34,5 +34,5 @@ class Skill(db.Model):
             "name": self.name,
             "category": self.category,
             "icon": self.icon,
-            "proficiency": self.proficiency
+            "proficiency": self.proficiency,
         }

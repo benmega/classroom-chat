@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">77.56% </span>
+                <span class="strong">77.98% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>280/361</span>
+                <span class='fraction'>287/368</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">73.61% </span>
+                <span class="strong">74.32% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>53/72</span>
+                <span class='fraction'>55/74</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">64.7% </span>
+                <span class="strong">63.15% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>11/17</span>
+                <span class='fraction'>12/19</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">77.56% </span>
+                <span class="strong">77.98% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>280/361</span>
+                <span class='fraction'>287/368</span>
             </div>
         
             
@@ -488,7 +488,15 @@
 <a name='L423'></a><a href='#L423'>423</a>
 <a name='L424'></a><a href='#L424'>424</a>
 <a name='L425'></a><a href='#L425'>425</a>
-<a name='L426'></a><a href='#L426'>426</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
+<a name='L426'></a><a href='#L426'>426</a>
+<a name='L427'></a><a href='#L427'>427</a>
+<a name='L428'></a><a href='#L428'>428</a>
+<a name='L429'></a><a href='#L429'>429</a>
+<a name='L430'></a><a href='#L430'>430</a>
+<a name='L431'></a><a href='#L431'>431</a>
+<a name='L432'></a><a href='#L432'>432</a>
+<a name='L433'></a><a href='#L433'>433</a>
+<a name='L434'></a><a href='#L434'>434</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
@@ -873,6 +881,14 @@
 <span class="cline-any cline-yes">8x</span>
 <span class="cline-any cline-yes">32x</span>
 <span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">8x</span>
 <span class="cline-any cline-yes">8x</span>
 <span class="cline-any cline-yes">8x</span>
@@ -1298,7 +1314,15 @@ const Shop = () =&gt; {
                                         &lt;/div&gt;
                                     ) : item.name === "Auto Challenge Claimer" ? (
                                         &lt;div style={{ width: '100%', textAlign: 'center' }}&gt;
-                                            &lt;span dangerouslySetInnerHTML={{ __html: `&lt;a href="${bookmarkletCode}" class="shop-btn-purchase" style="display: inline-block; text-decoration: none; width: 100%; box-sizing: border-box; cursor: grab;" title="Drag this button to your bookmarks bar!" onclick="alert('Drag me to your bookmarks bar! Don\\'t click me here!'); return false;"&gt;Drag to Bookmarks&lt;/a&gt;` }} /&gt;
+                                            &lt;a
+                                                ref={(el) =&gt; { if (el) el.href = bookmarkletCode; }}
+                                                className="shop-btn-purchase"
+                                                style={{ display: 'inline-block', textDecoration: 'none', width: '100%', boxSizing: 'border-box', cursor: 'grab' }}
+                                                title="Drag this button to your bookmarks bar!"
+                                                onClick={<span class="fstat-no" title="function not covered" >(e) =&gt; { e.preventDefault(); alert("Drag me to your bookmarks bar! Don't click me here!"); }}</span>
+                                            &gt;
+                                                Drag to Bookmarks
+                                            &lt;/a&gt;
                                             &lt;span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '4px', display: 'block' }}&gt;Drag to bookmarks bar&lt;/span&gt;
                                         &lt;/div&gt;
                                     ) : item.name === "Permanent Double Duck" ? (
@@ -1345,7 +1369,7 @@ export default Shop;
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-07-21T11:20:51.343Z
+                at 2026-07-25T04:11:35.534Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

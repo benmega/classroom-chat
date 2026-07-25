@@ -25,7 +25,7 @@ const ProjectPortfolio = ({ projects, isOwner, setSelectedProject, studentId }) 
                 <div className="projects-grid">
                     {sortedProjects.map(project => (
                         <div key={project.id} className="project-card">
-                            <div className="project-thumb" onClick={() => setSelectedProject(project)}>
+                            <div role="button" tabIndex={0} className="project-thumb" onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={() => setSelectedProject(project)}>
                                 <SmartImage 
                                     src={formatStaticUrl(project.image_url)} 
                                     alt={project.name} 

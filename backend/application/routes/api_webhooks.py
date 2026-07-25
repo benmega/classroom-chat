@@ -6,10 +6,9 @@ Summary: Flask routes for external service callbacks (YouTube Uploader & Transcr
 
 import os
 
-from flask import Blueprint, request, jsonify
-
-from application.extensions import db, csrf
+from application.extensions import csrf, db
 from application.models.project import Project
+from flask import Blueprint, jsonify, request
 
 webhooks_api = Blueprint("webhooks_api", __name__, url_prefix="/api/webhooks")
 
@@ -47,9 +46,9 @@ def youtube_callback():
         project.image_url = f"https://img.youtube.com/vi/{video_id}/hqdefault.jpg"
         db.session.commit()
         return jsonify({"success": True, "message": "YouTube info updated"})
-    except Exception as e:
+    except Exception:
         db.session.rollback()
-        return jsonify({"success": False, "error": str(e)}), 500
+        return jsonify({"success": False, "error": "Internal server error"}), 500
 
 
 @webhooks_api.route("/transcribe", methods=["POST"])
@@ -76,6 +75,6 @@ def transcribe_callback():
         project.video_transcript = transcript
         db.session.commit()
         return jsonify({"success": True, "message": "Transcript updated"})
-    except Exception as e:
+    except Exception:
         db.session.rollback()
-        return jsonify({"success": False, "error": str(e)}), 500
+        return jsonify({"success": False, "error": "Internal server error"}), 500

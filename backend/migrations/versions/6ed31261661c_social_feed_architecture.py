@@ -5,13 +5,13 @@ Revises: ea3252195b40
 Create Date: 2026-06-13 21:56:18.811123
 
 """
-from alembic import op
-import sqlalchemy as sa
 
+import sqlalchemy as sa
+from alembic import op
 
 # revision identifiers, used by Alembic.
-revision = '6ed31261661c'
-down_revision = 'ea3252195b40'
+revision = "6ed31261661c"
+down_revision = "ea3252195b40"
 branch_labels = None
 depends_on = None
 
@@ -22,40 +22,50 @@ def upgrade():
     inspector = sa.inspect(bind)
     existing_tables = set(inspector.get_table_names())
 
-    if 'message_classrooms' not in existing_tables:
-        op.create_table('message_classrooms',
-            sa.Column('message_id', sa.Integer(), nullable=False),
-            sa.Column('classroom_id', sa.String(length=64), nullable=False),
-            sa.ForeignKeyConstraint(['classroom_id'], ['classrooms.id'], ondelete='CASCADE'),
-            sa.ForeignKeyConstraint(['message_id'], ['messages.id'], ondelete='CASCADE'),
-            sa.PrimaryKeyConstraint('message_id', 'classroom_id')
+    if "message_classrooms" not in existing_tables:
+        op.create_table(
+            "message_classrooms",
+            sa.Column("message_id", sa.Integer(), nullable=False),
+            sa.Column("classroom_id", sa.String(length=64), nullable=False),
+            sa.ForeignKeyConstraint(
+                ["classroom_id"], ["classrooms.id"], ondelete="CASCADE"
+            ),
+            sa.ForeignKeyConstraint(
+                ["message_id"], ["messages.id"], ondelete="CASCADE"
+            ),
+            sa.PrimaryKeyConstraint("message_id", "classroom_id"),
         )
-    
-    if 'message_users' not in existing_tables:
-        op.create_table('message_users',
-            sa.Column('message_id', sa.Integer(), nullable=False),
-            sa.Column('user_id', sa.Integer(), nullable=False),
-            sa.ForeignKeyConstraint(['message_id'], ['messages.id'], ondelete='CASCADE'),
-            sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE'),
-            sa.PrimaryKeyConstraint('message_id', 'user_id')
-        )
-    
-    messages_cols = {c['name'] for c in inspector.get_columns('messages')}
-    
-    if 'is_global' not in messages_cols or 'target_live' not in messages_cols:
-        with op.batch_alter_table('messages', schema=None) as batch_op:
-            if 'is_global' not in messages_cols:
-                batch_op.add_column(sa.Column('is_global', sa.Boolean(), nullable=True))
-            if 'target_live' not in messages_cols:
-                batch_op.add_column(sa.Column('target_live', sa.Boolean(), nullable=True))
 
-    if 'conversations' in existing_tables:
+    if "message_users" not in existing_tables:
+        op.create_table(
+            "message_users",
+            sa.Column("message_id", sa.Integer(), nullable=False),
+            sa.Column("user_id", sa.Integer(), nullable=False),
+            sa.ForeignKeyConstraint(
+                ["message_id"], ["messages.id"], ondelete="CASCADE"
+            ),
+            sa.ForeignKeyConstraint(["user_id"], ["users.id"], ondelete="CASCADE"),
+            sa.PrimaryKeyConstraint("message_id", "user_id"),
+        )
+
+    messages_cols = {c["name"] for c in inspector.get_columns("messages")}
+
+    if "is_global" not in messages_cols or "target_live" not in messages_cols:
+        with op.batch_alter_table("messages", schema=None) as batch_op:
+            if "is_global" not in messages_cols:
+                batch_op.add_column(sa.Column("is_global", sa.Boolean(), nullable=True))
+            if "target_live" not in messages_cols:
+                batch_op.add_column(
+                    sa.Column("target_live", sa.Boolean(), nullable=True)
+                )
+
+    if "conversations" in existing_tables:
         connection = op.get_bind()
         connection.execute(
             sa.text("UPDATE messages SET is_global = :f_val, target_live = :f_val"),
-            {"f_val": False}
+            {"f_val": False},
         )
-        
+
         connection.execute(
             sa.text("""
             UPDATE messages
@@ -64,58 +74,94 @@ def upgrade():
                 SELECT id FROM conversations WHERE classroom_id = 'global'
             )
             """),
-            {"t_val": True}
+            {"t_val": True},
         )
-        
-        connection.execute(sa.text("""
+
+        connection.execute(
+            sa.text("""
             INSERT INTO message_classrooms (message_id, classroom_id)
             SELECT m.id, c.classroom_id
             FROM messages m
             JOIN conversations c ON m.conversation_id = c.id
             WHERE c.classroom_id != 'global' AND c.classroom_id != 'archive'
-        """))
+        """)
+        )
 
-    if 'conversation_id' in messages_cols:
-        with op.batch_alter_table('messages', schema=None) as batch_op:
-            messages_indexes = {idx['name'] for idx in inspector.get_indexes('messages')}
-            if 'ix_messages_conversation_id' in messages_indexes:
-                batch_op.drop_index('ix_messages_conversation_id')
-            batch_op.drop_column('conversation_id')
+    if "conversation_id" in messages_cols:
+        with op.batch_alter_table("messages", schema=None) as batch_op:
+            messages_indexes = {
+                idx["name"] for idx in inspector.get_indexes("messages")
+            }
+            if "ix_messages_conversation_id" in messages_indexes:
+                batch_op.drop_index("ix_messages_conversation_id")
+            batch_op.drop_column("conversation_id")
 
-    if 'conversation_users' in existing_tables:
-        op.drop_table('conversation_users')
-    if 'conversations' in existing_tables:
-        op.drop_table('conversations')
+    if "conversation_users" in existing_tables:
+        op.drop_table("conversation_users")
+    if "conversations" in existing_tables:
+        op.drop_table("conversations")
 
     # ### end Alembic commands ###
 
 
 def downgrade():
     # ### commands auto generated by Alembic - please adjust! ###
-    with op.batch_alter_table('messages', schema=None) as batch_op:
-        batch_op.add_column(sa.Column('conversation_id', sa.INTEGER(), nullable=True))
-        batch_op.create_foreign_key(batch_op.f('fk_messages_conversation_id_conversations'), 'conversations', ['conversation_id'], ['id'], ondelete='CASCADE')
-        batch_op.create_index(batch_op.f('ix_messages_conversation_id'), ['conversation_id'], unique=False)
-        batch_op.drop_column('target_live')
-        batch_op.drop_column('is_global')
+    with op.batch_alter_table("messages", schema=None) as batch_op:
+        batch_op.add_column(sa.Column("conversation_id", sa.INTEGER(), nullable=True))
+        batch_op.create_foreign_key(
+            batch_op.f("fk_messages_conversation_id_conversations"),
+            "conversations",
+            ["conversation_id"],
+            ["id"],
+            ondelete="CASCADE",
+        )
+        batch_op.create_index(
+            batch_op.f("ix_messages_conversation_id"), ["conversation_id"], unique=False
+        )
+        batch_op.drop_column("target_live")
+        batch_op.drop_column("is_global")
 
-    op.create_table('conversations',
-    sa.Column('id', sa.INTEGER(), nullable=False),
-    sa.Column('title', sa.VARCHAR(length=100), nullable=False),
-    sa.Column('creator_id', sa.INTEGER(), nullable=True),
-    sa.Column('classroom_id', sa.VARCHAR(length=64), nullable=False),
-    sa.Column('is_locked', sa.BOOLEAN(), nullable=True),
-    sa.Column('slow_mode_delay', sa.INTEGER(), nullable=True),
-    sa.Column('created_at', sa.DATETIME(), nullable=True),
-    sa.ForeignKeyConstraint(['classroom_id'], ['classrooms.id'], name=op.f('fk_conversations_classroom_id_classrooms'), ondelete='RESTRICT'),
-    sa.ForeignKeyConstraint(['creator_id'], ['users.id'], name=op.f('fk_conversations_creator_id_users'), ondelete='SET NULL'),
-    sa.PrimaryKeyConstraint('id', name=op.f('pk_conversations'))
+    op.create_table(
+        "conversations",
+        sa.Column("id", sa.INTEGER(), nullable=False),
+        sa.Column("title", sa.VARCHAR(length=100), nullable=False),
+        sa.Column("creator_id", sa.INTEGER(), nullable=True),
+        sa.Column("classroom_id", sa.VARCHAR(length=64), nullable=False),
+        sa.Column("is_locked", sa.BOOLEAN(), nullable=True),
+        sa.Column("slow_mode_delay", sa.INTEGER(), nullable=True),
+        sa.Column("created_at", sa.DATETIME(), nullable=True),
+        sa.ForeignKeyConstraint(
+            ["classroom_id"],
+            ["classrooms.id"],
+            name=op.f("fk_conversations_classroom_id_classrooms"),
+            ondelete="RESTRICT",
+        ),
+        sa.ForeignKeyConstraint(
+            ["creator_id"],
+            ["users.id"],
+            name=op.f("fk_conversations_creator_id_users"),
+            ondelete="SET NULL",
+        ),
+        sa.PrimaryKeyConstraint("id", name=op.f("pk_conversations")),
     )
-    op.create_table('conversation_users',
-    sa.Column('conversation_id', sa.INTEGER(), nullable=False),
-    sa.Column('user_id', sa.INTEGER(), nullable=False),
-    sa.ForeignKeyConstraint(['conversation_id'], ['conversations.id'], name=op.f('fk_conversation_users_conversation_id_conversations'), ondelete='CASCADE'),
-    sa.ForeignKeyConstraint(['user_id'], ['users.id'], name=op.f('fk_conversation_users_user_id_users'), ondelete='CASCADE'),
-    sa.PrimaryKeyConstraint('conversation_id', 'user_id', name=op.f('pk_conversation_users'))
+    op.create_table(
+        "conversation_users",
+        sa.Column("conversation_id", sa.INTEGER(), nullable=False),
+        sa.Column("user_id", sa.INTEGER(), nullable=False),
+        sa.ForeignKeyConstraint(
+            ["conversation_id"],
+            ["conversations.id"],
+            name=op.f("fk_conversation_users_conversation_id_conversations"),
+            ondelete="CASCADE",
+        ),
+        sa.ForeignKeyConstraint(
+            ["user_id"],
+            ["users.id"],
+            name=op.f("fk_conversation_users_user_id_users"),
+            ondelete="CASCADE",
+        ),
+        sa.PrimaryKeyConstraint(
+            "conversation_id", "user_id", name=op.f("pk_conversation_users")
+        ),
     )
     # ### end Alembic commands ###

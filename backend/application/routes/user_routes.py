@@ -2,31 +2,40 @@ import os
 import re
 import uuid
 from datetime import datetime
-from sqlalchemy.orm import selectinload
-
-from PIL import Image
-from flask import Blueprint, jsonify, send_from_directory, current_app, abort, render_template
-from flask import request, redirect, url_for, session, flash
-from flask_wtf import FlaskForm
-from werkzeug.utils import secure_filename
-from wtforms import StringField, PasswordField, SubmitField
-from wtforms.validators import DataRequired
 
 from application.config import Config
-from application.extensions import db, limiter, csrf
+from application.decorators.api_response import api_response
+from application.extensions import csrf, db, limiter
 from application.models.project import Project
 from application.models.skill import Skill
 from application.models.user import User
 from application.utilities.helper_functions import allowed_file, get_s3_client
-from application.decorators.api_response import api_response
-
+from flask import (
+    Blueprint,
+    abort,
+    current_app,
+    flash,
+    jsonify,
+    redirect,
+    render_template,
+    request,
+    send_from_directory,
+    session,
+    url_for,
+)
+from flask_wtf import FlaskForm
+from PIL import Image
+from sqlalchemy.orm import selectinload
+from werkzeug.utils import secure_filename
+from wtforms import PasswordField, StringField, SubmitField
+from wtforms.validators import DataRequired
 
 user = Blueprint("user", __name__)
 
 S3_UPLOAD_BUCKET = "youtube-upload-source-classroom-chat"
 
 
-from application.decorators.login_required import require_login  # noqa: E402
+from application.decorators.login_required import require_login
 
 
 class LoginForm(FlaskForm):
@@ -45,6 +54,7 @@ class LoginForm(FlaskForm):
 
 @csrf.exempt
 @user.route("/login", methods=["GET", "POST"])
+@limiter.limit("10 per minute; 100 per hour", methods=["POST"])
 def login():
     form = LoginForm()
     if request.is_json:
@@ -114,7 +124,7 @@ def auth_status():
                 return {"logged_in": True, "user": user_obj.to_dict_auth()}
         return {"logged_in": False}, 200
     except Exception as e:
-        current_app.logger.error(f"Auth status error: {str(e)}", exc_info=True)
+        current_app.logger.error(f"Auth status error: {e!s}", exc_info=True)
         return {
             "logged_in": False,
             "error": "Internal server error during auth check",
@@ -132,12 +142,14 @@ def tutorial_complete():
             if user_obj:
                 user_obj.has_seen_tutorial = True
                 db.session.commit()
-                return {"message": "Tutorial marked as seen", "has_seen_tutorial": True}, 200
+                return {
+                    "message": "Tutorial marked as seen",
+                    "has_seen_tutorial": True,
+                }, 200
         return {"error": "Unauthorized"}, 401
     except Exception as e:
-        current_app.logger.error(f"Error completing tutorial: {str(e)}", exc_info=True)
+        current_app.logger.error(f"Error completing tutorial: {e!s}", exc_info=True)
         return {"error": "Internal server error"}, 500
-
 
 
 @user.route("/logout")
@@ -155,6 +167,7 @@ def logout():
 
 @csrf.exempt
 @user.route("/signup", methods=["POST"])
+@limiter.limit("5 per minute; 30 per hour")
 @api_response
 def signup():
     data = request.get_json()
@@ -163,6 +176,9 @@ def signup():
 
     if not username or not password:
         return "Username and password are required.", 400
+
+    if len(password) < 8:
+        return "Password must be at least 8 characters long.", 400
 
     if not re.fullmatch(r"[a-z0-9_]{3,30}", username):
         return (
@@ -181,7 +197,7 @@ def signup():
         return {"message": "Account created! Awaiting admin approval."}, 201
     except Exception as e:
         db.session.rollback()
-        current_app.logger.error(f"Error during signup: {e}")
+        current_app.logger.exception(f"Error during signup: {e}")
         return "An error occurred during registration.", 500
 
 
@@ -191,14 +207,18 @@ def profile():
     user_id = session.get("user")
     if not user_id:
         return "Authentication required. Please log in.", 401
-        
-    user_obj = User.query.options(
-        selectinload(User.skills),
-        selectinload(User.projects),
-        selectinload(User.certificates),
-        selectinload(User.achievements),
-        selectinload(User.notes)
-    ).filter_by(id=user_id).first()
+
+    user_obj = (
+        User.query.options(
+            selectinload(User.skills),
+            selectinload(User.projects),
+            selectinload(User.certificates),
+            selectinload(User.achievements),
+            selectinload(User.notes),
+        )
+        .filter_by(id=user_id)
+        .first()
+    )
     if not user_obj:
         return "User not found", 404
 
@@ -211,18 +231,24 @@ def profile():
 @user.route("/profile/<slug>", methods=["GET"])
 @api_response
 def view_user_profile(slug):
-    # Use slug column for the lookup
-    target_profile = User.query.options(
-        selectinload(User.skills),
-        selectinload(User.projects),
-        selectinload(User.certificates),
-        selectinload(User.achievements),
-        selectinload(User.notes)
-    ).filter_by(slug=slug).first_or_404()
-
+    # Intentionally public: profile pages are shareable, and this tradeoff is
+    # disclosed and accepted during onboarding.
     # Determine who is looking at the page
     viewer_id = session.get("user")
     viewer = db.session.get(User, viewer_id) if viewer_id else None
+
+    # Use slug column for the lookup
+    target_profile = (
+        User.query.options(
+            selectinload(User.skills),
+            selectinload(User.projects),
+            selectinload(User.certificates),
+            selectinload(User.achievements),
+            selectinload(User.notes),
+        )
+        .filter_by(slug=slug)
+        .first_or_404()
+    )
 
     if request.accept_mimetypes.best == "application/json" or request.is_json:
         return {
@@ -267,7 +293,7 @@ def edit_profile():
 
         except Exception as e:
             db.session.rollback()
-            current_app.logger.error(f"Error during profile update: {e}")
+            current_app.logger.exception(f"Error during profile update: {e}")
             return "An error occurred while updating the profile.", 500
 
     if request.accept_mimetypes.best == "application/json" or request.is_json:
@@ -296,7 +322,7 @@ def get_parent_connection_code():
         "connection_code": code,
         "student_id": user_obj.id,
         "username": user_obj.username,
-        "nickname": user_obj.nickname
+        "nickname": user_obj.nickname,
     }
 
 
@@ -341,10 +367,10 @@ def new_project():
         )
 
         db.session.add(new_proj)
-        
+
         target_user.current_activity = f"Working on project: {new_proj.name}"
         target_user.last_activity_time = datetime.utcnow()
-        
+
         db.session.flush()
 
         if "project_image" in request.files:
@@ -537,7 +563,7 @@ def api_edit_profile_picture():
 
     except Exception as e:
         db.session.rollback()
-        current_app.logger.error(f"Error updating profile picture: {e}")
+        current_app.logger.exception(f"Error updating profile picture: {e}")
         return "Server error during image processing.", 500
 
 
@@ -573,7 +599,7 @@ def api_upload_project_image():
         return {"new_url": new_url, "filename": filename}
 
     except Exception as e:
-        print(f"Error saving image: {str(e)}")
+        print(f"Error saving image: {e!s}")
         return "Error saving image", 500
 
 
@@ -630,9 +656,13 @@ def api_edit_profile_wallpaper():
         db.session.commit()
 
         new_url = url_for("user.profile_wallpaper", filename=filename)
-        return {"new_url": new_url, "filename": filename, "message": "Profile wallpaper updated successfully!"}
+        return {
+            "new_url": new_url,
+            "filename": filename,
+            "message": "Profile wallpaper updated successfully!",
+        }
     except Exception as e:
-        print(f"Error saving wallpaper: {str(e)}")
+        print(f"Error saving wallpaper: {e!s}")
         return "Error saving wallpaper", 500
 
 
@@ -727,6 +757,7 @@ def get_users_simple_list():
 
 
 @user.route("/api/users/search", methods=["GET"])
+@require_login
 @api_response
 def search_users():
     query = request.args.get("q", "").strip()
@@ -875,9 +906,10 @@ def handle_video_s3_upload(file, user_obj, project_name, project_id):
 
     try:
         from boto3.s3.transfer import TransferConfig
+
         # Ensure full file is uploaded even if it was previously read
         file.seek(0)
-        
+
         # Increase multipart threshold to 500MB to force PutObject for videos.
         # S3 triggers are often configured only for s3:ObjectCreated:Put,
         # which ignores MultipartUpload events unless explicitly enabled.
@@ -891,7 +923,7 @@ def handle_video_s3_upload(file, user_obj, project_name, project_id):
                 "ContentType": file.content_type or "video/mp4",
                 "Metadata": {"project-id": str(project_id)},
             },
-            Config=config
+            Config=config,
         )
 
         # Update project video URL
@@ -907,8 +939,8 @@ def handle_video_s3_upload(file, user_obj, project_name, project_id):
 
         return True
     except Exception as e:
-        # NOTE: If S3 uploads or the transcriber Lambda fail, ensure AWS credentials 
-        # and S3 bucket permissions are correctly configured. The Lambda trigger might 
+        # NOTE: If S3 uploads or the transcriber Lambda fail, ensure AWS credentials
+        # and S3 bucket permissions are correctly configured. The Lambda trigger might
         # need to be manually re-enabled if it was detached.
-        current_app.logger.error(f"S3 Upload Error: {e}")
+        current_app.logger.exception(f"S3 Upload Error: {e}")
         return False

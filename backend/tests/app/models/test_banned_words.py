@@ -7,7 +7,6 @@ Summary: Unit tests for banned words model.
 from datetime import datetime
 
 import pytest
-
 from application import db
 from application.models.banned_words import BannedWords
 

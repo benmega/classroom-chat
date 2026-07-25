@@ -28,8 +28,8 @@ const AddChildModal = ({ isOpen, onClose, onAdded }) => {
     };
 
     return (
-        <div className="modal-overlay" onClick={onClose}>
-            <div className="add-child-modal" onClick={e => e.stopPropagation()}>
+        <div role="button" tabIndex={0} className="modal-overlay" onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={onClose}>
+            <div role="button" tabIndex={0} className="add-child-modal" onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={e => e.stopPropagation()}>
                 <div className="modal-header">
                     <h2>Connect Your Child</h2>
                     <button className="close-btn" onClick={onClose}><X size={20} /></button>

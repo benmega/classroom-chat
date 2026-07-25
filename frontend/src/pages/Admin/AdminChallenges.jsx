@@ -138,8 +138,8 @@ const AdminChallenges = () => {
                         
                         <div className="form-row">
                             <div className="form-group">
-                                <label>Target Course ID *</label>
-                                <input 
+                                <label htmlFor="input-140">Target Course ID *</label>
+                                <input id="input-140" 
                                     type="text" 
                                     name="course_id" 
                                     value={formData.course_id} 
@@ -157,8 +157,8 @@ const AdminChallenges = () => {
                             </div>
 
                             <div className="form-group">
-                                <label>Domain *</label>
-                                <select name="domain" value={formData.domain} onChange={handleInputChange} required>
+                                <label htmlFor="input-159">Domain *</label>
+                                <select id="input-159" name="domain" value={formData.domain} onChange={handleInputChange} required>
                                     <option value="codecombat.com">CodeCombat (codecombat.com)</option>
                                     <option value="studio.code.org">Code.org (studio.code.org)</option>
                                     <option value="ozaria.com">Ozaria (ozaria.com)</option>
@@ -169,8 +169,8 @@ const AdminChallenges = () => {
 
                         <div className="form-row">
                             <div className="form-group">
-                                <label>Difficulty Level</label>
-                                <select name="difficulty" value={formData.difficulty} onChange={handleInputChange}>
+                                <label htmlFor="input-171">Difficulty Level</label>
+                                <select id="input-171" name="difficulty" value={formData.difficulty} onChange={handleInputChange}>
                                     <option value="easy">Easy (0.5x multiplier)</option>
                                     <option value="medium">Medium (1x multiplier)</option>
                                     <option value="hard">Hard (2x multiplier)</option>
@@ -178,8 +178,8 @@ const AdminChallenges = () => {
                             </div>
 
                             <div className="form-group">
-                                <label>Base Duck Value</label>
-                                <input 
+                                <label htmlFor="input-180">Base Duck Value</label>
+                                <input id="input-180" 
                                     type="number" 
                                     name="value" 
                                     value={formData.value} 
@@ -195,9 +195,9 @@ const AdminChallenges = () => {
                         <h3 className="section-title"><Database size={18} /> Upload CSV Set</h3>
                         
                         <div className="form-group">
-                            <label>Challenge CSV File *</label>
+                            <label htmlFor="input-197">Challenge CSV File *</label>
                             <div className="file-upload-wrapper">
-                                <input 
+                                <input id="input-197" 
                                     type="file" 
                                     accept=".csv" 
                                     onChange={handleFileUpload}

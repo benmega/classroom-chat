@@ -2,26 +2,24 @@ import logging
 import os
 from datetime import timedelta
 
-from flask import Flask, session, g, jsonify
-from flask_cors import CORS
-from flask_limiter import RateLimitExceeded
-from sqlalchemy import inspect
-from werkzeug.exceptions import RequestEntityTooLarge
-from werkzeug.middleware.proxy_fix import ProxyFix
-
-from application.config import DevelopmentConfig, TestingConfig, ProductionConfig
-from application.extensions import db, socketio, limiter, scheduler, csrf, migrate
+from application.config import DevelopmentConfig, ProductionConfig, TestingConfig
+from application.constants import (
+    GLOBAL_CLASSROOM_ID as GLOBAL_CLASSROOM_ID,
+)  # imported for side-effect availability
+from application.extensions import csrf, db, limiter, migrate, scheduler, socketio
 from application.models import setup_models
 from application.models.configuration import Configuration
 from application.models.user import User
 from application.routes import register_blueprints
-from application.constants import (
-    GLOBAL_CLASSROOM_ID as GLOBAL_CLASSROOM_ID,
-)  # imported for side-effect availability
-
 from application.utilities.helper_functions import format_number
 from application.utilities.schema_check import check_for_schema_drift
+from flask import Flask, g, jsonify, session
+from flask_cors import CORS
+from flask_limiter import RateLimitExceeded
 from flask_wtf.csrf import generate_csrf
+from sqlalchemy import inspect
+from werkzeug.exceptions import RequestEntityTooLarge
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 
 def create_app(config_class=None):
@@ -96,8 +94,12 @@ def create_app(config_class=None):
         supports_credentials=True,
     )
 
-    # x_for=1 tells Flask to trust the first X-Forwarded-For header
-    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_port=1)
+    # x_for=1 tells Flask to trust the first X-Forwarded-For header.
+    # Only trust proxy headers in production, where nginx sets them. Trusting
+    # them in development would let anyone on the network spoof
+    # X-Forwarded-For: 127.0.0.1 and pass dev-login's localhost-only guard.
+    if os.getenv("FLASK_ENV", "development").lower() == "production":
+        app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_port=1)
 
     app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(hours=10)
 
@@ -113,7 +115,7 @@ def create_app(config_class=None):
     limiter.init_app(app)
     scheduler.init_app(app)
 
-    from . import socket_events as socket_events  # noqa: F401 - needed for side effects
+    from . import socket_events as socket_events
 
     csrf.init_app(app)
     register_blueprints(app)
@@ -128,6 +130,7 @@ def create_app(config_class=None):
         # Only use create_all in non-production environments to avoid schema drift issues.
         # Production should use migrations via 'flask db upgrade'.
         import sys
+
         if app.config.get("ENV") != "production" and "db" not in sys.argv:
             db.create_all()
             if app.config.get("ENV") == "development":
@@ -185,12 +188,17 @@ def create_app(config_class=None):
         response.set_cookie(
             "csrf_token_v2",
             generate_csrf(),
-            domain=app.config.get("WTF_CSRF_DOMAIN") or app.config.get("SESSION_COOKIE_DOMAIN"),
+            domain=app.config.get("WTF_CSRF_DOMAIN")
+            or app.config.get("SESSION_COOKIE_DOMAIN"),
             samesite=app.config.get("SESSION_COOKIE_SAMESITE", "Lax"),
             secure=app.config.get("SESSION_COOKIE_SECURE", False),
-            httponly=False
+            httponly=False,
         )
         return response
+
+    from application.commands.seed import seed_command
+
+    app.cli.add_command(seed_command)
 
     return app
 
@@ -211,17 +219,19 @@ def seed_global_data():
     Skips gracefully if the schema is not yet migrated (e.g. during
     'flask db upgrade' before the conversations table has classroom_id).
     """
+    import logging
+
     import application.constants as _constants
     from application.models.classroom import Classroom
     from application.models.store_item import StoreItem
-    import logging
 
     logger = logging.getLogger(__name__)
-    import sqlalchemy
-
     # Guard: skip seeding if the schema hasn't been migrated yet.
     # This allows 'flask db upgrade' to load the app without crashing.
     import sys
+
+    import sqlalchemy
+
     if "db" in sys.argv:
         logger.info("seed_global_data: skipping — 'flask db' command detected.")
         return
@@ -234,7 +244,6 @@ def seed_global_data():
                     id=_constants.GLOBAL_CLASSROOM_ID,
                     name="Global Announcements",
                     language="python",
-                    url="global",
                 )
             )
             db.session.flush()
@@ -242,22 +251,42 @@ def seed_global_data():
 
         # 2. Ensure 'archive' classroom exists
         if not db.session.get(Classroom, "archive"):
-            db.session.add(
-                Classroom(
-                    id="archive", name="Archive", language="python", url="archive"
-                )
-            )
+            db.session.add(Classroom(id="archive", name="Archive", language="python"))
             db.session.flush()
             logger.info("Seeded 'archive' classroom.")
 
         # 3. Ensure store items exist
         default_store_items = [
-            {"name": "Chat Font Color", "description": "Unlock the ability to change the color of your chat messages.", "base_price": 0.008},
-            {"name": "Animated Profile Border", "description": "Stand out with an animated border around your profile picture.", "base_price": 0.01},
-            {"name": "Custom Profile Wallpaper", "description": "Set a custom wallpaper for your user profile page.", "base_price": 0.015},
-            {"name": "Auto Bitshift", "description": "Automatically perform bitshift operations on your packets.", "base_price": 0.025},
-            {"name": "Auto Challenge Claimer", "description": "Automatically claim rewards from completed challenges.", "base_price": 0.018},
-            {"name": "Permanent Double Duck", "description": "Permanently double all your duck earnings! This stacks with global multipliers.", "base_price": 0.05},
+            {
+                "name": "Chat Font Color",
+                "description": "Unlock the ability to change the color of your chat messages.",
+                "base_price": 0.008,
+            },
+            {
+                "name": "Animated Profile Border",
+                "description": "Stand out with an animated border around your profile picture.",
+                "base_price": 0.01,
+            },
+            {
+                "name": "Custom Profile Wallpaper",
+                "description": "Set a custom wallpaper for your user profile page.",
+                "base_price": 0.015,
+            },
+            {
+                "name": "Auto Bitshift",
+                "description": "Automatically perform bitshift operations on your packets.",
+                "base_price": 0.025,
+            },
+            {
+                "name": "Auto Challenge Claimer",
+                "description": "Automatically claim rewards from completed challenges.",
+                "base_price": 0.018,
+            },
+            {
+                "name": "Permanent Double Duck",
+                "description": "Permanently double all your duck earnings! This stacks with global multipliers.",
+                "base_price": 0.05,
+            },
         ]
 
         for item_data in default_store_items:
@@ -268,31 +297,34 @@ def seed_global_data():
 
         # 4. Ensure default project templates exist
         from application.models.project_template import ProjectTemplate
+
         default_templates = [
             {
                 "name": "CS1 Capstone",
-                "description": "Students create a custom Python project utilizing Turtle graphics to design artwork, draw shapes, and build animations. They learn how to control turtle movement, use variables, loops, and conditions to structure their drawing logic, and organize code into functions. By the end, students understand coordinate systems, color maps, and procedural drawing."
+                "description": "Students create a custom Python project utilizing Turtle graphics to design artwork, draw shapes, and build animations. They learn how to control turtle movement, use variables, loops, and conditions to structure their drawing logic, and organize code into functions. By the end, students understand coordinate systems, color maps, and procedural drawing.",
             },
             {
                 "name": "CS2 Capstone",
-                "description": "Students design and build a 2D interactive game or simulation using conditional logic, keyboard controls, and collision detection. They learn to manage game state, implement loops, handle player input, and dynamically update game elements on screen. By the end, students understand key game design principles and state-driven program flow."
+                "description": "Students design and build a 2D interactive game or simulation using conditional logic, keyboard controls, and collision detection. They learn to manage game state, implement loops, handle player input, and dynamically update game elements on screen. By the end, students understand key game design principles and state-driven program flow.",
             },
             {
                 "name": "Tabula Rasa",
-                "description": "In this project students create a CodeCombat game level from scratch by spawning all the objects enemies and goals needed to make the game playable. They learn how to use coordinates to position items on the grid set object properties to control behavior and define victory conditions through goals."
+                "description": "In this project students create a CodeCombat game level from scratch by spawning all the objects enemies and goals needed to make the game playable. They learn how to use coordinates to position items on the grid set object properties to control behavior and define victory conditions through goals.",
             },
             {
                 "name": "Text-Based Adventure",
-                "description": "In this project students create a text-based adventure game where players navigate through different scenarios solving puzzles and making choices that affect the outcome. The game introduces basic coding concepts such as variables loops and conditionals. It offers an interactive and engaging way to learn programming while creating a fun story-driven experience."
+                "description": "In this project students create a text-based adventure game where players navigate through different scenarios solving puzzles and making choices that affect the outcome. The game introduces basic coding concepts such as variables loops and conditionals. It offers an interactive and engaging way to learn programming while creating a fun story-driven experience.",
             },
             {
                 "name": "Dangerous Skies",
-                "description": "Create an obstacle course using for and while loops based on player performance. Learning Goals: Use for and while loops to build an obstacle course. Concepts Covered: Data Types For Loops Iteration Nesting While Loops"
-            }
+                "description": "Create an obstacle course using for and while loops based on player performance. Learning Goals: Use for and while loops to build an obstacle course. Concepts Covered: Data Types For Loops Iteration Nesting While Loops",
+            },
         ]
 
         for template_data in default_templates:
-            template = ProjectTemplate.query.filter_by(name=template_data["name"]).first()
+            template = ProjectTemplate.query.filter_by(
+                name=template_data["name"]
+            ).first()
             if not template:
                 db.session.add(ProjectTemplate(**template_data))
                 logger.info(f"Seeded project template '{template_data['name']}'.")
@@ -301,8 +333,10 @@ def seed_global_data():
 
     except sqlalchemy.exc.OperationalError as exc:
         db.session.rollback()
-        logger.warning(f"seed_global_data skipped due to OperationalError (schema drift?): {exc}")
+        logger.warning(
+            f"seed_global_data skipped due to OperationalError (schema drift?): {exc}"
+        )
     except Exception as exc:
         db.session.rollback()
-        logger.error(f"seed_global_data failed: {exc}")
+        logger.exception(f"seed_global_data failed: {exc}")
         raise

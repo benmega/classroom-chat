@@ -293,8 +293,8 @@ const Shop = () => {
                                         </div>
                                         {item.is_purchased && (
                                             <div style={{ marginTop: '15px', width: '100%' }}>
-                                                <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '5px' }}>Animation Speed:</label>
-                                                <select 
+                                                <label htmlFor="input-295" style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '5px' }}>Animation Speed:</label>
+                                                <select id="input-295" 
                                                     value={borderSpeed} 
                                                     onChange={(e) => handleBorderSpeedSubmit(e.target.value)}
                                                     className="form-control"
@@ -383,7 +383,16 @@ const Shop = () => {
                                         </div>
                                     ) : item.name === "Auto Challenge Claimer" ? (
                                         <div style={{ width: '100%', textAlign: 'center' }}>
-                                            <span dangerouslySetInnerHTML={{ __html: `<a href="${bookmarkletCode}" class="shop-btn-purchase" style="display: inline-block; text-decoration: none; width: 100%; box-sizing: border-box; cursor: grab;" title="Drag this button to your bookmarks bar!" onclick="alert('Drag me to your bookmarks bar! Don\\'t click me here!'); return false;">Drag to Bookmarks</a>` }} />
+                                            {/* eslint-disable-next-line jsx-a11y/anchor-is-valid, jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
+                                            <a
+                                                ref={(el) => { if (el) el.href = bookmarkletCode; }}
+                                                className="shop-btn-purchase"
+                                                style={{ display: 'inline-block', textDecoration: 'none', width: '100%', boxSizing: 'border-box', cursor: 'grab' }}
+                                                title="Drag this button to your bookmarks bar!"
+                                                onClick={(e) => { e.preventDefault(); alert("Drag me to your bookmarks bar! Don't click me here!"); }}
+                                            >
+                                                Drag to Bookmarks
+                                            </a>
                                             <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '4px', display: 'block' }}>Drag to bookmarks bar</span>
                                         </div>
                                     ) : item.name === "Permanent Double Duck" ? (

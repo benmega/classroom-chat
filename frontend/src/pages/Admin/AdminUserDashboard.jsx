@@ -1,10 +1,10 @@
-import React from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-
-import { 
-    ArrowUpCircle, Package, Key, Trash2, 
-    Users as UsersIcon, ChevronLeft, Shield, FolderPlus,
-    Activity, Star, Eye, EyeOff, Check, Plus
+import React, { useState, useEffect } from 'react';
+import { Link, useParams, useNavigate } from 'react-router-dom';
+import {
+    ChevronLeft, Shield, Check, Trash2,
+    Save, Key, Plus, Copy, Eye, EyeOff, Activity, ExternalLink,
+    Volume2, VolumeX, Code, Gamepad2, Globe, Sparkles, ShieldAlert,
+    Coins, Lock, Award, QrCode
 } from 'lucide-react';
 import SmartImage from '../../components/common/SmartImage';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
@@ -13,10 +13,20 @@ import { getApiUrl } from '../../utils/apiUrl';
 import './AdminUserDashboard.css';
 import { useAdminUserDashboard } from '../../hooks/useAdminUserDashboard';
 
+import codecombatLogo from '../../assets/codecombat-logo.png';
+import ozariaLogo from '../../assets/ozaria-logo.png';
+
+const TRACKS = [
+    { id: 'cs', label: 'Computer Science', short: 'CS', type: 'image', logo: codecombatLogo, desc: 'Core Programming & Algorithms' },
+    { id: 'ozaria', label: 'Ozaria', short: 'Ozaria', type: 'image', logo: ozariaLogo, desc: 'Adventure Story & Code' },
+    { id: 'gd', label: 'Game Development', short: 'GD', type: 'icon', icon: Gamepad2, desc: 'Game Mechanics & Design' },
+    { id: 'wd', label: 'Web Development', short: 'WD', type: 'icon', icon: Globe, desc: 'HTML, CSS & Web Apps' }
+];
+
 const AdminUserDashboard = () => {
     const { userId } = useParams();
     const navigate = useNavigate();
-    
+
     const {
         user, isLoading, formLoading, parentChildren, connectionCode, allUsers,
         showNewPassword, setShowNewPassword, showConfirmPassword, setShowConfirmPassword,
@@ -26,21 +36,49 @@ const AdminUserDashboard = () => {
         handlePassChapterPreview, handlePassChapterConfirm, handleAdjustDucks,
         handleAdjustPackets, handleSetDrawer, handleResetPassword, handleRemoveUser,
         handleApproveUser, handleRejectUser, handleToggleChildLink, handleToggleParentLink,
-        handleAssignProjectSubmit
+        handleAssignProjectSubmit, handleUpdateUser
     } = useAdminUserDashboard(userId);
 
+    const [editForm, setEditForm] = useState({
+        username: '',
+        nickname: '',
+        active_track: 'cs',
+        role: 'student',
+        bio: '',
+        email: '',
+        can_chat: true,
+        is_admin: false,
+        is_approved: true
+    });
+
+    const [duckAmountInput, setDuckAmountInput] = useState('');
+
+    useEffect(() => {
+        if (user) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
+            setEditForm({
+                username: user.username || '',
+                nickname: user.nickname || '',
+                active_track: user.active_track || 'cs',
+                role: user.role || 'student',
+                bio: user.bio || '',
+                email: user.email || '',
+                can_chat: user.can_chat ?? true,
+                is_admin: !!user.is_admin,
+                is_approved: !!user.is_approved
+            });
+        }
+    }, [user]);
 
     if (isLoading) {
         return (
-            <div className="admin-user-dashboard-loading">
-                <AdminPageHeader title="Loading User Dashboard..." />
-                <div className="hud-skeleton">
-                    <Skeleton height="80px" />
-                </div>
-                <div className="controls-grid-skeleton">
-                    <Skeleton height="200px" />
-                    <Skeleton height="200px" />
-                    <Skeleton height="200px" />
+            <div className="compact-dashboard">
+                <AdminPageHeader title="Loading User..." />
+                <Skeleton height="50px" />
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem', marginTop: '1rem' }}>
+                    <Skeleton height="300px" />
+                    <Skeleton height="300px" />
+                    <Skeleton height="300px" />
                 </div>
             </div>
         );
@@ -48,474 +86,420 @@ const AdminUserDashboard = () => {
 
     if (!user) return null;
 
+    const handleTrackChange = (trackId) => {
+        setEditForm(prev => ({ ...prev, active_track: trackId }));
+        handleUpdateUser({ active_track: trackId });
+    };
+
+    const handleToggleChat = () => {
+        const nextState = !editForm.can_chat;
+        setEditForm(prev => ({ ...prev, can_chat: nextState }));
+        handleUpdateUser({ can_chat: nextState });
+    };
+
+    const handlePresetDuck = (amount) => {
+        setDuckAmountInput(String(amount));
+    };
+
     return (
-        <div className="admin-user-dashboard">
+        <div className="compact-dashboard admin-user-redesign">
+            {/* Banner for Pending Users */}
             {!user.is_approved && !user.is_admin && (
-                <div className="pending-approval-banner">
-                    <div className="banner-text">
-                        <strong>Pending Approval:</strong> This user has registered and is awaiting access approval.
+                <div className="compact-banner warning-banner">
+                    <div className="banner-info">
+                        <ShieldAlert size={18} />
+                        <span>Account Pending Approval</span>
                     </div>
                     <div className="banner-actions">
-                        <button className="btn-approve-banner" onClick={handleApproveUser} disabled={formLoading}>
-                            Approve Account
-                        </button>
-                        <button className="btn-reject-banner" onClick={handleRejectUser} disabled={formLoading}>
-                            Reject & Delete
-                        </button>
+                        <button onClick={handleApproveUser} disabled={formLoading} className="btn-compact primary">Approve Account</button>
+                        <button onClick={handleRejectUser} disabled={formLoading} className="btn-compact danger">Reject</button>
                     </div>
                 </div>
             )}
-            {/* Horizontal Header HUD */}
-            <div className="admin-user-hud">
-                <div className="hud-left">
-                    <button className="back-btn" onClick={() => navigate('/admin/users')}>
-                        <ChevronLeft size={20} />
+
+            {/* TOP HERO STATUS BAR (Unified Top Card Style) */}
+            <div className="user-hero-bar">
+                <div className="hero-left">
+                    <button className="btn-icon small hero-back" onClick={() => navigate('/admin/users')} title="Back to Users">
+                        <ChevronLeft size={18} />
                     </button>
-                    <SmartImage 
-                        src={user.profile_picture ? getApiUrl(`/user/profile_pictures/${user.profile_picture}`) : ''} 
-                        alt="" 
-                        className="hud-avatar-small"
+                    <SmartImage
+                        src={user.profile_picture ? getApiUrl(`/user/profile_pictures/${user.profile_picture}`) : ''}
+                        alt={user.username}
+                        className="hero-avatar"
                         fallbackType="avatar"
                     />
-                    <div className="hud-identity">
-                        <div className="hud-names">
-                            <h2>{user.nickname || user.username}</h2>
-                            <span className="hud-handle">@{user.username}</span>
+                    <div className="hero-user-details">
+                        <div className="hero-name-row">
+                            <h2 className="hero-name">{user.nickname || user.username}</h2>
+                            <span className="hero-handle">@{user.username}</span>
+                            <Link to={`/profile/${user.username}`} className="hero-profile-link" title="View Public Profile" target="_blank">
+                                <ExternalLink size={13} />
+                            </Link>
                         </div>
-                        <div className="hud-badges">
-                            {user.is_admin ? (
-                                <span className="user-role-badge admin"><Shield size={10} /> Admin</span>
-                            ) : user.role === 'parent' ? (
-                                <span className="user-role-badge parent">Parent</span>
-                            ) : (
-                                <span className="user-role-badge student">Student</span>
-                            )}
-                            <span className={`status-badge ${user.is_online ? 'online' : 'offline'}`}>
-                                {user.is_online ? 'Active' : 'Offline'}
+                        <div className="hero-meta-badges">
+                            <span className={`status-pill ${user.is_online ? 'online' : 'offline'}`}>
+                                <span className="status-dot"></span>
+                                {user.is_online ? 'Online Now' : user.last_activity_time ? `Last active ${new Date(user.last_activity_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : 'Offline'}
                             </span>
+                            {user.current_activity && (
+                                <span className="activity-pill truncate" title={user.current_activity}>
+                                    <Activity size={12} /> {user.current_activity}
+                                </span>
+                            )}
                         </div>
                     </div>
                 </div>
 
-                {user.role === 'student' && (
-                    <div className="hud-stats-grid">
-                        <div className="hud-stat-box">
-                            <span className="lbl">Ducks</span>
-                            <span className="val ducks">🦆 {(user.duck_balance ?? 0).toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
-                        </div>
-                        <div className="hud-stat-box">
-                            <span className="lbl">Packets</span>
-                            <span className="val packets" style={{ color: (user.packets < 0 ? 'var(--error-color, #ff4444)' : '') }}>
-                                📦 {(user.packets ?? 0).toLocaleString(undefined, { maximumFractionDigits: 3 })}
-                            </span>
-                        </div>
-                        <div className="hud-stat-box">
-                            <span className="lbl">Level</span>
-                            <span className="val level"><Star size={14} /> {user.total_levels || 0}</span>
-                        </div>
-                    </div>
-                )}
+                <div className="hero-right-actions">
+                    {user.role === 'student' && (
+                        <button
+                            type="button"
+                            className={`btn-compact chat-toggle-btn ${editForm.can_chat ? 'enabled' : 'disabled'}`}
+                            onClick={handleToggleChat}
+                            disabled={formLoading}
+                            title={editForm.can_chat ? "Click to mute student chat" : "Click to enable student chat"}
+                        >
+                            {editForm.can_chat ? <Volume2 size={15} /> : <VolumeX size={15} />}
+                            <span>{editForm.can_chat ? 'Chat Enabled' : 'Student Muted'}</span>
+                        </button>
+                    )}
+                    <button
+                        className="btn-compact primary save-hero-btn"
+                        onClick={() => handleUpdateUser(editForm)}
+                        disabled={formLoading}
+                    >
+                        <Save size={14} /> Save Profile
+                    </button>
+                </div>
             </div>
 
-            {/* Grid of Control Panels */}
-            <div className="admin-user-controls-grid">
-
-                {/* Activity & Status */}
-                <div className="control-panel-card">
-                    <div className="panel-forms">
-                        <div className="activity-info-block">
-                            <div className="activity-row">
-                                <span className="lbl">Status</span>
-                                <span className={`val ${user.is_online ? 'active' : 'idle'}`}>
-                                    {user.is_online ? 'Active Now' : 'Offline'}
-                                </span>
-                            </div>
-                            {user.role === 'student' && (
-                                <div className="activity-row">
-                                    <span className="lbl">Current Task</span>
-                                    <span className="val">{user.current_activity || 'None'}</span>
-                                </div>
-                            )}
-                            <div className="activity-row">
-                                <span className="lbl">Last Active</span>
-                                <span className="val">
-                                    {user.last_activity_time 
-                                        ? new Date(user.last_activity_time).toLocaleString() 
-                                        : 'Never'}
-                                </span>
-                            </div>
-                        </div>
+            {/* ACTIVE LEARNING TRACK (Unified Card Style with Course Path Icons) */}
+            {user.role === 'student' && (
+                <div className="compact-panel prominent-track-section">
+                    <div className="panel-head">
+                        <Code size={16} /> Current Learning Track
+                    </div>
+                    <div className="track-cards-grid">
+                        {TRACKS.map((t) => {
+                            const IconComponent = t.icon;
+                            const isActive = editForm.active_track === t.id;
+                            return (
+                                <button
+                                    key={t.id}
+                                    type="button"
+                                    className={`track-card-btn ${isActive ? 'active' : ''}`}
+                                    onClick={() => handleTrackChange(t.id)}
+                                    disabled={formLoading}
+                                >
+                                    <div className="track-card-icon">
+                                        {t.type === 'image' ? (
+                                            <img src={t.logo} alt={t.label} className="track-logo-img" />
+                                        ) : (
+                                            <IconComponent size={20} />
+                                        )}
+                                    </div>
+                                    <div className="track-card-info">
+                                        <div className="track-card-name">
+                                            {t.label}
+                                        </div>
+                                    </div>
+                                    {isActive && <div className="track-active-badge"><Check size={14} /> Active</div>}
+                                </button>
+                            );
+                        })}
                     </div>
                 </div>
+            )}
 
-                {/* Panel 1: Economy */}
-                {user.role === 'student' && (
-                    <div className="control-panel-card">
-                        <div className="panel-forms">
-                            <form onSubmit={handleAdjustDucks} className="action-form-inline" noValidate>
-                                <input type="hidden" name="username" value={user.username} />
-                                <label>Ducks</label>
-                                <div className="input-group">
-                                    <input type="number" name="amount" step="any" placeholder="+ / -" required />
-                                    <button type="submit" className="btn-action primary" disabled={formLoading}>
-                                        {formLoading ? '...' : <Check size={18} />}
-                                    </button>
-                                </div>
-                            </form>
-                            <form onSubmit={handleAdjustPackets} className="action-form-inline" noValidate>
-                                <input type="hidden" name="username" value={user.username} />
-                                <label>Packets</label>
-                                <div className="input-group">
-                                    <input type="number" name="amount" step="any" placeholder="+ / -" required />
-                                    <button type="submit" className="btn-action primary" disabled={formLoading}>
-                                        {formLoading ? '...' : <Check size={18} />}
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                )}
+            {/* MAIN OPERATIONAL GRID (Unified Card Style) */}
+            <div className="compact-grid">
 
-                {/* Panel 2: Projects */}
-                {user.role === 'student' && (
-                    <div className="control-panel-card">
-                        <div className="panel-forms role-specific-student">
-                            <form onSubmit={handleAssignProjectSubmit} className="action-form-inline">
-                                <label>New</label>
-                                <div className="input-group">
+                {/* HIGH FREQUENCY OPERATIONS */}
+                <div className="compact-col">
+                    {user.role === 'student' && (
+                        <>
+                            {/* Assign Project Card */}
+                            <div className="compact-panel">
+                                <div className="panel-head">
+                                    <Code size={16} /> Assign Project
+                                </div>
+                                <form onSubmit={handleAssignProjectSubmit} className="assign-project-form">
                                     <select
                                         value={selectedTemplateName}
                                         onChange={(e) => setSelectedTemplateName(e.target.value)}
                                         required
+                                        className="inline-select full"
                                     >
-                                        <option value="">-- Template --</option>
-                                        {Object.keys(templates).map(name => (
-                                            <option key={name} value={name}>{name}</option>
-                                        ))}
+                                        <option value="">Select Project Template...</option>
+                                        {Object.keys(templates).map(name => <option key={name} value={name}>{name}</option>)}
                                     </select>
-                                    <button 
-                                        type="submit" 
-                                        className="btn-action primary" 
-                                        disabled={templatesSaving || !selectedTemplateName}
-                                    >
-                                        {templatesSaving ? '...' : <Plus size={18} />}
+                                    <button type="submit" className="btn-compact primary w-full mt-xs" disabled={templatesSaving || !selectedTemplateName}>
+                                        <Plus size={14} /> Assign Project to Student
                                     </button>
-                                </div>
-                            </form>
-                            <div className="recent-project-info">
-                                <h4>Recent</h4>
-                                {user.recent_project ? (
-                                    <div className="project-status">
-                                        <span className="project-name">{user.recent_project.name}</span>
-                                        <span className="project-state">{user.recent_project.status || 'Active'}</span>
-                                    </div>
-                                ) : (
-                                    <span className="no-projects">No projects yet</span>
-                                )}
+                                </form>
                             </div>
-                        </div>
-                    </div>
-                )}
 
-                {/* Panel 2.5: Course Override */}
-                {user.role === 'student' && (
-                    <div className="control-panel-card">
-                        <div className="panel-forms role-specific-student">
-                            <form onSubmit={handlePassChapterPreview} className="action-form-inline">
-                                <label>Course Pass</label>
-                                <div className="input-group">
-                                    <select
-                                        value={selectedChapterId}
-                                        onChange={(e) => {
-                                            setSelectedChapterId(e.target.value);
-                                            setPassPreview(null);
-                                        }}
-                                        required
-                                    >
-                                        <option value="">-- Select Course --</option>
-                                        <option value="codecombat-junior">Code Combat Junior</option>
-                                        <option value="cs1">Introduction to Computer Science</option>
-                                        <option value="cs2">Computer Science 2</option>
-                                        <option value="cs3">Computer Science 3</option>
-                                        <option value="cs4">Computer Science 4</option>
-                                        <option value="cs5">Computer Science 5</option>
-                                        <option value="cs6">Computer Science 6</option>
-                                        <option value="ozaria1">Sky Mountain (Ozaria 1)</option>
-                                        <option value="ozaria2">Ozaria Chapter 2</option>
-                                        <option value="ozaria3">Ozaria Chapter 3</option>
-                                        <option value="ozaria4">Ozaria Chapter 4</option>
-                                        <option value="gd1">Game Development 1</option>
-                                        <option value="gd2">Game Development 2</option>
-                                        <option value="gd3">Game Development 3</option>
-                                        <option value="wd1">Web Development 1</option>
-                                        <option value="wd2">Web Development 2</option>
-                                    </select>
-                                    <button 
-                                        type="submit" 
-                                        className="btn-action primary" 
-                                        disabled={passChapterLoading || !selectedChapterId}
-                                        title="Preview Chapter Pass"
-                                    >
-                                        {passChapterLoading ? '...' : <Eye size={18} />}
-                                    </button>
+                            {/* Economy & Locker Card */}
+                            <div className="compact-panel">
+                                <div className="panel-head">
+                                    <Coins size={16} /> Economy & Locker
                                 </div>
+                                <div className="economy-section">
+                                    {/* Ducks Adjustment */}
+                                    <form onSubmit={handleAdjustDucks} className="economy-row-card">
+                                        <div className="econ-header">
+                                            <span className="econ-label">🦆 Ducks</span>
+                                            <span className="econ-balance">{(user.duck_balance ?? 0).toLocaleString()}</span>
+                                        </div>
+                                        <input type="hidden" name="username" value={user.username} />
+                                        <div className="econ-preset-pills">
+                                            <button type="button" className="preset-pill" onClick={() => handlePresetDuck(10)}>+10</button>
+                                            <button type="button" className="preset-pill" onClick={() => handlePresetDuck(50)}>+50</button>
+                                            <button type="button" className="preset-pill" onClick={() => handlePresetDuck(100)}>+100</button>
+                                            <button type="button" className="preset-pill neg" onClick={() => handlePresetDuck(-50)}>-50</button>
+                                        </div>
+                                        <div className="econ-action-inputs">
+                                            <input
+                                                type="number"
+                                                name="amount"
+                                                step="any"
+                                                placeholder="Amount (+/-)"
+                                                required
+                                                value={duckAmountInput}
+                                                onChange={(e) => setDuckAmountInput(e.target.value)}
+                                                className="inline-input"
+                                            />
+                                            <button type="submit" className="btn-compact primary" disabled={formLoading}>
+                                                <Check size={14} /> Adjust Ducks
+                                            </button>
+                                        </div>
+                                    </form>
+
+                                    {/* Packets Adjustment */}
+                                    <form onSubmit={handleAdjustPackets} className="economy-row-card">
+                                        <div className="econ-header">
+                                            <span className="econ-label">📦 Packets</span>
+                                            <span className="econ-balance">{(user.packets ?? 0).toLocaleString()}</span>
+                                        </div>
+                                        <input type="hidden" name="username" value={user.username} />
+                                        <div className="econ-action-inputs">
+                                            <input type="number" name="amount" step="any" placeholder="Amount (+/-)" required className="inline-input" />
+                                            <button type="submit" className="btn-compact primary" disabled={formLoading}>
+                                                <Check size={14} /> Adjust Packets
+                                            </button>
+                                        </div>
+                                    </form>
+
+                                    {/* Locker Drawer */}
+                                    <form onSubmit={handleSetDrawer} className="economy-row-card">
+                                        <div className="econ-header">
+                                            <span className="econ-label"><Lock size={14} /> Locker Drawer</span>
+                                            <span className="econ-balance">{user.drawer || 'Not Set'}</span>
+                                        </div>
+                                        <div className="econ-action-inputs">
+                                            <input type="text" name="drawer" defaultValue={user.drawer || ''} placeholder="e.g. 0xA6" maxLength={6} className="inline-input" />
+                                            <button type="submit" className="btn-compact primary" disabled={formLoading}>
+                                                <Check size={14} /> Set Drawer
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </>
+                    )}
+                </div>
+
+                {/* OCCASIONAL OPERATIONS */}
+                <div className="compact-col">
+                    {/* Password & Security */}
+                    <div className="compact-panel">
+                        <div className="panel-head"><Key size={16} /> Security</div>
+                        <form onSubmit={handleResetPassword} className="dense-form-group-stack">
+                            <div className="inline-lbl">Reset Password</div>
+                            <div className="pwd-row">
+                                <input type={showNewPassword ? "text" : "password"} name="new_password" placeholder="New Password" required className="inline-input full" />
+                                <button type="button" className="btn-icon small" onClick={() => setShowNewPassword(!showNewPassword)}>
+                                    {showNewPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+                                </button>
+                            </div>
+                            <div className="pwd-row mt-xs">
+                                <input type={showConfirmPassword ? "text" : "password"} name="confirm_password" placeholder="Confirm Password" required className="inline-input full" />
+                                <button type="button" className="btn-icon small" onClick={() => setShowConfirmPassword(!showConfirmPassword)}>
+                                    {showConfirmPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+                                </button>
+                            </div>
+                            <button type="submit" className="btn-compact warning w-full mt-xs" disabled={formLoading}>Reset Password</button>
+                        </form>
+                    </div>
+
+                    {/* Course Progress Override */}
+                    {user.role === 'student' && (
+                        <div className="compact-panel">
+                            <div className="panel-head"><Award size={16} /> Course Progress Override</div>
+                            <form onSubmit={handlePassChapterPreview} className="inline-action-form full">
+                                <select value={selectedChapterId} onChange={(e) => { setSelectedChapterId(e.target.value); setPassPreview(null); }} required className="inline-select">
+                                    <option value="">Select Chapter to Pass...</option>
+                                    <option value="cs1">CS 1</option>
+                                    <option value="cs2">CS 2</option>
+                                    <option value="cs3">CS 3</option>
+                                    <option value="cs4">CS 4</option>
+                                    <option value="cs5">CS 5</option>
+                                    <option value="cs6">CS 6</option>
+                                    <option value="ozaria1">Ozaria 1</option>
+                                    <option value="ozaria2">Ozaria 2</option>
+                                    <option value="gd1">GD 1</option>
+                                    <option value="gd2">GD 2</option>
+                                    <option value="wd1">WD 1</option>
+                                    <option value="wd2">WD 2</option>
+                                </select>
+                                <button type="submit" className="btn-compact primary" disabled={passChapterLoading || !selectedChapterId}>
+                                    <Check size={14} /> Preview
+                                </button>
                             </form>
-                            
                             {passPreview && (
-                                <div className="pass-chapter-preview p-2 border-radius-sm" style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', marginTop: '1rem', fontSize: '0.9rem' }}>
-                                    <h4 className="mb-2">Preview Overview</h4>
-                                    <ul className="mb-3" style={{ paddingLeft: '1.2rem', margin: '0.5rem 0' }}>
-                                        <li><strong>Missing Challenges:</strong> {passPreview.challenges_to_complete}</li>
-                                        <li><strong>Ducks to Award:</strong> {passPreview.ducks_to_award}</li>
-                                        <li><strong>Certificates:</strong> {passPreview.certificates_to_award.length > 0 ? passPreview.certificates_to_award.join(", ") : "None"}</li>
-                                    </ul>
-                                    <button 
-                                        className="btn-primary w-100" 
-                                        onClick={handlePassChapterConfirm}
-                                        disabled={passChapterLoading}
-                                    >
-                                        Confirm & Pass Chapter
-                                    </button>
+                                <div className="dense-preview mt-xs">
+                                    <div className="pv-text">Pass will grant {passPreview.ducks_to_award} ducks and complete {passPreview.challenges_to_complete} tasks.</div>
+                                    <button className="btn-compact warning w-full mt-xs" onClick={handlePassChapterConfirm}>Confirm Pass Chapter</button>
                                 </div>
                             )}
                         </div>
-                    </div>
-                )}
+                    )}
 
-                {/* Panel 3: Security */}
-                <div className="control-panel-card full-width">
-                    <div className="panel-forms">
-                        {user.role === 'student' && (
-                            <form onSubmit={handleSetDrawer} className="action-form-inline" noValidate>
-                                <input type="hidden" name="username" value={user.username} />
-                                <label>Drawer</label>
-                                <div className="input-group">
-                                    <input 
-                                        type="text" 
-                                        name="drawer" 
-                                        defaultValue={user.drawer || ''} 
-                                        placeholder="0xA6" 
-                                        maxLength={4}
-                                    />
-                                    <button type="submit" className="btn-action primary" disabled={formLoading}>
-                                        {formLoading ? '...' : <Check size={18} />}
-                                    </button>
-                                </div>
-                            </form>
-                        )}
+                    {/* Parent & Child Connections */}
+                    {(user.role === 'parent' || user.role === 'student') && (
+                        <div className="compact-panel">
+                            <div className="panel-head"><QrCode size={16} /> Connections</div>
+                            <div className="dense-links">
+                                <input
+                                    type="text"
+                                    placeholder={user.role === 'parent' ? "Find students to link..." : "Find parents to link..."}
+                                    value={user.role === 'parent' ? childSearchQuery : parentSearchQuery}
+                                    onChange={(e) => user.role === 'parent' ? setChildSearchQuery(e.target.value) : setParentSearchQuery(e.target.value)}
+                                    className="inline-input full mb-xs"
+                                />
+                                <div className="link-list">
+                                    {(() => {
+                                        const query = (user.role === 'parent' ? childSearchQuery : parentSearchQuery).toLowerCase();
+                                        const targets = allUsers.filter(u => u.role === (user.role === 'parent' ? 'student' : 'parent'));
+                                        const filtered = targets.filter(t => t.username.toLowerCase().includes(query) || (t.nickname && t.nickname.toLowerCase().includes(query)));
+                                        const linkedIds = new Set((user.role === 'parent' ? parentChildren : studentParents).map(c => c.id));
 
-                        <form onSubmit={handleResetPassword} className="password-form" noValidate>
-                            <input type="hidden" name="username" value={user.username} />
-                            <label>Password</label>
-                            <div className="password-inputs">
-                                <div className="password-input-wrapper">
-                                    <input 
-                                        type={showNewPassword ? "text" : "password"} 
-                                        name="new_password" 
-                                        placeholder="New Password"
-                                        required 
-                                    />
-                                    <button 
-                                        type="button" 
-                                        className="eye-toggle"
-                                        onClick={() => setShowNewPassword(!showNewPassword)}
-                                    >
-                                        {showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                                    </button>
+                                        if (filtered.length === 0) {
+                                            return <div className="link-empty">No accounts match query</div>;
+                                        }
+
+                                        return filtered.map(t => {
+                                            const isLinked = linkedIds.has(t.id);
+                                            return (
+                                                <div key={t.id} className="link-item">
+                                                    <span className="link-name truncate">{t.nickname || t.username} (@{t.username})</span>
+                                                    <button
+                                                        type="button"
+                                                        className={`btn-compact ${isLinked ? 'danger' : 'primary'} xs`}
+                                                        onClick={() => user.role === 'parent' ? handleToggleChildLink(t.id, isLinked) : handleToggleParentLink(t.id, isLinked)}
+                                                    >
+                                                        {isLinked ? 'Unlink' : 'Link'}
+                                                    </button>
+                                                </div>
+                                            );
+                                        });
+                                    })()}
                                 </div>
-                                <div className="password-input-wrapper">
-                                    <input 
-                                        type={showConfirmPassword ? "text" : "password"} 
-                                        name="confirm_password" 
-                                        placeholder="Confirm"
-                                        required 
-                                    />
-                                    <button 
-                                        type="button" 
-                                        className="eye-toggle"
-                                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                    >
-                                        {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                                    </button>
-                                </div>
-                                <button type="submit" className="btn-action warning" disabled={formLoading}>
-                                    {formLoading ? '...' : <Key size={18} />}
-                                </button>
-                            </div>
-                        </form>
-                        
-                        {/* Connection QR inside Security */}
-                        {user.role === 'student' && (
-                            <div className="sub-panel connection-qr-panel">
-                                <div className="qr-header">
-                                    <h4>Connection</h4>
-                                    <button className="btn-action-text" onClick={() => window.print()}>Print</button>
-                                </div>
-                                {connectionCode ? (
-                                    <div className="qr-compact-content">
-                                        <img 
-                                            src={`https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(`${window.location.origin}/parent/connect?code=${connectionCode}`)}`} 
-                                            alt="QR" 
-                                            className="qr-image-compact"
-                                        />
-                                        <div className="qr-text-info">
-                                            <span className="qr-code-txt">{connectionCode}</span>
-                                            <span className="qr-hint">Scan to link parent</span>
-                                        </div>
+                                {user.role === 'student' && connectionCode && (
+                                    <div className="qr-tiny-box mt-sm">
+                                        <span className="qr-tiny-lbl">Parent QR Code: <strong>{connectionCode}</strong></span>
+                                        <button className="btn-icon small" onClick={() => window.print()} title="Print QR Connection Card">
+                                            <Copy size={14} />
+                                        </button>
                                     </div>
-                                ) : (
-                                    <div className="loading-small">Loading...</div>
                                 )}
                             </div>
-                        )}
-                    </div>
+                        </div>
+                    )}
                 </div>
 
-                {user.role === 'parent' && (
-                    <div className="control-panel-card parent-links-card">
-                        <div className="panel-forms">
-                            <div className="compact-search-box">
-                                <input 
-                                    type="text" 
-                                    placeholder="Search students..." 
-                                    value={childSearchQuery} 
-                                    onChange={(e) => setChildSearchQuery(e.target.value)}
-                                    className="compact-search-input"
-                                />
+                {/* RARE SETTINGS & IDENTITY */}
+                <div className="compact-col">
+                    {/* Identity & Rare Account Settings */}
+                    <div className="compact-panel">
+                        <div className="panel-head">Account Identity</div>
+                        <div className="dense-form">
+                            <div className="dense-group">
+                                <label htmlFor="input-nickname">Nickname</label>
+                                <input id="input-nickname" type="text" value={editForm.nickname} onChange={(e) => setEditForm({ ...editForm, nickname: e.target.value })} />
                             </div>
-                            <div className="compact-children-list">
-                                {(() => {
-                                    const students = allUsers.filter(u => u.role === 'student');
-                                    const filteredStudents = students.filter(s => {
-                                        const search = childSearchQuery.toLowerCase();
-                                        return s.username.toLowerCase().includes(search) || 
-                                               (s.nickname && s.nickname.toLowerCase().includes(search));
-                                    });
-                                    const childIds = new Set(parentChildren.map(c => c.id));
-
-                                    if (filteredStudents.length === 0) return null;
-
-                                    return filteredStudents.map(s => {
-                                        const isLinked = childIds.has(s.id);
-                                        return (
-                                            <div key={s.id} className="compact-child-item">
-                                                <div className="child-info">
-                                                    <SmartImage 
-                                                        src={s.profile_picture ? getApiUrl(`/user/profile_pictures/${s.profile_picture}`) : ''} 
-                                                        alt="" 
-                                                        className="avatar-tiny"
-                                                        fallbackType="avatar"
-                                                    />
-                                                    <div className="child-names">
-                                                        <span className="name">{s.nickname || s.username}</span>
-                                                        <span className="handle">@{s.username}</span>
-                                                    </div>
-                                                </div>
-                                                <button 
-                                                    type="button"
-                                                    className={`btn-action-sm ${isLinked ? 'danger' : 'primary'}`}
-                                                    onClick={() => handleToggleChildLink(s.id, isLinked)}
-                                                    disabled={formLoading}
-                                                >
-                                                    {isLinked ? 'Unlink' : 'Link'}
-                                                </button>
-                                            </div>
-                                        );
-                                    });
-                                })()}
+                            <div className="dense-group">
+                                <label htmlFor="input-username">Username</label>
+                                <input id="input-username" type="text" value={editForm.username} onChange={(e) => setEditForm({ ...editForm, username: e.target.value.toLowerCase() })} />
+                            </div>
+                            <div className="dense-group">
+                                <label htmlFor="input-email">Email</label>
+                                <input id="input-email" type="email" value={editForm.email} onChange={(e) => setEditForm({ ...editForm, email: e.target.value })} />
+                            </div>
+                            <div className="dense-group">
+                                <label htmlFor="input-role">Role</label>
+                                <select id="input-role" value={editForm.role} onChange={(e) => setEditForm({ ...editForm, role: e.target.value })}>
+                                    <option value="student">Student</option>
+                                    <option value="parent">Parent</option>
+                                    <option value="teacher">Teacher</option>
+                                </select>
                             </div>
                         </div>
-                    </div>
-                )}
 
-                {user.role === 'student' && (
-                    <div className="control-panel-card parent-links-card">
-                        <div className="panel-forms">
-                            <div className="compact-search-box">
-                                <input 
-                                    type="text" 
-                                    placeholder="Search parents..." 
-                                    value={parentSearchQuery} 
-                                    onChange={(e) => setParentSearchQuery(e.target.value)}
-                                    className="compact-search-input"
-                                />
-                            </div>
-                            <div className="compact-children-list">
-                                {(() => {
-                                    const parents = allUsers.filter(u => u.role === 'parent');
-                                    const filteredParents = parents.filter(p => {
-                                        const search = parentSearchQuery.toLowerCase();
-                                        return p.username.toLowerCase().includes(search) || 
-                                               (p.nickname && p.nickname.toLowerCase().includes(search));
-                                    });
-                                    const parentIds = new Set(studentParents.map(p => p.id));
+                        <div className="compact-divider"></div>
 
-                                    if (filteredParents.length === 0) return null;
-
-                                    return filteredParents.map(p => {
-                                        const isLinked = parentIds.has(p.id);
-                                        return (
-                                            <div key={p.id} className="compact-child-item">
-                                                <div className="child-info">
-                                                    <SmartImage 
-                                                        src={p.profile_picture ? getApiUrl(`/user/profile_pictures/${p.profile_picture}`) : ''} 
-                                                        alt="" 
-                                                        className="avatar-tiny"
-                                                        fallbackType="avatar"
-                                                    />
-                                                    <div className="child-names">
-                                                        <span className="name">{p.nickname || p.username}</span>
-                                                        <span className="handle">@{p.username}</span>
-                                                    </div>
-                                                </div>
-                                                <button 
-                                                    type="button"
-                                                    className={`btn-action-sm ${isLinked ? 'danger' : 'primary'}`}
-                                                    onClick={() => handleToggleParentLink(p.id, isLinked)}
-                                                    disabled={formLoading}
-                                                >
-                                                    {isLinked ? 'Unlink' : 'Link'}
-                                                </button>
-                                            </div>
-                                        );
-                                    });
-                                })()}
-                            </div>
+                        <div className="panel-head">Access & Privileges</div>
+                        <div className="dense-toggles">
+                            <label className="dense-toggle">
+                                <input type="checkbox" checked={editForm.can_chat} onChange={(e) => setEditForm({ ...editForm, can_chat: e.target.checked })} />
+                                Chat Access Enabled
+                            </label>
+                            <label className="dense-toggle">
+                                <input type="checkbox" checked={editForm.is_admin} onChange={(e) => setEditForm({ ...editForm, is_admin: e.target.checked })} />
+                                System Administrator
+                            </label>
+                            <label className="dense-toggle">
+                                <input type="checkbox" checked={editForm.is_approved} onChange={(e) => setEditForm({ ...editForm, is_approved: e.target.checked })} />
+                                Account Approved
+                            </label>
                         </div>
                     </div>
-                )}
 
-                {/* Danger Zone */}
-                {!user.is_admin && (
-                    <div className="control-panel-card full-width danger-zone">
-                        <h3 className="danger-zone-title"><Trash2 size={20} /> Danger Zone</h3>
-                        <div className="panel-forms">
-                            <p style={{color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '0.5rem'}}>
-                                Removing a user will permanently delete all of their data and progress. This action cannot be undone.
-                            </p>
-                            <button   onClick={handleRemoveUser} className="hud-btn danger-outline w-fit-content">
-                                <Trash2 size={16} /> Remove User
+                    {/* Perks Matrix */}
+                    {user.role === 'student' && (
+                        <div className="compact-panel">
+                            <div className="panel-head"><Sparkles size={16} /> Perks Matrix</div>
+                            <div className="dense-perks">
+                                <button type="button" className={`perk-chip ${user.has_chat_font ? 'on' : 'off'}`} onClick={() => handleUpdateUser({ has_chat_font: !user.has_chat_font })}>Chat Font</button>
+                                <button type="button" className={`perk-chip ${user.has_animated_border ? 'on' : 'off'}`} onClick={() => handleUpdateUser({ has_animated_border: !user.has_animated_border })}>Border</button>
+                                <button type="button" className={`perk-chip ${user.has_auto_bitshift ? 'on' : 'off'}`} onClick={() => handleUpdateUser({ has_auto_bitshift: !user.has_auto_bitshift })}>Bitshift</button>
+                                <button type="button" className={`perk-chip ${user.has_auto_claimer ? 'on' : 'off'}`} onClick={() => handleUpdateUser({ has_auto_claimer: !user.has_auto_claimer })}>Auto Claim</button>
+                                <button type="button" className={`perk-chip ${user.has_double_duck ? 'on' : 'off'}`} onClick={() => handleUpdateUser({ has_double_duck: !user.has_double_duck })}>2x Duck</button>
+                                <button type="button" className={`perk-chip ${user.has_custom_wallpaper ? 'on' : 'off'}`} onClick={() => handleUpdateUser({ has_custom_wallpaper: !user.has_custom_wallpaper })}>Wallpaper</button>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Danger Zone */}
+                    {!user.is_admin && (
+                        <div className="compact-panel danger-box">
+                            <button onClick={handleRemoveUser} className="btn-compact danger w-full">
+                                <Trash2 size={15} /> Delete Account
                             </button>
                         </div>
-                    </div>
-                )}
+                    )}
+                </div>
 
             </div>
 
-            {/* Printable Connection Card for student - hidden on screen, visible on print */}
+            {/* Printable QR Code for Parent Connection */}
             {user.role === 'student' && connectionCode && (
-                <div className="printable-connection-card-full print-only">
-                    <h3>{user.nickname || user.username}</h3>
-                    <div className="print-handle">@{user.username}</div>
-                    <img 
-                        src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(`${window.location.origin}/parent/connect?code=${connectionCode}`)}`} 
-                        alt="QR Code" 
-                        style={{ width: '200px', height: '200px' }} 
-                    />
-                    <div className="print-code-box">
-                        <span className="print-code-lbl">Connection Code</span>
-                        <span className="print-code-val">{connectionCode}</span>
-                    </div>
+                <div className="print-only">
+                    <h2>{user.nickname || user.username}</h2>
+                    <div>@{user.username}</div>
+                    <img src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(`${window.location.origin}/parent/connect?code=${connectionCode}`)}`} alt="QR" />
+                    <div>Connection Code: {connectionCode}</div>
                 </div>
             )}
         </div>

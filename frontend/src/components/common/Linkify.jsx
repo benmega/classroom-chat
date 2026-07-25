@@ -35,11 +35,11 @@ const Linkify = ({ text, isUserMessage }) => {
                 wordBreak: 'break-all',
                 overflowWrap: 'anywhere'
               }}
-              onMouseOver={(e) => {
+              onFocus={() => {}} onMouseOver={(e) => {
                 e.currentTarget.style.opacity = '1';
                 e.currentTarget.style.textDecorationColor = isUserMessage ? 'rgba(255,255,255,0.8)' : 'var(--highlight-hover)';
               }}
-              onMouseOut={(e) => {
+              onBlur={() => {}} onMouseOut={(e) => {
                 e.currentTarget.style.opacity = '0.9';
                 e.currentTarget.style.textDecorationColor = 'currentColor';
               }}

@@ -1,10 +1,12 @@
 from application.extensions import db
-from application.models.user import User
 from application.models.store_item import StoreItem
+from application.models.user import User
+
 
 def test_shop_routes_unauthenticated(client):
     resp = client.get("/api/shop/items")
     assert resp.status_code == 302 or resp.status_code == 401 or resp.status_code == 403
+
 
 def test_shop_flow_success(client, init_db):
     # (they are already seeded by seed_global_data in conftest.py init_db fixture!)
@@ -25,7 +27,7 @@ def test_shop_flow_success(client, init_db):
     assert resp.status_code == 200
     items_data = resp.json
     assert len(items_data) > 0
-    
+
     # Let's find "Chat Font Color" item
     font_item = None
     for it in items_data:
@@ -42,7 +44,7 @@ def test_shop_flow_success(client, init_db):
     assert resp.status_code == 200
     assert resp.json["message"] == "Purchase successful!"
     assert resp.json["new_balance"] < 100.0
-    
+
     db.session.refresh(test_user)
     assert test_user.has_chat_font is True
 
@@ -51,22 +53,32 @@ def test_shop_flow_success(client, init_db):
     assert resp.status_code == 400
 
     # Configure owned perk success
-    resp = client.put("/api/shop/configure", json={"perk_name": "chat_font_color", "value": "#ff0000"})
+    resp = client.put(
+        "/api/shop/configure", json={"perk_name": "chat_font_color", "value": "#ff0000"}
+    )
     assert resp.status_code == 200
     db.session.refresh(test_user)
     assert test_user.chat_font_color == "#ff0000"
 
     # Configure owned perk invalid value
-    resp = client.put("/api/shop/configure", json={"perk_name": "chat_font_color", "value": "red"})
+    resp = client.put(
+        "/api/shop/configure", json={"perk_name": "chat_font_color", "value": "red"}
+    )
     assert resp.status_code == 400
 
     # Configure unowned perk failure
-    resp = client.put("/api/shop/configure", json={"perk_name": "profile_wallpaper", "value": "bg.jpg"})
+    resp = client.put(
+        "/api/shop/configure",
+        json={"perk_name": "profile_wallpaper", "value": "bg.jpg"},
+    )
     assert resp.status_code == 403
 
     # Unknown perk
-    resp = client.put("/api/shop/configure", json={"perk_name": "unknown", "value": "value"})
+    resp = client.put(
+        "/api/shop/configure", json={"perk_name": "unknown", "value": "value"}
+    )
     assert resp.status_code == 400
+
 
 def test_purchase_not_enough_packets(client, init_db):
     test_user = User(username="poor_shopper", packets=0.0, is_approved=True)

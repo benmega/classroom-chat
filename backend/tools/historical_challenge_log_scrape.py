@@ -60,7 +60,9 @@ def get_context(url):
     domain = (
         "CodeCombat"
         if "codecombat" in url
-        else "www.ozaria.com" if "ozaria" in url else "Studio.Code"
+        else "www.ozaria.com"
+        if "ozaria" in url
+        else "Studio.Code"
     )
     match = re.search(r"/classroom/([a-fA-F0-9]{24})", url)
     instance = match.group(1) if match else None
@@ -77,9 +79,7 @@ def main(DOMAIN, URL_LEVELS):
         return
 
     # Extract unique classroom IDs to avoid duplicate API calls
-    unique_classrooms = set(
-        item["classroomID"] for item in course_instances if "classroomID" in item
-    )
+    unique_classrooms = {item["classroomID"] for item in course_instances if "classroomID" in item}
     print(
         f"Found {len(course_instances)} course instances across {len(unique_classrooms)} unique classrooms."
     )

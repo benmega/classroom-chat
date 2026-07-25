@@ -8,9 +8,9 @@ const MobileSidebar = ({ user, isParent, isSidebarOpen, setSidebarOpen, handleLo
 
     return (
         <>
-            <div 
+            <div role="button" tabIndex={0} 
                 className={`mobile-overlay ${isSidebarOpen ? 'show' : ''}`} 
-                onClick={() => setSidebarOpen(false)}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={() => setSidebarOpen(false)}
             ></div>
             
             <aside className={`mobile-sidebar ${isSidebarOpen ? 'open' : ''}`}>

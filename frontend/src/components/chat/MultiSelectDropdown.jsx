@@ -5,6 +5,7 @@ import './MultiSelectDropdown.css';
 const MultiSelectDropdown = ({ options, selectedValues, onChange, defaultLabel, icon: Icon, disabled }) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
+  const triggerRef = useRef(null);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -12,9 +13,21 @@ const MultiSelectDropdown = ({ options, selectedValues, onChange, defaultLabel, 
         setIsOpen(false);
       }
     };
+    
+    const handleEscape = (event) => {
+      if (event.key === 'Escape' && isOpen) {
+        setIsOpen(false);
+        triggerRef.current?.focus();
+      }
+    };
+
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+    document.addEventListener('keydown', handleEscape);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [isOpen]);
 
   const toggleOption = (id) => {
     if (selectedValues.includes(id)) {
@@ -29,6 +42,13 @@ const MultiSelectDropdown = ({ options, selectedValues, onChange, defaultLabel, 
       onChange([]); 
     } else {
       onChange(options.map(o => o.id)); 
+    }
+  };
+
+  const handleKeyDownOption = (e, callback) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      callback();
     }
   };
 
@@ -49,6 +69,9 @@ const MultiSelectDropdown = ({ options, selectedValues, onChange, defaultLabel, 
         className={`multiselect-trigger ${isOpen ? 'active' : ''}`}
         onClick={() => !disabled && setIsOpen(!isOpen)}
         disabled={disabled}
+        ref={triggerRef}
+        aria-haspopup="listbox"
+        aria-expanded={isOpen}
       >
         {Icon && <Icon size={16} />}
         <span className="multiselect-label">{label}</span>
@@ -56,8 +79,15 @@ const MultiSelectDropdown = ({ options, selectedValues, onChange, defaultLabel, 
       </button>
 
       {isOpen && !disabled && (
-        <div className="multiselect-menu">
-          <div className="multiselect-option all-option" onClick={toggleAll}>
+        <div className="multiselect-menu" role="listbox" aria-multiselectable="true">
+          <div 
+            className="multiselect-option all-option" 
+            onClick={toggleAll}
+            onKeyDown={(e) => handleKeyDownOption(e, toggleAll)}
+            tabIndex="0"
+            role="option"
+            aria-selected={selectedValues.length === options.length}
+          >
             <div className={`checkbox ${selectedValues.length === options.length ? 'checked' : ''}`}>
               {selectedValues.length === options.length && <Check size={14} />}
             </div>
@@ -72,6 +102,10 @@ const MultiSelectDropdown = ({ options, selectedValues, onChange, defaultLabel, 
                   key={option.id} 
                   className="multiselect-option"
                   onClick={() => toggleOption(option.id)}
+                  onKeyDown={(e) => handleKeyDownOption(e, () => toggleOption(option.id))}
+                  tabIndex="0"
+                  role="option"
+                  aria-selected={isSelected}
                 >
                   <div className={`checkbox ${isSelected ? 'checked' : ''}`}>
                     {isSelected && <Check size={14} />}

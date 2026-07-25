@@ -191,7 +191,7 @@ const Analytics = () => {
                                     <span className="label">Total Supply</span>
                                     <span className="value">🦆 {total_ducks.toLocaleString()}</span>
                                 </div>
-                                <div className="simple-stat clickable" onClick={() => navigate('/admin/transactions?type=earned')}>
+                                <div role="button" tabIndex={0} className="simple-stat clickable" onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={() => navigate('/admin/transactions?type=earned')}>
                                     <span className="label">Minted (7d)</span>
                                     <span className="value positive">+ {ducks_earned_this_week.toLocaleString()}</span>
                                 </div>

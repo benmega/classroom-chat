@@ -133,7 +133,7 @@ const DuckTransactions = () => {
 
     return (
         <div className="admin-transactions-page">
-            <div className="back-link" onClick={() => navigate('/admin')}>
+            <div role="button" tabIndex={0} className="back-link" onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={() => navigate('/admin')}>
                 <ArrowLeft size={16} /> Back to Dashboard
             </div>
 

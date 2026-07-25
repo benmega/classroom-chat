@@ -1,16 +1,22 @@
 from datetime import datetime
+
 from ..extensions import db
 
 
 class DuckTransaction(db.Model):
     __tablename__ = "duck_transactions"
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False, index=True)
+    user_id = db.Column(
+        db.Integer, db.ForeignKey("users.id"), nullable=False, index=True
+    )
     amount = db.Column(db.Float, nullable=False)
     reason = db.Column(db.String(200), nullable=True)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow, index=True)
 
-    user = db.relationship("User", backref=db.backref("transactions", lazy=True, cascade="all, delete-orphan"))
+    user = db.relationship(
+        "User",
+        backref=db.backref("transactions", lazy=True, cascade="all, delete-orphan"),
+    )
 
     def to_dict(self):
         return {

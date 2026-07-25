@@ -1,14 +1,23 @@
 import os
 import uuid
-from flask import Blueprint, request, jsonify, session, current_app, send_from_directory
-from werkzeug.utils import secure_filename
 
 from application import limiter
+from application.decorators.login_required import require_login
 from application.extensions import db
 from application.models.note import Note
 from application.models.user import User
 from application.utilities.db_helpers import get_user
 from application.utilities.helper_functions import allowed_file, get_s3_client
+from flask import (
+    Blueprint,
+    current_app,
+    g,
+    jsonify,
+    request,
+    send_from_directory,
+    session,
+)
+from werkzeug.utils import secure_filename
 
 notes_bp = Blueprint("notes", __name__)
 
@@ -100,14 +109,23 @@ def handle_local_note_upload(file):
                 os.remove(file_path)
             return None
     except Exception as e:
-        current_app.logger.error(f"Local Note Upload Error: {e}")
+        current_app.logger.exception(f"Local Note Upload Error: {e}")
         return None
 
 
 @notes_bp.route("/view/<filename>")
+@require_login
 @limiter.limit("500 per minute")
 def serve_note(filename):
-    """Serve a locally stored note."""
+    """Serve a locally stored note to its owner, their parents, or an admin."""
+    viewer = g.get("user")
+    note = Note.query.filter_by(filename=os.path.basename(filename)).first()
+    if note is not None and viewer is not None:
+        is_owner = note.user_id == viewer.id
+        is_parent = viewer in (note.user.parents or [])
+        if not (is_owner or is_parent or viewer.is_admin):
+            return jsonify({"error": "Not authorized to view this note"}), 403
+
     notes_dir = os.path.join(current_app.config["UPLOAD_FOLDER"], "notes")
 
     # Security: prevent traversal
@@ -139,7 +157,7 @@ def handle_note_s3_upload(s3_client, file, user_obj):
         )
         return s3_key
     except Exception as e:
-        current_app.logger.error(f"Note S3 Upload Error: {e}")
+        current_app.logger.exception(f"Note S3 Upload Error: {e}")
         return None
 
 
@@ -178,7 +196,7 @@ def delete_note(note_id):
 
     except Exception as e:
         # Log the sensitive details securely to your server
-        current_app.logger.error(f"Error deleting note {note_id}: {str(e)}")
+        current_app.logger.exception(f"Error deleting note {note_id}: {e!s}")
 
         # Return a safe, generic message to the frontend
         return (

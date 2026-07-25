@@ -137,12 +137,12 @@ const EditProfile = () => {
                     <div className="settings-main">
                         <div className="form-row">
                             <div className="form-group flex-1">
-                                <label>Username (readonly)</label>
-                                <input type="text" value={user?.username || ''} disabled className="form-control readonly" />
+                                <label htmlFor="input-139">Username (readonly)</label>
+                                <input id="input-139" type="text" value={user?.username || ''} disabled className="form-control readonly" />
                             </div>
                             <div className="form-group flex-1">
-                                <label>Nickname</label>
-                                <input 
+                                <label htmlFor="input-143">Nickname</label>
+                                <input id="input-143" 
                                     type="text" 
                                     value={nickname}
                                     onChange={(e) => setNickname(e.target.value)}
@@ -156,9 +156,9 @@ const EditProfile = () => {
                             <div className="form-col">
                                 {user?.role !== 'parent' && (
                                     <div className="form-group">
-                                        <label>Parent Connection Code</label>
+                                        <label htmlFor="input-158">Parent Connection Code</label>
                                         <div className="connection-code-row">
-                                            <input 
+                                            <input id="input-158" 
                                                 type="text" 
                                                 value={connectionCode || 'Loading...'} 
                                                 disabled 
@@ -186,8 +186,8 @@ const EditProfile = () => {
                                 )}
                                 {user?.drawer && (
                                     <div className="form-group">
-                                        <label>Assigned Drawer (readonly)</label>
-                                        <input 
+                                        <label htmlFor="input-188">Assigned Drawer (readonly)</label>
+                                        <input id="input-188" 
                                             type="text" 
                                             value={user.drawer} 
                                             disabled 
@@ -202,8 +202,8 @@ const EditProfile = () => {
 
                             <div className="form-col">
                                 <div className="form-group about-me-group">
-                                    <label>About Me</label>
-                                    <textarea 
+                                    <label htmlFor="input-204">About Me</label>
+                                    <textarea id="input-204" 
                                         value={bio}
                                         onChange={(e) => setBio(e.target.value)}
                                         placeholder="Tell us about yourself..." 
@@ -220,9 +220,9 @@ const EditProfile = () => {
 
                         <div className="form-row">
                             <div className="form-group flex-1">
-                                <label>New Password</label>
+                                <label htmlFor="input-222">New Password</label>
                                 <div className="password-input-wrapper">
-                                    <input 
+                                    <input id="input-222" 
                                         type={showPassword ? "text" : "password"} 
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
@@ -241,9 +241,9 @@ const EditProfile = () => {
                                 </div>
                             </div>
                             <div className="form-group flex-1">
-                                <label>Confirm New Password</label>
+                                <label htmlFor="input-243">Confirm New Password</label>
                                 <div className="password-input-wrapper">
-                                    <input 
+                                    <input id="input-243" 
                                         type={showConfirmPassword ? "text" : "password"} 
                                         value={confirmPassword}
                                         onChange={(e) => setConfirmPassword(e.target.value)}

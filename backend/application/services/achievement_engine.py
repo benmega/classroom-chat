@@ -1,8 +1,6 @@
 # application/services/achievement_engine.py
 from datetime import datetime
 
-from sqlalchemy import func
-
 from application.extensions import db
 from application.models.achievements import Achievement, UserAchievement
 from application.models.challenge_log import ChallengeLog
@@ -10,6 +8,7 @@ from application.models.duck_trade import DuckTradeLog
 from application.models.message import Message
 from application.models.session_log import SessionLog
 from application.models.user_certificate import UserCertificate
+from sqlalchemy import func
 
 
 def check_achievement(user, achievement, stats=None):
@@ -180,7 +179,9 @@ def evaluate_user(user, force=False):
 
     # Use pessimistic locking to prevent concurrent evaluations
     # Lock the user row to ensure only one evaluation runs at a time
-    user = db.session.query(user.__class__).with_for_update().filter_by(id=user.id).first()
+    user = (
+        db.session.query(user.__class__).with_for_update().filter_by(id=user.id).first()
+    )
     if not user:
         return []
 

@@ -5,7 +5,6 @@ Summary: Unit tests for app.
 """
 
 import pytest
-
 from application import create_app
 
 

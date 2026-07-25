@@ -1,6 +1,7 @@
 from functools import wraps
-from flask import session, jsonify, render_template, request
+
 from application.models.user import User
+from flask import jsonify, render_template, request, session
 
 
 def admin_only(f):
@@ -22,6 +23,7 @@ def admin_only(f):
             return render_template("index.html")
 
         from application.extensions import db
+
         user = db.session.get(User, user_id)
         if not user or not user.is_admin:
             if is_api:

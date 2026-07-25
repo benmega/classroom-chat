@@ -231,8 +231,8 @@ const AdvancedPanel = () => {
             </div>
 
             {showLogModal && (
-                <div className="log-modal-overlay" onClick={() => setShowLogModal(false)}>
-                    <div className="log-modal glass-panel animate-fade-in" onClick={e => e.stopPropagation()}>
+                <div role="button" tabIndex={0} className="log-modal-overlay" onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={() => setShowLogModal(false)}>
+                    <div role="button" tabIndex={0} className="log-modal glass-panel animate-fade-in" onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={e => e.stopPropagation()}>
                         <div className="log-modal-header">
                             <div className="title-group">
                                 <Terminal size={20} />
@@ -254,8 +254,8 @@ const AdvancedPanel = () => {
             )}
 
             {showStatsModal && extendedStats && (
-                <div className="log-modal-overlay" onClick={() => setShowStatsModal(false)}>
-                    <div className="log-modal glass-panel animate-fade-in" onClick={e => e.stopPropagation()}>
+                <div role="button" tabIndex={0} className="log-modal-overlay" onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={() => setShowStatsModal(false)}>
+                    <div role="button" tabIndex={0} className="log-modal glass-panel animate-fade-in" onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={e => e.stopPropagation()}>
                         <div className="log-modal-header">
                             <div className="title-group">
                                 <Activity size={20} />
@@ -300,8 +300,8 @@ const AdvancedPanel = () => {
             )}
 
             {showPurgeModal && (
-                <div className="log-modal-overlay" onClick={() => setShowPurgeModal(false)}>
-                    <div className="log-modal glass-panel animate-fade-in purge-confirm" onClick={e => e.stopPropagation()}>
+                <div role="button" tabIndex={0} className="log-modal-overlay" onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={() => setShowPurgeModal(false)}>
+                    <div role="button" tabIndex={0} className="log-modal glass-panel animate-fade-in purge-confirm" onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={e => e.stopPropagation()}>
                         <div className="log-modal-header danger">
                             <div className="title-group">
                                 <ShieldAlert size={20} />

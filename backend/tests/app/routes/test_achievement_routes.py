@@ -8,12 +8,9 @@ from io import BytesIO
 from unittest.mock import patch
 
 import pytest
-
 from application.extensions import db
 from application.models.achievements import Achievement, UserAchievement
 from application.models.user_certificate import UserCertificate
-
-
 
 
 @pytest.fixture
@@ -24,8 +21,6 @@ def mock_render_template(client):
     with patch("application.routes.achievement_routes.render_template") as mock:
         mock.return_value = "Mocked Template Content"
         yield mock
-
-
 
 
 def test_achievements_page(
@@ -506,6 +501,7 @@ def test_user_achievement_earned_at_timestamp(init_db, sample_user, sample_achie
 def test_calculate_consistency_year_transition(init_db, sample_user):
     """Test that consistency streak handles 53-week year transitions correctly."""
     from datetime import datetime
+
     from application.models.challenge_log import ChallengeLog
     from application.services.achievement_engine import _calculate_consistency
 
@@ -517,9 +513,24 @@ def test_calculate_consistency_year_transition(init_db, sample_user):
     ts_w53 = datetime(2020, 12, 29)
     ts_w1 = datetime(2021, 1, 5)
 
-    log1 = ChallengeLog(user_id=sample_user.id, domain="python", challenge_slug="challenge-1", timestamp=ts_w52)
-    log2 = ChallengeLog(user_id=sample_user.id, domain="python", challenge_slug="challenge-2", timestamp=ts_w53)
-    log3 = ChallengeLog(user_id=sample_user.id, domain="python", challenge_slug="challenge-3", timestamp=ts_w1)
+    log1 = ChallengeLog(
+        user_id=sample_user.id,
+        domain="python",
+        challenge_slug="challenge-1",
+        timestamp=ts_w52,
+    )
+    log2 = ChallengeLog(
+        user_id=sample_user.id,
+        domain="python",
+        challenge_slug="challenge-2",
+        timestamp=ts_w53,
+    )
+    log3 = ChallengeLog(
+        user_id=sample_user.id,
+        domain="python",
+        challenge_slug="challenge-3",
+        timestamp=ts_w1,
+    )
 
     db.session.add_all([log1, log2, log3])
     db.session.commit()
@@ -546,8 +557,8 @@ def test_add_achievement_post_json(client, init_db, sample_admin):
             "slug": "json-ach",
             "description": "desc",
             "type": "ducks",
-            "reward": 10
-        }
+            "reward": 10,
+        },
     )
     assert response.status_code == 200
     assert response.json["status"] == "success"
@@ -564,7 +575,9 @@ def test_add_achievement_missing_fields(client, init_db, sample_admin):
     assert "required" in response.json["message"]
 
 
-def test_add_achievement_duplicate_slug(client, init_db, sample_admin, sample_achievement):
+def test_add_achievement_duplicate_slug(
+    client, init_db, sample_admin, sample_achievement
+):
     with client.session_transaction() as sess:
         sess["user"] = sample_admin.id
     response = client.post(
@@ -573,8 +586,8 @@ def test_add_achievement_duplicate_slug(client, init_db, sample_admin, sample_ac
             "name": "Duplicate",
             "slug": sample_achievement.slug,
             "type": "ducks",
-            "reward": 10
-        }
+            "reward": 10,
+        },
     )
     assert response.status_code == 400
     assert response.json["status"] == "error"
@@ -585,7 +598,15 @@ def test_add_achievement_duplicate_slug(client, init_db, sample_admin, sample_ac
 @patch("application.routes.achievement_routes.allowed_file")
 @patch("application.routes.achievement_routes.os.makedirs")
 @patch("application.routes.achievement_routes.subprocess.run")
-def test_add_achievement_with_badge(mock_subprocess, mock_makedirs, mock_allowed, mock_save, client, init_db, sample_admin):
+def test_add_achievement_with_badge(
+    mock_subprocess,
+    mock_makedirs,
+    mock_allowed,
+    mock_save,
+    client,
+    init_db,
+    sample_admin,
+):
     mock_allowed.return_value = True
     with client.session_transaction() as sess:
         sess["user"] = sample_admin.id
@@ -600,9 +621,9 @@ def test_add_achievement_with_badge(mock_subprocess, mock_makedirs, mock_allowed
             "slug": "badge-ach",
             "type": "ducks",
             "reward": 10,
-            "badge": img_file
+            "badge": img_file,
         },
-        content_type="multipart/form-data"
+        content_type="multipart/form-data",
     )
     assert response.status_code == 200
     assert response.json["status"] == "success"
@@ -626,9 +647,9 @@ def test_add_achievement_invalid_badge_ext(mock_allowed, client, init_db, sample
             "slug": "badge-ach-2",
             "type": "ducks",
             "reward": 10,
-            "badge": img_file
+            "badge": img_file,
         },
-        content_type="multipart/form-data"
+        content_type="multipart/form-data",
     )
     assert response.status_code == 200
     assert response.json["status"] == "error"
@@ -638,10 +659,15 @@ def test_add_achievement_invalid_badge_ext(mock_allowed, client, init_db, sample
 @patch("werkzeug.datastructures.FileStorage.save")
 @patch("application.routes.achievement_routes.allowed_file")
 @patch("application.routes.achievement_routes.subprocess.run")
-def test_add_achievement_badge_subprocess_fail(mock_subprocess, mock_allowed, mock_save, client, init_db, sample_admin):
+def test_add_achievement_badge_subprocess_fail(
+    mock_subprocess, mock_allowed, mock_save, client, init_db, sample_admin
+):
     import subprocess
+
     mock_allowed.return_value = True
-    mock_subprocess.side_effect = subprocess.CalledProcessError(1, "cmd", stderr="error")
+    mock_subprocess.side_effect = subprocess.CalledProcessError(
+        1, "cmd", stderr="error"
+    )
     with client.session_transaction() as sess:
         sess["user"] = sample_admin.id
 
@@ -653,9 +679,9 @@ def test_add_achievement_badge_subprocess_fail(mock_subprocess, mock_allowed, mo
             "slug": "badge-ach-3",
             "type": "ducks",
             "reward": 10,
-            "badge": img_file
+            "badge": img_file,
         },
-        content_type="multipart/form-data"
+        content_type="multipart/form-data",
     )
     assert response.status_code == 500
     assert response.json["status"] == "error"
@@ -664,7 +690,9 @@ def test_add_achievement_badge_subprocess_fail(mock_subprocess, mock_allowed, mo
 @patch("werkzeug.datastructures.FileStorage.save")
 @patch("application.routes.achievement_routes.allowed_file")
 @patch("application.routes.achievement_routes.subprocess.run")
-def test_add_achievement_badge_subprocess_exception(mock_subprocess, mock_allowed, mock_save, client, init_db, sample_admin):
+def test_add_achievement_badge_subprocess_exception(
+    mock_subprocess, mock_allowed, mock_save, client, init_db, sample_admin
+):
     mock_allowed.return_value = True
     mock_subprocess.side_effect = Exception("unexpected error")
     with client.session_transaction() as sess:
@@ -678,9 +706,9 @@ def test_add_achievement_badge_subprocess_exception(mock_subprocess, mock_allowe
             "slug": "badge-ach-4",
             "type": "ducks",
             "reward": 10,
-            "badge": img_file
+            "badge": img_file,
         },
-        content_type="multipart/form-data"
+        content_type="multipart/form-data",
     )
     assert response.status_code == 500
     assert response.json["status"] == "error"
@@ -689,24 +717,67 @@ def test_add_achievement_badge_subprocess_exception(mock_subprocess, mock_allowe
 def test_submit_certificate_get_json(client, init_db, sample_user):
     with client.session_transaction() as sess:
         sess["user"] = sample_user.id
-    response = client.get("/achievements/submit_certificate", headers={"Accept": "application/json"})
+    response = client.get(
+        "/achievements/submit_certificate", headers={"Accept": "application/json"}
+    )
     assert response.status_code == 200
     assert response.json["status"] == "ready"
 
 
-def test_view_certificate(client, init_db, sample_admin, sample_user, sample_achievement):
-    cert = UserCertificate(user_id=sample_user.id, achievement_id=sample_achievement.id, url="http://test", file_path="test.pdf")
+def test_view_certificate(
+    client, init_db, sample_admin, sample_user, sample_achievement
+):
+    cert = UserCertificate(
+        user_id=sample_user.id,
+        achievement_id=sample_achievement.id,
+        url="http://test",
+        file_path="test.pdf",
+    )
     db.session.add(cert)
     db.session.commit()
     with client.session_transaction() as sess:
         sess["user"] = sample_admin.id
 
-    with patch("application.routes.achievement_routes.os.path.exists", return_value=False):
+    with patch(
+        "application.routes.achievement_routes.os.path.exists", return_value=False
+    ):
         response = client.get(f"/achievements/view_certificate/{cert.id}")
         assert response.status_code == 404
 
-    with patch("application.routes.achievement_routes.os.path.exists", return_value=True), \
-         patch("application.routes.achievement_routes.send_from_directory", return_value="fake_file"):
+    with (
+        patch(
+            "application.routes.achievement_routes.os.path.exists", return_value=True
+        ),
+        patch(
+            "application.routes.achievement_routes.send_from_directory",
+            return_value="fake_file",
+        ),
+    ):
+        response = client.get(f"/achievements/view_certificate/{cert.id}")
+        assert response.status_code == 200
+
+
+def test_view_certificate_is_public(client, init_db, sample_user, sample_achievement):
+    """Certificate viewing is intentionally public (no login required) —
+    this is a disclosed and accepted tradeoff, not an oversight."""
+    cert = UserCertificate(
+        user_id=sample_user.id,
+        achievement_id=sample_achievement.id,
+        url="http://test",
+        file_path="test.pdf",
+    )
+    db.session.add(cert)
+    db.session.commit()
+
+    with (
+        patch(
+            "application.routes.achievement_routes.os.path.exists", return_value=True
+        ),
+        patch(
+            "application.routes.achievement_routes.send_from_directory",
+            return_value="fake_file",
+        ),
+    ):
         response = client.get(f"/achievements/view_certificate/{cert.id}")
         assert response.status_code == 200
 
@@ -719,13 +790,21 @@ def test_admin_certificates(client, init_db, sample_admin):
 
 
 def test_mark_reviewed(client, init_db, sample_admin, sample_user, sample_achievement):
-    cert = UserCertificate(user_id=sample_user.id, achievement_id=sample_achievement.id, url="http://test", file_path="test.pdf")
+    cert = UserCertificate(
+        user_id=sample_user.id,
+        achievement_id=sample_achievement.id,
+        url="http://test",
+        file_path="test.pdf",
+    )
     db.session.add(cert)
     db.session.commit()
     with client.session_transaction() as sess:
         sess["user"] = sample_admin.id
 
-    response = client.post(f"/achievements/admin/certificates/reviewed/{cert.id}", headers={"X-Requested-With": "XMLHttpRequest"})
+    response = client.post(
+        f"/achievements/admin/certificates/reviewed/{cert.id}",
+        headers={"X-Requested-With": "XMLHttpRequest"},
+    )
     assert response.status_code == 200
     assert response.json["status"] == "success"
     assert cert.reviewed is True
@@ -736,32 +815,58 @@ def test_mark_reviewed(client, init_db, sample_admin, sample_user, sample_achiev
     assert response2.status_code == 302
 
 
-def test_download_certificate(client, init_db, sample_admin, sample_user, sample_achievement):
-    cert = UserCertificate(user_id=sample_user.id, achievement_id=sample_achievement.id, url="http://test", file_path="test.pdf")
+def test_download_certificate(
+    client, init_db, sample_admin, sample_user, sample_achievement
+):
+    cert = UserCertificate(
+        user_id=sample_user.id,
+        achievement_id=sample_achievement.id,
+        url="http://test",
+        file_path="test.pdf",
+    )
     db.session.add(cert)
     db.session.commit()
     with client.session_transaction() as sess:
         sess["user"] = sample_admin.id
 
-    with patch("application.routes.achievement_routes.os.path.exists", return_value=False):
+    with patch(
+        "application.routes.achievement_routes.os.path.exists", return_value=False
+    ):
         response = client.get(f"/achievements/download_certificate/{cert.id}")
         assert response.status_code == 302
 
-    with patch("application.routes.achievement_routes.os.path.exists", return_value=True), \
-         patch("application.routes.achievement_routes.send_from_directory", return_value="fake_file"):
+    with (
+        patch(
+            "application.routes.achievement_routes.os.path.exists", return_value=True
+        ),
+        patch(
+            "application.routes.achievement_routes.send_from_directory",
+            return_value="fake_file",
+        ),
+    ):
         response = client.get(f"/achievements/download_certificate/{cert.id}")
         assert response.status_code == 200
 
 
-def test_mark_all_reviewed(client, init_db, sample_admin, sample_user, sample_achievement):
+def test_mark_all_reviewed(
+    client, init_db, sample_admin, sample_user, sample_achievement
+):
     # Just need one cert to test the logic
-    cert1 = UserCertificate(user_id=sample_user.id, achievement_id=sample_achievement.id, url="http://test1", file_path="test1.pdf")
+    cert1 = UserCertificate(
+        user_id=sample_user.id,
+        achievement_id=sample_achievement.id,
+        url="http://test1",
+        file_path="test1.pdf",
+    )
     db.session.add(cert1)
     db.session.commit()
     with client.session_transaction() as sess:
         sess["user"] = sample_admin.id
 
-    response = client.post("/achievements/admin/certificates/reviewed/all", headers={"X-Requested-With": "XMLHttpRequest"})
+    response = client.post(
+        "/achievements/admin/certificates/reviewed/all",
+        headers={"X-Requested-With": "XMLHttpRequest"},
+    )
     assert response.status_code == 200
     assert cert1.reviewed is True
 
@@ -773,7 +878,15 @@ def test_mark_all_reviewed(client, init_db, sample_admin, sample_user, sample_ac
 
 @patch("application.routes.achievement_routes.io.BytesIO")
 @patch("application.routes.achievement_routes.zipfile.ZipFile")
-def test_download_all_certificates(mock_zip, mock_bytesio, client, init_db, sample_admin, sample_user, sample_achievement):
+def test_download_all_certificates(
+    mock_zip,
+    mock_bytesio,
+    client,
+    init_db,
+    sample_admin,
+    sample_user,
+    sample_achievement,
+):
     with client.session_transaction() as sess:
         sess["user"] = sample_admin.id
 
@@ -781,11 +894,22 @@ def test_download_all_certificates(mock_zip, mock_bytesio, client, init_db, samp
     response = client.get("/achievements/admin/certificates/download_all")
     assert response.status_code == 302
 
-    cert = UserCertificate(user_id=sample_user.id, achievement_id=sample_achievement.id, url="http://test", file_path="test.pdf")
+    cert = UserCertificate(
+        user_id=sample_user.id,
+        achievement_id=sample_achievement.id,
+        url="http://test",
+        file_path="test.pdf",
+    )
     db.session.add(cert)
     db.session.commit()
 
-    with patch("application.routes.achievement_routes.os.path.exists", return_value=True), \
-         patch("application.routes.achievement_routes.send_file", return_value="fake_zip"):
+    with (
+        patch(
+            "application.routes.achievement_routes.os.path.exists", return_value=True
+        ),
+        patch(
+            "application.routes.achievement_routes.send_file", return_value="fake_zip"
+        ),
+    ):
         response = client.get("/achievements/admin/certificates/download_all")
         assert response.status_code == 200

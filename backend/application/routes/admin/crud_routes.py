@@ -1,8 +1,7 @@
-from flask import Blueprint, jsonify, request
-from application.extensions import db
 from application.decorators.admin_required import admin_only
+from application.extensions import db
+from flask import Blueprint, jsonify, request
 from sqlalchemy import inspect
-
 
 crud_bp = Blueprint("admin_crud", __name__)
 
@@ -113,7 +112,12 @@ def create(resource):
     params = request.json
     # Prevent mass assignment of sensitive fields
     protected = {"password_hash", "password", "created_at"}
-    if resource.lower() not in {"course", "courses", "courseinstance", "courseinstances"}:
+    if resource.lower() not in {
+        "course",
+        "courses",
+        "courseinstance",
+        "courseinstances",
+    }:
         protected.add("id")
     filtered_params = {k: v for k, v in params.items() if k not in protected}
 

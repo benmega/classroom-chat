@@ -297,9 +297,9 @@ const AdminDashboard = () => {
                             </button>
                             
                             <div className="setting-item multiplier">
-                                <label className="setting-label">Duck Multiplier</label>
+                                <label htmlFor="input-299" className="setting-label">Duck Multiplier</label>
                                 <div className="multiplier-input-wrapper">
-                                    <input 
+                                    <input id="input-299" 
                                         type="number" 
                                         step="0.1" 
                                         defaultValue={config?.duck_multiplier || 1.0} 

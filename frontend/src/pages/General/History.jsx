@@ -123,7 +123,7 @@ const History = () => {
             <div className="history-list">
                 {filteredConversations.length > 0 ? (
                     filteredConversations.map((conv) => (
-                        <div key={conv.conversation_id} className="history-card" onClick={() => navigate(`/chat?conv=${conv.conversation_id}`)}>
+                        <div role="button" tabIndex={0} key={conv.conversation_id} className="history-card" onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={() => navigate(`/chat?conv=${conv.conversation_id}`)}>
                             <div className="card-icon">
                                 <MessageSquare size={24} />
                             </div>

@@ -252,6 +252,63 @@ a.stat-badge:hover {
     }
 }
 
+.header-username-item {
+    display: flex;
+    align-items: center;
+    margin-right: 0.25rem;
+}
+
+.header-username-link {
+    display: flex;
+    align-items: center;
+    padding: 0.35rem 0.75rem;
+    border-radius: var(--radius-full);
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-subtle);
+    color: var(--text-primary);
+    font-weight: 700;
+    font-size: 0.85rem;
+    transition: var(--transition-fast);
+    text-decoration: none;
+}
+
+.header-username-link:hover {
+    background: var(--primary-light);
+    border-color: var(--primary-color);
+    color: var(--primary-accessible);
+    text-decoration: none;
+}
+
+.dropdown-user-header {
+    padding: 0.5rem 0.5rem 0.25rem 0.5rem;
+}
+
+.dropdown-user-link {
+    display: flex;
+    flex-direction: column;
+    text-decoration: none !important;
+    padding: 0.5rem 0.75rem !important;
+    border-radius: var(--radius-sm);
+    transition: var(--transition-fast);
+}
+
+.dropdown-user-link:hover {
+    background: var(--primary-light) !important;
+}
+
+.dropdown-user-name {
+    font-weight: 800;
+    font-size: 0.95rem;
+    color: var(--text-primary);
+    line-height: 1.2;
+}
+
+.dropdown-user-handle {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    line-height: 1.2;
+}
+
 .profile-menu {
     position: relative;
 }

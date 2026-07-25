@@ -94,9 +94,9 @@ const ImageUpload = ({
         <span className="image-upload-label">{label}</span>
       </div>
       
-      <div 
+      <div role="button" tabIndex={0} 
         className={`image-upload-container ${isUploading ? 'uploading' : ''} ${success ? 'success' : ''}`}
-        onClick={() => !isUploading && fileInputRef.current.click()}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={() => !isUploading && fileInputRef.current.click()}
       >
         <input 
           type="file" 

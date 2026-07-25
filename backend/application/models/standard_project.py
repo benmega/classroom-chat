@@ -5,6 +5,7 @@ Summary: SQLAlchemy model for Standard Projects (templates) that admins can assi
 
 from ..extensions import db
 
+
 class StandardProject(db.Model):
     __tablename__ = "standard_projects"
     id = db.Column(db.Integer, primary_key=True)

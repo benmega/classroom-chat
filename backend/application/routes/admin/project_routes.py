@@ -1,7 +1,7 @@
-from flask import request, jsonify
+from application.decorators.admin_required import admin_only
 from application.extensions import db
 from application.models.project import Project
-from application.decorators.admin_required import admin_only
+from flask import jsonify, request
 
 from ..admin_routes import admin_bp
 
@@ -58,7 +58,7 @@ def handle_project_review(project_id):
             student = project.user
             if student:
                 student.packets = max(0.0, student.packets - project.packets_awarded)
-        
+
         project.packets_awarded = 0.0
         project.teacher_comment = None
         db.session.commit()
@@ -74,12 +74,15 @@ def handle_project_review(project_id):
             previous_award = project.packets_awarded or 0.0
             diff = packet_reward - previous_award
             student.packets += diff
-        
+
         project.packets_awarded = packet_reward
         project.teacher_comment = comment
         db.session.commit()
         return jsonify(
-            {"status": "success", "message": f"Project '{project.name}' approved with {packet_reward:.3f} packets."}
+            {
+                "status": "success",
+                "message": f"Project '{project.name}' approved with {packet_reward:.3f} packets.",
+            }
         )
 
     return jsonify({"status": "error", "message": "Invalid action."}), 400
@@ -89,20 +92,22 @@ def handle_project_review(project_id):
 @admin_only
 def assign_project():
     data = request.get_json()
-    
+
     user_id = data.get("user_id")
     name = data.get("name")
-    
+
     if not user_id or not name:
-        return jsonify({"status": "error", "message": "Student ID and Project Name are required."}), 400
-        
+        return jsonify(
+            {"status": "error", "message": "Student ID and Project Name are required."}
+        ), 400
+
     description = data.get("description")
     link = data.get("link")
     github_link = data.get("github_link")
     video_url = data.get("video_url")
     code_snippet = data.get("code_snippet")
     image_url = data.get("image_url")
-    
+
     project = Project(
         user_id=user_id,
         name=name,
@@ -111,13 +116,15 @@ def assign_project():
         github_link=github_link,
         video_url=video_url,
         code_snippet=code_snippet,
-        image_url=image_url
+        image_url=image_url,
     )
-    
+
     db.session.add(project)
     db.session.commit()
-    
-    return jsonify({
-        "status": "success",
-        "message": f"Project '{name}' has been assigned to student #{user_id}."
-    })
+
+    return jsonify(
+        {
+            "status": "success",
+            "message": f"Project '{name}' has been assigned to student #{user_id}.",
+        }
+    )

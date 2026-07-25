@@ -15,7 +15,7 @@
     align-items: center;
     gap: 8px;
     padding: 10px 20px;
-    background: var(--primary-color, #3b82f6);
+    background: var(--primary-accessible, #006D74);
     color: white;
     border: none;
     border-radius: 8px;
@@ -86,7 +86,7 @@
 
 .btn-delete-sp {
     background: #fee2e2;
-    color: #ef4444;
+    color: #dc2626;
 }
 
 .btn-delete-sp:hover {
@@ -130,12 +130,12 @@
 .sp-close-btn {
     background: none;
     border: none;
-    color: #94a3b8;
+    color: #64748b;
     cursor: pointer;
 }
 
 .sp-close-btn:hover {
-    color: #ef4444;
+    color: #dc2626;
 }
 
 .sp-form {
@@ -157,7 +157,7 @@
 .sp-form-group input, .sp-form-group textarea {
     width: 100%;
     padding: 10px 12px;
-    border: 1px solid #cbd5e1;
+    border: 1px solid #64748b;
     border-radius: 8px;
     font-family: inherit;
     font-size: 0.95rem;
@@ -165,8 +165,8 @@
 
 .sp-form-group input:focus, .sp-form-group textarea:focus {
     outline: none;
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    border-color: var(--primary-accessible, #006D74);
+    box-shadow: var(--focus-ring);
 }
 
 .sp-form-row {
@@ -193,7 +193,7 @@
 
 .sp-btn-cancel {
     background: white;
-    border: 1px solid #cbd5e1;
+    border: 1px solid #64748b;
     color: #475569;
 }
 
@@ -202,12 +202,12 @@
 }
 
 .sp-btn-submit {
-    background: #3b82f6;
+    background: var(--primary-accessible, #006D74);
     color: white;
 }
 
 .sp-btn-submit:hover {
-    background: #2563eb;
+    background: var(--primary-dark, #007880);
 }
 
 

@@ -2,8 +2,6 @@ from datetime import datetime, timedelta
 
 from application.extensions import db
 from application.models.session_log import SessionLog
-
-
 from application.models.user import User
 
 
