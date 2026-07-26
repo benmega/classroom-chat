@@ -61,4 +61,4 @@ jobs:
         run: npm ci
         
       - name: Run Vitest
-        run: npm run test -- --run
+        run: npm run test -- --run --coverage

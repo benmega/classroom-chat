@@ -41,9 +41,6 @@ HEALTHCHECK_RETRIES=5
 
 DRY_RUN="${DRY_RUN:-0}"
 
-# Save current git head for potential rollback
-PREVIOUS_COMMIT=$(git -C "$APP_DIR" rev-parse HEAD)
-
 run() {
     if [[ "$DRY_RUN" == "1" ]]; then
         echo "[DRY RUN] $*"
@@ -55,6 +52,14 @@ run() {
 rollback() {
     echo "CRITICAL: Health check failed. Rolling back to $PREVIOUS_COMMIT..."
     run git -C "$APP_DIR" reset --hard "$PREVIOUS_COMMIT"
+
+    if [[ -f "$DB_BACKUP_FILE" ]]; then
+        echo "Restoring database from backup at $DB_BACKUP_FILE..."
+        run cp "$DB_BACKUP_FILE" "$DB_FILE"
+    else
+        echo "WARNING: No DB backup found at $DB_BACKUP_FILE; skipping database restore."
+    fi
+
     run sudo systemctl restart "$SERVICE_NAME"
     echo "Rollback complete. Check logs with: journalctl -u $SERVICE_NAME"
     exit 1
@@ -83,12 +88,16 @@ echo "Starting deploy..."
 # -------------------------
 # Code update
 # -------------------------
-# Note: Code is already updated by the GitHub Action SSH step before calling this script.
-# We keep this as a fallback but commented out.
-# cd "$APP_DIR"
-# echo "Updating code..."
-# run git fetch origin
-# run git reset --hard origin/deploy
+cd "$APP_DIR"
+echo "Updating code..."
+
+# Capture the current HEAD immediately before we move it, so rollback()
+# has the TRUE previous commit to reset back to.
+PREVIOUS_COMMIT=$(git -C "$APP_DIR" rev-parse HEAD)
+echo "Previous commit: $PREVIOUS_COMMIT"
+
+run git fetch origin
+run git reset --hard origin/deploy
 
 # -------------------------
 # Dependency verification

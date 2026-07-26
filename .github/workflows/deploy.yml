@@ -28,11 +28,8 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             APP_DIR="$HOME/classroom-chat"
-            
-            # Update code (for backend and script changes)
+
             cd $APP_DIR
-            git fetch origin
-            git reset --hard origin/deploy
 
             # Inject production environment variables
             {

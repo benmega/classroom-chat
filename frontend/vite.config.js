@@ -69,6 +69,12 @@ export default defineConfig({
         'src/hooks/useProfile.js',
         'src/hooks/useViewport.js',
       ],
+      thresholds: {
+        lines: 82,
+        statements: 82,
+        branches: 82,
+        functions: 57,
+      },
     },
   },
   server: {
