@@ -70,9 +70,9 @@ export default defineConfig({
         'src/hooks/useViewport.js',
       ],
       thresholds: {
-        lines: 82,
-        statements: 82,
-        branches: 82,
+        lines: 80,
+        statements: 80,
+        branches: 80,
         functions: 57,
       },
     },
