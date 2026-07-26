@@ -11,10 +11,15 @@ const DigitalNotebook = ({ notes, isOwner, onFileUpload, onDeleteNote, setSlides
                 <h2><StickyNote size={20} /> Digital Notebook</h2>
                 {isOwner && (
                     <div className="note-actions">
-                        <button className="btn-icon" onClick={() => cameraInputRef.current?.click()} title="Scan Note"><Camera size={18} /></button>
-                        <button className="btn-icon" onClick={() => fileInputRef.current?.click()} title="Upload Note"><Upload size={18} /></button>
-                        <input type="file" ref={fileInputRef} onChange={(e) => onFileUpload(e, 'upload')} hidden accept="image/*" />
-                        <input type="file" ref={cameraInputRef} onChange={(e) => onFileUpload(e, 'camera')} hidden accept="image/*" capture="environment" />
+                        <label className="btn-icon" htmlFor="camera-upload-input" title="Scan Note" style={{ cursor: 'pointer' }}>
+                            <Camera size={18} />
+                        </label>
+                        <input id="camera-upload-input" type="file" ref={cameraInputRef} onChange={(e) => onFileUpload(e, 'camera')} style={{ position: 'absolute', width: '1px', height: '1px', padding: 0, margin: '-1px', overflow: 'hidden', clip: 'rect(0, 0, 0, 0)', whiteSpace: 'nowrap', border: 0 }} accept="image/*" capture />
+                        
+                        <label className="btn-icon" htmlFor="file-upload-input" title="Upload Note" style={{ cursor: 'pointer' }}>
+                            <Upload size={18} />
+                        </label>
+                        <input id="file-upload-input" type="file" ref={fileInputRef} onChange={(e) => onFileUpload(e, 'upload')} style={{ position: 'absolute', width: '1px', height: '1px', padding: 0, margin: '-1px', overflow: 'hidden', clip: 'rect(0, 0, 0, 0)', whiteSpace: 'nowrap', border: 0 }} accept="image/*" />
                     </div>
                 )}
             </div>
