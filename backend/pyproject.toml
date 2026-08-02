@@ -2,3 +2,6 @@
 [tool.pyright]
 extraPaths = ["."]
 
+[tool.ruff]
+lint.ignore = ["SIM117", "F401", "E402"]
+

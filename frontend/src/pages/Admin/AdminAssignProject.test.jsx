@@ -46,14 +46,14 @@ describe('AdminAssignProject', () => {
 
     it('renders initial core tab and fetches standard projects', async () => {
         client.get.mockResolvedValueOnce({
-            data: { status: 'success', data: { standard_projects: [{ id: 1, name: 'Standard Project 1' }] } }
+            data: { status: 'success', data: { templates: {1: { id: 1, name: 'Standard Project 1' }} } }
         });
 
         renderWithRouter(<AdminAssignProject />);
         expect(screen.getAllByText('Assign Project').length).toBeGreaterThan(0);
         
         await waitFor(() => {
-            expect(client.get).toHaveBeenCalledWith('/api/admin/standard-projects');
+            expect(client.get).toHaveBeenCalledWith('/api/project-templates');
         });
         
         const select = screen.getByRole('combobox');
@@ -63,7 +63,7 @@ describe('AdminAssignProject', () => {
 
     it('searches for users and selects one', async () => {
         client.get.mockResolvedValueOnce({
-            data: { status: 'success', data: { standard_projects: [] } }
+            data: { status: 'success', data: { templates: {} } }
         });
 
         renderWithRouter(<AdminAssignProject />);
@@ -93,7 +93,7 @@ describe('AdminAssignProject', () => {
 
     it('validates form on submit', async () => {
         client.get.mockResolvedValueOnce({
-            data: { status: 'success', data: { standard_projects: [] } }
+            data: { status: 'success', data: { templates: {} } }
         });
 
         renderWithRouter(<AdminAssignProject />);
@@ -127,7 +127,7 @@ describe('AdminAssignProject', () => {
 
     it('submits form successfully', async () => {
         client.get.mockResolvedValueOnce({
-            data: { status: 'success', data: { standard_projects: [] } }
+            data: { status: 'success', data: { templates: {} } }
         });
 
         renderWithRouter(<AdminAssignProject />);
@@ -169,7 +169,7 @@ describe('AdminAssignProject', () => {
             id: 1, name: 'SP', description: 'Desc', link: 'http', github_link: 'http', video_url: 'http', code_snippet: 'code', image_url: 'http'
         };
         client.get.mockResolvedValueOnce({
-            data: { status: 'success', data: { standard_projects: [mockStandardProject] } }
+            data: { status: 'success', data: { templates: {1: mockStandardProject} } }
         });
 
         renderWithRouter(<AdminAssignProject />);
