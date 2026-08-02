@@ -552,6 +552,13 @@ class User(db.Model):
 
         self.duck_balance += amount
 
+        # Invariant: earned_ducks >= duck_balance at all times.
+        # earned_ducks is a lifetime counter (never decremented by spending or penalties).
+        # If duck_balance somehow exceeds earned_ducks (e.g. due to legacy migration data),
+        # clamp earned_ducks up to duck_balance so the invariant always holds.
+        if self.earned_ducks < self.duck_balance:
+            self.earned_ducks = self.duck_balance
+
         # Record the transaction
         from .duck_transaction import DuckTransaction
 
