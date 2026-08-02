@@ -14,7 +14,6 @@ from .admin import (
     dashboard_routes,
     doc_routes,
     project_routes,
-    standard_project_routes,
     trade_routes,
     user_mgmt,
 )

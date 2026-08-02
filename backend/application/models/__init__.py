@@ -29,7 +29,6 @@ def setup_models():
     from .project_template import ProjectTemplate
     from .session_log import SessionLog
     from .skill import Skill
-    from .standard_project import StandardProject
     from .store_item import StoreItem
     from .track_requests import TrackChangeRequest
     from .user import User

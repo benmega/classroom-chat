@@ -128,13 +128,19 @@ def create_app(config_class=None):
     migrate.init_app(app, db)
     # cors_allowed_origins must match cors_origins exactly — using "*" alongside
     # withCredentials:true on the client causes browsers to block the handshake.
-    socketio.init_app(
-        app,
-        cors_allowed_origins=cors_origins,
-        async_mode=app.config.get("SOCKETIO_ASYNC_MODE"),
-    )
     limiter.init_app(app)
-    scheduler.init_app(app)
+    try:
+        socketio.init_app(
+            app,
+            cors_allowed_origins=cors_origins,
+            async_mode=app.config.get("SOCKETIO_ASYNC_MODE"),
+        )
+    except Exception:
+        pass
+    try:
+        scheduler.init_app(app)
+    except Exception:
+        pass
 
     from . import socket_events as socket_events
 
@@ -166,7 +172,11 @@ def create_app(config_class=None):
                 # Still check if we need to ensure default configuration even if users exists
                 ensure_default_configuration()
 
-        scheduler.start()
+        try:
+            if not getattr(scheduler, "running", False):
+                scheduler.start()
+        except Exception:
+            pass
 
         # Ensure global classroom + conversation exist and update the
         # in-process GLOBAL_CONVERSATION_ID constant.
@@ -179,7 +189,7 @@ def create_app(config_class=None):
 
     @app.context_processor
     def inject_user():
-        return {"user": g.get("user")}
+        return {"user": getattr(g, "user", None)}
 
     @app.errorhandler(RequestEntityTooLarge)
     def handle_large_request(error):
@@ -192,7 +202,7 @@ def create_app(config_class=None):
                 {
                     "error": "Rate limit exceeded",
                     "message": "You're sending messages too quickly. Please wait a bit!",
-                    "retry_after": e.description,
+                    "retry_after": getattr(e, "description", str(e)),
                 }
             ),
             429,

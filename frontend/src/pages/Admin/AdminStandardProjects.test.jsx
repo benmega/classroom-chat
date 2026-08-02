@@ -39,7 +39,7 @@ describe('AdminStandardProjects', () => {
 
     it('renders loading initially and fetches projects', async () => {
         client.get.mockResolvedValueOnce({
-            data: { status: 'success', data: { standard_projects: [] } }
+            data: { status: 'success', data: { templates: {} } }
         });
 
         renderWithRouter(<AdminStandardProjects />);
@@ -47,20 +47,20 @@ describe('AdminStandardProjects', () => {
         expect(screen.getByText('Loading...')).toBeInTheDocument();
         
         await waitFor(() => {
-            expect(client.get).toHaveBeenCalledWith('/api/admin/standard-projects');
+            expect(client.get).toHaveBeenCalledWith('/api/project-templates');
         });
         
         expect(screen.getByText('No standard projects found.')).toBeInTheDocument();
     });
 
     it('displays fetched standard projects', async () => {
-        const mockProjects = [
-            { id: 1, name: 'Project 1', description: 'Desc 1' },
-            { id: 2, name: 'Project 2', description: 'Desc 2' }
-        ];
+        const mockProjects = {
+            1: { id: 1, name: 'Project 1', description: 'Desc 1' },
+            2: { id: 2, name: 'Project 2', description: 'Desc 2' }
+        };
 
         client.get.mockResolvedValueOnce({
-            data: { status: 'success', data: { standard_projects: mockProjects } }
+            data: { status: 'success', data: { templates: mockProjects } }
         });
 
         renderWithRouter(<AdminStandardProjects />);
@@ -74,7 +74,7 @@ describe('AdminStandardProjects', () => {
 
     it('opens add modal, fills form, and submits new project', async () => {
         client.get.mockResolvedValue({
-            data: { status: 'success', data: { standard_projects: [] } }
+            data: { status: 'success', data: { templates: {} } }
         });
 
         renderWithRouter(<AdminStandardProjects />);
@@ -100,7 +100,7 @@ describe('AdminStandardProjects', () => {
         fireEvent.submit(saveButtonsNew[0].closest('form'));
         
         await waitFor(() => {
-            expect(client.post).toHaveBeenCalledWith('/api/admin/standard-projects', expect.objectContaining({
+            expect(client.post).toHaveBeenCalledWith('/api/project-templates', expect.objectContaining({
                 name: 'New Template'
             }));
         });
@@ -108,12 +108,12 @@ describe('AdminStandardProjects', () => {
     });
 
     it('opens edit modal and updates existing project', async () => {
-        const mockProjects = [
-            { id: 1, name: 'Project 1', description: 'Desc 1' }
-        ];
+        const mockProjects = {
+            1: { id: 1, name: 'Project 1', description: 'Desc 1' }
+        };
 
         client.get.mockResolvedValue({
-            data: { status: 'success', data: { standard_projects: mockProjects } }
+            data: { status: 'success', data: { templates: mockProjects } }
         });
 
         renderWithRouter(<AdminStandardProjects />);
@@ -139,7 +139,7 @@ describe('AdminStandardProjects', () => {
         fireEvent.submit(saveButtons[0].closest('form'));
         
         await waitFor(() => {
-            expect(client.put).toHaveBeenCalledWith('/api/admin/standard-projects/1', expect.objectContaining({
+            expect(client.put).toHaveBeenCalledWith('/api/project-templates/1', expect.objectContaining({
                 name: 'Updated Project'
             }));
         });
@@ -147,12 +147,12 @@ describe('AdminStandardProjects', () => {
     });
 
     it('deletes a project after confirmation', async () => {
-        const mockProjects = [
-            { id: 1, name: 'Project 1', description: 'Desc 1' }
-        ];
+        const mockProjects = {
+            1: { id: 1, name: 'Project 1', description: 'Desc 1' }
+        };
 
         client.get.mockResolvedValue({
-            data: { status: 'success', data: { standard_projects: mockProjects } }
+            data: { status: 'success', data: { templates: mockProjects } }
         });
 
         renderWithRouter(<AdminStandardProjects />);
@@ -173,7 +173,7 @@ describe('AdminStandardProjects', () => {
         expect(confirmSpy).toHaveBeenCalledWith('Are you sure you want to delete "Project 1"?');
         
         await waitFor(() => {
-            expect(client.delete).toHaveBeenCalledWith('/api/admin/standard-projects/1');
+            expect(client.delete).toHaveBeenCalledWith('/api/project-templates/1');
         });
         expect(toast.success).toHaveBeenCalledWith('Deleted successfully.');
         
@@ -182,7 +182,7 @@ describe('AdminStandardProjects', () => {
 
     it('closes the modal on cancel', async () => {
         client.get.mockResolvedValue({
-            data: { status: 'success', data: { standard_projects: [] } }
+            data: { status: 'success', data: { templates: {} } }
         });
 
         renderWithRouter(<AdminStandardProjects />);

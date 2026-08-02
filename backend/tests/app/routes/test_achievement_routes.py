@@ -908,3 +908,87 @@ def test_admin_certificate_templates_test_generate(client, init_db, sample_admin
             data={"student_name": "Test Student"}
         )
         assert response.status_code == 200
+
+
+def test_get_achievements_json_success(client, init_db, sample_user, sample_achievement):
+    with client.session_transaction() as sess:
+        sess["user"] = sample_user.id
+
+    response = client.get("/achievements/all")
+    assert response.status_code == 200
+    data = response.get_json()
+    assert data["status"] == "success"
+    assert "achievements" in data["data"]
+
+
+def test_get_achievements_json_no_user(client, init_db):
+    response = client.get("/achievements/all")
+    assert response.status_code == 404
+    assert response.get_json()["error"] == "User not found!"
+
+
+def test_submit_certificate_generation_failure(client, init_db, sample_user, sample_achievement):
+    with client.session_transaction() as sess:
+        sess["user"] = sample_user.id
+
+    valid_url = f"https://codecombat.com/certificates/abc123?course={sample_achievement.slug}"
+
+    with patch("application.utilities.cert_generator.generate_certificate", side_effect=Exception("Generator Failed")):
+        response = client.post(
+            "/achievements/submit_certificate",
+            data={"certificate_url": valid_url},
+            content_type="multipart/form-data",
+            headers={"X-Requested-With": "XMLHttpRequest"},
+        )
+        assert response.status_code == 500
+        assert "Failed to generate certificate" in response.get_json()["error"]
+
+
+def test_admin_certificate_templates_view_fallback_and_error(client, init_db, sample_admin):
+    with client.session_transaction() as sess:
+        sess["user"] = sample_admin.id
+
+    # Fallback preview generation
+    with patch("os.path.exists", return_value=False), patch("application.utilities.cert_generator.generate_certificate", return_value=b"generated pdf"):
+        response = client.get("/achievements/admin/certificate_templates/cs-1/view")
+        assert response.status_code == 200
+
+    # Exception during fallback preview generation
+    with patch("os.path.exists", return_value=False), patch("application.utilities.cert_generator.generate_certificate", side_effect=Exception("Render error")):
+        response = client.get("/achievements/admin/certificate_templates/cs-1/view")
+        assert response.status_code == 500
+        assert response.get_json()["error"] == "Render error"
+
+
+def test_admin_certificate_templates_upload_invalid_file(client, init_db, sample_admin):
+    with client.session_transaction() as sess:
+        sess["user"] = sample_admin.id
+
+    # No file uploaded
+    res1 = client.post("/achievements/admin/certificate_templates/cs-1/upload", data={})
+    assert res1.status_code == 400
+    assert res1.get_json()["error"] == "No file uploaded"
+
+    # Non-PDF file
+    file_data = (BytesIO(b"not a pdf"), "test.txt")
+    res2 = client.post(
+        "/achievements/admin/certificate_templates/cs-1/upload",
+        data={"template_file": file_data},
+        content_type="multipart/form-data"
+    )
+    assert res2.status_code == 400
+    assert res2.get_json()["error"] == "Only PDF files allowed"
+
+
+def test_admin_certificate_templates_test_generate_error(client, init_db, sample_admin):
+    with client.session_transaction() as sess:
+        sess["user"] = sample_admin.id
+
+    with patch("application.utilities.cert_generator.generate_certificate", side_effect=Exception("Test gen error")):
+        response = client.post(
+            "/achievements/admin/certificate_templates/cs-1/test_generate",
+            data={"student_name": "Test Student"}
+        )
+        assert response.status_code == 500
+        assert response.get_json()["error"] == "Test gen error"
+

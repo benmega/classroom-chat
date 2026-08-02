@@ -42,7 +42,6 @@ export default defineConfig({
         'src/pages/Admin/AdminConnections.jsx',
         'src/pages/Admin/AdminCourseInstances.jsx',
         'src/pages/Admin/AdminDocuments.jsx',
-        'src/pages/Admin/AdminProjectTemplates.jsx',
         'src/pages/Admin/AdminProjects.jsx',
         'src/pages/Admin/AdminStudentActivity.jsx',
         'src/pages/Admin/AdminUserDashboard.jsx',
