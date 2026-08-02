@@ -149,47 +149,8 @@ describe('SubmitChallenge', () => {
         fireEvent.change(urlInput, { target: { value: 'https://codecombat.com/certificates/1234?course=cs1' } });
         
         await waitFor(() => {
-            expect(screen.getByLabelText(/Upload Certificate PDF/i)).toBeInTheDocument();
             expect(screen.getByRole('button', { name: /Submit Certificate/i })).toBeInTheDocument();
         });
-    });
-
-    it('validates file upload in certificate mode', async () => {
-        render(<SubmitChallenge />);
-        
-        const urlInput = screen.getByLabelText(/URL/i);
-        fireEvent.change(urlInput, { target: { value: 'https://codecombat.com/certificates/1234?course=cs1' } });
-        
-        await waitFor(() => {
-            expect(screen.getByLabelText(/Upload Certificate PDF/i)).toBeInTheDocument();
-        });
-
-        const fileInput = screen.getByLabelText(/Upload Certificate PDF/i);
-        const badFile = new File(['hello'], 'hello.txt', { type: 'text/plain' });
-        
-        fireEvent.change(fileInput, { target: { files: [badFile] } });
-        expect(toast.error).toHaveBeenCalledWith('Please select a valid PDF file.');
-        
-        const goodFile = new File(['hello'], 'cert.pdf', { type: 'application/pdf' });
-        fireEvent.change(fileInput, { target: { files: [goodFile] } });
-        
-        expect(screen.getByText('cert.pdf')).toBeInTheDocument();
-    });
-
-    it('prevents certificate submission without file', async () => {
-        render(<SubmitChallenge />);
-        
-        const urlInput = screen.getByLabelText(/URL/i);
-        fireEvent.change(urlInput, { target: { value: 'https://codecombat.com/certificates/1234?course=cs1' } });
-        
-        await waitFor(() => {
-            expect(screen.getByRole('button', { name: /Submit Certificate/i })).toBeInTheDocument();
-        });
-
-        fireEvent.submit(screen.getByRole('button', { name: /Submit Certificate/i }).closest('form'));
-        
-        expect(toast.error).toHaveBeenCalledWith('Please upload the certificate PDF file.');
-        expect(client.post).not.toHaveBeenCalled();
     });
 
     it('submits certificate successfully', async () => {
@@ -199,12 +160,8 @@ describe('SubmitChallenge', () => {
         fireEvent.change(urlInput, { target: { value: 'https://codecombat.com/certificates/1234?course=cs1' } });
         
         await waitFor(() => {
-            expect(screen.getByLabelText(/Upload Certificate PDF/i)).toBeInTheDocument();
+            expect(screen.getByRole('button', { name: /Submit Certificate/i })).toBeInTheDocument();
         });
-
-        const fileInput = screen.getByLabelText(/Upload Certificate PDF/i);
-        const goodFile = new File(['hello'], 'cert.pdf', { type: 'application/pdf' });
-        fireEvent.change(fileInput, { target: { files: [goodFile] } });
 
         client.post.mockResolvedValueOnce({
             data: { success: true }

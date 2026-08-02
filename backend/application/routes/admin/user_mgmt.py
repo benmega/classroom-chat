@@ -940,27 +940,6 @@ def unenroll_student_from_classroom(classroom_id):
 
     return jsonify({"success": True, "message": "Student unenrolled successfully"})
 
-
-NODE_MAP = {
-    "cc-junior": "65f32b6c87c07dbeb5ba1936",
-    "cs-1": "560f1a9f22961295f9427742",
-    "oz-1": "5d41d731a8d1836b5aa3cba1",
-    "gd-1": "5789587aad86a6efb573701e",
-    "cs-2": "5632661322961295f9428638",
-    "oz-2": "5d8a57abe8919b28d5113af1",
-    "wd-1": "5789587aad86a6efb573701f",
-    "cs-3": "56462f935afde0c6fd30fc8c",
-    "oz-3": "5e27600d1c9d440000ac3ee7",
-    "gd-2": "57b621e7ad86a6efb5737e64",
-    "wd-2": "5789587aad86a6efb5737020",
-    "cs-4": "56462f935afde0c6fd30fc8d",
-    "oz-4": "5f0cb0b7a2492bba0b3520df",
-    "gd-3": "5a0df02b8f2391437740f74f",
-    "cs-5": "569ed916efa72b0ced971447",
-    "cs-6": "5817d673e85d1220db624ca4",
-}
-
-
 @admin_bp.route("/user/<int:user_id>/pass_chapter_preview", methods=["POST"])
 @admin_only
 @api_response
@@ -976,7 +955,8 @@ def pass_chapter_preview(user_id):
     if not course_id:
         return {"error": "course_id is required"}, 400
 
-    db_course_id = NODE_MAP.get(course_id, course_id)
+    from application.utilities.db_helpers import resolve_course_id
+    db_course_id = resolve_course_id(course_id)
     challenges = Challenge.query.filter_by(course_id=db_course_id).all()
     if not challenges:
         return {"error": f"No challenges found for course_id: {db_course_id}"}, 404
@@ -1035,7 +1015,8 @@ def pass_chapter(user_id):
     if not course_id:
         return {"error": "course_id is required"}, 400
 
-    db_course_id = NODE_MAP.get(course_id, course_id)
+    from application.utilities.db_helpers import resolve_course_id
+    db_course_id = resolve_course_id(course_id)
     challenges = Challenge.query.filter_by(course_id=db_course_id).all()
     if not challenges:
         return {"error": f"No challenges found for course_id: {db_course_id}"}, 404
@@ -1095,3 +1076,40 @@ def pass_chapter(user_id):
         "success": True,
         "message": f"Successfully passed {course_id} for user. Awarded {total_ducks} ducks and completed {len(missing_challenges)} challenges.",
     }
+
+@admin_bp.route("/user/<int:user_id>/generate_certificate", methods=["POST"])
+@admin_only
+def generate_manual_certificate(user_id):
+    import io
+
+    from application.models.user import User
+    from application.utilities.cert_generator import generate_certificate
+    from application.utilities.db_helpers import get_canonical_course_slug
+    from flask import send_file
+
+    user_obj = db.session.get(User, user_id)
+    if not user_obj:
+        return {"error": "User not found"}, 404
+
+    data = request.get_json(silent=True) or request.form or {}
+    course_id = data.get("course_id", "cs-1")
+    student_name = user_obj.nickname or user_obj.username
+
+    try:
+        pdf_bytes = generate_certificate(course_id, None, student_name)
+    except Exception as e:
+        return {"error": f"Failed to generate certificate: {e!s}"}, 500
+
+    memory_file = io.BytesIO(pdf_bytes)
+    memory_file.seek(0)
+
+    canonical_slug = get_canonical_course_slug(course_id)
+    filename = f"{student_name}_{canonical_slug}_Certificate.pdf"
+
+    return send_file(
+        memory_file,
+        mimetype="application/pdf",
+        as_attachment=True,
+        download_name=filename
+    )
+

@@ -53,6 +53,7 @@ const AdvancedPanel = React.lazy(() => import('./pages/Admin/AdvancedPanel'));
 const DuckTransactions = React.lazy(() => import('./pages/Admin/DuckTransactions'));
 const AdminStudentActivity = React.lazy(() => import('./pages/Admin/AdminStudentActivity'));
 const AdminCRUD = React.lazy(() => import('./admin/AdminPanel'));
+const KioskUpload = React.lazy(() => import('./pages/Admin/KioskUpload'));
 
 // --- Parent pages: lazily loaded (students never need these) ---
 const ParentDashboard = React.lazy(() => import('./pages/Parent/ParentDashboard'));
@@ -103,7 +104,7 @@ const ProtectedRoute = ({ children, adminOnly = false, parentOnly = false }) => 
   if (!isAuthenticated) return <Navigate to="/login" />;
   if (adminOnly && !user?.is_admin) return <AccessDenied />;
 
-  if (user?.role === 'parent' && !location.pathname.startsWith('/parent/') && !location.pathname.startsWith('/chat') && !location.pathname.startsWith('/profile')) {
+  if (user?.role === 'parent' && !location.pathname.startsWith('/parent/')) {
     return <Navigate to="/parent/dashboard" replace />;
   }
 
@@ -296,6 +297,12 @@ function App() {
             <Layout>
               <ManageProject />
             </Layout>
+          </ProtectedRoute>
+        } />
+
+        <Route path="/admin/classes/:classId/kiosk" element={
+          <ProtectedRoute adminOnly={true}>
+            <KioskUpload />
           </ProtectedRoute>
         } />
 

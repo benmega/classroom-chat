@@ -371,6 +371,32 @@ export const useAdminUserDashboard = (userId) => {
         }
     };
 
+    const handleGenerateManualCertificate = async (courseId = 'cs-1') => {
+        setFormLoading(true);
+        try {
+            const response = await client.post(`/api/admin/user/${userId}/generate_certificate`, { course_id: courseId }, { responseType: 'blob' });
+            
+            const blob = new Blob([response.data], { type: 'application/pdf' });
+            const url = window.URL.createObjectURL(blob);
+            
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `${user.nickname || user.username}_${courseId}_Certificate.pdf`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
+            
+            toast.success("Certificate generated successfully!");
+        } catch (error) {
+            console.error(error);
+            toast.error("Failed to generate certificate.");
+        } finally {
+            setFormLoading(false);
+        }
+    };
+
+
     return {
         user, isLoading, formLoading, parentChildren, connectionCode, allUsers,
         showNewPassword, setShowNewPassword, showConfirmPassword, setShowConfirmPassword,
@@ -380,7 +406,7 @@ export const useAdminUserDashboard = (userId) => {
         fetchUser, handlePassChapterPreview, handlePassChapterConfirm, handleAdjustDucks,
         handleAdjustPackets, handleSetDrawer, handleResetPassword, handleRemoveUser,
         handleApproveUser, handleRejectUser, handleToggleChildLink, handleToggleParentLink,
-        handleAssignProjectSubmit, handleUpdateUser
+        handleAssignProjectSubmit, handleUpdateUser, handleGenerateManualCertificate
     };
 };
 

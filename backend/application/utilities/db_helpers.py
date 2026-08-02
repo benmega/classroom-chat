@@ -13,6 +13,80 @@ from flask import abort
 
 logger = logging.getLogger(__name__)
 
+NODE_MAP = {
+    # CS
+    "cs-1": "560f1a9f22961295f9427742",
+    "cs1": "560f1a9f22961295f9427742",
+    "cs-2": "5632661322961295f9428638",
+    "cs2": "5632661322961295f9428638",
+    "cs-3": "56462f935afde0c6fd30fc8c",
+    "cs3": "56462f935afde0c6fd30fc8c",
+    "cs-4": "56462f935afde0c6fd30fc8d",
+    "cs4": "56462f935afde0c6fd30fc8d",
+    "cs-5": "569ed916efa72b0ced971447",
+    "cs5": "569ed916efa72b0ced971447",
+    "cs-6": "5817d673e85d1220db624ca4",
+    "cs6": "5817d673e85d1220db624ca4",
+    # GD
+    "gd-1": "5789587aad86a6efb573701e",
+    "gd1": "5789587aad86a6efb573701e",
+    "gd-2": "57b621e7ad86a6efb5737e64",
+    "gd2": "57b621e7ad86a6efb5737e64",
+    "gd-3": "5a0df02b8f2391437740f74f",
+    "gd3": "5a0df02b8f2391437740f74f",
+    # WD
+    "wd-1": "5789587aad86a6efb573701f",
+    "wd1": "5789587aad86a6efb573701f",
+    "wd-2": "5789587aad86a6efb5737020",
+    "wd2": "5789587aad86a6efb5737020",
+    # CC Junior
+    "cc-junior": "65f32b6c87c07dbeb5ba1936",
+    "ccjunior": "65f32b6c87c07dbeb5ba1936",
+    # Ozaria
+    "oz-1": "5d41d731a8d1836b5aa3cba1",
+    "oz1": "5d41d731a8d1836b5aa3cba1",
+    "ozaria1": "5d41d731a8d1836b5aa3cba1",
+    "ozaria-1": "5d41d731a8d1836b5aa3cba1",
+    "oz-2": "5d8a57abe8919b28d5113af1",
+    "oz2": "5d8a57abe8919b28d5113af1",
+    "ozaria2": "5d8a57abe8919b28d5113af1",
+    "ozaria-2": "5d8a57abe8919b28d5113af1",
+    "oz-3": "5e27600d1c9d440000ac3ee7",
+    "oz3": "5e27600d1c9d440000ac3ee7",
+    "ozaria3": "5e27600d1c9d440000ac3ee7",
+    "ozaria-3": "5e27600d1c9d440000ac3ee7",
+    "oz-4": "5f0cb0b7a2492bba0b3520df",
+    "oz4": "5f0cb0b7a2492bba0b3520df",
+    "ozaria4": "5f0cb0b7a2492bba0b3520df",
+    "ozaria-4": "5f0cb0b7a2492bba0b3520df",
+}
+
+CANONICAL_SLUG_MAP = {
+    "cs1": "cs-1", "cs2": "cs-2", "cs3": "cs-3", "cs4": "cs-4", "cs5": "cs-5", "cs6": "cs-6",
+    "gd1": "gd-1", "gd2": "gd-2", "gd3": "gd-3",
+    "wd1": "wd-1", "wd2": "wd-2",
+    "ozaria1": "oz-1", "ozaria2": "oz-2", "ozaria3": "oz-3", "ozaria4": "oz-4",
+    "oz1": "oz-1", "oz2": "oz-2", "oz3": "oz-3", "oz4": "oz-4",
+}
+
+def resolve_course_id(course_identifier):
+    if not course_identifier:
+        return course_identifier
+    return NODE_MAP.get(course_identifier.lower().strip(), course_identifier)
+
+def get_canonical_course_slug(course_identifier):
+    if not course_identifier:
+        return course_identifier
+    c_lower = course_identifier.lower().strip()
+    if c_lower in CANONICAL_SLUG_MAP:
+        return CANONICAL_SLUG_MAP[c_lower]
+    # Reverse lookup from Mongo ID
+    mongo_id = NODE_MAP.get(c_lower, c_lower)
+    for slug, m_id in NODE_MAP.items():
+        if m_id == mongo_id and "-" in slug:
+            return slug
+    return c_lower
+
 
 def get_user(identifier):
     """

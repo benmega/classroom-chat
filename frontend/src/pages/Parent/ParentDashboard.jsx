@@ -212,26 +212,8 @@ const ParentDashboard = () => {
                                     <Skeleton height="64px" borderRadius="12px" />
                                 </div>
                             ) : mergedActivityFeed.length > 0 ? (
-                                <div className="activity-timeline d-flex flex-col gap-1-25rem">
+                                <div className="activity-timeline d-flex flex-col gap-sm" style={{ maxHeight: '400px', overflowY: 'auto', paddingRight: '0.5rem' }}>
                                     {mergedActivityFeed.map((event, idx) => {
-                                        let IconComponent = Zap;
-                                        let iconColor = 'var(--primary-color)';
-                                        let iconBg = 'rgba(15,118,110,0.08)';
-
-                                        if (event.type === 'project') {
-                                            IconComponent = Folder;
-                                            iconColor = '#6366f1';
-                                            iconBg = 'rgba(99,102,241,0.08)';
-                                        } else if (event.type === 'note') {
-                                            IconComponent = BookOpen;
-                                            iconColor = '#ec4899';
-                                            iconBg = 'rgba(236,72,153,0.08)';
-                                        } else if (event.type === 'achievement') {
-                                            IconComponent = Award;
-                                            iconColor = '#f59e0b';
-                                            iconBg = 'rgba(245,158,11,0.08)';
-                                        }
-
                                         return (
                                             <div role="button" tabIndex={0} 
                                                 key={idx} 
@@ -239,14 +221,13 @@ const ParentDashboard = () => {
                                                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={() => navigate(`/parent/report/${event.childId}`)}
                                                 style={{
                                                     display: 'flex', 
-                                                    gap: '1.25rem', 
+                                                    gap: '0.75rem', 
                                                     alignItems: 'center', 
                                                     background: 'var(--bg-secondary)', 
-                                                    padding: '1rem 1.25rem', 
-                                                    borderRadius: '12px',
+                                                    padding: '0.6rem 0.75rem', 
+                                                    borderRadius: '8px',
                                                     border: '1px solid var(--border-subtle)',
-                                                    cursor: 'pointer',
-                                                    transition: 'transform 0.2s, box-shadow 0.2s'
+                                                    cursor: 'pointer'
                                                 }}
                                             >
                                                 {/* Child Avatar indicator */}
@@ -255,50 +236,25 @@ const ParentDashboard = () => {
                                                         <img
                                                             src={getApiUrl(event.childAvatar)}
                                                             alt={event.childName}
-                                                            className="w-36px h-36px radius-50 object-cover"
+                                                            className="w-24px h-24px radius-50 object-cover"
                                                         />
                                                     ) : (
-                                                        <div className="child-avatar-initials w-36px h-36px m-0 text-0-8rem">
-                                                            <User size={16} />
+                                                        <div className="child-avatar-initials w-24px h-24px m-0 text-0-7rem">
+                                                            <User size={14} />
                                                         </div>
                                                     )}
-                                                    {/* Event Type Icon Badge */}
-                                                    <div 
-                                                        style={{ 
-                                                            position: 'absolute', 
-                                                            bottom: '-4px', 
-                                                            right: '-4px', 
-                                                            display: 'flex', 
-                                                            alignItems: 'center', 
-                                                            justifyContent: 'center', 
-                                                            width: '18px', 
-                                                            height: '18px', 
-                                                            borderRadius: '50%', 
-                                                            background: iconBg, 
-                                                            color: iconColor,
-                                                            border: '2px solid var(--bg-primary)',
-                                                            boxShadow: 'var(--shadow-sm)'
-                                                        }}
-                                                    >
-                                                        <IconComponent size={10} />
-                                                    </div>
                                                 </div>
 
                                                 {/* Event Info */}
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="d-flex justify-between align-center gap-sm">
-                                                        <span className="text-0-9rem fw-bold text-primary">
-                                                            {event.childName}
-                                                        </span>
-                                                        <span className="text-xs text-muted d-flex align-center gap-4px">
-                                                            <Clock size={11} /> {timeAgo(event.timestamp)}
-                                                        </span>
+                                                <div className="flex-1 min-w-0" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem' }}>
+                                                    <div style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontSize: '0.85rem' }}>
+                                                        <span className="fw-bold text-primary">{event.childName}</span>
+                                                        <span className="text-secondary" style={{ marginLeft: '6px' }}>{event.label}</span>
                                                     </div>
-                                                    <p className="text-ellipsis-desc">
-                                                        {event.label}
-                                                    </p>
+                                                    <span className="text-xs text-muted" style={{ whiteSpace: 'nowrap', flexShrink: 0 }}>
+                                                        {timeAgo(event.timestamp)}
+                                                    </span>
                                                 </div>
-                                                <ChevronRight size={16} color="var(--text-muted)" className="flex-shrink-0" />
                                             </div>
                                         );
                                     })}

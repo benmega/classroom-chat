@@ -10,6 +10,10 @@ from flask import Blueprint, jsonify, session, url_for
 
 from .achievement_routes import (
     add_achievement,
+    admin_certificate_templates,
+    admin_certificate_templates_test_generate,
+    admin_certificate_templates_upload,
+    admin_certificate_templates_view,
     admin_certificates,
     download_all_certificates,
     download_certificate,
@@ -105,3 +109,20 @@ def check_achievements():
         for a in new_awards
     ]
     return jsonify({"success": True, "new_awards": payload})
+
+@achievements_api.route("/admin/certificate_templates", methods=["GET"])
+def api_admin_certificate_templates():
+    return admin_certificate_templates()
+
+@achievements_api.route("/admin/certificate_templates/<course_id>/view", methods=["GET"])
+def api_admin_certificate_templates_view(course_id):
+    return admin_certificate_templates_view(course_id)
+
+@achievements_api.route("/admin/certificate_templates/<course_id>/upload", methods=["POST"])
+def api_admin_certificate_templates_upload(course_id):
+    return admin_certificate_templates_upload(course_id)
+
+@achievements_api.route("/admin/certificate_templates/<course_id>/test_generate", methods=["POST"])
+def api_admin_certificate_templates_test_generate(course_id):
+    return admin_certificate_templates_test_generate(course_id)
+

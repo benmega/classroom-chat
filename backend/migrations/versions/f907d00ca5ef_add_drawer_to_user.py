@@ -315,7 +315,7 @@ def upgrade():
             existing_type=sa.DATETIME(),
             type_=sa.Date(),
             existing_nullable=True,
-            existing_server_default=sa.text("(NULL)"),
+            existing_server_default=None,
         )
         if "uq_users_cognito_sub" not in usr_constraints:
             batch_op.create_unique_constraint(

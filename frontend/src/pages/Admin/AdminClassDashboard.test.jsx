@@ -328,6 +328,91 @@ describe('AdminClassDashboard', () => {
         expect(screen.getByText('No courses connected.')).toBeInTheDocument();
     });
 
+    it('opens add course modal and connects a course in classwork tab', async () => {
+        client.get.mockImplementation((url) => {
+            if (url.includes('/api/admin/crud/courses')) {
+                return Promise.resolve({ data: { data: [{ id: 'course-py', name: 'Python Basics' }] } });
+            }
+            if (url.includes('/join-code')) {
+                return Promise.resolve({ data: { success: true, join_code: 'ABC123' } });
+            }
+            if (url.includes('/api/admin/classrooms/')) {
+                return Promise.resolve({
+                    data: {
+                        classroom: {
+                            id: 'cls123',
+                            name: 'Python Level 1',
+                            students: [],
+                            course_assignments: []
+                        }
+                    }
+                });
+            }
+            if (url.includes('/api/admin/users')) {
+                return Promise.resolve({ data: { users: [] } });
+            }
+            return Promise.reject(new Error('not found'));
+        });
+
+        client.post.mockResolvedValue({ data: { data: { id: 'inst1', classroom_id: 'cls123', course_id: 'course-py' } } });
+
+        renderWithRouter(<AdminClassDashboard />);
+
+        await waitFor(() => {
+            expect(screen.getByText('Python Level 1')).toBeInTheDocument();
+        });
+
+        fireEvent.click(screen.getByRole('button', { name: 'Classwork' }));
+
+        const addCourseBtn = screen.getByRole('button', { name: 'Add Connected Course' });
+        fireEvent.click(addCourseBtn);
+
+        expect(screen.getByText('Connect Course to Classroom')).toBeInTheDocument();
+
+        fireEvent.change(screen.getByLabelText('Select Course'), { target: { value: 'course-py' } });
+        fireEvent.click(screen.getByRole('button', { name: 'Connect Course' }));
+
+        await waitFor(() => {
+            expect(client.post).toHaveBeenCalledWith('/api/admin/crud/courseinstances', expect.objectContaining({
+                classroom_id: 'cls123',
+                course_id: 'course-py'
+            }));
+            expect(toast.success).toHaveBeenCalledWith('Course connected successfully');
+        });
+    });
+
+    it('disconnects a course in classwork tab', async () => {
+        const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+
+        mockClassroomApi({
+            id: 'cls123',
+            name: 'Python Level 1',
+            students: [],
+            course_assignments: [
+                { id: 'inst1', course_id: 'course-py', course_name: 'Python Basics' }
+            ]
+        });
+        client.delete.mockResolvedValue({ data: { data: { id: 'inst1' } } });
+
+        renderWithRouter(<AdminClassDashboard />);
+
+        await waitFor(() => {
+            expect(screen.getByText('Python Level 1')).toBeInTheDocument();
+        });
+
+        fireEvent.click(screen.getByRole('button', { name: 'Classwork' }));
+
+        const removeBtn = screen.getByRole('button', { name: 'Disconnect Course' });
+        fireEvent.click(removeBtn);
+
+        await waitFor(() => {
+            expect(client.delete).toHaveBeenCalledWith('/api/admin/crud/courseinstances/inst1');
+            expect(toast.success).toHaveBeenCalledWith('Course disconnected successfully');
+        });
+
+        confirmSpy.mockRestore();
+    });
+
     it('displays the join code when the API provides one', async () => {
         client.get.mockImplementation((url) => {
             if (url.includes('/join-code')) {
@@ -358,5 +443,59 @@ describe('AdminClassDashboard', () => {
         });
 
         expect(screen.getByText('ABC123')).toBeInTheDocument();
+    });
+
+    it('displays join code and allows regenerating join code in People tab', async () => {
+        const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+
+        client.get.mockImplementation((url) => {
+            if (url.includes('/join-code')) {
+                return Promise.resolve({ data: { success: true, join_code: 'OLD123' } });
+            }
+            if (url.includes('/api/admin/classrooms/')) {
+                return Promise.resolve({
+                    data: {
+                        classroom: {
+                            id: 'cls123',
+                            name: 'Python Level 1',
+                            students: [],
+                            course_assignments: []
+                        }
+                    }
+                });
+            }
+            if (url.includes('/api/admin/users')) {
+                return Promise.resolve({ data: { users: [] } });
+            }
+            return Promise.resolve({ data: {} });
+        });
+
+        client.post.mockImplementation((url) => {
+            if (url.includes('/join-code/regenerate')) {
+                return Promise.resolve({ data: { success: true, join_code: 'NEW456' } });
+            }
+            return Promise.resolve({ data: {} });
+        });
+
+        renderWithRouter(<AdminClassDashboard />);
+
+        await waitFor(() => {
+            expect(screen.getByText('Python Level 1')).toBeInTheDocument();
+        });
+
+        fireEvent.click(screen.getByRole('button', { name: 'People' }));
+
+        expect(screen.getAllByText('OLD123').length).toBeGreaterThan(0);
+
+        const regenerateBtn = screen.getByRole('button', { name: 'Regenerate Join Code' });
+        fireEvent.click(regenerateBtn);
+
+        await waitFor(() => {
+            expect(client.post).toHaveBeenCalledWith('/api/admin/classrooms/cls123/join-code/regenerate');
+            expect(screen.getAllByText('NEW456').length).toBeGreaterThan(0);
+            expect(toast.success).toHaveBeenCalledWith('Join code regenerated successfully!');
+        });
+
+        confirmSpy.mockRestore();
     });
 });

@@ -11,10 +11,13 @@ Classroom Chat employs a multi-layered testing strategy to ensure application st
 
 ### 2.1 Backend Testing
 - **Framework**: [Pytest](https://pytest.org/)
-- **Extensions**: `pytest-flask`, `pytest-socketio`
+- **Extensions**: `pytest-flask`, `pytest-playwright`, `pytest-cov`
+- **Type checking**: `mypy` runs in CI (`python -m mypy .` from `backend/`) alongside the test job.
 - **Key Files**:
     - `backend/tests/conftest.py`: Defines fixtures for the app instance, database, and authenticated clients.
-    - `backend/tests/app/`: Contains functional and integration tests for various modules (Auth, Admin, Message).
+    - `backend/tests/app/routes/`: Functional tests for each blueprint (auth, admin subroutes, message, achievements, shop, cognito, ...).
+    - `backend/tests/app/models/`, `backend/tests/application/services/`: Model and service-layer unit tests.
+    - `backend/tests/test_socket_events.py`, `backend/tests/app/test_app_socket_events.py`: Socket.IO event tests.
 - **Strategy**: 
     - Focused on API endpoint validation (status codes, JSON payloads).
     - Database state verification after operations.
@@ -39,10 +42,11 @@ Classroom Chat employs a multi-layered testing strategy to ensure application st
 ---
 
 ## 3. Automation (CI)
-Tests are automatically executed on every push and pull request via GitHub Actions.
+Tests are automatically executed on every push and pull request via GitHub Actions (`.github/workflows/`).
 
-- **`tests.yml`**: Triggers full test suite (Backend + Frontend).
-- **`lint.yml`**: Runs ESLint (frontend) and Ruff (backend) to ensure code style consistency.
+- **`tests.yml`**: Runs the backend job (mypy + pytest) and the frontend job (`npm run test -- --run`) in parallel. Reusable via `workflow_call` so deploy workflows can gate on it.
+- **`lint.yml`**: Runs Ruff over the backend. (There is currently no dedicated CI job for `eslint`; run `npm run lint` locally before pushing frontend changes.)
+- **`deploy.yml` / `deploy-frontend.yml`**: Deploy to EC2 / S3+CloudFront on pushes to the `deploy` branch, gated on `tests.yml` and `lint.yml` passing first.
 
 ---
 

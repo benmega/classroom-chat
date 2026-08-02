@@ -225,3 +225,87 @@ def test_user_get_course_progress_data(add_sample_user, init_db):
     assert "codecombat" in data
     cc_data = data["codecombat"]
     assert "breakdown" in cc_data
+
+
+# ── earned_ducks floor guard ──────────────────────────────────────────────────
+
+def test_earned_ducks_never_go_negative_via_large_deduction(add_sample_user):
+    """A large negative add_ducks call must not push earned_ducks below 0.
+    earned_ducks stays at the highest it ever reached; duck_balance takes the full hit."""
+    from application import db
+
+    user = add_sample_user("duck_floor_user", "pwd")
+    user.add_ducks(10)       # earned_ducks = 10, duck_balance = 10
+    user.add_ducks(-9999)    # huge deduction — earned_ducks must stay >= duck_balance
+    db.session.commit()
+
+    assert user.earned_ducks == 10, (
+        f"earned_ducks should remain 10 after large deduction, got {user.earned_ducks}"
+    )
+    assert user.duck_balance == 10 - 9999, (
+        "duck_balance should still reflect the full deduction"
+    )
+    assert user.earned_ducks >= user.duck_balance, (
+        "Invariant violated: earned_ducks must always be >= duck_balance"
+    )
+
+
+def test_earned_ducks_unaffected_by_negative_adjustment_on_fresh_user(add_sample_user):
+    """A negative adjustment on a user with 0 earned_ducks must keep earned_ducks >= duck_balance."""
+    from application import db
+
+    user = add_sample_user("duck_floor_fresh", "pwd")
+    assert user.earned_ducks == 0
+
+    user.add_ducks(-50)
+    db.session.commit()
+
+    # duck_balance is now -50; earned_ducks must be >= duck_balance (and >= 0 since it never earned)
+    assert user.earned_ducks == 0, (
+        f"earned_ducks should be 0 (never earned anything), got {user.earned_ducks}"
+    )
+    assert user.earned_ducks >= user.duck_balance, (
+        "Invariant violated: earned_ducks must always be >= duck_balance"
+    )
+
+
+def test_earned_ducks_only_increase_on_positive_amounts(add_sample_user):
+    """Repeated positive and negative transactions: earned_ducks only grows, invariant always holds."""
+    from application import db
+
+    user = add_sample_user("duck_monotonic", "pwd")
+    user.add_ducks(20)
+    user.add_ducks(-5)
+    user.add_ducks(10)
+    user.add_ducks(-3)
+    db.session.commit()
+
+    assert user.earned_ducks == 30, (
+        f"earned_ducks should be 30 (sum of positive only: 20+10), got {user.earned_ducks}"
+    )
+    assert user.duck_balance == 22, (
+        f"duck_balance should be 22 (20-5+10-3), got {user.duck_balance}"
+    )
+    assert user.earned_ducks >= user.duck_balance, (
+        "Invariant violated: earned_ducks must always be >= duck_balance"
+    )
+
+
+def test_earned_ducks_invariant_with_legacy_balance(add_sample_user):
+    """Simulates a user whose duck_balance was set via legacy migration (no transaction log).
+    If duck_balance > earned_ducks, the next add_ducks call should bring earned_ducks up."""
+    from application import db
+
+    user = add_sample_user("duck_legacy", "pwd")
+    # Simulate a legacy DB migration that set balance directly, bypassing add_ducks
+    user.duck_balance = 500
+    user.earned_ducks = 10  # lower than balance — invariant currently violated
+    db.session.commit()
+
+    # The next add_ducks call should detect the violation and correct earned_ducks
+    user.add_ducks(1, reason="Daily Duck")
+    db.session.commit()
+
+    assert user.earned_ducks >= user.duck_balance, (
+        f"Invariant violated after add_ducks: earned={user.earned_ducks}, balance={user.duck_balance}"
+    )

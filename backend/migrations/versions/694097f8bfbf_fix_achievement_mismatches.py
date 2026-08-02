@@ -52,10 +52,10 @@ def upgrade():
         val_str = str(val).split(".")[0]
         try:
             return datetime.strptime(val_str, "%Y-%m-%d %H:%M:%S")
-        except ValueError:
+        except (ValueError, TypeError):
             try:
                 return datetime.fromisoformat(str(val))
-            except ValueError:
+            except (ValueError, TypeError):
                 return None
 
     # Cleanup 'you-there'

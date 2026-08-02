@@ -19,6 +19,9 @@ def get_feed():
         if not user:
             return jsonify({"success": False, "error": "User not logged in"}), 401
 
+        if getattr(user, "role", None) == "parent":
+            return jsonify({"success": False, "error": "Forbidden: Parents cannot access chat feed"}), 403
+
         limit = request.args.get("limit", 50, type=int)
         before_id = request.args.get("before_id", type=int)
         classroom_id = request.args.get("classroom_id", type=int)

@@ -23,7 +23,10 @@ def update_user_ducks():
             .scalar()
         ) or 0
 
-        user.earned_ducks = total_ducks
+        # Invariant: earned_ducks >= duck_balance.
+        # Take max of computed challenge earnings and current balance — if the user has
+        # a balance that predates the transaction log, earned_ducks must be at least that high.
+        user.earned_ducks = max(total_ducks, user.duck_balance)
         # user.packets = total_ducks / (2**14)  # DEPRECATED: Packets are decoupled from ducks
         updated += 1
 

@@ -224,6 +224,7 @@ const CourseProgressTree = () => {
     const hasCenteredActiveTrackRef = useRef(false);
 
     const handleAdminPass = async (e, node) => {
+        e.preventDefault();
         e.stopPropagation();
         if (!userObj?.id) return;
         
@@ -428,6 +429,7 @@ const CourseProgressTree = () => {
                         >
                             {isAdmin && (
                                 <button 
+                                    type="button"
                                     className="btn-admin-pass-chapter"
                                     onClick={(e) => handleAdminPass(e, node)}
                                     title="Admin Override: Pass Chapter"
