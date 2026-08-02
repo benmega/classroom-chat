@@ -1,5 +1,5 @@
 import os
-import shutil
+
 import fitz
 
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
@@ -50,12 +50,8 @@ def process_template(input_path, output_path, is_ozaria=False):
 
     doc = fitz.open(input_path)
     page = doc[0]
-    if is_ozaria:
-        # Blank out Ozaria name area (y=205 to 250)
-        rect = fitz.Rect(0, 205, page.rect.width, 250)
-    else:
-        # Blank out CodeCombat name area (y=190 to 255)
-        rect = fitz.Rect(0, 190, page.rect.width, 255)
+    # Ozaria name area: y=205–250; CodeCombat name area: y=190–255
+    rect = fitz.Rect(0, 205, page.rect.width, 250) if is_ozaria else fitz.Rect(0, 190, page.rect.width, 255)
 
     page.draw_rect(rect, color=(1, 1, 1), fill=(1, 1, 1))
     doc.save(output_path)

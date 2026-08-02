@@ -295,7 +295,6 @@ def test_earned_ducks_invariant_with_legacy_balance(add_sample_user):
     """Simulates a user whose duck_balance was set via legacy migration (no transaction log).
     If duck_balance > earned_ducks, the next add_ducks call should bring earned_ducks up."""
     from application import db
-    from application.models.user import User
 
     user = add_sample_user("duck_legacy", "pwd")
     # Simulate a legacy DB migration that set balance directly, bypassing add_ducks

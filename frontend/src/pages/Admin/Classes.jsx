@@ -130,8 +130,6 @@ const Classes = () => {
         );
     });
 
-    // Statistics calculations
-    const totalClassrooms = classrooms.length;
 
     if (isLoading) return (
         <div className="admin-classes-page">

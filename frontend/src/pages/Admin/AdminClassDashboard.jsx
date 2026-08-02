@@ -569,6 +569,7 @@ const AdminClassDashboard = () => {
                 fetchClassroomCards={fetchClassroomCards}
             />
             <AddCourseModal
+                key={activeModal}
                 isOpen={activeModal === 'add_course'}
                 onClose={() => setActiveModal(null)}
                 onSubmit={handleAddCourse}

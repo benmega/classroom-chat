@@ -485,8 +485,8 @@ def admin_certificate_templates():
 @achievements.route("/admin/certificate_templates/<course_id>/view")
 @admin_only
 def admin_certificate_templates_view(course_id):
-    from application.utilities.db_helpers import get_canonical_course_slug, resolve_course_id
     from application.utilities.cert_generator import generate_certificate
+    from application.utilities.db_helpers import get_canonical_course_slug, resolve_course_id
 
     templates_dir = os.path.join(os.path.dirname(__file__), "..", "static", "certificate_templates")
     canonical_slug = get_canonical_course_slug(course_id)

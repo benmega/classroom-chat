@@ -634,14 +634,6 @@ export const AddCourseModal = ({ isOpen, onClose, onSubmit, courses = [], loadin
     const [instanceId, setInstanceId] = useState('');
     const [customCourseId, setCustomCourseId] = useState('');
 
-    useEffect(() => {
-        if (isOpen) {
-            setSelectedCourseId('');
-            setInstanceId('');
-            setCustomCourseId('');
-        }
-    }, [isOpen]);
-
     const handleSubmit = (e) => {
         e.preventDefault();
         const finalCourseId = selectedCourseId === 'custom' ? customCourseId.trim() : selectedCourseId;
