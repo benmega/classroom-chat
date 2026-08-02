@@ -36,8 +36,8 @@ def create_template():
         return {"error": "A template with this name already exists"}, 400
 
     template = ProjectTemplate(
-        name=name, 
-        description=description, 
+        name=name,
+        description=description,
         chapter=data.get("chapter"),
         link=data.get("link"),
         github_link=data.get("github_link"),
