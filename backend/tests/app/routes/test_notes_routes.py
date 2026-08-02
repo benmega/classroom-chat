@@ -147,3 +147,168 @@ def test_delete_note_s3(mock_get_s3_client, logged_in_client, sample_user, init_
     assert resp.status_code == 200
     assert resp.json["status"] == "success"
     mock_s3.delete_object.assert_called_once()
+
+
+def test_upload_note_field_name_note(logged_in_client, sample_user):
+    logged_in_client.application.config["USE_S3"] = False
+    with logged_in_client.session_transaction() as sess:
+        sess["user"] = sample_user.id
+
+    data = {"note": (io.BytesIO(b"content using note field"), "field_note.png")}
+    response = logged_in_client.post(
+        "/notes/upload", data=data, content_type="multipart/form-data"
+    )
+    assert response.status_code == 200
+    assert response.json["status"] == "success"
+
+
+def test_upload_note_user_not_found(logged_in_client):
+    with logged_in_client.session_transaction() as sess:
+        sess["user"] = 999999
+
+    data = {"note_image": (io.BytesIO(b"img"), "test.png")}
+    response = logged_in_client.post(
+        "/notes/upload", data=data, content_type="multipart/form-data"
+    )
+    assert response.status_code == 404
+    assert response.json["error"] == "User not found"
+
+
+def test_upload_note_empty_file_local_fail(logged_in_client, sample_user):
+    logged_in_client.application.config["USE_S3"] = False
+    with logged_in_client.session_transaction() as sess:
+        sess["user"] = sample_user.id
+
+    data = {"note_image": (io.BytesIO(b""), "empty.png")}
+    response = logged_in_client.post(
+        "/notes/upload", data=data, content_type="multipart/form-data"
+    )
+    assert response.status_code == 500
+    assert response.json["error"] == "Upload failed"
+
+
+def test_serve_note_unauthorized(client, sample_user, init_db):
+    note_owner = User(username="note_owner", is_approved=True)
+    other_user = User(username="note_stranger", is_approved=True)
+    note_owner.set_password("pass123")
+    other_user.set_password("pass123")
+    db.session.add_all([note_owner, other_user])
+    db.session.commit()
+
+    note = Note(user_id=note_owner.id, filename="private_note.png")
+    db.session.add(note)
+    db.session.commit()
+
+    with client.session_transaction() as sess:
+        sess["user"] = other_user.id
+
+    response = client.get(f"/notes/view/{note.filename}")
+    assert response.status_code == 403
+    assert response.json["error"] == "Not authorized to view this note"
+
+
+def test_delete_note_unauthorized_session(client, sample_user, init_db):
+    note = Note(user_id=sample_user.id, filename="local_test.png")
+    db.session.add(note)
+    db.session.commit()
+
+    response = client.post(f"/notes/delete/{note.id}")
+    assert response.status_code == 401
+    assert response.json["error"] == "Unauthorized"
+
+
+def test_delete_note_exception(logged_in_client, sample_user, init_db):
+    note = Note(user_id=sample_user.id, filename="local_test_err.png")
+    db.session.add(note)
+    db.session.commit()
+
+    with logged_in_client.session_transaction() as sess:
+        sess["user"] = sample_user.id
+
+    with patch("application.extensions.db.session.commit", side_effect=Exception("DB Error")):
+        response = logged_in_client.post(f"/notes/delete/{note.id}")
+        assert response.status_code == 500
+        assert "Failed to delete the note" in response.json["error"]
+
+
+def test_kiosk_upload_note_unauthorized(client, sample_user):
+    with client.session_transaction() as sess:
+        sess["user"] = sample_user.id  # sample_user is not admin
+
+    response = client.post("/notes/kiosk-upload")
+    assert response.status_code == 403
+    assert response.json["error"] == "Unauthorized"
+
+
+def test_kiosk_upload_note_missing_student_id(logged_in_client, sample_admin):
+    with logged_in_client.session_transaction() as sess:
+        sess["user"] = sample_admin.id
+
+    response = logged_in_client.post("/notes/kiosk-upload", data={})
+    assert response.status_code == 400
+    assert response.json["error"] == "No student specified"
+
+
+def test_kiosk_upload_note_student_not_found(logged_in_client, sample_admin):
+    with logged_in_client.session_transaction() as sess:
+        sess["user"] = sample_admin.id
+
+    response = logged_in_client.post(
+        "/notes/kiosk-upload", data={"student_id": "99999"}
+    )
+    assert response.status_code == 404
+    assert response.json["error"] == "Student not found"
+
+
+def test_kiosk_upload_note_no_file(logged_in_client, sample_admin, sample_user):
+    with logged_in_client.session_transaction() as sess:
+        sess["user"] = sample_admin.id
+
+    response = logged_in_client.post(
+        "/notes/kiosk-upload", data={"student_id": str(sample_user.id)}
+    )
+    assert response.status_code == 400
+    assert response.json["error"] == "No file provided"
+
+
+def test_kiosk_upload_note_success_local(logged_in_client, sample_admin, sample_user):
+    logged_in_client.application.config["USE_S3"] = False
+    with logged_in_client.session_transaction() as sess:
+        sess["user"] = sample_admin.id
+
+    data = {
+        "student_id": str(sample_user.id),
+        "note": (io.BytesIO(b"kiosk note bytes"), "kiosk_sample.png"),
+    }
+    response = logged_in_client.post(
+        "/notes/kiosk-upload", data=data, content_type="multipart/form-data"
+    )
+    assert response.status_code == 200
+    assert response.json["status"] == "success"
+
+    uploaded_note = Note.query.filter_by(user_id=sample_user.id).first()
+    assert uploaded_note is not None
+
+
+@patch(f"{ROUTE_MODULE_PATH}.get_s3_client")
+def test_kiosk_upload_note_success_s3(
+    mock_get_s3_client, logged_in_client, sample_admin, sample_user
+):
+    mock_s3 = mock_get_s3_client.return_value
+    mock_s3.upload_fileobj.return_value = None
+    logged_in_client.application.config["USE_S3"] = True
+
+    with logged_in_client.session_transaction() as sess:
+        sess["user"] = sample_admin.id
+
+    data = {
+        "student_id": str(sample_user.id),
+        "note_image": (io.BytesIO(b"kiosk s3 bytes"), "kiosk_s3.png"),
+    }
+    response = logged_in_client.post(
+        "/notes/kiosk-upload", data=data, content_type="multipart/form-data"
+    )
+    assert response.status_code == 200
+    assert response.json["status"] == "success"
+    mock_s3.upload_fileobj.assert_called_once()
+

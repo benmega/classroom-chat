@@ -38,14 +38,12 @@ const AdminAssignProject = () => {
     useEffect(() => {
         const fetchStandardProjects = async () => {
             try {
-                const res = await client.get('/api/admin/standard-projects');
+                const res = await client.get('/api/project-templates');
                 const data = res.data;
                 const projectList = 
-                    data?.data?.standard_projects || 
-                    data?.standard_projects || 
-                    (Array.isArray(data?.data) ? data.data : null) || 
-                    (Array.isArray(data) ? data : []);
-                setStandardProjects(Array.isArray(projectList) ? projectList : []);
+                    data?.data?.templates || 
+                    data?.templates || {};
+                setStandardProjects(Object.values(projectList));
             } catch (e) {
                 console.error('Failed to load standard projects', e);
             }

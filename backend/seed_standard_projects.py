@@ -1,6 +1,5 @@
 from application import create_app
 from application.extensions import db
-from application.models.standard_project import StandardProject
 
 seed_data = [
     (
@@ -110,26 +109,17 @@ seed_data = [
 app = create_app()
 with app.app_context():
     count = 0
-    # Also need to seed the new chapter field on ProjectTemplates.
     from application.models.project_template import ProjectTemplate
 
     for name, desc, chapter in seed_data:
-        # Seed standard projects (which admins assign)
-        sp = StandardProject.query.filter_by(name=name).first()
-        if not sp:
-            sp = StandardProject(name=name, description=desc)
-            db.session.add(sp)
-            count += 1
-
-        # Seed project templates (used to render on the course map and assign dropdown)
         pt = ProjectTemplate.query.filter_by(name=name).first()
         if not pt:
             pt = ProjectTemplate(name=name, description=desc, chapter=chapter)
             db.session.add(pt)
+            count += 1
         else:
             pt.chapter = chapter
+            pt.description = desc
 
     db.session.commit()
-    print("Seeded standard projects and templates.")
-    db.session.commit()
-    print(f"Seeded {count} standard projects.")
+    print(f"Seeded {count} new project templates.")
