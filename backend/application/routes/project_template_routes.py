@@ -14,12 +14,7 @@ project_templates_bp = Blueprint("project_templates", __name__)
 def list_templates():
     templates = ProjectTemplate.query.all()
     templates_info = {
-        t.name: {
-            "id": t.id,
-            "description": t.description,
-            "chapter": t.chapter,
-            "name": t.name,
-        }
+        t.name: t.to_dict()
         for t in templates
     }
     return {"templates": templates_info}
@@ -41,7 +36,14 @@ def create_template():
         return {"error": "A template with this name already exists"}, 400
 
     template = ProjectTemplate(
-        name=name, description=description, chapter=data.get("chapter")
+        name=name,
+        description=description,
+        chapter=data.get("chapter"),
+        link=data.get("link"),
+        github_link=data.get("github_link"),
+        video_url=data.get("video_url"),
+        code_snippet=data.get("code_snippet"),
+        image_url=data.get("image_url")
     )
     db.session.add(template)
     db.session.commit()
@@ -75,6 +77,16 @@ def update_template(template_id):
         template.description = description
     if "chapter" in data:
         template.chapter = data.get("chapter")
+    if "link" in data:
+        template.link = data.get("link")
+    if "github_link" in data:
+        template.github_link = data.get("github_link")
+    if "video_url" in data:
+        template.video_url = data.get("video_url")
+    if "code_snippet" in data:
+        template.code_snippet = data.get("code_snippet")
+    if "image_url" in data:
+        template.image_url = data.get("image_url")
 
     db.session.commit()
 

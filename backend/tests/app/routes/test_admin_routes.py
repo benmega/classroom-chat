@@ -815,48 +815,6 @@ def test_assign_project(client, sample_admin, sample_user, test_app):
         assert p.description == "Desc"
 
 
-def test_standard_project_crud(client, sample_admin, test_app):
-    """Test CRUD operations for standard projects."""
-    from application.models.standard_project import StandardProject
-
-    login_as_admin(client, sample_admin)
-
-    resp = client.post(
-        "/api/admin/standard-projects",
-        json={"name": "Test Standard", "description": "Desc"},
-    )
-    assert resp.status_code == 200
-    data = resp.get_json()
-    assert data["status"] == "success"
-    p_id = data["data"]["id"]
-
-    resp_err = client.post("/api/admin/standard-projects", json={"description": "Desc"})
-    assert resp_err.status_code == 400
-
-    resp_get = client.get("/api/admin/standard-projects")
-    assert resp_get.status_code == 200
-    assert any(
-        p["name"] == "Test Standard"
-        for p in resp_get.get_json()["data"]["standard_projects"]
-    )
-
-    resp_put = client.put(
-        f"/api/admin/standard-projects/{p_id}",
-        json={"name": "Updated Standard", "link": "http://link.com"},
-    )
-    assert resp_put.status_code == 200
-
-    resp_put_err = client.put(
-        f"/api/admin/standard-projects/{p_id}", json={"description": "Desc"}
-    )
-    assert resp_put_err.status_code == 400
-
-    resp_del = client.delete(f"/api/admin/standard-projects/{p_id}")
-    assert resp_del.status_code == 200
-
-    with test_app.app_context():
-        assert db.session.get(StandardProject, p_id) is None
-
 
 def test_review_counts_route(client, sample_admin):
     """Test retrieving review counts as admin."""

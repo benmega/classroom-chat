@@ -1,3 +1,4 @@
+import pytest
 from application.extensions import db, socketio
 from application.models.classroom import Classroom
 from application.models.configuration import Configuration
@@ -5,9 +6,17 @@ from application.models.message import Message
 from application.models.user import User
 
 
+@pytest.fixture(autouse=True)
+def setup_socketio(app):
+    from application import tasks
+    tasks.set_app_instance(app)
+
+
 def test_socket_connect_unauthenticated(app):
     # Reject connection when no user in session
     flask_client = app.test_client()
+    with flask_client.session_transaction() as sess:
+        sess.clear()
     socket_client = socketio.test_client(app, flask_test_client=flask_client)
     assert not socket_client.is_connected()
 
@@ -25,9 +34,12 @@ def test_socket_connect_disconnect_student(app, sample_user, init_db):
     with flask_client.session_transaction() as sess:
         sess["user"] = sample_user.id
 
-    classroom = Classroom(id="cs_101", name="CS 101", language="Python")
-    classroom.users.append(sample_user)
-    db.session.add(classroom)
+    classroom = db.session.get(Classroom, "cs_101")
+    if not classroom:
+        classroom = Classroom(id="cs_101", name="CS 101", language="Python")
+        db.session.add(classroom)
+    if sample_user not in classroom.users:
+        classroom.users.append(sample_user)
     db.session.commit()
 
     socket_client = socketio.test_client(app, flask_test_client=flask_client)
@@ -64,17 +76,24 @@ def test_socket_send_message_student_success(app, sample_user, init_db):
     with flask_client.session_transaction() as sess:
         sess["user"] = sample_user.id
 
-    classroom = Classroom(id="cs_101", name="CS 101", language="Python")
-    classroom.users.append(sample_user)
-    db.session.add(classroom)
+    classroom = db.session.get(Classroom, "cs_101")
+    if not classroom:
+        classroom = Classroom(id="cs_101", name="CS 101", language="Python")
+        db.session.add(classroom)
+    if sample_user not in classroom.users:
+        classroom.users.append(sample_user)
     db.session.commit()
 
     socket_client = socketio.test_client(app, flask_test_client=flask_client)
     assert socket_client.is_connected()
 
     # Enable message sending
-    config = Configuration(message_sending_enabled=True)
-    db.session.add(config)
+    config = Configuration.query.first()
+    if not config:
+        config = Configuration(message_sending_enabled=True)
+        db.session.add(config)
+    else:
+        config.message_sending_enabled = True
     db.session.commit()
 
     # Emit message
@@ -108,8 +127,12 @@ def test_socket_send_message_disabled_or_muted(app, sample_user, init_db):
     with flask_client.session_transaction() as sess:
         sess["user"] = sample_user.id
 
-    config = Configuration(message_sending_enabled=False)
-    db.session.add(config)
+    config = Configuration.query.first()
+    if not config:
+        config = Configuration(message_sending_enabled=False)
+        db.session.add(config)
+    else:
+        config.message_sending_enabled = False
     db.session.commit()
 
     socket_client = socketio.test_client(app, flask_test_client=flask_client)
@@ -134,8 +157,12 @@ def test_socket_send_message_admin_global(app, sample_admin, init_db):
     with flask_client.session_transaction() as sess:
         sess["user"] = sample_admin.id
 
-    config = Configuration(message_sending_enabled=True)
-    db.session.add(config)
+    config = Configuration.query.first()
+    if not config:
+        config = Configuration(message_sending_enabled=True)
+        db.session.add(config)
+    else:
+        config.message_sending_enabled = True
     db.session.commit()
 
     socket_client = socketio.test_client(app, flask_test_client=flask_client)
@@ -156,12 +183,19 @@ def test_socket_send_message_rate_limit(app, sample_user, init_db):
     with flask_client.session_transaction() as sess:
         sess["user"] = sample_user.id
 
-    classroom = Classroom(id="cs_101", name="CS 101", language="Python")
-    classroom.users.append(sample_user)
-    db.session.add(classroom)
+    classroom = db.session.get(Classroom, "cs_101")
+    if not classroom:
+        classroom = Classroom(id="cs_101", name="CS 101", language="Python")
+        db.session.add(classroom)
+    if sample_user not in classroom.users:
+        classroom.users.append(sample_user)
 
-    config = Configuration(message_sending_enabled=True)
-    db.session.add(config)
+    config = Configuration.query.first()
+    if not config:
+        config = Configuration(message_sending_enabled=True)
+        db.session.add(config)
+    else:
+        config.message_sending_enabled = True
     db.session.commit()
 
     socket_client = socketio.test_client(app, flask_test_client=flask_client)

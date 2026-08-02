@@ -608,3 +608,474 @@ def test_serving_endpoints(client, init_db):
     resp = client.get("/user/project_images/nonexistent_proj.png")
     assert resp.status_code == 200
     resp.close()
+
+
+def test_login_unapproved_user_and_edge_cases(client, init_db):
+    unapproved = User(username="unapproved_guy", is_approved=False, is_admin=False)
+    unapproved.set_password("pass1234")
+    db.session.add(unapproved)
+    db.session.commit()
+
+    # JSON login unapproved -> 403
+    resp = client.post(
+        "/user/login", json={"username": "unapproved_guy", "password": "pass1234"}
+    )
+    assert resp.status_code == 403
+    assert resp.json["is_approved"] is False
+
+    # HTML login unapproved -> redirect to login
+    resp_html = client.post(
+        "/user/login",
+        data={"username": "unapproved_guy", "password": "pass1234"},
+        follow_redirects=False,
+    )
+    assert resp_html.status_code == 302
+    assert "/user/login" in resp_html.headers.get("Location", "")
+
+    # JSON login invalid password -> 401
+    resp_invalid = client.post(
+        "/user/login", json={"username": "unapproved_guy", "password": "wrong_password"}
+    )
+    assert resp_invalid.status_code == 401
+
+    # GET request with JSON accept header -> 405
+    resp_get_json = client.get("/user/login", headers={"Accept": "application/json"})
+    assert resp_get_json.status_code == 405
+
+
+def test_auth_status_and_tutorial_complete(client, init_db, sample_user):
+    # Unauthenticated auth_status
+    resp = client.get("/user/api/auth/status")
+    assert resp.status_code == 200
+    assert resp.json["data"]["logged_in"] is False
+
+    # Unauthenticated tutorial complete
+    resp_tut_unauth = client.post("/user/api/auth/tutorial/complete")
+    assert resp_tut_unauth.status_code in (302, 401)
+
+    # Authenticate
+    with client.session_transaction() as sess:
+        sess["user"] = sample_user.id
+
+    # Authenticated auth_status
+    resp_auth = client.get("/user/api/auth/status")
+    assert resp_auth.status_code == 200
+    assert resp_auth.json["data"]["logged_in"] is True
+
+    # Authenticated tutorial complete
+    resp_tut = client.post("/user/api/auth/tutorial/complete")
+    assert resp_tut.status_code == 200
+    assert resp_tut.json["data"]["has_seen_tutorial"] is True
+    db.session.refresh(sample_user)
+    assert sample_user.has_seen_tutorial is True
+
+
+def test_logout_json_response(client, init_db, sample_user):
+    with client.session_transaction() as sess:
+        sess["user"] = sample_user.id
+
+    resp = client.get("/user/logout", headers={"Accept": "application/json"})
+    assert resp.status_code == 200
+    assert resp.json["status"] == "success"
+
+
+def test_signup_validations(client, init_db):
+    # Missing username or password
+    resp = client.post("/user/signup", json={"username": "", "password": ""})
+    assert resp.status_code == 400
+
+    # Short password
+    resp = client.post("/user/signup", json={"username": "valid_user", "password": "123"})
+    assert resp.status_code == 400
+
+    # Invalid username format
+    resp = client.post("/user/signup", json={"username": "Invalid User!", "password": "password123"})
+    assert resp.status_code == 400
+
+
+def test_profile_not_found_and_html_redirect(client, init_db, sample_user):
+    # User ID in session doesn't exist in DB
+    with client.session_transaction() as sess:
+        sess["user"] = 999999
+
+    resp = client.get("/user/profile", headers={"Accept": "application/json"})
+    assert resp.status_code == 404
+
+    # Valid user, HTML request (no JSON header)
+    with client.session_transaction() as sess:
+        sess["user"] = sample_user.id
+
+    resp_html = client.get("/user/profile")
+    assert resp_html.status_code == 302
+    assert "/profile" in resp_html.headers.get("Location", "")
+
+
+def test_view_user_profile_slug_html_redirect_and_404(client, init_db, sample_user):
+    # HTML redirect
+    resp = client.get(f"/user/profile/{sample_user.slug}")
+    assert resp.status_code == 302
+
+    # Non-existent slug -> 404
+    resp_404 = client.get("/user/profile/nonexistent-slug-12345", headers={"Accept": "application/json"})
+    assert resp_404.status_code == 404
+
+
+def test_edit_profile_html_redirect_and_bio_update(client, init_db, sample_user):
+    with client.session_transaction() as sess:
+        sess["user"] = sample_user.id
+
+    # GET HTML redirect
+    resp_get = client.get("/user/edit_profile")
+    assert resp_get.status_code == 302
+
+    # POST JSON update with bio & nickname
+    resp_post = client.post(
+        "/user/edit_profile",
+        json={"bio": "Awesome bio", "nickname": "CoolNick"},
+        headers={"Accept": "application/json"},
+    )
+    assert resp_post.status_code == 200
+    db.session.refresh(sample_user)
+    assert sample_user.bio == "Awesome bio"
+    assert sample_user.nickname == "CoolNick"
+
+
+def test_get_parent_connection_code_route(client, init_db, sample_user):
+    # Student user
+    with client.session_transaction() as sess:
+        sess["user"] = sample_user.id
+
+    resp = client.get("/user/api/parent-code")
+    assert resp.status_code == 200
+    assert "connection_code" in resp.json["data"]
+
+    # Parent user
+    parent = User(username="parent_user", role="parent", is_approved=True)
+    parent.set_password("pass1234")
+    db.session.add(parent)
+    db.session.commit()
+
+    with client.session_transaction() as sess:
+        sess["user"] = parent.id
+
+    resp_parent = client.get("/user/api/parent-code")
+    assert resp_parent.status_code == 400
+
+
+def test_new_project_edge_cases(client, init_db, sample_user):
+    admin = User(username="admin_user", is_admin=True, is_approved=True)
+    admin.set_password("pass1234")
+    db.session.add(admin)
+    db.session.commit()
+
+    # 1. Missing project name -> 400
+    with client.session_transaction() as sess:
+        sess["user"] = sample_user.id
+
+    resp_no_name = client.post("/user/project/new", data={"name": ""})
+    assert resp_no_name.status_code == 400
+
+    # 2. Admin creating project for another student
+    with client.session_transaction() as sess:
+        sess["user"] = admin.id
+
+    resp_admin_proj = client.post(
+        "/user/project/new",
+        data={
+            "name": "Admin Assigned Project",
+            "student_id": sample_user.id,
+            "teacher_comment": "Great work!",
+        },
+    )
+    assert resp_admin_proj.status_code == 200
+
+    created_proj = Project.query.filter_by(name="Admin Assigned Project").first()
+    assert created_proj is not None
+    assert created_proj.user_id == sample_user.id
+    assert created_proj.teacher_comment == "Great work!"
+
+    # 3. Admin creating project for invalid student -> 400
+    resp_invalid_student = client.post(
+        "/user/project/new",
+        data={"name": "Bad Project", "student_id": 999999},
+    )
+    assert resp_invalid_student.status_code == 400
+
+    # 4. Invalid image upload format -> 400
+    txt_file = (BytesIO(b"not an image"), "test.txt")
+    resp_invalid_img = client.post(
+        "/user/project/new",
+        data={"name": "Invalid Image Project", "project_image": txt_file},
+    )
+    assert resp_invalid_img.status_code == 400
+
+    # 5. Admin GET project/new JSON -> returns students
+    resp_admin_get = client.get("/user/project/new", headers={"Accept": "application/json"})
+    assert resp_admin_get.status_code == 200
+    assert "students" in resp_admin_get.json["data"]
+
+    # 6. GET project/new non-JSON -> redirect
+    resp_get_html = client.get("/user/project/new")
+    assert resp_get_html.status_code == 302
+
+
+def test_edit_project_edge_cases(client, init_db, sample_user):
+    admin = User(username="admin_proj_editor", is_admin=True, is_approved=True)
+    admin.set_password("pass1234")
+
+    other_user = User(username="other_user", is_approved=True)
+    other_user.set_password("pass1234")
+
+    db.session.add_all([admin, other_user])
+    db.session.commit()
+
+    project = Project(name="Original Proj", user_id=sample_user.id)
+    db.session.add(project)
+    db.session.commit()
+
+    # 1. Non-owner non-admin editing -> 403
+    with client.session_transaction() as sess:
+        sess["user"] = other_user.id
+
+    resp_forbidden = client.post(
+        f"/user/project/edit/{project.id}", data={"name": "Hacked Name"}
+    )
+    assert resp_forbidden.status_code == 403
+
+    # 2. Admin reassigning student_id (invalid student -> 400)
+    with client.session_transaction() as sess:
+        sess["user"] = admin.id
+
+    resp_invalid_reassign = client.post(
+        f"/user/project/edit/{project.id}", data={"name": "Reassigned", "student_id": 999999}
+    )
+    assert resp_invalid_reassign.status_code == 400
+
+    # 3. Admin reassigning student_id (valid student -> success)
+    resp_valid_reassign = client.post(
+        f"/user/project/edit/{project.id}",
+        data={
+            "name": "Reassigned Proj",
+            "student_id": other_user.id,
+            "teacher_comment": "Reassigned comment",
+        },
+    )
+    assert resp_valid_reassign.status_code == 200
+    db.session.refresh(project)
+    assert project.user_id == other_user.id
+    assert project.teacher_comment == "Reassigned comment"
+
+    # 4. Invalid project image format on edit -> 400
+    txt_file = (BytesIO(b"not an image"), "test.txt")
+    resp_bad_img = client.post(
+        f"/user/project/edit/{project.id}", data={"name": "Edit Proj", "project_image": txt_file}
+    )
+    assert resp_bad_img.status_code == 400
+
+    # 5. GET edit_project non-JSON -> redirect
+    resp_get = client.get(f"/user/project/edit/{project.id}")
+    assert resp_get.status_code == 302
+
+
+def test_api_profile_picture_validations(client, init_db, sample_user):
+    with client.session_transaction() as sess:
+        sess["user"] = sample_user.id
+
+    # Empty filename -> 400
+    empty_file = (BytesIO(b""), "")
+    resp = client.post("/user/api/profile-picture", data={"profile_picture": empty_file})
+    assert resp.status_code == 400
+
+    # Invalid extension -> 400
+    txt_file = (BytesIO(b"hello"), "file.txt")
+    resp = client.post("/user/api/profile-picture", data={"profile_picture": txt_file})
+    assert resp.status_code == 400
+
+    # File > 5MB -> 400
+    large_data = BytesIO(b"0" * (5 * 1024 * 1024 + 10))
+    large_file = (large_data, "large.png")
+    resp = client.post("/user/api/profile-picture", data={"profile_picture": large_file})
+    assert resp.status_code == 400
+
+
+def test_api_project_image_validations(client, init_db, sample_user):
+    with client.session_transaction() as sess:
+        sess["user"] = sample_user.id
+
+    # Missing project_image -> 400
+    resp = client.post("/user/api/project-image", data={})
+    assert resp.status_code == 400
+
+    # Empty filename -> 400
+    resp = client.post("/user/api/project-image", data={"project_image": (BytesIO(b""), "")})
+    assert resp.status_code == 400
+
+    # Invalid file format -> 400
+    resp = client.post(
+        "/user/api/project-image",
+        data={"project_image": (BytesIO(b"test"), "doc.txt")},
+    )
+    assert resp.status_code == 400
+
+    # Large file > 10MB -> 400
+    large_data = BytesIO(b"0" * (10 * 1024 * 1024 + 10))
+    resp = client.post(
+        "/user/api/project-image",
+        data={"project_image": (large_data, "huge.png")},
+    )
+    assert resp.status_code == 400
+
+
+def test_api_profile_wallpaper_validations(client, init_db, sample_user):
+    sample_user.has_custom_wallpaper = True
+    db.session.commit()
+
+    with client.session_transaction() as sess:
+        sess["user"] = sample_user.id
+
+    # Missing file -> 400
+    resp = client.post("/user/api/profile-wallpaper", data={})
+    assert resp.status_code == 400
+
+    # Empty filename -> 400
+    resp = client.post(
+        "/user/api/profile-wallpaper",
+        data={"profile_wallpaper": (BytesIO(b""), "")},
+    )
+    assert resp.status_code == 400
+
+    # Invalid format -> 400
+    resp = client.post(
+        "/user/api/profile-wallpaper",
+        data={"profile_wallpaper": (BytesIO(b"test"), "wall.txt")},
+    )
+    assert resp.status_code == 400
+
+    # Large file > 10MB -> 400
+    large_data = BytesIO(b"0" * (10 * 1024 * 1024 + 10))
+    resp = client.post(
+        "/user/api/profile-wallpaper",
+        data={"profile_wallpaper": (large_data, "huge.png")},
+    )
+    assert resp.status_code == 400
+
+
+def test_search_users_empty_query(client, init_db, sample_user):
+    with client.session_transaction() as sess:
+        sess["user"] = sample_user.id
+
+    resp = client.get("/user/api/users/search?q=")
+    assert resp.status_code == 200
+    assert resp.json["data"]["users"] == []
+
+
+def test_get_user_id_nonexistent_user(client, init_db):
+    with client.session_transaction() as sess:
+        sess["user"] = 999999
+
+    resp = client.get("/user/get_user_id")
+    assert resp.status_code == 200
+    assert resp.json["user_id"] == 999999
+
+
+def test_get_parent_code_user_not_found(client, init_db):
+    with client.session_transaction() as sess:
+        sess["user"] = 999999
+
+    resp = client.get("/user/api/parent-code")
+    assert resp.status_code == 404
+
+
+def test_handle_video_s3_upload_helper(init_db, sample_user):
+    from application.routes.user_routes import handle_video_s3_upload
+
+    # Invalid inputs
+    assert handle_video_s3_upload(None, sample_user, "Project", 1) is False
+
+    class DummyFileNoName:
+        pass
+
+    assert handle_video_s3_upload(DummyFileNoName(), sample_user, "Project", 1) is False
+
+    class DummyFileNoExt:
+        filename = "videofile"
+
+    assert handle_video_s3_upload(DummyFileNoExt(), sample_user, "Project", 1) is False
+
+    class DummyFileBadExt:
+        filename = "video.pdf"
+
+    assert handle_video_s3_upload(DummyFileBadExt(), sample_user, "Project", 1) is False
+
+    # Mock S3 upload success
+    class DummyVideoFile:
+        filename = "demo.mp4"
+        content_type = "video/mp4"
+
+        def seek(self, pos):
+            pass
+
+    project = Project(name="S3 Proj", user_id=sample_user.id)
+    db.session.add(project)
+    db.session.commit()
+    with patch("application.routes.user_routes.get_s3_client") as mock_get_s3:
+        mock_s3 = mock_get_s3.return_value
+        mock_s3.upload_fileobj = lambda *args, **kwargs: None
+
+        res = handle_video_s3_upload(DummyVideoFile(), sample_user, project.name, project.id)
+        assert res is not False
+        db.session.refresh(project)
+        assert "s3.ap-southeast-1.amazonaws.com" in project.video_url
+
+    # Test S3 client None
+    with patch("application.routes.user_routes.get_s3_client", return_value=None):
+        assert handle_video_s3_upload(DummyVideoFile(), sample_user, project.name, project.id) is False
+
+
+def test_new_and_edit_project_video_upload(client, init_db, sample_user):
+    with client.session_transaction() as sess:
+        sess["user"] = sample_user.id
+
+    video_file = (BytesIO(b"fake video content"), "test_video.mp4")
+
+    # 1. New project with video upload failure mock
+    with patch("application.routes.user_routes.handle_video_s3_upload", return_value=False):
+        resp_new = client.post(
+            "/user/project/new",
+            data={"name": "Video Project", "project_video": video_file},
+        )
+        assert resp_new.status_code == 207
+        assert resp_new.json["data"]["video_upload_failed"] is True
+
+    # 2. Edit project with video upload failure mock
+    project = Project.query.filter_by(name="Video Project").first()
+    assert project is not None
+
+    with patch("application.routes.user_routes.handle_video_s3_upload", return_value=False):
+        resp_edit = client.post(
+            f"/user/project/edit/{project.id}",
+            data={"name": "Video Project Edit", "project_video": (BytesIO(b"video"), "vid.mp4")},
+        )
+        assert resp_edit.status_code == 207
+        assert resp_edit.json["data"]["video_upload_failed"] is True
+
+
+def test_edit_profile_form_pfp_upload(client, init_db, sample_user):
+    with client.session_transaction() as sess:
+        sess["user"] = sample_user.id
+
+    img = Image.new("RGB", (20, 20), color="green")
+    img_bytes = BytesIO()
+    img.save(img_bytes, format="PNG")
+    img_bytes.seek(0)
+
+    resp = client.post(
+        "/user/edit_profile",
+        data={"profile_picture": (img_bytes, "avatar.png")},
+        content_type="multipart/form-data",
+    )
+    assert resp.status_code == 200
+    db.session.refresh(sample_user)
+    assert sample_user.profile_picture is not None
+
+

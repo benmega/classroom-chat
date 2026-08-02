@@ -96,3 +96,101 @@ def test_purchase_not_enough_packets(client, init_db):
     resp = client.post(f"/api/shop/purchase/{item.id}")
     assert resp.status_code == 400
     assert "Not enough packets" in resp.json["message"]
+
+
+def test_purchase_all_store_items(client, init_db):
+    user = User(username="rich_shopper", packets=10000.0, is_approved=True)
+    user.set_password("pass123")
+    db.session.add(user)
+
+    items_to_create = [
+        ("Animated Profile Border", 10.0),
+        ("Auto Bitshift", 10.0),
+        ("Custom Profile Wallpaper", 10.0),
+        ("Auto Challenge Claimer", 10.0),
+        ("Permanent Double Duck", 10.0),
+    ]
+    for name, price in items_to_create:
+        if not StoreItem.query.filter_by(name=name).first():
+            db.session.add(StoreItem(name=name, description="Test item", base_price=price))
+    db.session.commit()
+
+    with client.session_transaction() as sess:
+        sess["user"] = user.id
+        sess["_user_id"] = str(user.id)
+
+    item_flag_map = {
+        "Animated Profile Border": "has_animated_border",
+        "Auto Bitshift": "has_auto_bitshift",
+        "Custom Profile Wallpaper": "has_custom_wallpaper",
+        "Auto Challenge Claimer": "has_auto_claimer",
+        "Permanent Double Duck": "has_double_duck",
+    }
+
+    for item_name, attr in item_flag_map.items():
+        item = StoreItem.query.filter_by(name=item_name).first()
+        assert item is not None
+        resp = client.post(f"/api/shop/purchase/{item.id}")
+        assert resp.status_code == 200
+        db.session.refresh(user)
+        assert getattr(user, attr) is True
+
+
+def test_configure_perk_wallpaper_and_animated_border(client, init_db):
+    user = User(username="perk_configurator", packets=100.0, is_approved=True)
+    user.set_password("pass1234")
+    db.session.add(user)
+    db.session.commit()
+
+    with client.session_transaction() as sess:
+        sess["user"] = user.id
+        sess["_user_id"] = str(user.id)
+
+    # 0. Chat Font Color unowned -> 403
+    resp_font = client.put(
+        "/api/shop/configure", json={"perk_name": "chat_font_color", "value": "#ff0000"}
+    )
+    assert resp_font.status_code == 403
+
+    # 1. Profile Wallpaper unowned -> 403
+    resp = client.put(
+        "/api/shop/configure", json={"perk_name": "profile_wallpaper", "value": "my_bg.jpg"}
+    )
+    assert resp.status_code == 403
+
+    # Grant profile wallpaper perk
+    user.has_custom_wallpaper = True
+    db.session.commit()
+
+    # Profile Wallpaper owned -> 200
+    resp = client.put(
+        "/api/shop/configure", json={"perk_name": "profile_wallpaper", "value": "my_bg.jpg"}
+    )
+    assert resp.status_code == 200
+    db.session.refresh(user)
+    assert user.profile_wallpaper == "my_bg.jpg"
+
+    # 2. Animated border speed unowned -> 403
+    resp = client.put(
+        "/api/shop/configure", json={"perk_name": "animated_border_speed", "value": "fast"}
+    )
+    assert resp.status_code == 403
+
+    # Grant animated border perk
+    user.has_animated_border = True
+    db.session.commit()
+
+    # Invalid speed value -> 400
+    resp = client.put(
+        "/api/shop/configure", json={"perk_name": "animated_border_speed", "value": "hyper"}
+    )
+    assert resp.status_code == 400
+
+    # Valid speed value -> 200
+    resp = client.put(
+        "/api/shop/configure", json={"perk_name": "animated_border_speed", "value": "fast"}
+    )
+    assert resp.status_code == 200
+    db.session.refresh(user)
+    assert user.animated_border_speed == "fast"
+

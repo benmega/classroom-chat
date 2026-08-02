@@ -13,7 +13,7 @@ const AdminStandardProjects = () => {
     const [editingProject, setEditingProject] = useState(null);
     
     const [form, setForm] = useState({
-        name: '', description: '', link: '', github_link: '', 
+        name: '', description: '', chapter: '', link: '', github_link: '', 
         video_url: '', code_snippet: '', image_url: ''
     });
 
@@ -24,14 +24,12 @@ const AdminStandardProjects = () => {
     const fetchProjects = async () => {
         setIsLoading(true);
         try {
-            const res = await client.get('/api/admin/standard-projects');
+            const res = await client.get('/api/project-templates');
             const data = res.data;
             const projectList = 
-                data?.data?.standard_projects || 
-                data?.standard_projects || 
-                (Array.isArray(data?.data) ? data.data : null) || 
-                (Array.isArray(data) ? data : []);
-            setProjects(Array.isArray(projectList) ? projectList : []);
+                data?.data?.templates || 
+                data?.templates || {};
+            setProjects(Object.values(projectList));
         } catch (error) {
             console.error('Failed to load standard projects:', error);
             toast.error('Failed to load standard projects.');
@@ -47,6 +45,7 @@ const AdminStandardProjects = () => {
             setForm({
                 name: project.name || '',
                 description: project.description || '',
+                chapter: project.chapter || '',
                 link: project.link || '',
                 github_link: project.github_link || '',
                 video_url: project.video_url || '',
@@ -56,7 +55,7 @@ const AdminStandardProjects = () => {
         } else {
             setEditingProject(null);
             setForm({
-                name: '', description: '', link: '', github_link: '', 
+                name: '', description: '', chapter: '', link: '', github_link: '', 
                 video_url: '', code_snippet: '', image_url: ''
             });
         }
@@ -77,16 +76,16 @@ const AdminStandardProjects = () => {
         setIsSubmitting(true);
         try {
             if (editingProject) {
-                const res = await client.put(`/api/admin/standard-projects/${editingProject.id}`, form);
-                if (res.data.status === 'success') {
-                    toast.success(res.data.message);
+                const res = await client.put(`/api/project-templates/${editingProject.id}`, form);
+                if (res.data.status === 'success' || res.data.message) {
+                    toast.success(res.data.message || 'Updated successfully.');
                     closeModal();
                     fetchProjects();
                 }
             } else {
-                const res = await client.post('/api/admin/standard-projects', form);
-                if (res.data.status === 'success') {
-                    toast.success(res.data.message);
+                const res = await client.post('/api/project-templates', form);
+                if (res.data.status === 'success' || res.data.message) {
+                    toast.success(res.data.message || 'Created successfully.');
                     closeModal();
                     fetchProjects();
                 }
@@ -102,9 +101,9 @@ const AdminStandardProjects = () => {
         if (!window.confirm(`Are you sure you want to delete "${name}"?`)) return;
         
         try {
-            const res = await client.delete(`/api/admin/standard-projects/${id}`);
-            if (res.data.status === 'success') {
-                toast.success(res.data.message);
+            const res = await client.delete(`/api/project-templates/${id}`);
+            if (res.data.status === 'success' || res.data.message) {
+                toast.success(res.data.message || 'Deleted successfully.');
                 fetchProjects();
             }
         } catch {
@@ -129,6 +128,7 @@ const AdminStandardProjects = () => {
                     {projects.map(p => (
                         <div key={p.id} className="standard-project-card">
                             <h3><BookOpen size={18} className="icon-book-open" /> {p.name}</h3>
+                            {p.chapter && <p className="sp-chapter">Chapter: {p.chapter}</p>}
                             <p>{p.description || <em>No description</em>}</p>
                             <div className="sp-actions">
                                 <button className="btn-edit-sp" onClick={() => openModal(p)}>
@@ -169,6 +169,15 @@ const AdminStandardProjects = () => {
                                     onChange={e => setForm({...form, description: e.target.value})}
                                     rows="4"
                                     placeholder="Description template..."
+                                />
+                            </div>
+                            <div className="sp-form-group">
+                                <label htmlFor="input-chapter">Chapter Mapping</label>
+                                <input id="input-chapter" 
+                                    type="text" 
+                                    value={form.chapter}
+                                    onChange={e => setForm({...form, chapter: e.target.value})}
+                                    placeholder="e.g. Computer Science 2"
                                 />
                             </div>
                             <div className="sp-form-row">
