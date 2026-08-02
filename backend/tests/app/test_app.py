@@ -53,7 +53,7 @@ def test_create_app_prod_proxy_fix():
 def test_create_app_dev_schema_drift():
     with patch.object(scheduler, "start"), patch.object(socketio, "init_app"):
         with patch.dict(os.environ, {"FLASK_ENV": "development"}):
-            with patch("application.check_for_schema_drift") as mock_drift:
+            with patch("application.check_for_schema_drift"):
                 app = create_app(DevelopmentConfig)
                 assert app is not None
 
@@ -116,7 +116,7 @@ def test_error_handlers(test_app):
                 err.description = "5 per minute"
                 res = func(err)
                 if isinstance(res, tuple):
-                    res_obj, code = res
+                    _res_obj, code = res
                     assert code == 429
             except Exception:
                 pass

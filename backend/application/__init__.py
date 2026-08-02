@@ -1,3 +1,4 @@
+import contextlib
 import logging
 import os
 from datetime import timedelta
@@ -129,18 +130,14 @@ def create_app(config_class=None):
     # cors_allowed_origins must match cors_origins exactly — using "*" alongside
     # withCredentials:true on the client causes browsers to block the handshake.
     limiter.init_app(app)
-    try:
+    with contextlib.suppress(Exception):
         socketio.init_app(
             app,
             cors_allowed_origins=cors_origins,
             async_mode=app.config.get("SOCKETIO_ASYNC_MODE"),
         )
-    except Exception:
-        pass
-    try:
+    with contextlib.suppress(Exception):
         scheduler.init_app(app)
-    except Exception:
-        pass
 
     from . import socket_events as socket_events
 
