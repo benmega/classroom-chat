@@ -865,3 +865,46 @@ def test_download_all_certificates(
     ):
         response = client.get("/achievements/admin/certificates/download_all")
         assert response.status_code == 200
+
+
+def test_admin_certificate_templates(client, init_db, sample_admin):
+    with client.session_transaction() as sess:
+        sess["user"] = sample_admin.id
+    response = client.get("/achievements/admin/certificate_templates")
+    assert response.status_code == 200
+    assert "templates" in response.json.get("data", response.json)
+
+
+def test_admin_certificate_templates_view(client, init_db, sample_admin):
+    with client.session_transaction() as sess:
+        sess["user"] = sample_admin.id
+    with patch("application.routes.achievement_routes.send_from_directory", return_value="fake_file"):
+        response = client.get("/achievements/admin/certificate_templates/cs-1/view")
+        assert response.status_code == 200
+
+
+def test_admin_certificate_templates_upload(client, init_db, sample_admin):
+    from io import BytesIO
+    with client.session_transaction() as sess:
+        sess["user"] = sample_admin.id
+    img_data = b"fake pdf content"
+    img_file = (BytesIO(img_data), "template.pdf")
+    with patch("werkzeug.datastructures.FileStorage.save"):
+        response = client.post(
+            "/achievements/admin/certificate_templates/cs-1/upload",
+            data={"template_file": img_file},
+            content_type="multipart/form-data"
+        )
+        assert response.status_code == 200
+        assert response.json["success"] is True
+
+
+def test_admin_certificate_templates_test_generate(client, init_db, sample_admin):
+    with client.session_transaction() as sess:
+        sess["user"] = sample_admin.id
+    with patch("application.utilities.cert_generator.generate_certificate", return_value=b"fake pdf content"), patch("application.routes.achievement_routes.send_file", return_value="fake_file"):
+        response = client.post(
+            "/achievements/admin/certificate_templates/cs-1/test_generate",
+            data={"student_name": "Test Student"}
+        )
+        assert response.status_code == 200

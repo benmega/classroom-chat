@@ -241,17 +241,17 @@ def submit_certificate():
             return jsonify({"success": False, "error": "Invalid certificate URL."}), 200
 
         course_slug = match.group(1)
-        
+
         from application.utilities.db_helpers import resolve_course_id
         db_course_id = resolve_course_id(course_slug)
-        
+
         achievement = Achievement.query.filter(
-            (Achievement.slug == course_slug) | 
-            (Achievement.source == course_slug) | 
-            (Achievement.slug == db_course_id) | 
+            (Achievement.slug == course_slug) |
+            (Achievement.source == course_slug) |
+            (Achievement.slug == db_course_id) |
             (Achievement.source == db_course_id)
         ).first()
-        
+
         is_auto_recommended = False
         recommendation_reason = "No matching achievement found for this course."
         if achievement:
@@ -445,3 +445,119 @@ def download_all_certificates():
         as_attachment=True,
         download_name="all_pending_certificates.zip",
     )
+
+@achievements.route("/admin/certificate_templates")
+@admin_only
+@api_response
+def admin_certificate_templates():
+    courses = [
+        {"id": "cs-1", "name": "Computer Science 1"},
+        {"id": "cs-2", "name": "Computer Science 2"},
+        {"id": "cs-3", "name": "Computer Science 3"},
+        {"id": "cs-4", "name": "Computer Science 4"},
+        {"id": "cs-5", "name": "Computer Science 5"},
+        {"id": "cs-6", "name": "Computer Science 6"},
+        {"id": "gd-1", "name": "Game Development 1"},
+        {"id": "gd-2", "name": "Game Development 2"},
+        {"id": "gd-3", "name": "Game Development 3"},
+        {"id": "wd-1", "name": "Web Development 1"},
+        {"id": "wd-2", "name": "Web Development 2"},
+        {"id": "oz-1", "name": "Ozaria 1"},
+        {"id": "oz-2", "name": "Ozaria 2"},
+        {"id": "oz-3", "name": "Ozaria 3"},
+        {"id": "oz-4", "name": "Ozaria 4"}
+    ]
+    templates_dir = os.path.join(os.path.dirname(__file__), "..", "static", "certificate_templates")
+    result = []
+    for c in courses:
+        path = os.path.join(templates_dir, f"{c['id']}.pdf")
+        has_template = os.path.exists(path)
+        c["has_template"] = has_template
+        c["course_id"] = c["id"]
+        c["course_name"] = c["name"]
+        if has_template:
+            c["preview_url"] = url_for("achievements.admin_certificate_templates_view", course_id=c["id"])
+        else:
+            c["preview_url"] = None
+        result.append(c)
+    return {"templates": result}
+
+@achievements.route("/admin/certificate_templates/<course_id>/view")
+@admin_only
+def admin_certificate_templates_view(course_id):
+    from application.utilities.db_helpers import get_canonical_course_slug, resolve_course_id
+    from application.utilities.cert_generator import generate_certificate
+
+    templates_dir = os.path.join(os.path.dirname(__file__), "..", "static", "certificate_templates")
+    canonical_slug = get_canonical_course_slug(course_id)
+    mongo_id = resolve_course_id(course_id)
+
+    candidates = [course_id, canonical_slug, mongo_id]
+    for c in candidates:
+        if not c:
+            continue
+        file_path = os.path.join(templates_dir, f"{c}.pdf")
+        if os.path.exists(file_path):
+            return send_from_directory(templates_dir, f"{c}.pdf", mimetype="application/pdf")
+
+    # Fallback: Dynamically generate sample preview PDF so iframe view NEVER returns 404
+    try:
+        pdf_bytes = generate_certificate(course_id, None, "Sample Student")
+        return send_file(
+            io.BytesIO(pdf_bytes),
+            mimetype="application/pdf",
+            as_attachment=False,
+            download_name=f"{course_id}_template_preview.pdf"
+        )
+    except Exception as e:
+        return jsonify({"status": "error", "success": False, "error": str(e)}), 500
+
+
+@achievements.route("/admin/certificate_templates/<course_id>/upload", methods=["POST"])
+@admin_only
+def admin_certificate_templates_upload(course_id):
+    from application.utilities.db_helpers import get_canonical_course_slug, resolve_course_id
+
+    file = request.files.get("template_file") or request.files.get("file")
+    if not file or file.filename == "":
+        return jsonify({"status": "error", "success": False, "error": "No file uploaded"}), 400
+
+    if not file.filename.lower().endswith(".pdf"):
+        return jsonify({"status": "error", "success": False, "error": "Only PDF files allowed"}), 400
+
+    templates_dir = os.path.join(os.path.dirname(__file__), "..", "static", "certificate_templates")
+    os.makedirs(templates_dir, exist_ok=True)
+
+    canonical_slug = get_canonical_course_slug(course_id)
+    mongo_id = resolve_course_id(course_id)
+
+    file_bytes = file.read()
+    save_names = {f"{course_id}.pdf", f"{canonical_slug}.pdf", f"{mongo_id}.pdf"}
+    for fname in save_names:
+        with open(os.path.join(templates_dir, fname), "wb") as f:
+            f.write(file_bytes)
+
+    return jsonify({
+        "status": "success",
+        "success": True,
+        "message": "Template uploaded successfully."
+    })
+
+
+@achievements.route("/admin/certificate_templates/<course_id>/test_generate", methods=["POST"])
+@admin_only
+def admin_certificate_templates_test_generate(course_id):
+    data = request.get_json(silent=True) or request.form
+    student_name = data.get("student_name", "Test Student")
+
+    from application.utilities.cert_generator import generate_certificate
+    try:
+        pdf_bytes = generate_certificate(course_id, None, student_name)
+        return send_file(
+            io.BytesIO(pdf_bytes),
+            mimetype="application/pdf",
+            as_attachment=True,
+            download_name=f"test_{course_id}.pdf"
+        )
+    except Exception as e:
+        return jsonify({"status": "error", "success": False, "error": str(e)}), 500

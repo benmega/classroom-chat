@@ -1081,29 +1081,30 @@ def pass_chapter(user_id):
 @admin_only
 def generate_manual_certificate(user_id):
     import io
-    import os
 
     from application.models.user import User
     from application.utilities.cert_generator import generate_certificate
-    from flask import current_app, send_file
+    from application.utilities.db_helpers import get_canonical_course_slug
+    from flask import send_file
 
     user_obj = db.session.get(User, user_id)
     if not user_obj:
         return {"error": "User not found"}, 404
 
-    # Default template path
-    template_path = os.path.join(current_app.config["BASE_DIR"], "mockups", "Certificate_Samples", "CodeCombat", "Alice_CS1.pdf")
+    data = request.get_json(silent=True) or request.form or {}
+    course_id = data.get("course_id", "cs-1")
     student_name = user_obj.nickname or user_obj.username
 
     try:
-        pdf_bytes = generate_certificate(template_path, None, student_name)
+        pdf_bytes = generate_certificate(course_id, None, student_name)
     except Exception as e:
         return {"error": f"Failed to generate certificate: {e!s}"}, 500
 
     memory_file = io.BytesIO(pdf_bytes)
     memory_file.seek(0)
 
-    filename = f"{student_name}_Certificate.pdf"
+    canonical_slug = get_canonical_course_slug(course_id)
+    filename = f"{student_name}_{canonical_slug}_Certificate.pdf"
 
     return send_file(
         memory_file,
@@ -1111,3 +1112,4 @@ def generate_manual_certificate(user_id):
         as_attachment=True,
         download_name=filename
     )
+

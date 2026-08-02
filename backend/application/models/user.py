@@ -378,7 +378,7 @@ class User(db.Model):
         from .challenge_log import ChallengeLog
 
         total_challenges = ChallengeLog.query.filter(
-            (ChallengeLog.user_id == self.id) & 
+            (ChallengeLog.user_id == self.id) &
             ((ChallengeLog.domain == domain) | (ChallengeLog.course_id == domain))
         ).count()
         return total_challenges  # Modify if you want percentages based on predefined thresholds.
