@@ -134,7 +134,7 @@ const AdminUserDashboard = () => {
                         <div className="hero-name-row">
                             <h2 className="hero-name">{user.nickname || user.username}</h2>
                             <span className="hero-handle">@{user.username}</span>
-                            <Link to={`/profile/${user.username}`} className="hero-profile-link" title="View Public Profile" target="_blank">
+                            <Link to={`/profile/${user.slug}`} className="hero-profile-link" title="View Public Profile" target="_blank">
                                 <ExternalLink size={13} />
                             </Link>
                         </div>
