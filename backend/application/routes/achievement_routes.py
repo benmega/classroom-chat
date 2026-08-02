@@ -232,8 +232,8 @@ def submit_certificate():
         return jsonify({"success": False, "error": "User not found!"}), 400
 
     if request.method == "POST":
-        url = request.form.get("certificate_url")
-        file = request.files.get("certificate_file")
+        data = request.get_json(silent=True) or request.form
+        url = data.get("certificate_url")
 
         # 1. Check URL
         match = re.search(CERT_URL_REGEX, url or "")
@@ -241,46 +241,47 @@ def submit_certificate():
             return jsonify({"success": False, "error": "Invalid certificate URL."}), 200
 
         course_slug = match.group(1)
-        achievement = Achievement.query.filter_by(slug=course_slug).first()
-        if not achievement:
-            return (
-                jsonify(
-                    {
-                        "success": False,
-                        "error": "No matching achievement found for this course.",
-                    }
-                ),
-                200,
-            )
+        
+        from application.utilities.db_helpers import resolve_course_id
+        db_course_id = resolve_course_id(course_slug)
+        
+        achievement = Achievement.query.filter(
+            (Achievement.slug == course_slug) | 
+            (Achievement.source == course_slug) | 
+            (Achievement.slug == db_course_id) | 
+            (Achievement.source == db_course_id)
+        ).first()
+        
+        is_auto_recommended = False
+        recommendation_reason = "No matching achievement found for this course."
+        if achievement:
+            is_auto_recommended = True
+            recommendation_reason = f"Valid certificate URL matching achievement '{achievement.name}'."
+        else:
+            return jsonify({
+                "success": False,
+                "error": "No matching achievement found for this course."
+            }), 200
 
-        # 2. File validation
-        if not file or file.filename == "":
-            return (
-                jsonify({"success": False, "error": "Certificate file is required."}),
-                200,
-            )
-
-        if not allowed_file(file.filename, ALLOWED_EXTENSIONS):
-            return (
-                jsonify(
-                    {
-                        "success": False,
-                        "error": "Invalid file type. Only PDF is allowed.",
-                    }
-                ),
-                200,
-            )
-
-        # 3. Save file
+        # 2. Generate file
+        from application.utilities.cert_generator import generate_certificate
         from flask import current_app
 
-        cert_dir = os.path.join(current_app.config["UPLOAD_FOLDER"], "certificates")
+        cert_dir = os.path.join(current_app.config.get("UPLOAD_FOLDER", os.path.join(current_app.config["BASE_DIR"], "certificates")))
         os.makedirs(cert_dir, exist_ok=True)
         filename = secure_filename(f"{current_user.username}_{achievement.slug}.pdf")
         filepath = os.path.join(cert_dir, filename)
-        file.save(filepath)
 
-        # 4. Create or update cert entry
+        # Use Alice_CS1.pdf as our template
+        template_path = os.path.join(current_app.config["BASE_DIR"], "mockups", "Certificate_Samples", "CodeCombat", "Alice_CS1.pdf")
+        student_name = current_user.nickname or current_user.username
+
+        try:
+            generate_certificate(template_path, filepath, student_name)
+        except Exception as e:
+            return jsonify({"success": False, "error": f"Failed to generate certificate: {e}"}), 500
+
+        # 3. Create or update cert entry
         cert = UserCertificate.query.filter_by(
             user_id=current_user.id, achievement_id=achievement.id
         ).first()
@@ -291,11 +292,17 @@ def submit_certificate():
                 achievement_id=achievement.id,
                 url=url,
                 file_path=filepath,
+                reviewed=False,
+                is_auto_recommended=is_auto_recommended,
+                recommendation_reason=recommendation_reason
+
             )
             db.session.add(cert)
         else:
             cert.url = url
             cert.file_path = filepath
+            cert.reviewed = True
+            cert.reviewed_at = datetime.utcnow()
 
         db.session.commit()
 

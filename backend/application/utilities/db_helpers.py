@@ -13,6 +13,28 @@ from flask import abort
 
 logger = logging.getLogger(__name__)
 
+NODE_MAP = {
+    "cc-junior": "65f32b6c87c07dbeb5ba1936",
+    "cs-1": "560f1a9f22961295f9427742",
+    "oz-1": "5d41d731a8d1836b5aa3cba1",
+    "gd-1": "5789587aad86a6efb573701e",
+    "cs-2": "5632661322961295f9428638",
+    "oz-2": "5d8a57abe8919b28d5113af1",
+    "wd-1": "5789587aad86a6efb573701f",
+    "cs-3": "56462f935afde0c6fd30fc8c",
+    "oz-3": "5e27600d1c9d440000ac3ee7",
+    "gd-2": "57b621e7ad86a6efb5737e64",
+    "wd-2": "5789587aad86a6efb5737020",
+    "cs-4": "56462f935afde0c6fd30fc8d",
+    "oz-4": "5f0cb0b7a2492bba0b3520df",
+    "gd-3": "5a0df02b8f2391437740f74f",
+    "cs-5": "569ed916efa72b0ced971447",
+    "cs-6": "5817d673e85d1220db624ca4",
+}
+
+def resolve_course_id(course_identifier):
+    return NODE_MAP.get(course_identifier, course_identifier)
+
 
 def get_user(identifier):
     """

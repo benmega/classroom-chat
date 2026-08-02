@@ -208,3 +208,60 @@ def delete_note(note_id):
             ),
             500,
         )
+
+
+@notes_bp.route("/kiosk-upload", methods=["POST"])
+@require_login
+@limiter.limit("500 per day")
+def kiosk_upload_note():
+    user_id = session.get("user")
+    current_user = get_user(user_id)
+    if not current_user or not getattr(current_user, "is_admin", False):
+        return jsonify({"status": "error", "error": "Unauthorized"}), 403
+
+    target_student_id = request.form.get("student_id")
+    if not target_student_id:
+        return jsonify({"status": "error", "error": "No student specified"}), 400
+
+    target_user = db.session.get(User, target_student_id)
+    if not target_user:
+        return jsonify({"status": "error", "error": "Student not found"}), 404
+
+    if "note" in request.files:
+        file = request.files["note"]
+    elif "note_image" in request.files:
+        file = request.files["note_image"]
+    else:
+        return jsonify({"status": "error", "error": "No file provided"}), 400
+
+    if file and allowed_file(file.filename):
+        s3_client = get_s3_client()
+        aws_configured = (
+            os.environ.get("AWS_ACCESS_KEY_ID") is not None
+            and os.environ.get("AWS_SECRET_ACCESS_KEY") is not None
+        )
+        s3_key = None
+        use_s3 = current_app.config.get("USE_S3", aws_configured)
+
+        if s3_client and use_s3:
+            s3_key = handle_note_s3_upload(s3_client, file, target_user)
+
+        db_filename = s3_key
+        if not db_filename:
+            file.seek(0)
+            db_filename = handle_local_note_upload(file)
+
+        if db_filename:
+            new_note = Note(user_id=target_user.id, filename=db_filename)
+            db.session.add(new_note)
+            db.session.commit()
+
+            return jsonify(
+                {
+                    "status": "success",
+                    "message": "Note uploaded successfully.",
+                    "note": {"id": new_note.id, "url": new_note.url},
+                }
+            )
+
+    return jsonify({"status": "error", "error": "Upload failed"}), 500

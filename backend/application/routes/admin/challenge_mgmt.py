@@ -54,6 +54,7 @@ def bulk_add_challenges():
             difficulty=difficulty,
             value=value,
             course_id=course_id,
+            sequence=item.get("sequence"),
             description=description,
             is_active=True,
         )
@@ -72,3 +73,59 @@ def bulk_add_challenges():
         "skipped": skipped_count,
         "errors": errors,
     }
+
+
+@admin_bp.route("/challenges/<course_id>", methods=["GET"])
+@admin_only
+@api_response
+def get_challenges_for_course(course_id):
+    domain = request.args.get("domain")
+    query = Challenge.query.filter_by(course_id=course_id)
+    if domain:
+        query = query.filter_by(domain=domain)
+
+    # Sort by sequence (handling nulls) then id
+    challenges = query.order_by(Challenge.sequence.asc(), Challenge.id.asc()).all()
+
+    return {
+        "challenges": [
+            {
+                "id": c.id,
+                "name": c.name,
+                "slug": c.slug,
+                "domain": c.domain,
+                "sequence": c.sequence,
+                "description": c.description
+            }
+            for c in challenges
+        ]
+    }
+
+
+@admin_bp.route("/challenges/reorder", methods=["PUT"])
+@admin_only
+@api_response
+def reorder_challenges():
+    data = request.get_json()
+    if not data or "updates" not in data:
+        return "Updates list is required", 400
+
+    updates = data.get("updates", [])
+
+    updated_count = 0
+    for update in updates:
+        chal_id = update.get("id")
+        seq = update.get("sequence")
+        if chal_id is not None and seq is not None:
+            chal = Challenge.query.get(chal_id)
+            if chal:
+                chal.sequence = seq
+                updated_count += 1
+
+    try:
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        return f"Database error: {e!s}", 500
+
+    return {"message": f"Successfully updated sequences for {updated_count} challenges."}

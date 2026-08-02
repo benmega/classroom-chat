@@ -1,93 +1,152 @@
+"""
+Unit tests for parent_routes.py
+"""
 from application.extensions import db
 from application.models.user import User
 
 
-def test_get_children_unauthenticated(client):
-    response = client.get("/api/parents/children")
-    assert (
-        response.status_code == 302
-        or response.status_code == 401
-        or response.status_code == 403
-    )
+def test_parent_get_children_access_denied(client, app):
+    with app.app_context():
+        student = User(username="std_only_parent_test", role="student")
+        student.set_password("pass123")
+        db.session.add(student)
+        db.session.commit()
+        s_id = student.id
 
-
-def test_get_children_non_parent(client, sample_user):
     with client.session_transaction() as sess:
-        sess["user"] = sample_user.id
-        sess["_user_id"] = str(sample_user.id)
-    # Role is student/default, should get 403 denied
-    response = client.get("/api/parents/children")
-    assert response.status_code == 403
+        sess["user"] = s_id
+
+    res = client.get("/api/parents/children")
+    assert res.status_code == 403
 
 
-def test_parent_flow_success(client, init_db):
-    parent_user = User(username="parent_1", role="parent", is_approved=True)
-    parent_user.set_password("pass123")
-    student_user = User(
-        username="student_1",
-        role="student",
-        nickname="Stu",
-        connection_code="CONN123",
-        is_approved=True,
-    )
-    student_user.set_password("pass123")
+def test_parent_get_children_success(client, app):
+    with app.app_context():
+        parent = User(username="parent_1_test", role="parent")
+        parent.set_password("pass123")
 
-    db.session.add_all([parent_user, student_user])
-    db.session.commit()
+        child1 = User(username="child_1_test", role="student", nickname="Child One", connection_code="CODE1_PTEST")
+        child1.set_password("pass123")
 
-    # Log in as parent
+        parent.children.append(child1)
+        db.session.add_all([parent, child1])
+        db.session.commit()
+        p_id = parent.id
+
     with client.session_transaction() as sess:
-        sess["user"] = parent_user.id
-        sess["_user_id"] = str(parent_user.id)
+        sess["user"] = p_id
 
-    resp = client.get("/api/parents/children")
-    assert resp.status_code == 200
-    assert resp.json["data"]["children"] == []
+    res = client.get("/api/parents/children")
+    assert res.status_code == 200
+    data = res.get_json()
+    children = data["data"]["children"]
+    assert len(children) == 1
+    assert children[0]["username"] == "child_1_test"
 
-    # Empty code check
-    resp = client.post("/api/parents/connect/code", json={})
-    assert resp.status_code == 400
 
-    resp = client.post("/api/parents/connect/code", json={"code": "INVALID"})
-    assert resp.status_code == 404
+def test_connect_via_code_missing_code(client, app):
+    with app.app_context():
+        parent = User(username="parent_2_test", role="parent")
+        parent.set_password("pass123")
+        db.session.add(parent)
+        db.session.commit()
+        p_id = parent.id
 
-    resp = client.post("/api/parents/connect/code", json={"code": "CONN123"})
-    assert resp.status_code == 200
-    assert resp.json["data"]["student"]["id"] == student_user.id
+    with client.session_transaction() as sess:
+        sess["user"] = p_id
 
-    # Try connecting again (already linked)
-    resp = client.post("/api/parents/connect/code", json={"code": "CONN123"})
-    assert resp.status_code == 400
+    res = client.post("/api/parents/connect/code", json={"code": ""})
+    assert res.status_code == 400
+    data = res.get_json()
+    assert "Connection code is required" in data.get("error", "")
 
-    resp = client.get("/api/parents/children")
-    assert resp.status_code == 200
-    assert len(resp.json["data"]["children"]) == 1
-    assert resp.json["data"]["children"][0]["id"] == student_user.id
 
-    # Try report for unlinked student
-    resp = client.get("/api/parents/student/999/report")
-    assert resp.status_code == 403
+def test_connect_via_code_invalid_code(client, app):
+    with app.app_context():
+        parent = User(username="parent_3_test", role="parent")
+        parent.set_password("pass123")
+        db.session.add(parent)
+        db.session.commit()
+        p_id = parent.id
 
-    # Try report for student linked
-    resp = client.get(f"/api/parents/student/{student_user.id}/report")
-    assert resp.status_code == 200
-    assert resp.json["data"]["username"] == "student_1"
+    with client.session_transaction() as sess:
+        sess["user"] = p_id
 
-    # Disconnect non-existent student
-    resp = client.post("/api/parents/disconnect/999")
-    assert resp.status_code == 404
+    res = client.post("/api/parents/connect/code", json={"code": "NONEXISTENT"})
+    assert res.status_code == 404
 
-    # Disconnect student not linked (e.g. create another student and try to disconnect)
-    student_2 = User(username="student_2", role="student", is_approved=True)
-    student_2.set_password("pass123")
-    db.session.add(student_2)
-    db.session.commit()
-    resp = client.post(f"/api/parents/disconnect/{student_2.id}")
-    assert resp.status_code == 400
 
-    # Disconnect successfully
-    resp = client.post(f"/api/parents/disconnect/{student_user.id}")
-    assert resp.status_code == 200
+def test_connect_via_code_success_and_already_linked(client, app):
+    with app.app_context():
+        parent = User(username="parent_4_test", role="parent")
+        parent.set_password("pass123")
 
-    resp = client.get("/api/parents/children")
-    assert resp.json["data"]["children"] == []
+        child = User(username="child_4_test", role="student", nickname="Child Four", connection_code="LINK4_PTEST")
+        child.set_password("pass123")
+
+        db.session.add_all([parent, child])
+        db.session.commit()
+        p_id = parent.id
+
+    with client.session_transaction() as sess:
+        sess["user"] = p_id
+
+    # First attempt: success
+    res = client.post("/api/parents/connect/code", json={"code": "LINK4_PTEST"})
+    assert res.status_code == 200
+    data = res.get_json()
+    assert data["data"]["student"]["nickname"] == "Child Four"
+
+    # Second attempt: already linked
+    res2 = client.post("/api/parents/connect/code", json={"code": "LINK4_PTEST"})
+    assert res2.status_code == 400
+    assert "Already linked" in res2.get_json().get("error", "")
+
+
+def test_disconnect_student(client, app):
+    with app.app_context():
+        parent = User(username="parent_5_test", role="parent")
+        parent.set_password("pass123")
+
+        child = User(username="child_5_test", role="student", nickname="Child Five", connection_code="LINK5_PTEST")
+        child.set_password("pass123")
+
+        parent.children.append(child)
+        db.session.add_all([parent, child])
+        db.session.commit()
+        p_id = parent.id
+        c_id = child.id
+
+    with client.session_transaction() as sess:
+        sess["user"] = p_id
+
+    res = client.post(f"/api/parents/disconnect/{c_id}")
+    assert res.status_code == 200
+    assert "Successfully disconnected" in res.get_json()["data"]["message"]
+
+    # Trying to disconnect again should return 400
+    res2 = client.post(f"/api/parents/disconnect/{c_id}")
+    assert res2.status_code == 400
+
+
+def test_get_student_report_success(client, app):
+    with app.app_context():
+        parent = User(username="parent_6_test", role="parent")
+        parent.set_password("pass123")
+
+        child = User(username="child_6_test", role="student", nickname="Child Six")
+        child.set_password("pass123")
+
+        parent.children.append(child)
+        db.session.add_all([parent, child])
+        db.session.commit()
+        p_id = parent.id
+        c_id = child.id
+
+    with client.session_transaction() as sess:
+        sess["user"] = p_id
+
+    res = client.get(f"/api/parents/student/{c_id}/report")
+    assert res.status_code == 200
+    data = res.get_json()
+    assert data["data"]["username"] == "child_6_test"

@@ -175,13 +175,12 @@ def test_submit_certificate_get(client, init_db, sample_user, mock_render_templa
     assert b"Mocked Template Content" in response.data
 
 
-def test_submit_certificate_valid(client, init_db, sample_user, sample_achievement):
+@patch("application.utilities.cert_generator.generate_certificate")
+def test_submit_certificate_valid(mock_gen, client, init_db, sample_user, sample_achievement):
     """Test submitting a valid certificate via AJAX."""
     with client.session_transaction() as sess:
         sess["user"] = sample_user.id
 
-    pdf_data = b"%PDF-1.4 mock pdf content"
-    pdf_file = (BytesIO(pdf_data), "certificate.pdf")
     valid_url = (
         f"https://codecombat.com/certificates/abc123?course={sample_achievement.slug}"
     )
@@ -189,7 +188,7 @@ def test_submit_certificate_valid(client, init_db, sample_user, sample_achieveme
     # Use X-Requested-With to get a JSON response
     response = client.post(
         "/achievements/submit_certificate",
-        data={"certificate_url": valid_url, "certificate_file": pdf_file},
+        data={"certificate_url": valid_url},
         content_type="multipart/form-data",
         headers={"X-Requested-With": "XMLHttpRequest"},
     )
@@ -202,6 +201,8 @@ def test_submit_certificate_valid(client, init_db, sample_user, sample_achieveme
     cert = UserCertificate.query.filter_by(url=valid_url).first()
     assert cert is not None
     assert cert.user_id == sample_user.id
+    assert cert.reviewed is False
+    assert cert.is_auto_recommended is True
 
 
 def test_submit_certificate_invalid_url(client, init_db, sample_user):
@@ -210,13 +211,11 @@ def test_submit_certificate_invalid_url(client, init_db, sample_user):
         sess["user"] = sample_user.id
 
     initial_count = db.session.query(UserCertificate).count()
-    pdf_file = (BytesIO(b"pdf"), "certificate.pdf")
 
     response = client.post(
         "/achievements/submit_certificate",
         data={
             "certificate_url": "https://invalid-url.com",
-            "certificate_file": pdf_file,
         },
         content_type="multipart/form-data",
         headers={"X-Requested-With": "XMLHttpRequest"},
@@ -237,13 +236,11 @@ def test_submit_certificate_no_matching_achievement(client, init_db, sample_user
         sess["user"] = sample_user.id
 
     initial_count = db.session.query(UserCertificate).count()
-    pdf_file = (BytesIO(b"pdf"), "certificate.pdf")
 
     response = client.post(
         "/achievements/submit_certificate",
         data={
             "certificate_url": "https://codecombat.com/certificates/abc123?course=nonexistent-course",
-            "certificate_file": pdf_file,
         },
         content_type="multipart/form-data",
         headers={"X-Requested-With": "XMLHttpRequest"},
@@ -257,56 +254,12 @@ def test_submit_certificate_no_matching_achievement(client, init_db, sample_user
     assert "No matching achievement" in response.json.get("error", "")
 
 
-def test_submit_certificate_no_file(client, init_db, sample_user, sample_achievement):
-    """Test submitting certificate without file."""
-    with client.session_transaction() as sess:
-        sess["user"] = sample_user.id
-
-    response = client.post(
-        "/achievements/submit_certificate",
-        data={
-            "certificate_url": f"https://codecombat.com/certificates/abc123?course={sample_achievement.slug}"
-        },
-        content_type="multipart/form-data",
-        headers={"X-Requested-With": "XMLHttpRequest"},
-    )
-
-    assert response.status_code == 200
-
-    assert response.is_json
-    assert response.json.get("success") is False
-    assert "required" in response.json.get("error", "").lower()
 
 
-def test_submit_certificate_invalid_file_type(
-    client, init_db, sample_user, sample_achievement
-):
-    """Test submitting certificate with invalid file type."""
-    with client.session_transaction() as sess:
-        sess["user"] = sample_user.id
 
-    initial_count = db.session.query(UserCertificate).count()
-    txt_file = (BytesIO(b"text"), "certificate.txt")
-
-    response = client.post(
-        "/achievements/submit_certificate",
-        data={
-            "certificate_url": f"https://codecombat.com/certificates/abc123?course={sample_achievement.slug}",
-            "certificate_file": txt_file,
-        },
-        content_type="multipart/form-data",
-        headers={"X-Requested-With": "XMLHttpRequest"},
-    )
-
-    assert response.status_code == 200
-    assert db.session.query(UserCertificate).count() == initial_count
-
-    assert response.is_json
-    assert response.json.get("success") is False
-
-
+@patch("application.utilities.cert_generator.generate_certificate")
 def test_submit_certificate_update_existing(
-    client, init_db, sample_user, sample_achievement
+    mock_gen, client, init_db, sample_user, sample_achievement
 ):
     """Test updating an existing certificate submission."""
     with client.session_transaction() as sess:
@@ -325,14 +278,13 @@ def test_submit_certificate_update_existing(
     old_id = initial_cert.id
 
     # Submit new data
-    pdf_file = (BytesIO(b"new pdf"), "new.pdf")
     new_url = (
         f"https://codecombat.com/certificates/new?course={sample_achievement.slug}"
     )
 
     response = client.post(
         "/achievements/submit_certificate",
-        data={"certificate_url": new_url, "certificate_file": pdf_file},
+        data={"certificate_url": new_url},
         content_type="multipart/form-data",
         headers={"X-Requested-With": "XMLHttpRequest"},
     )
@@ -344,6 +296,7 @@ def test_submit_certificate_update_existing(
     updated_cert = db.session.get(UserCertificate, old_id)
     assert updated_cert.url == new_url
     assert updated_cert.file_path != "old.pdf"
+    assert updated_cert.reviewed is True
 
 
 def test_submit_certificate_no_user(client, init_db):
@@ -353,7 +306,6 @@ def test_submit_certificate_no_user(client, init_db):
         "/achievements/submit_certificate",
         data={
             "certificate_url": "https://codecombat.com/certificates/abc?course=test",
-            "certificate_file": (BytesIO(b"test"), "test.pdf"),
         },
         content_type="multipart/form-data",
         headers={"X-Requested-With": "XMLHttpRequest"},
