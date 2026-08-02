@@ -99,8 +99,9 @@ def reject_user(user_id):
 @api_response
 def toggle_user_chat(user_id):
     user_obj = db.get_or_404(User, user_id)
-    # Default is True, if not set it acts as True
-    current_status = getattr(user_obj, "can_chat", True)
+    # Treat NULL as True (chat enabled) — getattr fallback does NOT work on
+    # SQLAlchemy columns because the attribute always exists (value is just None).
+    current_status = user_obj.can_chat if user_obj.can_chat is not None else True
     user_obj.can_chat = not current_status
     db.session.commit()
 

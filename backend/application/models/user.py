@@ -198,7 +198,7 @@ class User(db.Model):
             if self.last_activity_time
             else None,
             "achievement_count": len(self.achievements),
-            "can_chat": getattr(self, "can_chat", True),
+            "can_chat": self.can_chat if self.can_chat is not None else True,
         }
 
     def to_dict_summary(self, precomputed_progress=None):
@@ -297,7 +297,7 @@ class User(db.Model):
             }
             if self.projects
             else None,
-            "can_chat": getattr(self, "can_chat", True),
+            "can_chat": self.can_chat if self.can_chat is not None else True,
         }
         return d
 

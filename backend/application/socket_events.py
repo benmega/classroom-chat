@@ -129,7 +129,7 @@ def handle_send_message(data):
         if len(content) > 500:
             return {"success": False, "error": "Message too long"}
 
-        if not getattr(user, "can_chat", True):
+        if user.can_chat is False:
             return {"success": False, "error": "You are currently muted"}
 
         from .models.message import Message
