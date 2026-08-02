@@ -322,9 +322,18 @@
     gap: 0.5rem;
 }
 
-.assign-details {
+.assign-row {
     display: flex;
     justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    gap: 0.75rem;
+}
+
+.assign-details {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
     font-size: 0.9rem;
 }
 
@@ -335,6 +344,12 @@
 .assign-id-val {
     font-family: monospace;
     color: var(--text-primary);
+}
+
+.assign-instance-id {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    font-family: monospace;
 }
 
 .badge-course {
@@ -659,6 +674,44 @@
     font-family: monospace;
     font-size: 1.4rem;
     letter-spacing: 2px;
+}
+
+.roster-join-code-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-subtle);
+    border-radius: 10px;
+    padding: 0.75rem 1rem;
+    margin-bottom: 1.25rem;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.join-code-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+}
+
+.join-code-badge {
+    font-family: monospace;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--primary-accessible);
+    background: rgba(59, 130, 246, 0.1);
+    padding: 2px 8px;
+    border-radius: 6px;
+    letter-spacing: 1px;
+}
+
+.join-code-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 
 /* Tabs Styles */

@@ -4,14 +4,14 @@ import client from '../../api/client';
 import toast from 'react-hot-toast';
 import { 
     ChevronLeft, Users, RefreshCw, Trash2, 
-    Check, Plus, Settings, Globe, Link2, BookOpen, Camera
+    Check, Plus, Settings, Globe, Link2, BookOpen, Key, Copy
 } from 'lucide-react';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
 import Chat from '../Chat/Chat';
 import Skeleton from '../../components/common/Skeleton';
 import SmartImage from '../../components/common/SmartImage';
 import { getApiUrl } from '../../utils/apiUrl';
-import { BulkConnectionCardsModal, ConnectCourseModal } from '../../components/admin/AdminModals';
+import { BulkConnectionCardsModal, AddCourseModal } from '../../components/admin/AdminModals';
 import './AdminClassDashboard.css';
 
 const getLanguageIconUrl = (language) => {
@@ -36,10 +36,11 @@ const AdminClassDashboard = () => {
     const [activeTab, setActiveTab] = useState('stream');
     const [joinCode, setJoinCode] = useState(null);
 
-    // Connection cards states
+    // Connection cards & course states
     const [activeModal, setActiveModal] = useState(null);
     const [classroomCards, setClassroomCards] = useState([]);
     const [isFetchingCards, setIsFetchingCards] = useState(false);
+    const [courses, setCourses] = useState([]);
 
     const fetchClassroomDetails = useCallback(async () => {
         setIsLoading(true);
@@ -75,10 +76,77 @@ const AdminClassDashboard = () => {
         }
     }, []);
 
+    const fetchCourses = useCallback(async () => {
+        try {
+            const res = await client.get('/api/admin/crud/courses');
+            setCourses(res.data.data || []);
+        } catch (err) {
+            console.error('Failed to fetch courses list', err);
+        }
+    }, []);
+
     useEffect(() => {
         fetchClassroomDetails();
         fetchAllStudents();
-    }, [fetchClassroomDetails, fetchAllStudents]);
+        fetchCourses();
+    }, [fetchClassroomDetails, fetchAllStudents, fetchCourses]);
+
+    const handleAddCourse = async ({ course_id, instance_id }) => {
+        setFormLoading(true);
+        try {
+            const finalInstanceId = instance_id || `ci_${classId}_${course_id}_${Date.now()}`;
+            const res = await client.post('/api/admin/crud/courseinstances', {
+                id: finalInstanceId,
+                classroom_id: classId,
+                course_id: course_id
+            });
+            if (res.data) {
+                toast.success('Course connected successfully');
+                setActiveModal(null);
+                fetchClassroomDetails();
+            }
+        } catch (err) {
+            toast.error(err.response?.data?.error || 'Failed to connect course.');
+        } finally {
+            setFormLoading(false);
+        }
+    };
+
+    const handleDisconnectCourse = async (instanceId) => {
+        if (!window.confirm('Are you sure you want to disconnect this course from the classroom?')) return;
+        setFormLoading(true);
+        try {
+            const res = await client.delete(`/api/admin/crud/courseinstances/${instanceId}`);
+            if (res.data) {
+                toast.success('Course disconnected successfully');
+                fetchClassroomDetails();
+            }
+        } catch (err) {
+            toast.error(err.response?.data?.error || 'Failed to disconnect course.');
+        } finally {
+            setFormLoading(false);
+        }
+    };
+
+    const handleRegenerateJoinCode = async () => {
+        if (!window.confirm('Are you sure you want to regenerate the join code? The previous code will no longer work.')) {
+            return;
+        }
+        setFormLoading(true);
+        try {
+            const res = await client.post(`/api/admin/classrooms/${classId}/join-code/regenerate`);
+            const newCode = res.data?.join_code || res.data?.data?.join_code;
+            if (newCode) {
+                setJoinCode(newCode);
+                toast.success('Join code regenerated successfully!');
+            }
+        } catch (err) {
+            console.error('Failed to regenerate join code:', err);
+            toast.error(err.response?.data?.error || 'Failed to regenerate join code.');
+        } finally {
+            setFormLoading(false);
+        }
+    };
 
     const fetchClassroomCards = async () => {
         setIsFetchingCards(true);
@@ -173,28 +241,6 @@ const AdminClassDashboard = () => {
         }
     };
 
-    const handleConnectCourse = async (e) => {
-        e.preventDefault();
-        setFormLoading(true);
-        const formData = new FormData(e.target);
-        const data = {
-            classroom_id: classId,
-            course_id: formData.get('course_id'),
-            id: formData.get('instance_id')
-        };
-
-        try {
-            await client.post('/api/admin/courseinstances', data);
-            toast.success('Course connected successfully');
-            setActiveModal(null);
-            fetchClassroomDetails();
-        } catch (err) {
-            toast.error(err.response?.data?.error || 'Failed to connect course.');
-        } finally {
-            setFormLoading(false);
-        }
-    };
-
     if (isLoading) {
         return (
             <div className="admin-class-dashboard">
@@ -253,10 +299,6 @@ const AdminClassDashboard = () => {
                             <span className="join-code-val">{joinCode}</span>
                         </div>
                     )}
-                    <button className="primary-btn" onClick={() => navigate(`/admin/classes/${classId}/kiosk`)} title="Open Kiosk Upload Mode">
-                        <Camera size={16} style={{ marginRight: '6px' }} />
-                        Launch Kiosk Mode
-                    </button>
                     <button className="secondary-btn" onClick={async () => { await fetchClassroomDetails(); setActiveModal('bulk_connection_cards'); }}>
                         Print Connection Cards
                     </button>
@@ -286,35 +328,49 @@ const AdminClassDashboard = () => {
                     <div className="tab-pane classwork-pane">
                         <div className="admin-class-grid single-column">
                             <div className="control-panel-card assignments-card">
-                        <div className="card-custom-header">
-                            <div className="title-section">
-                                <BookOpen size={20} />
-                                <h3>Connected Courses</h3>
-                            </div>
-                            <button 
-                                type="button" 
-                                className="btn-action-sm primary"
-                                onClick={() => setActiveModal('connect_course')}
-                                title="Connect Course"
-                            >
-                                <Plus size={16} />
-                            </button>
-                        </div>
-                        <div className="assignments-list">
-                            {classroom.course_assignments && classroom.course_assignments.length > 0 ? (
-                                classroom.course_assignments.map(assign => (
-                                    <div key={assign.id} className="assignment-item">
-                                        <div className="assign-details">
-                                            <span className="assign-id-lbl">Course</span>
-                                            <span className="assign-id-val badge-course">{assign.course_name || assign.course_id || 'None'}</span>
-                                        </div>
+                                <div className="card-custom-header">
+                                    <div className="title-section">
+                                        <BookOpen size={20} />
+                                        <h3>Connected Courses</h3>
                                     </div>
-                                ))
-                            ) : (
-                                <div className="empty-roster-msg">No courses connected.</div>
-                            )}
-                        </div>
-                    </div>
+                                    <button 
+                                        type="button" 
+                                        className="btn-action-sm primary add-course-btn"
+                                        onClick={() => setActiveModal('add_course')}
+                                        title="Add Connected Course"
+                                        aria-label="Add Connected Course"
+                                    >
+                                        <Plus size={16} /> Add Course
+                                    </button>
+                                </div>
+                                <div className="assignments-list">
+                                    {classroom.course_assignments && classroom.course_assignments.length > 0 ? (
+                                        classroom.course_assignments.map(assign => (
+                                            <div key={assign.id} className="assignment-item">
+                                                <div className="assign-row">
+                                                    <div className="assign-details">
+                                                        <span className="assign-id-lbl">Course</span>
+                                                        <span className="assign-id-val badge-course">{assign.course_name || assign.course_id || 'None'}</span>
+                                                        {assign.id && <span className="assign-instance-id">({assign.id})</span>}
+                                                    </div>
+                                                    <button
+                                                        type="button"
+                                                        className="btn-action-sm danger unenroll-btn"
+                                                        onClick={() => handleDisconnectCourse(assign.id)}
+                                                        disabled={formLoading}
+                                                        title="Disconnect Course"
+                                                        aria-label="Disconnect Course"
+                                                    >
+                                                        <Trash2 size={14} /> Remove
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <div className="empty-roster-msg">No courses connected.</div>
+                                    )}
+                                </div>
+                            </div>
                         </div>
                     </div>
                 )}
@@ -335,6 +391,40 @@ const AdminClassDashboard = () => {
                             onChange={(e) => setRosterSearchQuery(e.target.value)}
                             className="roster-search-input"
                         />
+                    </div>
+
+                    <div className="roster-join-code-bar">
+                        <div className="join-code-info">
+                            <Key size={18} />
+                            <span>Classroom Join Code: <strong className="join-code-badge">{joinCode || 'None'}</strong></span>
+                        </div>
+                        <div className="join-code-actions">
+                            <button 
+                                type="button"
+                                className="btn-action-sm secondary copy-code-btn"
+                                onClick={() => {
+                                    if (joinCode) {
+                                        navigator.clipboard.writeText(joinCode);
+                                        toast.success('Join code copied to clipboard!');
+                                    }
+                                }}
+                                disabled={!joinCode}
+                                title="Copy Join Code"
+                                aria-label="Copy Join Code"
+                            >
+                                <Copy size={14} /> Copy Code
+                            </button>
+                            <button 
+                                type="button"
+                                className="btn-action-sm secondary regenerate-code-btn"
+                                onClick={handleRegenerateJoinCode}
+                                disabled={formLoading}
+                                title="Regenerate Join Code"
+                                aria-label="Regenerate Join Code"
+                            >
+                                <RefreshCw size={14} /> Regenerate
+                            </button>
+                        </div>
                     </div>
 
                     <div className="roster-list-container">
@@ -409,10 +499,8 @@ const AdminClassDashboard = () => {
                         <div className="admin-class-grid single-column centered-column">
                             <div className="control-panel-card settings-card">
                         <div className="card-custom-header">
-                            <div className="title-section">
-                                <Settings size={20} />
-                                <h3>Classroom Settings</h3>
-                            </div>
+                            <Settings size={20} />
+                            <h3>Classroom Settings</h3>
                         </div>
 
                         <form onSubmit={handleUpdateSettings} className="settings-form">
@@ -453,10 +541,8 @@ const AdminClassDashboard = () => {
                     </div>
                             <div className="control-panel-card danger-zone-card">
                         <div className="card-custom-header">
-                            <div className="title-section">
-                                <Trash2 size={20} />
-                                <h3>Danger Zone</h3>
-                            </div>
+                            <Trash2 size={20} />
+                            <h3>Danger Zone</h3>
                         </div>
                         <p className="danger-zone-desc">Deleting a classroom removes the classroom instance. Students remain active users in the system but will be unlinked from this group.</p>
                         <button 
@@ -482,10 +568,11 @@ const AdminClassDashboard = () => {
                 isFetchingCards={isFetchingCards}
                 fetchClassroomCards={fetchClassroomCards}
             />
-            <ConnectCourseModal
-                isOpen={activeModal === 'connect_course'}
+            <AddCourseModal
+                isOpen={activeModal === 'add_course'}
                 onClose={() => setActiveModal(null)}
-                onSubmit={handleConnectCourse}
+                onSubmit={handleAddCourse}
+                courses={courses}
                 loading={formLoading}
             />
         </div>

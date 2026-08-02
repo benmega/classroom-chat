@@ -629,21 +629,87 @@ export const BulkConnectionCardsModal = ({ isOpen, onClose, classrooms, fetchCla
     );
 };
 
-export const ConnectCourseModal = ({ isOpen, onClose, onSubmit, loading }) => (
-    <Modal isOpen={isOpen} onClose={onClose} title="Connect Course">
-        <form onSubmit={onSubmit} className="admin-form" noValidate>
-            <div className="form-group">
-                <label htmlFor="course_id">Course ID</label>
-                <input id="course_id" type="text" name="course_id" required placeholder="e.g. IntroToPython" />
-            </div>
-            <div className="form-group">
-                <label htmlFor="instance_id">Instance ID</label>
-                <input id="instance_id" type="text" name="instance_id" required placeholder="e.g. 678b56dc... or random unique ID" />
-                <small>The unique instance ID for this course mapping.</small>
-            </div>
-            <button type="submit" className="btn-primary" disabled={loading}>
-                {loading ? 'Connecting...' : 'Connect Course'}
-            </button>
-        </form>
-    </Modal>
-);
+export const AddCourseModal = ({ isOpen, onClose, onSubmit, courses = [], loading }) => {
+    const [selectedCourseId, setSelectedCourseId] = useState('');
+    const [instanceId, setInstanceId] = useState('');
+    const [customCourseId, setCustomCourseId] = useState('');
+
+    useEffect(() => {
+        if (isOpen) {
+            setSelectedCourseId('');
+            setInstanceId('');
+            setCustomCourseId('');
+        }
+    }, [isOpen]);
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        const finalCourseId = selectedCourseId === 'custom' ? customCourseId.trim() : selectedCourseId;
+        if (!finalCourseId) return;
+        onSubmit({ course_id: finalCourseId, instance_id: instanceId.trim() || undefined });
+    };
+
+    return (
+        <Modal isOpen={isOpen} onClose={onClose} title="Connect Course to Classroom">
+            <form onSubmit={handleSubmit} className="admin-form" noValidate>
+                <div className="form-group">
+                    <label htmlFor="course-select">Select Course</label>
+                    <select
+                        id="course-select"
+                        value={selectedCourseId}
+                        onChange={(e) => setSelectedCourseId(e.target.value)}
+                        required
+                    >
+                        <option value="">-- Select a Course --</option>
+                        {courses.map(course => (
+                            <option key={course.id} value={course.id}>
+                                {course.name ? `${course.name} (${course.id})` : course.id}
+                            </option>
+                        ))}
+                        <option value="custom">-- Enter Custom Course ID --</option>
+                    </select>
+                </div>
+
+                {selectedCourseId === 'custom' && (
+                    <div className="form-group">
+                        <label htmlFor="custom-course-id">Custom Course ID</label>
+                        <input
+                            id="custom-course-id"
+                            type="text"
+                            value={customCourseId}
+                            onChange={(e) => setCustomCourseId(e.target.value)}
+                            placeholder="e.g. Python_Level_1"
+                            required
+                        />
+                    </div>
+                )}
+
+                <div className="form-group">
+                    <label htmlFor="instance-id">Instance ID (Optional Unique Identifier)</label>
+                    <input
+                        id="instance-id"
+                        type="text"
+                        value={instanceId}
+                        onChange={(e) => setInstanceId(e.target.value)}
+                        placeholder="e.g. Sat1030CS4PY (Leave blank to auto-generate)"
+                    />
+                    <small>Custom instance identifier if required, otherwise auto-generated.</small>
+                </div>
+
+                <div className="modal-actions">
+                    <button type="button" className="btn-secondary" onClick={onClose} disabled={loading}>
+                        Cancel
+                    </button>
+                    <button 
+                        type="submit" 
+                        className="btn-primary" 
+                        disabled={loading || !selectedCourseId || (selectedCourseId === 'custom' && !customCourseId.trim())}
+                    >
+                        {loading ? 'Connecting...' : 'Connect Course'}
+                    </button>
+                </div>
+            </form>
+        </Modal>
+    );
+};
+
