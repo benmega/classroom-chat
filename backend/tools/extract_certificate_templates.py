@@ -50,7 +50,7 @@ def process_template(input_path, output_path, is_ozaria=False):
 
     doc = fitz.open(input_path)
     page = doc[0]
-    # Ozaria name area: y=205–250; CodeCombat name area: y=190–255
+    # Ozaria name area: y=205-250; CodeCombat name area: y=190-255
     rect = fitz.Rect(0, 205, page.rect.width, 250) if is_ozaria else fitz.Rect(0, 190, page.rect.width, 255)
 
     page.draw_rect(rect, color=(1, 1, 1), fill=(1, 1, 1))
