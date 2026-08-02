@@ -22,7 +22,10 @@ const ProfileHeader = ({ target, isOwner, pfpInputRef, onPfpChange, editLink }) 
                 <div role="button" tabIndex={0} 
                     className={`avatar-wrapper ${target.has_animated_border ? 'perk-animated-border' : ''}`} 
                     onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={() => isOwner && pfpInputRef.current?.click()}
-                    style={target.has_animated_border ? { '--border-speed': borderSpeed } : {}}
+                    style={target.has_animated_border ? { 
+                        '--border-speed': borderSpeed,
+                        ...(target.animated_border_color ? { '--border-color': target.animated_border_color } : {})
+                    } : {}}
                 >
                     <SmartImage 
                         src={getApiUrl(target.profile_picture_url)} 

@@ -164,6 +164,7 @@ def save_message_to_db(
             target_live=target_live,
             has_animated_border=user.has_animated_border,
             animated_border_speed=user.animated_border_speed,
+            animated_border_color=user.animated_border_color,
             chat_font_color=user.chat_font_color,
         )
 

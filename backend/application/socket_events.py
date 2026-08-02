@@ -215,6 +215,7 @@ def handle_send_message(data):
         "is_struck": msg.is_struck,
         "has_animated_border": msg.has_animated_border,
         "animated_border_speed": msg.animated_border_speed,
+        "animated_border_color": msg.animated_border_color,
         "chat_font_color": msg.chat_font_color,
     }
 

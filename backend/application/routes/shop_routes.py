@@ -153,4 +153,22 @@ def configure_perk():
             }
         )
 
+    elif perk_name == "animated_border_color":
+        if not current_user.has_animated_border:
+            return jsonify({"message": "You do not own this perk."}), 403
+
+        # Basic hex color validation
+        if not value or not value.startswith("#") or len(value) not in [4, 7]:
+            return jsonify({"message": "Invalid color format."}), 400
+
+        current_user.animated_border_color = value
+        db.session.commit()
+
+        return jsonify(
+            {
+                "message": "Animated border color updated successfully!",
+                "user": current_user.to_dict_auth(),
+            }
+        )
+
     return jsonify({"message": "Unknown perk."}), 400

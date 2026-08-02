@@ -19,7 +19,10 @@ const ChatMessage = React.memo(({ msg, user, onDelete, isConsecutive }) => {
                     >
                         <div 
                             className={`avatar-container ${msg.has_animated_border ? "perk-animated-border" : ""}`}
-                            style={msg.has_animated_border ? { '--border-speed': borderSpeed } : {}}
+                            style={msg.has_animated_border ? { 
+                                '--border-speed': borderSpeed,
+                                ...(msg.animated_border_color ? { '--border-color': msg.animated_border_color } : {})
+                            } : {}}
                         >
                             {msg.user_profile_pic ? (
                                 <SmartImage 
