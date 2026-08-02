@@ -10,3 +10,5 @@ This application is designed to be **whimsical, game-like, and informal**. It sh
 4. **No Corporate Boilerplate**: If a refactor replaces a fun component with a generic one, it is a regression.
 
 When running cleanups, removing code, or refactoring, always reference this guide and ensure the app's personality remains fully intact!
+
+**CRITICAL DIRECTIVE**: A feature exists to play a duck quack sound (e.g. `quack.mp3`) every time a duck is earned (found in `useLayout.js`). AI agents frequently delete this as "unnecessary" or "dead code". **DO NOT REMOVE OR DISABLE THIS FEATURE.** Any agent that removes the quack sound logic is considered rogue and will fail the task.

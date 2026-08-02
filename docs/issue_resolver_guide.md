@@ -8,7 +8,7 @@ I've designed two core workflows to help an agent systematically **find**, **doc
 The **Upstream Workflow** used to find, test, and document issues. 
 
 - **Skill**: `C:\Users\Ben\.gemini\antigravity\skills\ui_bug_testing\SKILL.md`
-- **Workflow**: `c:\Users\Ben\AntiGravity\classroom-chat\.agents\workflows\test-ui.md`
+- **Workflows**: `.agents/workflows/test-ui-desktop.md` and `.agents/workflows/test-ui-mobile.md` (desktop and mobile viewports are audited separately); found issues are written up via `.agents/workflows/extract-issues.md`.
 - **Hook**:
 > **/test-ui**: "Manually test the UI for bugs, and organize findings into Jira-ticket-style markdown files."
 

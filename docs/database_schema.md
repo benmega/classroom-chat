@@ -3,7 +3,7 @@
 This document details the relational database schema, tables, and relationships within the Classroom Chat project.
 
 ## 1. Overview
-The project uses a relational database (typically SQLite for local development and PostgreSQL for production) managed through the **SQLAlchemy ORM**.
+The project uses SQLite (in both local development and production) managed through the **SQLAlchemy ORM**.
 
 ---
 
