@@ -323,7 +323,8 @@ def test_disconnect_student_edge_cases(client, app):
 
 
 def test_get_student_history(client, app):
-    from datetime import datetime, timedelta
+    from datetime import datetime
+
     from application.models.achievements import Achievement, UserAchievement
     from application.models.challenge_log import ChallengeLog
     from application.models.duck_transaction import DuckTransaction

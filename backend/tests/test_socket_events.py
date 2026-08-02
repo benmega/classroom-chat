@@ -1,11 +1,9 @@
+import pytest
 from application.extensions import db, socketio
 from application.models.classroom import Classroom
 from application.models.configuration import Configuration
 from application.models.message import Message
 from application.models.user import User
-
-
-import pytest
 
 
 @pytest.fixture(autouse=True)

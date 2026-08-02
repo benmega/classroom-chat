@@ -2,7 +2,7 @@
 Unit tests for schema drift checking utility.
 """
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 from application.extensions import db
 from application.utilities.schema_check import check_for_schema_drift

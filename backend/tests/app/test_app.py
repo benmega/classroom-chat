@@ -11,11 +11,8 @@ from application import create_app, ensure_default_configuration, seed_global_da
 from application.commands.seed import generate_kebab_slug, seed_command
 from application.config import DevelopmentConfig, ProductionConfig, TestingConfig
 from application.extensions import db, scheduler, socketio
-from application.models.classroom import Classroom
 from application.models.configuration import Configuration
 from application.models.project_template import ProjectTemplate
-from application.models.store_item import StoreItem
-from application.models.user import User
 from flask import session
 from flask_limiter import RateLimitExceeded
 from werkzeug.exceptions import RequestEntityTooLarge
@@ -56,7 +53,7 @@ def test_create_app_prod_proxy_fix():
 def test_create_app_dev_schema_drift():
     with patch.object(scheduler, "start"), patch.object(socketio, "init_app"):
         with patch.dict(os.environ, {"FLASK_ENV": "development"}):
-            with patch("application.check_for_schema_drift") as mock_drift:
+            with patch("application.check_for_schema_drift"):
                 app = create_app(DevelopmentConfig)
                 assert app is not None
 
@@ -119,7 +116,7 @@ def test_error_handlers(test_app):
                 err.description = "5 per minute"
                 res = func(err)
                 if isinstance(res, tuple):
-                    res_obj, code = res
+                    _res_obj, code = res
                     assert code == 429
             except Exception:
                 pass
@@ -145,9 +142,8 @@ def test_ensure_default_configuration(test_app):
 
 
 def test_seed_global_data_sys_argv_db(test_app):
-    with test_app.app_context():
-        with patch.object(sys, "argv", ["flask", "db", "upgrade"]):
-            seed_global_data()
+    with test_app.app_context(), patch.object(sys, "argv", ["flask", "db", "upgrade"]):
+        seed_global_data()
 
 
 def test_seed_global_data_updates_template_chapter(test_app):
@@ -174,10 +170,9 @@ def test_seed_global_data_operational_error(test_app):
 
 
 def test_seed_global_data_generic_exception(test_app):
-    with test_app.app_context():
-        with patch.object(db.session, "commit", side_effect=RuntimeError("Unexpected error")):
-            with pytest.raises(RuntimeError):
-                seed_global_data()
+    with test_app.app_context(), patch.object(db.session, "commit", side_effect=RuntimeError("Unexpected error")):
+        with pytest.raises(RuntimeError):
+            seed_global_data()
 
 
 # Tests for application/commands/seed.py
@@ -225,17 +220,16 @@ def test_seed_command_success(test_app):
             return StringIO(challenges_csv_content)
         return open(path, mode, encoding=encoding)
 
-    with patch("os.path.exists", return_value=True):
-        with patch("builtins.open", side_effect=mock_open):
-            # Run first time (inserts)
-            res1 = runner.invoke(seed_command)
-            assert res1.exit_code == 0
-            assert "Successfully inserted" in res1.output
+    with patch("os.path.exists", return_value=True), patch("builtins.open", side_effect=mock_open):
+        # Run first time (inserts)
+        res1 = runner.invoke(seed_command)
+        assert res1.exit_code == 0
+        assert "Successfully inserted" in res1.output
 
-            # Run second time (updates existing challenges)
-            res2 = runner.invoke(seed_command)
-            assert res2.exit_code == 0
-            assert "updated" in res2.output
+        # Run second time (updates existing challenges)
+        res2 = runner.invoke(seed_command)
+        assert res2.exit_code == 0
+        assert "updated" in res2.output
 
     with test_app.app_context():
         db.session.rollback()
@@ -243,11 +237,10 @@ def test_seed_command_success(test_app):
 
 def test_seed_command_csv_exception(test_app):
     runner = test_app.test_cli_runner()
-    with patch("os.path.exists", return_value=True):
-        with patch("builtins.open", side_effect=IOError("Disk read error")):
-            result = runner.invoke(seed_command)
-            assert result.exit_code == 0
-            assert "Error seeding" in result.output
+    with patch("os.path.exists", return_value=True), patch("builtins.open", side_effect=IOError("Disk read error")):
+        result = runner.invoke(seed_command)
+        assert result.exit_code == 0
+        assert "Error seeding" in result.output
 
     with test_app.app_context():
         db.session.rollback()
