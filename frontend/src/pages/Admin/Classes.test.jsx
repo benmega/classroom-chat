@@ -123,7 +123,7 @@ describe('Classes Admin Page', () => {
             expect(screen.getByText('Math 101')).toBeInTheDocument();
         });
 
-        fireEvent.click(screen.getByText('Math 101'));
+        fireEvent.click(screen.getByText('Math 101').closest('.class-card'));
         expect(mockNavigate).toHaveBeenCalledWith('/admin/classes/c1');
     });
 

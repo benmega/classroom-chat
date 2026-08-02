@@ -4,6 +4,7 @@ import client from '../../api/client';
 import toast from 'react-hot-toast';
 import { Loader2, LogOut } from 'lucide-react';
 import SmartImage from '../../components/common/SmartImage';
+import CameraModal from '../../components/profile/CameraModal';
 import { getApiUrl } from '../../utils/apiUrl';
 import './KioskUpload.css';
 
@@ -13,7 +14,10 @@ const KioskUpload = () => {
     const [classroom, setClassroom] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [uploadingFor, setUploadingFor] = useState(null);
+    const [isCameraOpen, setIsCameraOpen] = useState(false);
     const fileInputRef = useRef(null);
+
+    const isMobile = /Mobi|Android/i.test(navigator.userAgent);
 
     useEffect(() => {
         const fetchClassroom = async () => {
@@ -32,23 +36,26 @@ const KioskUpload = () => {
 
     const handleStudentClick = (studentId) => {
         setUploadingFor(studentId);
-        if (fileInputRef.current) {
-            fileInputRef.current.click();
+        if (isMobile) {
+            if (fileInputRef.current) {
+                fileInputRef.current.click();
+            }
+        } else {
+            setIsCameraOpen(true);
         }
     };
 
-    const handleFileChange = async (e) => {
-        const file = e.target.files[0];
-        if (!file || !uploadingFor) {
+    const uploadNoteFile = async (file, studentId) => {
+        if (!file || !studentId) {
             setUploadingFor(null);
             return;
         }
 
         const formData = new FormData();
-        formData.append('student_id', uploadingFor);
+        formData.append('student_id', studentId);
         formData.append('note_image', file);
 
-        const uploadPromise = client.post('/api/notes/kiosk-upload', formData, {
+        const uploadPromise = client.post('/notes/kiosk-upload', formData, {
             headers: {
                 'Content-Type': 'multipart/form-data'
             }
@@ -70,6 +77,15 @@ const KioskUpload = () => {
                 fileInputRef.current.value = '';
             }
         }
+    };
+
+    const handleFileChange = async (e) => {
+        const file = e.target.files[0];
+        await uploadNoteFile(file, uploadingFor);
+    };
+
+    const handleCameraCapture = async (file) => {
+        await uploadNoteFile(file, uploadingFor);
     };
 
     const handleExit = () => {
@@ -152,6 +168,17 @@ const KioskUpload = () => {
                 capture="environment"
                 onChange={handleFileChange}
             />
+
+            {isCameraOpen && (
+                <CameraModal 
+                    isOpen={isCameraOpen}
+                    onClose={() => {
+                        setIsCameraOpen(false);
+                        setUploadingFor(null);
+                    }}
+                    onCapture={handleCameraCapture}
+                />
+            )}
         </div>
     );
 };
