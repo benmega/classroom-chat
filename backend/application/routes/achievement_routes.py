@@ -5,6 +5,7 @@ import subprocess
 import sys
 import zipfile
 from datetime import datetime
+from typing import Any
 
 from application.decorators.admin_required import admin_only
 from application.decorators.api_response import api_response
@@ -450,7 +451,7 @@ def download_all_certificates():
 @admin_only
 @api_response
 def admin_certificate_templates():
-    courses = [
+    courses: list[dict[str, Any]] = [
         {"id": "cs-1", "name": "Computer Science 1"},
         {"id": "cs-2", "name": "Computer Science 2"},
         {"id": "cs-3", "name": "Computer Science 3"},
@@ -519,7 +520,7 @@ def admin_certificate_templates_upload(course_id):
     from application.utilities.db_helpers import get_canonical_course_slug, resolve_course_id
 
     file = request.files.get("template_file") or request.files.get("file")
-    if not file or file.filename == "":
+    if not file or not file.filename:
         return jsonify({"status": "error", "success": False, "error": "No file uploaded"}), 400
 
     if not file.filename.lower().endswith(".pdf"):
