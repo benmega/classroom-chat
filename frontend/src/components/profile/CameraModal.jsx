@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import Modal from '../common/Modal';
 import { Camera } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -6,7 +6,6 @@ import toast from 'react-hot-toast';
 const CameraModal = ({ isOpen, onClose, onCapture }) => {
     const videoRef = useRef(null);
     const canvasRef = useRef(null);
-    const [stream, setStream] = useState(null);
 
     useEffect(() => {
         let mediaStream = null;
@@ -14,7 +13,6 @@ const CameraModal = ({ isOpen, onClose, onCapture }) => {
             navigator.mediaDevices.getUserMedia({ video: true })
                 .then(s => {
                     mediaStream = s;
-                    setStream(mediaStream);
                     if (videoRef.current) {
                         videoRef.current.srcObject = mediaStream;
                     }
@@ -77,7 +75,9 @@ const CameraModal = ({ isOpen, onClose, onCapture }) => {
                         boxShadow: 'var(--shadow-md)',
                         transform: 'scaleX(-1)'
                     }}
-                />
+                >
+                    <track kind="captions" />
+                </video>
             </div>
             <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px' }}>
                 <button className="btn-primary" onClick={handleSnap} style={{ padding: '12px 30px', fontSize: '1.1rem', display: 'flex', alignItems: 'center' }}>

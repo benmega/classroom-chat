@@ -36,7 +36,7 @@ const AdminUserDashboard = () => {
         handlePassChapterPreview, handlePassChapterConfirm, handleAdjustDucks,
         handleAdjustPackets, handleSetDrawer, handleResetPassword, handleRemoveUser,
         handleApproveUser, handleRejectUser, handleToggleChildLink, handleToggleParentLink,
-        handleAssignProjectSubmit, handleUpdateUser
+        handleAssignProjectSubmit, handleUpdateUser, handleGenerateManualCertificate
     } = useAdminUserDashboard(userId);
 
     const [editForm, setEditForm] = useState({
@@ -254,10 +254,8 @@ const AdminUserDashboard = () => {
                                         </div>
                                         <input type="hidden" name="username" value={user.username} />
                                         <div className="econ-preset-pills">
-                                            <button type="button" className="preset-pill" onClick={() => handlePresetDuck(10)}>+10</button>
-                                            <button type="button" className="preset-pill" onClick={() => handlePresetDuck(50)}>+50</button>
-                                            <button type="button" className="preset-pill" onClick={() => handlePresetDuck(100)}>+100</button>
-                                            <button type="button" className="preset-pill neg" onClick={() => handlePresetDuck(-50)}>-50</button>
+                                            <button type="button" className="preset-pill" onClick={() => handlePresetDuck(1)}>+1</button>
+                                            <button type="button" className="preset-pill neg" onClick={() => handlePresetDuck(-1)}>-1</button>
                                         </div>
                                         <div className="econ-action-inputs">
                                             <input
@@ -363,6 +361,19 @@ const AdminUserDashboard = () => {
                                     <button className="btn-compact warning w-full mt-xs" onClick={handlePassChapterConfirm}>Confirm Pass Chapter</button>
                                 </div>
                             )}
+                        </div>
+                    )}
+
+                    {/* Manual Certificate Generation */}
+                    {user.role === 'student' && (
+                        <div className="compact-panel">
+                            <div className="panel-head"><Award size={16} /> Manual Certificate</div>
+                            <div className="dense-form-group-stack">
+                                <div className="inline-lbl">Generate an honorary certificate for this student.</div>
+                                <button type="button" className="btn-compact primary w-full mt-xs" onClick={handleGenerateManualCertificate} disabled={formLoading}>
+                                    <Sparkles size={14} /> Generate PDF Certificate
+                                </button>
+                            </div>
                         </div>
                     )}
 

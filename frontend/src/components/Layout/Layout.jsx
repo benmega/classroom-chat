@@ -112,9 +112,13 @@ const Layout = ({ children }) => {
                                 )}
 
                                 {isAuthenticated && user && (
-                                    <li className="header-username-item">
-                                        <Link to="/profile" className="header-username-link" title="View Profile" data-testid="header-username">
-                                            @{user.username}
+                                    <li className="nav-stat-item">
+                                        <Link className="stat-badge drawer" to="/profile" title="View Profile" data-testid="header-drawer">
+                                            <Archive size={20} className="stat-icon" />
+                                            <div className="stat-content">
+                                                <span className="stat-label">Drawer</span>
+                                                <span className="stat-value">{user.drawer || 'N/A'}</span>
+                                            </div>
                                         </Link>
                                     </li>
                                 )}
@@ -138,10 +142,17 @@ const Layout = ({ children }) => {
                                         </button>
                                         <ul className={`dropdown-menu ${isDropdownOpen ? 'show' : ''}`}>
                                             <li className="dropdown-user-header">
-                                                <Link to="/profile" onClick={() => setIsDropdownOpen(false)} className="dropdown-user-link">
-                                                    <span className="dropdown-user-name">{user.nickname || user.username}</span>
-                                                    <span className="dropdown-user-handle">@{user.username}</span>
-                                                </Link>
+                                                {user?.role === 'parent' ? (
+                                                    <div className="dropdown-user-link">
+                                                        <span className="dropdown-user-name">{user.nickname || user.username}</span>
+                                                        <span className="dropdown-user-handle">@{user.username}</span>
+                                                    </div>
+                                                ) : (
+                                                    <Link to="/profile" onClick={() => setIsDropdownOpen(false)} className="dropdown-user-link">
+                                                        <span className="dropdown-user-name">{user.nickname || user.username}</span>
+                                                        <span className="dropdown-user-handle">@{user.username}</span>
+                                                    </Link>
+                                                )}
                                             </li>
                                             <li className="dropdown-divider"></li>
 
@@ -191,11 +202,13 @@ const Layout = ({ children }) => {
                                                 </>
                                             )}
                                             {user?.role !== 'parent' && <li className="mobile-only-stat mobile-only dropdown-divider"></li>}
-                                            <li>
-                                                <Link to="/profile" onClick={() => setIsDropdownOpen(false)} data-testid="nav-profile">
-                                                    <span className="flex items-center gap-2">Profile</span>
-                                                </Link>
-                                            </li>
+                                            {user?.role !== 'parent' && (
+                                                <li>
+                                                    <Link to="/profile" onClick={() => setIsDropdownOpen(false)} data-testid="nav-profile">
+                                                        <span className="flex items-center gap-2">Profile</span>
+                                                    </Link>
+                                                </li>
+                                            )}
                                             {user?.is_admin && (
                                                 <li><Link to="/admin" onClick={() => setIsDropdownOpen(false)}>Admin Panel</Link></li>
                                             )}

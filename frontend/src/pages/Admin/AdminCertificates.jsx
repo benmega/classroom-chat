@@ -162,6 +162,17 @@ const AdminCertificates = () => {
                                         {cert.user?.nickname || cert.user?.username} 
                                         <span className="text-muted">@{cert.user?.username}</span>
                                     </h3>
+                                    <div className="recommendation-badge-container" style={{ margin: '8px 0' }}>
+                                        {cert.is_auto_recommended ? (
+                                            <div className="badge-recommended" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '4px 10px', backgroundColor: '#e6f4ea', color: '#137333', borderRadius: '16px', fontSize: '0.85rem', fontWeight: '500' }}>
+                                                <CheckCircle size={14} /> System Recommends Approval
+                                            </div>
+                                        ) : (
+                                            <div className="badge-manual" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '4px 10px', backgroundColor: '#f3f4f6', color: '#4b5563', border: '1px solid #d1d5db', borderRadius: '16px', fontSize: '0.85rem', fontWeight: '500' }}>
+                                                <AlertCircle size={14} /> Manual Review Needed
+                                            </div>
+                                        )}
+                                    </div>
                                     <div className="achievement-title">
                                         <Award size={16} /> 
                                         {cert.achievement?.name}
@@ -170,6 +181,11 @@ const AdminCertificates = () => {
                                         <Clock size={14} /> 
                                         {new Date(cert.submitted_at).toLocaleDateString()}
                                     </div>
+                                    {cert.recommendation_reason && (
+                                        <div className="recommendation-reason" style={{ fontSize: '0.85rem', color: '#5f6368', marginTop: '6px', fontStyle: 'italic', padding: '4px 8px', backgroundColor: '#f8f9fa', borderRadius: '4px', borderLeft: '3px solid #e5e7eb' }}>
+                                            {cert.recommendation_reason}
+                                        </div>
+                                    )}
                                     {cert.url && (
                                         <a href={cert.url} target="_blank" rel="noopener noreferrer" className="original-link">
                                             <ExternalLink size={14} /> Original Link

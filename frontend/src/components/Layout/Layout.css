@@ -184,7 +184,12 @@ a.stat-badge:hover {
 }
 
 .stat-badge.drawer .stat-icon {
-    color: var(--text-secondary);
+    color: #6366f1;
+    transition: transform var(--transition-fast);
+}
+
+.stat-badge.drawer:hover .stat-icon {
+    transform: scale(1.15) rotate(-5deg);
 }
 
 .stat-content {

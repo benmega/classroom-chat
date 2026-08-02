@@ -1,11 +1,47 @@
-import React, { useState, useRef, useEffect } from 'react';
+/* eslint-disable react-hooks/set-state-in-effect */
+import React, { useState, useRef, useEffect, useLayoutEffect } from 'react';
 import { ChevronDown, Check } from 'lucide-react';
 import './MultiSelectDropdown.css';
 
-const MultiSelectDropdown = ({ options, selectedValues, onChange, defaultLabel, icon: Icon, disabled }) => {
+const MultiSelectDropdown = ({ 
+  options, 
+  selectedValues, 
+  onChange, 
+  defaultLabel, 
+  icon: Icon, 
+  disabled,
+  placement = 'auto' // 'auto' | 'top' | 'bottom'
+}) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [dropUp, setDropUp] = useState(false);
+  const [alignRight, setAlignRight] = useState(false);
   const dropdownRef = useRef(null);
   const triggerRef = useRef(null);
+
+  useLayoutEffect(() => {
+    if (isOpen && triggerRef.current) {
+      const rect = triggerRef.current.getBoundingClientRect();
+      const windowHeight = window.innerHeight || document.documentElement.clientHeight;
+      const windowWidth = window.innerWidth || document.documentElement.clientWidth;
+
+      if (placement === 'top') {
+        setDropUp(true);
+      } else if (placement === 'bottom') {
+        setDropUp(false);
+      } else {
+        const spaceBelow = windowHeight - rect.bottom;
+        const spaceAbove = rect.top;
+        // Drop up if space below is less than 280px (menu height) and there is more space above
+        setDropUp(spaceBelow < 280 && spaceAbove > spaceBelow);
+      }
+
+      if (rect.left + 250 > windowWidth) {
+        setAlignRight(true);
+      } else {
+        setAlignRight(false);
+      }
+    }
+  }, [isOpen, placement]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -79,7 +115,11 @@ const MultiSelectDropdown = ({ options, selectedValues, onChange, defaultLabel, 
       </button>
 
       {isOpen && !disabled && (
-        <div className="multiselect-menu" role="listbox" aria-multiselectable="true">
+        <div 
+          className={`multiselect-menu ${dropUp ? 'drop-up' : 'drop-down'} ${alignRight ? 'align-right' : 'align-left'}`} 
+          role="listbox" 
+          aria-multiselectable="true"
+        >
           <div 
             className="multiselect-option all-option" 
             onClick={toggleAll}

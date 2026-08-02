@@ -226,10 +226,7 @@ const Classes = () => {
                                     <Link 
                                         to={`/admin/classes/${c.id}`} 
                                         className="class-card-title-link"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            navigate(`/admin/classes/${c.id}`);
-                                        }}
+                                        onClick={(e) => e.stopPropagation()}
                                         aria-label={`Manage classroom ${c.name}`}
                                     >
                                         {c.name}

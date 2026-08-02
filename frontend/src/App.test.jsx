@@ -111,7 +111,7 @@ describe('App Component', () => {
     expect(screen.getByText('Classroom Chat')).toBeInTheDocument();
   });
 
-  it('allows parent role to access /chat', () => {
+  it('redirects parent role to parent dashboard', async () => {
     window.history.pushState({}, 'Test page', '/chat');
     useAuthStore.mockReturnValue({
       isLoading: false,
@@ -122,9 +122,9 @@ describe('App Component', () => {
     });
 
     renderApp();
-    // Parents should be able to access /chat
-    expect(screen.getByText('Chat Page Mock')).toBeInTheDocument();
-    expect(screen.queryByText('Parent Dashboard Mock')).not.toBeInTheDocument();
+    // Parents should be redirected away from /chat to parent dashboard
+    expect(await screen.findByText('Parent Dashboard Mock')).toBeInTheDocument();
+    expect(screen.queryByText('Chat Page Mock')).not.toBeInTheDocument();
   });
 
   it('renders AccessDenied for non-admin accessing admin route', () => {

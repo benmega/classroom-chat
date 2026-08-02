@@ -58,6 +58,11 @@ const ToReview = () => {
     const [selectedCourses, setSelectedCourses] = useState({});
     const [expandedCodeSnippets, setExpandedCodeSnippets] = useState({});
 
+    // Bulk Selection State
+    const [selectedUsers, setSelectedUsers] = useState(new Set());
+    const [selectedTrades, setSelectedTrades] = useState(new Set());
+    const [selectedTracks, setSelectedTracks] = useState(new Set());
+
     const fetchAllData = useCallback(async (quiet = false) => {
         if (!quiet) setIsLoading(true);
         else setIsRefreshing(true);
@@ -101,8 +106,19 @@ const ToReview = () => {
             const initialClassrooms = {};
             const initialCourses = {};
             courseRes.data.requests?.forEach(req => {
-                initialClassrooms[req.id] = clList[0]?.id || '';
-                initialCourses[req.id] = coList[0]?.id || '';
+                if (req.student_classrooms && req.student_classrooms.length > 0) {
+                    const studentClassroomIds = req.student_classrooms.map(c => c.id);
+                    const matched = clList.find(cl => studentClassroomIds.includes(cl.id));
+                    initialClassrooms[req.id] = matched ? matched.id : (clList[0]?.id || '');
+                } else {
+                    initialClassrooms[req.id] = clList[0]?.id || '';
+                }
+                
+                if (req.requested_course_id && coList.some(c => c.id === req.requested_course_id)) {
+                    initialCourses[req.id] = req.requested_course_id;
+                } else {
+                    initialCourses[req.id] = coList[0]?.id || '';
+                }
             });
             setSelectedClassrooms(initialClassrooms);
             setSelectedCourses(initialCourses);
@@ -187,27 +203,47 @@ const ToReview = () => {
     };
 
     // 3. User Signup Review Actions
-    const handleUserApproval = async (userId, action) => {
-        if (action === 'reject' && !window.confirm('Are you sure you want to reject and delete this user?')) return;
-        setIsProcessing(`user-${userId}`);
+    const handleUserApproval = async (userId, action, isBulk = false) => {
+        if (!isBulk && action === 'reject' && !window.confirm('Are you sure you want to reject and delete this user?')) return;
+        if (!isBulk) setIsProcessing(`user-${userId}`);
         const endpoint = action === 'approve' ? `approve_user/${userId}` : `reject_user/${userId}`;
 
         try {
             const response = await client.post(`/api/admin/${endpoint}`);
             if (response.data.status === 'success') {
-                toast.success(response.data.data?.message || `User ${action === 'approve' ? 'approved' : 'rejected'}`);
+                if (!isBulk) toast.success(response.data.data?.message || `User ${action === 'approve' ? 'approved' : 'rejected'}`);
                 setPendingUsers(prev => prev.filter(u => u.id !== userId));
             }
         } catch {
-            toast.error(`Failed to ${action} user.`);
+            if (!isBulk) toast.error(`Failed to ${action} user.`);
         } finally {
-            setIsProcessing(null);
+            if (!isBulk) setIsProcessing(null);
         }
     };
 
+    const handleBulkUserApproval = async (action) => {
+        if (selectedUsers.size === 0) return;
+        if (action === 'reject' && !window.confirm(`Are you sure you want to reject and delete ${selectedUsers.size} users?`)) return;
+        
+        setIsProcessing('bulk-user');
+        const ids = Array.from(selectedUsers);
+        let successCount = 0;
+        for (const id of ids) {
+            try {
+                await handleUserApproval(id, action, true);
+                successCount++;
+            } catch (e) {
+                console.error(e);
+            }
+        }
+        toast.success(`Successfully ${action === 'approve' ? 'approved' : 'rejected'} ${successCount} users.`);
+        setSelectedUsers(new Set());
+        setIsProcessing(null);
+    };
+
     // 4. Duck Trade Review Actions
-    const handleTradeApproval = async (tradeId, action) => {
-        setIsProcessing(`trade-${tradeId}`);
+    const handleTradeApproval = async (tradeId, action, isBulk = false) => {
+        if (!isBulk) setIsProcessing(`trade-${tradeId}`);
         const formData = new FormData();
         formData.append('trade_id', tradeId);
         formData.append('action', action);
@@ -215,36 +251,70 @@ const ToReview = () => {
         try {
             const response = await client.post('/api/admin/trade_action', formData);
             if (response.data.status === 'success') {
-                toast.success(response.data.message);
+                if (!isBulk) toast.success(response.data.message);
                 setTrades(prev => prev.filter(t => t.id !== tradeId));
             } else {
-                toast.error(response.data.message || 'Action failed.');
+                if (!isBulk) toast.error(response.data.message || 'Action failed.');
             }
         } catch {
-            toast.error('Failed to process trade.');
+            if (!isBulk) toast.error('Failed to process trade.');
         } finally {
-            setIsProcessing(null);
+            if (!isBulk) setIsProcessing(null);
         }
     };
 
+    const handleBulkTradeApproval = async (action) => {
+        if (selectedTrades.size === 0) return;
+        
+        setIsProcessing('bulk-trade');
+        const ids = Array.from(selectedTrades);
+        for (const id of ids) {
+            try {
+                await handleTradeApproval(id, action, true);
+            } catch (e) {
+                console.error(e);
+            }
+        }
+        toast.success(`Successfully processed ${ids.length} trades.`);
+        setSelectedTrades(new Set());
+        setIsProcessing(null);
+    };
+
     // 5. Track Change Request Actions
-    const handleTrackApproval = async (requestId, action) => {
-        setIsProcessing(`track-${requestId}`);
+    const handleTrackApproval = async (requestId, action, isBulk = false) => {
+        if (!isBulk) setIsProcessing(`track-${requestId}`);
         const status = action === 'approve' ? 'approved' : 'denied';
 
         try {
             const response = await client.put(`/api/admin/track-requests/${requestId}`, { status });
             if (response.data.success) {
-                toast.success(response.data.message);
+                if (!isBulk) toast.success(response.data.message);
                 setTrackRequests(prev => prev.filter(r => r.id !== requestId));
             } else {
-                toast.error(response.data.message || 'Action failed.');
+                if (!isBulk) toast.error(response.data.message || 'Action failed.');
             }
         } catch {
-            toast.error('Failed to process track request.');
+            if (!isBulk) toast.error('Failed to process track request.');
         } finally {
-            setIsProcessing(null);
+            if (!isBulk) setIsProcessing(null);
         }
+    };
+
+    const handleBulkTrackApproval = async (action) => {
+        if (selectedTracks.size === 0) return;
+        
+        setIsProcessing('bulk-track');
+        const ids = Array.from(selectedTracks);
+        for (const id of ids) {
+            try {
+                await handleTrackApproval(id, action, true);
+            } catch (e) {
+                console.error(e);
+            }
+        }
+        toast.success(`Successfully processed ${ids.length} track requests.`);
+        setSelectedTracks(new Set());
+        setIsProcessing(null);
     };
 
     // 6. Course Request Actions
@@ -548,6 +618,24 @@ const ToReview = () => {
                             <h4 className="achievement-name">{c.achievement?.name || 'Achievement Title'}</h4>
                         </div>
 
+                        <div className="recommendation-badge-container" style={{ margin: '8px 0' }}>
+                            {c.is_auto_recommended ? (
+                                <div className="badge-recommended" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '4px 10px', backgroundColor: '#e6f4ea', color: '#137333', borderRadius: '16px', fontSize: '0.85rem', fontWeight: '500' }}>
+                                    <CheckCircle size={14} /> System Recommends Approval
+                                </div>
+                            ) : (
+                                <div className="badge-manual" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '4px 10px', backgroundColor: '#f3f4f6', color: '#4b5563', border: '1px solid #d1d5db', borderRadius: '16px', fontSize: '0.85rem', fontWeight: '500' }}>
+                                    <AlertCircle size={14} /> Manual Review Needed
+                                </div>
+                            )}
+                        </div>
+
+                        {c.recommendation_reason && (
+                            <div className="recommendation-reason" style={{ fontSize: '0.85rem', color: '#5f6368', marginBottom: '8px', fontStyle: 'italic', padding: '4px 8px', backgroundColor: '#f8f9fa', borderRadius: '4px', borderLeft: '3px solid #e5e7eb' }}>
+                                {c.recommendation_reason}
+                            </div>
+                        )}
+
                         {c.url && (
                             <a href={c.url} target="_blank" rel="noopener noreferrer" className="original-cert-link">
                                 <ExternalLink size={14} /> Original Certificate Link
@@ -577,11 +665,21 @@ const ToReview = () => {
     };
 
     const renderUserCard = (u) => {
+        const isSelected = selectedUsers.has(u.id);
+        const toggleSelect = () => {
+            const next = new Set(selectedUsers);
+            if (next.has(u.id)) next.delete(u.id);
+            else next.add(u.id);
+            setSelectedUsers(next);
+        };
         return (
-            <div className="review-card user-review-card" key={u.key}>
+            <div className={`review-card user-review-card ${isSelected ? 'selected' : ''}`} key={u.key}>
                 <div className="review-card-header">
-                    <div className="card-badge badge-user">
-                        <Users size={14} /> Account Signup
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <input type="checkbox" checked={isSelected} onChange={toggleSelect} style={{ width: '16px', height: '16px', cursor: 'pointer' }} />
+                        <div className="card-badge badge-user">
+                            <Users size={14} /> Account Signup
+                        </div>
                     </div>
                     <span className="card-time">
                         <Clock size={12} /> Awaiting Review
@@ -632,11 +730,21 @@ const ToReview = () => {
     };
 
     const renderTradeCard = (t) => {
+        const isSelected = selectedTrades.has(t.id);
+        const toggleSelect = () => {
+            const next = new Set(selectedTrades);
+            if (next.has(t.id)) next.delete(t.id);
+            else next.add(t.id);
+            setSelectedTrades(next);
+        };
         return (
-            <div className="review-card trade-review-card" key={t.key}>
+            <div className={`review-card trade-review-card ${isSelected ? 'selected' : ''}`} key={t.key}>
                 <div className="review-card-header">
-                    <div className="card-badge badge-trade">
-                        <ArrowLeftRight size={14} /> Duck Trade
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <input type="checkbox" checked={isSelected} onChange={toggleSelect} style={{ width: '16px', height: '16px', cursor: 'pointer' }} />
+                        <div className="card-badge badge-trade">
+                            <ArrowLeftRight size={14} /> Duck Trade
+                        </div>
                     </div>
                     <span className="card-time">
                         <Clock size={12} /> {new Date(t.timestamp).toLocaleString()}
@@ -699,11 +807,21 @@ const ToReview = () => {
     };
 
     const renderTrackCard = (r) => {
+        const isSelected = selectedTracks.has(r.id);
+        const toggleSelect = () => {
+            const next = new Set(selectedTracks);
+            if (next.has(r.id)) next.delete(r.id);
+            else next.add(r.id);
+            setSelectedTracks(next);
+        };
         return (
-            <div className="review-card track-review-card" key={r.key}>
+            <div className={`review-card track-review-card ${isSelected ? 'selected' : ''}`} key={r.key}>
                 <div className="review-card-header">
-                    <div className="card-badge badge-track">
-                        <TrendingUp size={14} /> Track Change
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <input type="checkbox" checked={isSelected} onChange={toggleSelect} style={{ width: '16px', height: '16px', cursor: 'pointer' }} />
+                        <div className="card-badge badge-track">
+                            <TrendingUp size={14} /> Track Change
+                        </div>
                     </div>
                     <span className="card-time">
                         <Clock size={12} /> {new Date(r.requested_at).toLocaleString()}
@@ -773,7 +891,14 @@ const ToReview = () => {
                     </div>
 
                     <div className="course-request-info">
-
+                        <div className="info-row">
+                            <span className="info-label">Requested Course ID</span>
+                            <span className="info-value">{c.requested_course_id || 'Not provided'}</span>
+                        </div>
+                        <div className="info-row">
+                            <span className="info-label">Instance ID</span>
+                            <span className="info-value">{c.course_instance_id}</span>
+                        </div>
                         <div className="info-row">
                             <span className="info-label">CodeCombat / Ozaria URL</span>
                             <a href={c.url} target="_blank" rel="noopener noreferrer" className="url-link flex-center gap-6">
@@ -946,6 +1071,82 @@ const ToReview = () => {
                             </button>
                         </div>
                     )}
+                    
+                    {activeTab === 'users' && displayItems.length > 0 && (
+                        <div className="bulk-actions-bar" style={{ display: 'flex', gap: '12px', marginBottom: '16px', alignItems: 'center', justifyContent: 'space-between', background: '#fff', padding: '12px 16px', borderRadius: '12px', border: '1px solid var(--border-subtle)' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <input 
+                                    type="checkbox" 
+                                    checked={selectedUsers.size === pendingUsers.length && pendingUsers.length > 0} 
+                                    onChange={(e) => {
+                                        if (e.target.checked) setSelectedUsers(new Set(pendingUsers.map(u => u.id)));
+                                        else setSelectedUsers(new Set());
+                                    }}
+                                    style={{ width: '16px', height: '16px', cursor: 'pointer' }}
+                                />
+                                <span style={{ fontWeight: 600, fontSize: '14px', color: 'var(--text-main)' }}>Select All ({selectedUsers.size})</span>
+                            </div>
+                            <div style={{ display: 'flex', gap: '8px' }}>
+                                <button className="btn-reject" onClick={() => handleBulkUserApproval('reject')} disabled={selectedUsers.size === 0 || isProcessing === 'bulk-user'}>
+                                    <XCircle size={16} /> Reject Selected
+                                </button>
+                                <button className="btn-approve" onClick={() => handleBulkUserApproval('approve')} disabled={selectedUsers.size === 0 || isProcessing === 'bulk-user'}>
+                                    <CheckCircle size={16} /> Approve Selected
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    {activeTab === 'trades' && displayItems.length > 0 && (
+                        <div className="bulk-actions-bar" style={{ display: 'flex', gap: '12px', marginBottom: '16px', alignItems: 'center', justifyContent: 'space-between', background: '#fff', padding: '12px 16px', borderRadius: '12px', border: '1px solid var(--border-subtle)' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <input 
+                                    type="checkbox" 
+                                    checked={selectedTrades.size === trades.length && trades.length > 0} 
+                                    onChange={(e) => {
+                                        if (e.target.checked) setSelectedTrades(new Set(trades.map(t => t.id)));
+                                        else setSelectedTrades(new Set());
+                                    }}
+                                    style={{ width: '16px', height: '16px', cursor: 'pointer' }}
+                                />
+                                <span style={{ fontWeight: 600, fontSize: '14px', color: 'var(--text-main)' }}>Select All ({selectedTrades.size})</span>
+                            </div>
+                            <div style={{ display: 'flex', gap: '8px' }}>
+                                <button className="btn-reject" onClick={() => handleBulkTradeApproval('reject')} disabled={selectedTrades.size === 0 || isProcessing === 'bulk-trade'}>
+                                    <XCircle size={16} /> Reject Selected
+                                </button>
+                                <button className="btn-approve" onClick={() => handleBulkTradeApproval('approve')} disabled={selectedTrades.size === 0 || isProcessing === 'bulk-trade'}>
+                                    <CheckCircle size={16} /> Approve Selected
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    {activeTab === 'tracks' && displayItems.length > 0 && (
+                        <div className="bulk-actions-bar" style={{ display: 'flex', gap: '12px', marginBottom: '16px', alignItems: 'center', justifyContent: 'space-between', background: '#fff', padding: '12px 16px', borderRadius: '12px', border: '1px solid var(--border-subtle)' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <input 
+                                    type="checkbox" 
+                                    checked={selectedTracks.size === trackRequests.length && trackRequests.length > 0} 
+                                    onChange={(e) => {
+                                        if (e.target.checked) setSelectedTracks(new Set(trackRequests.map(r => r.id)));
+                                        else setSelectedTracks(new Set());
+                                    }}
+                                    style={{ width: '16px', height: '16px', cursor: 'pointer' }}
+                                />
+                                <span style={{ fontWeight: 600, fontSize: '14px', color: 'var(--text-main)' }}>Select All ({selectedTracks.size})</span>
+                            </div>
+                            <div style={{ display: 'flex', gap: '8px' }}>
+                                <button className="btn-reject" onClick={() => handleBulkTrackApproval('reject')} disabled={selectedTracks.size === 0 || isProcessing === 'bulk-track'}>
+                                    <XCircle size={16} /> Deny Selected
+                                </button>
+                                <button className="btn-approve" onClick={() => handleBulkTrackApproval('approve')} disabled={selectedTracks.size === 0 || isProcessing === 'bulk-track'}>
+                                    <CheckCircle size={16} /> Approve Selected
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
                     {displayItems.length > 0 ? (
                         <div className="cards-feed-wrapper">
                             {displayItems.map(item => renderCard(item))}

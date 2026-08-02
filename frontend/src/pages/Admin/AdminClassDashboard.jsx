@@ -4,7 +4,7 @@ import client from '../../api/client';
 import toast from 'react-hot-toast';
 import { 
     ChevronLeft, Users, RefreshCw, Trash2, 
-    Check, Plus, Settings, Globe, Link2, BookOpen
+    Check, Plus, Settings, Globe, Link2, BookOpen, Camera
 } from 'lucide-react';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
 import Chat from '../Chat/Chat';
@@ -253,6 +253,10 @@ const AdminClassDashboard = () => {
                             <span className="join-code-val">{joinCode}</span>
                         </div>
                     )}
+                    <button className="primary-btn" onClick={() => navigate(`/admin/classes/${classId}/kiosk`)} title="Open Kiosk Upload Mode">
+                        <Camera size={16} style={{ marginRight: '6px' }} />
+                        Launch Kiosk Mode
+                    </button>
                     <button className="secondary-btn" onClick={async () => { await fetchClassroomDetails(); setActiveModal('bulk_connection_cards'); }}>
                         Print Connection Cards
                     </button>
@@ -405,8 +409,10 @@ const AdminClassDashboard = () => {
                         <div className="admin-class-grid single-column centered-column">
                             <div className="control-panel-card settings-card">
                         <div className="card-custom-header">
-                            <Settings size={20} />
-                            <h3>Classroom Settings</h3>
+                            <div className="title-section">
+                                <Settings size={20} />
+                                <h3>Classroom Settings</h3>
+                            </div>
                         </div>
 
                         <form onSubmit={handleUpdateSettings} className="settings-form">
@@ -447,8 +453,10 @@ const AdminClassDashboard = () => {
                     </div>
                             <div className="control-panel-card danger-zone-card">
                         <div className="card-custom-header">
-                            <Trash2 size={20} />
-                            <h3>Danger Zone</h3>
+                            <div className="title-section">
+                                <Trash2 size={20} />
+                                <h3>Danger Zone</h3>
+                            </div>
                         </div>
                         <p className="danger-zone-desc">Deleting a classroom removes the classroom instance. Students remain active users in the system but will be unlinked from this group.</p>
                         <button 
