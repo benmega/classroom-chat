@@ -18,8 +18,8 @@ test.describe('Admin Packets Adjustment', () => {
     await studentRow.click();
     await page.waitForURL('**/admin/users/*', { timeout: 15000 });
 
-    const initialPacketsText = await page.locator('.hud-stat-box:has-text("Packets") .val.packets').innerText();
-    const initialPackets = parseFloat(initialPacketsText.replace('📦', '').replace(/,/g, '').trim());
+    const initialPacketsText = await page.locator('.economy-row-card:has-text("Packets") .econ-balance').innerText();
+    const initialPackets = parseFloat(initialPacketsText.replace(/,/g, '').trim()) || 0;
 
     const packetsForm = page.locator('form:has-text("Packets")');
     await expect(packetsForm).toBeVisible();
@@ -28,15 +28,15 @@ test.describe('Admin Packets Adjustment', () => {
     
     await packetsForm.locator('button[type="submit"]').click();
 
-    await expect(page.locator('.hud-stat-box:has-text("Packets") .val.packets')).toHaveText(
-      new RegExp(`📦\\s*${(initialPackets + 5).toLocaleString(undefined, { maximumFractionDigits: 3 })}`)
+    await expect(page.locator('.economy-row-card:has-text("Packets") .econ-balance')).toHaveText(
+      (initialPackets + 5).toLocaleString()
     );
 
     await packetsForm.locator('input[name="amount"]').fill('-20');
     await packetsForm.locator('button[type="submit"]').click();
     
-    await expect(page.locator('.hud-stat-box:has-text("Packets") .val.packets')).toHaveText(
-      new RegExp(`📦\\s*${(initialPackets - 15).toLocaleString(undefined, { maximumFractionDigits: 3 })}`)
+    await expect(page.locator('.economy-row-card:has-text("Packets") .econ-balance')).toHaveText(
+      (initialPackets - 15).toLocaleString()
     );
   });
 });

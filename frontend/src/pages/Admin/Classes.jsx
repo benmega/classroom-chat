@@ -21,17 +21,17 @@ const LanguageSymbol = ({ language }) => {
     if (lang.includes('javascript') || lang.includes('js')) {
         return (
             <svg viewBox="0 0 24 24" width="18" height="18" xmlns="http://www.w3.org/2000/svg">
-                <path fill="#F7DF1E" d="M0 0h24v24H0V0z"/>
-                <path fill="#000000" d="M22.012 18.2c-.136 1.451-1.359 4.161-5.12 4.161-2.969 0-5.118-1.503-6.046-3.136l2.956-1.921c.642 1.038 1.705 1.93 3.01 1.93 1.216 0 2.062-.518 2.062-1.396 0-.961-.716-1.35-2.616-2.094-2.836-.983-5.221-2.327-5.221-5.385 0-3.048 2.37-5.32 5.568-5.32 2.658 0 4.609 1.26 5.516 3.167l-2.733 1.789c-.662-1.127-1.533-1.782-2.775-1.782-1.2 0-1.879.626-1.879 1.341 0 .97.808 1.282 2.709 1.966 3.125 1.134 4.707 2.614 4.569 5.38zM11.746 16.969C11.746 20.354 10.372 22.36 6.84 22.36 4.39 22.36 2.32 21.05 1.34 19.16l2.813-1.802c.575 1.01 1.554 1.761 2.766 1.761 1.053 0 1.942-.518 1.942-2.12V5.05h3.18v11.919z"/>
+                <path fill="#F7DF1E" d="M0 0h24v24H0V0z" />
+                <path fill="#000000" d="M22.012 18.2c-.136 1.451-1.359 4.161-5.12 4.161-2.969 0-5.118-1.503-6.046-3.136l2.956-1.921c.642 1.038 1.705 1.93 3.01 1.93 1.216 0 2.062-.518 2.062-1.396 0-.961-.716-1.35-2.616-2.094-2.836-.983-5.221-2.327-5.221-5.385 0-3.048 2.37-5.32 5.568-5.32 2.658 0 4.609 1.26 5.516 3.167l-2.733 1.789c-.662-1.127-1.533-1.782-2.775-1.782-1.2 0-1.879.626-1.879 1.341 0 .97.808 1.282 2.709 1.966 3.125 1.134 4.707 2.614 4.569 5.38zM11.746 16.969C11.746 20.354 10.372 22.36 6.84 22.36 4.39 22.36 2.32 21.05 1.34 19.16l2.813-1.802c.575 1.01 1.554 1.761 2.766 1.761 1.053 0 1.942-.518 1.942-2.12V5.05h3.18v11.919z" />
             </svg>
         );
     }
     if (lang.includes('c++') || lang.includes('cpp')) {
         return (
             <svg viewBox="0 0 24 24" width="18" height="18" xmlns="http://www.w3.org/2000/svg">
-                <path fill="#00599C" d="M22.25 4.34a2 2 0 0 0-1-1.74l-8.25-4.76a2 2 0 0 0-2 0L2.75 2.6a2 2 0 0 0-1 1.74v9.52a2 2 0 0 0 1 1.74l8.25 4.76a2 2 0 0 0 2 0l8.25-4.76a2 2 0 0 0 1-1.74zm-8.8 8.16h-1.5v1.5h-1.24v-1.5h-1.5v-1.24h1.5v-1.5h1.24v1.5h1.5zm-5.74-3h1.24v1.5h1.5v1.24h-1.5v1.5H7.71v-1.5h-1.5v-1.24h1.5z"/>
-                <path fill="#004482" d="M2.75 12.12v9.28a2 2 0 0 0 1 1.74l8.25 4.76a2 2 0 0 0 2 0l8.25-4.76a2 2 0 0 0 1-1.74v-9.28l-10.25 5.91zM13.45 12.5h-1.24v1.5h-1.5v-1.24h-1.5v-1.5h1.5v-1.24h1.24v1.24h1.5z"/>
-                <path fill="#FFF" d="M12.92 11.26a4.23 4.23 0 0 0-3.32-3.35 4.19 4.19 0 0 0-4.8 2.76A4.2 4.2 0 0 0 7.55 15a4.23 4.23 0 0 0 3.32 3.35 4.19 4.19 0 0 0 4.8-2.76l-1.3-.46a2.82 2.82 0 0 1-3.23 1.83 2.8 2.8 0 0 1-1.84-1.84 2.82 2.82 0 0 1 1.83-3.23 2.8 2.8 0 0 1 3.23 1.84z"/>
+                <path fill="#00599C" d="M22.25 4.34a2 2 0 0 0-1-1.74l-8.25-4.76a2 2 0 0 0-2 0L2.75 2.6a2 2 0 0 0-1 1.74v9.52a2 2 0 0 0 1 1.74l8.25 4.76a2 2 0 0 0 2 0l8.25-4.76a2 2 0 0 0 1-1.74zm-8.8 8.16h-1.5v1.5h-1.24v-1.5h-1.5v-1.24h1.5v-1.5h1.24v1.5h1.5zm-5.74-3h1.24v1.5h1.5v1.24h-1.5v1.5H7.71v-1.5h-1.5v-1.24h1.5z" />
+                <path fill="#004482" d="M2.75 12.12v9.28a2 2 0 0 0 1 1.74l8.25 4.76a2 2 0 0 0 2 0l8.25-4.76a2 2 0 0 0 1-1.74v-9.28l-10.25 5.91zM13.45 12.5h-1.24v1.5h-1.5v-1.24h-1.5v-1.5h1.5v-1.24h1.24v1.24h1.5z" />
+                <path fill="#FFF" d="M12.92 11.26a4.23 4.23 0 0 0-3.32-3.35 4.19 4.19 0 0 0-4.8 2.76A4.2 4.2 0 0 0 7.55 15a4.23 4.23 0 0 0 3.32 3.35 4.19 4.19 0 0 0 4.8-2.76l-1.3-.46a2.82 2.82 0 0 1-3.23 1.83 2.8 2.8 0 0 1-1.84-1.84 2.82 2.82 0 0 1 1.83-3.23 2.8 2.8 0 0 1 3.23 1.84z" />
             </svg>
         );
     }
@@ -130,9 +130,7 @@ const Classes = () => {
         );
     });
 
-    // Statistics calculations
-    const totalClassrooms = classrooms.length;
-    
+
     if (isLoading) return (
         <div className="admin-classes-page">
             <header className="page-header">
@@ -163,32 +161,32 @@ const Classes = () => {
                     <label htmlFor="classroom-search" className="sr-only" style={{ position: 'absolute', width: '1px', height: '1px', padding: 0, margin: '-1px', overflow: 'hidden', clip: 'rect(0,0,0,0)', border: 0 }}>
                         Search classrooms by name, ID, or language
                     </label>
-                    <input 
-                        type="text" 
+                    <input
+                        type="text"
                         id="classroom-search"
                         aria-label="Search classrooms by name, ID, or language"
-                        placeholder="Search by name, ID, or language..." 
+                        placeholder="Search by name, ID, or language..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
                 </div>
 
                 <div className="header-actions-group">
-                    <button 
+                    <button
                         className="primary-btn"
                         onClick={() => setIsCreateModalOpen(true)}
                         aria-label="Add new classroom"
                     >
                         <Plus size={18} aria-hidden="true" /> Add Classroom
                     </button>
-                    <button 
-                        className="primary-btn bulk-conn-btn" 
+                    <button
+                        className="primary-btn bulk-conn-btn"
                         onClick={() => setActiveModal('bulk_connection_cards')}
                         aria-label="Print connection cards for all classrooms"
                     >
                         <Key size={18} aria-hidden="true" /> Connection Cards
                     </button>
-                    <button 
+                    <button
                         className={`refresh-btn ${isRefreshing ? 'spinning' : ''}`}
                         onClick={fetchClassrooms}
                         disabled={isRefreshing}
@@ -201,19 +199,29 @@ const Classes = () => {
 
             {/* Grid Container */}
             <div className="classes-grid-container">
-                <div className="classes-header-summary">
-                    <span>Showing <strong>{filteredClassrooms.length}</strong> of <strong>{totalClassrooms}</strong> classrooms</span>
-                </div>
-                
+
                 {filteredClassrooms.length > 0 ? (
                     <div className="classes-grid" aria-label="Classroom Directory Grid">
                         {filteredClassrooms.map(c => (
-                            <div className="class-card" key={c.id}>
+                            <div 
+                                className="class-card" 
+                                key={c.id}
+                                onClick={() => navigate(`/admin/classes/${c.id}`)}
+                                role="button"
+                                tabIndex={0}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter' || e.key === ' ') {
+                                        if (e.target === e.currentTarget) {
+                                            navigate(`/admin/classes/${c.id}`);
+                                        }
+                                    }
+                                }}
+                            >
                                 <div className="class-card-header">
-                                    <Link 
-                                        to={`/admin/classes/${c.id}`} 
+                                    <Link
+                                        to={`/admin/classes/${c.id}`}
                                         className="class-card-title-link"
-                                        onClick={() => navigate(`/admin/classes/${c.id}`)}
+                                        onClick={(e) => e.stopPropagation()}
                                         aria-label={`Manage classroom ${c.name}`}
                                     >
                                         {c.name}
@@ -229,10 +237,11 @@ const Classes = () => {
                                     </div>
                                 </div>
                                 <div className="class-card-actions">
-                                    <button 
-                                        className="secondary-btn" 
+                                    <button
+                                        className="secondary-btn"
                                         style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', padding: '6px 12px' }}
-                                        onClick={() => {
+                                        onClick={(e) => {
+                                            e.stopPropagation();
                                             fetchClassroomCards(c.id);
                                             setActiveModal('bulk_connection_cards');
                                         }}
@@ -258,9 +267,9 @@ const Classes = () => {
                     <div className="modal-card">
                         <div className="modal-header">
                             <h3 id="modal-title-create-classroom">Create New Classroom</h3>
-                            <button 
-                                type="button" 
-                                className="close-btn" 
+                            <button
+                                type="button"
+                                className="close-btn"
                                 onClick={() => setIsCreateModalOpen(false)}
                                 aria-label="Close modal"
                             >
@@ -270,63 +279,63 @@ const Classes = () => {
                         <form onSubmit={handleCreateClassroom} className="modal-form">
                             <div className="form-group">
                                 <label htmlFor="new-class-id">Classroom ID (Unique Identifier)</label>
-                                <input 
-                                    type="text" 
-                                    id="new-class-id" 
-                                    value={newId} 
-                                    onChange={(e) => setNewId(e.target.value)} 
-                                    placeholder="e.g. PY101_SPRING" 
-                                    required 
+                                <input
+                                    type="text"
+                                    id="new-class-id"
+                                    value={newId}
+                                    onChange={(e) => setNewId(e.target.value)}
+                                    placeholder="e.g. PY101_SPRING"
+                                    required
                                 />
                             </div>
 
                             <div className="form-group">
                                 <label htmlFor="new-class-name">Classroom Name</label>
-                                <input 
-                                    type="text" 
-                                    id="new-class-name" 
-                                    value={newName} 
-                                    onChange={(e) => setNewName(e.target.value)} 
-                                    placeholder="e.g. Python Beginners 101" 
-                                    required 
+                                <input
+                                    type="text"
+                                    id="new-class-name"
+                                    value={newName}
+                                    onChange={(e) => setNewName(e.target.value)}
+                                    placeholder="e.g. Python Beginners 101"
+                                    required
                                 />
                             </div>
 
                             <div className="form-group">
                                 <label htmlFor="new-class-lang">Language</label>
-                                <input 
-                                    type="text" 
-                                    id="new-class-lang" 
-                                    value={newLanguage} 
-                                    onChange={(e) => setNewLanguage(e.target.value)} 
-                                    placeholder="e.g. Python, Scratch, JavaScript" 
-                                    required 
+                                <input
+                                    type="text"
+                                    id="new-class-lang"
+                                    value={newLanguage}
+                                    onChange={(e) => setNewLanguage(e.target.value)}
+                                    placeholder="e.g. Python, Scratch, JavaScript"
+                                    required
                                 />
                             </div>
 
                             <div className="form-group">
                                 <label htmlFor="new-class-url">Web App / Project URL (Optional)</label>
-                                <input 
-                                    type="url" 
-                                    id="new-class-url" 
-                                    value={newUrl} 
-                                    onChange={(e) => setNewUrl(e.target.value)} 
-                                    placeholder="https://..." 
+                                <input
+                                    type="url"
+                                    id="new-class-url"
+                                    value={newUrl}
+                                    onChange={(e) => setNewUrl(e.target.value)}
+                                    placeholder="https://..."
                                 />
                             </div>
 
                             <div className="modal-footer">
-                                <button 
-                                    type="button" 
-                                    className="secondary-btn" 
+                                <button
+                                    type="button"
+                                    className="secondary-btn"
                                     onClick={() => setIsCreateModalOpen(false)}
                                     disabled={isSubmitting}
                                 >
                                     Cancel
                                 </button>
-                                <button 
-                                    type="submit" 
-                                    className="primary-btn" 
+                                <button
+                                    type="submit"
+                                    className="primary-btn"
                                     disabled={isSubmitting}
                                 >
                                     {isSubmitting ? 'Creating...' : 'Create Classroom'}

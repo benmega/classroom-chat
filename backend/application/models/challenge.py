@@ -24,6 +24,7 @@ class Challenge(db.Model):
     domain = db.Column(db.String(100), nullable=False)
     difficulty = db.Column(db.String(50), nullable=False, default="medium")
     value = db.Column(db.Integer, nullable=False, default=1)
+    sequence = db.Column(db.Integer, nullable=True)
     is_active = db.Column(db.Boolean, nullable=False, default=True)
     created_at = db.Column(db.DateTime, nullable=False, default=db.func.now())
     course_id = db.Column(db.String(100), nullable=True)

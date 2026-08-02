@@ -16,6 +16,7 @@ from application.utilities.schema_check import check_for_schema_drift
 from flask import Flask, g, jsonify, session
 from flask_cors import CORS
 from flask_limiter import RateLimitExceeded
+from flask_talisman import Talisman
 from flask_wtf.csrf import generate_csrf
 from sqlalchemy import inspect
 from werkzeug.exceptions import RequestEntityTooLarge
@@ -93,6 +94,26 @@ def create_app(config_class=None):
         origins=cors_origins,
         supports_credentials=True,
     )
+
+    is_prod = os.getenv("FLASK_ENV", "development").lower() == "production"
+    app.config["SESSION_COOKIE_HTTPONLY"] = True
+    if is_prod:
+        app.config["SESSION_COOKIE_SECURE"] = True
+
+    csp = {
+        'default-src': [
+            '\'self\'',
+            '\'unsafe-inline\'',
+            '\'unsafe-eval\'',
+            'data:',
+            'blob:',
+            'http:',
+            'https:',
+            'ws:',
+            'wss:'
+        ]
+    }
+    Talisman(app, force_https=is_prod, content_security_policy=csp, session_cookie_secure=is_prod, session_cookie_http_only=True)
 
     # x_for=1 tells Flask to trust the first X-Forwarded-For header.
     # Only trust proxy headers in production, where nginx sets them. Trusting
@@ -300,24 +321,119 @@ def seed_global_data():
 
         default_templates = [
             {
-                "name": "CS1 Capstone",
-                "description": "Students create a custom Python project utilizing Turtle graphics to design artwork, draw shapes, and build animations. They learn how to control turtle movement, use variables, loops, and conditions to structure their drawing logic, and organize code into functions. By the end, students understand coordinate systems, color maps, and procedural drawing.",
-            },
-            {
-                "name": "CS2 Capstone",
-                "description": "Students design and build a 2D interactive game or simulation using conditional logic, keyboard controls, and collision detection. They learn to manage game state, implement loops, handle player input, and dynamically update game elements on screen. By the end, students understand key game design principles and state-driven program flow.",
-            },
-            {
-                "name": "Tabula Rasa",
-                "description": "In this project students create a CodeCombat game level from scratch by spawning all the objects enemies and goals needed to make the game playable. They learn how to use coordinates to position items on the grid set object properties to control behavior and define victory conditions through goals.",
-            },
-            {
                 "name": "Text-Based Adventure",
                 "description": "In this project students create a text-based adventure game where players navigate through different scenarios solving puzzles and making choices that affect the outcome. The game introduces basic coding concepts such as variables loops and conditionals. It offers an interactive and engaging way to learn programming while creating a fun story-driven experience.",
+                "chapter": "Computer Science 2",
+            },
+            {
+                "name": "Practical Programming",
+                "description": "In this project students designed and built a practical program to solve a real-life problem or simplify a daily task. They brainstormed ideas identified a need and used their coding skills to create a tool or script that met this need. The project encouraged creative thinking and helped students apply what they learned in class. By the end they had a functional program that could be used beyond the classroom showing how coding can make everyday tasks easier.",
+                "chapter": None,
             },
             {
                 "name": "Dangerous Skies",
                 "description": "Create an obstacle course using for and while loops based on player performance. Learning Goals: Use for and while loops to build an obstacle course. Concepts Covered: Data Types For Loops Iteration Nesting While Loops",
+                "chapter": "Ozaria Chapter 3",
+            },
+            {
+                "name": "Turtle Dragon",
+                "description": "This project helps students practice key programming concepts like objects, methods, and arguements all while expressing their creativity. Each student will design and code their own unique dragon bringing it to life through code.",
+                "chapter": "Introduction to Computer Science",
+            },
+            {
+                "name": "Simulation",
+                "description": "In this capstone project students will create a simulation of their choosing. The project emphasizes applying the Engineering Design Process: defining the problem designing a solution building the simulation revising based on user feedback and reflecting on the process. Students are encouraged to use tools and resources including randomization or other functions to create dynamic simulations. Peer collaboration is key as students will test each other's simulations and provide constructive feedback to improve the final project.",
+                "chapter": "Computer Science 3",
+            },
+            {
+                "name": "bolt.new",
+                "description": "In this project students utilize bolt.new—an AI-powered web development environment—to prompt iterate and deploy a full-stack web application using natural language commands.",
+                "chapter": None,
+            },
+            {
+                "name": "Tabula Rasa",
+                "description": "In this project students create a CodeCombat game level from scratch by spawning all the objects enemies and goals needed to make the game playable. They learn how to use coordinates to position items on the grid set object properties to control behavior and define victory conditions through goals. By the end students understand how a game world is built programmatically—how each element is placed configured and connected to form a complete functional level.",
+                "chapter": "Game Development 1",
+            },
+            {
+                "name": "Gauntlet",
+                "description": "In this challenge students must program their hero to survive a gauntlet of enemies and traps. The project focuses on refining movement logic timing and debugging code to ensure the hero completes the course safely.",
+                "chapter": "Sky Mountain",
+            },
+            {
+                "name": "Game Dev 1 Final Project",
+                "description": "In this project students create a CodeCombat game level from scratch by spawning all the objects enemies and goals needed to make the game playable. They learn how to use coordinates to position items on the grid set object properties to control behavior and define victory conditions through goals.",
+                "chapter": "Game Development 1",
+            },
+            {
+                "name": "Story Maker",
+                "description": "Students use event handling and conditionals to create an interactive story. This project focuses on capturing user input to create branching narratives allowing players to choose different paths through the storyline.",
+                "chapter": "Ozaria Chapter 2",
+            },
+            {
+                "name": "Wanted Poster",
+                "description": "Students apply their knowledge of layout and positioning to design a digital Wanted Poster. This project emphasizes the use of coordinates (or HTML/CSS) to arrange text and images in a visually appealing format.",
+                "chapter": "Web Development 1",
+            },
+            {
+                "name": "Game Dev 2 Final Project",
+                "description": "Students build a complex game level that introduces user input handling. They learn to create event listeners for keyboard or mouse actions allowing for interactive character movement and game mechanics.",
+                "chapter": "Game Development 2",
+            },
+            {
+                "name": "Quizlet",
+                "description": "Students create a quiz application using data structures like arrays and dictionaries. The focus is on storing questions and answers paired together checking user input against the stored data and tracking the score.",
+                "chapter": "Web Development 2",
+            },
+            {
+                "name": "Game Dev 3",
+                "description": "In this advanced game development project students implement complex game logic including multiple levels scoring systems and enemy AI behavior. It requires mastering functions and state management.",
+                "chapter": "Game Development 3",
+            },
+            {
+                "name": "Arcade Card or Board Game",
+                "description": "Students design and program a digital version of a classic arcade card or board game. This project emphasizes object-oriented programming principles game physics and complex logic flow.",
+                "chapter": "Computer Science 4",
+            },
+            {
+                "name": "Curiosity Sandbox",
+                "description": "Students utilize advanced logic and creative coding tools to build an open-ended simulation or interactive art piece. The project encourages experimentation with loops and variables to generate dynamic visual effects.",
+                "chapter": "Ozaria 4",
+            },
+            {
+                "name": "Binary Search & Algorithms",
+                "description": "Students explore computer science fundamentals by implementing efficient search and sorting algorithms to solve complex data problems.",
+                "chapter": "Computer Science 5",
+            },
+            {
+                "name": "Capstone Challenge",
+                "description": "The final challenge where students combine all learned skills to solve complex algorithmic puzzles or build a comprehensive software application from scratch.",
+                "chapter": "Computer Science 6",
+            },
+            {
+                "name": "Group Roblox Game",
+                "description": "Our class has completed our first group project '” their very own Roblox game! By working together, they were able to build something much bigger than they could have achieved individually. While the game itself still has a lot of work ahead, this project has been a fantastic experience in teamwork, collaboration, and real-world development.",
+                "chapter": "Ozaria 4",
+            },
+            {
+                "name": "Favorite Animal Page",
+                "description": "",
+                "chapter": "Web Development 1",
+            },
+            {
+                "name": "Profile Page",
+                "description": "Students put their knowledge of HTML, CSS, and JS to work by creating their very own profile page! This will be a starting point for a future portfolio/resume page where they can show off all their accomplishments.",
+                "chapter": "Web Development 2",
+            },
+            {
+                "name": "CS1 Capstone",
+                "description": "Students create a custom Python project utilizing Turtle graphics to design artwork, draw shapes, and build animations. They learn how to control turtle movement, use variables, loops, and conditions to structure their drawing logic, and organize code into functions. By the end, students understand coordinate systems, color maps, and procedural drawing.",
+                "chapter": "Computer Science 1",
+            },
+            {
+                "name": "CS2 Capstone",
+                "description": "Students design and build a 2D interactive game or simulation using conditional logic, keyboard controls, and collision detection. They learn to manage game state, implement loops, handle player input, and dynamically update game elements on screen. By the end, students understand key game design principles and state-driven program flow.",
+                "chapter": "Computer Science 2",
             },
         ]
 
@@ -328,6 +444,10 @@ def seed_global_data():
             if not template:
                 db.session.add(ProjectTemplate(**template_data))
                 logger.info(f"Seeded project template '{template_data['name']}'.")
+            else:
+                if template.chapter != template_data.get("chapter"):
+                    template.chapter = template_data.get("chapter")
+                    logger.info(f"Updated chapter for project template '{template_data['name']}'.")
 
         db.session.commit()
 

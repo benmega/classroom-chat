@@ -113,9 +113,9 @@ const AdminAchievements = () => {
                         </div>
 
                         <div className="form-group">
-                            <label htmlFor="input-115">Badge Icon (PNG/JPG/WEBP)</label>
+                            <label htmlFor="badge-upload">Badge Icon (PNG/JPG/WEBP)</label>
                             <div className="file-upload-wrapper">
-                                <input id="input-115" 
+                                <input 
                                     type="file" 
                                     accept="image/*" 
                                     onChange={handleFileChange}

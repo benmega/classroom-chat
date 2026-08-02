@@ -21,6 +21,8 @@ class UserCertificate(db.Model):
     file_path = db.Column(db.String(256), nullable=True)
     reviewed = db.Column(db.Boolean, default=False)
     reviewed_at = db.Column(db.DateTime)
+    is_auto_recommended = db.Column(db.Boolean, default=False)
+    recommendation_reason = db.Column(db.String(256), nullable=True)
 
     # Relationships
     achievement = db.relationship("Achievement", backref="certificates")
@@ -46,6 +48,8 @@ class UserCertificate(db.Model):
             "file_path": self.file_path,
             "reviewed": self.reviewed,
             "reviewed_at": self.reviewed_at.isoformat() if self.reviewed_at else None,
+            "is_auto_recommended": self.is_auto_recommended,
+            "recommendation_reason": self.recommendation_reason,
         }
 
     __table_args__ = (db.UniqueConstraint("user_id", "achievement_id"),)

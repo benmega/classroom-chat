@@ -31,6 +31,20 @@ def test_get_feed_admin(client, init_db, sample_user):
     assert len(data["messages"]) == 2
 
 
+def test_get_feed_parent_forbidden(client, init_db, sample_user):
+    sample_user.role = "parent"
+    db.session.commit()
+
+    with client.session_transaction() as sess:
+        sess["user"] = sample_user.id
+
+    response = client.get("/message/api/feed")
+    assert response.status_code == 403
+    data = response.get_json()
+    assert data["success"] is False
+    assert "Forbidden" in data["error"]
+
+
 def test_get_feed_student(client, init_db, sample_user, sample_classroom):
     # User in a classroom
     sample_user.classrooms.append(sample_classroom)

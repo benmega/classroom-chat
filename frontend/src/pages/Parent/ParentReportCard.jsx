@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Loader2, ArrowLeft, Activity, Award, BookOpen, User, ChevronDown, ChevronUp, Zap, TrendingUp, BarChart2 } from 'lucide-react';
 import client from '../../api/client';
-import toast from 'react-hot-toast';
 import { getApiUrl } from '../../utils/apiUrl';
 import ContributionGraph from '../../components/profile/ContributionGraph';
 import ProjectPortfolio from '../../components/profile/ProjectPortfolio';
@@ -68,29 +67,6 @@ const ParentReportCard = () => {
     const [slideshowIndex, setSlideshowIndex] = useState(null);
     const [historyData, setHistoryData] = useState(null);
 
-    // Track request states
-    const [parentSelectedTrack, setParentSelectedTrack] = useState('ozaria');
-    const [isSubmittingParentRequest, setIsSubmittingParentRequest] = useState(false);
-    const [localPendingRequest, setLocalPendingRequest] = useState(null);
-
-    const handleParentRequestSubmit = async () => {
-        setIsSubmittingParentRequest(true);
-        try {
-            const response = await client.post('/api/track-requests/', {
-                requester_type: 'parent',
-                requested_track: parentSelectedTrack,
-                student_id: studentId
-            });
-            if (response.data.success) {
-                toast.success("Track change request submitted to the teacher!");
-                setLocalPendingRequest({ requested_track: parentSelectedTrack });
-            }
-        } catch (err) {
-            toast.error(err.response?.data?.message || "Failed to submit request.");
-        } finally {
-            setIsSubmittingParentRequest(false);
-        }
-    };
 
     useEffect(() => {
         const fetchReport = async () => {
@@ -180,63 +156,6 @@ const ParentReportCard = () => {
         );
     }
 
-    // Chart.js data configurations
-    const duckChartData = historyData?.duck_history ? {
-        labels: historyData.duck_history.labels,
-        datasets: [{
-            label: 'Duck Balance',
-            data: historyData.duck_history.data,
-            borderColor: '#0eb2bb',
-            backgroundColor: 'rgba(14, 178, 187, 0.12)',
-            pointBackgroundColor: '#0eb2bb',
-            pointBorderColor: '#fff',
-            pointBorderWidth: 2,
-            pointRadius: 4,
-            tension: 0.4,
-            fill: true,
-        }],
-    } : null;
-
-    const challengeChartData = historyData?.challenge_history ? {
-        labels: historyData.challenge_history.labels,
-        datasets: [{
-            label: 'Challenges Completed',
-            data: historyData.challenge_history.data,
-            backgroundColor: 'rgba(16, 185, 129, 0.75)',
-            borderColor: '#10b981',
-            borderRadius: 6,
-            borderSkipped: false,
-        }],
-    } : null;
-
-    const sharedChartOptions = {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: { display: false },
-            tooltip: {
-                backgroundColor: 'rgba(15, 15, 25, 0.92)',
-                titleColor: '#e2e8f0',
-                bodyColor: '#94a3b8',
-                borderColor: 'rgba(255,255,255,0.08)',
-                borderWidth: 1,
-                padding: 10,
-                cornerRadius: 8,
-            },
-        },
-        scales: {
-            x: {
-                grid: { color: 'rgba(255,255,255,0.05)' },
-                ticks: { color: 'var(--text-muted)', font: { size: 11 }, maxTicksLimit: 8 },
-            },
-            y: {
-                grid: { color: 'rgba(255,255,255,0.05)' },
-                ticks: { color: 'var(--text-muted)', font: { size: 11 } },
-                beginAtZero: true,
-            },
-        },
-    };
-
     const ccLevels = reportData.cc_levels !== undefined ? reportData.cc_levels : (reportData.course_progress?.codecombat?.levels_completed || 0);
     const ozLevels = reportData.oz_levels !== undefined ? reportData.oz_levels : (reportData.course_progress?.ozaria?.levels_completed || 0);
     const totalLevels = ccLevels + ozLevels;
@@ -295,37 +214,7 @@ const ParentReportCard = () => {
                                     {reportData.current_activity}
                                 </p>
                             )}
-                            <div className="parent-track-settings" style={{ marginTop: '1rem', display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
-                                <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', fontWeight: '600' }}>
-                                    Learning Track: <span style={{ color: 'var(--primary-color)', fontWeight: '800' }}>{reportData.active_track?.toUpperCase() || 'CS'}</span>
-                                </span>
-                                {reportData.pending_request || localPendingRequest ? (
-                                    <span className="pending-badge-parent" style={{ padding: '0.25rem 0.75rem', borderRadius: '8px', fontSize: '0.8rem', background: 'rgba(245, 158, 11, 0.15)', color: '#f59e0b', border: '1px solid rgba(245, 158, 11, 0.3)' }}>
-                                        ⏳ Change Request Pending: {(localPendingRequest?.requested_track || reportData.pending_request?.requested_track)?.toUpperCase()}
-                                    </span>
-                                ) : (
-                                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                                        <select 
-                                            value={parentSelectedTrack} 
-                                            onChange={e => setParentSelectedTrack(e.target.value)}
-                                            style={{ padding: '0.35rem 0.5rem', borderRadius: '6px', background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)', color: 'var(--text-primary)', fontSize: '0.85rem' }}
-                                        >
-                                            <option value="ozaria">Ozaria</option>
-                                            <option value="cs">Computer Science (CS)</option>
-                                            <option value="gd">Game Development (GD)</option>
-                                            <option value="wd">Web Development (WD)</option>
-                                        </select>
-                                        <button 
-                                            onClick={handleParentRequestSubmit} 
-                                            disabled={isSubmittingParentRequest}
-                                            className="btn-primary"
-                                            style={{ padding: '0.35rem 0.75rem', fontSize: '0.85rem', borderRadius: '6px', fontWeight: '600' }}
-                                        >
-                                            {isSubmittingParentRequest ? 'Requesting...' : 'Request Track Change'}
-                                        </button>
-                                    </div>
-                                )}
-                            </div>
+
                         </div>
                     </div>
                 </div>
@@ -378,55 +267,7 @@ const ParentReportCard = () => {
                             </section>
                         )}
 
-                        {/* Feature 4: Historical Progress Charts */}
-                        {(!historyData || (
-                            (historyData.duck_history?.labels && historyData.duck_history.labels.length > 0) ||
-                            (historyData.challenge_history?.labels && historyData.challenge_history.labels.length > 0)
-                        )) && (
-                            <section className="dashboard-panel">
-                                <div className="panel-header">
-                                    <h2><TrendingUp size={20} /> Progress Over Time</h2>
-                                </div>
 
-                                {!historyData ? (
-                                    <div className="history-charts-loading">
-                                        <Skeleton height="200px" borderRadius="8px" style={{ marginBottom: '1.5rem' }} />
-                                        <Skeleton height="200px" borderRadius="8px" />
-                                    </div>
-                                ) : (
-                                    <div className="history-charts-wrapper">
-                                        {/* Duck Balance Line Chart */}
-                                        <div className="chart-block">
-                                            <p className="chart-label">
-                                                🦆 Duck Balance (last 30 days)
-                                            </p>
-                                            {duckChartData && duckChartData.labels.length > 0 ? (
-                                                <div style={{ height: '200px', position: 'relative' }}>
-                                                    <Line data={duckChartData} options={sharedChartOptions} />
-                                                </div>
-                                            ) : (
-                                                <div className="chart-empty">No duck transactions in the last 30 days.</div>
-                                            )}
-                                        </div>
-
-                                        {/* Challenge Completions Bar Chart */}
-                                        <div className="chart-block">
-                                            <p className="chart-label">
-                                                <BarChart2 size={14} style={{ display: 'inline', marginRight: '6px', verticalAlign: 'middle' }} />
-                                                Daily Challenge Completions
-                                            </p>
-                                            {challengeChartData && challengeChartData.labels.length > 0 ? (
-                                                <div style={{ height: '200px', position: 'relative' }}>
-                                                    <Bar data={challengeChartData} options={sharedChartOptions} />
-                                                </div>
-                                            ) : (
-                                                <div className="chart-empty">No challenge completions in the last 30 days.</div>
-                                            )}
-                                        </div>
-                                    </div>
-                                )}
-                            </section>
-                        )}
 
                         {/* Recent Events Feed */}
                         {historyData?.recent_events && historyData.recent_events.length > 0 && (
@@ -434,7 +275,7 @@ const ParentReportCard = () => {
                                 <div className="panel-header">
                                     <h2><Activity size={20} /> Recent Activity</h2>
                                 </div>
-                                <div className="events-feed">
+                                <div className="events-feed" style={{ maxHeight: '400px', overflowY: 'auto', paddingRight: '0.5rem' }}>
                                     {historyData.recent_events.map((event, idx) => (
                                         <div key={idx} className={`event-item event-item--${event.type}`}>
                                             <div className="event-icon">

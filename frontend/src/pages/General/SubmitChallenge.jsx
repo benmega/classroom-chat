@@ -22,7 +22,6 @@ const SubmitChallenge = () => {
 
     // Certificate support
     const [isCertificate, setIsCertificate] = useState(false);
-    const [certificateFile, setCertificateFile] = useState(null);
     const [uploadProgress, setUploadProgress] = useState(0);
     
     useEffect(() => {
@@ -30,23 +29,11 @@ const SubmitChallenge = () => {
             setIsCertificate(true);
         } else {
             setIsCertificate(false);
-            setCertificateFile(null);
             setUploadProgress(0);
         }
     }, [url]);
 
-    const handleFileChange = (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            if (file.type === 'application/pdf') {
-                setCertificateFile(file);
-            } else {
-                toast.error('Please select a valid PDF file.');
-                e.target.value = null;
-                setCertificateFile(null);
-            }
-        }
-    };
+
 
     const handleCourseRequest = async () => {
         try {
@@ -69,14 +56,8 @@ const SubmitChallenge = () => {
         setIsSubmitting(true);
         try {
             if (isCertificate) {
-                if (!certificateFile) {
-                    toast.error("Please upload the certificate PDF file.");
-                    setIsSubmitting(false);
-                    return;
-                }
                 const formData = new FormData();
                 formData.append('certificate_url', url);
-                formData.append('certificate_file', certificateFile);
 
                 setUploadProgress(0);
                 const response = await client.post('/api/achievements/submit_certificate', formData, {
@@ -96,7 +77,6 @@ const SubmitChallenge = () => {
                         zIndex: 9999
                     });
                     setUrl('');
-                    setCertificateFile(null);
                     setHelpers('');
                     setNotes('');
                     setUploadProgress(0);
@@ -180,24 +160,7 @@ const SubmitChallenge = () => {
                             </div>
                         </div>
 
-                        {isCertificate && (
-                            <div className="form-group" style={{ animation: 'fadeIn 0.3s ease-out' }}>
-                                <label htmlFor="certificate_file">Upload Certificate PDF</label>
-                                <div className="submit-cert-file-input-wrapper" style={{ marginTop: '0.5rem' }}>
-                                    <input 
-                                        type="file" 
-                                        id="certificate_file"
-                                        onChange={handleFileChange}
-                                        accept="application/pdf" 
-                                        className="submit-cert-file-input"
-                                        required={isCertificate}
-                                    />
-                                    <div className="file-dummy">
-                                        {certificateFile ? certificateFile.name : 'Choose a PDF file...'}
-                                    </div>
-                                </div>
-                            </div>
-                        )}
+
 
                         <div className={`optional-section ${showOptional ? 'is-expanded' : ''}`}>
                             <button 

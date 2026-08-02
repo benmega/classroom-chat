@@ -114,6 +114,9 @@ def handle_send_message(data):
     if not user:
         return {"success": False, "error": "User not found"}
 
+    if getattr(user, "role", None) == "parent":
+        return {"success": False, "error": "Forbidden: Parents cannot send chat messages"}
+
     content = data.get("content")
     if not content or len(content) > 4000:
         return {"success": False, "error": "Invalid message length"}

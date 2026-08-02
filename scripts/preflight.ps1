@@ -30,7 +30,7 @@ python scripts/check_n_plus_one.py ; Assert-Success
 
 # Testing
 Write-Host " -> Running Pytest with Coverage..." -ForegroundColor DarkGray
-python -m pytest --cov=. --cov-report=term ; Assert-Success
+python -m pytest ; Assert-Success
 
 # Migration linter
 Write-Host " -> Linting migrations for idempotency..." -ForegroundColor DarkGray

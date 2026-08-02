@@ -1,0 +1,40 @@
+#!/bin/sh
+# pre-push hook: runs Ruff and ESLint before any push reaches the remote.
+# Install with: powershell scripts/install-hooks.ps1
+# To bypass in an emergency: git push --no-verify
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+
+echo "========================================================" >&2
+echo "  PRE-PUSH LINT GATE (Ruff + ESLint)" >&2
+echo "  Run 'git push --no-verify' to bypass in emergencies." >&2
+echo "========================================================" >&2
+
+# ---- Ruff (Python) ---------------------------------------------------------
+echo "" >&2
+echo "--> Running Ruff..." >&2
+ruff check "$REPO_ROOT"
+RUFF_EXIT=$?
+if [ $RUFF_EXIT -ne 0 ]; then
+    echo "" >&2
+    echo "PUSH BLOCKED: Ruff found errors. Fix them, then push again." >&2
+    echo "  Tip: 'ruff check --fix .' will auto-fix many issues." >&2
+    exit $RUFF_EXIT
+fi
+echo "    Ruff: OK" >&2
+
+# ---- ESLint (JavaScript/JSX) -----------------------------------------------
+echo "--> Running ESLint..." >&2
+cd "$REPO_ROOT/frontend" && npm run lint --silent
+ESLINT_EXIT=$?
+if [ $ESLINT_EXIT -ne 0 ]; then
+    echo "" >&2
+    echo "PUSH BLOCKED: ESLint found errors. Fix them, then push again." >&2
+    exit $ESLINT_EXIT
+fi
+echo "    ESLint: OK" >&2
+
+echo "" >&2
+echo "  Lint gate passed. Proceeding with push." >&2
+echo "========================================================" >&2
+exit 0

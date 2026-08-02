@@ -3,12 +3,10 @@ import { Link, useLocation } from 'react-router-dom';
 import { Home, LogOut, User, MessageSquare } from 'lucide-react';
 import client from '../../api/client';
 import { getApiUrl } from '../../utils/apiUrl';
-import useAuthStore from '../../store/useAuthStore';
 
 const ParentNavRail = ({ handleLogout }) => {
     const location = useLocation();
     const [children, setChildren] = useState([]);
-    const { unreadCount } = useAuthStore();
 
     useEffect(() => {
         const fetchChildren = async () => {
@@ -47,24 +45,6 @@ const ParentNavRail = ({ handleLogout }) => {
                     </Link>
                 </div>
 
-                {/* Chat */}
-                <div className={`nav-rail-item-container ${isActive('/chat') ? 'active' : ''}`}>
-                    <div className="nav-rail-indicator" />
-                    <Link
-                        to="/chat"
-                        className={`nav-rail-item ${isActive('/chat') ? 'active' : ''}`}
-                        data-tooltip="Chat"
-                        aria-label="Chat"
-                    >
-                        <div className="nav-badge-container">
-                            <MessageSquare size={20} />
-                            {unreadCount > 0 && (
-                                <span className="nav-unread-badge">{unreadCount}</span>
-                            )}
-                        </div>
-                    </Link>
-                </div>
-
                 {/* Divider if we have children */}
                 {children.length > 0 && (
                     <div className="nav-rail-divider" />
@@ -99,19 +79,6 @@ const ParentNavRail = ({ handleLogout }) => {
                         </div>
                     );
                 })}
-
-                {/* Profile */}
-                <div className={`nav-rail-item-container ${isActive('/profile') ? 'active' : ''}`}>
-                    <div className="nav-rail-indicator" />
-                    <Link
-                        to="/profile"
-                        className={`nav-rail-item ${isActive('/profile') ? 'active' : ''}`}
-                        data-tooltip="Profile"
-                        aria-label="Profile"
-                    >
-                        <User size={20} />
-                    </Link>
-                </div>
             </div>
 
             {/* Bottom — logout */}

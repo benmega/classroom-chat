@@ -2,7 +2,7 @@ import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { CreateUserModal, AdjustDucksModal, AdjustPacketsModal, SetDrawerModal, ResetPasswordModal, StartConversationModal, ManageChildrenModal, ConnectionCardModal, BulkConnectionCardsModal } from './AdminModals';
+import { CreateUserModal, AdjustDucksModal, AdjustPacketsModal, SetDrawerModal, ResetPasswordModal, StartConversationModal, ManageChildrenModal, ConnectionCardModal, BulkConnectionCardsModal, AddCourseModal } from './AdminModals';
 
 describe('AdminModals', () => {
   beforeEach(() => {
@@ -329,6 +329,71 @@ describe('AdminModals', () => {
       expect(screen.getByText('stud1')).toBeInTheDocument();
       expect(screen.getByText('XYZ-987')).toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'Print 1 Cards' })).toBeInTheDocument();
+    });
+  });
+
+  describe('AddCourseModal', () => {
+    it('renders course options and handles submission', async () => {
+      const onClose = vi.fn();
+      const onSubmit = vi.fn();
+      const courses = [
+        { id: 'course-py', name: 'Python Basics' },
+        { id: 'course-js', name: 'JavaScript Basics' }
+      ];
+
+      render(
+        <AddCourseModal
+          isOpen={true}
+          onClose={onClose}
+          onSubmit={onSubmit}
+          courses={courses}
+          loading={false}
+        />
+      );
+
+      expect(screen.getByText('Connect Course to Classroom')).toBeInTheDocument();
+
+      const select = screen.getByLabelText('Select Course');
+      await userEvent.selectOptions(select, 'course-py');
+
+      const instanceInput = screen.getByLabelText(/Instance ID/i);
+      await userEvent.type(instanceInput, 'inst-123');
+
+      const submitBtn = screen.getByRole('button', { name: 'Connect Course' });
+      await userEvent.click(submitBtn);
+
+      expect(onSubmit).toHaveBeenCalledWith({
+        course_id: 'course-py',
+        instance_id: 'inst-123'
+      });
+    });
+
+    it('allows entering custom course ID', async () => {
+      const onSubmit = vi.fn();
+
+      render(
+        <AddCourseModal
+          isOpen={true}
+          onClose={vi.fn()}
+          onSubmit={onSubmit}
+          courses={[]}
+          loading={false}
+        />
+      );
+
+      const select = screen.getByLabelText('Select Course');
+      await userEvent.selectOptions(select, 'custom');
+
+      const customInput = screen.getByLabelText('Custom Course ID');
+      await userEvent.type(customInput, 'Custom_Python_101');
+
+      const submitBtn = screen.getByRole('button', { name: 'Connect Course' });
+      await userEvent.click(submitBtn);
+
+      expect(onSubmit).toHaveBeenCalledWith({
+        course_id: 'Custom_Python_101',
+        instance_id: undefined
+      });
     });
   });
 });

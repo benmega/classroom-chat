@@ -133,13 +133,13 @@ describe('AdminUserDashboard Component Redesign', () => {
         );
 
         await waitFor(() => {
-            expect(screen.getByText('+50')).toBeInTheDocument();
+            expect(screen.getByText('+1')).toBeInTheDocument();
         });
 
-        const preset50Btn = screen.getByText('+50');
-        fireEvent.click(preset50Btn);
+        const preset1Btn = screen.getByText('+1');
+        fireEvent.click(preset1Btn);
 
         const duckInputs = screen.getAllByPlaceholderText('Amount (+/-)');
-        expect(duckInputs[0].value).toBe('50');
+        expect(duckInputs[0].value).toBe('1');
     });
 });

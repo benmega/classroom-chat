@@ -38,12 +38,14 @@ const LandingMobile = () => {
                         </div>
 
                         <div className="hero-cta animate-fade-in" style={{ animationDelay: '0.2s', display: 'flex', flexDirection: 'column', gap: '1rem', width: '100%', maxWidth: '300px' }}>
-
-                            <button onClick={() => navigate('/signup?role=student')} className="btn-secondary" style={{ width: '100%', padding: '0.8rem' }}>
-                                I'm a Student
+                            <button onClick={() => navigate('/signup?role=student')} className="btn-premium btn-premium-lg" style={{ width: '100%', padding: '0.8rem' }}>
+                                New Student
                             </button>
                             <button onClick={() => navigate('/signup?role=parent')} className="btn-premium btn-premium-lg w-100">
-                                I'm a Parent
+                                New Parent
+                            </button>
+                            <button onClick={() => navigate('/login')} className="btn-secondary" style={{ width: '100%', padding: '0.8rem' }}>
+                                Existing Student
                             </button>
                         </div>
                     </div>

@@ -36,7 +36,7 @@ const AdminUserDashboard = () => {
         handlePassChapterPreview, handlePassChapterConfirm, handleAdjustDucks,
         handleAdjustPackets, handleSetDrawer, handleResetPassword, handleRemoveUser,
         handleApproveUser, handleRejectUser, handleToggleChildLink, handleToggleParentLink,
-        handleAssignProjectSubmit, handleUpdateUser
+        handleAssignProjectSubmit, handleUpdateUser, handleGenerateManualCertificate
     } = useAdminUserDashboard(userId);
 
     const [editForm, setEditForm] = useState({
@@ -52,6 +52,7 @@ const AdminUserDashboard = () => {
     });
 
     const [duckAmountInput, setDuckAmountInput] = useState('');
+    const [selectedCertCourse, setSelectedCertCourse] = useState('cs-1');
 
     useEffect(() => {
         if (user) {
@@ -133,7 +134,7 @@ const AdminUserDashboard = () => {
                         <div className="hero-name-row">
                             <h2 className="hero-name">{user.nickname || user.username}</h2>
                             <span className="hero-handle">@{user.username}</span>
-                            <Link to={`/profile/${user.username}`} className="hero-profile-link" title="View Public Profile" target="_blank">
+                            <Link to={`/profile/${user.slug}`} className="hero-profile-link" title="View Public Profile" target="_blank">
                                 <ExternalLink size={13} />
                             </Link>
                         </div>
@@ -254,10 +255,8 @@ const AdminUserDashboard = () => {
                                         </div>
                                         <input type="hidden" name="username" value={user.username} />
                                         <div className="econ-preset-pills">
-                                            <button type="button" className="preset-pill" onClick={() => handlePresetDuck(10)}>+10</button>
-                                            <button type="button" className="preset-pill" onClick={() => handlePresetDuck(50)}>+50</button>
-                                            <button type="button" className="preset-pill" onClick={() => handlePresetDuck(100)}>+100</button>
-                                            <button type="button" className="preset-pill neg" onClick={() => handlePresetDuck(-50)}>-50</button>
+                                            <button type="button" className="preset-pill" onClick={() => handlePresetDuck(1)}>+1</button>
+                                            <button type="button" className="preset-pill neg" onClick={() => handlePresetDuck(-1)}>-1</button>
                                         </div>
                                         <div className="econ-action-inputs">
                                             <input
@@ -363,6 +362,41 @@ const AdminUserDashboard = () => {
                                     <button className="btn-compact warning w-full mt-xs" onClick={handlePassChapterConfirm}>Confirm Pass Chapter</button>
                                 </div>
                             )}
+                        </div>
+                    )}
+
+                    {/* Manual Certificate Generation */}
+                    {user.role === 'student' && (
+                        <div className="compact-panel">
+                            <div className="panel-head"><Award size={16} /> Manual Certificate</div>
+                            <div className="dense-form-group-stack">
+                                <div className="inline-lbl">Select a course to generate an honorary certificate:</div>
+                                <select 
+                                    value={selectedCertCourse} 
+                                    onChange={(e) => setSelectedCertCourse(e.target.value)}
+                                    className="inline-input full mb-xs"
+                                    style={{ padding: '6px 8px', fontSize: '0.85rem', borderRadius: '4px', border: '1px solid #d1d5db', marginBottom: '8px' }}
+                                >
+                                    <option value="cs-1">CS1 - Computer Science 1</option>
+                                    <option value="cs-2">CS2 - Computer Science 2</option>
+                                    <option value="cs-3">CS3 - Computer Science 3</option>
+                                    <option value="cs-4">CS4 - Computer Science 4</option>
+                                    <option value="cs-5">CS5 - Computer Science 5</option>
+                                    <option value="cs-6">CS6 - Computer Science 6</option>
+                                    <option value="gd-1">GD1 - Game Development 1</option>
+                                    <option value="gd-2">GD2 - Game Development 2</option>
+                                    <option value="gd-3">GD3 - Game Development 3</option>
+                                    <option value="wd-1">WD1 - Web Development 1</option>
+                                    <option value="wd-2">WD2 - Web Development 2</option>
+                                    <option value="oz-1">Ozaria 1</option>
+                                    <option value="oz-2">Ozaria 2</option>
+                                    <option value="oz-3">Ozaria 3</option>
+                                    <option value="oz-4">Ozaria 4</option>
+                                </select>
+                                <button type="button" className="btn-compact primary w-full" onClick={() => handleGenerateManualCertificate(selectedCertCourse)} disabled={formLoading}>
+                                    <Sparkles size={14} /> Generate PDF Certificate
+                                </button>
+                            </div>
                         </div>
                     )}
 

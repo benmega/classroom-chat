@@ -19,6 +19,7 @@ backend/reports/certificates/
 *.log
 *.bak
 certificates/*
+mockups/Certificate_Samples/
 git_log.txt
 .agents/workflows/git-review.md
 

@@ -377,8 +377,9 @@ class User(db.Model):
         """Calculate progress based on challenges completed for a specific domain."""
         from .challenge_log import ChallengeLog
 
-        total_challenges = ChallengeLog.query.filter_by(
-            user_id=self.id, domain=domain
+        total_challenges = ChallengeLog.query.filter(
+            (ChallengeLog.user_id == self.id) &
+            ((ChallengeLog.domain == domain) | (ChallengeLog.course_id == domain))
         ).count()
         return total_challenges  # Modify if you want percentages based on predefined thresholds.
 
@@ -425,7 +426,7 @@ class User(db.Model):
             ).all()
             completed_slugs = {cl.challenge_slug for cl in user_logs}
 
-            all_challenges = Challenge.query.filter_by(domain=domain).all()
+            all_challenges = Challenge.query.filter_by(domain=domain).order_by(Challenge.sequence).all()
 
             courses_map = {}
             for c in all_challenges:
@@ -446,7 +447,7 @@ class User(db.Model):
                     if is_completed:
                         completed_count += 1
                     levels.append(
-                        {"name": c.name, "slug": c.slug, "is_completed": is_completed}
+                        {"name": c.name, "slug": c.slug, "sequence": c.sequence, "is_completed": is_completed}
                     )
 
                 if len(levels) > 0:
@@ -474,6 +475,7 @@ class User(db.Model):
                             {
                                 "name": cl.challenge_slug,
                                 "slug": cl.challenge_slug,
+                                "sequence": None,
                                 "is_completed": True,
                             }
                         )
@@ -549,6 +551,13 @@ class User(db.Model):
             # Note: Packets are no longer earned here. They are earned via projects or admin adjustment.
 
         self.duck_balance += amount
+
+        # Invariant: earned_ducks >= duck_balance at all times.
+        # earned_ducks is a lifetime counter (never decremented by spending or penalties).
+        # If duck_balance somehow exceeds earned_ducks (e.g. due to legacy migration data),
+        # clamp earned_ducks up to duck_balance so the invariant always holds.
+        if self.earned_ducks < self.duck_balance:
+            self.earned_ducks = self.duck_balance
 
         # Record the transaction
         from .duck_transaction import DuckTransaction

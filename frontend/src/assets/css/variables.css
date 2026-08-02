@@ -31,6 +31,7 @@
 
     /* Neutral — Light & Clean */
     --bg-primary: #FFFFFF;
+    --surface-primary: var(--bg-primary);
     --bg-secondary: #F5F7FA;
     --bg-tertiary: #EAECF0;
     --text-primary: #0F172A;        /* Slate 900 — 17.9:1 on white ✓ */

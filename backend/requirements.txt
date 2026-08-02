@@ -12,6 +12,8 @@ cryptography
 gunicorn
 cryptography~=45.0.6
 Flask-Login~=0.6.3
+Flask-Talisman==1.1.0
+PyMuPDF
 Flask-Limiter~=3.12
 Flask-SocketIO~=5.3.6
 gevent

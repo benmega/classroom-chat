@@ -8,7 +8,7 @@ The Classroom Chat backend is a robust Python application built using the Flask 
 ### Core Technology Stack
 - **Framework**: [Flask 3.1.1](https://flask.palletsprojects.com/)
 - **ORM**: [SQLAlchemy](https://www.sqlalchemy.org/) & [Flask-SQLAlchemy](https://flask-sqlalchemy.palletsprojects.com/)
-- **Real-time**: [Flask-SocketIO](https://flask-socketio.readthedocs.io/) (via [Eventlet](https://eventlet.net/))
+- **Real-time**: [Flask-SocketIO](https://flask-socketio.readthedocs.io/) (via [gevent](http://www.gevent.org/))
 - **Security**: [Flask-Limiter](https://flask-limiter.readthedocs.io/), [Flask-WTF (CSRF)](https://flask-wtf.readthedocs.io/), [Cryptography](https://cryptography.io/)
 - **Scheduling**: [Flask-APScheduler](https://github.com/viniciuschiele/flask-apscheduler)
 - **AI Integration**: [OpenAI Python Library](https://github.com/openai/openai-python)
@@ -45,7 +45,7 @@ API endpoints are structured into logical modules using **Flask Blueprints**. Th
 ## 3. Database & Models
 
 ### Relational Mapping
-The system uses **SQLite** (or PostgreSQL in production) via the SQLAlchemy ORM. The relational schema is extensive, with core entities including:
+The system uses **SQLite** via the SQLAlchemy ORM in both development and production (`backend/instance/dev_users.db` / `prod_users.db`). No Postgres driver is installed, so `DATABASE_URL` must point at a SQLite database. The relational schema is extensive, with core entities including:
 - **Users**: Core entity with password hashing (Werkzeug) and relationship links to projects, achievements, and messages.
 - **Conversations & Messages**: Real-time messaging entities with participant tracking.
 - **Projects & Challenges**: Student submission workflows.
@@ -79,7 +79,7 @@ The backend implements a multi-layered **Authentication** system:
 
 Real-time features are powered by **Socket.io**.
 - **`socket_events.py`**: Contains centralized event handlers for chat messages, user status updates, and notification broadcasts.
-- **Async Mode**: Configured to use `eventlet` for high-performance concurrent socket connections.
+- **Async Mode**: Configured to use `gevent` (`SOCKETIO_ASYNC_MODE` in `application/config.py`); `main.py` applies `gevent.monkey.patch_all()` before the app is imported so the standard library plays nicely with it.
 - **Room Management**: Conversations are isolated into specific socket rooms to ensure broadcast privacy.
 
 ---
@@ -98,35 +98,32 @@ The backend integrates with **OpenAI** to provide an "AI Teacher" experience:
 
 ---
 
-## 7. License & Premium System
-Classroom Chat includes a custom **Premium License System**:
-- **Cryptographic Validation**: Uses RSA public keys to verify digital signatures in `.lic` files.
-- **Tiered Features**: Specific features are conditionally enabled based on the `IS_PREMIUM` status derived from the license.
-
----
-
-## 8. Directory Structure
+## 7. Directory Structure
 
 ```text
 backend/
 ├── application/       # Core app logic
 │   ├── ai/            # AI teacher services
+│   ├── commands/       # Flask CLI commands (e.g. `flask seed`)
 │   ├── decorators/    # Custom Flask decorators
 │   ├── models/        # SQLAlchemy model definitions
-│   ├── routes/        # API Blueprints
+│   ├── routes/        # API Blueprints (routes/admin/ holds the admin sub-modules)
 │   ├── services/      # Business logic and external wrappers
-│   ├── static/        # User-uploaded files and static assets
 │   ├── utilities/     # Internal helpers and formatting
+│   ├── socket_events.py  # Socket.IO event handlers
 │   └── extensions.py  # Shared Flask extension instances
-├── infrastructure/    # DB connection and deployment configs
-├── license/           # Cryptographic keys and license files
-├── main.py            # Entry point for the Flask application
+├── instance/           # SQLite DB files, logs (gitignored)
+├── migrations/          # Alembic migrations (Flask-Migrate)
+├── tests/               # Pytest suite
+├── main.py             # Entry point for the Flask application
 └── requirements.txt   # Backend dependencies
 ```
 
+Uploaded user assets (profile pictures, project images, certificates) live in `userData/` at the repo root, not under `backend/`.
+
 ---
 
-## 9. Testing Strategy
+## 8. Testing Strategy
 - **Tool**: [Pytest](https://pytest.org/) with [pytest-flask](https://github.com/pytest-dev/pytest-flask).
 - **Scope**:
     - **Unit Tests**: Coverage for individual models and utility functions.
