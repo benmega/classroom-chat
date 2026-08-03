@@ -11,7 +11,7 @@ import Chat from '../Chat/Chat';
 import Skeleton from '../../components/common/Skeleton';
 import SmartImage from '../../components/common/SmartImage';
 import { getApiUrl } from '../../utils/apiUrl';
-import { BulkConnectionCardsModal, AddCourseModal } from '../../components/admin/AdminModals';
+import { BulkConnectionCardsModal, AddCourseModal, EnrollStudentModal } from '../../components/admin/AdminModals';
 import './AdminClassDashboard.css';
 
 const getLanguageIconUrl = (language) => {
