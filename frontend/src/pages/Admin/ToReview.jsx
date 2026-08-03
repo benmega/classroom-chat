@@ -14,7 +14,6 @@ import {
     Clock,
     User,
     Hash,
-    RefreshCw,
     AlertCircle,
     Sliders,
     Eye,
@@ -47,7 +46,6 @@ const ToReview = () => {
 
     // App state
     const [isLoading, setIsLoading] = useState(true);
-    const [isRefreshing, setIsRefreshing] = useState(false);
     const [activeTab, setActiveTab] = useState('all');
     const [isProcessing, setIsProcessing] = useState(null);
 
@@ -63,9 +61,8 @@ const ToReview = () => {
     const [selectedTrades, setSelectedTrades] = useState(new Set());
     const [selectedTracks, setSelectedTracks] = useState(new Set());
 
-    const fetchAllData = useCallback(async (quiet = false) => {
-        if (!quiet) setIsLoading(true);
-        else setIsRefreshing(true);
+    const fetchAllData = useCallback(async () => {
+        setIsLoading(true);
 
         try {
             const [
@@ -128,7 +125,6 @@ const ToReview = () => {
             toast.error("Failed to load review workspace items.");
         } finally {
             setIsLoading(false);
-            setIsRefreshing(false);
         }
     }, []);
 
@@ -1007,14 +1003,7 @@ const ToReview = () => {
                 title="To Review" 
                 description="Items requiring teacher approvals."
             >
-                <button 
-                    className="btn-refresh" 
-                    onClick={() => fetchAllData(true)} 
-                    disabled={isRefreshing}
-                >
-                    <RefreshCw size={16} className={isRefreshing ? 'spin' : ''} /> 
-                    {isRefreshing ? 'Syncing...' : 'Sync'}
-                </button>
+                
             </AdminPageHeader>
 
             <div className="temporary-legacy-links" style={{ background: '#fff3cd', padding: '12px 16px', borderRadius: '8px', border: '1px solid #ffe69c', marginBottom: '20px', display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'center' }}>

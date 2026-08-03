@@ -71,7 +71,7 @@ def get_pending_requests():
         return jsonify({"success": False, "message": "Unauthorized"}), 401
 
     user = get_user(session_userid)
-    if not user or not user.is_admin:
+    if not user or user.role != 'admin':
         return jsonify({"success": False, "message": "Forbidden"}), 403
 
     requests = CourseInstanceRequest.query.filter_by(status="pending").all()
@@ -97,7 +97,7 @@ def approve_request(request_id):
         return jsonify({"success": False, "message": "Unauthorized"}), 401
 
     user = get_user(session_userid)
-    if not user or not user.is_admin:
+    if not user or user.role != 'admin':
         return jsonify({"success": False, "message": "Forbidden"}), 403
 
     data = request.get_json() or {}
@@ -144,7 +144,7 @@ def reject_request(request_id):
         return jsonify({"success": False, "message": "Unauthorized"}), 401
 
     user = get_user(session_userid)
-    if not user or not user.is_admin:
+    if not user or user.role != 'admin':
         return jsonify({"success": False, "message": "Forbidden"}), 403
 
     req = db.session.get(CourseInstanceRequest, request_id)

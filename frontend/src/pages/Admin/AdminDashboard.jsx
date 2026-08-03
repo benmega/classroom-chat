@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { 
     Users, 
     Search,
-    RefreshCw,
     Shield,
     Menu,
     Bot,
@@ -55,13 +54,11 @@ const AdminDashboard = () => {
     const {
         dashboardData,
         isLoading,
-        isRefreshing,
         activeModal,
         setActiveModal,
         formLoading,
         timeframe,
         setTimeframe,
-        fetchDashboardData,
         handleToggleAI,
         handleToggleMessages,
         handleUpdateMultiplier,
@@ -106,13 +103,7 @@ const AdminDashboard = () => {
     return (
         <div className="admin-dashboard">
             <AdminPageHeader title="Overview Dashboard">
-                <button 
-                    onClick={() => fetchDashboardData(timeframe)} 
-                    className={`refresh-btn ${isRefreshing ? 'spinning' : ''}`}
-                    disabled={isRefreshing}
-                >
-                    <RefreshCw size={20} />
-                </button>
+                
             </AdminPageHeader>
 
             <AdminStats 
@@ -194,7 +185,7 @@ const AdminDashboard = () => {
                                         onBlur={(e) => handleUpdateMultiplier(e.target.value)}
                                         className="multiplier-input-field"
                                     />
-                                    <RefreshCw size={14} color="var(--text-secondary)" />
+                                    
                                 </div>
                             </div>
                         </div>

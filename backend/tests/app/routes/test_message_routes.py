@@ -13,7 +13,7 @@ def test_get_feed_not_logged_in(client, init_db):
 
 
 def test_get_feed_admin(client, init_db, sample_user):
-    sample_user.is_admin = True
+    sample_user.role = "admin"
     db.session.commit()
 
     msg1 = Message(user_id=sample_user.id, content="msg1", is_global=False)

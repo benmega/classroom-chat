@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, RefreshCw, Key, Plus, School, Users, Globe, BookOpen, X } from 'lucide-react';
+import { Search, Key, Plus, School, Users, Globe, BookOpen, X } from 'lucide-react';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
 import Skeleton from '../../components/common/Skeleton';
@@ -43,7 +43,6 @@ const Classes = () => {
     const navigate = useNavigate();
     const [classrooms, setClassrooms] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [isRefreshing, setIsRefreshing] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [activeModal, setActiveModal] = useState(null);
     const [classroomCards, setClassroomCards] = useState([]);
@@ -58,7 +57,6 @@ const Classes = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const fetchClassrooms = useCallback(async () => {
-        setIsRefreshing(true);
         try {
             const response = await client.get('/api/admin/classrooms');
             setClassrooms(response.data.data?.classrooms || response.data.classrooms || []);
@@ -67,7 +65,6 @@ const Classes = () => {
             toast.error('Failed to load classrooms list.');
         } finally {
             setIsLoading(false);
-            setIsRefreshing(false);
         }
     }, []);
 
@@ -186,14 +183,7 @@ const Classes = () => {
                     >
                         <Key size={18} aria-hidden="true" /> Connection Cards
                     </button>
-                    <button
-                        className={`refresh-btn ${isRefreshing ? 'spinning' : ''}`}
-                        onClick={fetchClassrooms}
-                        disabled={isRefreshing}
-                        aria-label="Refresh classroom list"
-                    >
-                        <RefreshCw size={18} aria-hidden="true" />
-                    </button>
+                    
                 </div>
             </AdminPageHeader>
 

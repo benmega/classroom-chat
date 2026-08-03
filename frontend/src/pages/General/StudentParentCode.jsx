@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Copy, RefreshCw, AlertCircle } from 'lucide-react';
+import { Copy, AlertCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import client from '../../api/client';
 import './StudentParentCode.css';
@@ -69,10 +69,7 @@ const StudentParentCode = () => {
                     </button>
                 </div>
 
-                <button className="refresh-btn" onClick={fetchCode}>
-                    <RefreshCw size={16} />
-                    Refresh Code
-                </button>
+                
             </div>
         </div>
     );

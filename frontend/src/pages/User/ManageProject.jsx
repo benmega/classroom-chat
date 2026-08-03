@@ -117,7 +117,7 @@ const ManageProject = () => {
                         <div role="button" tabIndex={0} className={`step ${activeTab === 'code' ? 'active' : ''}`} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={() => setActiveTab('code')}>3. Code</div>
                     </div>
 
-                    {currentUser?.is_admin && (
+                    {currentUser?.role === 'admin' && (
                         <div className="admin-controls-panel">
                             <h4>Admin Controls</h4>
                             <div className="form-group">

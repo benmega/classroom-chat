@@ -73,7 +73,7 @@ def login():
         user_obj = User.query.filter_by(username=username).first()
 
         if user_obj and user_obj.check_password(password):
-            if not user_obj.is_approved and not user_obj.is_admin:
+            if not user_obj.is_approved and user_obj.role != 'admin':
                 if request.is_json:
                     return {
                         "error": "Your account is awaiting admin approval.",
@@ -344,7 +344,7 @@ def new_project():
         name = name.split("\\")[-1].split("/")[-1]
 
         target_user_id = user_id
-        if getattr(user_obj, "is_admin", False):
+        if getattr(user_obj, "role", "") == "admin":
             target_user_id = data.get("student_id") or user_id
 
         target_user = db.session.get(User, target_user_id)
@@ -360,7 +360,7 @@ def new_project():
             code_snippet=data.get("code_snippet"),
             teacher_comment=(
                 data.get("teacher_comment")
-                if getattr(user_obj, "is_admin", False)
+                if getattr(user_obj, "role", "") == "admin"
                 else None
             ),
             user_id=target_user.id,
@@ -414,7 +414,7 @@ def new_project():
                 {"id": u.id, "username": u.username, "slug": u.slug}
                 for u in User.query.all()
             ]
-            if getattr(user_obj, "is_admin", False)
+            if getattr(user_obj, "role", "") == "admin"
             else None
         )
         return {"students": student_list}
@@ -430,7 +430,7 @@ def edit_project(project_id):
     current_user = db.session.get(User, user_id)
     project = db.get_or_404(Project, project_id)
 
-    if project.user_id != user_id and not getattr(current_user, "is_admin", False):
+    if project.user_id != user_id and getattr(current_user, "role", "") != "admin":
         return "You do not have permission to edit this project.", 403
 
     if request.method == "POST":
@@ -451,7 +451,7 @@ def edit_project(project_id):
         project.video_url = data.get("video_url")
         project.code_snippet = data.get("code_snippet")
 
-        if getattr(current_user, "is_admin", False):
+        if getattr(current_user, "role", "") == "admin":
             project.teacher_comment = data.get("teacher_comment")
 
             # Allow admin to reassign student
@@ -825,8 +825,8 @@ def update_basic_user_info(user_obj, data):
     if "bio" in data:
         user_obj.bio = data.get("bio")
 
-    # Update nickname if provided
-    if "nickname" in data:
+    # Update nickname if provided (students cannot change their own nickname)
+    if "nickname" in data and user_obj.role != "student":
         user_obj.nickname = data.get("nickname")
 
     password = data.get("password")

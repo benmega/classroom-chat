@@ -212,7 +212,7 @@ export const useFeedLogic = (filterClassroomId = null) => {
       textareaRef.current.style.height = 'auto';
     }
 
-    if (!user?.is_admin) {
+    if (user?.role !== 'admin') {
       setCooldown(30);
     }
 

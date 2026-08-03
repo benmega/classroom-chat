@@ -3,6 +3,7 @@ import client from '../../api/client';
 import toast from 'react-hot-toast';
 import { Plus, Edit, Trash2, XCircle, BookOpen } from 'lucide-react';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
+import { ALIGNED_NODES } from '../../constants/courseProgress';
 import './AdminStandardProjects.css';
 
 const AdminStandardProjects = () => {
@@ -173,41 +174,19 @@ const AdminStandardProjects = () => {
                             </div>
                             <div className="sp-form-group">
                                 <label htmlFor="input-chapter">Chapter Mapping</label>
-                                <input id="input-chapter" 
-                                    type="text" 
+                                <select id="input-chapter"
                                     value={form.chapter}
                                     onChange={e => setForm({...form, chapter: e.target.value})}
-                                    placeholder="e.g. Computer Science 2"
-                                />
-                            </div>
-                            <div className="sp-form-row">
-                                <div className="sp-form-group">
-                                    <label htmlFor="input-175">Default Demo Link</label>
-                                    <input id="input-175" type="text" value={form.link} onChange={e => setForm({...form, link: e.target.value})} />
-                                </div>
-                                <div className="sp-form-group">
-                                    <label htmlFor="input-179">Default GitHub Link</label>
-                                    <input id="input-179" type="text" value={form.github_link} onChange={e => setForm({...form, github_link: e.target.value})} />
-                                </div>
-                            </div>
-                            <div className="sp-form-row">
-                                <div className="sp-form-group">
-                                    <label htmlFor="input-185">Default Video URL</label>
-                                    <input id="input-185" type="text" value={form.video_url} onChange={e => setForm({...form, video_url: e.target.value})} />
-                                </div>
-                                <div className="sp-form-group">
-                                    <label htmlFor="input-189">Default Thumbnail Image URL</label>
-                                    <input id="input-189" type="text" value={form.image_url} onChange={e => setForm({...form, image_url: e.target.value})} />
-                                </div>
+                                >
+                                    <option value="">Select a chapter...</option>
+                                    {ALIGNED_NODES.map(node => (
+                                        <option key={node.id} value={node.title}>{node.title}</option>
+                                    ))}
+                                </select>
                             </div>
                             <div className="sp-form-group">
-                                <label htmlFor="input-194">Default Code Snippet</label>
-                                <textarea id="input-194" 
-                                    value={form.code_snippet}
-                                    onChange={e => setForm({...form, code_snippet: e.target.value})}
-                                    rows="3"
-                                    className="font-mono"
-                                />
+                                <label htmlFor="input-189">Default Thumbnail Image URL</label>
+                                <input id="input-189" type="text" value={form.image_url} onChange={e => setForm({...form, image_url: e.target.value})} />
                             </div>
 
                             <div className="sp-modal-footer">

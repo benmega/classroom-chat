@@ -6,7 +6,6 @@ import {
     Calendar,
     ArrowLeft,
     PieChart as PieChartIcon,
-    RefreshCw,
     Download,
     DollarSign,
     Users
@@ -46,11 +45,9 @@ const Analytics = () => {
     const navigate = useNavigate();
     const [analyticsData, setAnalyticsData] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
-    const [isRefreshing, setIsRefreshing] = useState(false);
     const [timeRange, setTimeRange] = useState('7d');
 
     const fetchAnalytics = async () => {
-        setIsRefreshing(true);
         try {
             // Reusing the dashboard data for now as it contains the chart info
             const response = await client.get('/api/admin/dashboard');
@@ -62,7 +59,6 @@ const Analytics = () => {
             toast.error('Failed to load system analytics.');
         } finally {
             setIsLoading(false);
-            setIsRefreshing(false);
         }
     };
 
@@ -105,10 +101,10 @@ const Analytics = () => {
         labels: ['Active Students', 'Inactive Students', 'Parents', 'Administrators'],
         datasets: [{
             data: [
-                users.filter(u => u.is_online && u.role === 'student' && !u.is_admin).length,
-                users.filter(u => !u.is_online && u.role === 'student' && !u.is_admin).length,
+                users.filter(u => u.is_online && u.role === 'student' && u.role !== 'admin').length,
+                users.filter(u => !u.is_online && u.role === 'student' && u.role !== 'admin').length,
                 users.filter(u => u.role === 'parent').length,
-                users.filter(u => u.is_admin).length
+                users.filter(u => u.role === 'admin').length
             ],
             backgroundColor: ['var(--success-color)', 'var(--border-rich)', 'var(--secondary-color)', 'var(--primary-color)'],
             borderWidth: 0,
@@ -145,9 +141,7 @@ const Analytics = () => {
                     <option value="7d">Last 7 Days</option>
                     <option value="30d">Last 30 Days</option>
                 </select>
-                <button className="icon-btn" onClick={fetchAnalytics} disabled={isRefreshing}>
-                    <RefreshCw size={20} className={isRefreshing ? 'spinning' : ''} />
-                </button>
+                
                 <button className="primary-btn" onClick={handleExport}>
                     <Download size={18} /> Export CSV
                 </button>

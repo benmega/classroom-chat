@@ -46,7 +46,7 @@ export const useProfile = () => {
         fetchProfile();
     }, [slug, fetchProfile, navigate]);
 
-    const isOwner = !!profileData?.viewer && (profileData?.viewer?.id === profileData?.target?.id || profileData?.viewer?.is_admin);
+    const isOwner = !!profileData?.viewer && (profileData?.viewer?.id === profileData?.target?.id || profileData?.viewer?.role === 'admin');
 
     const handleDeleteNote = async (noteId) => {
         if (!window.confirm('Delete this note?')) return;

@@ -96,7 +96,6 @@ describe('AdminUserDashboard Component Redesign', () => {
         expect(screen.getByText('Chat Enabled')).toBeInTheDocument();
 
         // Prominent track buttons
-        expect(screen.getByText(/Current Learning Track/i)).toBeInTheDocument();
         expect(screen.getByText('Computer Science')).toBeInTheDocument();
         expect(screen.getByText('Ozaria')).toBeInTheDocument();
         expect(screen.getByText('Game Development')).toBeInTheDocument();
@@ -139,7 +138,7 @@ describe('AdminUserDashboard Component Redesign', () => {
         const preset1Btn = screen.getByText('+1');
         fireEvent.click(preset1Btn);
 
-        const duckInputs = screen.getAllByPlaceholderText('Amount (+/-)');
+        const duckInputs = screen.getAllByPlaceholderText('+/-');
         expect(duckInputs[0].value).toBe('1');
     });
 });

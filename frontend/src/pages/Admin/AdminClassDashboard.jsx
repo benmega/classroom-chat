@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
 import { 
-    ChevronLeft, Users, RefreshCw, Trash2, 
+    ChevronLeft, Users, Trash2, 
     Check, Plus, Settings, Globe, Link2, BookOpen, Key, Copy
 } from 'lucide-react';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
@@ -41,6 +41,10 @@ const AdminClassDashboard = () => {
     const [classroomCards, setClassroomCards] = useState([]);
     const [isFetchingCards, setIsFetchingCards] = useState(false);
     const [courses, setCourses] = useState([]);
+    
+    // Name editing state
+    const [isEditingName, setIsEditingName] = useState(false);
+    const [editNameValue, setEditNameValue] = useState('');
 
     const fetchClassroomDetails = useCallback(async () => {
         setIsLoading(true);
@@ -128,26 +132,6 @@ const AdminClassDashboard = () => {
         }
     };
 
-    const handleRegenerateJoinCode = async () => {
-        if (!window.confirm('Are you sure you want to regenerate the join code? The previous code will no longer work.')) {
-            return;
-        }
-        setFormLoading(true);
-        try {
-            const res = await client.post(`/api/admin/classrooms/${classId}/join-code/regenerate`);
-            const newCode = res.data?.join_code || res.data?.data?.join_code;
-            if (newCode) {
-                setJoinCode(newCode);
-                toast.success('Join code regenerated successfully!');
-            }
-        } catch (err) {
-            console.error('Failed to regenerate join code:', err);
-            toast.error(err.response?.data?.error || 'Failed to regenerate join code.');
-        } finally {
-            setFormLoading(false);
-        }
-    };
-
     const fetchClassroomCards = async () => {
         setIsFetchingCards(true);
         try {
@@ -164,41 +148,78 @@ const AdminClassDashboard = () => {
         }
     };
 
-    const handleUpdateSettings = async (e) => {
-        e.preventDefault();
+    const handleUpdateName = async () => {
+        if (!editNameValue.trim() || editNameValue === classroom.name) {
+            setIsEditingName(false);
+            return;
+        }
         setFormLoading(true);
-        const formData = new FormData(e.target);
-        const data = {
-            name: formData.get('name'),
-            language: formData.get('language'),
-            url: formData.get('url'),
-            course_id: formData.get('course_id') || null
-        };
-
         try {
-            const res = await client.put(`/api/admin/classrooms/${classId}`, data);
+            const res = await client.put(`/api/admin/classrooms/${classId}`, { 
+                name: editNameValue,
+                language: classroom.language
+            });
             if (res.data.success) {
-                toast.success(res.data.message || 'Classroom updated successfully');
+                toast.success('Classroom name updated');
                 fetchClassroomDetails();
+                setIsEditingName(false);
             }
         } catch (err) {
-            toast.error(err.response?.data?.error || 'Failed to update classroom.');
+            toast.error(err.response?.data?.error || 'Failed to update name.');
         } finally {
             setFormLoading(false);
         }
     };
 
-    const handleEnrollStudent = async (e) => {
+    const handleUpdateSettings = async (e) => {
         e.preventDefault();
-        if (!selectedStudentId) return;
+        const formData = new FormData(e.target);
+        const name = formData.get('name');
+        const language = formData.get('language');
+        
+        setFormLoading(true);
+        try {
+            const res = await client.put(`/api/admin/classrooms/${classId}`, { name, language });
+            if (res.data.success) {
+                toast.success('Classroom settings updated');
+                fetchClassroomDetails();
+            }
+        } catch (err) {
+            toast.error(err.response?.data?.error || 'Failed to update settings.');
+        } finally {
+            setFormLoading(false);
+        }
+    };
+
+    const handleRegenerateJoinCode = async () => {
+        setFormLoading(true);
+        try {
+            const res = await client.post(`/api/admin/classrooms/${classId}/regenerate_code`);
+            if (res.data.success) {
+                toast.success('Join code regenerated');
+                fetchClassroomDetails();
+            }
+        } catch (err) {
+            toast.error(err.response?.data?.error || 'Failed to regenerate code.');
+        } finally {
+            setFormLoading(false);
+        }
+    };
+
+
+
+    const handleEnrollStudent = async (studentIdToEnroll) => {
+        const targetId = studentIdToEnroll || selectedStudentId;
+        if (!targetId) return;
         setFormLoading(true);
         try {
             const res = await client.post(`/api/admin/classrooms/${classId}/enroll`, {
-                student_id: Number(selectedStudentId)
+                student_id: Number(targetId)
             });
             if (res.data.success) {
                 toast.success(res.data.message || 'Student enrolled successfully');
                 setSelectedStudentId('');
+                setActiveModal(null);
                 fetchClassroomDetails();
             }
         } catch (err) {
@@ -227,7 +248,7 @@ const AdminClassDashboard = () => {
     };
 
     const handleDeleteClassroom = async () => {
-        if (!window.confirm(`WARNING: Are you sure you want to delete classroom "${classroom.name}"? This cannot be undone.`)) {
+        if (!window.confirm(`WARNING: Are you sure you want to delete classroom "${classroom.name}"? Deleting a classroom removes the classroom instance. Students remain active users in the system but will be unlinked from this group. This cannot be undone.`)) {
             return;
         }
         try {
@@ -283,14 +304,54 @@ const AdminClassDashboard = () => {
 
             <div className="classroom-banner">
                 <div className="banner-content">
-                    <h1>
-                        {classroom.name}
-                        {classroom.language && getLanguageIconUrl(classroom.language) ? (
-                            <img src={getLanguageIconUrl(classroom.language)} alt={classroom.language} className="banner-lang-icon" />
-                        ) : classroom.language && (
-                            <span className="banner-lang-badge">{classroom.language}</span>
-                        )}
-                    </h1>
+                    {isEditingName ? (
+                        <div className="name-edit-container" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <input
+                                type="text"
+                                value={editNameValue}
+                                onChange={(e) => setEditNameValue(e.target.value)}
+                                className="name-edit-input"
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter') handleUpdateName();
+                                    if (e.key === 'Escape') setIsEditingName(false);
+                                }}
+                                style={{
+                                    fontSize: '24px',
+                                    fontWeight: 'bold',
+                                    padding: '4px 8px',
+                                    borderRadius: '4px',
+                                    border: '1px solid #ccc',
+                                    background: 'transparent',
+                                    color: 'inherit'
+                                }}
+                            />
+                            <button onClick={handleUpdateName} className="btn-action-sm primary" disabled={formLoading}>
+                                <Check size={16} />
+                            </button>
+                        </div>
+                    ) : (
+                        <h1 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            {classroom.name}
+                            <button 
+                                onClick={() => { setEditNameValue(classroom.name); setIsEditingName(true); }}
+                                className="btn-icon-only"
+                                aria-label="Edit classroom name"
+                                style={{ opacity: 0.7, cursor: 'pointer', background: 'none', border: 'none', padding: 0 }}
+                            >
+                                <Settings size={18} />
+                            </button>
+                            <div className="banner-langs" style={{ display: 'flex', gap: '4px', marginLeft: '8px' }}>
+                                {(classroom.language || '').split(',').map(l => l.trim()).filter(Boolean).map((lang, idx) => {
+                                    const iconUrl = getLanguageIconUrl(lang);
+                                    return iconUrl ? (
+                                        <img key={idx} src={iconUrl} alt={lang} className="banner-lang-icon" title={lang} />
+                                    ) : (
+                                        <span key={idx} className="banner-lang-badge">{lang}</span>
+                                    );
+                                })}
+                            </div>
+                        </h1>
+                    )}
                 </div>
                 <div className="banner-actions">
                     {joinCode && (
@@ -302,9 +363,7 @@ const AdminClassDashboard = () => {
                     <button className="secondary-btn" onClick={async () => { await fetchClassroomDetails(); setActiveModal('bulk_connection_cards'); }}>
                         Print Connection Cards
                     </button>
-                    <button onClick={fetchClassroomDetails} className="refresh-btn">
-                        <RefreshCw size={18} />
-                    </button>
+                    
                 </div>
             </div>
 
@@ -414,16 +473,7 @@ const AdminClassDashboard = () => {
                             >
                                 <Copy size={14} /> Copy Code
                             </button>
-                            <button 
-                                type="button"
-                                className="btn-action-sm secondary regenerate-code-btn"
-                                onClick={handleRegenerateJoinCode}
-                                disabled={formLoading}
-                                title="Regenerate Join Code"
-                                aria-label="Regenerate Join Code"
-                            >
-                                <RefreshCw size={14} /> Regenerate
-                            </button>
+                            
                         </div>
                     </div>
 
@@ -574,6 +624,15 @@ const AdminClassDashboard = () => {
                 onClose={() => setActiveModal(null)}
                 onSubmit={handleAddCourse}
                 courses={courses}
+                loading={formLoading}
+            />
+            <EnrollStudentModal
+                isOpen={activeModal === 'enroll_student'}
+                onClose={() => setActiveModal(null)}
+                onEnroll={handleEnrollStudent}
+                availableStudents={availableStudents}
+                joinCode={joinCode}
+                onRegenerateJoinCode={handleRegenerateJoinCode}
                 loading={formLoading}
             />
         </div>

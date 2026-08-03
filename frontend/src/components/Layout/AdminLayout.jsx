@@ -47,7 +47,7 @@ const AdminLayout = ({ children }) => {
             }
         };
 
-        if (isAuthenticated && user?.is_admin) {
+        if (isAuthenticated && user?.role === 'admin') {
             fetchData();
             const interval = setInterval(fetchData, 15000); // refresh every 15s
             return () => clearInterval(interval);
@@ -59,7 +59,7 @@ const AdminLayout = ({ children }) => {
         setSidebarOpen(false);
     }, [location.pathname, setSidebarOpen]);
 
-    if (!isAuthenticated || !user?.is_admin) {
+    if (!isAuthenticated || user?.role !== 'admin') {
         return (
             <div className="access-denied-container">
                 <div className="access-denied-card">

@@ -611,7 +611,7 @@ def test_serving_endpoints(client, init_db):
 
 
 def test_login_unapproved_user_and_edge_cases(client, init_db):
-    unapproved = User(username="unapproved_guy", is_approved=False, is_admin=False)
+    unapproved = User(username="unapproved_guy", is_approved=False, role="student")
     unapproved.set_password("pass1234")
     db.session.add(unapproved)
     db.session.commit()
@@ -728,7 +728,8 @@ def test_edit_profile_html_redirect_and_bio_update(client, init_db, sample_user)
     resp_get = client.get("/user/edit_profile")
     assert resp_get.status_code == 302
 
-    # POST JSON update with bio & nickname
+    # POST JSON update with bio & nickname for student (nickname should be ignored)
+    original_nick = sample_user.nickname
     resp_post = client.post(
         "/user/edit_profile",
         json={"bio": "Awesome bio", "nickname": "CoolNick"},
@@ -737,6 +738,18 @@ def test_edit_profile_html_redirect_and_bio_update(client, init_db, sample_user)
     assert resp_post.status_code == 200
     db.session.refresh(sample_user)
     assert sample_user.bio == "Awesome bio"
+    assert sample_user.nickname == original_nick
+
+    # Non-student user (e.g. parent) CAN update nickname
+    sample_user.role = "parent"
+    db.session.commit()
+    resp_post_parent = client.post(
+        "/user/edit_profile",
+        json={"nickname": "CoolNick"},
+        headers={"Accept": "application/json"},
+    )
+    assert resp_post_parent.status_code == 200
+    db.session.refresh(sample_user)
     assert sample_user.nickname == "CoolNick"
 
 
@@ -763,7 +776,7 @@ def test_get_parent_connection_code_route(client, init_db, sample_user):
 
 
 def test_new_project_edge_cases(client, init_db, sample_user):
-    admin = User(username="admin_user", is_admin=True, is_approved=True)
+    admin = User(username="admin_user", role="admin", is_approved=True)
     admin.set_password("pass1234")
     db.session.add(admin)
     db.session.commit()
@@ -820,7 +833,7 @@ def test_new_project_edge_cases(client, init_db, sample_user):
 
 
 def test_edit_project_edge_cases(client, init_db, sample_user):
-    admin = User(username="admin_proj_editor", is_admin=True, is_approved=True)
+    admin = User(username="admin_proj_editor", role="admin", is_approved=True)
     admin.set_password("pass1234")
 
     other_user = User(username="other_user", is_approved=True)

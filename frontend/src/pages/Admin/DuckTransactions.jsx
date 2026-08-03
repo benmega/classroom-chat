@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { 
     Search, 
-    RefreshCw, 
     ChevronLeft, 
     ChevronRight, 
     ArrowUpRight, 
@@ -29,11 +28,11 @@ const DuckTransactions = () => {
     const [total, setTotal] = useState(0);
     const [pages, setPages] = useState(1);
     const [isLoading, setIsLoading] = useState(true);
-    const [isRefreshing, setIsRefreshing] = useState(false);
+    const [isRefreshing] = useState(false);
     const [searchTerm, setSearchTerm] = useState(searchParam);
 
     const fetchTransactions = async (pageVal = pageParam, typeVal = typeParam, searchVal = searchParam) => {
-        setIsRefreshing(true);
+        
         try {
             const response = await client.get('/api/admin/transactions', {
                 params: {
@@ -55,7 +54,7 @@ const DuckTransactions = () => {
             toast.error('Failed to load transactions.');
         } finally {
             setIsLoading(false);
-            setIsRefreshing(false);
+            
         }
     };
 
@@ -153,13 +152,7 @@ const DuckTransactions = () => {
                 <button className="primary-btn export-btn" onClick={handleExport}>
                     <Download size={18} /> Export CSV
                 </button>
-                <button 
-                    className={`refresh-btn ${isRefreshing ? 'spinning' : ''}`}
-                    onClick={() => fetchTransactions(pageParam, typeParam, searchParam)}
-                    disabled={isRefreshing}
-                >
-                    <RefreshCw size={18} />
-                </button>
+                
             </AdminPageHeader>
 
             {/* Filter Tabs */}

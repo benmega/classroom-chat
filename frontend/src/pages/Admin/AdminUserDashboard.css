@@ -12,6 +12,107 @@
     color: var(--text-primary, #0f172a);
 }
 
+/* --------------------------------------------------------------------------
+   NEW REDESIGN STYLES
+   -------------------------------------------------------------------------- */
+.admin-sections {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.admin-section {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid rgba(203, 213, 225, 0.4);
+}
+
+.admin-section:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.section-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1.15rem;
+    font-weight: 800;
+    margin: 0 0 0.25rem 0;
+    color: var(--text-primary, #0f172a);
+}
+
+/* Red-tinted section for administration */
+.admin-danger-section {
+    background: linear-gradient(135deg, rgba(254, 226, 226, 0.15), rgba(254, 202, 202, 0.05));
+    padding: 1.5rem;
+    border-radius: 16px;
+    border: 1px solid rgba(248, 113, 113, 0.2);
+}
+
+.text-danger {
+    color: #b91c1c !important;
+}
+
+/* Action button colors */
+.action-blue { background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; border: none; }
+.action-blue:hover:not(:disabled) { box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25); transform: translateY(-1px); }
+
+.action-green { background: linear-gradient(135deg, #10b981, #059669); color: white; border: none; }
+.action-green:hover:not(:disabled) { box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25); transform: translateY(-1px); }
+
+.action-neutral { background: rgba(241, 245, 249, 0.9); border: 1px solid rgba(203, 213, 225, 0.8); color: var(--text-primary, #0f172a); }
+.action-neutral:hover:not(:disabled) { background: white; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+
+/* Perks list vertical layout */
+.perks-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.perk-list-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    padding: 0.65rem 0.85rem;
+    border-radius: 8px;
+    border: 1px solid rgba(203, 213, 225, 0.8);
+    background: rgba(248, 250, 252, 0.8);
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.2s ease;
+}
+
+.perk-list-item:hover {
+    background: white;
+    transform: translateX(2px);
+    border-color: rgba(148, 163, 184, 0.8);
+}
+
+.perk-list-item.on {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(5, 150, 105, 0.05));
+    border-color: #10b981;
+}
+
+.perk-list-item .perk-title {
+    font-weight: 800;
+    font-size: 0.85rem;
+    color: var(--text-primary, #0f172a);
+}
+
+.perk-list-item.on .perk-title {
+    color: #047857;
+}
+
+.perk-list-item .perk-desc {
+    font-size: 0.7rem;
+    color: var(--text-secondary, #64748b);
+}
+
+
 .admin-user-redesign input, 
 .admin-user-redesign select, 
 .admin-user-redesign button {
@@ -382,15 +483,15 @@
 }
 
 .panel-head {
-    font-size: 0.8rem;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--text-primary, #0f172a);
-    margin-bottom: 0.85rem;
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    font-size: 0.95rem;
+    font-weight: 800;
+    margin-bottom: 1rem;
+    color: var(--text-primary, #0f172a);
+    border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+    padding-bottom: 0.5rem;
 }
 
 /* Panel Variant for Danger Box */
@@ -770,4 +871,104 @@
         left: 0; top: 0;
         padding: 2rem;
     }
+}
+
+/* --------------------------------------------------------------------------
+   NEW REDESIGN STYLES
+   -------------------------------------------------------------------------- */
+.admin-sections {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.admin-section {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid rgba(203, 213, 225, 0.4);
+}
+
+.admin-section:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.section-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1.15rem;
+    font-weight: 800;
+    margin: 0 0 0.25rem 0;
+    color: var(--text-primary, #0f172a);
+}
+
+/* Red-tinted section for administration */
+.admin-danger-section {
+    background: linear-gradient(135deg, rgba(254, 226, 226, 0.15), rgba(254, 202, 202, 0.05));
+    padding: 1.5rem;
+    border-radius: 16px;
+    border: 1px solid rgba(248, 113, 113, 0.2);
+}
+
+.text-danger {
+    color: #b91c1c !important;
+}
+
+/* Action button colors */
+.action-blue { background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; border: none; }
+.action-blue:hover:not(:disabled) { box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25); transform: translateY(-1px); }
+
+.action-green { background: linear-gradient(135deg, #10b981, #059669); color: white; border: none; }
+.action-green:hover:not(:disabled) { box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25); transform: translateY(-1px); }
+
+.action-neutral { background: rgba(241, 245, 249, 0.9); border: 1px solid rgba(203, 213, 225, 0.8); color: var(--text-primary, #0f172a); }
+.action-neutral:hover:not(:disabled) { background: white; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+
+/* Perks list vertical layout */
+.perks-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.perk-list-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    padding: 0.65rem 0.85rem;
+    border-radius: 8px;
+    border: 1px solid rgba(203, 213, 225, 0.8);
+    background: rgba(248, 250, 252, 0.8);
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.2s ease;
+}
+
+.perk-list-item:hover {
+    background: white;
+    transform: translateX(2px);
+    border-color: rgba(148, 163, 184, 0.8);
+}
+
+.perk-list-item.on {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(5, 150, 105, 0.05));
+    border-color: #10b981;
+}
+
+.perk-list-item .perk-title {
+    font-weight: 800;
+    font-size: 0.85rem;
+    color: var(--text-primary, #0f172a);
+}
+
+.perk-list-item.on .perk-title {
+    color: #047857;
+}
+
+.perk-list-item .perk-desc {
+    font-size: 0.7rem;
+    color: var(--text-secondary, #64748b);
 }

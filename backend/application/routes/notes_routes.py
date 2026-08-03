@@ -123,7 +123,7 @@ def serve_note(filename):
     if note is not None and viewer is not None:
         is_owner = note.user_id == viewer.id
         is_parent = viewer in (note.user.parents or [])
-        if not (is_owner or is_parent or viewer.is_admin):
+        if not (is_owner or is_parent or viewer.role == 'admin'):
             return jsonify({"error": "Not authorized to view this note"}), 403
 
     notes_dir = os.path.join(current_app.config["UPLOAD_FOLDER"], "notes")
@@ -171,7 +171,7 @@ def delete_note(note_id):
         return jsonify({"error": "Unauthorized"}), 401
 
     current_user = get_user(user_id)
-    if note.user_id != current_user.id and not current_user.is_admin:
+    if note.user_id != current_user.id and current_user.role != 'admin':
         return jsonify({"success": False, "error": "Unauthorized"}), 403
 
     try:
@@ -216,7 +216,7 @@ def delete_note(note_id):
 def kiosk_upload_note():
     user_id = session.get("user")
     current_user = get_user(user_id)
-    if not current_user or not getattr(current_user, "is_admin", False):
+    if not current_user or getattr(current_user, "role", "") != 'admin':
         return jsonify({"status": "error", "error": "Unauthorized"}), 403
 
     target_student_id = request.form.get("student_id")

@@ -114,7 +114,7 @@ const DesktopNavRail = ({ user, location, handleLogout }) => {
             </div>
 
             <div className="nav-rail-bottom">
-                {user?.is_admin && (
+                {user?.role === 'admin' && (
                     <div className={`nav-rail-item-container ${location.pathname.startsWith('/admin') ? 'active' : ''}`}>
                         <div className="nav-rail-indicator" />
                         <Link 

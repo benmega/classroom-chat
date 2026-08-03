@@ -36,8 +36,10 @@ const EditProfile = () => {
         }
     }, [user]);
 
+    const isStudent = user?.role === 'student';
+
     const hasChanges = 
-        nickname !== (user?.nickname || user?.username || '') ||
+        (!isStudent && nickname !== (user?.nickname || user?.username || '')) ||
         bio !== (user?.bio || '') ||
         password !== '' ||
         confirmPassword !== '' ||
@@ -83,11 +85,13 @@ const EditProfile = () => {
 
             // 2. Handle Basic Info
             const payload = {
-                nickname,
                 bio,
                 password: password || undefined,
                 confirm_password: confirmPassword || undefined
             };
+            if (!isStudent) {
+                payload.nickname = nickname;
+            }
 
             await client.post('/user/edit_profile', payload);
             
@@ -141,13 +145,16 @@ const EditProfile = () => {
                                 <input id="input-139" type="text" value={user?.username || ''} disabled className="form-control readonly" />
                             </div>
                             <div className="form-group flex-1">
-                                <label htmlFor="input-143">Nickname</label>
+                                <label htmlFor="input-143">
+                                    {isStudent ? 'Nickname (readonly)' : 'Nickname'}
+                                </label>
                                 <input id="input-143" 
                                     type="text" 
                                     value={nickname}
                                     onChange={(e) => setNickname(e.target.value)}
                                     placeholder="Enter your nickname" 
-                                    className="form-control" 
+                                    disabled={isStudent}
+                                    className={`form-control ${isStudent ? 'readonly' : ''}`}
                                 />
                             </div>
                         </div>

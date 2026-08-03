@@ -128,14 +128,17 @@ describe('AdminClassDashboard', () => {
 
         fireEvent.click(screen.getByRole('button', { name: 'People' }));
 
-        const select = screen.getByRole('combobox');
+        // Click the UserPlus button to open the modal
+        fireEvent.click(screen.getByRole('button', { name: 'Enroll New Student' }));
+
+        const select = document.getElementById('student-select-list');
         fireEvent.change(select, { target: { value: '11' } });
 
         client.post.mockResolvedValueOnce({
             data: { success: true, message: 'Enrolled' }
         });
 
-        fireEvent.click(screen.getByRole('button', { name: /Enroll/i }));
+        fireEvent.click(screen.getByRole('button', { name: /Invite/i }));
 
         await waitFor(() => {
             expect(client.post).toHaveBeenCalledWith('/api/admin/classrooms/cls123/enroll', { student_id: 11 });
@@ -303,7 +306,7 @@ describe('AdminClassDashboard', () => {
 
         fireEvent.click(screen.getByRole('button', { name: 'Classwork' }));
 
-        expect(screen.getByText('Connected Courses')).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: 'Add Connected Course' })).toBeInTheDocument();
         // Displays course_name when present, falling back to course_id
         expect(screen.getByText('Python Basics')).toBeInTheDocument();
         expect(screen.getByText('course-js')).toBeInTheDocument();
@@ -402,7 +405,7 @@ describe('AdminClassDashboard', () => {
 
         fireEvent.click(screen.getByRole('button', { name: 'Classwork' }));
 
-        const removeBtn = screen.getByRole('button', { name: 'Disconnect Course' });
+        const removeBtn = screen.getByRole('button', { name: /disconnect course python basics/i });
         fireEvent.click(removeBtn);
 
         await waitFor(() => {
@@ -484,6 +487,9 @@ describe('AdminClassDashboard', () => {
         });
 
         fireEvent.click(screen.getByRole('button', { name: 'People' }));
+
+        // Open the modal containing join code & enroll
+        fireEvent.click(screen.getByRole('button', { name: 'Enroll New Student' }));
 
         expect(screen.getAllByText('OLD123').length).toBeGreaterThan(0);
 

@@ -25,7 +25,6 @@ class User(db.Model):
     is_online = db.Column(db.Boolean, default=False)
     nickname = db.Column(db.String(50), nullable=False, default=default_nickname)
     slug = db.Column(db.String(100), unique=True, nullable=True)
-    is_admin = db.Column(db.Boolean, default=False)
     is_approved = db.Column(db.Boolean, default=False)
     role = db.Column(db.String(20), default="student", nullable=False)
     active_track = db.Column(
@@ -167,7 +166,6 @@ class User(db.Model):
                 if self.profile_picture
                 else "/static/images/Default_pfp.jpg"
             ),
-            "is_admin": self.is_admin,
             "is_approved": self.is_approved,
             "role": self.role,
             "active_track": self.active_track,
@@ -254,7 +252,6 @@ class User(db.Model):
                 else "/static/images/Default_pfp.jpg"
             ),
             "is_online": self.is_online,
-            "is_admin": self.is_admin,
             "is_approved": self.is_approved,
             "role": self.role,
             "active_track": self.active_track,

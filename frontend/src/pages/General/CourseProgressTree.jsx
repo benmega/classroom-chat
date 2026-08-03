@@ -18,7 +18,7 @@ const CourseProgressTree = () => {
     const navigate = useNavigate();
     const { slug } = useParams();
     const { user: authUser } = useAuthStore();
-    const isAdmin = authUser?.is_admin;
+    const isAdmin = authUser?.role === 'admin';
 
     const containerRef = useRef(null);
     const nodeRefs = useRef({});
