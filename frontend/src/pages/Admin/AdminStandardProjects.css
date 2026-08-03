@@ -1,8 +1,7 @@
 .standard-projects-page {
     padding: 24px;
     background: #f8fafc;
-    min-height: 100vh;
-    height: max-content;
+    flex: 1 0 auto;
 }
 
 .controls-bar {
