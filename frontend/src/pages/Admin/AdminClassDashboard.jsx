@@ -4,8 +4,16 @@ import client from '../../api/client';
 import toast from 'react-hot-toast';
 import { 
     ChevronLeft, Users, Trash2, 
-    Check, Plus, Settings, Globe, Link2, BookOpen, Key, Copy
+    Check, Plus, Settings, Globe, Link2, BookOpen, Key, Copy, Gamepad2, Code, X
 } from 'lucide-react';
+
+const getCourseIcon = (courseName, courseId) => {
+    const text = `${courseName || ''} ${courseId || ''}`.toLowerCase();
+    if (text.includes('gd') || text.includes('game')) return <Gamepad2 size={24} />;
+    if (text.includes('wd') || text.includes('web')) return <Globe size={24} />;
+    if (text.includes('cs') || text.includes('computer')) return <Code size={24} />;
+    return <BookOpen size={24} />;
+};
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
 import Chat from '../Chat/Chat';
 import Skeleton from '../../components/common/Skeleton';
@@ -148,29 +156,6 @@ const AdminClassDashboard = () => {
         }
     };
 
-    const handleUpdateName = async () => {
-        if (!editNameValue.trim() || editNameValue === classroom.name) {
-            setIsEditingName(false);
-            return;
-        }
-        setFormLoading(true);
-        try {
-            const res = await client.put(`/api/admin/classrooms/${classId}`, { 
-                name: editNameValue,
-                language: classroom.language
-            });
-            if (res.data.success) {
-                toast.success('Classroom name updated');
-                fetchClassroomDetails();
-                setIsEditingName(false);
-            }
-        } catch (err) {
-            toast.error(err.response?.data?.error || 'Failed to update name.');
-        } finally {
-            setFormLoading(false);
-        }
-    };
-
     const handleToggleLanguage = async (langId) => {
         const currentLangs = (classroom.language || '').split(',').map(l => l.trim()).filter(Boolean);
         let newLangs = [...currentLangs];
@@ -195,6 +180,29 @@ const AdminClassDashboard = () => {
         }
     };
 
+    const handleUpdateName = async () => {
+        if (!editNameValue.trim() || editNameValue === classroom.name) {
+            setIsEditingName(false);
+            return;
+        }
+        setFormLoading(true);
+        try {
+            const res = await client.put(`/api/admin/classrooms/${classId}`, { 
+                name: editNameValue,
+                language: classroom.language
+            });
+            if (res.data.success) {
+                toast.success('Classroom name updated');
+                fetchClassroomDetails();
+                setIsEditingName(false);
+            }
+        } catch (err) {
+            toast.error(err.response?.data?.error || 'Failed to update name.');
+        } finally {
+            setFormLoading(false);
+        }
+    };
+
     const handleRegenerateJoinCode = async () => {
         setFormLoading(true);
         try {
@@ -209,8 +217,6 @@ const AdminClassDashboard = () => {
             setFormLoading(false);
         }
     };
-
-
 
     const handleEnrollStudent = async (studentIdToEnroll) => {
         const targetId = studentIdToEnroll || selectedStudentId;
@@ -425,50 +431,82 @@ const AdminClassDashboard = () => {
 
                 {activeTab === 'classwork' && (
                     <div className="tab-pane classwork-pane">
-                        <div className="admin-class-grid single-column">
-                            <div className="control-panel-card assignments-card">
-                                <div className="card-custom-header">
-                                    <div className="title-section">
-                                        <BookOpen size={20} />
-                                        <h3>Connected Courses</h3>
-                                    </div>
-                                    <button 
-                                        type="button" 
-                                        className="btn-action-sm primary add-course-btn"
-                                        onClick={() => setActiveModal('add_course')}
-                                        title="Add Connected Course"
-                                        aria-label="Add Connected Course"
-                                    >
-                                        <Plus size={16} /> Add Course
-                                    </button>
-                                </div>
-                                <div className="assignments-list">
-                                    {classroom.course_assignments && classroom.course_assignments.length > 0 ? (
-                                        classroom.course_assignments.map(assign => (
-                                            <div key={assign.id} className="assignment-item">
-                                                <div className="assign-row">
-                                                    <div className="assign-details">
-                                                        <span className="assign-id-lbl">Course</span>
-                                                        <span className="assign-id-val badge-course">{assign.course_name || assign.course_id || 'None'}</span>
-                                                        {assign.id && <span className="assign-instance-id">({assign.id})</span>}
-                                                    </div>
-                                                    <button
-                                                        type="button"
-                                                        className="btn-action-sm danger unenroll-btn"
-                                                        onClick={() => handleDisconnectCourse(assign.id)}
-                                                        disabled={formLoading}
-                                                        title="Disconnect Course"
-                                                        aria-label="Disconnect Course"
-                                                    >
-                                                        <Trash2 size={14} /> Remove
-                                                    </button>
-                                                </div>
+                        <div className="tab-section language-section" style={{ padding: '0 0 24px 0' }}>
+                            <h3 style={{ marginBottom: '16px', fontSize: '1.1rem' }}>Classroom Languages</h3>
+                            <div className="language-toggles" style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+                                {[
+                                    { id: 'python', label: 'Python', icon: getLanguageIconUrl('python') },
+                                    { id: 'javascript', label: 'JavaScript', icon: getLanguageIconUrl('javascript') },
+                                    { id: 'html', label: 'HTML/CSS', icon: getLanguageIconUrl('html') },
+                                    { id: 'java', label: 'Java', icon: getLanguageIconUrl('java') },
+                                    { id: 'cpp', label: 'C++', icon: getLanguageIconUrl('cpp') }
+                                ].map(langOption => {
+                                    const isActive = (classroom.language || '').split(',').map(l => l.trim()).includes(langOption.id);
+                                    return (
+                                        <button
+                                            key={langOption.id}
+                                            type="button"
+                                            onClick={() => handleToggleLanguage(langOption.id)}
+                                            style={{
+                                                display: 'flex',
+                                                flexDirection: 'column',
+                                                alignItems: 'center',
+                                                gap: '8px',
+                                                padding: '12px',
+                                                borderRadius: '8px',
+                                                border: `2px solid ${isActive ? '#3b82f6' : 'transparent'}`,
+                                                background: isActive ? 'rgba(59, 130, 246, 0.1)' : 'var(--bg-secondary)',
+                                                cursor: 'pointer',
+                                                transition: 'all 0.2s'
+                                            }}
+                                            title={`Toggle ${langOption.label}`}
+                                        >
+                                            <img src={langOption.icon} alt={langOption.label} style={{ width: '32px', height: '32px' }} />
+                                            <span style={{ fontSize: '0.85rem', fontWeight: isActive ? '600' : '400', color: 'var(--text-primary)' }}>{langOption.label}</span>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+
+                        <div className="tab-section assignments-section">
+                            <h3 style={{ marginBottom: '16px', fontSize: '1.1rem' }}>Connected Courses</h3>
+                            <div className="tab-action-bar" style={{ marginBottom: '16px' }}>
+                                <button 
+                                    type="button" 
+                                    className="btn-action-sm primary add-course-btn"
+                                    onClick={() => setActiveModal('add_course')}
+                                    title="Add Connected Course"
+                                    aria-label="Add Connected Course"
+                                >
+                                    <Plus size={16} /> Add Course
+                                </button>
+                            </div>
+                            <div className="assignments-list">
+                                {classroom.course_assignments && classroom.course_assignments.length > 0 ? (
+                                    classroom.course_assignments.map(assign => (
+                                        <div key={assign.id} className="assignment-tile">
+                                            <div className="tile-icon-wrapper">
+                                                {getCourseIcon(assign.course_name, assign.course_id)}
                                             </div>
-                                        ))
-                                    ) : (
-                                        <div className="empty-roster-msg">No courses connected.</div>
-                                    )}
-                                </div>
+                                            <span className="tile-label" title={assign.course_name || assign.course_id || 'Untitled Course'}>
+                                                {assign.course_name || assign.course_id || 'Untitled Course'}
+                                            </span>
+                                            <button
+                                                type="button"
+                                                className="tile-remove-btn"
+                                                onClick={() => handleDisconnectCourse(assign.id)}
+                                                disabled={formLoading}
+                                                title="Disconnect Course"
+                                                aria-label={`Disconnect course ${assign.course_name || assign.course_id}`}
+                                            >
+                                                <X size={14} />
+                                            </button>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div className="empty-roster-msg">No courses connected.</div>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -554,7 +592,7 @@ const AdminClassDashboard = () => {
                     {/* Enrollment form */}
                     <div className="enrollment-section">
                         <h4>Enroll New Student</h4>
-                        <form onSubmit={handleEnrollStudent} className="enroll-form">
+                        <form onSubmit={(e) => { e.preventDefault(); handleEnrollStudent(); }} className="enroll-form">
                             <div className="enroll-controls">
                                 <select 
                                     value={selectedStudentId} 
