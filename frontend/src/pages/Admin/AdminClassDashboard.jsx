@@ -171,23 +171,27 @@ const AdminClassDashboard = () => {
         }
     };
 
-    const handleUpdateSettings = async (e) => {
-        e.preventDefault();
-        const formData = new FormData(e.target);
-        const name = formData.get('name');
-        const language = formData.get('language');
-        
-        setFormLoading(true);
+    const handleToggleLanguage = async (langId) => {
+        const currentLangs = (classroom.language || '').split(',').map(l => l.trim()).filter(Boolean);
+        let newLangs = [...currentLangs];
+        if (newLangs.includes(langId)) {
+            newLangs = newLangs.filter(l => l !== langId);
+        } else {
+            newLangs.push(langId);
+        }
+        const newLanguageStr = newLangs.join(',');
+
         try {
-            const res = await client.put(`/api/admin/classrooms/${classId}`, { name, language });
+            const res = await client.put(`/api/admin/classrooms/${classId}`, {
+                name: classroom.name,
+                language: newLanguageStr
+            });
             if (res.data.success) {
-                toast.success('Classroom settings updated');
+                toast.success('Languages updated');
                 fetchClassroomDetails();
             }
         } catch (err) {
-            toast.error(err.response?.data?.error || 'Failed to update settings.');
-        } finally {
-            setFormLoading(false);
+            toast.error(err.response?.data?.error || 'Failed to update languages.');
         }
     };
 
@@ -367,11 +371,47 @@ const AdminClassDashboard = () => {
                 </div>
             </div>
 
-            <div className="classroom-tabs">
-                <button className={`tab-btn ${activeTab === 'stream' ? 'active' : ''}`} onClick={() => setActiveTab('stream')}>Stream</button>
-                <button className={`tab-btn ${activeTab === 'classwork' ? 'active' : ''}`} onClick={() => setActiveTab('classwork')}>Classwork</button>
-                <button className={`tab-btn ${activeTab === 'people' ? 'active' : ''}`} onClick={() => setActiveTab('people')}>People</button>
-                <button className={`tab-btn ${activeTab === 'settings' ? 'active' : ''}`} onClick={() => setActiveTab('settings')}>Settings</button>
+            <div className="classroom-tabs" role="tablist" aria-label="Classroom navigation tabs">
+                <button 
+                    id="tab-stream" 
+                    role="tab"
+                    aria-selected={activeTab === 'stream'} 
+                    aria-controls="pane-stream" 
+                    className={`tab-btn ${activeTab === 'stream' ? 'active' : ''}`} 
+                    onClick={() => setActiveTab('stream')}
+                >
+                    Stream
+                </button>
+                <button 
+                    id="tab-classwork" 
+                    role="tab"
+                    aria-selected={activeTab === 'classwork'} 
+                    aria-controls="pane-classwork" 
+                    className={`tab-btn ${activeTab === 'classwork' ? 'active' : ''}`} 
+                    onClick={() => setActiveTab('classwork')}
+                >
+                    Classwork
+                </button>
+                <button 
+                    id="tab-people" 
+                    role="tab"
+                    aria-selected={activeTab === 'people'} 
+                    aria-controls="pane-people" 
+                    className={`tab-btn ${activeTab === 'people' ? 'active' : ''}`} 
+                    onClick={() => setActiveTab('people')}
+                >
+                    People
+                </button>
+                <button 
+                    id="tab-settings" 
+                    role="tab"
+                    aria-selected={activeTab === 'settings'} 
+                    aria-controls="pane-settings" 
+                    className={`tab-btn ${activeTab === 'settings' ? 'active' : ''}`} 
+                    onClick={() => setActiveTab('settings')}
+                >
+                    Settings
+                </button>
             </div>
 
             <div className="tab-content">
@@ -545,65 +585,54 @@ const AdminClassDashboard = () => {
                 )}
 
                 {activeTab === 'settings' && (
-                    <div className="tab-pane settings-pane">
+                    <div id="pane-settings" role="tabpanel" aria-labelledby="tab-settings" className="tab-pane settings-pane">
                         <div className="admin-class-grid single-column centered-column">
-                            <div className="control-panel-card settings-card">
-                        <div className="card-custom-header">
-                            <Settings size={20} />
-                            <h3>Classroom Settings</h3>
-                        </div>
+                            <div className="control-panel-card settings-card" style={{ padding: '24px' }}>
+                                <h3 style={{ marginBottom: '16px', fontSize: '1.1rem' }}>Languages</h3>
+                                <div className="language-toggles" style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', marginBottom: '32px' }}>
+                                    {[
+                                        { id: 'python', label: 'Python', icon: getLanguageIconUrl('python') },
+                                        { id: 'javascript', label: 'JavaScript', icon: getLanguageIconUrl('javascript') },
+                                        { id: 'html', label: 'HTML/CSS', icon: getLanguageIconUrl('html') },
+                                        { id: 'java', label: 'Java', icon: getLanguageIconUrl('java') },
+                                        { id: 'cpp', label: 'C++', icon: getLanguageIconUrl('cpp') }
+                                    ].map(langOption => {
+                                        const isActive = (classroom.language || '').split(',').map(l => l.trim()).includes(langOption.id);
+                                        return (
+                                            <button
+                                                key={langOption.id}
+                                                type="button"
+                                                onClick={() => handleToggleLanguage(langOption.id)}
+                                                style={{
+                                                    display: 'flex',
+                                                    flexDirection: 'column',
+                                                    alignItems: 'center',
+                                                    gap: '8px',
+                                                    padding: '12px',
+                                                    borderRadius: '8px',
+                                                    border: `2px solid ${isActive ? '#3b82f6' : 'transparent'}`,
+                                                    background: isActive ? 'rgba(59, 130, 246, 0.1)' : '#f3f4f6',
+                                                    cursor: 'pointer',
+                                                    transition: 'all 0.2s'
+                                                }}
+                                                title={`Toggle ${langOption.label}`}
+                                            >
+                                                <img src={langOption.icon} alt={langOption.label} style={{ width: '32px', height: '32px' }} />
+                                                <span style={{ fontSize: '0.85rem', fontWeight: isActive ? '600' : '400' }}>{langOption.label}</span>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
 
-                        <form onSubmit={handleUpdateSettings} className="settings-form">
-                            <div className="form-group">
-                                <label htmlFor="input-368">Classroom Name</label>
-                                <input id="input-368" 
-                                    type="text" 
-                                    name="name" 
-                                    defaultValue={classroom.name} 
-                                    placeholder="e.g. Saturday coding"
-                                    required 
-                                />
-                            </div>
-
-                            <div className="form-group">
-                                <label htmlFor="input-379">Language</label>
-                                <select 
-                                    id="input-379" 
-                                    name="language" 
-                                    defaultValue={classroom.language}
-                                    required
+                                <button 
+                                    type="button" 
+                                    className="btn-danger"
+                                    onClick={handleDeleteClassroom}
+                                    style={{ marginTop: '16px' }}
                                 >
-                                    <option value="" disabled>Select a language</option>
-                                    <option value="python">Python</option>
-                                    <option value="javascript">JavaScript</option>
-                                    <option value="html">HTML/CSS</option>
-                                    <option value="java">Java</option>
-                                    <option value="cpp">C++</option>
-                                </select>
-                            </div>
-
-                            <div className="form-actions">
-                                <button type="submit" className="btn-save" disabled={formLoading}>
-                                    {formLoading ? 'Saving...' : 'Save Settings'}
+                                    Delete Classroom
                                 </button>
                             </div>
-                        </form>
-                    </div>
-                            <div className="control-panel-card danger-zone-card">
-                        <div className="card-custom-header">
-                            <Trash2 size={20} />
-                            <h3>Danger Zone</h3>
-                        </div>
-                        <p className="danger-zone-desc">Deleting a classroom removes the classroom instance. Students remain active users in the system but will be unlinked from this group.</p>
-                        <button 
-                            type="button" 
-                            className="btn-danger"
-                            onClick={handleDeleteClassroom}
-                        >
-                            Delete Classroom
-                        </button>
-                    </div>
-                
                         </div>
                     </div>
                 )}
