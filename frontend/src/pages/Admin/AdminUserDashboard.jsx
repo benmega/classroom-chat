@@ -53,6 +53,7 @@ const AdminUserDashboard = () => {
     });
 
     const [duckAmountInput, setDuckAmountInput] = useState('');
+    const [activeTab, setActiveTab] = useState('standard');
     const [selectedCertCourse, setSelectedCertCourse] = useState('cs-1');
     const [showAssignProjectModal, setShowAssignProjectModal] = useState(false);
     const [showAwardCertificateModal, setShowAwardCertificateModal] = useState(false);
@@ -190,7 +191,31 @@ const AdminUserDashboard = () => {
                 </div>
             </div>
 
-            <div className="admin-sections">
+                        {/* TABS */}
+            <div className="admin-tabs">
+                <button 
+                    className={`admin-tab ${activeTab === 'standard' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('standard')}
+                >
+                    Standard Operations
+                </button>
+                <button 
+                    className={`admin-tab ${activeTab === 'account' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('account')}
+                >
+                    Account & Connections
+                </button>
+                <button 
+                    className={`admin-tab ${activeTab === 'sensitive' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('sensitive')}
+                >
+                    Sensitive Actions
+                </button>
+            </div>
+
+            {activeTab === 'standard' && (
+                <>
+
                 {/* SECTION 1: ACADEMIC & PROGRESS */}
                 {user.role === 'student' && (
                     <div className="admin-section">
@@ -411,7 +436,13 @@ const AdminUserDashboard = () => {
                     </div>
                 )}
 
-                {/* SECTION 3: IDENTITY & CONNECTIONS */}
+                
+                </>
+            )}
+
+            {activeTab === 'account' && (
+                <>
+{/* SECTION 3: IDENTITY & CONNECTIONS */}
                 <div className="admin-section">
                     <h3 className="section-title"><Shield size={18} /> Identity & Connections</h3>
                     <div className="compact-grid section-grid">
@@ -494,7 +525,13 @@ const AdminUserDashboard = () => {
                     </div>
                 </div>
 
-                {/* SECTION 4: ADMINISTRATION & SECURITY */}
+                
+                </>
+            )}
+
+            {activeTab === 'sensitive' && (
+                <>
+{/* SECTION 4: ADMINISTRATION & SECURITY */}
                 <div className="admin-section admin-danger-section">
                     <h3 className="section-title text-danger"><ShieldAlert size={18} /> Administration & Security</h3>
                     <div className="compact-grid section-grid">
@@ -547,8 +584,8 @@ const AdminUserDashboard = () => {
                         )}
                     </div>
                 </div>
-
-            </div>
+                </>
+            )}
 
             {/* Printable QR Code for Parent Connection */}
             {user.role === 'student' && connectionCode && (

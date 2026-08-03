@@ -11,86 +11,13 @@
     align-items: stretch;
 }
 
-.admin-advanced-panel .utility-card {
-    display: flex;
-    gap: 1rem;
-    padding: 1rem;
-    background: var(--bg-primary);
-    border: 1px solid var(--border-subtle);
-    border-radius: 16px;
-    box-shadow: var(--shadow-soft);
-    transition: var(--transition-smooth);
-}
-
-.admin-advanced-panel .utility-card:hover {
-    transform: translateY(-4px);
-    box-shadow: var(--shadow-lg);
-    background: var(--bg-secondary);
-    border-color: var(--primary-color);
-}
-
-/* Premium card styling */
-.admin-advanced-panel .utility-card.premium-card {
-    border: 1px dashed rgba(99, 102, 241, 0.4);
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.8) 0%, rgba(99, 102, 241, 0.03) 100%);
-}
-
-.admin-advanced-panel .utility-card.premium-card:hover {
-    border-color: var(--secondary-color);
-    box-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.15), var(--shadow-glow);
-}
-
-.admin-advanced-panel .utility-icon {
-    width: 40px;
-    height: 40px;
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-}
-
-.admin-advanced-panel .utility-icon.warning { background: #fffbeb; color: #d97706; }
-.admin-advanced-panel .utility-icon.primary { background: #eff6ff; color: #3b82f6; }
-.admin-advanced-panel .utility-icon.secondary { background: #f0fdf4; color: #22c55e; }
-.admin-advanced-panel .utility-icon.premium { 
-    background: linear-gradient(135deg, var(--secondary-color) 0%, var(--primary-color) 100%); 
-    color: white; 
-    box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3);
-}
-
-.admin-advanced-panel .utility-content {
-    display: flex;
-    flex-direction: column;
-    flex-grow: 1;
-}
-
-.admin-advanced-panel .utility-content h3 { 
-    font-size: 1.15rem; 
-    font-weight: 700; 
-    color: var(--slate-800); 
-    margin-bottom: 6px; 
-}
-
-.admin-advanced-panel .utility-content p { 
-    font-size: 0.9rem; 
-    color: var(--text-muted); 
-    margin-bottom: 16px; 
-    line-height: 1.45;
-    flex-grow: 1;
-}
-
-.admin-advanced-panel .btn-utility,
-.admin-advanced-panel .btn-premium {
-    align-self: flex-start;
-}
 
 .admin-advanced-panel .btn-utility {
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
-    background: var(--bg-tertiary);
+    background: var(--btn-secondary-bg);
     border: none;
     padding: 10px 18px;
     border-radius: 12px;
@@ -102,42 +29,38 @@
 }
 
 .admin-advanced-panel .btn-utility:hover { 
-    background: var(--border-subtle); 
+    background: var(--btn-secondary-hover); 
     color: var(--slate-800);
     transform: translateY(-1px);
 }
 
-/* Danger Zone */
-.admin-advanced-panel .danger-zone {
-    background: var(--error-subtle);
-    border: 1px solid #fee2e2;
-    border-radius: 16px;
-    padding: 1.25rem;
-    margin-top: 1rem;
-}
-
-.admin-advanced-panel .danger-header {
+.admin-advanced-panel .action-button {
+    align-self: stretch;
+    padding: 1.5rem 1rem;
+    font-size: 1.05rem;
     display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 12px;
-    color: #dc2626;
-    margin-bottom: 1rem;
+    justify-content: center;
+    gap: 0.75rem;
+    height: 100%;
+    min-height: 120px;
+    text-align: center;
+    box-shadow: var(--shadow-soft);
 }
 
-.admin-advanced-panel .danger-header h3 { font-size: 1.25rem; font-weight: 800; margin: 0; }
-
-.admin-advanced-panel .danger-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: white;
-    padding: 1rem;
-    border-radius: 16px;
-    border: 1px solid #fee2e2;
+.admin-advanced-panel .action-button:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
 }
 
-.admin-advanced-panel .danger-item h4 { font-size: 1.1rem; font-weight: 700; color: #dc2626; margin-bottom: 4px; }
-.admin-advanced-panel .danger-item p { font-size: 0.95rem; color: var(--text-muted); margin: 0; }
+.admin-advanced-panel .action-button svg {
+    width: 28px;
+    height: 28px;
+    margin-bottom: 0.25rem;
+}
+
+
 
 .admin-advanced-panel .btn-danger {
     display: flex;

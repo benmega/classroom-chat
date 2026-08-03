@@ -186,7 +186,7 @@ button:focus-visible,
   justify-content: center;
   gap: 0.5rem;
   transition: var(--transition-bounce);
-  background: var(--bg-tertiary);
+  background: var(--btn-secondary-bg);
   color: var(--text-primary);
   border: 1px solid var(--border-subtle);
   cursor: pointer;
@@ -203,7 +203,7 @@ button:focus-visible,
 }
 
 .btn-secondary:hover {
-  background: var(--bg-tertiary);
+  background: var(--btn-secondary-hover);
   border-color: var(--border-rich);
 }
 

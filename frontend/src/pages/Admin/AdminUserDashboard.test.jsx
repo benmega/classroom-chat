@@ -138,7 +138,7 @@ describe('AdminUserDashboard Component Redesign', () => {
         const preset1Btn = screen.getByText('+1');
         fireEvent.click(preset1Btn);
 
-        const duckInputs = screen.getAllByPlaceholderText('+/-');
+        const duckInputs = screen.getAllByPlaceholderText('Amount (+/-)');
         expect(duckInputs[0].value).toBe('1');
     });
 });
