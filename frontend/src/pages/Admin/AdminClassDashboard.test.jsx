@@ -373,6 +373,7 @@ describe('AdminClassDashboard', () => {
         expect(screen.getByText('Connect Course to Classroom')).toBeInTheDocument();
 
         fireEvent.change(screen.getByLabelText('Select Course'), { target: { value: 'course-py' } });
+        fireEvent.change(screen.getByLabelText(/Instance ID/i), { target: { value: 'inst1' } });
         fireEvent.click(screen.getByRole('button', { name: 'Connect Course' }));
 
         await waitFor(() => {
@@ -451,9 +452,10 @@ describe('AdminClassDashboard', () => {
     it('displays join code and allows regenerating join code in People tab', async () => {
         const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
 
+        let currentJoinCode = 'OLD123';
         client.get.mockImplementation((url) => {
             if (url.includes('/join-code')) {
-                return Promise.resolve({ data: { success: true, join_code: 'OLD123' } });
+                return Promise.resolve({ data: { success: true, join_code: currentJoinCode } });
             }
             if (url.includes('/api/admin/classrooms/')) {
                 return Promise.resolve({
@@ -474,7 +476,8 @@ describe('AdminClassDashboard', () => {
         });
 
         client.post.mockImplementation((url) => {
-            if (url.includes('/join-code/regenerate')) {
+            if (url.includes('/regenerate_code')) {
+                currentJoinCode = 'NEW456';
                 return Promise.resolve({ data: { success: true, join_code: 'NEW456' } });
             }
             return Promise.resolve({ data: {} });

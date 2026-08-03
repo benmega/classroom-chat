@@ -1,0 +1,2245 @@
+
+[1m[7m[36m RUN [39m[27m[22m [36mv2.1.9 [39m[90mC:/Users/Ben/AntiGravity/classroom-chat/frontend[39m
+
+ [32m✓[39m src/pages/Admin/AdminClassDashboard.test.jsx[2m > [22mAdminClassDashboard[2m > [22mrenders loading state initially
+ [32m✓[39m src/pages/Admin/AdminClassDashboard.test.jsx[2m > [22mAdminClassDashboard[2m > [22mfetches and displays classroom details and students
+ [32m✓[39m src/pages/Admin/AdminClassDashboard.test.jsx[2m > [22mAdminClassDashboard[2m > [22menrolls a new student
+ [32m✓[39m src/pages/Admin/AdminClassDashboard.test.jsx[2m > [22mAdminClassDashboard[2m > [22munenrolls a student
+ [31m×[39m src/pages/Admin/AdminClassDashboard.test.jsx[2m > [22mAdminClassDashboard[2m > [22mupdates classroom settings
+[31m   → expected "spy" to be called with arguments: [ 'Updated' ][90m
+
+Received: 
+
+[1m  1st spy call:
+
+[22m[2m  Array [[22m
+[32m-   "Updated",[90m
+[31m+   "Settings updated",[90m
+[2m  ][22m
+[31m[90m
+
+Number of calls: [1m1[22m
+[31m[39m
+ [32m✓[39m src/pages/Admin/AdminClassDashboard.test.jsx[2m > [22mAdminClassDashboard[2m > [22mdeletes the classroom when confirmed
+ [32m✓[39m src/pages/Admin/AdminClassDashboard.test.jsx[2m > [22mAdminClassDashboard[2m > [22mcancels classroom deletion when confirmation is rejected
+ [32m✓[39m src/pages/Admin/AdminClassDashboard.test.jsx[2m > [22mAdminClassDashboard[2m > [22mrenders connected courses in the classwork tab
+ [32m✓[39m src/pages/Admin/AdminClassDashboard.test.jsx[2m > [22mAdminClassDashboard[2m > [22mshows an empty state in the classwork tab when no courses are connected
+ [31m×[39m src/pages/Admin/AdminClassDashboard.test.jsx[2m > [22mAdminClassDashboard[2m > [22mopens add course modal and connects a course in classwork tab[33m 1087[2mms[22m[39m
+[31m   → expected "spy" to be called with arguments: [ …(2) ][90m
+
+Received: 
+
+[31m[90m
+
+Number of calls: [1m0[22m
+[31m
+
+Ignored nodes: comments, script, style
+[36m<html>[31m
+  [36m<head />[31m
+  [36m<body[31m
+    [33mstyle[31m=[32m"overflow: hidden;"[31m
+  [36m>[31m
+    [36m<div>[31m
+      [36m<div[31m
+        [33mclass[31m=[32m"admin-class-dashboard"[31m
+      [36m>[31m
+        [36m<div[31m
+          [33mclass[31m=[32m"back-navigation"[31m
+        [36m>[31m
+          [36m<button[31m
+            [33maria-label[31m=[32m"Back to Classroom Directory"[31m
+            [33mclass[31m=[32m"back-btn-text"[31m
+          [36m>[31m
+            [36m<svg[31m
+              [33maria-hidden[31m=[32m"true"[31m
+              [33mclass[31m=[32m"lucide lucide-chevron-left"[31m
+              [33mfill[31m=[32m"none"[31m
+              [33mheight[31m=[32m"16"[31m
+              [33mstroke[31m=[32m"currentColor"[31m
+              [33mstroke-linecap[31m=[32m"round"[31m
+              [33mstroke-linejoin[31m=[32m"round"[31m
+              [33mstroke-width[31m=[32m"2"[31m
+              [33mviewBox[31m=[32m"0 0 24 24"[31m
+              [33mwidth[31m=[32m"16"[31m
+              [33mxmlns[31m=[32m"http://www.w3.org/2000/svg"[31m
+            [36m>[31m
+              [36m<path[31m
+                [33md[31m=[32m"m15 18-6-6 6-6"[31m
+              [36m/>[31m
+            [36m</svg>[31m
+            [0m Back to Directory[0m
+          [36m</button>[31m
+        [36m</div>[31m
+        [36m<div[31m
+          [33mclass[31m=[32m"classroom-banner"[31m
+        [36m>[31m
+          [36m<div[31m
+            [33mclass[31m=[32m"banner-content"[31m
+          [36m>[31m
+            [36m<h1[31m
+              [33mstyle[31m=[32m"display: flex; align-items: center; gap: 8px;"[31m
+            [36m>[31m
+              [0mPython Level 1[0m
+              [36m<button[31m
+                [33maria-label[31m=[32m"Edit classroom name"[31m
+                [33mclass[31m=[32m"btn-icon-only"[31m
+                [33mstyle[31m=[32m"opacity: 0.7; cursor: pointer; background: none none; border: none none; padding: 0px;"[31m
+              [36m>[31m
+                [36m<svg[31m
+                  [33mclass[31m=[32m"lucide lucide-settings"[31m
+                  [33mfill[31m=[32m"none"[31m
+                  [33mheight[31m=[32m"18"[31m
+                  [33mstroke[31m=[32m"currentColor"[31m
+                  [33mstroke-linecap[31m=[32m"round"[31m
+                  [33mstroke-linejoin[31m=[32m"round"[31m
+                  [33mstroke-width[31m=[32m"2"[31m
+                  [33mviewBox[31m=[32m"0 0 24 24"[31m
+                  [33mwidth[31m=[32m"18"[31m
+                  [33mxmlns[31m=[32m"http://www.w3.org/2000/svg"[31m
+                [36m>[31m
+                  [36m<path[31m
+                    [33md[31m=[32m"M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"[31m
+                  [36m/>[31m
+                  [36m<circle[31m
+                    [33mcx[31m=[32m"12"[31m
+                    [33mcy[31m=[32m"12"[31m
+                    [33mr[31m=[32m"3"[31m
+                  [36m/>[31m
+                [36m</svg>[31m
+              [36m</button>[31m
+              [36m<div[31m
+                [33mclass[31m=[32m"banner-langs"[31m
+                [33mstyle[31m=[32m"display: flex; gap: 4px; margin-left: 8px;"[31m
+              [36m/>[31m
+            [36m</h1>[31m
+          [36m</div>[31m
+          [36m<div[31m
+            [33mclass[31m=[32m"banner-actions"[31m
+          [36m>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"banner-join-code"[31m
+              [33mtitle[31m=[32m"Classroom Join Code"[31m
+            [36m>[31m
+              [36m<span[31m
+                [33mclass[31m=[32m"join-code-label"[31m
+              [36m>[31m
+                [0mCode:[0m
+              [36m</span>[31m
+              [36m<span[31m
+                [33mclass[31m=[32m"join-code-val"[31m
+              [36m>[31m
+                [0mABC123[0m
+              [36m</span>[31m
+            [36m</div>[31m
+            [36m<button[31m
+              [33mclass[31m=[32m"secondary-btn"[31m
+            [36m>[31m
+              [0mPrint Connection Cards[0m
+            [36m</button>[31m
+          [36m</div>[31m
+        [36m</div>[31m
+        [36m<div[31m
+          [33maria-label[31m=[32m"Classroom navigation tabs"[31m
+          [33mclass[31m=[32m"classroom-tabs"[31m
+          [33mrole[31m=[32m"tablist"[31m
+        [36m>[31m
+          [36m<button[31m
+            [33maria-controls[31m=[32m"pane-stream"[31m
+            [33maria-selected[31m=[32m"false"[31m
+            [33mclass[31m=[32m"tab-btn "[31m
+            [33mid[31m=[32m"tab-stream"[31m
+            [33mrole[31m=[32m"tab"[31m
+          [36m>[31m
+            [0mStream[0m
+          [36m</button>[31m
+          [36m<button[31m
+            [33maria-controls[31m=[32m"pane-classwork"[31m
+            [33maria-selected[31m=[32m"true"[31m
+            [33mclass[31m=[32m"tab-btn active"[31m
+            [33mid[31m=[32m"tab-classwork"[31m
+            [33mrole[31m=[32m"tab"[31m
+          [36m>[31m
+            [0mClasswork[0m
+          [36m</button>[31m
+          [36m<button[31m
+            [33maria-controls[31m=[32m"pane-people"[31m
+            [33maria-selected[31m=[32m"false"[31m
+            [33mclass[31m=[32m"tab-btn "[31m
+            [33mid[31m=[32m"tab-people"[31m
+            [33mrole[31m=[32m"tab"[31m
+          [36m>[31m
+            [0mPeople[0m
+          [36m</button>[31m
+          [36m<button[31m
+            [33maria-controls[31m=[32m"pane-settings"[31m
+            [33maria-selected[31m=[32m"false"[31m
+            [33mclass[31m=[32m"tab-btn "[31m
+            [33mid[31m=[32m"tab-settings"[31m
+            [33mrole[31m=[32m"tab"[31m
+          [36m>[31m
+            [0mSettings[0m
+          [36m</button>[31m
+        [36m</div>[31m
+        [36m<div[31m
+          [33mclass[31m=[32m"tab-content"[31m
+        [36m>[31m
+          [36m<div[31m
+            [33mclass[31m=[32m"tab-pane classwork-pane"[31m
+          [36m>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"admin-class-grid single-column"[31m
+            [36m>[31m
+              [36m<div[31m
+                [33mclass[31m=[32m"control-panel-card assignments-card"[31m
+              [36m>[3...[39m
+ [32m✓[39m src/pages/Admin/AdminClassDashboard.test.jsx[2m > [22mAdminClassDashboard[2m > [22mdisconnects a course in classwork tab
+ [32m✓[39m src/pages/Admin/AdminClassDashboard.test.jsx[2m > [22mAdminClassDashboard[2m > [22mdisplays the join code when the API provides one
+ [31m×[39m src/pages/Admin/AdminClassDashboard.test.jsx[2m > [22mAdminClassDashboard[2m > [22mdisplays join code and allows regenerating join code in People tab[33m 1061[2mms[22m[39m
+[31m   → Unable to find an element with the text: NEW456. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body[31m
+  [33mstyle[31m=[32m"overflow: hidden;"[31m
+[36m>[31m
+  [36m<div>[31m
+    [36m<div[31m
+      [33mclass[31m=[32m"admin-class-dashboard"[31m
+    [36m>[31m
+      [36m<div[31m
+        [33mclass[31m=[32m"back-navigation"[31m
+      [36m>[31m
+        [36m<button[31m
+          [33maria-label[31m=[32m"Back to Classroom Directory"[31m
+          [33mclass[31m=[32m"back-btn-text"[31m
+        [36m>[31m
+          [36m<svg[31m
+            [33maria-hidden[31m=[32m"true"[31m
+            [33mclass[31m=[32m"lucide lucide-chevron-left"[31m
+            [33mfill[31m=[32m"none"[31m
+            [33mheight[31m=[32m"16"[31m
+            [33mstroke[31m=[32m"currentColor"[31m
+            [33mstroke-linecap[31m=[32m"round"[31m
+            [33mstroke-linejoin[31m=[32m"round"[31m
+            [33mstroke-width[31m=[32m"2"[31m
+            [33mviewBox[31m=[32m"0 0 24 24"[31m
+            [33mwidth[31m=[32m"16"[31m
+            [33mxmlns[31m=[32m"http://www.w3.org/2000/svg"[31m
+          [36m>[31m
+            [36m<path[31m
+              [33md[31m=[32m"m15 18-6-6 6-6"[31m
+            [36m/>[31m
+          [36m</svg>[31m
+          [0m Back to Directory[0m
+        [36m</button>[31m
+      [36m</div>[31m
+      [36m<div[31m
+        [33mclass[31m=[32m"classroom-banner"[31m
+      [36m>[31m
+        [36m<div[31m
+          [33mclass[31m=[32m"banner-content"[31m
+        [36m>[31m
+          [36m<h1[31m
+            [33mstyle[31m=[32m"display: flex; align-items: center; gap: 8px;"[31m
+          [36m>[31m
+            [0mPython Level 1[0m
+            [36m<button[31m
+              [33maria-label[31m=[32m"Edit classroom name"[31m
+              [33mclass[31m=[32m"btn-icon-only"[31m
+              [33mstyle[31m=[32m"opacity: 0.7; cursor: pointer; background: none none; border: none none; padding: 0px;"[31m
+            [36m>[31m
+              [36m<svg[31m
+                [33mclass[31m=[32m"lucide lucide-settings"[31m
+                [33mfill[31m=[32m"none"[31m
+                [33mheight[31m=[32m"18"[31m
+                [33mstroke[31m=[32m"currentColor"[31m
+                [33mstroke-linecap[31m=[32m"round"[31m
+                [33mstroke-linejoin[31m=[32m"round"[31m
+                [33mstroke-width[31m=[32m"2"[31m
+                [33mviewBox[31m=[32m"0 0 24 24"[31m
+                [33mwidth[31m=[32m"18"[31m
+                [33mxmlns[31m=[32m"http://www.w3.org/2000/svg"[31m
+              [36m>[31m
+                [36m<path[31m
+                  [33md[31m=[32m"M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"[31m
+                [36m/>[31m
+                [36m<circle[31m
+                  [33mcx[31m=[32m"12"[31m
+                  [33mcy[31m=[32m"12"[31m
+                  [33mr[31m=[32m"3"[31m
+                [36m/>[31m
+              [36m</svg>[31m
+            [36m</button>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"banner-langs"[31m
+              [33mstyle[31m=[32m"display: flex; gap: 4px; margin-left: 8px;"[31m
+            [36m/>[31m
+          [36m</h1>[31m
+        [36m</div>[31m
+        [36m<div[31m
+          [33mclass[31m=[32m"banner-actions"[31m
+        [36m>[31m
+          [36m<div[31m
+            [33mclass[31m=[32m"banner-join-code"[31m
+            [33mtitle[31m=[32m"Classroom Join Code"[31m
+          [36m>[31m
+            [36m<span[31m
+              [33mclass[31m=[32m"join-code-label"[31m
+            [36m>[31m
+              [0mCode:[0m
+            [36m</span>[31m
+            [36m<span[31m
+              [33mclass[31m=[32m"join-code-val"[31m
+            [36m>[31m
+              [0mOLD123[0m
+            [36m</span>[31m
+          [36m</div>[31m
+          [36m<button[31m
+            [33mclass[31m=[32m"secondary-btn"[31m
+          [36m>[31m
+            [0mPrint Connection Cards[0m
+          [36m</button>[31m
+        [36m</div>[31m
+      [36m</div>[31m
+      [36m<div[31m
+        [33maria-label[31m=[32m"Classroom navigation tabs"[31m
+        [33mclass[31m=[32m"classroom-tabs"[31m
+        [33mrole[31m=[32m"tablist"[31m
+      [36m>[31m
+        [36m<button[31m
+          [33maria-controls[31m=[32m"pane-stream"[31m
+          [33maria-selected[31m=[32m"false"[31m
+          [33mclass[31m=[32m"tab-btn "[31m
+          [33mid[31m=[32m"tab-stream"[31m
+          [33mrole[31m=[32m"tab"[31m
+        [36m>[31m
+          [0mStream[0m
+        [36m</button>[31m
+        [36m<button[31m
+          [33maria-controls[31m=[32m"pane-classwork"[31m
+          [33maria-selected[31m=[32m"false"[31m
+          [33mclass[31m=[32m"tab-btn "[31m
+          [33mid[31m=[32m"tab-classwork"[31m
+          [33mrole[31m=[32m"tab"[31m
+        [36m>[31m
+          [0mClasswork[0m
+        [36m</button>[31m
+        [36m<button[31m
+          [33maria-controls[31m=[32m"pane-people"[31m
+          [33maria-selected[31m=[32m"true"[31m
+          [33mclass[31m=[32m"tab-btn active"[31m
+          [33mid[31m=[32m"tab-people"[31m
+          [33mrole[31m=[32m"tab"[31m
+        [36m>[31m
+          [0mPeople[0m
+        [36m</button>[31m
+        [36m<button[31m
+          [33maria-controls[31m=[32m"pane-settings"[31m
+          [33maria-selected[31m=[32m"false"[31m
+          [33mclass[31m=[32m"tab-btn "[31m
+          [33mid[31m=[32m"tab-settings"[31m
+          [33mrole[31m=[32m"tab"[31m
+        [36m>[31m
+          [0mSettings[0m
+        [36m</button>[31m
+      [36m</div>[31m
+      [36m<div[31m
+        [33mclass[31m=[32m"tab-content"[31m
+      [36m>[31m
+        [36m<div[31m
+          [33mclass[31m=[32m"tab-pane people-pane"[31m
+        [36m>[31m
+          [36m<div[31m
+            [33mclass[31m=[32m"admin-class-grid single-column"[31m
+          [36m>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"control-panel-card roster-card"[31m
+            [36m>[31m
+              [36m<div[31m
+                [33mclass[31m=[32m"card-custom-header"[31m
+              [36m>[31m
+                [36m<div[31m
+                  [33mclass[31m=[32m"title-section"[31m
+                [36m>[31m
+                  [36m<svg[31m
+                    [33mclass[31m=[32m"lucide lucide-users"[31m
+                    [33mfill[31m=[32m"none"[31m
+                    [33mheight[31m=[32m"20"[31m
+                    [33mstroke[31m=[32m"currentColor"[31m
+                    [33mstroke-linecap[31m=[32m"round"[31m
+                    [33mstroke-linejoin[31m=[32m"round"[31m
+                    [33mstroke-width[31m=[32m"2"[31m
+                    [33mviewBox[31m=[32m"0 0 24 24"[31m
+                    [33mwidth[31m=[32m"20"[31m
+                    [33mxmlns[31m=[32m"http://www.w3.org/2000/svg"[31m
+                  [36m>[31m
+                    [36m<path[31m
+                      [33md[31m=[32m"M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"[31m
+                    [36m/>[31m
+                    [36m<circle[31m
+                      [33mcx[31m=[32m"9"[31m
+                      [33mcy[31m=[32m"7"[31m
+                      [33mr[31m=[32m"4"[31m
+                    [36m/>[31m
+                    [36m<path[31m
+                      [33md[31m=[32m"M22 21v-2a4 4 0 0 0-3-3.87"[31m
+                    [36m/>[31m
+                    [36m<path[31m
+                      [33md[31m=[32m"M16 3.13a4 4 0 0 1 0 7.75"[31m
+                    [36m/>[31m
+                  [36m</svg>[31m
+                  [36m<h3>[31m
+                    [0mStudent Roster[0m
+                  [36m</h3>[31m
+                [36m</div>[31m
+                [36m<input[31m
+                  [33mclass[31m=[32m"roster-search-input"[31m
+                  [33mplaceholder[31m=[32m"Filter roster..."[31m
+                  [33mtype[31m=[32m"text"[31m
+                  [33mvalue[31m=[32m""[31m
+                [36m/>[31m
+              [36m</div>[31m
+              [36m<button[31m
+                [33mclass[31m=[32m"btn-primary"[31m
+                [33mstyle[31m=[32m"margin-top: 1rem; margin-bottom: 1rem;"[31m
+              [36m>[31m
+                [36m<svg[31m
+                  [33mclass[31m=[32m"lucide lucide-user-plus"[31m
+                  [33mfill[31m=[32m"none"[31m
+                  [33mheight[31m=[32m"18"[31m
+                  [33mstroke[31m=[32m"currentColor"[31m
+                  [33mstroke-linecap[31m=[32m"round"[31m
+                  [33mstroke-linejoin[31m=[32m"round"[31m
+                  [33mstroke-width[31m=[32m"2"[31m
+                  [33mviewBox[31m=[32m"0 0 24 24"[31m
+                  [33mwidth[31m=[32m"18"[31m
+                  [33mxmlns[31m=[32m"http://www.w3.org/2000/svg"[31m
+                [36m>[31m
+                  [36m<path[31m
+                    [33md[31m=[32m"M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"[31m
+                  [36m/>[31m
+                  [36m<circle[31m
+                    [33mcx[31m=[32m"9"[31m
+                    [33mcy[31m=[32m"7"[31m
+                    [33mr[31m=[32m"4"[31m
+                  [36m/>[31m
+                  [36m<line[31m
+                    [33mx1[31m=[32m"19"[31m
+                    [33mx2[31m=[32m"19"[31m
+                    [33my1[31m=[32m"8"[31m
+                    [33my2[31m=[32m"14"[31m
+                  [36m/>[31m
+                  [36m<line[31m
+                    [33mx1[31m=[32m"22"[31m
+                    [33mx2[31m=[32m"16"[31m
+                    [33my1[31m=[32m"11"[31m
+                    [33my2[31m=[32m"11"[31m
+                  [36m/>[31m
+                [36m</svg>[31m
+                [0mEnroll Student[0m
+              [36m</button>[31m
+              [36m<div[31m
+                [33mclass[31m=[32m"roster-list-container"[31m
+              [36m>[31m
+                [36m<div[31m
+                  [33mclass[31m=[32m"empty-roster-msg"[31m
+                [36m>[31m
+                  [0mNo students found.[0m
+                [36m</div>[31m
+              [36m</div>[31m
+            [36m</div>[31m
+          [36m</div>[31m
+        [36m</div>[31m
+      [36m</div>[31m
+    [36m</div>[31m
+  [36m</div>[31m
+  [36m<div[31m
+    [33mclass[31m=[32m"admin-modal-overlay"[31m
+    [33mrole[31m=[32m"presentation"[31m
+  [36m>[31m
+    [36m<div[31m
+      [33maria-labelledby[31m=[32m"modal-title"[31m
+      [33maria-modal[31m=[32m"true"[31m
+      [33mclass[31m=[32m"admin-modal-content"[31m
+      [33mrole[31m=[32m"dialog"[31m
+      [33mtabindex[31m=[32m"-1"[31m
+    [36m>[31m
+      [36m<div[31m
+        [33mclass[31m=[32m"modal-header"[31m
+      [36m>[31m
+        [36m<h3[31m
+          [33mid[31m=[32m"modal-title"[31m
+        [36m>[31m
+          [0mInvite students[0m
+        [36m</h3>[31m
+        [36m<button[31m
+          [33maria-label[31m=[32m"Close modal"[31m
+          [33mclass[31m=[32m"close-btn"[31m
+        [36m>[31m
+          [36m<svg[31m
+            [33mclass[31m=[32m"lucide lucide-x"[31m
+            [33mfill[31m=[32m"none"[31m
+            [33mheight[31m=[32m"20"[31m
+            [33mstroke[31m=[32m"currentColor"[31m
+            [33mstroke-linecap[31m=[32m"round"[31m
+            [33mstroke-linejoin[31m=[32m"round"[31m
+            [33mstroke-width[31m=[32m"2"[31m
+            [33mviewBox[31m=[32m"0 0 24 24"[31m
+            [33mwidth[31m=[32m"20"[31m
+            [33mxmlns[31m=[32m"http://www.w3.org/2000/svg"[31m
+          [36m>[31m
+            [36m<path[31m
+              [33md[31m=[32m"M18 6 6 18"[31m
+            [36m/>[31m
+            [36m<path[31m
+              [33md[31m=[32m"m6 6 12 12"[31m
+            [36m/>[31m
+          [36m</svg>[31m
+        [36m</button>[31m
+      [36m</div>[31m
+      [36m<div[31m
+        [33mclass[31m=[32m"modal-body"[31m
+      [36m>[31m
+        [36m<div[31m
+          [33mclass[31m=[32m"enroll-modal-content"[31m
+        [36m>[31m
+          [36m<div[31m
+            [33mclass[31m=[32m"enroll-modal-link-section"[31m
+          [36m>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"enroll-modal-link-label"[31m
+            [36m>[31m
+              [0mInvite link[0m
+            [36m</div>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"enroll-modal-link-row"[31m
+            [36m>[31m
+              [36m<span[31m
+                [33mclass[31m=[32m"enroll-modal-link-text"[31m
+              [36m>[31m
+                [0mhttps://classroom-chat.com/join?c=OLD123[0m
+              [36m</span>[31m
+              [36m<div[31m
+                [33mstyle[31m=[32m"display: flex; gap: 0.5rem;"[31m
+              [36m>[31m
+                [36m<button[31m
+                  [33maria-label[31m=[32m"Copy Join Code"[31m
+                  [33mclass[31m=[32m"regenerate-link-btn"[31m
+                  [33mtitle[31m=[32m"Copy Invite Link"[31m
+                  [33mtype[31m=[32m"button"[31m
+                [36m>[31m
+                  [36m<svg[31m
+                    [33mclass[31m=[32m"lucide lucide-copy"[31m
+                    [33mfill[31m=[32m"none"[31m
+                    [33mheight[31m=[32m"16"[31m
+                    [33mstroke[31m=[32m"currentColor"[31m
+                    [33mstroke-linecap[31m=[32m"round"[31m
+                    [33mstroke-linejoin[31m=[32m"round"[31m
+                    [33mstroke-width[31m=[32m"2"[31m
+                    [33mviewBox[31m=[32m"0 0 24 24"[31m
+                    [33mwidth[31m=[32m"16"[31m
+                    [33mxmlns[31m=[32m"http://www.w3.org/2000/svg"[31m
+                  [36m>[31m
+                    [36m<rect[31m
+                      [33mheight[31m=[32m"14"[31m
+                      [33mrx[31m=[32m"2"[31m
+                      [33mry[31m=[32m"2"[31m
+                      [33mwidth[31m=[32m"14"[31m
+                      [33mx[31m=[32m"8"[31m
+                      [33my[31m=[32m"8"[31m
+                    [36m/>[31m
+                    [36m<path[31m
+                      [33md[31m=[32m"M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"[31m
+                    [36m/>[31m
+                  [36m</svg>[31m
+                [36m</button>[31m
+                [36m<button[31m
+                  [33maria-label[31m=[32m"Regenerate Join Code"[31m
+                  [33mclass[31m=[32m"regenerate-link-btn"[31m
+                  [33mtitle[31m=[32m"Regenerate Join Code"[31m
+                  [33mtype[31m=[32m"button"[31m
+                [36m>[31m
+                  [36m<svg[31m
+                    [33mclass[31m=[32m"lucide lucide-refresh-cw"[31m
+                    [33mfill[31m=[32m"none"[31m
+                    [33mheight[31m=[32m"16"[31m
+                    [33mstroke[31m=[32m"currentColor"[31m
+                    [33mstroke-linecap[31m=[32m"round"[31m
+                    [33mstroke-linejoin[31m=[32m"round"[31m
+                    [33mstroke-width[31m=[32m"2"[31m
+                    [33mviewBox[31m=[32m"0 0 24 24"[31m
+                    [33mwidth[31m=[32m"16"[31m
+                    [33mxmlns[31m=[32m"http://www.w3.org/2000/svg"[31m
+                  [36m>[31m
+                    [36m<path[31m
+                      [33md[31m=[32m"M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"[31m
+                    [36m/>[31m
+                    [36m<path[31m
+                      [33md[31m=[32m"M21 3v5h-5"[31m
+                    [36m/>[31m
+                    [36m<path[31m
+                      [33md[31m=[32m"M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"[31m
+                    [36m/>[31m
+                    [36m<path[31m
+                      [33md[31m=[32m"M8 16H3v5"[31m
+                    [36m/>[31m
+                  [36m</svg>[31m
+                [36m</button>[31m
+              [36m</div>[31m
+            [36m</div>[31m
+          [36m</div>[31m
+          [36m<form[31m
+            [33mclass[31m=[32m"enroll-modal-form"[31m
+          [36m>[31m
+            [36m<input[31m
+              [33maria-label[31m=[32m"Search students to enroll"[31m
+              [33mclass[31m=[32m"enroll-modal-search"[31m
+              [33mid[31m=[32m"student-search-input"[31m
+              [33mplaceholder[31m=[32m"Type a name or email"[31m
+              [33mtype[31m=[32m"text"[31m
+              [33mvalue[31m=[32m""[31m
+            [36m/>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"enroll-modal-user-list"[31m
+            [36m>[31m
+              [36m<div[31m
+                [33mclass[31m=[32m"enroll-modal-user-row"[31m
+                [33mstyle[31m=[32m"cursor: default;"[31m
+              [36m>[31m
+                [36m<div[31m
+                  [33mclass[31m=[32m"enroll-modal-user-info"[31m
+                [36m>[31m
+                  [36m<span[31m
+                    [33mclass[31m=[32m"enroll-modal-user-name"[31m
+                  [36m>[31m
+                    [0mNo matching students found[0m
+                  [36m</span>[31m
+                [36m</div>[31m
+              [36m</div>[31m
+            [36m</div>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"enroll-modal-actions"[31m
+            [36m>[31m
+              [36m<button[31m
+                [33mclass[31m=[32m"enroll-modal-btn-cancel"[31m
+                [33mtype[31m=[32m"button"[31m
+              [36m>[31m
+                [0mCancel[0m
+              [36m</button>[31m
+              [36m<button[31m
+                [33mclass[31m=[32m"enroll-modal-btn-invite"[31m
+                [33mdisabled[31m=[32m""[31m
+                [33mname[31m=[32m"Enroll Student"[31m
+                [33mtype[31m=[32m"submit"[31m
+              [36m>[31m
+                [0mInvite[0m
+              [36m</button>[31m
+            [36m</div>[31m
+            [36m<select[31m
+              [33maria-hidden[31m=[32m"true"[31m
+              [33mid[31m=[32m"student-select-list"[31m
+              [33mstyle[31m=[32m"display: none;"[31m
+            [36m>[31m
+              [36m<option[31m
+                [33mvalue[31m=[32m""[31m
+              [36m/>[31m
+            [36m</select>[31m
+          [36m</form>[31m
+        [36m</div>[31m
+      [36m</div>[31m
+    [36m</div>[31m
+  [36m</div>[31m
+[36m</body>[31m
+
+Ignored nodes: comments, script, style
+[36m<html>[31m
+  [36m<head />[31m
+  [36m<body[31m
+    [33mstyle[31m=[32m"overflow: hidden;"[31m
+  [36m>[31m
+    [36m<div>[31m
+      [36m<div[31m
+        [33mclass[31m=[32m"admin-class-dashboard"[31m
+      [36m>[31m
+        [36m<div[31m
+          [33mclass[31m=[32m"back-navigation"[31m
+        [36m>[31m
+          [36m<button[31m
+            [33maria-label[31m=[32m"Back to Classroom Directory"[31m
+            [33mclass[31m=[32m"back-btn-text"[31m
+          [36m>[31m
+            [36m<svg[31m
+              [33maria-hidden[31m=[32m"true"[31m
+              [33mclass[31m=[32m"lucide lucide-chevron-left"[31m
+              [33mfill[31m=[32m"none"[31m
+              [33mheight[31m=[32m"16"[31m
+              [33mstroke[31m=[32m"currentColor"[31m
+              [33mstroke-linecap[31m=[32m"round"[31m
+              [33mstroke-linejoin[31m=[32m"round"[31m
+              [33mstroke-width[31m=[32m"2"[31m
+              [33mviewBox[31m=[32m"0 0 24 24"[31m
+              [33mwidth[31m=[32m"16"[31m
+              [33mxmlns[31m=[32m"http://www.w3.org/2000/svg"[31m
+            [36m>[31m
+              [36m<path[31m
+                [33md[31m=[32m"m15 18-6-6 6-6"[31m
+              [36m/>[31m
+            [36m</svg>[31m
+            [0m Back to Directory[0m
+          [36m</button>[31m
+        [36m</div>[31m
+        [36m<div[31m
+          [33mclass[31m=[32m"classroom-banner"[31m
+        [36m>[31m
+          [36m<div[31m
+            [33mclass[31m=[32m"banner-content"[31m
+          [36m>[31m
+            [36m<h1[31m
+              [33mstyle[31m=[32m"display: flex; align-items: center; gap: 8px;"[31m
+            [36m>[31m
+              [0mPython Level 1[0m
+              [36m<button[31m
+                [33maria-label[31m=[32m"Edit classroom name"[31m
+                [33mclass[31m=[32m"btn-icon-only"[31m
+                [33mstyle[31m=[32m"opacity: 0.7; cursor: pointer; background: none none; border: none none; padding: 0px;"[31m
+              [36m>[31m
+                [36m<svg[31m
+                  [33mclass[31m=[32m"lucide lucide-settings"[31m
+                  [33mfill[31m=[32m"none"[31m
+                  [33mheight[31m=[32m"18"[31m
+                  [33mstroke[31m=[32m"currentColor"[31m
+                  [33mstroke-linecap[31m=[32m"round"[31m
+                  [33mstroke-linejoin[31m=[32m"round"[31m
+                  [33mstroke-width[31m=[32m"2"[31m
+                  [33mviewBox[31m=[32m"0 0 24 24"[31m
+                  [33mwidth[31m=[32m"18"[31m
+                  [33mxmlns[31m=[32m"http://www.w3.org/2000/svg"[31m
+                [36m>[31m
+                  [36m<path[31m
+                    [33md[31m=[32m"M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"[31m
+                  [36m/>[31m
+                  [36m<circle[31m
+                    [33mcx[31m=[32m"12"[31m
+                    [33mcy[31m=[32m"12"[31m
+                    [33mr[31m=[32m"3"[31m
+                  [36m/>[31m
+                [36m</svg>[31m
+              [36m</button>[31m
+              [36m<div[31m
+                [33mclass[31m=[32m"banner-langs"[31m
+                [33mstyle[31m=[32m"display: flex; gap: 4px; margin-left: 8px;"[31m
+              [36m/>[31m
+            [36m</h1>[31m
+          [36m</div>[31m
+          [36m<div[31m
+            [33mclass[31m=[32m"banner-actions"[31m
+          [36m>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"banner-join-code"[31m
+              [33mtitle[31m=[32m"Classroom Join Code"[31m
+            [36m>[31m
+              [36m<span[31m
+                [33mclass[31m=[32m"join-code-label"[31m
+              [36m>[31m
+                [0mCode:[0m
+              [36m</span>[31m
+              [36m<span[31m
+                [33mclass[31m=[32m"join-code-val"[31m
+              [36m>[31m
+                [0mOLD123[0m
+              [36m</span>[31m
+            [36m</div>[31m
+            [36m<button[31m
+              [33mclass[31m=[32m"secondary-btn"[31m
+            [36m>[31m
+              [0mPrint Connection Cards[0m
+            [36m</button>[31m
+          [36m</div>[31m
+        [36m</div>[31m
+        [36m<div[31m
+          [33maria-label[31m=[32m"Classroom navigation tabs"[31m
+          [33mclass[31m=[32m"classroom-tabs"[31m
+          [33mrole[31m=[32m"tablist"[31m
+        [36m>[31m
+          [36m<button[31m
+            [33maria-controls[31m=[32m"pane-stream"[31m
+            [33maria-selected[31m=[32m"false"[31m
+            [33mclass[31m=[32m"tab-btn "[31m
+            [33mid[31m=[32m"tab-stream"[31m
+            [33mrole[31m=[32m"tab"[31m
+          [36m>[31m
+            [0mStream[0m
+          [36m</button>[31m
+          [36m<button[31m
+            [33maria-controls[31m=[32m"pane-classwork"[31m
+            [33maria-selected[31m=[32m"false"[31m
+            [33mclass[31m=[32m"tab-btn "[31m
+            [33mid[31m=[32m"tab-classwork"[31m
+            [33mrole[31m=[32m"tab"[31m
+          [36m>[31m
+            [0mClasswork[0m
+          [36m</button>[31m
+          [36m<button[31m
+            [33maria-controls[31m=[32m"pane-people"[31m
+            [33maria-selected[31m=[32m"true"[31m
+            [33mclass[31m=[32m"tab-btn active"[31m
+            [33mid[31m=[32m"tab-people"[31m
+            [33mrole[31m=[32m"tab"[31m
+          [36m>[31m
+            [0mPeople[0m
+          [36m</button>[31m
+          [36m<button[31m
+            [33maria-controls[31m=[32m"pane-settings"[31m
+            [33maria-selected[31m=[32m"false"[31m
+            [33mclass[31m=[32m"tab-btn "[31m
+            [33mid[31m=[32m"tab-settings"[31m
+            [33mrole[31m=[32m"tab"[31m
+          [36m>[31m
+            [0mSettings[0m
+          [36m</button>[31m
+        [36m</div>[31m
+        [36m<div[31m
+          [33mclass[31m=[32m"tab-content"[31m
+        [36m>[31m
+          [36m<div[31m
+            [33mclass[31m=[32m"tab-pane people-pane"[31m
+          [36m>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"admin-class-grid single-column"[31m
+            [36m>[31m
+              [36m<div[31m
+                [33mclass[31m=[32m"control-panel-card roster-card"[31m
+              [36m>[31m
+                [36m<div[31m
+                  [33mclass[31m=[32m"card-custom-header"[31m
+                [36m>[31m
+                  [36m<div[31m
+                    [33mclass[31m=[32m"title-section"[31m
+                  [36m>[31m
+                    [36m<svg[31m
+                      [33mclass[31m=[32m"lucide lucide-users"[31m
+                      [33mfill[31m=[32m"none"[31m
+                      [33mheight[31m=[32m"20"[31m
+                      [33mstroke[31m=[32m"currentColor"[31m
+                      [33mstroke-linecap[31m=[32m"round"[31m
+                      [33mstroke-linejoin[31m=[32m"round"[31m
+                      [33mstroke-width[31m=[32m"2"[31m
+                      [33mviewBox[31m=[32m"0 0 24 24"[31m
+                      [33mwidth[31m=[32m"20"[31m
+                      [33mxmlns[31m=[32m"http://www.w3.org/2000/svg"[31m
+                    [36m>[31m
+                      [36m<path[31m
+                        [33md[31m=[32m"M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"[31m
+                      [36m/>[31m
+                      [36m<circle[31m
+                        [33mcx[31m=[32m"9"[31m
+                        [33mcy[31m=[32m"7"[31m
+                        [33mr[31m=[32m"4"[31m
+                      [36m/>[31m
+                      [36m<path[31m
+                        [33md[31m=[32m"M22 21v-2a4 4 0 0 0-3-3.87"[31m
+                      [36m/>[31m
+                      [36m<path[31m
+                        [33md[31m=[32m"M16 3.13a4 4 0 0 1 0 7.75"[31m
+                      [36m/>[31m
+                    [36m</svg>[31m
+                    [36m<h3>[31m
+                      [0mStudent Roster[0m
+                    [36m</h3>[31m
+                  [36m</div>[31m
+                  [36m<input[31m
+                    [33mclass[31m=[32m"roster-search-input"[31m
+                    [33mplaceholder[31m=[32m"Filter roster..."[31m
+                    [33mtype[31m=[32m"text"[31m
+                    [33mvalue[31m=[32m""[31m
+                  [36m/>[31m
+                [36m</div>[31m
+                [36m<button[31m
+                  [33mclass[31m=[32m"btn-primary"[31m
+                  [33mstyle[31m=[32m"margin-top: 1rem; margin-bottom: 1rem;"[31m
+                [36m>[31m
+                  [36m<svg[31m
+                    [33mclass[31m=[32m"lucide lucide-user-plus"[31m
+                    [33mfill[31m=[32m"none"[31m
+                    [33mheight[31m=[32m"18"[31m
+                    [33mstroke[31m=[32m"currentColor"[31m
+                    [33mstroke-linecap[31m=[32m"round"[31m
+                    [33mstroke-linejoin[31m=[32m"round"[31m
+                    [33mstroke-width[31m=[32m"2"[31m
+                    [33mviewBox[31m=[32m"0 0 24 24"[31m
+                    [33mwidth[31m=[32m"18"[31m
+                    [33mxmlns[31m=[32m"http://www.w3.org/2000/svg"[31m
+                  [36m>[31m
+                    [36m<path[31m
+                      [33md[31m=[32m"M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"[31m
+                    [36m/>[31m
+                    [36m<circle[31m
+                      [33mcx[31m=[32m"9"[31m
+                      [33mcy[31m=[32m"7"[31m
+                      [33mr[31m=[32m"4"[31m
+                    [36m/>[31m
+                    [36m<line[31m
+                      [33mx1[31m=[32m"19"[31m
+                      [33mx2[31m=[32m"19"[31m
+                      [33my1[31m=[32m"8"[31m
+                      [33my2[31m=[32m"14"[31m
+                    [36m/>[31m
+                    [36m<line[31m
+                      [33mx1[31m=[32m"22"[31m
+                      [33mx2[31m=[32m"16"[31m
+                      [33my1[31m=[32m"11"[31m
+                      [33my2[31m=[32m"11"[31m
+                    [36m/>[31m
+                  [36m</svg>[31m
+                  [0mEnroll Student[0m
+                [36m</button>[31m
+                [36m<div[31m
+                  [33mclass[31m=[32m"roster-list-container"[31m
+                [36m>[31m
+                  [36m<div[31m
+                    [33mclass[31m=[32m"empty-roster-msg"[31m
+                  [36m>[31m
+                    [0mNo students found.[0m
+                  [36m</div>[31m
+                [36m</div>[31m
+              [36m</div>[31m
+            [36m</div>[31m
+          [36m</div>[31m
+        [36m</div>[31m
+      [36m</div>[31m
+    [36m</div>[31m
+    [36m<div[31m
+      [33mclass[31m=[32m"admin-modal-overlay"[31m
+      [33mrole[31m=[32m"presentation"[31m
+    [36m>[31m
+      [36m<div[31m
+        [33maria-labelledby[31m=[32m"modal-title"[31m
+        [33maria-modal[31m=[32m"true"[31m
+        [33mclass[31m=[32m"admin-modal-content"[31m
+        [33mrole[31m=[32m"dialog"[31m
+        [33mtabindex[31m=[32m"-1"[31m
+      [36m>[31m
+        [36m<div[31m
+          [33mclass[31m=[32m"modal-header"[31m
+        [36m>[31m
+          [36m<h3[31m
+            [33mid[31m=[32m"modal-title"[31m
+          [36m>[31m
+            [0mInvite students[0m
+          [36m</h3>[31m
+          [36m<button[31m
+            [33maria-label[31m=[32m"Close modal"[31m
+            [33mclass[31m=[32m"close-btn"[31m
+          [36m>[31m
+            [36m<svg[31m
+              [33mclass[31m=[32m"lucide lucide-x"[31m
+              [33mfill[31m=[32m"none"[31m
+              [33mheight[31m=[32m"20"[31m
+              [33mstroke[31m=[32m"currentColor"[31m
+              [33mstroke-linecap[31m=[32m"round"[31m
+              [33mstroke-linejoin[31m=[32m"round"[31m
+              [33mstroke-width[31m=[32m"2"[31m
+              [33mviewBox[31m=[32m"0 0 24 24"[31m
+              [33mwidth[31m=[32m"20"[31m
+              [33mxmlns[31m=[32m"http://www.w3.org/2000/svg"[31m
+            [36m>[31m
+              [36m<path[31m
+                [33md[31m=[32m"M18 6 6 18"[31m
+              [36m/>[31m
+              [36m<path[31m
+                [33md[31m=[32m"m6 6 12 12"[31m
+              [36m/>[31m
+            [36m</svg>[31m
+          [36m</button>[31m
+        [36m</div>[31m
+        [36m<div[31m
+          [33mclass[31m=[32m"modal-body"[31m
+        [36m>[31m
+          [36m<div[31m
+            [33mclass[31m=[32m"enroll-modal-content"[31m
+          [36m>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"enroll-modal-link-section"[31m
+            [36m>[31m
+              [36m<div[31m
+                [33mclass[31m=[32m"enroll-modal-link-label"[31m
+              [36m>[31m
+                [0mInvite link[0m
+              [36m</div>[31m
+              [36m<div[31m
+                [33mclass[31m=[32m"enroll-modal-link-row"[31m
+              [36m>[31m
+                [36m<span[31m
+                  [33mclass[31m=[32m"enroll-modal-link-text"[31m
+                [36m>[31m
+                  [0mhttps://classroom-chat.com/join?c=OLD123[0m
+                [36m</span>[31m
+                [36m<div[31m
+                  [33mstyle[31m=[32m"display: flex; gap: 0.5rem;"[31m
+                [36m>[31m
+                  [36m<button[31m
+                    [33maria-label[31m=[32m"Copy Join Code"[31m
+                    [33mclass[31m=[32m"regenerate-link-btn"[31m
+                    [33mtitle[31m=[32m"Copy Invite Link"[31m
+                    [33mtype[31m=[32m"button"[31m
+                  [36m>[31m
+                    [36m<svg[31m
+                      [33mclass[31m=[32m"lucide lucide-copy"[31m
+                      [33mfill[31m=[32m"none"[31m
+                      [33mheight[31m=[32m"16"[31m
+                      [33mstroke[31m=[32m"currentColor"[31m
+                      [33mstroke-linecap[31m=[32m"round"[31m
+                      [33mstroke-linejoin[31m=[32m"round"[31m
+                      [33mstroke-width[31m=[32m"2"[31m
+                      [33mviewBox[31m=[32m"0 0 24 24"[31m
+                      [33mwidth[31m=[32m"16"[31m
+                      [33mxmlns[31m=[32m"http://www.w3.org/2000/svg"[31m
+                    [36m>[31m
+                      [36m<rect[31m
+                        [33mheight[31m=[32m"14"[31m
+                        [33mrx[31m=[32m"2"[31m
+                        [33mry[31m=[32m"2"[31m
+                        [33mwidth[31m=[32m"14"[31m
+                        [33mx[31m=[32m"8"[31m
+                        [33my[31m=[32m"8"[31m
+                      [36m/>[31m
+                      [36m<path[31m
+                        [33md[31m=[32m"M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"[31m
+                      [36m/>[31m
+                    [36m</svg>[31m
+                  [36m</button>[31m
+                  [36m<button[31m
+                    [33maria-label[31m=[32m"Regenerate Join Code"[31m
+                    [33mclass[31m=[32m"regenerate-link-btn"[31m
+                    [33mtitle[31m=[32m"Regenerate Join Code"[31m
+                    [33mtype[31m=[32m"button"[31m
+                  [36m>[31m
+                    [36m<svg[31m
+                      [33mclass[31m=[32m"lucide lucide-refresh-cw"[31m
+                      [33mfill[31m=[32m"none"[31m
+                      [33mheight[31m=[32m"16"[31m
+                      [33mstroke[31m=[32m"currentColor"[31m
+                      [33mstroke-linecap[31m=[32m"round"[31m
+                      [33mstroke-linejoin[31m=[32m"round"[31m
+                      [33mstroke-width[31m=[32m"2"[31m
+                      [33mviewBox[31m=[32m"0 0 24 24"[31m
+                      [33mwidth[31m=[32m"16"[31m
+                      [33mxmlns[31m=[32m"http://www.w3.org/2000/svg"[31m
+                    [36m>[31m
+                      [36m<path[31m
+                        [33md[31m=[32m"M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"[31m
+                      [36m/>[31m
+                      [36m<path[31m
+                        [33md[31m=[32m"M21 3v5h-5"[31m
+                      [36m/>[31m
+                      [36m<path[31m
+                        [33md[31m=[32m"M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"[31m
+                      [36m/>[31m
+                      [36m<path[31m
+                        [33md[31m=[32m"M8 16H3v5"[31m
+                      [36m/>[31m
+                    [36m</svg>[31m
+                  [36m</button>[31m
+                [36m</div>[31m
+              [36m</div>[31m
+            [36m</div>[31m
+            [36m<form[31m
+              [33mclass[31m=[32m"enroll-modal-form"[31m
+            [36m>[31m
+              [36m<input[31m
+                [33maria-label[31m=[32m"Search students to enroll"[31m
+                [33mclass[31m=[32m"enroll-modal-search"[31m
+                [33mid[31m=[32m"student-search-input"[31m
+                [33mplaceholder[31m=[32m"Type a name or email"[31m
+                [33mtype[31m=[32m"text"[31m
+                [33mvalue[31m=[32m""[31m
+              [36m/>[31m
+              [36m<div[31m
+                [33mclass[31m=[32m"enroll-modal-user-list"[31m
+              [36m>[31m
+                [36m<div[31m
+                  [33mclass[31m=[32m"enroll-modal-user-row"[31m
+                  [33mstyle[31m=[32m"cursor: default;"[31m
+                [36m>[31m
+                  [36m<div[31m
+                    [33mclass[31m=[32m"enroll-modal-user-info"[31m
+                  [36m>[31m
+                    [36m<span[31m
+                      [33mclass[31m=[32m"enroll-modal-user-name"[31m
+                    [36m>[31m
+                      [0mNo matching students found[0m
+                    [36m</span>[31m
+                  [36m</div>[31m
+                [36m</div>[31m
+              [36m</div>[31m
+              [36m<div[31m
+                [33mclass[31m=[32m"enroll-modal-actions"[31m
+              [36m>[31m
+                [36m<button[31m
+                  [33mclass[31m=[32m"enroll-modal-btn-cancel"[31m
+                  [33mtype[31m=[32m"button"[31m
+                [36m>[31m
+                  [0mCancel[0m
+                [36m</button>[31m
+                [36m<button[31m
+                  [33mclass[31m=[32m"enroll-modal-btn-invite"[31m
+                  [33mdisabled[31m=[32m""[31m
+                  [33mname[31m=[32m"Enroll Student"[31m
+                  [33mtype[31m=[32m"submit"[31m
+                [36m>[31m
+                  [0mInvite[0m
+                [36m</button>[31m
+              [36m</div>[31m
+              [36m<select[31m
+                [33maria-hidden[31m=[32m"true"[31m
+                [33mid[31m=[32m"student-select-list"[31m
+                [33mstyle[31m=[32m"display: none;"[31m
+              [36m>[31m
+                [36m<option[31m
+                  [33mvalue[31m=[32m""[31m
+                [36m/>[31m
+              [36m</select>[31m
+            [36m</form>[31m
+          [36m</div>[31m
+        [36m</div>[31m
+      [36m</div>[31m
+    [36m</div>[31m
+  [36m</body>[31m
+[36m</html>[31m[39m
+
+[31m⎯⎯⎯⎯⎯⎯⎯[1m[7m Failed Tests 3 [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[31m[1m[7m FAIL [27m[22m[39m src/pages/Admin/AdminClassDashboard.test.jsx[2m > [22mAdminClassDashboard[2m > [22mupdates classroom settings
+[31m[1mAssertionError[22m: expected "spy" to be called with arguments: [ 'Updated' ][90m
+
+Received: 
+
+[1m  1st spy call:
+
+[22m[2m  Array [[22m
+[32m-   "Updated",[90m
+[31m+   "Settings updated",[90m
+[2m  ][22m
+[31m[90m
+
+Number of calls: [1m1[22m
+[31m[39m
+[36m [2m❯[22m src/pages/Admin/AdminClassDashboard.test.jsx:[2m224:31[22m[39m
+    [90m222| [39m            }))[33m;[39m
+    [90m223| [39m        })[33m;[39m
+    [90m224| [39m        [34mexpect[39m(toast[33m.[39msuccess)[33m.[39m[34mtoHaveBeenCalledWith[39m([32m'Updated'[39m)[33m;[39m
+    [90m   | [39m                              [31m^[39m
+    [90m225| [39m    })[33m;[39m
+    [90m226| [39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯[22m[39m
+
+[31m[1m[7m FAIL [27m[22m[39m src/pages/Admin/AdminClassDashboard.test.jsx[2m > [22mAdminClassDashboard[2m > [22mopens add course modal and connects a course in classwork tab
+[31m[1mAssertionError[22m[39m: expected "spy" to be called with arguments: [ …(2) ][90m
+
+Received: 
+
+[39m[90m
+
+Number of calls: [1m0[22m
+[39m
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body[39m
+    [33mstyle[39m=[32m"overflow: hidden;"[39m
+  [36m>[39m
+    [36m<div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"admin-class-dashboard"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"back-navigation"[39m
+        [36m>[39m
+          [36m<button[39m
+            [33maria-label[39m=[32m"Back to Classroom Directory"[39m
+            [33mclass[39m=[32m"back-btn-text"[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mclass[39m=[32m"lucide lucide-chevron-left"[39m
+              [33mfill[39m=[32m"none"[39m
+              [33mheight[39m=[32m"16"[39m
+              [33mstroke[39m=[32m"currentColor"[39m
+              [33mstroke-linecap[39m=[32m"round"[39m
+              [33mstroke-linejoin[39m=[32m"round"[39m
+              [33mstroke-width[39m=[32m"2"[39m
+              [33mviewBox[39m=[32m"0 0 24 24"[39m
+              [33mwidth[39m=[32m"16"[39m
+              [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+            [36m>[39m
+              [36m<path[39m
+                [33md[39m=[32m"m15 18-6-6 6-6"[39m
+              [36m/>[39m
+            [36m</svg>[39m
+            [0m Back to Directory[0m
+          [36m</button>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"classroom-banner"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"banner-content"[39m
+          [36m>[39m
+            [36m<h1[39m
+              [33mstyle[39m=[32m"display: flex; align-items: center; gap: 8px;"[39m
+            [36m>[39m
+              [0mPython Level 1[0m
+              [36m<button[39m
+                [33maria-label[39m=[32m"Edit classroom name"[39m
+                [33mclass[39m=[32m"btn-icon-only"[39m
+                [33mstyle[39m=[32m"opacity: 0.7; cursor: pointer; background: none none; border: none none; padding: 0px;"[39m
+              [36m>[39m
+                [36m<svg[39m
+                  [33mclass[39m=[32m"lucide lucide-settings"[39m
+                  [33mfill[39m=[32m"none"[39m
+                  [33mheight[39m=[32m"18"[39m
+                  [33mstroke[39m=[32m"currentColor"[39m
+                  [33mstroke-linecap[39m=[32m"round"[39m
+                  [33mstroke-linejoin[39m=[32m"round"[39m
+                  [33mstroke-width[39m=[32m"2"[39m
+                  [33mviewBox[39m=[32m"0 0 24 24"[39m
+                  [33mwidth[39m=[32m"18"[39m
+                  [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+                [36m>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"[39m
+                  [36m/>[39m
+                  [36m<circle[39m
+                    [33mcx[39m=[32m"12"[39m
+                    [33mcy[39m=[32m"12"[39m
+                    [33mr[39m=[32m"3"[39m
+                  [36m/>[39m
+                [36m</svg>[39m
+              [36m</button>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"banner-langs"[39m
+                [33mstyle[39m=[32m"display: flex; gap: 4px; margin-left: 8px;"[39m
+              [36m/>[39m
+            [36m</h1>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"banner-actions"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"banner-join-code"[39m
+              [33mtitle[39m=[32m"Classroom Join Code"[39m
+            [36m>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"join-code-label"[39m
+              [36m>[39m
+                [0mCode:[0m
+              [36m</span>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"join-code-val"[39m
+              [36m>[39m
+                [0mABC123[0m
+              [36m</span>[39m
+            [36m</div>[39m
+            [36m<button[39m
+              [33mclass[39m=[32m"secondary-btn"[39m
+            [36m>[39m
+              [0mPrint Connection Cards[0m
+            [36m</button>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33maria-label[39m=[32m"Classroom navigation tabs"[39m
+          [33mclass[39m=[32m"classroom-tabs"[39m
+          [33mrole[39m=[32m"tablist"[39m
+        [36m>[39m
+          [36m<button[39m
+            [33maria-controls[39m=[32m"pane-stream"[39m
+            [33maria-selected[39m=[32m"false"[39m
+            [33mclass[39m=[32m"tab-btn "[39m
+            [33mid[39m=[32m"tab-stream"[39m
+            [33mrole[39m=[32m"tab"[39m
+          [36m>[39m
+            [0mStream[0m
+          [36m</button>[39m
+          [36m<button[39m
+            [33maria-controls[39m=[32m"pane-classwork"[39m
+            [33maria-selected[39m=[32m"true"[39m
+            [33mclass[39m=[32m"tab-btn active"[39m
+            [33mid[39m=[32m"tab-classwork"[39m
+            [33mrole[39m=[32m"tab"[39m
+          [36m>[39m
+            [0mClasswork[0m
+          [36m</button>[39m
+          [36m<button[39m
+            [33maria-controls[39m=[32m"pane-people"[39m
+            [33maria-selected[39m=[32m"false"[39m
+            [33mclass[39m=[32m"tab-btn "[39m
+            [33mid[39m=[32m"tab-people"[39m
+            [33mrole[39m=[32m"tab"[39m
+          [36m>[39m
+            [0mPeople[0m
+          [36m</button>[39m
+          [36m<button[39m
+            [33maria-controls[39m=[32m"pane-settings"[39m
+            [33maria-selected[39m=[32m"false"[39m
+            [33mclass[39m=[32m"tab-btn "[39m
+            [33mid[39m=[32m"tab-settings"[39m
+            [33mrole[39m=[32m"tab"[39m
+          [36m>[39m
+            [0mSettings[0m
+          [36m</button>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"tab-content"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"tab-pane classwork-pane"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"admin-class-grid single-column"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"control-panel-card assignments-card"[39m
+              [36m>[3...
+[36m [2m❯[22m src/pages/Admin/AdminClassDashboard.test.jsx:[2m379:33[22m[39m
+    [90m377| [39m
+    [90m378| [39m        [35mawait[39m [34mwaitFor[39m(() [33m=>[39m {
+    [90m379| [39m            [34mexpect[39m(client[33m.[39mpost)[33m.[39m[34mtoHaveBeenCalledWith[39m([32m'/api/admin/crud/[39m…
+    [90m   | [39m                                [31m^[39m
+    [90m380| [39m                classroom_id[33m:[39m [32m'cls123'[39m[33m,[39m
+    [90m381| [39m                course_id[33m:[39m [32m'course-py'[39m
+[90m [2m❯[22m runWithExpensiveErrorDiagnosticsDisabled node_modules/@testing-library/dom/dist/config.js:[2m47:12[22m[39m
+[90m [2m❯[22m checkCallback node_modules/@testing-library/dom/dist/wait-for.js:[2m124:77[22m[39m
+[90m [2m❯[22m Timeout.checkRealTimersCallback node_modules/@testing-library/dom/dist/wait-for.js:[2m118:16[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯[22m[39m
+
+[31m[1m[7m FAIL [27m[22m[39m src/pages/Admin/AdminClassDashboard.test.jsx[2m > [22mAdminClassDashboard[2m > [22mdisplays join code and allows regenerating join code in People tab
+[31m[1mTestingLibraryElementError[22m[39m: Unable to find an element with the text: NEW456. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body[39m
+  [33mstyle[39m=[32m"overflow: hidden;"[39m
+[36m>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"admin-class-dashboard"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"back-navigation"[39m
+      [36m>[39m
+        [36m<button[39m
+          [33maria-label[39m=[32m"Back to Classroom Directory"[39m
+          [33mclass[39m=[32m"back-btn-text"[39m
+        [36m>[39m
+          [36m<svg[39m
+            [33maria-hidden[39m=[32m"true"[39m
+            [33mclass[39m=[32m"lucide lucide-chevron-left"[39m
+            [33mfill[39m=[32m"none"[39m
+            [33mheight[39m=[32m"16"[39m
+            [33mstroke[39m=[32m"currentColor"[39m
+            [33mstroke-linecap[39m=[32m"round"[39m
+            [33mstroke-linejoin[39m=[32m"round"[39m
+            [33mstroke-width[39m=[32m"2"[39m
+            [33mviewBox[39m=[32m"0 0 24 24"[39m
+            [33mwidth[39m=[32m"16"[39m
+            [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+          [36m>[39m
+            [36m<path[39m
+              [33md[39m=[32m"m15 18-6-6 6-6"[39m
+            [36m/>[39m
+          [36m</svg>[39m
+          [0m Back to Directory[0m
+        [36m</button>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"classroom-banner"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"banner-content"[39m
+        [36m>[39m
+          [36m<h1[39m
+            [33mstyle[39m=[32m"display: flex; align-items: center; gap: 8px;"[39m
+          [36m>[39m
+            [0mPython Level 1[0m
+            [36m<button[39m
+              [33maria-label[39m=[32m"Edit classroom name"[39m
+              [33mclass[39m=[32m"btn-icon-only"[39m
+              [33mstyle[39m=[32m"opacity: 0.7; cursor: pointer; background: none none; border: none none; padding: 0px;"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33mclass[39m=[32m"lucide lucide-settings"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"18"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"18"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"[39m
+                [36m/>[39m
+                [36m<circle[39m
+                  [33mcx[39m=[32m"12"[39m
+                  [33mcy[39m=[32m"12"[39m
+                  [33mr[39m=[32m"3"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+            [36m</button>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"banner-langs"[39m
+              [33mstyle[39m=[32m"display: flex; gap: 4px; margin-left: 8px;"[39m
+            [36m/>[39m
+          [36m</h1>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"banner-actions"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"banner-join-code"[39m
+            [33mtitle[39m=[32m"Classroom Join Code"[39m
+          [36m>[39m
+            [36m<span[39m
+              [33mclass[39m=[32m"join-code-label"[39m
+            [36m>[39m
+              [0mCode:[0m
+            [36m</span>[39m
+            [36m<span[39m
+              [33mclass[39m=[32m"join-code-val"[39m
+            [36m>[39m
+              [0mOLD123[0m
+            [36m</span>[39m
+          [36m</div>[39m
+          [36m<button[39m
+            [33mclass[39m=[32m"secondary-btn"[39m
+          [36m>[39m
+            [0mPrint Connection Cards[0m
+          [36m</button>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33maria-label[39m=[32m"Classroom navigation tabs"[39m
+        [33mclass[39m=[32m"classroom-tabs"[39m
+        [33mrole[39m=[32m"tablist"[39m
+      [36m>[39m
+        [36m<button[39m
+          [33maria-controls[39m=[32m"pane-stream"[39m
+          [33maria-selected[39m=[32m"false"[39m
+          [33mclass[39m=[32m"tab-btn "[39m
+          [33mid[39m=[32m"tab-stream"[39m
+          [33mrole[39m=[32m"tab"[39m
+        [36m>[39m
+          [0mStream[0m
+        [36m</button>[39m
+        [36m<button[39m
+          [33maria-controls[39m=[32m"pane-classwork"[39m
+          [33maria-selected[39m=[32m"false"[39m
+          [33mclass[39m=[32m"tab-btn "[39m
+          [33mid[39m=[32m"tab-classwork"[39m
+          [33mrole[39m=[32m"tab"[39m
+        [36m>[39m
+          [0mClasswork[0m
+        [36m</button>[39m
+        [36m<button[39m
+          [33maria-controls[39m=[32m"pane-people"[39m
+          [33maria-selected[39m=[32m"true"[39m
+          [33mclass[39m=[32m"tab-btn active"[39m
+          [33mid[39m=[32m"tab-people"[39m
+          [33mrole[39m=[32m"tab"[39m
+        [36m>[39m
+          [0mPeople[0m
+        [36m</button>[39m
+        [36m<button[39m
+          [33maria-controls[39m=[32m"pane-settings"[39m
+          [33maria-selected[39m=[32m"false"[39m
+          [33mclass[39m=[32m"tab-btn "[39m
+          [33mid[39m=[32m"tab-settings"[39m
+          [33mrole[39m=[32m"tab"[39m
+        [36m>[39m
+          [0mSettings[0m
+        [36m</button>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"tab-content"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"tab-pane people-pane"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"admin-class-grid single-column"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"control-panel-card roster-card"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"card-custom-header"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"title-section"[39m
+                [36m>[39m
+                  [36m<svg[39m
+                    [33mclass[39m=[32m"lucide lucide-users"[39m
+                    [33mfill[39m=[32m"none"[39m
+                    [33mheight[39m=[32m"20"[39m
+                    [33mstroke[39m=[32m"currentColor"[39m
+                    [33mstroke-linecap[39m=[32m"round"[39m
+                    [33mstroke-linejoin[39m=[32m"round"[39m
+                    [33mstroke-width[39m=[32m"2"[39m
+                    [33mviewBox[39m=[32m"0 0 24 24"[39m
+                    [33mwidth[39m=[32m"20"[39m
+                    [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+                  [36m>[39m
+                    [36m<path[39m
+                      [33md[39m=[32m"M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"[39m
+                    [36m/>[39m
+                    [36m<circle[39m
+                      [33mcx[39m=[32m"9"[39m
+                      [33mcy[39m=[32m"7"[39m
+                      [33mr[39m=[32m"4"[39m
+                    [36m/>[39m
+                    [36m<path[39m
+                      [33md[39m=[32m"M22 21v-2a4 4 0 0 0-3-3.87"[39m
+                    [36m/>[39m
+                    [36m<path[39m
+                      [33md[39m=[32m"M16 3.13a4 4 0 0 1 0 7.75"[39m
+                    [36m/>[39m
+                  [36m</svg>[39m
+                  [36m<h3>[39m
+                    [0mStudent Roster[0m
+                  [36m</h3>[39m
+                [36m</div>[39m
+                [36m<input[39m
+                  [33mclass[39m=[32m"roster-search-input"[39m
+                  [33mplaceholder[39m=[32m"Filter roster..."[39m
+                  [33mtype[39m=[32m"text"[39m
+                  [33mvalue[39m=[32m""[39m
+                [36m/>[39m
+              [36m</div>[39m
+              [36m<button[39m
+                [33mclass[39m=[32m"btn-primary"[39m
+                [33mstyle[39m=[32m"margin-top: 1rem; margin-bottom: 1rem;"[39m
+              [36m>[39m
+                [36m<svg[39m
+                  [33mclass[39m=[32m"lucide lucide-user-plus"[39m
+                  [33mfill[39m=[32m"none"[39m
+                  [33mheight[39m=[32m"18"[39m
+                  [33mstroke[39m=[32m"currentColor"[39m
+                  [33mstroke-linecap[39m=[32m"round"[39m
+                  [33mstroke-linejoin[39m=[32m"round"[39m
+                  [33mstroke-width[39m=[32m"2"[39m
+                  [33mviewBox[39m=[32m"0 0 24 24"[39m
+                  [33mwidth[39m=[32m"18"[39m
+                  [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+                [36m>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"[39m
+                  [36m/>[39m
+                  [36m<circle[39m
+                    [33mcx[39m=[32m"9"[39m
+                    [33mcy[39m=[32m"7"[39m
+                    [33mr[39m=[32m"4"[39m
+                  [36m/>[39m
+                  [36m<line[39m
+                    [33mx1[39m=[32m"19"[39m
+                    [33mx2[39m=[32m"19"[39m
+                    [33my1[39m=[32m"8"[39m
+                    [33my2[39m=[32m"14"[39m
+                  [36m/>[39m
+                  [36m<line[39m
+                    [33mx1[39m=[32m"22"[39m
+                    [33mx2[39m=[32m"16"[39m
+                    [33my1[39m=[32m"11"[39m
+                    [33my2[39m=[32m"11"[39m
+                  [36m/>[39m
+                [36m</svg>[39m
+                [0mEnroll Student[0m
+              [36m</button>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"roster-list-container"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"empty-roster-msg"[39m
+                [36m>[39m
+                  [0mNo students found.[0m
+                [36m</div>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</div>[39m
+  [36m<div[39m
+    [33mclass[39m=[32m"admin-modal-overlay"[39m
+    [33mrole[39m=[32m"presentation"[39m
+  [36m>[39m
+    [36m<div[39m
+      [33maria-labelledby[39m=[32m"modal-title"[39m
+      [33maria-modal[39m=[32m"true"[39m
+      [33mclass[39m=[32m"admin-modal-content"[39m
+      [33mrole[39m=[32m"dialog"[39m
+      [33mtabindex[39m=[32m"-1"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"modal-header"[39m
+      [36m>[39m
+        [36m<h3[39m
+          [33mid[39m=[32m"modal-title"[39m
+        [36m>[39m
+          [0mInvite students[0m
+        [36m</h3>[39m
+        [36m<button[39m
+          [33maria-label[39m=[32m"Close modal"[39m
+          [33mclass[39m=[32m"close-btn"[39m
+        [36m>[39m
+          [36m<svg[39m
+            [33mclass[39m=[32m"lucide lucide-x"[39m
+            [33mfill[39m=[32m"none"[39m
+            [33mheight[39m=[32m"20"[39m
+            [33mstroke[39m=[32m"currentColor"[39m
+            [33mstroke-linecap[39m=[32m"round"[39m
+            [33mstroke-linejoin[39m=[32m"round"[39m
+            [33mstroke-width[39m=[32m"2"[39m
+            [33mviewBox[39m=[32m"0 0 24 24"[39m
+            [33mwidth[39m=[32m"20"[39m
+            [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+          [36m>[39m
+            [36m<path[39m
+              [33md[39m=[32m"M18 6 6 18"[39m
+            [36m/>[39m
+            [36m<path[39m
+              [33md[39m=[32m"m6 6 12 12"[39m
+            [36m/>[39m
+          [36m</svg>[39m
+        [36m</button>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"modal-body"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"enroll-modal-content"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"enroll-modal-link-section"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"enroll-modal-link-label"[39m
+            [36m>[39m
+              [0mInvite link[0m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"enroll-modal-link-row"[39m
+            [36m>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"enroll-modal-link-text"[39m
+              [36m>[39m
+                [0mhttps://classroom-chat.com/join?c=OLD123[0m
+              [36m</span>[39m
+              [36m<div[39m
+                [33mstyle[39m=[32m"display: flex; gap: 0.5rem;"[39m
+              [36m>[39m
+                [36m<button[39m
+                  [33maria-label[39m=[32m"Copy Join Code"[39m
+                  [33mclass[39m=[32m"regenerate-link-btn"[39m
+                  [33mtitle[39m=[32m"Copy Invite Link"[39m
+                  [33mtype[39m=[32m"button"[39m
+                [36m>[39m
+                  [36m<svg[39m
+                    [33mclass[39m=[32m"lucide lucide-copy"[39m
+                    [33mfill[39m=[32m"none"[39m
+                    [33mheight[39m=[32m"16"[39m
+                    [33mstroke[39m=[32m"currentColor"[39m
+                    [33mstroke-linecap[39m=[32m"round"[39m
+                    [33mstroke-linejoin[39m=[32m"round"[39m
+                    [33mstroke-width[39m=[32m"2"[39m
+                    [33mviewBox[39m=[32m"0 0 24 24"[39m
+                    [33mwidth[39m=[32m"16"[39m
+                    [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+                  [36m>[39m
+                    [36m<rect[39m
+                      [33mheight[39m=[32m"14"[39m
+                      [33mrx[39m=[32m"2"[39m
+                      [33mry[39m=[32m"2"[39m
+                      [33mwidth[39m=[32m"14"[39m
+                      [33mx[39m=[32m"8"[39m
+                      [33my[39m=[32m"8"[39m
+                    [36m/>[39m
+                    [36m<path[39m
+                      [33md[39m=[32m"M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"[39m
+                    [36m/>[39m
+                  [36m</svg>[39m
+                [36m</button>[39m
+                [36m<button[39m
+                  [33maria-label[39m=[32m"Regenerate Join Code"[39m
+                  [33mclass[39m=[32m"regenerate-link-btn"[39m
+                  [33mtitle[39m=[32m"Regenerate Join Code"[39m
+                  [33mtype[39m=[32m"button"[39m
+                [36m>[39m
+                  [36m<svg[39m
+                    [33mclass[39m=[32m"lucide lucide-refresh-cw"[39m
+                    [33mfill[39m=[32m"none"[39m
+                    [33mheight[39m=[32m"16"[39m
+                    [33mstroke[39m=[32m"currentColor"[39m
+                    [33mstroke-linecap[39m=[32m"round"[39m
+                    [33mstroke-linejoin[39m=[32m"round"[39m
+                    [33mstroke-width[39m=[32m"2"[39m
+                    [33mviewBox[39m=[32m"0 0 24 24"[39m
+                    [33mwidth[39m=[32m"16"[39m
+                    [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+                  [36m>[39m
+                    [36m<path[39m
+                      [33md[39m=[32m"M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"[39m
+                    [36m/>[39m
+                    [36m<path[39m
+                      [33md[39m=[32m"M21 3v5h-5"[39m
+                    [36m/>[39m
+                    [36m<path[39m
+                      [33md[39m=[32m"M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"[39m
+                    [36m/>[39m
+                    [36m<path[39m
+                      [33md[39m=[32m"M8 16H3v5"[39m
+                    [36m/>[39m
+                  [36m</svg>[39m
+                [36m</button>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+          [36m<form[39m
+            [33mclass[39m=[32m"enroll-modal-form"[39m
+          [36m>[39m
+            [36m<input[39m
+              [33maria-label[39m=[32m"Search students to enroll"[39m
+              [33mclass[39m=[32m"enroll-modal-search"[39m
+              [33mid[39m=[32m"student-search-input"[39m
+              [33mplaceholder[39m=[32m"Type a name or email"[39m
+              [33mtype[39m=[32m"text"[39m
+              [33mvalue[39m=[32m""[39m
+            [36m/>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"enroll-modal-user-list"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"enroll-modal-user-row"[39m
+                [33mstyle[39m=[32m"cursor: default;"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"enroll-modal-user-info"[39m
+                [36m>[39m
+                  [36m<span[39m
+                    [33mclass[39m=[32m"enroll-modal-user-name"[39m
+                  [36m>[39m
+                    [0mNo matching students found[0m
+                  [36m</span>[39m
+                [36m</div>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"enroll-modal-actions"[39m
+            [36m>[39m
+              [36m<button[39m
+                [33mclass[39m=[32m"enroll-modal-btn-cancel"[39m
+                [33mtype[39m=[32m"button"[39m
+              [36m>[39m
+                [0mCancel[0m
+              [36m</button>[39m
+              [36m<button[39m
+                [33mclass[39m=[32m"enroll-modal-btn-invite"[39m
+                [33mdisabled[39m=[32m""[39m
+                [33mname[39m=[32m"Enroll Student"[39m
+                [33mtype[39m=[32m"submit"[39m
+              [36m>[39m
+                [0mInvite[0m
+              [36m</button>[39m
+            [36m</div>[39m
+            [36m<select[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mid[39m=[32m"student-select-list"[39m
+              [33mstyle[39m=[32m"display: none;"[39m
+            [36m>[39m
+              [36m<option[39m
+                [33mvalue[39m=[32m""[39m
+              [36m/>[39m
+            [36m</select>[39m
+          [36m</form>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</div>[39m
+[36m</body>[39m
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body[39m
+    [33mstyle[39m=[32m"overflow: hidden;"[39m
+  [36m>[39m
+    [36m<div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"admin-class-dashboard"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"back-navigation"[39m
+        [36m>[39m
+          [36m<button[39m
+            [33maria-label[39m=[32m"Back to Classroom Directory"[39m
+            [33mclass[39m=[32m"back-btn-text"[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mclass[39m=[32m"lucide lucide-chevron-left"[39m
+              [33mfill[39m=[32m"none"[39m
+              [33mheight[39m=[32m"16"[39m
+              [33mstroke[39m=[32m"currentColor"[39m
+              [33mstroke-linecap[39m=[32m"round"[39m
+              [33mstroke-linejoin[39m=[32m"round"[39m
+              [33mstroke-width[39m=[32m"2"[39m
+              [33mviewBox[39m=[32m"0 0 24 24"[39m
+              [33mwidth[39m=[32m"16"[39m
+              [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+            [36m>[39m
+              [36m<path[39m
+                [33md[39m=[32m"m15 18-6-6 6-6"[39m
+              [36m/>[39m
+            [36m</svg>[39m
+            [0m Back to Directory[0m
+          [36m</button>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"classroom-banner"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"banner-content"[39m
+          [36m>[39m
+            [36m<h1[39m
+              [33mstyle[39m=[32m"display: flex; align-items: center; gap: 8px;"[39m
+            [36m>[39m
+              [0mPython Level 1[0m
+              [36m<button[39m
+                [33maria-label[39m=[32m"Edit classroom name"[39m
+                [33mclass[39m=[32m"btn-icon-only"[39m
+                [33mstyle[39m=[32m"opacity: 0.7; cursor: pointer; background: none none; border: none none; padding: 0px;"[39m
+              [36m>[39m
+                [36m<svg[39m
+                  [33mclass[39m=[32m"lucide lucide-settings"[39m
+                  [33mfill[39m=[32m"none"[39m
+                  [33mheight[39m=[32m"18"[39m
+                  [33mstroke[39m=[32m"currentColor"[39m
+                  [33mstroke-linecap[39m=[32m"round"[39m
+                  [33mstroke-linejoin[39m=[32m"round"[39m
+                  [33mstroke-width[39m=[32m"2"[39m
+                  [33mviewBox[39m=[32m"0 0 24 24"[39m
+                  [33mwidth[39m=[32m"18"[39m
+                  [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+                [36m>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"[39m
+                  [36m/>[39m
+                  [36m<circle[39m
+                    [33mcx[39m=[32m"12"[39m
+                    [33mcy[39m=[32m"12"[39m
+                    [33mr[39m=[32m"3"[39m
+                  [36m/>[39m
+                [36m</svg>[39m
+              [36m</button>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"banner-langs"[39m
+                [33mstyle[39m=[32m"display: flex; gap: 4px; margin-left: 8px;"[39m
+              [36m/>[39m
+            [36m</h1>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"banner-actions"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"banner-join-code"[39m
+              [33mtitle[39m=[32m"Classroom Join Code"[39m
+            [36m>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"join-code-label"[39m
+              [36m>[39m
+                [0mCode:[0m
+              [36m</span>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"join-code-val"[39m
+              [36m>[39m
+                [0mOLD123[0m
+              [36m</span>[39m
+            [36m</div>[39m
+            [36m<button[39m
+              [33mclass[39m=[32m"secondary-btn"[39m
+            [36m>[39m
+              [0mPrint Connection Cards[0m
+            [36m</button>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33maria-label[39m=[32m"Classroom navigation tabs"[39m
+          [33mclass[39m=[32m"classroom-tabs"[39m
+          [33mrole[39m=[32m"tablist"[39m
+        [36m>[39m
+          [36m<button[39m
+            [33maria-controls[39m=[32m"pane-stream"[39m
+            [33maria-selected[39m=[32m"false"[39m
+            [33mclass[39m=[32m"tab-btn "[39m
+            [33mid[39m=[32m"tab-stream"[39m
+            [33mrole[39m=[32m"tab"[39m
+          [36m>[39m
+            [0mStream[0m
+          [36m</button>[39m
+          [36m<button[39m
+            [33maria-controls[39m=[32m"pane-classwork"[39m
+            [33maria-selected[39m=[32m"false"[39m
+            [33mclass[39m=[32m"tab-btn "[39m
+            [33mid[39m=[32m"tab-classwork"[39m
+            [33mrole[39m=[32m"tab"[39m
+          [36m>[39m
+            [0mClasswork[0m
+          [36m</button>[39m
+          [36m<button[39m
+            [33maria-controls[39m=[32m"pane-people"[39m
+            [33maria-selected[39m=[32m"true"[39m
+            [33mclass[39m=[32m"tab-btn active"[39m
+            [33mid[39m=[32m"tab-people"[39m
+            [33mrole[39m=[32m"tab"[39m
+          [36m>[39m
+            [0mPeople[0m
+          [36m</button>[39m
+          [36m<button[39m
+            [33maria-controls[39m=[32m"pane-settings"[39m
+            [33maria-selected[39m=[32m"false"[39m
+            [33mclass[39m=[32m"tab-btn "[39m
+            [33mid[39m=[32m"tab-settings"[39m
+            [33mrole[39m=[32m"tab"[39m
+          [36m>[39m
+            [0mSettings[0m
+          [36m</button>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"tab-content"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"tab-pane people-pane"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"admin-class-grid single-column"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"control-panel-card roster-card"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"card-custom-header"[39m
+                [36m>[39m
+                  [36m<div[39m
+                    [33mclass[39m=[32m"title-section"[39m
+                  [36m>[39m
+                    [36m<svg[39m
+                      [33mclass[39m=[32m"lucide lucide-users"[39m
+                      [33mfill[39m=[32m"none"[39m
+                      [33mheight[39m=[32m"20"[39m
+                      [33mstroke[39m=[32m"currentColor"[39m
+                      [33mstroke-linecap[39m=[32m"round"[39m
+                      [33mstroke-linejoin[39m=[32m"round"[39m
+                      [33mstroke-width[39m=[32m"2"[39m
+                      [33mviewBox[39m=[32m"0 0 24 24"[39m
+                      [33mwidth[39m=[32m"20"[39m
+                      [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+                    [36m>[39m
+                      [36m<path[39m
+                        [33md[39m=[32m"M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"[39m
+                      [36m/>[39m
+                      [36m<circle[39m
+                        [33mcx[39m=[32m"9"[39m
+                        [33mcy[39m=[32m"7"[39m
+                        [33mr[39m=[32m"4"[39m
+                      [36m/>[39m
+                      [36m<path[39m
+                        [33md[39m=[32m"M22 21v-2a4 4 0 0 0-3-3.87"[39m
+                      [36m/>[39m
+                      [36m<path[39m
+                        [33md[39m=[32m"M16 3.13a4 4 0 0 1 0 7.75"[39m
+                      [36m/>[39m
+                    [36m</svg>[39m
+                    [36m<h3>[39m
+                      [0mStudent Roster[0m
+                    [36m</h3>[39m
+                  [36m</div>[39m
+                  [36m<input[39m
+                    [33mclass[39m=[32m"roster-search-input"[39m
+                    [33mplaceholder[39m=[32m"Filter roster..."[39m
+                    [33mtype[39m=[32m"text"[39m
+                    [33mvalue[39m=[32m""[39m
+                  [36m/>[39m
+                [36m</div>[39m
+                [36m<button[39m
+                  [33mclass[39m=[32m"btn-primary"[39m
+                  [33mstyle[39m=[32m"margin-top: 1rem; margin-bottom: 1rem;"[39m
+                [36m>[39m
+                  [36m<svg[39m
+                    [33mclass[39m=[32m"lucide lucide-user-plus"[39m
+                    [33mfill[39m=[32m"none"[39m
+                    [33mheight[39m=[32m"18"[39m
+                    [33mstroke[39m=[32m"currentColor"[39m
+                    [33mstroke-linecap[39m=[32m"round"[39m
+                    [33mstroke-linejoin[39m=[32m"round"[39m
+                    [33mstroke-width[39m=[32m"2"[39m
+                    [33mviewBox[39m=[32m"0 0 24 24"[39m
+                    [33mwidth[39m=[32m"18"[39m
+                    [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+                  [36m>[39m
+                    [36m<path[39m
+                      [33md[39m=[32m"M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"[39m
+                    [36m/>[39m
+                    [36m<circle[39m
+                      [33mcx[39m=[32m"9"[39m
+                      [33mcy[39m=[32m"7"[39m
+                      [33mr[39m=[32m"4"[39m
+                    [36m/>[39m
+                    [36m<line[39m
+                      [33mx1[39m=[32m"19"[39m
+                      [33mx2[39m=[32m"19"[39m
+                      [33my1[39m=[32m"8"[39m
+                      [33my2[39m=[32m"14"[39m
+                    [36m/>[39m
+                    [36m<line[39m
+                      [33mx1[39m=[32m"22"[39m
+                      [33mx2[39m=[32m"16"[39m
+                      [33my1[39m=[32m"11"[39m
+                      [33my2[39m=[32m"11"[39m
+                    [36m/>[39m
+                  [36m</svg>[39m
+                  [0mEnroll Student[0m
+                [36m</button>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"roster-list-container"[39m
+                [36m>[39m
+                  [36m<div[39m
+                    [33mclass[39m=[32m"empty-roster-msg"[39m
+                  [36m>[39m
+                    [0mNo students found.[0m
+                  [36m</div>[39m
+                [36m</div>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"admin-modal-overlay"[39m
+      [33mrole[39m=[32m"presentation"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33maria-labelledby[39m=[32m"modal-title"[39m
+        [33maria-modal[39m=[32m"true"[39m
+        [33mclass[39m=[32m"admin-modal-content"[39m
+        [33mrole[39m=[32m"dialog"[39m
+        [33mtabindex[39m=[32m"-1"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"modal-header"[39m
+        [36m>[39m
+          [36m<h3[39m
+            [33mid[39m=[32m"modal-title"[39m
+          [36m>[39m
+            [0mInvite students[0m
+          [36m</h3>[39m
+          [36m<button[39m
+            [33maria-label[39m=[32m"Close modal"[39m
+            [33mclass[39m=[32m"close-btn"[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33mclass[39m=[32m"lucide lucide-x"[39m
+              [33mfill[39m=[32m"none"[39m
+              [33mheight[39m=[32m"20"[39m
+              [33mstroke[39m=[32m"currentColor"[39m
+              [33mstroke-linecap[39m=[32m"round"[39m
+              [33mstroke-linejoin[39m=[32m"round"[39m
+              [33mstroke-width[39m=[32m"2"[39m
+              [33mviewBox[39m=[32m"0 0 24 24"[39m
+              [33mwidth[39m=[32m"20"[39m
+              [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+            [36m>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M18 6 6 18"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"m6 6 12 12"[39m
+              [36m/>[39m
+            [36m</svg>[39m
+          [36m</button>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"modal-body"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"enroll-modal-content"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"enroll-modal-link-section"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"enroll-modal-link-label"[39m
+              [36m>[39m
+                [0mInvite link[0m
+              [36m</div>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"enroll-modal-link-row"[39m
+              [36m>[39m
+                [36m<span[39m
+                  [33mclass[39m=[32m"enroll-modal-link-text"[39m
+                [36m>[39m
+                  [0mhttps://classroom-chat.com/join?c=OLD123[0m
+                [36m</span>[39m
+                [36m<div[39m
+                  [33mstyle[39m=[32m"display: flex; gap: 0.5rem;"[39m
+                [36m>[39m
+                  [36m<button[39m
+                    [33maria-label[39m=[32m"Copy Join Code"[39m
+                    [33mclass[39m=[32m"regenerate-link-btn"[39m
+                    [33mtitle[39m=[32m"Copy Invite Link"[39m
+                    [33mtype[39m=[32m"button"[39m
+                  [36m>[39m
+                    [36m<svg[39m
+                      [33mclass[39m=[32m"lucide lucide-copy"[39m
+                      [33mfill[39m=[32m"none"[39m
+                      [33mheight[39m=[32m"16"[39m
+                      [33mstroke[39m=[32m"currentColor"[39m
+                      [33mstroke-linecap[39m=[32m"round"[39m
+                      [33mstroke-linejoin[39m=[32m"round"[39m
+                      [33mstroke-width[39m=[32m"2"[39m
+                      [33mviewBox[39m=[32m"0 0 24 24"[39m
+                      [33mwidth[39m=[32m"16"[39m
+                      [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+                    [36m>[39m
+                      [36m<rect[39m
+                        [33mheight[39m=[32m"14"[39m
+                        [33mrx[39m=[32m"2"[39m
+                        [33mry[39m=[32m"2"[39m
+                        [33mwidth[39m=[32m"14"[39m
+                        [33mx[39m=[32m"8"[39m
+                        [33my[39m=[32m"8"[39m
+                      [36m/>[39m
+                      [36m<path[39m
+                        [33md[39m=[32m"M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"[39m
+                      [36m/>[39m
+                    [36m</svg>[39m
+                  [36m</button>[39m
+                  [36m<button[39m
+                    [33maria-label[39m=[32m"Regenerate Join Code"[39m
+                    [33mclass[39m=[32m"regenerate-link-btn"[39m
+                    [33mtitle[39m=[32m"Regenerate Join Code"[39m
+                    [33mtype[39m=[32m"button"[39m
+                  [36m>[39m
+                    [36m<svg[39m
+                      [33mclass[39m=[32m"lucide lucide-refresh-cw"[39m
+                      [33mfill[39m=[32m"none"[39m
+                      [33mheight[39m=[32m"16"[39m
+                      [33mstroke[39m=[32m"currentColor"[39m
+                      [33mstroke-linecap[39m=[32m"round"[39m
+                      [33mstroke-linejoin[39m=[32m"round"[39m
+                      [33mstroke-width[39m=[32m"2"[39m
+                      [33mviewBox[39m=[32m"0 0 24 24"[39m
+                      [33mwidth[39m=[32m"16"[39m
+                      [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+                    [36m>[39m
+                      [36m<path[39m
+                        [33md[39m=[32m"M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"[39m
+                      [36m/>[39m
+                      [36m<path[39m
+                        [33md[39m=[32m"M21 3v5h-5"[39m
+                      [36m/>[39m
+                      [36m<path[39m
+                        [33md[39m=[32m"M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"[39m
+                      [36m/>[39m
+                      [36m<path[39m
+                        [33md[39m=[32m"M8 16H3v5"[39m
+                      [36m/>[39m
+                    [36m</svg>[39m
+                  [36m</button>[39m
+                [36m</div>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+            [36m<form[39m
+              [33mclass[39m=[32m"enroll-modal-form"[39m
+            [36m>[39m
+              [36m<input[39m
+                [33maria-label[39m=[32m"Search students to enroll"[39m
+                [33mclass[39m=[32m"enroll-modal-search"[39m
+                [33mid[39m=[32m"student-search-input"[39m
+                [33mplaceholder[39m=[32m"Type a name or email"[39m
+                [33mtype[39m=[32m"text"[39m
+                [33mvalue[39m=[32m""[39m
+              [36m/>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"enroll-modal-user-list"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"enroll-modal-user-row"[39m
+                  [33mstyle[39m=[32m"cursor: default;"[39m
+                [36m>[39m
+                  [36m<div[39m
+                    [33mclass[39m=[32m"enroll-modal-user-info"[39m
+                  [36m>[39m
+                    [36m<span[39m
+                      [33mclass[39m=[32m"enroll-modal-user-name"[39m
+                    [36m>[39m
+                      [0mNo matching students found[0m
+                    [36m</span>[39m
+                  [36m</div>[39m
+                [36m</div>[39m
+              [36m</div>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"enroll-modal-actions"[39m
+              [36m>[39m
+                [36m<button[39m
+                  [33mclass[39m=[32m"enroll-modal-btn-cancel"[39m
+                  [33mtype[39m=[32m"button"[39m
+                [36m>[39m
+                  [0mCancel[0m
+                [36m</button>[39m
+                [36m<button[39m
+                  [33mclass[39m=[32m"enroll-modal-btn-invite"[39m
+                  [33mdisabled[39m=[32m""[39m
+                  [33mname[39m=[32m"Enroll Student"[39m
+                  [33mtype[39m=[32m"submit"[39m
+                [36m>[39m
+                  [0mInvite[0m
+                [36m</button>[39m
+              [36m</div>[39m
+              [36m<select[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mid[39m=[32m"student-select-list"[39m
+                [33mstyle[39m=[32m"display: none;"[39m
+              [36m>[39m
+                [36m<option[39m
+                  [33mvalue[39m=[32m""[39m
+                [36m/>[39m
+              [36m</select>[39m
+            [36m</form>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</body>[39m
+[36m</html>[39m
+[90m [2m❯[22m Proxy.waitForWrapper node_modules/@testing-library/dom/dist/wait-for.js:[2m163:27[22m[39m
+[36m [2m❯[22m src/pages/Admin/AdminClassDashboard.test.jsx:[2m499:15[22m[39m
+    [90m497| [39m        fireEvent[33m.[39m[34mclick[39m(regenerateBtn)[33m;[39m
+    [90m498| [39m
+    [90m499| [39m        [35mawait[39m [34mwaitFor[39m(() [33m=>[39m {
+    [90m   | [39m              [31m^[39m
+    [90m500| [39m            [34mexpect[39m(client[33m.[39mpost)[33m.[39m[34mtoHaveBeenCalledWith[39m([32m'/api/admin/class[39m…
+    [90m501| [39m            [34mexpect[39m(screen[33m.[39m[34mgetAllByText[39m([32m'NEW456'[39m)[33m.[39mlength)[33m.[39m[34mtoBeGreaterTh[39m…
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯[22m[39m
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m3 failed[39m[22m[2m | [22m[1m[32m10 passed[39m[22m[90m (13)[39m
+[2m   Start at [22m 18:07:13
+[2m   Duration [22m 3.80s[2m (transform 168ms, setup 269ms, collect 328ms, tests 2.54s, environment 268ms, prepare 109ms)[22m
+

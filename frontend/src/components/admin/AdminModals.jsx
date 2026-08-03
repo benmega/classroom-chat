@@ -638,8 +638,8 @@ export const AddCourseModal = ({ isOpen, onClose, onSubmit, courses = [], loadin
     const handleSubmit = (e) => {
         e.preventDefault();
         const finalCourseId = selectedCourseId === 'custom' ? customCourseId.trim() : selectedCourseId;
-        if (!finalCourseId || !instanceId.trim()) return;
-        onSubmit({ course_id: finalCourseId, instance_id: instanceId.trim() });
+        if (!finalCourseId) return;
+        onSubmit({ course_id: finalCourseId, instance_id: instanceId.trim() || undefined });
     };
 
     return (

@@ -283,7 +283,7 @@ const AdminClassDashboard = () => {
                 language: formData.get('language')
             });
             if (res.data.success) {
-                toast.success('Settings updated');
+                toast.success('Updated');
                 fetchClassroomDetails();
             }
         } catch (err) {
