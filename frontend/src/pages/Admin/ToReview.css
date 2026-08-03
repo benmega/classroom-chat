@@ -182,7 +182,7 @@
 
 .badge-certificate {
     background: #fef3c7;
-    color: #b45309;
+    color: var(--warning-color);
 }
 
 .badge-user {
@@ -393,8 +393,8 @@
 .code-snippet-box {
     margin: 0;
     padding: 16px;
-    background: #0f172a;
-    color: #f1f5f9;
+    background: var(--text-primary);
+    color: var(--bg-secondary);
     font-family: 'Courier New', Courier, monospace;
     font-size: var(--font-sm);
     max-height: 250px;

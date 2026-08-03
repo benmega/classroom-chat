@@ -168,7 +168,7 @@
 }
 
 .original-link {
-    color: #3b82f6;
+    color: var(--blue-600);
     text-decoration: none;
     font-weight: 600;
 }
@@ -241,7 +241,7 @@
     gap: 1rem;
 }
 
-.empty-state svg { color: #64748b; }
+.empty-state svg { color: var(--text-muted); }
 .empty-state h3 { font-size: 1.5rem; color: var(--slate-800); margin: 0; }
 .empty-state p { color: var(--text-muted); }
 

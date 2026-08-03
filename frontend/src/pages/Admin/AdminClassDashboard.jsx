@@ -258,40 +258,6 @@ const AdminClassDashboard = () => {
         }
     };
 
-    const handleDeleteClassroom = async () => {
-        if (!window.confirm(`WARNING: Are you sure you want to delete classroom "${classroom.name}"? Deleting a classroom removes the classroom instance. Students remain active users in the system but will be unlinked from this group. This cannot be undone.`)) {
-            return;
-        }
-        try {
-            const res = await client.delete(`/api/admin/classrooms/${classId}`);
-            if (res.data.success) {
-                toast.success(res.data.message || 'Classroom deleted successfully');
-                navigate('/admin/classes');
-            }
-        } catch (err) {
-            toast.error(err.response?.data?.error || 'Failed to delete classroom.');
-        }
-    };
-
-    const handleUpdateSettings = async (e) => {
-        e.preventDefault();
-        setFormLoading(true);
-        try {
-            const formData = new FormData(e.target);
-            const res = await client.put(`/api/admin/classrooms/${classId}`, {
-                name: formData.get('name'),
-                language: formData.get('language')
-            });
-            if (res.data.success) {
-                toast.success('Updated');
-                fetchClassroomDetails();
-            }
-        } catch (err) {
-            toast.error(err.response?.data?.error || 'Failed to update settings.');
-        } finally {
-            setFormLoading(false);
-        }
-    };
 
     if (isLoading) {
         return (
@@ -429,16 +395,6 @@ const AdminClassDashboard = () => {
                 >
                     People
                 </button>
-                <button 
-                    id="tab-settings" 
-                    role="tab"
-                    aria-selected={activeTab === 'settings'} 
-                    aria-controls="pane-settings" 
-                    className={`tab-btn ${activeTab === 'settings' ? 'active' : ''}`} 
-                    onClick={() => setActiveTab('settings')}
-                >
-                    Settings
-                </button>
             </div>
 
             <div className="tab-content">
@@ -474,6 +430,7 @@ const AdminClassDashboard = () => {
                                                 key={langOption.id}
                                                 type="button"
                                                 onClick={() => handleToggleLanguage(langOption.id)}
+                                                aria-pressed={isActive}
                                                 style={{
                                                     display: 'flex',
                                                     flexDirection: 'column',
@@ -481,8 +438,8 @@ const AdminClassDashboard = () => {
                                                     gap: '8px',
                                                     padding: '12px',
                                                     borderRadius: '8px',
-                                                    border: `2px solid ${isActive ? '#3b82f6' : 'transparent'}`,
-                                                    background: isActive ? 'rgba(59, 130, 246, 0.1)' : 'var(--bg-secondary)',
+                                                    border: `2px solid ${isActive ? 'var(--blue-600)' : 'transparent'}`,
+                                                    background: isActive ? 'var(--btn-secondary-bg)' : 'var(--bg-secondary)',
                                                     cursor: 'pointer',
                                                     transition: 'all 0.2s'
                                                 }}
@@ -549,22 +506,18 @@ const AdminClassDashboard = () => {
                             <div className="control-panel-card roster-card">
                                 <div className="card-custom-header">
                                     <div className="title-section">
-                                        <Users size={20} />
-                                        <h3>Student Roster</h3>
+                                        <h3>Students</h3>
                                     </div>
-                                    <input 
-                                        type="text" 
-                                        placeholder="Filter roster..." 
-                                        value={rosterSearchQuery}
-                                        onChange={(e) => setRosterSearchQuery(e.target.value)}
-                                        className="roster-search-input"
-                                    />
+                                    <button 
+                                        type="button"
+                                        className="btn-action-sm primary" 
+                                        onClick={() => setActiveModal('enroll_student')}
+                                        title="Enroll Student"
+                                        aria-label="Enroll Student"
+                                    >
+                                        <UserPlus size={18} />
+                                    </button>
                                 </div>
-
-                                <button className="btn-primary" style={{ marginTop: '1rem', marginBottom: '1rem' }} onClick={() => setActiveModal('enroll_student')}>
-                                    <UserPlus size={18} />
-                                    Enroll Student
-                                </button>
 
                                 <div className="roster-list-container">
                                     {filteredRoster.length > 0 ? (
@@ -604,41 +557,7 @@ const AdminClassDashboard = () => {
                     </div>
                 )}
 
-                {activeTab === 'settings' && (
-                    <div id="pane-settings" role="tabpanel" aria-labelledby="tab-settings" className="tab-pane settings-pane">
-                        <div className="admin-class-grid single-column centered-column">
-                            <div className="control-panel-card settings-card" style={{ padding: '24px' }}>
-                                <h3 style={{ marginBottom: '16px', fontSize: '1.1rem' }}>General Settings</h3>
-                                <form onSubmit={handleUpdateSettings} className="settings-form" style={{ marginBottom: '32px' }}>
-                                    <div className="form-group" style={{ marginBottom: '16px' }}>
-                                        <label htmlFor="input-368" style={{ display: 'block', marginBottom: '8px', fontWeight: '500' }}>Classroom Name</label>
-                                        <input 
-                                            id="input-368" 
-                                            name="name" 
-                                            type="text" 
-                                            defaultValue={classroom.name} 
-                                            required 
-                                            style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db' }}
-                                        />
-                                    </div>
-                                    <input type="hidden" name="language" value={classroom.language || ''} />
-                                    <button type="submit" className="btn-primary" disabled={formLoading}>
-                                        Save Settings
-                                    </button>
-                                </form>
 
-                                <button 
-                                    type="button" 
-                                    className="btn-danger"
-                                    onClick={handleDeleteClassroom}
-                                    style={{ marginTop: '16px' }}
-                                >
-                                    Delete Classroom
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )}
             </div>
             <BulkConnectionCardsModal
                 isOpen={activeModal === 'bulk_connection_cards'}

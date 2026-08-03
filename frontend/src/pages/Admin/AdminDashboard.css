@@ -141,7 +141,7 @@
 
 .stat-icon svg { width: 20px; height: 20px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.2)); }
 
-.stat-icon.ducks { background: linear-gradient(135deg, #fbbf24, #b45309); color: #451a03; } /* Darker text for yellow */
+.stat-icon.ducks { background: linear-gradient(135deg, var(--accent-color), var(--warning-color)); color: #451a03; } /* Darker text for yellow */
 .stat-icon.week { background: linear-gradient(135deg, var(--success-dark), #064e3b); } /* Darker green */
 .stat-icon.pending { background: linear-gradient(135deg, #4f46e5, #312e81); } /* Darker indigo */
 .stat-icon.active { background: linear-gradient(135deg, #db2777, #831843); } /* Darker pink */
@@ -486,7 +486,7 @@
 
 .requester-type-badge.parent {
     background: rgba(16, 185, 129, 0.15);
-    color: #059669;
+    color: var(--success-dark);
     border: 1px solid rgba(16, 185, 129, 0.3);
 }
 
@@ -525,22 +525,22 @@
 }
 
 .btn-action.approve {
-    background: #10b981;
+    background: var(--success-color);
     color: white;
 }
 
 .btn-action.approve:hover {
-    background: #059669;
+    background: var(--success-dark);
     transform: translateY(-1px);
 }
 
 .btn-action.deny {
-    background: #ef4444;
+    background: var(--error-color);
     color: white;
 }
 
 .btn-action.deny:hover {
-    background: #dc2626;
+    background: var(--error-color);
     transform: translateY(-1px);
 }
 
