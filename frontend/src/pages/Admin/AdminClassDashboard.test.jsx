@@ -102,7 +102,7 @@ describe('AdminClassDashboard', () => {
         expect(screen.getByAltText('Python')).toBeInTheDocument();
 
         // The roster lives in the People tab
-        fireEvent.click(screen.getByRole('button', { name: 'People' }));
+        fireEvent.click(screen.getByRole('tab', { name: 'People' }));
         expect(screen.getByText('John Doe')).toBeInTheDocument();
         expect(screen.getByText('@student1')).toBeInTheDocument();
     });
@@ -126,10 +126,10 @@ describe('AdminClassDashboard', () => {
             expect(screen.getByText('Python Level 1')).toBeInTheDocument();
         });
 
-        fireEvent.click(screen.getByRole('button', { name: 'People' }));
+        fireEvent.click(screen.getByRole('tab', { name: 'People' }));
 
         // Click the UserPlus button to open the modal
-        fireEvent.click(screen.getByRole('button', { name: 'Enroll New Student' }));
+        fireEvent.click(screen.getByRole('button', { name: 'Enroll Student' }));
 
         const select = document.getElementById('student-select-list');
         fireEvent.change(select, { target: { value: '11' } });
@@ -167,7 +167,7 @@ describe('AdminClassDashboard', () => {
             expect(screen.getByText('Python Level 1')).toBeInTheDocument();
         });
 
-        fireEvent.click(screen.getByRole('button', { name: 'People' }));
+        fireEvent.click(screen.getByRole('tab', { name: 'People' }));
         expect(screen.getByText('John Doe')).toBeInTheDocument();
 
         const confirmSpy = vi.spyOn(window, 'confirm').mockImplementation(() => true);
@@ -204,7 +204,7 @@ describe('AdminClassDashboard', () => {
             expect(screen.getByText('Python Level 1')).toBeInTheDocument();
         });
 
-        fireEvent.click(screen.getByRole('button', { name: 'Settings' }));
+        fireEvent.click(screen.getByRole('tab', { name: 'Settings' }));
 
         const nameInput = screen.getByDisplayValue('Python Level 1');
         fireEvent.change(nameInput, { target: { value: 'New Name' } });
@@ -238,7 +238,7 @@ describe('AdminClassDashboard', () => {
             expect(screen.getByText('Python Level 1')).toBeInTheDocument();
         });
 
-        fireEvent.click(screen.getByRole('button', { name: 'Settings' }));
+        fireEvent.click(screen.getByRole('tab', { name: 'Settings' }));
 
         const confirmSpy = vi.spyOn(window, 'confirm').mockImplementation(() => true);
 
@@ -272,7 +272,7 @@ describe('AdminClassDashboard', () => {
             expect(screen.getByText('Python Level 1')).toBeInTheDocument();
         });
 
-        fireEvent.click(screen.getByRole('button', { name: 'Settings' }));
+        fireEvent.click(screen.getByRole('tab', { name: 'Settings' }));
 
         const confirmSpy = vi.spyOn(window, 'confirm').mockImplementation(() => false);
 
@@ -304,7 +304,7 @@ describe('AdminClassDashboard', () => {
             expect(screen.getByText('Python Level 1')).toBeInTheDocument();
         });
 
-        fireEvent.click(screen.getByRole('button', { name: 'Classwork' }));
+        fireEvent.click(screen.getByRole('tab', { name: 'Classwork' }));
 
         expect(screen.getByRole('button', { name: 'Add Connected Course' })).toBeInTheDocument();
         // Displays course_name when present, falling back to course_id
@@ -326,7 +326,7 @@ describe('AdminClassDashboard', () => {
             expect(screen.getByText('Python Level 1')).toBeInTheDocument();
         });
 
-        fireEvent.click(screen.getByRole('button', { name: 'Classwork' }));
+        fireEvent.click(screen.getByRole('tab', { name: 'Classwork' }));
 
         expect(screen.getByText('No courses connected.')).toBeInTheDocument();
     });
@@ -365,7 +365,7 @@ describe('AdminClassDashboard', () => {
             expect(screen.getByText('Python Level 1')).toBeInTheDocument();
         });
 
-        fireEvent.click(screen.getByRole('button', { name: 'Classwork' }));
+        fireEvent.click(screen.getByRole('tab', { name: 'Classwork' }));
 
         const addCourseBtn = screen.getByRole('button', { name: 'Add Connected Course' });
         fireEvent.click(addCourseBtn);
@@ -403,7 +403,7 @@ describe('AdminClassDashboard', () => {
             expect(screen.getByText('Python Level 1')).toBeInTheDocument();
         });
 
-        fireEvent.click(screen.getByRole('button', { name: 'Classwork' }));
+        fireEvent.click(screen.getByRole('tab', { name: 'Classwork' }));
 
         const removeBtn = screen.getByRole('button', { name: /disconnect course python basics/i });
         fireEvent.click(removeBtn);
@@ -486,10 +486,10 @@ describe('AdminClassDashboard', () => {
             expect(screen.getByText('Python Level 1')).toBeInTheDocument();
         });
 
-        fireEvent.click(screen.getByRole('button', { name: 'People' }));
+        fireEvent.click(screen.getByRole('tab', { name: 'People' }));
 
         // Open the modal containing join code & enroll
-        fireEvent.click(screen.getByRole('button', { name: 'Enroll New Student' }));
+        fireEvent.click(screen.getByRole('button', { name: 'Enroll Student' }));
 
         expect(screen.getAllByText('OLD123').length).toBeGreaterThan(0);
 
@@ -497,7 +497,7 @@ describe('AdminClassDashboard', () => {
         fireEvent.click(regenerateBtn);
 
         await waitFor(() => {
-            expect(client.post).toHaveBeenCalledWith('/api/admin/classrooms/cls123/join-code/regenerate');
+            expect(client.post).toHaveBeenCalledWith('/api/admin/classrooms/cls123/regenerate_code');
             expect(screen.getAllByText('NEW456').length).toBeGreaterThan(0);
             expect(toast.success).toHaveBeenCalledWith('Join code regenerated successfully!');
         });

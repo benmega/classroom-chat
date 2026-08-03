@@ -530,30 +530,10 @@ const AdminClassDashboard = () => {
                         />
                     </div>
 
-                    <div className="roster-join-code-bar">
-                        <div className="join-code-info">
-                            <Key size={18} />
-                            <span>Classroom Join Code: <strong className="join-code-badge">{joinCode || 'None'}</strong></span>
-                        </div>
-                        <div className="join-code-actions">
-                            <button 
-                                type="button"
-                                className="btn-action-sm secondary copy-code-btn"
-                                onClick={() => {
-                                    if (joinCode) {
-                                        navigator.clipboard.writeText(joinCode);
-                                        toast.success('Join code copied to clipboard!');
-                                    }
-                                }}
-                                disabled={!joinCode}
-                                title="Copy Join Code"
-                                aria-label="Copy Join Code"
-                            >
-                                <Copy size={14} /> Copy Code
+                    <button className="btn-primary" style={{ marginTop: '1rem', marginBottom: '1rem' }} onClick={() => setActiveModal('enroll_student')}>
+                                <UserPlus size={18} />
+                                Enroll Student
                             </button>
-                            
-                        </div>
-                    </div>
 
                     <div className="roster-list-container">
                         {filteredRoster.length > 0 ? (
@@ -587,35 +567,6 @@ const AdminClassDashboard = () => {
                         ) : (
                             <div className="empty-roster-msg">No students found.</div>
                         )}
-                    </div>
-
-                    {/* Enrollment form */}
-                    <div className="enrollment-section">
-                        <h4>Enroll New Student</h4>
-                        <form onSubmit={(e) => { e.preventDefault(); handleEnrollStudent(); }} className="enroll-form">
-                            <div className="enroll-controls">
-                                <select 
-                                    value={selectedStudentId} 
-                                    onChange={(e) => setSelectedStudentId(e.target.value)}
-                                    className="student-enroll-select"
-                                    required
-                                >
-                                    <option value="">-- Select Student --</option>
-                                    {availableStudents.map(student => (
-                                        <option key={student.id} value={student.id}>
-                                            {student.nickname || student.username} (@{student.username})
-                                        </option>
-                                    ))}
-                                </select>
-                                <button 
-                                    type="submit" 
-                                    className="btn-action-sm primary enroll-btn"
-                                    disabled={formLoading || !selectedStudentId}
-                                >
-                                    <Plus size={16} /> Enroll
-                                </button>
-                            </div>
-                        </form>
                     </div>
                 </div>
                         </div>
