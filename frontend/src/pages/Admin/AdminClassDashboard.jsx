@@ -445,7 +445,7 @@ const AdminClassDashboard = () => {
                 {activeTab === 'stream' && (
                     <div className="tab-pane stream-pane">
                         <div className="stream-chat-wrapper">
-                            <Chat filterClassroomId={Number(classId)} />
+                            <Chat filterClassroomId={classId} />
                         </div>
                     </div>
                 )}

@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
-import { Plus, Edit, Trash2, XCircle, BookOpen } from 'lucide-react';
+import { Plus, Edit, X, BookOpen } from 'lucide-react';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
+import Modal from '../../components/common/Modal';
 import { ALIGNED_NODES } from '../../constants/courseProgress';
 import './AdminStandardProjects.css';
 
@@ -113,94 +114,101 @@ const AdminStandardProjects = () => {
     };
 
     return (
-        <div className="standard-projects-page">
-            <AdminPageHeader title="Standard Projects (Templates)" />
-            
-            <div className="controls-bar">
-                <button className="btn-add-standard" onClick={() => openModal()}>
-                    <Plus size={18} /> Add Standard Project
+        <div className="admin-standard-projects-page">
+            <AdminPageHeader title="Standard Projects (Templates)">
+                <button className="primary-btn" onClick={() => openModal()}>
+                    <Plus size={18} /> Add Project
                 </button>
-            </div>
+            </AdminPageHeader>
 
             {isLoading ? (
-                <div>Loading...</div>
+                <div className="card p-2rem text-center text-muted">Loading...</div>
             ) : (
-                <div className="standard-projects-grid">
-                    {projects.map(p => (
-                        <div key={p.id} className="standard-project-card">
-                            <h3><BookOpen size={18} className="icon-book-open" /> {p.name}</h3>
-                            {p.chapter && <p className="sp-chapter">Chapter: {p.chapter}</p>}
-                            <p>{p.description || <em>No description</em>}</p>
-                            <div className="sp-actions">
-                                <button className="btn-edit-sp" onClick={() => openModal(p)}>
-                                    <Edit size={16} /> Edit
-                                </button>
-                                <button className="btn-delete-sp" onClick={() => handleDelete(p.id, p.name)}>
-                                    <Trash2 size={16} /> Delete
-                                </button>
-                            </div>
-                        </div>
-                    ))}
-                    {projects.length === 0 && <div className="empty-state">No standard projects found.</div>}
-                </div>
-            )}
-
-            {isModalOpen && (
-                <div role="button" tabIndex={0} className="sp-modal-overlay" onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={closeModal}>
-                    <div role="button" tabIndex={0} className="sp-modal-card" onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={e => e.stopPropagation()}>
-                        <div className="sp-modal-header">
-                            <h3>{editingProject ? 'Edit Standard Project' : 'Add Standard Project'}</h3>
-                            <button className="sp-close-btn" onClick={closeModal}><XCircle size={24}/></button>
-                        </div>
-                        <form onSubmit={handleSubmit} className="sp-form">
-                            <div className="sp-form-group">
-                                <label htmlFor="input-155">Project Name *</label>
-                                <input id="input-155" 
-                                    type="text" 
-                                    required
-                                    value={form.name}
-                                    onChange={e => setForm({...form, name: e.target.value})}
-                                    placeholder="e.g. Text-Based Adventure"
-                                />
-                            </div>
-                            <div className="sp-form-group">
-                                <label htmlFor="input-165">Description</label>
-                                <textarea id="input-165" 
-                                    value={form.description}
-                                    onChange={e => setForm({...form, description: e.target.value})}
-                                    rows="4"
-                                    placeholder="Description template..."
-                                />
-                            </div>
-                            <div className="sp-form-group">
-                                <label htmlFor="input-chapter">Chapter Mapping</label>
-                                <select id="input-chapter"
-                                    value={form.chapter}
-                                    onChange={e => setForm({...form, chapter: e.target.value})}
+                <div className="card" style={{ padding: '24px' }}>
+                    <div className="assignments-list">
+                        {projects.map(p => (
+                            <div 
+                                key={p.id} 
+                                className="assignment-tile" 
+                                onClick={() => openModal(p)}
+                                style={{ cursor: 'pointer' }}
+                            >
+                                <div className="tile-icon-wrapper">
+                                    <BookOpen size={24} />
+                                </div>
+                                <span className="tile-label" title={p.name}>
+                                    {p.name}
+                                </span>
+                                <button
+                                    type="button"
+                                    className="tile-remove-btn"
+                                    onClick={(e) => { e.stopPropagation(); handleDelete(p.id, p.name); }}
+                                    title="Delete Project"
+                                    aria-label={`Delete project ${p.name}`}
                                 >
-                                    <option value="">Select a chapter...</option>
-                                    {ALIGNED_NODES.map(node => (
-                                        <option key={node.id} value={node.title}>{node.title}</option>
-                                    ))}
-                                </select>
-                            </div>
-                            <div className="sp-form-group">
-                                <label htmlFor="input-189">Default Thumbnail Image URL</label>
-                                <input id="input-189" type="text" value={form.image_url} onChange={e => setForm({...form, image_url: e.target.value})} />
-                            </div>
-
-                            <div className="sp-modal-footer">
-                                <button type="button" className="sp-btn-cancel" onClick={closeModal} disabled={isSubmitting}>Cancel</button>
-                                <button type="submit" className="sp-btn-submit" disabled={isSubmitting}>
-                                    {isSubmitting ? 'Saving...' : 'Save Template'}
+                                    <X size={14} />
                                 </button>
                             </div>
-                        </form>
+                        ))}
+                        {projects.length === 0 && (
+                            <div className="empty-state text-muted" style={{ width: '100%', textAlign: 'center', padding: '20px' }}>
+                                No standard projects found.
+                            </div>
+                        )}
                     </div>
                 </div>
             )}
+
+            <Modal isOpen={isModalOpen} onClose={closeModal} title={editingProject ? 'Edit Standard Project' : 'Add Standard Project'}>
+                <form onSubmit={handleSubmit} className="admin-form">
+                    <div className="form-group">
+                        <label htmlFor="input-155">Project Name <span className="text-error">*</span></label>
+                        <input id="input-155" 
+                            type="text" 
+                            required
+                            value={form.name}
+                            onChange={e => setForm({...form, name: e.target.value})}
+                            placeholder="e.g. Text-Based Adventure"
+                        />
+                    </div>
+                    <div className="form-group">
+                        <label htmlFor="input-165">Description</label>
+                        <textarea id="input-165" 
+                            value={form.description}
+                            onChange={e => setForm({...form, description: e.target.value})}
+                            rows="4"
+                            placeholder="Description template..."
+                        />
+                    </div>
+                    <div className="form-group">
+                        <label htmlFor="input-chapter">Chapter Mapping</label>
+                        <select id="input-chapter"
+                            className="admin-select"
+                            value={form.chapter}
+                            onChange={e => setForm({...form, chapter: e.target.value})}
+                        >
+                            <option value="">Select a chapter...</option>
+                            {ALIGNED_NODES.map(node => (
+                                <option key={node.id} value={node.title}>{node.title}</option>
+                            ))}
+                        </select>
+                    </div>
+                    <div className="form-group">
+                        <label htmlFor="input-189">Default Thumbnail Image URL</label>
+                        <input id="input-189" type="text" value={form.image_url} onChange={e => setForm({...form, image_url: e.target.value})} />
+                    </div>
+
+                    <div className="modal-actions mt-1-5rem d-flex justify-end gap-md">
+                        <button type="button" className="btn-secondary" onClick={closeModal} disabled={isSubmitting}>Cancel</button>
+                        <button type="submit" className="btn-primary" disabled={isSubmitting}>
+                            {isSubmitting ? 'Saving...' : 'Save Template'}
+                        </button>
+                    </div>
+                </form>
+            </Modal>
         </div>
     );
 };
 
 export default AdminStandardProjects;
+

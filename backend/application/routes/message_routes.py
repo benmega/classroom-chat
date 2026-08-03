@@ -24,7 +24,7 @@ def get_feed():
 
         limit = request.args.get("limit", 50, type=int)
         before_id = request.args.get("before_id", type=int)
-        classroom_id = request.args.get("classroom_id", type=int)
+        classroom_id = request.args.get("classroom_id", type=str)
 
         from application.models.message import message_classrooms, message_users
 
