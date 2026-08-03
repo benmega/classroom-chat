@@ -4,7 +4,7 @@ import client from '../../api/client';
 import toast from 'react-hot-toast';
 import { 
     ChevronLeft, Users, Trash2, 
-    Check, Plus, Settings, Globe, Link2, BookOpen, Key, Copy, Gamepad2, Code, X
+    Check, Plus, Settings, Globe, Link2, BookOpen, Key, Copy, Gamepad2, Code, X, UserPlus
 } from 'lucide-react';
 
 const getCourseIcon = (courseName, courseId) => {
@@ -14,6 +14,7 @@ const getCourseIcon = (courseName, courseId) => {
     if (text.includes('cs') || text.includes('computer')) return <Code size={24} />;
     return <BookOpen size={24} />;
 };
+
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
 import Chat from '../Chat/Chat';
 import Skeleton from '../../components/common/Skeleton';
@@ -208,7 +209,7 @@ const AdminClassDashboard = () => {
         try {
             const res = await client.post(`/api/admin/classrooms/${classId}/regenerate_code`);
             if (res.data.success) {
-                toast.success('Join code regenerated');
+                toast.success('Join code regenerated successfully!');
                 fetchClassroomDetails();
             }
         } catch (err) {
@@ -269,6 +270,26 @@ const AdminClassDashboard = () => {
             }
         } catch (err) {
             toast.error(err.response?.data?.error || 'Failed to delete classroom.');
+        }
+    };
+
+    const handleUpdateSettings = async (e) => {
+        e.preventDefault();
+        setFormLoading(true);
+        try {
+            const formData = new FormData(e.target);
+            const res = await client.put(`/api/admin/classrooms/${classId}`, {
+                name: formData.get('name'),
+                language: formData.get('language')
+            });
+            if (res.data.success) {
+                toast.success('Settings updated');
+                fetchClassroomDetails();
+            }
+        } catch (err) {
+            toast.error(err.response?.data?.error || 'Failed to update settings.');
+        } finally {
+            setFormLoading(false);
         }
     };
 
@@ -431,154 +452,15 @@ const AdminClassDashboard = () => {
 
                 {activeTab === 'classwork' && (
                     <div className="tab-pane classwork-pane">
-                        <div className="tab-section language-section" style={{ padding: '0 0 24px 0' }}>
-                            <h3 style={{ marginBottom: '16px', fontSize: '1.1rem' }}>Classroom Languages</h3>
-                            <div className="language-toggles" style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
-                                {[
-                                    { id: 'python', label: 'Python', icon: getLanguageIconUrl('python') },
-                                    { id: 'javascript', label: 'JavaScript', icon: getLanguageIconUrl('javascript') },
-                                    { id: 'html', label: 'HTML/CSS', icon: getLanguageIconUrl('html') },
-                                    { id: 'java', label: 'Java', icon: getLanguageIconUrl('java') },
-                                    { id: 'cpp', label: 'C++', icon: getLanguageIconUrl('cpp') }
-                                ].map(langOption => {
-                                    const isActive = (classroom.language || '').split(',').map(l => l.trim()).includes(langOption.id);
-                                    return (
-                                        <button
-                                            key={langOption.id}
-                                            type="button"
-                                            onClick={() => handleToggleLanguage(langOption.id)}
-                                            style={{
-                                                display: 'flex',
-                                                flexDirection: 'column',
-                                                alignItems: 'center',
-                                                gap: '8px',
-                                                padding: '12px',
-                                                borderRadius: '8px',
-                                                border: `2px solid ${isActive ? '#3b82f6' : 'transparent'}`,
-                                                background: isActive ? 'rgba(59, 130, 246, 0.1)' : 'var(--bg-secondary)',
-                                                cursor: 'pointer',
-                                                transition: 'all 0.2s'
-                                            }}
-                                            title={`Toggle ${langOption.label}`}
-                                        >
-                                            <img src={langOption.icon} alt={langOption.label} style={{ width: '32px', height: '32px' }} />
-                                            <span style={{ fontSize: '0.85rem', fontWeight: isActive ? '600' : '400', color: 'var(--text-primary)' }}>{langOption.label}</span>
-                                        </button>
-                                    );
-                                })}
-                            </div>
-                        </div>
-
-                        <div className="tab-section assignments-section">
-                            <h3 style={{ marginBottom: '16px', fontSize: '1.1rem' }}>Connected Courses</h3>
-                            <div className="tab-action-bar" style={{ marginBottom: '16px' }}>
-                                <button 
-                                    type="button" 
-                                    className="btn-action-sm primary add-course-btn"
-                                    onClick={() => setActiveModal('add_course')}
-                                    title="Add Connected Course"
-                                    aria-label="Add Connected Course"
-                                >
-                                    <Plus size={16} /> Add Course
-                                </button>
-                            </div>
-                            <div className="assignments-list">
-                                {classroom.course_assignments && classroom.course_assignments.length > 0 ? (
-                                    classroom.course_assignments.map(assign => (
-                                        <div key={assign.id} className="assignment-tile">
-                                            <div className="tile-icon-wrapper">
-                                                {getCourseIcon(assign.course_name, assign.course_id)}
-                                            </div>
-                                            <span className="tile-label" title={assign.course_name || assign.course_id || 'Untitled Course'}>
-                                                {assign.course_name || assign.course_id || 'Untitled Course'}
-                                            </span>
-                                            <button
-                                                type="button"
-                                                className="tile-remove-btn"
-                                                onClick={() => handleDisconnectCourse(assign.id)}
-                                                disabled={formLoading}
-                                                title="Disconnect Course"
-                                                aria-label={`Disconnect course ${assign.course_name || assign.course_id}`}
-                                            >
-                                                <X size={14} />
-                                            </button>
-                                        </div>
-                                    ))
-                                ) : (
-                                    <div className="empty-roster-msg">No courses connected.</div>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {activeTab === 'people' && (
-                    <div className="tab-pane people-pane">
                         <div className="admin-class-grid single-column">
-                            <div className="control-panel-card roster-card">
-                    <div className="card-custom-header">
-                        <div className="title-section">
-                            <Users size={20} />
-                            <h3>Student Roster</h3>
-                        </div>
-                        <input 
-                            type="text" 
-                            placeholder="Filter roster..." 
-                            value={rosterSearchQuery}
-                            onChange={(e) => setRosterSearchQuery(e.target.value)}
-                            className="roster-search-input"
-                        />
-                    </div>
-
-                    <button className="btn-primary" style={{ marginTop: '1rem', marginBottom: '1rem' }} onClick={() => setActiveModal('enroll_student')}>
-                                <UserPlus size={18} />
-                                Enroll Student
-                            </button>
-
-                    <div className="roster-list-container">
-                        {filteredRoster.length > 0 ? (
-                            <div className="roster-list">
-                                {filteredRoster.map(student => (
-                                    <div key={student.id} className="roster-item">
-                                        <div role="button" tabIndex={0} className="student-info cursor-pointer" onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={() => navigate(`/admin/users/${student.id}`)}>
-                                            <SmartImage 
-                                                src={student.profile_picture ? getApiUrl(`/user/profile_pictures/${student.profile_picture}`) : ''} 
-                                                alt="" 
-                                                className="avatar-tiny"
-                                                fallbackType="avatar"
-                                            />
-                                            <div className="student-names">
-                                                <span className="name">{student.nickname || student.username}</span>
-                                                <span className="handle">@{student.username}</span>
-                                            </div>
-                                            <span className={`status-dot ${student.is_online ? 'online' : 'offline'}`} />
-                                        </div>
-                                        <button 
-                                            type="button" 
-                                            className="btn-action-sm danger unenroll-btn"
-                                            onClick={() => handleUnenrollStudent(student.id)}
-                                            disabled={formLoading}
-                                        >
-                                            Remove
-                                        </button>
+                            <div className="control-panel-card assignments-card">
+                                <div className="card-custom-header">
+                                    <div className="title-section">
+                                        <BookOpen size={20} />
+                                        <h3>Classroom Languages</h3>
                                     </div>
-                                ))}
-                            </div>
-                        ) : (
-                            <div className="empty-roster-msg">No students found.</div>
-                        )}
-                    </div>
-                </div>
-                        </div>
-                    </div>
-                )}
-
-                {activeTab === 'settings' && (
-                    <div id="pane-settings" role="tabpanel" aria-labelledby="tab-settings" className="tab-pane settings-pane">
-                        <div className="admin-class-grid single-column centered-column">
-                            <div className="control-panel-card settings-card" style={{ padding: '24px' }}>
-                                <h3 style={{ marginBottom: '16px', fontSize: '1.1rem' }}>Languages</h3>
-                                <div className="language-toggles" style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', marginBottom: '32px' }}>
+                                </div>
+                                <div className="language-toggles" style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', padding: '16px 24px' }}>
                                     {[
                                         { id: 'python', label: 'Python', icon: getLanguageIconUrl('python') },
                                         { id: 'javascript', label: 'JavaScript', icon: getLanguageIconUrl('javascript') },
@@ -600,18 +482,150 @@ const AdminClassDashboard = () => {
                                                     padding: '12px',
                                                     borderRadius: '8px',
                                                     border: `2px solid ${isActive ? '#3b82f6' : 'transparent'}`,
-                                                    background: isActive ? 'rgba(59, 130, 246, 0.1)' : '#f3f4f6',
+                                                    background: isActive ? 'rgba(59, 130, 246, 0.1)' : 'var(--bg-secondary)',
                                                     cursor: 'pointer',
                                                     transition: 'all 0.2s'
                                                 }}
                                                 title={`Toggle ${langOption.label}`}
                                             >
                                                 <img src={langOption.icon} alt={langOption.label} style={{ width: '32px', height: '32px' }} />
-                                                <span style={{ fontSize: '0.85rem', fontWeight: isActive ? '600' : '400' }}>{langOption.label}</span>
+                                                <span style={{ fontSize: '0.85rem', fontWeight: isActive ? '600' : '400', color: 'var(--text-primary)' }}>{langOption.label}</span>
                                             </button>
                                         );
                                     })}
                                 </div>
+                            </div>
+
+                            <div className="control-panel-card assignments-card">
+                                <div className="card-custom-header">
+                                    <div className="title-section">
+                                        <BookOpen size={20} />
+                                        <h3>Connected Courses</h3>
+                                    </div>
+                                    <button 
+                                        type="button" 
+                                        className="btn-action-sm primary add-course-btn"
+                                        onClick={() => setActiveModal('add_course')}
+                                        title="Add Connected Course"
+                                        aria-label="Add Connected Course"
+                                    >
+                                        <Plus size={16} /> Add Course
+                                    </button>
+                                </div>
+                                <div className="assignments-list">
+                                    {classroom.course_assignments && classroom.course_assignments.length > 0 ? (
+                                        classroom.course_assignments.map(assign => (
+                                            <div key={assign.id} className="assignment-tile">
+                                                <div className="tile-icon-wrapper">
+                                                    {getCourseIcon(assign.course_name, assign.course_id)}
+                                                </div>
+                                                <span className="tile-label" title={assign.course_name || assign.course_id || 'Untitled Course'}>
+                                                    {assign.course_name || assign.course_id || 'Untitled Course'}
+                                                </span>
+                                                <button
+                                                    type="button"
+                                                    className="tile-remove-btn"
+                                                    onClick={() => handleDisconnectCourse(assign.id)}
+                                                    disabled={formLoading}
+                                                    title="Disconnect Course"
+                                                    aria-label={`Disconnect course ${assign.course_name || assign.course_id}`}
+                                                >
+                                                    <X size={14} />
+                                                </button>
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <div className="empty-roster-msg">No courses connected.</div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {activeTab === 'people' && (
+                    <div className="tab-pane people-pane">
+                        <div className="admin-class-grid single-column">
+                            <div className="control-panel-card roster-card">
+                                <div className="card-custom-header">
+                                    <div className="title-section">
+                                        <Users size={20} />
+                                        <h3>Student Roster</h3>
+                                    </div>
+                                    <input 
+                                        type="text" 
+                                        placeholder="Filter roster..." 
+                                        value={rosterSearchQuery}
+                                        onChange={(e) => setRosterSearchQuery(e.target.value)}
+                                        className="roster-search-input"
+                                    />
+                                </div>
+
+                                <button className="btn-primary" style={{ marginTop: '1rem', marginBottom: '1rem' }} onClick={() => setActiveModal('enroll_student')}>
+                                    <UserPlus size={18} />
+                                    Enroll Student
+                                </button>
+
+                                <div className="roster-list-container">
+                                    {filteredRoster.length > 0 ? (
+                                        <div className="roster-list">
+                                            {filteredRoster.map(student => (
+                                                <div key={student.id} className="roster-item">
+                                                    <div role="button" tabIndex={0} className="student-info cursor-pointer" onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={() => navigate(`/admin/users/${student.id}`)}>
+                                                        <SmartImage 
+                                                            src={student.profile_picture ? getApiUrl(`/user/profile_pictures/${student.profile_picture}`) : ''} 
+                                                            alt="" 
+                                                            className="avatar-tiny"
+                                                            fallbackType="avatar"
+                                                        />
+                                                        <div className="student-names">
+                                                            <span className="name">{student.nickname || student.username}</span>
+                                                            <span className="handle">@{student.username}</span>
+                                                        </div>
+                                                        <span className={`status-dot ${student.is_online ? 'online' : 'offline'}`} />
+                                                    </div>
+                                                    <button 
+                                                        type="button" 
+                                                        className="btn-action-sm danger unenroll-btn"
+                                                        onClick={() => handleUnenrollStudent(student.id)}
+                                                        disabled={formLoading}
+                                                    >
+                                                        Remove
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <div className="empty-roster-msg">No students found.</div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {activeTab === 'settings' && (
+                    <div id="pane-settings" role="tabpanel" aria-labelledby="tab-settings" className="tab-pane settings-pane">
+                        <div className="admin-class-grid single-column centered-column">
+                            <div className="control-panel-card settings-card" style={{ padding: '24px' }}>
+                                <h3 style={{ marginBottom: '16px', fontSize: '1.1rem' }}>General Settings</h3>
+                                <form onSubmit={handleUpdateSettings} className="settings-form" style={{ marginBottom: '32px' }}>
+                                    <div className="form-group" style={{ marginBottom: '16px' }}>
+                                        <label htmlFor="input-368" style={{ display: 'block', marginBottom: '8px', fontWeight: '500' }}>Classroom Name</label>
+                                        <input 
+                                            id="input-368" 
+                                            name="name" 
+                                            type="text" 
+                                            defaultValue={classroom.name} 
+                                            required 
+                                            style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db' }}
+                                        />
+                                    </div>
+                                    <input type="hidden" name="language" value={classroom.language || ''} />
+                                    <button type="submit" className="btn-primary" disabled={formLoading}>
+                                        Save Settings
+                                    </button>
+                                </form>
 
                                 <button 
                                     type="button" 

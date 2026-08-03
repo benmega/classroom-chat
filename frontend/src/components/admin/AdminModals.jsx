@@ -656,7 +656,7 @@ export const AddCourseModal = ({ isOpen, onClose, onSubmit, courses = [], loadin
                         <option value="">-- Select a Course --</option>
                         {courses.map(course => (
                             <option key={course.id} value={course.id}>
-                                {course.name || course.id}
+                                {course.name}
                             </option>
                         ))}
                         <option value="custom">-- Enter Custom Course ID --</option>
