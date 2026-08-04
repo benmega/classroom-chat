@@ -137,7 +137,7 @@ const Chat = ({ filterClassroomId = null }) => {
                   placeholder={cooldown > 0 ? `Please wait ${cooldown}s...` : `What's on your mind, ${user?.nickname || user?.username || 'Student'}?`}
                   className="feed-input-field"
                   rows={2}
-                  maxLength={user?.is_admin ? 4000 : 500}
+                  maxLength={user?.role === 'admin' ? 4000 : 500}
                   disabled={cooldown > 0}
                 />
                 
@@ -156,7 +156,7 @@ const Chat = ({ filterClassroomId = null }) => {
                       />
                     )}
 
-                    {user?.is_admin && users?.length > 0 && (
+                    {user?.role === 'admin' && users?.length > 0 && (
                       <MultiSelectDropdown
                         icon={UserPlus}
                         defaultLabel="Students"
@@ -167,7 +167,7 @@ const Chat = ({ filterClassroomId = null }) => {
                       />
                     )}
 
-                    {user?.is_admin && (
+                    {user?.role === 'admin' && (
                       <label className="targeting-option checkbox-option" title="Send to everyone">
                         <input 
                           type="checkbox" 

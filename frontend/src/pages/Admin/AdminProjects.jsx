@@ -88,7 +88,7 @@ const AdminProjects = () => {
             });
 
             if (response.data.status === 'success') {
-                toast.success(response.data.message);
+                
                 setSelectedProject(null);
                 setTeacherComment('');
                 setPacketReward(0.006);

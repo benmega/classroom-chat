@@ -22,7 +22,7 @@ def dashboard_data():
     total_ducks = db.session.query(func.sum(User.duck_balance)).scalar() or 0
     active_users = User.query.filter_by(is_online=True).count()
     pending_trades = DuckTradeLog.query.filter_by(status="pending").count()
-    pending_users = User.query.filter_by(is_approved=False, is_admin=False).count()
+    pending_users = User.query.filter_by(is_approved=False).filter(User.role != 'admin').count()
 
     last_week = datetime.utcnow() - timedelta(days=7)
     ducks_earned_week = (
@@ -266,7 +266,7 @@ def get_review_counts():
     from application.models.track_requests import TrackChangeRequest
     from application.models.user_certificate import UserCertificate
 
-    pending_users = User.query.filter_by(is_approved=False, is_admin=False).count()
+    pending_users = User.query.filter_by(is_approved=False).filter(User.role != 'admin').count()
     pending_trades = DuckTradeLog.query.filter_by(status="pending").count()
     pending_projects = Project.query.filter(
         Project.teacher_comment.is_(None) | (Project.teacher_comment == "")

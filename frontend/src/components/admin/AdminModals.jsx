@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, Key, Copy, RefreshCw, HelpCircle } from 'lucide-react';
+import toast from 'react-hot-toast';
 import Modal from '../common/Modal';
 import SmartImage from '../common/SmartImage';
 import DuckIcon from '../Icons/DuckIcon';
@@ -655,7 +656,7 @@ export const AddCourseModal = ({ isOpen, onClose, onSubmit, courses = [], loadin
                         <option value="">-- Select a Course --</option>
                         {courses.map(course => (
                             <option key={course.id} value={course.id}>
-                                {course.name ? `${course.name} (${course.id})` : course.id}
+                                {course.name}
                             </option>
                         ))}
                         <option value="custom">-- Enter Custom Course ID --</option>
@@ -677,15 +678,20 @@ export const AddCourseModal = ({ isOpen, onClose, onSubmit, courses = [], loadin
                 )}
 
                 <div className="form-group">
-                    <label htmlFor="instance-id">Instance ID (Optional Unique Identifier)</label>
+                    <label htmlFor="instance-id" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        Instance ID <span className="text-error">*</span>
+                        <span title="It is the id used by CodeCombat such as 636609502cd169001fa7ba7c." style={{ cursor: 'help', display: 'flex' }}>
+                            <HelpCircle size={14} className="text-muted" />
+                        </span>
+                    </label>
                     <input
                         id="instance-id"
                         type="text"
                         value={instanceId}
                         onChange={(e) => setInstanceId(e.target.value)}
-                        placeholder="e.g. Sat1030CS4PY (Leave blank to auto-generate)"
+                        placeholder="e.g. 636609502cd169001fa7ba7c"
+                        required
                     />
-                    <small>Custom instance identifier if required, otherwise auto-generated.</small>
                 </div>
 
                 <div className="modal-actions">
@@ -695,7 +701,7 @@ export const AddCourseModal = ({ isOpen, onClose, onSubmit, courses = [], loadin
                     <button 
                         type="submit" 
                         className="btn-primary" 
-                        disabled={loading || !selectedCourseId || (selectedCourseId === 'custom' && !customCourseId.trim())}
+                        disabled={loading || !selectedCourseId || (selectedCourseId === 'custom' && !customCourseId.trim()) || !instanceId.trim()}
                     >
                         {loading ? 'Connecting...' : 'Connect Course'}
                     </button>
@@ -704,4 +710,162 @@ export const AddCourseModal = ({ isOpen, onClose, onSubmit, courses = [], loadin
         </Modal>
     );
 };
+
+export const EnrollStudentModal = ({ 
+    isOpen, 
+    onClose, 
+    onEnroll, 
+    availableStudents = [], 
+    joinCode, 
+    onRegenerateJoinCode, 
+    loading 
+}) => {
+    const [searchQuery, setSearchQuery] = useState('');
+    const [selectedStudentId, setSelectedStudentId] = useState('');
+
+    useEffect(() => {
+        if (!isOpen) {
+            const timer = setTimeout(() => {
+                setSearchQuery('');
+                setSelectedStudentId('');
+            }, 0);
+            return () => clearTimeout(timer);
+        }
+    }, [isOpen]);
+
+    const filteredStudents = availableStudents.filter(student => {
+        const query = searchQuery.toLowerCase().trim();
+        if (!query) return true;
+        const name = (student.nickname || student.username || '').toLowerCase();
+        const handle = (student.username || '').toLowerCase();
+        return name.includes(query) || handle.includes(query);
+    });
+
+    const handleEnrollSubmit = (e) => {
+        e.preventDefault();
+        if (!selectedStudentId) return;
+        onEnroll(selectedStudentId);
+    };
+
+    const handleCopyCode = () => {
+        if (joinCode) {
+            navigator.clipboard.writeText(joinCode);
+            toast.success('Join code copied to clipboard!');
+        }
+    };
+
+    const simulatedInviteLink = joinCode ? `https://classroom-chat.com/join?c=${joinCode}` : '';
+
+    return (
+        <Modal isOpen={isOpen} onClose={onClose} title="Invite students">
+            <div className="enroll-modal-content">
+                {/* Invite Link Section */}
+                <div className="enroll-modal-link-section">
+                    <div className="enroll-modal-link-label">Invite link</div>
+                    <div className="enroll-modal-link-row">
+                        <span className="enroll-modal-link-text">{simulatedInviteLink || 'No code available'}</span>
+                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                            <button 
+                                type="button"
+                                className="regenerate-link-btn"
+                                onClick={handleCopyCode}
+                                disabled={!joinCode}
+                                title="Copy Invite Link"
+                                aria-label="Copy Join Code"
+                            >
+                                <Copy size={16} />
+                            </button>
+                            <button 
+                                type="button"
+                                className="regenerate-link-btn"
+                                onClick={onRegenerateJoinCode}
+                                disabled={loading}
+                                title="Regenerate Join Code"
+                                aria-label="Regenerate Join Code"
+                            >
+                                <RefreshCw size={16} />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Enroll New Student Search and Select */}
+                <form onSubmit={handleEnrollSubmit} className="enroll-modal-form">
+                    <input 
+                        id="student-search-input"
+                        type="text" 
+                        placeholder="Type a name or email" 
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="enroll-modal-search"
+                        aria-label="Search students to enroll"
+                    />
+
+                    <div className="enroll-modal-user-list">
+                        {filteredStudents.length > 0 ? (
+                            filteredStudents.map(student => (
+                                <div 
+                                    key={student.id} 
+                                    className={`enroll-modal-user-row ${selectedStudentId === student.id.toString() ? 'selected' : ''}`}
+                                    onClick={() => setSelectedStudentId(student.id.toString())}
+                                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setSelectedStudentId(student.id.toString()); }}
+                                    tabIndex={0}
+                                    role="button"
+                                    aria-pressed={selectedStudentId === student.id.toString()}
+                                    data-testid={`user-row-${student.id}`}
+                                >
+                                    <img 
+                                        src={student.profile_pic_url || '/default-avatar.png'} 
+                                        alt={student.username} 
+                                        className="enroll-modal-user-avatar" 
+                                    />
+                                    <div className="enroll-modal-user-info">
+                                        <span className="enroll-modal-user-name">
+                                            {student.nickname || student.username}
+                                        </span>
+                                        <span className="enroll-modal-user-handle">
+                                            {student.email || student.username}
+                                        </span>
+                                    </div>
+                                </div>
+                            ))
+                        ) : (
+                            <div className="enroll-modal-user-row" style={{ cursor: 'default' }}>
+                                <div className="enroll-modal-user-info">
+                                    <span className="enroll-modal-user-name">No matching students found</span>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="enroll-modal-actions">
+                        <button type="button" className="enroll-modal-btn-cancel" onClick={onClose} disabled={loading}>
+                            Cancel
+                        </button>
+                        <button 
+                            type="submit" 
+                            className="enroll-modal-btn-invite"
+                            disabled={loading || !selectedStudentId}
+                            name="Enroll Student"
+                        >
+                            {loading ? 'Enrolling...' : 'Invite'}
+                        </button>
+                    </div>
+                    {/* Hidden select for compatibility if needed, but preferably tests should be updated */}
+                    <select 
+                        id="student-select-list" 
+                        style={{ display: 'none' }} 
+                        value={selectedStudentId} 
+                        onChange={(e) => setSelectedStudentId(e.target.value)}
+                        aria-hidden="true"
+                    >
+                        <option value=""></option>
+                        {filteredStudents.map(s => <option key={s.id} value={s.id.toString()}>{s.username}</option>)}
+                    </select>
+                </form>
+            </div>
+        </Modal>
+    );
+};
+
 

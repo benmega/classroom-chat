@@ -86,7 +86,7 @@ export const useAdminUserDashboard = (userId) => {
         try {
             const res = await client.post(`/api/admin/user/${userId}/pass_chapter`, { course_id: selectedChapterId });
             if (res.data.success) {
-                toast.success(res.data.message);
+                
                 setPassPreview(null);
                 setSelectedChapterId('');
                 fetchUser();
@@ -106,7 +106,7 @@ export const useAdminUserDashboard = (userId) => {
         try {
             const res = await client.post('/api/admin/adjust_ducks', formData);
             if (res.data.success) {
-                toast.success(res.data.message);
+                
                 e.target.reset();
                 fetchUser();
             } else {
@@ -127,7 +127,7 @@ export const useAdminUserDashboard = (userId) => {
         try {
             const res = await client.post('/api/admin/adjust_packets', formData);
             if (res.data.success) {
-                toast.success(res.data.message);
+                
                 e.target.reset();
                 fetchUser();
             } else {
@@ -149,7 +149,7 @@ export const useAdminUserDashboard = (userId) => {
         try {
             const res = await client.post('/api/admin/set_drawer', formData);
             if (res.status === 200) {
-                toast.success(res.data.message || 'Drawer updated');
+                
                 fetchUser();
             }
         } catch (err) {
@@ -167,7 +167,7 @@ export const useAdminUserDashboard = (userId) => {
         try {
             const res = await client.post('/api/admin/reset_password', formData);
             if (res.data.success) {
-                toast.success(res.data.message);
+                
                 e.target.reset();
             } else {
                 toast.error(res.data.message || "Failed to reset password");
@@ -188,7 +188,7 @@ export const useAdminUserDashboard = (userId) => {
             formData.append('username', user.username);
             const res = await client.post('/api/admin/remove_user', formData);
             if (res.data.success) {
-                toast.success(res.data.message);
+                
                 navigate('/admin/users');
             } else {
                 toast.error(res.data.message || "Failed to remove user");
@@ -203,7 +203,7 @@ export const useAdminUserDashboard = (userId) => {
         try {
             const response = await client.post(`/api/admin/approve_user/${user.id}`);
             if (response.data.status === 'success') {
-                toast.success(response.data.data.message);
+                
                 fetchUser();
             }
         } catch {
@@ -219,7 +219,7 @@ export const useAdminUserDashboard = (userId) => {
         try {
             const response = await client.post(`/api/admin/reject_user/${user.id}`);
             if (response.data.status === 'success') {
-                toast.success(response.data.data.message);
+                
                 navigate('/admin/users');
             }
         } catch {
@@ -246,7 +246,7 @@ export const useAdminUserDashboard = (userId) => {
             const endpoint = isLinked ? 'unlink' : 'link';
             const response = await client.post(`/api/admin/parents/${user.id}/${endpoint}/${childId}`);
             if (response.data.success) {
-                toast.success(`Successfully ${isLinked ? 'unlinked' : 'linked'} child account`);
+                
                 fetchParentChildren();
             } else {
                 toast.error(response.data.message || `Failed to ${endpoint} child`);
@@ -275,7 +275,7 @@ export const useAdminUserDashboard = (userId) => {
             const endpoint = isLinked ? 'unlink' : 'link';
             const response = await client.post(`/api/admin/parents/${parentId}/${endpoint}/${user.id}`);
             if (response.data.success) {
-                toast.success(`Successfully ${isLinked ? 'unlinked' : 'linked'} parent account`);
+                
                 fetchStudentParents();
             } else {
                 toast.error(response.data.message || `Failed to ${endpoint} parent`);
@@ -304,7 +304,7 @@ export const useAdminUserDashboard = (userId) => {
         try {
             const response = await client.post('/user/project/new', formData);
             if (response.data.status === 'success') {
-                toast.success(`Assigned ${selectedTemplateName} to ${user.nickname || user.username}!`);
+                
                 setSelectedTemplateName('');
                 fetchUser();
             } else {
@@ -355,7 +355,7 @@ export const useAdminUserDashboard = (userId) => {
             const res = await client.put(`/api/admin/user/${userId}`, updatedFields);
             const responseData = res.data?.data || res.data;
             if (responseData.user || responseData.message) {
-                toast.success(responseData.message || 'User profile updated successfully');
+                
                 if (responseData.user) {
                     setUser(responseData.user);
                 } else {

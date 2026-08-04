@@ -19,7 +19,10 @@ const ChatMessage = React.memo(({ msg, user, onDelete, isConsecutive }) => {
                     >
                         <div 
                             className={`avatar-container ${msg.has_animated_border ? "perk-animated-border" : ""}`}
-                            style={msg.has_animated_border ? { '--border-speed': borderSpeed } : {}}
+                            style={msg.has_animated_border ? { 
+                                '--border-speed': borderSpeed,
+                                ...(msg.animated_border_color ? { '--border-color': msg.animated_border_color } : {})
+                            } : {}}
                         >
                             {msg.user_profile_pic ? (
                                 <SmartImage 
@@ -45,7 +48,7 @@ const ChatMessage = React.memo(({ msg, user, onDelete, isConsecutive }) => {
                                     <Globe size={12} color="var(--primary-color)" className="icon-globe" title="Global Post" />
                                 )}
                                 
-                                {(user?.is_admin || user?.id === msg.user_id) && !msg.is_global && (
+                                {(user?.role === 'admin' || user?.id === msg.user_id) && !msg.is_global && (
                                     <>
                                         {msg.target_live && (
                                             <span className="targeting-badge">
@@ -84,7 +87,7 @@ const ChatMessage = React.memo(({ msg, user, onDelete, isConsecutive }) => {
                         <div className={`message-bubble message-bubble-container ${msg.chat_font_color ? "perk-chat-font" : ""}`} style={msg.chat_font_color ? { "--chat-font-color": msg.chat_font_color } : {}}>
                             <Linkify text={msg.content} isUserMessage={false} />
                         </div>
-                        {(user?.is_admin || user?.id === msg.user_id) && (
+                        {(user?.role === 'admin' || user?.id === msg.user_id) && (
                             <button 
                                 onClick={() => onDelete(msg.id)}
                                 className="delete-message-btn"

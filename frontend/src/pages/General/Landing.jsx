@@ -15,7 +15,7 @@ const Landing = () => {
         if (isAuthenticated && user) {
             if (user.role === 'parent') {
                 navigate('/parent/dashboard');
-            } else if (user.is_admin) {
+            } else if (user.role === 'admin') {
                 navigate('/admin/dashboard');
             } else {
                 navigate('/chat');

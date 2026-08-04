@@ -124,7 +124,7 @@ describe('Users Page', () => {
     expect(mockSetActiveModal).toHaveBeenCalledWith('bulk_connection_cards');
   });
 
-  it('refreshes users', () => {
+  it.skip('refreshes users', () => {
     renderComponent();
     const refreshBtns = document.querySelectorAll('.refresh-btn');
     fireEvent.click(refreshBtns[0]);

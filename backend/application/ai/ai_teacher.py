@@ -72,7 +72,7 @@ def get_recent_messages(user: User, limit: int = 50) -> List[Dict[str, str]]:
     try:
         query = Message.query.filter(Message.deleted_at.is_(None))
 
-        if not user.is_admin:
+        if user.role != 'admin':
             user_classroom_ids = [c.id for c in user.classrooms]
             query = query.filter(
                 db.or_(

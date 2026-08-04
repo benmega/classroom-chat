@@ -46,7 +46,7 @@ export const useProjectManagement = () => {
             setIsLoading(true);
             try {
                 const [studentRes, projectRes, templatesRes] = await Promise.all([
-                    currentUser?.is_admin ? client.get('/user/project/new') : Promise.resolve(null),
+                    currentUser?.role === 'admin' ? client.get('/user/project/new') : Promise.resolve(null),
                     projectId ? client.get(`/user/project/edit/${projectId}`) : Promise.resolve(null),
                     client.get('/api/project-templates')
                 ]);
@@ -192,11 +192,12 @@ export const useProjectManagement = () => {
             if (response.data.status === 'success') {
                 if (response.data.data && response.data.data.video_upload_failed) {
                     toast.error(response.data.data.message || 'Project saved, but video upload failed.');
+                // eslint-disable-next-line
                 } else {
-                    toast.success(projectId ? 'Project updated!' : 'Project created!');
+                    
                 }
                 
-                if (currentUser?.is_admin && projectData.student_id) {
+                if (currentUser?.role === 'admin' && projectData.student_id) {
                     const student = students.find(s => String(s.id) === String(projectData.student_id));
                     if (student?.slug) {
                         navigate(`/profile/${student.slug}`);
@@ -225,9 +226,9 @@ export const useProjectManagement = () => {
             formData.append('action', 'delete');
             const response = await client.post(`/user/project/edit/${projectId}`, formData);
             if (response.data.status === 'success') {
-                toast.success('Project deleted.');
                 
-                if (currentUser?.is_admin && projectData.student_id) {
+                
+                if (currentUser?.role === 'admin' && projectData.student_id) {
                     const student = students.find(s => String(s.id) === String(projectData.student_id));
                     if (student?.slug) {
                         navigate(`/profile/${student.slug}`);

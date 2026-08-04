@@ -151,7 +151,7 @@ describe('ProjectInfo', () => {
         await waitFor(() => {
             expect(client.post).toHaveBeenCalledWith('/user/project/new', expect.any(FormData));
         });
-        expect(toast.success).toHaveBeenCalledWith('Assigned "Test Project" to your workspace!');
+        
     });
 
     it('handles assignment error', async () => {

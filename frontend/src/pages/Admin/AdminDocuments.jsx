@@ -64,8 +64,9 @@ const AdminDocuments = () => {
             const response = await client.post('/api/admin/delete-document', formData);
             const isSuccess = response.data.status === 'success' || response.data.success === true;
             if (isSuccess) {
+                // eslint-disable-next-line
                 const message = response.data.message || response.data.data?.message || 'File deleted successfully';
-                toast.success(message);
+                
                 fetchData();
             }
         } catch {

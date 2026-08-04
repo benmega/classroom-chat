@@ -370,7 +370,7 @@ def contact_teacher():
         return "Message is too long (max 2000 characters).", 400
 
     # Find all admin users to broadcast to
-    admins = User.query.filter_by(is_admin=True).all()
+    admins = User.query.filter_by(role='admin').all()
     if not admins:
         return "No teacher accounts found. Please contact your school directly.", 404
 

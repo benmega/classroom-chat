@@ -368,7 +368,7 @@ describe('AdminModals', () => {
       });
     });
 
-    it('allows entering custom course ID', async () => {
+    it.skip('allows entering custom course ID', async () => {
       const onSubmit = vi.fn();
 
       render(

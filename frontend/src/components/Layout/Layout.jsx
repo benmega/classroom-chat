@@ -111,7 +111,7 @@ const Layout = ({ children }) => {
                                     </>
                                 )}
 
-                                {isAuthenticated && user && (
+                                {isAuthenticated && user && user.role !== 'parent' && (
                                     <li className="nav-stat-item">
                                         <Link className="stat-badge drawer" to="/profile" title="View Profile" data-testid="header-drawer">
                                             <Archive size={20} className="stat-icon" />
@@ -209,7 +209,7 @@ const Layout = ({ children }) => {
                                                     </Link>
                                                 </li>
                                             )}
-                                            {user?.is_admin && (
+                                            {user?.role === 'admin' && (
                                                 <li><Link to="/admin" onClick={() => setIsDropdownOpen(false)}>Admin Panel</Link></li>
                                             )}
                                             {!isParent && (

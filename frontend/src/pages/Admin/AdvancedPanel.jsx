@@ -75,7 +75,7 @@ const AdvancedPanel = () => {
         try {
             const response = await client.post('/api/admin/advanced/purge-history');
             if (response.data.status === 'success') {
-                toast.success(`History purged! Deleted ${response.data.data.deleted_messages} messages.`);
+                
                 setShowPurgeModal(false);
             }
         } catch (err) {
@@ -94,14 +94,10 @@ const AdvancedPanel = () => {
                 <Skeleton height="40px" width="300px" className="skeleton-title mb-2rem" />
             </header>
             <div className="advanced-grid">
-                {[1, 2, 3, 4, 5, 6].map(i => (
-                    <div key={i} className="utility-card card" style={{ display: 'flex', gap: '1.5rem', padding: '1.5rem', background: 'var(--bg-secondary)', borderRadius: '12px', border: '1px solid var(--border-subtle)' }}>
-                        <Skeleton height="48px" width="48px" borderRadius="8px" className="flex-shrink-0" />
-                        <div className="flex-1">
-                            <Skeleton height="24px" width="50%" className="mb-sm" />
-                            <Skeleton height="16px" width="90%" className="mb-1-25rem" />
-                            <Skeleton height="36px" width="120px" borderRadius="6px" />
-                        </div>
+                {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
+                    <div key={i} className="action-button" style={{ background: 'var(--bg-secondary)', borderRadius: '12px', border: '1px solid var(--border-subtle)' }}>
+                        <Skeleton height="28px" width="28px" borderRadius="8px" style={{ marginBottom: '8px' }} />
+                        <Skeleton height="20px" width="70%" />
                     </div>
                 ))}
             </div>
@@ -115,119 +111,52 @@ const AdvancedPanel = () => {
             />
 
             <div className="advanced-grid">
-                <section className="utility-card card premium-card">
-                    <div className="utility-icon premium"><Layers size={20} /></div>
-                    <div className="utility-content">
-                        <h3>Headless Database Management</h3>
-                        <p>Manage all database records via the new React-based headless interface.</p>
-                        <button className="btn-premium" onClick={() => navigate('/admin/advanced-crud')}>
-                            <Activity size={16} /> Open Headless CRUD
-                        </button>
-                    </div>
-                </section>
+                <button className="btn-premium action-button" onClick={() => navigate('/admin/advanced-crud')}>
+                    <Layers size={18} /> Headless Database CRUD
+                </button>
 
-                <section className="utility-card card">
-                    <div className="utility-icon primary"><FileText size={20} /></div>
-                    <div className="utility-content">
-                        <h3>Assets & Documents</h3>
-                        <p>Manage static files, documents, and other digital assets.</p>
-                        <button className="btn-utility" onClick={() => navigate('/admin/documents')}>
-                            <FileText size={16} /> Manage Assets
-                        </button>
-                    </div>
-                </section>
+                <button className="btn-utility action-button" onClick={() => navigate('/admin/documents')}>
+                    <FileText size={18} /> Manage Assets & Documents
+                </button>
 
-                <section className="utility-card card">
-                    <div className="utility-icon primary"><Trophy size={20} /></div>
-                    <div className="utility-content">
-                        <h3>Achievements</h3>
-                        <p>Manage platform achievements and milestones.</p>
-                        <button className="btn-utility" onClick={() => navigate('/admin/add-achievement')}>
-                            <Trophy size={16} /> Manage Achievements
-                        </button>
-                    </div>
-                </section>
+                <button className="btn-utility action-button" onClick={() => navigate('/admin/add-achievement')}>
+                    <Trophy size={18} /> Manage Achievements
+                </button>
 
-                <section className="utility-card card">
-                    <div className="utility-icon primary"><Database size={20} /></div>
-                    <div className="utility-content">
-                        <h3>Challenge Sets</h3>
-                        <p>Bulk import challenges via CSV.</p>
-                        <button className="btn-utility" onClick={() => navigate('/admin/add-challenges')}>
-                            <Database size={16} /> Manage Challenges
-                        </button>
-                    </div>
-                </section>
+                <button className="btn-utility action-button" onClick={() => navigate('/admin/add-challenges')}>
+                    <Database size={18} /> Manage Challenge Sets
+                </button>
 
-                <section className="utility-card card">
-                    <div className="utility-icon primary"><BarChart3 size={20} /></div>
-                    <div className="utility-content">
-                        <h3>Analytics Dashboard</h3>
-                        <p>View detailed system analytics and usage metrics.</p>
-                        <button className="btn-utility" onClick={() => navigate('/admin/analytics')}>
-                            <Activity size={16} /> Open Analytics
-                        </button>
-                    </div>
-                </section>
+                <button className="btn-utility action-button" onClick={() => navigate('/admin/analytics')}>
+                    <BarChart3 size={18} /> Analytics Dashboard
+                </button>
 
-                <section className="utility-card card">
-                    <div className="utility-icon primary"><Terminal size={20} /></div>
-                    <div className="utility-content">
-                        <h3>API Documentation</h3>
-                        <p>Browse available endpoints and request schemas.</p>
-                        <button className="btn-utility" onClick={() => window.open(`${apiBaseUrl}/api/docs/`, '_blank')}>
-                            <Code size={16} /> View Swagger
-                        </button>
-                    </div>
-                </section>
+                <button className="btn-utility action-button" onClick={() => window.open(`${apiBaseUrl}/api/docs/`, '_blank')}>
+                    <Terminal size={18} /> API Documentation
+                </button>
 
-                <section className="utility-card card">
-                    <div className="utility-icon secondary"><Activity size={20} /></div>
-                    <div className="utility-content">
-                        <h3>Server Performance</h3>
-                        <p>Monitor memory usage and database table counts.</p>
-                        <button 
-                            className="btn-utility" 
-                            onClick={fetchExtendedStats}
-                            disabled={isFetchingStats}
-                        >
-                            <BarChart3 size={16} /> {isFetchingStats ? 'Loading...' : 'View Extended Stats'}
-                        </button>
-                    </div>
-                </section>
+                <button 
+                    className="btn-utility action-button" 
+                    onClick={fetchExtendedStats}
+                    disabled={isFetchingStats}
+                >
+                    <Activity size={18} /> {isFetchingStats ? 'Loading...' : 'Server Performance Stats'}
+                </button>
 
-                <section className="utility-card card">
-                    <div className="utility-icon warning"><ShieldAlert size={20} /></div>
-                    <div className="utility-content">
-                        <h3>System Logs</h3>
-                        <p>View real-time server output and error traces.</p>
-                        <button 
-                            className="btn-utility" 
-                            onClick={fetchLogs}
-                            disabled={isFetchingLogs}
-                        >
-                            <FileText size={16} /> {isFetchingLogs ? 'Fetching...' : 'Open Log Viewer'}
-                        </button>
-                    </div>
-                </section>
-            </div>
-            
-            <div className="danger-zone">
-                <div className="danger-header">
-                    <ShieldAlert size={20} />
-                    <h3>Danger Zone</h3>
-                </div>
-                <div className="danger-content">
-                    <div className="danger-item">
-                        <div className="text">
-                            <h4>Clear All History</h4>
-                            <p>Permanently deletes all message and conversation history. This cannot be undone.</p>
-                        </div>
-                        <button className="btn-danger" onClick={() => setShowPurgeModal(true)}>
-                            <Trash2 size={18} /> Purge History
-                        </button>
-                    </div>
-            </div>
+                <button 
+                    className="btn-utility action-button" 
+                    onClick={fetchLogs}
+                    disabled={isFetchingLogs}
+                >
+                    <ShieldAlert size={18} /> {isFetchingLogs ? 'Fetching...' : 'System Logs'}
+                </button>
+
+                <button 
+                    className="btn-danger action-button" 
+                    onClick={() => setShowPurgeModal(true)}
+                >
+                    <Trash2 size={18} /> Purge History
+                </button>
             </div>
 
             {showLogModal && (

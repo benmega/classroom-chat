@@ -150,7 +150,7 @@ def save_message_to_db(
 
         # Screen every non-admin message (students, parents, and AI output)
         # against the banned-words list before it is stored or broadcast.
-        if not user.is_admin and not message_is_appropriate(message):
+        if user.role != 'admin' and not message_is_appropriate(message):
             return {
                 "success": False,
                 "error": "Your message contains language that isn't allowed here.",
@@ -164,6 +164,7 @@ def save_message_to_db(
             target_live=target_live,
             has_animated_border=user.has_animated_border,
             animated_border_speed=user.animated_border_speed,
+            animated_border_color=user.animated_border_color,
             chat_font_color=user.chat_font_color,
         )
 

@@ -12,8 +12,9 @@ from application.services.moderation_service import is_appropriate
 from application.utilities.db_helpers import save_message_to_db
 
 
-def _make_user(username, is_admin=False):
-    user = User(username=username, is_approved=True, is_admin=is_admin)
+def _make_user(username, is_admin_role=False):
+    role = "admin" if is_admin_role else "student"
+    user = User(username=username, is_approved=True, role=role)
     user.set_password("pass123")
     db.session.add(user)
     db.session.commit()
@@ -79,7 +80,7 @@ class TestSaveMessageModeration:
     def test_admin_not_blocked(self, init_db):
         db.session.add(BannedWords(word="badword", active=True))
         db.session.commit()
-        admin = _make_user("mod_admin", is_admin=True)
+        admin = _make_user("mod_admin", is_admin_role=True)
 
         result = save_message_to_db(admin.id, "discussing the badword filter")
         assert result["success"] is True

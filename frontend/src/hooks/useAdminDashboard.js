@@ -42,7 +42,7 @@ export const useAdminDashboard = () => {
         try {
             const response = await client.post('/api/admin/toggle-ai');
             if (response.data.success) {
-                toast.success(response.data.message);
+                
                 fetchDashboardData();
             }
         } catch {
@@ -54,7 +54,7 @@ export const useAdminDashboard = () => {
         try {
             const response = await client.post('/api/admin/toggle-message-sending');
             if (response.data.success) {
-                toast.success(response.data.message);
+                
                 fetchDashboardData();
             }
         } catch {
@@ -66,7 +66,7 @@ export const useAdminDashboard = () => {
         try {
             const response = await client.post('/api/admin/update_duck_multiplier', { multiplier: val });
             if (response.data.success) {
-                toast.success('Multiplier updated!');
+                
                 fetchDashboardData();
             }
         } catch {
@@ -84,7 +84,7 @@ export const useAdminDashboard = () => {
             
             const response = await client.post('/api/admin/add-banned-word', formData);
             if (response.data.success) {
-                toast.success(response.data.message);
+                
                 fetchDashboardData();
                 return true;
             }
@@ -123,7 +123,7 @@ export const useAdminDashboard = () => {
         try {
             const response = await client.post('/api/admin/create_user', formData);
             if (response.data.success) {
-                toast.success(response.data.message);
+                
                 setActiveModal(null);
                 fetchDashboardData();
             }
@@ -153,7 +153,7 @@ export const useAdminDashboard = () => {
         try {
             const response = await client.post('/api/admin/adjust_ducks', formData);
             if (response.data.success) {
-                toast.success(response.data.message);
+                
                 setActiveModal(null);
                 fetchDashboardData();
             }
@@ -190,7 +190,7 @@ export const useAdminDashboard = () => {
                 new_password: data.new_password
             });
             if (response.data.success) {
-                toast.success(response.data.message);
+                
                 setActiveModal(null);
             }
         } catch (error) {
@@ -207,7 +207,7 @@ export const useAdminDashboard = () => {
         try {
             const response = await client.post('/message/start_conversation', data);
             if (response.status === 201) {
-                toast.success('New conversation started!');
+                
                 setActiveModal(null);
             }
         } catch {
@@ -225,7 +225,7 @@ export const useAdminDashboard = () => {
             formData.append('username', username);
             const response = await client.post('/api/admin/remove_user', formData);
             if (response.data.success) {
-                toast.success(response.data.message);
+                
                 fetchDashboardData();
             }
         } catch (error) {

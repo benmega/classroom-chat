@@ -160,7 +160,7 @@ describe('AdminAssignProject', () => {
                 user_id: 42
             }));
         });
-        expect(toast.success).toHaveBeenCalledWith('Assigned!');
+        
         expect(mockNavigate).toHaveBeenCalledWith('/admin/projects');
     });
 

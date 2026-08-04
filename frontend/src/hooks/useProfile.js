@@ -46,13 +46,13 @@ export const useProfile = () => {
         fetchProfile();
     }, [slug, fetchProfile, navigate]);
 
-    const isOwner = !!profileData?.viewer && (profileData?.viewer?.id === profileData?.target?.id || profileData?.viewer?.is_admin);
+    const isOwner = !!profileData?.viewer && (profileData?.viewer?.id === profileData?.target?.id || profileData?.viewer?.role === 'admin');
 
     const handleDeleteNote = async (noteId) => {
         if (!window.confirm('Delete this note?')) return;
         try {
             await client.post(`/notes/delete/${noteId}`);
-            toast.success('Note deleted.');
+            
             setProfileData(prev => ({
                 ...prev,
                 target: {
@@ -75,7 +75,7 @@ export const useProfile = () => {
         try {
             const response = await client.post('/notes/upload', formData);
             if (response.data.status === 'success') {
-                toast.success('Note uploaded!');
+                
                 fetchProfile();
             }
         } catch {
@@ -125,7 +125,7 @@ export const useProfile = () => {
                     const response = await client.post('/user/api/profile-picture', formData);
 
                     if (response.data.status === 'success') {
-                        toast.success('Profile picture updated!');
+                        
                         setIsCropping(false);
                         fetchProfile();
                         if (profileData.viewer?.id === profileData.target?.id) {

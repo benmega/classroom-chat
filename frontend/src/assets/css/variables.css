@@ -33,7 +33,9 @@
     --bg-primary: #FFFFFF;
     --surface-primary: var(--bg-primary);
     --bg-secondary: #F5F7FA;
-    --bg-tertiary: #EAECF0;
+    --bg-tertiary: #F8FAFC;         /* Slate 50 — Nearly white for admin layout backgrounds */
+    --btn-secondary-bg: #E0F2FE;    /* Light blue for secondary/utility buttons */
+    --btn-secondary-hover: #BAE6FD; /* Slightly darker light blue for hover state */
     --text-primary: #0F172A;        /* Slate 900 — 17.9:1 on white ✓ */
     --text-secondary: #334155;      /* Slate 700 — 10.3:1 on white ✓ */
     --text-muted: #475569;          /* Slate 600 — FIXED from #64748B; 6.41:1 on bg-tertiary ✓ */

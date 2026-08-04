@@ -87,7 +87,7 @@
 
 .earner-item .amount {
     font-weight: 800;
-    color: #92400e;
+    color: var(--warning-color);
     font-size: 0.95rem;
 }
 

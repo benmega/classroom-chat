@@ -59,7 +59,7 @@ const PendingUsers = () => {
         try {
             const response = await client.post(`/api/admin/approve_user/${userId}`);
             if (response.data.status === 'success') {
-                toast.success(response.data.data.message);
+                
                 setUsers(prev => prev.filter(u => u.id !== userId));
             }
         } catch {
@@ -75,7 +75,7 @@ const PendingUsers = () => {
         try {
             const response = await client.post(`/api/admin/reject_user/${userId}`);
             if (response.data.status === 'success') {
-                toast.success(response.data.data.message);
+                
                 setUsers(prev => prev.filter(u => u.id !== userId));
             }
         } catch {
@@ -90,7 +90,7 @@ const PendingUsers = () => {
         setIsProcessing(`req-${reqId}`);
         try {
             await client.post(`/api/admin/connection_requests/${reqId}/approve`);
-            toast.success('Connection approved!');
+            
             setRequests(prev => prev.filter(r => r.id !== reqId));
         } catch {
             toast.error('Failed to approve request.');
@@ -103,7 +103,7 @@ const PendingUsers = () => {
         setIsProcessing(`req-${reqId}`);
         try {
             await client.post(`/api/admin/connection_requests/${reqId}/reject`);
-            toast.success('Connection rejected.');
+            
             setRequests(prev => prev.filter(r => r.id !== reqId));
         } catch {
             toast.error('Failed to reject request.');

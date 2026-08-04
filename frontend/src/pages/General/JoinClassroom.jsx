@@ -32,7 +32,7 @@ const JoinClassroom = ({ compact = false, onJoined }) => {
             const classroom = res.data?.data?.classroom || res.data?.classroom || {};
             setSuccess(classroom);
             setCode('');
-            toast.success(`Joined ${classroom.name || 'classroom'}!`);
+            
             if (onJoined) onJoined(classroom);
         } catch (err) {
             const msg = err.response?.data?.error || 'Invalid code. Please check and try again.';

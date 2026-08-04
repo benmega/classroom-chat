@@ -62,7 +62,7 @@ def handle_connect(auth=None):
         join_room(f"classroom:{cid}")
 
     # 4. Admin room
-    if user.is_admin:
+    if user.role == 'admin':
         join_room("admin")
 
     # Mark online
@@ -128,7 +128,7 @@ def handle_send_message(data):
     target_users = data.get("target_users", [])
 
     # Server-side validation
-    if not user.is_admin:
+    if user.role != 'admin':
         if len(content) > 500:
             return {"success": False, "error": "Message too long"}
 
@@ -215,6 +215,7 @@ def handle_send_message(data):
         "is_struck": msg.is_struck,
         "has_animated_border": msg.has_animated_border,
         "animated_border_speed": msg.animated_border_speed,
+        "animated_border_color": msg.animated_border_color,
         "chat_font_color": msg.chat_font_color,
     }
 

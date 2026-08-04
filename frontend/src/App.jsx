@@ -102,7 +102,7 @@ const ProtectedRoute = ({ children, adminOnly = false, parentOnly = false }) => 
     </div>
   );
   if (!isAuthenticated) return <Navigate to="/login" />;
-  if (adminOnly && !user?.is_admin) return <AccessDenied />;
+  if (adminOnly && user?.role !== 'admin') return <AccessDenied />;
 
   if (user?.role === 'parent' && !location.pathname.startsWith('/parent/')) {
     return <Navigate to="/parent/dashboard" replace />;
@@ -129,7 +129,7 @@ function App() {
   let authRedirect = '/chat';
   if (user?.role === 'parent') {
     authRedirect = '/parent/dashboard';
-  } else if (user?.is_admin) {
+  } else if (user?.role === 'admin') {
     authRedirect = '/admin/dashboard';
   } else if (user?.role === 'student' && user?.slug) {
     authRedirect = `/course-progress/${user.slug}`;

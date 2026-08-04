@@ -84,11 +84,11 @@
 }
 
 .admin-student-activity .status-dot.online {
-    background-color: #10b981;
+    background-color: var(--success-color);
 }
 
 .admin-student-activity .status-dot.offline {
-    background-color: #6b7280;
+    background-color: var(--text-muted);
 }
 
 .admin-student-activity .student-info h3 {

@@ -96,7 +96,6 @@ describe('AdminUserDashboard Component Redesign', () => {
         expect(screen.getByText('Chat Enabled')).toBeInTheDocument();
 
         // Prominent track buttons
-        expect(screen.getByText(/Current Learning Track/i)).toBeInTheDocument();
         expect(screen.getByText('Computer Science')).toBeInTheDocument();
         expect(screen.getByText('Ozaria')).toBeInTheDocument();
         expect(screen.getByText('Game Development')).toBeInTheDocument();

@@ -186,7 +186,7 @@ button:focus-visible,
   justify-content: center;
   gap: 0.5rem;
   transition: var(--transition-bounce);
-  background: var(--bg-tertiary);
+  background: var(--btn-secondary-bg);
   color: var(--text-primary);
   border: 1px solid var(--border-subtle);
   cursor: pointer;
@@ -203,7 +203,7 @@ button:focus-visible,
 }
 
 .btn-secondary:hover {
-  background: var(--bg-tertiary);
+  background: var(--btn-secondary-hover);
   border-color: var(--border-rich);
 }
 
@@ -338,13 +338,14 @@ button:disabled {
 
 /* --- Shop Perks --- */
 @keyframes borderPulse {
-    0% { box-shadow: 0 0 0 0 rgba(250, 204, 21, 0.9); border-color: var(--accent-color); }
-    50% { box-shadow: 0 0 0 15px rgba(250, 204, 21, 0); border-color: var(--accent-color); }
-    100% { box-shadow: 0 0 0 0 rgba(250, 204, 21, 0); border-color: var(--accent-color); }
+    0% { box-shadow: 0 0 0 0 var(--pulse-color); border-color: var(--pulse-color); }
+    50% { box-shadow: 0 0 0 15px transparent; border-color: var(--pulse-color); }
+    100% { box-shadow: 0 0 0 0 transparent; border-color: var(--pulse-color); }
 }
 
 .perk-animated-border {
-    border: 3px solid var(--accent-color) !important;
+    --pulse-color: var(--border-color, var(--accent-color));
+    border: 3px solid var(--pulse-color) !important;
     animation: borderPulse var(--border-speed, 1.5s) infinite !important;
     border-radius: 50%;
     z-index: 1;

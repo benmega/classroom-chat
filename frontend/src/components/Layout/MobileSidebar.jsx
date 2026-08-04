@@ -47,7 +47,7 @@ const MobileSidebar = ({ user, isParent, isSidebarOpen, setSidebarOpen, handleLo
                         {!isParent && (
                             <li><Link to="/profile" onClick={() => setSidebarOpen(false)}><User size={18} /> Profile</Link></li>
                         )}
-                        {user?.is_admin && (
+                        {user?.role === 'admin' && (
                             <li><Link to="/admin" onClick={() => setSidebarOpen(false)}><Shield size={18} /> Admin Panel</Link></li>
                         )}
                         {!isParent && (

@@ -7,6 +7,22 @@ import './Shop.css'; // Let's use a standard CSS file
 import WallpaperCropModal from '../../components/profile/WallpaperCropModal';
 import Skeleton from '../../components/common/Skeleton';
 
+const hexToRgb = (hex) => {
+    if (!hex || typeof hex !== 'string' || !hex.startsWith('#') || hex.length !== 7) return {r:250, g:204, b:21};
+    let r = parseInt(hex.slice(1, 3), 16) || 0;
+    let g = parseInt(hex.slice(3, 5), 16) || 0;
+    let b = parseInt(hex.slice(5, 7), 16) || 0;
+    return {r, g, b};
+};
+
+const rgbToHex = (r, g, b) => {
+    const toHex = (n) => {
+        const hex = Math.max(0, Math.min(255, n)).toString(16);
+        return hex.length === 1 ? '0' + hex : hex;
+    };
+    return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+};
+
 const Shop = () => {
     const { user, checkAuth } = useAuthStore();
     const [items, setItems] = useState([]);
@@ -14,6 +30,7 @@ const Shop = () => {
     const [purchasingId, setPurchasingId] = useState(null);
     const [chatColor, setChatColor] = useState('var(--accent-color)');
     const [borderSpeed, setBorderSpeed] = useState('normal');
+    const [borderColor, setBorderColor] = useState('var(--accent-color)');
     const wallpaperInputRef = React.useRef(null);
     
     const [isCropping, setIsCropping] = useState(false);
@@ -41,6 +58,9 @@ const Shop = () => {
         if (user?.animated_border_speed) {
             setBorderSpeed(user.animated_border_speed);
         }
+        if (user?.animated_border_color) {
+            setBorderColor(user.animated_border_color);
+        }
         fetchItems();
     }, [user]);
 
@@ -62,7 +82,7 @@ const Shop = () => {
         setPurchasingId(itemId);
         try {
             await client.post(`/api/shop/purchase/${itemId}`);
-            toast.success(`Successfully unlocked ${itemName}!`);
+            
             await checkAuth(); 
             await fetchItems(); 
         } catch (error) {
@@ -95,10 +115,32 @@ const Shop = () => {
                 value: speed
             });
             setBorderSpeed(speed);
-            toast.success("Animation speed updated!");
+            
             await checkAuth(true);
         } catch {
             toast.error("Failed to save animation speed.");
+        }
+    };
+
+    const handleRgbChange = (channel, value) => {
+        const currentRgb = hexToRgb(borderColor);
+        let val = parseInt(value, 10);
+        if (isNaN(val)) val = 0;
+        val = Math.max(0, Math.min(255, val));
+        
+        currentRgb[channel] = val;
+        setBorderColor(rgbToHex(currentRgb.r, currentRgb.g, currentRgb.b));
+    };
+
+    const handleBorderColorSubmit = async () => {
+        try {
+            await client.put(`/api/shop/configure`, {
+                perk_name: "animated_border_color",
+                value: borderColor
+            });
+            await checkAuth(true);
+        } catch {
+            toast.error("Failed to save border color.");
         }
     };
 
@@ -146,7 +188,7 @@ const Shop = () => {
 
                 try {
                     await client.post('/user/api/profile-wallpaper', formData);
-                    toast.success("Wallpaper saved!");
+                    
                     setIsCropping(false);
                     await checkAuth(true);
                 } catch (error) {
@@ -287,23 +329,59 @@ const Shop = () => {
                                     <div className="shop-preview border-preview">
                                         <div 
                                             className="animated-border-preview"
-                                            style={{ '--border-speed': borderSpeed === 'slow' ? '3s' : borderSpeed === 'fast' ? '0.5s' : '1.5s' }}
+                                            style={{ 
+                                                '--border-speed': borderSpeed === 'slow' ? '3s' : borderSpeed === 'fast' ? '0.5s' : '1.5s',
+                                                '--border-color': borderColor || 'var(--accent-color)'
+                                            }}
                                         >
                                             <img src={`https://ui-avatars.com/api/?name=${user?.username || 'User'}&background=random`} alt="Avatar" />
                                         </div>
                                         {item.is_purchased && (
                                             <div style={{ marginTop: '15px', width: '100%' }}>
-                                                <label htmlFor="input-295" style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '5px' }}>Animation Speed:</label>
-                                                <select id="input-295" 
-                                                    value={borderSpeed} 
-                                                    onChange={(e) => handleBorderSpeedSubmit(e.target.value)}
-                                                    className="form-control"
-                                                    style={{ padding: '4px 8px', fontSize: '0.9rem' }}
-                                                >
-                                                    <option value="slow">Slow</option>
-                                                    <option value="normal">Normal</option>
-                                                    <option value="fast">Fast</option>
-                                                </select>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px', justifyContent: 'space-between' }}>
+                                                    <label htmlFor="input-speed" style={{ fontSize: '0.9rem', fontWeight: 600 }}>Speed:</label>
+                                                    <select id="input-speed" 
+                                                        value={borderSpeed} 
+                                                        onChange={(e) => handleBorderSpeedSubmit(e.target.value)}
+                                                        className="form-control"
+                                                        style={{ padding: '4px 8px', fontSize: '0.9rem', width: 'auto' }}
+                                                    >
+                                                        <option value="slow">Slow</option>
+                                                        <option value="normal">Normal</option>
+                                                        <option value="fast">Fast</option>
+                                                    </select>
+                                                </div>
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
+                                                    <span style={{ fontSize: '0.9rem', fontWeight: 600 }}>RGB Color:</span>
+                                                    {['r', 'g', 'b'].map(channel => {
+                                                        const currentRgb = hexToRgb(borderColor);
+                                                        const val = currentRgb[channel];
+                                                        const label = channel === 'r' ? 'Red' : channel === 'g' ? 'Green' : 'Blue';
+                                                        return (
+                                                            <div key={channel} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', width: '36px' }}>{label}</span>
+                                                                <input 
+                                                                    type="range" 
+                                                                    min="0" max="255" 
+                                                                    value={val} 
+                                                                    onChange={(e) => handleRgbChange(channel, e.target.value)}
+                                                                    onMouseUp={handleBorderColorSubmit}
+                                                                    onTouchEnd={handleBorderColorSubmit}
+                                                                    style={{ flex: 1, cursor: 'pointer' }}
+                                                                />
+                                                                <input 
+                                                                    type="number" 
+                                                                    min="0" max="255" 
+                                                                    value={val}
+                                                                    onChange={(e) => handleRgbChange(channel, e.target.value)}
+                                                                    onBlur={handleBorderColorSubmit}
+                                                                    className="form-control"
+                                                                    style={{ width: '60px', padding: '4px', fontSize: '0.9rem', textAlign: 'center' }}
+                                                                />
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
                                             </div>
                                         )}
                                     </div>

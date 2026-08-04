@@ -4,7 +4,7 @@
     left: 0;
     right: 0;
     background: white;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--border-subtle);
     border-radius: 10px;
     margin-top: 4px;
     box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
@@ -27,14 +27,14 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    color: #1e40af;
+    color: var(--primary-accessible);
     font-weight: 600;
 }
 
 .aap-pill button {
     background: none;
     border: none;
-    color: #60a5fa;
+    color: var(--primary-accessible);
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -42,13 +42,13 @@
 }
 
 .aap-pill button:hover {
-    color: #dc2626;
+    color: var(--error-color);
 }
 
 .spinner-small {
     width: 16px;
     height: 16px;
-    border: 2px solid #e2e8f0;
+    border: 2px solid var(--border-subtle);
     border-top-color: var(--primary-color);
     border-radius: 50%;
     animation: spin 1s linear infinite;

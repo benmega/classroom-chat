@@ -256,7 +256,7 @@ def sample_admin(init_db):
         password_hash=password,
         earned_ducks=0,
         duck_balance=0,
-        is_admin=True,
+        role="admin",
     )
     db.session.add(admin_user)
     db.session.commit()

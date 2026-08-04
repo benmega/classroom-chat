@@ -105,7 +105,7 @@ const AdminCertificates = () => {
         try {
             const response = await client.post(`/api/achievements/admin/certificates/reviewed/${certId}`);
             if (response.data.status === 'success' || response.data.success) {
-                toast.success(response.data.message || 'Marked as reviewed.');
+                
                 setCertificates(prev => prev.filter(c => c.id !== certId));
             }
         } catch {
@@ -118,7 +118,7 @@ const AdminCertificates = () => {
         try {
             const response = await client.post('/api/achievements/admin/certificates/reviewed/all');
             if (response.data.status === 'success' || response.data.success) {
-                toast.success(response.data.message || 'All certificates approved.');
+                
                 setCertificates([]); 
             }
         } catch {
@@ -137,7 +137,7 @@ const AdminCertificates = () => {
         try {
             const response = await client.post(`/api/achievements/admin/certificate_templates/${selectedCourseId}/upload`, formData);
             if (response.data.status === 'success' || response.data.success) {
-                toast.success('Template uploaded successfully');
+                
                 setUploadModalOpen(false);
                 setSelectedFile(null);
                 fetchTemplates();

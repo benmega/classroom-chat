@@ -126,7 +126,7 @@
     font-size: 0.65rem;
     padding: 1px 6px;
     border-radius: 4px;
-    background: #f1f5f9;
+    background: var(--bg-secondary);
     color: var(--text-muted);
     border: 1px solid var(--border-subtle);
     text-transform: uppercase;
@@ -135,9 +135,9 @@
 }
 
 .inline-role-label.admin {
-    background: #fef2f2;
-    color: #b91c1c;
-    border-color: #fecaca;
+    background: var(--error-subtle);
+    color: var(--error-color);
+    border-color: var(--error-light);
 }
 
 .inline-role-label.parent {
@@ -148,13 +148,13 @@
 
 .inline-role-label.student {
     background: #eff6ff;
-    color: #1e40af;
+    color: var(--primary-accessible);
     border-color: #bfdbfe;
 }
 
 .inline-role-label.pending {
     background: #fffbeb;
-    color: #b45309;
+    color: var(--warning-color);
     border-color: #fde68a;
 }
 
@@ -178,7 +178,7 @@
 .status-awaiting {
     font-size: 0.85rem;
     font-weight: 600;
-    color: #b45309;
+    color: var(--warning-color);
     background-color: #fffbeb;
     border: 1px solid #fde68a;
     padding: 4px 10px;

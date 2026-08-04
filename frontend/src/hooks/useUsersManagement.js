@@ -89,7 +89,7 @@ export const useUsersManagement = (role = '') => {
         try {
             const response = await client.post('/api/admin/create_user', formData);
             if (response.data.success) {
-                toast.success(response.data.message);
+                
                 setActiveModal(null);
                 fetchUsers(page);
             }
@@ -114,7 +114,7 @@ export const useUsersManagement = (role = '') => {
         try {
             const response = await client.post('/api/admin/adjust_ducks', formData);
             if (response.data.success) {
-                toast.success(response.data.message);
+                
                 setActiveModal(null);
                 fetchUsers(page);
             }
@@ -139,7 +139,7 @@ export const useUsersManagement = (role = '') => {
         try {
             const response = await client.post('/api/admin/adjust_packets', formData);
             if (response.data.success) {
-                toast.success(response.data.message);
+                
                 setActiveModal(null);
                 fetchUsers(page);
             }
@@ -175,7 +175,7 @@ export const useUsersManagement = (role = '') => {
                 new_password: data.new_password
             });
             if (response.data.success) {
-                toast.success(response.data.message);
+                
                 setActiveModal(null);
                 fetchUsers(page);
             }
@@ -206,7 +206,7 @@ export const useUsersManagement = (role = '') => {
             
             const response = await client.post('/api/admin/set_drawer', payload);
             if (response.data) {
-                toast.success(response.data.message || 'Drawer updated successfully.');
+                
                 setActiveModal(null);
                 fetchUsers(page);
             }
@@ -235,7 +235,7 @@ export const useUsersManagement = (role = '') => {
             formData.append('username', username);
             const response = await client.post('/api/admin/remove_user', formData);
             if (response.data.success) {
-                toast.success(response.data.message);
+                
                 fetchUsers(page);
             }
         } catch (error) {
@@ -246,7 +246,7 @@ export const useUsersManagement = (role = '') => {
     const handleToggleChat = async (userId) => {
         try {
             const response = await client.post(`/api/admin/user/${userId}/toggle-chat`);
-            toast.success(response.data.message);
+            
             
             // Optimistically update the specific user in the users array
             setUsers(prevUsers => 
@@ -282,7 +282,7 @@ export const useUsersManagement = (role = '') => {
             const endpoint = isLinked ? 'unlink' : 'link';
             const response = await client.post(`/api/admin/parents/${parentId}/${endpoint}/${studentId}`);
             if (response.data.success) {
-                toast.success(response.data.message);
+                
                 await fetchParentChildren(parentId);
             }
         } catch (error) {

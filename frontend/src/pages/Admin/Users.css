@@ -188,13 +188,13 @@
     box-shadow: var(--shadow-sm);
 }
 
-.user-role-badge.student { background: linear-gradient(135deg, #eff6ff, #dbeafe); color: #1e40af; border: 1px solid #bfdbfe; }
-.user-role-badge.admin { background: linear-gradient(135deg, var(--error-subtle), #fee2e2); color: #b91c1c; border: 1px solid #fecaca; }
+.user-role-badge.student { background: linear-gradient(135deg, #eff6ff, #dbeafe); color: var(--primary-accessible); border: 1px solid #bfdbfe; }
+.user-role-badge.admin { background: linear-gradient(135deg, var(--error-subtle), var(--error-subtle)); color: var(--error-color); border: 1px solid var(--error-light); }
 .user-role-badge.parent { background: linear-gradient(135deg, #f5f3ff, #ede9fe); color: #6d28d9; border: 1px solid #ddd6fe; }
 
 .economy-info .duck-count {
     font-weight: 700;
-    color: #92400e;
+    color: var(--warning-color);
     font-size: 0.95rem;
 }
 
@@ -218,9 +218,9 @@
 }
 
 .status-indicator.online { color: #166534; }
-.status-indicator.online .dot { background: #22c55e; box-shadow: 0 0 8px rgba(34, 197, 94, 0.4); }
+.status-indicator.online .dot { background: var(--success-color); box-shadow: 0 0 8px rgba(34, 197, 94, 0.4); }
 .status-indicator.offline { color: var(--text-muted); }
-.status-indicator.offline .dot { background: #64748b; }
+.status-indicator.offline .dot { background: var(--text-muted); }
 
 .action-group {
     display: flex;
@@ -243,13 +243,13 @@
 
 .action-btn:hover {
     background: var(--bg-secondary);
-    border-color: #cbd5e1;
+    border-color: var(--border-subtle);
     color: var(--slate-800);
 }
 
-.action-btn.adjust:hover { background: #fffbeb; border-color: #fcd34d; color: #b45309; }
+.action-btn.adjust:hover { background: #fffbeb; border-color: var(--accent-color); color: var(--warning-color); }
 .action-btn.pass:hover { background: var(--secondary-light); border-color: #c7d2fe; color: #4338ca; }
-.action-btn.delete:hover { background: var(--error-subtle); border-color: #fecaca; color: #b91c1c; }
+.action-btn.delete:hover { background: var(--error-subtle); border-color: var(--error-light); color: var(--error-color); }
 
 .empty-row {
     text-align: center;
@@ -311,8 +311,8 @@
 }
 
 .action-btn-green {
-    color: var(--success-dark, #059669);
-    border: 1px solid var(--success-color, #10b981);
+    color: var(--success-dark, var(--success-dark));
+    border: 1px solid var(--success-color, var(--success-color));
     padding: 4px 8px;
     border-radius: 4px;
     display: flex;
@@ -487,7 +487,7 @@
 /* ── Expanded Children Row ───────────────────────────────── */
 .expanded-children-row td {
     border-top: none !important;
-    background: var(--bg-secondary, #f8fafc);
+    background: var(--bg-secondary, var(--bg-tertiary));
     padding: 0 !important;
 }
 
@@ -540,7 +540,7 @@
 
 .kebab-trigger.active {
     background: var(--bg-secondary);
-    border-color: #cbd5e1;
+    border-color: var(--border-subtle);
     color: var(--slate-800);
 }
 

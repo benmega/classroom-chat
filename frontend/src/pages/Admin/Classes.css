@@ -25,7 +25,7 @@
 .classes-header-summary {
     margin-bottom: 1rem;
     font-size: 0.875rem;
-    color: var(--text-muted, #64748b);
+    color: var(--text-muted, var(--text-muted));
     font-weight: 600;
 }
 
@@ -38,8 +38,8 @@
 .class-card {
     background: white;
     border-radius: 12px;
-    border: 1px solid var(--border-subtle, #e2e8f0);
-    overflow: hidden;
+    border: 1px solid var(--border-subtle, var(--border-subtle));
+    /* Removed overflow: hidden to allow kebab menu to show */
     transition: transform 0.2s ease, box-shadow 0.2s ease;
     display: flex;
     flex-direction: column;
@@ -54,13 +54,15 @@
 
 .class-card-header {
     height: 100px;
-    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    background: linear-gradient(135deg, var(--blue-600), var(--blue-600));
     padding: 1.25rem;
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
     color: white;
     position: relative;
+    border-top-left-radius: 11px;
+    border-top-right-radius: 11px;
 }
 
 .class-card-title-link {
@@ -89,13 +91,13 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    color: var(--slate-700, #334155);
+    color: var(--slate-700, var(--text-secondary));
     font-size: 0.9rem;
 }
 
 .class-card-actions {
     padding: 1rem 1.25rem;
-    border-top: 1px solid var(--border-subtle, #e2e8f0);
+    border-top: 1px solid var(--border-subtle, var(--border-subtle));
     display: flex;
     justify-content: flex-end;
 }
@@ -103,7 +105,7 @@
 /* Semantic Link for Classroom Name */
 .class-name-link {
     font-weight: 700;
-    color: var(--primary-accessible, #1d4ed8);
+    color: var(--primary-accessible, var(--blue-600));
     font-size: 0.975rem;
     text-decoration: none;
     display: inline-flex;
@@ -114,12 +116,12 @@
 }
 
 .class-name-link:hover {
-    color: var(--primary-color, #2563eb);
+    color: var(--primary-color, var(--blue-600));
     text-decoration: underline;
 }
 
 .class-name-link:focus-visible {
-    outline: 2px solid var(--primary-color, #2563eb);
+    outline: 2px solid var(--primary-color, var(--blue-600));
     outline-offset: 3px;
 }
 
@@ -129,9 +131,9 @@
     font-size: 0.85rem;
     font-weight: 600;
     padding: 4px 10px;
-    background: #f1f5f9;
-    color: #1e293b;
-    border: 1px solid #cbd5e1;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-subtle);
     border-radius: 8px;
 }
 
@@ -139,7 +141,7 @@
     display: inline-block;
     padding: 4px 10px;
     background: #dbeafe;
-    color: #1e40af;
+    color: var(--primary-accessible);
     border: 1px solid #bfdbfe;
     border-radius: 8px;
     font-size: 0.85rem;
@@ -148,7 +150,7 @@
 
 .students-count-badge {
     font-weight: 600;
-    color: #334155;
+    color: var(--text-secondary);
     font-size: 0.9rem;
     display: flex;
     align-items: center;
@@ -175,7 +177,7 @@
 .modal-card {
     background: white;
     border-radius: 20px;
-    border: 1px solid var(--border-subtle, #e2e8f0);
+    border: 1px solid var(--border-subtle, var(--border-subtle));
     box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
     width: 100%;
     max-width: 520px;
@@ -184,7 +186,7 @@
 
 .modal-header {
     padding: 1.25rem 1.5rem;
-    border-bottom: 1px solid var(--border-subtle, #e2e8f0);
+    border-bottom: 1px solid var(--border-subtle, var(--border-subtle));
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -194,13 +196,13 @@
     margin: 0;
     font-size: 1.2rem;
     font-weight: 800;
-    color: var(--slate-800, #0f172a);
+    color: var(--slate-800, var(--text-primary));
 }
 
 .close-btn {
     background: transparent;
     border: none;
-    color: var(--text-muted, #64748b);
+    color: var(--text-muted, var(--text-muted));
     cursor: pointer;
     padding: 6px;
     border-radius: 8px;
@@ -211,12 +213,12 @@
 }
 
 .close-btn:hover {
-    background: var(--bg-secondary, #f8fafc);
-    color: var(--slate-800, #0f172a);
+    background: var(--bg-secondary, var(--bg-tertiary));
+    color: var(--slate-800, var(--text-primary));
 }
 
 .close-btn:focus-visible {
-    outline: 2px solid var(--primary-color, #2563eb);
+    outline: 2px solid var(--primary-color, var(--blue-600));
 }
 
 .modal-form {
@@ -235,7 +237,7 @@
 .modal-form label {
     font-size: 0.875rem;
     font-weight: 700;
-    color: var(--slate-700, #334155);
+    color: var(--slate-700, var(--text-secondary));
 }
 
 .modal-form input,
@@ -243,7 +245,7 @@
     width: 100%;
     padding: 10px 14px;
     border-radius: 10px;
-    border: 1px solid var(--border-subtle, #cbd5e1);
+    border: 1px solid var(--border-subtle, var(--border-subtle));
     font-size: 0.95rem;
     outline: none;
     transition: all 0.2s ease;
@@ -251,7 +253,7 @@
 
 .modal-form input:focus,
 .modal-form select:focus {
-    border-color: var(--primary-color, #2563eb);
+    border-color: var(--primary-color, var(--blue-600));
     box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15);
 }
 
@@ -266,18 +268,18 @@
 .secondary-btn {
     padding: 10px 18px;
     background: white;
-    border: 1px solid var(--border-subtle, #cbd5e1);
+    border: 1px solid var(--border-subtle, var(--border-subtle));
     border-radius: 10px;
     font-weight: 700;
-    color: var(--slate-700, #334155);
+    color: var(--slate-700, var(--text-secondary));
     cursor: pointer;
     transition: all 0.15s ease;
 }
 
 .secondary-btn:hover {
-    background: var(--bg-secondary, #f8fafc);
+    background: var(--bg-secondary, var(--bg-tertiary));
 }
 
 .secondary-btn:focus-visible {
-    outline: 2px solid var(--primary-color, #2563eb);
+    outline: 2px solid var(--primary-color, var(--blue-600));
 }
