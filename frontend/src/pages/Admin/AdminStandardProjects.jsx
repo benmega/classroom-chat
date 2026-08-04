@@ -3,6 +3,7 @@ import client from '../../api/client';
 import toast from 'react-hot-toast';
 import { Plus, Edit, X, BookOpen } from 'lucide-react';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
+import { formatStaticUrl } from '../../utils/formatters';
 import Modal from '../../components/common/Modal';
 import { ALIGNED_NODES } from '../../constants/courseProgress';
 import './AdminStandardProjects.css';
@@ -80,14 +81,14 @@ const AdminStandardProjects = () => {
             if (editingProject) {
                 const res = await client.put(`/api/project-templates/${editingProject.id}`, form);
                 if (res.data.status === 'success' || res.data.message) {
-                    toast.success(res.data.message || 'Updated successfully.');
+                    
                     closeModal();
                     fetchProjects();
                 }
             } else {
                 const res = await client.post('/api/project-templates', form);
                 if (res.data.status === 'success' || res.data.message) {
-                    toast.success(res.data.message || 'Created successfully.');
+                    
                     closeModal();
                     fetchProjects();
                 }
@@ -105,7 +106,7 @@ const AdminStandardProjects = () => {
         try {
             const res = await client.delete(`/api/project-templates/${id}`);
             if (res.data.status === 'success' || res.data.message) {
-                toast.success(res.data.message || 'Deleted successfully.');
+                
                 fetchProjects();
             }
         } catch {
@@ -125,29 +126,39 @@ const AdminStandardProjects = () => {
                 <div className="card p-2rem text-center text-muted">Loading...</div>
             ) : (
                 <div className="card" style={{ padding: '24px' }}>
-                    <div className="assignments-list">
+                    <div className="projects-grid">
                         {projects.map(p => (
                             <div 
                                 key={p.id} 
-                                className="assignment-tile" 
+                                className="project-card" 
                                 onClick={() => openModal(p)}
-                                style={{ cursor: 'pointer' }}
                             >
-                                <div className="tile-icon-wrapper">
-                                    <BookOpen size={24} />
-                                </div>
-                                <span className="tile-label" title={p.name}>
-                                    {p.name}
-                                </span>
-                                <button
-                                    type="button"
-                                    className="tile-remove-btn"
-                                    onClick={(e) => { e.stopPropagation(); handleDelete(p.id, p.name); }}
-                                    title="Delete Project"
-                                    aria-label={`Delete project ${p.name}`}
+                                <div 
+                                    className="project-card-header" 
+                                    style={{ 
+                                        backgroundImage: p.image_url ? `url(${formatStaticUrl(p.image_url)})` : 'none',
+                                        backgroundColor: p.image_url ? 'transparent' : 'var(--blue-600)'
+                                    }}
                                 >
-                                    <X size={14} />
-                                </button>
+                                    {!p.image_url && <BookOpen size={48} />}
+                                    <button
+                                        type="button"
+                                        className="project-remove-btn"
+                                        onClick={(e) => { e.stopPropagation(); handleDelete(p.id, p.name); }}
+                                        title="Delete Project"
+                                        aria-label={`Delete project ${p.name}`}
+                                    >
+                                        <X size={14} />
+                                    </button>
+                                </div>
+                                <div className="project-card-body">
+                                    <div className="project-card-title" title={p.name}>
+                                        {p.name}
+                                    </div>
+                                    <div className="project-card-desc">
+                                        {p.description || "No description provided."}
+                                    </div>
+                                </div>
                             </div>
                         ))}
                         {projects.length === 0 && (

@@ -104,7 +104,7 @@ describe('AdminStandardProjects', () => {
                 name: 'New Template'
             }));
         });
-        expect(toast.success).toHaveBeenCalledWith('Created successfully.');
+        
     });
 
     it('opens edit modal and updates existing project', async () => {
@@ -143,7 +143,7 @@ describe('AdminStandardProjects', () => {
                 name: 'Updated Project'
             }));
         });
-        expect(toast.success).toHaveBeenCalledWith('Updated successfully.');
+        
     });
 
     it('deletes a project after confirmation', async () => {
@@ -175,7 +175,7 @@ describe('AdminStandardProjects', () => {
         await waitFor(() => {
             expect(client.delete).toHaveBeenCalledWith('/api/project-templates/1');
         });
-        expect(toast.success).toHaveBeenCalledWith('Deleted successfully.');
+        
         
         confirmSpy.mockRestore();
     });
