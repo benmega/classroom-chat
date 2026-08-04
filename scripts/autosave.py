@@ -17,7 +17,7 @@ def autosave():
                 autosave_branch = f"autosave/{current_branch}"
                 
                 # Stash changes
-                subprocess.run("git stash push -m 'autosave_tmp'", shell=True)
+                subprocess.run("git stash push -m \"autosave_tmp\"", shell=True)
                 
                 # Checkout autosave branch
                 subprocess.run(f"git checkout -B {autosave_branch}", shell=True)
@@ -25,7 +25,7 @@ def autosave():
                 # Apply stash, commit, and go back
                 subprocess.run("git stash apply", shell=True)
                 subprocess.run("git add -A", shell=True)
-                subprocess.run(f"git commit -m 'Autosave {time.time()}'", shell=True)
+                subprocess.run(f"git commit -m \"Autosave {time.time()}\"", shell=True)
                 subprocess.run(f"git checkout {current_branch}", shell=True)
                 subprocess.run("git stash pop", shell=True)
                 
