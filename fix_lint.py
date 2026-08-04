@@ -1,15 +1,16 @@
 import os
 import re
 
+
 def process_file(filepath, replacements):
     if not os.path.exists(filepath):
         return
     with open(filepath, 'r', encoding='utf-8') as f:
         content = f.read()
-    
+
     for old, new in replacements:
         content = re.sub(old, new, content)
-        
+
     with open(filepath, 'w', encoding='utf-8') as f:
         f.write(content)
 

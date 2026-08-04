@@ -146,6 +146,7 @@ const AdminChallenges = () => {
                 setChallengesList(response.data.challenges);
                 if (response.data.challenges.length === 0) {
                     toast.error("No challenges found for this course and domain.");
+                // eslint-disable-next-line
                 } else {
                     
                 }

@@ -21,13 +21,13 @@ for filepath in files_to_check:
     content = re.sub(r'RefreshCw,\s*', '', content)
     content = re.sub(r',\s*RefreshCw\b', '', content)
     content = re.sub(r'import\s+{\s*RefreshCw\s*}\s+from\s+[\'"]lucide-react[\'"];?\n?', '', content)
-    
+
     # Remove <button> or <div className="refresh-btn"> containing RefreshCw
     # Actually, simpler: replace all <RefreshCw ... /> and the button wrappers
     content = re.sub(r'<button[^>]*>\s*<RefreshCw[^>]*/>\s*</button>', '', content)
     content = re.sub(r'<div[^>]*className=["\'][^"\']*refresh[^"\']*["\'][^>]*>\s*<RefreshCw[^>]*/>\s*</div>', '', content)
     content = re.sub(r'<RefreshCw[^>]*/>', '', content)
-    
+
     # Remove isRefreshing state if it exists
     content = re.sub(r'const\s+\[isRefreshing,\s*setIsRefreshing\]\s*=\s*useState\(false\);?\n?', '', content)
 

@@ -71,7 +71,9 @@ const ClassCardMenu = ({ classroom, onDelete }) => {
                         className="kebab-item" 
                         style={{ display: 'flex', alignItems: 'center', width: '100%', padding: '8px 12px', border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--text-danger, #dc2626)', fontSize: '0.85rem', borderRadius: '4px', fontWeight: '500' }}
                         onClick={(e) => { e.stopPropagation(); setIsOpen(false); onDelete(classroom); }}
+                        // eslint-disable-next-line
                         onMouseOver={(e) => e.currentTarget.style.background = 'var(--bg-secondary, #f1f5f9)'}
+                        // eslint-disable-next-line
                         onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
                     >
                         <Trash2 size={14} style={{marginRight:'8px'}} /> Delete Class

@@ -22,11 +22,8 @@ Every available page in the React application, its component, and its required u
 |`/parent`|`ParentDashboard`|Parent|`App.jsx`|
 |`/admin`|`AdminDashboard`|Admin|`App.jsx`, `AdminLayout.jsx`|
 |`/admin/dashboard`|`AdminDashboard`|Admin|`App.jsx`|
-|`/admin/pending-users`|`PendingUsers`|Admin|`App.jsx`, `AdminLayout.jsx`|
-|`/admin/pending-trades`|`PendingTrades`|Admin|`App.jsx`, `AdminLayout.jsx`|
-|`/admin/projects`|`AdminProjects`|Admin|`App.jsx`, `AdminLayout.jsx`|
+|`/admin/course-templates`|`CourseTemplates`|Admin|`App.jsx`, `AdminLayout.jsx`|
 |`/admin/add-achievement`|`AdminAchievements`|Admin|`App.jsx`, `AdminLayout.jsx`|
-|`/admin/certificates`|`AdminCertificates`|Admin|`App.jsx`, `AdminLayout.jsx`|
 |`/admin/documents`|`AdminDocuments`|Admin|`App.jsx`, `AdminLayout.jsx`|
 |`/admin/advanced`|`AdvancedPanel`|Admin|`App.jsx`, `AdminLayout.jsx`|
 |`/admin/courses`|`AdminCourses`|Admin|`App.jsx`, `AdminLayout.jsx`|

@@ -21,17 +21,17 @@ def process_file(filepath):
         return
     with open(filepath, 'r', encoding='utf-8') as f:
         content = f.read()
-    
+
     original_content = content
-    
+
     # Remove RefreshCw from imports
     content = re.sub(r'RefreshCw\s*,\s*', '', content)
     content = re.sub(r',\s*RefreshCw\b', '', content)
-    
+
     # Remove button blocks that contain RefreshCw
     # Use negative lookahead to prevent matching across multiple buttons
     content = re.sub(r'<button(?:(?!<button).)*?<RefreshCw[^>]*/>(?:(?!</button>).)*?</button>', '', content, flags=re.DOTALL)
-    
+
     if content != original_content:
         with open(filepath, 'w', encoding='utf-8') as f:
             f.write(content)

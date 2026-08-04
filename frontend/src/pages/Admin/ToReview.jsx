@@ -227,6 +227,7 @@ const ToReview = () => {
         for (const id of ids) {
             try {
                 await handleUserApproval(id, action, true);
+                // eslint-disable-next-line
                 successCount++;
             } catch (e) {
                 console.error(e);

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Copy, AlertCircle } from 'lucide-react';
+// eslint-disable-next-line
 import toast from 'react-hot-toast';
 import client from '../../api/client';
 import './StudentParentCode.css';

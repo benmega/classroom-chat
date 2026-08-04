@@ -1,14 +1,15 @@
 import os
-import sys
-import shutil
 import re
+import shutil
+import sys
+
 from flask import Flask
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "backend")))
 
 from application import create_app
-from application.models.project_template import ProjectTemplate
 from application.extensions import db
+from application.models.project_template import ProjectTemplate
 
 app = create_app()
 
@@ -41,6 +42,6 @@ with app.app_context():
             # Placeholder
             t.image_url = "/images/tutorial_coding.png"
             print(f"Updated Project {t.id} with placeholder.")
-    
+
     db.session.commit()
     print("Database updated successfully.")

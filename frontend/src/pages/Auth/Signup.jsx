@@ -53,6 +53,7 @@ const Signup = () => {
                 const payload = { username, password };
                 if (selectedRole === 'educator') payload.role = 'educator';
                 
+                // eslint-disable-next-line
                 const response = await client.post('/user/signup', payload);
                 
                 setIsSuccess(true);

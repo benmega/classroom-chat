@@ -11,21 +11,23 @@ files = [
 
 for path in files:
     try:
-        lines = open(path).readlines()
+        with open(path) as f:
+            lines = f.readlines()
         out = []
         skip = False
 
-        for l in lines:
-            if l.startswith('<<<<<<< Updated upstream'):
+        for line in lines:
+            if line.startswith('<<<<<<< Updated upstream'):
                 continue
-            elif l.startswith('======='):
+            elif line.startswith('======='):
                 skip = True
-            elif l.startswith('>>>>>>> Stashed changes'):
+            elif line.startswith('>>>>>>> Stashed changes'):
                 skip = False
             elif not skip:
-                out.append(l)
+                out.append(line)
 
-        open(path, 'w').writelines(out)
+        with open(path, 'w') as f:
+            f.writelines(out)
         print(f"Fixed {path}")
     except Exception as e:
         print(f"Failed {path}: {e}")

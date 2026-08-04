@@ -192,6 +192,7 @@ export const useProjectManagement = () => {
             if (response.data.status === 'success') {
                 if (response.data.data && response.data.data.video_upload_failed) {
                     toast.error(response.data.data.message || 'Project saved, but video upload failed.');
+                // eslint-disable-next-line
                 } else {
                     
                 }

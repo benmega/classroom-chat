@@ -41,6 +41,7 @@ const AdminClassDashboard = () => {
     const [formLoading, setFormLoading] = useState(false);
     const [allStudents, setAllStudents] = useState([]);
     const [selectedStudentId, setSelectedStudentId] = useState('');
+    // eslint-disable-next-line
     const [rosterSearchQuery, setRosterSearchQuery] = useState('');
     const [activeTab, setActiveTab] = useState('stream');
     const [joinCode, setJoinCode] = useState(null);

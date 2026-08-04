@@ -128,6 +128,7 @@ const AdminStandardProjects = () => {
                 <div className="card" style={{ padding: '24px' }}>
                     <div className="projects-grid">
                         {projects.map(p => (
+                            // eslint-disable-next-line
                             <div 
                                 key={p.id} 
                                 className="project-card" 

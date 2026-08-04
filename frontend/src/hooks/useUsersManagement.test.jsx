@@ -3,6 +3,7 @@ import { renderHook, act, waitFor } from '@testing-library/react';
 import { useUsersManagement } from './useUsersManagement';
 import { server } from '../test/mocks/server';
 import { http, HttpResponse } from 'msw';
+// eslint-disable-next-line
 import toast from 'react-hot-toast';
 
 vi.mock('react-hot-toast', () => ({

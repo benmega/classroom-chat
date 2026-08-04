@@ -1,5 +1,5 @@
-import os
 import json
+import os
 import subprocess
 
 conversations = [
@@ -29,20 +29,20 @@ for conv_id in conversations:
         continue
 
     print(f"\n--- Replaying {conv_id} ---")
-    
+
     with open(transcript_path, 'r', encoding='utf-8') as f:
         for line in f:
             if not line.strip(): continue
             try:
                 entry = json.loads(line)
-            except:
+            except Exception:
                 continue
-            
+
             if entry.get('type') == 'PLANNER_RESPONSE' and 'tool_calls' in entry:
                 for call in entry['tool_calls']:
                     tool_name = call.get('name')
                     args = call.get('args', {})
-                    
+
                     if tool_name == 'write_to_file':
                         target = args.get('TargetFile')
                         content = args.get('CodeContent')
@@ -51,46 +51,44 @@ for conv_id in conversations:
                             with open(target, 'w', encoding='utf-8') as tf:
                                 tf.write(content)
                             print(f"[{conv_id}] Wrote file: {target}")
-                            
+
                     elif tool_name == 'replace_file_content':
                         target = args.get('TargetFile')
                         old_str = args.get('TargetContent')
                         new_str = args.get('ReplacementContent')
-                        
-                        if target and ('frontend' in target) and old_str and new_str:
-                            if os.path.exists(target):
-                                with open(target, 'r', encoding='utf-8') as tf:
-                                    t_content = tf.read()
-                                if old_str in t_content:
-                                    t_content = t_content.replace(old_str, new_str, 1)
-                                    with open(target, 'w', encoding='utf-8') as tf:
-                                        tf.write(t_content)
-                                    print(f"[{conv_id}] Replaced content in: {target}")
-                                else:
-                                    print(f"[{conv_id}] WARNING: Could not find TargetContent in {target}")
-                                    
+
+                        if target and ('frontend' in target) and old_str and new_str and os.path.exists(target):
+                            with open(target, 'r', encoding='utf-8') as tf:
+                                t_content = tf.read()
+                            if old_str in t_content:
+                                t_content = t_content.replace(old_str, new_str, 1)
+                                with open(target, 'w', encoding='utf-8') as tf:
+                                    tf.write(t_content)
+                                print(f"[{conv_id}] Replaced content in: {target}")
+                            else:
+                                print(f"[{conv_id}] WARNING: Could not find TargetContent in {target}")
+
                     elif tool_name == 'multi_replace_file_content':
                         target = args.get('TargetFile')
                         chunks = args.get('ReplacementChunks', [])
-                        
-                        if target and ('frontend' in target) and chunks:
-                            if os.path.exists(target):
-                                with open(target, 'r', encoding='utf-8') as tf:
-                                    t_content = tf.read()
-                                    
-                                for chunk in chunks:
-                                    old_str = chunk.get('TargetContent')
-                                    new_str = chunk.get('ReplacementContent')
-                                    if old_str and new_str:
-                                        if old_str in t_content:
-                                            t_content = t_content.replace(old_str, new_str, 1)
-                                        else:
-                                            print(f"[{conv_id}] WARNING: Could not find one of the TargetContents in {target}")
-                                            
-                                with open(target, 'w', encoding='utf-8') as tf:
-                                    tf.write(t_content)
-                                print(f"[{conv_id}] Multi-replaced content in: {target}")
-                                
+
+                        if target and ('frontend' in target) and chunks and os.path.exists(target):
+                            with open(target, 'r', encoding='utf-8') as tf:
+                                t_content = tf.read()
+
+                            for chunk in chunks:
+                                old_str = chunk.get('TargetContent')
+                                new_str = chunk.get('ReplacementContent')
+                                if old_str and new_str:
+                                    if old_str in t_content:
+                                        t_content = t_content.replace(old_str, new_str, 1)
+                                    else:
+                                        print(f"[{conv_id}] WARNING: Could not find one of the TargetContents in {target}")
+
+                            with open(target, 'w', encoding='utf-8') as tf:
+                                tf.write(t_content)
+                            print(f"[{conv_id}] Multi-replaced content in: {target}")
+
                     elif tool_name == 'run_command':
                         cmd = args.get('CommandLine', '')
                         if 'python' in cmd and 'refactor' in cmd and 'frontend' in args.get('Cwd', ''):
