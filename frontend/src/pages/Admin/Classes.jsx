@@ -59,7 +59,7 @@ const ClassCardMenu = ({ classroom, onDelete }) => {
                 type="button"
                 className={`action-btn kebab-trigger ${isOpen ? 'active' : ''}`} 
                 onClick={(e) => { e.stopPropagation(); setIsOpen(!isOpen); }}
-                style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '4px', color: 'var(--text-muted)' }}
+                style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '4px', color: 'white' }}
                 aria-label="Classroom options"
             >
                 <MoreVertical size={18} />
@@ -161,7 +161,7 @@ const Classes = () => {
                 language: newLanguage.trim(),
                 url: newUrl.trim() || 'https://classroom.chat'
             });
-            toast.success(`Classroom "${newName}" created successfully!`);
+            
             setIsCreateModalOpen(false);
             setNewId('');
             setNewName('');
@@ -265,7 +265,10 @@ const Classes = () => {
                                     }
                                 }}
                             >
-                                <div className="class-card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                <div className="class-card-header">
+                                    <div style={{ position: 'absolute', top: '12px', right: '12px', zIndex: 5 }}>
+                                        <ClassCardMenu classroom={c} onDelete={handleDeleteClassroom} />
+                                    </div>
                                     <Link
                                         to={`/admin/classes/${c.id}`}
                                         className="class-card-title-link"
@@ -274,7 +277,6 @@ const Classes = () => {
                                     >
                                         {c.name}
                                     </Link>
-                                    <ClassCardMenu classroom={c} onDelete={handleDeleteClassroom} />
                                 </div>
                                 <div className="class-card-body">
                                     <div className="class-card-detail" title={c.language || 'Language'}>

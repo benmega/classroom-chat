@@ -75,7 +75,7 @@ describe('JoinClassroom Component', () => {
 
     await waitFor(() => {
       expect(client.post).toHaveBeenCalledWith('/api/classroom/join', { code: 'AB3C9' });
-      expect(toast.success).toHaveBeenCalledWith('Joined CS 101!');
+      
       expect(mockOnJoined).toHaveBeenCalledWith({ name: 'CS 101' });
     });
 

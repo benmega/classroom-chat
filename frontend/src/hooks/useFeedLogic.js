@@ -265,7 +265,7 @@ export const useFeedLogic = (filterClassroomId = null) => {
     if (!window.confirm('Are you sure you want to delete this message?')) return;
     try {
       await client.delete(`/message/delete_message/${messageId}`);
-      toast.success('Message deleted');
+      
       setMessages(prev => prev.filter(m => m.id !== messageId));
     } catch (err) {
       toast.error('Failed to delete message');

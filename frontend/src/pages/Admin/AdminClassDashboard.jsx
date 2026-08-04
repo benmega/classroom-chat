@@ -114,7 +114,7 @@ const AdminClassDashboard = () => {
                 course_id: course_id
             });
             if (res.data) {
-                toast.success('Course connected successfully');
+                
                 setActiveModal(null);
                 fetchClassroomDetails();
             }
@@ -131,7 +131,7 @@ const AdminClassDashboard = () => {
         try {
             const res = await client.delete(`/api/admin/crud/courseinstances/${instanceId}`);
             if (res.data) {
-                toast.success('Course disconnected successfully');
+                
                 fetchClassroomDetails();
             }
         } catch (err) {
@@ -173,7 +173,7 @@ const AdminClassDashboard = () => {
                 language: newLanguageStr
             });
             if (res.data.success) {
-                toast.success('Languages updated');
+                
                 fetchClassroomDetails();
             }
         } catch (err) {
@@ -193,7 +193,7 @@ const AdminClassDashboard = () => {
                 language: classroom.language
             });
             if (res.data.success) {
-                toast.success('Classroom name updated');
+                
                 fetchClassroomDetails();
                 setIsEditingName(false);
             }
@@ -209,7 +209,7 @@ const AdminClassDashboard = () => {
         try {
             const res = await client.post(`/api/admin/classrooms/${classId}/regenerate_code`);
             if (res.data.success) {
-                toast.success('Join code regenerated successfully!');
+                
                 fetchClassroomDetails();
             }
         } catch (err) {
@@ -228,7 +228,7 @@ const AdminClassDashboard = () => {
                 student_id: Number(targetId)
             });
             if (res.data.success) {
-                toast.success(res.data.message || 'Student enrolled successfully');
+                
                 setSelectedStudentId('');
                 setActiveModal(null);
                 fetchClassroomDetails();
@@ -248,7 +248,7 @@ const AdminClassDashboard = () => {
                 student_id: studentId
             });
             if (res.data.success) {
-                toast.success(res.data.message || 'Student removed successfully');
+                
                 fetchClassroomDetails();
             }
         } catch (err) {

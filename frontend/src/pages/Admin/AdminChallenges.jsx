@@ -76,7 +76,7 @@ const AdminChallenges = () => {
                     }).filter(c => c.name && c.slug);
                     
                     setParsedChallenges(challenges);
-                    toast.success(`Parsed ${challenges.length} challenges from CSV`);
+                    
                 } else {
                     toast.error("No valid data found in CSV");
                 }
@@ -114,7 +114,7 @@ const AdminChallenges = () => {
         try {
             const response = await client.post('/api/admin/challenges/bulk_add', payload);
             if (response.data) {
-                toast.success(response.data.message || `Successfully added challenges.`);
+                
                 // Reset form
                 setParsedChallenges([]);
                 setFileName('');
@@ -147,7 +147,7 @@ const AdminChallenges = () => {
                 if (response.data.challenges.length === 0) {
                     toast.error("No challenges found for this course and domain.");
                 } else {
-                    toast.success(`Loaded ${response.data.challenges.length} challenges.`);
+                    
                 }
             }
         } catch (error) {
@@ -187,7 +187,7 @@ const AdminChallenges = () => {
         try {
             const response = await client.put('/api/admin/challenges/reorder', { updates });
             if (response.data) {
-                toast.success(response.data.message || 'Order saved successfully!');
+                
                 // Re-fetch to reflect saved sequences from backend
                 await fetchChallenges();
             }

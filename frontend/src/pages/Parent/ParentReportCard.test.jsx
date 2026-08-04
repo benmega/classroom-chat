@@ -91,7 +91,7 @@ describe('ParentReportCard Component', () => {
 
         await waitFor(() => {
             expect(client.post).toHaveBeenCalledWith('/api/parents/disconnect/1');
-            expect(toast.success).toHaveBeenCalledWith('Disconnected from Bob');
+            
             expect(screen.getByText('Parent Dashboard Page')).toBeInTheDocument();
         });
     });

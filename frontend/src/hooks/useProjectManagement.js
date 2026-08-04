@@ -193,7 +193,7 @@ export const useProjectManagement = () => {
                 if (response.data.data && response.data.data.video_upload_failed) {
                     toast.error(response.data.data.message || 'Project saved, but video upload failed.');
                 } else {
-                    toast.success(projectId ? 'Project updated!' : 'Project created!');
+                    
                 }
                 
                 if (currentUser?.role === 'admin' && projectData.student_id) {
@@ -225,7 +225,7 @@ export const useProjectManagement = () => {
             formData.append('action', 'delete');
             const response = await client.post(`/user/project/edit/${projectId}`, formData);
             if (response.data.status === 'success') {
-                toast.success('Project deleted.');
+                
                 
                 if (currentUser?.role === 'admin' && projectData.student_id) {
                     const student = students.find(s => String(s.id) === String(projectData.student_id));

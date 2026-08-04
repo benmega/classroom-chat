@@ -75,7 +75,7 @@ const AdvancedPanel = () => {
         try {
             const response = await client.post('/api/admin/advanced/purge-history');
             if (response.data.status === 'success') {
-                toast.success(`History purged! Deleted ${response.data.data.deleted_messages} messages.`);
+                
                 setShowPurgeModal(false);
             }
         } catch (err) {

@@ -95,7 +95,7 @@ const EditProfile = () => {
 
             await client.post('/user/edit_profile', payload);
             
-            toast.success('Profile updated successfully!');
+            
             
             setPassword('');
             setConfirmPassword('');

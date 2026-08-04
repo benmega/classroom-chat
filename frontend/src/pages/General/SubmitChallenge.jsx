@@ -39,7 +39,7 @@ const SubmitChallenge = () => {
         try {
             const response = await client.post('/api/course-requests/submit', pendingCourseRequest);
             if (response.data.success) {
-                toast.success(response.data.message);
+                
                 setPendingCourseRequest(null);
                 setUrl('');
                 setHelpers('');
@@ -99,7 +99,7 @@ const SubmitChallenge = () => {
                             { icon: '⚠️', duration: 6000 }
                         );
                     } else {
-                        toast.success(response.data.message || 'Challenge submitted successfully!');
+                        
                         
                         const duckReward = response.data.duck_reward || 10;
                         const pCount = Math.min(50 + (duckReward * 10), 500);

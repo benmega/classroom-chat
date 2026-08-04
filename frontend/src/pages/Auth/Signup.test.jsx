@@ -75,7 +75,7 @@ describe('Signup Component', () => {
         username: 'student123',
         password: 'password123'
       });
-      expect(toast.success).toHaveBeenCalledWith('Signup successful! Awaiting approval.');
+      
       expect(screen.getByText('Request Submitted!')).toBeInTheDocument();
     });
   });

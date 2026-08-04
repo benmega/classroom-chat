@@ -156,7 +156,7 @@ describe('ManageProject', () => {
         expect(screen.getByRole('button', { name: /Saving.../i })).toBeInTheDocument();
 
         await waitFor(() => {
-            expect(toast.success).toHaveBeenCalledWith('Project created!');
+            
             expect(screen.getByTestId('profile-page')).toBeInTheDocument();
         });
     });
@@ -190,7 +190,7 @@ describe('ManageProject', () => {
         fireEvent.click(submitBtn);
 
         await waitFor(() => {
-            expect(toast.success).toHaveBeenCalledWith('Project updated!');
+            
         });
     });
 
@@ -221,7 +221,7 @@ describe('ManageProject', () => {
         expect(window.confirm).toHaveBeenCalledWith('Are you sure you want to delete this project?');
 
         await waitFor(() => {
-            expect(toast.success).toHaveBeenCalledWith('Project deleted.');
+            
             expect(screen.getByTestId('profile-page')).toBeInTheDocument();
         });
     });

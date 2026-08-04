@@ -47,7 +47,7 @@ const PendingTrades = () => {
         try {
             const response = await client.post('/api/admin/trade_action', formData);
             if (response.data.status === 'success') {
-                toast.success(response.data.message);
+                
                 setTrades(prev => prev.filter(t => t.id !== tradeId));
             } else {
                 toast.error(response.data.message || 'Action failed.');

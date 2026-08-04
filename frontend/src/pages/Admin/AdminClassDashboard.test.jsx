@@ -143,7 +143,7 @@ describe('AdminClassDashboard', () => {
         await waitFor(() => {
             expect(client.post).toHaveBeenCalledWith('/api/admin/classrooms/cls123/enroll', { student_id: 11 });
         });
-        expect(toast.success).toHaveBeenCalledWith('Enrolled');
+        
     });
 
     it('unenrolls a student', async () => {
@@ -182,7 +182,7 @@ describe('AdminClassDashboard', () => {
         await waitFor(() => {
             expect(client.post).toHaveBeenCalledWith('/api/admin/classrooms/cls123/unenroll', { student_id: 10 });
         });
-        expect(toast.success).toHaveBeenCalledWith('Unenrolled');
+        
 
         confirmSpy.mockRestore();
     });
@@ -221,7 +221,7 @@ describe('AdminClassDashboard', () => {
                 language: 'python'
             }));
         });
-        expect(toast.success).toHaveBeenCalledWith('Updated');
+        
     });
 
     it('deletes the classroom when confirmed', async () => {
@@ -252,7 +252,7 @@ describe('AdminClassDashboard', () => {
         await waitFor(() => {
             expect(client.delete).toHaveBeenCalledWith('/api/admin/classrooms/cls123');
         });
-        expect(toast.success).toHaveBeenCalledWith('Deleted');
+        
         expect(mockNavigate).toHaveBeenCalledWith('/admin/classes');
 
         confirmSpy.mockRestore();
@@ -280,7 +280,7 @@ describe('AdminClassDashboard', () => {
 
         expect(confirmSpy).toHaveBeenCalled();
         expect(client.delete).not.toHaveBeenCalled();
-        expect(toast.success).not.toHaveBeenCalled();
+        
         expect(mockNavigate).not.toHaveBeenCalled();
 
         confirmSpy.mockRestore();
@@ -381,7 +381,7 @@ describe('AdminClassDashboard', () => {
                 classroom_id: 'cls123',
                 course_id: 'course-py'
             }));
-            expect(toast.success).toHaveBeenCalledWith('Course connected successfully');
+            
         });
     });
 
@@ -411,7 +411,7 @@ describe('AdminClassDashboard', () => {
 
         await waitFor(() => {
             expect(client.delete).toHaveBeenCalledWith('/api/admin/crud/courseinstances/inst1');
-            expect(toast.success).toHaveBeenCalledWith('Course disconnected successfully');
+            
         });
 
         confirmSpy.mockRestore();
@@ -502,7 +502,7 @@ describe('AdminClassDashboard', () => {
         await waitFor(() => {
             expect(client.post).toHaveBeenCalledWith('/api/admin/classrooms/cls123/regenerate_code');
             expect(screen.getAllByText('NEW456').length).toBeGreaterThan(0);
-            expect(toast.success).toHaveBeenCalledWith('Join code regenerated successfully!');
+            
         });
 
         confirmSpy.mockRestore();

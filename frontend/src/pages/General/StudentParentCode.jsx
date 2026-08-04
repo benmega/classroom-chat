@@ -30,7 +30,7 @@ const StudentParentCode = () => {
     const copyToClipboard = () => {
         if (!code) return;
         navigator.clipboard.writeText(code);
-        toast.success('Connection code copied!');
+        
     };
 
     if (isLoading) return (

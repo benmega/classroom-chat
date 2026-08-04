@@ -236,7 +236,7 @@ const CourseProgressTree = () => {
                 if (window.confirm(msg)) {
                     const passRes = await client.post(`/api/admin/user/${userObj.id}/pass_chapter`, { course_id: node.id });
                     if (passRes.data.success) {
-                        toast.success(passRes.data.message);
+                        
                         // Reload data via full refresh since state may not auto-update cleanly here
                         window.location.reload();
                     }

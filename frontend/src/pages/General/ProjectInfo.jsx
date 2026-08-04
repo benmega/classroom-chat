@@ -4,6 +4,7 @@ import { ArrowLeft, Award, BookOpen, Code2, CheckCircle2, HelpCircle, Loader2, C
 import client from '../../api/client';
 import useAuthStore from '../../store/useAuthStore';
 import toast from 'react-hot-toast';
+import { formatStaticUrl } from '../../utils/formatters';
 import './ProjectInfo.css';
 
 // Extra rich details for standard projects
@@ -295,7 +296,7 @@ const ProjectInfo = () => {
         try {
             const response = await client.post('/user/project/new', formData);
             if (response.data.status === 'success') {
-                toast.success(`Assigned "${project.name}" to your workspace!`);
+                
                 // Reload profile data to find newly assigned project
                 const profileRes = await client.get('/user/profile');
                 const userProfile = profileRes.data?.data?.target;
@@ -353,7 +354,7 @@ const ProjectInfo = () => {
                 <div className="project-header-section">
                     <div className="project-header-main">
                         <img 
-                            src={getProjectPlaceholder(project.name)} 
+                            src={project.image_url ? formatStaticUrl(project.image_url) : getProjectPlaceholder(project.name)} 
                             alt={project.name} 
                             className="project-header-cover-img"
                             onError={(e) => { e.target.src = '/static/images/Project_placeholder.png'; }}

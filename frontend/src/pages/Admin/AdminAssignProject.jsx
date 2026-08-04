@@ -99,7 +99,7 @@ const AdminAssignProject = () => {
             const payload = { ...assignForm, user_id: selectedUser.id };
             const response = await client.post('/api/admin/assign-project', payload);
             if (response.data.status === 'success') {
-                toast.success(response.data.message);
+                
                 navigate('/admin/projects');
             }
         } catch (error) {

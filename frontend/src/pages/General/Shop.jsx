@@ -82,7 +82,7 @@ const Shop = () => {
         setPurchasingId(itemId);
         try {
             await client.post(`/api/shop/purchase/${itemId}`);
-            toast.success(`Successfully unlocked ${itemName}!`);
+            
             await checkAuth(); 
             await fetchItems(); 
         } catch (error) {
@@ -115,7 +115,7 @@ const Shop = () => {
                 value: speed
             });
             setBorderSpeed(speed);
-            toast.success("Animation speed updated!");
+            
             await checkAuth(true);
         } catch {
             toast.error("Failed to save animation speed.");
@@ -188,7 +188,7 @@ const Shop = () => {
 
                 try {
                     await client.post('/user/api/profile-wallpaper', formData);
-                    toast.success("Wallpaper saved!");
+                    
                     setIsCropping(false);
                     await checkAuth(true);
                 } catch (error) {

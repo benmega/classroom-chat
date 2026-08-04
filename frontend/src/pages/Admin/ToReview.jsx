@@ -153,7 +153,7 @@ const ToReview = () => {
             });
 
             if (response.data.status === 'success') {
-                toast.success(response.data.message);
+                
                 setProjects(prev => prev.filter(p => p.id !== projectId));
                 // Clean up state
                 setProjectComments(prev => { const copy = {...prev}; delete copy[projectId]; return copy; });
@@ -172,7 +172,7 @@ const ToReview = () => {
         try {
             const response = await client.post(`/api/achievements/admin/certificates/reviewed/${certId}`);
             if (response.data.status === 'success') {
-                toast.success(response.data.message);
+                
                 setCertificates(prev => prev.filter(c => c.id !== certId));
             }
         } catch {
@@ -188,7 +188,7 @@ const ToReview = () => {
         try {
             const response = await client.post('/api/achievements/admin/certificates/reviewed/all');
             if (response.data.status === 'success') {
-                toast.success(response.data.message);
+                
                 setCertificates([]); 
             }
         } catch {
@@ -207,7 +207,7 @@ const ToReview = () => {
         try {
             const response = await client.post(`/api/admin/${endpoint}`);
             if (response.data.status === 'success') {
-                if (!isBulk) toast.success(response.data.data?.message || `User ${action === 'approve' ? 'approved' : 'rejected'}`);
+                
                 setPendingUsers(prev => prev.filter(u => u.id !== userId));
             }
         } catch {
@@ -232,7 +232,7 @@ const ToReview = () => {
                 console.error(e);
             }
         }
-        toast.success(`Successfully ${action === 'approve' ? 'approved' : 'rejected'} ${successCount} users.`);
+        
         setSelectedUsers(new Set());
         setIsProcessing(null);
     };
@@ -247,7 +247,7 @@ const ToReview = () => {
         try {
             const response = await client.post('/api/admin/trade_action', formData);
             if (response.data.status === 'success') {
-                if (!isBulk) toast.success(response.data.message);
+                
                 setTrades(prev => prev.filter(t => t.id !== tradeId));
             } else {
                 if (!isBulk) toast.error(response.data.message || 'Action failed.');
@@ -271,7 +271,7 @@ const ToReview = () => {
                 console.error(e);
             }
         }
-        toast.success(`Successfully processed ${ids.length} trades.`);
+        
         setSelectedTrades(new Set());
         setIsProcessing(null);
     };
@@ -284,7 +284,7 @@ const ToReview = () => {
         try {
             const response = await client.put(`/api/admin/track-requests/${requestId}`, { status });
             if (response.data.success) {
-                if (!isBulk) toast.success(response.data.message);
+                
                 setTrackRequests(prev => prev.filter(r => r.id !== requestId));
             } else {
                 if (!isBulk) toast.error(response.data.message || 'Action failed.');
@@ -308,7 +308,7 @@ const ToReview = () => {
                 console.error(e);
             }
         }
-        toast.success(`Successfully processed ${ids.length} track requests.`);
+        
         setSelectedTracks(new Set());
         setIsProcessing(null);
     };
@@ -332,7 +332,7 @@ const ToReview = () => {
                     course_id
                 });
                 if (response.data.success) {
-                    toast.success(response.data.message);
+                    
                     setCourseRequests(prev => prev.filter(r => r.id !== requestId));
                 }
             } else {
@@ -342,7 +342,7 @@ const ToReview = () => {
                 }
                 const response = await client.post(`/api/course-requests/${requestId}/reject`);
                 if (response.data.success) {
-                    toast.success(response.data.message);
+                    
                     setCourseRequests(prev => prev.filter(r => r.id !== requestId));
                 }
             }

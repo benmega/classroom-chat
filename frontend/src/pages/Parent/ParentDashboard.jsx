@@ -107,7 +107,7 @@ const ParentDashboard = () => {
         setIsConnecting(true);
         try {
             await client.post('/api/parents/connect/code', { code: connectCode });
-            toast.success('Child connected successfully!');
+            
             setConnectCode('');
             setIsLinkModalOpen(false);
             const list = await fetchChildren();
@@ -126,7 +126,7 @@ const ParentDashboard = () => {
         if (!window.confirm(`Remove ${childName}?`)) return;
         try {
             await client.post(`/api/parents/disconnect/${childId}`);
-            toast.success(`Disconnected from ${childName}`);
+            
             const list = await fetchChildren();
             if (list.length > 0) fetchChildReports(list);
         } catch (err) {

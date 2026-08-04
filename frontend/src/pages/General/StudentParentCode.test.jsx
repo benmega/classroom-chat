@@ -76,7 +76,7 @@ describe('StudentParentCode Component', () => {
     fireEvent.click(copyBtn);
 
     expect(navigator.clipboard.writeText).toHaveBeenCalledWith('CODE-123');
-    expect(toast.success).toHaveBeenCalledWith('Connection code copied!');
+    
   });
 
   it('refreshes code on Refresh Code button click', async () => {

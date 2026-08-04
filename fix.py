@@ -5,6 +5,7 @@ files = [
     'frontend/src/components/admin/AdminModals.jsx',
     'frontend/src/pages/Admin/AdminClassDashboard.css',
     'frontend/src/pages/Admin/AdminClassDashboard.jsx',
+    'frontend/src/pages/Admin/AdminClassDashboard.test.jsx',
     'frontend/src/pages/Admin/Classes.jsx'
 ]
 

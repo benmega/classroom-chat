@@ -93,7 +93,7 @@ describe('SubmitChallenge', () => {
             }, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
         });
 
-        expect(toast.success).toHaveBeenCalledWith('Challenge submitted successfully!');
+        
         expect(confetti).toHaveBeenCalled();
         expect(mockCheckAuth).toHaveBeenCalled();
         

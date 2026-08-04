@@ -209,7 +209,7 @@ describe('useProjectManagement', () => {
         });
 
         expect(client.post).toHaveBeenCalledWith('/user/project/edit/1', expect.any(FormData));
-        expect(toast.success).toHaveBeenCalledWith('Project updated!');
+        
         expect(mockNavigate).toHaveBeenCalledWith('/profile/student2');
     });
 
@@ -255,7 +255,7 @@ describe('useProjectManagement', () => {
         });
 
         expect(client.post).toHaveBeenCalledWith('/user/project/edit/1', expect.any(FormData));
-        expect(toast.success).toHaveBeenCalledWith('Project deleted.');
+        
         expect(mockNavigate).toHaveBeenCalledWith('/profile/student2');
     });
 });

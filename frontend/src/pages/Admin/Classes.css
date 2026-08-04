@@ -39,7 +39,7 @@
     background: white;
     border-radius: 12px;
     border: 1px solid var(--border-subtle, var(--border-subtle));
-    overflow: hidden;
+    /* Removed overflow: hidden to allow kebab menu to show */
     transition: transform 0.2s ease, box-shadow 0.2s ease;
     display: flex;
     flex-direction: column;
@@ -61,6 +61,8 @@
     justify-content: flex-end;
     color: white;
     position: relative;
+    border-top-left-radius: 11px;
+    border-top-right-radius: 11px;
 }
 
 .class-card-title-link {

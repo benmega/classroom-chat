@@ -65,7 +65,7 @@ const AdminDocuments = () => {
             const isSuccess = response.data.status === 'success' || response.data.success === true;
             if (isSuccess) {
                 const message = response.data.message || response.data.data?.message || 'File deleted successfully';
-                toast.success(message);
+                
                 fetchData();
             }
         } catch {

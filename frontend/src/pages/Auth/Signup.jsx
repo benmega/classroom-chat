@@ -54,7 +54,7 @@ const Signup = () => {
                 if (selectedRole === 'educator') payload.role = 'educator';
                 
                 const response = await client.post('/user/signup', payload);
-                toast.success(response.data.data.message || 'Signup successful! Awaiting approval.');
+                
                 setIsSuccess(true);
             }
         } catch (error) {
