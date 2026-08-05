@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
 import { Plus, Edit, X, BookOpen } from 'lucide-react';
-import AdminPageHeader from '../../components/admin/AdminPageHeader';
 import { formatStaticUrl } from '../../utils/formatters';
 import Modal from '../../components/common/Modal';
 import { ALIGNED_NODES } from '../../constants/courseProgress';
@@ -116,11 +115,11 @@ const AdminStandardProjects = () => {
 
     return (
         <div className="admin-standard-projects-page">
-            <AdminPageHeader title="Standard Projects (Templates)">
+            <div className="d-flex justify-end mb-1-5rem">
                 <button className="primary-btn" onClick={() => openModal()}>
                     <Plus size={18} /> Add Project
                 </button>
-            </AdminPageHeader>
+            </div>
 
             {isLoading ? (
                 <div className="card p-2rem text-center text-muted">Loading...</div>

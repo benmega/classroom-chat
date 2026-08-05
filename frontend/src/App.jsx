@@ -38,6 +38,7 @@ const AdminDashboard = React.lazy(() => import('./pages/Admin/AdminDashboard'));
 const AdminProjects = React.lazy(() => import('./pages/Admin/AdminProjects'));
 const AdminAssignProject = React.lazy(() => import('./pages/Admin/AdminAssignProject'));
 const AdminStandardProjects = React.lazy(() => import('./pages/Admin/AdminStandardProjects'));
+const AdminLibrary = React.lazy(() => import('./pages/Admin/AdminLibrary'));
 const AdminCertificates = React.lazy(() => import('./pages/Admin/AdminCertificates'));
 const AdminAchievements = React.lazy(() => import('./pages/Admin/AdminAchievements'));
 const AdminChallenges = React.lazy(() => import('./pages/Admin/AdminChallenges'));
@@ -324,6 +325,7 @@ function App() {
                 <Route path="projects" element={<AdminProjects />} />
                 <Route path="assign-project" element={<AdminAssignProject />} />
                 <Route path="standard-projects" element={<AdminStandardProjects />} />
+                <Route path="library" element={<AdminLibrary />} />
                 <Route path="certificates" element={<AdminCertificates />} />
                 <Route path="users" element={<Users />} />
                 <Route path="students" element={<Navigate to="/admin/users?role=student" replace />} />

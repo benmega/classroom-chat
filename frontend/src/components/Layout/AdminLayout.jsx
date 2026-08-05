@@ -14,7 +14,8 @@ import {
     ArrowLeftRight,
     BookMarked,
     School,
-    ClipboardList
+    ClipboardList,
+    Library
 } from 'lucide-react';
 import useAuthStore from '../../store/useAuthStore';
 import useSidebar from '../../hooks/useSidebar';
@@ -80,6 +81,7 @@ const AdminLayout = ({ children }) => {
         { path: '/admin/users', label: 'Users', tooltip: 'User Management', icon: Users },
         { path: '/admin/classes', label: 'Classes', tooltip: 'Classes & Enrolments', icon: School },
         { path: '/admin/standard-projects', label: 'Standard Projects', tooltip: 'Standard Project Templates', icon: BookMarked },
+        { path: '/admin/library', label: 'Content Library', tooltip: 'Content Library', icon: Library },
         { path: '/admin/advanced', label: 'Advanced Panel', tooltip: 'Advanced System CRUD', icon: Settings2 },
         { path: '/chat', label: 'Back to Site', tooltip: 'Return to Main App', icon: Home },
     ];
