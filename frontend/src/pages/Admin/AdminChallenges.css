@@ -1,13 +1,11 @@
 .admin-challenges-page {
-    padding: 2rem;
-    max-width: 1200px;
-    margin: 0 auto;
+    width: 100%;
 }
 
 /* Course Cards Grid */
 .courses-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     gap: 1.5rem;
 }
 
@@ -15,15 +13,13 @@
     background: white;
     border-radius: 12px;
     border: 1px solid var(--border-subtle, #e2e8f0);
-    padding: 2rem 1.5rem;
+    overflow: hidden;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 1rem;
+    aspect-ratio: 1 / 1;
     cursor: pointer;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-    text-align: center;
+    position: relative;
 }
 
 .course-card:hover {
@@ -32,24 +28,43 @@
     border-color: var(--purple-400, #a78bfa);
 }
 
-.course-card-icon {
-    background: rgba(167, 139, 250, 0.1); /* light purple */
-    padding: 1.5rem;
-    border-radius: 50%;
+.course-card-header {
+    height: 140px;
+    background-size: cover;
+    background-position: center;
+    background-color: var(--purple-600, #9333ea);
+    position: relative;
+    border-bottom: 1px solid var(--border-subtle, #e2e8f0);
     display: flex;
     align-items: center;
     justify-content: center;
+    color: white;
+}
+
+.course-card-body {
+    padding: 1.25rem;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
 }
 
 .course-card-title {
-    font-size: 1.15rem;
+    font-size: 1.25rem;
     font-weight: 700;
     color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .course-card-meta {
     font-size: 0.9rem;
-    color: var(--text-secondary);
+    color: var(--slate-700, var(--text-secondary));
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
 }
 
 /* Challenges List */

@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import './AdminChallenges.css';
 import Papa from 'papaparse';
 import Modal from '../../components/common/Modal';
+import { getCourseHeaderImage } from '../../constants/courseImages';
 
 const AdminChallenges = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -255,19 +256,32 @@ const AdminChallenges = () => {
                 ) : selectedCourseId === null ? (
                     // COURSES VIEW
                     <div className="courses-grid">
-                        {courseIds.map(courseId => (
-                            <div key={courseId} className="course-card" onClick={() => setSelectedCourseId(courseId)}>
-                                <div className="course-card-icon">
-                                    <Folder size={48} color="var(--purple-600)" />
-                                </div>
-                                <div className="course-card-body">
-                                    <div className="course-card-title">{getCourseName(courseId)}</div>
-                                    <div className="course-card-meta">
-                                        {groupedChallenges[courseId].length} Challenges
+                        {courseIds.map(courseId => {
+                            const courseName = getCourseName(courseId);
+                            const courseDomain = courses.find(c => c.id === courseId)?.domain;
+                            const courseImg = getCourseHeaderImage(courseId, courseName, courseDomain);
+                            return (
+                                <div key={courseId} className="course-card" onClick={() => setSelectedCourseId(courseId)}>
+                                    <div 
+                                        className="course-card-header"
+                                        style={{
+                                            backgroundImage: courseImg ? `url(${courseImg})` : 'none',
+                                            backgroundColor: courseImg ? 'transparent' : 'var(--purple-600)'
+                                        }}
+                                    >
+                                        {!courseImg && <Folder size={48} />}
+                                    </div>
+                                    <div className="course-card-body">
+                                        <div className="course-card-title" title={courseName}>
+                                            {courseName}
+                                        </div>
+                                        <div className="course-card-meta">
+                                            {groupedChallenges[courseId].length} Challenges
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 ) : (
                     // COURSE DETAILS VIEW
