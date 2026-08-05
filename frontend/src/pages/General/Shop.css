@@ -225,12 +225,15 @@
     height: 80px;
     border-radius: 50%;
     padding: 4px;
-    background: linear-gradient(45deg, #ff0000, #ff7300, #fffb00, #48ff00, #00ffd5, #002bff, #7a00ff, #ff00c8, #ff0000);
+    --preview-color: var(--border-color, var(--accent-color));
+    background: linear-gradient(45deg, var(--preview-color), #ffffff, var(--preview-color), rgba(0, 0, 0, 0.3), var(--preview-color));
     background-size: 400%;
-    animation: rainbow-border calc(var(--border-speed, 1.5s) * 2) linear infinite;
+    animation: rainbow-border calc(var(--border-speed, 1.5s) * 2) linear infinite, borderPulse var(--border-speed, 1.5s) infinite;
     display: flex;
     align-items: center;
     justify-content: center;
+    box-shadow: 0 0 16px var(--preview-color);
+    transition: box-shadow 0.2s ease;
 }
 
 .animated-border-preview img {

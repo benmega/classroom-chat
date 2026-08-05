@@ -37,15 +37,12 @@ const LandingMobile = () => {
                             </div>
                         </div>
 
-                        <div className="hero-cta animate-fade-in" style={{ animationDelay: '0.2s', display: 'flex', flexDirection: 'column', gap: '1rem', width: '100%', maxWidth: '300px' }}>
-                            <button onClick={() => navigate('/signup?role=student')} className="btn-premium btn-premium-lg" style={{ width: '100%', padding: '0.8rem' }}>
-                                New Student
+                        <div className="hero-cta animate-fade-in" style={{ animationDelay: '0.2s', display: 'flex', flexDirection: 'row', justifyContent: 'center', gap: '1rem', width: '100%', maxWidth: '360px' }}>
+                            <button onClick={() => navigate('/signup')} className="btn-premium btn-premium-lg" style={{ flex: 1, padding: '0.8rem' }}>
+                                I'm New
                             </button>
-                            <button onClick={() => navigate('/signup?role=parent')} className="btn-premium btn-premium-lg w-100">
-                                New Parent
-                            </button>
-                            <button onClick={() => navigate('/login')} className="btn-secondary" style={{ width: '100%', padding: '0.8rem' }}>
-                                Existing Student
+                            <button onClick={() => navigate('/login')} className="btn-premium btn-premium-lg" style={{ flex: 1, padding: '0.8rem' }}>
+                                I'm Back
                             </button>
                         </div>
                     </div>

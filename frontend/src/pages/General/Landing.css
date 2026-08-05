@@ -88,14 +88,15 @@
 
 .hero-cta {
     display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
+    flex-direction: row;
+    align-items: center;
+    gap: 1rem;
     margin-top: 1rem;
 }
 
 @media (min-width: 800px) {
     .hero-cta {
-        align-items: flex-start;
+        justify-content: flex-start;
     }
 }
 

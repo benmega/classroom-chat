@@ -1,7 +1,8 @@
 .manage-project-page {
     padding: 0;
     margin: 0;
-    min-height: 100vh;
+    height: 100%;
+    min-height: 0;
     display: flex;
     flex-direction: column;
     background: var(--bg-secondary);
@@ -9,12 +10,21 @@
     overflow: hidden;
 }
 
+.manage-project-form {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+    min-height: 0;
+    overflow: hidden;
+}
+
 .manage-project-grid {
     display: grid;
     grid-template-columns: 1fr;
     flex: 1;
-    overflow-y: auto;
-    padding-bottom: 100px; /* space for floating bar */
+    min-height: 0;
+    overflow: hidden;
 }
 
 @media (min-width: 900px) {
@@ -372,12 +382,10 @@
 
 /* Floating Action Bar */
 .floating-action-bar {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
+    flex-shrink: 0;
+    width: 100%;
     background: white;
-    padding: 1.5rem 3rem;
+    padding: 1rem 2rem;
     border-top: 1px solid var(--border-subtle);
     display: flex;
     justify-content: space-between;
@@ -492,19 +500,26 @@
         max-width: none !important;
         padding: 0 !important;
         overflow: hidden !important;
-        height: calc(100vh - 60px); /* Fit exactly under the header */
+        flex: 1 !important;
+        height: 100% !important;
     }
     .manage-project-page {
         height: 100%;
         overflow: hidden;
         position: relative;
     }
+    .manage-project-form {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
     .manage-project-grid {
         height: 100%;
+        flex: 1;
+        min-height: 0;
         grid-template-columns: 1fr 1fr;
         overflow: hidden;
-        padding-bottom: 74px; /* Space for the absolute floating bar */
-        position: relative;
     }
     .form-column, .preview-column {
         height: 100%;

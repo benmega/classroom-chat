@@ -29,14 +29,11 @@ const LandingDesktop = () => {
                         </p>
                         
                         <div className="hero-cta animate-fade-in landing-cta">
-                            <button onClick={() => navigate('/signup?role=student')} className="btn-premium btn-premium-lg">
-                                New Student
+                            <button onClick={() => navigate('/signup')} className="btn-premium btn-premium-lg">
+                                I'm New
                             </button>
-                            <button onClick={() => navigate('/signup?role=parent')} className="btn-premium btn-premium-lg">
-                                New Parent
-                            </button>
-                            <button onClick={() => navigate('/login')} className="btn-secondary btn-premium-lg">
-                                Existing Student
+                            <button onClick={() => navigate('/login')} className="btn-premium btn-premium-lg">
+                                I'm Back
                             </button>
                         </div>
                     </div>
