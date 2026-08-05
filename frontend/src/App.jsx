@@ -35,22 +35,14 @@ const ManageProject = React.lazy(() => import('./pages/User/ManageProject'));
 // --- Admin pages: lazily loaded (students never need these) ---
 const ToReview = React.lazy(() => import('./pages/Admin/ToReview'));
 const AdminDashboard = React.lazy(() => import('./pages/Admin/AdminDashboard'));
-const AdminProjects = React.lazy(() => import('./pages/Admin/AdminProjects'));
 const AdminAssignProject = React.lazy(() => import('./pages/Admin/AdminAssignProject'));
-const AdminStandardProjects = React.lazy(() => import('./pages/Admin/AdminStandardProjects'));
 const AdminLibrary = React.lazy(() => import('./pages/Admin/AdminLibrary'));
-const AdminCertificates = React.lazy(() => import('./pages/Admin/AdminCertificates'));
-const AdminAchievements = React.lazy(() => import('./pages/Admin/AdminAchievements'));
-const AdminChallenges = React.lazy(() => import('./pages/Admin/AdminChallenges'));
-const AdminDocuments = React.lazy(() => import('./pages/Admin/AdminDocuments'));
 const AdminSubmissions = React.lazy(() => import('./pages/Admin/AdminSubmissions'));
 const Users = React.lazy(() => import('./pages/Admin/Users'));
 const Classes = React.lazy(() => import('./pages/Admin/Classes'));
 const AdminUserDashboard = React.lazy(() => import('./pages/Admin/AdminUserDashboard'));
 const AdminClassDashboard = React.lazy(() => import('./pages/Admin/AdminClassDashboard'));
 const Analytics = React.lazy(() => import('./pages/Admin/Analytics'));
-const PendingTrades = React.lazy(() => import('./pages/Admin/PendingTrades'));
-const PendingUsers = React.lazy(() => import('./pages/Admin/PendingUsers'));
 const AdvancedPanel = React.lazy(() => import('./pages/Admin/AdvancedPanel'));
 const DuckTransactions = React.lazy(() => import('./pages/Admin/DuckTransactions'));
 const AdminStudentActivity = React.lazy(() => import('./pages/Admin/AdminStudentActivity'));
@@ -323,11 +315,8 @@ function App() {
                 <Route index element={<AdminDashboard />} />
                 <Route path="dashboard" element={<AdminDashboard />} />
                 <Route path="to-review" element={<ToReview />} />
-                <Route path="projects" element={<AdminProjects />} />
                 <Route path="assign-project" element={<AdminAssignProject />} />
-                <Route path="standard-projects" element={<AdminStandardProjects />} />
                 <Route path="library" element={<AdminLibrary />} />
-                <Route path="certificates" element={<AdminCertificates />} />
                 <Route path="users" element={<Users />} />
                 <Route path="students" element={<Navigate to="/admin/users?role=student" replace />} />
                 <Route path="parents" element={<Navigate to="/admin/users?role=parent" replace />} />
@@ -336,12 +325,15 @@ function App() {
                 <Route path="users/:userId" element={<AdminUserDashboard />} />
                 <Route path="connections" element={<Navigate to="/admin/users?role=parent" replace />} />
                 <Route path="analytics" element={<Analytics />} />
-                <Route path="add-achievement" element={<AdminAchievements />} />
-                <Route path="add-challenges" element={<AdminChallenges />} />
-                <Route path="documents" element={<AdminDocuments />} />
                 <Route path="submissions" element={<AdminSubmissions />} />
-                <Route path="pending-trades" element={<PendingTrades />} />
-                <Route path="pending-users" element={<PendingUsers />} />
+                <Route path="projects" element={<Navigate to="/admin/to-review" replace />} />
+                <Route path="certificates" element={<Navigate to="/admin/to-review" replace />} />
+                <Route path="pending-trades" element={<Navigate to="/admin/to-review" replace />} />
+                <Route path="pending-users" element={<Navigate to="/admin/to-review" replace />} />
+                <Route path="standard-projects" element={<Navigate to="/admin/library" replace />} />
+                <Route path="add-achievement" element={<Navigate to="/admin/library" replace />} />
+                <Route path="add-challenges" element={<Navigate to="/admin/library" replace />} />
+                <Route path="documents" element={<Navigate to="/admin/library" replace />} />
                 <Route path="advanced" element={<AdvancedPanel />} />
                 <Route path="transactions" element={<DuckTransactions />} />
                 <Route path="student-activity" element={<AdminStudentActivity />} />

@@ -12,7 +12,6 @@ import {
     Menu,
     X,
     ArrowLeftRight,
-    BookMarked,
     School,
     ClipboardList,
     Library,
@@ -83,7 +82,6 @@ const AdminLayout = ({ children }) => {
         { path: '/admin/submissions', label: 'Student Files', tooltip: 'Student File Submissions', icon: Inbox },
         { path: '/admin/users', label: 'Users', tooltip: 'User Management', icon: Users },
         { path: '/admin/classes', label: 'Classes', tooltip: 'Classes & Enrolments', icon: School },
-        { path: '/admin/standard-projects', label: 'Standard Projects', tooltip: 'Standard Project Templates', icon: BookMarked },
         { path: '/admin/library', label: 'Content Library', tooltip: 'Content Library', icon: Library },
         { path: '/admin/advanced', label: 'Advanced Panel', tooltip: 'Advanced System CRUD', icon: Settings2 },
         { path: '/chat', label: 'Back to Site', tooltip: 'Return to Main App', icon: Home },
@@ -153,17 +151,8 @@ const AdminLayout = ({ children }) => {
                                         {item.path === '/admin/users' && reviewCounts.pending_users > 0 && (
                                             <span className="admin-nav-badge">{reviewCounts.pending_users}</span>
                                         )}
-                                        {item.path === '/admin/pending-trades' && reviewCounts.pending_trades > 0 && (
-                                            <span className="admin-nav-badge">{reviewCounts.pending_trades}</span>
-                                        )}
                                         {item.path === '/admin/submissions' && reviewCounts.pending_submissions > 0 && (
                                             <span className="admin-nav-badge">{reviewCounts.pending_submissions}</span>
-                                        )}
-                                        {item.path === '/admin/projects' && reviewCounts.pending_projects > 0 && (
-                                            <span className="admin-nav-badge">{reviewCounts.pending_projects}</span>
-                                        )}
-                                        {item.path === '/admin/certificates' && reviewCounts.pending_certificates > 0 && (
-                                            <span className="admin-nav-badge">{reviewCounts.pending_certificates}</span>
                                         )}
                                         {item.path === '/admin' && reviewCounts.pending_track_requests > 0 && (
                                             <span className="admin-nav-badge">{reviewCounts.pending_track_requests}</span>
@@ -176,17 +165,8 @@ const AdminLayout = ({ children }) => {
                                     {item.path === '/admin/users' && reviewCounts.pending_users > 0 && (
                                         <span className="admin-nav-badge mobile-badge">{reviewCounts.pending_users}</span>
                                     )}
-                                    {item.path === '/admin/pending-trades' && reviewCounts.pending_trades > 0 && (
-                                        <span className="admin-nav-badge mobile-badge">{reviewCounts.pending_trades}</span>
-                                    )}
                                     {item.path === '/admin/submissions' && reviewCounts.pending_submissions > 0 && (
                                         <span className="admin-nav-badge mobile-badge">{reviewCounts.pending_submissions}</span>
-                                    )}
-                                    {item.path === '/admin/projects' && reviewCounts.pending_projects > 0 && (
-                                        <span className="admin-nav-badge mobile-badge">{reviewCounts.pending_projects}</span>
-                                    )}
-                                    {item.path === '/admin/certificates' && reviewCounts.pending_certificates > 0 && (
-                                        <span className="admin-nav-badge mobile-badge">{reviewCounts.pending_certificates}</span>
                                     )}
                                     {item.path === '/admin' && reviewCounts.pending_track_requests > 0 && (
                                         <span className="admin-nav-badge mobile-badge">{reviewCounts.pending_track_requests}</span>
