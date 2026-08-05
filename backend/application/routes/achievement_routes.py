@@ -223,6 +223,58 @@ def add_achievement():
         {"status": "success", "message": f"Achievement '{name}' added successfully!"}
     )
 
+@achievements.route("/edit/<int:id>", methods=["PUT"])
+@admin_only
+def edit_achievement(id):
+    ach = Achievement.query.get(id)
+    if not ach:
+        return jsonify({"status": "error", "message": "Achievement not found."}), 404
+
+    data = request.form
+    name = data.get("name")
+    slug = data.get("slug")
+    description = data.get("description")
+    achievement_type = data.get("type")
+    reward = data.get("reward")
+    requirement_value = data.get("requirement_value")
+    source = data.get("source")
+
+    if name: ach.name = name
+    if slug:
+        existing = Achievement.query.filter(Achievement.slug == slug, Achievement.id != id).first()
+        if existing:
+            return jsonify({"status": "error", "message": "Achievement with this slug already exists."}), 400
+        ach.slug = slug
+    if description is not None: ach.description = description
+    if achievement_type: ach.type = achievement_type
+    if reward: ach.reward = int(reward)
+    if requirement_value is not None: ach.requirement_value = requirement_value
+    if source is not None: ach.source = source
+
+    badge_file = request.files.get("badge")
+    if badge_file and badge_file.filename != "":
+        allowed_badge_ext = {"png", "jpg", "jpeg", "webp"}
+        if not allowed_file(badge_file.filename, allowed_badge_ext):
+            return jsonify({"status": "error", "message": "Invalid badge file type."}), 400
+
+        from flask import current_app
+        badge_dir = os.path.join(str(current_app.static_folder), "images", "achievement_badges")
+        os.makedirs(badge_dir, exist_ok=True)
+
+        ext = (badge_file.filename or "").rsplit(".", 1)[1].lower()
+        filename = f"{ach.slug}.{ext}"
+        filepath = os.path.join(badge_dir, filename)
+        badge_file.save(filepath)
+
+        try:
+            tools_dir = os.path.join(current_app.config["BASE_DIR"], "backend", "tools")
+            script_path = os.path.join(tools_dir, "make_sprite_sheet.py")
+            subprocess.run([sys.executable, script_path], check=True, capture_output=True, text=True)
+        except Exception as e:
+            return jsonify({"status": "error", "message": f"Error rebuilding sprite sheet: {e}"}), 500
+
+    db.session.commit()
+    return jsonify({"status": "success", "message": f"Achievement '{ach.name}' updated successfully!"})
 
 @achievements.route("/submit_certificate", methods=["GET", "POST"])
 def submit_certificate():
