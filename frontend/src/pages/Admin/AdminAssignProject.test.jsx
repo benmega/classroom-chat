@@ -161,7 +161,7 @@ describe('AdminAssignProject', () => {
             }));
         });
         
-        expect(mockNavigate).toHaveBeenCalledWith('/admin/projects');
+        expect(mockNavigate).toHaveBeenCalledWith('/admin/to-review');
     });
 
     it('navigates between tabs and updates form values from standard project', async () => {

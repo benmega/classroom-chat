@@ -21,7 +21,6 @@ import {
     ChevronDown,
     ChevronUp
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
 import { getApiUrl } from '../../utils/apiUrl';
@@ -1006,14 +1005,6 @@ const ToReview = () => {
             >
                 
             </AdminPageHeader>
-
-            <div className="temporary-legacy-links" style={{ background: '#fff3cd', padding: '12px 16px', borderRadius: '8px', border: '1px solid #ffe69c', marginBottom: '20px', display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'center' }}>
-                <strong style={{ color: '#664d03', fontSize: '14px' }}>Legacy Processing Views:</strong>
-                <Link to="/admin/projects" style={{ color: '#055160', fontSize: '14px', textDecoration: 'underline', fontWeight: 600 }}>Projects</Link>
-                <Link to="/admin/certificates" style={{ color: '#055160', fontSize: '14px', textDecoration: 'underline', fontWeight: 600 }}>Certificates</Link>
-                <Link to="/admin/pending-users" style={{ color: '#055160', fontSize: '14px', textDecoration: 'underline', fontWeight: 600 }}>Pending Users</Link>
-                <Link to="/admin/pending-trades" style={{ color: '#055160', fontSize: '14px', textDecoration: 'underline', fontWeight: 600 }}>Pending Trades</Link>
-            </div>
 
             <div className="review-dashboard-layout">
                 {/* Left Tabs */}

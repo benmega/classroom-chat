@@ -8,9 +8,7 @@ import {
     Trash2, 
     FileText, 
     Code, 
-    BarChart3,
-    Trophy,
-    Database
+    BarChart3
 } from 'lucide-react';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
@@ -115,16 +113,8 @@ const AdvancedPanel = () => {
                     <Layers size={18} /> Headless Database CRUD
                 </button>
 
-                <button className="btn-utility action-button" onClick={() => navigate('/admin/documents')}>
-                    <FileText size={18} /> Manage Assets & Documents
-                </button>
-
-                <button className="btn-utility action-button" onClick={() => navigate('/admin/add-achievement')}>
-                    <Trophy size={18} /> Manage Achievements
-                </button>
-
-                <button className="btn-utility action-button" onClick={() => navigate('/admin/add-challenges')}>
-                    <Database size={18} /> Manage Challenge Sets
+                <button className="btn-utility action-button" onClick={() => navigate('/admin/library')}>
+                    <FileText size={18} /> Content Library
                 </button>
 
                 <button className="btn-utility action-button" onClick={() => navigate('/admin/analytics')}>
