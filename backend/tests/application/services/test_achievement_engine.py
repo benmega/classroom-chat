@@ -294,6 +294,12 @@ def test_evaluate_user(init_db, sample_user):
     assert sample_user.duck_balance == 5  # 5 reward
     assert sample_user.last_achievement_evaluation is not None
 
+    from application.models.duck_transaction import DuckTransaction
+
+    txs = DuckTransaction.query.filter_by(user_id=sample_user.id).all()
+    assert len(txs) == 1
+    assert txs[0].reason == "Achievement: D1"
+
     # Throttling test: evaluating again within 1 hour should return []
     awards = evaluate_user(sample_user)
     assert awards == []
@@ -305,6 +311,14 @@ def test_evaluate_user(init_db, sample_user):
     assert len(awards) == 1
     assert awards[0].slug == "d2"
     assert sample_user.duck_balance == 15  # 5 + 10 reward
+
+    txs = (
+        DuckTransaction.query.filter_by(user_id=sample_user.id)
+        .order_by(DuckTransaction.id.asc())
+        .all()
+    )
+    assert len(txs) == 2
+    assert txs[1].reason == "Achievement: D2"
 
 
 def test_longest_session_minutes(init_db, sample_user):

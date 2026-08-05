@@ -223,7 +223,9 @@ def evaluate_user(user, force=False):
             db.session.add(ua)
             # grant ducks reward
             if achievement.reward > 0:
-                user.add_ducks(achievement.reward)
+                user.add_ducks(
+                    achievement.reward, reason=f"Achievement: {achievement.name}"
+                )
 
             new_awards.append(achievement)
 

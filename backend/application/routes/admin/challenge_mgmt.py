@@ -28,9 +28,9 @@ def bulk_add_challenges():
         slug = item.get("slug")
         description = item.get("description", "")
         
-        # New required fields from CSV
-        course_id = item.get("course_id")
-        domain = item.get("domain")
+        # New required fields from CSV (with fallback to top-level payload)
+        course_id = item.get("course_id") or data.get("course_id")
+        domain = item.get("domain") or data.get("domain")
         difficulty = item.get("difficulty") or "medium"
         value = int(item.get("value") or 1)
 
