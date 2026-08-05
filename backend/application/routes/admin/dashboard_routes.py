@@ -263,6 +263,7 @@ def admin_transactions():
 def get_review_counts():
     from application.models.course_instance_request import CourseInstanceRequest
     from application.models.project import Project
+    from application.models.submission import Submission
     from application.models.track_requests import TrackChangeRequest
     from application.models.user_certificate import UserCertificate
 
@@ -278,6 +279,7 @@ def get_review_counts():
     pending_course_requests = CourseInstanceRequest.query.filter_by(
         status="pending"
     ).count()
+    pending_submissions = Submission.query.filter_by(status="pending").count()
 
     total_incomplete = (
         pending_users
@@ -286,6 +288,7 @@ def get_review_counts():
         + pending_certificates
         + pending_track_requests
         + pending_course_requests
+        + pending_submissions
     )
 
     return {
@@ -295,5 +298,6 @@ def get_review_counts():
         "pending_certificates": pending_certificates,
         "pending_track_requests": pending_track_requests,
         "pending_course_requests": pending_course_requests,
+        "pending_submissions": pending_submissions,
         "total_incomplete": total_incomplete,
     }

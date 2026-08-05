@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import SubmitChallenge from './SubmitChallenge';
+import SubmitFile from './SubmitFile';
 import JoinClassroom from './JoinClassroom';
 import client from '../../api/client';
 
@@ -28,6 +29,8 @@ const SubmitWork = () => {
     return (
         <div className="submit-work-page animate-page-entry">
             <SubmitChallenge />
+
+            <SubmitFile />
 
             {/* ── Classroom join section ───────────────────────────────── */}
             {/* Only render once we know the student's classroom status */}

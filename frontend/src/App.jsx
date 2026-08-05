@@ -43,6 +43,7 @@ const AdminCertificates = React.lazy(() => import('./pages/Admin/AdminCertificat
 const AdminAchievements = React.lazy(() => import('./pages/Admin/AdminAchievements'));
 const AdminChallenges = React.lazy(() => import('./pages/Admin/AdminChallenges'));
 const AdminDocuments = React.lazy(() => import('./pages/Admin/AdminDocuments'));
+const AdminSubmissions = React.lazy(() => import('./pages/Admin/AdminSubmissions'));
 const Users = React.lazy(() => import('./pages/Admin/Users'));
 const Classes = React.lazy(() => import('./pages/Admin/Classes'));
 const AdminUserDashboard = React.lazy(() => import('./pages/Admin/AdminUserDashboard'));
@@ -338,6 +339,7 @@ function App() {
                 <Route path="add-achievement" element={<AdminAchievements />} />
                 <Route path="add-challenges" element={<AdminChallenges />} />
                 <Route path="documents" element={<AdminDocuments />} />
+                <Route path="submissions" element={<AdminSubmissions />} />
                 <Route path="pending-trades" element={<PendingTrades />} />
                 <Route path="pending-users" element={<PendingUsers />} />
                 <Route path="advanced" element={<AdvancedPanel />} />

@@ -15,7 +15,8 @@ import {
     BookMarked,
     School,
     ClipboardList,
-    Library
+    Library,
+    Inbox
 } from 'lucide-react';
 import useAuthStore from '../../store/useAuthStore';
 import useSidebar from '../../hooks/useSidebar';
@@ -33,6 +34,7 @@ const AdminLayout = ({ children }) => {
         pending_certificates: 0,
         pending_track_requests: 0,
         pending_course_requests: 0,
+        pending_submissions: 0,
         total_incomplete: 0
     });
 
@@ -78,6 +80,7 @@ const AdminLayout = ({ children }) => {
     const navItems = [
         { path: '/admin', label: 'Dashboard', tooltip: 'Admin Dashboard', icon: LayoutDashboard, end: true },
         { path: '/admin/to-review', label: 'To Review', tooltip: 'Items To Review', icon: ClipboardList },
+        { path: '/admin/submissions', label: 'Student Files', tooltip: 'Student File Submissions', icon: Inbox },
         { path: '/admin/users', label: 'Users', tooltip: 'User Management', icon: Users },
         { path: '/admin/classes', label: 'Classes', tooltip: 'Classes & Enrolments', icon: School },
         { path: '/admin/standard-projects', label: 'Standard Projects', tooltip: 'Standard Project Templates', icon: BookMarked },
@@ -153,6 +156,9 @@ const AdminLayout = ({ children }) => {
                                         {item.path === '/admin/pending-trades' && reviewCounts.pending_trades > 0 && (
                                             <span className="admin-nav-badge">{reviewCounts.pending_trades}</span>
                                         )}
+                                        {item.path === '/admin/submissions' && reviewCounts.pending_submissions > 0 && (
+                                            <span className="admin-nav-badge">{reviewCounts.pending_submissions}</span>
+                                        )}
                                         {item.path === '/admin/projects' && reviewCounts.pending_projects > 0 && (
                                             <span className="admin-nav-badge">{reviewCounts.pending_projects}</span>
                                         )}
@@ -172,6 +178,9 @@ const AdminLayout = ({ children }) => {
                                     )}
                                     {item.path === '/admin/pending-trades' && reviewCounts.pending_trades > 0 && (
                                         <span className="admin-nav-badge mobile-badge">{reviewCounts.pending_trades}</span>
+                                    )}
+                                    {item.path === '/admin/submissions' && reviewCounts.pending_submissions > 0 && (
+                                        <span className="admin-nav-badge mobile-badge">{reviewCounts.pending_submissions}</span>
                                     )}
                                     {item.path === '/admin/projects' && reviewCounts.pending_projects > 0 && (
                                         <span className="admin-nav-badge mobile-badge">{reviewCounts.pending_projects}</span>

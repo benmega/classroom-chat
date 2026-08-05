@@ -1,0 +1,275 @@
+/* Standardized Header handled by AdminPageHeader.css */
+
+.admin-submissions-page {
+    animation: fadeIn var(--transition-smooth);
+}
+
+/* Filter Tabs */
+.filter-tabs-container {
+    margin-bottom: 1.5rem;
+}
+
+.filter-tabs {
+    display: flex;
+    gap: 0.5rem;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-subtle);
+    padding: 6px;
+    border-radius: 14px;
+    width: fit-content;
+    box-shadow: var(--shadow-soft);
+}
+
+.tab-btn {
+    padding: 10px 20px;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    font-family: var(--font-primary);
+    font-weight: 700;
+    font-size: 0.9rem;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+
+.tab-btn:hover {
+    color: var(--text-primary);
+}
+
+.tab-btn.active {
+    background: var(--primary-color);
+    color: white;
+    box-shadow: var(--shadow-glow);
+}
+
+/* Submissions List */
+.submissions-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 1rem;
+}
+
+.submission-card {
+    background: white;
+    border-radius: 16px;
+    border: 1px solid var(--border-subtle);
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    transition: all 0.2s;
+}
+
+.submission-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--primary-color);
+}
+
+.submission-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 0.5rem;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.avatar-placeholder {
+    width: 36px;
+    height: 36px;
+    background: var(--bg-tertiary);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    flex-shrink: 0;
+}
+
+.submission-user-details {
+    display: flex;
+    flex-direction: column;
+}
+
+.submission-user-name {
+    font-size: 1.2rem;
+    margin-bottom: 2px;
+}
+
+.submission-user-handle {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+}
+
+.timestamp {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-top: 4px;
+}
+
+.timestamp-mt-0 {
+    margin-top: 0;
+}
+
+.submission-meta-column {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+}
+
+.status-badge {
+    font-size: 0.7rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 4px 10px;
+    border-radius: 999px;
+}
+
+.status-pending {
+    background: rgba(234, 179, 8, 0.12);
+    color: var(--warning-color, #b45309);
+}
+
+.status-reviewed {
+    background: rgba(34, 197, 94, 0.12);
+    color: var(--success-color, #15803d);
+}
+
+.submission-details {
+    background: var(--bg-secondary);
+    padding: 0.65rem 0.75rem;
+    border-radius: 12px;
+    margin-bottom: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.submission-file-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 700;
+    color: var(--slate-800);
+}
+
+.submission-filename {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 1;
+}
+
+.submission-filesize {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    flex-shrink: 0;
+}
+
+.submission-note-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    font-style: italic;
+}
+
+.submission-actions {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: auto;
+    flex-wrap: wrap;
+}
+
+.submission-actions .btn-secondary,
+.submission-actions .btn-approve,
+.submission-actions .btn-reject {
+    flex: 1;
+    min-width: 110px;
+    padding: 10px;
+    border-radius: 12px;
+    border: none;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+    font-size: 0.9rem;
+}
+
+.submission-actions .btn-secondary {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-subtle);
+}
+
+.submission-actions .btn-secondary:hover {
+    background: var(--bg-secondary);
+    border-color: var(--primary-color);
+}
+
+.submission-actions .btn-approve {
+    background: var(--primary-color);
+    color: white;
+    box-shadow: 0 4px 14px rgba(14, 178, 187, 0.3);
+}
+
+.submission-actions .btn-approve:hover:not(:disabled) {
+    background: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(14, 178, 187, 0.4);
+}
+
+.submission-actions .btn-reject {
+    background: rgba(239, 68, 68, 0.08);
+    color: var(--error-color);
+    border: 1px solid rgba(239, 68, 68, 0.15);
+}
+
+.submission-actions .btn-reject:hover:not(:disabled) {
+    background: var(--error-color);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.submission-actions button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Empty State */
+.empty-state {
+    grid-column: 1 / -1;
+    padding: 5rem;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
+.empty-state svg { color: var(--text-muted); }
+.empty-state h3 { font-size: 1.5rem; color: var(--slate-800); margin: 0; }
+.empty-state p { color: var(--text-muted); }
+
+@media (max-width: 500px) {
+    .submissions-list {
+        grid-template-columns: 1fr;
+    }
+}
