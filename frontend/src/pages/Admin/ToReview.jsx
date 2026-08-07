@@ -166,12 +166,28 @@ const ToReview = () => {
     };
 
     // 2. Certificate Review Actions
-    const handleCertificateReview = async (certId) => {
+    const handleCertificateReview = async (certId, action = 'approve') => {
+        if (action === 'reject') {
+            const review_note = window.prompt('Reason for rejecting? (optional)') || undefined;
+            setIsProcessing(`cert-${certId}`);
+            try {
+                const response = await client.post(`/api/achievements/admin/certificates/reject/${certId}`, { review_note });
+                if (response.data.status === 'success') {
+                    setCertificates(prev => prev.filter(c => c.id !== certId));
+                }
+            } catch {
+                toast.error('Failed to reject certificate.');
+            } finally {
+                setIsProcessing(null);
+            }
+            return;
+        }
+
         setIsProcessing(`cert-${certId}`);
         try {
             const response = await client.post(`/api/achievements/admin/certificates/reviewed/${certId}`);
             if (response.data.status === 'success') {
-                
+
                 setCertificates(prev => prev.filter(c => c.id !== certId));
             }
         } catch {
@@ -646,9 +662,16 @@ const ToReview = () => {
                             >
                                 <Download size={16} /> PDF
                             </a>
-                            <button 
+                            <button
+                                className="btn-reject"
+                                onClick={() => handleCertificateReview(c.id, 'reject')}
+                                disabled={isProcessing === `cert-${c.id}`}
+                            >
+                                <XCircle size={16} /> Reject
+                            </button>
+                            <button
                                 className="btn-approve"
-                                onClick={() => handleCertificateReview(c.id)}
+                                onClick={() => handleCertificateReview(c.id, 'approve')}
                                 disabled={isProcessing === `cert-${c.id}`}
                             >
                                 <CheckCircle size={16} /> {isProcessing === `cert-${c.id}` ? 'Approving...' : 'Approve'}

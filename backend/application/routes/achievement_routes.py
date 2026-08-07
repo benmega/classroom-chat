@@ -344,7 +344,7 @@ def submit_certificate():
                 achievement_id=achievement.id,
                 url=url,
                 file_path=filepath,
-                reviewed=False,
+                status="pending",
                 is_auto_recommended=is_auto_recommended,
                 recommendation_reason=recommendation_reason
 
@@ -353,8 +353,10 @@ def submit_certificate():
         else:
             cert.url = url
             cert.file_path = filepath
-            cert.reviewed = True
-            cert.reviewed_at = datetime.utcnow()
+            # A resubmission always requires fresh admin review — never
+            # auto-approve just because a prior submission existed.
+            cert.status = "pending"
+            cert.reviewed_at = None
 
         db.session.commit()
 
@@ -388,10 +390,10 @@ def view_certificate(cert_id):
 @admin_only
 @api_response
 def admin_certificates():
-    # Only show unreviewed certificates by default, matching the template
+    # Only show pending certificates by default, matching the template
     certs = (
         db.session.query(UserCertificate)
-        .filter_by(reviewed=False)
+        .filter_by(status="pending")
         .join(User)
         .join(Achievement)
         .all()
@@ -404,7 +406,7 @@ def admin_certificates():
 @admin_only
 def mark_reviewed(cert_id):
     cert = db.get_or_404(UserCertificate, cert_id)
-    cert.reviewed = True
+    cert.status = "approved"
     cert.reviewed_at = datetime.utcnow()
     db.session.commit()
 
@@ -413,6 +415,25 @@ def mark_reviewed(cert_id):
     evaluate_user(cert.user, force=True)
 
     msg = "Certificate marked as reviewed."
+
+    if request.is_json or request.headers.get("X-Requested-With") == "XMLHttpRequest":
+        return jsonify({"status": "success", "message": msg})
+
+    flash(msg, "success")
+    return redirect(url_for("achievements.admin_certificates"))
+
+
+@achievements.route("/admin/certificates/reject/<int:cert_id>", methods=["POST"])
+@admin_only
+def reject_certificate(cert_id):
+    cert = db.get_or_404(UserCertificate, cert_id)
+    data = request.get_json(silent=True) or {}
+    cert.status = "rejected"
+    cert.review_note = data.get("review_note")
+    cert.reviewed_at = datetime.utcnow()
+    db.session.commit()
+
+    msg = "Certificate rejected."
 
     if request.is_json or request.headers.get("X-Requested-With") == "XMLHttpRequest":
         return jsonify({"status": "success", "message": msg})
@@ -444,11 +465,11 @@ def download_certificate(cert_id):
 @achievements.route("/admin/certificates/reviewed/all", methods=["POST"])
 @admin_only
 def mark_all_reviewed():
-    certs = db.session.query(UserCertificate).filter_by(reviewed=False).all()
+    certs = db.session.query(UserCertificate).filter_by(status="pending").all()
     now = datetime.utcnow()
     users_to_evaluate = set()
     for cert in certs:
-        cert.reviewed = True
+        cert.status = "approved"
         cert.reviewed_at = now
         users_to_evaluate.add(cert.user)
     db.session.commit()
@@ -472,7 +493,7 @@ def mark_all_reviewed():
 def download_all_certificates():
     certs = (
         db.session.query(UserCertificate)
-        .filter_by(reviewed=False)
+        .filter_by(status="pending")
         .join(User)
         .join(Achievement)
         .all()

@@ -201,7 +201,7 @@ def test_submit_certificate_valid(mock_gen, client, init_db, sample_user, sample
     cert = UserCertificate.query.filter_by(url=valid_url).first()
     assert cert is not None
     assert cert.user_id == sample_user.id
-    assert cert.reviewed is False
+    assert cert.status == "pending"
     assert cert.is_auto_recommended is True
 
 
@@ -296,7 +296,7 @@ def test_submit_certificate_update_existing(
     updated_cert = db.session.get(UserCertificate, old_id)
     assert updated_cert.url == new_url
     assert updated_cert.file_path != "old.pdf"
-    assert updated_cert.reviewed is True
+    assert updated_cert.status == "pending"
 
 
 def test_submit_certificate_no_user(client, init_db):
@@ -759,11 +759,40 @@ def test_mark_reviewed(client, init_db, sample_admin, sample_user, sample_achiev
     )
     assert response.status_code == 200
     assert response.json["status"] == "success"
-    assert cert.reviewed is True
+    assert cert.status == "approved"
 
-    cert.reviewed = False
+    cert.status = "pending"
     db.session.commit()
     response2 = client.post(f"/achievements/admin/certificates/reviewed/{cert.id}")
+    assert response2.status_code == 302
+
+
+def test_reject_certificate(client, init_db, sample_admin, sample_user, sample_achievement):
+    cert = UserCertificate(
+        user_id=sample_user.id,
+        achievement_id=sample_achievement.id,
+        url="http://test",
+        file_path="test.pdf",
+    )
+    db.session.add(cert)
+    db.session.commit()
+    with client.session_transaction() as sess:
+        sess["user"] = sample_admin.id
+
+    response = client.post(
+        f"/achievements/admin/certificates/reject/{cert.id}",
+        json={"review_note": "Not a valid certificate."},
+        headers={"X-Requested-With": "XMLHttpRequest"},
+    )
+    assert response.status_code == 200
+    assert response.json["status"] == "success"
+    assert cert.status == "rejected"
+    assert cert.review_note == "Not a valid certificate."
+
+    cert.status = "pending"
+    cert.review_note = None
+    db.session.commit()
+    response2 = client.post(f"/achievements/admin/certificates/reject/{cert.id}")
     assert response2.status_code == 302
 
 
@@ -820,9 +849,9 @@ def test_mark_all_reviewed(
         headers={"X-Requested-With": "XMLHttpRequest"},
     )
     assert response.status_code == 200
-    assert cert1.reviewed is True
+    assert cert1.status == "approved"
 
-    cert1.reviewed = False
+    cert1.status = "pending"
     db.session.commit()
     response2 = client.post("/achievements/admin/certificates/reviewed/all")
     assert response2.status_code == 302

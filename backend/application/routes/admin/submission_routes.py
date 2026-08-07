@@ -72,7 +72,12 @@ def mark_submission_reviewed(submission_id):
     if not submission:
         return {"error": "Submission not found"}, 404
 
+    data = request.get_json(silent=True) or {}
+    note = (data.get("teacher_note") or "").strip()[:500]
+
     submission.status = "reviewed"
+    if note:
+        submission.teacher_note = note
     db.session.commit()
 
     return {"submission": submission.to_dict()}

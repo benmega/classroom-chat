@@ -272,7 +272,7 @@ def get_review_counts():
     pending_projects = Project.query.filter(
         Project.teacher_comment.is_(None) | (Project.teacher_comment == "")
     ).count()
-    pending_certificates = UserCertificate.query.filter_by(reviewed=False).count()
+    pending_certificates = UserCertificate.query.filter_by(status="pending").count()
     pending_track_requests = TrackChangeRequest.query.filter_by(
         status="pending"
     ).count()

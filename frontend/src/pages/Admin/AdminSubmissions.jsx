@@ -7,7 +7,8 @@ import {
     CheckCircle,
     Trash2,
     FileText,
-    StickyNote
+    StickyNote,
+    Reply
 } from 'lucide-react';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
@@ -34,6 +35,7 @@ const AdminSubmissions = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [isProcessing, setIsProcessing] = useState(null);
     const [statusFilter, setStatusFilter] = useState('pending');
+    const [noteDrafts, setNoteDrafts] = useState({});
 
     const fetchSubmissions = useCallback(async (status) => {
         setIsLoading(true);
@@ -58,13 +60,22 @@ const AdminSubmissions = () => {
     const handleMarkReviewed = async (id) => {
         setIsProcessing(id);
         try {
-            const response = await client.post(`/api/admin/submissions/${id}/mark-reviewed`);
+            const teacherNote = noteDrafts[id] || '';
+            const response = await client.post(`/api/admin/submissions/${id}/mark-reviewed`, {
+                teacher_note: teacherNote
+            });
             if (response.data.status === 'success') {
                 if (statusFilter === 'pending') {
                     setSubmissions((prev) => prev.filter((s) => s.id !== id));
                 } else {
-                    setSubmissions((prev) => prev.map((s) => (s.id === id ? { ...s, status: 'reviewed' } : s)));
+                    const updated = response.data.data?.submission;
+                    setSubmissions((prev) => prev.map((s) => (s.id === id ? { ...s, ...updated, status: 'reviewed' } : s)));
                 }
+                setNoteDrafts((prev) => {
+                    const next = { ...prev };
+                    delete next[id];
+                    return next;
+                });
                 toast.success('Marked as reviewed.');
             } else {
                 toast.error(response.data.error || 'Failed to update submission.');
@@ -74,6 +85,10 @@ const AdminSubmissions = () => {
         } finally {
             setIsProcessing(null);
         }
+    };
+
+    const handleNoteDraftChange = (id, value) => {
+        setNoteDrafts((prev) => ({ ...prev, [id]: value }));
     };
 
     const handleDelete = async (id, filename) => {
@@ -187,7 +202,27 @@ const AdminSubmissions = () => {
                                         <span>{submission.note}</span>
                                     </div>
                                 )}
+                                {submission.teacher_note && (
+                                    <div className="submission-note-row teacher-note-row">
+                                        <Reply size={14} />
+                                        <span>You: {submission.teacher_note}</span>
+                                    </div>
+                                )}
                             </div>
+
+                            {submission.status !== 'reviewed' && (
+                                <div className="teacher-note-input-row">
+                                    <input
+                                        type="text"
+                                        className="teacher-note-input"
+                                        placeholder="Optional note back to the student..."
+                                        value={noteDrafts[submission.id] || ''}
+                                        onChange={(e) => handleNoteDraftChange(submission.id, e.target.value)}
+                                        maxLength={500}
+                                        disabled={isProcessing === submission.id}
+                                    />
+                                </div>
+                            )}
 
                             <div className="submission-actions">
                                 <a

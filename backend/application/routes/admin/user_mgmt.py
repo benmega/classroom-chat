@@ -1056,7 +1056,7 @@ def pass_chapter(user_id):
                 user_id=user_obj.id,
                 achievement_id=cert.id,
                 url="Honorary Degree",
-                reviewed=True,
+                status="approved",
                 reviewed_at=datetime.datetime.utcnow(),
             )
             db.session.add(uc)

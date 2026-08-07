@@ -186,6 +186,31 @@
     font-style: italic;
 }
 
+.submission-note-row.teacher-note-row {
+    color: var(--primary-color, #4f46e5);
+    font-style: normal;
+    font-weight: 600;
+}
+
+.teacher-note-input-row {
+    margin-bottom: 0.75rem;
+}
+
+.teacher-note-input {
+    width: 100%;
+    padding: 0.55rem 0.75rem;
+    border-radius: 8px;
+    border: 1px solid var(--border-subtle);
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-size: 0.85rem;
+}
+
+.teacher-note-input:focus {
+    outline: none;
+    border-color: var(--primary-color, #4f46e5);
+}
+
 .submission-actions {
     display: flex;
     gap: 0.75rem;

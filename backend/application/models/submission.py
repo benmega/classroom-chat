@@ -22,6 +22,7 @@ class Submission(db.Model):
     stored_path = db.Column(db.String(255), nullable=False)
     file_size = db.Column(db.Integer, nullable=False)
     note = db.Column(db.String(500), nullable=True)
+    teacher_note = db.Column(db.String(500), nullable=True)
     status = db.Column(
         db.String(20), default="pending", index=True
     )  # pending, reviewed
@@ -42,6 +43,7 @@ class Submission(db.Model):
             "original_filename": self.original_filename,
             "file_size": self.file_size,
             "note": self.note,
+            "teacher_note": self.teacher_note,
             "status": self.status,
             "timestamp": self.timestamp.isoformat() if self.timestamp else None,
         }

@@ -121,7 +121,7 @@ def test_check_achievement_types_with_stats(init_db, sample_user):
         user_id=sample_user.id,
         achievement_id=ach_cert.id,
         url="http://example.com/cert.pdf",
-        reviewed=True,
+        status="approved",
     )
     db.session.add(cert)
     db.session.commit()
