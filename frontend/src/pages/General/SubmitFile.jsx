@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { UploadCloud, Paperclip, X } from 'lucide-react';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
+import { getErrorMessage } from '../../utils/apiError';
 import './SubmitChallenge.css';
 import './SubmitFile.css';
 
@@ -29,6 +30,8 @@ const SubmitFile = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [uploadProgress, setUploadProgress] = useState(0);
     const [inputKey, setInputKey] = useState(0); // bump to force-remount the file input (can't reset it via ref value)
+    const [isDragActive, setIsDragActive] = useState(false);
+    const dragCounter = React.useRef(0);
 
     const validateFile = (selected) => {
         if (selected.size > MAX_FILE_SIZE) {
@@ -46,8 +49,7 @@ const SubmitFile = () => {
         return true;
     };
 
-    const handleFileChange = (e) => {
-        const selected = e.target.files && e.target.files[0];
+    const selectFile = (selected) => {
         if (!selected) {
             setFile(null);
             return;
@@ -60,6 +62,44 @@ const SubmitFile = () => {
         }
 
         setFile(selected);
+    };
+
+    const handleFileChange = (e) => {
+        selectFile(e.target.files && e.target.files[0]);
+    };
+
+    const handleDragEnter = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dragCounter.current += 1;
+        if (e.dataTransfer.types?.includes('Files')) {
+            setIsDragActive(true);
+        }
+    };
+
+    const handleDragOver = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+    };
+
+    const handleDragLeave = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dragCounter.current -= 1;
+        if (dragCounter.current <= 0) {
+            dragCounter.current = 0;
+            setIsDragActive(false);
+        }
+    };
+
+    const handleDrop = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dragCounter.current = 0;
+        setIsDragActive(false);
+
+        const dropped = e.dataTransfer.files && e.dataTransfer.files[0];
+        selectFile(dropped);
     };
 
     const clearFile = () => {
@@ -106,12 +146,10 @@ const SubmitFile = () => {
             if (response.data.status === 'success') {
                 toast.success('File sent to your teacher!');
                 resetForm();
-            } else {
-                toast.error(response.data.error || 'Failed to send file.');
             }
         } catch (error) {
             console.error('File submission error:', error);
-            toast.error(error.response?.data?.error || error.response?.data?.message || 'Failed to send file.');
+            toast.error(getErrorMessage(error, 'Failed to send file.'));
         } finally {
             setIsSubmitting(false);
         }
@@ -127,7 +165,14 @@ const SubmitFile = () => {
                 <form onSubmit={handleSubmit} className="file-submission-form">
                     <div className="form-group">
                         <label htmlFor="submission-file">File</label>
-                        <label htmlFor="submission-file" className="file-drop-zone">
+                        <label
+                            htmlFor="submission-file"
+                            className={`file-drop-zone${isDragActive ? ' is-drag-active' : ''}`}
+                            onDragEnter={handleDragEnter}
+                            onDragOver={handleDragOver}
+                            onDragLeave={handleDragLeave}
+                            onDrop={handleDrop}
+                        >
                             <UploadCloud size={28} />
                             {file ? (
                                 <span className="file-chip">

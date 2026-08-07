@@ -49,6 +49,13 @@
     color: var(--primary-accessible);
 }
 
+.file-drop-zone.is-drag-active {
+    border-color: var(--primary-color);
+    background: var(--primary-light);
+    color: var(--primary-accessible);
+    box-shadow: var(--shadow-glow);
+}
+
 .file-chip {
     display: flex;
     align-items: center;

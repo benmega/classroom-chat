@@ -3,43 +3,43 @@ import SubmitChallenge from './SubmitChallenge';
 import SubmitFile from './SubmitFile';
 import JoinClassroom from './JoinClassroom';
 import client from '../../api/client';
+import './SubmitWork.css';
 
 const SubmitWork = () => {
     const [classrooms, setClassrooms] = useState(null); // null = loading
-    const [hasClassroom, setHasClassroom] = useState(false);
+    const [loadFailed, setLoadFailed] = useState(false);
 
     useEffect(() => {
         client.get('/api/classroom/mine')
             .then(res => {
                 const list = res.data?.data?.classrooms || res.data?.classrooms || [];
                 setClassrooms(list);
-                setHasClassroom(list.length > 0);
             })
             .catch(() => {
-                // If the endpoint fails (e.g., user is not a student), hide the widget quietly
+                // Status is genuinely unknown (network blip, etc.) — don't guess
+                // either way, just skip the classroom prompt for this visit.
+                setLoadFailed(true);
                 setClassrooms([]);
-                setHasClassroom(true); // don't show the prominent form on errors
             });
     }, []);
 
-    const handleJoined = () => {
-        setHasClassroom(true);
+    const isLoading = classrooms === null;
+    const hasClassroom = !isLoading && classrooms.length > 0;
+
+    const handleJoined = (classroom) => {
+        setClassrooms((prev) => [...(prev || []), classroom]);
     };
 
     return (
         <div className="submit-work-page animate-page-entry">
-            <SubmitChallenge />
-
-            <SubmitFile />
-
-            {/* ── Classroom join section ───────────────────────────────── */}
-            {/* Only render once we know the student's classroom status */}
-            {classrooms !== null && (
-                <JoinClassroom
-                    compact={hasClassroom}
-                    onJoined={handleJoined}
-                />
+            {isLoading ? (
+                <div className="join-classroom-skeleton" aria-hidden="true" />
+            ) : (
+                !loadFailed && <JoinClassroom compact={hasClassroom} onJoined={handleJoined} />
             )}
+
+            <SubmitChallenge />
+            <SubmitFile />
         </div>
     );
 };
