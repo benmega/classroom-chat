@@ -31,11 +31,12 @@ def upgrade():
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], name=op.f('fk_submissions_user_id_users')),
     sa.PrimaryKeyConstraint('id', name=op.f('pk_submissions'))
     )
-    with op.batch_alter_table('submissions', schema=None) as batch_op:
-        batch_op.create_index(batch_op.f('ix_submissions_classroom_id'), ['classroom_id'], unique=False)
-        batch_op.create_index(batch_op.f('ix_submissions_status'), ['status'], unique=False)
-        batch_op.create_index(batch_op.f('ix_submissions_timestamp'), ['timestamp'], unique=False)
-        batch_op.create_index(batch_op.f('ix_submissions_user_id'), ['user_id'], unique=False)
+    if True:
+        with op.batch_alter_table('submissions', schema=None) as batch_op:
+            batch_op.create_index(batch_op.f('ix_submissions_classroom_id'), ['classroom_id'], unique=False)
+            batch_op.create_index(batch_op.f('ix_submissions_status'), ['status'], unique=False)
+            batch_op.create_index(batch_op.f('ix_submissions_timestamp'), ['timestamp'], unique=False)
+            batch_op.create_index(batch_op.f('ix_submissions_user_id'), ['user_id'], unique=False)
 
     # ### end Alembic commands ###
 
