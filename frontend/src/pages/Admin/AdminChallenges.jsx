@@ -58,7 +58,7 @@ const AdminChallenges = () => {
         try {
             await client.put('/api/admin/challenges/reorder', { updates });
             // We successfully saved order, no toast to avoid spam
-        } catch (_) {
+        } catch {
             toast.error('Failed to save new order');
         }
     };
@@ -226,7 +226,7 @@ const AdminChallenges = () => {
             const res = await client.delete(`/api/admin/challenges/${id}`);
             toast.success(res.data.message || 'Challenge deleted.');
             fetchGroupedChallenges();
-        } catch (_) {
+        } catch {
             toast.error('Failed to delete challenge.');
         }
     };
