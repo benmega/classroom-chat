@@ -11,6 +11,7 @@ from flask import Flask
 from flask_swagger_ui import get_swaggerui_blueprint
 
 from .achievement_routes import achievements
+from .activity_routes import activity_bp
 from .admin_routes import admin_bp
 from .ai_routes import ai
 from .api_achievements import achievements_api
@@ -34,6 +35,7 @@ from .user_routes import user
 
 
 def register_blueprints(app: Flask):
+    app.register_blueprint(activity_bp, url_prefix="/api/me")
     app.register_blueprint(admin_bp, url_prefix="/api/admin")
     app.register_blueprint(parent, url_prefix="/api/parents")
     app.register_blueprint(user, url_prefix="/user")
