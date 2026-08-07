@@ -58,7 +58,7 @@ const AdminChallenges = () => {
         try {
             await client.put('/api/admin/challenges/reorder', { updates });
             // We successfully saved order, no toast to avoid spam
-        } catch (_error) {
+        } catch (_) {
             toast.error('Failed to save new order');
         }
     };
@@ -226,7 +226,7 @@ const AdminChallenges = () => {
             const res = await client.delete(`/api/admin/challenges/${id}`);
             toast.success(res.data.message || 'Challenge deleted.');
             fetchGroupedChallenges();
-        } catch (_error) {
+        } catch (_) {
             toast.error('Failed to delete challenge.');
         }
     };
@@ -313,8 +313,27 @@ const AdminChallenges = () => {
                                     onDragEnd={handleSort}
                                     onDragOver={(e) => e.preventDefault()}
                                     onClick={() => openModal(c)}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter' || e.key === ' ') {
+                                            e.preventDefault();
+                                            openModal(c);
+                                        }
+                                    }}
+                                    role="button"
+                                    tabIndex={0}
                                 >
-                                    <div className="drag-handle" onClick={(e) => e.stopPropagation()}>
+                                    <div
+                                        className="drag-handle"
+                                        onClick={(e) => e.stopPropagation()}
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter' || e.key === ' ') {
+                                                e.preventDefault();
+                                                e.stopPropagation();
+                                            }
+                                        }}
+                                        role="button"
+                                        tabIndex={0}
+                                    >
                                         <GripVertical size={20} color="var(--text-secondary)" />
                                     </div>
                                     <div className="challenge-list-icon">
