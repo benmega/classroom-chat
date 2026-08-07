@@ -31,7 +31,8 @@ const Layout = ({ children }) => {
         isGuestPage,
         isChatPage,
         location,
-        hamburgerProgress
+        hamburgerProgress,
+        activityUnreadCount
     } = useLayout();
 
     const isParent = user?.role === 'parent';
@@ -215,8 +216,12 @@ const Layout = ({ children }) => {
                                             {!isParent && (
                                                 <>
                                                     <li><Link to="/submit-work" onClick={() => setIsDropdownOpen(false)}>Submit Work</Link></li>
-                                                    <li><Link to="/activity" onClick={() => setIsDropdownOpen(false)}>Activity</Link></li>
-                                                    {/* TODO: unread badge lands here */}
+                                                    <li>
+                                                        <Link to="/activity" onClick={() => setIsDropdownOpen(false)}>
+                                                            Activity
+                                                            {activityUnreadCount > 0 && <span className="nav-unread-badge">{activityUnreadCount}</span>}
+                                                        </Link>
+                                                    </li>
                                                     {(user?.duck_balance ?? 0) > 0 && (
                                                         <li><Link to="/bit-shift" onClick={() => setIsDropdownOpen(false)}>Bit Shift</Link></li>
                                                     )}

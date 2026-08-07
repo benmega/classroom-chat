@@ -4,6 +4,7 @@ import client from '../../api/client';
 import toast from 'react-hot-toast';
 import { getErrorMessage } from '../../utils/apiError';
 import Skeleton from '../../components/common/Skeleton';
+import useAuthStore from '../../store/useAuthStore';
 import './Activity.css';
 
 const PER_PAGE = 20;
@@ -134,6 +135,10 @@ const Activity = () => {
     useEffect(() => {
         fetchActivity(1, false);
     }, [fetchActivity]);
+
+    useEffect(() => {
+        useAuthStore.getState().setActivityUnreadCount(0);
+    }, []);
 
     const handleLoadMore = () => {
         fetchActivity(page + 1, true);
