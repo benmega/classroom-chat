@@ -1,0 +1,229 @@
+.activity-page {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 1.5rem 1rem 3rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    animation: fadeIn var(--transition-smooth);
+}
+
+.activity-header {
+    text-align: left;
+}
+
+.activity-title {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    margin: 0 0 0.25rem;
+}
+
+.activity-subtitle {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    margin: 0;
+}
+
+.activity-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.activity-section-title {
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    margin: 0;
+}
+
+.activity-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.activity-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.9rem;
+    padding: 1rem 1.1rem;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    transition: var(--transition-fast);
+}
+
+.activity-item:hover {
+    border-color: var(--border-rich);
+}
+
+.activity-item-icon {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--bg-tertiary);
+    color: var(--primary-color);
+}
+
+.activity-item-body {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.activity-item-top {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+}
+
+.activity-item-kind {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+}
+
+.activity-item-title {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    overflow-wrap: anywhere;
+}
+
+.activity-item-detail {
+    margin: 0.15rem 0 0;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    overflow-wrap: anywhere;
+}
+
+.activity-item-meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 0.35rem;
+}
+
+.activity-item-date {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.78rem;
+    color: var(--text-muted);
+}
+
+.activity-item-reward {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--success-color);
+}
+
+.status-pill {
+    flex-shrink: 0;
+    font-size: 0.68rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 4px 10px;
+    border-radius: var(--radius-full);
+    white-space: nowrap;
+}
+
+.status-pill-pending {
+    background: rgba(217, 119, 6, 0.12);
+    color: var(--warning-color);
+}
+
+.status-pill-success {
+    background: rgba(16, 185, 129, 0.12);
+    color: var(--success-color);
+}
+
+.status-pill-rejected {
+    background: rgba(220, 38, 38, 0.12);
+    color: var(--error-color);
+}
+
+.activity-empty-state {
+    padding: 4rem 1.5rem;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+}
+
+.activity-empty-state svg {
+    color: var(--text-muted);
+}
+
+.activity-empty-state h3 {
+    font-size: 1.25rem;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.activity-empty-state p {
+    color: var(--text-muted);
+    margin: 0;
+    max-width: 420px;
+}
+
+.activity-load-more-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 0.5rem;
+}
+
+.activity-load-more-btn {
+    padding: 0.65rem 1.5rem;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-subtle);
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    font-weight: 700;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: var(--transition-fast);
+}
+
+.activity-load-more-btn:hover:not(:disabled) {
+    border-color: var(--primary-color);
+    color: var(--primary-accessible, var(--primary-color));
+}
+
+.activity-load-more-btn:disabled {
+    opacity: 0.6;
+    cursor: default;
+}
+
+.activity-item-skeleton {
+    align-items: center;
+}
+
+@media (max-width: 600px) {
+    .activity-item {
+        flex-wrap: wrap;
+    }
+
+    .status-pill {
+        order: -1;
+    }
+}

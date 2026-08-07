@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { History } from 'lucide-react';
 import SubmitChallenge from './SubmitChallenge';
 import SubmitFile from './SubmitFile';
 import JoinClassroom from './JoinClassroom';
@@ -32,6 +34,10 @@ const SubmitWork = () => {
 
     return (
         <div className="submit-work-page animate-page-entry">
+            <Link to="/activity" className="submit-work-activity-link">
+                <History size={14} /> View your submission history &rarr;
+            </Link>
+
             {isLoading ? (
                 <div className="join-classroom-skeleton" aria-hidden="true" />
             ) : (

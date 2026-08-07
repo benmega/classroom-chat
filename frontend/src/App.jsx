@@ -25,6 +25,7 @@ import ServerOffline from './pages/Error/ServerOffline';
 const Achievements = React.lazy(() => import('./pages/General/Achievements'));
 const BitShift = React.lazy(() => import('./pages/General/BitShift'));
 const SubmitWork = React.lazy(() => import('./pages/General/SubmitWork'));
+const Activity = React.lazy(() => import('./pages/General/Activity'));
 const CourseProgressTree = React.lazy(() => import('./pages/General/CourseProgressTree'));
 const CourseLevelBreakdown = React.lazy(() => import('./pages/General/CourseLevelBreakdown'));
 const Shop = React.lazy(() => import('./pages/General/Shop'));
@@ -266,6 +267,14 @@ function App() {
           <ProtectedRoute>
             <Layout>
               <SubmitWork />
+            </Layout>
+          </ProtectedRoute>
+        } />
+
+        <Route path="/activity" element={
+          <ProtectedRoute>
+            <Layout>
+              <Activity />
             </Layout>
           </ProtectedRoute>
         } />

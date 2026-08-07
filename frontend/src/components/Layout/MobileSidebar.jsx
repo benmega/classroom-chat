@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Home, User, Shield, FileCheck, RefreshCw, X, LogOut, MessageSquare } from 'lucide-react';
+import { Home, User, Shield, FileCheck, History, RefreshCw, X, LogOut, MessageSquare } from 'lucide-react';
 import useAuthStore from '../../store/useAuthStore';
 
 const MobileSidebar = ({ user, isParent, isSidebarOpen, setSidebarOpen, handleLogout }) => {
@@ -53,6 +53,8 @@ const MobileSidebar = ({ user, isParent, isSidebarOpen, setSidebarOpen, handleLo
                         {!isParent && (
                             <>
                                 <li><Link to="/submit-work" onClick={() => setSidebarOpen(false)}><FileCheck size={18} /> Submit Work</Link></li>
+                                <li><Link to="/activity" onClick={() => setSidebarOpen(false)}><History size={18} /> Activity</Link></li>
+                                {/* TODO: unread badge lands here */}
                                 {(user?.duck_balance ?? 0) > 0 && (
                                     <li><Link to="/bit-shift" onClick={() => setSidebarOpen(false)}><RefreshCw size={18} /> Bit Shift</Link></li>
                                 )}

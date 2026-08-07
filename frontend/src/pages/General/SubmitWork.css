@@ -7,6 +7,21 @@
     gap: 1.25rem;
 }
 
+.submit-work-activity-link {
+    align-self: flex-end;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-decoration: none;
+}
+
+.submit-work-activity-link:hover {
+    color: var(--primary-color);
+}
+
 .join-classroom-skeleton {
     height: 3.25rem;
     border-radius: 10px;
