@@ -27,7 +27,7 @@ def bulk_add_challenges():
         name = item.get("name")
         slug = item.get("slug")
         description = item.get("description", "")
-        
+
         # New required fields from CSV (with fallback to top-level payload)
         course_id = item.get("course_id") or data.get("course_id")
         domain = item.get("domain") or data.get("domain")
@@ -164,10 +164,10 @@ def add_challenge():
     course_id = data.get("course_id")
     if not name or not slug or not course_id:
         return "name, slug, and course_id are required", 400
-    
+
     if Challenge.query.filter_by(slug=slug).first():
         return "Challenge with this slug already exists", 400
-    
+
     c = Challenge(
         name=name,
         slug=slug,
@@ -191,18 +191,18 @@ def edit_challenge(id):
     c = Challenge.query.get(id)
     if not c:
         return "Challenge not found", 404
-    
+
     data = request.get_json()
     if not data:
         return "No data provided", 400
-        
+
     slug = data.get("slug")
     if slug:
         existing = Challenge.query.filter(Challenge.slug == slug, Challenge.id != id).first()
         if existing:
             return "Challenge with this slug already exists", 400
         c.slug = slug
-        
+
     if "name" in data: c.name = data["name"]
     if "course_id" in data: c.course_id = data["course_id"]
     if "domain" in data: c.domain = data["domain"]
@@ -210,7 +210,7 @@ def edit_challenge(id):
     if "value" in data: c.value = int(data["value"] or 1)
     if "sequence" in data: c.sequence = data["sequence"]
     if "description" in data: c.description = data["description"]
-    
+
     db.session.commit()
     return {"message": "Challenge updated successfully"}
 
