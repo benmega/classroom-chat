@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Award, PlusCircle, Trash2, ArrowLeft, Info, Coins, Shield, Tag, Plus, Edit, X, Search, FileUp, Image as ImageIcon } from 'lucide-react';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
@@ -7,7 +6,6 @@ import './AdminAchievements.css';
 import { formatStaticUrl } from '../../utils/formatters';
 
 const AdminAchievements = () => {
-    const navigate = useNavigate();
     const [viewMode, setViewMode] = useState('list'); // 'list' or 'form'
     const [achievements, setAchievements] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -142,10 +140,18 @@ const AdminAchievements = () => {
                             {achievements.map(a => {
                                 const badgeUrl = `images/achievement_badges/${a.slug}.png`;
                                 return (
-                                    <div 
-                                        key={a.id} 
-                                        className="project-card" 
+                                    <div
+                                        key={a.id}
+                                        className="project-card"
                                         onClick={() => handleEditClick(a)}
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter' || e.key === ' ') {
+                                                e.preventDefault();
+                                                handleEditClick(a);
+                                            }
+                                        }}
+                                        role="button"
+                                        tabIndex={0}
                                     >
                                         <div 
                                             className="project-card-header" 

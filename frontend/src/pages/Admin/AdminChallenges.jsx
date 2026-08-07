@@ -58,7 +58,7 @@ const AdminChallenges = () => {
         try {
             await client.put('/api/admin/challenges/reorder', { updates });
             // We successfully saved order, no toast to avoid spam
-        } catch (error) {
+        } catch (_error) {
             toast.error('Failed to save new order');
         }
     };
@@ -146,7 +146,7 @@ const AdminChallenges = () => {
                     toast.error("No valid data found in CSV");
                 }
             },
-            error: (error) => {
+            error: (_error) => {
                 toast.error("Error parsing CSV file");
             }
         });
@@ -226,7 +226,7 @@ const AdminChallenges = () => {
             const res = await client.delete(`/api/admin/challenges/${id}`);
             toast.success(res.data.message || 'Challenge deleted.');
             fetchGroupedChallenges();
-        } catch (error) {
+        } catch (_error) {
             toast.error('Failed to delete challenge.');
         }
     };
@@ -261,7 +261,19 @@ const AdminChallenges = () => {
                             const courseDomain = courses.find(c => c.id === courseId)?.domain;
                             const courseImg = getCourseHeaderImage(courseId, courseName, courseDomain);
                             return (
-                                <div key={courseId} className="course-card" onClick={() => setSelectedCourseId(courseId)}>
+                                <div
+                                    key={courseId}
+                                    className="course-card"
+                                    onClick={() => setSelectedCourseId(courseId)}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter' || e.key === ' ') {
+                                            e.preventDefault();
+                                            setSelectedCourseId(courseId);
+                                        }
+                                    }}
+                                    role="button"
+                                    tabIndex={0}
+                                >
                                     <div 
                                         className="course-card-header"
                                         style={{
@@ -292,17 +304,17 @@ const AdminChallenges = () => {
                         
                         <div className="challenges-list mt-1rem">
                             {groupedChallenges[selectedCourseId]?.map((c, index) => (
-                                <div 
-                                    key={c.id} 
-                                    className="challenge-list-item" 
+                                <div
+                                    key={c.id}
+                                    className="challenge-list-item"
                                     draggable
-                                    onDragStart={(e) => { dragItem.current = index; }}
-                                    onDragEnter={(e) => { dragOverItem.current = index; }}
+                                    onDragStart={(_e) => { dragItem.current = index; }}
+                                    onDragEnter={(_e) => { dragOverItem.current = index; }}
                                     onDragEnd={handleSort}
                                     onDragOver={(e) => e.preventDefault()}
                                     onClick={() => openModal(c)}
                                 >
-                                    <div className="drag-handle" onClick={e => e.stopPropagation()}>
+                                    <div className="drag-handle" onClick={(e) => e.stopPropagation()}>
                                         <GripVertical size={20} color="var(--text-secondary)" />
                                     </div>
                                     <div className="challenge-list-icon">
@@ -379,23 +391,23 @@ const AdminChallenges = () => {
             <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editingChallenge ? 'Edit Challenge' : 'Add Challenge'}>
                 <form onSubmit={handleModalSubmit} className="admin-form">
                     <div className="form-group">
-                        <label>Challenge Name *</label>
-                        <input type="text" required value={modalForm.name} onChange={e => setModalForm({...modalForm, name: e.target.value})} />
+                        <label htmlFor="modal-name">Challenge Name *</label>
+                        <input id="modal-name" type="text" required value={modalForm.name} onChange={e => setModalForm({...modalForm, name: e.target.value})} />
                     </div>
                     <div className="form-group">
-                        <label>Slug *</label>
-                        <input type="text" required value={modalForm.slug} onChange={e => setModalForm({...modalForm, slug: e.target.value})} />
+                        <label htmlFor="modal-slug">Slug *</label>
+                        <input id="modal-slug" type="text" required value={modalForm.slug} onChange={e => setModalForm({...modalForm, slug: e.target.value})} />
                     </div>
                     <div className="form-group">
-                        <label>Course ID *</label>
-                        <input type="text" required value={modalForm.course_id} onChange={e => setModalForm({...modalForm, course_id: e.target.value})} list="modal-course-list" />
+                        <label htmlFor="modal-course">Course ID *</label>
+                        <input id="modal-course" type="text" required value={modalForm.course_id} onChange={e => setModalForm({...modalForm, course_id: e.target.value})} list="modal-course-list" />
                         <datalist id="modal-course-list">
                             {courses.map(course => <option key={course.id} value={course.id}>{course.name}</option>)}
                         </datalist>
                     </div>
                     <div className="form-group">
-                        <label>Domain</label>
-                        <select className="admin-select" value={modalForm.domain} onChange={e => setModalForm({...modalForm, domain: e.target.value})}>
+                        <label htmlFor="modal-domain">Domain</label>
+                        <select id="modal-domain" className="admin-select" value={modalForm.domain} onChange={e => setModalForm({...modalForm, domain: e.target.value})}>
                             <option value="codecombat.com">codecombat.com</option>
                             <option value="studio.code.org">studio.code.org</option>
                             <option value="ozaria.com">ozaria.com</option>
@@ -404,25 +416,25 @@ const AdminChallenges = () => {
                     </div>
                     <div className="form-group flex-row gap-md">
                         <div className="flex-1">
-                            <label>Difficulty</label>
-                            <select className="admin-select" value={modalForm.difficulty} onChange={e => setModalForm({...modalForm, difficulty: e.target.value})}>
+                            <label htmlFor="modal-difficulty">Difficulty</label>
+                            <select id="modal-difficulty" className="admin-select" value={modalForm.difficulty} onChange={e => setModalForm({...modalForm, difficulty: e.target.value})}>
                                 <option value="easy">Easy</option>
                                 <option value="medium">Medium</option>
                                 <option value="hard">Hard</option>
                             </select>
                         </div>
                         <div className="flex-1">
-                            <label>Value</label>
-                            <input type="number" required min="1" value={modalForm.value} onChange={e => setModalForm({...modalForm, value: e.target.value})} />
+                            <label htmlFor="modal-value">Value</label>
+                            <input id="modal-value" type="number" required min="1" value={modalForm.value} onChange={e => setModalForm({...modalForm, value: e.target.value})} />
                         </div>
                         <div className="flex-1">
-                            <label>Sequence</label>
-                            <input type="number" value={modalForm.sequence} onChange={e => setModalForm({...modalForm, sequence: e.target.value})} />
+                            <label htmlFor="modal-sequence">Sequence</label>
+                            <input id="modal-sequence" type="number" value={modalForm.sequence} onChange={e => setModalForm({...modalForm, sequence: e.target.value})} />
                         </div>
                     </div>
                     <div className="form-group">
-                        <label>Description</label>
-                        <textarea rows="3" value={modalForm.description} onChange={e => setModalForm({...modalForm, description: e.target.value})} />
+                        <label htmlFor="modal-description">Description</label>
+                        <textarea id="modal-description" rows="3" value={modalForm.description} onChange={e => setModalForm({...modalForm, description: e.target.value})} />
                     </div>
 
                     <div className="modal-actions mt-1-5rem d-flex justify-end gap-md">
