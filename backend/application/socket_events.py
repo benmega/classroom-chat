@@ -258,3 +258,21 @@ def emit_classroom_enrolled(user_id: int, classroom_dict: dict):
         },
         room=f"user:{user_id}",
     )
+
+
+def emit_activity_resolved(user_id: int, kind: str, item_id: int, status: str):
+    """
+    Public helper — called when a teacher/admin resolves a student's pending
+    submission (certificate, file, or course-connection request). Pushes a
+    push event to the student's personal socket room so the client can
+    surface an unread badge / refresh the /activity timeline live.
+    """
+    socketio.emit(
+        "activity_resolved",
+        {
+            "kind": kind,
+            "id": item_id,
+            "status": status,
+        },
+        room=f"user:{user_id}",
+    )

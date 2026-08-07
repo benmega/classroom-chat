@@ -80,6 +80,10 @@ def mark_submission_reviewed(submission_id):
         submission.teacher_note = note
     db.session.commit()
 
+    from application.socket_events import emit_activity_resolved
+
+    emit_activity_resolved(submission.user_id, "file", submission.id, "reviewed")
+
     return {"submission": submission.to_dict()}
 
 

@@ -410,6 +410,10 @@ def mark_reviewed(cert_id):
     cert.reviewed_at = datetime.utcnow()
     db.session.commit()
 
+    from application.socket_events import emit_activity_resolved
+
+    emit_activity_resolved(cert.user_id, "certificate", cert.id, "approved")
+
     from application.services.achievement_engine import evaluate_user
 
     evaluate_user(cert.user, force=True)
@@ -432,6 +436,10 @@ def reject_certificate(cert_id):
     cert.review_note = data.get("review_note")
     cert.reviewed_at = datetime.utcnow()
     db.session.commit()
+
+    from application.socket_events import emit_activity_resolved
+
+    emit_activity_resolved(cert.user_id, "certificate", cert.id, "rejected")
 
     msg = "Certificate rejected."
 
@@ -473,6 +481,11 @@ def mark_all_reviewed():
         cert.reviewed_at = now
         users_to_evaluate.add(cert.user)
     db.session.commit()
+
+    from application.socket_events import emit_activity_resolved
+
+    for cert in certs:
+        emit_activity_resolved(cert.user_id, "certificate", cert.id, "approved")
 
     from application.services.achievement_engine import evaluate_user
 
