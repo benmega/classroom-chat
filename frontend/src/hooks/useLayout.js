@@ -6,13 +6,15 @@ import useSidebar from './useSidebar';
 import useChatSocket from './useChatSocket';
 
 export const useLayout = () => {
-    const { 
-        user, 
-        logout, 
-        isAuthenticated, 
+    const {
+        user,
+        logout,
+        isAuthenticated,
         hamburgerProgress,
         setUnreadCount,
-        setLastReadMessageId
+        setLastReadMessageId,
+        activityUnreadCount,
+        setActivityUnreadCount
     } = useAuthStore();
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const dropdownRef = useRef(null);
@@ -26,13 +28,23 @@ export const useLayout = () => {
     };
 
     const isChatRoute = location.pathname === '/chat';
+    const isActivityRoute = location.pathname === '/activity';
 
     // Hook to listen to new messages and update unread count
-    useChatSocket(useCallback((_data) => {
-        if (!isChatRoute && user && user.role !== 'parent') {
-            setUnreadCount(useAuthStore.getState().unreadCount + 1);
-        }
-    }, [isChatRoute, user, setUnreadCount]), () => {});
+    useChatSocket(
+        useCallback((_data) => {
+            if (!isChatRoute && user && user.role !== 'parent') {
+                setUnreadCount(useAuthStore.getState().unreadCount + 1);
+            }
+        }, [isChatRoute, user, setUnreadCount]),
+        () => {},
+        {},
+        useCallback((_data) => {
+            if (!isActivityRoute && user && user.role !== 'parent') {
+                setActivityUnreadCount(useAuthStore.getState().activityUnreadCount + 1);
+            }
+        }, [isActivityRoute, user, setActivityUnreadCount])
+    );
 
     // Fetch initial unread count on login/load
     useEffect(() => {
@@ -173,6 +185,7 @@ export const useLayout = () => {
         isGuestPage,
         isChatPage,
         location,
-        hamburgerProgress
+        hamburgerProgress,
+        activityUnreadCount
     };
 };

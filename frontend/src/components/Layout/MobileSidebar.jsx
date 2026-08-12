@@ -1,10 +1,10 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Home, User, Shield, FileCheck, RefreshCw, X, LogOut, MessageSquare } from 'lucide-react';
+import { Home, User, Shield, FileCheck, History, RefreshCw, X, LogOut, MessageSquare } from 'lucide-react';
 import useAuthStore from '../../store/useAuthStore';
 
 const MobileSidebar = ({ user, isParent, isSidebarOpen, setSidebarOpen, handleLogout }) => {
-    const { unreadCount } = useAuthStore();
+    const { unreadCount, activityUnreadCount } = useAuthStore();
 
     return (
         <>
@@ -53,6 +53,17 @@ const MobileSidebar = ({ user, isParent, isSidebarOpen, setSidebarOpen, handleLo
                         {!isParent && (
                             <>
                                 <li><Link to="/submit-work" onClick={() => setSidebarOpen(false)}><FileCheck size={18} /> Submit Work</Link></li>
+                                <li>
+                                    <Link to="/activity" onClick={() => setSidebarOpen(false)}>
+                                        <div className="nav-badge-container" style={{ display: 'inline-flex', alignItems: 'center', width: '100%' }}>
+                                            <History size={18} />
+                                            <span style={{ marginLeft: '12px', flexGrow: 1 }}>Activity</span>
+                                            {activityUnreadCount > 0 && (
+                                                <span className="nav-unread-badge mobile-badge">{activityUnreadCount}</span>
+                                            )}
+                                        </div>
+                                    </Link>
+                                </li>
                                 {(user?.duck_balance ?? 0) > 0 && (
                                     <li><Link to="/bit-shift" onClick={() => setSidebarOpen(false)}><RefreshCw size={18} /> Bit Shift</Link></li>
                                 )}

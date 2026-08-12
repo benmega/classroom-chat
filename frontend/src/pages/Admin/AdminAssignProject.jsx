@@ -100,7 +100,7 @@ const AdminAssignProject = () => {
             const response = await client.post('/api/admin/assign-project', payload);
             if (response.data.status === 'success') {
                 
-                navigate('/admin/projects');
+                navigate('/admin/to-review');
             }
         } catch (error) {
             toast.error(error.response?.data?.message || 'Failed to assign project.');
@@ -308,7 +308,7 @@ const AdminAssignProject = () => {
                         </div>
 
                         <div className="form-footer sticky-footer">
-                            <button type="button" onClick={() => navigate('/admin/projects')} className="btn-cancel">
+                            <button type="button" onClick={() => navigate('/admin/to-review')} className="btn-cancel">
                                 Cancel
                             </button>
                             <div className="action-group">

@@ -38,7 +38,8 @@ def test_user_certificate_to_dict_and_attributes(app):
             achievement_id=ach.id,
             url="https://example.com/cert.pdf",
             file_path="/uploads/cert.pdf",
-            reviewed=True,
+            status="approved",
+            review_note="Looks good.",
             reviewed_at=datetime.utcnow(),
             is_auto_recommended=True,
             recommendation_reason="Matched title",
@@ -54,7 +55,8 @@ def test_user_certificate_to_dict_and_attributes(app):
         assert d["achievement"]["name"] == "Cert Test Achievement"
         assert d["url"] == "https://example.com/cert.pdf"
         assert d["file_path"] == "/uploads/cert.pdf"
-        assert d["reviewed"] is True
+        assert d["status"] == "approved"
+        assert d["review_note"] == "Looks good."
         assert d["reviewed_at"] is not None
         assert d["is_auto_recommended"] is True
         assert d["recommendation_reason"] == "Matched title"

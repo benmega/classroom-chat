@@ -1,14 +1,16 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Award, PlusCircle, Trash2, ArrowLeft, Info, Coins, Shield, Tag } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Award, PlusCircle, Trash2, ArrowLeft, Info, Coins, Shield, Tag, Plus, Edit, X, Search, FileUp, Image as ImageIcon } from 'lucide-react';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
 import './AdminAchievements.css';
-import AdminPageHeader from '../../components/admin/AdminPageHeader';
+import { formatStaticUrl } from '../../utils/formatters';
 
 const AdminAchievements = () => {
-    const navigate = useNavigate();
+    const [viewMode, setViewMode] = useState('list'); // 'list' or 'form'
+    const [achievements, setAchievements] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [editingAchievement, setEditingAchievement] = useState(null);
     
     const [formData, setFormData] = useState({
         name: '',
@@ -22,6 +24,53 @@ const AdminAchievements = () => {
 
     const [badgeFile, setBadgeFile] = useState(null);
     const [badgePreview, setBadgePreview] = useState(null);
+
+    useEffect(() => {
+        if (viewMode === 'list') {
+            fetchAchievements();
+        }
+    }, [viewMode]);
+
+    const fetchAchievements = async () => {
+        setIsLoading(true);
+        try {
+            const res = await client.get('/api/achievements/all');
+            if (res.data?.status === 'success') {
+                setAchievements(res.data.data.achievements || []);
+            }
+        } catch (error) {
+            console.error('Failed to load achievements:', error);
+            toast.error('Failed to load achievements.');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleAddClick = () => {
+        setEditingAchievement(null);
+        setFormData({
+            name: '', slug: '', description: '', type: 'ducks', reward: 1, requirement_value: '', source: ''
+        });
+        setBadgeFile(null);
+        setBadgePreview(null);
+        setViewMode('form');
+    };
+
+    const handleEditClick = (achievement) => {
+        setEditingAchievement(achievement);
+        setFormData({
+            name: achievement.name || '',
+            slug: achievement.slug || '',
+            description: achievement.description || '',
+            type: achievement.type || 'ducks',
+            reward: achievement.reward || 1,
+            requirement_value: achievement.requirement_value || '',
+            source: achievement.source || ''
+        });
+        setBadgeFile(null);
+        setBadgePreview(null);
+        setViewMode('form');
+    };
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -53,24 +102,103 @@ const AdminAchievements = () => {
         }
 
         try {
-            const response = await client.post('/api/achievements/add', data);
-            if (response.data.status === 'success') {
-                
-                navigate('/admin');
+            if (editingAchievement) {
+                const response = await client.put(`/api/achievements/edit/${editingAchievement.id}`, data);
+                if (response.data.status === 'success') {
+                    toast.success(response.data.message || 'Achievement updated.');
+                    setViewMode('list');
+                }
+            } else {
+                const response = await client.post('/api/achievements/add', data);
+                if (response.data.status === 'success') {
+                    toast.success(response.data.message || 'Achievement created.');
+                    setViewMode('list');
+                }
             }
         } catch (error) {
-            console.error('Add achievement error:', error);
-            toast.error(error.response?.data?.message || 'Failed to add achievement.');
+            console.error('Save achievement error:', error);
+            toast.error(error.response?.data?.message || 'Failed to save achievement.');
         } finally {
             setIsSubmitting(false);
         }
     };
 
+    if (viewMode === 'list') {
+        return (
+            <div className="admin-achievements-page">
+                <div className="d-flex justify-end mb-1-5rem">
+                    <button className="primary-btn" onClick={handleAddClick}>
+                        <Plus size={18} /> Add Achievement
+                    </button>
+                </div>
+
+                {isLoading ? (
+                    <div className="card p-2rem text-center text-muted">Loading achievements...</div>
+                ) : (
+                    <div className="card" style={{ padding: '24px' }}>
+                        <div className="projects-grid">
+                            {achievements.map(a => {
+                                const badgeUrl = `images/achievement_badges/${a.slug}.png`;
+                                return (
+                                    <div
+                                        key={a.id}
+                                        className="project-card"
+                                        onClick={() => handleEditClick(a)}
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter' || e.key === ' ') {
+                                                e.preventDefault();
+                                                handleEditClick(a);
+                                            }
+                                        }}
+                                        role="button"
+                                        tabIndex={0}
+                                    >
+                                        <div 
+                                            className="project-card-header" 
+                                            style={{ 
+                                                backgroundImage: `url(${formatStaticUrl(badgeUrl)})`,
+                                                backgroundColor: 'var(--bg-color)',
+                                                backgroundSize: 'contain',
+                                                backgroundRepeat: 'no-repeat',
+                                                backgroundPosition: 'center'
+                                            }}
+                                        >
+                                            {/* Fallback icon if image fails to load via CSS, but let's just let it load */}
+                                        </div>
+                                        <div className="project-card-body">
+                                            <div className="project-card-title" title={a.name}>
+                                                {a.name}
+                                            </div>
+                                            <div className="project-card-desc">
+                                                {a.description || "No description."}
+                                            </div>
+                                            <div style={{ marginTop: '8px', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                                                Reward: <strong>{a.reward} ducks</strong>
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                            {achievements.length === 0 && (
+                                <div className="empty-state text-muted" style={{ width: '100%', textAlign: 'center', padding: '20px' }}>
+                                    No achievements found.
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
+            </div>
+        );
+    }
+
     return (
         <div className="admin-achievements-page">
-            <AdminPageHeader 
-                title="Create Achievement" 
-            />
+            <div className="d-flex justify-between align-center mb-1-5rem">
+                <h2 style={{ margin: 0 }}>{editingAchievement ? "Edit Achievement" : "Create Achievement"}</h2>
+                <button className="secondary-btn" onClick={() => setViewMode('list')}>
+                    <ArrowLeft size={18} /> Back to List
+                </button>
+            </div>
 
             <div className="achievement-form-container card">
                 <form onSubmit={handleSubmit} className="achievement-form">
@@ -191,7 +319,7 @@ const AdminAchievements = () => {
                             className="btn-submit" 
                             disabled={isSubmitting}
                         >
-                            <PlusCircle size={20} /> {isSubmitting ? 'Adding...' : 'Create Achievement'}
+                            <SaveIcon /> {isSubmitting ? 'Saving...' : (editingAchievement ? 'Save Changes' : 'Create Achievement')}
                         </button>
                     </footer>
                 </form>
@@ -206,7 +334,8 @@ const AdminAchievements = () => {
                                 </div>
                             ) : (
                                 <div className={`preview-badge type-${formData.type}`}>
-                                    <Award size={32} />
+                                    {formData.slug ? <img src={formatStaticUrl(`images/achievement_badges/${formData.slug}.png`)} alt="Badge" onError={(e) => { e.target.style.display='none'; e.target.nextSibling.style.display='block'; }} style={{width: '100%', height: '100%', objectFit: 'contain'}} /> : null}
+                                    <Award size={32} style={{ display: formData.slug ? 'none' : 'block' }} />
                                 </div>
                             )}
                             <span className="reward-tag">+{formData.reward} 🦆</span>
@@ -226,5 +355,7 @@ const AdminAchievements = () => {
         </div>
     );
 };
+
+const SaveIcon = () => <Award size={20} />;
 
 export default AdminAchievements;

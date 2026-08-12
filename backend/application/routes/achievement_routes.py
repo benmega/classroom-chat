@@ -224,6 +224,58 @@ def add_achievement():
         {"status": "success", "message": f"Achievement '{name}' added successfully!"}
     )
 
+@achievements.route("/edit/<int:id>", methods=["PUT"])
+@admin_only
+def edit_achievement(id):
+    ach = Achievement.query.get(id)
+    if not ach:
+        return jsonify({"status": "error", "message": "Achievement not found."}), 404
+
+    data = request.form
+    name = data.get("name")
+    slug = data.get("slug")
+    description = data.get("description")
+    achievement_type = data.get("type")
+    reward = data.get("reward")
+    requirement_value = data.get("requirement_value")
+    source = data.get("source")
+
+    if name: ach.name = name
+    if slug:
+        existing = Achievement.query.filter(Achievement.slug == slug, Achievement.id != id).first()
+        if existing:
+            return jsonify({"status": "error", "message": "Achievement with this slug already exists."}), 400
+        ach.slug = slug
+    if description is not None: ach.description = description
+    if achievement_type: ach.type = achievement_type
+    if reward: ach.reward = int(reward)
+    if requirement_value is not None: ach.requirement_value = requirement_value
+    if source is not None: ach.source = source
+
+    badge_file = request.files.get("badge")
+    if badge_file and badge_file.filename != "":
+        allowed_badge_ext = {"png", "jpg", "jpeg", "webp"}
+        if not allowed_file(badge_file.filename, allowed_badge_ext):
+            return jsonify({"status": "error", "message": "Invalid badge file type."}), 400
+
+        from flask import current_app
+        badge_dir = os.path.join(str(current_app.static_folder), "images", "achievement_badges")
+        os.makedirs(badge_dir, exist_ok=True)
+
+        ext = (badge_file.filename or "").rsplit(".", 1)[1].lower()
+        filename = f"{ach.slug}.{ext}"
+        filepath = os.path.join(badge_dir, filename)
+        badge_file.save(filepath)
+
+        try:
+            tools_dir = os.path.join(current_app.config["BASE_DIR"], "backend", "tools")
+            script_path = os.path.join(tools_dir, "make_sprite_sheet.py")
+            subprocess.run([sys.executable, script_path], check=True, capture_output=True, text=True)
+        except Exception as e:
+            return jsonify({"status": "error", "message": f"Error rebuilding sprite sheet: {e}"}), 500
+
+    db.session.commit()
+    return jsonify({"status": "success", "message": f"Achievement '{ach.name}' updated successfully!"})
 
 @achievements.route("/submit_certificate", methods=["GET", "POST"])
 def submit_certificate():
@@ -293,7 +345,7 @@ def submit_certificate():
                 achievement_id=achievement.id,
                 url=url,
                 file_path=filepath,
-                reviewed=False,
+                status="pending",
                 is_auto_recommended=is_auto_recommended,
                 recommendation_reason=recommendation_reason
 
@@ -302,8 +354,10 @@ def submit_certificate():
         else:
             cert.url = url
             cert.file_path = filepath
-            cert.reviewed = True
-            cert.reviewed_at = datetime.utcnow()
+            # A resubmission always requires fresh admin review — never
+            # auto-approve just because a prior submission existed.
+            cert.status = "pending"
+            cert.reviewed_at = None
 
         db.session.commit()
 
@@ -337,10 +391,10 @@ def view_certificate(cert_id):
 @admin_only
 @api_response
 def admin_certificates():
-    # Only show unreviewed certificates by default, matching the template
+    # Only show pending certificates by default, matching the template
     certs = (
         db.session.query(UserCertificate)
-        .filter_by(reviewed=False)
+        .filter_by(status="pending")
         .join(User)
         .join(Achievement)
         .all()
@@ -353,15 +407,42 @@ def admin_certificates():
 @admin_only
 def mark_reviewed(cert_id):
     cert = db.get_or_404(UserCertificate, cert_id)
-    cert.reviewed = True
+    cert.status = "approved"
     cert.reviewed_at = datetime.utcnow()
     db.session.commit()
+
+    from application.socket_events import emit_activity_resolved
+
+    emit_activity_resolved(cert.user_id, "certificate", cert.id, "approved")
 
     from application.services.achievement_engine import evaluate_user
 
     evaluate_user(cert.user, force=True)
 
     msg = "Certificate marked as reviewed."
+
+    if request.is_json or request.headers.get("X-Requested-With") == "XMLHttpRequest":
+        return jsonify({"status": "success", "message": msg})
+
+    flash(msg, "success")
+    return redirect(url_for("achievements.admin_certificates"))
+
+
+@achievements.route("/admin/certificates/reject/<int:cert_id>", methods=["POST"])
+@admin_only
+def reject_certificate(cert_id):
+    cert = db.get_or_404(UserCertificate, cert_id)
+    data = request.get_json(silent=True) or {}
+    cert.status = "rejected"
+    cert.review_note = data.get("review_note")
+    cert.reviewed_at = datetime.utcnow()
+    db.session.commit()
+
+    from application.socket_events import emit_activity_resolved
+
+    emit_activity_resolved(cert.user_id, "certificate", cert.id, "rejected")
+
+    msg = "Certificate rejected."
 
     if request.is_json or request.headers.get("X-Requested-With") == "XMLHttpRequest":
         return jsonify({"status": "success", "message": msg})
@@ -393,14 +474,19 @@ def download_certificate(cert_id):
 @achievements.route("/admin/certificates/reviewed/all", methods=["POST"])
 @admin_only
 def mark_all_reviewed():
-    certs = db.session.query(UserCertificate).filter_by(reviewed=False).all()
+    certs = db.session.query(UserCertificate).filter_by(status="pending").all()
     now = datetime.utcnow()
     users_to_evaluate = set()
     for cert in certs:
-        cert.reviewed = True
+        cert.status = "approved"
         cert.reviewed_at = now
         users_to_evaluate.add(cert.user)
     db.session.commit()
+
+    from application.socket_events import emit_activity_resolved
+
+    for cert in certs:
+        emit_activity_resolved(cert.user_id, "certificate", cert.id, "approved")
 
     from application.services.achievement_engine import evaluate_user
 
@@ -421,7 +507,7 @@ def mark_all_reviewed():
 def download_all_certificates():
     certs = (
         db.session.query(UserCertificate)
-        .filter_by(reviewed=False)
+        .filter_by(status="pending")
         .join(User)
         .join(Achievement)
         .all()

@@ -21,7 +21,6 @@ import {
     ChevronDown,
     ChevronUp
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
 import { getApiUrl } from '../../utils/apiUrl';
@@ -167,12 +166,28 @@ const ToReview = () => {
     };
 
     // 2. Certificate Review Actions
-    const handleCertificateReview = async (certId) => {
+    const handleCertificateReview = async (certId, action = 'approve') => {
+        if (action === 'reject') {
+            const review_note = window.prompt('Reason for rejecting? (optional)') || undefined;
+            setIsProcessing(`cert-${certId}`);
+            try {
+                const response = await client.post(`/api/achievements/admin/certificates/reject/${certId}`, { review_note });
+                if (response.data.status === 'success') {
+                    setCertificates(prev => prev.filter(c => c.id !== certId));
+                }
+            } catch {
+                toast.error('Failed to reject certificate.');
+            } finally {
+                setIsProcessing(null);
+            }
+            return;
+        }
+
         setIsProcessing(`cert-${certId}`);
         try {
             const response = await client.post(`/api/achievements/admin/certificates/reviewed/${certId}`);
             if (response.data.status === 'success') {
-                
+
                 setCertificates(prev => prev.filter(c => c.id !== certId));
             }
         } catch {
@@ -456,6 +471,18 @@ const ToReview = () => {
                         <div className="project-title-area">
                             <h3 className="project-title">{p.name}</h3>
                             {p.description && <p className="project-description">{p.description}</p>}
+                            <div className="project-indicators">
+                                {(!p.code_snippet && !p.github_link) && (
+                                    <span className="missing-indicator">
+                                        <AlertCircle size={12} /> Missing Code
+                                    </span>
+                                )}
+                                {!p.video_url && (
+                                    <span className="missing-indicator">
+                                        <AlertCircle size={12} /> Missing Video
+                                    </span>
+                                )}
+                            </div>
                         </div>
                     </div>
 
@@ -647,9 +674,16 @@ const ToReview = () => {
                             >
                                 <Download size={16} /> PDF
                             </a>
-                            <button 
+                            <button
+                                className="btn-reject"
+                                onClick={() => handleCertificateReview(c.id, 'reject')}
+                                disabled={isProcessing === `cert-${c.id}`}
+                            >
+                                <XCircle size={16} /> Reject
+                            </button>
+                            <button
                                 className="btn-approve"
-                                onClick={() => handleCertificateReview(c.id)}
+                                onClick={() => handleCertificateReview(c.id, 'approve')}
                                 disabled={isProcessing === `cert-${c.id}`}
                             >
                                 <CheckCircle size={16} /> {isProcessing === `cert-${c.id}` ? 'Approving...' : 'Approve'}
@@ -1006,14 +1040,6 @@ const ToReview = () => {
             >
                 
             </AdminPageHeader>
-
-            <div className="temporary-legacy-links" style={{ background: '#fff3cd', padding: '12px 16px', borderRadius: '8px', border: '1px solid #ffe69c', marginBottom: '20px', display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'center' }}>
-                <strong style={{ color: '#664d03', fontSize: '14px' }}>Legacy Processing Views:</strong>
-                <Link to="/admin/projects" style={{ color: '#055160', fontSize: '14px', textDecoration: 'underline', fontWeight: 600 }}>Projects</Link>
-                <Link to="/admin/certificates" style={{ color: '#055160', fontSize: '14px', textDecoration: 'underline', fontWeight: 600 }}>Certificates</Link>
-                <Link to="/admin/pending-users" style={{ color: '#055160', fontSize: '14px', textDecoration: 'underline', fontWeight: 600 }}>Pending Users</Link>
-                <Link to="/admin/pending-trades" style={{ color: '#055160', fontSize: '14px', textDecoration: 'underline', fontWeight: 600 }}>Pending Trades</Link>
-            </div>
 
             <div className="review-dashboard-layout">
                 {/* Left Tabs */}

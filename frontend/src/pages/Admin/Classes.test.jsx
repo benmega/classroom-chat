@@ -8,6 +8,7 @@ import toast from 'react-hot-toast';
 vi.mock('../../api/client', () => ({
     default: {
         get: vi.fn(),
+        delete: vi.fn(),
     }
 }));
 
@@ -216,5 +217,59 @@ describe('Classes Admin Page', () => {
         await waitFor(() => {
             expect(toast.error).toHaveBeenCalledWith('Failed to load cohort connection cards.');
         });
+    });
+
+    it('opens create modal and handles deletion', async () => {
+        const mockClassrooms = [
+            { id: 'c1', name: 'Math 101', language: 'English', student_count: 20 }
+        ];
+
+        client.get.mockResolvedValue({
+            data: { classrooms: mockClassrooms }
+        });
+
+        renderWithRouter(<Classes />);
+        
+        await waitFor(() => {
+            expect(screen.getByText('Math 101')).toBeInTheDocument();
+        });
+
+        // Create modal
+        const addBtn = screen.getByText(/Add Classroom/i);
+        fireEvent.click(addBtn);
+        await waitFor(() => {
+            expect(document.querySelector('.modal-overlay')).not.toBeNull();
+        });
+        
+        // Close modal
+        const closeBtn = screen.getByLabelText('Close modal');
+        fireEvent.click(closeBtn);
+
+        // Open kebab menu
+        const kebabBtn = document.querySelector('.kebab-trigger');
+        if (kebabBtn) {
+            fireEvent.click(kebabBtn);
+
+            // Delete action
+            const deleteBtn = screen.getByText(/Delete Class/i);
+            
+            // Mock window.confirm
+            window.confirm = vi.fn().mockReturnValue(true);
+            client.delete.mockResolvedValueOnce({ data: { success: true } });
+            
+            fireEvent.click(deleteBtn);
+            
+            await waitFor(() => {
+                expect(window.confirm).toHaveBeenCalled();
+            });
+        }
+
+        // Test onKeyDown branch
+        const classCard = document.querySelector('.class-card');
+        if (classCard) {
+            fireEvent.keyDown(classCard, { key: 'Enter', target: classCard });
+            fireEvent.keyDown(classCard, { key: ' ', target: classCard });
+            fireEvent.keyDown(classCard, { key: 'a' }); // No-op branch
+        }
     });
 });

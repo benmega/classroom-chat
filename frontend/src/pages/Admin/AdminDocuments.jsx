@@ -2,27 +2,21 @@ import React, { useState, useEffect } from 'react';
 import { 
     File, 
     FileText, 
-    Image as ImageIcon, 
     Download, 
     Eye, 
     Trash2, 
     Search, 
-    Database, 
-    HardDrive,
     AlertCircle,
-    ChevronDown,
     Filter
 } from 'lucide-react';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
 import { getApiUrl } from '../../utils/apiUrl';
 import './AdminDocuments.css';
-import AdminPageHeader from '../../components/admin/AdminPageHeader';
 import Skeleton from '../../components/common/Skeleton';
 
 const AdminDocuments = () => {
     const [documents, setDocuments] = useState([]);
-    const [stats, setStats] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [categoryFilter, setCategoryFilter] = useState('all');
@@ -30,18 +24,11 @@ const AdminDocuments = () => {
     const fetchData = async () => {
         setIsLoading(true);
         try {
-            const [docsRes, statsRes] = await Promise.all([
-                client.get('/api/admin/documents'),
-                client.get('/api/admin/documents/stats')
-            ]);
+            const docsRes = await client.get('/api/admin/documents');
             
             if (docsRes.data.status === 'success') {
                 setDocuments(docsRes.data.data.documents);
             }
-            if (statsRes.data.status === 'success') {
-                setStats(statsRes.data.data.stats);
-            }
-            
         } catch {
             toast.error('Failed to load document data.');
         } finally {
@@ -83,16 +70,6 @@ const AdminDocuments = () => {
     if (isLoading) {
         return (
             <div className="admin-documents-page">
-                <AdminPageHeader title="Asset & Document Management" />
-                <div className="storage-overview storage-overview-skeleton">
-                    <Skeleton height="120px" width="300px" borderRadius="12px" />
-                    <div className="storage-stats-grid storage-stats-grid-skeleton">
-                        <Skeleton height="56px" borderRadius="8px" />
-                        <Skeleton height="56px" borderRadius="8px" />
-                        <Skeleton height="56px" borderRadius="8px" />
-                        <Skeleton height="56px" borderRadius="8px" />
-                    </div>
-                </div>
                 <div className="controls-bar card controls-bar-skeleton">
                     <Skeleton height="40px" width="400px" />
                 </div>
@@ -117,33 +94,6 @@ const AdminDocuments = () => {
 
     return (
         <div className="admin-documents-page">
-            <AdminPageHeader 
-                title="Asset & Document Management" 
-            />
-
-            {stats && (
-                <div className="storage-overview">
-                    <div className="storage-card card">
-                        <div className="storage-icon"><Database size={24} /></div>
-                        <div className="storage-info">
-                            <span className="label">Total Storage Used</span>
-                            <span className="value">{stats.total_size_formatted}</span>
-                            <div className="storage-bar">
-                                <div className="fill storage-fill-45"></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="storage-stats-grid">
-                        {Object.entries(stats.by_category).map(([cat, data]) => (
-                            <div key={cat} className="mini-stat card">
-                                <span className="cat-name">{cat.toUpperCase()}</span>
-                                <span className="cat-val">{data.count} Files ({data.size_formatted})</span>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            )}
-
             <div className="controls-bar card">
                 <div className="search-box">
                     <Search size={18} />

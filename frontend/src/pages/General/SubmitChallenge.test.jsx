@@ -70,7 +70,7 @@ describe('SubmitChallenge', () => {
         expect(screen.getByRole('button', { name: /− Extras/i })).toBeInTheDocument();
     });
 
-    it('submits a normal challenge and shows success toast and confetti', async () => {
+    it('submits a normal challenge and shows confetti', async () => {
         render(<SubmitChallenge />);
         
         const urlInput = screen.getByLabelText(/URL/i);
@@ -173,7 +173,9 @@ describe('SubmitChallenge', () => {
             expect(client.post).toHaveBeenCalledWith('/api/achievements/submit_certificate', expect.any(FormData), expect.any(Object));
         });
 
-        expect(toast.success).toHaveBeenCalledWith('Certificate submitted successfully!');
+        // Certificates need admin review before ducks are awarded, so there's no
+        // success toast — confetti is the only acknowledgement.
+        expect(toast.success).not.toHaveBeenCalled();
         expect(confetti).toHaveBeenCalled();
         expect(urlInput.value).toBe('');
     });

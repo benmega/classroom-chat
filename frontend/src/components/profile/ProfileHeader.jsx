@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { User } from 'lucide-react';
+import { User, History } from 'lucide-react';
 import SmartImage from '../common/SmartImage';
 import { formatLargeNumber } from '../../utils/formatters';
 import { getApiUrl } from '../../utils/apiUrl';
@@ -59,9 +59,14 @@ const ProfileHeader = ({ target, isOwner, pfpInputRef, onPfpChange, editLink }) 
                         </p>
                     )}
                     {isOwner && (
-                        <Link to={editLink || "/settings"} className="btn-settings">
-                            <User size={14} /> Edit Profile
-                        </Link>
+                        <div className="profile-header-actions">
+                            <Link to={editLink || "/settings"} className="btn-settings">
+                                <User size={14} /> Edit Profile
+                            </Link>
+                            <Link to="/activity" className="btn-settings">
+                                <History size={14} /> Activity
+                            </Link>
+                        </div>
                     )}
                 </div>
 

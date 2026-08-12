@@ -132,6 +132,10 @@ def approve_request(request_id):
     req.status = "approved"
     db.session.commit()
 
+    from application.socket_events import emit_activity_resolved
+
+    emit_activity_resolved(req.student_id, "course_request", req.id, "approved")
+
     return jsonify(
         {"success": True, "message": "Course instance added and request approved."}
     )
@@ -158,5 +162,9 @@ def reject_request(request_id):
 
     req.status = "rejected"
     db.session.commit()
+
+    from application.socket_events import emit_activity_resolved
+
+    emit_activity_resolved(req.student_id, "course_request", req.id, "rejected")
 
     return jsonify({"success": True, "message": "Request rejected."})

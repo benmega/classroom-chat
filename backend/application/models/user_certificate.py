@@ -19,7 +19,8 @@ class UserCertificate(db.Model):
     url = db.Column(db.String(256), nullable=False)
     submitted_at = db.Column(db.DateTime, default=datetime.utcnow)
     file_path = db.Column(db.String(256), nullable=True)
-    reviewed = db.Column(db.Boolean, default=False)
+    status = db.Column(db.String(20), nullable=False, default="pending")
+    review_note = db.Column(db.Text, nullable=True)
     reviewed_at = db.Column(db.DateTime)
     is_auto_recommended = db.Column(db.Boolean, default=False)
     recommendation_reason = db.Column(db.String(256), nullable=True)
@@ -46,7 +47,8 @@ class UserCertificate(db.Model):
                 self.submitted_at.isoformat() if self.submitted_at else None
             ),
             "file_path": self.file_path,
-            "reviewed": self.reviewed,
+            "status": self.status,
+            "review_note": self.review_note,
             "reviewed_at": self.reviewed_at.isoformat() if self.reviewed_at else None,
             "is_auto_recommended": self.is_auto_recommended,
             "recommendation_reason": self.recommendation_reason,

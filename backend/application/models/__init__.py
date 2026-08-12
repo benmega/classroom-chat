@@ -30,6 +30,7 @@ def setup_models():
     from .session_log import SessionLog
     from .skill import Skill
     from .store_item import StoreItem
+    from .submission import Submission
     from .track_requests import TrackChangeRequest
     from .user import User
     from .user_certificate import UserCertificate

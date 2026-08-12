@@ -328,7 +328,7 @@ const Shop = () => {
                                 {item.name === "Animated Profile Border" && (
                                     <div className="shop-preview border-preview">
                                         <div 
-                                            className="animated-border-preview"
+                                            className="animated-border-preview perk-animated-border"
                                             style={{ 
                                                 '--border-speed': borderSpeed === 'slow' ? '3s' : borderSpeed === 'fast' ? '0.5s' : '1.5s',
                                                 '--border-color': borderColor || 'var(--accent-color)'
@@ -352,7 +352,21 @@ const Shop = () => {
                                                     </select>
                                                 </div>
                                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
-                                                    <span style={{ fontSize: '0.9rem', fontWeight: 600 }}>RGB Color:</span>
+                                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                                        <span style={{ fontSize: '0.9rem', fontWeight: 600 }}>RGB Color:</span>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                            <span style={{ fontSize: '0.8rem', fontFamily: 'monospace', color: 'var(--text-muted)' }}>
+                                                                {borderColor.startsWith('#') ? borderColor.toUpperCase() : '#FAC815'}
+                                                            </span>
+                                                            <input 
+                                                                type="color" 
+                                                                value={borderColor.startsWith('#') ? borderColor : '#fac815'} 
+                                                                onChange={(e) => setBorderColor(e.target.value)}
+                                                                onBlur={handleBorderColorSubmit}
+                                                                style={{ width: '24px', height: '24px', padding: '0', cursor: 'pointer', border: 'none', background: 'transparent' }}
+                                                            />
+                                                        </div>
+                                                    </div>
                                                     {['r', 'g', 'b'].map(channel => {
                                                         const currentRgb = hexToRgb(borderColor);
                                                         const val = currentRgb[channel];

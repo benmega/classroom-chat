@@ -39,6 +39,10 @@ class Config:
     UPLOAD_FOLDER = os.path.join(BASE_DIR, "userData")
     MAX_CONTENT_LENGTH = 500 * 1024 * 1024
     ALLOWED_EXTENSIONS: ClassVar[set[str]] = {"png", "jpg", "jpeg", "gif", "webp"}
+    SUBMISSION_ALLOWED_EXTENSIONS: ClassVar[set[str]] = {
+        "png", "jpg", "jpeg", "gif", "webp", "pdf", "doc", "docx", "txt", "ppt", "pptx", "zip"
+    }
+    SUBMISSION_MAX_BYTES = 20 * 1024 * 1024  # 20MB
 
 
     ADMIN_USERNAME = os.getenv("ADMIN_USERNAME", "admin")
