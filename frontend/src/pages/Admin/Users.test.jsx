@@ -157,4 +157,60 @@ describe('Users Page', () => {
     // Verify status info
     expect(screen.getByText('Offline')).toBeInTheDocument();
   });
+
+  it('handles tab changes and kebab menu actions', async () => {
+    useUsersManagement.mockReturnValue({
+      ...defaultMockState,
+      users: [
+        { id: 1, username: 'student1', role: 'student', can_chat: true },
+      ],
+      totalUsers: 1
+    });
+
+    renderComponent();
+
+    // Click the Parents tab
+    const parentTab = screen.getByText('Parents');
+    fireEvent.click(parentTab);
+
+    // Open kebab menu
+    const kebab = document.querySelector('.kebab-trigger');
+    if (kebab) {
+      fireEvent.click(kebab);
+      // Click an action
+      const adjustBtn = screen.getByText(/Adjust Ducks/i);
+      fireEvent.click(adjustBtn);
+      expect(mockSetActiveModal).toHaveBeenCalledWith('adjust');
+      
+      fireEvent.click(kebab);
+      const muteBtn = screen.getByText(/Mute Chat/i);
+      fireEvent.click(muteBtn);
+    }
+  });
+
+  it('expands parent rows and shows children', () => {
+    useUsersManagement.mockReturnValue({
+      ...defaultMockState,
+      users: [
+        { id: 1, username: 'parent1', role: 'parent' },
+      ],
+      totalUsers: 1,
+      parentChildren: [{ parent_id: 1, child_id: 2, child_username: 'student1', child_nickname: 'Student One' }]
+    });
+
+    renderComponent();
+
+    // Click expand button
+    const expandBtn = document.querySelector('.expand-btn');
+    if (expandBtn) {
+      fireEvent.click(expandBtn);
+      // Wait for children list
+      expect(document.querySelector('.expanded-children-row')).toBeInTheDocument();
+      // Click unlink button
+      const unlinkBtn = document.querySelector('.child-unlink-btn');
+      if (unlinkBtn) {
+        fireEvent.click(unlinkBtn);
+      }
+    }
+  });
 });

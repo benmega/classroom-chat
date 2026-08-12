@@ -328,6 +328,25 @@
     gap: 4px;
 }
 
+.project-indicators {
+    display: flex;
+    gap: 8px;
+    margin-top: 4px;
+    flex-wrap: wrap;
+}
+
+.missing-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: #fee2e2;
+    color: #991b1b;
+    font-size: 0.7rem;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-weight: 700;
+}
+
 .review-preview-img {
     width: 100%;
     height: 100%;

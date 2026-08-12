@@ -24,7 +24,7 @@ def _table_exists(table_name):
 def _index_exists(table_name, index_name):
     conn = op.get_bind()
     inspector = sa.inspect(conn)
-    indexes = {idx.name for idx in inspector.get_indexes(table_name)}
+    indexes = {idx['name'] for idx in inspector.get_indexes(table_name)}
     return index_name in indexes
 
 

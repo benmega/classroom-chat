@@ -471,6 +471,18 @@ const ToReview = () => {
                         <div className="project-title-area">
                             <h3 className="project-title">{p.name}</h3>
                             {p.description && <p className="project-description">{p.description}</p>}
+                            <div className="project-indicators">
+                                {(!p.code_snippet && !p.github_link) && (
+                                    <span className="missing-indicator">
+                                        <AlertCircle size={12} /> Missing Code
+                                    </span>
+                                )}
+                                {!p.video_url && (
+                                    <span className="missing-indicator">
+                                        <AlertCircle size={12} /> Missing Video
+                                    </span>
+                                )}
+                            </div>
                         </div>
                     </div>
 
