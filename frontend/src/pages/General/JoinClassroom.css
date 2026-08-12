@@ -6,7 +6,6 @@
     border: 1px solid color-mix(in srgb, var(--primary-color) 25%, var(--border-subtle));
     border-radius: 12px;
     padding: 1.5rem;
-    margin-top: 1.5rem;
     animation: fadeInUp 0.35s ease-out;
 }
 
@@ -40,9 +39,10 @@
 
 /* === COMPACT (already in a class, but can still join another) === */
 .join-classroom-compact {
-    border-top: 1px solid var(--border-subtle);
-    padding-top: 0.875rem;
-    margin-top: 0.75rem;
+    border: 1px solid var(--border-subtle);
+    border-radius: 10px;
+    padding: 0.75rem 1rem;
+    background: var(--bg-secondary);
 }
 
 .join-classroom-compact-label {
@@ -56,24 +56,23 @@
 
 /* Trigger button (collapsed compact state) */
 .join-classroom-compact-trigger {
-    display: inline-flex;
+    display: flex;
     align-items: center;
     gap: 0.35rem;
-    background: none;
-    border: none;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-subtle);
+    border-radius: 10px;
     color: var(--text-muted);
     font-size: var(--font-xs);
     cursor: pointer;
-    padding: 0.25rem 0;
-    transition: color 0.15s ease;
-    border-top: 1px solid var(--border-subtle);
-    padding-top: 0.75rem;
-    margin-top: 0.5rem;
+    padding: 0.65rem 1rem;
+    transition: color 0.15s ease, border-color 0.15s ease;
     width: 100%;
 }
 
 .join-classroom-compact-trigger:hover {
     color: var(--text-secondary);
+    border-color: var(--primary-color);
 }
 
 .trigger-chevron {
@@ -166,14 +165,15 @@
 
 /* Success state */
 .join-classroom-success {
-    display: inline-flex;
+    display: flex;
     align-items: center;
     gap: 0.4rem;
     font-size: var(--font-sm);
     color: var(--text-secondary);
-    padding: 0.5rem 0;
-    border-top: 1px solid var(--border-subtle);
-    margin-top: 0.5rem;
+    padding: 0.65rem 1rem;
+    border: 1px solid var(--border-subtle);
+    border-radius: 10px;
+    background: var(--bg-secondary);
 }
 
 .join-success-icon {

@@ -71,7 +71,7 @@ def get_pending_requests():
         return jsonify({"success": False, "message": "Unauthorized"}), 401
 
     user = get_user(session_userid)
-    if not user or not user.is_admin:
+    if not user or user.role != 'admin':
         return jsonify({"success": False, "message": "Forbidden"}), 403
 
     requests = CourseInstanceRequest.query.filter_by(status="pending").all()
@@ -97,7 +97,7 @@ def approve_request(request_id):
         return jsonify({"success": False, "message": "Unauthorized"}), 401
 
     user = get_user(session_userid)
-    if not user or not user.is_admin:
+    if not user or user.role != 'admin':
         return jsonify({"success": False, "message": "Forbidden"}), 403
 
     data = request.get_json() or {}
@@ -132,6 +132,10 @@ def approve_request(request_id):
     req.status = "approved"
     db.session.commit()
 
+    from application.socket_events import emit_activity_resolved
+
+    emit_activity_resolved(req.student_id, "course_request", req.id, "approved")
+
     return jsonify(
         {"success": True, "message": "Course instance added and request approved."}
     )
@@ -144,7 +148,7 @@ def reject_request(request_id):
         return jsonify({"success": False, "message": "Unauthorized"}), 401
 
     user = get_user(session_userid)
-    if not user or not user.is_admin:
+    if not user or user.role != 'admin':
         return jsonify({"success": False, "message": "Forbidden"}), 403
 
     req = db.session.get(CourseInstanceRequest, request_id)
@@ -158,5 +162,9 @@ def reject_request(request_id):
 
     req.status = "rejected"
     db.session.commit()
+
+    from application.socket_events import emit_activity_resolved
+
+    emit_activity_resolved(req.student_id, "course_request", req.id, "rejected")
 
     return jsonify({"success": True, "message": "Request rejected."})

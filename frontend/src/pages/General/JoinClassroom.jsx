@@ -2,10 +2,11 @@ import React, { useState } from 'react';
 import { LogIn, CheckCircle, Loader2, ChevronRight } from 'lucide-react';
 import toast from 'react-hot-toast';
 import client from '../../api/client';
+import { getErrorMessage } from '../../utils/apiError';
 import './JoinClassroom.css';
 
 /**
- * JoinClassroom — inline component for the Submit Work page.
+ * JoinClassroom — sits at the top of the Submit Work page.
  *
  * Props:
  *   compact    {boolean} — if true, renders a subtle single-line prompt instead
@@ -32,11 +33,10 @@ const JoinClassroom = ({ compact = false, onJoined }) => {
             const classroom = res.data?.data?.classroom || res.data?.classroom || {};
             setSuccess(classroom);
             setCode('');
-            toast.success(`Joined ${classroom.name || 'classroom'}!`);
+            
             if (onJoined) onJoined(classroom);
         } catch (err) {
-            const msg = err.response?.data?.error || 'Invalid code. Please check and try again.';
-            toast.error(msg);
+            toast.error(getErrorMessage(err, 'Invalid code. Please check and try again.'));
         } finally {
             setIsSubmitting(false);
         }

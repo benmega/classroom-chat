@@ -14,7 +14,6 @@ import {
     Clock,
     User,
     Hash,
-    RefreshCw,
     AlertCircle,
     Sliders,
     Eye,
@@ -22,7 +21,6 @@ import {
     ChevronDown,
     ChevronUp
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
 import { getApiUrl } from '../../utils/apiUrl';
@@ -47,7 +45,6 @@ const ToReview = () => {
 
     // App state
     const [isLoading, setIsLoading] = useState(true);
-    const [isRefreshing, setIsRefreshing] = useState(false);
     const [activeTab, setActiveTab] = useState('all');
     const [isProcessing, setIsProcessing] = useState(null);
 
@@ -63,9 +60,8 @@ const ToReview = () => {
     const [selectedTrades, setSelectedTrades] = useState(new Set());
     const [selectedTracks, setSelectedTracks] = useState(new Set());
 
-    const fetchAllData = useCallback(async (quiet = false) => {
-        if (!quiet) setIsLoading(true);
-        else setIsRefreshing(true);
+    const fetchAllData = useCallback(async () => {
+        setIsLoading(true);
 
         try {
             const [
@@ -128,7 +124,6 @@ const ToReview = () => {
             toast.error("Failed to load review workspace items.");
         } finally {
             setIsLoading(false);
-            setIsRefreshing(false);
         }
     }, []);
 
@@ -157,7 +152,7 @@ const ToReview = () => {
             });
 
             if (response.data.status === 'success') {
-                toast.success(response.data.message);
+                
                 setProjects(prev => prev.filter(p => p.id !== projectId));
                 // Clean up state
                 setProjectComments(prev => { const copy = {...prev}; delete copy[projectId]; return copy; });
@@ -171,12 +166,28 @@ const ToReview = () => {
     };
 
     // 2. Certificate Review Actions
-    const handleCertificateReview = async (certId) => {
+    const handleCertificateReview = async (certId, action = 'approve') => {
+        if (action === 'reject') {
+            const review_note = window.prompt('Reason for rejecting? (optional)') || undefined;
+            setIsProcessing(`cert-${certId}`);
+            try {
+                const response = await client.post(`/api/achievements/admin/certificates/reject/${certId}`, { review_note });
+                if (response.data.status === 'success') {
+                    setCertificates(prev => prev.filter(c => c.id !== certId));
+                }
+            } catch {
+                toast.error('Failed to reject certificate.');
+            } finally {
+                setIsProcessing(null);
+            }
+            return;
+        }
+
         setIsProcessing(`cert-${certId}`);
         try {
             const response = await client.post(`/api/achievements/admin/certificates/reviewed/${certId}`);
             if (response.data.status === 'success') {
-                toast.success(response.data.message);
+
                 setCertificates(prev => prev.filter(c => c.id !== certId));
             }
         } catch {
@@ -192,7 +203,7 @@ const ToReview = () => {
         try {
             const response = await client.post('/api/achievements/admin/certificates/reviewed/all');
             if (response.data.status === 'success') {
-                toast.success(response.data.message);
+                
                 setCertificates([]); 
             }
         } catch {
@@ -211,7 +222,7 @@ const ToReview = () => {
         try {
             const response = await client.post(`/api/admin/${endpoint}`);
             if (response.data.status === 'success') {
-                if (!isBulk) toast.success(response.data.data?.message || `User ${action === 'approve' ? 'approved' : 'rejected'}`);
+                
                 setPendingUsers(prev => prev.filter(u => u.id !== userId));
             }
         } catch {
@@ -231,12 +242,13 @@ const ToReview = () => {
         for (const id of ids) {
             try {
                 await handleUserApproval(id, action, true);
+                // eslint-disable-next-line
                 successCount++;
             } catch (e) {
                 console.error(e);
             }
         }
-        toast.success(`Successfully ${action === 'approve' ? 'approved' : 'rejected'} ${successCount} users.`);
+        
         setSelectedUsers(new Set());
         setIsProcessing(null);
     };
@@ -251,7 +263,7 @@ const ToReview = () => {
         try {
             const response = await client.post('/api/admin/trade_action', formData);
             if (response.data.status === 'success') {
-                if (!isBulk) toast.success(response.data.message);
+                
                 setTrades(prev => prev.filter(t => t.id !== tradeId));
             } else {
                 if (!isBulk) toast.error(response.data.message || 'Action failed.');
@@ -275,7 +287,7 @@ const ToReview = () => {
                 console.error(e);
             }
         }
-        toast.success(`Successfully processed ${ids.length} trades.`);
+        
         setSelectedTrades(new Set());
         setIsProcessing(null);
     };
@@ -288,7 +300,7 @@ const ToReview = () => {
         try {
             const response = await client.put(`/api/admin/track-requests/${requestId}`, { status });
             if (response.data.success) {
-                if (!isBulk) toast.success(response.data.message);
+                
                 setTrackRequests(prev => prev.filter(r => r.id !== requestId));
             } else {
                 if (!isBulk) toast.error(response.data.message || 'Action failed.');
@@ -312,7 +324,7 @@ const ToReview = () => {
                 console.error(e);
             }
         }
-        toast.success(`Successfully processed ${ids.length} track requests.`);
+        
         setSelectedTracks(new Set());
         setIsProcessing(null);
     };
@@ -336,7 +348,7 @@ const ToReview = () => {
                     course_id
                 });
                 if (response.data.success) {
-                    toast.success(response.data.message);
+                    
                     setCourseRequests(prev => prev.filter(r => r.id !== requestId));
                 }
             } else {
@@ -346,7 +358,7 @@ const ToReview = () => {
                 }
                 const response = await client.post(`/api/course-requests/${requestId}/reject`);
                 if (response.data.success) {
-                    toast.success(response.data.message);
+                    
                     setCourseRequests(prev => prev.filter(r => r.id !== requestId));
                 }
             }
@@ -459,6 +471,18 @@ const ToReview = () => {
                         <div className="project-title-area">
                             <h3 className="project-title">{p.name}</h3>
                             {p.description && <p className="project-description">{p.description}</p>}
+                            <div className="project-indicators">
+                                {(!p.code_snippet && !p.github_link) && (
+                                    <span className="missing-indicator">
+                                        <AlertCircle size={12} /> Missing Code
+                                    </span>
+                                )}
+                                {!p.video_url && (
+                                    <span className="missing-indicator">
+                                        <AlertCircle size={12} /> Missing Video
+                                    </span>
+                                )}
+                            </div>
                         </div>
                     </div>
 
@@ -650,9 +674,16 @@ const ToReview = () => {
                             >
                                 <Download size={16} /> PDF
                             </a>
-                            <button 
+                            <button
+                                className="btn-reject"
+                                onClick={() => handleCertificateReview(c.id, 'reject')}
+                                disabled={isProcessing === `cert-${c.id}`}
+                            >
+                                <XCircle size={16} /> Reject
+                            </button>
+                            <button
                                 className="btn-approve"
-                                onClick={() => handleCertificateReview(c.id)}
+                                onClick={() => handleCertificateReview(c.id, 'approve')}
                                 disabled={isProcessing === `cert-${c.id}`}
                             >
                                 <CheckCircle size={16} /> {isProcessing === `cert-${c.id}` ? 'Approving...' : 'Approve'}
@@ -1007,23 +1038,8 @@ const ToReview = () => {
                 title="To Review" 
                 description="Items requiring teacher approvals."
             >
-                <button 
-                    className="btn-refresh" 
-                    onClick={() => fetchAllData(true)} 
-                    disabled={isRefreshing}
-                >
-                    <RefreshCw size={16} className={isRefreshing ? 'spin' : ''} /> 
-                    {isRefreshing ? 'Syncing...' : 'Sync'}
-                </button>
+                
             </AdminPageHeader>
-
-            <div className="temporary-legacy-links" style={{ background: '#fff3cd', padding: '12px 16px', borderRadius: '8px', border: '1px solid #ffe69c', marginBottom: '20px', display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'center' }}>
-                <strong style={{ color: '#664d03', fontSize: '14px' }}>Legacy Processing Views:</strong>
-                <Link to="/admin/projects" style={{ color: '#055160', fontSize: '14px', textDecoration: 'underline', fontWeight: 600 }}>Projects</Link>
-                <Link to="/admin/certificates" style={{ color: '#055160', fontSize: '14px', textDecoration: 'underline', fontWeight: 600 }}>Certificates</Link>
-                <Link to="/admin/pending-users" style={{ color: '#055160', fontSize: '14px', textDecoration: 'underline', fontWeight: 600 }}>Pending Users</Link>
-                <Link to="/admin/pending-trades" style={{ color: '#055160', fontSize: '14px', textDecoration: 'underline', fontWeight: 600 }}>Pending Trades</Link>
-            </div>
 
             <div className="review-dashboard-layout">
                 {/* Left Tabs */}

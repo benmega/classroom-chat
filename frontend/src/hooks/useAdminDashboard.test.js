@@ -69,7 +69,7 @@ describe('useAdminDashboard', () => {
         });
 
         expect(client.post).toHaveBeenCalledWith('/api/admin/toggle-ai');
-        expect(toast.success).toHaveBeenCalledWith('AI toggled');
+        
         expect(client.get).toHaveBeenCalledTimes(2); // refetch
     });
 
@@ -100,7 +100,7 @@ describe('useAdminDashboard', () => {
         });
 
         expect(client.post).toHaveBeenCalledWith('/api/admin/toggle-message-sending');
-        expect(toast.success).toHaveBeenCalledWith('Messages toggled');
+        
     });
 
     it('fails to toggle messages', async () => {
@@ -126,7 +126,7 @@ describe('useAdminDashboard', () => {
         });
 
         expect(client.post).toHaveBeenCalledWith('/api/admin/update_duck_multiplier', { multiplier: 2.5 });
-        expect(toast.success).toHaveBeenCalledWith('Multiplier updated!');
+        
     });
 
     it('fails to update multiplier', async () => {
@@ -152,7 +152,7 @@ describe('useAdminDashboard', () => {
         });
 
         expect(client.post).toHaveBeenCalledWith('/api/admin/add-banned-word', expect.any(FormData));
-        expect(toast.success).toHaveBeenCalledWith('Word added');
+        
         expect(res).toBe(true);
     });
 
@@ -236,7 +236,7 @@ describe('useAdminDashboard', () => {
         });
 
         expect(client.post).toHaveBeenCalledWith('/api/admin/create_user', expect.any(FormData));
-        expect(toast.success).toHaveBeenCalledWith('User created');
+        
         expect(result.current.formErrors).toEqual({});
     });
 
@@ -308,7 +308,7 @@ describe('useAdminDashboard', () => {
         });
 
         expect(client.post).toHaveBeenCalledWith('/api/admin/adjust_ducks', expect.any(FormData));
-        expect(toast.success).toHaveBeenCalledWith('Ducks adjusted');
+        
     });
     
     it('fails to adjust ducks api error', async () => {
@@ -398,7 +398,7 @@ describe('useAdminDashboard', () => {
             username: 'testuser',
             new_password: 'pass123'
         });
-        expect(toast.success).toHaveBeenCalledWith('Password reset');
+        
     });
     
     it('fails to reset password api error', async () => {
@@ -448,7 +448,7 @@ describe('useAdminDashboard', () => {
         });
 
         expect(client.post).toHaveBeenCalledWith('/message/start_conversation', expect.any(FormData));
-        expect(toast.success).toHaveBeenCalledWith('New conversation started!');
+        
     });
 
     it('fails to start conversation', async () => {
@@ -481,7 +481,7 @@ describe('useAdminDashboard', () => {
         });
 
         expect(client.post).toHaveBeenCalledWith('/api/admin/remove_user', expect.any(FormData));
-        expect(toast.success).toHaveBeenCalledWith('User removed');
+        
     });
 
     it('cancels removing user', async () => {

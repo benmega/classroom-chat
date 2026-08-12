@@ -328,14 +328,13 @@ const ParentReportCard = () => {
             project={selectedProject} 
             onClose={() => setSelectedProject(null)} 
         />
-
-        <NoteSlideshow 
-            notes={reportData.notes}
-            currentIndex={slideshowIndex}
-            onClose={() => setSlideshowIndex(null)}
-            onPrev={() => setSlideshowIndex(i => i > 0 ? i - 1 : reportData.notes.length - 1)}
-            onNext={() => setSlideshowIndex(i => i < reportData.notes.length - 1 ? i + 1 : 0)}
-        />
+        {slideshowIndex !== null && (
+            <NoteSlideshow
+                notes={reportData.notes}
+                initialIndex={slideshowIndex}
+                onClose={() => setSlideshowIndex(null)}
+            />
+        )}
         </>
     );
 };

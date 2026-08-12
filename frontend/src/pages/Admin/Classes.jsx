@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, RefreshCw, Key, Plus, School, Users, Globe, BookOpen, X } from 'lucide-react';
+import { Search, Key, Plus, School, Users, Globe, BookOpen, X, MoreVertical, Trash2 } from 'lucide-react';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
 import Skeleton from '../../components/common/Skeleton';
@@ -39,11 +39,55 @@ const LanguageSymbol = ({ language }) => {
     return <Globe size={18} aria-hidden="true" style={{ color: 'var(--text-muted)' }} />;
 };
 
+const ClassCardMenu = ({ classroom, onDelete }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const menuRef = React.useRef(null);
+    
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (menuRef.current && !menuRef.current.contains(event.target)) {
+                setIsOpen(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    return (
+        <div className="kebab-menu-container" ref={menuRef} style={{ position: 'relative' }}>
+            <button 
+                type="button"
+                className={`action-btn kebab-trigger ${isOpen ? 'active' : ''}`} 
+                onClick={(e) => { e.stopPropagation(); setIsOpen(!isOpen); }}
+                style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '4px', color: 'white' }}
+                aria-label="Classroom options"
+            >
+                <MoreVertical size={18} />
+            </button>
+            {isOpen && (
+                <div className="kebab-dropdown" style={{ position: 'absolute', right: 0, top: '100%', zIndex: 10, background: 'var(--bg-primary, white)', border: '1px solid var(--border-subtle, #e2e8f0)', borderRadius: '6px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)', minWidth: '150px', padding: '4px' }}>
+                    <button 
+                        type="button"
+                        className="kebab-item" 
+                        style={{ display: 'flex', alignItems: 'center', width: '100%', padding: '8px 12px', border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--text-danger, #dc2626)', fontSize: '0.85rem', borderRadius: '4px', fontWeight: '500' }}
+                        onClick={(e) => { e.stopPropagation(); setIsOpen(false); onDelete(classroom); }}
+                        // eslint-disable-next-line
+                        onMouseOver={(e) => e.currentTarget.style.background = 'var(--bg-secondary, #f1f5f9)'}
+                        // eslint-disable-next-line
+                        onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
+                    >
+                        <Trash2 size={14} style={{marginRight:'8px'}} /> Delete Class
+                    </button>
+                </div>
+            )}
+        </div>
+    );
+};
+
 const Classes = () => {
     const navigate = useNavigate();
     const [classrooms, setClassrooms] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [isRefreshing, setIsRefreshing] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [activeModal, setActiveModal] = useState(null);
     const [classroomCards, setClassroomCards] = useState([]);
@@ -58,7 +102,6 @@ const Classes = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const fetchClassrooms = useCallback(async () => {
-        setIsRefreshing(true);
         try {
             const response = await client.get('/api/admin/classrooms');
             setClassrooms(response.data.data?.classrooms || response.data.classrooms || []);
@@ -67,13 +110,27 @@ const Classes = () => {
             toast.error('Failed to load classrooms list.');
         } finally {
             setIsLoading(false);
-            setIsRefreshing(false);
         }
     }, []);
 
     useEffect(() => {
         fetchClassrooms();
     }, [fetchClassrooms]);
+
+    const handleDeleteClassroom = async (classroom) => {
+        if (!window.confirm(`WARNING: Are you sure you want to delete classroom "${classroom.name}"? Deleting a classroom removes the classroom instance. Students remain active users in the system but will be unlinked from this group. This cannot be undone.`)) {
+            return;
+        }
+        try {
+            const res = await client.delete(`/api/admin/classrooms/${classroom.id}`);
+            if (res.data.success) {
+                toast.success(res.data.message || 'Classroom deleted successfully');
+                fetchClassrooms();
+            }
+        } catch (err) {
+            toast.error(err.response?.data?.error || 'Failed to delete classroom.');
+        }
+    };
 
     const fetchClassroomCards = async (classroomId) => {
         setIsFetchingCards(true);
@@ -106,7 +163,7 @@ const Classes = () => {
                 language: newLanguage.trim(),
                 url: newUrl.trim() || 'https://classroom.chat'
             });
-            toast.success(`Classroom "${newName}" created successfully!`);
+            
             setIsCreateModalOpen(false);
             setNewId('');
             setNewName('');
@@ -186,14 +243,7 @@ const Classes = () => {
                     >
                         <Key size={18} aria-hidden="true" /> Connection Cards
                     </button>
-                    <button
-                        className={`refresh-btn ${isRefreshing ? 'spinning' : ''}`}
-                        onClick={fetchClassrooms}
-                        disabled={isRefreshing}
-                        aria-label="Refresh classroom list"
-                    >
-                        <RefreshCw size={18} aria-hidden="true" />
-                    </button>
+                    
                 </div>
             </AdminPageHeader>
 
@@ -218,6 +268,9 @@ const Classes = () => {
                                 }}
                             >
                                 <div className="class-card-header">
+                                    <div style={{ position: 'absolute', top: '12px', right: '12px', zIndex: 5 }}>
+                                        <ClassCardMenu classroom={c} onDelete={handleDeleteClassroom} />
+                                    </div>
                                     <Link
                                         to={`/admin/classes/${c.id}`}
                                         className="class-card-title-link"

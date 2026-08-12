@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { 
     Users, 
     Search,
-    RefreshCw,
     Shield,
     Menu,
     Bot,
@@ -55,13 +54,11 @@ const AdminDashboard = () => {
     const {
         dashboardData,
         isLoading,
-        isRefreshing,
         activeModal,
         setActiveModal,
         formLoading,
         timeframe,
         setTimeframe,
-        fetchDashboardData,
         handleToggleAI,
         handleToggleMessages,
         handleUpdateMultiplier,
@@ -106,19 +103,13 @@ const AdminDashboard = () => {
     return (
         <div className="admin-dashboard">
             <AdminPageHeader title="Overview Dashboard">
-                <button 
-                    onClick={() => fetchDashboardData(timeframe)} 
-                    className={`refresh-btn ${isRefreshing ? 'spinning' : ''}`}
-                    disabled={isRefreshing}
-                >
-                    <RefreshCw size={20} />
-                </button>
+                
             </AdminPageHeader>
 
             <AdminStats 
                 stats={dashboardData} 
-                onApprovalClick={() => navigate('/admin/pending-users')} 
-                onTradeClick={() => navigate('/admin/pending-trades')}
+                onApprovalClick={() => navigate('/admin/to-review')}
+                onTradeClick={() => navigate('/admin/to-review')}
                 onEarnedWeekClick={() => navigate('/admin/transactions?type=earned')}
                 onTotalDucksClick={() => navigate('/admin/users')}
                 onOnlineUsersClick={() => navigate('/admin/users?filter=online')}
@@ -152,7 +143,7 @@ const AdminDashboard = () => {
                                 <div className="icon icon-primary"><Users size={20} /></div>
                                 <span className="action-text-main">User Directory</span>
                             </button>
-                            <button className="action-item" onClick={() => navigate('/admin/pending-users')}>
+                            <button className="action-item" onClick={() => navigate('/admin/to-review')}>
                                 <div className="icon icon-primary approval"><Shield size={20} /></div>
                                 <span className="action-text-main">Account Approvals</span>
                             </button>
@@ -194,7 +185,7 @@ const AdminDashboard = () => {
                                         onBlur={(e) => handleUpdateMultiplier(e.target.value)}
                                         className="multiplier-input-field"
                                     />
-                                    <RefreshCw size={14} color="var(--text-secondary)" />
+                                    
                                 </div>
                             </div>
                         </div>

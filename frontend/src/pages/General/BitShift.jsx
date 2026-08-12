@@ -89,7 +89,7 @@ const BitShift = () => {
         setByteDuckCounts(newByteCounts);
         setBitDuckCounts(newBitCounts);
         setHasAttemptedSubmit(false);
-        toast.success('Binary auto-calculated!');
+        
     };
 
     const handleSubmit = async (e) => {
@@ -120,7 +120,7 @@ const BitShift = () => {
             });
 
             if (response.data.status === 'success') {
-                toast.success(response.data.message || 'Trade submitted for approval.');
+                
                 confetti({
                     particleCount: 100,
                     spread: 70,

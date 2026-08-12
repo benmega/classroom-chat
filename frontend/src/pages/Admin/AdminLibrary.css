@@ -1,0 +1,76 @@
+.admin-library-page {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    padding-bottom: 2rem;
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+.library-tabs-container {
+    background: var(--surface-color);
+    border-radius: var(--radius-lg);
+    padding: 0.5rem;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    backdrop-filter: blur(8px);
+}
+
+.library-tabs {
+    display: flex;
+    gap: 0.5rem;
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
+.library-tabs::-webkit-scrollbar {
+    display: none;
+}
+
+.library-tab {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    background: transparent;
+    border: none;
+    border-radius: var(--radius-md);
+    color: var(--text-secondary);
+    font-weight: 500;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.library-tab:hover {
+    background: var(--bg-color);
+    color: var(--text-primary);
+}
+
+.library-tab.active {
+    background: var(--primary-color);
+    color: white;
+    box-shadow: 0 4px 8px rgba(var(--primary-color-rgb), 0.2);
+}
+
+.library-content-container {
+    background: transparent;
+    border-radius: var(--radius-lg);
+    min-height: 500px;
+}
+
+/* Optional: Slight tweaks to embedded pages so they fit better in the library context */
+.library-content-container > div {
+    animation: slideUpFade 0.3s ease-out;
+}
+
+@keyframes slideUpFade {
+    0% {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

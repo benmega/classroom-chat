@@ -67,7 +67,7 @@ def check_achievement(user, achievement, stats=None):
         "certificate": lambda: (
             1
             if UserCertificate.query.filter_by(
-                user_id=user.id, achievement_id=achievement.id, reviewed=True
+                user_id=user.id, achievement_id=achievement.id, status="approved"
             ).first()
             else 0
         ),
@@ -127,7 +127,7 @@ def get_achievement_progress(user, achievement, stats=None):
         "certificate": lambda: (
             1
             if UserCertificate.query.filter_by(
-                user_id=user.id, achievement_id=achievement.id, reviewed=True
+                user_id=user.id, achievement_id=achievement.id, status="approved"
             ).first()
             else 0
         ),
@@ -223,7 +223,9 @@ def evaluate_user(user, force=False):
             db.session.add(ua)
             # grant ducks reward
             if achievement.reward > 0:
-                user.add_ducks(achievement.reward)
+                user.add_ducks(
+                    achievement.reward, reason=f"Achievement: {achievement.name}"
+                )
 
             new_awards.append(achievement)
 

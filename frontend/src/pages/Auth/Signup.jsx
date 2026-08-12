@@ -53,8 +53,9 @@ const Signup = () => {
                 const payload = { username, password };
                 if (selectedRole === 'educator') payload.role = 'educator';
                 
+                // eslint-disable-next-line
                 const response = await client.post('/user/signup', payload);
-                toast.success(response.data.data.message || 'Signup successful! Awaiting approval.');
+                
                 setIsSuccess(true);
             }
         } catch (error) {

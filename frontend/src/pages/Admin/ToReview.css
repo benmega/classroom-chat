@@ -182,7 +182,7 @@
 
 .badge-certificate {
     background: #fef3c7;
-    color: #b45309;
+    color: var(--warning-color);
 }
 
 .badge-user {
@@ -328,6 +328,25 @@
     gap: 4px;
 }
 
+.project-indicators {
+    display: flex;
+    gap: 8px;
+    margin-top: 4px;
+    flex-wrap: wrap;
+}
+
+.missing-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: #fee2e2;
+    color: #991b1b;
+    font-size: 0.7rem;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-weight: 700;
+}
+
 .review-preview-img {
     width: 100%;
     height: 100%;
@@ -393,8 +412,8 @@
 .code-snippet-box {
     margin: 0;
     padding: 16px;
-    background: #0f172a;
-    color: #f1f5f9;
+    background: var(--text-primary);
+    color: var(--bg-secondary);
     font-family: 'Courier New', Courier, monospace;
     font-size: var(--font-sm);
     max-height: 250px;

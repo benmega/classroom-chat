@@ -24,12 +24,12 @@ def get_feed():
 
         limit = request.args.get("limit", 50, type=int)
         before_id = request.args.get("before_id", type=int)
-        classroom_id = request.args.get("classroom_id", type=int)
+        classroom_id = request.args.get("classroom_id", type=str)
 
         from application.models.message import message_classrooms, message_users
 
         # Admin gets everything, UNLESS a classroom_id is specified
-        if user.is_admin and not classroom_id:
+        if user.role == 'admin' and not classroom_id:
             query = Message.query.filter(Message.deleted_at.is_(None))
             if before_id:
                 query = query.filter(Message.id < before_id)
@@ -114,6 +114,7 @@ def get_feed():
                 "is_struck": msg.is_struck,
                 "has_animated_border": msg.has_animated_border,
                 "animated_border_speed": msg.animated_border_speed,
+                "animated_border_color": msg.animated_border_color,
                 "chat_font_color": msg.chat_font_color,
             }
             message_data.append(msg_dict)
@@ -133,7 +134,7 @@ def get_me_context():
         if not user:
             return jsonify({"success": False, "error": "User not logged in"}), 401
 
-        if user.is_admin:
+        if user.role == 'admin':
             from application.models.classroom import Classroom
 
             classrooms = Classroom.query.all()
@@ -171,7 +172,7 @@ def delete_message(message_id):
         if not msg:
             return jsonify({"error": "Message not found"}), 404
 
-        if not user.is_admin and msg.user_id != user.id:
+        if user.role != 'admin' and msg.user_id != user.id:
             return jsonify(
                 {"error": "Forbidden: Admin access or message author required"}
             ), 403

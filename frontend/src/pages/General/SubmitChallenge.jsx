@@ -5,6 +5,7 @@ import useAuthStore from '../../store/useAuthStore';
 import UserSearchInput from '../../components/common/UserSearchInput';
 import Modal from '../../components/common/Modal';
 import confetti from 'canvas-confetti';
+import { getErrorMessage } from '../../utils/apiError';
 import './SubmitChallenge.css';
 import './SubmitCertificate.css';
 
@@ -35,18 +36,21 @@ const SubmitChallenge = () => {
 
 
 
+    const resetForm = () => {
+        setUrl('');
+        setHelpers('');
+        setNotes('');
+    };
+
     const handleCourseRequest = async () => {
         try {
             const response = await client.post('/api/course-requests/submit', pendingCourseRequest);
             if (response.data.success) {
-                toast.success(response.data.message);
                 setPendingCourseRequest(null);
-                setUrl('');
-                setHelpers('');
-                setNotes('');
+                resetForm();
             }
         } catch (error) {
-            toast.error(error.response?.data?.message || 'Failed to submit request');
+            toast.error(getErrorMessage(error, 'Failed to submit request'));
         }
     };
 
@@ -69,16 +73,16 @@ const SubmitChallenge = () => {
                 });
 
                 if (response.data.success) {
-                    toast.success('Certificate submitted successfully!');
+                    // Certificates need admin review before the achievement/ducks are
+                    // awarded, so no success toast here — the confetti is just an
+                    // acknowledgement that the submission went through.
                     confetti({
                         particleCount: 200,
                         spread: 100,
                         origin: { y: 0.6 },
                         zIndex: 9999
                     });
-                    setUrl('');
-                    setHelpers('');
-                    setNotes('');
+                    resetForm();
                     setUploadProgress(0);
                 } else {
                     toast.error(response.data.error || 'Submission failed.');
@@ -99,11 +103,12 @@ const SubmitChallenge = () => {
                             { icon: '⚠️', duration: 6000 }
                         );
                     } else {
-                        toast.success(response.data.message || 'Challenge submitted successfully!');
-                        
+                        // No success toast — the confetti here and the duck quack
+                        // sound (fired globally in useLayout when the balance
+                        // refreshed by checkAuth() below increases) are the feedback.
                         const duckReward = response.data.duck_reward || 10;
                         const pCount = Math.min(50 + (duckReward * 10), 500);
-                        
+
                         confetti({
                             particleCount: pCount,
                             spread: Math.min(70 + (duckReward * 2), 160),
@@ -111,10 +116,8 @@ const SubmitChallenge = () => {
                             zIndex: 9999
                         });
                     }
-                    
-                    setUrl('');
-                    setHelpers('');
-                    setNotes('');
+
+                    resetForm();
                     checkAuth(); // Refresh user balance
                 } else {
                     toast.error(response.data.message || 'Submission failed.');
@@ -131,7 +134,7 @@ const SubmitChallenge = () => {
                     url: url
                 });
             } else {
-                toast.error(data?.message || data?.error || 'An error occurred during submission.');
+                toast.error(getErrorMessage(error, 'An error occurred during submission.'));
                 setUrl('');
             }
         } finally {

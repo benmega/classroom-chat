@@ -15,15 +15,7 @@ def bulk_add_challenges():
     if not data:
         return "No data provided", 400
 
-    course_id = data.get("course_id")
-    domain = data.get("domain")
-    difficulty = data.get("difficulty", "medium")
-    value = int(data.get("value", 1))
     challenges = data.get("challenges", [])
-
-    if not course_id or not domain:
-        return "course_id and domain are required", 400
-
     if not challenges:
         return "No challenges provided in the set", 400
 
@@ -36,9 +28,15 @@ def bulk_add_challenges():
         slug = item.get("slug")
         description = item.get("description", "")
 
-        if not name or not slug:
+        # New required fields from CSV (with fallback to top-level payload)
+        course_id = item.get("course_id") or data.get("course_id")
+        domain = item.get("domain") or data.get("domain")
+        difficulty = item.get("difficulty") or "medium"
+        value = int(item.get("value") or 1)
+
+        if not name or not slug or not course_id or not domain:
             skipped_count += 1
-            errors.append("Missing name or slug for an item")
+            errors.append(f"Missing required fields for challenge: {name or 'Unknown'}")
             continue
 
         # Check if challenge already exists
@@ -129,3 +127,101 @@ def reorder_challenges():
         return f"Database error: {e!s}", 500
 
     return {"message": f"Successfully updated sequences for {updated_count} challenges."}
+
+
+@admin_bp.route("/challenges/all_grouped", methods=["GET"])
+@admin_only
+@api_response
+def get_all_challenges_grouped():
+    challenges = Challenge.query.order_by(Challenge.course_id, Challenge.sequence.asc(), Challenge.id.asc()).all()
+    grouped = {}
+    for c in challenges:
+        if c.course_id not in grouped:
+            grouped[c.course_id] = []
+        grouped[c.course_id].append({
+            "id": c.id,
+            "name": c.name,
+            "slug": c.slug,
+            "domain": c.domain,
+            "difficulty": c.difficulty,
+            "value": c.value,
+            "sequence": c.sequence,
+            "description": c.description,
+            "course_id": c.course_id,
+        })
+    return {"challenges": grouped}
+
+
+@admin_bp.route("/challenges/add", methods=["POST"])
+@admin_only
+@api_response
+def add_challenge():
+    data = request.get_json()
+    if not data:
+        return "No data provided", 400
+    name = data.get("name")
+    slug = data.get("slug")
+    course_id = data.get("course_id")
+    if not name or not slug or not course_id:
+        return "name, slug, and course_id are required", 400
+
+    if Challenge.query.filter_by(slug=slug).first():
+        return "Challenge with this slug already exists", 400
+
+    c = Challenge(
+        name=name,
+        slug=slug,
+        course_id=course_id,
+        domain=data.get("domain", "codecombat.com"),
+        difficulty=data.get("difficulty", "medium"),
+        value=int(data.get("value", 1) or 1),
+        sequence=data.get("sequence"),
+        description=data.get("description", ""),
+        is_active=True
+    )
+    db.session.add(c)
+    db.session.commit()
+    return {"message": "Challenge added successfully", "id": c.id}
+
+
+@admin_bp.route("/challenges/edit/<int:id>", methods=["PUT"])
+@admin_only
+@api_response
+def edit_challenge(id):
+    c = Challenge.query.get(id)
+    if not c:
+        return "Challenge not found", 404
+
+    data = request.get_json()
+    if not data:
+        return "No data provided", 400
+
+    slug = data.get("slug")
+    if slug:
+        existing = Challenge.query.filter(Challenge.slug == slug, Challenge.id != id).first()
+        if existing:
+            return "Challenge with this slug already exists", 400
+        c.slug = slug
+
+    if "name" in data: c.name = data["name"]
+    if "course_id" in data: c.course_id = data["course_id"]
+    if "domain" in data: c.domain = data["domain"]
+    if "difficulty" in data: c.difficulty = data["difficulty"]
+    if "value" in data: c.value = int(data["value"] or 1)
+    if "sequence" in data: c.sequence = data["sequence"]
+    if "description" in data: c.description = data["description"]
+
+    db.session.commit()
+    return {"message": "Challenge updated successfully"}
+
+
+@admin_bp.route("/challenges/<int:id>", methods=["DELETE"])
+@admin_only
+@api_response
+def delete_challenge(id):
+    c = Challenge.query.get(id)
+    if not c:
+        return "Challenge not found", 404
+    db.session.delete(c)
+    db.session.commit()
+    return {"message": "Challenge deleted successfully"}

@@ -399,7 +399,7 @@ def test_contact_teacher(client, app):
     from application.models.message import Message
 
     with app.app_context():
-        admin = User(username="admin_teacher", role="teacher", is_admin=True)
+        admin = User(username="admin_teacher", role="admin")
         admin.set_password("pass123")
 
         parent = User(username="parent_contact_test", role="parent", nickname="Parent One")

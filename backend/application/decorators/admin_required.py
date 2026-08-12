@@ -25,7 +25,7 @@ def admin_only(f):
         from application.extensions import db
 
         user = db.session.get(User, user_id)
-        if not user or not user.is_admin:
+        if not user or user.role != 'admin':
             if is_api:
                 return jsonify({"error": "Admin access required"}), 403
             return render_template("index.html")

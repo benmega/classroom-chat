@@ -25,7 +25,6 @@ class User(db.Model):
     is_online = db.Column(db.Boolean, default=False)
     nickname = db.Column(db.String(50), nullable=False, default=default_nickname)
     slug = db.Column(db.String(100), unique=True, nullable=True)
-    is_admin = db.Column(db.Boolean, default=False)
     is_approved = db.Column(db.Boolean, default=False)
     role = db.Column(db.String(20), default="student", nullable=False)
     active_track = db.Column(
@@ -56,6 +55,7 @@ class User(db.Model):
     chat_font_color = db.Column(db.String(7), nullable=True)
     has_animated_border = db.Column(db.Boolean, default=False)
     animated_border_speed = db.Column(db.String(10), default="normal")
+    animated_border_color = db.Column(db.String(7), nullable=True)
     has_auto_bitshift = db.Column(db.Boolean, default=False)
     has_custom_wallpaper = db.Column(db.Boolean, default=False)
     profile_wallpaper = db.Column(db.String(255), nullable=True)
@@ -166,7 +166,6 @@ class User(db.Model):
                 if self.profile_picture
                 else "/static/images/Default_pfp.jpg"
             ),
-            "is_admin": self.is_admin,
             "is_approved": self.is_approved,
             "role": self.role,
             "active_track": self.active_track,
@@ -187,6 +186,7 @@ class User(db.Model):
             "chat_font_color": self.chat_font_color,
             "has_animated_border": self.has_animated_border,
             "animated_border_speed": self.animated_border_speed,
+            "animated_border_color": self.animated_border_color,
             "has_auto_bitshift": self.has_auto_bitshift,
             "has_custom_wallpaper": self.has_custom_wallpaper,
             "profile_wallpaper": self.profile_wallpaper,
@@ -252,7 +252,6 @@ class User(db.Model):
                 else "/static/images/Default_pfp.jpg"
             ),
             "is_online": self.is_online,
-            "is_admin": self.is_admin,
             "is_approved": self.is_approved,
             "role": self.role,
             "active_track": self.active_track,
@@ -283,6 +282,7 @@ class User(db.Model):
             "chat_font_color": self.chat_font_color,
             "has_animated_border": self.has_animated_border,
             "animated_border_speed": self.animated_border_speed,
+            "animated_border_color": self.animated_border_color,
             "has_auto_bitshift": self.has_auto_bitshift,
             "has_custom_wallpaper": self.has_custom_wallpaper,
             "profile_wallpaper": self.profile_wallpaper,

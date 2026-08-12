@@ -53,7 +53,7 @@ def pending_users():
     from application.models.challenge_log import ChallengeLog
     from sqlalchemy import func
 
-    pending = User.query.filter_by(is_approved=False, is_admin=False).all()
+    pending = User.query.filter_by(is_approved=False).filter(User.role != 'admin').all()
     user_ids = [u.id for u in pending]
 
     counts = (
@@ -139,9 +139,9 @@ def get_users():
     )
 
     online_count = query.filter(User.is_online.is_(True)).count()
-    admin_count = query.filter(User.is_admin.is_(True)).count()
+    admin_count = query.filter(User.role == 'admin').count()
     pending_count = query.filter(
-        User.is_approved.is_(False), User.is_admin.is_(False)
+        User.is_approved.is_(False), User.role != 'admin'
     ).count()
 
     pagination = query.paginate(page=page, per_page=per_page, error_out=False)
@@ -220,7 +220,7 @@ def reset_password():
     if not user:
         return jsonify({"success": False, "message": "User not found"}), 404
 
-    if user.is_admin:
+    if user.role == 'admin':
         return jsonify(
             {"success": False, "message": "Cannot reset password of another admin"}
         ), 403
@@ -285,7 +285,7 @@ def remove_user():
     if not user:
         return jsonify(success=False, message="User not found"), 404
 
-    if user.is_admin:
+    if user.role == 'admin':
         return jsonify(success=False, message="Cannot remove another admin"), 403
 
     try:
@@ -671,11 +671,6 @@ def update_user_details(user_id):
         user_obj.role = data["role"]
 
     # Boolean flags & permissions
-    if "is_admin" in data:
-        val = data["is_admin"]
-        user_obj.is_admin = (
-            val if isinstance(val, bool) else (str(val).lower() == "true")
-        )
 
     if "is_approved" in data:
         val = data["is_approved"]
@@ -1062,7 +1057,7 @@ def pass_chapter(user_id):
                 user_id=user_obj.id,
                 achievement_id=cert.id,
                 url="Honorary Degree",
-                reviewed=True,
+                status="approved",
                 reviewed_at=datetime.datetime.utcnow(),
             )
             db.session.add(uc)

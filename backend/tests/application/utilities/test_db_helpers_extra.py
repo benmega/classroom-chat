@@ -29,7 +29,7 @@ def test_save_message_to_db_no_user(mock_get):
 def test_save_message_to_db_success(mock_is_appropriate, mock_commit, mock_add, mock_query, mock_get):
     # Setup user
     mock_user = MagicMock()
-    mock_user.is_admin = True
+    mock_user.role = "admin"
     mock_user.has_animated_border = False
     mock_user.animated_border_speed = "slow"
     mock_user.chat_font_color = "red"

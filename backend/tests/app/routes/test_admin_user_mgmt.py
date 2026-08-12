@@ -108,7 +108,7 @@ def test_reset_password(client, sample_admin, sample_user):
     assert resp.get_json()["success"] is True
 
     # Trying to reset another admin's password should fail
-    other_admin = User(username="otheradmin", is_admin=True, password_hash="dummy")
+    other_admin = User(username="otheradmin", role="admin", password_hash="dummy")
     db.session.add(other_admin)
     db.session.commit()
 
@@ -175,7 +175,7 @@ def test_remove_user(client, sample_admin, sample_user):
     assert User.query.filter_by(username=sample_user.username).first() is None
 
     # Cannot remove admin
-    other_admin = User(username="otheradmin2", is_admin=True, password_hash="dummy")
+    other_admin = User(username="otheradmin2", role="admin", password_hash="dummy")
     db.session.add(other_admin)
     db.session.commit()
 

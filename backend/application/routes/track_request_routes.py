@@ -89,7 +89,7 @@ def get_pending_track_requests():
         return jsonify({"success": False, "message": "Unauthorized"}), 401
 
     user = get_user(session_userid)
-    if not user or not user.is_admin:
+    if not user or user.role != 'admin':
         return jsonify({"success": False, "message": "Forbidden"}), 403
 
     requests = TrackChangeRequest.query.filter_by(status="pending").all()
@@ -103,7 +103,7 @@ def update_track_request(request_id):
         return jsonify({"success": False, "message": "Unauthorized"}), 401
 
     user = get_user(session_userid)
-    if not user or not user.is_admin:
+    if not user or user.role != 'admin':
         return jsonify({"success": False, "message": "Forbidden"}), 403
 
     data = request.get_json() or {}

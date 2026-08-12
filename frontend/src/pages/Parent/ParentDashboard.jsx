@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Loader2, MoreVertical, User, Trophy, Bell, Activity, Zap, Clock, Star, BookOpen, Folder, Award, ChevronRight, AlertCircle, Plus } from 'lucide-react';
+import { Loader2, MoreVertical, User, Trophy, Bell, Activity, Zap, Clock, Star, BookOpen, Folder, Award, ChevronRight, AlertCircle, Plus, HelpCircle, UserMinus } from 'lucide-react';
 import toast from 'react-hot-toast';
 import client from '../../api/client';
 import { getApiUrl } from '../../utils/apiUrl';
@@ -107,7 +107,7 @@ const ParentDashboard = () => {
         setIsConnecting(true);
         try {
             await client.post('/api/parents/connect/code', { code: connectCode });
-            toast.success('Child connected successfully!');
+            
             setConnectCode('');
             setIsLinkModalOpen(false);
             const list = await fetchChildren();
@@ -123,10 +123,10 @@ const ParentDashboard = () => {
 
     // ── Disconnect child ───────────────────────────────────────────────────────
     const handleDisconnect = async (childId, childName) => {
-        if (!window.confirm(`Remove ${childName} from your account? You can reconnect later with their code.`)) return;
+        if (!window.confirm(`Remove ${childName}?`)) return;
         try {
             await client.post(`/api/parents/disconnect/${childId}`);
-            toast.success(`Disconnected from ${childName}`);
+            
             const list = await fetchChildren();
             if (list.length > 0) fetchChildReports(list);
         } catch (err) {
@@ -186,6 +186,85 @@ const ParentDashboard = () => {
         );
     }
 
+    if (children.length === 0 && !isLoading) {
+        return (
+            <div className="parent-dashboard animate-page-entry">
+                <main className="parent-body" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '80vh' }}>
+                    <div className="glass-panel" style={{ padding: '2rem', textAlign: 'center', maxWidth: '400px', width: '100%' }}>
+                        <h2 style={{ marginBottom: '1rem' }}>Welcome</h2>
+                        <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+                            Link child to start.
+                            <HelpCircle size={16} title="Ask your child to provide you the 6-digit code they can find in their profile settings." style={{ cursor: 'help' }} />
+                        </p>
+                        <form onSubmit={handleConnectChild} className="connect-form d-flex flex-col gap-md">
+                            <input
+                                type="text"
+                                placeholder="CODE"
+                                value={connectCode}
+                                onChange={(e) => setConnectCode(e.target.value)}
+                                maxLength={10}
+                                className="connect-input"
+                                style={{ padding: '0.75rem', fontSize: '1.1rem', textAlign: 'center', letterSpacing: '2px', textTransform: 'uppercase' }}
+                                aria-label="Code"
+                            />
+                            <button
+                                type="submit"
+                                className="btn-premium"
+                                disabled={isConnecting || !connectCode.trim()}
+                                style={{ width: '100%', justifyContent: 'center' }}
+                            >
+                                {isConnecting ? 'Linking...' : 'Link Child'}
+                            </button>
+                            {connectError && (
+                                <div style={{ fontSize: '0.75rem', color: 'var(--error-color)', marginTop: '0.25rem' }}>
+                                    {connectError}
+                                </div>
+                            )}
+                        </form>
+                    </div>
+                </main>
+            </div>
+        );
+    }
+
+    if (children.length === 0 && !isLoading) {
+        return (
+            <div className="parent-dashboard animate-page-entry">
+                <main className="parent-body" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '80vh' }}>
+                    <div className="glass-panel" style={{ padding: '2rem', textAlign: 'center', maxWidth: '400px', width: '100%' }}>
+                        <h2 style={{ marginBottom: '1rem' }}>Welcome</h2>
+                        <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem' }}>Link child to start.</p>
+                        <form onSubmit={handleConnectChild} className="connect-form d-flex flex-col gap-md">
+                            <input
+                                type="text"
+                                placeholder="CODE"
+                                value={connectCode}
+                                onChange={(e) => setConnectCode(e.target.value)}
+                                maxLength={10}
+                                className="connect-input"
+                                style={{ padding: '0.75rem', fontSize: '1.1rem', textAlign: 'center', letterSpacing: '2px', textTransform: 'uppercase' }}
+                                aria-label="Code"
+                            />
+                            <button
+                                type="submit"
+                                className="btn-premium"
+                                disabled={isConnecting || !connectCode.trim()}
+                                style={{ width: '100%', justifyContent: 'center' }}
+                            >
+                                {isConnecting ? 'Linking...' : 'Link Child'}
+                            </button>
+                            {connectError && (
+                                <div style={{ fontSize: '0.75rem', color: 'var(--error-color)', marginTop: '0.25rem' }}>
+                                    {connectError}
+                                </div>
+                            )}
+                        </form>
+                    </div>
+                </main>
+            </div>
+        );
+    }
+
     return (
         <div role="button" tabIndex={0} className="parent-dashboard animate-page-entry" onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={() => setOpenMenu(null)}>
             <main className="parent-body">
@@ -200,9 +279,9 @@ const ParentDashboard = () => {
                             <div className="panel-header-styled">
                                 <div className="d-flex align-center gap-0-75rem">
                                     <Activity size={22} color="var(--primary-color)" />
-                                    <h2 className="panel-title-text">Recent Family Activity</h2>
+                                    <h2 className="panel-title-text">Activity</h2>
                                 </div>
-                                <span className="panel-subtitle-text">Past 30 Days</span>
+                                <span className="panel-subtitle-text">30 Days</span>
                             </div>
 
                             {reportsLoading && Object.keys(childHistories).length === 0 ? (
@@ -283,12 +362,12 @@ const ParentDashboard = () => {
                                                     <span className="text-1-75rem">{hasAnyActivityEver ? '☕' : '👋'}</span>
                                                     <div>
                                                         <h4 style={{ margin: '0 0 0.35rem 0', color: hasAnyActivityEver ? '#b45309' : 'var(--primary-color)', fontSize: '1rem' }}>
-                                                            {hasAnyActivityEver ? `${displayName} is taking a break` : `Welcome ${displayName}!`}
+                                                            {hasAnyActivityEver ? `${displayName} inactive` : `Welcome!`}
                                                         </h4>
                                                         <p className="m-0 text-xs text-secondary lh-1-5">
                                                             {hasAnyActivityEver 
-                                                                ? `It looks like ${displayName} hasn't been active in the last 30 days. Try encouraging them to attempt some levels or showcase their skills in a project!` 
-                                                                : `We're excited to have ${displayName} get started on their coding journey! Encourage them to complete their first challenges or build a project to earn Ducks.`
+                                                                ? `No activity in 30 days. Encourage them to play or build!` 
+                                                                : `Encourage ${displayName} to start coding and earn Ducks!`
                                                             }
                                                         </p>
                                                     </div>
@@ -308,7 +387,7 @@ const ParentDashboard = () => {
                         <section className="dashboard-panel dashboard-panel-styled-small">
                             <div className="panel-header-styled-small">
                                 <h3 className="panel-title-small">
-                                    Family Members
+                                    Family
                                 </h3>
                                 <button 
                                     onClick={() => setIsLinkModalOpen(true)}
@@ -385,7 +464,9 @@ const ParentDashboard = () => {
                                                             e.preventDefault();
                                                             setOpenMenu(openMenu === child.id ? null : child.id);
                                                         }}
-                                                        title="Options"
+                                                        title={`Options for ${displayName}`}
+                                                        aria-label={`Options for ${displayName}`}
+                                                        aria-expanded={openMenu === child.id}
                                                     >
                                                         <MoreVertical size={16} />
                                                     </button>

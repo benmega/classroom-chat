@@ -12,9 +12,10 @@ import {
     Menu,
     X,
     ArrowLeftRight,
-    BookMarked,
     School,
-    ClipboardList
+    ClipboardList,
+    Library,
+    Inbox
 } from 'lucide-react';
 import useAuthStore from '../../store/useAuthStore';
 import useSidebar from '../../hooks/useSidebar';
@@ -32,6 +33,7 @@ const AdminLayout = ({ children }) => {
         pending_certificates: 0,
         pending_track_requests: 0,
         pending_course_requests: 0,
+        pending_submissions: 0,
         total_incomplete: 0
     });
 
@@ -47,7 +49,7 @@ const AdminLayout = ({ children }) => {
             }
         };
 
-        if (isAuthenticated && user?.is_admin) {
+        if (isAuthenticated && user?.role === 'admin') {
             fetchData();
             const interval = setInterval(fetchData, 15000); // refresh every 15s
             return () => clearInterval(interval);
@@ -59,7 +61,7 @@ const AdminLayout = ({ children }) => {
         setSidebarOpen(false);
     }, [location.pathname, setSidebarOpen]);
 
-    if (!isAuthenticated || !user?.is_admin) {
+    if (!isAuthenticated || user?.role !== 'admin') {
         return (
             <div className="access-denied-container">
                 <div className="access-denied-card">
@@ -77,9 +79,10 @@ const AdminLayout = ({ children }) => {
     const navItems = [
         { path: '/admin', label: 'Dashboard', tooltip: 'Admin Dashboard', icon: LayoutDashboard, end: true },
         { path: '/admin/to-review', label: 'To Review', tooltip: 'Items To Review', icon: ClipboardList },
+        { path: '/admin/submissions', label: 'Student Files', tooltip: 'Student File Submissions', icon: Inbox },
         { path: '/admin/users', label: 'Users', tooltip: 'User Management', icon: Users },
         { path: '/admin/classes', label: 'Classes', tooltip: 'Classes & Enrolments', icon: School },
-        { path: '/admin/standard-projects', label: 'Standard Projects', tooltip: 'Standard Project Templates', icon: BookMarked },
+        { path: '/admin/library', label: 'Content Library', tooltip: 'Content Library', icon: Library },
         { path: '/admin/advanced', label: 'Advanced Panel', tooltip: 'Advanced System CRUD', icon: Settings2 },
         { path: '/chat', label: 'Back to Site', tooltip: 'Return to Main App', icon: Home },
     ];
@@ -148,14 +151,8 @@ const AdminLayout = ({ children }) => {
                                         {item.path === '/admin/users' && reviewCounts.pending_users > 0 && (
                                             <span className="admin-nav-badge">{reviewCounts.pending_users}</span>
                                         )}
-                                        {item.path === '/admin/pending-trades' && reviewCounts.pending_trades > 0 && (
-                                            <span className="admin-nav-badge">{reviewCounts.pending_trades}</span>
-                                        )}
-                                        {item.path === '/admin/projects' && reviewCounts.pending_projects > 0 && (
-                                            <span className="admin-nav-badge">{reviewCounts.pending_projects}</span>
-                                        )}
-                                        {item.path === '/admin/certificates' && reviewCounts.pending_certificates > 0 && (
-                                            <span className="admin-nav-badge">{reviewCounts.pending_certificates}</span>
+                                        {item.path === '/admin/submissions' && reviewCounts.pending_submissions > 0 && (
+                                            <span className="admin-nav-badge">{reviewCounts.pending_submissions}</span>
                                         )}
                                         {item.path === '/admin' && reviewCounts.pending_track_requests > 0 && (
                                             <span className="admin-nav-badge">{reviewCounts.pending_track_requests}</span>
@@ -168,14 +165,8 @@ const AdminLayout = ({ children }) => {
                                     {item.path === '/admin/users' && reviewCounts.pending_users > 0 && (
                                         <span className="admin-nav-badge mobile-badge">{reviewCounts.pending_users}</span>
                                     )}
-                                    {item.path === '/admin/pending-trades' && reviewCounts.pending_trades > 0 && (
-                                        <span className="admin-nav-badge mobile-badge">{reviewCounts.pending_trades}</span>
-                                    )}
-                                    {item.path === '/admin/projects' && reviewCounts.pending_projects > 0 && (
-                                        <span className="admin-nav-badge mobile-badge">{reviewCounts.pending_projects}</span>
-                                    )}
-                                    {item.path === '/admin/certificates' && reviewCounts.pending_certificates > 0 && (
-                                        <span className="admin-nav-badge mobile-badge">{reviewCounts.pending_certificates}</span>
+                                    {item.path === '/admin/submissions' && reviewCounts.pending_submissions > 0 && (
+                                        <span className="admin-nav-badge mobile-badge">{reviewCounts.pending_submissions}</span>
                                     )}
                                     {item.path === '/admin' && reviewCounts.pending_track_requests > 0 && (
                                         <span className="admin-nav-badge mobile-badge">{reviewCounts.pending_track_requests}</span>

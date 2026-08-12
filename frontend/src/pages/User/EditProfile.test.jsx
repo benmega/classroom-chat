@@ -42,7 +42,7 @@ describe('EditProfile', () => {
         });
     });
 
-    it('renders user details correctly', async () => {
+    it('renders user details correctly and disables nickname for student', async () => {
         server.use(
             http.get('*/user/api/parent-code', () => {
                 return HttpResponse.json({ data: { connection_code: 'ABCD-1234' } });
@@ -53,6 +53,8 @@ describe('EditProfile', () => {
 
         expect(screen.getByDisplayValue('testuser')).toBeInTheDocument();
         expect(screen.getByDisplayValue('Test Nick')).toBeInTheDocument();
+        expect(screen.getByPlaceholderText('Enter your nickname')).toBeDisabled();
+        expect(screen.getByText('Nickname (readonly)')).toBeInTheDocument();
         expect(screen.getByDisplayValue('This is my bio')).toBeInTheDocument();
         expect(screen.getByDisplayValue('Drawer A1')).toBeInTheDocument();
 
@@ -81,13 +83,13 @@ describe('EditProfile', () => {
         expect(toast.success).toHaveBeenCalledWith('Code copied to clipboard!');
     });
 
-    it('updates inputs and shows save/cancel buttons when changed', () => {
+    it('updates inputs and shows save/cancel buttons when bio is changed', () => {
         render(<EditProfile />);
         
         expect(screen.queryByRole('button', { name: /Save Changes/i })).not.toBeInTheDocument();
 
-        const nicknameInput = screen.getByPlaceholderText('Enter your nickname');
-        fireEvent.change(nicknameInput, { target: { value: 'New Nick' } });
+        const bioInput = screen.getByPlaceholderText('Tell us about yourself...');
+        fireEvent.change(bioInput, { target: { value: 'New Bio' } });
 
         expect(screen.getByRole('button', { name: /Save Changes/i })).toBeInTheDocument();
         expect(screen.getByRole('button', { name: /Cancel/i })).toBeInTheDocument();
@@ -96,14 +98,14 @@ describe('EditProfile', () => {
     it('cancels changes', () => {
         render(<EditProfile />);
         
-        const nicknameInput = screen.getByPlaceholderText('Enter your nickname');
-        fireEvent.change(nicknameInput, { target: { value: 'New Nick' } });
+        const bioInput = screen.getByPlaceholderText('Tell us about yourself...');
+        fireEvent.change(bioInput, { target: { value: 'New Bio' } });
 
         const cancelBtn = screen.getByRole('button', { name: /Cancel/i });
         fireEvent.click(cancelBtn);
 
         expect(screen.queryByRole('button', { name: /Save Changes/i })).not.toBeInTheDocument();
-        expect(nicknameInput.value).toBe('Test Nick');
+        expect(bioInput.value).toBe('This is my bio');
     });
 
     it('toggles password visibility', () => {
@@ -135,27 +137,61 @@ describe('EditProfile', () => {
         expect(toast.error).toHaveBeenCalledWith('Passwords do not match!');
     });
 
-    it('handles successful profile update', async () => {
+    it('handles successful profile update for student (without sending nickname)', async () => {
         server.use(
             http.post('*/user/edit_profile', async ({ request }) => {
                 const body = await request.json();
-                expect(body.nickname).toBe('New Nick');
+                expect(body.nickname).toBeUndefined();
+                expect(body.bio).toBe('New Bio');
                 return HttpResponse.json({ success: true });
             })
         );
 
         render(<EditProfile />);
 
-        fireEvent.change(screen.getByPlaceholderText('Enter your nickname'), { target: { value: 'New Nick' } });
+        fireEvent.change(screen.getByPlaceholderText('Tell us about yourself...'), { target: { value: 'New Bio' } });
         fireEvent.submit(screen.getByRole('button', { name: /Save Changes/i }).closest('form'));
 
         expect(screen.getByRole('button', { name: /Saving.../i })).toBeInTheDocument();
 
         await waitFor(() => {
-            expect(toast.success).toHaveBeenCalledWith('Profile updated successfully!');
+            
         });
-        
-        // Buttons should disappear since checkAuth resets changes by setting inputs to new store state
+    });
+
+    it('allows non-student to edit nickname and sends nickname in payload', async () => {
+        useAuthStore.setState({
+            user: {
+                username: 'parentuser',
+                nickname: 'Parent Nick',
+                bio: 'Parent bio',
+                role: 'parent',
+                profile_picture: 'pic.jpg',
+            },
+            checkAuth: vi.fn(),
+            isAuthenticated: true,
+            isChecking: false
+        });
+
+        server.use(
+            http.post('*/user/edit_profile', async ({ request }) => {
+                const body = await request.json();
+                expect(body.nickname).toBe('New Parent Nick');
+                return HttpResponse.json({ success: true });
+            })
+        );
+
+        render(<EditProfile />);
+
+        const nicknameInput = screen.getByPlaceholderText('Enter your nickname');
+        expect(nicknameInput).not.toBeDisabled();
+
+        fireEvent.change(nicknameInput, { target: { value: 'New Parent Nick' } });
+        fireEvent.submit(screen.getByRole('button', { name: /Save Changes/i }).closest('form'));
+
+        await waitFor(() => {
+            
+        });
     });
 
     it('handles file change', async () => {
@@ -189,7 +225,7 @@ describe('EditProfile', () => {
         fireEvent.submit(screen.getByRole('button', { name: /Save Changes/i }).closest('form'));
 
         await waitFor(() => {
-            expect(toast.success).toHaveBeenCalledWith('Profile updated successfully!');
+            
         });
     });
 
@@ -202,7 +238,7 @@ describe('EditProfile', () => {
 
         render(<EditProfile />);
 
-        fireEvent.change(screen.getByPlaceholderText('Enter your nickname'), { target: { value: 'New Nick' } });
+        fireEvent.change(screen.getByPlaceholderText('Tell us about yourself...'), { target: { value: 'New Bio' } });
         fireEvent.submit(screen.getByRole('button', { name: /Save Changes/i }).closest('form'));
 
         await waitFor(() => {

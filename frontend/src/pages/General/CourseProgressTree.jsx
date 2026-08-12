@@ -18,7 +18,7 @@ const CourseProgressTree = () => {
     const navigate = useNavigate();
     const { slug } = useParams();
     const { user: authUser } = useAuthStore();
-    const isAdmin = authUser?.is_admin;
+    const isAdmin = authUser?.role === 'admin';
 
     const containerRef = useRef(null);
     const nodeRefs = useRef({});
@@ -236,7 +236,7 @@ const CourseProgressTree = () => {
                 if (window.confirm(msg)) {
                     const passRes = await client.post(`/api/admin/user/${userObj.id}/pass_chapter`, { course_id: node.id });
                     if (passRes.data.success) {
-                        toast.success(passRes.data.message);
+                        
                         // Reload data via full refresh since state may not auto-update cleanly here
                         window.location.reload();
                     }

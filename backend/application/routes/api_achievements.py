@@ -20,6 +20,7 @@ from .achievement_routes import (
     get_achievements_json,
     mark_all_reviewed,
     mark_reviewed,
+    reject_certificate,
     submit_certificate,
     view_certificate,
 )
@@ -67,6 +68,11 @@ def api_download_certificate(cert_id):
 @achievements_api.route("/admin/certificates/reviewed/all", methods=["POST"])
 def api_mark_all_reviewed():
     return mark_all_reviewed()
+
+
+@achievements_api.route("/admin/certificates/reject/<int:cert_id>", methods=["POST"])
+def api_reject_certificate(cert_id):
+    return reject_certificate(cert_id)
 
 
 @achievements_api.route("/admin/certificates/download_all", methods=["GET"])

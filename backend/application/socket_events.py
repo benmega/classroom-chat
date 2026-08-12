@@ -62,7 +62,7 @@ def handle_connect(auth=None):
         join_room(f"classroom:{cid}")
 
     # 4. Admin room
-    if user.is_admin:
+    if user.role == 'admin':
         join_room("admin")
 
     # Mark online
@@ -128,7 +128,7 @@ def handle_send_message(data):
     target_users = data.get("target_users", [])
 
     # Server-side validation
-    if not user.is_admin:
+    if user.role != 'admin':
         if len(content) > 500:
             return {"success": False, "error": "Message too long"}
 
@@ -215,6 +215,7 @@ def handle_send_message(data):
         "is_struck": msg.is_struck,
         "has_animated_border": msg.has_animated_border,
         "animated_border_speed": msg.animated_border_speed,
+        "animated_border_color": msg.animated_border_color,
         "chat_font_color": msg.chat_font_color,
     }
 
@@ -254,6 +255,24 @@ def emit_classroom_enrolled(user_id: int, classroom_dict: dict):
         {
             "classroom": classroom_dict,
             "user_id": user_id,
+        },
+        room=f"user:{user_id}",
+    )
+
+
+def emit_activity_resolved(user_id: int, kind: str, item_id: int, status: str):
+    """
+    Public helper — called when a teacher/admin resolves a student's pending
+    submission (certificate, file, or course-connection request). Pushes a
+    push event to the student's personal socket room so the client can
+    surface an unread badge / refresh the /activity timeline live.
+    """
+    socketio.emit(
+        "activity_resolved",
+        {
+            "kind": kind,
+            "id": item_id,
+            "status": status,
         },
         room=f"user:{user_id}",
     )

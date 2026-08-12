@@ -1,0 +1,258 @@
+﻿
+frontend\src\components\admin\AdminModals.jsx:753:            toast.success('Join code copied to clipboard!');
+frontend\src\components\common\ImageUpload.jsx:71:        toast.success('Image uploaded successfully');
+frontend\src\hooks\useAdminDashboard.js:45:                toast.success(response.data.message);
+frontend\src\hooks\useAdminDashboard.js:57:                toast.success(response.data.message);
+frontend\src\hooks\useAdminDashboard.js:69:                toast.success('Multiplier updated!');
+frontend\src\hooks\useAdminDashboard.js:87:                toast.success(response.data.message);
+frontend\src\hooks\useAdminDashboard.js:126:                toast.success(response.data.message);
+frontend\src\hooks\useAdminDashboard.js:156:                toast.success(response.data.message);
+frontend\src\hooks\useAdminDashboard.js:193:                toast.success(response.data.message);
+frontend\src\hooks\useAdminDashboard.js:210:                toast.success('New conversation started!');
+frontend\src\hooks\useAdminDashboard.js:228:                toast.success(response.data.message);
+frontend\src\hooks\useAdminDashboard.test.js:72:        expect(toast.success).toHaveBeenCalledWith('AI toggled');
+frontend\src\hooks\useAdminDashboard.test.js:103:        expect(toast.success).toHaveBeenCalledWith('Messages 
+toggled');
+frontend\src\hooks\useAdminDashboard.test.js:129:        expect(toast.success).toHaveBeenCalledWith('Multiplier 
+updated!');
+frontend\src\hooks\useAdminDashboard.test.js:155:        expect(toast.success).toHaveBeenCalledWith('Word added');
+frontend\src\hooks\useAdminDashboard.test.js:239:        expect(toast.success).toHaveBeenCalledWith('User created');
+frontend\src\hooks\useAdminDashboard.test.js:311:        expect(toast.success).toHaveBeenCalledWith('Ducks adjusted');
+frontend\src\hooks\useAdminDashboard.test.js:401:        expect(toast.success).toHaveBeenCalledWith('Password reset');
+frontend\src\hooks\useAdminDashboard.test.js:451:        expect(toast.success).toHaveBeenCalledWith('New conversation 
+started!');
+frontend\src\hooks\useAdminDashboard.test.js:484:        expect(toast.success).toHaveBeenCalledWith('User removed');
+frontend\src\hooks\useAdminUserDashboard.js:89:                toast.success(res.data.message);
+frontend\src\hooks\useAdminUserDashboard.js:109:                toast.success(res.data.message);
+frontend\src\hooks\useAdminUserDashboard.js:130:                toast.success(res.data.message);
+frontend\src\hooks\useAdminUserDashboard.js:152:                toast.success(res.data.message || 'Drawer updated');
+frontend\src\hooks\useAdminUserDashboard.js:170:                toast.success(res.data.message);
+frontend\src\hooks\useAdminUserDashboard.js:191:                toast.success(res.data.message);
+frontend\src\hooks\useAdminUserDashboard.js:206:                toast.success(response.data.data.message);
+frontend\src\hooks\useAdminUserDashboard.js:222:                toast.success(response.data.data.message);
+frontend\src\hooks\useAdminUserDashboard.js:249:                toast.success(`Successfully ${isLinked ? 'unlinked' : 
+'linked'} child account`);
+frontend\src\hooks\useAdminUserDashboard.js:278:                toast.success(`Successfully ${isLinked ? 'unlinked' : 
+'linked'} parent account`);
+frontend\src\hooks\useAdminUserDashboard.js:307:                toast.success(`Assigned ${selectedTemplateName} to 
+${user.nickname || user.username}!`);
+frontend\src\hooks\useAdminUserDashboard.js:358:                toast.success(responseData.message || 'User profile 
+updated successfully');
+frontend\src\hooks\useAdminUserDashboard.js:390:            toast.success("Certificate generated successfully!");
+frontend\src\hooks\useAdminUserDashboard.test.js:132:        expect(toast.success).toHaveBeenCalledWith('Chapter 
+passed');
+frontend\src\hooks\useAdminUserDashboard.test.js:151:        expect(toast.success).toHaveBeenCalledWith('Ducks 
+adjusted');
+frontend\src\hooks\useAdminUserDashboard.test.js:169:        expect(toast.success).toHaveBeenCalledWith('Packets 
+adjusted');
+frontend\src\hooks\useAdminUserDashboard.test.js:187:        expect(toast.success).toHaveBeenCalledWith('Password 
+reset');
+frontend\src\hooks\useAdminUserDashboard.test.js:204:        expect(toast.success).toHaveBeenCalledWith('Drawer set');
+frontend\src\hooks\useAdminUserDashboard.test.js:218:        expect(toast.success).toHaveBeenCalledWith('User 
+removed');
+frontend\src\hooks\useAdminUserDashboard.test.js:233:        expect(toast.success).toHaveBeenCalledWith('Approved');
+frontend\src\hooks\useAdminUserDashboard.test.js:247:        expect(toast.success).toHaveBeenCalledWith('Rejected');
+frontend\src\hooks\useAdminUserDashboard.test.js:263:        expect(toast.success).toHaveBeenCalledWith('Successfully 
+linked child account');
+frontend\src\hooks\useAdminUserDashboard.test.js:278:        expect(toast.success).toHaveBeenCalledWith('Successfully 
+linked parent account');
+frontend\src\hooks\useAdminUserDashboard.test.js:298:        expect(toast.success).toHaveBeenCalledWith('Assigned 
+Template1 to nick!');
+frontend\src\hooks\useAdminUserDashboard.test.js:313:        expect(toast.success).toHaveBeenCalledWith('Updated 
+profile for @newnick');
+frontend\src\hooks\useFeedLogic.js:268:      toast.success('Message deleted');
+frontend\src\hooks\useProfile.js:55:            toast.success('Note deleted.');
+frontend\src\hooks\useProfile.js:78:                toast.success('Note uploaded!');
+frontend\src\hooks\useProfile.js:128:                        toast.success('Profile picture updated!');
+frontend\src\hooks\useProjectManagement.js:148:                        toast.success('Generated thumbnail from 
+video!');
+frontend\src\hooks\useProjectManagement.js:167:                toast.success('Generated thumbnail from recording!');
+frontend\src\hooks\useProjectManagement.js:196:                    toast.success(projectId ? 'Project updated!' : 
+'Project created!');
+frontend\src\hooks\useProjectManagement.js:228:                toast.success('Project deleted.');
+frontend\src\hooks\useProjectManagement.test.js:166:        expect(toast.success).toHaveBeenCalledWith('Generated 
+thumbnail from video!');
+frontend\src\hooks\useProjectManagement.test.js:184:        expect(toast.success).toHaveBeenCalledWith('Generated 
+thumbnail from recording!');
+frontend\src\hooks\useProjectManagement.test.js:212:        expect(toast.success).toHaveBeenCalledWith('Project 
+updated!');
+frontend\src\hooks\useProjectManagement.test.js:258:        expect(toast.success).toHaveBeenCalledWith('Project 
+deleted.');
+frontend\src\hooks\useUsersManagement.js:92:                toast.success(response.data.message);
+frontend\src\hooks\useUsersManagement.js:117:                toast.success(response.data.message);
+frontend\src\hooks\useUsersManagement.js:142:                toast.success(response.data.message);
+frontend\src\hooks\useUsersManagement.js:178:                toast.success(response.data.message);
+frontend\src\hooks\useUsersManagement.js:209:                toast.success(response.data.message || 'Drawer updated 
+successfully.');
+frontend\src\hooks\useUsersManagement.js:238:                toast.success(response.data.message);
+frontend\src\hooks\useUsersManagement.js:249:            toast.success(response.data.message);
+frontend\src\hooks\useUsersManagement.js:285:                toast.success(response.data.message);
+frontend\src\hooks\useUsersManagement.test.jsx:107:    expect(toast.success).toHaveBeenCalledWith('User created');
+frontend\src\hooks\useUsersManagement.test.jsx:140:    expect(toast.success).toHaveBeenCalledWith('Ducks adjusted');
+frontend\src\hooks\useUsersManagement.test.jsx:166:    expect(toast.success).toHaveBeenCalledWith('Packets adjusted');
+frontend\src\hooks\useUsersManagement.test.jsx:207:    expect(toast.success).toHaveBeenCalledWith('Password reset');
+frontend\src\hooks\useUsersManagement.test.jsx:220:    expect(toast.success).toHaveBeenCalledWith('Drawer set');
+frontend\src\hooks\useUsersManagement.test.jsx:232:    expect(toast.success).toHaveBeenCalledWith('User removed');
+frontend\src\hooks\useUsersManagement.test.jsx:253:    expect(toast.success).toHaveBeenCalledWith('Link toggled');
+frontend\src\hooks\useUsersManagement.test.jsx:320:    expect(toast.success).not.toHaveBeenCalled();
+frontend\src\pages\Admin\AdminAchievements.jsx:58:                toast.success(response.data.message);
+frontend\src\pages\Admin\AdminAssignProject.jsx:102:                toast.success(response.data.message);
+frontend\src\pages\Admin\AdminAssignProject.test.jsx:163:        
+expect(toast.success).toHaveBeenCalledWith('Assigned!');
+frontend\src\pages\Admin\AdminCertificates.jsx:108:                toast.success(response.data.message || 'Marked as 
+reviewed.');
+frontend\src\pages\Admin\AdminCertificates.jsx:121:                toast.success(response.data.message || 'All 
+certificates approved.');
+frontend\src\pages\Admin\AdminCertificates.jsx:140:                toast.success('Template uploaded successfully');
+frontend\src\pages\Admin\AdminCertificates.jsx:174:            toast.success('Test certificate generated');
+frontend\src\pages\Admin\AdminChallenges.jsx:79:                    toast.success(`Parsed ${challenges.length} 
+challenges from CSV`);
+frontend\src\pages\Admin\AdminChallenges.jsx:117:                toast.success(response.data.message || `Successfully 
+added challenges.`);
+frontend\src\pages\Admin\AdminChallenges.jsx:150:                    toast.success(`Loaded 
+${response.data.challenges.length} challenges.`);
+frontend\src\pages\Admin\AdminChallenges.jsx:190:                toast.success(response.data.message || 'Order saved 
+successfully!');
+frontend\src\pages\Admin\AdminClassDashboard.jsx:117:                toast.success('Course connected successfully');
+frontend\src\pages\Admin\AdminClassDashboard.jsx:134:                toast.success('Course disconnected successfully');
+frontend\src\pages\Admin\AdminClassDashboard.jsx:176:                toast.success('Languages updated');
+frontend\src\pages\Admin\AdminClassDashboard.jsx:196:                toast.success('Classroom name updated');
+frontend\src\pages\Admin\AdminClassDashboard.jsx:212:                toast.success('Join code regenerated 
+successfully!');
+frontend\src\pages\Admin\AdminClassDashboard.jsx:231:                toast.success(res.data.message || 'Student 
+enrolled successfully');
+frontend\src\pages\Admin\AdminClassDashboard.jsx:251:                toast.success(res.data.message || 'Student 
+removed successfully');
+frontend\src\pages\Admin\AdminClassDashboard.test.jsx:146:        
+expect(toast.success).toHaveBeenCalledWith('Enrolled');
+frontend\src\pages\Admin\AdminClassDashboard.test.jsx:185:        
+expect(toast.success).toHaveBeenCalledWith('Unenrolled');
+frontend\src\pages\Admin\AdminClassDashboard.test.jsx:224:        
+expect(toast.success).toHaveBeenCalledWith('Updated');
+frontend\src\pages\Admin\AdminClassDashboard.test.jsx:255:        
+expect(toast.success).toHaveBeenCalledWith('Deleted');
+frontend\src\pages\Admin\AdminClassDashboard.test.jsx:283:        expect(toast.success).not.toHaveBeenCalled();
+frontend\src\pages\Admin\AdminClassDashboard.test.jsx:384:            
+expect(toast.success).toHaveBeenCalledWith('Course connected successfully');
+frontend\src\pages\Admin\AdminClassDashboard.test.jsx:414:            
+expect(toast.success).toHaveBeenCalledWith('Course disconnected successfully');
+frontend\src\pages\Admin\AdminClassDashboard.test.jsx:505:            expect(toast.success).toHaveBeenCalledWith('Join 
+code regenerated successfully!');
+frontend\src\pages\Admin\AdminDocuments.jsx:68:                toast.success(message);
+frontend\src\pages\Admin\AdminProjects.jsx:91:                toast.success(response.data.message);
+frontend\src\pages\Admin\AdminStandardProjects.jsx:83:                    toast.success(res.data.message || 'Updated 
+successfully.');
+frontend\src\pages\Admin\AdminStandardProjects.jsx:90:                    toast.success(res.data.message || 'Created 
+successfully.');
+frontend\src\pages\Admin\AdminStandardProjects.jsx:108:                toast.success(res.data.message || 'Deleted 
+successfully.');
+frontend\src\pages\Admin\AdminStandardProjects.test.jsx:107:        
+expect(toast.success).toHaveBeenCalledWith('Created successfully.');
+frontend\src\pages\Admin\AdminStandardProjects.test.jsx:146:        
+expect(toast.success).toHaveBeenCalledWith('Updated successfully.');
+frontend\src\pages\Admin\AdminStandardProjects.test.jsx:178:        
+expect(toast.success).toHaveBeenCalledWith('Deleted successfully.');
+frontend\src\pages\Admin\AdvancedPanel.jsx:78:                toast.success(`History purged! Deleted 
+${response.data.data.deleted_messages} messages.`);
+frontend\src\pages\Admin\Analytics.jsx:127:            toast.success('Transaction history exported.');
+frontend\src\pages\Admin\Classes.jsx:125:                toast.success(res.data.message || 'Classroom deleted 
+successfully');
+frontend\src\pages\Admin\Classes.jsx:164:            toast.success(`Classroom "${newName}" created successfully!`);
+frontend\src\pages\Admin\DuckTransactions.jsx:110:            toast.success('Transaction history exported.');
+frontend\src\pages\Admin\PendingTrades.jsx:50:                toast.success(response.data.message);
+frontend\src\pages\Admin\PendingUsers.jsx:62:                toast.success(response.data.data.message);
+frontend\src\pages\Admin\PendingUsers.jsx:78:                toast.success(response.data.data.message);
+frontend\src\pages\Admin\PendingUsers.jsx:93:            toast.success('Connection approved!');
+frontend\src\pages\Admin\PendingUsers.jsx:106:            toast.success('Connection rejected.');
+frontend\src\pages\Admin\ToReview.jsx:156:                toast.success(response.data.message);
+frontend\src\pages\Admin\ToReview.jsx:175:                toast.success(response.data.message);
+frontend\src\pages\Admin\ToReview.jsx:191:                toast.success(response.data.message);
+frontend\src\pages\Admin\ToReview.jsx:210:                if (!isBulk) toast.success(response.data.data?.message || 
+`User ${action === 'approve' ? 'approved' : 'rejected'}`);
+frontend\src\pages\Admin\ToReview.jsx:235:        toast.success(`Successfully ${action === 'approve' ? 'approved' : 
+'rejected'} ${successCount} users.`);
+frontend\src\pages\Admin\ToReview.jsx:250:                if (!isBulk) toast.success(response.data.message);
+frontend\src\pages\Admin\ToReview.jsx:274:        toast.success(`Successfully processed ${ids.length} trades.`);
+frontend\src\pages\Admin\ToReview.jsx:287:                if (!isBulk) toast.success(response.data.message);
+frontend\src\pages\Admin\ToReview.jsx:311:        toast.success(`Successfully processed ${ids.length} track 
+requests.`);
+frontend\src\pages\Admin\ToReview.jsx:335:                    toast.success(response.data.message);
+frontend\src\pages\Admin\ToReview.jsx:345:                    toast.success(response.data.message);
+frontend\src\pages\Auth\ForgotPassword.jsx:27:                toast.success('Verification code sent to your email!');
+frontend\src\pages\Auth\ForgotPassword.test.jsx:94:            
+expect(toast.success).toHaveBeenCalledWith('Verification code sent to your email!');
+frontend\src\pages\Auth\Login.jsx:29:                toast.success('Login successful!');
+frontend\src\pages\Auth\Login.jsx:31:                    toast.success('Welcome! Daily duck awarded.', { icon: '🦆' });
+frontend\src\pages\Auth\Login.test.jsx:49:      expect(toast.success).toHaveBeenCalledWith('Login successful!');
+frontend\src\pages\Auth\ResetPassword.jsx:43:                toast.success('Password reset successfully! Please log 
+in.');
+frontend\src\pages\Auth\ResetPassword.test.jsx:127:            expect(toast.success).toHaveBeenCalledWith('Password 
+reset successfully! Please log in.');
+frontend\src\pages\Auth\Signup.jsx:48:                    toast.success('Verification code sent to your email!');
+frontend\src\pages\Auth\Signup.jsx:57:                toast.success(response.data.data.message || 'Signup successful! 
+Awaiting approval.');
+frontend\src\pages\Auth\Signup.jsx:65:                        toast.success('Account found! Logging you in...');
+frontend\src\pages\Auth\Signup.jsx:76:                    toast.success('Account found! Logging you in...');
+frontend\src\pages\Auth\Signup.jsx:97:                toast.success('Email verified! Logging you in...');
+frontend\src\pages\Auth\Signup.test.jsx:78:      expect(toast.success).toHaveBeenCalledWith('Signup successful! 
+Awaiting approval.');
+frontend\src\pages\Auth\Signup.test.jsx:114:      expect(toast.success).toHaveBeenCalledWith('Verification code sent 
+to your email!');
+frontend\src\pages\General\BitShift.jsx:92:        toast.success('Binary auto-calculated!');
+frontend\src\pages\General\BitShift.jsx:123:                toast.success(response.data.message || 'Trade submitted 
+for approval.');
+frontend\src\pages\General\CourseLevelBreakdown.jsx:150:                toast.success("Track change request submitted 
+to your teacher!");
+frontend\src\pages\General\CourseProgressTree.jsx:239:                        toast.success(passRes.data.message);
+frontend\src\pages\General\JoinClassroom.jsx:35:            toast.success(`Joined ${classroom.name || 'classroom'}!`);
+frontend\src\pages\General\JoinClassroom.test.jsx:78:      expect(toast.success).toHaveBeenCalledWith('Joined CS 
+101!');
+frontend\src\pages\General\ProjectInfo.jsx:298:                toast.success(`Assigned "${project.name}" to your 
+workspace!`);
+frontend\src\pages\General\ProjectInfo.test.jsx:154:        expect(toast.success).toHaveBeenCalledWith('Assigned "Test 
+Project" to your workspace!');
+frontend\src\pages\General\Shop.jsx:85:            toast.success(`Successfully unlocked ${itemName}!`);
+frontend\src\pages\General\Shop.jsx:118:            toast.success("Animation speed updated!");
+frontend\src\pages\General\Shop.jsx:191:                    toast.success("Wallpaper saved!");
+frontend\src\pages\General\Shop.test.jsx:84:      expect(toast.success).toHaveBeenCalledWith('Successfully unlocked 
+Profile Theme!');
+frontend\src\pages\General\Shop.test.jsx:142:      expect(toast.success).toHaveBeenCalledWith('Animation speed 
+updated!');
+frontend\src\pages\General\StudentParentCode.jsx:33:        toast.success('Connection code copied!');
+frontend\src\pages\General\StudentParentCode.test.jsx:79:    expect(toast.success).toHaveBeenCalledWith('Connection 
+code copied!');
+frontend\src\pages\General\SubmitChallenge.jsx:42:                toast.success(response.data.message);
+frontend\src\pages\General\SubmitChallenge.jsx:72:                    toast.success('Certificate submitted 
+successfully!');
+frontend\src\pages\General\SubmitChallenge.jsx:102:                        toast.success(response.data.message || 
+'Challenge submitted successfully!');
+frontend\src\pages\General\SubmitChallenge.test.jsx:18:    mockToast.success = vi.fn();
+frontend\src\pages\General\SubmitChallenge.test.jsx:96:        expect(toast.success).toHaveBeenCalledWith('Challenge 
+submitted successfully!');
+frontend\src\pages\General\SubmitChallenge.test.jsx:176:        
+expect(toast.success).toHaveBeenCalledWith('Certificate submitted successfully!');
+frontend\src\pages\Parent\ParentDashboard.jsx:110:            toast.success('Child connected successfully!');
+frontend\src\pages\Parent\ParentDashboard.jsx:129:            toast.success(`Disconnected from ${childName}`);
+frontend\src\pages\Parent\ParentDashboard.test.jsx:113:            
+expect(toast.success).toHaveBeenCalledWith('Disconnected from Alice');
+frontend\src\pages\Parent\ParentReportCard.test.jsx:94:            
+expect(toast.success).toHaveBeenCalledWith('Disconnected from Bob');
+frontend\src\pages\User\EditProfile.jsx:98:            toast.success('Profile updated successfully!');
+frontend\src\pages\User\EditProfile.jsx:180:                                                        
+toast.success('Code copied to clipboard!');
+frontend\src\pages\User\EditProfile.test.jsx:83:        expect(toast.success).toHaveBeenCalledWith('Code copied to 
+clipboard!');
+frontend\src\pages\User\EditProfile.test.jsx:158:            expect(toast.success).toHaveBeenCalledWith('Profile 
+updated successfully!');
+frontend\src\pages\User\EditProfile.test.jsx:193:            expect(toast.success).toHaveBeenCalledWith('Profile 
+updated successfully!');
+frontend\src\pages\User\EditProfile.test.jsx:228:            expect(toast.success).toHaveBeenCalledWith('Profile 
+updated successfully!');
+frontend\src\pages\User\ManageProject.test.jsx:159:            expect(toast.success).toHaveBeenCalledWith('Project 
+created!');
+frontend\src\pages\User\ManageProject.test.jsx:193:            expect(toast.success).toHaveBeenCalledWith('Project 
+updated!');
+frontend\src\pages\User\ManageProject.test.jsx:224:            expect(toast.success).toHaveBeenCalledWith('Project 
+deleted.');
+
+

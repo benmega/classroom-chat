@@ -97,7 +97,8 @@ def test_bulk_add_challenges(client, sample_admin):
         "/api/admin/challenges/bulk_add",
         json={"challenges": [{"name": "A", "slug": "a"}]},
     )
-    assert resp.status_code == 400
+    assert resp.status_code == 200
+    assert resp.json["data"]["skipped"] == 1
 
     # Empty challenges set
     resp = client.post(

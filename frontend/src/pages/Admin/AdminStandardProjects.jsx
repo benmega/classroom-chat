@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
-import { Plus, Edit, Trash2, XCircle, BookOpen } from 'lucide-react';
-import AdminPageHeader from '../../components/admin/AdminPageHeader';
+import { Plus, Edit, X, BookOpen } from 'lucide-react';
+import { formatStaticUrl } from '../../utils/formatters';
+import Modal from '../../components/common/Modal';
+import { ALIGNED_NODES } from '../../constants/courseProgress';
 import './AdminStandardProjects.css';
 
 const AdminStandardProjects = () => {
@@ -78,14 +80,14 @@ const AdminStandardProjects = () => {
             if (editingProject) {
                 const res = await client.put(`/api/project-templates/${editingProject.id}`, form);
                 if (res.data.status === 'success' || res.data.message) {
-                    toast.success(res.data.message || 'Updated successfully.');
+                    
                     closeModal();
                     fetchProjects();
                 }
             } else {
                 const res = await client.post('/api/project-templates', form);
                 if (res.data.status === 'success' || res.data.message) {
-                    toast.success(res.data.message || 'Created successfully.');
+                    
                     closeModal();
                     fetchProjects();
                 }
@@ -103,7 +105,7 @@ const AdminStandardProjects = () => {
         try {
             const res = await client.delete(`/api/project-templates/${id}`);
             if (res.data.status === 'success' || res.data.message) {
-                toast.success(res.data.message || 'Deleted successfully.');
+                
                 fetchProjects();
             }
         } catch {
@@ -112,116 +114,112 @@ const AdminStandardProjects = () => {
     };
 
     return (
-        <div className="standard-projects-page">
-            <AdminPageHeader title="Standard Projects (Templates)" />
-            
-            <div className="controls-bar">
-                <button className="btn-add-standard" onClick={() => openModal()}>
-                    <Plus size={18} /> Add Standard Project
+        <div className="admin-standard-projects-page">
+            <div className="d-flex justify-end mb-1-5rem">
+                <button className="primary-btn" onClick={() => openModal()}>
+                    <Plus size={18} /> Add Project
                 </button>
             </div>
 
             {isLoading ? (
-                <div>Loading...</div>
+                <div className="card p-2rem text-center text-muted">Loading...</div>
             ) : (
-                <div className="standard-projects-grid">
-                    {projects.map(p => (
-                        <div key={p.id} className="standard-project-card">
-                            <h3><BookOpen size={18} className="icon-book-open" /> {p.name}</h3>
-                            {p.chapter && <p className="sp-chapter">Chapter: {p.chapter}</p>}
-                            <p>{p.description || <em>No description</em>}</p>
-                            <div className="sp-actions">
-                                <button className="btn-edit-sp" onClick={() => openModal(p)}>
-                                    <Edit size={16} /> Edit
-                                </button>
-                                <button className="btn-delete-sp" onClick={() => handleDelete(p.id, p.name)}>
-                                    <Trash2 size={16} /> Delete
-                                </button>
-                            </div>
-                        </div>
-                    ))}
-                    {projects.length === 0 && <div className="empty-state">No standard projects found.</div>}
-                </div>
-            )}
-
-            {isModalOpen && (
-                <div role="button" tabIndex={0} className="sp-modal-overlay" onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={closeModal}>
-                    <div role="button" tabIndex={0} className="sp-modal-card" onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={e => e.stopPropagation()}>
-                        <div className="sp-modal-header">
-                            <h3>{editingProject ? 'Edit Standard Project' : 'Add Standard Project'}</h3>
-                            <button className="sp-close-btn" onClick={closeModal}><XCircle size={24}/></button>
-                        </div>
-                        <form onSubmit={handleSubmit} className="sp-form">
-                            <div className="sp-form-group">
-                                <label htmlFor="input-155">Project Name *</label>
-                                <input id="input-155" 
-                                    type="text" 
-                                    required
-                                    value={form.name}
-                                    onChange={e => setForm({...form, name: e.target.value})}
-                                    placeholder="e.g. Text-Based Adventure"
-                                />
-                            </div>
-                            <div className="sp-form-group">
-                                <label htmlFor="input-165">Description</label>
-                                <textarea id="input-165" 
-                                    value={form.description}
-                                    onChange={e => setForm({...form, description: e.target.value})}
-                                    rows="4"
-                                    placeholder="Description template..."
-                                />
-                            </div>
-                            <div className="sp-form-group">
-                                <label htmlFor="input-chapter">Chapter Mapping</label>
-                                <input id="input-chapter" 
-                                    type="text" 
-                                    value={form.chapter}
-                                    onChange={e => setForm({...form, chapter: e.target.value})}
-                                    placeholder="e.g. Computer Science 2"
-                                />
-                            </div>
-                            <div className="sp-form-row">
-                                <div className="sp-form-group">
-                                    <label htmlFor="input-175">Default Demo Link</label>
-                                    <input id="input-175" type="text" value={form.link} onChange={e => setForm({...form, link: e.target.value})} />
+                <div className="card" style={{ padding: '24px' }}>
+                    <div className="projects-grid">
+                        {projects.map(p => (
+                            // eslint-disable-next-line
+                            <div 
+                                key={p.id} 
+                                className="project-card" 
+                                onClick={() => openModal(p)}
+                            >
+                                <div 
+                                    className="project-card-header" 
+                                    style={{ 
+                                        backgroundImage: p.image_url ? `url(${formatStaticUrl(p.image_url)})` : 'none',
+                                        backgroundColor: p.image_url ? 'transparent' : 'var(--blue-600)'
+                                    }}
+                                >
+                                    {!p.image_url && <BookOpen size={48} />}
+                                    <button
+                                        type="button"
+                                        className="project-remove-btn"
+                                        onClick={(e) => { e.stopPropagation(); handleDelete(p.id, p.name); }}
+                                        title="Delete Project"
+                                        aria-label={`Delete project ${p.name}`}
+                                    >
+                                        <X size={14} />
+                                    </button>
                                 </div>
-                                <div className="sp-form-group">
-                                    <label htmlFor="input-179">Default GitHub Link</label>
-                                    <input id="input-179" type="text" value={form.github_link} onChange={e => setForm({...form, github_link: e.target.value})} />
+                                <div className="project-card-body">
+                                    <div className="project-card-title" title={p.name}>
+                                        {p.name}
+                                    </div>
+                                    <div className="project-card-desc">
+                                        {p.description || "No description provided."}
+                                    </div>
                                 </div>
                             </div>
-                            <div className="sp-form-row">
-                                <div className="sp-form-group">
-                                    <label htmlFor="input-185">Default Video URL</label>
-                                    <input id="input-185" type="text" value={form.video_url} onChange={e => setForm({...form, video_url: e.target.value})} />
-                                </div>
-                                <div className="sp-form-group">
-                                    <label htmlFor="input-189">Default Thumbnail Image URL</label>
-                                    <input id="input-189" type="text" value={form.image_url} onChange={e => setForm({...form, image_url: e.target.value})} />
-                                </div>
+                        ))}
+                        {projects.length === 0 && (
+                            <div className="empty-state text-muted" style={{ width: '100%', textAlign: 'center', padding: '20px' }}>
+                                No standard projects found.
                             </div>
-                            <div className="sp-form-group">
-                                <label htmlFor="input-194">Default Code Snippet</label>
-                                <textarea id="input-194" 
-                                    value={form.code_snippet}
-                                    onChange={e => setForm({...form, code_snippet: e.target.value})}
-                                    rows="3"
-                                    className="font-mono"
-                                />
-                            </div>
-
-                            <div className="sp-modal-footer">
-                                <button type="button" className="sp-btn-cancel" onClick={closeModal} disabled={isSubmitting}>Cancel</button>
-                                <button type="submit" className="sp-btn-submit" disabled={isSubmitting}>
-                                    {isSubmitting ? 'Saving...' : 'Save Template'}
-                                </button>
-                            </div>
-                        </form>
+                        )}
                     </div>
                 </div>
             )}
+
+            <Modal isOpen={isModalOpen} onClose={closeModal} title={editingProject ? 'Edit Standard Project' : 'Add Standard Project'}>
+                <form onSubmit={handleSubmit} className="admin-form">
+                    <div className="form-group">
+                        <label htmlFor="input-155">Project Name <span className="text-error">*</span></label>
+                        <input id="input-155" 
+                            type="text" 
+                            required
+                            value={form.name}
+                            onChange={e => setForm({...form, name: e.target.value})}
+                            placeholder="e.g. Text-Based Adventure"
+                        />
+                    </div>
+                    <div className="form-group">
+                        <label htmlFor="input-165">Description</label>
+                        <textarea id="input-165" 
+                            value={form.description}
+                            onChange={e => setForm({...form, description: e.target.value})}
+                            rows="4"
+                            placeholder="Description template..."
+                        />
+                    </div>
+                    <div className="form-group">
+                        <label htmlFor="input-chapter">Chapter Mapping</label>
+                        <select id="input-chapter"
+                            className="admin-select"
+                            value={form.chapter}
+                            onChange={e => setForm({...form, chapter: e.target.value})}
+                        >
+                            <option value="">Select a chapter...</option>
+                            {ALIGNED_NODES.map(node => (
+                                <option key={node.id} value={node.title}>{node.title}</option>
+                            ))}
+                        </select>
+                    </div>
+                    <div className="form-group">
+                        <label htmlFor="input-189">Default Thumbnail Image URL</label>
+                        <input id="input-189" type="text" value={form.image_url} onChange={e => setForm({...form, image_url: e.target.value})} />
+                    </div>
+
+                    <div className="modal-actions mt-1-5rem d-flex justify-end gap-md">
+                        <button type="button" className="btn-secondary" onClick={closeModal} disabled={isSubmitting}>Cancel</button>
+                        <button type="submit" className="btn-primary" disabled={isSubmitting}>
+                            {isSubmitting ? 'Saving...' : 'Save Template'}
+                        </button>
+                    </div>
+                </form>
+            </Modal>
         </div>
     );
 };
 
 export default AdminStandardProjects;
+

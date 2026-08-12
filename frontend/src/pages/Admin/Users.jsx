@@ -7,7 +7,6 @@ import {
     Package,
     Key, 
     Trash2, 
-    RefreshCw,
     Shield,
     ChevronLeft,
     ChevronDown,
@@ -89,7 +88,7 @@ const UserRowActions = ({ u, setModalUser, setActiveModal, handleToggleChat, han
                                 <UsersIcon size={14} style={{marginRight:'8px'}} /> Manage Children
                             </button>
                         )}
-                        {!u.is_admin && u.role === 'student' && (
+                        {u.role !== 'admin' && u.role === 'student' && (
                             <button className="kebab-item" onClick={async (e) => { 
                                 e.stopPropagation();
                                 const success = await fetchConnectionCard(u.id);
@@ -108,7 +107,7 @@ const UserRowActions = ({ u, setModalUser, setActiveModal, handleToggleChat, han
                                 {u.can_chat ? 'Mute Chat' : 'Unmute Chat'}
                             </button>
                         )}
-                        {!u.is_admin && (
+                        {u.role !== 'admin' && (
                             <button className="kebab-item danger" onClick={(e) => { e.stopPropagation(); handleRemoveUser(u.username); setIsOpen(false); }}>
                                 <Trash2 size={14} style={{marginRight:'8px'}} /> Remove User
                             </button>
@@ -255,13 +254,7 @@ const Users = () => {
                         <Key size={18} /> Print Cohort Cards
                     </button>
                 )}
-                <button 
-                    className={`refresh-btn ${isRefreshing ? 'spinning' : ''}`}
-                    onClick={() => fetchUsers(page)}
-                    disabled={isRefreshing}
-                >
-                    <RefreshCw size={18} />
-                </button>
+                
             </AdminPageHeader>
 
             {/* Tab Bar */}
@@ -316,7 +309,7 @@ const Users = () => {
                                 <React.Fragment key={u.id}>
                                     {/* ── All tab row ─────────────────────────────────── */}
                                     {activeRole === '' && (
-                                        <tr className={u.is_admin ? 'admin-row' : ''}>
+                                        <tr className={u.role === 'admin' ? 'admin-row' : ''}>
                                             <td onClick={() => navigate(`/admin/users/${u.id}`)} className="cursor-pointer">
                                                 <div className="user-profile-cell">
                                                     <SmartImage 
@@ -334,7 +327,7 @@ const Users = () => {
                                             </td>
                                             <td onClick={() => navigate(`/admin/users/${u.id}`)} className="cursor-pointer">
                                                 <div className="type-badge">
-                                                    {u.is_admin ? (
+                                                    {u.role === 'admin' ? (
                                                         <span className="user-role-badge admin"><Shield size={12} /> Administrator</span>
                                                     ) : u.role === 'parent' ? (
                                                         <span className="user-role-badge parent">Parent</span>

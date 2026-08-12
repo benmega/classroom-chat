@@ -129,7 +129,7 @@ describe('useAdminUserDashboard', () => {
             await result.current.handlePassChapterConfirm();
         });
 
-        expect(toast.success).toHaveBeenCalledWith('Chapter passed');
+        
         expect(result.current.passPreview).toBeNull();
     });
 
@@ -148,7 +148,7 @@ describe('useAdminUserDashboard', () => {
             await result.current.handleAdjustDucks(event);
         });
 
-        expect(toast.success).toHaveBeenCalledWith('Ducks adjusted');
+        
     });
 
     it('adjusts packets', async () => {
@@ -166,7 +166,7 @@ describe('useAdminUserDashboard', () => {
             await result.current.handleAdjustPackets(event);
         });
 
-        expect(toast.success).toHaveBeenCalledWith('Packets adjusted');
+        
     });
 
     it('resets password', async () => {
@@ -184,7 +184,7 @@ describe('useAdminUserDashboard', () => {
             await result.current.handleResetPassword(event);
         });
 
-        expect(toast.success).toHaveBeenCalledWith('Password reset');
+        
     });
 
     it('sets drawer', async () => {
@@ -201,7 +201,7 @@ describe('useAdminUserDashboard', () => {
             await result.current.handleSetDrawer(event);
         });
 
-        expect(toast.success).toHaveBeenCalledWith('Drawer set');
+        
     });
 
     it('removes user', async () => {
@@ -215,7 +215,7 @@ describe('useAdminUserDashboard', () => {
             await result.current.handleRemoveUser();
         });
 
-        expect(toast.success).toHaveBeenCalledWith('User removed');
+        
         expect(mockNavigate).toHaveBeenCalledWith('/admin/users');
     });
 
@@ -230,7 +230,7 @@ describe('useAdminUserDashboard', () => {
             await result.current.handleApproveUser();
         });
 
-        expect(toast.success).toHaveBeenCalledWith('Approved');
+        
     });
 
     it('rejects user', async () => {
@@ -244,7 +244,7 @@ describe('useAdminUserDashboard', () => {
             await result.current.handleRejectUser();
         });
 
-        expect(toast.success).toHaveBeenCalledWith('Rejected');
+        
         expect(mockNavigate).toHaveBeenCalledWith('/admin/users');
     });
 
@@ -260,7 +260,7 @@ describe('useAdminUserDashboard', () => {
         });
 
         expect(client.post).toHaveBeenCalledWith('/api/admin/parents/1/link/2');
-        expect(toast.success).toHaveBeenCalledWith('Successfully linked child account');
+        
     });
 
     it('toggles parent link', async () => {
@@ -275,7 +275,7 @@ describe('useAdminUserDashboard', () => {
         });
 
         expect(client.post).toHaveBeenCalledWith('/api/admin/parents/2/link/1');
-        expect(toast.success).toHaveBeenCalledWith('Successfully linked parent account');
+        
     });
 
     it('assigns project submit', async () => {
@@ -295,7 +295,7 @@ describe('useAdminUserDashboard', () => {
         });
 
         expect(client.post).toHaveBeenCalledWith('/user/project/new', expect.any(FormData));
-        expect(toast.success).toHaveBeenCalledWith('Assigned Template1 to nick!');
+        
     });
 
     it('updates user profile via handleUpdateUser', async () => {
@@ -310,7 +310,7 @@ describe('useAdminUserDashboard', () => {
         });
 
         expect(client.put).toHaveBeenCalledWith('/api/admin/user/1', { nickname: 'newnick', active_track: 'gd' });
-        expect(toast.success).toHaveBeenCalledWith('Updated profile for @newnick');
+        
         expect(result.current.user.nickname).toBe('newnick');
     });
 });

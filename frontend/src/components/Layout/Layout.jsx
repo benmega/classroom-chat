@@ -31,7 +31,8 @@ const Layout = ({ children }) => {
         isGuestPage,
         isChatPage,
         location,
-        hamburgerProgress
+        hamburgerProgress,
+        activityUnreadCount
     } = useLayout();
 
     const isParent = user?.role === 'parent';
@@ -111,7 +112,7 @@ const Layout = ({ children }) => {
                                     </>
                                 )}
 
-                                {isAuthenticated && user && (
+                                {isAuthenticated && user && user.role !== 'parent' && (
                                     <li className="nav-stat-item">
                                         <Link className="stat-badge drawer" to="/profile" title="View Profile" data-testid="header-drawer">
                                             <Archive size={20} className="stat-icon" />
@@ -209,12 +210,18 @@ const Layout = ({ children }) => {
                                                     </Link>
                                                 </li>
                                             )}
-                                            {user?.is_admin && (
+                                            {user?.role === 'admin' && (
                                                 <li><Link to="/admin" onClick={() => setIsDropdownOpen(false)}>Admin Panel</Link></li>
                                             )}
                                             {!isParent && (
                                                 <>
                                                     <li><Link to="/submit-work" onClick={() => setIsDropdownOpen(false)}>Submit Work</Link></li>
+                                                    <li>
+                                                        <Link to="/activity" onClick={() => setIsDropdownOpen(false)}>
+                                                            Activity
+                                                            {activityUnreadCount > 0 && <span className="nav-unread-badge">{activityUnreadCount}</span>}
+                                                        </Link>
+                                                    </li>
                                                     {(user?.duck_balance ?? 0) > 0 && (
                                                         <li><Link to="/bit-shift" onClick={() => setIsDropdownOpen(false)}>Bit Shift</Link></li>
                                                     )}

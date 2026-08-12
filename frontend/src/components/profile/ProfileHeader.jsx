@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { User } from 'lucide-react';
+import { User, History } from 'lucide-react';
 import SmartImage from '../common/SmartImage';
 import { formatLargeNumber } from '../../utils/formatters';
 import { getApiUrl } from '../../utils/apiUrl';
@@ -22,7 +22,10 @@ const ProfileHeader = ({ target, isOwner, pfpInputRef, onPfpChange, editLink }) 
                 <div role="button" tabIndex={0} 
                     className={`avatar-wrapper ${target.has_animated_border ? 'perk-animated-border' : ''}`} 
                     onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={() => isOwner && pfpInputRef.current?.click()}
-                    style={target.has_animated_border ? { '--border-speed': borderSpeed } : {}}
+                    style={target.has_animated_border ? { 
+                        '--border-speed': borderSpeed,
+                        ...(target.animated_border_color ? { '--border-color': target.animated_border_color } : {})
+                    } : {}}
                 >
                     <SmartImage 
                         src={getApiUrl(target.profile_picture_url)} 
@@ -56,9 +59,14 @@ const ProfileHeader = ({ target, isOwner, pfpInputRef, onPfpChange, editLink }) 
                         </p>
                     )}
                     {isOwner && (
-                        <Link to={editLink || "/settings"} className="btn-settings">
-                            <User size={14} /> Edit Profile
-                        </Link>
+                        <div className="profile-header-actions">
+                            <Link to={editLink || "/settings"} className="btn-settings">
+                                <User size={14} /> Edit Profile
+                            </Link>
+                            <Link to="/activity" className="btn-settings">
+                                <History size={14} /> Activity
+                            </Link>
+                        </div>
                     )}
                 </div>
 
