@@ -22,39 +22,58 @@ import AccessDenied from './pages/Error/AccessDenied';
 import ServerOffline from './pages/Error/ServerOffline';
 
 // --- Student pages: lazily loaded ---
-const Achievements = React.lazy(() => import('./pages/General/Achievements'));
-const BitShift = React.lazy(() => import('./pages/General/BitShift'));
-const SubmitWork = React.lazy(() => import('./pages/General/SubmitWork'));
-const Activity = React.lazy(() => import('./pages/General/Activity'));
-const CourseProgressTree = React.lazy(() => import('./pages/General/CourseProgressTree'));
-const CourseLevelBreakdown = React.lazy(() => import('./pages/General/CourseLevelBreakdown'));
-const Shop = React.lazy(() => import('./pages/General/Shop'));
-const ProjectInfo = React.lazy(() => import('./pages/General/ProjectInfo'));
-const EditProfile = React.lazy(() => import('./pages/User/EditProfile'));
-const ManageProject = React.lazy(() => import('./pages/User/ManageProject'));
+const lazyWithRetry = (componentImport) =>
+  React.lazy(async () => {
+    const pageHasAlreadyBeenForceRefreshed = JSON.parse(
+      window.sessionStorage.getItem('page-has-been-force-refreshed') || 'false'
+    );
+
+    try {
+      const component = await componentImport();
+      window.sessionStorage.setItem('page-has-been-force-refreshed', 'false');
+      return component;
+    } catch (error) {
+      if (!pageHasAlreadyBeenForceRefreshed) {
+        window.sessionStorage.setItem('page-has-been-force-refreshed', 'true');
+        window.location.reload();
+      }
+      throw error;
+    }
+  });
+
+const Achievements = lazyWithRetry(() => import('./pages/General/Achievements'));
+const BitShift = lazyWithRetry(() => import('./pages/General/BitShift'));
+const SubmitWork = lazyWithRetry(() => import('./pages/General/SubmitWork'));
+const Activity = lazyWithRetry(() => import('./pages/General/Activity'));
+const CourseProgressTree = lazyWithRetry(() => import('./pages/General/CourseProgressTree'));
+const CourseLevelBreakdown = lazyWithRetry(() => import('./pages/General/CourseLevelBreakdown'));
+const Shop = lazyWithRetry(() => import('./pages/General/Shop'));
+const ProjectInfo = lazyWithRetry(() => import('./pages/General/ProjectInfo'));
+const EditProfile = lazyWithRetry(() => import('./pages/User/EditProfile'));
+const ManageProject = lazyWithRetry(() => import('./pages/User/ManageProject'));
 
 // --- Admin pages: lazily loaded (students never need these) ---
-const ToReview = React.lazy(() => import('./pages/Admin/ToReview'));
-const AdminDashboard = React.lazy(() => import('./pages/Admin/AdminDashboard'));
-const AdminAssignProject = React.lazy(() => import('./pages/Admin/AdminAssignProject'));
-const AdminLibrary = React.lazy(() => import('./pages/Admin/AdminLibrary'));
-const AdminSubmissions = React.lazy(() => import('./pages/Admin/AdminSubmissions'));
-const Users = React.lazy(() => import('./pages/Admin/Users'));
-const Classes = React.lazy(() => import('./pages/Admin/Classes'));
-const AdminUserDashboard = React.lazy(() => import('./pages/Admin/AdminUserDashboard'));
-const AdminClassDashboard = React.lazy(() => import('./pages/Admin/AdminClassDashboard'));
-const Analytics = React.lazy(() => import('./pages/Admin/Analytics'));
-const AdvancedPanel = React.lazy(() => import('./pages/Admin/AdvancedPanel'));
-const DuckTransactions = React.lazy(() => import('./pages/Admin/DuckTransactions'));
-const AdminStudentActivity = React.lazy(() => import('./pages/Admin/AdminStudentActivity'));
-const AdminCRUD = React.lazy(() => import('./admin/AdminPanel'));
-const KioskUpload = React.lazy(() => import('./pages/Admin/KioskUpload'));
+const ToReview = lazyWithRetry(() => import('./pages/Admin/ToReview'));
+const AdminDashboard = lazyWithRetry(() => import('./pages/Admin/AdminDashboard'));
+const AdminAssignProject = lazyWithRetry(() => import('./pages/Admin/AdminAssignProject'));
+const AdminLibrary = lazyWithRetry(() => import('./pages/Admin/AdminLibrary'));
+const AdminSubmissions = lazyWithRetry(() => import('./pages/Admin/AdminSubmissions'));
+const Users = lazyWithRetry(() => import('./pages/Admin/Users'));
+const Classes = lazyWithRetry(() => import('./pages/Admin/Classes'));
+const AdminUserDashboard = lazyWithRetry(() => import('./pages/Admin/AdminUserDashboard'));
+const AdminClassDashboard = lazyWithRetry(() => import('./pages/Admin/AdminClassDashboard'));
+const Analytics = lazyWithRetry(() => import('./pages/Admin/Analytics'));
+const AdvancedPanel = lazyWithRetry(() => import('./pages/Admin/AdvancedPanel'));
+const DuckTransactions = lazyWithRetry(() => import('./pages/Admin/DuckTransactions'));
+const AdminStudentActivity = lazyWithRetry(() => import('./pages/Admin/AdminStudentActivity'));
+const AdminCRUD = lazyWithRetry(() => import('./admin/AdminPanel'));
+const KioskUpload = lazyWithRetry(() => import('./pages/Admin/KioskUpload'));
 
 // --- Parent pages: lazily loaded (students never need these) ---
-const ParentDashboard = React.lazy(() => import('./pages/Parent/ParentDashboard'));
-const ParentReportCard = React.lazy(() => import('./pages/Parent/ParentReportCard'));
-const ConnectChild = React.lazy(() => import('./pages/Parent/ConnectChild'));
-const JoinClassroomLink = React.lazy(() => import('./pages/General/JoinClassroomLink'));
+const ParentDashboard = lazyWithRetry(() => import('./pages/Parent/ParentDashboard'));
+const ParentReportCard = lazyWithRetry(() => import('./pages/Parent/ParentReportCard'));
+const ConnectChild = lazyWithRetry(() => import('./pages/Parent/ConnectChild'));
+const JoinClassroomLink = lazyWithRetry(() => import('./pages/General/JoinClassroomLink'));
 
 // Development-only shortcut page — Vite's tree-shaking removes this module
 // from production builds because it is only referenced inside the DEV guard below.
