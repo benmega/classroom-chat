@@ -21,7 +21,8 @@ const TRACKS = [
     { id: 'cs', label: 'Computer Science', short: 'CS', type: 'image', logo: codecombatLogo, desc: 'Core Programming & Algorithms' },
     { id: 'ozaria', label: 'Ozaria', short: 'Ozaria', type: 'image', logo: ozariaLogo, desc: 'Adventure Story & Code' },
     { id: 'gd', label: 'Game Development', short: 'GD', type: 'icon', icon: Gamepad2, desc: 'Game Mechanics & Design' },
-    { id: 'wd', label: 'Web Development', short: 'WD', type: 'icon', icon: Globe, desc: 'HTML, CSS & Web Apps' }
+    { id: 'wd', label: 'Web Development', short: 'WD', type: 'icon', icon: Globe, desc: 'HTML, CSS & Web Apps' },
+    { id: '3d', label: '3D Modeling', short: '3D', type: 'icon', icon: Code, desc: '3D Modeling & Printing' }
 ];
 
 const AdminUserDashboard = () => {
@@ -289,6 +290,8 @@ const AdminUserDashboard = () => {
                                         <option value="gd2">GD 2</option>
                                         <option value="wd1">WD 1</option>
                                         <option value="wd2">WD 2</option>
+                                        <option value="3d-1">3D-1: TinkerCAD 1</option>
+                                        <option value="3d-2">3D-2: Blender 1</option>
                                     </select>
                                     <button type="submit" className="btn-compact action-blue" disabled={passChapterLoading || !selectedChapterId}>
                                         <Check size={14} /> Preview
@@ -325,6 +328,8 @@ const AdminUserDashboard = () => {
                                         <option value="oz-2">Ozaria 2</option>
                                         <option value="oz-3">Ozaria 3</option>
                                         <option value="oz-4">Ozaria 4</option>
+                                        <option value="3d-1">3D-1: TinkerCAD 1</option>
+                                        <option value="3d-2">3D-2: Blender 1</option>
                                     </select>
                                     <button type="button" className="btn-compact action-blue w-full" onClick={() => handleGenerateManualCertificate(selectedCertCourse)} disabled={formLoading}>
                                         <Sparkles size={14} /> Generate PDF Certificate
@@ -668,6 +673,8 @@ const AdminUserDashboard = () => {
                         <option value="gd2">GD 2</option>
                         <option value="wd1">WD 1</option>
                         <option value="wd2">WD 2</option>
+                        <option value="3d-1">3D-1: TinkerCAD 1</option>
+                        <option value="3d-2">3D-2: Blender 1</option>
                     </select>
                     <button type="submit" className="btn-compact primary" disabled={passChapterLoading || !selectedChapterId} style={{ justifyContent: 'center', padding: '10px' }}>
                         <Check size={14} /> Preview Pass

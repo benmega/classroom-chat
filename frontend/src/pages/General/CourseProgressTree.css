@@ -313,7 +313,7 @@
 
     .skill-tree-grid {
         display: grid;
-        grid-template-columns: repeat(4, 520px);
+        grid-template-columns: repeat(5, 520px);
         grid-auto-rows: auto;
         gap: 2.5rem 4rem;
         width: max-content;
@@ -322,7 +322,7 @@
 
     .track-headers-container {
         display: grid;
-        grid-template-columns: repeat(4, 520px);
+        grid-template-columns: repeat(5, 520px);
         gap: 4rem;
         width: max-content;
         margin: 0 auto;

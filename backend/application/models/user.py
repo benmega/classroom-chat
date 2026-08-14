@@ -414,6 +414,8 @@ class User(db.Model):
         cc_percent = self.get_progress_percent("codecombat.com")
         oz_levels = self.get_progress("www.ozaria.com")
         oz_percent = self.get_progress_percent("www.ozaria.com")
+        td_levels = self.get_progress("3d-modeling")
+        td_percent = self.get_progress_percent("3d-modeling")
 
         # Query all courses at once to avoid N+1 queries during breakdown generation
         courses_dict = {course.id: course.name for course in Course.query.all()}
@@ -507,6 +509,11 @@ class User(db.Model):
                 "levels_completed": oz_levels,
                 "percent": oz_percent,
                 "breakdown": get_course_breakdown("www.ozaria.com"),
+            },
+            "3d-modeling": {
+                "levels_completed": td_levels,
+                "percent": td_percent,
+                "breakdown": get_course_breakdown("3d-modeling"),
             },
         }
 

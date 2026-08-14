@@ -85,9 +85,13 @@ const CourseProgressTree = () => {
 
     const ccBreakdown = progressData?.codecombat?.breakdown || [];
     const ozBreakdown = progressData?.ozaria?.breakdown || [];
+    const tdBreakdown = progressData?.['3d-modeling']?.breakdown || [];
 
     const processedNodes = ALIGNED_NODES.map(node => {
-        const breakdownList = node.domain === 'codecombat' ? ccBreakdown : ozBreakdown;
+        let breakdownList = ccBreakdown;
+        if (node.domain === 'ozaria') breakdownList = ozBreakdown;
+        if (node.domain === '3d-modeling') breakdownList = tdBreakdown;
+        
         const matchingCourse = breakdownList.find(c => matchCourse(c.course_name, node.aliases));
         return {
             ...node,
@@ -120,6 +124,7 @@ const CourseProgressTree = () => {
     };
     findUnmappedAndAppend(ccBreakdown, 'codecombat', 'cs');
     findUnmappedAndAppend(ozBreakdown, 'ozaria', 'ozaria');
+    findUnmappedAndAppend(tdBreakdown, '3d-modeling', '3d');
 
     processedNodes.sort((a, b) => a.row - b.row);
 
@@ -205,7 +210,9 @@ const CourseProgressTree = () => {
                         const y2 = toEl.offsetTop;
 
                         const isActive = fromNode.has_started && toNode.has_started;
-                        const lineDomain = track.id === 'ozaria' ? 'ozaria' : 'codecombat';
+                        let lineDomain = 'codecombat';
+                        if (track.id === 'ozaria') lineDomain = 'ozaria';
+                        if (track.id === '3d') lineDomain = '3d-modeling';
 
                         newLines.push({ id: `track-${track.id}-${lineIdCounter++}`, x1: x, y1, x2: x, y2, isActive, lineDomain, fromId: fromNode.id, toId: toNode.id, trackId: track.id });
                     }
@@ -343,9 +350,10 @@ const CourseProgressTree = () => {
                     const isComplete = trackNodes.length > 0 && trackNodes.every(n => n.has_started && n.levels_completed >= (n.levels_total || 1));
 
                     const isOzaria = track.id === 'ozaria';
+                    const is3D = track.id === '3d';
                     const logoSrc = isOzaria ? ozariaLogo : codecombatLogo;
-                    const linkUrl = isOzaria ? 'https://ozeria.com' : 'https://codecombat.com';
-                    const linkTitle = isOzaria ? 'Visit Ozaria' : 'Visit CodeCombat';
+                    const linkUrl = isOzaria ? 'https://ozeria.com' : (is3D ? 'https://tinkercad.com' : 'https://codecombat.com');
+                    const linkTitle = isOzaria ? 'Visit Ozaria' : (is3D ? 'Visit Tinkercad' : 'Visit CodeCombat');
 
                     return (
                         <a 
@@ -449,11 +457,17 @@ const CourseProgressTree = () => {
                                     </div>
                                 )}
                                 <div className="skill-icon">
-                                    <img
-                                        src={node.domain === 'codecombat' ? codecombatLogo : ozariaLogo}
-                                        alt={`${node.domain} logo`}
-                                        className="domain-logo"
-                                    />
+                                    {node.domain === '3d-modeling' ? (
+                                        <div style={{ width: '48px', height: '48px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#3b82f6', borderRadius: '50%', color: 'white' }}>
+                                            <Code size={24} />
+                                        </div>
+                                    ) : (
+                                        <img
+                                            src={node.domain === 'codecombat' ? codecombatLogo : ozariaLogo}
+                                            alt={`${node.domain} logo`}
+                                            className="domain-logo"
+                                        />
+                                    )}
                                 </div>
                                 <div className="skill-content">
                                     <h3>{node.title}</h3>

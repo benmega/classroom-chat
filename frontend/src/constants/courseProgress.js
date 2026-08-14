@@ -2,7 +2,8 @@ export const TRACKS = [
     { id: 'ozaria', title: 'Ozaria', col: 1 },
     { id: 'cs', title: 'Computer Science', col: 2 },
     { id: 'gd', title: 'Game Development', col: 3 },
-    { id: 'wd', title: 'Web Development', col: 4 }
+    { id: 'wd', title: 'Web Development', col: 4 },
+    { id: '3d', title: '3D Modeling', col: 5 }
 ];
 
 export const ALIGNED_NODES = [
@@ -22,6 +23,10 @@ export const ALIGNED_NODES = [
     { id: 'gd-3', title: 'Game Development 3', aliases: ['Game Development 3', 'GD3'], domain: 'codecombat', track: 'gd', row: 9 },
     { id: 'cs-5', title: 'Computer Science 5', aliases: ['Computer Science 5', 'CS5'], domain: 'codecombat', track: 'cs', row: 10 },
     { id: 'cs-6', title: 'Computer Science 6', aliases: ['Computer Science 6', 'CS6'], domain: 'codecombat', track: 'cs', row: 11 },
+    
+    // 3D Modeling Track (Mini-Project Based)
+    { id: '3d-1', title: 'TinkerCAD 1', aliases: ['TinkerCAD 1', '3D-1'], domain: '3d-modeling', track: '3d', row: 4 },
+    { id: '3d-2', title: 'Blender 1', aliases: ['Blender 1', '3D-2'], domain: '3d-modeling', track: '3d', row: 8 }
 ];
 
 export const BRANCH_EDGES = [
@@ -33,7 +38,9 @@ export const BRANCH_EDGES = [
     { from: 'cs-1', to: 'oz-1' },
     { from: 'cs-2', to: 'oz-2' },
     { from: 'cs-3', to: 'oz-3' },
-    { from: 'cs-4', to: 'oz-4' }
+    { from: 'cs-4', to: 'oz-4' },
+    { from: 'cs-2', to: '3d-1' },
+    { from: '3d-1', to: '3d-2' }
 ];
 
 export const matchCourse = (courseName, aliases) => {
