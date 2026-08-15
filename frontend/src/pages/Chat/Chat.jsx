@@ -10,10 +10,10 @@ import {
 import EmojiPicker from 'emoji-picker-react';
 import './Chat.css';
 
-// Extracted Components
 import ChatMessage from '../../components/chat/ChatMessage';
 import MultiSelectDropdown from '../../components/chat/MultiSelectDropdown';
 import Skeleton from '../../components/common/Skeleton';
+import SubmitFileModal from '../../components/common/SubmitFileModal';
 
 // Hooks
 import { useFeedLogic } from '../../hooks/useFeedLogic';
@@ -49,6 +49,8 @@ const Chat = ({ filterClassroomId = null }) => {
     handleScroll,
     cooldown
   } = useFeedLogic(filterClassroomId);
+
+  const [isFileModalOpen, setIsFileModalOpen] = React.useState(false);
 
   if (loading) return (
     <div className="feed-loading-skeleton-container p-2rem">
@@ -201,6 +203,15 @@ const Chat = ({ filterClassroomId = null }) => {
                         >
                           <Smile size={20} color={showEmojiPicker ? "var(--primary-color)" : "inherit"} />
                         </button>
+                        <button
+                          type="button"
+                          className="toolbar-btn"
+                          onClick={() => setIsFileModalOpen(true)}
+                          title="Attach file"
+                          disabled={cooldown > 0}
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-paperclip"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+                        </button>
                         {showEmojiPicker && (
                           <div className="emoji-picker-container emoji-picker-container-absolute">
                             <EmojiPicker
@@ -227,6 +238,10 @@ const Chat = ({ filterClassroomId = null }) => {
           </form>
         </div>
       </div>
+      <SubmitFileModal 
+        isOpen={isFileModalOpen} 
+        onClose={() => setIsFileModalOpen(false)} 
+      />
     </div>
   );
 };
