@@ -290,18 +290,7 @@ const CourseProgressTree = () => {
         }
     }, [location.state, processedNodes]);
 
-    if (isFetching) {
-        return (
-            <div className="report-card-page animate-page-entry p-2rem text-center">
-                <div className="report-error glass-panel">
-                    <h2>Loading...</h2>
-                    <p>Fetching your course progress.</p>
-                </div>
-            </div>
-        );
-    }
-
-    if (!progressData) {
+    if (!progressData && !isFetching) {
         return (
             <div className="report-card-page animate-page-entry p-2rem text-center">
                 <div className="report-error glass-panel">

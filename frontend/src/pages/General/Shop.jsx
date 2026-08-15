@@ -31,6 +31,7 @@ const Shop = () => {
     const [chatColor, setChatColor] = useState('var(--accent-color)');
     const [borderSpeed, setBorderSpeed] = useState('normal');
     const [borderColor, setBorderColor] = useState('var(--accent-color)');
+    const borderColorRef = React.useRef('var(--accent-color)');
     const wallpaperInputRef = React.useRef(null);
     
     const [isCropping, setIsCropping] = useState(false);
@@ -52,14 +53,18 @@ const Shop = () => {
     })();`.replace(/\n\s+/g, ' ');
 
     useEffect(() => {
+        if (user?.animated_border_color) {
+            setBorderColor(user.animated_border_color);
+            borderColorRef.current = user.animated_border_color;
+        }
+    }, [user?.animated_border_color]);
+
+    useEffect(() => {
         if (user?.chat_font_color) {
             setChatColor(user.chat_font_color);
         }
         if (user?.animated_border_speed) {
             setBorderSpeed(user.animated_border_speed);
-        }
-        if (user?.animated_border_color) {
-            setBorderColor(user.animated_border_color);
         }
         fetchItems();
     }, [user]);
@@ -123,20 +128,22 @@ const Shop = () => {
     };
 
     const handleRgbChange = (channel, value) => {
-        const currentRgb = hexToRgb(borderColor);
+        const currentRgb = hexToRgb(borderColorRef.current);
         let val = parseInt(value, 10);
         if (isNaN(val)) val = 0;
         val = Math.max(0, Math.min(255, val));
         
         currentRgb[channel] = val;
-        setBorderColor(rgbToHex(currentRgb.r, currentRgb.g, currentRgb.b));
+        const newColor = rgbToHex(currentRgb.r, currentRgb.g, currentRgb.b);
+        setBorderColor(newColor);
+        borderColorRef.current = newColor;
     };
 
     const handleBorderColorSubmit = async () => {
         try {
             await client.put(`/api/shop/configure`, {
                 perk_name: "animated_border_color",
-                value: borderColor
+                value: borderColorRef.current
             });
             await checkAuth(true);
         } catch {
@@ -361,7 +368,10 @@ const Shop = () => {
                                                             <input 
                                                                 type="color" 
                                                                 value={borderColor.startsWith('#') ? borderColor : '#fac815'} 
-                                                                onChange={(e) => setBorderColor(e.target.value)}
+                                                                onChange={(e) => {
+                                                                    setBorderColor(e.target.value);
+                                                                    borderColorRef.current = e.target.value;
+                                                                }}
                                                                 onBlur={handleBorderColorSubmit}
                                                                 style={{ width: '24px', height: '24px', padding: '0', cursor: 'pointer', border: 'none', background: 'transparent' }}
                                                             />
