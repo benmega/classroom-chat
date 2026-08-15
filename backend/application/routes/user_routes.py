@@ -117,9 +117,17 @@ def login():
 @api_response
 def auth_status():
     try:
-        users = User.query.all()
-        debug_users = [{"id": u.id, "username": u.username, "role": u.role} for u in users]
-        return {"logged_in": False, "debug_users": debug_users}, 200
+        if request.args.get("debug") == "1":
+            users = User.query.all()
+            debug_users = [{"id": u.id, "username": u.username, "role": u.role} for u in users]
+            return {"logged_in": False, "debug_users": debug_users}, 200
+
+        user_id = session.get("user")
+        if user_id:
+            user_obj = db.session.get(User, user_id)
+            if user_obj:
+                return {"logged_in": True, "user": user_obj.to_dict_auth()}
+        return {"logged_in": False}, 200
     except Exception as e:
         current_app.logger.error(f"Auth status error: {e!s}", exc_info=True)
         return {
