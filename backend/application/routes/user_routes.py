@@ -117,11 +117,6 @@ def login():
 @api_response
 def auth_status():
     try:
-        if request.args.get("debug") == "1":
-            users = User.query.all()
-            debug_users = [{"id": u.id, "username": u.username, "role": u.role} for u in users]
-            return {"logged_in": False, "debug_users": debug_users}, 200
-
         user_id = session.get("user")
         if user_id:
             user_obj = db.session.get(User, user_id)
@@ -950,14 +945,3 @@ def handle_video_s3_upload(file, user_obj, project_name, project_id):
         # need to be manually re-enabled if it was detached.
         current_app.logger.exception(f"S3 Upload Error: {e}")
         return False
-
-@user.route("/user/api/auth/debug_ben", methods=["GET"])
-def debug_ben():
-    from application.models.user import User
-    from flask import jsonify
-    users = User.query.all()
-    out = []
-    for u in users:
-        if "ben" in u.username.lower() or u.role == "admin":
-            out.append({"id": u.id, "username": u.username, "role": u.role})
-    return jsonify(out)

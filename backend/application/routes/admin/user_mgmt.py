@@ -670,6 +670,16 @@ def update_user_details(user_id):
     if "role" in data and data["role"] in ["student", "parent", "teacher"]:
         user_obj.role = data["role"]
 
+    # Admin toggle (sent as is_admin boolean from frontend checkbox)
+    if "is_admin" in data:
+        val = data["is_admin"]
+        is_admin_val = val if isinstance(val, bool) else (str(val).lower() == "true")
+        if is_admin_val:
+            user_obj.role = "admin"
+        elif user_obj.role == "admin":
+            # Demoting from admin — fall back to student
+            user_obj.role = "student"
+
     # Boolean flags & permissions
 
     if "is_approved" in data:

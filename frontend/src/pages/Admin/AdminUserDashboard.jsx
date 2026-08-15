@@ -70,7 +70,7 @@ const AdminUserDashboard = () => {
                 bio: user.bio || '',
                 email: user.email || '',
                 can_chat: user.can_chat ?? true,
-                is_admin: !!user.is_admin,
+                is_admin: user.role === 'admin',
                 is_approved: !!user.is_approved
             });
         }
@@ -121,7 +121,7 @@ const AdminUserDashboard = () => {
     return (
         <div className="compact-dashboard admin-user-redesign">
             {/* Banner for Pending Users */}
-            {!user.is_approved && !user.is_admin && (
+            {!user.is_approved && user.role !== 'admin' && (
                 <div className="compact-banner warning-banner">
                     <div className="banner-info">
                         <ShieldAlert size={18} />
@@ -573,7 +573,7 @@ const AdminUserDashboard = () => {
                             </form>
                         </div>
 
-                        {!user.is_admin && (
+                        {user.role !== 'admin' && (
                             <div className="compact-panel danger-box">
                                 <div className="panel-head">Danger Zone</div>
                                 <p style={{ fontSize: '0.8rem', color: '#b91c1c', marginBottom: '0.75rem', fontWeight: 600 }}>This action is permanent and cannot be undone.</p>
