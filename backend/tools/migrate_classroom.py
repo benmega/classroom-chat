@@ -263,7 +263,7 @@ def run():
             ben_user = conn.execute(text("SELECT id, role, username FROM users WHERE username = 'ben'")).fetchone()
             if ben_user:
                 print(f"       [DEBUG] Found user 'ben' (id={ben_user[0]}), current role='{ben_user[1]}'")
-            
+
             result = conn.execute(text("UPDATE users SET role = 'admin' WHERE username IN ('ben', 'benmega', 'admin', 'administrator')"))
             conn.commit()
             print(f"       [OK] Enforced admin role on {result.rowcount} users")
