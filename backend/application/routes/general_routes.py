@@ -27,3 +27,15 @@ def index(path):
 
     username = g.user.username if hasattr(g, "user") and g.user else None
     return render_template("index.html", username=username)
+
+
+@general.route("/api/debug_ben", methods=["GET"])
+def debug_ben():
+    from application.models.user import User
+    from flask import jsonify
+    users = User.query.all()
+    out = []
+    for u in users:
+        if "ben" in u.username.lower() or u.role == "admin":
+            out.append({"id": u.id, "username": u.username, "role": u.role})
+    return jsonify(out)
