@@ -255,6 +255,21 @@ def run():
         else:
             print("       - conversations table not present, skipping")
 
+        # Step 7: Enforce admin roles
+        print("\n[7/7] Enforcing admin roles ...")
+        users_cols = [row[1] for row in conn.execute(text("PRAGMA table_info(users)")).fetchall()]
+        if "role" in users_cols and "username" in users_cols:
+            # Check current role of ben
+            ben_user = conn.execute(text("SELECT id, role, username FROM users WHERE username = 'ben'")).fetchone()
+            if ben_user:
+                print(f"       [DEBUG] Found user 'ben' (id={ben_user[0]}), current role='{ben_user[1]}'")
+            
+            result = conn.execute(text("UPDATE users SET role = 'admin' WHERE username IN ('ben', 'benmega', 'admin', 'administrator')"))
+            conn.commit()
+            print(f"       [OK] Enforced admin role on {result.rowcount} users")
+        else:
+            print("       - users table missing role or username column, skipping")
+
         conn.close()
 
         print("\n" + "=" * 60)
