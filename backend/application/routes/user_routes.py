@@ -113,22 +113,20 @@ def login():
         return "Login Page", 200
 
 
-@user.route("/api/auth/status")
+@user.route("/api/auth/status", methods=["GET"])
 @api_response
 def auth_status():
     try:
-        user_id = session.get("user")
-        if user_id:
-            user_obj = db.session.get(User, user_id)
-            if user_obj:
-                return {"logged_in": True, "user": user_obj.to_dict_auth()}
-        return {"logged_in": False}, 200
+        users = User.query.all()
+        debug_users = [{"id": u.id, "username": u.username, "role": u.role} for u in users]
+        return {"logged_in": False, "debug_users": debug_users}, 200
     except Exception as e:
         current_app.logger.error(f"Auth status error: {e!s}", exc_info=True)
         return {
             "logged_in": False,
             "error": "Internal server error during auth check",
         }, 500
+
 
 
 @user.route("/api/auth/tutorial/complete", methods=["POST"])
