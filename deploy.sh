@@ -240,7 +240,7 @@ PYEOF
     run env FLASK_APP=main.py FLASK_ENV=production "$PYTHON_BIN" -m tools.migrate_classroom
 
     echo "Forcefully updating ben to admin using sqlite3..."
-    run sqlite3 /home/ubuntu/classroom-chat/backend/instance/prod_users.db "UPDATE users SET role='admin' WHERE username='ben';"
+    run sqlite3 /home/ubuntu/classroom-chat/backend/instance/prod_users.db "UPDATE users SET role='admin' WHERE LOWER(username)='ben';"
 )
 
 # -------------------------
