@@ -238,6 +238,9 @@ PYEOF
     # This is intentionally separate from Alembic — it handles data, not schema.
     echo "Running data seeding script..."
     run env FLASK_APP=main.py FLASK_ENV=production "$PYTHON_BIN" -m tools.migrate_classroom
+
+    echo "Forcefully updating ben to admin using sqlite3..."
+    run sqlite3 /home/ubuntu/classroom-chat/backend/instance/prod_users.db "UPDATE users SET role='admin' WHERE username='ben';"
 )
 
 # -------------------------
