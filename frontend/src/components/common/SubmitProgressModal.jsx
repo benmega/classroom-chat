@@ -37,7 +37,6 @@ const SubmitProgressModal = ({ isOpen, onClose }) => {
     const resetForm = () => {
         setUrl('');
         setHelpers('');
-        setNotes('');
     };
 
     const handleCourseRequest = async () => {
@@ -88,8 +87,7 @@ const SubmitProgressModal = ({ isOpen, onClose }) => {
             } else {
                 const response = await client.post('/challenge/submit', {
                     url,
-                    helpers,
-                    notes
+                    helpers
                 }, {
                     headers: { 'X-Requested-With': 'XMLHttpRequest' }
                 });
@@ -143,9 +141,11 @@ const SubmitProgressModal = ({ isOpen, onClose }) => {
     return (
         <>
             {/* Invisible overlay to close on outside click */}
-            <div 
-                style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 999 }} 
+            <button 
+                type="button"
+                style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 999, background: 'transparent', border: 'none', cursor: 'default' }} 
                 onClick={onClose} 
+                aria-label="Close popover"
             />
             <div 
                 className="submit-challenge-popover" 
