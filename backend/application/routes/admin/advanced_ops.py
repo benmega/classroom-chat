@@ -38,7 +38,7 @@ def get_extended_stats():
     Returns more detailed server and database statistics.
     """
     import os
-
+    import time
     import psutil
 
     # Process stats
@@ -55,5 +55,5 @@ def get_extended_stats():
         "memory_usage_mb": round(memory_info.rss / (1024 * 1024), 2),
         "cpu_percent": process.cpu_percent(interval=0.1),
         "table_counts": table_counts,
-        "uptime_seconds": round(psutil.time.time() - process.create_time(), 0),
+        "uptime_seconds": round(time.time() - process.create_time(), 0),
     }

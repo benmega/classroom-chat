@@ -16,7 +16,8 @@ const AdminStandardProjects = () => {
     
     const [form, setForm] = useState({
         name: '', description: '', chapter: '', link: '', github_link: '', 
-        video_url: '', code_snippet: '', image_url: ''
+        video_url: '', code_snippet: '', image_url: '',
+        difficulty: 'Intermediate', concepts: '', goals: ''
     });
 
     useEffect(() => {
@@ -52,13 +53,17 @@ const AdminStandardProjects = () => {
                 github_link: project.github_link || '',
                 video_url: project.video_url || '',
                 code_snippet: project.code_snippet || '',
-                image_url: project.image_url || ''
+                image_url: project.image_url || '',
+                difficulty: project.difficulty || 'Intermediate',
+                concepts: Array.isArray(project.concepts) ? project.concepts.join(', ') : (project.concepts || ''),
+                goals: Array.isArray(project.goals) ? project.goals.join('\n') : (project.goals || '')
             });
         } else {
             setEditingProject(null);
             setForm({
                 name: '', description: '', chapter: '', link: '', github_link: '', 
-                video_url: '', code_snippet: '', image_url: ''
+                video_url: '', code_snippet: '', image_url: '',
+                difficulty: 'Intermediate', concepts: '', goals: ''
             });
         }
         setIsModalOpen(true);
@@ -76,16 +81,21 @@ const AdminStandardProjects = () => {
         }
 
         setIsSubmitting(true);
+        const submitData = {
+            ...form,
+            concepts: form.concepts ? form.concepts.split(',').map(s => s.trim()).filter(Boolean) : [],
+            goals: form.goals ? form.goals.split('\n').map(s => s.trim()).filter(Boolean) : []
+        };
         try {
             if (editingProject) {
-                const res = await client.put(`/api/project-templates/${editingProject.id}`, form);
+                const res = await client.put(`/api/project-templates/${editingProject.id}`, submitData);
                 if (res.data.status === 'success' || res.data.message) {
                     
                     closeModal();
                     fetchProjects();
                 }
             } else {
-                const res = await client.post('/api/project-templates', form);
+                const res = await client.post('/api/project-templates', submitData);
                 if (res.data.status === 'success' || res.data.message) {
                     
                     closeModal();
@@ -207,6 +217,36 @@ const AdminStandardProjects = () => {
                     <div className="form-group">
                         <label htmlFor="input-189">Default Thumbnail Image URL</label>
                         <input id="input-189" type="text" value={form.image_url} onChange={e => setForm({...form, image_url: e.target.value})} />
+                    </div>
+                    <div className="form-group">
+                        <label htmlFor="input-difficulty">Difficulty</label>
+                        <select id="input-difficulty"
+                            className="admin-select"
+                            value={form.difficulty}
+                            onChange={e => setForm({...form, difficulty: e.target.value})}
+                        >
+                            <option value="Beginner">Beginner</option>
+                            <option value="Intermediate">Intermediate</option>
+                            <option value="Advanced">Advanced</option>
+                        </select>
+                    </div>
+                    <div className="form-group">
+                        <label htmlFor="input-concepts">Concepts Covered</label>
+                        <input id="input-concepts" 
+                            type="text" 
+                            value={form.concepts}
+                            onChange={e => setForm({...form, concepts: e.target.value})}
+                            placeholder="e.g. Variables, Loops, Conditionals (comma-separated)"
+                        />
+                    </div>
+                    <div className="form-group">
+                        <label htmlFor="input-goals">What You Will Learn (Goals)</label>
+                        <textarea id="input-goals" 
+                            value={form.goals}
+                            onChange={e => setForm({...form, goals: e.target.value})}
+                            rows="4"
+                            placeholder="e.g. Create a branching story structure... (one per line)"
+                        />
                     </div>
 
                     <div className="modal-actions mt-1-5rem d-flex justify-end gap-md">
