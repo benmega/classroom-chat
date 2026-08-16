@@ -1,11 +1,12 @@
 import React, { useLayoutEffect, useRef, useState, useMemo, useEffect } from 'react';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams, Link } from 'react-router-dom';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
-import { ArrowLeft, Star, ZoomIn, ZoomOut, Maximize2, CheckCircle, Code } from 'lucide-react';
+import { ArrowLeft, Star, ZoomIn, ZoomOut, Maximize2, CheckCircle, Code, History } from 'lucide-react';
 import codecombatLogo from '../../assets/codecombat-logo.png';
 import ozariaLogo from '../../assets/ozaria-logo.png';
 import useAuthStore from '../../store/useAuthStore';
+import SubmitProgressModal from '../../components/common/SubmitProgressModal';
 import './CourseProgressTree.css';
 
 import {
@@ -32,6 +33,7 @@ const CourseProgressTree = () => {
     const [localPendingRequest] = useState(null);
     const [zoom, setZoom] = useState(1.0);
     const [chapterProjects, setChapterProjects] = useState({});
+    const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
 
     const stateProgressData = location.state?.course_progress || location.state?.target?.course_progress;
 
@@ -521,6 +523,58 @@ const CourseProgressTree = () => {
                     <Maximize2 size={16} />
                 </button>
             </div>
+
+            {/* Quick Submit Widget */}
+            <div style={{
+                position: 'fixed',
+                bottom: '6rem',
+                right: '2rem',
+                zIndex: 1000,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '1rem'
+            }}>
+                <Link 
+                    to="/activity" 
+                    className="btn-icon"
+                    style={{ 
+                        background: 'var(--bg-secondary)', 
+                        border: '1px solid var(--border-subtle)', 
+                        boxShadow: 'var(--shadow-md)', 
+                        padding: '0.75rem', 
+                        borderRadius: '50%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: 'var(--text-primary)'
+                    }}
+                    title="View History"
+                >
+                    <History size={20} />
+                </Link>
+
+                <button 
+                    className="btn-premium" 
+                    onClick={() => setIsSubmitModalOpen(true)}
+                    style={{ 
+                        padding: '0.75rem 1.5rem',
+                        borderRadius: '30px',
+                        boxShadow: 'var(--shadow-lg)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        fontSize: '1rem'
+                    }}
+                >
+                    <CheckCircle size={18} />
+                    Claim Ducks
+                </button>
+            </div>
+
+            <SubmitProgressModal 
+                isOpen={isSubmitModalOpen} 
+                onClose={() => setIsSubmitModalOpen(false)} 
+            />
         </div>
     );
 };

@@ -43,7 +43,7 @@ const lazyWithRetry = (componentImport) =>
 
 const Achievements = lazyWithRetry(() => import('./pages/General/Achievements'));
 const BitShift = lazyWithRetry(() => import('./pages/General/BitShift'));
-const SubmitWork = lazyWithRetry(() => import('./pages/General/SubmitWork'));
+
 const Activity = lazyWithRetry(() => import('./pages/General/Activity'));
 const CourseProgressTree = lazyWithRetry(() => import('./pages/General/CourseProgressTree'));
 const CourseLevelBreakdown = lazyWithRetry(() => import('./pages/General/CourseLevelBreakdown'));
@@ -279,16 +279,7 @@ function App() {
           </ProtectedRoute>
         } />
 
-        <Route path="/submit-certificate" element={<Navigate to="/submit-work" replace />} />
-        <Route path="/submit-challenge" element={<Navigate to="/submit-work" replace />} />
 
-        <Route path="/submit-work" element={
-          <ProtectedRoute>
-            <Layout>
-              <SubmitWork />
-            </Layout>
-          </ProtectedRoute>
-        } />
 
         <Route path="/activity" element={
           <ProtectedRoute>

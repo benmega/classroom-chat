@@ -52,7 +52,7 @@ const MobileSidebar = ({ user, isParent, isSidebarOpen, setSidebarOpen, handleLo
                         )}
                         {!isParent && (
                             <>
-                                <li><Link to="/submit-work" onClick={() => setSidebarOpen(false)}><FileCheck size={18} /> Submit Work</Link></li>
+
                                 <li>
                                     <Link to="/activity" onClick={() => setSidebarOpen(false)}>
                                         <div className="nav-badge-container" style={{ display: 'inline-flex', alignItems: 'center', width: '100%' }}>

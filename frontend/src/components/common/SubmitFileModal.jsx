@@ -160,9 +160,6 @@ const SubmitFileModal = ({ isOpen, onClose }) => {
         <Modal isOpen={isOpen} onClose={onClose} title="Send a File">
             <div className="submit-file-page" style={{ padding: '0' }}>
                 <div className="form-card submit-file-card" style={{ border: 'none', boxShadow: 'none', padding: '0', maxWidth: '100%' }}>
-                    <div className="form-header submit-file-header" style={{ marginBottom: '1.5rem', textAlign: 'left' }}>
-                        <p className="form-description" style={{ margin: '0' }}>Share a document, image, or project file directly with your teacher.</p>
-                    </div>
                     <form onSubmit={handleSubmit} className="file-submission-form">
                         <div className="form-group">
                             <label htmlFor="submission-file">File</label>

@@ -40,16 +40,6 @@ const DesktopNavRail = ({ user, location, handleLogout }) => {
                     </Link>
                 </div>
 
-                <div className={`nav-rail-item-container ${location.pathname.startsWith('/submit-work') ? 'active' : ''}`}>
-                    <div className="nav-rail-indicator" />
-                    <Link 
-                        to="/submit-work" 
-                        className={`nav-rail-item ${location.pathname.startsWith('/submit-work') ? 'active' : ''}`}
-                        data-tooltip="Submit Work"
-                    >
-                        <FileCheck size={20} />
-                    </Link>
-                </div>
 
                 <div className={`nav-rail-item-container ${location.pathname.startsWith('/course-progress') ? 'active' : ''}`}>
                     <div className="nav-rail-indicator" />

@@ -77,10 +77,14 @@ const Modal = ({ isOpen, onClose, title, children }) => {
                 aria-modal="true"
                 aria-labelledby="modal-title"
             >
-                <div className="modal-header">
-                    <h3 id="modal-title">{title}</h3>
-                    <button onClick={onClose} className="close-btn" aria-label="Close modal"><X size={20} /></button>
-                </div>
+                {title ? (
+                    <div className="modal-header">
+                        <h3 id="modal-title">{title}</h3>
+                        <button onClick={onClose} className="close-btn" aria-label="Close modal"><X size={20} /></button>
+                    </div>
+                ) : (
+                    <button onClick={onClose} className="close-btn" aria-label="Close modal" style={{ position: 'absolute', top: '15px', right: '15px', zIndex: 10, background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)' }}><X size={20} /></button>
+                )}
                 <div className="modal-body">
                     {children}
                 </div>
