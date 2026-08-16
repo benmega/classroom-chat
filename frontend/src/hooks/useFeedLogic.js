@@ -14,6 +14,7 @@ export const useFeedLogic = (filterClassroomId = null) => {
   const [hasMore, setHasMore] = useState(true);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [cooldown, setCooldown] = useState(0);
+  const [file, setFile] = useState(null);
 
   useEffect(() => {
     if (cooldown <= 0) return;
@@ -202,7 +203,32 @@ export const useFeedLogic = (filterClassroomId = null) => {
 
   const handleSendMessage = async (e) => {
     if (e) e.preventDefault();
-    if (!newMessage.trim() || cooldown > 0) return;
+    if ((!newMessage.trim() && !file) || cooldown > 0) return;
+
+    if (file) {
+      const formData = new FormData();
+      formData.append('file', file);
+      if (newMessage.trim()) {
+        formData.append('note', newMessage.trim());
+      }
+      
+      try {
+        await client.post('/api/submissions', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        toast.success('File submitted successfully');
+        setFile(null);
+        setNewMessage('');
+        setShowEmojiPicker(false);
+        if (textareaRef.current) {
+          textareaRef.current.style.height = 'auto';
+        }
+      } catch (err) {
+        toast.error('Failed to submit file');
+        console.error(err);
+      }
+      return;
+    }
 
     const messageToSend = newMessage.trim();
 
@@ -326,6 +352,8 @@ export const useFeedLogic = (filterClassroomId = null) => {
     handleTextareaChange,
     onEmojiClick,
     handleDeleteMessage,
+    file,
+    setFile,
     handleScroll,
     handleLoadMore,
     cooldown
