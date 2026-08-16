@@ -150,9 +150,9 @@ class User(db.Model):
     @property
     def has_activity(self):
         from .challenge_log import ChallengeLog
+        from .course_instance_request import CourseInstanceRequest
         from .submission import Submission
         from .user_certificate import UserCertificate
-        from .course_instance_request import CourseInstanceRequest
 
         if ChallengeLog.query.filter_by(user_id=self.id).first():
             return True
@@ -160,9 +160,7 @@ class User(db.Model):
             return True
         if UserCertificate.query.filter_by(user_id=self.id).first():
             return True
-        if CourseInstanceRequest.query.filter_by(student_id=self.id).first():
-            return True
-        return False
+        return bool(CourseInstanceRequest.query.filter_by(student_id=self.id).first())
 
     def to_dict_auth(self):
         """Ultra-lightweight dictionary for frequent auth status checks."""

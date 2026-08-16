@@ -39,6 +39,7 @@ def get_extended_stats():
     """
     import os
     import time
+
     import psutil
 
     # Process stats
