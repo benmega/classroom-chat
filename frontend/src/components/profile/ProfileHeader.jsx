@@ -63,9 +63,11 @@ const ProfileHeader = ({ target, isOwner, pfpInputRef, onPfpChange, editLink }) 
                             <Link to={editLink || "/settings"} className="btn-settings">
                                 <User size={14} /> Edit Profile
                             </Link>
-                            <Link to="/activity" className="btn-settings">
-                                <History size={14} /> Activity
-                            </Link>
+                            {target.has_activity && (
+                                <Link to="/activity" className="btn-settings">
+                                    <History size={14} /> Activity
+                                </Link>
+                            )}
                         </div>
                     )}
                 </div>

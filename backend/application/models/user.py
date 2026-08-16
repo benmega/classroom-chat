@@ -147,6 +147,23 @@ class User(db.Model):
 
         return d
 
+    @property
+    def has_activity(self):
+        from .challenge_log import ChallengeLog
+        from .submission import Submission
+        from .user_certificate import UserCertificate
+        from .course_instance_request import CourseInstanceRequest
+
+        if ChallengeLog.query.filter_by(user_id=self.id).first():
+            return True
+        if Submission.query.filter_by(user_id=self.id).first():
+            return True
+        if UserCertificate.query.filter_by(user_id=self.id).first():
+            return True
+        if CourseInstanceRequest.query.filter_by(student_id=self.id).first():
+            return True
+        return False
+
     def to_dict_auth(self):
         """Ultra-lightweight dictionary for frequent auth status checks."""
         from .track_requests import TrackChangeRequest
@@ -197,6 +214,7 @@ class User(db.Model):
             "last_activity_time": self.last_activity_time.isoformat()
             if self.last_activity_time
             else None,
+            "has_activity": self.has_activity,
             "achievement_count": len(self.achievements),
             "can_chat": getattr(self, "can_chat", True),
         }
@@ -292,6 +310,7 @@ class User(db.Model):
             "last_activity_time": self.last_activity_time.isoformat()
             if self.last_activity_time
             else None,
+            "has_activity": self.has_activity,
             "recent_project": {
                 "name": self.projects[-1].name,
             }
