@@ -232,15 +232,19 @@ const CourseProgressTree = () => {
         
         try {
             const previewRes = await client.post(`/api/admin/user/${userObj.id}/pass_chapter_preview`, { course_id: node.id });
-            if (previewRes.data.success) {
-                const p = previewRes.data.preview;
+            const previewData = previewRes.data.data || previewRes.data;
+            if (previewData.success) {
+                const p = previewData.preview;
                 const msg = `Preview for passing ${node.title}:\n- Missing Challenges: ${p.challenges_to_complete}\n- Ducks to award: ${p.ducks_to_award}\n- Certificates: ${p.certificates_to_award.join(', ') || 'None'}\n\nAre you sure you want to pass this chapter?`;
                 if (window.confirm(msg)) {
                     const passRes = await client.post(`/api/admin/user/${userObj.id}/pass_chapter`, { course_id: node.id });
-                    if (passRes.data.success) {
-                        
-                        // Reload data via full refresh since state may not auto-update cleanly here
-                        window.location.reload();
+                    const passData = passRes.data.data || passRes.data;
+                    if (passData.success) {
+                        // Clear the cached router state so a reload fetches fresh data from the server
+                        navigate(location.pathname, { replace: true, state: {} });
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 50);
                     }
                 }
             }
@@ -418,18 +422,19 @@ const CourseProgressTree = () => {
                                 } 
                             })}
                         >
-                            {isAdmin && (
-                                <button 
-                                    type="button"
-                                    className="btn-admin-pass-chapter"
-                                    onClick={(e) => handleAdminPass(e, node)}
-                                    title="Admin Override: Pass Chapter"
-                                    style={{ position: 'absolute', top: '-10px', right: '-10px', zIndex: 10, background: 'var(--success-color, #28a745)', border: 'none', color: '#fff', borderRadius: '50%', padding: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 5px rgba(0,0,0,0.3)' }}
-                                >
-                                    <CheckCircle size={16} />
-                                </button>
-                            )}
-                            <div className={`skill-card ${node.domain} ${node.levels_total && node.levels_completed >= node.levels_total ? 'complete' : ''} cursor-pointer`}>
+                            <div style={{ position: 'relative' }}>
+                                {isAdmin && (
+                                    <button 
+                                        type="button"
+                                        className="btn-admin-pass-chapter"
+                                        onClick={(e) => handleAdminPass(e, node)}
+                                        title="Admin Override: Pass Chapter"
+                                        style={{ position: 'absolute', top: '-10px', right: '-10px', zIndex: 10, background: 'var(--success-color, #28a745)', border: 'none', color: '#fff', borderRadius: '50%', padding: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 5px rgba(0,0,0,0.3)' }}
+                                    >
+                                        <CheckCircle size={16} />
+                                    </button>
+                                )}
+                                <div className={`skill-card ${node.domain} ${node.levels_total && node.levels_completed >= node.levels_total ? 'complete' : ''} cursor-pointer`}>
                                 <div 
                                     className={`skill-card-bg-fill ${node.domain} ${node.levels_total && node.levels_completed >= node.levels_total ? 'complete' : ''}`}
                                     style={{ width: `${node.levels_total ? Math.min((node.levels_completed / node.levels_total) * 100, 100) : (node.levels_completed > 0 ? 100 : 0)}%` }}
@@ -457,6 +462,7 @@ const CourseProgressTree = () => {
                                         </div>
                                     )}
                                 </div>
+                            </div>
                             </div>
                             
                             {/* Project Nodes */}
@@ -534,24 +540,26 @@ const CourseProgressTree = () => {
                 alignItems: 'center',
                 gap: '1rem'
             }}>
-                <Link 
-                    to="/activity" 
-                    className="btn-icon"
-                    style={{ 
-                        background: 'var(--bg-secondary)', 
-                        border: '1px solid var(--border-subtle)', 
-                        boxShadow: 'var(--shadow-md)', 
-                        padding: '0.75rem', 
-                        borderRadius: '50%',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: 'var(--text-primary)'
-                    }}
-                    title="View History"
-                >
-                    <History size={20} />
-                </Link>
+                {authUser?.has_activity && (
+                    <Link 
+                        to="/activity" 
+                        className="btn-icon"
+                        style={{ 
+                            background: 'var(--bg-secondary)', 
+                            border: '1px solid var(--border-subtle)', 
+                            boxShadow: 'var(--shadow-md)', 
+                            padding: '0.75rem', 
+                            borderRadius: '50%',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: 'var(--text-primary)'
+                        }}
+                        title="View History"
+                    >
+                        <History size={20} />
+                    </Link>
+                )}
 
                 <button 
                     className="btn-premium" 
