@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
 import useAuthStore from '../../store/useAuthStore';
@@ -14,6 +14,7 @@ const CERT_URL_PATTERN = /^https:\/\/(?:www\.)?(?:codecombat|ozaria)\.com\/certi
 
 const SubmitProgressModal = ({ isOpen, onClose }) => {
     const { checkAuth } = useAuthStore();
+    const popoverRef = useRef(null);
     
     const [url, setUrl] = useState('');
     const [helpers, setHelpers] = useState('');
@@ -38,6 +39,30 @@ const SubmitProgressModal = ({ isOpen, onClose }) => {
         setUrl('');
         setHelpers('');
     };
+
+    // Handle Escape key and outside clicks
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (e.key === 'Escape') onClose();
+        };
+        const handleClickOutside = (e) => {
+            if (popoverRef.current && !popoverRef.current.contains(e.target)) {
+                // Check if they didn't click inside a toast or something similar before closing
+                // The main thing is they clicked outside the popover
+                onClose();
+            }
+        };
+
+        if (isOpen) {
+            document.addEventListener('keydown', handleKeyDown);
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+
+        return () => {
+            document.removeEventListener('keydown', handleKeyDown);
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [isOpen, onClose]);
 
     const handleCourseRequest = async () => {
         try {
@@ -140,14 +165,8 @@ const SubmitProgressModal = ({ isOpen, onClose }) => {
 
     return (
         <>
-            {/* Invisible overlay to close on outside click */}
-            <button 
-                type="button"
-                style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 999, background: 'transparent', border: 'none', cursor: 'default' }} 
-                onClick={onClose} 
-                aria-label="Close popover"
-            />
             <div 
+                ref={popoverRef}
                 className="submit-challenge-popover" 
                 style={{ 
                     position: 'fixed', 
