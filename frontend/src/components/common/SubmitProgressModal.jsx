@@ -5,6 +5,7 @@ import useAuthStore from '../../store/useAuthStore';
 import UserSearchInput from './UserSearchInput';
 import Modal from './Modal';
 import confetti from 'canvas-confetti';
+import { Users, X } from 'lucide-react';
 import { getErrorMessage } from '../../utils/apiError';
 import './SubmitProgressModal.css';
 
@@ -16,9 +17,8 @@ const SubmitProgressModal = ({ isOpen, onClose }) => {
     
     const [url, setUrl] = useState('');
     const [helpers, setHelpers] = useState('');
-    const [notes, setNotes] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [showOptional, setShowOptional] = useState(false);
+    const [showHelperModal, setShowHelperModal] = useState(false);
     const [pendingCourseRequest, setPendingCourseRequest] = useState(null);
 
     // Certificate support
@@ -154,15 +154,71 @@ const SubmitProgressModal = ({ isOpen, onClose }) => {
                     bottom: '10rem',
                     right: '2rem', 
                     zIndex: 1000,
-                    background: 'var(--surface-primary)',
-                    border: '1px solid var(--border-subtle)',
-                    borderRadius: 'var(--radius-lg)',
-                    boxShadow: 'var(--shadow-xl)',
                     width: '350px',
-                    padding: '1.25rem',
                     animation: 'slideUp 0.2s ease-out'
                 }}
             >
+                {/* Floating Helper Icon */}
+                <button
+                    type="button"
+                    onClick={() => setShowHelperModal(!showHelperModal)}
+                    style={{
+                        position: 'absolute',
+                        top: '-40px',
+                        right: '0',
+                        background: 'var(--surface-primary)',
+                        border: '1px solid var(--border-subtle)',
+                        boxShadow: 'var(--shadow-sm)',
+                        borderRadius: '50%',
+                        width: '32px',
+                        height: '32px',
+                        cursor: 'pointer',
+                        color: helpers ? 'var(--primary-color)' : 'var(--text-muted)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        zIndex: 1002
+                    }}
+                    title={helpers ? `Helper: ${helpers}` : "Tag a helper"}
+                >
+                    <Users size={16} />
+                </button>
+
+                {showHelperModal && (
+                    <div style={{
+                        position: 'absolute',
+                        bottom: 'calc(100% + 48px)',
+                        right: '0',
+                        background: 'var(--surface-primary)',
+                        border: '1px solid var(--border-subtle)',
+                        borderRadius: 'var(--radius-md)',
+                        boxShadow: 'var(--shadow-lg)',
+                        padding: '0.75rem',
+                        width: '280px',
+                        zIndex: 1001,
+                        animation: 'slideUp 0.15s ease-out'
+                    }}>
+                        <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '0.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span>Who helped you?</span>
+                            <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                {helpers && (
+                                    <button type="button" onClick={() => { setHelpers(''); setShowHelperModal(false); }} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '0.75rem' }}>Clear</button>
+                                )}
+                                <button type="button" onClick={() => setShowHelperModal(false)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex' }}><X size={14}/></button>
+                            </div>
+                        </div>
+                        <UserSearchInput 
+                            id="helpers"
+                            value={helpers}
+                            onChange={setHelpers}
+                            onSelect={(u) => { setHelpers(u.username); setShowHelperModal(false); }}
+                            placeholder="Search users..." 
+                            className="form-control"
+                            showIcon={true}
+                        />
+                    </div>
+                )}
+
                 <div className="form-card" style={{ maxWidth: '100%', margin: '0', border: 'none', boxShadow: 'none', padding: '0' }}>
                     <form onSubmit={handleSubmit} className="challenge-form">
                         <div className="challenge-form-main">
@@ -182,42 +238,7 @@ const SubmitProgressModal = ({ isOpen, onClose }) => {
                                 </div>
                             </div>
 
-                            <div className={`optional-section ${showOptional ? 'is-expanded' : ''}`}>
-                                <button 
-                                    type="button" 
-                                    className="toggle-optional"
-                                    onClick={() => setShowOptional(!showOptional)}
-                                >
-                                    <span>{showOptional ? '−' : '+'} Extras</span>
-                                </button>
-                                
-                                <div className="optional-content">
-                                    <div className="form-group">
-                                        <label htmlFor="helpers">Who helped you?</label>
-                                        <UserSearchInput 
-                                            id="helpers"
-                                            value={helpers}
-                                            onChange={setHelpers}
-                                            onSelect={(u) => setHelpers(u.username)}
-                                            placeholder="Search for users who helped..." 
-                                            className="form-control"
-                                            showIcon={false}
-                                        />
-                                    </div>
-
-                                    <div className="form-group">
-                                        <label htmlFor="notes">Notes</label>
-                                        <textarea 
-                                            id="notes" 
-                                            value={notes}
-                                            onChange={(e) => setNotes(e.target.value)}
-                                            rows="2" 
-                                            className="form-control"
-                                            placeholder="What did you learn or struggle with?"
-                                        ></textarea>
-                                    </div>
-                                </div>
-                            </div>
+                            {/* Removed optional section */}
 
                             {isCertificate && isSubmitting && uploadProgress > 0 && (
                                 <div className="progress-container mt-md">
