@@ -200,26 +200,24 @@ const AdminLayout = ({ children }) => {
                 </div>
             </aside>
 
-            {/* Mobile Hamburger Button + Main Content */}
-            <div className="admin-main-wrapper">
-                <div className="admin-mobile-top-bar mobile-only">
-                    <button
-                        className="admin-hamburger"
-                        onClick={() => setSidebarOpen(true)}
-                        aria-label="Open Sidebar"
-                    >
-                        <Menu size={24} />
-                    </button>
-                </div>
-
-                {/* Main Content Area */}
-                <main
-                    key={location.pathname.startsWith('/admin/advanced-crud') ? '/admin/advanced-crud' : location.pathname}
-                    className="admin-body animate-page-entry"
+            {/* Mobile Hamburger Button */}
+            <div className="admin-mobile-top-bar mobile-only">
+                <button
+                    className="admin-hamburger"
+                    onClick={() => setSidebarOpen(true)}
+                    aria-label="Open Sidebar"
                 >
-                    {children}
-                </main>
+                    <Menu size={24} />
+                </button>
             </div>
+
+            {/* Main Content Area */}
+            <main
+                key={location.pathname.startsWith('/admin/advanced-crud') ? '/admin/advanced-crud' : location.pathname}
+                className="admin-body animate-page-entry"
+            >
+                {children}
+            </main>
         </div>
     );
 };

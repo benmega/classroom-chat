@@ -23,8 +23,9 @@
    App Container
    ========================================================================== */
 .admin-app-container {
-    display: flex;
-    flex-direction: row;
+    display: grid;
+    grid-template-columns: var(--admin-rail-width) 1fr;
+    grid-template-rows: auto 1fr;
     height: 100dvh;
     overflow: hidden;
     background-color: var(--bg-tertiary);
@@ -34,6 +35,8 @@
    Sidebar — base (matches .desktop-nav-rail)
    ========================================================================== */
 .admin-sidebar {
+    grid-column: 1;
+    grid-row: 1 / -1;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -356,20 +359,12 @@
 }
 
 /* ==========================================================================
-   Main wrapper
+   Main content column
    ========================================================================== */
-.admin-main-wrapper {
-    flex: 1;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    height: 100dvh;
-    background: var(--bg-tertiary);
-    overflow: hidden;
-}
-
 .admin-body {
-    flex: 1;
+    grid-column: 2;
+    grid-row: 2;
+    min-height: 0;
     display: flex;
     flex-direction: column;
     padding: 1.25rem;
@@ -378,10 +373,13 @@
     width: 100%;
     margin: 0 auto;
     overflow-y: auto;
+    background: var(--bg-tertiary);
 }
 
 /* Mobile top bar */
 .admin-mobile-top-bar {
+    grid-column: 2;
+    grid-row: 1;
     display: none;
     align-items: center;
     padding: 0 1rem;
@@ -506,7 +504,12 @@
    ========================================================================== */
 @media (max-width: 800px) {
     .admin-app-container {
-        flex-direction: column;
+        grid-template-columns: 1fr;
+    }
+
+    .admin-mobile-top-bar,
+    .admin-body {
+        grid-column: 1;
     }
 
     /* Sidebar slides in from left */
