@@ -21,6 +21,10 @@ class ProjectTemplate(db.Model):
     code_snippet = db.Column(db.Text, nullable=True)
     image_url = db.Column(db.String(255), nullable=True)
 
+    difficulty = db.Column(db.String(50), nullable=True, default="Intermediate")
+    concepts = db.Column(db.JSON, nullable=True, default=list)
+    goals = db.Column(db.JSON, nullable=True, default=list)
+
     def __repr__(self):
         return f"<ProjectTemplate {self.name}>"
 
@@ -35,4 +39,7 @@ class ProjectTemplate(db.Model):
             "video_url": self.video_url,
             "code_snippet": self.code_snippet,
             "image_url": self.image_url,
+            "difficulty": self.difficulty,
+            "concepts": self.concepts,
+            "goals": self.goals,
         }

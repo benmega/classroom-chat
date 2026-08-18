@@ -3,7 +3,9 @@ import re
 from application.decorators.admin_required import admin_only
 from application.decorators.api_response import api_response
 from application.extensions import db
+from application.models.challenge_log import ChallengeLog
 from application.models.user import User
+from application.utilities.db_helpers import get_canonical_course_slug
 from flask import current_app, jsonify, request
 
 from ..admin_routes import admin_bp
@@ -132,17 +134,51 @@ def get_users():
     role = request.args.get("role", "", type=str)
     if role:
         query = query.filter_by(role=role)
-    query = query.order_by(
-        User.is_approved.asc(),
-        User.last_activity_time.desc().nullslast(),
-        User.id.desc(),
-    )
 
     online_count = query.filter(User.is_online.is_(True)).count()
     admin_count = query.filter(User.role == 'admin').count()
     pending_count = query.filter(
         User.is_approved.is_(False), User.role != 'admin'
     ).count()
+
+    # ── Excel-style column filters ──────────────────────────
+    status_param = request.args.get("status", "", type=str)
+    if status_param:
+        statuses = {v.strip() for v in status_param.split(",") if v.strip()}
+        bool_values = []
+        if "active" in statuses:
+            bool_values.append(True)
+        if "offline" in statuses:
+            bool_values.append(False)
+        query = query.filter(User.is_online.in_(bool_values)) if bool_values else query.filter(db.false())
+
+    account_types_param = request.args.get("account_types", "", type=str)
+    if account_types_param:
+        types = {v.strip() for v in account_types_param.split(",") if v.strip()}
+        query = query.filter(User.role.in_(types)) if types else query.filter(db.false())
+
+    # ── Sorting ──────────────────────────────────────────────
+    sort_by = request.args.get("sort_by", "", type=str)
+    sort_dir = request.args.get("sort_dir", "asc", type=str)
+    descending = sort_dir == "desc"
+
+    sort_columns = {
+        "name": db.func.lower(db.func.coalesce(User.nickname, User._username)),
+        "role": User.role,
+        "duck_balance": User.duck_balance,
+        "packets": User.packets,
+        "is_online": User.is_online,
+    }
+
+    if sort_by in sort_columns:
+        column = sort_columns[sort_by]
+        query = query.order_by(column.desc() if descending else column.asc(), User.id.desc())
+    else:
+        query = query.order_by(
+            User.is_approved.asc(),
+            User.last_activity_time.desc().nullslast(),
+            User.id.desc(),
+        )
 
     pagination = query.paginate(page=page, per_page=per_page, error_out=False)
     users = pagination.items
@@ -621,6 +657,23 @@ def get_user_details(user_id):
     d = user.to_dict()
     for field in ["password_hash", "salt", "ip_address"]:
         d.pop(field, None)
+
+    # ChallengeLog rows are only ever written at challenge-completion time
+    # (Challenge.complete_challenge, the claim endpoint, admin bulk-pass), so
+    # the newest row by timestamp is the student's most recently completed
+    # challenge; its course_id tells us which course that challenge belongs to.
+    most_recently_completed_challenge = (
+        ChallengeLog.query.filter(
+            ChallengeLog.user_id == user_id, ChallengeLog.course_id.isnot(None)
+        )
+        .order_by(ChallengeLog.timestamp.desc())
+        .first()
+    )
+    d["most_recently_completed_challenge_course"] = (
+        get_canonical_course_slug(most_recently_completed_challenge.course_id)
+        if most_recently_completed_challenge
+        else None
+    )
 
     return jsonify({"user": d})
 

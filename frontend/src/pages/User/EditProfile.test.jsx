@@ -111,8 +111,8 @@ describe('EditProfile', () => {
     it('toggles password visibility', () => {
         const { container } = render(<EditProfile />);
 
-        const passInput = screen.getByPlaceholderText('Leave blank to keep current');
-        const confirmInput = screen.getByPlaceholderText('Confirm your new password');
+        const passInput = screen.getByPlaceholderText('New Password');
+        const confirmInput = screen.getByPlaceholderText('Confirm New Password');
 
         expect(passInput).toHaveAttribute('type', 'password');
         expect(confirmInput).toHaveAttribute('type', 'password');
@@ -129,8 +129,8 @@ describe('EditProfile', () => {
     it('validates password match', () => {
         render(<EditProfile />);
 
-        fireEvent.change(screen.getByPlaceholderText('Leave blank to keep current'), { target: { value: 'pass123' } });
-        fireEvent.change(screen.getByPlaceholderText('Confirm your new password'), { target: { value: 'pass456' } });
+        fireEvent.change(screen.getByPlaceholderText('New Password'), { target: { value: 'pass123' } });
+        fireEvent.change(screen.getByPlaceholderText('Confirm New Password'), { target: { value: 'pass456' } });
 
         fireEvent.submit(screen.getByRole('button', { name: /Save Changes/i }).closest('form'));
 

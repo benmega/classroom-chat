@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
-import { 
-    Users, 
+import {
     Search,
-    Shield,
     Menu,
     Bot,
     MessageSquare,
-    AlertTriangle
+    AlertTriangle,
+    Calendar,
+    PieChart as PieChartIcon,
+    Download
 } from 'lucide-react';
 import {
     Chart as ChartJS,
@@ -17,16 +18,20 @@ import {
     Title,
     Tooltip,
     Legend,
-    Filler
+    Filler,
+    ArcElement
 } from 'chart.js';
-import { Line } from 'react-chartjs-2';
+import { Line, Pie } from 'react-chartjs-2';
 import { useNavigate } from 'react-router-dom';
+import client from '../../api/client';
+import toast from 'react-hot-toast';
 import './AdminDashboard.css';
+import './Analytics.css';
 import Skeleton from '../../components/common/Skeleton';
 
 // Extracted Components
 import AdminStats from '../../components/admin/AdminStats';
-import { 
+import {
     AddBannedWordModal
 } from '../../components/admin/AdminModals';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
@@ -43,7 +48,8 @@ ChartJS.register(
     Title,
     Tooltip,
     Legend,
-    Filler
+    Filler,
+    ArcElement
 );
 
 const AdminDashboard = () => {
@@ -64,6 +70,26 @@ const AdminDashboard = () => {
         handleUpdateMultiplier,
         handleAddBannedWord
     } = useAdminDashboard();
+
+    const handleExportTransactions = async () => {
+        try {
+            const response = await client.get('/api/admin/export/transactions', {
+                responseType: 'blob'
+            });
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            const filename = `duck_transactions_${new Date().toISOString().slice(0, 19).replace(/[:T]/g, '_')}.csv`;
+            link.setAttribute('download', filename);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            toast.success('Transaction history exported.');
+        } catch (error) {
+            console.error('Export failed:', error);
+            toast.error('Failed to export transaction data.');
+        }
+    };
 
     const onSubmitBannedWord = async (e) => {
         e.preventDefault();
@@ -94,25 +120,59 @@ const AdminDashboard = () => {
     
     if (!dashboardData) return <div className="admin-error">Error loading dashboard.</div>;
 
-    const { config, chart_data } = dashboardData;
+    const { config, chart_data, all_users } = dashboardData;
 
     const chartConfig = getChartConfig(chart_data);
 
     const maxDays = dashboardData?.chart_data?.max_history_days || 0;
 
+    const handleChartPointClick = (event, elements) => {
+        if (!elements || !elements.length) return;
+        const { datasetIndex, index } = elements[0];
+        const date = chart_data?.dates?.[index];
+        if (!date) return;
+        const type = datasetIndex === 1 ? 'spent' : 'earned';
+        navigate(`/admin/transactions?type=${type}&date=${date}`);
+    };
+
+    const clickableChartOptions = {
+        ...chartOptions,
+        onClick: handleChartPointClick,
+        onHover: (event, elements) => {
+            if (event.native?.target) {
+                event.native.target.style.cursor = elements.length ? 'pointer' : 'default';
+            }
+        },
+    };
+
+    const engagementPct = all_users.length ? (all_users.filter(u => u.is_online).length / all_users.length * 100) : 0;
+
+    const userDistributionData = {
+        labels: ['Active Students', 'Inactive Students', 'Parents', 'Administrators'],
+        datasets: [{
+            data: [
+                all_users.filter(u => u.is_online && u.role === 'student').length,
+                all_users.filter(u => !u.is_online && u.role === 'student').length,
+                all_users.filter(u => u.role === 'parent').length,
+                all_users.filter(u => u.role === 'admin').length
+            ],
+            backgroundColor: ['#10B981', '#94A3B8', '#4F52C9', '#0EB2BB'], // success, border-rich, secondary, primary
+            borderWidth: 0,
+        }]
+    };
+
     return (
         <div className="admin-dashboard">
-            <AdminPageHeader title="Overview Dashboard">
-                
+            <AdminPageHeader title="Dashboard">
+
             </AdminPageHeader>
 
-            <AdminStats 
-                stats={dashboardData} 
-                onApprovalClick={() => navigate('/admin/to-review')}
-                onTradeClick={() => navigate('/admin/to-review')}
+            <AdminStats
+                stats={dashboardData}
                 onEarnedWeekClick={() => navigate('/admin/transactions?type=earned')}
                 onTotalDucksClick={() => navigate('/admin/users')}
                 onOnlineUsersClick={() => navigate('/admin/users?filter=online')}
+                onTotalResidentsClick={() => navigate('/admin/users')}
             />
 
             <div className="dashboard-layout">
@@ -132,23 +192,14 @@ const AdminDashboard = () => {
                             </select>
                         </div>
                         <div className="chart-container chart-container-fixed">
-                            <Line data={chartConfig} options={chartOptions} />
+                            <Line data={chartConfig} options={clickableChartOptions} />
                         </div>
                     </div>
 
                     <div className="admin-controls-card card">
                         {/* Unified Controls Grid */}
                         <div className="admin-controls-grid">
-                            <button className="action-item" onClick={() => navigate('/admin/users')}>
-                                <div className="icon icon-primary"><Users size={20} /></div>
-                                <span className="action-text-main">User Directory</span>
-                            </button>
-                            <button className="action-item" onClick={() => navigate('/admin/to-review')}>
-                                <div className="icon icon-primary approval"><Shield size={20} /></div>
-                                <span className="action-text-main">Account Approvals</span>
-                            </button>
-                            
-                            <button 
+                            <button
                                 onClick={handleToggleAI}
                                 className={`action-item ${config?.ai_teacher_enabled ? 'action-item-success' : 'action-item-error'}`}
                             >
@@ -174,7 +225,12 @@ const AdminDashboard = () => {
                                 <div className="icon icon-error"><AlertTriangle size={20} /></div>
                                 <span className="action-text-main">Content Moderation</span>
                             </button>
-                            
+
+                            <button className="action-item" onClick={handleExportTransactions}>
+                                <div className="icon icon-primary"><Download size={20} /></div>
+                                <span className="action-text-main">Export Transactions CSV</span>
+                            </button>
+
                             <div className="setting-item multiplier">
                                 <label htmlFor="input-299" className="setting-label">Duck Multiplier</label>
                                 <div className="multiplier-input-wrapper">
@@ -193,7 +249,45 @@ const AdminDashboard = () => {
                 </div>
             </div>
 
-            <AddBannedWordModal 
+            <div className="insights-grid">
+                <div className="chart-card card">
+                    <div className="chart-header mb-sm">
+                        <h3><PieChartIcon size={20} /> User Breakdown</h3>
+                    </div>
+                    <div className="chart-container chart-container-fixed">
+                        <Pie
+                            data={userDistributionData}
+                            options={{
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: {
+                                    legend: { position: 'bottom' }
+                                }
+                            }}
+                        />
+                    </div>
+                    <p className="insight-footnote">{engagementPct.toFixed(0)}% of users are currently online</p>
+                </div>
+
+                <div className="card">
+                    <div className="card-header">
+                        <h3><Calendar size={20} /> High Value Earners</h3>
+                    </div>
+                    <div className="top-earners">
+                        {[...all_users].sort((a, b) => b.duck_balance - a.duck_balance).slice(0, 5).map(u => (
+                            <div key={u.id} className="earner-item">
+                                <div className="user-info">
+                                    <div className="name">{u.nickname || u.username}</div>
+                                    <div className="handle">@{u.username}</div>
+                                </div>
+                                <div className="amount">🦆 {(u.duck_balance ?? 0).toFixed(1)}</div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+
+            <AddBannedWordModal
                 isOpen={activeModal === 'bannedWord'} 
                 onClose={() => setActiveModal(null)} 
                 onSubmit={(e) => { e.preventDefault(); onSubmitBannedWord(e); setActiveModal(null); }} 

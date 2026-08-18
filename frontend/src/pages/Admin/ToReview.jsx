@@ -1002,7 +1002,7 @@ const ToReview = () => {
     if (isLoading) {
         return (
             <div className="to-review-page container-fluid">
-                <AdminPageHeader title="To Review" description="Items requiring teacher approvals." />
+                <AdminPageHeader title="To Review" />
                 <div className="review-dashboard-layout">
                     <div className="review-tabs-pane">
                         {[1, 2, 3, 4, 5].map(i => (
@@ -1034,12 +1034,7 @@ const ToReview = () => {
 
     return (
         <div className="to-review-page container-fluid">
-            <AdminPageHeader 
-                title="To Review" 
-                description="Items requiring teacher approvals."
-            >
-                
-            </AdminPageHeader>
+            <AdminPageHeader title="To Review" />
 
             <div className="review-dashboard-layout">
                 {/* Left Tabs */}

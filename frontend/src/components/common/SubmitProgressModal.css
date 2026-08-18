@@ -27,6 +27,13 @@
     border-color: var(--primary-color);
 }
 
+/* Compact popover variant: the decorative top accent bar below clashes with the
+   input's own border (mismatched thickness/radius at the top corners), so it's
+   suppressed here in favor of a single continuous border on the input itself. */
+.form-card-compact::before {
+    display: none;
+}
+
 /* Accent line matching Premium standard */
 .form-card::before {
     content: '';

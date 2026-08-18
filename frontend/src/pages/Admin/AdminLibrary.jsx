@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
 import AdminStandardProjects from './AdminStandardProjects';
 import AdminAchievements from './AdminAchievements';
-import AdminDocuments from './AdminDocuments';
 import AdminChallenges from './AdminChallenges';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
-import { BookMarked, Award, FileText, Swords, Library } from 'lucide-react';
+import { BookMarked, Award, Swords, Library } from 'lucide-react';
 import './AdminLibrary.css';
 
 const AdminLibrary = () => {
@@ -13,8 +12,7 @@ const AdminLibrary = () => {
     const tabs = [
         { id: 'projects', label: 'Standard Projects', icon: BookMarked },
         { id: 'achievements', label: 'Achievements', icon: Award },
-        { id: 'documents', label: 'Documents & Assets', icon: FileText },
-        { id: 'challenges', label: 'Challenges', icon: Swords },
+        { id: 'challenges', label: 'Courses', icon: Swords },
     ];
 
     const renderContent = () => {
@@ -23,8 +21,6 @@ const AdminLibrary = () => {
                 return <AdminStandardProjects />;
             case 'achievements':
                 return <AdminAchievements />;
-            case 'documents':
-                return <AdminDocuments />;
             case 'challenges':
                 return <AdminChallenges />;
             default:

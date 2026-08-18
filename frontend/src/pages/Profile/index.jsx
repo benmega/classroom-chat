@@ -16,6 +16,7 @@ import DigitalNotebook from '../../components/profile/DigitalNotebook';
 import ProjectModal from '../../components/profile/ProjectModal';
 import NoteSlideshow from '../../components/profile/NoteSlideshow';
 import PfpCropModal from '../../components/profile/PfpCropModal';
+import JoinClassroom from '../General/JoinClassroom';
 
 // Hooks
 import { useProfile } from '../../hooks/useProfile';
@@ -66,6 +67,11 @@ const Profile = () => {
 
             <div className="dashboard-grid">
                 <div className="column-left">
+                    {isTargetUser && (!target.classrooms || target.classrooms.length === 0) && (
+                        <div className="dashboard-panel" style={{ padding: 'var(--spacing-md)' }}>
+                            <JoinClassroom compact={false} />
+                        </div>
+                    )}
                     {(target.bio || isOwner) ? (
                         <section className="dashboard-panel bio-section">
                             <div className="panel-header between">

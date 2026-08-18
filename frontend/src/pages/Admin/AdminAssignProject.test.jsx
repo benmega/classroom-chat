@@ -146,6 +146,10 @@ describe('AdminAssignProject', () => {
         const nameInput = screen.getByPlaceholderText('e.g. My Awesome Game');
         fireEvent.change(nameInput, { target: { value: 'Cool Project' } });
         
+        // Fill description to trigger adjustTextareaHeight
+        const descInput = screen.getByPlaceholderText('Tell the story of your project...');
+        fireEvent.change(descInput, { target: { value: 'Cool description' } });
+        
         // Submit
         client.post.mockResolvedValueOnce({
             data: { status: 'success', message: 'Assigned!' }

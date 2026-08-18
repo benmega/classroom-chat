@@ -18,6 +18,12 @@ export const useUsersManagement = (role = '') => {
     const [searchTerm, setSearchTerm] = useState('');
     const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
 
+    // Excel-style column filters & sorting
+    const [statusFilter, setStatusFilter] = useState([]); // subset of ['active', 'offline']
+    const [accountTypeFilter, setAccountTypeFilter] = useState([]); // subset of ['admin', 'parent', 'student']
+    const [sortBy, setSortBy] = useState('');
+    const [sortDir, setSortDir] = useState('asc');
+
     useEffect(() => {
         const timer = setTimeout(() => {
             setDebouncedSearchTerm(searchTerm);
@@ -25,10 +31,10 @@ export const useUsersManagement = (role = '') => {
         return () => clearTimeout(timer);
     }, [searchTerm]);
 
-    // Reset to page 1 when search changes
+    // Reset to page 1 when search or filters change
     useEffect(() => {
         setPage(1);
-    }, [debouncedSearchTerm]);
+    }, [debouncedSearchTerm, statusFilter, accountTypeFilter, sortBy, sortDir]);
 
     const fetchUsers = useCallback(async (targetPage = page) => {
         setIsRefreshing(true);
@@ -39,6 +45,15 @@ export const useUsersManagement = (role = '') => {
             }
             if (debouncedSearchTerm) {
                 url += `&search=${encodeURIComponent(debouncedSearchTerm)}`;
+            }
+            if (statusFilter.length > 0) {
+                url += `&status=${statusFilter.join(',')}`;
+            }
+            if (accountTypeFilter.length > 0) {
+                url += `&account_types=${accountTypeFilter.join(',')}`;
+            }
+            if (sortBy) {
+                url += `&sort_by=${sortBy}&sort_dir=${sortDir}`;
             }
             const response = await client.get(url);
             const data = response.data;
@@ -61,7 +76,7 @@ export const useUsersManagement = (role = '') => {
             setIsLoading(false);
             setIsRefreshing(false);
         }
-    }, [page, debouncedSearchTerm, role]);
+    }, [page, debouncedSearchTerm, role, statusFilter, accountTypeFilter, sortBy, sortDir]);
 
     useEffect(() => {
         fetchUsers(page);
@@ -372,6 +387,14 @@ export const useUsersManagement = (role = '') => {
         fetchClassroomCards,
         searchTerm,
         setSearchTerm,
-        handleToggleChat
+        handleToggleChat,
+        statusFilter,
+        setStatusFilter,
+        accountTypeFilter,
+        setAccountTypeFilter,
+        sortBy,
+        setSortBy,
+        sortDir,
+        setSortDir
     };
 };

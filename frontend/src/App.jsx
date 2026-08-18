@@ -43,7 +43,7 @@ const lazyWithRetry = (componentImport) =>
 
 const Achievements = lazyWithRetry(() => import('./pages/General/Achievements'));
 const BitShift = lazyWithRetry(() => import('./pages/General/BitShift'));
-const SubmitWork = lazyWithRetry(() => import('./pages/General/SubmitWork'));
+
 const Activity = lazyWithRetry(() => import('./pages/General/Activity'));
 const CourseProgressTree = lazyWithRetry(() => import('./pages/General/CourseProgressTree'));
 const CourseLevelBreakdown = lazyWithRetry(() => import('./pages/General/CourseLevelBreakdown'));
@@ -62,7 +62,6 @@ const Users = lazyWithRetry(() => import('./pages/Admin/Users'));
 const Classes = lazyWithRetry(() => import('./pages/Admin/Classes'));
 const AdminUserDashboard = lazyWithRetry(() => import('./pages/Admin/AdminUserDashboard'));
 const AdminClassDashboard = lazyWithRetry(() => import('./pages/Admin/AdminClassDashboard'));
-const Analytics = lazyWithRetry(() => import('./pages/Admin/Analytics'));
 const AdvancedPanel = lazyWithRetry(() => import('./pages/Admin/AdvancedPanel'));
 const DuckTransactions = lazyWithRetry(() => import('./pages/Admin/DuckTransactions'));
 const AdminStudentActivity = lazyWithRetry(() => import('./pages/Admin/AdminStudentActivity'));
@@ -279,16 +278,7 @@ function App() {
           </ProtectedRoute>
         } />
 
-        <Route path="/submit-certificate" element={<Navigate to="/submit-work" replace />} />
-        <Route path="/submit-challenge" element={<Navigate to="/submit-work" replace />} />
 
-        <Route path="/submit-work" element={
-          <ProtectedRoute>
-            <Layout>
-              <SubmitWork />
-            </Layout>
-          </ProtectedRoute>
-        } />
 
         <Route path="/activity" element={
           <ProtectedRoute>
@@ -352,7 +342,7 @@ function App() {
                 <Route path="classes/:classId" element={<AdminClassDashboard />} />
                 <Route path="users/:userId" element={<AdminUserDashboard />} />
                 <Route path="connections" element={<Navigate to="/admin/users?role=parent" replace />} />
-                <Route path="analytics" element={<Analytics />} />
+                <Route path="analytics" element={<Navigate to="/admin/dashboard" replace />} />
                 <Route path="submissions" element={<AdminSubmissions />} />
                 <Route path="projects" element={<Navigate to="/admin/to-review" replace />} />
                 <Route path="certificates" element={<Navigate to="/admin/to-review" replace />} />

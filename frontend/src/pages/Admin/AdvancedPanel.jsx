@@ -5,9 +5,8 @@ import {
     ShieldAlert, 
     Terminal, 
     Activity, 
-    Trash2, 
-    FileText, 
-    Code, 
+    Trash2,
+    Code,
     BarChart3
 } from 'lucide-react';
 import client from '../../api/client';
@@ -104,20 +103,14 @@ const AdvancedPanel = () => {
 
     return (
         <div className="admin-advanced-panel">
-            <AdminPageHeader 
-                title="Advanced Database Management" 
-            />
+            <AdminPageHeader title="Database" />
 
             <div className="advanced-grid">
                 <button className="btn-premium action-button" onClick={() => navigate('/admin/advanced-crud')}>
                     <Layers size={18} /> Headless Database CRUD
                 </button>
 
-                <button className="btn-utility action-button" onClick={() => navigate('/admin/library')}>
-                    <FileText size={18} /> Content Library
-                </button>
-
-                <button className="btn-utility action-button" onClick={() => navigate('/admin/analytics')}>
+                <button className="btn-utility action-button" onClick={() => navigate('/admin/dashboard')}>
                     <BarChart3 size={18} /> Analytics Dashboard
                 </button>
 

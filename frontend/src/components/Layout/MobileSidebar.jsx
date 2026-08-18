@@ -50,9 +50,8 @@ const MobileSidebar = ({ user, isParent, isSidebarOpen, setSidebarOpen, handleLo
                         {user?.role === 'admin' && (
                             <li><Link to="/admin" onClick={() => setSidebarOpen(false)}><Shield size={18} /> Admin Panel</Link></li>
                         )}
-                        {!isParent && (
+                        {!isParent && user?.has_activity && (
                             <>
-                                <li><Link to="/submit-work" onClick={() => setSidebarOpen(false)}><FileCheck size={18} /> Submit Work</Link></li>
                                 <li>
                                     <Link to="/activity" onClick={() => setSidebarOpen(false)}>
                                         <div className="nav-badge-container" style={{ display: 'inline-flex', alignItems: 'center', width: '100%' }}>
@@ -64,10 +63,10 @@ const MobileSidebar = ({ user, isParent, isSidebarOpen, setSidebarOpen, handleLo
                                         </div>
                                     </Link>
                                 </li>
-                                {(user?.duck_balance ?? 0) > 0 && (
-                                    <li><Link to="/bit-shift" onClick={() => setSidebarOpen(false)}><RefreshCw size={18} /> Bit Shift</Link></li>
-                                )}
                             </>
+                        )}
+                        {!isParent && (user?.duck_balance ?? 0) > 0 && (
+                            <li><Link to="/bit-shift" onClick={() => setSidebarOpen(false)}><RefreshCw size={18} /> Bit Shift</Link></li>
                         )}
                     </ul>
                 </nav>

@@ -213,7 +213,7 @@ def _parse_pagination_args():
     return page, per_page
 
 
-@activity_bp.route("/activity", methods=["GET"])
+@activity_bp.route("/activity", methods=["GET"], strict_slashes=False)
 @require_login
 @api_response
 def get_activity():
