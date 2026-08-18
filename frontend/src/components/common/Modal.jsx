@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import './Modal.css';
 
-const Modal = ({ isOpen, onClose, title, children }) => {
+const Modal = ({ isOpen, onClose, title, children, maxWidth }) => {
     const modalRef = useRef(null);
 
     useEffect(() => {
@@ -68,14 +68,15 @@ const Modal = ({ isOpen, onClose, title, children }) => {
     return createPortal(
         <div className="admin-modal-overlay" onClick={onClose} role="presentation">
             {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/click-events-have-key-events */}
-            <div 
-                className="admin-modal-content" 
+            <div
+                className="admin-modal-content"
                 onClick={e => e.stopPropagation()}
                 ref={modalRef}
                 tabIndex="-1"
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="modal-title"
+                style={maxWidth ? { maxWidth } : undefined}
             >
                 {title ? (
                     <div className="modal-header">

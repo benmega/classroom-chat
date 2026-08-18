@@ -5,7 +5,7 @@ import useAuthStore from '../../store/useAuthStore';
 import UserSearchInput from './UserSearchInput';
 import Modal from './Modal';
 import confetti from 'canvas-confetti';
-import { Users, X } from 'lucide-react';
+import { Users } from 'lucide-react';
 import { getErrorMessage } from '../../utils/apiError';
 import './SubmitProgressModal.css';
 
@@ -43,9 +43,14 @@ const SubmitProgressModal = ({ isOpen, onClose }) => {
     // Handle Escape key and outside clicks
     useEffect(() => {
         const handleKeyDown = (e) => {
+            // The helper modal handles its own Escape key; don't also close the outer popover
+            if (showHelperModal) return;
             if (e.key === 'Escape') onClose();
         };
         const handleClickOutside = (e) => {
+            // Helper modal renders via portal outside popoverRef; ignore clicks while it's open
+            // so they don't get misread as "clicked outside the popover"
+            if (showHelperModal) return;
             if (popoverRef.current && !popoverRef.current.contains(e.target)) {
                 // Check if they didn't click inside a toast or something similar before closing
                 // The main thing is they clicked outside the popover
@@ -62,7 +67,7 @@ const SubmitProgressModal = ({ isOpen, onClose }) => {
             document.removeEventListener('keydown', handleKeyDown);
             document.removeEventListener('mousedown', handleClickOutside);
         };
-    }, [isOpen, onClose]);
+    }, [isOpen, onClose, showHelperModal]);
 
     const handleCourseRequest = async () => {
         try {
@@ -203,42 +208,32 @@ const SubmitProgressModal = ({ isOpen, onClose }) => {
                     <Users size={16} />
                 </button>
 
-                {showHelperModal && (
-                    <div style={{
-                        position: 'absolute',
-                        bottom: 'calc(100% + 48px)',
-                        right: '0',
-                        background: 'var(--surface-primary)',
-                        border: '1px solid var(--border-subtle)',
-                        borderRadius: 'var(--radius-md)',
-                        boxShadow: 'var(--shadow-lg)',
-                        padding: '0.75rem',
-                        width: '280px',
-                        zIndex: 1001,
-                        animation: 'slideUp 0.15s ease-out'
-                    }}>
-                        <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '0.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span>Who helped you?</span>
-                            <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                {helpers && (
-                                    <button type="button" onClick={() => { setHelpers(''); setShowHelperModal(false); }} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '0.75rem' }}>Clear</button>
-                                )}
-                                <button type="button" onClick={() => setShowHelperModal(false)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex' }}><X size={14}/></button>
-                            </div>
+                <Modal
+                    isOpen={showHelperModal}
+                    onClose={() => setShowHelperModal(false)}
+                    title="Who helped you?"
+                >
+                    <p style={{ marginBottom: '1rem', color: 'var(--text-secondary)' }}>
+                        Search by username or nickname to tag a classmate who helped you.
+                    </p>
+                    <UserSearchInput
+                        id="helpers"
+                        value={helpers}
+                        onChange={setHelpers}
+                        onSelect={(u) => { setHelpers(u.username); setShowHelperModal(false); }}
+                        placeholder="Search by username or nickname..."
+                        className="form-control"
+                        showIcon={true}
+                    />
+                    {helpers && (
+                        <div style={{ marginTop: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+                            <span>Helper: <strong>{helpers}</strong></span>
+                            <button type="button" onClick={() => setHelpers('')} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '0.85rem' }}>Clear</button>
                         </div>
-                        <UserSearchInput 
-                            id="helpers"
-                            value={helpers}
-                            onChange={setHelpers}
-                            onSelect={(u) => { setHelpers(u.username); setShowHelperModal(false); }}
-                            placeholder="Search users..." 
-                            className="form-control"
-                            showIcon={true}
-                        />
-                    </div>
-                )}
+                    )}
+                </Modal>
 
-                <div className="form-card" style={{ maxWidth: '100%', margin: '0', border: 'none', boxShadow: 'none', padding: '0' }}>
+                <div className="form-card form-card-compact" style={{ maxWidth: '100%', margin: '0', border: 'none', boxShadow: 'none', padding: '0' }}>
                     <form onSubmit={handleSubmit} className="challenge-form">
                         <div className="challenge-form-main">
                             <div className="form-group primary-input">
