@@ -82,7 +82,7 @@ const ColumnFilterDropdown = ({ label, sortKey, options, selected = [], onApply,
                 <Filter size={13} />
             </button>
             {isOpen && (
-                <div className="column-filter-dropdown" role="menu" onClick={(e) => e.stopPropagation()} onKeyDown={(e) => { if (e.key === 'Escape') setIsOpen(false); }}>
+                <div className="column-filter-dropdown" role="menu" tabIndex="0" onClick={(e) => e.stopPropagation()} onKeyDown={(e) => { if (e.key === 'Escape') setIsOpen(false); }}>
                     {sortKey && (
                         <div className="column-filter-sort-group">
                             <button
