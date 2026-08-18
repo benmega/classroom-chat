@@ -36,6 +36,19 @@ jobs:
       - name: Run Mypy
         run: python -m mypy .
 
+      - name: Check Alembic Migration Heads
+        env:
+          FLASK_ENV: testing
+        run: |
+          HEAD_COUNT=$(python -m flask db heads | grep "(head)" | wc -l)
+          if [ "$HEAD_COUNT" -gt 1 ]; then
+            echo "ERROR: Multiple Alembic migration heads detected:"
+            python -m flask db heads
+            echo "Please run 'flask db merge heads' and commit the merge migration to resolve the branch."
+            exit 1
+          fi
+          echo "Alembic heads check passed. Only one head detected."
+
       - name: Run Pytest
         env:
           FLASK_ENV: testing
