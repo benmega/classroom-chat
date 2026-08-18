@@ -20,6 +20,36 @@
     transform: translateX(-4px);
 }
 
+.date-filter-chip {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-subtle);
+    border-radius: 12px;
+    padding: 0.65rem 1rem;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.date-filter-clear {
+    background: none;
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    padding: 0.3rem 0.75rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: var(--transition-bounce);
+}
+
+.date-filter-clear:hover {
+    background: var(--bg-secondary);
+}
+
 /* Header Actions Adjustments */
 .admin-transactions-page .export-btn {
     background: var(--bg-primary);
