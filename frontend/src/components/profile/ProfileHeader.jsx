@@ -6,7 +6,7 @@ import { formatLargeNumber } from '../../utils/formatters';
 import { getApiUrl } from '../../utils/apiUrl';
 
 const ProfileHeader = ({ target, isOwner, pfpInputRef, onPfpChange, editLink }) => {
-    const borderSpeed = target.animated_border_speed === 'slow' ? '3s' : target.animated_border_speed === 'fast' ? '0.5s' : '1.5s';
+    const borderSpeed = '1.5s';
     return (
         <div className="profile-header-card">
             <div 
