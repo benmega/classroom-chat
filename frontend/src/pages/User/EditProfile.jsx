@@ -137,6 +137,7 @@ const EditProfile = () => {
                         </div>
                     </div>
                     <div className="profile-header-info">
+                        <input type="hidden" value={user?.username || ''} readOnly disabled />
                         <h1 className="profile-username">{user?.username || ''}</h1>
                         <p className="profile-subtitle">Account Profile Settings</p>
                     </div>
@@ -201,9 +202,13 @@ const EditProfile = () => {
                             <div className="settings-panel connection-panel">
                                 <h2 className="panel-title">Pairing Code & Connection</h2>
                                 <div className="connection-code-box">
-                                    <div className="connection-code-value">
-                                        {connectionCode || 'Loading...'}
-                                    </div>
+                                    <input 
+                                        type="text"
+                                        value={connectionCode || 'Loading...'}
+                                        readOnly
+                                        disabled
+                                        className="connection-code-value"
+                                    />
                                     <button 
                                         type="button" 
                                         className="copy-btn-icon" 
@@ -281,16 +286,16 @@ const EditProfile = () => {
                         </div>
                         
                         {/* Save Button Row */}
-                        <div className="settings-footer-actions">
-                            {hasChanges && (
+                        {hasChanges && (
+                            <div className="settings-footer-actions">
                                 <button type="button" onClick={handleCancel} className="btn-secondary">
                                     <X size={18} /> Cancel
                                 </button>
-                            )}
-                            <button type="submit" disabled={isSaving || !hasChanges} className="btn-primary-save">
-                                {isSaving ? 'Saving...' : 'Save Changes'}
-                            </button>
-                        </div>
+                                <button type="submit" disabled={isSaving} className="btn-primary-save">
+                                    {isSaving ? 'Saving...' : 'Save Changes'}
+                                </button>
+                            </div>
+                        )}
                     </div>
                 </div>
             </form>

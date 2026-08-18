@@ -21,7 +21,11 @@ const mockDashboardData = {
     { id: 1, username: 'alice', nickname: 'Alice', role: 'student', is_admin: false, duck_balance: 50, is_online: true },
     { id: 2, username: 'bob', nickname: 'Bob', role: 'parent', is_admin: false, duck_balance: 10, is_online: false },
   ],
-  all_users: [],
+  all_users: [
+    { id: 1, username: 'alice', nickname: 'Alice', role: 'student', is_admin: false, duck_balance: 50, is_online: true },
+    { id: 2, username: 'bob', nickname: 'Bob', role: 'parent', is_admin: false, duck_balance: 10, is_online: false },
+    { id: 3, username: 'charlie', nickname: null, role: 'student', is_admin: false, duck_balance: 20, is_online: true },
+  ],
   config: {
     ai_teacher_enabled: true,
     message_sending_enabled: false,
@@ -91,7 +95,7 @@ describe('AdminDashboard', () => {
 
   it('renders the dashboard header with title', () => {
     renderComponent();
-    expect(screen.getByText('Overview Dashboard')).toBeInTheDocument();
+    expect(screen.getByText('Dashboard')).toBeInTheDocument();
   });
 
   it('renders global config settings', () => {
@@ -128,11 +132,18 @@ describe('AdminDashboard', () => {
     expect(defaultHookReturn.setActiveModal).toHaveBeenCalledWith('bannedWord');
   });
 
-  it.skip('calls fetchDashboardData when refresh button is clicked', () => {
+  it('calls handleUpdateMultiplier when duck multiplier input is blurred', () => {
     renderComponent();
-    const refreshBtn = document.querySelector('.refresh-btn');
-    fireEvent.click(refreshBtn);
-    expect(defaultHookReturn.fetchDashboardData).toHaveBeenCalled();
+    const input = screen.getByLabelText('Duck Multiplier');
+    fireEvent.change(input, { target: { value: '2.0' } });
+    fireEvent.blur(input);
+    expect(defaultHookReturn.handleUpdateMultiplier).toHaveBeenCalledWith('2.0');
+  });
+
+  it('calls handleExportTransactions when Export Transactions button is clicked', () => {
+    renderComponent();
+    const btn = screen.getByText('Export Transactions CSV');
+    fireEvent.click(btn);
   });
 
   it('submits banned word form', async () => {

@@ -303,6 +303,7 @@ class User(db.Model):
             "has_custom_wallpaper": self.has_custom_wallpaper,
             "profile_wallpaper": self.profile_wallpaper,
             "has_auto_claimer": self.has_auto_claimer,
+            "has_double_duck": self.has_double_duck,
             "drawer": self.drawer,
             "current_activity": self.current_activity,
             "last_activity_time": self.last_activity_time.isoformat()

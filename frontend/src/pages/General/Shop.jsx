@@ -48,7 +48,15 @@ const Shop = () => {
             alert('🚨 This bookmarklet only works when you are on a CodeCombat or Ozaria level!');
             return;
         }
-        window.open('${fullApiUrl}/challenge/submit?url=' + encodeURIComponent(url), '_blank');
+        const targetUrl = '${fullApiUrl}/challenge/submit?url=' + encodeURIComponent(url);
+        try {
+            const newWin = window.open(targetUrl, '_blank');
+            if(!newWin || newWin.closed || typeof newWin.closed === 'undefined') {
+                window.location.href = targetUrl;
+            }
+        } catch(e) {
+            window.location.href = targetUrl;
+        }
     })();`.replace(/\n\s+/g, ' ');
 
     useEffect(() => {

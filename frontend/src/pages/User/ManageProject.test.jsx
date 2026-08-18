@@ -35,7 +35,7 @@ describe('ManageProject', () => {
 
         server.use(
             http.get('*/api/project-templates', () => {
-                return HttpResponse.json({ data: { templates: {} } });
+                return HttpResponse.json({ data: { templates: { 'Template A': {}, 'Template B': {} } } });
             })
         );
     });
@@ -73,6 +73,26 @@ describe('ManageProject', () => {
         expect(screen.getByDisplayValue('My Cool Game')).toBeInTheDocument();
         expect(screen.getByDisplayValue('A game I built')).toBeInTheDocument();
         expect(screen.getByRole('button', { name: /Delete Project/i })).toBeInTheDocument();
+    });
+
+    it('renders code snippet and teacher comment in preview', async () => {
+        server.use(
+            http.get('*/user/project/edit/1', async () => {
+                return HttpResponse.json({ status: 'success', data: { project: { id: 1, name: 'My Cool Game', description: 'A game I built', image_url: 'cover.jpg', teacher_comment: 'Great job!', code_snippet: 'print("hello")', link: 'http://example.com' } } });
+            })
+        );
+
+        render(
+            <MemoryRouter initialEntries={['/manage-project/1']}>
+                <Routes>
+                    <Route path="/manage-project/:projectId" element={<ManageProject />} />
+                </Routes>
+            </MemoryRouter>
+        );
+
+        expect(await screen.findByText('Core Information')).toBeInTheDocument();
+        expect(screen.getByText('Teacher Note: Great job!')).toBeInTheDocument();
+        expect(screen.getByText('print("hello")')).toBeInTheDocument();
     });
 
     it('navigates through tabs', async () => {

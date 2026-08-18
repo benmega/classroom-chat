@@ -16,14 +16,33 @@ depends_on = None
 
 
 def upgrade():
+    # --- Ghost table cleanup (idempotency) ---
+    conn = op.get_bind()
+    inspector = sa.inspect(conn)
+    if inspector.has_table('_alembic_tmp_project_templates'):
+        op.drop_table('_alembic_tmp_project_templates')
+    # -----------------------------------------
+
+    existing_cols = [col['name'] for col in inspector.get_columns('project_templates')]
+
     with op.batch_alter_table('project_templates', schema=None) as batch_op:
-        batch_op.add_column(sa.Column('difficulty', sa.String(length=50), nullable=True, server_default='Intermediate'))
-        batch_op.add_column(sa.Column('concepts', sa.JSON(), nullable=True))
-        batch_op.add_column(sa.Column('goals', sa.JSON(), nullable=True))
+        if 'difficulty' not in existing_cols:
+            batch_op.add_column(sa.Column('difficulty', sa.String(length=50), nullable=True, server_default='Intermediate'))
+        if 'concepts' not in existing_cols:
+            batch_op.add_column(sa.Column('concepts', sa.JSON(), nullable=True))
+        if 'goals' not in existing_cols:
+            batch_op.add_column(sa.Column('goals', sa.JSON(), nullable=True))
 
 
 def downgrade():
+    conn = op.get_bind()
+    inspector = sa.inspect(conn)
+    existing_cols = [col['name'] for col in inspector.get_columns('project_templates')]
+
     with op.batch_alter_table('project_templates', schema=None) as batch_op:
-        batch_op.drop_column('goals')
-        batch_op.drop_column('concepts')
-        batch_op.drop_column('difficulty')
+        if 'goals' in existing_cols:
+            batch_op.drop_column('goals')
+        if 'concepts' in existing_cols:
+            batch_op.drop_column('concepts')
+        if 'difficulty' in existing_cols:
+            batch_op.drop_column('difficulty')

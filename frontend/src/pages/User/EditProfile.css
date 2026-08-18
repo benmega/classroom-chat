@@ -223,7 +223,11 @@
     font-family: monospace, system-ui;
     flex: 1;
     text-align: center;
-    padding-left: 2rem;
+    padding-left: 2.25rem;
+    background: transparent;
+    border: none;
+    outline: none;
+    width: 100%;
 }
 
 .copy-btn-icon {
