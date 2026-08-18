@@ -5,6 +5,27 @@
     animation: fadeIn var(--transition-smooth);
 }
 
+.insights-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+}
+
+@media (max-width: 900px) {
+    .insights-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.insight-footnote {
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin: 0.5rem 0 0;
+}
+
 .dashboard-header {
     display: flex;
     justify-content: space-between;
@@ -28,6 +49,18 @@
     align-items: center;
     flex-wrap: wrap;
     gap: 0.5rem;
+}
+
+.chart-header h3 {
+    font-size: 1.25rem;
+    margin-bottom: 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.chart-header h3 svg {
+    color: var(--primary-accessible);
 }
 
 .chart-timeframe-select {
@@ -146,6 +179,8 @@
 .stat-icon.pending { background: linear-gradient(135deg, #4f46e5, #312e81); } /* Darker indigo */
 .stat-icon.active { background: linear-gradient(135deg, #db2777, #831843); } /* Darker pink */
 .stat-icon.approval { background: linear-gradient(135deg, #7e22ce, #4c1d95); } /* Darker violet */
+.stat-icon.avg-balance { background: linear-gradient(135deg, #0891b2, #164e63); } /* Darker cyan */
+.stat-icon.residents { background: linear-gradient(135deg, #ea580c, #7c2d12); } /* Darker orange */
 
 .stat-card.clickable {
     cursor: pointer;

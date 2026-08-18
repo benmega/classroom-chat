@@ -1,8 +1,11 @@
 import React from 'react';
-import { TrendingUp, Clock, Users } from 'lucide-react';
+import { TrendingUp, Users, DollarSign, UserCircle } from 'lucide-react';
 import DuckIcon from '../Icons/DuckIcon';
 
-const AdminStats = ({ stats, onApprovalClick, onTradeClick, onEarnedWeekClick, onTotalDucksClick, onOnlineUsersClick }) => {
+const AdminStats = ({ stats, onEarnedWeekClick, onTotalDucksClick, onOnlineUsersClick, onTotalResidentsClick }) => {
+    const totalResidents = stats.total_users_count ?? 0;
+    const avgBalance = totalResidents ? stats.total_ducks / totalResidents : 0;
+
     return (
         <div className="stats-grid">
             <div role="button" tabIndex={0} className="stat-card clickable" onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={onTotalDucksClick}>
@@ -19,18 +22,18 @@ const AdminStats = ({ stats, onApprovalClick, onTradeClick, onEarnedWeekClick, o
                     <span className="stat-value">{stats.ducks_earned_this_week.toLocaleString()}</span>
                 </div>
             </div>
-            <div role="button" tabIndex={0} className="stat-card clickable" onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={onTradeClick}>
-                <div className="stat-icon pending"><Clock size={24} /></div>
+            <div className="stat-card">
+                <div className="stat-icon avg-balance"><DollarSign size={24} /></div>
                 <div className="stat-info">
-                    <span className="stat-label">Pending Trades</span>
-                    <span className="stat-value">{stats.pending_trades_count || 0}</span>
+                    <span className="stat-label">Avg. Balance</span>
+                    <span className="stat-value">🦆 {avgBalance.toFixed(1)}</span>
                 </div>
             </div>
-            <div role="button" tabIndex={0} className="stat-card clickable" onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={onApprovalClick}>
-                <div className="stat-icon approval"><Users size={24} /></div>
+            <div role="button" tabIndex={0} className="stat-card clickable" onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={onTotalResidentsClick}>
+                <div className="stat-icon residents"><UserCircle size={24} /></div>
                 <div className="stat-info">
-                    <span className="stat-label">Account Approvals</span>
-                    <span className="stat-value">{stats.pending_users_count || 0}</span>
+                    <span className="stat-label">Total Residents</span>
+                    <span className="stat-value">{totalResidents}</span>
                 </div>
             </div>
             <div role="button" tabIndex={0} className="stat-card clickable" onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={onOnlineUsersClick}>
