@@ -29,7 +29,6 @@ const Shop = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [purchasingId, setPurchasingId] = useState(null);
     const [chatColor, setChatColor] = useState('var(--accent-color)');
-    const [borderSpeed, setBorderSpeed] = useState('normal');
     const [borderColor, setBorderColor] = useState('var(--accent-color)');
     const borderColorRef = React.useRef('var(--accent-color)');
     const wallpaperInputRef = React.useRef(null);
@@ -62,9 +61,6 @@ const Shop = () => {
     useEffect(() => {
         if (user?.chat_font_color) {
             setChatColor(user.chat_font_color);
-        }
-        if (user?.animated_border_speed) {
-            setBorderSpeed(user.animated_border_speed);
         }
         fetchItems();
     }, [user]);
@@ -110,20 +106,6 @@ const Shop = () => {
             await checkAuth(true); // Sync user state globally in background
         } catch {
             toast.error("Failed to save color configuration.");
-        }
-    };
-
-    const handleBorderSpeedSubmit = async (speed) => {
-        try {
-            await client.put(`/api/shop/configure`, {
-                perk_name: "animated_border_speed",
-                value: speed
-            });
-            setBorderSpeed(speed);
-            
-            await checkAuth(true);
-        } catch {
-            toast.error("Failed to save animation speed.");
         }
     };
 
@@ -337,7 +319,7 @@ const Shop = () => {
                                         <div 
                                             className="animated-border-preview perk-animated-border"
                                             style={{ 
-                                                '--border-speed': borderSpeed === 'slow' ? '3s' : borderSpeed === 'fast' ? '0.5s' : '1.5s',
+                                                '--border-speed': '1.5s',
                                                 '--border-color': borderColor || 'var(--accent-color)'
                                             }}
                                         >
@@ -345,19 +327,6 @@ const Shop = () => {
                                         </div>
                                         {item.is_purchased && (
                                             <div style={{ marginTop: '15px', width: '100%' }}>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px', justifyContent: 'space-between' }}>
-                                                    <label htmlFor="input-speed" style={{ fontSize: '0.9rem', fontWeight: 600 }}>Speed:</label>
-                                                    <select id="input-speed" 
-                                                        value={borderSpeed} 
-                                                        onChange={(e) => handleBorderSpeedSubmit(e.target.value)}
-                                                        className="form-control"
-                                                        style={{ padding: '4px 8px', fontSize: '0.9rem', width: 'auto' }}
-                                                    >
-                                                        <option value="slow">Slow</option>
-                                                        <option value="normal">Normal</option>
-                                                        <option value="fast">Fast</option>
-                                                    </select>
-                                                </div>
                                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
                                                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                                         <span style={{ fontSize: '0.9rem', fontWeight: 600 }}>RGB Color:</span>

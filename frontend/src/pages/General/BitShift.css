@@ -141,7 +141,8 @@
 }
 
 .ducks-grid.bytes-grid {
-    grid-template-columns: 1.15fr 1.05fr 0.95fr 0.85fr 0.75fr 0.65fr;
+    grid-template-columns: 1.25fr 1.15fr 1.05fr 0.95fr 0.85fr;
+    align-items: start;
 }
 
 .ducks-grid.bits-grid {

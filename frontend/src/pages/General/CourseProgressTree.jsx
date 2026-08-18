@@ -31,7 +31,9 @@ const CourseProgressTree = () => {
     const [fetchedUser, setFetchedUser] = useState(null);
     const [fetchedProgressData, setFetchedProgressData] = useState(null);
     const [localPendingRequest] = useState(null);
-    const [zoom, setZoom] = useState(1.0);
+    // Baseline scale factor treated as the "100%" zoom level (naturally zoomed out ~30% from the raw 1.0 scale)
+    const ZOOM_BASELINE = 0.7;
+    const [zoom, setZoom] = useState(ZOOM_BASELINE);
     const [chapterProjects, setChapterProjects] = useState({});
     const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
 
@@ -503,28 +505,28 @@ const CourseProgressTree = () => {
             
             {/* Zoom Controls */}
             <div className="zoom-controls glass-panel">
-                <button 
-                    onClick={() => setZoom(z => Math.max(0.5, z - 0.1))} 
+                <button
+                    onClick={() => setZoom(z => Math.max(0.35, z - ZOOM_BASELINE * 0.1))}
                     className="zoom-btn"
                     title="Zoom Out"
-                    disabled={zoom <= 0.5}
+                    disabled={zoom <= 0.35}
                 >
                     <ZoomOut size={18} />
                 </button>
-                <span className="zoom-value">{Math.round(zoom * 100)}%</span>
-                <button 
-                    onClick={() => setZoom(z => Math.min(2.0, z + 0.1))} 
+                <span className="zoom-value">{Math.round((zoom / ZOOM_BASELINE) * 100)}%</span>
+                <button
+                    onClick={() => setZoom(z => Math.min(1.4, z + ZOOM_BASELINE * 0.1))}
                     className="zoom-btn"
                     title="Zoom In"
-                    disabled={zoom >= 2.0}
+                    disabled={zoom >= 1.4}
                 >
                     <ZoomIn size={18} />
                 </button>
-                <button 
-                    onClick={() => setZoom(1.0)} 
+                <button
+                    onClick={() => setZoom(ZOOM_BASELINE)}
                     className="zoom-btn reset-btn"
                     title="Reset Zoom"
-                    disabled={zoom === 1.0}
+                    disabled={zoom === ZOOM_BASELINE}
                 >
                     <Maximize2 size={16} />
                 </button>
