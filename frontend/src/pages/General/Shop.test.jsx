@@ -128,18 +128,32 @@ describe('Shop', () => {
     });
   });
 
-  it('handles changing border speed', async () => {
+  it('handles changing border color', async () => {
     renderWithProviders(<Shop />);
 
     await waitFor(() => {
-      expect(document.querySelector('select')).toBeInTheDocument();
+      expect(screen.getByText('Animated Border')).toBeInTheDocument();
     });
 
-    const speedSelect = screen.getByRole('combobox');
-    fireEvent.change(speedSelect, { target: { value: 'fast' } });
+    // The animated border color input is the first color input with value '#fac815' or similar, 
+    // or we can find it by looking at the specific test structure.
+    // There are color inputs in Shop, let's just find the one that triggers handleBorderColorSubmit
+    // It's the one that is associated with RGB Color
+    await waitFor(() => {
+      expect(screen.getByText('RGB Color:')).toBeInTheDocument();
+    });
+
+    // Let's just find the first number input to change RGB.
+    const numberInputs = document.querySelectorAll('input[type="number"]');
+    
+    // The red channel input
+    if (numberInputs.length > 0) {
+      fireEvent.change(numberInputs[0], { target: { value: '255' } });
+      fireEvent.blur(numberInputs[0]); // triggers handleBorderColorSubmit
+    }
 
     await waitFor(() => {
-      
+      expect(mockCheckAuth).toHaveBeenCalled();
     });
   });
 

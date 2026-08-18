@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Inbox, Trophy, Award, Paperclip, Link2, Clock } from 'lucide-react';
+import { Inbox, Trophy, Award, Paperclip, Link2, Clock, Loader2 } from 'lucide-react';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
 import { getErrorMessage } from '../../utils/apiError';
@@ -77,25 +77,9 @@ const ActivityItem = ({ item }) => {
     );
 };
 
-const ActivitySkeleton = () => (
-    <div className="activity-page animate-page-entry">
-        <header className="activity-header">
-            <Skeleton height="32px" width="220px" className="mb-4px" />
-            <Skeleton height="16px" width="320px" />
-        </header>
-        <div className="activity-list">
-            {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="activity-item activity-item-skeleton">
-                    <Skeleton height="40px" width="40px" borderRadius="50%" />
-                    <div className="activity-item-body">
-                        <Skeleton height="14px" width="100px" className="mb-4px" />
-                        <Skeleton height="18px" width="220px" className="mb-4px" />
-                        <Skeleton height="14px" width="140px" />
-                    </div>
-                    <Skeleton height="24px" width="80px" borderRadius="999px" />
-                </div>
-            ))}
-        </div>
+const ActivityLoading = () => (
+    <div className="activity-page animate-page-entry" style={{ alignItems: 'center', justifyContent: 'center', minHeight: '50vh' }}>
+        <Loader2 size={48} className="animate-spin text-primary" />
     </div>
 );
 
@@ -145,7 +129,7 @@ const Activity = () => {
     };
 
     if (isLoading) {
-        return <ActivitySkeleton />;
+        return <ActivityLoading />;
     }
 
     const pendingItems = items.filter((item) => item.status === 'pending');
@@ -153,16 +137,11 @@ const Activity = () => {
 
     return (
         <div className="activity-page animate-page-entry">
-            <header className="activity-header">
-                <h1 className="activity-title">Your Activity</h1>
-                <p className="activity-subtitle">Track what happened to everything you've submitted.</p>
-            </header>
-
             {total === 0 ? (
                 <div className="activity-empty-state">
                     <Inbox size={48} />
-                    <h3>Nothing here yet</h3>
-                    <p>Once you submit a challenge, certificate, file, or course request, it'll show up here.</p>
+                    <h3>Keep Up the Great Work!</h3>
+                    <p>You haven't submitted any activity yet. Start a challenge or request a course to see your history grow!</p>
                 </div>
             ) : (
                 <>

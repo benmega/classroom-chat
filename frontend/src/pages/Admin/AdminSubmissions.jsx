@@ -140,7 +140,7 @@ const AdminSubmissions = () => {
 
     return (
         <div className="admin-submissions-page">
-            <AdminPageHeader title="Student File Submissions" description="Files students have sent you from the Submit Work page." />
+            <AdminPageHeader title="File Submissions" />
 
             <div className="filter-tabs-container">
                 <div className="filter-tabs">
@@ -149,12 +149,6 @@ const AdminSubmissions = () => {
                         onClick={() => setStatusFilter('pending')}
                     >
                         Pending
-                    </button>
-                    <button
-                        className={`tab-btn ${statusFilter === 'reviewed' ? 'active' : ''}`}
-                        onClick={() => setStatusFilter('reviewed')}
-                    >
-                        Reviewed
                     </button>
                     <button
                         className={`tab-btn ${statusFilter === 'all' ? 'active' : ''}`}

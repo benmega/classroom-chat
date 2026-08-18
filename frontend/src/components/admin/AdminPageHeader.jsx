@@ -3,7 +3,8 @@ import { ChevronLeft, Menu } from 'lucide-react';
 import useSidebar from '../../hooks/useSidebar';
 import './AdminPageHeader.css';
 
-const AdminPageHeader = ({ title, description, children }) => {
+// Titles only, 1-2 words. No description/subtitle prop -- put explanatory text in comments or docs, not the UI.
+const AdminPageHeader = ({ title, children }) => {
     const { toggleSidebar } = useSidebar();
 
     return (
@@ -14,7 +15,6 @@ const AdminPageHeader = ({ title, description, children }) => {
                 </button>
                 <div className="title-stack">
                     <h1>{title}</h1>
-                    {description && <p>{description}</p>}
                 </div>
             </div>
             {children && (

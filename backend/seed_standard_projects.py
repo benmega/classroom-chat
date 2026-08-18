@@ -105,6 +105,207 @@ seed_data = [
         "Web Development 2",
     ),
 ]
+PROJECT_EXTRA_DETAILS = {
+    "Text-Based Adventure": {
+        "difficulty": "Beginner",
+        "concepts": ["Variables", "Loops", "Conditionals", "Input Handling"],
+        "goals": [
+            "Create a branching story structure using if/else conditions.",
+            "Understand user input loop control.",
+            "Implement scoring or inventory tracking with variables."
+        ]
+    },
+    "Practical Programming": {
+        "difficulty": "Intermediate",
+        "concepts": ["Real-world application", "Problem Solving", "Scripting"],
+        "goals": [
+            "Identify a day-to-day problem that can be automated.",
+            "Design and build a tool/script to address the problem.",
+            "Refactor code to make it reusable."
+        ]
+    },
+    "Dangerous Skies": {
+        "difficulty": "Beginner",
+        "concepts": ["For Loops", "While Loops", "Iteration", "Nesting"],
+        "goals": [
+            "Build an obstacle course based on player performance.",
+            "Combine for and while loops for game flow control.",
+            "Master iterating through complex structures."
+        ]
+    },
+    "Turtle Dragon": {
+        "difficulty": "Beginner",
+        "concepts": ["Objects", "Methods", "Arguments", "Creative Coding"],
+        "goals": [
+            "Practice core programming syntax: instantiating objects.",
+            "Design unique custom dragon behaviors.",
+            "Pass parameters/arguments to custom functions."
+        ]
+    },
+    "Simulation": {
+        "difficulty": "Advanced",
+        "concepts": ["Engineering Design Process", "Randomization", "Collaboration"],
+        "goals": [
+            "Build a dynamic system simulation of your choice.",
+            "Apply user testing feedback to improve the model.",
+            "Incorporate randomized outcomes to mimic real-world complexity."
+        ]
+    },
+    "bolt.new": {
+        "difficulty": "Intermediate",
+        "concepts": ["AI Prompting", "Full-Stack Deployment", "Rapid Prototyping"],
+        "goals": [
+            "Use natural language prompts to model full-stack apps.",
+            "Understand iterative deployment workflows.",
+            "Deploy a live functional application."
+        ]
+    },
+    "Tabula Rasa": {
+        "difficulty": "Intermediate",
+        "concepts": ["Coordinates", "Object Properties", "Victory Conditions"],
+        "goals": [
+            "Program a grid game level from scratch.",
+            "Set coordinates and properties for spawned entities.",
+            "Define custom victory triggers."
+        ]
+    },
+    "Gauntlet": {
+        "difficulty": "Intermediate",
+        "concepts": ["Movement Logic", "Timing", "Debugging"],
+        "goals": [
+            "Refine character movement and collision detection.",
+            "Time enemy spawns and environmental traps.",
+            "Debug complex logical loops to ensure player survival."
+        ]
+    },
+    "Game Dev 1 Final Project": {
+        "difficulty": "Intermediate",
+        "concepts": ["Game Grid", "Spawning", "Victory States"],
+        "goals": [
+            "Create a playable CodeCombat level.",
+            "Spawn enemies and configure coordinates.",
+            "Build interactive goals."
+        ]
+    },
+    "Story Maker": {
+        "difficulty": "Beginner",
+        "concepts": ["Event Handling", "Branching Narratives", "Conditionals"],
+        "goals": [
+            "Capture player keyboard/mouse input.",
+            "Design event listeners for branching stories.",
+            "Practice conditional branching."
+        ]
+    },
+    "Wanted Poster": {
+        "difficulty": "Beginner",
+        "concepts": ["Layout Positioning", "HTML/CSS Layouts", "Styling"],
+        "goals": [
+            "Design a digital Wanted Poster graphic.",
+            "Apply layout structure and grid positioning.",
+            "Combine typography and color themes."
+        ]
+    },
+    "Game Dev 2 Final Project": {
+        "difficulty": "Intermediate",
+        "concepts": ["Event Listeners", "Keyboard Control", "Physics Rules"],
+        "goals": [
+            "Handle mouse and key listeners for game objects.",
+            "Define basic physics and momentum parameters.",
+            "Implement multi-button control bindings."
+        ]
+    },
+    "Quizlet": {
+        "difficulty": "Intermediate",
+        "concepts": ["Arrays", "Dictionaries", "Score Tracking"],
+        "goals": [
+            "Store paired question/answer sets in key-value maps.",
+            "Verify text inputs against storage records.",
+            "Implement scoring and level-complete calculations."
+        ]
+    },
+    "Game Dev 3": {
+        "difficulty": "Advanced",
+        "concepts": ["State Management", "Enemy AI Pathfinding", "Functions"],
+        "goals": [
+            "Create a complex game with multiple levels.",
+            "Implement state patterns for game loops.",
+            "Write custom AI movement behavior."
+        ]
+    },
+    "Arcade Card or Board Game": {
+        "difficulty": "Advanced",
+        "concepts": ["OOP Principles", "Game Physics", "Flow Logic"],
+        "goals": [
+            "Model card/board rules programmatically using classes.",
+            "Code turn-based and phase-based game logic.",
+            "Add visual effects for board state changes."
+        ]
+    },
+    "Curiosity Sandbox": {
+        "difficulty": "Advanced",
+        "concepts": ["Loops & Variables", "Dynamic Art", "Experimental Logic"],
+        "goals": [
+            "Build an open-ended artistic sandbox simulation.",
+            "Utilize loops to generate particles and graphics.",
+            "Encourage player interaction and modifications."
+        ]
+    },
+    "Binary Search & Algorithms": {
+        "difficulty": "Advanced",
+        "concepts": ["Search Algorithms", "Sort Complexity", "Big O Notation"],
+        "goals": [
+            "Implement binary search and bubble/quick sort.",
+            "Understand execution speeds on large data arrays.",
+            "Write tests to analyze algorithmic efficiency."
+        ]
+    },
+    "Capstone Challenge": {
+        "difficulty": "Advanced",
+        "concepts": ["Full-Stack Architecture", "Algorithmic Puzzles", "Deployment"],
+        "goals": [
+            "Construct a fully-realized custom software app.",
+            "Solve complex algorithmic logic problems.",
+            "Document code structure and project steps."
+        ]
+    },
+    "Group Roblox Game": {
+        "difficulty": "Intermediate",
+        "concepts": ["Team Collaboration", "Roblox Lua Scripting", "3D Building"],
+        "goals": [
+            "Collaborate as a team to construct a Roblox world.",
+            "Use Lua scripting to bind elements to interactions.",
+            "Learn coordination, versioning, and project management."
+        ]
+    },
+    "Favorite Animal Page": {
+        "difficulty": "Beginner",
+        "concepts": ["HTML Tags", "Image Embedding", "Basic CSS"],
+        "goals": [
+            "Learn core HTML elements (headings, paragraphs, images).",
+            "Apply CSS font styles, borders, and margins.",
+            "Publish a simple website showing facts about an animal."
+        ]
+    },
+    "Profile Page": {
+        "difficulty": "Intermediate",
+        "concepts": ["Portfolio Design", "Responsive Layouts", "Media Queries"],
+        "goals": [
+            "Build a responsive profile/portfolio page.",
+            "Incorporate responsive layouts that work on mobile and desktop.",
+            "Showcase course accomplishments, stats, and links."
+        ]
+    }
+}
+
+DEFAULT_EXTRA = {
+    "difficulty": "Intermediate",
+    "concepts": ["Computer Science", "Coding Logic", "Problem Solving"],
+    "goals": [
+        "Define project scope and flow.",
+        "Implement basic variables and conditional structures.",
+        "Submit final work to teacher for feedback."
+    ]
+}
 
 app = create_app()
 with app.app_context():

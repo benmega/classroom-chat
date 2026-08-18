@@ -43,7 +43,10 @@ def create_template():
         github_link=data.get("github_link"),
         video_url=data.get("video_url"),
         code_snippet=data.get("code_snippet"),
-        image_url=data.get("image_url")
+        image_url=data.get("image_url"),
+        difficulty=data.get("difficulty", "Intermediate"),
+        concepts=data.get("concepts", []),
+        goals=data.get("goals", [])
     )
     db.session.add(template)
     db.session.commit()
@@ -87,6 +90,12 @@ def update_template(template_id):
         template.code_snippet = data.get("code_snippet")
     if "image_url" in data:
         template.image_url = data.get("image_url")
+    if "difficulty" in data:
+        template.difficulty = data.get("difficulty")
+    if "concepts" in data:
+        template.concepts = data.get("concepts")
+    if "goals" in data:
+        template.goals = data.get("goals")
 
     db.session.commit()
 

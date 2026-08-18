@@ -17,6 +17,7 @@ import {
     MoreVertical
 } from 'lucide-react';
 import SmartImage from '../../components/common/SmartImage';
+import ColumnFilterDropdown from '../../components/admin/ColumnFilterDropdown';
 import { 
     CreateUserModal, 
     AdjustDucksModal, 
@@ -41,6 +42,17 @@ const TABS = [
     { label: 'All', value: '' },
     { label: 'Students', value: 'student' },
     { label: 'Parents', value: 'parent' },
+];
+
+const STATUS_OPTIONS = [
+    { label: 'Active', value: 'active' },
+    { label: 'Offline', value: 'offline' },
+];
+
+const ACCOUNT_TYPE_OPTIONS = [
+    { label: 'Administrator', value: 'admin' },
+    { label: 'Parent', value: 'parent' },
+    { label: 'Student', value: 'student' },
 ];
 
 const UserRowActions = ({ u, setModalUser, setActiveModal, handleToggleChat, handleRemoveUser, fetchParentChildren, fetchConnectionCard }) => {
@@ -169,8 +181,19 @@ const Users = () => {
         fetchClassroomCards,
         searchTerm,
         setSearchTerm,
-        handleToggleChat
+        handleToggleChat,
+        statusFilter,
+        setStatusFilter,
+        accountTypeFilter,
+        setAccountTypeFilter,
+        sortBy,
+        setSortBy,
+        sortDir,
+        setSortDir
     } = useUsersManagement(activeRole);
+
+    const activeSort = { sortBy, sortDir };
+    const handleSort = (key, dir) => { setSortBy(key); setSortDir(dir); };
 
     // Expandable parents state
     const [expandedParents, setExpandedParents] = useState(new Set());
@@ -278,26 +301,101 @@ const Users = () => {
                         <tr>
                             {activeRole === '' && (
                                 <>
-                                    <th>User Profile</th>
-                                    <th>Account Type</th>
-                                    <th>Economy</th>
-                                    <th>Status</th>
+                                    <th>
+                                        <ColumnFilterDropdown
+                                            label="User Profile"
+                                            sortKey="name"
+                                            activeSort={activeSort}
+                                            onSort={handleSort}
+                                        />
+                                    </th>
+                                    <th>
+                                        <ColumnFilterDropdown
+                                            label="Account Type"
+                                            sortKey="role"
+                                            options={ACCOUNT_TYPE_OPTIONS}
+                                            selected={accountTypeFilter}
+                                            onApply={setAccountTypeFilter}
+                                            activeSort={activeSort}
+                                            onSort={handleSort}
+                                        />
+                                    </th>
+                                    <th>
+                                        <ColumnFilterDropdown
+                                            label="Economy"
+                                            sortKey="duck_balance"
+                                            activeSort={activeSort}
+                                            onSort={handleSort}
+                                        />
+                                    </th>
+                                    <th>
+                                        <ColumnFilterDropdown
+                                            label="Status"
+                                            sortKey="is_online"
+                                            options={STATUS_OPTIONS}
+                                            selected={statusFilter}
+                                            onApply={setStatusFilter}
+                                            activeSort={activeSort}
+                                            onSort={handleSort}
+                                        />
+                                    </th>
                                     <th>Actions</th>
                                 </>
                             )}
                             {activeRole === 'student' && (
                                 <>
-                                    <th>Student Profile</th>
-                                    <th>Economy</th>
-                                    <th>Status</th>
+                                    <th>
+                                        <ColumnFilterDropdown
+                                            label="Student Profile"
+                                            sortKey="name"
+                                            activeSort={activeSort}
+                                            onSort={handleSort}
+                                        />
+                                    </th>
+                                    <th>
+                                        <ColumnFilterDropdown
+                                            label="Economy"
+                                            sortKey="duck_balance"
+                                            activeSort={activeSort}
+                                            onSort={handleSort}
+                                        />
+                                    </th>
+                                    <th>
+                                        <ColumnFilterDropdown
+                                            label="Status"
+                                            sortKey="is_online"
+                                            options={STATUS_OPTIONS}
+                                            selected={statusFilter}
+                                            onApply={setStatusFilter}
+                                            activeSort={activeSort}
+                                            onSort={handleSort}
+                                        />
+                                    </th>
                                     <th>Actions</th>
                                 </>
                             )}
                             {activeRole === 'parent' && (
                                 <>
-                                    <th>Parent Profile</th>
+                                    <th>
+                                        <ColumnFilterDropdown
+                                            label="Parent Profile"
+                                            sortKey="name"
+                                            activeSort={activeSort}
+                                            onSort={handleSort}
+                                        />
+                                    </th>
                                     <th>Linked Children</th>
-                                    <th>Status</th>
+                                    <th>
+                                        <ColumnFilterDropdown
+                                            label="Status"
+                                            sortKey="is_online"
+                                            options={STATUS_OPTIONS}
+                                            selected={statusFilter}
+                                            onApply={setStatusFilter}
+                                            activeSort={activeSort}
+                                            onSort={handleSort}
+                                        />
+                                    </th>
                                     <th>Actions</th>
                                 </>
                             )}

@@ -29,8 +29,8 @@ const Shop = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [purchasingId, setPurchasingId] = useState(null);
     const [chatColor, setChatColor] = useState('var(--accent-color)');
-    const [borderSpeed, setBorderSpeed] = useState('normal');
     const [borderColor, setBorderColor] = useState('var(--accent-color)');
+    const borderColorRef = React.useRef('var(--accent-color)');
     const wallpaperInputRef = React.useRef(null);
     
     const [isCropping, setIsCropping] = useState(false);
@@ -48,18 +48,27 @@ const Shop = () => {
             alert('🚨 This bookmarklet only works when you are on a CodeCombat or Ozaria level!');
             return;
         }
-        window.open('${fullApiUrl}/challenge/submit?url=' + encodeURIComponent(url), '_blank');
+        const targetUrl = '${fullApiUrl}/challenge/submit?url=' + encodeURIComponent(url);
+        try {
+            const newWin = window.open(targetUrl, '_blank');
+            if(!newWin || newWin.closed || typeof newWin.closed === 'undefined') {
+                window.location.href = targetUrl;
+            }
+        } catch(e) {
+            window.location.href = targetUrl;
+        }
     })();`.replace(/\n\s+/g, ' ');
+
+    useEffect(() => {
+        if (user?.animated_border_color) {
+            setBorderColor(user.animated_border_color);
+            borderColorRef.current = user.animated_border_color;
+        }
+    }, [user?.animated_border_color]);
 
     useEffect(() => {
         if (user?.chat_font_color) {
             setChatColor(user.chat_font_color);
-        }
-        if (user?.animated_border_speed) {
-            setBorderSpeed(user.animated_border_speed);
-        }
-        if (user?.animated_border_color) {
-            setBorderColor(user.animated_border_color);
         }
         fetchItems();
     }, [user]);
@@ -108,35 +117,23 @@ const Shop = () => {
         }
     };
 
-    const handleBorderSpeedSubmit = async (speed) => {
-        try {
-            await client.put(`/api/shop/configure`, {
-                perk_name: "animated_border_speed",
-                value: speed
-            });
-            setBorderSpeed(speed);
-            
-            await checkAuth(true);
-        } catch {
-            toast.error("Failed to save animation speed.");
-        }
-    };
-
     const handleRgbChange = (channel, value) => {
-        const currentRgb = hexToRgb(borderColor);
+        const currentRgb = hexToRgb(borderColorRef.current);
         let val = parseInt(value, 10);
         if (isNaN(val)) val = 0;
         val = Math.max(0, Math.min(255, val));
         
         currentRgb[channel] = val;
-        setBorderColor(rgbToHex(currentRgb.r, currentRgb.g, currentRgb.b));
+        const newColor = rgbToHex(currentRgb.r, currentRgb.g, currentRgb.b);
+        setBorderColor(newColor);
+        borderColorRef.current = newColor;
     };
 
     const handleBorderColorSubmit = async () => {
         try {
             await client.put(`/api/shop/configure`, {
                 perk_name: "animated_border_color",
-                value: borderColor
+                value: borderColorRef.current
             });
             await checkAuth(true);
         } catch {
@@ -330,7 +327,7 @@ const Shop = () => {
                                         <div 
                                             className="animated-border-preview perk-animated-border"
                                             style={{ 
-                                                '--border-speed': borderSpeed === 'slow' ? '3s' : borderSpeed === 'fast' ? '0.5s' : '1.5s',
+                                                '--border-speed': '1.5s',
                                                 '--border-color': borderColor || 'var(--accent-color)'
                                             }}
                                         >
@@ -338,19 +335,6 @@ const Shop = () => {
                                         </div>
                                         {item.is_purchased && (
                                             <div style={{ marginTop: '15px', width: '100%' }}>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px', justifyContent: 'space-between' }}>
-                                                    <label htmlFor="input-speed" style={{ fontSize: '0.9rem', fontWeight: 600 }}>Speed:</label>
-                                                    <select id="input-speed" 
-                                                        value={borderSpeed} 
-                                                        onChange={(e) => handleBorderSpeedSubmit(e.target.value)}
-                                                        className="form-control"
-                                                        style={{ padding: '4px 8px', fontSize: '0.9rem', width: 'auto' }}
-                                                    >
-                                                        <option value="slow">Slow</option>
-                                                        <option value="normal">Normal</option>
-                                                        <option value="fast">Fast</option>
-                                                    </select>
-                                                </div>
                                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
                                                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                                         <span style={{ fontSize: '0.9rem', fontWeight: 600 }}>RGB Color:</span>
@@ -361,7 +345,10 @@ const Shop = () => {
                                                             <input 
                                                                 type="color" 
                                                                 value={borderColor.startsWith('#') ? borderColor : '#fac815'} 
-                                                                onChange={(e) => setBorderColor(e.target.value)}
+                                                                onChange={(e) => {
+                                                                    setBorderColor(e.target.value);
+                                                                    borderColorRef.current = e.target.value;
+                                                                }}
                                                                 onBlur={handleBorderColorSubmit}
                                                                 style={{ width: '24px', height: '24px', padding: '0', cursor: 'pointer', border: 'none', background: 'transparent' }}
                                                             />

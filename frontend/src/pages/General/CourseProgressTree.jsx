@@ -1,11 +1,12 @@
 import React, { useLayoutEffect, useRef, useState, useMemo, useEffect } from 'react';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams, Link } from 'react-router-dom';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
-import { ArrowLeft, Star, ZoomIn, ZoomOut, Maximize2, CheckCircle, Code } from 'lucide-react';
+import { ArrowLeft, Star, ZoomIn, ZoomOut, Maximize2, CheckCircle, Code, History } from 'lucide-react';
 import codecombatLogo from '../../assets/codecombat-logo.png';
 import ozariaLogo from '../../assets/ozaria-logo.png';
 import useAuthStore from '../../store/useAuthStore';
+import SubmitProgressModal from '../../components/common/SubmitProgressModal';
 import './CourseProgressTree.css';
 
 import {
@@ -30,8 +31,11 @@ const CourseProgressTree = () => {
     const [fetchedUser, setFetchedUser] = useState(null);
     const [fetchedProgressData, setFetchedProgressData] = useState(null);
     const [localPendingRequest] = useState(null);
-    const [zoom, setZoom] = useState(1.0);
+    // Baseline scale factor treated as the "100%" zoom level (naturally zoomed out ~30% from the raw 1.0 scale)
+    const ZOOM_BASELINE = 0.7;
+    const [zoom, setZoom] = useState(ZOOM_BASELINE);
     const [chapterProjects, setChapterProjects] = useState({});
+    const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
 
     const stateProgressData = location.state?.course_progress || location.state?.target?.course_progress;
 
@@ -230,15 +234,19 @@ const CourseProgressTree = () => {
         
         try {
             const previewRes = await client.post(`/api/admin/user/${userObj.id}/pass_chapter_preview`, { course_id: node.id });
-            if (previewRes.data.success) {
-                const p = previewRes.data.preview;
+            const previewData = previewRes.data.data || previewRes.data;
+            if (previewData.success) {
+                const p = previewData.preview;
                 const msg = `Preview for passing ${node.title}:\n- Missing Challenges: ${p.challenges_to_complete}\n- Ducks to award: ${p.ducks_to_award}\n- Certificates: ${p.certificates_to_award.join(', ') || 'None'}\n\nAre you sure you want to pass this chapter?`;
                 if (window.confirm(msg)) {
                     const passRes = await client.post(`/api/admin/user/${userObj.id}/pass_chapter`, { course_id: node.id });
-                    if (passRes.data.success) {
-                        
-                        // Reload data via full refresh since state may not auto-update cleanly here
-                        window.location.reload();
+                    const passData = passRes.data.data || passRes.data;
+                    if (passData.success) {
+                        // Clear the cached router state so a reload fetches fresh data from the server
+                        navigate(location.pathname, { replace: true, state: {} });
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 50);
                     }
                 }
             }
@@ -290,18 +298,7 @@ const CourseProgressTree = () => {
         }
     }, [location.state, processedNodes]);
 
-    if (isFetching) {
-        return (
-            <div className="report-card-page animate-page-entry p-2rem text-center">
-                <div className="report-error glass-panel">
-                    <h2>Loading...</h2>
-                    <p>Fetching your course progress.</p>
-                </div>
-            </div>
-        );
-    }
-
-    if (!progressData) {
+    if (!progressData && !isFetching) {
         return (
             <div className="report-card-page animate-page-entry p-2rem text-center">
                 <div className="report-error glass-panel">
@@ -427,18 +424,19 @@ const CourseProgressTree = () => {
                                 } 
                             })}
                         >
-                            {isAdmin && (
-                                <button 
-                                    type="button"
-                                    className="btn-admin-pass-chapter"
-                                    onClick={(e) => handleAdminPass(e, node)}
-                                    title="Admin Override: Pass Chapter"
-                                    style={{ position: 'absolute', top: '-10px', right: '-10px', zIndex: 10, background: 'var(--success-color, #28a745)', border: 'none', color: '#fff', borderRadius: '50%', padding: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 5px rgba(0,0,0,0.3)' }}
-                                >
-                                    <CheckCircle size={16} />
-                                </button>
-                            )}
-                            <div className={`skill-card ${node.domain} ${node.levels_total && node.levels_completed >= node.levels_total ? 'complete' : ''} cursor-pointer`}>
+                            <div style={{ position: 'relative' }}>
+                                {isAdmin && (
+                                    <button 
+                                        type="button"
+                                        className="btn-admin-pass-chapter"
+                                        onClick={(e) => handleAdminPass(e, node)}
+                                        title="Admin Override: Pass Chapter"
+                                        style={{ position: 'absolute', top: '-10px', right: '-10px', zIndex: 10, background: 'var(--success-color, #28a745)', border: 'none', color: '#fff', borderRadius: '50%', padding: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 5px rgba(0,0,0,0.3)' }}
+                                    >
+                                        <CheckCircle size={16} />
+                                    </button>
+                                )}
+                                <div className={`skill-card ${node.domain} ${node.levels_total && node.levels_completed >= node.levels_total ? 'complete' : ''} cursor-pointer`}>
                                 <div 
                                     className={`skill-card-bg-fill ${node.domain} ${node.levels_total && node.levels_completed >= node.levels_total ? 'complete' : ''}`}
                                     style={{ width: `${node.levels_total ? Math.min((node.levels_completed / node.levels_total) * 100, 100) : (node.levels_completed > 0 ? 100 : 0)}%` }}
@@ -466,6 +464,7 @@ const CourseProgressTree = () => {
                                         </div>
                                     )}
                                 </div>
+                            </div>
                             </div>
                             
                             {/* Project Nodes */}
@@ -506,32 +505,86 @@ const CourseProgressTree = () => {
             
             {/* Zoom Controls */}
             <div className="zoom-controls glass-panel">
-                <button 
-                    onClick={() => setZoom(z => Math.max(0.5, z - 0.1))} 
+                <button
+                    onClick={() => setZoom(z => Math.max(0.35, z - ZOOM_BASELINE * 0.1))}
                     className="zoom-btn"
                     title="Zoom Out"
-                    disabled={zoom <= 0.5}
+                    disabled={zoom <= 0.35}
                 >
                     <ZoomOut size={18} />
                 </button>
-                <span className="zoom-value">{Math.round(zoom * 100)}%</span>
-                <button 
-                    onClick={() => setZoom(z => Math.min(2.0, z + 0.1))} 
+                <span className="zoom-value">{Math.round((zoom / ZOOM_BASELINE) * 100)}%</span>
+                <button
+                    onClick={() => setZoom(z => Math.min(1.4, z + ZOOM_BASELINE * 0.1))}
                     className="zoom-btn"
                     title="Zoom In"
-                    disabled={zoom >= 2.0}
+                    disabled={zoom >= 1.4}
                 >
                     <ZoomIn size={18} />
                 </button>
-                <button 
-                    onClick={() => setZoom(1.0)} 
+                <button
+                    onClick={() => setZoom(ZOOM_BASELINE)}
                     className="zoom-btn reset-btn"
                     title="Reset Zoom"
-                    disabled={zoom === 1.0}
+                    disabled={zoom === ZOOM_BASELINE}
                 >
                     <Maximize2 size={16} />
                 </button>
             </div>
+
+            {/* Quick Submit Widget */}
+            <div style={{
+                position: 'fixed',
+                bottom: '6rem',
+                right: '2rem',
+                zIndex: 1000,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '1rem'
+            }}>
+                {authUser?.has_activity && (
+                    <Link 
+                        to="/activity" 
+                        className="btn-icon"
+                        style={{ 
+                            background: 'var(--bg-secondary)', 
+                            border: '1px solid var(--border-subtle)', 
+                            boxShadow: 'var(--shadow-md)', 
+                            padding: '0.75rem', 
+                            borderRadius: '50%',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: 'var(--text-primary)'
+                        }}
+                        title="View History"
+                    >
+                        <History size={20} />
+                    </Link>
+                )}
+
+                <button 
+                    className="btn-premium" 
+                    onClick={() => setIsSubmitModalOpen(true)}
+                    style={{ 
+                        padding: '0.75rem 1.5rem',
+                        borderRadius: '30px',
+                        boxShadow: 'var(--shadow-lg)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        fontSize: '1rem'
+                    }}
+                >
+                    <CheckCircle size={18} />
+                    Claim Ducks
+                </button>
+            </div>
+
+            <SubmitProgressModal 
+                isOpen={isSubmitModalOpen} 
+                onClose={() => setIsSubmitModalOpen(false)} 
+            />
         </div>
     );
 };
