@@ -180,73 +180,79 @@ const AdminStandardProjects = () => {
                 </div>
             )}
 
-            <Modal isOpen={isModalOpen} onClose={closeModal} title={editingProject ? 'Edit Standard Project' : 'Add Standard Project'}>
+            <Modal isOpen={isModalOpen} onClose={closeModal} title={editingProject ? 'Edit Standard Project' : 'Add Standard Project'} maxWidth="760px">
                 <form onSubmit={handleSubmit} className="admin-form">
                     <div className="form-group">
                         <label htmlFor="input-155">Project Name <span className="text-error">*</span></label>
-                        <input id="input-155" 
-                            type="text" 
+                        <input id="input-155"
+                            type="text"
                             required
                             value={form.name}
                             onChange={e => setForm({...form, name: e.target.value})}
                             placeholder="e.g. Text-Based Adventure"
                         />
                     </div>
-                    <div className="form-group">
-                        <label htmlFor="input-165">Description</label>
-                        <textarea id="input-165" 
-                            value={form.description}
-                            onChange={e => setForm({...form, description: e.target.value})}
-                            rows="4"
-                            placeholder="Description template..."
-                        />
+                    <div className="standard-project-form-row">
+                        <div className="form-group">
+                            <label htmlFor="input-chapter">Chapter Mapping</label>
+                            <select id="input-chapter"
+                                className="admin-select"
+                                value={form.chapter}
+                                onChange={e => setForm({...form, chapter: e.target.value})}
+                            >
+                                <option value="">Select a chapter...</option>
+                                {ALIGNED_NODES.map(node => (
+                                    <option key={node.id} value={node.title}>{node.title}</option>
+                                ))}
+                            </select>
+                        </div>
+                        <div className="form-group">
+                            <label htmlFor="input-difficulty">Difficulty</label>
+                            <select id="input-difficulty"
+                                className="admin-select"
+                                value={form.difficulty}
+                                onChange={e => setForm({...form, difficulty: e.target.value})}
+                            >
+                                <option value="Beginner">Beginner</option>
+                                <option value="Intermediate">Intermediate</option>
+                                <option value="Advanced">Advanced</option>
+                            </select>
+                        </div>
                     </div>
-                    <div className="form-group">
-                        <label htmlFor="input-chapter">Chapter Mapping</label>
-                        <select id="input-chapter"
-                            className="admin-select"
-                            value={form.chapter}
-                            onChange={e => setForm({...form, chapter: e.target.value})}
-                        >
-                            <option value="">Select a chapter...</option>
-                            {ALIGNED_NODES.map(node => (
-                                <option key={node.id} value={node.title}>{node.title}</option>
-                            ))}
-                        </select>
+                    <div className="standard-project-form-row">
+                        <div className="form-group">
+                            <label htmlFor="input-189">Default Thumbnail Image URL</label>
+                            <input id="input-189" type="text" value={form.image_url} onChange={e => setForm({...form, image_url: e.target.value})} />
+                        </div>
+                        <div className="form-group">
+                            <label htmlFor="input-concepts">Concepts Covered</label>
+                            <input id="input-concepts"
+                                type="text"
+                                value={form.concepts}
+                                onChange={e => setForm({...form, concepts: e.target.value})}
+                                placeholder="e.g. Variables, Loops, Conditionals (comma-separated)"
+                            />
+                        </div>
                     </div>
-                    <div className="form-group">
-                        <label htmlFor="input-189">Default Thumbnail Image URL</label>
-                        <input id="input-189" type="text" value={form.image_url} onChange={e => setForm({...form, image_url: e.target.value})} />
-                    </div>
-                    <div className="form-group">
-                        <label htmlFor="input-difficulty">Difficulty</label>
-                        <select id="input-difficulty"
-                            className="admin-select"
-                            value={form.difficulty}
-                            onChange={e => setForm({...form, difficulty: e.target.value})}
-                        >
-                            <option value="Beginner">Beginner</option>
-                            <option value="Intermediate">Intermediate</option>
-                            <option value="Advanced">Advanced</option>
-                        </select>
-                    </div>
-                    <div className="form-group">
-                        <label htmlFor="input-concepts">Concepts Covered</label>
-                        <input id="input-concepts" 
-                            type="text" 
-                            value={form.concepts}
-                            onChange={e => setForm({...form, concepts: e.target.value})}
-                            placeholder="e.g. Variables, Loops, Conditionals (comma-separated)"
-                        />
-                    </div>
-                    <div className="form-group">
-                        <label htmlFor="input-goals">What You Will Learn (Goals)</label>
-                        <textarea id="input-goals" 
-                            value={form.goals}
-                            onChange={e => setForm({...form, goals: e.target.value})}
-                            rows="4"
-                            placeholder="e.g. Create a branching story structure... (one per line)"
-                        />
+                    <div className="standard-project-form-row">
+                        <div className="form-group">
+                            <label htmlFor="input-165">Description</label>
+                            <textarea id="input-165"
+                                value={form.description}
+                                onChange={e => setForm({...form, description: e.target.value})}
+                                rows="3"
+                                placeholder="Description template..."
+                            />
+                        </div>
+                        <div className="form-group">
+                            <label htmlFor="input-goals">What You Will Learn (Goals)</label>
+                            <textarea id="input-goals"
+                                value={form.goals}
+                                onChange={e => setForm({...form, goals: e.target.value})}
+                                rows="3"
+                                placeholder="e.g. Create a branching story structure... (one per line)"
+                            />
+                        </div>
                     </div>
 
                     <div className="modal-actions mt-1-5rem d-flex justify-end gap-md">
