@@ -35,8 +35,12 @@ def dashboard_data():
     total_users_count = User.query.count()
     users = User.query.limit(10).all()
     # Column-only projection: avoids loading full ORM objects (and lazy relationship
-    # triggers) just to produce the slim {id, username, duck_balance} list below.
-    all_users = db.session.query(User.id, User._username, User.duck_balance).all()
+    # triggers) just to produce the slim per-user list below. Unlike `users` above,
+    # this is NOT capped, so it's safe to use for roster-wide stats (counts,
+    # averages, breakdowns) without the cost of to_dict_summary() per user.
+    all_users = db.session.query(
+        User.id, User._username, User.nickname, User.duck_balance, User.role, User.is_online
+    ).all()
     config = Configuration.query.first()
     banned_words = BannedWords.query.all()
     classrooms = Classroom.query.all()
@@ -86,11 +90,13 @@ def dashboard_data():
             stats_map[date_str]["spent"] += tx.amount
 
     labels = []
+    dates = []
     earned = []
     spent = []
     for i in range(days - 1, -1, -1):
         day = (now_local - timedelta(days=i)).date()
         labels.append(day.strftime("%b %d"))
+        dates.append(str(day))
 
         e = stats_map.get(str(day), {}).get("earned", 0)
         s = stats_map.get(str(day), {}).get("spent", 0)
@@ -106,7 +112,14 @@ def dashboard_data():
         "total_users_count": total_users_count,
         "users": [u.to_dict_summary() for u in users],
         "all_users": [
-            {"id": u.id, "username": u._username, "duck_balance": u.duck_balance}
+            {
+                "id": u.id,
+                "username": u._username,
+                "nickname": u.nickname,
+                "duck_balance": u.duck_balance,
+                "role": u.role,
+                "is_online": u.is_online,
+            }
             for u in all_users
         ],
         "classrooms": [c.to_dict() for c in classrooms],
@@ -114,6 +127,7 @@ def dashboard_data():
         "banned_words": [bw.to_dict() for bw in banned_words],
         "chart_data": {
             "labels": labels,
+            "dates": dates,
             "earned": earned,
             "spent": spent,
             "max_history_days": max_history_days,
@@ -219,6 +233,8 @@ def admin_transactions():
     per_page = request.args.get("per_page", 20, type=int)
     tx_type = request.args.get("type", "all", type=str)
     search_query = request.args.get("search", "", type=str)
+    date_param = request.args.get("date", "", type=str)
+    tz_offset = request.args.get("tz_offset", 0, type=int)
 
     query = DuckTransaction.query.options(joinedload(DuckTransaction.user))
 
@@ -226,6 +242,20 @@ def admin_transactions():
         query = query.filter(DuckTransaction.amount > 0)
     elif tx_type == "spent":
         query = query.filter(DuckTransaction.amount < 0)
+
+    if date_param:
+        try:
+            day = datetime.strptime(date_param, "%Y-%m-%d").date()
+            local_start = datetime(day.year, day.month, day.day)
+            local_end = local_start + timedelta(days=1)
+            utc_start = local_start + timedelta(minutes=tz_offset)
+            utc_end = local_end + timedelta(minutes=tz_offset)
+            query = query.filter(
+                DuckTransaction.timestamp >= utc_start,
+                DuckTransaction.timestamp < utc_end,
+            )
+        except ValueError:
+            pass
 
     if search_query:
         query = query.join(User).filter(
@@ -254,6 +284,7 @@ def admin_transactions():
         "page": page,
         "pages": pagination.pages,
         "per_page": per_page,
+        "date": date_param,
     }
 
 
