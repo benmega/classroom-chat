@@ -117,7 +117,12 @@ const ProtectedRoute = ({ children, adminOnly = false, parentOnly = false }) => 
   if (!isAuthenticated) return <Navigate to="/login" />;
   if (adminOnly && user?.role !== 'admin') return <AccessDenied />;
 
-  if (user?.role === 'parent' && !location.pathname.startsWith('/parent/')) {
+  if (user?.role === 'parent' && 
+      !location.pathname.startsWith('/parent/') && 
+      !location.pathname.startsWith('/chat') && 
+      !location.pathname.startsWith('/profile') && 
+      !location.pathname.startsWith('/settings') &&
+      !location.pathname.startsWith('/join-class')) {
     return <Navigate to="/parent/dashboard" replace />;
   }
 
@@ -355,6 +360,8 @@ function App() {
                 <Route path="advanced" element={<AdvancedPanel />} />
                 <Route path="transactions" element={<DuckTransactions />} />
                 <Route path="student-activity" element={<AdminStudentActivity />} />
+                <Route path="review" element={<Navigate to="/admin/to-review" replace />} />
+                <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
               </Routes>
             </AdminLayout>
           </ProtectedRoute>
@@ -374,7 +381,13 @@ function App() {
             </Layout>
           </ProtectedRoute>
         } />
-        <Route path="/parent/connect" element={<ConnectChild />} />
+        <Route path="/parent/connect" element={
+          <ProtectedRoute parentOnly={true}>
+            <Layout>
+              <ConnectChild />
+            </Layout>
+          </ProtectedRoute>
+        } />
         <Route path="/join-class" element={<JoinClassroomLink />} />
         <Route path="/parent/course-progress/:slug" element={
           <ProtectedRoute parentOnly={true}>

@@ -438,6 +438,27 @@
 @media (max-width: 800px) {
     .dashboard-header h1 { font-size: 1.5rem; word-break: break-word; white-space: normal; }
     .search-box { width: 100%; }
+    .dashboard-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
+    }
+    /* Track requests table: horizontal scroll on mobile */
+    .requests-table-wrapper {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    .requests-table {
+        min-width: 500px;
+    }
+    /* Action buttons group: stack on very narrow screens */
+    .actions-button-group {
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+    .admin-dashboard {
+        padding-bottom: max(1rem, env(safe-area-inset-bottom));
+    }
 }
 
 /* Track Requests Widget Card Styles */

@@ -26,8 +26,8 @@
 
 .report-back-btn {
     transition: transform 0.2s ease;
-    width: 38px;
-    height: 38px;
+    width: 44px;
+    height: 44px;
     border-radius: 50%;
     padding: 0;
     display: flex;
@@ -323,8 +323,8 @@
     }
 
     .report-back-btn {
-        width: 32px;
-        height: 32px;
+        width: 44px;
+        height: 44px;
     }
 
     .report-student-name {
@@ -337,8 +337,8 @@
 
     .report-student-avatar,
     .report-student-avatar-placeholder {
-        width: 38px;
-        height: 38px;
+        width: 44px;
+        height: 44px;
     }
 
     .report-dashboard-grid.dashboard-grid {
@@ -416,7 +416,7 @@
     margin-left: auto;
     flex-shrink: 0;
     padding: 0 14px;
-    height: 38px;
+    height: 44px;
     border-radius: var(--radius-sm);
     font-size: 0.82rem;
     font-weight: 600;
@@ -492,8 +492,8 @@
 }
 
 .event-icon {
-    width: 32px;
-    height: 32px;
+    width: 44px;
+    height: 44px;
     border-radius: 50%;
     display: flex;
     align-items: center;

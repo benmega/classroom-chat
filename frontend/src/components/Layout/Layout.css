@@ -53,7 +53,8 @@ header.guest-mode {
 #logo-container {
     display: flex;
     align-items: center;
-    width: 256px; /* 64 * 4px */
+    max-width: 256px; /* flex-shrink allowed for small screens */
+    flex-shrink: 1;
 }
 
 .logo-link {
@@ -117,6 +118,10 @@ header.guest-mode {
         display: flex;
         align-items: center;
         justify-content: center;
+    }
+    /* Show for all roles including parent */
+    .main-layout-content .hamburger-toggle {
+        display: flex !important;
     }
 }
 
@@ -341,8 +346,8 @@ a.stat-badge:hover {
 @media (max-width: 400px) {
     .profile-toggle {
         padding: 0;
-        width: 36px;
-        height: 36px;
+        width: 44px;
+        height: 44px;
     }
     .profile-icon {
         display: flex;
@@ -355,8 +360,8 @@ a.stat-badge:hover {
 }
 
 .profile-img {
-    width: 36px;
-    height: 36px;
+    width: 44px;
+    height: 44px;
     border-radius: 50%;
     object-fit: cover;
     border: 2px solid white;
@@ -534,12 +539,15 @@ main.main-full {
 @media (max-width: 768px) {
     main {
         padding: 1rem;
+        /* iOS safe area: avoid content under home indicator */
+        padding-bottom: max(1rem, env(safe-area-inset-bottom));
     }
 }
 
 @media (max-width: 500px) {
     main {
         padding: 0.5rem;
+        padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
     }
 }
 
@@ -639,7 +647,7 @@ footer {
 }
 
 .sidebar-logo img {
-    height: 36px;
+    height: 44px;
 }
 
 .sidebar-close {
@@ -690,6 +698,7 @@ footer {
 
 .sidebar-footer {
     padding: 1.5rem;
+    padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
     border-top: 1px solid var(--border-subtle);
 }
 
@@ -708,6 +717,42 @@ footer {
 .sidebar-logout:hover {
     background: rgba(239, 68, 68, 0.08);
     color: var(--error-color);
+}
+
+/* Section label inside sidebar nav (e.g. "My Children") */
+.sidebar-nav-section-label {
+    font-size: 0.65rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    padding: 0.75rem 1rem 0.25rem;
+    pointer-events: none;
+}
+
+/* Child avatar in sidebar parent nav */
+.sidebar-child-avatar {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1px solid var(--border-subtle);
+    flex-shrink: 0;
+}
+
+.sidebar-child-avatar-fallback {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--primary-light);
+    color: var(--primary-accessible);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 8px;
+    font-weight: 800;
+    border: 1px solid var(--border-subtle);
+    flex-shrink: 0;
 }
 
 @media (min-width: 801px) {

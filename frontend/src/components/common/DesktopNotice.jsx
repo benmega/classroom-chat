@@ -1,25 +1,7 @@
-import React, { useState } from 'react';
-import { X } from 'lucide-react';
-import './DesktopNotice.css';
+import React from 'react';
+// DesktopNotice has been intentionally removed — the parent portal now
+// has full mobile support via the MobileSidebar navigation drawer.
 
-const DesktopNotice = () => {
-    const [isVisible, setIsVisible] = useState(() => !localStorage.getItem('desktopNoticeDismissed'));
-
-    const handleDismiss = () => {
-        setIsVisible(false);
-        localStorage.setItem('desktopNoticeDismissed', 'true');
-    };
-
-    if (!isVisible) return null;
-
-    return (
-        <div className="mobile-desktop-notice">
-            <span>For the best viewing experience, we recommend using a desktop device.</span>
-            <button className="dismiss-notice-btn" onClick={handleDismiss} aria-label="Dismiss notice">
-                <X size={16} />
-            </button>
-        </div>
-    );
-};
+const DesktopNotice = () => null;
 
 export default DesktopNotice;

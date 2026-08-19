@@ -293,6 +293,25 @@
 .empty-state h3 { font-size: 1.5rem; color: var(--slate-800); margin: 0; }
 .empty-state p { color: var(--text-muted); }
 
+@media (max-width: 800px) {
+    /* Filter tabs: scrollable on mobile */
+    .filter-tabs-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    .filter-tabs {
+        width: max-content;
+        max-width: 100%;
+    }
+    .tab-btn {
+        padding: 10px 14px;
+        min-height: 44px; /* WCAG touch target */
+    }
+    .admin-submissions-page {
+        padding-bottom: max(1rem, env(safe-area-inset-bottom));
+    }
+}
+
 @media (max-width: 500px) {
     .submissions-list {
         grid-template-columns: 1fr;

@@ -166,7 +166,7 @@ const ParentDashboard = () => {
     if (isLoading) {
         return (
             <div className="parent-dashboard parent-loading animate-page-entry p-2rem">
-                <main className="parent-body">
+                <div className="parent-body">
                     <div className="parent-grid-layout">
                         <div className="glass-panel p-2rem h-400px">
                             <Skeleton height="32px" width="40%" className="mb-1-5rem" />
@@ -181,7 +181,7 @@ const ParentDashboard = () => {
                             </div>
                         </div>
                     </div>
-                </main>
+                </div>
             </div>
         );
     }
@@ -189,7 +189,7 @@ const ParentDashboard = () => {
     if (children.length === 0 && !isLoading) {
         return (
             <div className="parent-dashboard animate-page-entry">
-                <main className="parent-body" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '80vh' }}>
+                <div className="parent-body" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '80vh' }}>
                     <div className="glass-panel" style={{ padding: '2rem', textAlign: 'center', maxWidth: '400px', width: '100%' }}>
                         <h2 style={{ marginBottom: '1rem' }}>Welcome</h2>
                         <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
@@ -222,7 +222,7 @@ const ParentDashboard = () => {
                             )}
                         </form>
                     </div>
-                </main>
+                </div>
             </div>
         );
     }
@@ -230,7 +230,7 @@ const ParentDashboard = () => {
     if (children.length === 0 && !isLoading) {
         return (
             <div className="parent-dashboard animate-page-entry">
-                <main className="parent-body" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '80vh' }}>
+                <div className="parent-body" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '80vh' }}>
                     <div className="glass-panel" style={{ padding: '2rem', textAlign: 'center', maxWidth: '400px', width: '100%' }}>
                         <h2 style={{ marginBottom: '1rem' }}>Welcome</h2>
                         <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem' }}>Link child to start.</p>
@@ -260,15 +260,15 @@ const ParentDashboard = () => {
                             )}
                         </form>
                     </div>
-                </main>
+                </div>
             </div>
         );
     }
 
     return (
         <div role="button" tabIndex={0} className="parent-dashboard animate-page-entry" onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={() => setOpenMenu(null)}>
-            <main className="parent-body">
-                <DesktopNotice />
+            <div className="parent-body">
+                
 
                 {/* Cohesive Dashboard Layout */}
                 <div className="dashboard-layout parent-dashboard-layout">
@@ -395,8 +395,8 @@ const ParentDashboard = () => {
                                         display: 'flex',
                                         alignItems: 'center',
                                         justifyContent: 'center',
-                                        width: '28px',
-                                        height: '28px',
+                                        width: '44px',
+                                        height: '44px',
                                         borderRadius: '50%',
                                         background: 'rgba(99, 102, 241, 0.1)',
                                         color: '#6366f1',
@@ -492,7 +492,7 @@ const ParentDashboard = () => {
                         </section>
                     </div>
                 </div>
-            </main>
+            </div>
 
             {/* Link Another Child Modal */}
             {isLinkModalOpen && (

@@ -82,22 +82,22 @@ const ParentReportCard = () => {
             }
         };
         fetchReport();
-    }, [studentId]);
+    }, [studentId, error]);
 
     // Fetch historical progress data separately after the main report loads
     useEffect(() => {
-        if (!studentId) return;
+        if (!studentId || error) return;
         const fetchHistory = async () => {
             try {
                 const response = await client.get(`/api/parents/student/${studentId}/history`);
                 setHistoryData(response.data.data);
             } catch (err) {
                 // Non-critical: silently fail if history is unavailable
-                console.warn('Could not load history data:', err);
+                if (err.response && err.response.status === 403) return; console.warn('Could not load history data:', err);
             }
         };
         fetchHistory();
-    }, [studentId]);
+    }, [studentId, error]);
 
     if (isLoading) {
         return (
@@ -144,13 +144,22 @@ const ParentReportCard = () => {
                 <div className="report-error">
                     <h2>Unable to Load Report</h2>
                     <p>{error || 'Report data is unavailable.'}</p>
-                    <button
-                        className="report-error-back-btn"
-                        onClick={() => navigate('/parent/dashboard')}
-                    >
-                        <ArrowLeft size={16} />
-                        Back to Dashboard
-                    </button>
+                    <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', marginTop: '1.5rem' }}>
+                        <button
+                            className="report-error-back-btn"
+                            onClick={() => navigate('/parent/dashboard')}
+                        >
+                            <ArrowLeft size={16} />
+                            Back to Dashboard
+                        </button>
+                        <button
+                            className="btn-primary"
+                            onClick={() => navigate('/parent/connect')}
+                            style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                        >
+                            Link a New Student
+                        </button>
+                    </div>
                 </div>
             </div>
         );

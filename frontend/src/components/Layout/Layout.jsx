@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Menu, Package, Archive } from 'lucide-react';
+import { Menu, Package, Archive, HelpCircle, User } from 'lucide-react';
 
 import './Layout.css';
 import UserSearch from '../common/UserSearch';
@@ -31,7 +31,7 @@ const Layout = ({ children }) => {
         isGuestPage,
         isChatPage,
         location,
-        hamburgerProgress,
+        
         activityUnreadCount
     } = useLayout();
 
@@ -53,7 +53,7 @@ const Layout = ({ children }) => {
             <div className="main-layout-content">
                 <header className={`${!isAuthenticated || isGuestPage ? 'guest-mode' : ''}`}>
                     <div className="header-content">
-                        {isAuthenticated && user && user.role !== 'parent' && (
+                        {isAuthenticated && user && (
                             <button 
                                 className="hamburger-toggle mobile-only" 
                                 onClick={toggleSidebar}
@@ -72,7 +72,7 @@ const Layout = ({ children }) => {
                             </Link>
                         </div>
 
-                        {isAuthenticated && user && user.role !== 'parent' && <UserSearch />}
+                        {isAuthenticated && user && <UserSearch />}
 
                         <nav>
                             <ul>
@@ -124,6 +124,18 @@ const Layout = ({ children }) => {
                                     </li>
                                 )}
 
+                                {isAuthenticated && isParent && (
+                                    <li className="nav-stat-item">
+                                        <div className="stat-badge help" title="Parent Help" style={{ cursor: 'help' }}>
+                                            <HelpCircle size={20} className="stat-icon" />
+                                            <div className="stat-content">
+                                                <span className="stat-label">Support</span>
+                                                <span className="stat-value">Help</span>
+                                            </div>
+                                        </div>
+                                    </li>
+                                )}
+
                                 {isAuthenticated ? (
                                     <li className="profile-menu" ref={dropdownRef}>
                                         <button 
@@ -138,7 +150,7 @@ const Layout = ({ children }) => {
                                             data-testid="profile-toggle"
                                         >
                                             <span className="profile-icon">
-                                                <HamburgerIcon progress={user?.role === 'student' ? hamburgerProgress : 1} size={20} />
+                                                <User size={20} />
                                             </span>
                                         </button>
                                         <ul className={`dropdown-menu ${isDropdownOpen ? 'show' : ''}`}>
@@ -246,8 +258,8 @@ const Layout = ({ children }) => {
                     {children}
                 </main>
                 
-                {/* Mobile Navigation Sidebar */}
-                {user && user.role !== 'parent' && (
+                {/* Mobile Navigation Sidebar — all authenticated users */}
+                {user && (
                     <MobileSidebar 
                         user={user} 
                         isParent={isParent} 
