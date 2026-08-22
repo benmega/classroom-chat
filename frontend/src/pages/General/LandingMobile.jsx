@@ -9,7 +9,7 @@ const LandingMobile = () => {
         <div className="landing-page landing-page-mobile animate-page-entry">
             <nav className="landing-nav glass-panel mobile-nav">
                 <div className="landing-nav-brand">
-                    <img src="/images/logo.ico" alt="Classroom Chat Logo" className="brand-icon w-28px h-28px" />
+                    <img src="/images/logo.ico" alt="Classroom Chat Logo" className="brand-icon w-32px h-32px" />
                     <h1 className="text-1-25rem">Classroom Chat</h1>
                 </div>
             </nav>

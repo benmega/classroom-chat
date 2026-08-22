@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, Key, Plus, School, Users, Globe, BookOpen, X, MoreVertical, Trash2 } from 'lucide-react';
+import { Search, Key, Plus, Users, Globe, X, MoreVertical, Trash2 } from 'lucide-react';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
 import Skeleton from '../../components/common/Skeleton';
@@ -42,7 +42,7 @@ const LanguageSymbol = ({ language }) => {
 const ClassCardMenu = ({ classroom, onDelete }) => {
     const [isOpen, setIsOpen] = useState(false);
     const menuRef = React.useRef(null);
-    
+
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (menuRef.current && !menuRef.current.contains(event.target)) {
@@ -55,9 +55,9 @@ const ClassCardMenu = ({ classroom, onDelete }) => {
 
     return (
         <div className="kebab-menu-container" ref={menuRef} style={{ position: 'relative' }}>
-            <button 
+            <button
                 type="button"
-                className={`action-btn kebab-trigger ${isOpen ? 'active' : ''}`} 
+                className={`action-btn kebab-trigger ${isOpen ? 'active' : ''}`}
                 onClick={(e) => { e.stopPropagation(); setIsOpen(!isOpen); }}
                 style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '4px', color: 'white' }}
                 aria-label="Classroom options"
@@ -66,9 +66,9 @@ const ClassCardMenu = ({ classroom, onDelete }) => {
             </button>
             {isOpen && (
                 <div className="kebab-dropdown" style={{ position: 'absolute', right: 0, top: '100%', zIndex: 10, background: 'var(--bg-primary, white)', border: '1px solid var(--border-subtle, #e2e8f0)', borderRadius: '6px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)', minWidth: '150px', padding: '4px' }}>
-                    <button 
+                    <button
                         type="button"
-                        className="kebab-item" 
+                        className="kebab-item"
                         style={{ display: 'flex', alignItems: 'center', width: '100%', padding: '8px 12px', border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--text-danger, #dc2626)', fontSize: '0.85rem', borderRadius: '4px', fontWeight: '500' }}
                         onClick={(e) => { e.stopPropagation(); setIsOpen(false); onDelete(classroom); }}
                         // eslint-disable-next-line
@@ -76,7 +76,7 @@ const ClassCardMenu = ({ classroom, onDelete }) => {
                         // eslint-disable-next-line
                         onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
                     >
-                        <Trash2 size={14} style={{marginRight:'8px'}} /> Delete Class
+                        <Trash2 size={14} style={{ marginRight: '8px' }} /> Delete Class
                     </button>
                 </div>
             )}
@@ -163,7 +163,7 @@ const Classes = () => {
                 language: newLanguage.trim(),
                 url: newUrl.trim() || 'https://classroom.chat'
             });
-            
+
             setIsCreateModalOpen(false);
             setNewId('');
             setNewName('');
@@ -243,7 +243,6 @@ const Classes = () => {
                     >
                         <Key size={18} aria-hidden="true" /> Connection Cards
                     </button>
-                    
                 </div>
             </AdminPageHeader>
 
@@ -253,8 +252,8 @@ const Classes = () => {
                 {filteredClassrooms.length > 0 ? (
                     <div className="classes-grid" aria-label="Classroom Directory Grid">
                         {filteredClassrooms.map(c => (
-                            <div 
-                                className="class-card" 
+                            <div
+                                className="class-card"
                                 key={c.id}
                                 onClick={() => navigate(`/admin/classes/${c.id}`)}
                                 role="button"

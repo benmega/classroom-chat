@@ -79,7 +79,7 @@ const AdminLayout = ({ children }) => {
     const navItems = [
         { path: '/admin', label: 'Dashboard', tooltip: 'Admin Dashboard', icon: LayoutDashboard, end: true },
         { path: '/admin/to-review', label: 'To Review', tooltip: 'Items To Review', icon: ClipboardList },
-        { path: '/admin/submissions', label: 'Student Files', tooltip: 'Student File Submissions', icon: Inbox },
+        { path: '/admin/submissions', label: 'Inbox', tooltip: 'Inbox', icon: Inbox },
         { path: '/admin/users', label: 'Users', tooltip: 'User Management', icon: Users },
         { path: '/admin/classes', label: 'Classes', tooltip: 'Classes & Enrolments', icon: School },
         { path: '/admin/library', label: 'Content Library', tooltip: 'Content Library', icon: Library },

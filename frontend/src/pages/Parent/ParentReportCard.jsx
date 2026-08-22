@@ -139,15 +139,32 @@ const ParentReportCard = () => {
     }
 
     if (error || !reportData) {
+        // Handle both string errors and JSON object errors from the backend
+        const errorMsg = typeof error === 'string' ? error : (error?.error || 'Report data is unavailable.');
+        const isUnlinked = errorMsg.toLowerCase().includes('not linked');
+
         return (
             <div className="report-card-page animate-page-entry">
-                <div className="report-error">
-                    <h2>Unable to Load Report</h2>
-                    <p>{error || 'Report data is unavailable.'}</p>
-                    <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', marginTop: '1.5rem' }}>
+                <div className="report-error" style={{ textAlign: 'center' }}>
+                    {isUnlinked && (
+                        <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'center' }}>
+                            <div style={{ 
+                                background: 'var(--bg-secondary)', 
+                                padding: '1.5rem', 
+                                borderRadius: '50%',
+                                display: 'inline-flex'
+                            }}>
+                                <User size={48} strokeWidth={1.5} color="var(--text-secondary)" />
+                            </div>
+                        </div>
+                    )}
+                    <h2>{isUnlinked ? 'Student Not Linked' : 'Unable to Load Report'}</h2>
+                    <p style={{ color: 'var(--text-secondary)' }}>{errorMsg}</p>
+                    <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', marginTop: '2rem' }}>
                         <button
-                            className="report-error-back-btn"
+                            className="btn-secondary"
                             onClick={() => navigate('/parent/dashboard')}
+                            style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
                         >
                             <ArrowLeft size={16} />
                             Back to Dashboard

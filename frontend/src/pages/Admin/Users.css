@@ -662,3 +662,15 @@
         grid-template-columns: 1fr 1fr;
     }
 }
+
+@media (max-width: 400px) {
+    .pagination-controls {
+        width: 100%;
+        flex-direction: column;
+        gap: 8px;
+    }
+    .pagination-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}

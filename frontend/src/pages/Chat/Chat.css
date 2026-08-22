@@ -429,6 +429,8 @@
     /* Delete button: always visible on mobile (no hover needed) */
     .delete-message-btn {
         opacity: 0.5;
+        min-width: 44px;
+        min-height: 44px;
     }
 
     /* Chat targeting row wraps on narrow screens */

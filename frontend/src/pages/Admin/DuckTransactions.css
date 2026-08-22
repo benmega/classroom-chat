@@ -314,3 +314,15 @@
         display: none; /* Hide reason on mobile to fit screen */
     }
 }
+
+@media (max-width: 400px) {
+    .transactions-table-container .pagination-controls {
+        width: 100%;
+        flex-direction: column;
+        gap: 8px;
+    }
+    .transactions-table-container .pagination-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}

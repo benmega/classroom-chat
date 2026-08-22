@@ -128,9 +128,10 @@ const AdminSubmissions = () => {
                             </div>
                             <Skeleton height="24px" width="100px" borderRadius="12px" />
                         </div>
-                        <div className="d-flex gap-md mt-1-5rem">
-                            <Skeleton height="36px" width="100px" borderRadius="6px" />
-                            <Skeleton height="36px" width="100px" borderRadius="6px" />
+                        <div className="d-flex gap-sm mt-1-5rem" style={{ justifyContent: 'flex-end' }}>
+                            <Skeleton height="40px" width="40px" borderRadius="10px" />
+                            <Skeleton height="40px" width="40px" borderRadius="10px" />
+                            <Skeleton height="40px" width="40px" borderRadius="10px" />
                         </div>
                     </div>
                 ))}
@@ -140,7 +141,7 @@ const AdminSubmissions = () => {
 
     return (
         <div className="admin-submissions-page">
-            <AdminPageHeader title="File Submissions" />
+            <AdminPageHeader title="Inbox" />
 
             <div className="filter-tabs-container">
                 <div className="filter-tabs">
@@ -199,7 +200,7 @@ const AdminSubmissions = () => {
                                 {submission.teacher_note && (
                                     <div className="submission-note-row teacher-note-row">
                                         <Reply size={14} />
-                                        <span>You: {submission.teacher_note}</span>
+                                        <span>{submission.teacher_note}</span>
                                     </div>
                                 )}
                             </div>
@@ -209,7 +210,7 @@ const AdminSubmissions = () => {
                                     <input
                                         type="text"
                                         className="teacher-note-input"
-                                        placeholder="Optional note back to the student..."
+                                        placeholder="Note..."
                                         value={noteDrafts[submission.id] || ''}
                                         onChange={(e) => handleNoteDraftChange(submission.id, e.target.value)}
                                         maxLength={500}
@@ -222,25 +223,27 @@ const AdminSubmissions = () => {
                                 <a
                                     href={getApiUrl(`/api/admin/submissions/${submission.id}/download`)}
                                     className="btn-secondary"
-                                    title="Download file"
+                                    title="Download"
                                 >
-                                    <Download size={16} /> Download
+                                    <Download size={18} />
                                 </a>
                                 {submission.status !== 'reviewed' && (
                                     <button
                                         className="btn-approve"
                                         onClick={() => handleMarkReviewed(submission.id)}
                                         disabled={isProcessing === submission.id}
+                                        title="Mark Reviewed"
                                     >
-                                        <CheckCircle size={16} /> {isProcessing === submission.id ? 'Working...' : 'Mark Reviewed'}
+                                        <CheckCircle size={18} />
                                     </button>
                                 )}
                                 <button
                                     className="btn-reject"
                                     onClick={() => handleDelete(submission.id, submission.original_filename)}
                                     disabled={isProcessing === submission.id}
+                                    title="Delete"
                                 >
-                                    <Trash2 size={16} /> Delete
+                                    <Trash2 size={18} />
                                 </button>
                             </div>
                         </div>
@@ -248,12 +251,7 @@ const AdminSubmissions = () => {
                 ) : (
                     <div className="empty-state card">
                         <Inbox size={48} />
-                        <h3>No Submissions</h3>
-                        <p>
-                            {statusFilter === 'pending'
-                                ? 'When students send files from the Submit Work page, they will show up here.'
-                                : 'Nothing to show for this filter yet.'}
-                        </p>
+                        <h3>Inbox Zero</h3>
                     </div>
                 )}
             </div>
