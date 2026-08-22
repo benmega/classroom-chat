@@ -37,7 +37,7 @@ describe('AdminSubmissions Component', () => {
     render(<AdminSubmissions />);
 
     await waitFor(() => {
-      expect(screen.getByText('No Submissions')).toBeInTheDocument();
+      expect(screen.getByText('Inbox Zero')).toBeInTheDocument();
     });
   });
 
@@ -70,16 +70,16 @@ describe('AdminSubmissions Component', () => {
     });
 
     // Test input change
-    const input = screen.getByPlaceholderText('Optional note back to the student...');
+    const input = screen.getByPlaceholderText('Note...');
     fireEvent.change(input, { target: { value: 'Good job!' } });
 
     // Test approve
     client.post.mockResolvedValueOnce({ data: { status: 'success' } });
-    fireEvent.click(screen.getByText(/Mark Reviewed/i));
+    fireEvent.click(screen.getByTitle(/Mark Reviewed/i));
 
     // Test delete
     window.confirm = vi.fn().mockReturnValue(true);
     client.delete.mockResolvedValueOnce({ data: { status: 'success' } });
-    fireEvent.click(screen.getByText(/Delete/i));
+    fireEvent.click(screen.getByTitle(/Delete/i));
   });
 });
