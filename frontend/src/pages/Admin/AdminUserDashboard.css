@@ -973,3 +973,48 @@
     color: var(--primary-accessible, #006D74);
     border-bottom-color: var(--primary-accessible, #006D74);
 }
+
+/* ── Mobile Responsive ───────────────────────────────────── */
+@media (max-width: 800px) {
+    .compact-dashboard.admin-user-redesign {
+        padding-bottom: max(2.5rem, env(safe-area-inset-bottom));
+    }
+
+    /* Admin tabs: horizontal scroll on mobile */
+    .admin-tabs {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        flex-wrap: nowrap;
+        padding-bottom: 2px;
+    }
+
+    .admin-tabs::-webkit-scrollbar {
+        display: none;
+    }
+
+    .admin-tab {
+        flex-shrink: 0;
+        min-height: 44px; /* WCAG touch target */
+        padding: 0.75rem 1rem;
+        white-space: nowrap;
+    }
+
+    /* Section grid: single column on mobile */
+    .admin-section.section-grid-inline {
+        grid-template-columns: 1fr;
+    }
+
+    /* Danger section: reduce padding */
+    .admin-danger-section {
+        padding: 1rem;
+    }
+
+    /* Action buttons full width on mobile */
+    .action-green,
+    .action-blue,
+    .action-neutral {
+        width: 100%;
+        justify-content: center;
+    }
+}

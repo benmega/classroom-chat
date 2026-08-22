@@ -289,9 +289,40 @@
     color: var(--text-secondary);
 }
 
+@media (max-width: 800px) {
+    /* Filter tabs: make horizontally scrollable */
+    .filter-tabs-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    .filter-tabs {
+        width: max-content;
+        max-width: 100%;
+    }
+    .tab-btn {
+        padding: 10px 14px;
+        min-height: 44px; /* WCAG touch target */
+    }
+    .admin-transactions-page {
+        padding-bottom: max(1rem, env(safe-area-inset-bottom));
+    }
+}
+
 @media (max-width: 640px) {
     .transactions-table th:nth-child(3),
     .transactions-table td:nth-child(3) {
         display: none; /* Hide reason on mobile to fit screen */
+    }
+}
+
+@media (max-width: 400px) {
+    .transactions-table-container .pagination-controls {
+        width: 100%;
+        flex-direction: column;
+        gap: 8px;
+    }
+    .transactions-table-container .pagination-btn {
+        width: 100%;
+        justify-content: center;
     }
 }

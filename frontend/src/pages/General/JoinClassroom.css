@@ -194,3 +194,20 @@
 @keyframes spin {
     to { transform: rotate(360deg); }
 }
+
+@media (max-width: 500px) {
+    .join-classroom-prominent .join-code-input {
+        font-size: 1rem;
+        padding: 0.5rem;
+        letter-spacing: 0.1em;
+    }
+    
+    .join-code-input::placeholder {
+        letter-spacing: normal;
+        font-size: 0.9rem;
+    }
+
+    .join-classroom-prominent {
+        padding: 1rem;
+    }
+}

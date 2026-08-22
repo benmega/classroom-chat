@@ -472,7 +472,7 @@ button:disabled {
 .landing-title { font-size: clamp(2.5rem, 5vw, 4rem); }
 .text-primary-color { color: var(--primary-accessible); }
 .landing-subtitle { animation-delay: 0.1s; font-size: 1.25rem; }
-.landing-cta { animation-delay: 0.2s; display: flex; flex-direction: row; gap: 1rem; margin-top: 1rem; }
+.landing-cta { animation-delay: 0.2s; display: flex; flex-direction: row; gap: 1rem; margin-top: 1rem; flex-wrap: wrap; }
 .object-cover { object-fit: cover; }
 .text-1-25rem { font-size: 1.25rem; }
 .landing-mobile-title { font-size: 2.5rem; line-height: 1.1; }
@@ -480,6 +480,10 @@ button:disabled {
 .h-400px { height: 400px; }
 .h-200px { height: 200px; }
 .parent-dashboard-layout { display: grid; grid-template-columns: 2.2fr 1fr; gap: 2rem; margin-top: 1rem; }
+@media (max-width: 900px) {
+  .parent-grid-layout { grid-template-columns: 1fr; }
+  .parent-dashboard-layout { grid-template-columns: 1fr; }
+}
 .dashboard-panel-styled { padding: 2rem; background: var(--bg-primary); border-radius: 16px; border: 1px solid var(--border-subtle); }
 .panel-header-styled { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border-subtle); padding-bottom: 1rem; }
 .panel-title-text { font-size: 1.4rem; margin: 0; font-weight: 700; }
@@ -536,5 +540,4 @@ button:disabled {
 .duck-icon-styled { display: inline-block; vertical-align: middle; transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275); filter: drop-shadow(0 1px 1px rgba(0,0,0,0.1)); }
 
 .p-1-5rem { padding: 1.5rem; }
-.p-0-75rem-1rem { padding: 0.75rem 1rem; }
-
+@media (max-width: 800px) { button, select, [role="button"], .profile-toggle, .btn-icon, .btn-small, .btn-primary, .btn-secondary, .btn-outline { min-height: 44px !important; min-width: 44px !important; } }

@@ -17,7 +17,8 @@
 
 .search-bar {
     position: relative;
-    width: 320px;
+    width: 100%;
+    max-width: 320px;
 }
 
 .search-bar svg {
@@ -594,3 +595,82 @@
     background: var(--error-subtle);
 }
 
+/* ── Mobile Responsive ───────────────────────────────────── */
+@media (max-width: 800px) {
+    /* Stack header actions vertically */
+    .header-actions {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.75rem;
+    }
+
+    .search-bar {
+        max-width: 100%;
+    }
+
+    /* Make role tabs scrollable on mobile */
+    .admin-role-tabs {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: 4px;
+        scrollbar-width: none;
+        white-space: nowrap;
+    }
+
+    .admin-role-tabs::-webkit-scrollbar {
+        display: none;
+    }
+
+    /* Role tabs inline on mobile */
+    .role-tab {
+        display: inline-block;
+        flex-shrink: 0;
+        padding: 10px 16px;
+        min-height: 44px;
+    }
+
+    /* Stats row: 2 cols on mobile */
+    .users-stats-row {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    /* Table: allow horizontal scroll and force min-width */
+    .table-responsive {
+        border-radius: 0;
+    }
+
+    .users-table {
+        min-width: 600px;
+    }
+
+    /* Ensure action buttons are large enough for touch */
+    .action-btn {
+        min-width: 36px;
+        min-height: 36px;
+    }
+
+    /* Pagination stacks already at 640px */
+    .pagination-btn {
+        padding: 8px 12px;
+        min-height: 44px;
+    }
+}
+
+@media (max-width: 500px) {
+    /* Stats row: single column on very small phones */
+    .users-stats-row {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+@media (max-width: 400px) {
+    .pagination-controls {
+        width: 100%;
+        flex-direction: column;
+        gap: 8px;
+    }
+    .pagination-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}

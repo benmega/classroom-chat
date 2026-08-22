@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-    Layers, 
-    ShieldAlert, 
-    Terminal, 
-    Activity, 
+import {
+    Layers,
+    ShieldAlert,
+    Terminal,
+    Activity,
     Trash2,
     Code,
     BarChart3
@@ -27,11 +27,11 @@ const AdvancedPanel = () => {
     const [isFetchingStats, setIsFetchingStats] = useState(false);
     const [isPurging, setIsPurging] = useState(false);
     const [extendedStats, setExtendedStats] = useState(null);
-    
+
     // In production, the API is served from the same origin as the frontend.
     // In development, we fallback to the known Flask port (8000).
-    const apiBaseUrl = import.meta.env.VITE_API_URL || 
-                      (import.meta.env.DEV ? 'http://localhost:8000' : window.location.origin);
+    const apiBaseUrl = import.meta.env.VITE_API_URL ||
+        (import.meta.env.DEV ? 'http://localhost:8000' : window.location.origin);
 
 
 
@@ -72,7 +72,7 @@ const AdvancedPanel = () => {
         try {
             const response = await client.post('/api/admin/advanced/purge-history');
             if (response.data.status === 'success') {
-                
+
                 setShowPurgeModal(false);
             }
         } catch (err) {
@@ -110,32 +110,28 @@ const AdvancedPanel = () => {
                     <Layers size={18} /> Headless Database CRUD
                 </button>
 
-                <button className="btn-utility action-button" onClick={() => navigate('/admin/dashboard')}>
-                    <BarChart3 size={18} /> Analytics Dashboard
-                </button>
-
                 <button className="btn-utility action-button" onClick={() => window.open(`${apiBaseUrl}/api/docs/`, '_blank')}>
                     <Terminal size={18} /> API Documentation
                 </button>
 
-                <button 
-                    className="btn-utility action-button" 
+                <button
+                    className="btn-utility action-button"
                     onClick={fetchExtendedStats}
                     disabled={isFetchingStats}
                 >
                     <Activity size={18} /> {isFetchingStats ? 'Loading...' : 'Server Performance Stats'}
                 </button>
 
-                <button 
-                    className="btn-utility action-button" 
+                <button
+                    className="btn-utility action-button"
                     onClick={fetchLogs}
                     disabled={isFetchingLogs}
                 >
                     <ShieldAlert size={18} /> {isFetchingLogs ? 'Fetching...' : 'System Logs'}
                 </button>
 
-                <button 
-                    className="btn-danger action-button" 
+                <button
+                    className="btn-danger action-button"
                     onClick={() => setShowPurgeModal(true)}
                 >
                     <Trash2 size={18} /> Purge History
@@ -192,7 +188,7 @@ const AdvancedPanel = () => {
                                     <span className="value">{Math.floor(extendedStats.uptime_seconds / 3600)}h {Math.floor((extendedStats.uptime_seconds % 3600) / 60)}m</span>
                                 </div>
                             </div>
-                            
+
                             <h4>Database Table Counts</h4>
                             <div className="table-counts">
                                 {Object.entries(extendedStats.table_counts).map(([name, count]) => (
@@ -229,8 +225,8 @@ const AdvancedPanel = () => {
                         </div>
                         <div className="log-modal-footer">
                             <button className="btn-secondary" onClick={() => setShowPurgeModal(false)}>Cancel</button>
-                            <button 
-                                className="btn-danger" 
+                            <button
+                                className="btn-danger"
                                 onClick={purgeHistory}
                                 disabled={isPurging}
                             >
