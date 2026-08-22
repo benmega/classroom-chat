@@ -36,6 +36,7 @@ const CourseProgressTree = () => {
     const [zoom, setZoom] = useState(ZOOM_BASELINE);
     const [chapterProjects, setChapterProjects] = useState({});
     const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
+    const [hasUrlInput, setHasUrlInput] = useState(false);
 
     const stateProgressData = location.state?.course_progress || location.state?.target?.course_progress;
 
@@ -564,8 +565,16 @@ const CourseProgressTree = () => {
                 )}
 
                 <button 
+                    id="claim-ducks-btn"
                     className="btn-premium" 
-                    onClick={() => setIsSubmitModalOpen(true)}
+                    onClick={() => {
+                        if (isSubmitModalOpen) {
+                            const btn = document.getElementById('claim-ducks-submit-btn');
+                            if (btn) btn.click();
+                        } else {
+                            setIsSubmitModalOpen(true);
+                        }
+                    }}
                     style={{ 
                         padding: '0.75rem 1.5rem',
                         borderRadius: '30px',
@@ -577,13 +586,14 @@ const CourseProgressTree = () => {
                     }}
                 >
                     <CheckCircle size={18} />
-                    Claim Ducks
+                    {hasUrlInput ? 'Go!!!' : 'Claim Ducks'}
                 </button>
             </div>
 
             <SubmitProgressModal 
                 isOpen={isSubmitModalOpen} 
                 onClose={() => setIsSubmitModalOpen(false)} 
+                onUrlChange={(url) => setHasUrlInput(!!url.trim())}
             />
         </div>
     );
