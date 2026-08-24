@@ -115,6 +115,10 @@ echo "Updating Nginx configuration..."
 # API backend config (api-blossom.benmega.com)
 if [[ -f "$APP_DIR/infrastructure/nginx/api-blossom.benmega.com.conf" ]]; then
     run sudo cp "$APP_DIR/infrastructure/nginx/api-blossom.benmega.com.conf" "/etc/nginx/sites-available/benmega"
+    # Ensure the symlink is enabled
+    if [[ ! -L "/etc/nginx/sites-enabled/benmega" ]]; then
+        run sudo ln -s "/etc/nginx/sites-available/benmega" "/etc/nginx/sites-enabled/benmega"
+    fi
 else
     echo "WARNING: Nginx API configuration not found in repository at $APP_DIR/infrastructure/nginx/api-blossom.benmega.com.conf"
 fi
@@ -131,6 +135,13 @@ if [[ -f "$APP_DIR/infrastructure/nginx/blossom.benmega.com.conf" ]]; then
 else
     echo "WARNING: Nginx frontend configuration not found in repository at $APP_DIR/infrastructure/nginx/blossom.benmega.com.conf"
 fi
+
+echo "Building frontend..."
+(
+    cd "$APP_DIR/frontend"
+    run npm install
+    run npm run build
+)
 
 run sudo systemctl reload nginx
 
