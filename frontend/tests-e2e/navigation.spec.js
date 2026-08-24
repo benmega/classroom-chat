@@ -61,21 +61,23 @@ test.describe('Navigation', () => {
 
   test('should navigate to profile from dashboard', async ({ page }) => {
     const profileRail = page.locator('.nav-rail-item[data-tooltip="Profile"]');
-    const profileToggle = page.getByTestId('profile-toggle');
+    const hamburgerToggle = page.locator('.hamburger-toggle');
 
     await expect(async () => {
       const isRailVisible = await profileRail.isVisible();
-      const isToggleVisible = await profileToggle.isVisible();
-      expect(isRailVisible || isToggleVisible).toBe(true);
+      const isHamburgerVisible = await hamburgerToggle.isVisible();
+      expect(isRailVisible || isHamburgerVisible).toBe(true);
     }).toPass({ timeout: 15000 });
 
     if (await profileRail.isVisible()) {
       await profileRail.click();
     } else {
-      await profileToggle.click();
-      await page.getByTestId('nav-profile').click();
+      await hamburgerToggle.click();
+      await page.locator('.sidebar-nav').getByRole('link', { name: 'Profile' }).click();
     }
-    await expect(page).toHaveURL(/\/profile/);
+
+    await expect(page).toHaveURL(/.*\/profile/);
+    await expect(page.locator('.profile-card-premium')).toBeVisible({ timeout: 15000 });
   });
 
   test('should navigate to bit-shift', async ({ page }) => {

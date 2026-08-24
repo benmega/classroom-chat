@@ -111,12 +111,28 @@ fi
 # Nginx configuration
 # -------------------------
 echo "Updating Nginx configuration..."
+
+# API backend config (api-blossom.benmega.com)
 if [[ -f "$APP_DIR/infrastructure/nginx/api-blossom.benmega.com.conf" ]]; then
     run sudo cp "$APP_DIR/infrastructure/nginx/api-blossom.benmega.com.conf" "/etc/nginx/sites-available/benmega"
-    run sudo systemctl reload nginx
 else
-    echo "WARNING: Nginx configuration not found in repository at $APP_DIR/infrastructure/nginx/api-blossom.benmega.com.conf"
+    echo "WARNING: Nginx API configuration not found in repository at $APP_DIR/infrastructure/nginx/api-blossom.benmega.com.conf"
 fi
+
+# Frontend SPA config (blossom.benmega.com)
+# This serves frontend/dist/ and enables SPA fallback (try_files → index.html)
+# so direct navigation to React Router paths like /admin/submissions works.
+if [[ -f "$APP_DIR/infrastructure/nginx/blossom.benmega.com.conf" ]]; then
+    run sudo cp "$APP_DIR/infrastructure/nginx/blossom.benmega.com.conf" "/etc/nginx/sites-available/blossom-frontend"
+    # Ensure the symlink is enabled
+    if [[ ! -L "/etc/nginx/sites-enabled/blossom-frontend" ]]; then
+        run sudo ln -s "/etc/nginx/sites-available/blossom-frontend" "/etc/nginx/sites-enabled/blossom-frontend"
+    fi
+else
+    echo "WARNING: Nginx frontend configuration not found in repository at $APP_DIR/infrastructure/nginx/blossom.benmega.com.conf"
+fi
+
+run sudo systemctl reload nginx
 
 # -------------------------
 # DNS Update Script

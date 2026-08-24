@@ -7,6 +7,7 @@ import useAuthStore from '../../store/useAuthStore';
 import './EditProfile.css';
 import SmartImage from '../../components/common/SmartImage';
 import { getApiUrl } from '../../utils/apiUrl';
+import { ConnectionCardModal } from '../../components/admin/AdminModals';
 
 const EditProfile = () => {
     const { user, checkAuth } = useAuthStore();
@@ -21,6 +22,7 @@ const EditProfile = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [connectionCode, setConnectionCode] = useState('');
+    const [showConnectionModal, setShowConnectionModal] = useState(false);
 
     useEffect(() => {
         if (user) {
@@ -233,6 +235,20 @@ const EditProfile = () => {
                                         </svg>
                                     </div>
                                 </div>
+                                <button
+                                    type="button"
+                                    className="btn-secondary w-100 mt-1rem"
+                                    onClick={() => setShowConnectionModal(true)}
+                                    disabled={!connectionCode}
+                                >
+                                    Print Connection Card
+                                </button>
+                                <ConnectionCardModal
+                                    isOpen={showConnectionModal}
+                                    onClose={() => setShowConnectionModal(false)}
+                                    student={user}
+                                    connectionCode={connectionCode}
+                                />
                             </div>
                         )}
 

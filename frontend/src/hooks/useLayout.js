@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import useAuthStore from '../store/useAuthStore';
 import client from '../api/client';
@@ -16,16 +16,9 @@ export const useLayout = () => {
         activityUnreadCount,
         setActivityUnreadCount
     } = useAuthStore();
-    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-    const dropdownRef = useRef(null);
     const navigate = useNavigate();
     const location = useLocation();
     const { isSidebarOpen, toggleSidebar, setSidebarOpen } = useSidebar();
-
-    const toggleDropdown = (e) => {
-        if (e) e.stopPropagation();
-        setIsDropdownOpen(!isDropdownOpen);
-    };
 
     const isChatRoute = location.pathname === '/chat';
     const isActivityRoute = location.pathname === '/activity';
@@ -152,16 +145,6 @@ export const useLayout = () => {
         return () => clearInterval(interval);
     }, [isAuthenticated, user]);
 
-    useEffect(() => {
-        const handleClickOutside = (event) => {
-            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-                setIsDropdownOpen(false);
-            }
-        };
-
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, []);
 
     const handleLogout = async () => {
         await logout();
@@ -174,13 +157,9 @@ export const useLayout = () => {
     return {
         user,
         isAuthenticated,
-        isDropdownOpen,
-        setIsDropdownOpen,
-        dropdownRef,
         isSidebarOpen,
         toggleSidebar,
         setSidebarOpen,
-        toggleDropdown,
         handleLogout,
         isGuestPage,
         isChatPage,

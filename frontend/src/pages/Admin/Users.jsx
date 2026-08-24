@@ -25,8 +25,7 @@ import {
     SetDrawerModal,
     ResetPasswordModal,
     ManageChildrenModal,
-    ConnectionCardModal,
-    BulkConnectionCardsModal
+    ConnectionCardModal
 } from '../../components/admin/AdminModals';
 import './Users.css';
 import Skeleton from '../../components/common/Skeleton';
@@ -173,12 +172,6 @@ const Users = () => {
         connectionCode,
         setConnectionCode,
         fetchConnectionCard,
-        classrooms,
-        fetchClassrooms,
-        classroomCards,
-        setClassroomCards,
-        isFetchingCards,
-        fetchClassroomCards,
         searchTerm,
         setSearchTerm,
         handleToggleChat,
@@ -272,11 +265,7 @@ const Users = () => {
                         <Plus size={18} /> {activeRole === 'student' ? 'Add Student' : 'Add User'}
                     </button>
                 )}
-                {activeRole !== 'parent' && (
-                    <button className="primary-btn bulk-conn-btn" onClick={() => setActiveModal('bulk_connection_cards')}>
-                        <Key size={18} /> Print Cohort Cards
-                    </button>
-                )}
+
                 
             </AdminPageHeader>
 
@@ -703,16 +692,6 @@ const Users = () => {
                 connectionCode={connectionCode}
             />
 
-            <BulkConnectionCardsModal
-                isOpen={activeModal === 'bulk_connection_cards'}
-                onClose={() => setActiveModal(null)}
-                classrooms={classrooms}
-                fetchClassrooms={fetchClassrooms}
-                classroomCards={classroomCards}
-                setClassroomCards={setClassroomCards}
-                isFetchingCards={isFetchingCards}
-                fetchClassroomCards={fetchClassroomCards}
-            />
         </div>
     );
 };

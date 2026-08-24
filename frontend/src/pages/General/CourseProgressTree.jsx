@@ -543,26 +543,24 @@ const CourseProgressTree = () => {
                 alignItems: 'center',
                 gap: '1rem'
             }}>
-                {authUser?.has_activity && (
-                    <Link 
-                        to="/activity" 
-                        className="btn-icon"
-                        style={{ 
-                            background: 'var(--bg-secondary)', 
-                            border: '1px solid var(--border-subtle)', 
-                            boxShadow: 'var(--shadow-md)', 
-                            padding: '0.75rem', 
-                            borderRadius: '50%',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            color: 'var(--text-primary)'
-                        }}
-                        title="View History"
-                    >
-                        <History size={20} />
-                    </Link>
-                )}
+                <Link 
+                    to="/activity" 
+                    className="btn-icon"
+                    style={{ 
+                        background: 'var(--bg-secondary)', 
+                        border: '1px solid var(--border-subtle)', 
+                        boxShadow: 'var(--shadow-md)', 
+                        padding: '0.75rem', 
+                        borderRadius: '50%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: 'var(--text-primary)'
+                    }}
+                    title="View History"
+                >
+                    <History size={20} />
+                </Link>
 
                 <button 
                     id="claim-ducks-btn"
