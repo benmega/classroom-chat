@@ -49,10 +49,7 @@ const DevLogin = () => {
                     setError(res.data?.error || 'Dev login returned an unexpected response.');
                 }
             } catch (err) {
-                const msg =
-                    err.response?.data?.error ||
-                    err.message ||
-                    'Dev login request failed.';
+                const msg = err.response?.data?.error || 'Dev login request failed.';
                 setError(msg);
             }
         };
