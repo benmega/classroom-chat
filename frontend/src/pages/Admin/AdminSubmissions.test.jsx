@@ -37,7 +37,7 @@ describe('AdminSubmissions Component', () => {
     render(<AdminSubmissions />);
 
     await waitFor(() => {
-      expect(screen.getByText('Inbox Zero')).toBeInTheDocument();
+      expect(screen.getByText('No Submissions')).toBeInTheDocument();
     });
   });
 
@@ -70,7 +70,7 @@ describe('AdminSubmissions Component', () => {
     });
 
     // Test input change
-    const input = screen.getByPlaceholderText('Note...');
+    const input = screen.getByPlaceholderText('Optional note back to the student...');
     fireEvent.change(input, { target: { value: 'Good job!' } });
 
     // Test approve
