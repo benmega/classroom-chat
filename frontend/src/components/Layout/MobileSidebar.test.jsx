@@ -86,7 +86,10 @@ describe('MobileSidebar Component', () => {
             expect(screen.getByText(/Child Two's Report/i)).toBeInTheDocument();
         });
 
-        expect(client.get).toHaveBeenCalledWith(expect.stringContaining('/api/parents/children'));
+        expect(client.get).toHaveBeenCalledWith(
+            '/api/parents/children',
+            expect.objectContaining({ signal: expect.any(AbortSignal) })
+        );
         expect(screen.queryByText(/Chat/i)).not.toBeInTheDocument();
     });
 
