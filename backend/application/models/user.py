@@ -59,6 +59,8 @@ class User(db.Model):
     has_auto_bitshift = db.Column(db.Boolean, default=False)
     has_custom_wallpaper = db.Column(db.Boolean, default=False)
     profile_wallpaper = db.Column(db.String(255), nullable=True)
+    # Note: This perk does not automate periodic rewards (which are given automatically anyway),
+    # but rather unlocks a frontend bookmarklet for CodeCombat/Ozaria auto-claiming.
     has_auto_claimer = db.Column(db.Boolean, default=False)
     has_double_duck = db.Column(db.Boolean, default=False)
 

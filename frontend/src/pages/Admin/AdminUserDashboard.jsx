@@ -369,6 +369,7 @@ const AdminUserDashboard = () => {
                                 </button>
                                 <button type="button" className={`perk-list-item ${user.has_auto_claimer ? 'on' : 'off'}`} onClick={() => handleUpdateUser({ has_auto_claimer: !user.has_auto_claimer })}>
                                     <span className="perk-title">Auto Claim</span>
+                                    {/* Note: This perk actually provides a bookmarklet for auto-claiming CodeCombat/Ozaria challenges, rather than daily/periodic rewards. */}
                                     <span className="perk-desc">Automatically claims periodic rewards</span>
                                 </button>
                                 <button type="button" className={`perk-list-item ${user.has_double_duck ? 'on' : 'off'}`} onClick={() => handleUpdateUser({ has_double_duck: !user.has_double_duck })}>
