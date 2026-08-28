@@ -67,4 +67,27 @@ def send_admin_email(subject, body):
         args=(subject, body, to_address, from_address, region)
     )
     thread.daemon = True
+def send_email(subject, body, to_addresses):
+    """
+    Asynchronously sends an email to specific addresses using AWS SES.
+    """
+    from_address = Config.SES_SENDER_EMAIL
+    region = Config.SES_REGION
+
+    if not to_addresses or not from_address:
+        print("Skipping email: to_addresses or SES_SENDER_EMAIL not provided.")
+        return
+
+    # Run in background to avoid blocking the API response
+    # _send_async_email takes a string and splits it if needed, so we pass a comma separated string if it's a list.
+    if isinstance(to_addresses, list):
+        to_address_str = ",".join(to_addresses)
+    else:
+        to_address_str = to_addresses
+
+    thread = Thread(
+        target=_send_async_email, 
+        args=(subject, body, to_address_str, from_address, region)
+    )
+    thread.daemon = True
     thread.start()
