@@ -48,7 +48,7 @@ describe('ForgotPassword', () => {
     });
 
     it('shows error toast if email is empty when form submitted', async () => {
-        const { container } = render(
+        render(
             <MemoryRouter initialEntries={['/forgot-password']}>
                 <ForgotPassword />
             </MemoryRouter>

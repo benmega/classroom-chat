@@ -66,7 +66,7 @@ describe('Users Page', () => {
 
   it('renders loading skeleton when isLoading is true', () => {
     useUsersManagement.mockReturnValue({ ...defaultMockState, isLoading: true });
-    const { container } = renderComponent();
+    renderComponent();
     expect(screen.getAllByTestId("users-skeleton-row")[0]).toBeInTheDocument();
   });
 

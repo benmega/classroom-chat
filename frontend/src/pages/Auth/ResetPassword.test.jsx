@@ -65,7 +65,7 @@ describe('ResetPassword', () => {
     });
 
     it('shows error toast if email is missing when submitting', async () => {
-        const { container } = render(
+        render(
             <MemoryRouter initialEntries={['/reset-password']}>
                 <ResetPassword />
             </MemoryRouter>
@@ -78,7 +78,7 @@ describe('ResetPassword', () => {
     });
 
     it('shows error toast if passwords do not match', async () => {
-        const { container } = render(
+        render(
             <MemoryRouter initialEntries={['/reset-password?email=test@example.com']}>
                 <ResetPassword />
             </MemoryRouter>
@@ -105,7 +105,7 @@ describe('ResetPassword', () => {
             })
         );
 
-        const { container } = render(
+        render(
             <MemoryRouter initialEntries={['/reset-password?email=test@example.com']}>
                 <Routes>
                     <Route path="/reset-password" element={<ResetPassword />} />
@@ -136,7 +136,7 @@ describe('ResetPassword', () => {
             })
         );
 
-        const { container } = render(
+        render(
             <MemoryRouter initialEntries={['/reset-password?email=test@example.com']}>
                 <ResetPassword />
             </MemoryRouter>
@@ -161,7 +161,7 @@ describe('ResetPassword', () => {
             })
         );
 
-        const { container } = render(
+        render(
             <MemoryRouter initialEntries={['/reset-password?email=test@example.com']}>
                 <ResetPassword />
             </MemoryRouter>

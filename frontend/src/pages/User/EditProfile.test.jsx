@@ -109,7 +109,7 @@ describe('EditProfile', () => {
     });
 
     it('toggles password visibility', () => {
-        const { container } = render(<EditProfile />);
+        render(<EditProfile />);
 
         const passInput = screen.getByPlaceholderText(/^New Password/i);
         const confirmInput = screen.getByPlaceholderText(/confirm new password/i);

@@ -102,7 +102,7 @@ describe('Chat Component', () => {
 
   it('does not render the feed container while loading', () => {
     useFeedLogic.mockReturnValue(buildFeedLogic({ loading: true }));
-    const { container } = renderWithProviders(<Chat />);
+    renderWithProviders(<Chat />);
 
     expect(screen.queryByTestId("feed-container")).not.toBeInTheDocument();
     expect(screen.queryByPlaceholderText(/what's on your mind/i)).not.toBeInTheDocument();

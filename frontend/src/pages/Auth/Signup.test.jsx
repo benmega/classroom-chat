@@ -32,7 +32,7 @@ describe('Signup Component', () => {
   });
 
   it('validates password match', async () => {
-    const { container } = renderWithProviders(<Signup />);
+    renderWithProviders(<Signup />);
     const usernameInput = screen.getByPlaceholderText(/username/i);
     const passInput = screen.getByPlaceholderText(/^Password/i);
     const confirmInput = screen.getByPlaceholderText(/^Confirm Password/i);
@@ -56,7 +56,7 @@ describe('Signup Component', () => {
       }
     });
 
-    const { container } = renderWithProviders(<Signup />);
+    renderWithProviders(<Signup />);
     const usernameInput = screen.getByPlaceholderText(/username/i);
     const passInput = screen.getByPlaceholderText(/^Password/i);
     const confirmInput = screen.getByPlaceholderText(/^Confirm Password/i);
@@ -85,7 +85,7 @@ describe('Signup Component', () => {
       data: { success: true }
     });
 
-    const { container } = renderWithProviders(<Signup />);
+    renderWithProviders(<Signup />);
     
     // Switch to Parent role
     const parentRoleTab = screen.getByText('Parent');
