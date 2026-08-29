@@ -124,12 +124,6 @@ describe('Users Page', () => {
     expect(mockSetActiveModal).toHaveBeenCalledWith('create');
   });
 
-  it('opens bulk connection cards modal', () => {
-    renderComponent();
-    const btn = screen.getByText(/Print Cohort Cards/i);
-    fireEvent.click(btn);
-    expect(mockSetActiveModal).toHaveBeenCalledWith('bulk_connection_cards');
-  });
 
   it('refreshes users', () => {
     renderComponent();

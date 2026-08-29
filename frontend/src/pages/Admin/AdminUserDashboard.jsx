@@ -13,6 +13,7 @@ import Modal from '../../components/common/Modal';
 import { getApiUrl } from '../../utils/apiUrl';
 import './AdminUserDashboard.css';
 import { useAdminUserDashboard } from '../../hooks/useAdminUserDashboard';
+import { ALIGNED_NODES } from '../../constants/courseProgress';
 
 import codecombatLogo from '../../assets/codecombat-logo.png';
 import ozariaLogo from '../../assets/ozaria-logo.png';
@@ -131,6 +132,8 @@ const AdminUserDashboard = () => {
     const recentTrackId = getTrackIdFromCourseSlug(user.most_recently_completed_challenge_course);
     const recentTrack = TRACKS.find(t => t.id === recentTrackId);
     const RecentTrackIcon = recentTrack?.icon;
+    const recentCourseNode = ALIGNED_NODES.find(n => n.id === user.most_recently_completed_challenge_course);
+    const recentCourseTitle = recentCourseNode ? recentCourseNode.title : recentTrack?.label;
 
     return (
         <div className="compact-dashboard admin-user-redesign">
@@ -173,13 +176,13 @@ const AdminUserDashboard = () => {
                             {user.is_online ? 'Online Now' : user.last_activity_time ? `Last active ${new Date(user.last_activity_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : 'Offline'}
                         </span>
                         {user.role === 'student' && recentTrack && (
-                            <span className="course-badge" title={`Most Recently Completed: ${recentTrack.label}`}>
+                            <span className="course-badge" title={`Most Recently Completed: ${recentCourseTitle}`}>
                                 {recentTrack.type === 'image' ? (
                                     <img src={recentTrack.logo} alt="" className="course-badge-logo" />
                                 ) : (
                                     <RecentTrackIcon size={12} />
                                 )}
-                                {recentTrack.label}
+                                {recentCourseTitle}
                             </span>
                         )}
                         {user.current_activity && (
@@ -366,6 +369,7 @@ const AdminUserDashboard = () => {
                                 </button>
                                 <button type="button" className={`perk-list-item ${user.has_auto_claimer ? 'on' : 'off'}`} onClick={() => handleUpdateUser({ has_auto_claimer: !user.has_auto_claimer })}>
                                     <span className="perk-title">Auto Claim</span>
+                                    {/* Note: This perk actually provides a bookmarklet for auto-claiming CodeCombat/Ozaria challenges, rather than daily/periodic rewards. */}
                                     <span className="perk-desc">Automatically claims periodic rewards</span>
                                 </button>
                                 <button type="button" className={`perk-list-item ${user.has_double_duck ? 'on' : 'off'}`} onClick={() => handleUpdateUser({ has_double_duck: !user.has_double_duck })}>

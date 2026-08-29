@@ -111,12 +111,39 @@ fi
 # Nginx configuration
 # -------------------------
 echo "Updating Nginx configuration..."
+
+# API backend config (api-blossom.benmega.com)
 if [[ -f "$APP_DIR/infrastructure/nginx/api-blossom.benmega.com.conf" ]]; then
     run sudo cp "$APP_DIR/infrastructure/nginx/api-blossom.benmega.com.conf" "/etc/nginx/sites-available/benmega"
-    run sudo systemctl reload nginx
+    # Ensure the symlink is enabled
+    if [[ ! -L "/etc/nginx/sites-enabled/benmega" ]]; then
+        run sudo ln -s "/etc/nginx/sites-available/benmega" "/etc/nginx/sites-enabled/benmega"
+    fi
 else
-    echo "WARNING: Nginx configuration not found in repository at $APP_DIR/infrastructure/nginx/api-blossom.benmega.com.conf"
+    echo "WARNING: Nginx API configuration not found in repository at $APP_DIR/infrastructure/nginx/api-blossom.benmega.com.conf"
 fi
+
+# Frontend SPA config (blossom.benmega.com)
+# This serves frontend/dist/ and enables SPA fallback (try_files → index.html)
+# so direct navigation to React Router paths like /admin/submissions works.
+if [[ -f "$APP_DIR/infrastructure/nginx/blossom.benmega.com.conf" ]]; then
+    run sudo cp "$APP_DIR/infrastructure/nginx/blossom.benmega.com.conf" "/etc/nginx/sites-available/blossom-frontend"
+    # Ensure the symlink is enabled
+    if [[ ! -L "/etc/nginx/sites-enabled/blossom-frontend" ]]; then
+        run sudo ln -s "/etc/nginx/sites-available/blossom-frontend" "/etc/nginx/sites-enabled/blossom-frontend"
+    fi
+else
+    echo "WARNING: Nginx frontend configuration not found in repository at $APP_DIR/infrastructure/nginx/blossom.benmega.com.conf"
+fi
+
+echo "Building frontend..."
+(
+    cd "$APP_DIR/frontend"
+    run npm install
+    run npm run build
+)
+
+run sudo systemctl reload nginx
 
 # -------------------------
 # DNS Update Script
@@ -238,6 +265,9 @@ PYEOF
     # This is intentionally separate from Alembic — it handles data, not schema.
     echo "Running data seeding script..."
     run env FLASK_APP=main.py FLASK_ENV=production "$PYTHON_BIN" -m tools.migrate_classroom
+
+    echo "Running standard data seeds (projects, challenges, instances)..."
+    run env FLASK_APP=main.py FLASK_ENV=production "$PYTHON_BIN" -m flask seed
 
     echo "Forcefully updating ben to admin using sqlite3..."
     run sqlite3 /home/ubuntu/classroom-chat/backend/instance/prod_users.db "UPDATE users SET role='admin' WHERE LOWER(username)='ben';"

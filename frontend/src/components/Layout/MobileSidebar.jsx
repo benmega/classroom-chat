@@ -1,27 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import { Home, User, Shield, FileCheck, History, RefreshCw, X, LogOut, MessageSquare, ShoppingCart, Map, Award, Settings } from 'lucide-react';
 import useAuthStore from '../../store/useAuthStore';
-import client from '../../api/client';
 import { getApiUrl } from '../../utils/apiUrl';
+import useParentChildren from '../../hooks/useParentChildren';
 
 const MobileSidebar = ({ user, isParent, isSidebarOpen, setSidebarOpen, handleLogout }) => {
     const { unreadCount, activityUnreadCount } = useAuthStore();
-    const [children, setChildren] = useState([]);
-
-    // Fetch children for parent nav links
-    useEffect(() => {
-        if (!isParent) return;
-        const fetchChildren = async () => {
-            try {
-                const response = await client.get(`/api/parents/children?t=${new Date().getTime()}`);
-                setChildren(response.data.data?.children || response.data.children || []);
-            } catch (err) {
-                console.error('Failed to load children in mobile sidebar:', err);
-            }
-        };
-        fetchChildren();
-    }, [isParent]);
+    const { children } = useParentChildren(isParent);
 
     const close = () => setSidebarOpen(false);
 

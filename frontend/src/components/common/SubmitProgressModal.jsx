@@ -12,7 +12,7 @@ import './SubmitProgressModal.css';
 // Check if the URL is a certificate URL
 const CERT_URL_PATTERN = /^https:\/\/(?:www\.)?(?:codecombat|ozaria)\.com\/certificates\/[\w\d]+\?.*course=[\w\d-]+.*$/;
 
-const SubmitProgressModal = ({ isOpen, onClose }) => {
+const SubmitProgressModal = ({ isOpen, onClose, onUrlChange }) => {
     const { checkAuth } = useAuthStore();
     const popoverRef = useRef(null);
     
@@ -33,7 +33,10 @@ const SubmitProgressModal = ({ isOpen, onClose }) => {
             setIsCertificate(false);
             setUploadProgress(0);
         }
-    }, [url]);
+        if (onUrlChange) {
+            onUrlChange(url);
+        }
+    }, [url, onUrlChange]);
 
     const resetForm = () => {
         setUrl('');
@@ -52,6 +55,7 @@ const SubmitProgressModal = ({ isOpen, onClose }) => {
             // so they don't get misread as "clicked outside the popover"
             if (showHelperModal) return;
             if (popoverRef.current && !popoverRef.current.contains(e.target)) {
+                if (e.target.closest('#claim-ducks-btn')) return;
                 // Check if they didn't click inside a toast or something similar before closing
                 // The main thing is they clicked outside the popover
                 onClose();
@@ -243,7 +247,7 @@ const SubmitProgressModal = ({ isOpen, onClose }) => {
                                         id="url"
                                         value={url}
                                         onChange={(e) => setUrl(e.target.value)}
-                                        placeholder="Paste link and press Enter..." 
+                                        placeholder="Paste link here..." 
                                         required 
                                         autoComplete="off"
                                         className="form-control main-url-input"
@@ -275,7 +279,7 @@ const SubmitProgressModal = ({ isOpen, onClose }) => {
                                 </div>
                             )}
 
-                            <button type="submit" style={{ display: 'none' }} disabled={isSubmitting}>Submit</button>
+                            <button id="claim-ducks-submit-btn" type="submit" style={{ display: 'none' }} disabled={isSubmitting}>Submit</button>
                         </div>
                     </form>
                 </div>

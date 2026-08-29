@@ -40,6 +40,7 @@ import {
     TextField,
     TextInput,
     Loading,
+    defaultTheme,
 } from 'react-admin';
 import dataProvider from './dataProvider';
 import { FK_OVERRIDES, HIDDEN_FIELDS, READONLY_FIELDS, RESOURCES } from './adminSchema';
@@ -219,11 +220,19 @@ const CustomLayout = (props) => (
 
 // ─── Root ─────────────────────────────────────────────────────────────────────
 
+const darkTheme = {
+    ...defaultTheme,
+    palette: {
+        mode: 'dark',
+    },
+};
+
 const AdminPanel = () => (
     <Admin
         dataProvider={dataProvider}
         basename="/admin/advanced-crud"
         layout={CustomLayout}
+        theme={darkTheme}
     >
         {RESOURCES.map(buildResource)}
     </Admin>

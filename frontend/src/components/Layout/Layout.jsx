@@ -20,19 +20,13 @@ const Layout = ({ children }) => {
     const {
         user,
         isAuthenticated,
-        isDropdownOpen,
-        setIsDropdownOpen,
-        dropdownRef,
         isSidebarOpen,
         setSidebarOpen,
         toggleSidebar,
-        toggleDropdown,
         handleLogout,
         isGuestPage,
         isChatPage,
-        location,
-        
-        activityUnreadCount
+        location
     } = useLayout();
 
     const isParent = user?.role === 'parent';
@@ -136,118 +130,8 @@ const Layout = ({ children }) => {
                                     </li>
                                 )}
 
-                                {isAuthenticated ? (
-                                    <li className="profile-menu" ref={dropdownRef}>
-                                        <button 
-                                            className="profile-toggle" 
-                                            onClick={(e) => {
-                                                if (e.detail > 1) return;
-                                                toggleDropdown();
-                                            }}
-                                            aria-haspopup="true" 
-                                            aria-expanded={isDropdownOpen}
-                                            title="Account"
-                                            data-testid="profile-toggle"
-                                        >
-                                            <span className="profile-icon">
-                                                <User size={20} />
-                                            </span>
-                                        </button>
-                                        <ul className={`dropdown-menu ${isDropdownOpen ? 'show' : ''}`}>
-                                            <li className="dropdown-user-header">
-                                                {user?.role === 'parent' ? (
-                                                    <div className="dropdown-user-link">
-                                                        <span className="dropdown-user-name">{user.nickname || user.username}</span>
-                                                        <span className="dropdown-user-handle">@{user.username}</span>
-                                                    </div>
-                                                ) : (
-                                                    <Link to="/profile" onClick={() => setIsDropdownOpen(false)} className="dropdown-user-link">
-                                                        <span className="dropdown-user-name">{user.nickname || user.username}</span>
-                                                        <span className="dropdown-user-handle">@{user.username}</span>
-                                                    </Link>
-                                                )}
-                                            </li>
-                                            <li className="dropdown-divider"></li>
-
-                                            {user?.role !== 'parent' && (
-                                                <>
-                                                    {user.drawer && (
-                                                        <li className="mobile-only-stat mobile-only">
-                                                            <div className="dropdown-stat-link drawer">
-                                                                <Archive size={20} />
-                                                                <div className="dropdown-stat-info">
-                                                                    <span className="dropdown-stat-label">Drawer</span>
-                                                                    <span className="dropdown-stat-value">{user.drawer}</span>
-                                                                </div>
-                                                            </div>
-                                                        </li>
-                                                    )}
-                                                    <li className="mobile-only-stat mobile-only">
-                                                        <Link to="/bit-shift" onClick={() => setIsDropdownOpen(false)} className="dropdown-stat-link">
-                                                            <DuckIcon size={20} />
-                                                            <div className="dropdown-stat-info">
-                                                                <span className="dropdown-stat-label">Ducks</span>
-                                                                <span className="dropdown-stat-value">
-                                                                    {(user.duck_balance ?? 0).toLocaleString(undefined, { 
-                                                                        minimumFractionDigits: 0, 
-                                                                        maximumFractionDigits: 3 
-                                                                    })}
-                                                                </span>
-                                                            </div>
-                                                        </Link>
-                                                    </li>
-                                                    {Math.abs(user.packets) > 0.001 && (
-                                                        <li className="mobile-only-stat mobile-only">
-                                                            <Link to="/shop" onClick={() => setIsDropdownOpen(false)} className="dropdown-stat-link packets">
-                                                                <Package size={20} />
-                                                                <div className="dropdown-stat-info">
-                                                                    <span className="dropdown-stat-label">Packets</span>
-                                                                    <span className={`dropdown-stat-value ${user.packets < 0 ? 'text-error' : ''}`}>
-                                                                        {Number(user.packets || 0).toLocaleString(undefined, { 
-                                                                            minimumFractionDigits: 0, 
-                                                                            maximumFractionDigits: 3 
-                                                                        })}
-                                                                    </span>
-                                                                </div>
-                                                            </Link>
-                                                        </li>
-                                                    )}
-                                                </>
-                                            )}
-                                            {user?.role !== 'parent' && <li className="mobile-only-stat mobile-only dropdown-divider"></li>}
-                                            {user?.role !== 'parent' && (
-                                                <li>
-                                                    <Link to="/profile" onClick={() => setIsDropdownOpen(false)} data-testid="nav-profile">
-                                                        <span className="flex items-center gap-2">Profile</span>
-                                                    </Link>
-                                                </li>
-                                            )}
-                                            {user?.role === 'admin' && (
-                                                <li><Link to="/admin" onClick={() => setIsDropdownOpen(false)}>Admin Panel</Link></li>
-                                            )}
-                                            {!isParent && (
-                                                <>
-                                                    <li><Link to="/submit-work" onClick={() => setIsDropdownOpen(false)}>Submit Work</Link></li>
-                                                    {user?.has_activity && (
-                                                        <li>
-                                                            <Link to="/activity" onClick={() => setIsDropdownOpen(false)}>
-                                                                Activity
-                                                                {activityUnreadCount > 0 && <span className="nav-unread-badge">{activityUnreadCount}</span>}
-                                                            </Link>
-                                                        </li>
-                                                    )}
-                                                    {(user?.duck_balance ?? 0) > 0 && (
-                                                        <li><Link to="/bit-shift" onClick={() => setIsDropdownOpen(false)}>Bit Shift</Link></li>
-                                                    )}
-                                                </>
-                                            )}
-                                            <li><button onClick={() => { handleLogout(); setIsDropdownOpen(false); }} className="logout-btn">Logout</button></li>
-                                        </ul>
-                                    </li>
-                                ) : (
-                                    !isGuestPage && (
-                                        <li><Link className="nav-button" to="/login">Login</Link></li>
-                                    )
+                                {!isAuthenticated && !isGuestPage && (
+                                    <li><Link className="nav-button" to="/login">Login</Link></li>
                                 )}
                             </ul>
                         </nav>

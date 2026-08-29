@@ -1,0 +1,14 @@
+version = 0.1
+
+[default.deploy.parameters]
+stack_name = "classroom-chat-ses"
+resolve_s3 = true
+s3_prefix = "classroom-chat-ses"
+region = "ap-southeast-1"
+confirm_changeset = true
+capabilities = "CAPABILITY_NAMED_IAM"
+parameter_overrides = "DomainName=\"benmega.com\""
+image_repositories = []
+
+[default.global.parameters]
+region = "ap-southeast-1"

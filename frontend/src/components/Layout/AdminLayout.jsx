@@ -201,17 +201,15 @@ const AdminLayout = ({ children }) => {
             </aside>
 
             {/* Mobile Hamburger Button */}
-            {location.pathname.startsWith('/admin/advanced-crud') && (
-                <div className="admin-mobile-top-bar mobile-only">
-                    <button
-                        className="admin-hamburger"
-                        onClick={() => setSidebarOpen(true)}
-                        aria-label="Open Sidebar"
-                    >
-                        <Menu size={24} />
-                    </button>
-                </div>
-            )}
+            <div className="admin-mobile-top-bar mobile-only">
+                <button
+                    className="admin-hamburger"
+                    onClick={() => setSidebarOpen(true)}
+                    aria-label="Open Sidebar"
+                >
+                    <Menu size={24} />
+                </button>
+            </div>
 
             {/* Main Content Area */}
             <main

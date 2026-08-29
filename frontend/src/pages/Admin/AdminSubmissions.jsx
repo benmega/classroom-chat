@@ -210,7 +210,7 @@ const AdminSubmissions = () => {
                                     <input
                                         type="text"
                                         className="teacher-note-input"
-                                        placeholder="Note..."
+                                        placeholder="Optional note back to the student..."
                                         value={noteDrafts[submission.id] || ''}
                                         onChange={(e) => handleNoteDraftChange(submission.id, e.target.value)}
                                         maxLength={500}
@@ -251,7 +251,7 @@ const AdminSubmissions = () => {
                 ) : (
                     <div className="empty-state card">
                         <Inbox size={48} />
-                        <h3>Inbox Zero</h3>
+                        <h3>No Submissions</h3>
                     </div>
                 )}
             </div>

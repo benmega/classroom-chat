@@ -22,61 +22,102 @@ import AccessDenied from './pages/Error/AccessDenied';
 import ServerOffline from './pages/Error/ServerOffline';
 
 // --- Student pages: lazily loaded ---
-const lazyWithRetry = (componentImport) =>
-  React.lazy(async () => {
-    const pageHasAlreadyBeenForceRefreshed = JSON.parse(
-      window.sessionStorage.getItem('page-has-been-force-refreshed') || 'false'
-    );
+const Achievements = React.lazy(() => import('./pages/General/Achievements'));
+const BitShift = React.lazy(() => import('./pages/General/BitShift'));
 
-    try {
-      const component = await componentImport();
-      window.sessionStorage.setItem('page-has-been-force-refreshed', 'false');
-      return component;
-    } catch (error) {
-      if (!pageHasAlreadyBeenForceRefreshed) {
-        window.sessionStorage.setItem('page-has-been-force-refreshed', 'true');
-        window.location.reload();
-      }
-      throw error;
-    }
-  });
-
-const Achievements = lazyWithRetry(() => import('./pages/General/Achievements'));
-const BitShift = lazyWithRetry(() => import('./pages/General/BitShift'));
-
-const Activity = lazyWithRetry(() => import('./pages/General/Activity'));
-const CourseProgressTree = lazyWithRetry(() => import('./pages/General/CourseProgressTree'));
-const CourseLevelBreakdown = lazyWithRetry(() => import('./pages/General/CourseLevelBreakdown'));
-const Shop = lazyWithRetry(() => import('./pages/General/Shop'));
-const ProjectInfo = lazyWithRetry(() => import('./pages/General/ProjectInfo'));
-const EditProfile = lazyWithRetry(() => import('./pages/User/EditProfile'));
-const ManageProject = lazyWithRetry(() => import('./pages/User/ManageProject'));
+const Activity = React.lazy(() => import('./pages/General/Activity'));
+const CourseProgressTree = React.lazy(() => import('./pages/General/CourseProgressTree'));
+const CourseLevelBreakdown = React.lazy(() => import('./pages/General/CourseLevelBreakdown'));
+const Shop = React.lazy(() => import('./pages/General/Shop'));
+const ProjectInfo = React.lazy(() => import('./pages/General/ProjectInfo'));
+const EditProfile = React.lazy(() => import('./pages/User/EditProfile'));
+const ManageProject = React.lazy(() => import('./pages/User/ManageProject'));
 
 // --- Admin pages: lazily loaded (students never need these) ---
-const ToReview = lazyWithRetry(() => import('./pages/Admin/ToReview'));
-const AdminDashboard = lazyWithRetry(() => import('./pages/Admin/AdminDashboard'));
-const AdminAssignProject = lazyWithRetry(() => import('./pages/Admin/AdminAssignProject'));
-const AdminLibrary = lazyWithRetry(() => import('./pages/Admin/AdminLibrary'));
-const AdminSubmissions = lazyWithRetry(() => import('./pages/Admin/AdminSubmissions'));
-const Users = lazyWithRetry(() => import('./pages/Admin/Users'));
-const Classes = lazyWithRetry(() => import('./pages/Admin/Classes'));
-const AdminUserDashboard = lazyWithRetry(() => import('./pages/Admin/AdminUserDashboard'));
-const AdminClassDashboard = lazyWithRetry(() => import('./pages/Admin/AdminClassDashboard'));
-const AdvancedPanel = lazyWithRetry(() => import('./pages/Admin/AdvancedPanel'));
-const DuckTransactions = lazyWithRetry(() => import('./pages/Admin/DuckTransactions'));
-const AdminStudentActivity = lazyWithRetry(() => import('./pages/Admin/AdminStudentActivity'));
-const AdminCRUD = lazyWithRetry(() => import('./admin/AdminPanel'));
-const KioskUpload = lazyWithRetry(() => import('./pages/Admin/KioskUpload'));
+const ToReview = React.lazy(() => import('./pages/Admin/ToReview'));
+const AdminDashboard = React.lazy(() => import('./pages/Admin/AdminDashboard'));
+const AdminAssignProject = React.lazy(() => import('./pages/Admin/AdminAssignProject'));
+const AdminLibrary = React.lazy(() => import('./pages/Admin/AdminLibrary'));
+const AdminSubmissions = React.lazy(() => import('./pages/Admin/AdminSubmissions'));
+const Users = React.lazy(() => import('./pages/Admin/Users'));
+const Classes = React.lazy(() => import('./pages/Admin/Classes'));
+const AdminUserDashboard = React.lazy(() => import('./pages/Admin/AdminUserDashboard'));
+const AdminClassDashboard = React.lazy(() => import('./pages/Admin/AdminClassDashboard'));
+const AdvancedPanel = React.lazy(() => import('./pages/Admin/AdvancedPanel'));
+const DuckTransactions = React.lazy(() => import('./pages/Admin/DuckTransactions'));
+const AdminStudentActivity = React.lazy(() => import('./pages/Admin/AdminStudentActivity'));
+const AdminCRUD = React.lazy(() => import('./admin/AdminPanel'));
+const KioskUpload = React.lazy(() => import('./pages/Admin/KioskUpload'));
 
 // --- Parent pages: lazily loaded (students never need these) ---
-const ParentDashboard = lazyWithRetry(() => import('./pages/Parent/ParentDashboard'));
-const ParentReportCard = lazyWithRetry(() => import('./pages/Parent/ParentReportCard'));
-const ConnectChild = lazyWithRetry(() => import('./pages/Parent/ConnectChild'));
-const JoinClassroomLink = lazyWithRetry(() => import('./pages/General/JoinClassroomLink'));
+const ParentDashboard = React.lazy(() => import('./pages/Parent/ParentDashboard'));
+const ParentReportCard = React.lazy(() => import('./pages/Parent/ParentReportCard'));
+const ConnectChild = React.lazy(() => import('./pages/Parent/ConnectChild'));
+const JoinClassroomLink = React.lazy(() => import('./pages/General/JoinClassroomLink'));
 
 // Development-only shortcut page — Vite's tree-shaking removes this module
 // from production builds because it is only referenced inside the DEV guard below.
 import DevLogin from './pages/Auth/DevLogin';
+
+/**
+ * Catches chunk-load errors (e.g. after a deploy that invalidates old JS hashes).
+ * Instead of silently force-refreshing in a `React.lazy` wrapper (which can cause
+ * infinite reload loops), we surface a user-friendly "Reload" prompt.
+ */
+class ChunkErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error, info) {
+    console.error('Chunk load error caught by boundary:', error, info);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '1rem',
+          justifyContent: 'center',
+          alignItems: 'center',
+          height: '100vh',
+          background: 'var(--bg-primary)',
+          color: 'var(--text-primary)',
+          textAlign: 'center',
+          padding: '2rem',
+        }}>
+          <h2 style={{ margin: 0, fontSize: 'var(--font-2xl)' }}>A new version is available</h2>
+          <p style={{ opacity: 0.7, fontSize: 'var(--font-sm)', margin: 0 }}>
+            Please reload the page to get the latest update.
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            style={{
+              padding: '0.6rem 1.5rem',
+              borderRadius: 'var(--radius-lg)',
+              border: 'none',
+              background: 'var(--primary-color)',
+              color: '#fff',
+              cursor: 'pointer',
+              fontWeight: 600,
+              fontSize: 'var(--font-sm)',
+            }}
+          >
+            Reload
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 // Fallback spinner shown while lazy chunks are loading
 const PageLoader = () => (
@@ -197,6 +238,7 @@ function App() {
                 },
             }}
         />
+      <ChunkErrorBoundary>
       <Suspense fallback={<PageLoader />}>
       <Routes>
         <Route path="/login" element={isAuthenticated ? <Navigate to={authRedirect} /> : <Login />} />
@@ -407,6 +449,7 @@ function App() {
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
       </Suspense>
+      </ChunkErrorBoundary>
       </SidebarProvider>
     </Router>
   );

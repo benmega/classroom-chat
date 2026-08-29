@@ -40,7 +40,7 @@ const studentSlides = [
     position: 'bottom'
   },
   {
-    target: '.profile-toggle',
+    target: '.hamburger-toggle, .desktop-nav-rail',
     title: "Account",
     description: "Settings & Profile here.",
     icon: <MousePointer2 size={24} />,
@@ -64,7 +64,7 @@ const parentSlides = [
     position: 'top'
   },
   {
-    target: '.profile-toggle',
+    target: '.hamburger-toggle, .desktop-nav-rail',
     title: "Account Settings",
     description: "Manage your profile and settings here.",
     icon: <MousePointer2 size={24} />,

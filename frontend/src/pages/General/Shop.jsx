@@ -28,9 +28,9 @@ const Shop = () => {
     const [items, setItems] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [purchasingId, setPurchasingId] = useState(null);
-    const [chatColor, setChatColor] = useState('var(--accent-color)');
-    const [borderColor, setBorderColor] = useState('var(--accent-color)');
-    const borderColorRef = React.useRef('var(--accent-color)');
+    const [chatColor, setChatColor] = useState('#fac815');
+    const [borderColor, setBorderColor] = useState('#fac815');
+    const borderColorRef = React.useRef('#fac815');
     const wallpaperInputRef = React.useRef(null);
     
     const [isCropping, setIsCropping] = useState(false);

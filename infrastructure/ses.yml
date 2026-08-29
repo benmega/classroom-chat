@@ -1,0 +1,43 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: AWS SAM Template for SES IAM User setup (Domain is already verified)
+
+Parameters:
+  DomainName:
+    Type: String
+    Default: benmega.com
+    Description: The domain name already verified in AWS SES (e.g., benmega.com).
+
+Resources:
+  SesAccessUser:
+    Type: AWS::IAM::User
+    Properties:
+      UserName: SESEmailSenderUser
+
+  SesAccessPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: SESEmailSenderPolicy
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action:
+              - ses:SendEmail
+              - ses:SendRawEmail
+            Resource: "*"
+      Users:
+        - !Ref SesAccessUser
+
+  SesAccessKey:
+    Type: AWS::IAM::AccessKey
+    Properties:
+      UserName: !Ref SesAccessUser
+
+Outputs:
+  AWSAccessKeyId:
+    Description: Access Key ID for SES
+    Value: !Ref SesAccessKey
+  AWSSecretAccessKey:
+    Description: Secret Access Key for SES
+    Value: !GetAtt SesAccessKey.SecretAccessKey

@@ -365,58 +365,26 @@ export const ConnectionCardModal = ({ isOpen, onClose, student, connectionCode }
     );
 };
 
-export const BulkConnectionCardsModal = ({ isOpen, onClose, classrooms, fetchClassrooms, classroomCards, setClassroomCards, isFetchingCards, fetchClassroomCards }) => {
-    const [selectedClassroomId, setSelectedClassroomId] = useState('');
-
+export const BulkConnectionCardsModal = ({ isOpen, onClose, classroomCards = [], isFetchingCards, fetchClassroomCards, fetchClassrooms }) => {
     useEffect(() => {
-        let timeoutId;
         if (isOpen) {
-            fetchClassrooms();
-            timeoutId = setTimeout(() => {
-                setClassroomCards([]);
-                setSelectedClassroomId('');
-            }, 0);
+            if (fetchClassrooms) fetchClassrooms();
+            if (fetchClassroomCards) fetchClassroomCards();
         }
-        return () => {
-            if (timeoutId) clearTimeout(timeoutId);
-        };
-    }, [isOpen, fetchClassrooms, setClassroomCards]);
-
-    const handleClassroomChange = async (e) => {
-        const id = e.target.value;
-        setSelectedClassroomId(id);
-        if (id) {
-            await fetchClassroomCards(id);
-        } else {
-            setClassroomCards([]);
-        }
-    };
+    }, [isOpen, fetchClassrooms, fetchClassroomCards]);
 
     return (
-        <Modal isOpen={isOpen} onClose={onClose} title="Bulk Print Cohort Connection Cards" width="80%">
+        <Modal isOpen={isOpen} onClose={onClose} title="Print Cohort Connection Cards" width="80%">
             <div className="bulk-cards-modal-content p-1rem">
-                <div className="form-group no-print mb-1-5rem">
-                    <label htmlFor="input-397" className="fw-semibold mb-sm d-block">Select Cohort (Classroom)</label>
-                    <select id="input-397" 
-                        value={selectedClassroomId} 
-                        onChange={handleClassroomChange} className="admin-select select-styled-full">
-                        <option value="">Select a classroom...</option>
-                        <option value="all">All Students (Entire Directory)</option>
-                        {classrooms.map(c => (
-                            <option key={c.id} value={c.id}>{c.name}</option>
-                        ))}
-                    </select>
-                </div>
-
                 {isFetchingCards ? (
                     <div className="text-center p-3rem text-muted no-print">
                         <p>Generating cards and connection codes...</p>
                     </div>
-                ) : selectedClassroomId && classroomCards.length === 0 ? (
+                ) : classroomCards.length === 0 ? (
                     <div className="text-center p-3rem text-muted no-print">
                         <p>No students found in this classroom.</p>
                     </div>
-                ) : classroomCards.length > 0 ? (
+                ) : (
                     <div>
                         <div className="d-flex justify-between align-center mb-1-5rem no-print">
                             <span className="text-muted text-sm">
@@ -451,10 +419,6 @@ export const BulkConnectionCardsModal = ({ isOpen, onClose, classrooms, fetchCla
                                 );
                             })}
                         </div>
-                    </div>
-                ) : (
-                    <div className="text-center p-4rem-2rem text-muted border-dashed-2 radius-12 no-print">
-                        <p className="text-1-1rem m-0">Please select a classroom cohort above to generate and preview connection cards.</p>
                     </div>
                 )}
             </div>

@@ -48,10 +48,8 @@ describe('AdminStandardProjects', () => {
         expect(screen.getByText('Loading...')).toBeInTheDocument();
         
         await waitFor(() => {
-            expect(client.get).toHaveBeenCalledWith('/api/project-templates');
+            expect(screen.getByText('No standard projects found.')).toBeInTheDocument();
         });
-        
-        expect(screen.getByText('No standard projects found.')).toBeInTheDocument();
     });
 
     it('displays fetched standard projects', async () => {

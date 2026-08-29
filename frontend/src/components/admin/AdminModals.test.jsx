@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { CreateUserModal, AdjustDucksModal, AdjustPacketsModal, SetDrawerModal, ResetPasswordModal, StartConversationModal, ManageChildrenModal, ConnectionCardModal, BulkConnectionCardsModal, AddCourseModal } from './AdminModals';
@@ -283,44 +283,30 @@ describe('AdminModals', () => {
   });
 
   describe('BulkConnectionCardsModal', () => {
-    const classrooms = [{ id: 'c1', name: 'Class 1' }];
-
-    it('renders and handles selections', async () => {
+    it('renders and fetches data on open', async () => {
       const fetchClassrooms = vi.fn();
       const fetchClassroomCards = vi.fn();
-      const setClassroomCards = vi.fn();
 
       const { rerender } = render(
         <BulkConnectionCardsModal 
           isOpen={true} 
           onClose={vi.fn()} 
-          classrooms={classrooms}
           fetchClassrooms={fetchClassrooms}
           classroomCards={[]}
-          setClassroomCards={setClassroomCards}
           isFetchingCards={false}
           fetchClassroomCards={fetchClassroomCards}
         />
       );
 
       expect(fetchClassrooms).toHaveBeenCalled();
-
-      await waitFor(() => {
-        expect(setClassroomCards).toHaveBeenCalledWith([]);
-      });
-
-      const select = screen.getByRole('combobox');
-      await userEvent.selectOptions(select, 'c1');
-      expect(fetchClassroomCards).toHaveBeenCalledWith('c1');
+      expect(fetchClassroomCards).toHaveBeenCalled();
 
       rerender(
         <BulkConnectionCardsModal 
           isOpen={true} 
           onClose={vi.fn()} 
-          classrooms={classrooms}
           fetchClassrooms={fetchClassrooms}
           classroomCards={[{ id: 'card1', username: 'stud1', connection_code: 'XYZ-987' }]}
-          setClassroomCards={setClassroomCards}
           isFetchingCards={false}
           fetchClassroomCards={fetchClassroomCards}
         />

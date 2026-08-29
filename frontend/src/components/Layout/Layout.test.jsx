@@ -148,33 +148,5 @@ describe('Layout Component', () => {
         const hamburgerBtn = screen.getByLabelText(/Toggle Sidebar/i);
         await userEvent.click(hamburgerBtn);
         expect(toggleSidebar).toHaveBeenCalledTimes(1);
-
-        const profileToggle = screen.getByTestId('profile-toggle');
-        await userEvent.click(profileToggle);
-        expect(toggleDropdown).toHaveBeenCalledTimes(1);
-    });
-
-    it('calls handleLogout when logout is clicked from dropdown', async () => {
-        const handleLogout = vi.fn();
-        const setIsDropdownOpen = vi.fn();
-
-        useLayout.mockReturnValue({
-            ...defaultLayoutContext,
-            handleLogout,
-            setIsDropdownOpen,
-        });
-
-        render(
-            <MemoryRouter>
-                <Layout>
-                    <div>Content</div>
-                </Layout>
-            </MemoryRouter>
-        );
-
-        const logoutBtn = screen.getByText('Logout');
-        await userEvent.click(logoutBtn);
-        expect(handleLogout).toHaveBeenCalledTimes(1);
-        expect(setIsDropdownOpen).toHaveBeenCalledWith(false);
     });
 });

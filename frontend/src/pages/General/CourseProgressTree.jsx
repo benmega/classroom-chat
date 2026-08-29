@@ -36,6 +36,7 @@ const CourseProgressTree = () => {
     const [zoom, setZoom] = useState(ZOOM_BASELINE);
     const [chapterProjects, setChapterProjects] = useState({});
     const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
+    const [hasUrlInput, setHasUrlInput] = useState(false);
 
     const stateProgressData = location.state?.course_progress || location.state?.target?.course_progress;
 
@@ -542,30 +543,36 @@ const CourseProgressTree = () => {
                 alignItems: 'center',
                 gap: '1rem'
             }}>
-                {authUser?.has_activity && (
-                    <Link 
-                        to="/activity" 
-                        className="btn-icon"
-                        style={{ 
-                            background: 'var(--bg-secondary)', 
-                            border: '1px solid var(--border-subtle)', 
-                            boxShadow: 'var(--shadow-md)', 
-                            padding: '0.75rem', 
-                            borderRadius: '50%',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            color: 'var(--text-primary)'
-                        }}
-                        title="View History"
-                    >
-                        <History size={20} />
-                    </Link>
-                )}
+                <Link 
+                    to="/activity" 
+                    className="btn-icon"
+                    style={{ 
+                        background: 'var(--bg-secondary)', 
+                        border: '1px solid var(--border-subtle)', 
+                        boxShadow: 'var(--shadow-md)', 
+                        padding: '0.75rem', 
+                        borderRadius: '50%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: 'var(--text-primary)'
+                    }}
+                    title="View History"
+                >
+                    <History size={20} />
+                </Link>
 
                 <button 
+                    id="claim-ducks-btn"
                     className="btn-premium" 
-                    onClick={() => setIsSubmitModalOpen(true)}
+                    onClick={() => {
+                        if (isSubmitModalOpen) {
+                            const btn = document.getElementById('claim-ducks-submit-btn');
+                            if (btn) btn.click();
+                        } else {
+                            setIsSubmitModalOpen(true);
+                        }
+                    }}
                     style={{ 
                         padding: '0.75rem 1.5rem',
                         borderRadius: '30px',
@@ -577,13 +584,14 @@ const CourseProgressTree = () => {
                     }}
                 >
                     <CheckCircle size={18} />
-                    Claim Ducks
+                    {hasUrlInput ? 'Go!!!' : 'Claim Ducks'}
                 </button>
             </div>
 
             <SubmitProgressModal 
                 isOpen={isSubmitModalOpen} 
                 onClose={() => setIsSubmitModalOpen(false)} 
+                onUrlChange={(url) => setHasUrlInput(!!url.trim())}
             />
         </div>
     );

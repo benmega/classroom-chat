@@ -5,6 +5,15 @@
     overflow: hidden;
 }
 
+.main-layout-content {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    min-height: 0;
+    min-width: 0;
+    overflow: hidden;
+}
+
 header {
     flex-shrink: 0;
     background: var(--bg-primary);
@@ -515,6 +524,7 @@ main {
     width: 100%;
     padding: var(--spacing-md);
     overflow-y: auto; /* Allow pages to scroll by default */
+    -webkit-overflow-scrolling: touch;
 }
 
 main.main-full {
@@ -758,13 +768,6 @@ footer {
 @media (min-width: 801px) {
     .app-container {
         flex-direction: row;
-    }
-    .main-layout-content {
-        display: flex;
-        flex-direction: column;
-        flex-grow: 1;
-        height: 100dvh;
-        overflow: hidden;
     }
     main.main-full {
         overflow-y: auto;

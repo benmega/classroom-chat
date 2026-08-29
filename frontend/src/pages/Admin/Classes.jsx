@@ -1,11 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, Key, Plus, Users, Globe, X, MoreVertical, Trash2 } from 'lucide-react';
+import { Search, Plus, Users, Globe, X, MoreVertical, Trash2 } from 'lucide-react';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
 import Skeleton from '../../components/common/Skeleton';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
-import { BulkConnectionCardsModal } from '../../components/admin/AdminModals';
 import './Classes.css';
 
 const LanguageSymbol = ({ language }) => {
@@ -89,9 +88,6 @@ const Classes = () => {
     const [classrooms, setClassrooms] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
-    const [activeModal, setActiveModal] = useState(null);
-    const [classroomCards, setClassroomCards] = useState([]);
-    const [isFetchingCards, setIsFetchingCards] = useState(false);
 
     // Create Classroom Modal state
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -129,22 +125,6 @@ const Classes = () => {
             }
         } catch (err) {
             toast.error(err.response?.data?.error || 'Failed to delete classroom.');
-        }
-    };
-
-    const fetchClassroomCards = async (classroomId) => {
-        setIsFetchingCards(true);
-        try {
-            const response = await client.get(`/api/admin/classrooms/${classroomId}/connection_cards`);
-            setClassroomCards(response.data.data?.cards || response.data.cards || []);
-            return true;
-        } catch (error) {
-            console.error('Error fetching cohort connection cards:', error);
-            toast.error('Failed to load cohort connection cards.');
-            setClassroomCards([]);
-            return false;
-        } finally {
-            setIsFetchingCards(false);
         }
     };
 
@@ -236,13 +216,6 @@ const Classes = () => {
                     >
                         <Plus size={18} aria-hidden="true" /> Add Classroom
                     </button>
-                    <button
-                        className="primary-btn bulk-conn-btn"
-                        onClick={() => setActiveModal('bulk_connection_cards')}
-                        aria-label="Print connection cards for all classrooms"
-                    >
-                        <Key size={18} aria-hidden="true" /> Connection Cards
-                    </button>
                 </div>
             </AdminPageHeader>
 
@@ -289,19 +262,6 @@ const Classes = () => {
                                     </div>
                                 </div>
                                 <div className="class-card-actions">
-                                    <button
-                                        className="secondary-btn"
-                                        style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', padding: '6px 12px' }}
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            fetchClassroomCards(c.id);
-                                            setActiveModal('bulk_connection_cards');
-                                        }}
-                                        title={`Print Connection Cards for ${c.name}`}
-                                        aria-label={`Print Connection Cards for ${c.name}`}
-                                    >
-                                        <Key size={14} aria-hidden="true" /> Cards
-                                    </button>
                                 </div>
                             </div>
                         ))}
@@ -397,17 +357,6 @@ const Classes = () => {
                     </div>
                 </div>
             )}
-
-            <BulkConnectionCardsModal
-                isOpen={activeModal === 'bulk_connection_cards'}
-                onClose={() => setActiveModal(null)}
-                classrooms={classrooms}
-                fetchClassrooms={fetchClassrooms}
-                classroomCards={classroomCards}
-                setClassroomCards={setClassroomCards}
-                isFetchingCards={isFetchingCards}
-                fetchClassroomCards={fetchClassroomCards}
-            />
         </div>
     );
 };
