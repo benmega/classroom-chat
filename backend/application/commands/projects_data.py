@@ -1,7 +1,4 @@
-from application import create_app
-from application.extensions import db
-
-seed_data = [
+PROJECT_SEED_DATA = [
     (
         "Text-Based Adventure",
         "In this project students create a text-based adventure game where players navigate through different scenarios solving puzzles and making choices that affect the outcome. The game introduces basic coding concepts such as variables loops and conditionals. It offers an interactive and engaging way to learn programming while creating a fun story-driven experience.",
@@ -25,7 +22,6 @@ seed_data = [
     (
         "Simulation",
         "In this capstone project students will create a simulation of their choosing. The project emphasizes applying the Engineering Design Process: defining the problem designing a solution building the simulation revising based on user feedback and reflecting on the process. Students are encouraged to use tools and resources including randomization or other functions to create dynamic simulations. Peer collaboration is key as students will test each other's simulations and provide constructive feedback to improve the final project.",
-
         "Computer Science 3",
     ),
     (
@@ -105,6 +101,7 @@ seed_data = [
         "Web Development 2",
     ),
 ]
+
 PROJECT_EXTRA_DETAILS = {
     "Text-Based Adventure": {
         "difficulty": "Beginner",
@@ -306,21 +303,3 @@ DEFAULT_EXTRA = {
         "Submit final work to teacher for feedback."
     ]
 }
-
-app = create_app()
-with app.app_context():
-    count = 0
-    from application.models.project_template import ProjectTemplate
-
-    for name, desc, chapter in seed_data:
-        pt = ProjectTemplate.query.filter_by(name=name).first()
-        if not pt:
-            pt = ProjectTemplate(name=name, description=desc, chapter=chapter)
-            db.session.add(pt)
-            count += 1
-        else:
-            pt.chapter = chapter
-            pt.description = desc
-
-    db.session.commit()
-    print(f"Seeded {count} new project templates.")

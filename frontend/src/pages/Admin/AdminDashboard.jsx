@@ -26,7 +26,6 @@ import { useNavigate } from 'react-router-dom';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
 import './AdminDashboard.css';
-import './Analytics.css';
 import Skeleton from '../../components/common/Skeleton';
 
 // Extracted Components

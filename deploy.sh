@@ -266,6 +266,9 @@ PYEOF
     echo "Running data seeding script..."
     run env FLASK_APP=main.py FLASK_ENV=production "$PYTHON_BIN" -m tools.migrate_classroom
 
+    echo "Running standard data seeds (projects, challenges, instances)..."
+    run env FLASK_APP=main.py FLASK_ENV=production "$PYTHON_BIN" -m flask seed
+
     echo "Forcefully updating ben to admin using sqlite3..."
     run sqlite3 /home/ubuntu/classroom-chat/backend/instance/prod_users.db "UPDATE users SET role='admin' WHERE LOWER(username)='ben';"
 )

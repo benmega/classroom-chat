@@ -19,7 +19,8 @@ import {
     Eye,
     TrendingUp,
     ChevronDown,
-    ChevronUp
+    ChevronUp,
+    Edit
 } from 'lucide-react';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
@@ -573,6 +574,15 @@ const ToReview = () => {
                         </div>
 
                         <div className="card-actions">
+                            <a
+                                href={`/project/edit/${p.id}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="btn-secondary flex-center gap-6"
+                                title="Edit Project"
+                            >
+                                <Edit size={16} /> Edit
+                            </a>
                             <button 
                                 className="btn-reject"
                                 onClick={() => handleProjectReview(p.id, 'reject')}

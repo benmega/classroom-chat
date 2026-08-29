@@ -405,7 +405,7 @@ def admin_certificates():
 
 def _send_certificate_approval_email(cert):
     from application.services.email_service import send_email
-    
+
     # We want absolute URLs
     # request.host_url gives something like "https://blossom.benmega.com/"
     # If not in request context, this might fail, but mark_reviewed is in request context.
@@ -444,7 +444,7 @@ def mark_reviewed(cert_id):
     from application.services.achievement_engine import evaluate_user
 
     evaluate_user(cert.user, force=True)
-    
+
     _send_certificate_approval_email(cert)
 
     msg = "Certificate marked as reviewed."
