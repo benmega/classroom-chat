@@ -70,7 +70,7 @@ describe('AdminSubmissions Component', () => {
     });
 
     // Test input change
-    const input = screen.getByPlaceholderText('Optional note back to the student...');
+    const input = screen.getByPlaceholderText(/optional note/i);
     fireEvent.change(input, { target: { value: 'Good job!' } });
 
     // Test approve

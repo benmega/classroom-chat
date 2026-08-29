@@ -120,7 +120,7 @@ describe('ToReview Component', () => {
     // Click on 'Course Requests' tab
     // We don't have the exact label, maybe 'Course & Track Requests' or similar. 
     // We'll click some tabs that exist based on data.
-    const tabs = document.querySelectorAll('.review-tab-item');
+    const tabs = screen.getAllByRole("button").filter(b => b.classList.contains("review-tab-item"));
     if (tabs.length > 1) {
         fireEvent.click(tabs[1]);
         fireEvent.click(tabs[2]);

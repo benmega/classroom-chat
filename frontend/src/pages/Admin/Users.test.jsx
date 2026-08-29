@@ -67,7 +67,7 @@ describe('Users Page', () => {
   it('renders loading skeleton when isLoading is true', () => {
     useUsersManagement.mockReturnValue({ ...defaultMockState, isLoading: true });
     const { container } = renderComponent();
-    expect(container.querySelector('.users-skeleton-row')).toBeInTheDocument();
+    expect(screen.getAllByTestId("users-skeleton-row")[0]).toBeInTheDocument();
   });
 
   it('renders empty state when no users are found', () => {
@@ -128,7 +128,7 @@ describe('Users Page', () => {
   it('refreshes users', () => {
     renderComponent();
     // Assuming AdminPageHeader has a refresh button with class .refresh-btn
-    const refreshBtns = document.querySelectorAll('.refresh-btn');
+    const refreshBtns = screen.queryAllByTestId("refresh-btn");
     if (refreshBtns.length > 0) {
       fireEvent.click(refreshBtns[0]);
       expect(mockFetchUsers).toHaveBeenCalledWith(1);
@@ -178,7 +178,7 @@ describe('Users Page', () => {
     fireEvent.click(parentTab);
 
     // Open kebab menu
-    const kebab = document.querySelector('.kebab-trigger');
+    const kebab = screen.getByTestId("kebab-trigger");
     if (kebab) {
       fireEvent.click(kebab);
       // Click an action
@@ -210,15 +210,15 @@ describe('Users Page', () => {
     renderWithProviders(<Users />, { route: '/admin/users?role=parent' });
 
     // Click expand button
-    const expandBtn = document.querySelector('.expand-btn');
+    const expandBtn = screen.getByTestId("expand-btn");
     if (expandBtn) {
       fireEvent.click(expandBtn);
       // Wait for children list
       await waitFor(() => {
-          expect(document.querySelector('.expanded-children-row')).toBeInTheDocument();
+          expect(screen.getByTestId("expanded-children-row")).toBeInTheDocument();
       });
       // Click unlink button
-      const unlinkBtn = document.querySelector('.child-unlink-btn');
+      const unlinkBtn = screen.getByTestId("child-unlink-btn");
       if (unlinkBtn) {
         fireEvent.click(unlinkBtn);
       }
@@ -249,12 +249,12 @@ describe('Users Page', () => {
 
     renderComponent();
 
-    const checkboxes = document.querySelectorAll('.user-select-checkbox');
+    const checkboxes = screen.queryAllByTestId("user-select-checkbox");
     if (checkboxes.length >= 2) {
       fireEvent.click(checkboxes[0]);
       fireEvent.click(checkboxes[1]);
       
-      const selectAll = document.querySelector('.select-all-checkbox');
+      const selectAll = screen.queryByTestId("select-all-checkbox");
       if (selectAll) {
           fireEvent.click(selectAll);
       }

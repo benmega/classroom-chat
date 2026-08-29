@@ -28,14 +28,14 @@ describe('Signup Component', () => {
   it('renders correctly for student', () => {
     renderWithProviders(<Signup />);
     expect(screen.getByText('Welcome new student')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('Username')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/username/i)).toBeInTheDocument();
   });
 
   it('validates password match', async () => {
     const { container } = renderWithProviders(<Signup />);
-    const usernameInput = screen.getByPlaceholderText('Username');
-    const passInput = container.querySelector('#password');
-    const confirmInput = container.querySelector('#confirmPassword');
+    const usernameInput = screen.getByPlaceholderText(/username/i);
+    const passInput = screen.getByPlaceholderText(/^Password/i);
+    const confirmInput = screen.getByPlaceholderText(/^Confirm Password/i);
     const submitBtn = screen.getByRole('button', { name: /Request Access/i });
 
     fireEvent.change(usernameInput, { target: { value: 'student123' } });
@@ -57,9 +57,9 @@ describe('Signup Component', () => {
     });
 
     const { container } = renderWithProviders(<Signup />);
-    const usernameInput = screen.getByPlaceholderText('Username');
-    const passInput = container.querySelector('#password');
-    const confirmInput = container.querySelector('#confirmPassword');
+    const usernameInput = screen.getByPlaceholderText(/username/i);
+    const passInput = screen.getByPlaceholderText(/^Password/i);
+    const confirmInput = screen.getByPlaceholderText(/^Confirm Password/i);
     const submitBtn = screen.getByRole('button', { name: /Request Access/i });
 
     fireEvent.change(usernameInput, { target: { value: 'student123' } });
@@ -91,11 +91,11 @@ describe('Signup Component', () => {
     const parentRoleTab = screen.getByText('Parent');
     fireEvent.click(parentRoleTab);
 
-    expect(screen.getByPlaceholderText('Email Address')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/email address/i)).toBeInTheDocument();
 
-    const emailInput = screen.getByPlaceholderText('Email Address');
-    const passInput = container.querySelector('#password');
-    const confirmInput = container.querySelector('#confirmPassword');
+    const emailInput = screen.getByPlaceholderText(/email address/i);
+    const passInput = screen.getByPlaceholderText(/^Password/i);
+    const confirmInput = screen.getByPlaceholderText(/^Confirm Password/i);
     const submitBtn = screen.getByRole('button', { name: /Request Access/i });
 
     fireEvent.change(emailInput, { target: { value: 'parent@example.com' } });

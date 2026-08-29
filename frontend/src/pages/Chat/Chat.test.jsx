@@ -104,7 +104,7 @@ describe('Chat Component', () => {
     useFeedLogic.mockReturnValue(buildFeedLogic({ loading: true }));
     const { container } = renderWithProviders(<Chat />);
 
-    expect(container.querySelector('.feed-container')).not.toBeInTheDocument();
+    expect(screen.queryByTestId("feed-container")).not.toBeInTheDocument();
     expect(screen.queryByPlaceholderText(/what's on your mind/i)).not.toBeInTheDocument();
   });
 
@@ -300,7 +300,7 @@ describe('Chat Component', () => {
   it('calls handleScroll when messages container is scrolled', () => {
     renderWithProviders(<Chat />);
 
-    const messagesDiv = document.querySelector('.feed-messages');
+    const messagesDiv = screen.getByTestId("feed-messages");
     if (messagesDiv) {
       fireEvent.scroll(messagesDiv);
       expect(mockHandleScroll).toHaveBeenCalledTimes(1);

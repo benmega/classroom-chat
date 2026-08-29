@@ -58,7 +58,9 @@ describe('AdminAssignProject', () => {
         
         const select = screen.getByRole('combobox');
         expect(select).toBeInTheDocument();
-        expect(screen.getByText('Standard Project 1')).toBeInTheDocument();
+        await waitFor(() => {
+            expect(screen.getByText('Standard Project 1')).toBeInTheDocument();
+        });
     });
 
     it('searches for users and selects one', async () => {
@@ -68,7 +70,7 @@ describe('AdminAssignProject', () => {
 
         renderWithRouter(<AdminAssignProject />);
         
-        const searchInput = screen.getByPlaceholderText('Type to search by username or nickname...');
+        const searchInput = screen.getByPlaceholderText(/search/i);
         
         // Mock the debounced search request
         client.get.mockResolvedValueOnce({
@@ -88,7 +90,7 @@ describe('AdminAssignProject', () => {
         fireEvent.click(screen.getByText('Test User (testuser) - #42'));
         
         expect(screen.getByText('Test User (testuser) - #42')).toBeInTheDocument();
-        expect(screen.queryByPlaceholderText('Type to search by username or nickname...')).not.toBeInTheDocument();
+        expect(screen.queryByPlaceholderText(/search/i)).not.toBeInTheDocument();
     });
 
     it('validates form on submit', async () => {
@@ -103,7 +105,7 @@ describe('AdminAssignProject', () => {
         expect(toast.error).toHaveBeenCalledWith('Please select a student.');
         
         // Select user
-        const searchInput = screen.getByPlaceholderText('Type to search by username or nickname...');
+        const searchInput = screen.getByPlaceholderText(/search/i);
         client.get.mockResolvedValueOnce({
             data: { users: [{ id: 42, username: 'testuser', nickname: 'Test User' }] }
         });
@@ -133,7 +135,7 @@ describe('AdminAssignProject', () => {
         renderWithRouter(<AdminAssignProject />);
         
         // Select user
-        const searchInput = screen.getByPlaceholderText('Type to search by username or nickname...');
+        const searchInput = screen.getByPlaceholderText(/search/i);
         client.get.mockResolvedValueOnce({
             data: { users: [{ id: 42, username: 'testuser', nickname: 'Test User' }] }
         });
@@ -143,11 +145,11 @@ describe('AdminAssignProject', () => {
         });
         
         // Fill name
-        const nameInput = screen.getByPlaceholderText('e.g. My Awesome Game');
+        const nameInput = screen.getByPlaceholderText(/awesome game/i);
         fireEvent.change(nameInput, { target: { value: 'Cool Project' } });
         
         // Fill description to trigger adjustTextareaHeight
-        const descInput = screen.getByPlaceholderText('Tell the story of your project...');
+        const descInput = screen.getByPlaceholderText(/story of your project/i);
         fireEvent.change(descInput, { target: { value: 'Cool description' } });
         
         // Submit
@@ -185,13 +187,13 @@ describe('AdminAssignProject', () => {
         const select = screen.getByRole('combobox');
         fireEvent.change(select, { target: { value: '1' } });
         
-        const assignedNameInput = screen.getByPlaceholderText('e.g. My Awesome Game');
+        const assignedNameInput = screen.getByPlaceholderText(/awesome game/i);
         expect(assignedNameInput).toHaveValue('SP');
         expect(screen.getByDisplayValue('Desc')).toBeInTheDocument();
         
         // Media Tab
         fireEvent.click(screen.getByText('Media & Links'));
-        expect(screen.getByPlaceholderText('https://youtube.com/...')).toHaveValue('http');
+        expect(screen.getByPlaceholderText(/youtube\.com/i)).toHaveValue('http');
         
         // Code Tab
         fireEvent.click(screen.getByText('Code Showcase'));

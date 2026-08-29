@@ -254,7 +254,7 @@ const Shop = () => {
 
     if (isLoading) {
         return (
-            <div className="shop-loading" style={{ display: 'block', height: 'auto', padding: '2rem' }}>
+            <div data-testid="shop-loading" className="shop-loading" style={{ display: 'block', height: 'auto', padding: '2rem' }}>
                 <div className="shop-items-grid">
                     {[1, 2, 3, 4, 5, 6].map(i => (
                         <div key={i} className="shop-item-card skeleton-mt" style={{ minHeight: '220px', padding: '1.5rem', background: 'var(--bg-secondary)', borderRadius: '12px', border: '1px solid var(--border-subtle)' }}>

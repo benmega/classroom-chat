@@ -408,7 +408,7 @@ const CourseProgressTree = () => {
                         <div role="button" tabIndex={0}
                             key={node.id}
                             ref={el => nodeRefs.current[node.id] = el}
-                            className={`skill-node-cell ${node.has_started ? 'active' : 'locked'} ${node.is_extra ? 'extra-node' : ''} ${isRecommended ? 'recommended' : ''} ${isDimmed ? 'dimmed' : ''} ${isComplete ? 'completed' : ''} ${node.track === activeTrack ? 'active-track-node' : 'de-emphasized-track-node'}`}
+                            data-testid="skill-node-cell" className={`skill-node-cell ${node.has_started ? 'active' : 'locked'} ${node.is_extra ? 'extra-node' : ''} ${isRecommended ? 'recommended' : ''} ${isDimmed ? 'dimmed' : ''} ${isComplete ? 'completed' : ''} ${node.track === activeTrack ? 'active-track-node' : 'de-emphasized-track-node'}`}
                             style={{
                                 gridColumn: trackInfo?.col || 1,
                                 gridRow: node.row + 1

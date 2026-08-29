@@ -56,7 +56,7 @@ const ClassCardMenu = ({ classroom, onDelete }) => {
         <div className="kebab-menu-container" ref={menuRef} style={{ position: 'relative' }}>
             <button
                 type="button"
-                className={`action-btn kebab-trigger ${isOpen ? 'active' : ''}`}
+                data-testid="kebab-trigger" className={`action-btn kebab-trigger ${isOpen ? 'active' : ''}`}
                 onClick={(e) => { e.stopPropagation(); setIsOpen(!isOpen); }}
                 style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '4px', color: 'white' }}
                 aria-label="Classroom options"
@@ -169,7 +169,7 @@ const Classes = () => {
 
 
     if (isLoading) return (
-        <div className="admin-classes-page">
+        <div data-testid="admin-classes-page" className="admin-classes-page">
             <header className="page-header">
                 <Skeleton height="40px" width="300px" className="skeleton-title" />
                 <Skeleton height="20px" width="500px" />
@@ -177,7 +177,7 @@ const Classes = () => {
             <div className="classes-grid-container">
                 <div className="classes-grid">
                     {[1, 2, 3, 4, 5, 6].map(i => (
-                        <div key={i} className="class-card" style={{ padding: 0 }}>
+                        <div key={i} data-testid="class-card" data-testid="class-card" className="class-card" style={{ padding: 0 }}>
                             <Skeleton height="100px" borderRadius="12px 12px 0 0" />
                             <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
                                 <Skeleton height="20px" width="60%" />
@@ -191,7 +191,7 @@ const Classes = () => {
     );
 
     return (
-        <div className="admin-classes-page">
+        <div data-testid="admin-classes-page" className="admin-classes-page">
             <AdminPageHeader title="Classroom Directory">
                 <div className="search-bar">
                     <Search size={18} aria-hidden="true" />
@@ -226,7 +226,7 @@ const Classes = () => {
                     <div className="classes-grid" aria-label="Classroom Directory Grid">
                         {filteredClassrooms.map(c => (
                             <div
-                                className="class-card"
+                                data-testid="class-card" data-testid="class-card" className="class-card"
                                 key={c.id}
                                 onClick={() => navigate(`/admin/classes/${c.id}`)}
                                 role="button"
@@ -239,29 +239,29 @@ const Classes = () => {
                                     }
                                 }}
                             >
-                                <div className="class-card-header">
+                                <div data-testid="class-card" className="class-card-header">
                                     <div style={{ position: 'absolute', top: '12px', right: '12px', zIndex: 5 }}>
                                         <ClassCardMenu classroom={c} onDelete={handleDeleteClassroom} />
                                     </div>
                                     <Link
                                         to={`/admin/classes/${c.id}`}
-                                        className="class-card-title-link"
+                                        data-testid="class-card" className="class-card-title-link"
                                         onClick={(e) => e.stopPropagation()}
                                         aria-label={`Manage classroom ${c.name}`}
                                     >
                                         {c.name}
                                     </Link>
                                 </div>
-                                <div className="class-card-body">
-                                    <div className="class-card-detail" title={c.language || 'Language'}>
+                                <div data-testid="class-card" className="class-card-body">
+                                    <div data-testid="class-card" className="class-card-detail" title={c.language || 'Language'}>
                                         <LanguageSymbol language={c.language} />
                                     </div>
-                                    <div className="class-card-detail" title={`${c.student_count || 0} Students`}>
+                                    <div data-testid="class-card" className="class-card-detail" title={`${c.student_count || 0} Students`}>
                                         <Users size={18} aria-hidden="true" style={{ color: 'var(--text-muted)' }} />
                                         <span>{c.student_count || 0}</span>
                                     </div>
                                 </div>
-                                <div className="class-card-actions">
+                                <div data-testid="class-card" className="class-card-actions">
                                 </div>
                             </div>
                         ))}
@@ -275,7 +275,7 @@ const Classes = () => {
 
             {/* Create Classroom Modal */}
             {isCreateModalOpen && (
-                <div className="modal-overlay" role="dialog" aria-labelledby="modal-title-create-classroom" aria-modal="true">
+                <div data-testid="modal-overlay" className="modal-overlay" role="dialog" aria-labelledby="modal-title-create-classroom" aria-modal="true">
                     <div className="modal-card">
                         <div className="modal-header">
                             <h3 id="modal-title-create-classroom">Create New Classroom</h3>

@@ -86,7 +86,7 @@ describe('AdminStandardProjects', () => {
         
         expect(screen.getByText('Project Name *')).toBeInTheDocument();
         
-        const nameInput = screen.getByPlaceholderText('e.g. Text-Based Adventure');
+        const nameInput = screen.getByPlaceholderText(/text-based adventure/i);
         fireEvent.change(nameInput, { target: { value: 'New Template' } });
 
         client.post.mockResolvedValueOnce({
@@ -123,7 +123,7 @@ describe('AdminStandardProjects', () => {
 
         fireEvent.click(screen.getByRole('button', { name: /Edit/i }));
         
-        const nameInput = screen.getByPlaceholderText('e.g. Text-Based Adventure');
+        const nameInput = screen.getByPlaceholderText(/text-based adventure/i);
         expect(nameInput).toHaveValue('Project 1');
         
         fireEvent.change(nameInput, { target: { value: 'Updated Project' } });
@@ -191,11 +191,11 @@ describe('AdminStandardProjects', () => {
         });
 
         fireEvent.click(screen.getByRole('button', { name: /Add Standard Project/i }));
-        expect(screen.getByPlaceholderText('e.g. Text-Based Adventure')).toBeInTheDocument();
+        expect(screen.getByPlaceholderText(/text-based adventure/i)).toBeInTheDocument();
         
         const cancelButtons = screen.getAllByRole('button', { name: /Cancel/i });
         fireEvent.click(cancelButtons[0]);
         
-        expect(screen.queryByPlaceholderText('e.g. Text-Based Adventure')).not.toBeInTheDocument();
+        expect(screen.queryByPlaceholderText(/text-based adventure/i)).not.toBeInTheDocument();
     });
 });

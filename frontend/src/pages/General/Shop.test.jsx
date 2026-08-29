@@ -64,7 +64,7 @@ describe('Shop', () => {
 
   it('renders loading state initially', () => {
     renderWithProviders(<Shop />);
-    expect(document.querySelector('.shop-loading')).toBeInTheDocument();
+    expect(screen.getByTestId("shop-loading")).toBeInTheDocument();
   });
 
   it('renders items and handles purchase success', async () => {

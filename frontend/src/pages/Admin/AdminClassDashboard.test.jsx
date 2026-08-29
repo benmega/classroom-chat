@@ -71,7 +71,7 @@ describe('AdminClassDashboard', () => {
     it('renders loading state initially', () => {
         client.get.mockImplementation(() => new Promise(() => {})); // Never resolves
         renderWithRouter(<AdminClassDashboard />);
-        expect(document.querySelector('.skeleton-title')).toBeInTheDocument();
+        expect(screen.getAllByTestId("skeleton-title")[0]).toBeInTheDocument();
     });
 
     it('fetches and displays classroom details and students', async () => {

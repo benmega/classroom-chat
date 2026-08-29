@@ -53,7 +53,7 @@ describe('EditProfile', () => {
 
         expect(screen.getByDisplayValue('testuser')).toBeInTheDocument();
         expect(screen.getByDisplayValue('Test Nick')).toBeInTheDocument();
-        expect(screen.getByPlaceholderText('Enter your nickname')).toBeDisabled();
+        expect(screen.getByPlaceholderText(/Enter your nickname/i)).toBeDisabled();
         expect(screen.getByText('Nickname (readonly)')).toBeInTheDocument();
         expect(screen.getByDisplayValue('This is my bio')).toBeInTheDocument();
         expect(screen.getByDisplayValue('Drawer A1')).toBeInTheDocument();
@@ -88,7 +88,7 @@ describe('EditProfile', () => {
         
         expect(screen.queryByRole('button', { name: /Save Changes/i })).not.toBeInTheDocument();
 
-        const bioInput = screen.getByPlaceholderText('Tell us about yourself...');
+        const bioInput = screen.getByPlaceholderText(/Tell us about yourself\.\.\./i);
         fireEvent.change(bioInput, { target: { value: 'New Bio' } });
 
         expect(screen.getByRole('button', { name: /Save Changes/i })).toBeInTheDocument();
@@ -98,7 +98,7 @@ describe('EditProfile', () => {
     it('cancels changes', () => {
         render(<EditProfile />);
         
-        const bioInput = screen.getByPlaceholderText('Tell us about yourself...');
+        const bioInput = screen.getByPlaceholderText(/Tell us about yourself\.\.\./i);
         fireEvent.change(bioInput, { target: { value: 'New Bio' } });
 
         const cancelBtn = screen.getByRole('button', { name: /Cancel/i });
@@ -111,13 +111,13 @@ describe('EditProfile', () => {
     it('toggles password visibility', () => {
         const { container } = render(<EditProfile />);
 
-        const passInput = screen.getByPlaceholderText('New Password');
-        const confirmInput = screen.getByPlaceholderText('Confirm New Password');
+        const passInput = screen.getByPlaceholderText(/^New Password/i);
+        const confirmInput = screen.getByPlaceholderText(/confirm new password/i);
 
         expect(passInput).toHaveAttribute('type', 'password');
         expect(confirmInput).toHaveAttribute('type', 'password');
 
-        const toggleBtns = container.querySelectorAll('.password-toggle-btn');
+        const toggleBtns = screen.getAllByRole("button").filter(b => b.classList.contains("password-toggle-btn"));
         
         fireEvent.click(toggleBtns[0]);
         expect(passInput).toHaveAttribute('type', 'text');
@@ -129,8 +129,8 @@ describe('EditProfile', () => {
     it('validates password match', () => {
         render(<EditProfile />);
 
-        fireEvent.change(screen.getByPlaceholderText('New Password'), { target: { value: 'pass123' } });
-        fireEvent.change(screen.getByPlaceholderText('Confirm New Password'), { target: { value: 'pass456' } });
+        fireEvent.change(screen.getByPlaceholderText(/^New Password/i), { target: { value: 'pass123' } });
+        fireEvent.change(screen.getByPlaceholderText(/confirm new password/i), { target: { value: 'pass456' } });
 
         fireEvent.submit(screen.getByRole('button', { name: /Save Changes/i }).closest('form'));
 
@@ -149,7 +149,7 @@ describe('EditProfile', () => {
 
         render(<EditProfile />);
 
-        fireEvent.change(screen.getByPlaceholderText('Tell us about yourself...'), { target: { value: 'New Bio' } });
+        fireEvent.change(screen.getByPlaceholderText(/Tell us about yourself\.\.\./i), { target: { value: 'New Bio' } });
         fireEvent.submit(screen.getByRole('button', { name: /Save Changes/i }).closest('form'));
 
         expect(screen.getByRole('button', { name: /Saving.../i })).toBeInTheDocument();
@@ -183,7 +183,7 @@ describe('EditProfile', () => {
 
         render(<EditProfile />);
 
-        const nicknameInput = screen.getByPlaceholderText('Enter your nickname');
+        const nicknameInput = screen.getByPlaceholderText(/Enter your nickname/i);
         expect(nicknameInput).not.toBeDisabled();
 
         fireEvent.change(nicknameInput, { target: { value: 'New Parent Nick' } });
@@ -238,7 +238,7 @@ describe('EditProfile', () => {
 
         render(<EditProfile />);
 
-        fireEvent.change(screen.getByPlaceholderText('Tell us about yourself...'), { target: { value: 'New Bio' } });
+        fireEvent.change(screen.getByPlaceholderText(/Tell us about yourself\.\.\./i), { target: { value: 'New Bio' } });
         fireEvent.submit(screen.getByRole('button', { name: /Save Changes/i }).closest('form'));
 
         await waitFor(() => {

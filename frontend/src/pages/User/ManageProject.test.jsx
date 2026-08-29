@@ -48,7 +48,7 @@ describe('ManageProject', () => {
         );
 
         expect(await screen.findByText('Core Information')).toBeInTheDocument();
-        expect(screen.getByPlaceholderText('What is this project about? What did you learn?')).toBeInTheDocument();
+        expect(screen.getByPlaceholderText(/What is this project about\? What did you learn\?/i)).toBeInTheDocument();
         
         // Navigation buttons
         expect(screen.getByRole('button', { name: /Next/i })).toBeInTheDocument();
@@ -103,13 +103,13 @@ describe('ManageProject', () => {
         );
 
         // Core tab is active initially
-        expect(await screen.findByPlaceholderText('What is this project about? What did you learn?')).toBeInTheDocument();
+        expect(await screen.findByPlaceholderText(/What is this project about\? What did you learn\?/i)).toBeInTheDocument();
 
         // Click next -> Media tab
         fireEvent.click(screen.getByRole('button', { name: /Next/i }));
         
         expect(await screen.findByText(/Media Assets/i)).toBeInTheDocument();
-        expect(screen.getByPlaceholderText('YouTube/Vimeo URL')).toBeInTheDocument();
+        expect(screen.getByPlaceholderText(/YouTube\/Vimeo URL/i)).toBeInTheDocument();
 
         // Click next -> Code tab
         fireEvent.click(screen.getByRole('button', { name: /Next/i }));
@@ -162,8 +162,8 @@ describe('ManageProject', () => {
             </MemoryRouter>
         );
 
-        await screen.findByPlaceholderText('What is this project about? What did you learn?');
-        fireEvent.change(screen.getByPlaceholderText('What is this project about? What did you learn?'), { target: { value: 'My cool desc' } });
+        await screen.findByPlaceholderText(/What is this project about\? What did you learn\?/i);
+        fireEvent.change(screen.getByPlaceholderText(/What is this project about\? What did you learn\?/i), { target: { value: 'My cool desc' } });
         
         // Go to last tab
         fireEvent.click(screen.getByRole('button', { name: /Next/i }));

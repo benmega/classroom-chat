@@ -30,7 +30,7 @@ describe('ForgotPassword', () => {
 
         expect(screen.getByText('Forgot Password')).toBeInTheDocument();        
         // Ensure email input is not visible for student
-        expect(screen.queryByPlaceholderText('Enter your Email Address')).not.toBeInTheDocument();
+        expect(screen.queryByPlaceholderText(/email address/i)).not.toBeInTheDocument();
     });
 
     it('switches to parent role and renders form', () => {
@@ -43,7 +43,7 @@ describe('ForgotPassword', () => {
         const parentBtn = screen.getByRole('button', { name: 'Parent' });
         fireEvent.click(parentBtn);
 
-        expect(screen.getByPlaceholderText('Enter your Email Address')).toBeInTheDocument();
+        expect(screen.getByPlaceholderText(/email address/i)).toBeInTheDocument();
         expect(screen.getByRole('button', { name: /Send Code/i })).toBeInTheDocument();
     });
 
@@ -56,7 +56,7 @@ describe('ForgotPassword', () => {
 
         fireEvent.click(screen.getByRole('button', { name: 'Parent' }));
         
-        const form = container.querySelector('#forgot-password-form');
+        const form = screen.getByPlaceholderText(/email address/i).closest("form");
         fireEvent.submit(form);
 
         expect(toast.error).toHaveBeenCalledWith('Please enter your email address.');
@@ -82,7 +82,7 @@ describe('ForgotPassword', () => {
 
         fireEvent.click(screen.getByRole('button', { name: 'Parent' }));
         
-        const emailInput = screen.getByPlaceholderText('Enter your Email Address');
+        const emailInput = screen.getByPlaceholderText(/email address/i);
         fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
 
         const submitBtn = screen.getByRole('button', { name: /Send Code/i });
@@ -112,7 +112,7 @@ describe('ForgotPassword', () => {
 
         fireEvent.click(screen.getByRole('button', { name: 'Parent' }));
         
-        const emailInput = screen.getByPlaceholderText('Enter your Email Address');
+        const emailInput = screen.getByPlaceholderText(/email address/i);
         fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
 
         const submitBtn = screen.getByRole('button', { name: /Send Code/i });
@@ -138,7 +138,7 @@ describe('ForgotPassword', () => {
 
         fireEvent.click(screen.getByRole('button', { name: 'Parent' }));
         
-        const emailInput = screen.getByPlaceholderText('Enter your Email Address');
+        const emailInput = screen.getByPlaceholderText(/email address/i);
         fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
 
         const submitBtn = screen.getByRole('button', { name: /Send Code/i });

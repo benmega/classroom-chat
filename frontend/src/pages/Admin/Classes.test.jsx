@@ -49,7 +49,7 @@ describe('Classes Admin Page', () => {
         });
 
         renderWithRouter(<Classes />);
-        expect(document.querySelector('.admin-classes-page')).toBeInTheDocument();
+        expect(screen.getByTestId("admin-classes-page")).toBeInTheDocument();
         // Since loading state is handled with Skeleton, wait for fetch to finish
         await waitFor(() => {
             expect(screen.getByText('Classroom Directory')).toBeInTheDocument();
@@ -102,7 +102,7 @@ describe('Classes Admin Page', () => {
             expect(screen.getByText('Math 101')).toBeInTheDocument();
         });
 
-        const searchInput = screen.getByPlaceholderText('Search by name, ID, or language...');
+        const searchInput = screen.getByPlaceholderText(/search/i);
         fireEvent.change(searchInput, { target: { value: 'math' } });
 
         expect(screen.getByText('Math 101')).toBeInTheDocument();
@@ -167,7 +167,7 @@ describe('Classes Admin Page', () => {
         const addBtn = screen.getByText(/Add Classroom/i);
         fireEvent.click(addBtn);
         await waitFor(() => {
-            expect(document.querySelector('.modal-overlay')).not.toBeNull();
+            expect(screen.getByTestId("modal-overlay")).toBeInTheDocument();
         });
         
         // Close modal
@@ -175,7 +175,7 @@ describe('Classes Admin Page', () => {
         fireEvent.click(closeBtn);
 
         // Open kebab menu
-        const kebabBtn = document.querySelector('.kebab-trigger');
+        const kebabBtn = screen.getByTestId("kebab-trigger");
         if (kebabBtn) {
             fireEvent.click(kebabBtn);
 
@@ -194,7 +194,7 @@ describe('Classes Admin Page', () => {
         }
 
         // Test onKeyDown branch
-        const classCard = document.querySelector('.class-card');
+        const classCard = screen.queryAllByTestId("class-card")[0];
         if (classCard) {
             fireEvent.keyDown(classCard, { key: 'Enter', target: classCard });
             fireEvent.keyDown(classCard, { key: ' ', target: classCard });

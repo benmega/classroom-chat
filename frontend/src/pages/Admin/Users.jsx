@@ -72,7 +72,7 @@ const UserRowActions = ({ u, setModalUser, setActiveModal, handleToggleChat, han
         <div className="action-group">
             
             <div className="kebab-menu-container" ref={menuRef}>
-                <button className={`action-btn kebab-trigger ${isOpen ? 'active' : ''}`} onClick={(e) => { e.stopPropagation(); setIsOpen(!isOpen); }}>
+                <button data-testid="kebab-trigger" data-testid="kebab-trigger" className={`action-btn kebab-trigger ${isOpen ? 'active' : ''}`} onClick={(e) => { e.stopPropagation(); setIsOpen(!isOpen); }}>
                     <MoreVertical size={16} />
                 </button>
                 {isOpen && (
@@ -237,7 +237,7 @@ const Users = () => {
             </header>
             <div className="users-table-container card">
                 {[1, 2, 3, 4, 5].map(i => (
-                    <div key={i} className="users-skeleton-row">
+                    <div key={i} data-testid="users-skeleton-row" className="users-skeleton-row">
                         <Skeleton height="60px" />
                     </div>
                 ))}
@@ -525,7 +525,7 @@ const Users = () => {
                                                             : 'Children'
                                                         }
                                                         <button
-                                                            className="action-btn expand-btn"
+                                                            data-testid="expand-btn" className="action-btn expand-btn"
                                                             onClick={() => toggleParentExpand(u.id)}
                                                             title={expandedParents.has(u.id) ? 'Collapse' : 'Expand'}
                                                             style={{ marginLeft: '8px', width: '28px', height: '28px' }}
@@ -553,7 +553,7 @@ const Users = () => {
                                                 </td>
                                             </tr>
                                             {expandedParents.has(u.id) && (
-                                                <tr className="expanded-children-row">
+                                                <tr data-testid="expanded-children-row" className="expanded-children-row">
                                                     <td colSpan="4">
                                                         <div className="children-list-container">
                                                             {childrenCache[u.id] === undefined ? (
@@ -576,7 +576,7 @@ const Users = () => {
                                                                             </div>
                                                                         </div>
                                                                         <button
-                                                                            className="action-btn delete child-unlink-btn"
+                                                                            data-testid="child-unlink-btn" className="action-btn delete child-unlink-btn"
                                                                             onClick={() => handleUnlinkChild(u.id, child.id)}
                                                                             disabled={formLoading}
                                                                             title="Unlink this child"

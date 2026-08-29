@@ -89,11 +89,11 @@ const Chat = ({ filterClassroomId = null }) => {
   );
 
   return (
-    <div className="feed-container">
+    <div data-testid="feed-container" className="feed-container">
       <div className="feed-main">
         <div 
           ref={scrollRef}
-          className="feed-messages"
+          data-testid="feed-messages" className="feed-messages"
           onScroll={handleScroll}
         >
           <div className="feed-messages-inner">

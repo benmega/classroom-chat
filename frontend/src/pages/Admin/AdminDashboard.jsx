@@ -102,7 +102,7 @@ const AdminDashboard = () => {
     if (isLoading) return (
         <div className="admin-dashboard">
             <div className="dashboard-header">
-                <Skeleton height="40px" width="300px" className="skeleton-title" />
+                <Skeleton height="40px" width="300px" data-testid="skeleton-title" className="skeleton-title" />
             </div>
             <div className="dashboard-layout">
                 <div className="main-content">
