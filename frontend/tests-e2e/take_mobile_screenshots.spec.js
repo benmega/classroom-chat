@@ -32,7 +32,6 @@ test('take parent mobile screenshots', async ({ page }) => {
   await page.waitForTimeout(2000);
   await page.screenshot({ path: '../issues/screenshots/mobile_login_page.png', fullPage: true });
   
-  try {
     await page.getByPlaceholder(/username/i).fill('test_parent');
     await page.getByPlaceholder(/password/i).fill('parent123');
     await page.getByRole('button', { name: /login|sign in/i }).click();
@@ -43,7 +42,4 @@ test('take parent mobile screenshots', async ({ page }) => {
     await page.goto('http://localhost:5173/chat');
     await page.waitForTimeout(2000);
     await page.screenshot({ path: '../issues/screenshots/mobile_parent_chat.png', fullPage: true });
-  } catch(e) {
-    console.log("Could not login as parent: ", e);
-  }
 });

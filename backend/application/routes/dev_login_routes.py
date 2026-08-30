@@ -95,6 +95,12 @@ def browser_dev_login():
     # In development, redirect to the Vite dev server to ensure the 'main app' loads.
     # If the user is already on the Vite server, this just brings them to /.
     redirect_url = "http://localhost:5173/"
+    if role == "admin":
+        redirect_url += "admin/dashboard"
+    elif role == "parent":
+        redirect_url += "parent/dashboard"
+    else:
+        redirect_url += "chat"
 
     return render_template(
         "dev_login.html", role=role, error=error, redirect_url=redirect_url
@@ -144,6 +150,13 @@ def agent_dev_login():
     # For browser navigation (GET), use the premium template or redirect.
     if request.method == "GET":
         redirect_url = "http://localhost:5173/"
+        if role == "admin":
+            redirect_url += "admin/dashboard"
+        elif role == "parent":
+            redirect_url += "parent/dashboard"
+        else:
+            redirect_url += "chat"
+
         return render_template(
             "dev_login.html", role=role, error=None, redirect_url=redirect_url
         )

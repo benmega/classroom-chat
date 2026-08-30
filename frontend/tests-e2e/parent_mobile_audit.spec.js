@@ -23,45 +23,47 @@ test.describe('Parent Portal Mobile UI Audit', () => {
     page.on('console', msg => console.log(`BROWSER CONSOLE: [${msg.type()}] ${msg.text()}`));
     page.on('pageerror', err => console.log(`BROWSER ERROR: ${err.message}`));
 
-    try {
-      console.log('1. Navigating to parent dev-login...');
-      await page.goto('http://localhost:5173/api/dev-login?role=parent');
-      await page.waitForTimeout(1000);
+    console.log('1. Navigating to parent dev-login...');
+    await page.goto('http://localhost:5173/api/dev-login?role=parent');
+    await page.waitForTimeout(1000);
+    
+    console.log('2. Navigating to parent dashboard...');
+    await page.goto('http://localhost:5173/parent/dashboard');
+    
+    console.log('3. Waiting for dashboard content to load...');
+    await page.waitForSelector('.parent-dashboard', { state: 'visible', timeout: 10000 });
+    
+    await page.waitForTimeout(2000);
+    
+    const dashboardPath = path.join(screenshotsDir, 'parent_dashboard_mobile_audit.png');
+    console.log(`4. Capturing dashboard screenshot to: ${dashboardPath}`);
+    await page.screenshot({ path: dashboardPath, fullPage: true });
+
+    const childCardCount = await page.locator('text=blossomstudent01').count();
+    console.log(`Found ${childCardCount} instances of blossomstudent01.`);
+    
+    if (childCardCount > 0) {
+      const childId = await page.evaluate(async () => {
+        const res = await fetch('/api/parents/children');
+        const data = await res.json();
+        const children = data.data?.children || data.children || [];
+        return children[0]?.id;
+      });
       
-      console.log('2. Navigating to parent dashboard...');
-      await page.goto('http://localhost:5173/parent/dashboard');
+      console.log(`Navigating to report for child ${childId}...`);
+      await page.goto(`http://localhost:5173/parent/report/${childId}`);
       
-      console.log('3. Waiting for dashboard content to load...');
-      await page.waitForSelector('.parent-dashboard', { state: 'visible', timeout: 10000 });
+      console.log('6. Waiting for report card page to load...');
+      console.log(`Arrived at report card URL: ${page.url()}`);
+      
+      await page.waitForSelector('.report-loading', { state: 'detached', timeout: 15000 });
+      await page.waitForSelector('.report-card-page', { state: 'visible', timeout: 15000 });
       
       await page.waitForTimeout(2000);
       
-      const dashboardPath = path.join(screenshotsDir, 'parent_dashboard_mobile_audit.png');
-      console.log(`4. Capturing dashboard screenshot to: ${dashboardPath}`);
-      await page.screenshot({ path: dashboardPath, fullPage: true });
-
-      const childCardCount = await page.locator('.child-card').count();
-      console.log(`Found ${childCardCount} cards on dashboard.`);
-      
-      if (childCardCount > 1) {
-        const childLink = page.locator('.child-card-clickable').first();
-        await childLink.click();
-        
-        console.log('6. Waiting for report card page to load...');
-        await page.waitForURL(/\/parent\/report\/\d+/, { timeout: 15000 });
-        console.log(`Arrived at report card URL: ${page.url()}`);
-        
-        await page.waitForSelector('.report-loading', { state: 'detached', timeout: 15000 });
-        await page.waitForSelector('.report-card-page', { state: 'visible', timeout: 15000 });
-        
-        await page.waitForTimeout(2000);
-        
-        const reportPath = path.join(screenshotsDir, 'parent_report_mobile_audit.png');
-        console.log(`7. Capturing report card screenshot to: ${reportPath}`);
-        await page.screenshot({ path: reportPath, fullPage: true });
-      }
-    } catch (e) {
-      console.log('Could not complete parent mobile audit: ', e);
+      const reportPath = path.join(screenshotsDir, 'parent_report_mobile_audit.png');
+      console.log(`7. Capturing report card screenshot to: ${reportPath}`);
+      await page.screenshot({ path: reportPath, fullPage: true });
     }
   });
 });
