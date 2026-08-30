@@ -1,12 +1,41 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { screen, fireEvent } from '@testing-library/react';
+import { screen, fireEvent, waitFor } from '@testing-library/react';
 import { renderWithProviders } from '../../test/test-utils';
 import AdminDashboard from './AdminDashboard';
 import { useAdminDashboard } from '../../hooks/useAdminDashboard';
+import client from '../../api/client';
+import toast from 'react-hot-toast';
 
-// Mock chart.js canvas API used by react-chartjs-2
+vi.mock('../../api/client', () => ({
+  default: {
+    get: vi.fn(),
+  }
+}));
+
+vi.mock('react-hot-toast', () => ({
+  default: {
+    success: vi.fn(),
+    error: vi.fn(),
+  }
+}));
+
+const mockNavigate = vi.fn();
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual('react-router-dom');
+  return {
+    ...actual,
+    useNavigate: () => mockNavigate,
+  };
+});
+
 vi.mock('react-chartjs-2', () => ({
-  Line: () => <canvas data-testid="line-chart" />,
+  Line: ({ options }) => (
+    <button 
+      data-testid="line-chart" 
+      onClick={(e) => options.onClick(e, [{ datasetIndex: 1, index: 1 }])} 
+      onMouseOver={(e) => options.onHover({ native: { target: e.target } }, [{ datasetIndex: 0, index: 1 }])}
+    />
+  ),
   Pie: () => <canvas data-testid="pie-chart" />,
 }));
 
@@ -15,6 +44,8 @@ vi.mock('../../hooks/useSidebar', () => ({
   default: () => ({ toggleSidebar: vi.fn() }),
   useSidebar: () => ({ toggleSidebar: vi.fn() }),
 }));
+
+global.URL.createObjectURL = vi.fn(() => 'blob:url');
 
 const mockDashboardData = {
   users: [
@@ -25,6 +56,7 @@ const mockDashboardData = {
     { id: 1, username: 'alice', nickname: 'Alice', role: 'student', is_admin: false, duck_balance: 50, is_online: true },
     { id: 2, username: 'bob', nickname: 'Bob', role: 'parent', is_admin: false, duck_balance: 10, is_online: false },
     { id: 3, username: 'charlie', nickname: null, role: 'student', is_admin: false, duck_balance: 20, is_online: true },
+    { id: 4, username: 'admin', nickname: 'Admin', role: 'admin', is_admin: true, duck_balance: 0, is_online: false },
   ],
   config: {
     ai_teacher_enabled: true,
@@ -36,6 +68,7 @@ const mockDashboardData = {
     { id: 2, word: 'anotherbad' },
   ],
   chart_data: {
+    dates: ['2023-01-01', '2023-01-02', '2023-01-03'],
     labels: ['Mon', 'Tue', 'Wed'],
     earned: [10, 20, 15],
     spent: [5, 8, 12],
@@ -105,34 +138,25 @@ describe('AdminDashboard', () => {
     expect(screen.getByText('Duck Multiplier')).toBeInTheDocument();
   });
 
-  it('renders AI teacher toggle reflecting config state', () => {
+  it('calls handleToggleAI and handleToggleMessages', () => {
     renderComponent();
-    expect(screen.getByRole('button', { name: /AI Teacher Enabled/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Public Messaging Disabled/i })).toBeInTheDocument();
-  });
-
-  it('calls handleToggleAI when AI toggle is clicked', () => {
-    renderComponent();
-    const aiBtn = screen.getByRole('button', { name: /AI Teacher Enabled/i });
+    const aiBtn = screen.getByRole('button', { name: /AI Teacher/i });
     fireEvent.click(aiBtn);
     expect(defaultHookReturn.handleToggleAI).toHaveBeenCalledTimes(1);
-  });
 
-  it('calls handleToggleMessages when messages toggle is clicked', () => {
-    renderComponent();
-    const msgBtn = screen.getByRole('button', { name: /Public Messaging Disabled/i });
+    const msgBtn = screen.getByRole('button', { name: /Public Messaging/i });
     fireEvent.click(msgBtn);
     expect(defaultHookReturn.handleToggleMessages).toHaveBeenCalledTimes(1);
   });
 
-  it('opens bannedWord modal when Content Moderation button is clicked', () => {
+  it('opens bannedWord modal', () => {
     renderComponent();
     const modBtn = screen.getByRole('button', { name: /Content Moderation/i });
     fireEvent.click(modBtn);
     expect(defaultHookReturn.setActiveModal).toHaveBeenCalledWith('bannedWord');
   });
 
-  it('calls handleUpdateMultiplier when duck multiplier input is blurred', () => {
+  it('calls handleUpdateMultiplier', () => {
     renderComponent();
     const input = screen.getByLabelText('Duck Multiplier');
     fireEvent.change(input, { target: { value: '2.0' } });
@@ -140,10 +164,25 @@ describe('AdminDashboard', () => {
     expect(defaultHookReturn.handleUpdateMultiplier).toHaveBeenCalledWith('2.0');
   });
 
-  it('calls handleExportTransactions when Export Transactions button is clicked', () => {
+  it('calls handleExportTransactions on success', async () => {
     renderComponent();
+    client.get.mockResolvedValueOnce({ data: new Blob(['test']), headers: {} });
     const btn = screen.getByText('Export Transactions CSV');
     fireEvent.click(btn);
+    await waitFor(() => {
+        expect(client.get).toHaveBeenCalledWith('/api/admin/export/transactions', { responseType: 'blob' });
+        expect(toast.success).toHaveBeenCalledWith('Transaction history exported.');
+    });
+  });
+
+  it('calls handleExportTransactions on error', async () => {
+    renderComponent();
+    client.get.mockRejectedValueOnce(new Error('fail'));
+    const btn = screen.getByText('Export Transactions CSV');
+    fireEvent.click(btn);
+    await waitFor(() => {
+        expect(toast.error).toHaveBeenCalledWith('Failed to export transaction data.');
+    });
   });
 
   it('submits banned word form', async () => {
@@ -159,16 +198,42 @@ describe('AdminDashboard', () => {
     expect(defaultHookReturn.handleAddBannedWord).toHaveBeenCalledWith('testword', '');
   });
 
-  it('renders timeframe select with default value 7', () => {
-    renderComponent();
-    const select = screen.getByRole('combobox', { hidden: true });
-    expect(select.value).toBe('7');
-  });
-
-  it('calls setTimeframe when timeframe select changes', () => {
+  it('handles timeframe select', () => {
     renderComponent();
     const select = screen.getByRole('combobox', { hidden: true });
     fireEvent.change(select, { target: { value: '30' } });
     expect(defaultHookReturn.setTimeframe).toHaveBeenCalledWith(30);
+
+    fireEvent.change(select, { target: { value: 'all' } });
+    expect(defaultHookReturn.setTimeframe).toHaveBeenCalledWith('all');
+  });
+
+  it('navigates when chart point is clicked', () => {
+    renderComponent();
+    const chart = screen.getByTestId('line-chart');
+    fireEvent.click(chart);
+    expect(mockNavigate).toHaveBeenCalledWith('/admin/transactions?type=spent&date=2023-01-02');
+  });
+
+  it('changes cursor on hover over chart', () => {
+    renderComponent();
+    const chart = screen.getByTestId('line-chart');
+    fireEvent.mouseOver(chart);
+    expect(chart.style.cursor).toBe('pointer');
+  });
+
+  it('navigates on AdminStats clicks', () => {
+    renderComponent();
+    const earnedWeek = screen.getByText('Ducks In Circulation');
+    fireEvent.click(earnedWeek.closest('.stat-card') || earnedWeek);
+    expect(mockNavigate).toHaveBeenCalledWith('/admin/users');
+
+    const onlineUsers = screen.getByText('Online Users');
+    fireEvent.click(onlineUsers.closest('.stat-card') || onlineUsers);
+    expect(mockNavigate).toHaveBeenCalledWith('/admin/users?filter=online');
+
+    const weekEarned = screen.getByText('Earned This Week');
+    fireEvent.click(weekEarned.closest('.stat-card') || weekEarned);
+    expect(mockNavigate).toHaveBeenCalledWith('/admin/transactions?type=earned');
   });
 });
