@@ -34,6 +34,7 @@ vi.mock('react-chartjs-2', () => ({
       data-testid="line-chart" 
       onClick={(e) => options.onClick(e, [{ datasetIndex: 1, index: 1 }])} 
       onMouseOver={(e) => options.onHover({ native: { target: e.target } }, [{ datasetIndex: 0, index: 1 }])}
+      onFocus={(e) => options.onHover({ native: { target: e.target } }, [{ datasetIndex: 0, index: 1 }])}
     />
   ),
   Pie: () => <canvas data-testid="pie-chart" />,
