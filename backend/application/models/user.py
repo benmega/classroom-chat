@@ -166,11 +166,6 @@ class User(db.Model):
 
     def to_dict_auth(self):
         """Ultra-lightweight dictionary for frequent auth status checks."""
-        from .track_requests import TrackChangeRequest
-
-        pending_request = TrackChangeRequest.query.filter_by(
-            student_id=self.id, status="pending"
-        ).first()
         return {
             "id": self.id,
             "user_id": self.id,
@@ -186,15 +181,7 @@ class User(db.Model):
             "is_approved": self.is_approved,
             "role": self.role,
             "active_track": self.active_track,
-            "pending_request": {
-                "id": pending_request.id,
-                "requested_track": pending_request.requested_track,
-                "created_at": pending_request.created_at.isoformat()
-                if pending_request.created_at
-                else None,
-            }
-            if pending_request
-            else None,
+
             "slug": self.slug,
             "duck_balance": self.duck_balance,
             "packets": self.packets,
@@ -251,13 +238,6 @@ class User(db.Model):
             oz_levels = self.get_progress("www.ozaria.com")
             cc_percent = self.get_progress_percent("codecombat.com")
             oz_percent = self.get_progress_percent("www.ozaria.com")
-
-        from .track_requests import TrackChangeRequest
-
-        pending_request = TrackChangeRequest.query.filter_by(
-            student_id=self.id, status="pending"
-        ).first()
-
         d = {
             "id": self.id,
             "user_id": self.id,
@@ -273,15 +253,6 @@ class User(db.Model):
             "is_approved": self.is_approved,
             "role": self.role,
             "active_track": self.active_track,
-            "pending_request": {
-                "id": pending_request.id,
-                "requested_track": pending_request.requested_track,
-                "created_at": pending_request.created_at.isoformat()
-                if pending_request.created_at
-                else None,
-            }
-            if pending_request
-            else None,
             "bio": self.bio,
             "slug": self.slug,
             # Gamification

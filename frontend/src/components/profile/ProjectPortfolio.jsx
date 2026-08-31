@@ -9,7 +9,7 @@ const ProjectPortfolio = ({ projects, isOwner, setSelectedProject, studentId }) 
 
     const sortedProjects = projects ? [...projects].sort((a, b) => b.id - a.id) : [];
 
-    if (sortedProjects.length === 0) return null;
+    if (sortedProjects.length === 0 && !isOwner) return null;
 
     return (
         <section className="dashboard-panel">
@@ -22,45 +22,51 @@ const ProjectPortfolio = ({ projects, isOwner, setSelectedProject, studentId }) 
                 )}
             </div>
             <div className="projects-grid-container">
-                <div className="projects-grid">
-                    {sortedProjects.map(project => (
-                        <div key={project.id} className="project-card">
-                            <div role="button" tabIndex={0} data-testid="project-thumb" className="project-thumb" onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={() => setSelectedProject(project)}>
-                                <SmartImage 
-                                    src={formatStaticUrl(project.image_url)} 
-                                    alt={project.name} 
-                                    fallbackType="project"
-                                />
-                                {project.video_url && <div className="play-overlay"><Play size={24} fill="currentColor" /></div>}
-                                {!project.teacher_comment && (
-                                    <span className="in-progress-badge" title="Pending Admin Approval">
-                                        <Clock size={12} /> In Progress
-                                    </span>
-                                )}
-                            </div>
-                            <div className="project-content">
-                                <h3>{project.name}</h3>
-                                
-                                {project.teacher_comment && (
-                                    <div className="card-teacher-feedback">
-                                        <CheckCircle size={14} /> {project.teacher_comment.substring(0, 80)}...
-                                    </div>
-                                )}
-
-                                <p>{project.description?.substring(0, 80)}...</p>
-                                <div className="project-footer">
-                                    {project.link && <a href={project.link} target="_blank" rel="noreferrer" className="link-icon"><ExternalLink size={16} /></a>}
-                                    <button className="btn-text" onClick={() => setSelectedProject(project)}>Details</button>
-                                    {isOwner && (
-                                        <button className="link-icon" onClick={() => navigate(`/project/edit/${project.id}`)} title="Edit Project">
-                                            <Settings size={16} />
-                                        </button>
+                {sortedProjects.length === 0 ? (
+                    <p style={{ padding: '1rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
+                        No projects yet. Click the + icon to add your first project!
+                    </p>
+                ) : (
+                    <div className="projects-grid">
+                        {sortedProjects.map(project => (
+                            <div key={project.id} className="project-card">
+                                <div role="button" tabIndex={0} data-testid="project-thumb" className="project-thumb" onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={() => setSelectedProject(project)}>
+                                    <SmartImage 
+                                        src={formatStaticUrl(project.image_url)} 
+                                        alt={project.name} 
+                                        fallbackType="project"
+                                    />
+                                    {project.video_url && <div className="play-overlay"><Play size={24} fill="currentColor" /></div>}
+                                    {!project.teacher_comment && (
+                                        <span className="in-progress-badge" title="Pending Admin Approval">
+                                            <Clock size={12} /> In Progress
+                                        </span>
                                     )}
                                 </div>
+                                <div className="project-content">
+                                    <h3>{project.name}</h3>
+                                    
+                                    {project.teacher_comment && (
+                                        <div className="card-teacher-feedback">
+                                            <CheckCircle size={14} /> {project.teacher_comment.substring(0, 80)}...
+                                        </div>
+                                    )}
+
+                                    <p>{project.description?.substring(0, 80)}...</p>
+                                    <div className="project-footer">
+                                        {project.link && <a href={project.link} target="_blank" rel="noreferrer" className="link-icon"><ExternalLink size={16} /></a>}
+                                        <button className="btn-text" onClick={() => setSelectedProject(project)}>Details</button>
+                                        {isOwner && (
+                                            <button className="link-icon" onClick={() => navigate(`/project/edit/${project.id}`)} title="Edit Project">
+                                                <Settings size={16} />
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                    ))}
-                </div>
+                        ))}
+                    </div>
+                )}
             </div>
         </section>
     );

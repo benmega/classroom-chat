@@ -213,9 +213,7 @@ export const useFeedLogic = (filterClassroomId = null) => {
       }
       
       try {
-        await client.post('/api/submissions', formData, {
-          headers: { 'Content-Type': 'multipart/form-data' }
-        });
+        await client.post('/api/submissions', formData);
         toast.success('File submitted successfully');
         setFile(null);
         setNewMessage('');

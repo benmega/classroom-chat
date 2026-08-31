@@ -316,8 +316,8 @@ def submit_certificate():
                 "error": "No matching achievement found for this course."
             }), 200
 
-        # 2. Generate file
-        from application.utilities.cert_generator import generate_certificate
+        # 2. Handle File (Upload or Generate)
+        file = request.files.get("certificate_file")
         from flask import current_app
 
         cert_dir = os.path.join(current_app.config.get("UPLOAD_FOLDER", os.path.join(current_app.config["BASE_DIR"], "certificates")))
@@ -325,14 +325,22 @@ def submit_certificate():
         filename = secure_filename(f"{current_user.username}_{achievement.slug}.pdf")
         filepath = os.path.join(cert_dir, filename)
 
-        # Use Alice_CS1.pdf as our template
-        template_path = os.path.join(current_app.config["BASE_DIR"], "mockups", "Certificate_Samples", "CodeCombat", "Alice_CS1.pdf")
-        student_name = current_user.nickname or current_user.username
+        if file and file.filename:
+            from application.utilities.helper_functions import allowed_file
+            if not allowed_file(file.filename, {'pdf'}):
+                return jsonify({"success": False, "error": "Invalid file type. Only PDF is allowed."}), 200
+            file.save(filepath)
+        else:
+            from application.utilities.cert_generator import generate_certificate
 
-        try:
-            generate_certificate(template_path, filepath, student_name)
-        except Exception as e:
-            return jsonify({"success": False, "error": f"Failed to generate certificate: {e}"}), 500
+            # Use Alice_CS1.pdf as our template
+            template_path = os.path.join(current_app.config["BASE_DIR"], "mockups", "Certificate_Samples", "CodeCombat", "Alice_CS1.pdf")
+            student_name = current_user.nickname or current_user.username
+
+            try:
+                generate_certificate(template_path, filepath, student_name)
+            except Exception as e:
+                return jsonify({"success": False, "error": f"Failed to generate certificate: {e}"}), 500
 
         # 3. Create or update cert entry
         cert = UserCertificate.query.filter_by(

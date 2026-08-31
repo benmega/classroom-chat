@@ -145,9 +145,7 @@ def submit_challenge():
         warning = details.get("warning")
 
         challenge_name = details.get("challenge_name")
-        if not reward_issued:
-            message = "Challenge complete! But since you aren't assigned to this track, you didn't get a duck. Ask your teacher to change your track!"
-        elif challenge_name:
+        if challenge_name:
             message = f"Congratulations on completing {challenge_name}! You earned {duck_reward} {duck_word}!"
         else:
             message = f"Congrats {user.username}, you earned {duck_reward} {duck_word}!"
@@ -246,20 +244,18 @@ def detect_and_handle_challenge_url(message, user, duck_multiplier=1, helper=Non
             get_track_for_course_id(challenge.course_id) if challenge else None
         )
 
-        # Compare challenge track with user's active track
-        if challenge_track == user.active_track:
-            # Match: Save progress, grant the duck reward
-            duck_reward = _update_user_ducks(
-                user, match["challenge_slug"], duck_multiplier
-            )
-            log_result["duck_reward"] = duck_reward
-            log_result["reward_issued"] = True
-            log_result["warning"] = None
-        else:
-            # Mismatch: Save progress, skip the duck reward
-            log_result["duck_reward"] = 0
-            log_result["reward_issued"] = False
-            log_result["warning"] = "Off-track completion"
+        # Update user's active track if they completed a challenge on a new track
+        if challenge_track and challenge_track != user.active_track:
+            user.active_track = challenge_track
+            db.session.add(user)
+
+        # Always save progress and grant the duck reward
+        duck_reward = _update_user_ducks(
+            user, match["challenge_slug"], duck_multiplier
+        )
+        log_result["duck_reward"] = duck_reward
+        log_result["reward_issued"] = True
+        log_result["warning"] = None
 
         return {"handled": True, "details": log_result}
     except ValueError as e:

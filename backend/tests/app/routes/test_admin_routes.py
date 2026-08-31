@@ -828,6 +828,5 @@ def test_review_counts_route(client, sample_admin):
     assert "pending_trades" in data["data"]
     assert "pending_projects" in data["data"]
     assert "pending_certificates" in data["data"]
-    assert "pending_track_requests" in data["data"]
     assert "pending_course_requests" in data["data"]
     assert "total_incomplete" in data["data"]

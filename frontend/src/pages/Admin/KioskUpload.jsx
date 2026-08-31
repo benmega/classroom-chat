@@ -55,11 +55,7 @@ const KioskUpload = () => {
         formData.append('student_id', studentId);
         formData.append('note_image', file);
 
-        const uploadPromise = client.post('/notes/kiosk-upload', formData, {
-            headers: {
-                'Content-Type': 'multipart/form-data'
-            }
-        });
+        const uploadPromise = client.post('/notes/kiosk-upload', formData);
 
         toast.promise(uploadPromise, {
             loading: 'Uploading note...',

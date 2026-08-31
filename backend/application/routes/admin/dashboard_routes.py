@@ -295,7 +295,6 @@ def get_review_counts():
     from application.models.course_instance_request import CourseInstanceRequest
     from application.models.project import Project
     from application.models.submission import Submission
-    from application.models.track_requests import TrackChangeRequest
     from application.models.user_certificate import UserCertificate
 
     pending_users = User.query.filter_by(is_approved=False).filter(User.role != 'admin').count()
@@ -304,9 +303,6 @@ def get_review_counts():
         Project.teacher_comment.is_(None) | (Project.teacher_comment == "")
     ).count()
     pending_certificates = UserCertificate.query.filter_by(status="pending").count()
-    pending_track_requests = TrackChangeRequest.query.filter_by(
-        status="pending"
-    ).count()
     pending_course_requests = CourseInstanceRequest.query.filter_by(
         status="pending"
     ).count()
@@ -317,7 +313,6 @@ def get_review_counts():
         + pending_trades
         + pending_projects
         + pending_certificates
-        + pending_track_requests
         + pending_course_requests
         + pending_submissions
     )
@@ -327,7 +322,6 @@ def get_review_counts():
         "pending_trades": pending_trades,
         "pending_projects": pending_projects,
         "pending_certificates": pending_certificates,
-        "pending_track_requests": pending_track_requests,
         "pending_course_requests": pending_course_requests,
         "pending_submissions": pending_submissions,
         "total_incomplete": total_incomplete,

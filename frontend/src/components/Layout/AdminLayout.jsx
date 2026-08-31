@@ -31,7 +31,6 @@ const AdminLayout = ({ children }) => {
         pending_trades: 0,
         pending_projects: 0,
         pending_certificates: 0,
-        pending_track_requests: 0,
         pending_course_requests: 0,
         pending_submissions: 0,
         total_incomplete: 0
@@ -154,9 +153,6 @@ const AdminLayout = ({ children }) => {
                                         {item.path === '/admin/submissions' && reviewCounts.pending_submissions > 0 && (
                                             <span className="admin-nav-badge">{reviewCounts.pending_submissions}</span>
                                         )}
-                                        {item.path === '/admin' && reviewCounts.pending_track_requests > 0 && (
-                                            <span className="admin-nav-badge">{reviewCounts.pending_track_requests}</span>
-                                        )}
                                     </span>
                                     <span className="admin-nav-label">{item.label}</span>
                                     {item.path === '/admin/to-review' && reviewCounts.total_incomplete > 0 && (
@@ -167,9 +163,6 @@ const AdminLayout = ({ children }) => {
                                     )}
                                     {item.path === '/admin/submissions' && reviewCounts.pending_submissions > 0 && (
                                         <span className="admin-nav-badge mobile-badge">{reviewCounts.pending_submissions}</span>
-                                    )}
-                                    {item.path === '/admin' && reviewCounts.pending_track_requests > 0 && (
-                                        <span className="admin-nav-badge mobile-badge">{reviewCounts.pending_track_requests}</span>
                                     )}
                                 </NavLink>
                             </div>

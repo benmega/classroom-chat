@@ -96,10 +96,7 @@ describe('KioskUpload Component', () => {
         await waitFor(() => {
             expect(client.post).toHaveBeenCalledWith(
                 '/notes/kiosk-upload',
-                expect.any(FormData),
-                expect.objectContaining({
-                    headers: { 'Content-Type': 'multipart/form-data' },
-                })
+                expect.any(FormData)
             );
         });
     });

@@ -645,7 +645,7 @@ def test_detect_and_handle_ozaria_domain(
     assert result["details"]["success"] is True
 
 
-def test_submit_challenge_off_track(
+def test_submit_challenge_switch_track(
     client,
     init_db,
     sample_user,
@@ -654,7 +654,7 @@ def test_submit_challenge_off_track(
     sample_course,
     sample_course_instance,
 ):
-    """Test challenge completion on mismatched track. Ducks should be withheld."""
+    """Test challenge completion on mismatched track automatically switches track and ducks are awarded."""
     with client.session_transaction() as sess:
         sess["user"] = sample_user.id
 
@@ -686,11 +686,9 @@ def test_submit_challenge_off_track(
     assert response.status_code == 200
     res_json = response.get_json()
     assert res_json["success"] is True
-    assert res_json["reward_issued"] is False
-    assert res_json["warning"] == "Off-track completion"
-    assert res_json["duck_reward"] == 0
-    assert "you didn't get a duck" in res_json["message"]
-    assert "Ask your teacher to change your track" in res_json["message"]
+    assert res_json["reward_issued"] is True
+    assert res_json["warning"] is None
 
     db.session.refresh(sample_user)
-    assert sample_user.duck_balance == initial_ducks
+    assert sample_user.active_track == "cs"
+    assert sample_user.duck_balance > initial_ducks

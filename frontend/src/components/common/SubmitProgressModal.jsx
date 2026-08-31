@@ -25,6 +25,7 @@ const SubmitProgressModal = ({ isOpen, onClose, onUrlChange }) => {
     // Certificate support
     const [isCertificate, setIsCertificate] = useState(false);
     const [uploadProgress, setUploadProgress] = useState(0);
+    const [file, setFile] = useState(null);
 
     useEffect(() => {
         if (CERT_URL_PATTERN.test(url.trim())) {
@@ -32,6 +33,7 @@ const SubmitProgressModal = ({ isOpen, onClose, onUrlChange }) => {
         } else {
             setIsCertificate(false);
             setUploadProgress(0);
+            setFile(null);
         }
         if (onUrlChange) {
             onUrlChange(url);
@@ -41,6 +43,7 @@ const SubmitProgressModal = ({ isOpen, onClose, onUrlChange }) => {
     const resetForm = () => {
         setUrl('');
         setHelpers('');
+        setFile(null);
     };
 
     // Handle Escape key and outside clicks
@@ -94,6 +97,9 @@ const SubmitProgressModal = ({ isOpen, onClose, onUrlChange }) => {
             if (isCertificate) {
                 const formData = new FormData();
                 formData.append('certificate_url', url);
+                if (file) {
+                    formData.append('certificate_file', file);
+                }
 
                 setUploadProgress(0);
                 const response = await client.post('/api/achievements/submit_certificate', formData, {
@@ -257,6 +263,25 @@ const SubmitProgressModal = ({ isOpen, onClose, onUrlChange }) => {
                             </div>
 
                             {/* Removed optional section */}
+
+                            {isCertificate && (
+                                <div className="form-group primary-input" style={{ marginTop: '1rem' }}>
+                                    <div className="input-with-icon">
+                                        <input 
+                                            type="file" 
+                                            id="certificate-file"
+                                            accept=".pdf"
+                                            required
+                                            onChange={(e) => setFile(e.target.files[0])}
+                                            className="form-control"
+                                            style={{ fontSize: '1rem', padding: '0.75rem', borderRadius: 'var(--radius-md)' }}
+                                        />
+                                    </div>
+                                    <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '0.25rem', display: 'block' }}>
+                                        Please upload the certificate PDF
+                                    </span>
+                                </div>
+                            )}
 
                             {isCertificate && isSubmitting && uploadProgress > 0 && (
                                 <div className="progress-container mt-md">
