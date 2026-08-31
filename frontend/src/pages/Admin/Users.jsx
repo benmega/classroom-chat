@@ -72,7 +72,7 @@ const UserRowActions = ({ u, setModalUser, setActiveModal, handleToggleChat, han
         <div className="action-group">
             
             <div className="kebab-menu-container" ref={menuRef}>
-                <button data-testid="kebab-trigger" data-testid="kebab-trigger" className={`action-btn kebab-trigger ${isOpen ? 'active' : ''}`} onClick={(e) => { e.stopPropagation(); setIsOpen(!isOpen); }}>
+                <button data-testid="kebab-trigger" className={`action-btn kebab-trigger ${isOpen ? 'active' : ''}`} onClick={(e) => { e.stopPropagation(); setIsOpen(!isOpen); }}>
                     <MoreVertical size={16} />
                 </button>
                 {isOpen && (
