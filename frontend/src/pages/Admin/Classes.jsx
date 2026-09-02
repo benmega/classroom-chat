@@ -177,7 +177,7 @@ const Classes = () => {
             <div className="classes-grid-container">
                 <div className="classes-grid">
                     {[1, 2, 3, 4, 5, 6].map(i => (
-                        <div key={i} data-testid="class-card" data-testid="class-card" className="class-card" style={{ padding: 0 }}>
+                        <div key={i} data-testid="class-card" className="class-card" style={{ padding: 0 }}>
                             <Skeleton height="100px" borderRadius="12px 12px 0 0" />
                             <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
                                 <Skeleton height="20px" width="60%" />
@@ -226,7 +226,7 @@ const Classes = () => {
                     <div className="classes-grid" aria-label="Classroom Directory Grid">
                         {filteredClassrooms.map(c => (
                             <div
-                                data-testid="class-card" data-testid="class-card" className="class-card"
+                                data-testid="class-card" className="class-card"
                                 key={c.id}
                                 onClick={() => navigate(`/admin/classes/${c.id}`)}
                                 role="button"
