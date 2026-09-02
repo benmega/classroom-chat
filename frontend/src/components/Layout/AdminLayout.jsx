@@ -23,7 +23,9 @@ import client from '../../api/client';
 import './AdminLayout.css';
 
 const AdminLayout = ({ children }) => {
-    const { user, isAuthenticated } = useAuthStore();
+    const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+    const userRole = useAuthStore((s) => s.user?.role);
+    const user = useAuthStore((s) => s.user);
     const { isSidebarOpen, setSidebarOpen } = useSidebar();
     const location = useLocation();
     const [reviewCounts, setReviewCounts] = useState({
@@ -48,12 +50,12 @@ const AdminLayout = ({ children }) => {
             }
         };
 
-        if (isAuthenticated && user?.role === 'admin') {
+        if (isAuthenticated && userRole === 'admin') {
             fetchData();
             const interval = setInterval(fetchData, 15000); // refresh every 15s
             return () => clearInterval(interval);
         }
-    }, [isAuthenticated, user]);
+    }, [isAuthenticated, userRole]);
 
     // Close mobile menu on route change
     useEffect(() => {
