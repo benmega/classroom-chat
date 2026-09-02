@@ -30,7 +30,7 @@ const Login = () => {
                 if (result.awarded_duck) {
                     toast.success('Welcome! Daily duck awarded.', { icon: '🦆' });
                 }
-                
+
                 const pendingCode = localStorage.getItem('pendingConnectionCode');
                 const fromPath = location.state?.from || (pendingCode ? `/parent/connect?code=${pendingCode}` : null);
 
@@ -69,17 +69,16 @@ const Login = () => {
                         <img src="/images/logo.ico" alt="Classroom Chat Logo" />
                     </div>
                     <h1 className="auth-title">Welcome Back</h1>
-                    <p className="auth-subtitle">Continue your classroom journey</p>
                 </div>
-                
+
                 <form onSubmit={handleSubmit} className="auth-form" id="login-form">
                     <div className="form-group">
                         <div className="input-wrapper">
-                            <input 
-                                type="text" 
+                            <input
+                                type="text"
                                 id="usernameOrEmail"
-                                value={usernameOrEmail} 
-                                onChange={(e) => setUsernameOrEmail(e.target.value)} 
+                                value={usernameOrEmail}
+                                onChange={(e) => setUsernameOrEmail(e.target.value)}
                                 required
                                 placeholder="Username or Email"
                                 autoComplete="username"
@@ -88,22 +87,22 @@ const Login = () => {
                             <User className="input-icon" size={18} />
                         </div>
                     </div>
-                    
+
                     <div className="form-group">
                         <div className="input-wrapper">
-                            <input 
-                                type={showPassword ? "text" : "password"} 
+                            <input
+                                type={showPassword ? "text" : "password"}
                                 id="password"
-                                value={password} 
-                                onChange={(e) => setPassword(e.target.value)} 
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
                                 required
                                 placeholder="Password"
                                 autoComplete="current-password"
                                 className="auth-input has-password-toggle"
                             />
                             <Lock className="input-icon" size={18} />
-                            <button 
-                                type="button" 
+                            <button
+                                type="button"
                                 className="toggle-password-btn"
                                 onClick={() => setShowPassword(!showPassword)}
                                 aria-label={showPassword ? "Hide password" : "Show password"}
@@ -113,9 +112,9 @@ const Login = () => {
                             </button>
                         </div>
                     </div>
-                    
-                    <button 
-                        type="submit" 
+
+                    <button
+                        type="submit"
                         className="auth-button"
                         id="login-submit-btn"
                         disabled={isLoading}
@@ -132,7 +131,7 @@ const Login = () => {
                         )}
                     </button>
                 </form>
-                
+
                 <div className="auth-footer auth-footer-container">
                     <div className="auth-footer-links">
                         <Link to="/signup" className="auth-link auth-link-no-margin">New Student</Link>
