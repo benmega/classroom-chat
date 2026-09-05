@@ -37,7 +37,11 @@ def create_app(config_class=None):
     )
     if not os.path.exists(log_dir):
         os.makedirs(log_dir)
-    file_handler = logging.FileHandler(os.path.join(log_dir, "app.log"))
+    from logging.handlers import RotatingFileHandler
+
+    file_handler = RotatingFileHandler(
+        os.path.join(log_dir, "app.log"), maxBytes=10 * 1024 * 1024, backupCount=5
+    )
     file_handler.setFormatter(log_formatter)
 
     root_logger = logging.getLogger()
