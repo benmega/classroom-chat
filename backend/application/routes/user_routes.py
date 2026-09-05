@@ -1,7 +1,9 @@
 import os
 import re
+import threading
 import uuid
 from datetime import datetime
+from io import BytesIO
 
 from application.config import Config
 from application.decorators.api_response import api_response
@@ -387,26 +389,21 @@ def new_project():
                         400,
                     )
 
-        video_upload_failed = False
+        video_started = False
         if "project_video" in request.files:
             video_file = request.files["project_video"]
             if video_file.filename != "":
-                video_url = handle_video_s3_upload(
+                video_started = start_video_upload_thread(
                     video_file, user_obj, name, project_id=new_proj.id
                 )
-                if not video_url:
-                    video_upload_failed = True
 
         db.session.commit()
 
-        if video_upload_failed:
-            return {
-                "message": "Project created, but video upload failed. Please check your credentials.",
-                "project_id": new_proj.id,
-                "video_upload_failed": True,
-            }, 207
-
-        return {"message": "Project created successfully!", "project_id": new_proj.id}
+        return {
+            "message": "Project created successfully!",
+            "project_id": new_proj.id,
+            "video_processing": video_started,
+        }
 
     # GET logic
     if request.is_json or request.accept_mimetypes.accept_json:
@@ -476,28 +473,24 @@ def edit_project(project_id):
                         400,
                     )
 
-        video_upload_failed = False
+        video_started = False
         if "project_video" in request.files:
             video_file = request.files["project_video"]
             if video_file.filename != "":
-                video_url = handle_video_s3_upload(
+                video_started = start_video_upload_thread(
                     video_file, current_user, project.name, project_id=project.id
                 )
-                if not video_url:
-                    video_upload_failed = True
+                if not video_started:
+                    current_app.logger.warning(
+                        f"Video upload rejected for project {project.id}: invalid file."
+                    )
 
         db.session.commit()
-
-        if video_upload_failed:
-            return {
-                "message": "Project updated, but video upload failed.",
-                "project": project.to_dict(),
-                "video_upload_failed": True,
-            }, 207
 
         return {
             "message": "Project updated successfully!",
             "project": project.to_dict(),
+            "video_processing": video_started,
         }
 
     # GET logic
@@ -885,7 +878,75 @@ def handle_project_image_upload(file):
     return None
 
 
-def handle_video_s3_upload(file, user_obj, project_name, project_id):
+def _do_s3_upload(app, file_bytes, filename, content_type, username, project_name, project_id):
+    """
+    Performs the S3 upload in a background thread.
+
+    This runs outside the original Flask request context, so we push a fresh
+    app context and create our own DB session.  The caller must read the file
+    bytes into memory *before* the request context is torn down, then pass them
+    here as a plain ``bytes`` object.
+    """
+    with app.app_context():
+        ext = filename.rsplit(".", 1)[1].lower()
+        project_slug = secure_filename(project_name).replace("_", "-").lower()
+        s3_filename = f"{username}-{project_slug}.{ext}"
+
+        s3_client = get_s3_client()
+        if not s3_client:
+            app.logger.error("S3 client not initialized. Check AWS credentials.")
+            return
+
+        try:
+            from boto3.s3.transfer import TransferConfig
+
+            # Increase multipart threshold to 500 MB to force PutObject for videos.
+            # S3 triggers are often configured only for s3:ObjectCreated:Put,
+            # which ignores MultipartUpload events unless explicitly enabled.
+            config = TransferConfig(multipart_threshold=1024 * 1024 * 500)
+
+            s3_client.upload_fileobj(
+                BytesIO(file_bytes),
+                S3_UPLOAD_BUCKET,
+                s3_filename,
+                ExtraArgs={
+                    "ContentType": content_type or "video/mp4",
+                    "Metadata": {"project-id": str(project_id)},
+                },
+                Config=config,
+            )
+
+            region = os.environ.get("AWS_REGION", "ap-southeast-1")
+            video_url = (
+                f"https://{S3_UPLOAD_BUCKET}.s3.{region}.amazonaws.com/{s3_filename}"
+            )
+
+            project = db.session.get(Project, project_id)
+            if project:
+                project.video_url = video_url
+                db.session.commit()
+                app.logger.info(
+                    f"Background S3 upload complete for project {project_id}: {video_url}"
+                )
+
+        except Exception as e:
+            # NOTE: If S3 uploads or the transcriber Lambda fail, ensure AWS credentials
+            # and S3 bucket permissions are correctly configured. The Lambda trigger might
+            # need to be manually re-enabled if it was detached.
+            app.logger.exception(f"Background S3 Upload Error for project {project_id}: {e}")
+
+
+def start_video_upload_thread(file, user_obj, project_name, project_id):
+    """
+    Validates the uploaded video file, reads its bytes into memory, and starts a
+    background thread to push the file to S3.
+
+    Returns ``True`` if the thread was successfully started (validation passed),
+    ``False`` if the file is missing or has an unsupported extension.
+
+    The caller should respond to the client *after* calling this function; the
+    upload continues after the HTTP response has been sent.
+    """
     if not file or not getattr(file, "filename", ""):
         return False
 
@@ -897,51 +958,17 @@ def handle_video_s3_upload(file, user_obj, project_name, project_id):
     if ext not in allowed_exts:
         return False
 
-    project_slug = secure_filename(project_name).replace("_", "-").lower()
-    s3_filename = f"{user_obj.username}-{project_slug}.{ext}"
+    # Read all bytes while the request (and its file object) is still open.
+    file.seek(0)
+    file_bytes = file.read()
+    content_type = file.content_type or "video/mp4"
 
-    s3_client = get_s3_client()
-    if not s3_client:
-        current_app.logger.error("S3 client not initialized. Check AWS credentials.")
-        return False
+    app = current_app._get_current_object()  # unwrap LocalProxy for the thread
 
-    try:
-        from boto3.s3.transfer import TransferConfig
-
-        # Ensure full file is uploaded even if it was previously read
-        file.seek(0)
-
-        # Increase multipart threshold to 500MB to force PutObject for videos.
-        # S3 triggers are often configured only for s3:ObjectCreated:Put,
-        # which ignores MultipartUpload events unless explicitly enabled.
-        config = TransferConfig(multipart_threshold=1024 * 1024 * 500)
-
-        s3_client.upload_fileobj(
-            file,
-            S3_UPLOAD_BUCKET,
-            s3_filename,
-            ExtraArgs={
-                "ContentType": file.content_type or "video/mp4",
-                "Metadata": {"project-id": str(project_id)},
-            },
-            Config=config,
-        )
-
-        # Update project video URL
-        project = db.session.get(Project, project_id)
-        if project:
-            region = os.environ.get("AWS_REGION", "ap-southeast-1")
-            video_url = (
-                f"https://{S3_UPLOAD_BUCKET}.s3.{region}.amazonaws.com/{s3_filename}"
-            )
-            project.video_url = video_url
-            db.session.commit()
-            return video_url
-
-        return True
-    except Exception as e:
-        # NOTE: If S3 uploads or the transcriber Lambda fail, ensure AWS credentials
-        # and S3 bucket permissions are correctly configured. The Lambda trigger might
-        # need to be manually re-enabled if it was detached.
-        current_app.logger.exception(f"S3 Upload Error: {e}")
-        return False
+    t = threading.Thread(
+        target=_do_s3_upload,
+        args=(app, file_bytes, file.filename, content_type, user_obj.username, project_name, project_id),
+        daemon=True,
+    )
+    t.start()
+    return True

@@ -6,12 +6,17 @@ import './Modal.css';
 const Modal = ({ isOpen, onClose, title, children, maxWidth }) => {
     const modalRef = useRef(null);
 
+    const onCloseRef = useRef(onClose);
+    useEffect(() => {
+        onCloseRef.current = onClose;
+    }, [onClose]);
+
     useEffect(() => {
         if (!isOpen) return;
 
         const handleKeyDown = (e) => {
             if (e.key === 'Escape') {
-                onClose();
+                if (onCloseRef.current) onCloseRef.current();
             } else if (e.key === 'Tab') {
                 if (!modalRef.current) return;
                 
@@ -61,7 +66,7 @@ const Modal = ({ isOpen, onClose, title, children, maxWidth }) => {
             document.removeEventListener('keydown', handleKeyDown);
             document.body.style.overflow = originalStyle;
         };
-    }, [isOpen, onClose]);
+    }, [isOpen]);
 
     if (!isOpen) return null;
 

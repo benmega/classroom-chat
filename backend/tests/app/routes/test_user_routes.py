@@ -999,28 +999,29 @@ def test_get_parent_code_user_not_found(client, init_db):
     assert resp.status_code == 404
 
 
-def test_handle_video_s3_upload_helper(init_db, sample_user):
-    from application.routes.user_routes import handle_video_s3_upload
+def test_handle_video_s3_upload_helper(init_db, sample_user, app):
+    from application.routes.user_routes import start_video_upload_thread
 
-    # Invalid inputs
-    assert handle_video_s3_upload(None, sample_user, "Project", 1) is False
+    # Invalid inputs — validation rejections return False immediately
+    assert start_video_upload_thread(None, sample_user, "Project", 1) is False
 
     class DummyFileNoName:
         pass
 
-    assert handle_video_s3_upload(DummyFileNoName(), sample_user, "Project", 1) is False
+    assert start_video_upload_thread(DummyFileNoName(), sample_user, "Project", 1) is False
 
     class DummyFileNoExt:
         filename = "videofile"
 
-    assert handle_video_s3_upload(DummyFileNoExt(), sample_user, "Project", 1) is False
+    assert start_video_upload_thread(DummyFileNoExt(), sample_user, "Project", 1) is False
 
     class DummyFileBadExt:
         filename = "video.pdf"
 
-    assert handle_video_s3_upload(DummyFileBadExt(), sample_user, "Project", 1) is False
+    assert start_video_upload_thread(DummyFileBadExt(), sample_user, "Project", 1) is False
 
-    # Mock S3 upload success
+    # Valid file — should start the background thread and return True.
+    # We mock _do_s3_upload so the thread body is a no-op in tests.
     class DummyVideoFile:
         filename = "demo.mp4"
         content_type = "video/mp4"
@@ -1028,21 +1029,17 @@ def test_handle_video_s3_upload_helper(init_db, sample_user):
         def seek(self, pos):
             pass
 
+        def read(self):
+            return b"fake video bytes"
+
     project = Project(name="S3 Proj", user_id=sample_user.id)
     db.session.add(project)
     db.session.commit()
-    with patch("application.routes.user_routes.get_s3_client") as mock_get_s3:
-        mock_s3 = mock_get_s3.return_value
-        mock_s3.upload_fileobj = lambda *args, **kwargs: None
 
-        res = handle_video_s3_upload(DummyVideoFile(), sample_user, project.name, project.id)
-        assert res is not False
-        db.session.refresh(project)
-        assert "s3.ap-southeast-1.amazonaws.com" in project.video_url
-
-    # Test S3 client None
-    with patch("application.routes.user_routes.get_s3_client", return_value=None):
-        assert handle_video_s3_upload(DummyVideoFile(), sample_user, project.name, project.id) is False
+    with patch("application.routes.user_routes._do_s3_upload"):
+        with app.app_context():
+            res = start_video_upload_thread(DummyVideoFile(), sample_user, project.name, project.id)
+        assert res is True
 
 
 def test_new_and_edit_project_video_upload(client, init_db, sample_user):
@@ -1051,26 +1048,26 @@ def test_new_and_edit_project_video_upload(client, init_db, sample_user):
 
     video_file = (BytesIO(b"fake video content"), "test_video.mp4")
 
-    # 1. New project with video upload failure mock
-    with patch("application.routes.user_routes.handle_video_s3_upload", return_value=False):
+    # 1. New project — background thread is started, route returns 200 with video_processing=True
+    with patch("application.routes.user_routes.start_video_upload_thread", return_value=True):
         resp_new = client.post(
             "/user/project/new",
             data={"name": "Video Project", "project_video": video_file},
         )
-        assert resp_new.status_code == 207
-        assert resp_new.json["data"]["video_upload_failed"] is True
+        assert resp_new.status_code == 200
+        assert resp_new.json["data"]["video_processing"] is True
 
-    # 2. Edit project with video upload failure mock
+    # 2. Edit project — same behaviour
     project = Project.query.filter_by(name="Video Project").first()
     assert project is not None
 
-    with patch("application.routes.user_routes.handle_video_s3_upload", return_value=False):
+    with patch("application.routes.user_routes.start_video_upload_thread", return_value=True):
         resp_edit = client.post(
             f"/user/project/edit/{project.id}",
             data={"name": "Video Project Edit", "project_video": (BytesIO(b"video"), "vid.mp4")},
         )
-        assert resp_edit.status_code == 207
-        assert resp_edit.json["data"]["video_upload_failed"] is True
+        assert resp_edit.status_code == 200
+        assert resp_edit.json["data"]["video_processing"] is True
 
 
 def test_edit_profile_form_pfp_upload(client, init_db, sample_user):
