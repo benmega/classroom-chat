@@ -389,6 +389,8 @@ def new_project():
                         400,
                     )
 
+        db.session.commit()
+
         video_started = False
         if "project_video" in request.files:
             video_file = request.files["project_video"]
@@ -396,8 +398,6 @@ def new_project():
                 video_started = start_video_upload_thread(
                     video_file, user_obj, name, project_id=new_proj.id
                 )
-
-        db.session.commit()
 
         return {
             "message": "Project created successfully!",
@@ -473,6 +473,8 @@ def edit_project(project_id):
                         400,
                     )
 
+        db.session.commit()
+
         video_started = False
         if "project_video" in request.files:
             video_file = request.files["project_video"]
@@ -484,8 +486,6 @@ def edit_project(project_id):
                     current_app.logger.warning(
                         f"Video upload rejected for project {project.id}: invalid file."
                     )
-
-        db.session.commit()
 
         return {
             "message": "Project updated successfully!",

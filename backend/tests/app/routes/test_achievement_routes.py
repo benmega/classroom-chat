@@ -12,6 +12,33 @@ from application.extensions import db
 from application.models.achievements import Achievement, UserAchievement
 from application.models.user_certificate import UserCertificate
 
+from tests.factories import UserFactory, AdminFactory, AchievementFactory, UserAchievementFactory
+
+@pytest.fixture
+def test_user(init_db):
+    user = UserFactory()
+    db.session.commit()
+    return user
+
+@pytest.fixture
+def test_admin(init_db):
+    admin = AdminFactory()
+    db.session.commit()
+    return admin
+
+@pytest.fixture
+def test_achievement(init_db):
+    ach = AchievementFactory(type='ducks', requirement_value='100')
+    db.session.commit()
+    return ach
+
+@pytest.fixture
+def test_user_achievement(init_db, test_user, test_achievement):
+    ua = UserAchievementFactory(user_id=test_user.id, achievement_id=test_achievement.id)
+    db.session.commit()
+    return ua
+
+
 
 @pytest.fixture
 def mock_render_template(client):
@@ -24,11 +51,11 @@ def mock_render_template(client):
 
 
 def test_achievements_page(
-    client, init_db, sample_user, sample_achievement, mock_render_template
+    client, init_db, test_user, test_achievement, mock_render_template
 ):
     """Test retrieving achievements page with a logged-in user."""
     with client.session_transaction() as sess:
-        sess["user"] = sample_user.id
+        sess["user"] = test_user.id
 
     response = client.get("/achievements/")
     assert response.status_code == 200
@@ -37,22 +64,22 @@ def test_achievements_page(
 
 
 def test_achievements_page_with_user_achievements(
-    client, init_db, sample_user, sample_user_achievement, mock_render_template
+    client, init_db, test_user, test_user_achievement, mock_render_template
 ):
     """Test achievements page showing user's completed achievements."""
     with client.session_transaction() as sess:
-        sess["user"] = sample_user.id
+        sess["user"] = test_user.id
 
     response = client.get("/achievements/")
     assert response.status_code == 200
 
 
 def test_achievements_page_multiple_types(
-    client, init_db, sample_user, mock_render_template
+    client, init_db, test_user, mock_render_template
 ):
     """Test achievements page with multiple achievement types."""
     with client.session_transaction() as sess:
-        sess["user"] = sample_user.id
+        sess["user"] = test_user.id
 
     achievements = [
         Achievement(
@@ -95,10 +122,10 @@ def test_achievements_page_multiple_types(
     assert response.status_code == 200
 
 
-def test_add_achievement_post(client, init_db, sample_admin):
+def test_add_achievement_post(client, init_db, test_admin):
     """Test POST request to create a new achievement (Admin)."""
     with client.session_transaction() as sess:
-        sess["user"] = sample_admin.id
+        sess["user"] = test_admin.id
 
     response = client.post(
         "/achievements/add",
@@ -121,10 +148,10 @@ def test_add_achievement_post(client, init_db, sample_admin):
     assert ach.reward == 10
 
 
-def test_add_achievement_no_requirement(client, init_db, sample_admin):
+def test_add_achievement_no_requirement(client, init_db, test_admin):
     """Test creating achievement without requirement value."""
     with client.session_transaction() as sess:
-        sess["user"] = sample_admin.id
+        sess["user"] = test_admin.id
 
     response = client.post(
         "/achievements/add",
@@ -165,24 +192,23 @@ def test_add_achievement_no_user(client, init_db):
     assert response.status_code == 401
 
 
-def test_submit_certificate_get(client, init_db, sample_user, mock_render_template):
+def test_submit_certificate_get(client, init_db, test_user, mock_render_template):
     """Test GET request to submit certificate page."""
     with client.session_transaction() as sess:
-        sess["user"] = sample_user.id
+        sess["user"] = test_user.id
 
     response = client.get("/achievements/submit_certificate")
     assert response.status_code == 200
     assert b"Mocked Template Content" in response.data
 
 
-@patch("application.utilities.cert_generator.generate_certificate")
-def test_submit_certificate_valid(mock_gen, client, init_db, sample_user, sample_achievement):
+def test_submit_certificate_valid(client, init_db, test_user, test_achievement):
     """Test submitting a valid certificate via AJAX."""
     with client.session_transaction() as sess:
-        sess["user"] = sample_user.id
+        sess["user"] = test_user.id
 
     valid_url = (
-        f"https://codecombat.com/certificates/abc123?course={sample_achievement.slug}"
+        f"https://codecombat.com/certificates/abc123?course={test_achievement.slug}"
     )
 
     # Use X-Requested-With to get a JSON response
@@ -200,15 +226,15 @@ def test_submit_certificate_valid(mock_gen, client, init_db, sample_user, sample
 
     cert = UserCertificate.query.filter_by(url=valid_url).first()
     assert cert is not None
-    assert cert.user_id == sample_user.id
+    assert cert.user_id == test_user.id
     assert cert.status == "pending"
     assert cert.is_auto_recommended is True
 
 
-def test_submit_certificate_invalid_url(client, init_db, sample_user):
+def test_submit_certificate_invalid_url(client, init_db, test_user):
     """Test submitting certificate with invalid URL."""
     with client.session_transaction() as sess:
-        sess["user"] = sample_user.id
+        sess["user"] = test_user.id
 
     initial_count = db.session.query(UserCertificate).count()
 
@@ -230,10 +256,10 @@ def test_submit_certificate_invalid_url(client, init_db, sample_user):
     assert "Invalid certificate URL" in response.json.get("error", "")
 
 
-def test_submit_certificate_no_matching_achievement(client, init_db, sample_user):
+def test_submit_certificate_no_matching_achievement(client, init_db, test_user):
     """Test submitting certificate for non-existent achievement."""
     with client.session_transaction() as sess:
-        sess["user"] = sample_user.id
+        sess["user"] = test_user.id
 
     initial_count = db.session.query(UserCertificate).count()
 
@@ -257,18 +283,17 @@ def test_submit_certificate_no_matching_achievement(client, init_db, sample_user
 
 
 
-@patch("application.utilities.cert_generator.generate_certificate")
 def test_submit_certificate_update_existing(
-    mock_gen, client, init_db, sample_user, sample_achievement
+    client, init_db, test_user, test_achievement
 ):
     """Test updating an existing certificate submission."""
     with client.session_transaction() as sess:
-        sess["user"] = sample_user.id
+        sess["user"] = test_user.id
 
     # Pre-seed a certificate
     initial_cert = UserCertificate(
-        user_id=sample_user.id,
-        achievement_id=sample_achievement.id,
+        user_id=test_user.id,
+        achievement_id=test_achievement.id,
         url="https://codecombat.com/certificates/old?course=test",
         file_path="old.pdf",
     )
@@ -279,7 +304,7 @@ def test_submit_certificate_update_existing(
 
     # Submit new data
     new_url = (
-        f"https://codecombat.com/certificates/new?course={sample_achievement.slug}"
+        f"https://codecombat.com/certificates/new?course={test_achievement.slug}"
     )
 
     response = client.post(
@@ -324,24 +349,24 @@ def test_achievements_page_no_user(client, init_db):
     assert "User not found" in response.json["error"]
 
 
-def test_add_achievement_get(client, init_db, sample_admin, mock_render_template):
+def test_add_achievement_get(client, init_db, test_admin, mock_render_template):
     """Test GET request to add achievement page."""
     with client.session_transaction() as sess:
-        sess["user"] = sample_admin.id
+        sess["user"] = test_admin.id
 
     response = client.get("/achievements/add")
     assert response.status_code == 200
     assert b"Mocked Template Content" in response.data
 
 
-def test_user_achievement_uniqueness(init_db, sample_user, sample_achievement):
+def test_user_achievement_uniqueness(init_db, test_user, test_achievement):
     """Test that the same achievement cannot be earned twice by a user."""
-    ua1 = UserAchievement(user_id=sample_user.id, achievement_id=sample_achievement.id)
+    ua1 = UserAchievement(user_id=test_user.id, achievement_id=test_achievement.id)
     db.session.add(ua1)
     db.session.commit()
 
     # Try to create duplicate
-    ua2 = UserAchievement(user_id=sample_user.id, achievement_id=sample_achievement.id)
+    ua2 = UserAchievement(user_id=test_user.id, achievement_id=test_achievement.id)
     db.session.add(ua2)
 
     # We expect a Database Integrity Error
@@ -431,14 +456,14 @@ def test_achievement_reward_values(init_db):
     assert huge.reward == 500
 
 
-def test_user_achievement_earned_at_timestamp(init_db, sample_user, sample_achievement):
+def test_user_achievement_earned_at_timestamp(init_db, test_user, test_achievement):
     """Test that earned_at timestamp is set when achievement is earned."""
     from datetime import datetime
 
     before_time = datetime.utcnow()
 
     user_achievement = UserAchievement(
-        user_id=sample_user.id, achievement_id=sample_achievement.id
+        user_id=test_user.id, achievement_id=test_achievement.id
     )
     db.session.add(user_achievement)
     db.session.commit()
@@ -450,7 +475,7 @@ def test_user_achievement_earned_at_timestamp(init_db, sample_user, sample_achie
     assert before_time <= user_achievement.earned_at <= after_time
 
 
-def test_calculate_consistency_year_transition(init_db, sample_user):
+def test_calculate_consistency_year_transition(init_db, test_user):
     """Test that consistency streak handles 53-week year transitions correctly."""
     from datetime import datetime
 
@@ -466,19 +491,19 @@ def test_calculate_consistency_year_transition(init_db, sample_user):
     ts_w1 = datetime(2021, 1, 5)
 
     log1 = ChallengeLog(
-        user_id=sample_user.id,
+        user_id=test_user.id,
         domain="python",
         challenge_slug="challenge-1",
         timestamp=ts_w52,
     )
     log2 = ChallengeLog(
-        user_id=sample_user.id,
+        user_id=test_user.id,
         domain="python",
         challenge_slug="challenge-2",
         timestamp=ts_w53,
     )
     log3 = ChallengeLog(
-        user_id=sample_user.id,
+        user_id=test_user.id,
         domain="python",
         challenge_slug="challenge-3",
         timestamp=ts_w1,
@@ -487,21 +512,21 @@ def test_calculate_consistency_year_transition(init_db, sample_user):
     db.session.add_all([log1, log2, log3])
     db.session.commit()
 
-    streak = _calculate_consistency(sample_user.id)
+    streak = _calculate_consistency(test_user.id)
     assert streak == 3
 
 
-def test_add_achievement_get_json(client, init_db, sample_admin):
+def test_add_achievement_get_json(client, init_db, test_admin):
     with client.session_transaction() as sess:
-        sess["user"] = sample_admin.id
+        sess["user"] = test_admin.id
     response = client.get("/achievements/add", headers={"Accept": "application/json"})
     assert response.status_code == 200
     assert response.json["status"] == "ready"
 
 
-def test_add_achievement_post_json(client, init_db, sample_admin):
+def test_add_achievement_post_json(client, init_db, test_admin):
     with client.session_transaction() as sess:
-        sess["user"] = sample_admin.id
+        sess["user"] = test_admin.id
     response = client.post(
         "/achievements/add",
         json={
@@ -518,9 +543,9 @@ def test_add_achievement_post_json(client, init_db, sample_admin):
     assert ach is not None
 
 
-def test_add_achievement_missing_fields(client, init_db, sample_admin):
+def test_add_achievement_missing_fields(client, init_db, test_admin):
     with client.session_transaction() as sess:
-        sess["user"] = sample_admin.id
+        sess["user"] = test_admin.id
     response = client.post("/achievements/add", data={"name": ""})
     assert response.status_code == 400
     assert response.json["status"] == "error"
@@ -528,15 +553,15 @@ def test_add_achievement_missing_fields(client, init_db, sample_admin):
 
 
 def test_add_achievement_duplicate_slug(
-    client, init_db, sample_admin, sample_achievement
+    client, init_db, test_admin, test_achievement
 ):
     with client.session_transaction() as sess:
-        sess["user"] = sample_admin.id
+        sess["user"] = test_admin.id
     response = client.post(
         "/achievements/add",
         data={
             "name": "Duplicate",
-            "slug": sample_achievement.slug,
+            "slug": test_achievement.slug,
             "type": "ducks",
             "reward": 10,
         },
@@ -557,11 +582,11 @@ def test_add_achievement_with_badge(
     mock_save,
     client,
     init_db,
-    sample_admin,
+    test_admin,
 ):
     mock_allowed.return_value = True
     with client.session_transaction() as sess:
-        sess["user"] = sample_admin.id
+        sess["user"] = test_admin.id
 
     img_data = b"fake image"
     img_file = (BytesIO(img_data), "badge.png")
@@ -584,10 +609,10 @@ def test_add_achievement_with_badge(
 
 
 @patch("application.routes.achievement_routes.allowed_file")
-def test_add_achievement_invalid_badge_ext(mock_allowed, client, init_db, sample_admin):
+def test_add_achievement_invalid_badge_ext(mock_allowed, client, init_db, test_admin):
     mock_allowed.return_value = False
     with client.session_transaction() as sess:
-        sess["user"] = sample_admin.id
+        sess["user"] = test_admin.id
 
     img_data = b"fake image"
     img_file = (BytesIO(img_data), "badge.txt")
@@ -612,7 +637,7 @@ def test_add_achievement_invalid_badge_ext(mock_allowed, client, init_db, sample
 @patch("application.routes.achievement_routes.allowed_file")
 @patch("application.routes.achievement_routes.subprocess.run")
 def test_add_achievement_badge_subprocess_fail(
-    mock_subprocess, mock_allowed, mock_save, client, init_db, sample_admin
+    mock_subprocess, mock_allowed, mock_save, client, init_db, test_admin
 ):
     import subprocess
 
@@ -621,7 +646,7 @@ def test_add_achievement_badge_subprocess_fail(
         1, "cmd", stderr="error"
     )
     with client.session_transaction() as sess:
-        sess["user"] = sample_admin.id
+        sess["user"] = test_admin.id
 
     img_file = (BytesIO(b"fake image"), "badge.png")
     response = client.post(
@@ -643,12 +668,12 @@ def test_add_achievement_badge_subprocess_fail(
 @patch("application.routes.achievement_routes.allowed_file")
 @patch("application.routes.achievement_routes.subprocess.run")
 def test_add_achievement_badge_subprocess_exception(
-    mock_subprocess, mock_allowed, mock_save, client, init_db, sample_admin
+    mock_subprocess, mock_allowed, mock_save, client, init_db, test_admin
 ):
     mock_allowed.return_value = True
     mock_subprocess.side_effect = Exception("unexpected error")
     with client.session_transaction() as sess:
-        sess["user"] = sample_admin.id
+        sess["user"] = test_admin.id
 
     img_file = (BytesIO(b"fake image"), "badge.png")
     response = client.post(
@@ -666,9 +691,9 @@ def test_add_achievement_badge_subprocess_exception(
     assert response.json["status"] == "error"
 
 
-def test_submit_certificate_get_json(client, init_db, sample_user):
+def test_submit_certificate_get_json(client, init_db, test_user):
     with client.session_transaction() as sess:
-        sess["user"] = sample_user.id
+        sess["user"] = test_user.id
     response = client.get(
         "/achievements/submit_certificate", headers={"Accept": "application/json"}
     )
@@ -677,18 +702,18 @@ def test_submit_certificate_get_json(client, init_db, sample_user):
 
 
 def test_view_certificate(
-    client, init_db, sample_admin, sample_user, sample_achievement
+    client, init_db, test_admin, test_user, test_achievement
 ):
     cert = UserCertificate(
-        user_id=sample_user.id,
-        achievement_id=sample_achievement.id,
+        user_id=test_user.id,
+        achievement_id=test_achievement.id,
         url="http://test",
         file_path="test.pdf",
     )
     db.session.add(cert)
     db.session.commit()
     with client.session_transaction() as sess:
-        sess["user"] = sample_admin.id
+        sess["user"] = test_admin.id
 
     with patch(
         "application.routes.achievement_routes.os.path.exists", return_value=False
@@ -709,12 +734,12 @@ def test_view_certificate(
         assert response.status_code == 200
 
 
-def test_view_certificate_is_public(client, init_db, sample_user, sample_achievement):
+def test_view_certificate_is_public(client, init_db, test_user, test_achievement):
     """Certificate viewing is intentionally public (no login required) —
     this is a disclosed and accepted tradeoff, not an oversight."""
     cert = UserCertificate(
-        user_id=sample_user.id,
-        achievement_id=sample_achievement.id,
+        user_id=test_user.id,
+        achievement_id=test_achievement.id,
         url="http://test",
         file_path="test.pdf",
     )
@@ -734,24 +759,24 @@ def test_view_certificate_is_public(client, init_db, sample_user, sample_achieve
         assert response.status_code == 200
 
 
-def test_admin_certificates(client, init_db, sample_admin):
+def test_admin_certificates(client, init_db, test_admin):
     with client.session_transaction() as sess:
-        sess["user"] = sample_admin.id
+        sess["user"] = test_admin.id
     response = client.get("/achievements/admin/certificates")
     assert response.status_code == 200
 
 
-def test_mark_reviewed(client, init_db, sample_admin, sample_user, sample_achievement):
+def test_mark_reviewed(client, init_db, test_admin, test_user, test_achievement):
     cert = UserCertificate(
-        user_id=sample_user.id,
-        achievement_id=sample_achievement.id,
+        user_id=test_user.id,
+        achievement_id=test_achievement.id,
         url="http://test",
         file_path="test.pdf",
     )
     db.session.add(cert)
     db.session.commit()
     with client.session_transaction() as sess:
-        sess["user"] = sample_admin.id
+        sess["user"] = test_admin.id
 
     response = client.post(
         f"/achievements/admin/certificates/reviewed/{cert.id}",
@@ -767,17 +792,17 @@ def test_mark_reviewed(client, init_db, sample_admin, sample_user, sample_achiev
     assert response2.status_code == 302
 
 
-def test_reject_certificate(client, init_db, sample_admin, sample_user, sample_achievement):
+def test_reject_certificate(client, init_db, test_admin, test_user, test_achievement):
     cert = UserCertificate(
-        user_id=sample_user.id,
-        achievement_id=sample_achievement.id,
+        user_id=test_user.id,
+        achievement_id=test_achievement.id,
         url="http://test",
         file_path="test.pdf",
     )
     db.session.add(cert)
     db.session.commit()
     with client.session_transaction() as sess:
-        sess["user"] = sample_admin.id
+        sess["user"] = test_admin.id
 
     response = client.post(
         f"/achievements/admin/certificates/reject/{cert.id}",
@@ -797,18 +822,18 @@ def test_reject_certificate(client, init_db, sample_admin, sample_user, sample_a
 
 
 def test_download_certificate(
-    client, init_db, sample_admin, sample_user, sample_achievement
+    client, init_db, test_admin, test_user, test_achievement
 ):
     cert = UserCertificate(
-        user_id=sample_user.id,
-        achievement_id=sample_achievement.id,
+        user_id=test_user.id,
+        achievement_id=test_achievement.id,
         url="http://test",
         file_path="test.pdf",
     )
     db.session.add(cert)
     db.session.commit()
     with client.session_transaction() as sess:
-        sess["user"] = sample_admin.id
+        sess["user"] = test_admin.id
 
     with patch(
         "application.routes.achievement_routes.os.path.exists", return_value=False
@@ -830,19 +855,19 @@ def test_download_certificate(
 
 
 def test_mark_all_reviewed(
-    client, init_db, sample_admin, sample_user, sample_achievement
+    client, init_db, test_admin, test_user, test_achievement
 ):
     # Just need one cert to test the logic
     cert1 = UserCertificate(
-        user_id=sample_user.id,
-        achievement_id=sample_achievement.id,
+        user_id=test_user.id,
+        achievement_id=test_achievement.id,
         url="http://test1",
         file_path="test1.pdf",
     )
     db.session.add(cert1)
     db.session.commit()
     with client.session_transaction() as sess:
-        sess["user"] = sample_admin.id
+        sess["user"] = test_admin.id
 
     response = client.post(
         "/achievements/admin/certificates/reviewed/all",
@@ -864,20 +889,20 @@ def test_download_all_certificates(
     mock_bytesio,
     client,
     init_db,
-    sample_admin,
-    sample_user,
-    sample_achievement,
+    test_admin,
+    test_user,
+    test_achievement,
 ):
     with client.session_transaction() as sess:
-        sess["user"] = sample_admin.id
+        sess["user"] = test_admin.id
 
     # No certs
     response = client.get("/achievements/admin/certificates/download_all")
     assert response.status_code == 302
 
     cert = UserCertificate(
-        user_id=sample_user.id,
-        achievement_id=sample_achievement.id,
+        user_id=test_user.id,
+        achievement_id=test_achievement.id,
         url="http://test",
         file_path="test.pdf",
     )
@@ -896,26 +921,26 @@ def test_download_all_certificates(
         assert response.status_code == 200
 
 
-def test_admin_certificate_templates(client, init_db, sample_admin):
+def test_admin_certificate_templates(client, init_db, test_admin):
     with client.session_transaction() as sess:
-        sess["user"] = sample_admin.id
+        sess["user"] = test_admin.id
     response = client.get("/achievements/admin/certificate_templates")
     assert response.status_code == 200
     assert "templates" in response.json.get("data", response.json)
 
 
-def test_admin_certificate_templates_view(client, init_db, sample_admin):
+def test_admin_certificate_templates_view(client, init_db, test_admin):
     with client.session_transaction() as sess:
-        sess["user"] = sample_admin.id
+        sess["user"] = test_admin.id
     with patch("application.routes.achievement_routes.send_from_directory", return_value="fake_file"):
         response = client.get("/achievements/admin/certificate_templates/cs-1/view")
         assert response.status_code == 200
 
 
-def test_admin_certificate_templates_upload(client, init_db, sample_admin):
+def test_admin_certificate_templates_upload(client, init_db, test_admin):
     from io import BytesIO
     with client.session_transaction() as sess:
-        sess["user"] = sample_admin.id
+        sess["user"] = test_admin.id
     img_data = b"fake pdf content"
     img_file = (BytesIO(img_data), "template.pdf")
     with patch("werkzeug.datastructures.FileStorage.save"):
@@ -928,9 +953,9 @@ def test_admin_certificate_templates_upload(client, init_db, sample_admin):
         assert response.json["success"] is True
 
 
-def test_admin_certificate_templates_test_generate(client, init_db, sample_admin):
+def test_admin_certificate_templates_test_generate(client, init_db, test_admin):
     with client.session_transaction() as sess:
-        sess["user"] = sample_admin.id
+        sess["user"] = test_admin.id
     with patch("application.utilities.cert_generator.generate_certificate", return_value=b"fake pdf content"), patch("application.routes.achievement_routes.send_file", return_value="fake_file"):
         response = client.post(
             "/achievements/admin/certificate_templates/cs-1/test_generate",
@@ -939,9 +964,9 @@ def test_admin_certificate_templates_test_generate(client, init_db, sample_admin
         assert response.status_code == 200
 
 
-def test_get_achievements_json_success(client, init_db, sample_user, sample_achievement):
+def test_get_achievements_json_success(client, init_db, test_user, test_achievement):
     with client.session_transaction() as sess:
-        sess["user"] = sample_user.id
+        sess["user"] = test_user.id
 
     response = client.get("/achievements/all")
     assert response.status_code == 200
@@ -956,11 +981,11 @@ def test_get_achievements_json_no_user(client, init_db):
     assert response.get_json()["error"] == "User not found!"
 
 
-def test_submit_certificate_generation_failure(client, init_db, sample_user, sample_achievement):
+def test_submit_certificate_generation_failure(client, init_db, test_user, test_achievement):
     with client.session_transaction() as sess:
-        sess["user"] = sample_user.id
+        sess["user"] = test_user.id
 
-    valid_url = f"https://codecombat.com/certificates/abc123?course={sample_achievement.slug}"
+    valid_url = f"https://codecombat.com/certificates/abc123?course={test_achievement.slug}"
 
     with patch("application.utilities.cert_generator.generate_certificate", side_effect=Exception("Generator Failed")):
         response = client.post(
@@ -973,9 +998,9 @@ def test_submit_certificate_generation_failure(client, init_db, sample_user, sam
         assert "Failed to generate certificate" in response.get_json()["error"]
 
 
-def test_admin_certificate_templates_view_fallback_and_error(client, init_db, sample_admin):
+def test_admin_certificate_templates_view_fallback_and_error(client, init_db, test_admin):
     with client.session_transaction() as sess:
-        sess["user"] = sample_admin.id
+        sess["user"] = test_admin.id
 
     # Fallback preview generation
     with patch("os.path.exists", return_value=False), patch("application.utilities.cert_generator.generate_certificate", return_value=b"generated pdf"):
@@ -989,9 +1014,9 @@ def test_admin_certificate_templates_view_fallback_and_error(client, init_db, sa
         assert response.get_json()["error"] == "Render error"
 
 
-def test_admin_certificate_templates_upload_invalid_file(client, init_db, sample_admin):
+def test_admin_certificate_templates_upload_invalid_file(client, init_db, test_admin):
     with client.session_transaction() as sess:
-        sess["user"] = sample_admin.id
+        sess["user"] = test_admin.id
 
     # No file uploaded
     res1 = client.post("/achievements/admin/certificate_templates/cs-1/upload", data={})
@@ -1009,9 +1034,9 @@ def test_admin_certificate_templates_upload_invalid_file(client, init_db, sample
     assert res2.get_json()["error"] == "Only PDF files allowed"
 
 
-def test_admin_certificate_templates_test_generate_error(client, init_db, sample_admin):
+def test_admin_certificate_templates_test_generate_error(client, init_db, test_admin):
     with client.session_transaction() as sess:
-        sess["user"] = sample_admin.id
+        sess["user"] = test_admin.id
 
     with patch("application.utilities.cert_generator.generate_certificate", side_effect=Exception("Test gen error")):
         response = client.post(

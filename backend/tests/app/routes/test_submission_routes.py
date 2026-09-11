@@ -9,10 +9,12 @@ from io import BytesIO
 
 from application.extensions import db
 from application.models.submission import Submission
+from tests.factories import UserFactory
 
 
-def test_submit_work_creates_submission(client, init_db, sample_user):
+def test_submit_work_creates_submission(client, init_db):
     """A logged-in student can POST a file to /api/submissions and a row is created."""
+    sample_user = UserFactory()
     with client.session_transaction() as sess:
         sess["user"] = sample_user.id
 
@@ -68,11 +70,16 @@ def _create_submission(sample_user):
     return submission
 
 
-def test_mark_reviewed_persists_teacher_note(client, init_db, sample_user, logged_in_admin):
+def test_mark_reviewed_persists_teacher_note(client, init_db):
     """Marking a submission reviewed with a teacher_note persists and round-trips it."""
+    sample_user = UserFactory()
+    admin_user = UserFactory(role="admin", is_approved=True)
     submission = _create_submission(sample_user)
 
-    response = logged_in_admin.post(
+    with client.session_transaction() as sess:
+        sess["user"] = admin_user.id
+
+    response = client.post(
         f"/api/admin/submissions/{submission.id}/mark-reviewed",
         json={"teacher_note": "Great work, see you tomorrow!"},
     )
@@ -90,11 +97,16 @@ def test_mark_reviewed_persists_teacher_note(client, init_db, sample_user, logge
     assert stored.to_dict()["teacher_note"] == "Great work, see you tomorrow!"
 
 
-def test_mark_reviewed_without_teacher_note(client, init_db, sample_user, logged_in_admin):
+def test_mark_reviewed_without_teacher_note(client, init_db):
     """Marking reviewed with no body still works and leaves teacher_note unset."""
+    sample_user = UserFactory()
+    admin_user = UserFactory(role="admin", is_approved=True)
     submission = _create_submission(sample_user)
 
-    response = logged_in_admin.post(
+    with client.session_transaction() as sess:
+        sess["user"] = admin_user.id
+
+    response = client.post(
         f"/api/admin/submissions/{submission.id}/mark-reviewed"
     )
 
@@ -105,11 +117,16 @@ def test_mark_reviewed_without_teacher_note(client, init_db, sample_user, logged
     assert returned["teacher_note"] is None
 
 
-def test_mark_reviewed_requires_admin(client, init_db, sample_user, logged_in_client):
+def test_mark_reviewed_requires_admin(client, init_db):
     """A non-admin logged-in user cannot mark a submission reviewed."""
+    sample_user = UserFactory()
+    regular_user = UserFactory(role="student", is_approved=True)
     submission = _create_submission(sample_user)
 
-    response = logged_in_client.post(
+    with client.session_transaction() as sess:
+        sess["user"] = regular_user.id
+
+    response = client.post(
         f"/api/admin/submissions/{submission.id}/mark-reviewed",
         json={"teacher_note": "sneaky"},
     )

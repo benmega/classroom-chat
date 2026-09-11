@@ -173,19 +173,14 @@ def add_sample_user(init_db):
     def _add_user(
         username, password, earned_ducks=0, profile_picture="Default_pfp.jpg"
     ):
-        existing_user = User.query.filter_by(username=username).first()
-        if existing_user:
-            db.session.delete(existing_user)
-            db.session.commit()
-
-        user = User(
+        from tests.factories import UserFactory
+        user = UserFactory(
             username=username,
-            password_hash=password,
             earned_ducks=earned_ducks,
             duck_balance=earned_ducks,
             profile_picture=profile_picture,
         )
-        db.session.add(user)
+        user.set_password(password)
         db.session.commit()
         return user
 
@@ -197,13 +192,13 @@ def sample_user_with_ducks(test_app):
     with test_app.app_context():
         db.create_all()
         try:
-            user = User(
+            from tests.factories import UserFactory
+            user = UserFactory(
                 username="user_with_ducks",
-                password_hash="test_password",
                 earned_ducks=50,
                 duck_balance=50,
             )
-            db.session.add(user)
+            user.set_password("test_password")
             db.session.commit()
             yield user
         except Exception:
@@ -223,8 +218,9 @@ def sample_user_with_ducks(test_app):
 
 @pytest.fixture
 def sample_challenge(init_db):
+    from tests.factories import ChallengeFactory
     slug = f"sample-challenge-{generate_random_slug()}"
-    challenge = Challenge(
+    challenge = ChallengeFactory(
         name=f"Sample Challenge-{generate_random_slug()}",
         slug=slug,
         domain="Test Domain",
@@ -232,33 +228,24 @@ def sample_challenge(init_db):
         value=10,
         is_active=True,
     )
-    db.session.add(challenge)
-    db.session.commit()
     return challenge
 
 
 @pytest.fixture
 def sample_user(init_db):
+    from tests.factories import UserFactory
     username = f"user_{uuid.uuid4().hex[:8]}"
-    user = User(username=username, is_approved=True)
-    user.set_password("hashedpassword")  # Use set_password for proper hashing
-    db.session.add(user)
+    user = UserFactory(username=username, is_approved=True)
+    user.set_password("hashedpassword")
     db.session.commit()
     return user
 
 
 @pytest.fixture
 def sample_admin(init_db):
-    username = TestingConfig.ADMIN_USERNAME
-    password = TestingConfig.ADMIN_PASSWORD
-    admin_user = User(
-        username=username,
-        password_hash=password,
-        earned_ducks=0,
-        duck_balance=0,
-        role="admin",
-    )
-    db.session.add(admin_user)
+    from tests.factories import AdminFactory
+    admin_user = AdminFactory(is_approved=True)
+    admin_user.set_password("hashedpassword")
     db.session.commit()
     return admin_user
 
@@ -272,21 +259,26 @@ def logged_in_admin(client, sample_admin):
 
 @pytest.fixture
 def sample_challenge_log(init_db):
-    unique_username = f"user_{uuid.uuid4()}"
-    unique_user = User(username=unique_username, password_hash="test")
-    db.session.add(unique_user)
-    db.session.commit()
-    unique_slug = f"challenge-slug-{uuid.uuid4()}"
-    challenge_log = ChallengeLog(
-        user_id=unique_user.id,
+    from tests.factories import ChallengeLogFactory
+    challenge_log = ChallengeLogFactory(
         domain="codecombat.com",
-        challenge_slug=unique_slug,
+        challenge_slug=f"challenge-slug-{uuid.uuid4()}",
         course_id="12345",
         course_instance="spring2025",
     )
-    db.session.add(challenge_log)
-    db.session.commit()
     return challenge_log
+
+
+@pytest.fixture
+def sample_classroom(init_db, sample_user):
+    from tests.factories import ClassroomFactory
+    classroom = ClassroomFactory(
+        name="Test Classroom",
+        language="python",
+        description="A test classroom",
+        teacher_id=sample_user.id,
+    )
+    return classroom
 
 
 @pytest.fixture
@@ -318,43 +310,43 @@ def sample_banned_words(init_db):
 
 @pytest.fixture
 def sample_configuration(init_db):
-    config = Configuration(
+    from tests.factories import ConfigurationFactory
+    config = ConfigurationFactory(
         ai_teacher_enabled=True,
         message_sending_enabled=True,
-        # Added multiplier here to support new tests without breaking old ones
-        duck_multiplier=1,
+        duck_multiplier=1.0,
     )
-    db.session.add(config)
-    db.session.commit()
     return config
 
 
 @pytest.fixture
 def sample_users(init_db):
-    user1 = User(username=f"User_{uuid.uuid4().hex[:8]}", password_hash="test")
-    user2 = User(username=f"User_{uuid.uuid4().hex[:8]}", password_hash="test")
-    db.session.add_all([user1, user2])
+    from tests.factories import UserFactory
+    user1 = UserFactory(username=f"User_{uuid.uuid4().hex[:8]}")
+    user1.set_password("test")
+    user2 = UserFactory(username=f"User_{uuid.uuid4().hex[:8]}")
+    user2.set_password("test")
     db.session.commit()
     return [user1, user2]
 
 
 @pytest.fixture
 def sample_course(init_db):
-    course = Course(
+    from tests.factories import CourseFactory
+    course = CourseFactory(
         id=f"course_{uuid.uuid4().hex[:8]}",
         name="Intro to Programming",
         domain="codecombat.com",
         description="Learn the basics of programming.",
         is_active=True,
     )
-    db.session.add(course)
-    db.session.commit()
     return course
 
 
 @pytest.fixture
 def sample_message(init_db, sample_user, sample_classroom):
-    message = Message(
+    from tests.factories import MessageFactory
+    message = MessageFactory(
         user_id=sample_user.id,
         content="This is a test message.",
         message_type="text",
@@ -362,29 +354,25 @@ def sample_message(init_db, sample_user, sample_classroom):
         is_global=False,
         target_live=False,
     )
-    db.session.add(message)
-    db.session.commit()
     return message
 
 
 @pytest.fixture
 def sample_project(init_db, sample_user):
-    project = Project(
+    from tests.factories import ProjectFactory
+    project = ProjectFactory(
         name=f"Project_{uuid.uuid4().hex[:8]}",
         description="This is a sample project description.",
         link="http://example.com",
         user_id=sample_user.id,
     )
-    db.session.add(project)
-    db.session.commit()
     return project
 
 
 @pytest.fixture
 def sample_skill(init_db, sample_user):
-    skill = Skill(name="Python", user_id=sample_user.id)
-    db.session.add(skill)
-    db.session.commit()
+    from tests.factories import SkillFactory
+    skill = SkillFactory(name="Python", user_id=sample_user.id)
     return skill
 
 
@@ -411,28 +399,22 @@ def auth_headers(sample_admin):
 
 @pytest.fixture
 def sample_duck_trade(init_db, sample_user):
-    try:
-        from application.models.duck_trade import DuckTradeLog
-
-        sample_user.duck_balance = 100
-        trade = DuckTradeLog(
-            user_id=sample_user.id,
-            digital_ducks=1,
-            bit_ducks=[1, 0, 0, 0, 0, 0, 0],
-            byte_ducks=[0, 0, 0, 0, 0, 0, 0],
-            status="pending",
-        )
-        db.session.add(trade)
-        db.session.commit()
-        trade = db.session.get(DuckTradeLog, trade.id)
-        return trade
-    except ImportError:
-        return None
+    from tests.factories import DuckTradeLogFactory
+    sample_user.duck_balance = 100
+    trade = DuckTradeLogFactory(
+        user_id=sample_user.id,
+        digital_ducks=1,
+        bit_ducks=[1, 0, 0, 0, 0, 0, 0],
+        byte_ducks=[0, 0, 0, 0, 0, 0, 0],
+        status="pending",
+    )
+    return trade
 
 
 @pytest.fixture
 def sample_achievement(init_db):
-    achievement = Achievement(
+    from tests.factories import AchievementFactory
+    achievement = AchievementFactory(
         name="Python Master",
         slug="python-basics",
         type="certificate",
@@ -441,24 +423,22 @@ def sample_achievement(init_db):
         requirement_value="100",
         source="codecombat.com",
     )
-    db.session.add(achievement)
-    db.session.commit()
     return achievement
 
 
 @pytest.fixture
 def sample_user_achievement(init_db, sample_user, sample_achievement):
-    user_achievement = UserAchievement(
+    from tests.factories import UserAchievementFactory
+    user_achievement = UserAchievementFactory(
         user_id=sample_user.id, achievement_id=sample_achievement.id
     )
-    db.session.add(user_achievement)
-    db.session.commit()
     return user_achievement
 
 
 @pytest.fixture
 def sample_ducks_achievement(init_db):
-    achievement = Achievement(
+    from tests.factories import AchievementFactory
+    achievement = AchievementFactory(
         name="Duck Collector",
         slug="duck-collector-50",
         type="ducks",
@@ -466,14 +446,13 @@ def sample_ducks_achievement(init_db):
         description="Collect 50 ducks",
         requirement_value="50",
     )
-    db.session.add(achievement)
-    db.session.commit()
     return achievement
 
 
 @pytest.fixture
 def sample_chat_achievement(init_db):
-    achievement = Achievement(
+    from tests.factories import AchievementFactory
+    achievement = AchievementFactory(
         name="First Message",
         slug="first-message",
         type="chat",
@@ -481,15 +460,14 @@ def sample_chat_achievement(init_db):
         description="Send your first message",
         requirement_value="1",
     )
-    db.session.add(achievement)
-    db.session.commit()
     return achievement
 
 
 @pytest.fixture
 def sample_new_achievements(init_db):
+    from tests.factories import AchievementFactory
     achievements = [
-        Achievement(
+        AchievementFactory(
             name="First Message",
             slug="first-message",
             type="chat",
@@ -497,7 +475,7 @@ def sample_new_achievements(init_db):
             description="Send your first message",
             requirement_value="1",
         ),
-        Achievement(
+        AchievementFactory(
             name="Duck Collector",
             slug="duck-collector-10",
             type="ducks",
@@ -505,7 +483,7 @@ def sample_new_achievements(init_db):
             description="Collect 10 ducks",
             requirement_value="10",
         ),
-        Achievement(
+        AchievementFactory(
             name="Project Starter",
             slug="project-starter",
             type="project",
@@ -514,15 +492,14 @@ def sample_new_achievements(init_db):
             requirement_value="1",
         ),
     ]
-    db.session.add_all(achievements)
-    db.session.commit()
     return achievements
 
 
 @pytest.fixture
 def sample_multiple_achievements(init_db):
+    from tests.factories import AchievementFactory
     achievements = [
-        Achievement(
+        AchievementFactory(
             id=1,
             name="Achievement One",
             slug="achievement-one",
@@ -531,7 +508,7 @@ def sample_multiple_achievements(init_db):
             description="First achievement",
             requirement_value="10",
         ),
-        Achievement(
+        AchievementFactory(
             id=2,
             name="Achievement Two",
             slug="achievement-two",
@@ -541,16 +518,13 @@ def sample_multiple_achievements(init_db):
             requirement_value="5",
         ),
     ]
-    for ach in achievements:
-        db.session.add(ach)
-    db.session.commit()
     return achievements
 
 
 @pytest.fixture
 def sample_challenge_active(init_db):
-    """Fixture to create an active challenge with known difficulty."""
-    challenge = Challenge(
+    from tests.factories import ChallengeFactory
+    challenge = ChallengeFactory(
         name="Dungeons of Kithgard",
         slug="dungeons-of-kithgard",
         domain="codecombat.com",
@@ -559,15 +533,13 @@ def sample_challenge_active(init_db):
         is_active=True,
         course_id="intro-to-python",
     )
-    db.session.add(challenge)
-    db.session.commit()
     return challenge
 
 
 @pytest.fixture
 def sample_challenges_multi_domain(init_db):
-    """Fixture to create active challenges across multiple domains."""
-    c1 = Challenge(
+    from tests.factories import ChallengeFactory
+    c1 = ChallengeFactory(
         name="Dungeons of Kithgard",
         slug="dungeons-of-kithgard",
         domain="codecombat.com",
@@ -576,7 +548,7 @@ def sample_challenges_multi_domain(init_db):
         is_active=True,
         course_id="intro-to-python",
     )
-    c2 = Challenge(
+    c2 = ChallengeFactory(
         name="Chapter 1: Sky Mountain",
         slug="chapter-1-sky-mountain",
         domain="ozaria.com",
@@ -585,8 +557,6 @@ def sample_challenges_multi_domain(init_db):
         is_active=True,
         course_id="intro-to-coding",
     )
-    db.session.add_all([c1, c2])
-    db.session.commit()
     return [c1, c2]
 
 

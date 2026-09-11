@@ -69,6 +69,8 @@ def send_admin_email(subject, body):
         args=(subject, body, to_address, from_address, region)
     )
     thread.daemon = True
+    thread.start()
+
 def send_email(subject, body, to_addresses):
     """
     Asynchronously sends an email to specific addresses using AWS SES.

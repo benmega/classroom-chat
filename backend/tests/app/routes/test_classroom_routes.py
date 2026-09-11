@@ -4,6 +4,7 @@ Unit tests for classroom_routes.py
 from application.extensions import db
 from application.models.classroom import Classroom
 from application.models.user import User
+from tests.factories import UserFactory, ClassroomFactory
 
 
 def test_join_classroom_unauthenticated(client):
@@ -13,10 +14,7 @@ def test_join_classroom_unauthenticated(client):
 
 def test_join_classroom_parent_forbidden(client, app):
     with app.app_context():
-        parent = User(username="parent_user_c", role="parent")
-        parent.set_password("pass123")
-        db.session.add(parent)
-        db.session.commit()
+        parent = UserFactory(role="parent")
         p_id = parent.id
 
     with client.session_transaction() as sess:
@@ -30,10 +28,7 @@ def test_join_classroom_parent_forbidden(client, app):
 
 def test_join_classroom_missing_code(client, app):
     with app.app_context():
-        student = User(username="student_user_c1", role="student")
-        student.set_password("pass123")
-        db.session.add(student)
-        db.session.commit()
+        student = UserFactory(role="student")
         s_id = student.id
 
     with client.session_transaction() as sess:
@@ -47,10 +42,7 @@ def test_join_classroom_missing_code(client, app):
 
 def test_join_classroom_invalid_code(client, app):
     with app.app_context():
-        student = User(username="student_user_c2", role="student")
-        student.set_password("pass123")
-        db.session.add(student)
-        db.session.commit()
+        student = UserFactory(role="student")
         s_id = student.id
 
     with client.session_transaction() as sess:
@@ -64,18 +56,15 @@ def test_join_classroom_invalid_code(client, app):
 
 def test_join_classroom_reserved_code(client, app):
     with app.app_context():
-        student = User(username="student_user_c3", role="student")
-        student.set_password("pass123")
-
+        student = UserFactory(role="student")
+        
         glob_room = Classroom.query.get("global")
         if not glob_room:
-            glob_room = Classroom(id="global", name="Global Room", language="Python", join_code="GLOB1")
-            db.session.add(glob_room)
+            glob_room = ClassroomFactory(id="global", name="Global Room", language="Python", join_code="GLOB1")
         else:
             glob_room.join_code = "GLOB1"
+            db.session.commit()
 
-        db.session.add(student)
-        db.session.commit()
         s_id = student.id
 
     with client.session_transaction() as sess:
@@ -89,13 +78,8 @@ def test_join_classroom_reserved_code(client, app):
 
 def test_join_classroom_success_and_already_enrolled(client, app):
     with app.app_context():
-        student = User(username="student_user_c4", role="student")
-        student.set_password("pass123")
-        db.session.add(student)
-
-        room = Classroom(id="room_123_c", name="CS 101", language="Python", join_code="JOIN1")
-        db.session.add(room)
-        db.session.commit()
+        student = UserFactory(role="student")
+        room = ClassroomFactory(name="CS 101", join_code="JOIN1")
         s_id = student.id
 
     with client.session_transaction() as sess:
@@ -116,17 +100,14 @@ def test_join_classroom_success_and_already_enrolled(client, app):
 
 def test_my_classrooms_endpoint(client, app):
     with app.app_context():
-        student = User(username="student_user_c5", role="student")
-        student.set_password("pass123")
-
-        c1 = Classroom(id="c1_my", name="Math Class", language="Python", join_code="MATH1")
+        student = UserFactory(role="student")
+        c1 = ClassroomFactory(name="Math Class")
         glob_room = Classroom.query.get("global")
 
         student.classrooms.append(c1)
         if glob_room:
             student.classrooms.append(glob_room)
 
-        db.session.add_all([student, c1])
         db.session.commit()
         s_id = student.id
 

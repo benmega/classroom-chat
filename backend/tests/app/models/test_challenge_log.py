@@ -16,7 +16,7 @@ def test_challenge_log_creation(sample_challenge_log):
     """Test creating a ChallengeLog entry."""
     challenge_log = sample_challenge_log
 
-    assert db.session.get(User, challenge_log.user_id).username.startswith("user_")
+    assert db.session.get(User, challenge_log.user_id).username.startswith("user")
     assert challenge_log.domain == "codecombat.com"
 
     # UPDATED: Check challenge_slug instead of challenge_name
