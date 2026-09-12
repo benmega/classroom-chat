@@ -177,6 +177,31 @@ def submit_challenge():
         "Mr. Mega does not recognize this challenge. Are you sure this is the right link?",
     )
 
+    if details.get("course_instance_not_found"):
+        from application.models.course_instance_request import CourseInstanceRequest
+
+        course_instance_id = details.get("course_instance_id")
+        requested_course_id = details.get("requested_course_id")
+
+        if course_instance_id:
+            existing_request = CourseInstanceRequest.query.filter_by(
+                course_instance_id=course_instance_id
+            ).first()
+
+            if not existing_request:
+                new_request = CourseInstanceRequest(
+                    student_id=user.id,
+                    course_instance_id=course_instance_id,
+                    requested_course_id=requested_course_id,
+                    url=url,
+                    status="pending",
+                )
+                db.session.add(new_request)
+                db.session.commit()
+                msg = "This course wasn't connected yet, but we've automatically requested your teacher to add it!"
+            else:
+                msg = "This course wasn't connected yet. A request to add it has already been submitted."
+
     if is_get_submission:
         # Escape single quotes in the message for JS alert
         safe_msg = msg.replace("'", "\\'")

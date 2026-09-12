@@ -143,7 +143,7 @@ const AdminClassDashboard = () => {
         }
     };
 
-    const fetchClassroomCards = async () => {
+    const fetchClassroomCards = useCallback(async () => {
         setIsFetchingCards(true);
         try {
             const response = await client.get(`/api/admin/classrooms/${classId}/connection_cards`);
@@ -157,7 +157,7 @@ const AdminClassDashboard = () => {
         } finally {
             setIsFetchingCards(false);
         }
-    };
+    }, [classId]);
 
     const handleToggleLanguage = async (langId) => {
         const currentLangs = (classroom.language || '').split(',').map(l => l.trim()).filter(Boolean);
@@ -209,7 +209,7 @@ const AdminClassDashboard = () => {
     const handleRegenerateJoinCode = async () => {
         setFormLoading(true);
         try {
-            const res = await client.post(`/api/admin/classrooms/${classId}/regenerate_code`);
+            const res = await client.post(`/api/admin/classrooms/${classId}/join-code/regenerate`);
             if (res.data.success) {
                 
                 fetchClassroomDetails();
@@ -261,7 +261,7 @@ const AdminClassDashboard = () => {
     };
 
 
-    if (isLoading) {
+    if (isLoading || !classroom) {
         return (
             <div className="admin-class-dashboard">
                 <div className="dashboard-header">

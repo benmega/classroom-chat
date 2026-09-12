@@ -114,7 +114,7 @@ def test_submit_challenge_failed(client, init_db):
     )
 
     assert response.status_code == 400
-    assert b"seem to be part of a valid course instance" in response.data
+    assert b"This course wasn't connected yet" in response.data
 
 
 def test_submit_challenge_no_configuration(client, init_db):
