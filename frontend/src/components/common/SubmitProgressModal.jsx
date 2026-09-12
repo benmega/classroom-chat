@@ -21,7 +21,6 @@ const SubmitProgressModal = ({ isOpen, onClose, onUrlChange }) => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [showHelperModal, setShowHelperModal] = useState(false);
 
-
     // Certificate support
     const [isCertificate, setIsCertificate] = useState(false);
     const [uploadProgress, setUploadProgress] = useState(0);
