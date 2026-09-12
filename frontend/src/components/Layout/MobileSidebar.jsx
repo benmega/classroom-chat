@@ -1,11 +1,11 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Home, User, Shield, FileCheck, History, RefreshCw, X, LogOut, MessageSquare, ShoppingCart, Map, Award, Settings } from 'lucide-react';
+import { Home, User, Shield, FileCheck, History, RefreshCw, X, LogOut, MessageSquare, ShoppingCart, Map, Award, Settings, HelpCircle } from 'lucide-react';
 import useAuthStore from '../../store/useAuthStore';
 import { getApiUrl } from '../../utils/apiUrl';
 import useParentChildren from '../../hooks/useParentChildren';
 
-const MobileSidebar = ({ user, isParent, isSidebarOpen, setSidebarOpen, handleLogout }) => {
+const MobileSidebar = ({ user, isParent, isSidebarOpen, setSidebarOpen, handleLogout, onContactTeacher }) => {
     const { unreadCount, activityUnreadCount } = useAuthStore();
     const { children } = useParentChildren(isParent);
 
@@ -42,6 +42,11 @@ const MobileSidebar = ({ user, isParent, isSidebarOpen, setSidebarOpen, handleLo
                                     <Link to="/chat" onClick={close}>
                                         <MessageSquare size={18} /> Messages
                                     </Link>
+                                </li>
+                                <li>
+                                    <button onClick={() => { onContactTeacher(); close(); }} className="sidebar-link-btn" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', width: '100%', background: 'none', border: 'none', padding: '0.75rem 1rem', color: 'var(--text-primary)', fontSize: '0.95rem', cursor: 'pointer', textAlign: 'left' }}>
+                                        <HelpCircle size={18} /> Message Teacher
+                                    </button>
                                 </li>
 
                                 {/* Child report card links */}
@@ -134,9 +139,7 @@ const MobileSidebar = ({ user, isParent, isSidebarOpen, setSidebarOpen, handleLo
                         )}
 
                         {/* Settings — all roles */}
-                        {!isParent && (
-                            <li><Link to="/settings" onClick={close}><Settings size={18} /> Settings</Link></li>
-                        )}
+                        <li><Link to="/settings" onClick={close}><Settings size={18} /> Settings</Link></li>
                     </ul>
                 </nav>
 

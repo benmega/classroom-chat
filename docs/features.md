@@ -14,6 +14,7 @@
 
 ## Economy & Shop (Duck System)
 - Ducks are awarded upon challenge completion and achievements.
+- **Note**: The "Permanent Double Duck" store perk doubles daily and challenge duck earnings, but **does not** apply to ducks awarded via achievements.
 - Real-time updates to profile.
 - **Duck Trades**: Students can trade ducks with peers.
 - **Shop**: Students can spend ducks on virtual store items.

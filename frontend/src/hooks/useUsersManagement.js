@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import client from '../api/client';
+import { showConfirm } from '../utils/confirm';
 import toast from 'react-hot-toast';
 
 export const useUsersManagement = (role = '') => {
@@ -229,7 +230,7 @@ export const useUsersManagement = (role = '') => {
             const errorData = error.response?.data;
             if (errorData?.conflict && errorData?.current_owner) {
                 // Duplicate drawer assignment detected
-                const confirmed = window.confirm(`That drawer is already assigned to @${errorData.current_owner}. Do you want to take it over and remove that student's drawer assignment to move it over to this student, or cancel?`);
+                const confirmed = await showConfirm(`That drawer is already assigned to @${errorData.current_owner}. Do you want to take it over and remove that student's drawer assignment to move it over to this student, or cancel?`, { title: 'Drawer Conflict', confirmText: 'Take Over', destructive: true });
                 if (confirmed) {
                     // recursively call with force=true, passing the original target
                     return handleSetDrawer(formElement, true);
@@ -243,7 +244,7 @@ export const useUsersManagement = (role = '') => {
     };
 
     const handleRemoveUser = async (username) => {
-        if (!window.confirm(`Are you sure you want to PERMANENTLY remove @${username}?`)) return;
+        if (!await showConfirm(`Are you sure you want to PERMANENTLY remove @${username}?`, { title: 'Remove User', destructive: true })) return;
         
         try {
             const formData = new FormData();

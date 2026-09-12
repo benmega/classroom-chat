@@ -12,20 +12,14 @@ from application import db
 from application.models.challenge import Challenge
 from application.models.challenge_log import ChallengeLog
 from application.models.configuration import Configuration
-from tests.factories import (
-    UserFactory,
-    ConfigurationFactory,
-    ChallengeFactory,
-    CourseFactory,
-    CourseInstanceFactory
-)
+from tests.factories import ChallengeFactory, ConfigurationFactory, CourseFactory, CourseInstanceFactory, UserFactory
 
 
 def test_submit_challenge_get(client, init_db):
     """Test GET request to challenge submission page."""
     sample_user = UserFactory()
     ConfigurationFactory()
-    
+
     with client.session_transaction() as sess:
         sess["user"] = sample_user.id
 
@@ -57,7 +51,7 @@ def test_submit_challenge_no_url(client, init_db):
     """Test submitting challenge without URL."""
     sample_user = UserFactory()
     ConfigurationFactory()
-    
+
     with client.session_transaction() as sess:
         sess["user"] = sample_user.id
 
@@ -75,9 +69,9 @@ def test_submit_challenge_success(client, init_db):
     """Test successful challenge submission."""
     sample_user = UserFactory()
     ConfigurationFactory()
-    
+
     course = CourseFactory(id="123")
-    course_instance = CourseInstanceFactory(id="456", course_id=course.id, classroom_id='cls1')
+    CourseInstanceFactory(id="456", course_id=course.id, classroom_id='cls1')
     ChallengeFactory(
         slug="dungeons-of-kithgard",
         domain="codecombat.com",
@@ -86,7 +80,7 @@ def test_submit_challenge_success(client, init_db):
         course_id=course.id,
         is_active=True
     )
-    
+
     with client.session_transaction() as sess:
         sess["user"] = sample_user.id
 
@@ -109,7 +103,7 @@ def test_submit_challenge_failed(client, init_db):
     """Test failed challenge submission."""
     sample_user = UserFactory()
     ConfigurationFactory()
-    
+
     with client.session_transaction() as sess:
         sess["user"] = sample_user.id
 
@@ -128,7 +122,7 @@ def test_submit_challenge_no_configuration(client, init_db):
     sample_user = UserFactory()
     Configuration.query.delete()
     db.session.commit()
-    
+
     with client.session_transaction() as sess:
         sess["user"] = sample_user.id
 
@@ -153,9 +147,9 @@ def test_submit_challenge_with_helper(client, init_db):
     sample_user = UserFactory()
     ConfigurationFactory()
     UserFactory(username="friend_user")
-    
+
     course = CourseFactory(id="123")
-    course_instance = CourseInstanceFactory(id="456", course_id=course.id, classroom_id='cls1')
+    CourseInstanceFactory(id="456", course_id=course.id, classroom_id='cls1')
     ChallengeFactory(
         slug="dungeons-of-kithgard",
         domain="codecombat.com",
@@ -179,7 +173,7 @@ def test_submit_challenge_with_helper(client, init_db):
     )
 
     assert response.status_code == 200
-    
+
     log = ChallengeLog.query.filter_by(user_id=sample_user.id, challenge_slug="dungeons-of-kithgard").first()
     assert log is not None
     assert log.helper == "friend_user"
@@ -189,9 +183,9 @@ def test_submit_challenge_with_notes(client, init_db):
     """Test challenge submission with notes."""
     sample_user = UserFactory()
     ConfigurationFactory()
-    
+
     course = CourseFactory(id="123")
-    course_instance = CourseInstanceFactory(id="456", course_id=course.id, classroom_id='cls1')
+    CourseInstanceFactory(id="456", course_id=course.id, classroom_id='cls1')
     ChallengeFactory(
         slug="dungeons-of-kithgard",
         domain="codecombat.com",
@@ -525,7 +519,7 @@ def test_update_user_ducks_user_not_found(init_db):
 def test_update_user_ducks_challenge_not_found(init_db):
     """Test updating ducks for non-existent challenge."""
     from application.routes.challenge_routes import _update_user_ducks
-    
+
     sample_user = UserFactory()
 
     with pytest.raises(ValueError, match=r"Challenge .* not found"):
@@ -725,7 +719,7 @@ def test_submit_challenge_switch_track(client, init_db):
     """Test challenge completion on mismatched track automatically switches track and ducks are awarded."""
     sample_user = UserFactory(active_track="ozaria")
     ConfigurationFactory()
-    
+
     course = CourseFactory(name="CS1")
     course_instance = CourseInstanceFactory(course_id=course.id, classroom_id='cls1')
     ChallengeFactory(

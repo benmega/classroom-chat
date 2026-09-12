@@ -25,6 +25,12 @@ vi.mock('react-hot-toast', () => ({
     }
 }));
 
+import { showConfirm } from '../../utils/confirm';
+
+vi.mock('../../utils/confirm', () => ({
+    showConfirm: vi.fn()
+}));
+
 const mockNavigate = vi.fn();
 vi.mock('react-router-dom', async (importOriginal) => {
     const actual = await importOriginal();
@@ -183,13 +189,13 @@ describe('Classes Admin Page', () => {
             const deleteBtn = screen.getByText(/Delete Class/i);
             
             // Mock window.confirm
-            window.confirm = vi.fn().mockReturnValue(true);
+            showConfirm.mockResolvedValue(true);
             client.delete.mockResolvedValueOnce({ data: { success: true } });
             
             fireEvent.click(deleteBtn);
             
             await waitFor(() => {
-                expect(window.confirm).toHaveBeenCalled();
+                expect(showConfirm).toHaveBeenCalled();
             });
         }
 

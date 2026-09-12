@@ -1,21 +1,22 @@
 import factory
 from application.extensions import db
-from application.models.user import User
-from application.models.classroom import Classroom
-from application.models.course import Course
-from application.models.course_instance import CourseInstance
-from application.models.challenge import Challenge
-from application.models.challenge_log import ChallengeLog
 from application.models.achievements import Achievement, UserAchievement
-from application.models.message import Message
-from application.models.project import Project
-from application.models.skill import Skill
 from application.models.ai_settings import AISettings
 from application.models.banned_words import BannedWords
+from application.models.challenge import Challenge
+from application.models.challenge_log import ChallengeLog
+from application.models.classroom import Classroom
 from application.models.configuration import Configuration
-from application.models.session_log import SessionLog
-from application.models.user_certificate import UserCertificate
+from application.models.course import Course
+from application.models.course_instance import CourseInstance
 from application.models.duck_trade import DuckTradeLog
+from application.models.message import Message
+from application.models.project import Project
+from application.models.session_log import SessionLog
+from application.models.skill import Skill
+from application.models.user import User
+from application.models.user_certificate import UserCertificate
+
 
 class BaseFactory(factory.alchemy.SQLAlchemyModelFactory):
     class Meta:
@@ -167,7 +168,7 @@ class SessionLogFactory(BaseFactory):
 class UserCertificateFactory(BaseFactory):
     class Meta:
         model = UserCertificate
-    
+
     user_id = factory.LazyAttribute(lambda _: UserFactory().id)
     achievement_id = factory.LazyAttribute(lambda _: AchievementFactory().id)
     url = factory.Sequence(lambda n: f'http://example.com/cert{n}.pdf')
@@ -176,9 +177,9 @@ class UserCertificateFactory(BaseFactory):
 class DuckTradeLogFactory(BaseFactory):
     class Meta:
         model = DuckTradeLog
-    
+
     user_id = factory.LazyAttribute(lambda _: UserFactory().id)
     digital_ducks = 1
-    bit_ducks = []
-    byte_ducks = []
+    bit_ducks = factory.LazyFunction(list)
+    byte_ducks = factory.LazyFunction(list)
     status = 'completed'

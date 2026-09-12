@@ -1,4 +1,5 @@
 ---
+name: preflight-check
 description: Automatically run all tests, linters, and checks before merging into the deploy branch.
 ---
 

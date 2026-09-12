@@ -1,4 +1,5 @@
 ---
+name: git-review
 description: Perform rigorous Post-Mortem Git/Commit Analyses on recently merged branches to extract actionable insights.
 ---
 

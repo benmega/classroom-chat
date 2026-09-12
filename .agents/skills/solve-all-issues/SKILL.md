@@ -1,4 +1,5 @@
 ---
+name: solve-all-issues
 description: Systematically manage and resolve all pending issues by orchestrating the solve-issue workflow.
 ---
 

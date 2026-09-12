@@ -1,4 +1,5 @@
 ---
+name: cleanup-comments
 description: Audit and refine codebase comments to improve readability and maintainability without altering logic.
 ---
 

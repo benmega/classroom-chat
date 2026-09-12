@@ -4,7 +4,7 @@ Unit tests for classroom_routes.py
 from application.extensions import db
 from application.models.classroom import Classroom
 from application.models.user import User
-from tests.factories import UserFactory, ClassroomFactory
+from tests.factories import ClassroomFactory, UserFactory
 
 
 def test_join_classroom_unauthenticated(client):
@@ -57,7 +57,7 @@ def test_join_classroom_invalid_code(client, app):
 def test_join_classroom_reserved_code(client, app):
     with app.app_context():
         student = UserFactory(role="student")
-        
+
         glob_room = Classroom.query.get("global")
         if not glob_room:
             glob_room = ClassroomFactory(id="global", name="Global Room", language="Python", join_code="GLOB1")
@@ -79,7 +79,7 @@ def test_join_classroom_reserved_code(client, app):
 def test_join_classroom_success_and_already_enrolled(client, app):
     with app.app_context():
         student = UserFactory(role="student")
-        room = ClassroomFactory(name="CS 101", join_code="JOIN1")
+        ClassroomFactory(name="CS 101", join_code="JOIN1")
         s_id = student.id
 
     with client.session_transaction() as sess:

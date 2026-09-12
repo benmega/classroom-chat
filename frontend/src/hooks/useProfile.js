@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { showConfirm } from '../utils/confirm';
 import client from '../api/client';
 import useAuthStore from '../store/useAuthStore';
 import toast from 'react-hot-toast';
@@ -49,7 +50,7 @@ export const useProfile = () => {
     const isOwner = !!profileData?.viewer && (profileData?.viewer?.id === profileData?.target?.id || profileData?.viewer?.role === 'admin');
 
     const handleDeleteNote = async (noteId) => {
-        if (!window.confirm('Delete this note?')) return;
+        if (!await showConfirm('Delete this note?', { title: 'Delete Note', destructive: true })) return;
         try {
             await client.post(`/notes/delete/${noteId}`);
             

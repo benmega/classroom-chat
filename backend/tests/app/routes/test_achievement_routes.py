@@ -11,8 +11,8 @@ import pytest
 from application.extensions import db
 from application.models.achievements import Achievement, UserAchievement
 from application.models.user_certificate import UserCertificate
+from tests.factories import AchievementFactory, AdminFactory, UserAchievementFactory, UserFactory
 
-from tests.factories import UserFactory, AdminFactory, AchievementFactory, UserAchievementFactory
 
 @pytest.fixture
 def test_user(init_db):

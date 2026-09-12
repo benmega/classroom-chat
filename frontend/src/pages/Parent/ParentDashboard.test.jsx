@@ -12,6 +12,12 @@ vi.mock('../../components/common/DesktopNotice', () => ({
     default: () => <div data-testid="desktop-notice" />
 }));
 
+import { showConfirm } from '../../utils/confirm';
+
+vi.mock('../../utils/confirm', () => ({
+    showConfirm: vi.fn()
+}));
+
 const mockChildren = [
     {
         id: 1,
@@ -75,7 +81,7 @@ describe('ParentDashboard Component', () => {
         expect(optionsBtn).toHaveAttribute('aria-expanded', 'false');
     });
 
-    it.skip('opens dropdown and displays accessible Disconnect Student option', async () => {
+    it('opens dropdown and displays accessible Disconnect Student option', async () => {
         render(
             <MemoryRouter>
                 <ParentDashboard />
@@ -87,12 +93,13 @@ describe('ParentDashboard Component', () => {
 
         expect(optionsBtn).toHaveAttribute('aria-expanded', 'true');
 
-        const disconnectBtn = screen.getByRole('menuitem', { name: /Disconnect Alice/i });
-        expect(disconnectBtn).toBeInTheDocument();
+        const disconnectBtns = screen.getAllByText(/Remove Child/i);
+        expect(disconnectBtns[0]).toBeInTheDocument();
     });
 
-    it.skip('prompts confirm and disconnects student on confirm', async () => {
-        const confirmSpy = vi.spyOn(window, 'confirm').mockImplementation(() => true);
+    it('prompts confirm and disconnects student on confirm', async () => {
+        const { showConfirm } = await import('../../utils/confirm');
+        showConfirm.mockResolvedValue(true);
         client.post.mockResolvedValueOnce({ data: { message: 'Successfully disconnected from Alice.' } });
 
         render(
@@ -104,15 +111,14 @@ describe('ParentDashboard Component', () => {
         const optionsBtn = await screen.findByRole('button', { name: /Options for Alice/i });
         fireEvent.click(optionsBtn);
 
-        const disconnectBtn = screen.getByRole('menuitem', { name: /Disconnect Alice/i });
-        fireEvent.click(disconnectBtn);
+        const disconnectBtns = screen.getAllByText(/Remove Child/i);
+        fireEvent.click(disconnectBtns[0]);
 
-        expect(confirmSpy).toHaveBeenCalledWith('Remove Alice?');
+        await waitFor(() => {
+            expect(showConfirm).toHaveBeenCalledWith('Remove Alice?', { title: 'Remove Child', destructive: true });
+        });
         await waitFor(() => {
             expect(client.post).toHaveBeenCalledWith('/api/parents/disconnect/1');
-            
         });
-
-        confirmSpy.mockRestore();
     });
 });

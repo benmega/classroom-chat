@@ -5,6 +5,8 @@ import AdminSubmissions from './AdminSubmissions';
 import client from '../../api/client';
 
 
+import { showConfirm } from '../../utils/confirm';
+
 vi.mock('../../api/client', () => ({
   default: {
     get: vi.fn(),
@@ -18,6 +20,10 @@ vi.mock('react-hot-toast', () => ({
     success: vi.fn(),
     error: vi.fn(),
   },
+}));
+
+vi.mock('../../utils/confirm', () => ({
+    showConfirm: vi.fn()
 }));
 
 vi.mock('../../components/admin/AdminPageHeader', () => ({
@@ -78,7 +84,7 @@ describe('AdminSubmissions Component', () => {
     fireEvent.click(screen.getByTitle(/Mark Reviewed/i));
 
     // Test delete
-    window.confirm = vi.fn().mockReturnValue(true);
+    showConfirm.mockResolvedValue(true);
     client.delete.mockResolvedValueOnce({ data: { status: 'success' } });
     fireEvent.click(screen.getByTitle(/Delete/i));
   });

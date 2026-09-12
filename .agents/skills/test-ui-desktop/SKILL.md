@@ -1,4 +1,5 @@
 ---
+name: test-ui-desktop
 description: Automatically test the Desktop UI for bugs, and document them as Jira-style markdown files in the issues/ directory.
 ---
 

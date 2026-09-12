@@ -1,4 +1,4 @@
-﻿import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { BrowserRouter } from 'react-router-dom';
 import AdminStandardProjects from './AdminStandardProjects';
@@ -19,6 +19,12 @@ vi.mock('react-hot-toast', () => ({
         error: vi.fn(),
         success: vi.fn(),
     }
+}));
+
+import { showConfirm } from '../../utils/confirm';
+
+vi.mock('../../utils/confirm', () => ({
+    showConfirm: vi.fn()
 }));
 
 vi.mock('../../hooks/useSidebar', () => ({
@@ -186,7 +192,7 @@ describe('AdminStandardProjects', () => {
             expect(screen.getByText('Project 1')).toBeInTheDocument();
         });
 
-        const confirmSpy = vi.spyOn(window, 'confirm').mockImplementation(() => true);
+        showConfirm.mockResolvedValueOnce(true);
 
         client.delete.mockResolvedValueOnce({
             data: { status: 'success', message: 'Deleted successfully.' }
@@ -194,13 +200,13 @@ describe('AdminStandardProjects', () => {
 
         fireEvent.click(screen.getByTitle(/Delete Project/i));
 
-        expect(confirmSpy).toHaveBeenCalledWith('Are you sure you want to delete "Project 1"?');
+        await waitFor(() => {
+            expect(showConfirm).toHaveBeenCalledWith('Are you sure you want to delete "Project 1"?', { title: 'Delete Project', destructive: true });
+        });
         
         await waitFor(() => {
             expect(client.delete).toHaveBeenCalledWith('/api/project-templates/1');
         });
-        
-        confirmSpy.mockRestore();
     });
 
     it('cancels deletion if not confirmed', async () => {
@@ -218,15 +224,15 @@ describe('AdminStandardProjects', () => {
             expect(screen.getByText('Project 1')).toBeInTheDocument();
         });
 
-        const confirmSpy = vi.spyOn(window, 'confirm').mockImplementation(() => false);
+        showConfirm.mockResolvedValueOnce(false);
 
         fireEvent.click(screen.getByTitle(/Delete Project/i));
 
-        expect(confirmSpy).toHaveBeenCalledWith('Are you sure you want to delete "Project 1"?');
+        await waitFor(() => {
+            expect(showConfirm).toHaveBeenCalledWith('Are you sure you want to delete "Project 1"?', { title: 'Delete Project', destructive: true });
+        });
         
         expect(client.delete).not.toHaveBeenCalled();
-        
-        confirmSpy.mockRestore();
     });
 
     it('closes the modal on cancel', async () => {

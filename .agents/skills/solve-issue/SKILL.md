@@ -1,4 +1,5 @@
 ---
+name: solve-issue
 description: Automatically locate, solve, and archive open issues in the issues/ directory.
 ---
 

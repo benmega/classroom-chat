@@ -8,11 +8,17 @@ import { server } from '../../test/mocks/server';
 import { http, HttpResponse } from 'msw';
 import toast from 'react-hot-toast';
 
+import { showConfirm } from '../../utils/confirm';
+
 vi.mock('react-hot-toast', () => ({
     default: {
         success: vi.fn(),
         error: vi.fn(),
     }
+}));
+
+vi.mock('../../utils/confirm', () => ({
+    showConfirm: vi.fn()
 }));
 
 window.URL.createObjectURL = vi.fn(() => 'blob:mock-url');
@@ -215,7 +221,7 @@ describe('ManageProject', () => {
     });
 
     it('deletes project after confirmation', async () => {
-        window.confirm = vi.fn(() => true);
+        showConfirm.mockResolvedValue(true);
         server.use(
             http.get('*/user/project/edit/1', async () => {
                 return HttpResponse.json({ status: 'success', data: { project: { id: 1, name: 'To Delete' } } });
@@ -238,7 +244,9 @@ describe('ManageProject', () => {
         
         fireEvent.click(screen.getByRole('button', { name: /Delete Project/i }));
 
-        expect(window.confirm).toHaveBeenCalledWith('Are you sure you want to delete this project?');
+        await waitFor(() => {
+            expect(showConfirm).toHaveBeenCalledWith('Are you sure you want to delete this project?', { title: 'Delete Project', destructive: true });
+        });
 
         await waitFor(() => {
             
@@ -247,7 +255,7 @@ describe('ManageProject', () => {
     });
 
     it('does not delete if confirmation is cancelled', async () => {
-        window.confirm = vi.fn(() => false);
+        showConfirm.mockResolvedValue(false);
         
         server.use(
             http.get('*/user/project/edit/1', async () => {
@@ -267,7 +275,9 @@ describe('ManageProject', () => {
         
         fireEvent.click(screen.getByRole('button', { name: /Delete Project/i }));
 
-        expect(window.confirm).toHaveBeenCalledWith('Are you sure you want to delete this project?');
+        await waitFor(() => {
+            expect(showConfirm).toHaveBeenCalledWith('Are you sure you want to delete this project?', { title: 'Delete Project', destructive: true });
+        });
         expect(screen.queryByTestId('profile-page')).not.toBeInTheDocument();
     });
 

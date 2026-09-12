@@ -25,6 +25,7 @@ import {
 import client from '../../api/client';
 import toast from 'react-hot-toast';
 import { getApiUrl } from '../../utils/apiUrl';
+import { showConfirm } from '../../utils/confirm';
 import { formatStaticUrl } from '../../utils/formatters';
 import './ToReview.css';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
@@ -193,7 +194,7 @@ const ToReview = () => {
     };
 
     const handleApproveAllCertificates = async () => {
-        if (!window.confirm("Are you sure you want to mark all pending certificates as reviewed?")) return;
+        if (!await showConfirm("Are you sure you want to mark all pending certificates as reviewed?", { title: 'Review All Certificates', confirmText: 'Review All' })) return;
         setIsProcessing('cert-all');
         try {
             const response = await client.post('/api/achievements/admin/certificates/reviewed/all');
@@ -210,7 +211,7 @@ const ToReview = () => {
 
     // 3. User Signup Review Actions
     const handleUserApproval = async (userId, action, isBulk = false) => {
-        if (!isBulk && action === 'reject' && !window.confirm('Are you sure you want to reject and delete this user?')) return;
+        if (!isBulk && action === 'reject' && !await showConfirm('Are you sure you want to reject and delete this user?', { title: 'Reject User', destructive: true })) return;
         if (!isBulk) setIsProcessing(`user-${userId}`);
         const endpoint = action === 'approve' ? `approve_user/${userId}` : `reject_user/${userId}`;
 
@@ -229,7 +230,7 @@ const ToReview = () => {
 
     const handleBulkUserApproval = async (action) => {
         if (selectedUsers.size === 0) return;
-        if (action === 'reject' && !window.confirm(`Are you sure you want to reject and delete ${selectedUsers.size} users?`)) return;
+        if (action === 'reject' && !await showConfirm(`Are you sure you want to reject and delete ${selectedUsers.size} users?`, { title: 'Reject Users', destructive: true })) return;
         
         setIsProcessing('bulk-user');
         const ids = Array.from(selectedUsers);
@@ -311,7 +312,7 @@ const ToReview = () => {
                     setCourseRequests(prev => prev.filter(r => r.id !== requestId));
                 }
             } else {
-                if (!window.confirm('Are you sure you want to reject this request?')) {
+                if (!await showConfirm('Are you sure you want to reject this request?', { title: 'Reject Request', destructive: true })) {
                     setIsProcessing(null);
                     return;
                 }

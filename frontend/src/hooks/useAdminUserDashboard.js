@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import client from '../api/client';
 import toast from 'react-hot-toast';
+import { showConfirm } from '../utils/confirm';
 
 export const useAdminUserDashboard = (userId) => {
     const navigate = useNavigate();
@@ -79,7 +80,7 @@ export const useAdminUserDashboard = (userId) => {
     };
 
     const handlePassChapterConfirm = async () => {
-        if (!window.confirm("Are you sure you want to pass this chapter? They will receive all achievements, certificates, and ducks.")) {
+        if (!await showConfirm("Are you sure you want to pass this chapter? They will receive all achievements, certificates, and ducks.", { title: 'Pass Chapter', confirmLabel: 'Pass Chapter', destructive: false })) {
             return;
         }
         setPassChapterLoading(true);
@@ -180,7 +181,7 @@ export const useAdminUserDashboard = (userId) => {
     };
 
     const handleRemoveUser = async () => {
-        if (!window.confirm(`Are you sure you want to completely remove ${user.username}? This cannot be undone.`)) {
+        if (!await showConfirm(`Are you sure you want to completely remove ${user.username}? This cannot be undone.`, { title: 'Remove User', confirmLabel: 'Remove', destructive: true })) {
             return;
         }
         try {
@@ -214,7 +215,7 @@ export const useAdminUserDashboard = (userId) => {
     };
 
     const handleRejectUser = async () => {
-        if (!window.confirm('Are you sure you want to reject and delete this user?')) return;
+        if (!await showConfirm('Are you sure you want to reject and delete this user?', { title: 'Reject User', confirmLabel: 'Reject & Delete', destructive: true })) return;
         setFormLoading(true);
         try {
             const response = await client.post(`/api/admin/reject_user/${user.id}`);

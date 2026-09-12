@@ -2,6 +2,7 @@ import React, { useLayoutEffect, useRef, useState, useMemo, useEffect } from 're
 import { useLocation, useNavigate, useParams, Link } from 'react-router-dom';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
+import { showConfirm } from '../../utils/confirm';
 import { ArrowLeft, Star, ZoomIn, ZoomOut, Maximize2, CheckCircle, Code, History } from 'lucide-react';
 import codecombatLogo from '../../assets/codecombat-logo.png';
 import ozariaLogo from '../../assets/ozaria-logo.png';
@@ -239,7 +240,7 @@ const CourseProgressTree = () => {
             if (previewData.success) {
                 const p = previewData.preview;
                 const msg = `Preview for passing ${node.title}:\n- Missing Challenges: ${p.challenges_to_complete}\n- Ducks to award: ${p.ducks_to_award}\n- Certificates: ${p.certificates_to_award.join(', ') || 'None'}\n\nAre you sure you want to pass this chapter?`;
-                if (window.confirm(msg)) {
+                if (await showConfirm(msg, { title: 'Pass Chapter', destructive: false })) {
                     const passRes = await client.post(`/api/admin/user/${userObj.id}/pass_chapter`, { course_id: node.id });
                     const passData = passRes.data.data || passRes.data;
                     if (passData.success) {

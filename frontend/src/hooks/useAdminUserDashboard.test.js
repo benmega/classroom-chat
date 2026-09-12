@@ -24,6 +24,12 @@ vi.mock('react-hot-toast', () => ({
     },
 }));
 
+import { showConfirm } from '../utils/confirm';
+
+vi.mock('../utils/confirm', () => ({
+    showConfirm: vi.fn()
+}));
+
 describe('useAdminUserDashboard', () => {
     beforeEach(() => {
         vi.clearAllMocks();
@@ -31,7 +37,7 @@ describe('useAdminUserDashboard', () => {
         client.post.mockReset();
         if (client.put && client.put.mockReset) client.put.mockReset();
         mockNavigate.mockReset();
-        vi.spyOn(window, 'confirm').mockReturnValue(true);
+        showConfirm.mockResolvedValue(true);
     });
 
 

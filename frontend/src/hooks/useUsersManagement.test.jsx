@@ -13,10 +13,16 @@ vi.mock('react-hot-toast', () => ({
   },
 }));
 
+import { showConfirm } from '../utils/confirm';
+
+vi.mock('../utils/confirm', () => ({
+    showConfirm: vi.fn()
+}));
+
 describe('useUsersManagement', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    window.confirm = vi.fn(() => true);
+    showConfirm.mockResolvedValue(true);
 
     server.use(
       http.get('*/api/admin/users', ({ request }) => {
@@ -308,7 +314,7 @@ describe('useUsersManagement', () => {
   });
 
   it('cancels remove user when confirm is dismissed', async () => {
-    window.confirm = vi.fn(() => false);
+    showConfirm.mockResolvedValue(false);
     const { result } = renderHook(() => useUsersManagement());
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));

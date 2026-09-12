@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { FileUp, Save, Info, Database, Folder, ArrowLeft, Plus, X, GripVertical } from 'lucide-react';
 import client from '../../api/client';
+import { showConfirm } from '../../utils/confirm';
 import toast from 'react-hot-toast';
 import './AdminChallenges.css';
 import Papa from 'papaparse';
@@ -227,7 +228,7 @@ const AdminChallenges = () => {
     };
 
     const handleDelete = async (id, name) => {
-        if (!window.confirm(`Are you sure you want to delete challenge "${name}"?`)) return;
+        if (!await showConfirm(`Are you sure you want to delete challenge "${name}"?`, { title: 'Delete Challenge', destructive: true })) return;
         try {
             const res = await client.delete(`/api/admin/challenges/${id}`);
             toast.success(res.data.message || 'Challenge deleted.');

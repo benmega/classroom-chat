@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import client from '../../api/client';
+import { showConfirm } from '../../utils/confirm';
 import toast from 'react-hot-toast';
 import { Plus, Edit, X, BookOpen } from 'lucide-react';
 import { formatStaticUrl } from '../../utils/formatters';
@@ -110,7 +111,7 @@ const AdminStandardProjects = () => {
     };
 
     const handleDelete = async (id, name) => {
-        if (!window.confirm(`Are you sure you want to delete "${name}"?`)) return;
+        if (!await showConfirm(`Are you sure you want to delete "${name}"?`, { title: 'Delete Project', destructive: true })) return;
         
         try {
             const res = await client.delete(`/api/project-templates/${id}`);

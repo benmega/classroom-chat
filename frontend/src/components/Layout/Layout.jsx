@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Menu, Package, Archive, HelpCircle, User } from 'lucide-react';
 
@@ -7,6 +7,7 @@ import UserSearch from '../common/UserSearch';
 import DuckIcon from '../Icons/DuckIcon';
 import Tutorial from '../common/Tutorial';
 import HamburgerIcon from '../common/HamburgerIcon';
+import ContactTeacherModal from '../common/ContactTeacherModal';
 
 // Sub-components
 import ParentNavRail from './ParentNavRail';
@@ -30,6 +31,7 @@ const Layout = ({ children }) => {
     } = useLayout();
 
     const isParent = user?.role === 'parent';
+    const [isContactModalOpen, setIsContactModalOpen] = useState(false);
 
     return (
         <div className="app-container">
@@ -120,13 +122,18 @@ const Layout = ({ children }) => {
 
                                 {isAuthenticated && isParent && (
                                     <li className="nav-stat-item">
-                                        <div className="stat-badge help" title="Parent Help" style={{ cursor: 'help' }}>
+                                        <button
+                                            className="stat-badge help"
+                                            title="Message the teacher"
+                                            onClick={() => setIsContactModalOpen(true)}
+                                            style={{ cursor: 'pointer', background: 'none', border: 'none', padding: 0 }}
+                                        >
                                             <HelpCircle size={20} className="stat-icon" />
                                             <div className="stat-content">
                                                 <span className="stat-label">Support</span>
                                                 <span className="stat-value">Help</span>
                                             </div>
-                                        </div>
+                                        </button>
                                     </li>
                                 )}
 
@@ -150,9 +157,18 @@ const Layout = ({ children }) => {
                         isSidebarOpen={isSidebarOpen} 
                         setSidebarOpen={setSidebarOpen} 
                         handleLogout={handleLogout} 
+                        onContactTeacher={() => setIsContactModalOpen(true)}
                     />
                 )}
             </div>
+
+            {/* Contact Teacher Modal — parent users only */}
+            {isParent && (
+                <ContactTeacherModal
+                    isOpen={isContactModalOpen}
+                    onClose={() => setIsContactModalOpen(false)}
+                />
+            )}
         </div>
     );
 };

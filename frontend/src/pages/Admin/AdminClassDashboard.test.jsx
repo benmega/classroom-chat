@@ -22,6 +22,12 @@ vi.mock('react-hot-toast', () => ({
     }
 }));
 
+import { showConfirm } from '../../utils/confirm';
+
+vi.mock('../../utils/confirm', () => ({
+    showConfirm: vi.fn()
+}));
+
 vi.mock('../../hooks/useSidebar', () => ({
     default: () => ({
         isOpen: true,
@@ -171,7 +177,7 @@ describe('AdminClassDashboard', () => {
         fireEvent.click(screen.getByRole('tab', { name: 'People' }));
         expect(screen.getByText('John Doe')).toBeInTheDocument();
 
-        const confirmSpy = vi.spyOn(window, 'confirm').mockImplementation(() => true);
+        showConfirm.mockResolvedValue(true);
 
         client.post.mockResolvedValueOnce({
             data: { success: true, message: 'Unenrolled' }
@@ -179,13 +185,10 @@ describe('AdminClassDashboard', () => {
 
         fireEvent.click(screen.getByRole('button', { name: /Remove/i }));
 
-        expect(confirmSpy).toHaveBeenCalled();
         await waitFor(() => {
+            expect(showConfirm).toHaveBeenCalled();
             expect(client.post).toHaveBeenCalledWith('/api/admin/classrooms/cls123/unenroll', { student_id: 10 });
         });
-        
-
-        confirmSpy.mockRestore();
     });
 
     it.skip('updates classroom settings', async () => {
@@ -387,7 +390,7 @@ describe('AdminClassDashboard', () => {
     });
 
     it('disconnects a course in classwork tab', async () => {
-        const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+        showConfirm.mockResolvedValue(true);
 
         mockClassroomApi({
             id: 'cls123',
@@ -411,11 +414,10 @@ describe('AdminClassDashboard', () => {
         fireEvent.click(removeBtn);
 
         await waitFor(() => {
+            expect(showConfirm).toHaveBeenCalled();
             expect(client.delete).toHaveBeenCalledWith('/api/admin/crud/courseinstances/inst1');
             
         });
-
-        confirmSpy.mockRestore();
     });
 
     it('displays the join code when the API provides one', async () => {
@@ -451,7 +453,7 @@ describe('AdminClassDashboard', () => {
     });
 
     it('displays join code and allows regenerating join code in People tab', async () => {
-        const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+        showConfirm.mockResolvedValue(true);
 
         let currentJoinCode = 'OLD123';
         client.get.mockImplementation((url) => {
@@ -503,9 +505,6 @@ describe('AdminClassDashboard', () => {
         await waitFor(() => {
             expect(client.post).toHaveBeenCalledWith('/api/admin/classrooms/cls123/regenerate_code');
             expect(screen.getAllByText('NEW456').length).toBeGreaterThan(0);
-            
         });
-
-        confirmSpy.mockRestore();
     });
 });

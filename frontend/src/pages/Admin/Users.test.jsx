@@ -16,6 +16,12 @@ vi.mock('../../api/client', () => ({
   }
 }));
 
+import { showConfirm } from '../../utils/confirm';
+
+vi.mock('../../utils/confirm', () => ({
+    showConfirm: vi.fn()
+}));
+
 const renderComponent = () => renderWithProviders(<Users />);
 
 describe('Users Page', () => {
@@ -61,7 +67,7 @@ describe('Users Page', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     useUsersManagement.mockReturnValue(defaultMockState);
-    window.confirm = vi.fn(() => true);
+    showConfirm.mockResolvedValue(true);
   });
 
   it('renders loading skeleton when isLoading is true', () => {

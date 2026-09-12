@@ -3,6 +3,7 @@ import toast from 'react-hot-toast';
 import useAuthStore from '../store/useAuthStore';
 import client from '../api/client';
 import useChatSocket from './useChatSocket';
+import { showConfirm } from '../utils/confirm';
 import { GLOBAL_CLASSROOM_ID } from '../utils/constants';
 
 export const useFeedLogic = (filterClassroomId = null) => {
@@ -286,7 +287,7 @@ export const useFeedLogic = (filterClassroomId = null) => {
   }, []);
 
   const handleDeleteMessage = useCallback(async (messageId) => {
-    if (!window.confirm('Are you sure you want to delete this message?')) return;
+    if (!await showConfirm('Are you sure you want to delete this message?', { title: 'Delete Message', destructive: true })) return;
     try {
       await client.delete(`/message/delete_message/${messageId}`);
       

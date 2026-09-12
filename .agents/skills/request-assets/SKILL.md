@@ -1,4 +1,5 @@
 ---
+name: request-assets
 description: Review project structure and existing files to generate or extend a comprehensive UI/UX asset wishlist in CSV format.
 ---
 

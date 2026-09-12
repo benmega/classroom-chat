@@ -1,6 +1,8 @@
 ---
+name: login
 description: Automated Login Procedure
 ---
+
 > [!IMPORTANT]
 > **DEFAULT**: Use `/dev-login` for all normal agent authentication tasks.
 > Only use the standard `/login` form when the task is **explicitly about testing login or signup behaviour**.

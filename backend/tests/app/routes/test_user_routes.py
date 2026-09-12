@@ -10,13 +10,12 @@ from datetime import date
 from io import BytesIO
 from unittest.mock import patch
 
-from tests.factories import UserFactory, AdminFactory
-
 from application import db
 from application.models.project import Project
 from application.models.skill import Skill
 from application.models.user import User
 from PIL import Image
+from tests.factories import AdminFactory, UserFactory
 
 
 def test_get_users(client, init_db):
@@ -1044,10 +1043,6 @@ def test_get_parent_code_user_not_found(client, init_db):
 def synchronous_thread_start(self):
     self._target(*self._args, **self._kwargs)
 
-
-def synchronous_thread_start(self):
-    self._target(*self._args, **self._kwargs)
-
 def test_handle_video_s3_upload_helper(init_db, test_app):
     sample_user = UserFactory()
     from application.routes.user_routes import start_video_upload_thread
@@ -1080,7 +1075,7 @@ def test_handle_video_s3_upload_helper(init_db, test_app):
         mock_s3 = mock_get_s3.return_value
         with test_app.app_context():
             res = start_video_upload_thread(DummyVideoFile(), sample_user, project.name, project.id)
-        
+
         assert res is True
         mock_s3.upload_fileobj.assert_called_once()
         db.session.refresh(project)

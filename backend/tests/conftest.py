@@ -275,8 +275,6 @@ def sample_classroom(init_db, sample_user):
     classroom = ClassroomFactory(
         name="Test Classroom",
         language="python",
-        description="A test classroom",
-        teacher_id=sample_user.id,
     )
     return classroom
 
@@ -581,19 +579,6 @@ def mock_render_template(client):
         create=True,
     ) as mock:
         yield mock
-
-
-@pytest.fixture
-def sample_classroom(init_db):
-    """Creates a standard classroom."""
-    classroom = Classroom(
-        id="678b56dc12345",  # Simulating the MongoDB/JSON ID format
-        name="Sat1030 CS 4 PY",
-        language="python",
-    )
-    db.session.add(classroom)
-    db.session.commit()
-    return classroom
 
 
 @pytest.fixture

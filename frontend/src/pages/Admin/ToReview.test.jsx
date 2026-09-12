@@ -28,6 +28,12 @@ vi.mock('../../components/admin/AdminPageHeader', () => ({
   default: () => <div data-testid="AdminPageHeader">Header</div>
 }));
 
+import { showConfirm } from '../../utils/confirm';
+
+vi.mock('../../utils/confirm', () => ({
+    showConfirm: vi.fn()
+}));
+
 // Prevent happy-dom from trying to load iframe src which causes a TCP handle crash
 beforeEach(() => {
   vi.stubGlobal('HTMLIFrameElement', class HTMLIFrameElement {
@@ -39,7 +45,7 @@ beforeEach(() => {
 describe('ToReview Component', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    window.confirm = vi.fn(() => true);
+    showConfirm.mockResolvedValue(true);
     window.prompt = vi.fn(() => 'Test Reason');
   });
 

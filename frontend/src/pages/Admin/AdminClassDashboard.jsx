@@ -6,6 +6,7 @@ import {
     ChevronLeft, Users, Trash2, 
     Check, Plus, Settings, Globe, Link2, BookOpen, Key, Copy, Gamepad2, Code, X, UserPlus
 } from 'lucide-react';
+import { showConfirm } from '../../utils/confirm';
 
 const getCourseIcon = (courseName, courseId) => {
     const text = `${courseName || ''} ${courseId || ''}`.toLowerCase();
@@ -127,7 +128,7 @@ const AdminClassDashboard = () => {
     };
 
     const handleDisconnectCourse = async (instanceId) => {
-        if (!window.confirm('Are you sure you want to disconnect this course from the classroom?')) return;
+        if (!await showConfirm('Are you sure you want to disconnect this course from the classroom?', { title: 'Disconnect Course', destructive: true })) return;
         setFormLoading(true);
         try {
             const res = await client.delete(`/api/admin/crud/courseinstances/${instanceId}`);
@@ -242,7 +243,7 @@ const AdminClassDashboard = () => {
     };
 
     const handleUnenrollStudent = async (studentId) => {
-        if (!window.confirm('Are you sure you want to remove this student from the classroom?')) return;
+        if (!await showConfirm('Are you sure you want to remove this student from the classroom?', { title: 'Remove Student', destructive: true })) return;
         setFormLoading(true);
         try {
             const res = await client.post(`/api/admin/classrooms/${classId}/unenroll`, {

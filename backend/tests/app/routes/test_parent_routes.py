@@ -3,9 +3,7 @@ Unit tests for parent_routes.py
 """
 from application.extensions import db
 from application.models.user import User
-
-
-from tests.factories import UserFactory, AchievementFactory, UserAchievementFactory, ProjectFactory
+from tests.factories import AchievementFactory, ProjectFactory, UserAchievementFactory, UserFactory
 
 
 def test_parent_get_children_access_denied(client, app):
@@ -69,7 +67,7 @@ def test_connect_via_code_invalid_code(client, app):
 def test_connect_via_code_success_and_already_linked(client, app):
     with app.app_context():
         parent = UserFactory(role="parent")
-        child = UserFactory(username="child_4_test", role="student", nickname="Child Four", connection_code="LINK4_PTEST")
+        UserFactory(username="child_4_test", role="student", nickname="Child Four", connection_code="LINK4_PTEST")
 
         db.session.commit()
         p_id = parent.id
@@ -197,10 +195,10 @@ def test_get_student_report_with_achievements_projects_notes(client, app):
         parent.children.append(child)
 
         ach = AchievementFactory(name="Super Coder", type="ducks")
-        ua = UserAchievementFactory(user_id=child.id, achievement_id=ach.id)
-        proj = ProjectFactory(user_id=child.id, name="Snake Game")
+        UserAchievementFactory(user_id=child.id, achievement_id=ach.id)
+        ProjectFactory(user_id=child.id, name="Snake Game")
         note = Note(user_id=child.id, filename="note1.png")
-        
+
         db.session.add(note)
         db.session.commit()
 
@@ -240,7 +238,7 @@ def test_connect_via_code_edge_cases(client, app):
         for i in range(5):
             db.session.add(ConnectionAttempt(parent_id=p_id, code_attempted=f"CODE{i}"))
         db.session.commit()
-        
+
     with client.session_transaction() as sess:
         sess["user"] = p_id
 
@@ -274,9 +272,16 @@ def test_disconnect_student_edge_cases(client, app):
 
 def test_get_student_history(client, app):
     from datetime import datetime
-    from application.models.note import Note
-    from tests.factories import AchievementFactory, UserAchievementFactory, ChallengeLogFactory, DuckTradeLogFactory, ProjectFactory
+
     from application.models.duck_transaction import DuckTransaction
+    from application.models.note import Note
+    from tests.factories import (
+        AchievementFactory,
+        ChallengeLogFactory,
+        DuckTradeLogFactory,
+        ProjectFactory,
+        UserAchievementFactory,
+    )
 
     with app.app_context():
         parent = UserFactory(role="parent")
@@ -287,10 +292,10 @@ def test_get_student_history(client, app):
 
         # Add history data for child
         tx = DuckTransaction(user_id=child.id, amount=10.0, timestamp=datetime.utcnow())
-        clog = ChallengeLogFactory(user_id=child.id, domain="python", challenge_slug="vars-1")
+        ChallengeLogFactory(user_id=child.id, domain="python", challenge_slug="vars-1")
         ach = AchievementFactory(name="Explorer", type="ducks")
-        ua = UserAchievementFactory(user_id=child.id, achievement_id=ach.id)
-        proj = ProjectFactory(user_id=child.id, name="Art Project")
+        UserAchievementFactory(user_id=child.id, achievement_id=ach.id)
+        ProjectFactory(user_id=child.id, name="Art Project")
         note = Note(user_id=child.id, filename="hist_note.png", created_at=datetime.utcnow())
 
         db.session.add_all([tx, note])
@@ -336,12 +341,12 @@ def test_contact_teacher(client, app):
     from application.models.message import Message
 
     with app.app_context():
-        admin = UserFactory(role="admin")
+        UserFactory(role="admin")
         parent = UserFactory(role="parent", nickname="Parent One")
         child = UserFactory(role="student", nickname="Child One")
         parent.children.append(child)
         db.session.commit()
-        
+
         p_id = parent.id
         c_id = child.id
 

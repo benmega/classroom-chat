@@ -1,4 +1,5 @@
 ---
+name: cleanup-code
 description: Systematically identify and resolve technical debt, bad code smells, and inconsistencies.
 ---
 

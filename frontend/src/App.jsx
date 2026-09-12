@@ -5,6 +5,7 @@ import { Loader2 } from 'lucide-react';
 import useAuthStore from './store/useAuthStore';
 import { SidebarProvider } from './context/SidebarContext';
 import { THEME } from './utils/theme';
+import ConfirmDialog from './components/common/ConfirmDialog';
 
 
 import Layout from './components/Layout/Layout';
@@ -238,6 +239,7 @@ function App() {
                 },
             }}
         />
+        <ConfirmDialog />
       <ChunkErrorBoundary>
       <Suspense fallback={<PageLoader />}>
       <Routes>
@@ -424,11 +426,9 @@ function App() {
           </ProtectedRoute>
         } />
         <Route path="/parent/connect" element={
-          <ProtectedRoute parentOnly={true}>
-            <Layout>
-              <ConnectChild />
-            </Layout>
-          </ProtectedRoute>
+          <Layout>
+            <ConnectChild />
+          </Layout>
         } />
         <Route path="/join-class" element={<JoinClassroomLink />} />
         <Route path="/parent/course-progress/:slug" element={

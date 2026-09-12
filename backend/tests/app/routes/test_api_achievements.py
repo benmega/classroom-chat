@@ -2,7 +2,8 @@ import json
 
 import pytest
 from application import db
-from tests.factories import UserFactory, AchievementFactory
+from tests.factories import AchievementFactory, UserFactory
+
 
 @pytest.fixture
 def test_user(init_db):
@@ -78,13 +79,13 @@ def test_check_achievements_badge_url_format(logged_in_client, init_db, test_use
 
     assert response.status_code == 200
     data = json.loads(response.data)
-    
+
     badge_url = None
     for award in data["new_awards"]:
         if award["name"] == achievement.name:
             badge_url = award["badge"]
             break
-            
+
     assert badge_url is not None
     assert f"{achievement.slug}.png" in badge_url
 
@@ -140,7 +141,7 @@ def test_check_achievements_response_structure(logged_in_client, init_db, test_u
     response = logged_in_client.get("/api/achievements/check")
     data = json.loads(response.data)
 
-    award = [a for a in data["new_awards"] if a["name"] == achievement.name][0]
+    award = next(a for a in data["new_awards"] if a["name"] == achievement.name)
     assert all(k in award for k in ("id", "name", "badge"))
 
 def test_check_achievements_session_persistence(logged_in_client, init_db, test_user):

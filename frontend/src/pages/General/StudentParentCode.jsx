@@ -31,7 +31,7 @@ const StudentParentCode = () => {
     const copyToClipboard = () => {
         if (!code) return;
         navigator.clipboard.writeText(code);
-        
+        toast.success('Code copied!');
     };
 
     if (isLoading) return (

@@ -1,4 +1,5 @@
 ---
+name: remove-dead-code
 description: Find potentially unused and unneeded code, get user approval, remove it, verify success, and rollback on failure.
 ---
 

@@ -1,6 +1,6 @@
-import pytest
 from datetime import datetime, timedelta
 
+import pytest
 from application.extensions import db
 from application.models.achievements import Achievement
 from application.models.challenge_log import ChallengeLog
@@ -10,8 +10,8 @@ from application.models.project import Project
 from application.models.session_log import SessionLog
 from application.models.user import User
 from application.models.user_certificate import UserCertificate
+from tests.factories import AchievementFactory, UserFactory
 
-from tests.factories import UserFactory, AchievementFactory
 
 @pytest.fixture
 def test_user(init_db):

@@ -1,4 +1,5 @@
 ---
+name: polish-ui
 description: Automatically analyze a target URL or component using browser subagents to critique the UX/UI against the Aesthetic Guidelines, and autonomously iterate on a redesign.
 ---
 

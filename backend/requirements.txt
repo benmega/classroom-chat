@@ -37,3 +37,4 @@ pytest-cov==5.0.0
 
 mypy
 sqlalchemy2-stubs
+factory_boy==3.3.3

@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Loader2, MoreVertical, User, Trophy, Bell, Activity, Zap, Clock, Star, BookOpen, Folder, Award, ChevronRight, AlertCircle, Plus, HelpCircle, UserMinus } from 'lucide-react';
+import { Loader2, MoreVertical, User, Trophy, Bell, Activity, Zap, Clock, Star, BookOpen, Folder, Award, ChevronRight, AlertCircle, Plus, UserMinus } from 'lucide-react';
 import toast from 'react-hot-toast';
 import client from '../../api/client';
+import { showConfirm } from '../../utils/confirm';
 import { getApiUrl } from '../../utils/apiUrl';
 
 import DesktopNotice from '../../components/common/DesktopNotice';
@@ -123,7 +124,7 @@ const ParentDashboard = () => {
 
     // ── Disconnect child ───────────────────────────────────────────────────────
     const handleDisconnect = async (childId, childName) => {
-        if (!window.confirm(`Remove ${childName}?`)) return;
+        if (!await showConfirm(`Remove ${childName}?`, { title: 'Remove Child', destructive: true })) return;
         try {
             await client.post(`/api/parents/disconnect/${childId}`);
             
@@ -190,60 +191,43 @@ const ParentDashboard = () => {
         return (
             <div className="parent-dashboard animate-page-entry">
                 <div className="parent-body" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '80vh' }}>
-                    <div className="glass-panel" style={{ padding: '2rem', textAlign: 'center', maxWidth: '400px', width: '100%' }}>
-                        <h2 style={{ marginBottom: '1rem' }}>Welcome</h2>
-                        <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
-                            Link child to start.
-                            <HelpCircle size={16} title="Ask your child to provide you the 6-digit code they can find in their profile settings." style={{ cursor: 'help' }} />
+                    <div className="glass-panel" style={{ padding: '2rem', textAlign: 'center', maxWidth: '420px', width: '100%' }}>
+                        <div style={{ fontSize: '2.5rem', marginBottom: '0.75rem' }}>👋</div>
+                        <h2 style={{ marginBottom: '0.5rem', fontSize: '1.3rem' }}>Welcome to the Parent Portal</h2>
+                        <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem', fontSize: '0.9rem', lineHeight: 1.6 }}>
+                            Link your child's account to start tracking their progress.
                         </p>
-                        <form onSubmit={handleConnectChild} className="connect-form d-flex flex-col gap-md">
-                            <input
-                                type="text"
-                                placeholder="CODE"
-                                value={connectCode}
-                                onChange={(e) => setConnectCode(e.target.value)}
-                                maxLength={10}
-                                className="connect-input"
-                                style={{ padding: '0.75rem', fontSize: '1.1rem', textAlign: 'center', letterSpacing: '2px', textTransform: 'uppercase' }}
-                                aria-label="Code"
-                            />
-                            <button
-                                type="submit"
-                                className="btn-premium"
-                                disabled={isConnecting || !connectCode.trim()}
-                                style={{ width: '100%', justifyContent: 'center' }}
-                            >
-                                {isConnecting ? 'Linking...' : 'Link Child'}
-                            </button>
-                            {connectError && (
-                                <div style={{ fontSize: '0.75rem', color: 'var(--error-color)', marginTop: '0.25rem' }}>
-                                    {connectError}
-                                </div>
-                            )}
-                        </form>
-                    </div>
-                </div>
-            </div>
-        );
-    }
 
-    if (children.length === 0 && !isLoading) {
-        return (
-            <div className="parent-dashboard animate-page-entry">
-                <div className="parent-body" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '80vh' }}>
-                    <div className="glass-panel" style={{ padding: '2rem', textAlign: 'center', maxWidth: '400px', width: '100%' }}>
-                        <h2 style={{ marginBottom: '1rem' }}>Welcome</h2>
-                        <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem' }}>Link child to start.</p>
+                        <div style={{
+                            background: 'var(--bg-secondary)',
+                            border: '1px solid var(--border-subtle)',
+                            borderRadius: '10px',
+                            padding: '1rem 1.25rem',
+                            marginBottom: '1.5rem',
+                            textAlign: 'left',
+                            fontSize: '0.85rem',
+                            lineHeight: 1.6,
+                            color: 'var(--text-secondary)',
+                        }}>
+                            <strong style={{ color: 'var(--text-primary)', display: 'block', marginBottom: '0.4rem' }}>How to get a connection code:</strong>
+                            <ol style={{ margin: 0, paddingLeft: '1.25rem' }}>
+                                <li>Ask your child to open the app and go to <strong>Settings</strong>.</li>
+                                <li>They'll see a <strong>Pairing Code</strong> — have them share it with you.</li>
+                                <li>Enter that code below to link their account.</li>
+                            </ol>
+                        </div>
+
                         <form onSubmit={handleConnectChild} className="connect-form d-flex flex-col gap-md">
                             <input
                                 type="text"
-                                placeholder="CODE"
+                                placeholder="Enter code"
                                 value={connectCode}
                                 onChange={(e) => setConnectCode(e.target.value)}
                                 maxLength={10}
                                 className="connect-input"
                                 style={{ padding: '0.75rem', fontSize: '1.1rem', textAlign: 'center', letterSpacing: '2px', textTransform: 'uppercase' }}
-                                aria-label="Code"
+                                aria-label="Connection code"
+                                autoFocus
                             />
                             <button
                                 type="submit"
@@ -390,7 +374,7 @@ const ParentDashboard = () => {
                                     Family
                                 </h3>
                                 <button 
-                                    onClick={() => setIsLinkModalOpen(true)}
+                                    onClick={() => { setConnectError(null); setIsLinkModalOpen(true); }}
                                     style={{
                                         display: 'flex',
                                         alignItems: 'center',

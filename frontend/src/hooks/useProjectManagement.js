@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import client from '../api/client';
+import { showConfirm } from '../utils/confirm';
 import toast from 'react-hot-toast';
 import useAuthStore from '../store/useAuthStore';
 import { formatStaticUrl } from '../utils/formatters';
@@ -217,7 +218,7 @@ export const useProjectManagement = () => {
     };
 
     const handleDelete = async () => {
-        if (!window.confirm('Are you sure you want to delete this project?')) return;
+        if (!await showConfirm('Are you sure you want to delete this project?', { title: 'Delete Project', destructive: true })) return;
         
         setIsSaving(true);
         try {

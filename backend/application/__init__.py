@@ -316,7 +316,7 @@ def seed_global_data():
             },
             {
                 "name": "Permanent Double Duck",
-                "description": "Permanently double all your duck earnings! This stacks with global multipliers.",
+                "description": "Permanently double your daily and challenge duck earnings! (Does not apply to achievements).",
                 "base_price": 0.05,
             },
         ]

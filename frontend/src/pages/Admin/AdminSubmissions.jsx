@@ -11,6 +11,7 @@ import {
     Reply
 } from 'lucide-react';
 import client from '../../api/client';
+import { showConfirm } from '../../utils/confirm';
 import toast from 'react-hot-toast';
 import { getApiUrl } from '../../utils/apiUrl';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
@@ -92,7 +93,7 @@ const AdminSubmissions = () => {
     };
 
     const handleDelete = async (id, filename) => {
-        if (!window.confirm(`Are you sure you want to delete "${filename}"? This cannot be undone.`)) return;
+        if (!await showConfirm(`Are you sure you want to delete "${filename}"? This cannot be undone.`, { title: 'Delete Submission', destructive: true })) return;
 
         setIsProcessing(id);
         try {

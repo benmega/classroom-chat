@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Search, Plus, Users, Globe, X, MoreVertical, Trash2 } from 'lucide-react';
+import { showConfirm } from '../../utils/confirm';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
 import Skeleton from '../../components/common/Skeleton';
@@ -114,7 +115,7 @@ const Classes = () => {
     }, [fetchClassrooms]);
 
     const handleDeleteClassroom = async (classroom) => {
-        if (!window.confirm(`WARNING: Are you sure you want to delete classroom "${classroom.name}"? Deleting a classroom removes the classroom instance. Students remain active users in the system but will be unlinked from this group. This cannot be undone.`)) {
+        if (!await showConfirm(`WARNING: Are you sure you want to delete classroom "${classroom.name}"? Deleting a classroom removes the classroom instance. Students remain active users in the system but will be unlinked from this group. This cannot be undone.`, { title: 'Delete Classroom', destructive: true })) {
             return;
         }
         try {
