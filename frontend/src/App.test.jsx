@@ -63,7 +63,7 @@ describe('App Component', () => {
     window.history.pushState({}, 'Test page', '/');
   });
 
-  it('renders landing page initially when not authenticated', () => {
+  it('renders landing page initially when not authenticated', async () => {
     useAuthStore.mockReturnValue({
       isLoading: false,
       isAuthenticated: false,
@@ -73,10 +73,10 @@ describe('App Component', () => {
     });
 
     renderApp();
-    expect(screen.getByText('Landing Page Mock')).toBeInTheDocument();
+    expect(await screen.findByText('Landing Page Mock')).toBeInTheDocument();
   });
 
-  it('renders ServerOffline component when server is offline', () => {
+  it('renders ServerOffline component when server is offline', async () => {
     useAuthStore.mockReturnValue({
       isLoading: false,
       isAuthenticated: false,
@@ -86,10 +86,10 @@ describe('App Component', () => {
     });
 
     renderApp();
-    expect(screen.getByText('Server is Offline Mock')).toBeInTheDocument();
+    expect(await screen.findByText('Server is Offline Mock')).toBeInTheDocument();
   });
 
-  it('redirects authenticated student away from /login to /chat', () => {
+  it('redirects authenticated student away from /login to /chat', async () => {
     window.history.pushState({}, 'Test page', '/login');
     useAuthStore.mockReturnValue({
       isLoading: false,
@@ -102,10 +102,10 @@ describe('App Component', () => {
     renderApp();
     // Login page should NOT be visible; student should be redirected to chat
     expect(screen.queryByText('Login Page Mock')).not.toBeInTheDocument();
-    expect(screen.getByText('Chat Page Mock')).toBeInTheDocument();
+    expect(await screen.findByText('Chat Page Mock')).toBeInTheDocument();
   });
 
-  it('shows loading spinner when isLoading is true', () => {
+  it('shows loading spinner when isLoading is true', async () => {
     useAuthStore.mockReturnValue({
       isLoading: true,
       isAuthenticated: false,
@@ -116,8 +116,8 @@ describe('App Component', () => {
 
     window.history.pushState({}, 'Test page', '/chat');
     renderApp();
-    expect(screen.getByText('Preparing your workspace...')).toBeInTheDocument();
-    expect(screen.getByText('Classroom Chat')).toBeInTheDocument();
+    expect(await screen.findByText('Preparing your workspace...')).toBeInTheDocument();
+    expect(await screen.findByText('Classroom Chat')).toBeInTheDocument();
   });
 
   it('redirects parent role to parent dashboard', async () => {
@@ -135,7 +135,7 @@ describe('App Component', () => {
     expect(await screen.findByText('Parent Dashboard Mock')).toBeInTheDocument();
   });
 
-  it('renders AccessDenied for non-admin accessing admin route', () => {
+  it('renders AccessDenied for non-admin accessing admin route', async () => {
     window.history.pushState({}, 'Test page', '/admin');
     useAuthStore.mockReturnValue({
       isLoading: false,
@@ -146,7 +146,7 @@ describe('App Component', () => {
     });
 
     renderApp();
-    expect(screen.getByText('Access Denied Mock')).toBeInTheDocument();
+    expect(await screen.findByText('Access Denied Mock')).toBeInTheDocument();
   });
 
   it('calls checkAuth on mount', () => {

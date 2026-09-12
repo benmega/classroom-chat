@@ -324,18 +324,18 @@ describe('Chat Component', () => {
     expect(mockSetShowEmojiPicker).toHaveBeenCalledWith(true);
   });
 
-  it('renders emoji picker when showEmojiPicker is true', () => {
+  it('renders emoji picker when showEmojiPicker is true', async () => {
     useFeedLogic.mockReturnValue(buildFeedLogic({ showEmojiPicker: true }));
     renderWithProviders(<Chat />);
 
-    expect(screen.getByTestId('emoji-picker')).toBeInTheDocument();
+    expect(await screen.findByTestId('emoji-picker')).toBeInTheDocument();
   });
 
-  it('calls onEmojiClick when an emoji is picked', () => {
+  it('calls onEmojiClick when an emoji is picked', async () => {
     useFeedLogic.mockReturnValue(buildFeedLogic({ showEmojiPicker: true }));
     renderWithProviders(<Chat />);
 
-    fireEvent.click(screen.getByText('Pick emoji'));
+    fireEvent.click(await screen.findByText('Pick emoji'));
 
     expect(mockOnEmojiClick).toHaveBeenCalledWith({ emoji: '😊' });
   });

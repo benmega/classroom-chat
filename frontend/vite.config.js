@@ -4,6 +4,7 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   build: {
+    target: 'esnext',
     rollupOptions: {
       output: {
         // Split heavy vendor libs into separate cached chunks.
@@ -11,7 +12,6 @@ export default defineConfig({
         // busts the MUI / react-admin / chart.js cache in the browser.
         manualChunks: {
           'vendor-react': ['react', 'react-dom', 'react-router-dom'],
-          'vendor-mui': ['@mui/material', '@emotion/react', '@emotion/styled'],
           'vendor-charts': ['chart.js', 'react-chartjs-2'],
           'vendor-react-admin': ['react-admin', 'ra-core'],
           'vendor-emoji': ['emoji-picker-react'],
