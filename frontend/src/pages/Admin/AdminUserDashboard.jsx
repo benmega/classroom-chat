@@ -93,10 +93,7 @@ const AdminUserDashboard = () => {
 
     if (!user) return null;
 
-    const handleTrackChange = (trackId) => {
-        setEditForm(prev => ({ ...prev, active_track: trackId }));
-        handleUpdateUser({ active_track: trackId });
-    };
+
 
     const handleToggleChat = () => {
         const nextState = !editForm.can_chat;
@@ -252,12 +249,10 @@ const AdminUserDashboard = () => {
                                     const IconComponent = t.icon;
                                     const isActive = editForm.active_track === t.id;
                                     return (
-                                        <button
+                                        <div
                                             key={t.id}
-                                            type="button"
                                             className={`track-card-btn ${isActive ? 'active' : ''}`}
-                                            onClick={() => handleTrackChange(t.id)}
-                                            disabled={formLoading}
+                                            style={{ cursor: 'default' }}
                                         >
                                             {t.type === 'image' ? (
                                                 <img src={t.logo} alt={t.label} className="track-card-icon track-logo-img" />
@@ -268,7 +263,7 @@ const AdminUserDashboard = () => {
                                                 <div className="track-card-name">{t.label}</div>
                                             </div>
                                             {isActive && <div className="track-active-badge">✓ Active</div>}
-                                        </button>
+                                        </div>
                                     );
                                 })}
                             </div>

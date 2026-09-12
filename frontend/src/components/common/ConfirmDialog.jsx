@@ -1,4 +1,5 @@
-﻿import React, { useState, useEffect, useRef } from 'react';
+/* eslint-disable jsx-a11y/no-noninteractive-element-interactions */
+import React, { useState, useEffect, useRef } from 'react';
 import { confirmEvents } from '../../utils/confirm';
 
 const ConfirmDialog = () => {
