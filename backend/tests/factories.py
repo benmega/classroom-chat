@@ -37,8 +37,8 @@ class UserFactory(BaseFactory):
     duck_balance = 0
 
 class AdminFactory(UserFactory):
-    _username = 'admin'
-    nickname = 'Admin'
+    _username = 'admin'  # type: ignore[assignment]
+    nickname = 'Admin'  # type: ignore[assignment]
     role = 'admin'
 
 class ParentFactory(UserFactory):
@@ -86,7 +86,7 @@ class ChallengeLogFactory(BaseFactory):
     class Meta:
         model = ChallengeLog
 
-    user_id = factory.LazyAttribute(lambda _: UserFactory().id)
+    user_id = factory.LazyAttribute(lambda _: UserFactory().id)  # type: ignore[attr-defined]
     domain = 'codecombat.com'
     challenge_slug = factory.Sequence(lambda n: f'challenge-slug-{n}')
     course_id = 'test-course'
@@ -107,14 +107,14 @@ class UserAchievementFactory(BaseFactory):
     class Meta:
         model = UserAchievement
 
-    user_id = factory.LazyAttribute(lambda _: UserFactory().id)
-    achievement_id = factory.LazyAttribute(lambda _: AchievementFactory().id)
+    user_id = factory.LazyAttribute(lambda _: UserFactory().id)  # type: ignore[attr-defined]
+    achievement_id = factory.LazyAttribute(lambda _: AchievementFactory().id)  # type: ignore[attr-defined]
 
 class MessageFactory(BaseFactory):
     class Meta:
         model = Message
 
-    user_id = factory.LazyAttribute(lambda _: UserFactory().id)
+    user_id = factory.LazyAttribute(lambda _: UserFactory().id)  # type: ignore[attr-defined]
     content = factory.Sequence(lambda n: f'Test message {n}')
     message_type = 'text'
     is_global = False
@@ -127,14 +127,14 @@ class ProjectFactory(BaseFactory):
     name = factory.Sequence(lambda n: f'Project {n}')
     description = 'Test Project'
     link = 'http://example.com'
-    user_id = factory.LazyAttribute(lambda _: UserFactory().id)
+    user_id = factory.LazyAttribute(lambda _: UserFactory().id)  # type: ignore[attr-defined]
 
 class SkillFactory(BaseFactory):
     class Meta:
         model = Skill
 
     name = factory.Sequence(lambda n: f'Skill {n}')
-    user_id = factory.LazyAttribute(lambda _: UserFactory().id)
+    user_id = factory.LazyAttribute(lambda _: UserFactory().id)  # type: ignore[attr-defined]
 
 class AISettingsFactory(BaseFactory):
     class Meta:
@@ -163,14 +163,14 @@ class SessionLogFactory(BaseFactory):
     class Meta:
         model = SessionLog
 
-    user_id = factory.LazyAttribute(lambda _: UserFactory().id)
+    user_id = factory.LazyAttribute(lambda _: UserFactory().id)  # type: ignore[attr-defined]
 
 class UserCertificateFactory(BaseFactory):
     class Meta:
         model = UserCertificate
 
-    user_id = factory.LazyAttribute(lambda _: UserFactory().id)
-    achievement_id = factory.LazyAttribute(lambda _: AchievementFactory().id)
+    user_id = factory.LazyAttribute(lambda _: UserFactory().id)  # type: ignore[attr-defined]
+    achievement_id = factory.LazyAttribute(lambda _: AchievementFactory().id)  # type: ignore[attr-defined]
     url = factory.Sequence(lambda n: f'http://example.com/cert{n}.pdf')
     status = 'pending'
 
@@ -178,7 +178,7 @@ class DuckTradeLogFactory(BaseFactory):
     class Meta:
         model = DuckTradeLog
 
-    user_id = factory.LazyAttribute(lambda _: UserFactory().id)
+    user_id = factory.LazyAttribute(lambda _: UserFactory().id)  # type: ignore[attr-defined]
     digital_ducks = 1
     bit_ducks = factory.LazyFunction(list)
     byte_ducks = factory.LazyFunction(list)
