@@ -34,7 +34,7 @@ jobs:
         run: |
           cd frontend
           npm install
-          npm run build
+          NODE_OPTIONS="--max-old-space-size=4096" npm run build
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4

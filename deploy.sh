@@ -140,7 +140,7 @@ echo "Building frontend..."
 (
     cd "$APP_DIR/frontend"
     run npm install
-    run npm run build
+    run env NODE_OPTIONS="--max-old-space-size=4096" npm run build
 )
 
 run sudo systemctl reload nginx
