@@ -479,7 +479,7 @@ describe('AdminClassDashboard', () => {
         });
 
         client.post.mockImplementation((url) => {
-            if (url.includes('/regenerate_code')) {
+            if (url.includes('/join-code/regenerate')) {
                 currentJoinCode = 'NEW456';
                 return Promise.resolve({ data: { success: true, join_code: 'NEW456' } });
             }
@@ -503,7 +503,7 @@ describe('AdminClassDashboard', () => {
         fireEvent.click(regenerateBtn);
 
         await waitFor(() => {
-            expect(client.post).toHaveBeenCalledWith('/api/admin/classrooms/cls123/regenerate_code');
+            expect(client.post).toHaveBeenCalledWith('/api/admin/classrooms/cls123/join-code/regenerate');
             expect(screen.getAllByText('NEW456').length).toBeGreaterThan(0);
         });
     });

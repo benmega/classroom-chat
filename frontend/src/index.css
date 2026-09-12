@@ -13,6 +13,16 @@ html, body {
   overflow: hidden;
 }
 
+::selection {
+  background-color: var(--primary-accessible);
+  color: var(--bg-primary);
+}
+
+::-moz-selection {
+  background-color: var(--primary-accessible);
+  color: var(--bg-primary);
+}
+
 body {
   font-family: var(--font-body);
   font-size: var(--font-md);

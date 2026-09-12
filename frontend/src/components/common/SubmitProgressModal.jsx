@@ -142,18 +142,10 @@ const SubmitProgressModal = ({ isOpen, onClose, onUrlChange }) => {
             console.error('Submission error:', error);
             const data = error.response?.data;
             if (data?.course_instance_not_found) {
-                try {
-                    await client.post('/api/course-requests/submit', {
-                        course_instance_id: data.course_instance_id,
-                        requested_course_id: data.requested_course_id,
-                        url: url
-                    });
-                    toast.success("This course wasn't connected yet, but we've automatically requested your teacher to add it!");
-                    resetForm();
-                    if (onClose) onClose();
-                } catch (reqError) {
-                    toast.error(getErrorMessage(reqError, 'Failed to request course addition automatically'));
-                }
+                // The backend automatically creates the request and sets an appropriate message.
+                toast.success(data.message || "This course wasn't connected yet, but we've automatically requested your teacher to add it!");
+                resetForm();
+                if (onClose) onClose();
             } else {
                 toast.error(getErrorMessage(error, 'An error occurred during submission.'));
                 setUrl('');
