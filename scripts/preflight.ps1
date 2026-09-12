@@ -21,6 +21,8 @@ Set-Location "$PSScriptRoot\..\backend"
 # Linting
 Write-Host " -> Running Ruff (Linter)..." -ForegroundColor DarkGray
 ruff check "$PSScriptRoot\.." ; Assert-Success
+Write-Host " -> Running Mypy (Type Checker)..." -ForegroundColor DarkGray
+python -m mypy . ; Assert-Success
 
 # Security and Performance Analysis
 Write-Host " -> Running Admin Authorization Check..." -ForegroundColor DarkGray

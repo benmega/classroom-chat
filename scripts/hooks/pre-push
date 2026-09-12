@@ -1,12 +1,12 @@
 #!/bin/sh
-# pre-push hook: runs Ruff and ESLint before any push reaches the remote.
+# pre-push hook: runs Ruff, Mypy, and ESLint before any push reaches the remote.
 # Install with: powershell scripts/install-hooks.ps1
 # To bypass in an emergency: git push --no-verify
 
 REPO_ROOT="$(git rev-parse --show-toplevel)"
 
 echo "========================================================" >&2
-echo "  PRE-PUSH LINT GATE (Ruff + ESLint)" >&2
+echo "  PRE-PUSH LINT GATE (Ruff + Mypy + ESLint)" >&2
 echo "  Run 'git push --no-verify' to bypass in emergencies." >&2
 echo "========================================================" >&2
 
@@ -22,6 +22,17 @@ if [ $RUFF_EXIT -ne 0 ]; then
     exit $RUFF_EXIT
 fi
 echo "    Ruff: OK" >&2
+
+# ---- Mypy (Python) ---------------------------------------------------------
+echo "--> Running Mypy..." >&2
+cd "$REPO_ROOT/backend" && python -m mypy .
+MYPY_EXIT=$?
+if [ $MYPY_EXIT -ne 0 ]; then
+    echo "" >&2
+    echo "PUSH BLOCKED: Mypy found errors. Fix them, then push again." >&2
+    exit $MYPY_EXIT
+fi
+echo "    Mypy: OK" >&2
 
 # ---- ESLint (JavaScript/JSX) -----------------------------------------------
 echo "--> Running ESLint..." >&2

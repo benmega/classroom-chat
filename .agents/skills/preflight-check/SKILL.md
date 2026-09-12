@@ -11,7 +11,7 @@ This workflow automates running the preflight script and proactively fixing any 
 
 Running `/preflight-check` validates the codebase **at the moment it runs**. Any code written or committed *after* that point is not re-checked before it reaches the remote. This is how lint errors can pass a manual preflight but still fail CI.
 
-**The fix**: a `pre-push` git hook runs Ruff and ESLint automatically on every `git push`, making it impossible to push failing code. This hook must be installed once per machine.
+**The fix**: a `pre-push` git hook runs Ruff, Mypy, and ESLint automatically on every `git push`, making it impossible to push failing code. This hook must be installed once per machine.
 
 ## Step 0: Verify the Pre-Push Hook Is Installed
 
@@ -35,11 +35,12 @@ powershell scripts/install-hooks.ps1
     - Command: `powershell.exe -ExecutionPolicy Bypass -File scripts/preflight.ps1`
 2.  **Analyze Results**:
     - If the script outputs `ALL CHECKS PASSED! SAFE TO MERGE.`, then the workflow is complete. Report success to the user and note the test coverage percentages.
-    - If the script fails, identify the failing stage (e.g., Ruff linting, Pytest, Frontend Vitest, ESLint, Database Migrations, or Playwright E2E).
+    - If the script fails, identify the failing stage (e.g., Ruff linting, Mypy, Pytest, Frontend Vitest, ESLint, Database Migrations, or Playwright E2E).
 3.  **Resolve Issues**:
     - **Linting/Formatting (Ruff/ESLint)**: Locate the problematic files and fix the syntax or formatting errors.
       - Ruff auto-fix: `ruff check --fix .` (from repo root)
       - ESLint auto-fix: `npm run lint -- --fix` (from `frontend/`)
+    - **Static Type Checking (Mypy)**: Locate the flagged lines and resolve the type mismatches (using `# type: ignore` as a last resort if dealing with complex dynamically generated classes like FactoryBoy).
     - **Security and Performance**: If `check_admin_auth.py` fails, add proper `@admin_only` or `@login_required` decorators to the flagged admin routes. If `check_n_plus_one.py` warns of N+1 queries, verify the queries and ensure `joinedload` or `selectinload` is used where necessary.
     - **Unit Tests (Pytest/Vitest)**: Read the test outputs to understand the failure. Modify the source code or the test code (whichever is appropriate) to resolve the bug.
     - **Database Migrations (`flask db check`)**: If migrations are out of sync, generate a new migration using `flask db migrate -m "Auto migration"` and apply it using `flask db upgrade head`.
