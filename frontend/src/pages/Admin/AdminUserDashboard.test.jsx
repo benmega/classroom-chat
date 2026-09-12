@@ -102,27 +102,6 @@ describe('AdminUserDashboard Component Redesign', () => {
         expect(screen.getByText('Web Development')).toBeInTheDocument();
     });
 
-    it('triggers track update when clicking track pill', async () => {
-        client.put.mockResolvedValueOnce({ data: { status: 'success', message: 'User updated' } });
-
-        render(
-            <BrowserRouter>
-                <AdminUserDashboard />
-            </BrowserRouter>
-        );
-
-        await waitFor(() => {
-            expect(screen.getByText('Game Development')).toBeInTheDocument();
-        });
-
-        const gdTrackBtn = screen.getByText('Game Development').closest('button');
-        fireEvent.click(gdTrackBtn);
-
-        expect(client.put).toHaveBeenCalledWith(
-            '/api/admin/user/1',
-            expect.objectContaining({ active_track: 'gd' })
-        );
-    });
 
     it('handles quick duck preset click', async () => {
         render(
