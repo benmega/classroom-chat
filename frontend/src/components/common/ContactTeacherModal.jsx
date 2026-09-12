@@ -1,4 +1,4 @@
-﻿import React, { useState } from "react";
+import React, { useState } from "react";
 import { X, Send, MessageSquare } from "lucide-react";
 import client from "../../api/client";
 import toast from "react-hot-toast";
@@ -34,6 +34,7 @@ const ContactTeacherModal = ({ isOpen, onClose }) => {
     };
 
     return (
+        // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/click-events-have-key-events
         <div
             role="dialog"
             aria-modal="true"

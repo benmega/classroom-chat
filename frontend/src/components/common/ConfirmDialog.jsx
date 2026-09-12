@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { confirmEvents } from '../../utils/confirm';
 
 const ConfirmDialog = () => {
@@ -47,6 +47,7 @@ const ConfirmDialog = () => {
     const isDestructive = config.options?.destructive;
 
     return (
+        // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
         <div
             role="dialog"
             aria-modal="true"

@@ -227,7 +227,6 @@ const ParentDashboard = () => {
                                 className="connect-input"
                                 style={{ padding: '0.75rem', fontSize: '1.1rem', textAlign: 'center', letterSpacing: '2px', textTransform: 'uppercase' }}
                                 aria-label="Connection code"
-                                autoFocus
                             />
                             <button
                                 type="submit"
