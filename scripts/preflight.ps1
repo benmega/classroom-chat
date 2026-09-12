@@ -61,8 +61,14 @@ Write-Host " -> Running Vitest with Coverage..." -ForegroundColor DarkGray
 npm run test -- --run --coverage ; Assert-Success
 
 # Building
-Write-Host " -> Verifying Vite Build..." -ForegroundColor DarkGray
-npm run build ; Assert-Success
+Write-Host " -> Verifying Vite Build (Simulating Prod Constraints)..." -ForegroundColor DarkGray
+npm run build:strict ; Assert-Success
+
+$distSize = (Get-ChildItem -Path dist -Recurse -File | Measure-Object -Property Length -Sum).Sum / 1MB
+Write-Host (" -> Frontend Bundle Size: {0:N2} MB" -f $distSize) -ForegroundColor DarkGray
+if ($distSize -gt 3.0) {
+    Write-Warning "Frontend bundle size ($("{0:N2}" -f $distSize) MB) is getting large. Consider debloating."
+}
 
 # ---------------------------------------------------------
 # END-TO-END TESTS

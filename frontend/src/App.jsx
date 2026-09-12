@@ -11,14 +11,14 @@ import ConfirmDialog from './components/common/ConfirmDialog';
 import Layout from './components/Layout/Layout';
 import AdminLayout from './components/Layout/AdminLayout';
 
-// --- Core pages: eagerly loaded (needed on first render for all users) ---
-import Login from './pages/Auth/Login';
-import Signup from './pages/Auth/Signup';
-import ForgotPassword from './pages/Auth/ForgotPassword';
-import ResetPassword from './pages/Auth/ResetPassword';
-import Landing from './pages/General/Landing';
-import Chat from './pages/Chat/Chat';
-import Profile from './pages/Profile/index';
+// --- Core pages: lazily loaded to reduce main bundle size ---
+const Login = React.lazy(() => import('./pages/Auth/Login'));
+const Signup = React.lazy(() => import('./pages/Auth/Signup'));
+const ForgotPassword = React.lazy(() => import('./pages/Auth/ForgotPassword'));
+const ResetPassword = React.lazy(() => import('./pages/Auth/ResetPassword'));
+const Landing = React.lazy(() => import('./pages/General/Landing'));
+const Chat = React.lazy(() => import('./pages/Chat/Chat'));
+const Profile = React.lazy(() => import('./pages/Profile/index'));
 import AccessDenied from './pages/Error/AccessDenied';
 import ServerOffline from './pages/Error/ServerOffline';
 

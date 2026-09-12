@@ -8,7 +8,7 @@ import {
   UserPlus,
   X
 } from 'lucide-react';
-import EmojiPicker from 'emoji-picker-react';
+const EmojiPicker = React.lazy(() => import('emoji-picker-react'));
 import './Chat.css';
 
 import ChatMessage from '../../components/chat/ChatMessage';
@@ -241,13 +241,15 @@ const Chat = ({ filterClassroomId = null }) => {
                         </button>
                         {showEmojiPicker && (
                           <div className="emoji-picker-container emoji-picker-container-absolute">
-                            <EmojiPicker
-                              onEmojiClick={onEmojiClick}
-                              autoFocusSearch={false}
-                              theme="auto"
-                              width={320}
-                              height={400}
-                            />
+                            <React.Suspense fallback={<div>Loading emojis...</div>}>
+                              <EmojiPicker
+                                onEmojiClick={onEmojiClick}
+                                autoFocusSearch={false}
+                                theme="auto"
+                                width={320}
+                                height={400}
+                              />
+                            </React.Suspense>
                           </div>
                         )}
                     </div>
