@@ -34,7 +34,7 @@ API endpoints are structured into logical modules using **Flask Blueprints**. Th
 - **`shop`** / **`duck_trade`**: Economy systems for virtual storefront purchases and peer trading.
 - **`parent`**: APIs handling the parent portal data and parent-student linkages.
 - **`api_webhooks`**: Ingress for external systems (e.g., Stripe, analytics).
-- **`track_requests`**: Analytics and request logging endpoints.
+
 
 ### Proxy & WSGI Support
 - **ProxyFix**: Configured to trust headers when running behind a reverse proxy (like Nginx).

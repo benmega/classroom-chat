@@ -11,7 +11,7 @@ const BitShift = () => {
     const { user, checkAuth } = useAuthStore();
     const [digitalDucks, setDigitalDucks] = useState(0);
     const [bitDuckCounts, setBitDuckCounts] = useState(Array(7).fill(0));
-    const [byteDuckCounts, setByteDuckCounts] = useState(Array(6).fill(0));
+    const [byteDuckCounts, setByteDuckCounts] = useState(Array(5).fill(0));
     const [showByteRow, setShowByteRow] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
@@ -60,7 +60,7 @@ const BitShift = () => {
             toast.error('Enter a duck amount first.');
             return;
         }
-        const maxAllowed = showByteRow ? 8191 : 127;
+        const maxAllowed = showByteRow ? 4095 : 127;
         if (digitalDucks > maxAllowed) {
             toast.error(`Maximum value for current mode is ${maxAllowed}.`);
             return;
@@ -68,10 +68,10 @@ const BitShift = () => {
         
         let remaining = digitalDucks;
         
-        const newByteCounts = Array(6).fill(0);
+        const newByteCounts = Array(5).fill(0);
         if (showByteRow) {
             const byteDecimal = Math.floor(remaining / 128);
-            for (let i = 5; i >= 0; i--) {
+            for (let i = 4; i >= 0; i--) {
                 if (byteDecimal & (1 << i)) {
                     newByteCounts[i] = 1;
                 }
@@ -112,7 +112,7 @@ const BitShift = () => {
             const payload = {
                 digital_ducks: digitalDucks,
                 bit_ducks: [...bitDuckCounts, 0],
-                byte_ducks: showByteRow ? [...byteDuckCounts, 0, 0] : Array(8).fill(0)
+                byte_ducks: showByteRow ? [...byteDuckCounts, 0, 0, 0] : Array(8).fill(0)
             };
 
             const response = await client.post('/duck_trade/submit_trade', payload, {
@@ -129,7 +129,7 @@ const BitShift = () => {
                 });
                 setDigitalDucks(0);
                 setBitDuckCounts(Array(7).fill(0));
-                setByteDuckCounts(Array(6).fill(0));
+                setByteDuckCounts(Array(5).fill(0));
                 setHasAttemptedSubmit(false);
                 checkAuth(); // Refresh user balance
             } else {
@@ -157,7 +157,7 @@ const BitShift = () => {
                                 onChange={() => {
                                     setShowByteRow(prev => {
                                         if (prev) {
-                                            setByteDuckCounts(Array(6).fill(0));
+                                            setByteDuckCounts(Array(5).fill(0));
                                         }
                                         return !prev;
                                     });
@@ -236,7 +236,7 @@ const BitShift = () => {
 
                     <div className={`byte-row-container ${showByteRow ? 'expanded' : ''}`}>
                         <div className="ducks-grid bytes-grid">
-                            {[5, 4, 3, 2, 1, 0].map((i) => (
+                            {[4, 3, 2, 1, 0].map((i) => (
                                 <div key={`byte_${i}`} className="small-input-group">
                                     <button
                                         type="button"

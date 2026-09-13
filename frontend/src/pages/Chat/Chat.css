@@ -352,7 +352,7 @@
 .delete-message-btn {
     background: none;
     border: none;
-    padding: 4px;
+    padding: 8px; /* Increased padding for better touch target */
     border-radius: 4px;
     display: flex;
     align-items: center;
@@ -361,6 +361,7 @@
     color: var(--text-muted);
     transition: all 0.2s ease;
     opacity: 0;
+    flex-shrink: 0;
 }
 
 .chat-message-group:hover .delete-message-btn {
@@ -402,19 +403,67 @@
     }
 
     .feed-input-area {
-        padding: 1rem;
+        padding: 0.75rem;
+        /* iOS safe area: ensure input is visible above home indicator */
+        padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
     }
 
     .feed-messages-inner {
-        padding: 1rem;
+        padding: 0.75rem;
+        gap: 1rem;
     }
 
     .avatar-container,
     .chat-avatar-placeholder {
-        width: 40px;
-        height: 40px;
+        width: 36px;
+        height: 36px;
+    }
+
+    /* Larger touch targets for toolbar buttons */
+    .toolbar-btn {
+        padding: 10px;
+        min-width: 44px;
+        min-height: 44px;
+    }
+
+    /* Delete button: always visible on mobile (no hover needed) */
+    .delete-message-btn {
+        opacity: 0.5;
+        min-width: 44px;
+        min-height: 44px;
+    }
+
+    /* Chat targeting row wraps on narrow screens */
+    .feed-toolbar {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        padding: 0.5rem 0.75rem;
+    }
+
+    .feed-targeting {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    /* Emoji picker: constrain to viewport width on mobile */
+    .emoji-picker-container-absolute {
+        right: -0.75rem;
+        max-width: calc(100vw - 1.5rem);
+    }
+
+    /* Send button: ensure minimum touch target */
+    .chat-send-btn {
+        min-height: 44px;
+        padding: 0.5rem 1rem;
+    }
+
+    /* Reduce message bubble max-width slightly for better layout on phones */
+    .other-message .message-bubble,
+    .own-message .message-bubble {
+        max-width: 85%;
     }
 }
+
 
 .feed-loading {
     text-align: center;

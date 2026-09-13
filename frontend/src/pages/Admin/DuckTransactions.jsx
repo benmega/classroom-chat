@@ -23,6 +23,7 @@ const DuckTransactions = () => {
     const typeParam = searchParams.get('type') || 'all';
     const pageParam = parseInt(searchParams.get('page') || '1', 10);
     const searchParam = searchParams.get('search') || '';
+    const dateParam = searchParams.get('date') || '';
 
     const [transactions, setTransactions] = useState([]);
     const [total, setTotal] = useState(0);
@@ -31,15 +32,17 @@ const DuckTransactions = () => {
     const [isRefreshing] = useState(false);
     const [searchTerm, setSearchTerm] = useState(searchParam);
 
-    const fetchTransactions = async (pageVal = pageParam, typeVal = typeParam, searchVal = searchParam) => {
-        
+    const fetchTransactions = async (pageVal = pageParam, typeVal = typeParam, searchVal = searchParam, dateVal = dateParam) => {
+
         try {
             const response = await client.get('/api/admin/transactions', {
                 params: {
                     page: pageVal,
                     per_page: 20,
                     type: typeVal,
-                    search: searchVal
+                    search: searchVal,
+                    date: dateVal,
+                    tz_offset: new Date().getTimezoneOffset()
                 }
             });
             if (response.data.status === 'success') {
@@ -60,9 +63,9 @@ const DuckTransactions = () => {
 
     // Refetch when search params change
     useEffect(() => {
-        fetchTransactions(pageParam, typeParam, searchParam);
+        fetchTransactions(pageParam, typeParam, searchParam, dateParam);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [pageParam, typeParam, searchParam]);
+    }, [pageParam, typeParam, searchParam, dateParam]);
 
     // Handle Search Submit
     const handleSearchSubmit = (e) => {
@@ -70,7 +73,8 @@ const DuckTransactions = () => {
         setSearchParams({
             type: typeParam,
             page: '1',
-            search: searchTerm
+            search: searchTerm,
+            ...(dateParam ? { date: dateParam } : {})
         });
     };
 
@@ -79,7 +83,8 @@ const DuckTransactions = () => {
         setSearchParams({
             type: newType,
             page: '1',
-            search: searchParam
+            search: searchParam,
+            ...(dateParam ? { date: dateParam } : {})
         });
     };
 
@@ -89,9 +94,29 @@ const DuckTransactions = () => {
             setSearchParams({
                 type: typeParam,
                 page: String(newPage),
-                search: searchParam
+                search: searchParam,
+                ...(dateParam ? { date: dateParam } : {})
             });
         }
+    };
+
+    // Clear the date breakdown filter, keeping other filters intact
+    const handleClearDate = () => {
+        setSearchParams({
+            type: typeParam,
+            page: '1',
+            search: searchParam
+        });
+    };
+
+    const formatDateLabel = (isoDate) => {
+        if (!isoDate) return '';
+        const [year, month, day] = isoDate.split('-').map(Number);
+        return new Date(year, month - 1, day).toLocaleDateString(undefined, {
+            month: 'long',
+            day: 'numeric',
+            year: 'numeric'
+        });
     };
 
     const handleExport = async () => {
@@ -136,10 +161,7 @@ const DuckTransactions = () => {
                 <ArrowLeft size={16} /> Back to Dashboard
             </div>
 
-            <AdminPageHeader 
-                title="Duck Transactions" 
-                description="Monitor all transactions, including ducks earned, spent, and adjustments."
-            >
+            <AdminPageHeader title={dateParam ? `Duck Breakdown — ${formatDateLabel(dateParam)}` : 'Duck Transactions'}>
                 <form className="search-bar" onSubmit={handleSearchSubmit}>
                     <Search size={18} />
                     <input 
@@ -154,6 +176,17 @@ const DuckTransactions = () => {
                 </button>
                 
             </AdminPageHeader>
+
+            {dateParam && (
+                <div className="date-filter-chip">
+                    <span>
+                        Showing {typeParam === 'spent' ? 'ducks spent' : 'ducks earned'} on <strong>{formatDateLabel(dateParam)}</strong>
+                    </span>
+                    <button type="button" className="date-filter-clear" onClick={handleClearDate}>
+                        Clear date
+                    </button>
+                </div>
+            )}
 
             {/* Filter Tabs */}
             <div className="filter-tabs-container">

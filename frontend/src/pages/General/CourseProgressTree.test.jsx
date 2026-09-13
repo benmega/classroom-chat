@@ -34,7 +34,7 @@ describe('CourseProgressTree - Chapter Recommendation', () => {
     renderWithProviders(<CourseProgressTree />);
 
     await waitFor(() => {
-      const ccJuniorCell = document.querySelector('.skill-node-cell');
+      const ccJuniorCell = screen.getAllByTestId("skill-node-cell")[0];
       expect(ccJuniorCell).toHaveClass('recommended');
       expect(screen.getByText('Code Combat Junior')).toBeInTheDocument();
     });
@@ -59,7 +59,7 @@ describe('CourseProgressTree - Chapter Recommendation', () => {
     renderWithProviders(<CourseProgressTree />);
 
     await waitFor(() => {
-      const cells = document.querySelectorAll('.skill-node-cell');
+      const cells = screen.getAllByTestId("skill-node-cell");
       let cs5Cell = null;
       cells.forEach(cell => {
         const h3 = cell.querySelector('h3');
@@ -87,7 +87,7 @@ describe('CourseProgressTree - Chapter Recommendation', () => {
     renderWithProviders(<CourseProgressTree />);
 
     await waitFor(() => {
-      const cells = document.querySelectorAll('.skill-node-cell');
+      const cells = screen.getAllByTestId("skill-node-cell");
       let wd2Cell = null;
       cells.forEach(cell => {
         const h3 = cell.querySelector('h3');
@@ -118,7 +118,7 @@ describe('CourseProgressTree - Chapter Recommendation', () => {
     renderWithProviders(<CourseProgressTree />);
 
     await waitFor(() => {
-      const cells = document.querySelectorAll('.skill-node-cell');
+      const cells = screen.getAllByTestId("skill-node-cell");
       let cs5Cell = null;
       cells.forEach(cell => {
         const h3 = cell.querySelector('h3');
@@ -153,7 +153,7 @@ describe('CourseProgressTree - Chapter Recommendation', () => {
     renderWithProviders(<CourseProgressTree />);
 
     await waitFor(() => {
-      const cells = document.querySelectorAll('.skill-node-cell.recommended');
+      const cells = screen.getAllByTestId("skill-node-cell").filter(n => n.classList.contains("recommended"));
       expect(cells.length).toBe(1);
       const text = cells[0].textContent;
       expect(text.includes('Ozaria 4') || text.includes('Game Development 3')).toBe(true);

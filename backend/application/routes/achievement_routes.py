@@ -316,8 +316,8 @@ def submit_certificate():
                 "error": "No matching achievement found for this course."
             }), 200
 
-        # 2. Generate file
-        from application.utilities.cert_generator import generate_certificate
+        # 2. Handle File (Upload or Generate)
+        file = request.files.get("certificate_file")
         from flask import current_app
 
         cert_dir = os.path.join(current_app.config.get("UPLOAD_FOLDER", os.path.join(current_app.config["BASE_DIR"], "certificates")))
@@ -325,14 +325,22 @@ def submit_certificate():
         filename = secure_filename(f"{current_user.username}_{achievement.slug}.pdf")
         filepath = os.path.join(cert_dir, filename)
 
-        # Use Alice_CS1.pdf as our template
-        template_path = os.path.join(current_app.config["BASE_DIR"], "mockups", "Certificate_Samples", "CodeCombat", "Alice_CS1.pdf")
-        student_name = current_user.nickname or current_user.username
+        if file and file.filename:
+            from application.utilities.helper_functions import allowed_file
+            if not allowed_file(file.filename, {'pdf'}):
+                return jsonify({"success": False, "error": "Invalid file type. Only PDF is allowed."}), 200
+            file.save(filepath)
+        else:
+            from application.utilities.cert_generator import generate_certificate
 
-        try:
-            generate_certificate(template_path, filepath, student_name)
-        except Exception as e:
-            return jsonify({"success": False, "error": f"Failed to generate certificate: {e}"}), 500
+            # Use Alice_CS1.pdf as our template
+            template_path = os.path.join(current_app.config["BASE_DIR"], "mockups", "Certificate_Samples", "CodeCombat", "Alice_CS1.pdf")
+            student_name = current_user.nickname or current_user.username
+
+            try:
+                generate_certificate(template_path, filepath, student_name)
+            except Exception as e:
+                return jsonify({"success": False, "error": f"Failed to generate certificate: {e}"}), 500
 
         # 3. Create or update cert entry
         cert = UserCertificate.query.filter_by(
@@ -403,6 +411,32 @@ def admin_certificates():
     return {"certificates": [c.to_dict() for c in certs]}
 
 
+def _send_certificate_approval_email(cert):
+    from application.services.email_service import send_email
+
+    # We want absolute URLs
+    # request.host_url gives something like "https://blossom.benmega.com/"
+    # If not in request context, this might fail, but mark_reviewed is in request context.
+    base_url = request.host_url.rstrip("/")
+    download_link = f"{base_url}/api/achievements/download_certificate/{cert.id}"
+    profile_link = f"{base_url}/profile/{cert.user.slug}"
+
+    subject = f"Certificate Approved: {cert.achievement.name} - {cert.user.username}"
+    body = f"""A new certificate has been approved!
+
+Certificate: {cert.achievement.name}
+Student: {cert.user.nickname or cert.user.username}
+
+Download Certificate:
+{download_link}
+
+View Student Profile:
+{profile_link}
+"""
+    to_addresses = ["me@benmega.com", "benmega@gmail.com"]
+    send_email(subject, body, to_addresses)
+
+
 @achievements.route("/admin/certificates/reviewed/<int:cert_id>", methods=["POST"])
 @admin_only
 def mark_reviewed(cert_id):
@@ -418,6 +452,8 @@ def mark_reviewed(cert_id):
     from application.services.achievement_engine import evaluate_user
 
     evaluate_user(cert.user, force=True)
+
+    _send_certificate_approval_email(cert)
 
     msg = "Certificate marked as reviewed."
 
@@ -487,6 +523,7 @@ def mark_all_reviewed():
 
     for cert in certs:
         emit_activity_resolved(cert.user_id, "certificate", cert.id, "approved")
+        _send_certificate_approval_email(cert)
 
     from application.services.achievement_engine import evaluate_user
 

@@ -27,3 +27,4 @@ def index(path):
 
     username = g.user.username if hasattr(g, "user") and g.user else None
     return render_template("index.html", username=username)
+

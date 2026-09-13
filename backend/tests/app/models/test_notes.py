@@ -1,7 +1,6 @@
 def test_classroom_creation(sample_classroom):
     """Test that a classroom is created with correct attributes."""
-    assert sample_classroom.id == "678b56dc12345"
-    assert sample_classroom.name == "Sat1030 CS 4 PY"
+    assert sample_classroom.name == "Test Classroom"
     assert sample_classroom.language == "python"
 
 

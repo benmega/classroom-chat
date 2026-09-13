@@ -5,7 +5,6 @@ import AdminLibrary from './AdminLibrary';
 
 vi.mock('./AdminStandardProjects', () => ({ default: () => <div data-testid="AdminStandardProjects">Projects</div> }));
 vi.mock('./AdminAchievements', () => ({ default: () => <div data-testid="AdminAchievements">Achievements</div> }));
-vi.mock('./AdminDocuments', () => ({ default: () => <div data-testid="AdminDocuments">Documents</div> }));
 vi.mock('./AdminChallenges', () => ({ default: () => <div data-testid="AdminChallenges">Challenges</div> }));
 vi.mock('../../components/admin/AdminPageHeader', () => ({ default: () => <div data-testid="AdminPageHeader">Header</div> }));
 
@@ -22,10 +21,7 @@ describe('AdminLibrary Component', () => {
     fireEvent.click(screen.getByText('Achievements'));
     expect(screen.getByTestId('AdminAchievements')).toBeInTheDocument();
 
-    fireEvent.click(screen.getByText('Documents & Assets'));
-    expect(screen.getByTestId('AdminDocuments')).toBeInTheDocument();
-
-    fireEvent.click(screen.getByText('Challenges'));
+    fireEvent.click(screen.getByText('Courses'));
     expect(screen.getByTestId('AdminChallenges')).toBeInTheDocument();
   });
 });

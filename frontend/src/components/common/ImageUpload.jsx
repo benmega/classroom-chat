@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import axios from '../../api/client';
 import { Upload, X, CheckCircle, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -28,6 +28,17 @@ const ImageUpload = ({
   const [progress, setProgress] = useState(0);
   const [success, setSuccess] = useState(false);
   const fileInputRef = useRef(null);
+  const abortControllerRef = useRef(null);
+  const isMountedRef = useRef(true);
+
+  // Track mount state so async callbacks don't update state after unmount.
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+      abortControllerRef.current?.abort();
+    };
+  }, []);
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
@@ -50,6 +61,12 @@ const ImageUpload = ({
   };
 
   const uploadFile = async (file) => {
+    // Cancel any in-flight upload before starting a new one.
+    abortControllerRef.current?.abort();
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
+    if (!isMountedRef.current) return;
     setIsUploading(true);
     setProgress(0);
 
@@ -58,12 +75,15 @@ const ImageUpload = ({
 
     try {
       const response = await axios.post(uploadUrl, formData, {
+        signal: controller.signal,
         onUploadProgress: (progressEvent) => {
+          if (!isMountedRef.current) return;
           const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
           setProgress(percentCompleted);
         },
       });
 
+      if (!isMountedRef.current) return;
       // Backend returns { status: 'success', data: { new_url, filename } }
       if (response.data.status === 'success') {
         const { new_url, filename } = response.data.data;
@@ -74,15 +94,20 @@ const ImageUpload = ({
         toast.error(response.data.error || 'Upload failed');
       }
     } catch (err) {
+      if (err.name === 'CanceledError' || err.code === 'ERR_CANCELED') return;
+      if (!isMountedRef.current) return;
       console.error('Upload error:', err);
       const errorMessage = err.response?.data?.error || 'Server error during upload';
       toast.error(errorMessage);
     } finally {
-      setIsUploading(false);
+      if (isMountedRef.current) {
+        setIsUploading(false);
+      }
     }
   };
 
   const clearPreview = () => {
+    abortControllerRef.current?.abort();
     setPreview(initialImage);
     setSuccess(false);
     if (fileInputRef.current) fileInputRef.current.value = '';

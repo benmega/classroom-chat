@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import client from '../api/client';
 import toast from 'react-hot-toast';
+import { showConfirm } from '../utils/confirm';
 
 export const useAdminDashboard = () => {
     const [dashboardData, setDashboardData] = useState(null);
@@ -218,7 +219,7 @@ export const useAdminDashboard = () => {
     };
 
     const handleRemoveUser = async (username) => {
-        if (!window.confirm(`Are you sure you want to PERMANENTLY remove @${username}?`)) return;
+        if (!await showConfirm(`Are you sure you want to PERMANENTLY remove @${username}?`, { title: 'Remove User', destructive: true })) return;
         
         try {
             const formData = new FormData();

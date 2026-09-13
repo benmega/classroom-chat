@@ -8,11 +8,17 @@ import { server } from '../../test/mocks/server';
 import { http, HttpResponse } from 'msw';
 import toast from 'react-hot-toast';
 
+import { showConfirm } from '../../utils/confirm';
+
 vi.mock('react-hot-toast', () => ({
     default: {
         success: vi.fn(),
         error: vi.fn(),
     }
+}));
+
+vi.mock('../../utils/confirm', () => ({
+    showConfirm: vi.fn()
 }));
 
 window.URL.createObjectURL = vi.fn(() => 'blob:mock-url');
@@ -35,7 +41,7 @@ describe('ManageProject', () => {
 
         server.use(
             http.get('*/api/project-templates', () => {
-                return HttpResponse.json({ data: { templates: {} } });
+                return HttpResponse.json({ data: { templates: { 'Template A': {}, 'Template B': {} } } });
             })
         );
     });
@@ -48,7 +54,7 @@ describe('ManageProject', () => {
         );
 
         expect(await screen.findByText('Core Information')).toBeInTheDocument();
-        expect(screen.getByPlaceholderText('What is this project about? What did you learn?')).toBeInTheDocument();
+        expect(screen.getByPlaceholderText(/What is this project about\? What did you learn\?/i)).toBeInTheDocument();
         
         // Navigation buttons
         expect(screen.getByRole('button', { name: /Next/i })).toBeInTheDocument();
@@ -75,6 +81,26 @@ describe('ManageProject', () => {
         expect(screen.getByRole('button', { name: /Delete Project/i })).toBeInTheDocument();
     });
 
+    it('renders code snippet and teacher comment in preview', async () => {
+        server.use(
+            http.get('*/user/project/edit/1', async () => {
+                return HttpResponse.json({ status: 'success', data: { project: { id: 1, name: 'My Cool Game', description: 'A game I built', image_url: 'cover.jpg', teacher_comment: 'Great job!', code_snippet: 'print("hello")', link: 'http://example.com' } } });
+            })
+        );
+
+        render(
+            <MemoryRouter initialEntries={['/manage-project/1']}>
+                <Routes>
+                    <Route path="/manage-project/:projectId" element={<ManageProject />} />
+                </Routes>
+            </MemoryRouter>
+        );
+
+        expect(await screen.findByText('Core Information')).toBeInTheDocument();
+        expect(screen.getByText('Teacher Note: Great job!')).toBeInTheDocument();
+        expect(screen.getByText('print("hello")')).toBeInTheDocument();
+    });
+
     it('navigates through tabs', async () => {
         render(
             <MemoryRouter initialEntries={['/manage-project']}>
@@ -83,13 +109,13 @@ describe('ManageProject', () => {
         );
 
         // Core tab is active initially
-        expect(await screen.findByPlaceholderText('What is this project about? What did you learn?')).toBeInTheDocument();
+        expect(await screen.findByPlaceholderText(/What is this project about\? What did you learn\?/i)).toBeInTheDocument();
 
         // Click next -> Media tab
         fireEvent.click(screen.getByRole('button', { name: /Next/i }));
         
         expect(await screen.findByText(/Media Assets/i)).toBeInTheDocument();
-        expect(screen.getByPlaceholderText('YouTube/Vimeo URL')).toBeInTheDocument();
+        expect(screen.getByPlaceholderText(/YouTube\/Vimeo URL/i)).toBeInTheDocument();
 
         // Click next -> Code tab
         fireEvent.click(screen.getByRole('button', { name: /Next/i }));
@@ -142,8 +168,8 @@ describe('ManageProject', () => {
             </MemoryRouter>
         );
 
-        await screen.findByPlaceholderText('What is this project about? What did you learn?');
-        fireEvent.change(screen.getByPlaceholderText('What is this project about? What did you learn?'), { target: { value: 'My cool desc' } });
+        await screen.findByPlaceholderText(/What is this project about\? What did you learn\?/i);
+        fireEvent.change(screen.getByPlaceholderText(/What is this project about\? What did you learn\?/i), { target: { value: 'My cool desc' } });
         
         // Go to last tab
         fireEvent.click(screen.getByRole('button', { name: /Next/i }));
@@ -195,7 +221,7 @@ describe('ManageProject', () => {
     });
 
     it('deletes project after confirmation', async () => {
-        window.confirm = vi.fn(() => true);
+        showConfirm.mockResolvedValue(true);
         server.use(
             http.get('*/user/project/edit/1', async () => {
                 return HttpResponse.json({ status: 'success', data: { project: { id: 1, name: 'To Delete' } } });
@@ -218,7 +244,9 @@ describe('ManageProject', () => {
         
         fireEvent.click(screen.getByRole('button', { name: /Delete Project/i }));
 
-        expect(window.confirm).toHaveBeenCalledWith('Are you sure you want to delete this project?');
+        await waitFor(() => {
+            expect(showConfirm).toHaveBeenCalledWith('Are you sure you want to delete this project?', { title: 'Delete Project', destructive: true });
+        });
 
         await waitFor(() => {
             
@@ -227,7 +255,7 @@ describe('ManageProject', () => {
     });
 
     it('does not delete if confirmation is cancelled', async () => {
-        window.confirm = vi.fn(() => false);
+        showConfirm.mockResolvedValue(false);
         
         server.use(
             http.get('*/user/project/edit/1', async () => {
@@ -247,7 +275,9 @@ describe('ManageProject', () => {
         
         fireEvent.click(screen.getByRole('button', { name: /Delete Project/i }));
 
-        expect(window.confirm).toHaveBeenCalledWith('Are you sure you want to delete this project?');
+        await waitFor(() => {
+            expect(showConfirm).toHaveBeenCalledWith('Are you sure you want to delete this project?', { title: 'Delete Project', destructive: true });
+        });
         expect(screen.queryByTestId('profile-page')).not.toBeInTheDocument();
     });
 

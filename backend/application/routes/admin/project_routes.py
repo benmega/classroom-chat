@@ -1,6 +1,7 @@
 from application.decorators.admin_required import admin_only
 from application.extensions import db
 from application.models.project import Project
+from application.services.email_service import send_admin_email
 from flask import jsonify, request
 
 from ..admin_routes import admin_bp
@@ -78,6 +79,14 @@ def handle_project_review(project_id):
         project.packets_awarded = packet_reward
         project.teacher_comment = comment
         db.session.commit()
+
+        student_nickname = student.nickname if student else "A student"
+        student_slug = student.slug if student else ""
+
+        subject = f"Project Approved: {project.name}"
+        body = f"We are pleased to inform you that {student_nickname} has successfully completed a new project: {project.name}.\n\nYou can review their accomplishment at the link below:\nhttps://blossom.benmega.com/profile/{student_slug}"
+        send_admin_email(subject, body)
+
         return jsonify(
             {
                 "status": "success",

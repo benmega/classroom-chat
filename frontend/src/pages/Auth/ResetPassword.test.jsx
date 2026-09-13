@@ -49,8 +49,8 @@ describe('ResetPassword', () => {
             </MemoryRouter>
         );
 
-        const passwordInput = screen.getByPlaceholderText('New Password (min 8 chars)');
-        const confirmInput = screen.getByPlaceholderText('Confirm New Password');
+        const passwordInput = screen.getByPlaceholderText(/^new password/i);
+        const confirmInput = screen.getByPlaceholderText(/confirm new password/i);
 
         expect(passwordInput).toHaveAttribute('type', 'password');
         expect(confirmInput).toHaveAttribute('type', 'password');
@@ -65,30 +65,30 @@ describe('ResetPassword', () => {
     });
 
     it('shows error toast if email is missing when submitting', async () => {
-        const { container } = render(
+        render(
             <MemoryRouter initialEntries={['/reset-password']}>
                 <ResetPassword />
             </MemoryRouter>
         );
 
-        const form = container.querySelector('#reset-password-form');
+        const form = screen.getByPlaceholderText(/verification code/i).closest("form");
         fireEvent.submit(form);
 
         expect(toast.error).toHaveBeenCalledWith('Email is missing. Please restart the password reset process.');
     });
 
     it('shows error toast if passwords do not match', async () => {
-        const { container } = render(
+        render(
             <MemoryRouter initialEntries={['/reset-password?email=test@example.com']}>
                 <ResetPassword />
             </MemoryRouter>
         );
 
-        fireEvent.change(screen.getByPlaceholderText('6-Digit Verification Code'), { target: { value: '123456' } });
-        fireEvent.change(screen.getByPlaceholderText('New Password (min 8 chars)'), { target: { value: 'password123' } });
-        fireEvent.change(screen.getByPlaceholderText('Confirm New Password'), { target: { value: 'password456' } });
+        fireEvent.change(screen.getByPlaceholderText(/verification code/i), { target: { value: '123456' } });
+        fireEvent.change(screen.getByPlaceholderText(/^new password/i), { target: { value: 'password123' } });
+        fireEvent.change(screen.getByPlaceholderText(/confirm new password/i), { target: { value: 'password456' } });
 
-        const form = container.querySelector('#reset-password-form');
+        const form = screen.getByPlaceholderText(/verification code/i).closest("form");
         fireEvent.submit(form);
 
         expect(toast.error).toHaveBeenCalledWith('Passwords do not match.');
@@ -105,7 +105,7 @@ describe('ResetPassword', () => {
             })
         );
 
-        const { container } = render(
+        render(
             <MemoryRouter initialEntries={['/reset-password?email=test@example.com']}>
                 <Routes>
                     <Route path="/reset-password" element={<ResetPassword />} />
@@ -114,11 +114,11 @@ describe('ResetPassword', () => {
             </MemoryRouter>
         );
 
-        fireEvent.change(screen.getByPlaceholderText('6-Digit Verification Code'), { target: { value: '123456' } });
-        fireEvent.change(screen.getByPlaceholderText('New Password (min 8 chars)'), { target: { value: 'password123' } });
-        fireEvent.change(screen.getByPlaceholderText('Confirm New Password'), { target: { value: 'password123' } });
+        fireEvent.change(screen.getByPlaceholderText(/verification code/i), { target: { value: '123456' } });
+        fireEvent.change(screen.getByPlaceholderText(/^new password/i), { target: { value: 'password123' } });
+        fireEvent.change(screen.getByPlaceholderText(/confirm new password/i), { target: { value: 'password123' } });
 
-        const form = container.querySelector('#reset-password-form');
+        const form = screen.getByPlaceholderText(/verification code/i).closest("form");
         fireEvent.submit(form);
 
         expect(screen.getByRole('button', { name: /Resetting.../i })).toBeInTheDocument();
@@ -136,17 +136,17 @@ describe('ResetPassword', () => {
             })
         );
 
-        const { container } = render(
+        render(
             <MemoryRouter initialEntries={['/reset-password?email=test@example.com']}>
                 <ResetPassword />
             </MemoryRouter>
         );
 
-        fireEvent.change(screen.getByPlaceholderText('6-Digit Verification Code'), { target: { value: 'wrong_code' } });
-        fireEvent.change(screen.getByPlaceholderText('New Password (min 8 chars)'), { target: { value: 'password123' } });
-        fireEvent.change(screen.getByPlaceholderText('Confirm New Password'), { target: { value: 'password123' } });
+        fireEvent.change(screen.getByPlaceholderText(/verification code/i), { target: { value: 'wrong_code' } });
+        fireEvent.change(screen.getByPlaceholderText(/^new password/i), { target: { value: 'password123' } });
+        fireEvent.change(screen.getByPlaceholderText(/confirm new password/i), { target: { value: 'password123' } });
 
-        const form = container.querySelector('#reset-password-form');
+        const form = screen.getByPlaceholderText(/verification code/i).closest("form");
         fireEvent.submit(form);
 
         await waitFor(() => {
@@ -161,17 +161,17 @@ describe('ResetPassword', () => {
             })
         );
 
-        const { container } = render(
+        render(
             <MemoryRouter initialEntries={['/reset-password?email=test@example.com']}>
                 <ResetPassword />
             </MemoryRouter>
         );
 
-        fireEvent.change(screen.getByPlaceholderText('6-Digit Verification Code'), { target: { value: '123456' } });
-        fireEvent.change(screen.getByPlaceholderText('New Password (min 8 chars)'), { target: { value: 'password123' } });
-        fireEvent.change(screen.getByPlaceholderText('Confirm New Password'), { target: { value: 'password123' } });
+        fireEvent.change(screen.getByPlaceholderText(/verification code/i), { target: { value: '123456' } });
+        fireEvent.change(screen.getByPlaceholderText(/^new password/i), { target: { value: 'password123' } });
+        fireEvent.change(screen.getByPlaceholderText(/confirm new password/i), { target: { value: 'password123' } });
 
-        const form = container.querySelector('#reset-password-form');
+        const form = screen.getByPlaceholderText(/verification code/i).closest("form");
         fireEvent.submit(form);
 
         await waitFor(() => {

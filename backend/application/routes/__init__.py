@@ -29,7 +29,6 @@ from .server_info_routes import server_info
 from .session_routes import session
 from .shop_routes import shop_bp
 from .submission_routes import submission_bp
-from .track_request_routes import track_request_bp
 from .upload_routes import upload
 from .user_routes import user
 
@@ -55,7 +54,6 @@ def register_blueprints(app: Flask):
     app.register_blueprint(server_info)
     app.register_blueprint(shop_bp, url_prefix="/api/shop")
     app.register_blueprint(submission_bp, url_prefix="/api/submissions")
-    app.register_blueprint(track_request_bp)
     app.register_blueprint(course_request_bp)
     app.register_blueprint(classroom_bp, url_prefix="/api/classroom")
 

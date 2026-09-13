@@ -160,9 +160,9 @@ const ManageProject = () => {
                                             value={projectData.name || ''}
                                             onChange={handleInputChange}
                                             placeholder="e.g. My Awesome Platformer"
-                                            className={`form-control title-input-left ${selectedTemplate !== 'custom' ? 'read-only-input' : ''}`}
+                                            className={`form-control title-input-left ${selectedTemplate !== 'custom' && currentUser?.role !== 'admin' ? 'read-only-input' : ''}`}
                                             required
-                                            readOnly={selectedTemplate !== 'custom'}
+                                            readOnly={selectedTemplate !== 'custom' && currentUser?.role !== 'admin'}
                                         />
                                     </div>
                                     <div className="form-group">

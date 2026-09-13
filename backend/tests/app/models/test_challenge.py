@@ -10,11 +10,14 @@ import pytest
 from application.extensions import db
 from application.models.challenge import Challenge
 from application.models.challenge_log import ChallengeLog
+from tests.factories import ChallengeFactory, UserFactory
 
 # tests/app/models/test_challenge.py
 
 
-def test_complete_challenge(sample_challenge, sample_user):
+def test_complete_challenge(init_db):
+    sample_challenge = ChallengeFactory(slug="test-slug")
+    sample_user = UserFactory()
     assert ChallengeLog.query.count() == 0
 
     # Call complete_challenge method
@@ -36,7 +39,8 @@ def test_complete_challenge(sample_challenge, sample_user):
         ("hard", 20),  # 10 * 2.0
     ],
 )
-def test_scale_value(sample_challenge, difficulty, expected_value):
+def test_scale_value(init_db, difficulty, expected_value):
+    sample_challenge = ChallengeFactory(value=10)
     sample_challenge.difficulty = difficulty
     assert sample_challenge.scale_value() == expected_value
 
@@ -64,7 +68,8 @@ def test_created_at_timestamp(init_db):
     assert isinstance(challenge_with_timestamp.created_at, datetime)
 
 
-def test_scale_value_with_custom_multiplier(sample_challenge):
+def test_scale_value_with_custom_multiplier(init_db):
+    sample_challenge = ChallengeFactory(value=10)
     sample_challenge.difficulty = "medium"
     assert (
         sample_challenge.scale_value(difficulty_multiplier=1.5) == 15
@@ -103,11 +108,12 @@ def test_challenge_explicit_slug(init_db):
     assert challenge.name == "Complex Algorithms"
 
 
-def test_complete_challenge_logs_slug(init_db, sample_user):
+def test_complete_challenge_logs_slug(init_db):
     """
     Test that completing a challenge creates a log entry using the SLUG,
     not the name.
     """
+    sample_user = UserFactory()
     challenge_name = "Super Hard Level"
     challenge_slug = "super-hard-level-slug"
 
@@ -160,3 +166,4 @@ def test_challenge_name_uniqueness_scoped_by_domain(init_db):
     db.session.add(c3)
     with pytest.raises(IntegrityError):
         db.session.commit()
+

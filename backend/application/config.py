@@ -60,6 +60,11 @@ class Config:
     COGNITO_REDIRECT_URI = os.getenv("COGNITO_REDIRECT_URI")
     COGNITO_REGION = os.getenv("COGNITO_REGION", "us-east-1")
 
+    # SES Email configuration
+    SES_REGION = os.getenv("AWS_SES_REGION", "ap-southeast-1")
+    SES_SENDER_EMAIL = os.getenv("SES_SENDER_EMAIL", "noreply@benmega.com")
+    ADMIN_EMAIL_ADDRESS = os.getenv("ADMIN_EMAIL_ADDRESS")
+
     # SocketIO configuration
     SOCKETIO_ASYNC_MODE = "gevent"
 

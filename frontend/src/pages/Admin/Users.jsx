@@ -17,6 +17,7 @@ import {
     MoreVertical
 } from 'lucide-react';
 import SmartImage from '../../components/common/SmartImage';
+import ColumnFilterDropdown from '../../components/admin/ColumnFilterDropdown';
 import { 
     CreateUserModal, 
     AdjustDucksModal, 
@@ -24,8 +25,7 @@ import {
     SetDrawerModal,
     ResetPasswordModal,
     ManageChildrenModal,
-    ConnectionCardModal,
-    BulkConnectionCardsModal
+    ConnectionCardModal
 } from '../../components/admin/AdminModals';
 import './Users.css';
 import Skeleton from '../../components/common/Skeleton';
@@ -41,6 +41,17 @@ const TABS = [
     { label: 'All', value: '' },
     { label: 'Students', value: 'student' },
     { label: 'Parents', value: 'parent' },
+];
+
+const STATUS_OPTIONS = [
+    { label: 'Active', value: 'active' },
+    { label: 'Offline', value: 'offline' },
+];
+
+const ACCOUNT_TYPE_OPTIONS = [
+    { label: 'Administrator', value: 'admin' },
+    { label: 'Parent', value: 'parent' },
+    { label: 'Student', value: 'student' },
 ];
 
 const UserRowActions = ({ u, setModalUser, setActiveModal, handleToggleChat, handleRemoveUser, fetchParentChildren, fetchConnectionCard }) => {
@@ -61,7 +72,7 @@ const UserRowActions = ({ u, setModalUser, setActiveModal, handleToggleChat, han
         <div className="action-group">
             
             <div className="kebab-menu-container" ref={menuRef}>
-                <button className={`action-btn kebab-trigger ${isOpen ? 'active' : ''}`} onClick={(e) => { e.stopPropagation(); setIsOpen(!isOpen); }}>
+                <button data-testid="kebab-trigger" className={`action-btn kebab-trigger ${isOpen ? 'active' : ''}`} onClick={(e) => { e.stopPropagation(); setIsOpen(!isOpen); }}>
                     <MoreVertical size={16} />
                 </button>
                 {isOpen && (
@@ -161,16 +172,21 @@ const Users = () => {
         connectionCode,
         setConnectionCode,
         fetchConnectionCard,
-        classrooms,
-        fetchClassrooms,
-        classroomCards,
-        setClassroomCards,
-        isFetchingCards,
-        fetchClassroomCards,
         searchTerm,
         setSearchTerm,
-        handleToggleChat
+        handleToggleChat,
+        statusFilter,
+        setStatusFilter,
+        accountTypeFilter,
+        setAccountTypeFilter,
+        sortBy,
+        setSortBy,
+        sortDir,
+        setSortDir
     } = useUsersManagement(activeRole);
+
+    const activeSort = { sortBy, sortDir };
+    const handleSort = (key, dir) => { setSortBy(key); setSortDir(dir); };
 
     // Expandable parents state
     const [expandedParents, setExpandedParents] = useState(new Set());
@@ -221,7 +237,7 @@ const Users = () => {
             </header>
             <div className="users-table-container card">
                 {[1, 2, 3, 4, 5].map(i => (
-                    <div key={i} className="users-skeleton-row">
+                    <div key={i} data-testid="users-skeleton-row" className="users-skeleton-row">
                         <Skeleton height="60px" />
                     </div>
                 ))}
@@ -249,11 +265,7 @@ const Users = () => {
                         <Plus size={18} /> {activeRole === 'student' ? 'Add Student' : 'Add User'}
                     </button>
                 )}
-                {activeRole !== 'parent' && (
-                    <button className="primary-btn bulk-conn-btn" onClick={() => setActiveModal('bulk_connection_cards')}>
-                        <Key size={18} /> Print Cohort Cards
-                    </button>
-                )}
+
                 
             </AdminPageHeader>
 
@@ -278,26 +290,101 @@ const Users = () => {
                         <tr>
                             {activeRole === '' && (
                                 <>
-                                    <th>User Profile</th>
-                                    <th>Account Type</th>
-                                    <th>Economy</th>
-                                    <th>Status</th>
+                                    <th>
+                                        <ColumnFilterDropdown
+                                            label="User Profile"
+                                            sortKey="name"
+                                            activeSort={activeSort}
+                                            onSort={handleSort}
+                                        />
+                                    </th>
+                                    <th>
+                                        <ColumnFilterDropdown
+                                            label="Account Type"
+                                            sortKey="role"
+                                            options={ACCOUNT_TYPE_OPTIONS}
+                                            selected={accountTypeFilter}
+                                            onApply={setAccountTypeFilter}
+                                            activeSort={activeSort}
+                                            onSort={handleSort}
+                                        />
+                                    </th>
+                                    <th>
+                                        <ColumnFilterDropdown
+                                            label="Economy"
+                                            sortKey="duck_balance"
+                                            activeSort={activeSort}
+                                            onSort={handleSort}
+                                        />
+                                    </th>
+                                    <th>
+                                        <ColumnFilterDropdown
+                                            label="Status"
+                                            sortKey="is_online"
+                                            options={STATUS_OPTIONS}
+                                            selected={statusFilter}
+                                            onApply={setStatusFilter}
+                                            activeSort={activeSort}
+                                            onSort={handleSort}
+                                        />
+                                    </th>
                                     <th>Actions</th>
                                 </>
                             )}
                             {activeRole === 'student' && (
                                 <>
-                                    <th>Student Profile</th>
-                                    <th>Economy</th>
-                                    <th>Status</th>
+                                    <th>
+                                        <ColumnFilterDropdown
+                                            label="Student Profile"
+                                            sortKey="name"
+                                            activeSort={activeSort}
+                                            onSort={handleSort}
+                                        />
+                                    </th>
+                                    <th>
+                                        <ColumnFilterDropdown
+                                            label="Economy"
+                                            sortKey="duck_balance"
+                                            activeSort={activeSort}
+                                            onSort={handleSort}
+                                        />
+                                    </th>
+                                    <th>
+                                        <ColumnFilterDropdown
+                                            label="Status"
+                                            sortKey="is_online"
+                                            options={STATUS_OPTIONS}
+                                            selected={statusFilter}
+                                            onApply={setStatusFilter}
+                                            activeSort={activeSort}
+                                            onSort={handleSort}
+                                        />
+                                    </th>
                                     <th>Actions</th>
                                 </>
                             )}
                             {activeRole === 'parent' && (
                                 <>
-                                    <th>Parent Profile</th>
+                                    <th>
+                                        <ColumnFilterDropdown
+                                            label="Parent Profile"
+                                            sortKey="name"
+                                            activeSort={activeSort}
+                                            onSort={handleSort}
+                                        />
+                                    </th>
                                     <th>Linked Children</th>
-                                    <th>Status</th>
+                                    <th>
+                                        <ColumnFilterDropdown
+                                            label="Status"
+                                            sortKey="is_online"
+                                            options={STATUS_OPTIONS}
+                                            selected={statusFilter}
+                                            onApply={setStatusFilter}
+                                            activeSort={activeSort}
+                                            onSort={handleSort}
+                                        />
+                                    </th>
                                     <th>Actions</th>
                                 </>
                             )}
@@ -438,7 +525,7 @@ const Users = () => {
                                                             : 'Children'
                                                         }
                                                         <button
-                                                            className="action-btn expand-btn"
+                                                            data-testid="expand-btn" className="action-btn expand-btn"
                                                             onClick={() => toggleParentExpand(u.id)}
                                                             title={expandedParents.has(u.id) ? 'Collapse' : 'Expand'}
                                                             style={{ marginLeft: '8px', width: '28px', height: '28px' }}
@@ -466,7 +553,7 @@ const Users = () => {
                                                 </td>
                                             </tr>
                                             {expandedParents.has(u.id) && (
-                                                <tr className="expanded-children-row">
+                                                <tr data-testid="expanded-children-row" className="expanded-children-row">
                                                     <td colSpan="4">
                                                         <div className="children-list-container">
                                                             {childrenCache[u.id] === undefined ? (
@@ -489,7 +576,7 @@ const Users = () => {
                                                                             </div>
                                                                         </div>
                                                                         <button
-                                                                            className="action-btn delete child-unlink-btn"
+                                                                            data-testid="child-unlink-btn" className="action-btn delete child-unlink-btn"
                                                                             onClick={() => handleUnlinkChild(u.id, child.id)}
                                                                             disabled={formLoading}
                                                                             title="Unlink this child"
@@ -605,16 +692,6 @@ const Users = () => {
                 connectionCode={connectionCode}
             />
 
-            <BulkConnectionCardsModal
-                isOpen={activeModal === 'bulk_connection_cards'}
-                onClose={() => setActiveModal(null)}
-                classrooms={classrooms}
-                fetchClassrooms={fetchClassrooms}
-                classroomCards={classroomCards}
-                setClassroomCards={setClassroomCards}
-                isFetchingCards={isFetchingCards}
-                fetchClassroomCards={fetchClassroomCards}
-            />
         </div>
     );
 };

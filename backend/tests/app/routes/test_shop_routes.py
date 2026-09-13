@@ -194,3 +194,16 @@ def test_configure_perk_wallpaper_and_animated_border(client, init_db):
     db.session.refresh(user)
     assert user.animated_border_speed == "fast"
 
+    # Test animated_border_color
+    resp = client.put(
+        "/api/shop/configure", json={"perk_name": "animated_border_color", "value": "red"}
+    )
+    assert resp.status_code == 400
+
+    resp = client.put(
+        "/api/shop/configure", json={"perk_name": "animated_border_color", "value": "#fac815"}
+    )
+    assert resp.status_code == 200
+    db.session.refresh(user)
+    assert user.animated_border_color == "#fac815"
+

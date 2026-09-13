@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import client from '../api/client';
+import { showConfirm } from '../utils/confirm';
 import toast from 'react-hot-toast';
 
 export const useUsersManagement = (role = '') => {
@@ -18,6 +19,12 @@ export const useUsersManagement = (role = '') => {
     const [searchTerm, setSearchTerm] = useState('');
     const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
 
+    // Excel-style column filters & sorting
+    const [statusFilter, setStatusFilter] = useState([]); // subset of ['active', 'offline']
+    const [accountTypeFilter, setAccountTypeFilter] = useState([]); // subset of ['admin', 'parent', 'student']
+    const [sortBy, setSortBy] = useState('');
+    const [sortDir, setSortDir] = useState('asc');
+
     useEffect(() => {
         const timer = setTimeout(() => {
             setDebouncedSearchTerm(searchTerm);
@@ -25,10 +32,10 @@ export const useUsersManagement = (role = '') => {
         return () => clearTimeout(timer);
     }, [searchTerm]);
 
-    // Reset to page 1 when search changes
+    // Reset to page 1 when search or filters change
     useEffect(() => {
         setPage(1);
-    }, [debouncedSearchTerm]);
+    }, [debouncedSearchTerm, statusFilter, accountTypeFilter, sortBy, sortDir]);
 
     const fetchUsers = useCallback(async (targetPage = page) => {
         setIsRefreshing(true);
@@ -39,6 +46,15 @@ export const useUsersManagement = (role = '') => {
             }
             if (debouncedSearchTerm) {
                 url += `&search=${encodeURIComponent(debouncedSearchTerm)}`;
+            }
+            if (statusFilter.length > 0) {
+                url += `&status=${statusFilter.join(',')}`;
+            }
+            if (accountTypeFilter.length > 0) {
+                url += `&account_types=${accountTypeFilter.join(',')}`;
+            }
+            if (sortBy) {
+                url += `&sort_by=${sortBy}&sort_dir=${sortDir}`;
             }
             const response = await client.get(url);
             const data = response.data;
@@ -61,7 +77,7 @@ export const useUsersManagement = (role = '') => {
             setIsLoading(false);
             setIsRefreshing(false);
         }
-    }, [page, debouncedSearchTerm, role]);
+    }, [page, debouncedSearchTerm, role, statusFilter, accountTypeFilter, sortBy, sortDir]);
 
     useEffect(() => {
         fetchUsers(page);
@@ -214,7 +230,7 @@ export const useUsersManagement = (role = '') => {
             const errorData = error.response?.data;
             if (errorData?.conflict && errorData?.current_owner) {
                 // Duplicate drawer assignment detected
-                const confirmed = window.confirm(`That drawer is already assigned to @${errorData.current_owner}. Do you want to take it over and remove that student's drawer assignment to move it over to this student, or cancel?`);
+                const confirmed = await showConfirm(`That drawer is already assigned to @${errorData.current_owner}. Do you want to take it over and remove that student's drawer assignment to move it over to this student, or cancel?`, { title: 'Drawer Conflict', confirmText: 'Take Over', destructive: true });
                 if (confirmed) {
                     // recursively call with force=true, passing the original target
                     return handleSetDrawer(formElement, true);
@@ -228,7 +244,7 @@ export const useUsersManagement = (role = '') => {
     };
 
     const handleRemoveUser = async (username) => {
-        if (!window.confirm(`Are you sure you want to PERMANENTLY remove @${username}?`)) return;
+        if (!await showConfirm(`Are you sure you want to PERMANENTLY remove @${username}?`, { title: 'Remove User', destructive: true })) return;
         
         try {
             const formData = new FormData();
@@ -372,6 +388,14 @@ export const useUsersManagement = (role = '') => {
         fetchClassroomCards,
         searchTerm,
         setSearchTerm,
-        handleToggleChat
+        handleToggleChat,
+        statusFilter,
+        setStatusFilter,
+        accountTypeFilter,
+        setAccountTypeFilter,
+        sortBy,
+        setSortBy,
+        sortDir,
+        setSortDir
     };
 };

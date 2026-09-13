@@ -104,6 +104,15 @@ Key points:
 
 ## 5. Nginx Configuration
 
+There are **two** nginx site configs, both stored in `infrastructure/nginx/` and deployed by `deploy.sh`:
+
+| File | Domain | Purpose |
+|---|---|---|
+| `api-blossom.benmega.com.conf` | `api-blossom.benmega.com` | Backend API proxy → Gunicorn |
+| `blossom.benmega.com.conf` | `blossom.benmega.com` | Frontend SPA static files |
+
+### `api-blossom.benmega.com.conf` — Backend API
+
 File: `/etc/nginx/sites-available/benmega`
 
 ```nginx
@@ -150,7 +159,43 @@ server {
 }
 ```
 
----
+### `blossom.benmega.com.conf` — Frontend SPA
+
+File: `/etc/nginx/sites-available/blossom-frontend`
+
+The `try_files $uri $uri/ /index.html` directive is critical for React Router — without it, direct navigation or hard refresh on any route (e.g. `/admin/submissions`) returns 404 instead of serving the SPA.
+
+```nginx
+server {
+    listen 80;
+    server_name blossom.benmega.com;
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen 443 ssl;
+    server_name blossom.benmega.com;
+
+    ssl_certificate     /etc/letsencrypt/live/blossom.benmega.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/blossom.benmega.com/privkey.pem;
+    include /etc/letsencrypt/options-ssl-nginx.conf;
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+
+    root /home/ubuntu/classroom-chat/frontend/dist;
+    index index.html;
+
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    location ~* \.(js|css|woff2?|ttf|otf|eot|svg|png|jpg|jpeg|gif|ico|webp)$ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+        try_files $uri =404;
+    }
+}
+```
+
 
 ## 6. CI/CD Pipeline (GitHub Actions)
 

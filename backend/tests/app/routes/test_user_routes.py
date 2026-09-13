@@ -15,9 +15,11 @@ from application.models.project import Project
 from application.models.skill import Skill
 from application.models.user import User
 from PIL import Image
+from tests.factories import AdminFactory, UserFactory
 
 
-def test_get_users(client, init_db, sample_user):
+def test_get_users(client, init_db):
+    sample_user = UserFactory()
     """Test retrieving all users."""
     with client.session_transaction() as sess:
         sess["user"] = sample_user.id
@@ -31,7 +33,8 @@ def test_get_users(client, init_db, sample_user):
     assert any(u["username"] == sample_user.username for u in data)
 
 
-def test_get_user_id_authenticated(client, init_db, sample_user):
+def test_get_user_id_authenticated(client, init_db):
+    sample_user = UserFactory()
     """Test getting user ID when authenticated."""
     with client.session_transaction() as sess:
         sess["user"] = sample_user.id
@@ -66,7 +69,8 @@ def test_login_get(client, init_db):
     assert b"login" in response.data.lower()
 
 
-def test_login_success(client, init_db, sample_user):
+def test_login_success(client, init_db):
+    sample_user = UserFactory()
     """Test successful login."""
     sample_user.set_password("testpassword123")
     db.session.commit()
@@ -98,7 +102,8 @@ def test_login_invalid_username(client, init_db):
     assert b"Invalid username or password" in response.data
 
 
-def test_login_invalid_password(client, init_db, sample_user):
+def test_login_invalid_password(client, init_db):
+    sample_user = UserFactory()
     """Test login with invalid password."""
     sample_user.set_password("correctpassword")
     db.session.commit()
@@ -113,7 +118,8 @@ def test_login_invalid_password(client, init_db, sample_user):
     assert b"Invalid username or password" in response.data
 
 
-def test_logout(client, init_db, sample_user):
+def test_logout(client, init_db):
+    sample_user = UserFactory()
     """Test user logout."""
     # Set user as online
     sample_user.is_online = True
@@ -157,7 +163,8 @@ def test_signup_success(client, init_db):
     assert user.check_password("newpassword123")
 
 
-def test_signup_duplicate_username(client, init_db, sample_user):
+def test_signup_duplicate_username(client, init_db):
+    sample_user = UserFactory()
     """Test signup with existing username."""
     response = client.post(
         "/user/signup",
@@ -171,7 +178,8 @@ def test_signup_duplicate_username(client, init_db, sample_user):
 # --- Profile Tests ---
 
 
-def test_profile_authenticated(client, init_db, sample_user):
+def test_profile_authenticated(client, init_db):
+    sample_user = UserFactory()
     """Test accessing profile when authenticated."""
     with client.session_transaction() as sess:
         sess["user"] = sample_user.id
@@ -187,7 +195,8 @@ def test_profile_not_authenticated(client, init_db):
     assert response.status_code == 401
 
 
-def test_view_user_profile_by_slug_is_public(client, init_db, sample_user):
+def test_view_user_profile_by_slug_is_public(client, init_db):
+    sample_user = UserFactory()
     """Profile pages are intentionally public (no login required) — this is
     a disclosed and accepted tradeoff, not an oversight."""
     response = client.get(
@@ -197,7 +206,8 @@ def test_view_user_profile_by_slug_is_public(client, init_db, sample_user):
     assert response.json["data"]["target"]["username"] == sample_user.username
 
 
-def test_edit_profile_get(client, init_db, sample_user):
+def test_edit_profile_get(client, init_db):
+    sample_user = UserFactory()
     """Test GET request to edit profile page."""
     with client.session_transaction() as sess:
         sess["user"] = sample_user.id
@@ -206,7 +216,8 @@ def test_edit_profile_get(client, init_db, sample_user):
     assert response.status_code == 200
 
 
-def test_edit_profile_post(client, init_db, sample_user):
+def test_edit_profile_post(client, init_db):
+    sample_user = UserFactory()
     """Test updating profile information (Skills, IP, Online)."""
     with client.session_transaction() as sess:
         sess["user"] = sample_user.id
@@ -231,7 +242,8 @@ def test_edit_profile_post(client, init_db, sample_user):
     assert sample_user.is_online is True
 
 
-def test_edit_profile_change_password(client, init_db, sample_user):
+def test_edit_profile_change_password(client, init_db):
+    sample_user = UserFactory()
     """Test changing password via edit profile."""
     sample_user.set_password("oldpassword")
     db.session.commit()
@@ -256,7 +268,8 @@ def test_edit_profile_change_password(client, init_db, sample_user):
     assert sample_user.check_password("newpassword")
 
 
-def test_edit_profile_password_mismatch(client, init_db, sample_user):
+def test_edit_profile_password_mismatch(client, init_db):
+    sample_user = UserFactory()
     """Test edit profile with mismatched passwords."""
     with client.session_transaction() as sess:
         sess["user"] = sample_user.id
@@ -277,7 +290,8 @@ def test_edit_profile_password_mismatch(client, init_db, sample_user):
 # --- Project Route Tests (New) ---
 
 
-def test_new_project_post(client, init_db, sample_user):
+def test_new_project_post(client, init_db):
+    sample_user = UserFactory()
     """Test creating a new project via the specific route."""
     with client.session_transaction() as sess:
         sess["user"] = sample_user.id
@@ -301,7 +315,8 @@ def test_new_project_post(client, init_db, sample_user):
     assert project.user_id == sample_user.id
 
 
-def test_edit_project_post(client, init_db, sample_user):
+def test_edit_project_post(client, init_db):
+    sample_user = UserFactory()
     """Test editing an existing project."""
     project = Project(name="Old Name", description="Old Desc", user_id=sample_user.id)
     db.session.add(project)
@@ -323,7 +338,8 @@ def test_edit_project_post(client, init_db, sample_user):
     assert project.name == "Updated Name"
 
 
-def test_delete_project(client, init_db, sample_user):
+def test_delete_project(client, init_db):
+    sample_user = UserFactory()
     """Test deleting a project."""
     project = Project(name="To Delete", user_id=sample_user.id)
     db.session.add(project)
@@ -346,7 +362,8 @@ def test_delete_project(client, init_db, sample_user):
 # --- Image & File Handling Tests ---
 
 
-def test_edit_profile_picture_api(client, init_db, sample_user):
+def test_edit_profile_picture_api(client, init_db):
+    sample_user = UserFactory()
     """Test editing profile picture via API endpoint."""
     with client.session_transaction() as sess:
         sess["user"] = sample_user.id
@@ -367,7 +384,8 @@ def test_edit_profile_picture_api(client, init_db, sample_user):
     assert "new_url" in data
 
 
-def test_edit_profile_picture_no_file(client, init_db, sample_user):
+def test_edit_profile_picture_no_file(client, init_db):
+    sample_user = UserFactory()
     """Test editing profile picture without providing a file."""
     with client.session_transaction() as sess:
         sess["user"] = sample_user.id
@@ -378,7 +396,8 @@ def test_edit_profile_picture_no_file(client, init_db, sample_user):
     assert b"No file part" in response.data
 
 
-def test_delete_profile_picture(client, init_db, sample_user):
+def test_delete_profile_picture(client, init_db):
+    sample_user = UserFactory()
     """Test deleting profile picture."""
     # Set a profile picture
     sample_user.profile_picture = "test_picture.png"
@@ -413,7 +432,8 @@ def test_profile_picture_path_traversal_protection(client, init_db):
 # --- Skill Tests ---
 
 
-def test_remove_skill(client, init_db, sample_user):
+def test_remove_skill(client, init_db):
+    sample_user = UserFactory()
     """Test removing a skill via AJAX."""
     skill = Skill(name="Python", user_id=sample_user.id)
     db.session.add(skill)
@@ -433,7 +453,8 @@ def test_remove_skill(client, init_db, sample_user):
 # --- Helper Function & Model Tests ---
 
 
-def test_helper_functions_clear_user_skills(init_db, sample_user):
+def test_helper_functions_clear_user_skills(init_db):
+    sample_user = UserFactory()
     """Test clear_user_skills helper function."""
     from application.routes.user_routes import clear_user_skills
 
@@ -448,7 +469,8 @@ def test_helper_functions_clear_user_skills(init_db, sample_user):
     assert len(sample_user.skills) == 0
 
 
-def test_helper_functions_add_user_skills(init_db, sample_user):
+def test_helper_functions_add_user_skills(init_db):
+    sample_user = UserFactory()
     """Test add_user_skills helper function."""
     from application.routes.user_routes import add_user_skills
 
@@ -462,7 +484,8 @@ def test_helper_functions_add_user_skills(init_db, sample_user):
     assert "Python" in skill_names
 
 
-def test_user_model_add_skill(init_db, sample_user):
+def test_user_model_add_skill(init_db):
+    sample_user = UserFactory()
     """Test User model's add_skill method."""
     initial_skill_count = len(sample_user.skills)
     sample_user.add_skill("Java")
@@ -471,7 +494,8 @@ def test_user_model_add_skill(init_db, sample_user):
     assert any(s.name == "Java" for s in sample_user.skills)
 
 
-def test_daily_duck_logic(client, init_db, sample_user):
+def test_daily_duck_logic(client, init_db):
+    sample_user = UserFactory()
     """Test that login awards ducks correctly."""
     sample_user.set_password("testpassword")
     # Reset ducks
@@ -503,7 +527,8 @@ def test_daily_duck_logic(client, init_db, sample_user):
     assert sample_user.duck_balance == initial_balance
 
 
-def test_pfp_integrity_cleanup(init_db, sample_user):
+def test_pfp_integrity_cleanup(init_db):
+    sample_user = UserFactory()
     """Test the cleanup of missing profile picture files."""
     from application.utilities.helper_functions import cleanup_missing_user_pfps
 
@@ -518,7 +543,8 @@ def test_pfp_integrity_cleanup(init_db, sample_user):
     assert sample_user.profile_picture == "Default_pfp.jpg"
 
 
-def test_get_project_templates(client, init_db, sample_user):
+def test_get_project_templates(client, init_db):
+    sample_user = UserFactory()
     """Test retrieving list of default projects."""
     with client.session_transaction() as sess:
         sess["user"] = sample_user.id
@@ -535,12 +561,14 @@ def test_get_project_templates(client, init_db, sample_user):
     assert "Dangerous Skies" in templates
 
 
-def test_search_users_requires_login(client, init_db, sample_user):
+def test_search_users_requires_login(client, init_db):
+    sample_user = UserFactory()
     resp = client.get(f"/user/api/users/search?q={sample_user.username}")
     assert resp.status_code in (302, 401)
 
 
-def test_search_users(client, init_db, sample_user):
+def test_search_users(client, init_db):
+    sample_user = UserFactory()
     with client.session_transaction() as sess:
         sess["user"] = sample_user.id
     resp = client.get(f"/user/api/users/search?q={sample_user.username}")
@@ -548,7 +576,8 @@ def test_search_users(client, init_db, sample_user):
     assert resp.json["data"]["users"][0]["username"] == sample_user.username
 
 
-def test_project_image_and_wallpaper_upload(client, init_db, sample_user):
+def test_project_image_and_wallpaper_upload(client, init_db):
+    sample_user = UserFactory()
     # Generate a valid PNG image in memory
     from PIL import Image
 
@@ -643,7 +672,8 @@ def test_login_unapproved_user_and_edge_cases(client, init_db):
     assert resp_get_json.status_code == 405
 
 
-def test_auth_status_and_tutorial_complete(client, init_db, sample_user):
+def test_auth_status_and_tutorial_complete(client, init_db):
+    sample_user = UserFactory()
     # Unauthenticated auth_status
     resp = client.get("/user/api/auth/status")
     assert resp.status_code == 200
@@ -670,7 +700,8 @@ def test_auth_status_and_tutorial_complete(client, init_db, sample_user):
     assert sample_user.has_seen_tutorial is True
 
 
-def test_logout_json_response(client, init_db, sample_user):
+def test_logout_json_response(client, init_db):
+    sample_user = UserFactory()
     with client.session_transaction() as sess:
         sess["user"] = sample_user.id
 
@@ -693,7 +724,8 @@ def test_signup_validations(client, init_db):
     assert resp.status_code == 400
 
 
-def test_profile_not_found_and_html_redirect(client, init_db, sample_user):
+def test_profile_not_found_and_html_redirect(client, init_db):
+    sample_user = UserFactory()
     # User ID in session doesn't exist in DB
     with client.session_transaction() as sess:
         sess["user"] = 999999
@@ -710,7 +742,8 @@ def test_profile_not_found_and_html_redirect(client, init_db, sample_user):
     assert "/profile" in resp_html.headers.get("Location", "")
 
 
-def test_view_user_profile_slug_html_redirect_and_404(client, init_db, sample_user):
+def test_view_user_profile_slug_html_redirect_and_404(client, init_db):
+    sample_user = UserFactory()
     # HTML redirect
     resp = client.get(f"/user/profile/{sample_user.slug}")
     assert resp.status_code == 302
@@ -720,7 +753,8 @@ def test_view_user_profile_slug_html_redirect_and_404(client, init_db, sample_us
     assert resp_404.status_code == 404
 
 
-def test_edit_profile_html_redirect_and_bio_update(client, init_db, sample_user):
+def test_edit_profile_html_redirect_and_bio_update(client, init_db):
+    sample_user = UserFactory()
     with client.session_transaction() as sess:
         sess["user"] = sample_user.id
 
@@ -753,7 +787,8 @@ def test_edit_profile_html_redirect_and_bio_update(client, init_db, sample_user)
     assert sample_user.nickname == "CoolNick"
 
 
-def test_get_parent_connection_code_route(client, init_db, sample_user):
+def test_get_parent_connection_code_route(client, init_db):
+    sample_user = UserFactory()
     # Student user
     with client.session_transaction() as sess:
         sess["user"] = sample_user.id
@@ -775,7 +810,8 @@ def test_get_parent_connection_code_route(client, init_db, sample_user):
     assert resp_parent.status_code == 400
 
 
-def test_new_project_edge_cases(client, init_db, sample_user):
+def test_new_project_edge_cases(client, init_db):
+    sample_user = UserFactory()
     admin = User(username="admin_user", role="admin", is_approved=True)
     admin.set_password("pass1234")
     db.session.add(admin)
@@ -832,7 +868,8 @@ def test_new_project_edge_cases(client, init_db, sample_user):
     assert resp_get_html.status_code == 302
 
 
-def test_edit_project_edge_cases(client, init_db, sample_user):
+def test_edit_project_edge_cases(client, init_db):
+    sample_user = UserFactory()
     admin = User(username="admin_proj_editor", role="admin", is_approved=True)
     admin.set_password("pass1234")
 
@@ -890,7 +927,8 @@ def test_edit_project_edge_cases(client, init_db, sample_user):
     assert resp_get.status_code == 302
 
 
-def test_api_profile_picture_validations(client, init_db, sample_user):
+def test_api_profile_picture_validations(client, init_db):
+    sample_user = UserFactory()
     with client.session_transaction() as sess:
         sess["user"] = sample_user.id
 
@@ -911,7 +949,8 @@ def test_api_profile_picture_validations(client, init_db, sample_user):
     assert resp.status_code == 400
 
 
-def test_api_project_image_validations(client, init_db, sample_user):
+def test_api_project_image_validations(client, init_db):
+    sample_user = UserFactory()
     with client.session_transaction() as sess:
         sess["user"] = sample_user.id
 
@@ -939,7 +978,8 @@ def test_api_project_image_validations(client, init_db, sample_user):
     assert resp.status_code == 400
 
 
-def test_api_profile_wallpaper_validations(client, init_db, sample_user):
+def test_api_profile_wallpaper_validations(client, init_db):
+    sample_user = UserFactory()
     sample_user.has_custom_wallpaper = True
     db.session.commit()
 
@@ -973,7 +1013,8 @@ def test_api_profile_wallpaper_validations(client, init_db, sample_user):
     assert resp.status_code == 400
 
 
-def test_search_users_empty_query(client, init_db, sample_user):
+def test_search_users_empty_query(client, init_db):
+    sample_user = UserFactory()
     with client.session_transaction() as sess:
         sess["user"] = sample_user.id
 
@@ -999,81 +1040,87 @@ def test_get_parent_code_user_not_found(client, init_db):
     assert resp.status_code == 404
 
 
-def test_handle_video_s3_upload_helper(init_db, sample_user):
-    from application.routes.user_routes import handle_video_s3_upload
+def synchronous_thread_start(self):
+    self._target(*self._args, **self._kwargs)
 
-    # Invalid inputs
-    assert handle_video_s3_upload(None, sample_user, "Project", 1) is False
+def test_handle_video_s3_upload_helper(init_db, test_app):
+    sample_user = UserFactory()
+    from application.routes.user_routes import start_video_upload_thread
+
+    assert start_video_upload_thread(None, sample_user, "Project", 1) is False
 
     class DummyFileNoName:
         pass
-
-    assert handle_video_s3_upload(DummyFileNoName(), sample_user, "Project", 1) is False
+    assert start_video_upload_thread(DummyFileNoName(), sample_user, "Project", 1) is False
 
     class DummyFileNoExt:
         filename = "videofile"
-
-    assert handle_video_s3_upload(DummyFileNoExt(), sample_user, "Project", 1) is False
+    assert start_video_upload_thread(DummyFileNoExt(), sample_user, "Project", 1) is False
 
     class DummyFileBadExt:
         filename = "video.pdf"
+    assert start_video_upload_thread(DummyFileBadExt(), sample_user, "Project", 1) is False
 
-    assert handle_video_s3_upload(DummyFileBadExt(), sample_user, "Project", 1) is False
-
-    # Mock S3 upload success
     class DummyVideoFile:
         filename = "demo.mp4"
         content_type = "video/mp4"
-
-        def seek(self, pos):
-            pass
+        def seek(self, pos): pass
+        def read(self): return b"fake video bytes"
 
     project = Project(name="S3 Proj", user_id=sample_user.id)
     db.session.add(project)
     db.session.commit()
-    with patch("application.routes.user_routes.get_s3_client") as mock_get_s3:
+
+    with patch("application.routes.user_routes.threading.Thread.start", synchronous_thread_start),          patch("application.routes.user_routes.get_s3_client") as mock_get_s3:
         mock_s3 = mock_get_s3.return_value
-        mock_s3.upload_fileobj = lambda *args, **kwargs: None
+        with test_app.app_context():
+            res = start_video_upload_thread(DummyVideoFile(), sample_user, project.name, project.id)
 
-        res = handle_video_s3_upload(DummyVideoFile(), sample_user, project.name, project.id)
-        assert res is not False
+        assert res is True
+        mock_s3.upload_fileobj.assert_called_once()
         db.session.refresh(project)
-        assert "s3.ap-southeast-1.amazonaws.com" in project.video_url
-
-    # Test S3 client None
-    with patch("application.routes.user_routes.get_s3_client", return_value=None):
-        assert handle_video_s3_upload(DummyVideoFile(), sample_user, project.name, project.id) is False
+        assert project.video_url is not None
+        assert ".mp4" in project.video_url
 
 
-def test_new_and_edit_project_video_upload(client, init_db, sample_user):
+def test_new_and_edit_project_video_upload(client, init_db):
+    sample_user = UserFactory()
     with client.session_transaction() as sess:
         sess["user"] = sample_user.id
 
     video_file = (BytesIO(b"fake video content"), "test_video.mp4")
 
-    # 1. New project with video upload failure mock
-    with patch("application.routes.user_routes.handle_video_s3_upload", return_value=False):
+    with patch("application.routes.user_routes.threading.Thread.start", synchronous_thread_start),          patch("application.routes.user_routes.get_s3_client") as mock_get_s3:
+        mock_s3 = mock_get_s3.return_value
         resp_new = client.post(
             "/user/project/new",
             data={"name": "Video Project", "project_video": video_file},
         )
-        assert resp_new.status_code == 207
-        assert resp_new.json["data"]["video_upload_failed"] is True
+        assert resp_new.status_code == 200
+        assert resp_new.json["data"]["video_processing"] is True
+        mock_s3.upload_fileobj.assert_called_once()
+        db.session.expire_all()
+        project = Project.query.filter_by(name="Video Project").first()
+        assert project is not None
+        assert project.video_url is not None
+        assert project.video_url.endswith(".mp4")
 
-    # 2. Edit project with video upload failure mock
-    project = Project.query.filter_by(name="Video Project").first()
-    assert project is not None
-
-    with patch("application.routes.user_routes.handle_video_s3_upload", return_value=False):
+    with patch("application.routes.user_routes.threading.Thread.start", synchronous_thread_start),          patch("application.routes.user_routes.get_s3_client") as mock_get_s3:
+        mock_s3 = mock_get_s3.return_value
         resp_edit = client.post(
             f"/user/project/edit/{project.id}",
             data={"name": "Video Project Edit", "project_video": (BytesIO(b"video"), "vid.mp4")},
         )
-        assert resp_edit.status_code == 207
-        assert resp_edit.json["data"]["video_upload_failed"] is True
+        assert resp_edit.status_code == 200
+        assert resp_edit.json["data"]["video_processing"] is True
+        mock_s3.upload_fileobj.assert_called_once()
+        db.session.refresh(project)
+        assert project.video_url is not None
+        assert project.video_url.endswith(".mp4")
 
 
-def test_edit_profile_form_pfp_upload(client, init_db, sample_user):
+def test_edit_profile_form_pfp_upload(client, init_db):
+    sample_user = UserFactory()
     with client.session_transaction() as sess:
         sess["user"] = sample_user.id
 

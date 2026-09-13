@@ -37,7 +37,7 @@ describe('Activity Component', () => {
     render(<Activity />);
 
     await waitFor(() => {
-      expect(screen.getByText('Nothing here yet')).toBeInTheDocument();
+      expect(screen.getByText('Keep Up the Great Work!')).toBeInTheDocument();
     });
   });
 

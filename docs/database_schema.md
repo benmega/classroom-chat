@@ -71,7 +71,7 @@ The central entity for authentication and student tracking.
 - **`banned_words`**: List of prohibited words for chat moderation.
     - Fields: `id`, `word`, `severity`.
 - **`ai_settings` / `configuration`**: Global settings and AI toggles.
-- **`track_requests`**: Webhook endpoint logging.
+
 
 ---
 

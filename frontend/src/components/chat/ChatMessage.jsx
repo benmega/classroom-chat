@@ -6,7 +6,7 @@ import Linkify from '../common/Linkify';
 import { getApiUrl } from '../../utils/apiUrl';
 
 const ChatMessage = React.memo(({ msg, user, onDelete, isConsecutive }) => {
-    const borderSpeed = msg.animated_border_speed === 'slow' ? '3s' : msg.animated_border_speed === 'fast' ? '0.5s' : '1.5s';
+    const borderSpeed = '1.5s';
     const isOwnMessage = user && msg && user.id === msg.user_id;
 
     return (

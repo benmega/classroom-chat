@@ -45,6 +45,19 @@ const ParentNavRail = ({ handleLogout }) => {
                     </Link>
                 </div>
 
+                {/* Chat / Messages */}
+                <div className={`nav-rail-item-container ${isActive('/chat') ? 'active' : ''}`}>
+                    <div className="nav-rail-indicator" />
+                    <Link
+                        to="/chat"
+                        className={`nav-rail-item ${isActive('/chat') ? 'active' : ''}`}
+                        data-tooltip="Messages"
+                        aria-label="Messages"
+                    >
+                        <MessageSquare size={20} />
+                    </Link>
+                </div>
+
                 {/* Divider if we have children */}
                 {children.length > 0 && (
                     <div className="nav-rail-divider" />

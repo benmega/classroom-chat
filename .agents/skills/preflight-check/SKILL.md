@@ -1,0 +1,63 @@
+---
+name: preflight-check
+description: Automatically run all tests, linters, and checks before merging into the deploy branch.
+---
+
+# Preflight Check Workflow
+
+This workflow automates running the preflight script and proactively fixing any issues discovered during the process.
+
+## ⚠️ Why Manual Preflight Alone Is Not Enough
+
+Running `/preflight-check` validates the codebase **at the moment it runs**. Any code written or committed *after* that point is not re-checked before it reaches the remote. This is how lint errors can pass a manual preflight but still fail CI.
+
+**The fix**: a `pre-push` git hook runs Ruff and ESLint automatically on every `git push`, making it impossible to push failing code. This hook must be installed once per machine.
+
+## Step 0: Verify the Pre-Push Hook Is Installed
+
+Before running the preflight, confirm the hook is active:
+
+```powershell
+Test-Path .git/hooks/pre-push
+```
+
+If this returns `False`, install it now:
+
+```powershell
+powershell scripts/install-hooks.ps1
+```
+
+> The hook source lives at `scripts/hooks/pre-push` and is tracked in git so every dev can install it. Use `git push --no-verify` only in genuine emergencies.
+
+---
+
+1.  **Execute Preflight**: Use `run_command` to execute the preflight script at `scripts/preflight.ps1`.
+    - Command: `powershell.exe -ExecutionPolicy Bypass -File scripts/preflight.ps1`
+2.  **Analyze Results**:
+    - If the script outputs `ALL CHECKS PASSED! SAFE TO MERGE.`, then the workflow is complete. Report success to the user and note the test coverage percentages.
+    - If the script fails, identify the failing stage (e.g., Ruff linting, Pytest, Frontend Vitest, ESLint, Database Migrations, or Playwright E2E).
+3.  **Resolve Issues**:
+    - **Linting/Formatting (Ruff/ESLint)**: Locate the problematic files and fix the syntax or formatting errors.
+      - Ruff auto-fix: `ruff check --fix .` (from repo root)
+      - ESLint auto-fix: `npm run lint -- --fix` (from `frontend/`)
+    - **Security and Performance**: If `check_admin_auth.py` fails, add proper `@admin_only` or `@login_required` decorators to the flagged admin routes. If `check_n_plus_one.py` warns of N+1 queries, verify the queries and ensure `joinedload` or `selectinload` is used where necessary.
+    - **Unit Tests (Pytest/Vitest)**: Read the test outputs to understand the failure. Modify the source code or the test code (whichever is appropriate) to resolve the bug.
+    - **Database Migrations (`flask db check`)**: If migrations are out of sync, generate a new migration using `flask db migrate -m "Auto migration"` and apply it using `flask db upgrade head`.
+    - **End-to-End Tests (Playwright)**: Debug the UI/integration failure. You may need to review the frontend source code or backend API endpoints to fix the bug.
+
+### Migration Idempotency Checklist
+
+Before signing off on any migration, verify each of the following for every `upgrade()` function:
+
+- [ ] Every `add_column` call is guarded with `if 'col' not in existing_cols:`
+- [ ] Every `drop_column` call is guarded with `if 'col' in existing_cols:`
+- [ ] Every `create_index` / `create_unique_constraint` / `create_foreign_key` call is guarded with a name-existence check
+- [ ] Every `drop_index` / `drop_constraint` / `drop_foreign_key` call is guarded with a name-existence check
+- [ ] Each `batch_alter_table` block has a matching `_alembic_tmp_<table>` entry in the ghost-table cleanup block at the top of `upgrade()`
+- [ ] No operation in the new migration duplicates one already performed in a parallel branch (run `python backend/scripts/validate_migrations.py` to check)
+- [ ] Auto-generated migrations have been manually compared against all migrations on branches that will be merged
+
+**Manual review gate**: Run `python backend/scripts/lint_migrations.py` and confirm exit code 0 before approving any migration PR.
+
+4.  **Re-run Preflight**: After applying a fix, return to Step 1 and re-run the `scripts/preflight.ps1` script. Repeat this loop until the script passes completely.
+5.  **Summary**: Present the user with a summary of the issues you fixed and confirm that the codebase is ready to merge. Note the final frontend and backend test coverage percentages.

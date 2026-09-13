@@ -38,21 +38,8 @@ def test_user_repr(add_sample_user):
 
 def test_user_to_dict_auth(add_sample_user, init_db):
     user = add_sample_user("testuser_auth", "pwd")
-    from application import db
-    from application.models.track_requests import TrackChangeRequest
-
-    req = TrackChangeRequest(
-        student_id=user.id,
-        requested_track="test_track",
-        status="pending",
-        requester_type="student",
-    )
-    db.session.add(req)
-    db.session.commit()
-
     data = user.to_dict_auth()
     assert data["username"] == "testuser_auth"
-    assert data["pending_request"]["requested_track"] == "test_track"
 
 
 def test_user_to_dict_summary_precomputed(add_sample_user, init_db):

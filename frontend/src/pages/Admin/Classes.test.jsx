@@ -25,6 +25,12 @@ vi.mock('react-hot-toast', () => ({
     }
 }));
 
+import { showConfirm } from '../../utils/confirm';
+
+vi.mock('../../utils/confirm', () => ({
+    showConfirm: vi.fn()
+}));
+
 const mockNavigate = vi.fn();
 vi.mock('react-router-dom', async (importOriginal) => {
     const actual = await importOriginal();
@@ -49,7 +55,7 @@ describe('Classes Admin Page', () => {
         });
 
         renderWithRouter(<Classes />);
-        expect(document.querySelector('.admin-classes-page')).toBeInTheDocument();
+        expect(screen.getByTestId("admin-classes-page")).toBeInTheDocument();
         // Since loading state is handled with Skeleton, wait for fetch to finish
         await waitFor(() => {
             expect(screen.getByText('Classroom Directory')).toBeInTheDocument();
@@ -102,7 +108,7 @@ describe('Classes Admin Page', () => {
             expect(screen.getByText('Math 101')).toBeInTheDocument();
         });
 
-        const searchInput = screen.getByPlaceholderText('Search by name, ID, or language...');
+        const searchInput = screen.getByPlaceholderText(/search/i);
         fireEvent.change(searchInput, { target: { value: 'math' } });
 
         expect(screen.getByText('Math 101')).toBeInTheDocument();
@@ -147,77 +153,6 @@ describe('Classes Admin Page', () => {
         expect(mockNavigate).toHaveBeenCalledWith('/admin/classes/c1');
     });
 
-    it('opens bulk connection modal on global button click', async () => {
-        client.get.mockResolvedValue({
-            data: { classrooms: [] }
-        });
-
-        renderWithRouter(<Classes />);
-        
-        await waitFor(() => {
-            expect(screen.getByText('Classroom Directory')).toBeInTheDocument();
-        });
-
-        const printBtn = screen.getByRole('button', { name: /Print Connection Cards/i });
-        fireEvent.click(printBtn);
-        
-        // Wait for modal to render or some state update
-        await waitFor(() => {
-            expect(document.querySelector('.admin-modal-overlay') || document.querySelector('.modal-content')).not.toBeNull();
-        });
-    });
-
-    it('fetches classroom cards and opens modal on individual print button click', async () => {
-        const mockClassrooms = [
-            { id: 'c1', name: 'Math 101', language: 'English', student_count: 20 }
-        ];
-
-        client.get.mockImplementation((url) => {
-            if (url.includes('connection_cards')) {
-                return Promise.resolve({ data: { cards: [{ id: 'card1' }] } });
-            }
-            return Promise.resolve({ data: { classrooms: mockClassrooms } });
-        });
-
-        renderWithRouter(<Classes />);
-        
-        await waitFor(() => {
-            expect(screen.getByText('Math 101')).toBeInTheDocument();
-        });
-
-        const printBtn = screen.getByTitle(/Print Connection Cards/i);
-        fireEvent.click(printBtn);
-
-        await waitFor(() => {
-            expect(client.get).toHaveBeenCalledWith('/api/admin/classrooms/c1/connection_cards');
-        });
-    });
-
-    it('handles individual card fetch error', async () => {
-        const mockClassrooms = [
-            { id: 'c1', name: 'Math 101', language: 'English', student_count: 20 }
-        ];
-
-        client.get.mockImplementation((url) => {
-            if (url.includes('connection_cards')) {
-                return Promise.reject(new Error('Card error'));
-            }
-            return Promise.resolve({ data: { classrooms: mockClassrooms } });
-        });
-
-        renderWithRouter(<Classes />);
-        
-        await waitFor(() => {
-            expect(screen.getByText('Math 101')).toBeInTheDocument();
-        });
-
-        const printBtn = screen.getByTitle(/Print Connection Cards/i);
-        fireEvent.click(printBtn);
-
-        await waitFor(() => {
-            expect(toast.error).toHaveBeenCalledWith('Failed to load cohort connection cards.');
-        });
-    });
 
     it('opens create modal and handles deletion', async () => {
         const mockClassrooms = [
@@ -238,7 +173,7 @@ describe('Classes Admin Page', () => {
         const addBtn = screen.getByText(/Add Classroom/i);
         fireEvent.click(addBtn);
         await waitFor(() => {
-            expect(document.querySelector('.modal-overlay')).not.toBeNull();
+            expect(screen.getByTestId("modal-overlay")).toBeInTheDocument();
         });
         
         // Close modal
@@ -246,7 +181,7 @@ describe('Classes Admin Page', () => {
         fireEvent.click(closeBtn);
 
         // Open kebab menu
-        const kebabBtn = document.querySelector('.kebab-trigger');
+        const kebabBtn = screen.getByTestId("kebab-trigger");
         if (kebabBtn) {
             fireEvent.click(kebabBtn);
 
@@ -254,18 +189,18 @@ describe('Classes Admin Page', () => {
             const deleteBtn = screen.getByText(/Delete Class/i);
             
             // Mock window.confirm
-            window.confirm = vi.fn().mockReturnValue(true);
+            showConfirm.mockResolvedValue(true);
             client.delete.mockResolvedValueOnce({ data: { success: true } });
             
             fireEvent.click(deleteBtn);
             
             await waitFor(() => {
-                expect(window.confirm).toHaveBeenCalled();
+                expect(showConfirm).toHaveBeenCalled();
             });
         }
 
         // Test onKeyDown branch
-        const classCard = document.querySelector('.class-card');
+        const classCard = screen.queryAllByTestId("class-card")[0];
         if (classCard) {
             fireEvent.keyDown(classCard, { key: 'Enter', target: classCard });
             fireEvent.keyDown(classCard, { key: ' ', target: classCard });

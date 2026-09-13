@@ -59,6 +59,8 @@ class User(db.Model):
     has_auto_bitshift = db.Column(db.Boolean, default=False)
     has_custom_wallpaper = db.Column(db.Boolean, default=False)
     profile_wallpaper = db.Column(db.String(255), nullable=True)
+    # Note: This perk does not automate periodic rewards (which are given automatically anyway),
+    # but rather unlocks a frontend bookmarklet for CodeCombat/Ozaria auto-claiming.
     has_auto_claimer = db.Column(db.Boolean, default=False)
     has_double_duck = db.Column(db.Boolean, default=False)
 
@@ -147,13 +149,23 @@ class User(db.Model):
 
         return d
 
+    @property
+    def has_activity(self):
+        from .challenge_log import ChallengeLog
+        from .course_instance_request import CourseInstanceRequest
+        from .submission import Submission
+        from .user_certificate import UserCertificate
+
+        if ChallengeLog.query.filter_by(user_id=self.id).first():
+            return True
+        if Submission.query.filter_by(user_id=self.id).first():
+            return True
+        if UserCertificate.query.filter_by(user_id=self.id).first():
+            return True
+        return bool(CourseInstanceRequest.query.filter_by(student_id=self.id).first())
+
     def to_dict_auth(self):
         """Ultra-lightweight dictionary for frequent auth status checks."""
-        from .track_requests import TrackChangeRequest
-
-        pending_request = TrackChangeRequest.query.filter_by(
-            student_id=self.id, status="pending"
-        ).first()
         return {
             "id": self.id,
             "user_id": self.id,
@@ -169,15 +181,7 @@ class User(db.Model):
             "is_approved": self.is_approved,
             "role": self.role,
             "active_track": self.active_track,
-            "pending_request": {
-                "id": pending_request.id,
-                "requested_track": pending_request.requested_track,
-                "created_at": pending_request.created_at.isoformat()
-                if pending_request.created_at
-                else None,
-            }
-            if pending_request
-            else None,
+
             "slug": self.slug,
             "duck_balance": self.duck_balance,
             "packets": self.packets,
@@ -197,6 +201,7 @@ class User(db.Model):
             "last_activity_time": self.last_activity_time.isoformat()
             if self.last_activity_time
             else None,
+            "has_activity": self.has_activity,
             "achievement_count": len(self.achievements),
             "can_chat": self.can_chat if self.can_chat is not None else True,
         }
@@ -233,13 +238,6 @@ class User(db.Model):
             oz_levels = self.get_progress("www.ozaria.com")
             cc_percent = self.get_progress_percent("codecombat.com")
             oz_percent = self.get_progress_percent("www.ozaria.com")
-
-        from .track_requests import TrackChangeRequest
-
-        pending_request = TrackChangeRequest.query.filter_by(
-            student_id=self.id, status="pending"
-        ).first()
-
         d = {
             "id": self.id,
             "user_id": self.id,
@@ -255,15 +253,6 @@ class User(db.Model):
             "is_approved": self.is_approved,
             "role": self.role,
             "active_track": self.active_track,
-            "pending_request": {
-                "id": pending_request.id,
-                "requested_track": pending_request.requested_track,
-                "created_at": pending_request.created_at.isoformat()
-                if pending_request.created_at
-                else None,
-            }
-            if pending_request
-            else None,
             "bio": self.bio,
             "slug": self.slug,
             # Gamification
@@ -287,11 +276,13 @@ class User(db.Model):
             "has_custom_wallpaper": self.has_custom_wallpaper,
             "profile_wallpaper": self.profile_wallpaper,
             "has_auto_claimer": self.has_auto_claimer,
+            "has_double_duck": self.has_double_duck,
             "drawer": self.drawer,
             "current_activity": self.current_activity,
             "last_activity_time": self.last_activity_time.isoformat()
             if self.last_activity_time
             else None,
+            "has_activity": self.has_activity,
             "recent_project": {
                 "name": self.projects[-1].name,
             }

@@ -11,11 +11,17 @@ vi.mock('../api/client', () => ({
     },
 }));
 
+import { showConfirm } from '../utils/confirm';
+
 vi.mock('react-hot-toast', () => ({
     default: {
         success: vi.fn(),
         error: vi.fn(),
     },
+}));
+
+vi.mock('../utils/confirm', () => ({
+    showConfirm: vi.fn()
 }));
 
 describe('useAdminDashboard', () => {
@@ -471,7 +477,7 @@ describe('useAdminDashboard', () => {
 
     it('removes user successfully', async () => {
         // mock window.confirm
-        vi.spyOn(window, 'confirm').mockReturnValue(true);
+        showConfirm.mockResolvedValue(true);
         client.get.mockResolvedValueOnce({ data: { status: 'success', data: {} } });
         client.post.mockResolvedValueOnce({ data: { success: true, message: 'User removed' } });
         const { result } = renderHook(() => useAdminDashboard());
@@ -485,7 +491,7 @@ describe('useAdminDashboard', () => {
     });
 
     it('cancels removing user', async () => {
-        vi.spyOn(window, 'confirm').mockReturnValue(false);
+        showConfirm.mockResolvedValue(false);
         client.get.mockResolvedValueOnce({ data: { status: 'success', data: {} } });
         const { result } = renderHook(() => useAdminDashboard());
 
@@ -497,7 +503,7 @@ describe('useAdminDashboard', () => {
     });
 
     it('fails to remove user api error', async () => {
-        vi.spyOn(window, 'confirm').mockReturnValue(true);
+        showConfirm.mockResolvedValue(true);
         client.get.mockResolvedValueOnce({ data: { status: 'success', data: {} } });
         client.post.mockRejectedValueOnce({ response: { data: { message: 'Remove failed' } } });
         const { result } = renderHook(() => useAdminDashboard());

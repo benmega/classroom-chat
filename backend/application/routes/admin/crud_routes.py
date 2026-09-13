@@ -76,16 +76,32 @@ def get_list(resource):
     if not model:
         return jsonify({"error": "Resource not found"}), 404
 
-    # Handle pagination/sorting if needed for react-admin
-    # Simple implementation for now
-    items = model.query.all()
+    query = model.query
 
-    # React-admin expects [ { id: 1, ... }, ... ]
-    # And an X-Total-Count header or a wrapped response
+    # Handle filtering
+    for key, value in request.args.items():
+        if key not in ['_sort', '_order', '_start', '_end'] and hasattr(model, key):
+            query = query.filter(getattr(model, key) == value)
+
+    # Handle sorting
+    sort_field = request.args.get('_sort')
+    sort_order = request.args.get('_order')
+    if sort_field and hasattr(model, sort_field):
+        col = getattr(model, sort_field)
+        query = query.order_by(col.desc()) if sort_order and sort_order.upper() == 'DESC' else query.order_by(col.asc())
+
+    total = query.count()
+
+    # Handle pagination
+    start = request.args.get('_start', type=int)
+    end = request.args.get('_end', type=int)
+    if start is not None and end is not None:
+        query = query.offset(start).limit(end - start)
+
+    items = query.all()
+
     data = [model_to_dict(item) for item in items]
-
-    # We'll use a wrapped response that our dataProvider can understand
-    return jsonify({"data": data, "total": len(data)})
+    return jsonify({"data": data, "total": total})
 
 
 @crud_bp.route("/<resource>/<id>", methods=["GET"])

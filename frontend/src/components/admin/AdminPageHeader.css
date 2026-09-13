@@ -51,12 +51,6 @@
     line-height: 1.2;
 }
 
-.page-header.standardized p {
-    color: var(--text-muted);
-    font-size: 1rem;
-    margin: 0;
-}
-
 .page-header.standardized .header-actions {
     display: flex;
     align-items: center;

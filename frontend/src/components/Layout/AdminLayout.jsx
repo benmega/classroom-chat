@@ -23,7 +23,9 @@ import client from '../../api/client';
 import './AdminLayout.css';
 
 const AdminLayout = ({ children }) => {
-    const { user, isAuthenticated } = useAuthStore();
+    const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+    const userRole = useAuthStore((s) => s.user?.role);
+    const user = useAuthStore((s) => s.user);
     const { isSidebarOpen, setSidebarOpen } = useSidebar();
     const location = useLocation();
     const [reviewCounts, setReviewCounts] = useState({
@@ -31,7 +33,6 @@ const AdminLayout = ({ children }) => {
         pending_trades: 0,
         pending_projects: 0,
         pending_certificates: 0,
-        pending_track_requests: 0,
         pending_course_requests: 0,
         pending_submissions: 0,
         total_incomplete: 0
@@ -49,12 +50,12 @@ const AdminLayout = ({ children }) => {
             }
         };
 
-        if (isAuthenticated && user?.role === 'admin') {
+        if (isAuthenticated && userRole === 'admin') {
             fetchData();
             const interval = setInterval(fetchData, 15000); // refresh every 15s
             return () => clearInterval(interval);
         }
-    }, [isAuthenticated, user]);
+    }, [isAuthenticated, userRole]);
 
     // Close mobile menu on route change
     useEffect(() => {
@@ -79,7 +80,7 @@ const AdminLayout = ({ children }) => {
     const navItems = [
         { path: '/admin', label: 'Dashboard', tooltip: 'Admin Dashboard', icon: LayoutDashboard, end: true },
         { path: '/admin/to-review', label: 'To Review', tooltip: 'Items To Review', icon: ClipboardList },
-        { path: '/admin/submissions', label: 'Student Files', tooltip: 'Student File Submissions', icon: Inbox },
+        { path: '/admin/submissions', label: 'Inbox', tooltip: 'Inbox', icon: Inbox },
         { path: '/admin/users', label: 'Users', tooltip: 'User Management', icon: Users },
         { path: '/admin/classes', label: 'Classes', tooltip: 'Classes & Enrolments', icon: School },
         { path: '/admin/library', label: 'Content Library', tooltip: 'Content Library', icon: Library },
@@ -154,9 +155,6 @@ const AdminLayout = ({ children }) => {
                                         {item.path === '/admin/submissions' && reviewCounts.pending_submissions > 0 && (
                                             <span className="admin-nav-badge">{reviewCounts.pending_submissions}</span>
                                         )}
-                                        {item.path === '/admin' && reviewCounts.pending_track_requests > 0 && (
-                                            <span className="admin-nav-badge">{reviewCounts.pending_track_requests}</span>
-                                        )}
                                     </span>
                                     <span className="admin-nav-label">{item.label}</span>
                                     {item.path === '/admin/to-review' && reviewCounts.total_incomplete > 0 && (
@@ -167,9 +165,6 @@ const AdminLayout = ({ children }) => {
                                     )}
                                     {item.path === '/admin/submissions' && reviewCounts.pending_submissions > 0 && (
                                         <span className="admin-nav-badge mobile-badge">{reviewCounts.pending_submissions}</span>
-                                    )}
-                                    {item.path === '/admin' && reviewCounts.pending_track_requests > 0 && (
-                                        <span className="admin-nav-badge mobile-badge">{reviewCounts.pending_track_requests}</span>
                                     )}
                                 </NavLink>
                             </div>
@@ -200,26 +195,24 @@ const AdminLayout = ({ children }) => {
                 </div>
             </aside>
 
-            {/* Mobile Hamburger Button + Main Content */}
-            <div className="admin-main-wrapper">
-                <div className="admin-mobile-top-bar mobile-only">
-                    <button
-                        className="admin-hamburger"
-                        onClick={() => setSidebarOpen(true)}
-                        aria-label="Open Sidebar"
-                    >
-                        <Menu size={24} />
-                    </button>
-                </div>
-
-                {/* Main Content Area */}
-                <main
-                    key={location.pathname.startsWith('/admin/advanced-crud') ? '/admin/advanced-crud' : location.pathname}
-                    className="admin-body animate-page-entry"
+            {/* Mobile Hamburger Button */}
+            <div className="admin-mobile-top-bar mobile-only">
+                <button
+                    className="admin-hamburger"
+                    onClick={() => setSidebarOpen(true)}
+                    aria-label="Open Sidebar"
                 >
-                    {children}
-                </main>
+                    <Menu size={24} />
+                </button>
             </div>
+
+            {/* Main Content Area */}
+            <main
+                key={location.pathname.startsWith('/admin/advanced-crud') ? '/admin/advanced-crud' : location.pathname}
+                className="admin-body animate-page-entry"
+            >
+                {children}
+            </main>
         </div>
     );
 };

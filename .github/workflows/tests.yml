@@ -28,13 +28,21 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          
-      - name: Install Playwright Browsers
-        run: playwright install --with-deps
-        
-
       - name: Run Mypy
         run: python -m mypy .
+
+      - name: Check Alembic Migration Heads
+        env:
+          FLASK_ENV: testing
+        run: |
+          HEAD_COUNT=$(python -m flask db heads | grep "(head)" | wc -l)
+          if [ "$HEAD_COUNT" -gt 1 ]; then
+            echo "ERROR: Multiple Alembic migration heads detected:"
+            python -m flask db heads
+            echo "Please run 'flask db merge heads' and commit the merge migration to resolve the branch."
+            exit 1
+          fi
+          echo "Alembic heads check passed. Only one head detected."
 
       - name: Run Pytest
         env:
@@ -62,3 +70,42 @@ jobs:
         
       - name: Run Vitest
         run: npm run test -- --run --coverage
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: 'pip'
+          cache-dependency-path: backend/requirements.txt
+          
+      - name: Install Backend Dependencies
+        working-directory: backend
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps
+
+      - name: Run Playwright Tests
+        run: |
+          # Seed E2E test users
+          cd ../backend
+          export FLASK_ENV="development"
+          python scripts/seed_e2e_users.py
+          
+          # Start backend in the background
+          export FLASK_USE_RELOADER="False"
+          export FLASK_DEBUG="True"
+          python main.py &
+          BACKEND_PID=$!
+          
+          # Wait for backend to be ready
+          sleep 5
+          
+          # Run frontend tests
+          cd ../frontend
+          npm run test:e2e
+          
+          # Tear down backend
+          kill $BACKEND_PID

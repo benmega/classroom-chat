@@ -131,3 +131,30 @@ def seed_command():
             click.echo(f"Error seeding challenges: {e}")
     else:
         click.echo(f"File not found: {challenges_csv}")
+
+    # Seed Project Templates
+    from application.commands.projects_data import PROJECT_SEED_DATA
+    from application.models.project_template import ProjectTemplate
+
+    click.echo("Seeding standard project templates...")
+    inserted_projects = 0
+    updated_projects = 0
+    try:
+        for name, desc, chapter in PROJECT_SEED_DATA:
+            pt = ProjectTemplate.query.filter_by(name=name).first()
+            if not pt:
+                pt = ProjectTemplate(name=name, description=desc, chapter=chapter)
+                db.session.add(pt)
+                inserted_projects += 1
+            else:
+                pt.chapter = chapter
+                pt.description = desc
+                updated_projects += 1
+
+        db.session.commit()
+        click.echo(
+            f"Successfully inserted {inserted_projects} and updated {updated_projects} project templates."
+        )
+    except Exception as e:
+        db.session.rollback()
+        click.echo(f"Error seeding project templates: {e}")

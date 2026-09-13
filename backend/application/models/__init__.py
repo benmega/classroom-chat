@@ -31,7 +31,6 @@ def setup_models():
     from .skill import Skill
     from .store_item import StoreItem
     from .submission import Submission
-    from .track_requests import TrackChangeRequest
     from .user import User
     from .user_certificate import UserCertificate
     from .user_item_purchase import UserItemPurchase

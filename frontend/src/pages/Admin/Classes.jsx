@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, Key, Plus, School, Users, Globe, BookOpen, X, MoreVertical, Trash2 } from 'lucide-react';
+import { Search, Plus, Users, Globe, X, MoreVertical, Trash2 } from 'lucide-react';
+import { showConfirm } from '../../utils/confirm';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
 import Skeleton from '../../components/common/Skeleton';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
-import { BulkConnectionCardsModal } from '../../components/admin/AdminModals';
 import './Classes.css';
 
 const LanguageSymbol = ({ language }) => {
@@ -42,7 +42,7 @@ const LanguageSymbol = ({ language }) => {
 const ClassCardMenu = ({ classroom, onDelete }) => {
     const [isOpen, setIsOpen] = useState(false);
     const menuRef = React.useRef(null);
-    
+
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (menuRef.current && !menuRef.current.contains(event.target)) {
@@ -55,9 +55,9 @@ const ClassCardMenu = ({ classroom, onDelete }) => {
 
     return (
         <div className="kebab-menu-container" ref={menuRef} style={{ position: 'relative' }}>
-            <button 
+            <button
                 type="button"
-                className={`action-btn kebab-trigger ${isOpen ? 'active' : ''}`} 
+                data-testid="kebab-trigger" className={`action-btn kebab-trigger ${isOpen ? 'active' : ''}`}
                 onClick={(e) => { e.stopPropagation(); setIsOpen(!isOpen); }}
                 style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '4px', color: 'white' }}
                 aria-label="Classroom options"
@@ -66,9 +66,9 @@ const ClassCardMenu = ({ classroom, onDelete }) => {
             </button>
             {isOpen && (
                 <div className="kebab-dropdown" style={{ position: 'absolute', right: 0, top: '100%', zIndex: 10, background: 'var(--bg-primary, white)', border: '1px solid var(--border-subtle, #e2e8f0)', borderRadius: '6px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)', minWidth: '150px', padding: '4px' }}>
-                    <button 
+                    <button
                         type="button"
-                        className="kebab-item" 
+                        className="kebab-item"
                         style={{ display: 'flex', alignItems: 'center', width: '100%', padding: '8px 12px', border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--text-danger, #dc2626)', fontSize: '0.85rem', borderRadius: '4px', fontWeight: '500' }}
                         onClick={(e) => { e.stopPropagation(); setIsOpen(false); onDelete(classroom); }}
                         // eslint-disable-next-line
@@ -76,7 +76,7 @@ const ClassCardMenu = ({ classroom, onDelete }) => {
                         // eslint-disable-next-line
                         onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
                     >
-                        <Trash2 size={14} style={{marginRight:'8px'}} /> Delete Class
+                        <Trash2 size={14} style={{ marginRight: '8px' }} /> Delete Class
                     </button>
                 </div>
             )}
@@ -89,9 +89,6 @@ const Classes = () => {
     const [classrooms, setClassrooms] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
-    const [activeModal, setActiveModal] = useState(null);
-    const [classroomCards, setClassroomCards] = useState([]);
-    const [isFetchingCards, setIsFetchingCards] = useState(false);
 
     // Create Classroom Modal state
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -118,7 +115,7 @@ const Classes = () => {
     }, [fetchClassrooms]);
 
     const handleDeleteClassroom = async (classroom) => {
-        if (!window.confirm(`WARNING: Are you sure you want to delete classroom "${classroom.name}"? Deleting a classroom removes the classroom instance. Students remain active users in the system but will be unlinked from this group. This cannot be undone.`)) {
+        if (!await showConfirm(`WARNING: Are you sure you want to delete classroom "${classroom.name}"? Deleting a classroom removes the classroom instance. Students remain active users in the system but will be unlinked from this group. This cannot be undone.`, { title: 'Delete Classroom', destructive: true })) {
             return;
         }
         try {
@@ -129,22 +126,6 @@ const Classes = () => {
             }
         } catch (err) {
             toast.error(err.response?.data?.error || 'Failed to delete classroom.');
-        }
-    };
-
-    const fetchClassroomCards = async (classroomId) => {
-        setIsFetchingCards(true);
-        try {
-            const response = await client.get(`/api/admin/classrooms/${classroomId}/connection_cards`);
-            setClassroomCards(response.data.data?.cards || response.data.cards || []);
-            return true;
-        } catch (error) {
-            console.error('Error fetching cohort connection cards:', error);
-            toast.error('Failed to load cohort connection cards.');
-            setClassroomCards([]);
-            return false;
-        } finally {
-            setIsFetchingCards(false);
         }
     };
 
@@ -163,7 +144,7 @@ const Classes = () => {
                 language: newLanguage.trim(),
                 url: newUrl.trim() || 'https://classroom.chat'
             });
-            
+
             setIsCreateModalOpen(false);
             setNewId('');
             setNewName('');
@@ -189,7 +170,7 @@ const Classes = () => {
 
 
     if (isLoading) return (
-        <div className="admin-classes-page">
+        <div data-testid="admin-classes-page" className="admin-classes-page">
             <header className="page-header">
                 <Skeleton height="40px" width="300px" className="skeleton-title" />
                 <Skeleton height="20px" width="500px" />
@@ -197,7 +178,7 @@ const Classes = () => {
             <div className="classes-grid-container">
                 <div className="classes-grid">
                     {[1, 2, 3, 4, 5, 6].map(i => (
-                        <div key={i} className="class-card" style={{ padding: 0 }}>
+                        <div key={i} data-testid="class-card" className="class-card" style={{ padding: 0 }}>
                             <Skeleton height="100px" borderRadius="12px 12px 0 0" />
                             <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
                                 <Skeleton height="20px" width="60%" />
@@ -211,7 +192,7 @@ const Classes = () => {
     );
 
     return (
-        <div className="admin-classes-page">
+        <div data-testid="admin-classes-page" className="admin-classes-page">
             <AdminPageHeader title="Classroom Directory">
                 <div className="search-bar">
                     <Search size={18} aria-hidden="true" />
@@ -236,14 +217,6 @@ const Classes = () => {
                     >
                         <Plus size={18} aria-hidden="true" /> Add Classroom
                     </button>
-                    <button
-                        className="primary-btn bulk-conn-btn"
-                        onClick={() => setActiveModal('bulk_connection_cards')}
-                        aria-label="Print connection cards for all classrooms"
-                    >
-                        <Key size={18} aria-hidden="true" /> Connection Cards
-                    </button>
-                    
                 </div>
             </AdminPageHeader>
 
@@ -253,8 +226,8 @@ const Classes = () => {
                 {filteredClassrooms.length > 0 ? (
                     <div className="classes-grid" aria-label="Classroom Directory Grid">
                         {filteredClassrooms.map(c => (
-                            <div 
-                                className="class-card" 
+                            <div
+                                data-testid="class-card" className="class-card"
                                 key={c.id}
                                 onClick={() => navigate(`/admin/classes/${c.id}`)}
                                 role="button"
@@ -267,42 +240,29 @@ const Classes = () => {
                                     }
                                 }}
                             >
-                                <div className="class-card-header">
+                                <div data-testid="class-card" className="class-card-header">
                                     <div style={{ position: 'absolute', top: '12px', right: '12px', zIndex: 5 }}>
                                         <ClassCardMenu classroom={c} onDelete={handleDeleteClassroom} />
                                     </div>
                                     <Link
                                         to={`/admin/classes/${c.id}`}
-                                        className="class-card-title-link"
+                                        data-testid="class-card" className="class-card-title-link"
                                         onClick={(e) => e.stopPropagation()}
                                         aria-label={`Manage classroom ${c.name}`}
                                     >
                                         {c.name}
                                     </Link>
                                 </div>
-                                <div className="class-card-body">
-                                    <div className="class-card-detail" title={c.language || 'Language'}>
+                                <div data-testid="class-card" className="class-card-body">
+                                    <div data-testid="class-card" className="class-card-detail" title={c.language || 'Language'}>
                                         <LanguageSymbol language={c.language} />
                                     </div>
-                                    <div className="class-card-detail" title={`${c.student_count || 0} Students`}>
+                                    <div data-testid="class-card" className="class-card-detail" title={`${c.student_count || 0} Students`}>
                                         <Users size={18} aria-hidden="true" style={{ color: 'var(--text-muted)' }} />
                                         <span>{c.student_count || 0}</span>
                                     </div>
                                 </div>
-                                <div className="class-card-actions">
-                                    <button
-                                        className="secondary-btn"
-                                        style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', padding: '6px 12px' }}
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            fetchClassroomCards(c.id);
-                                            setActiveModal('bulk_connection_cards');
-                                        }}
-                                        title={`Print Connection Cards for ${c.name}`}
-                                        aria-label={`Print Connection Cards for ${c.name}`}
-                                    >
-                                        <Key size={14} aria-hidden="true" /> Cards
-                                    </button>
+                                <div data-testid="class-card" className="class-card-actions">
                                 </div>
                             </div>
                         ))}
@@ -316,7 +276,7 @@ const Classes = () => {
 
             {/* Create Classroom Modal */}
             {isCreateModalOpen && (
-                <div className="modal-overlay" role="dialog" aria-labelledby="modal-title-create-classroom" aria-modal="true">
+                <div data-testid="modal-overlay" className="modal-overlay" role="dialog" aria-labelledby="modal-title-create-classroom" aria-modal="true">
                     <div className="modal-card">
                         <div className="modal-header">
                             <h3 id="modal-title-create-classroom">Create New Classroom</h3>
@@ -398,17 +358,6 @@ const Classes = () => {
                     </div>
                 </div>
             )}
-
-            <BulkConnectionCardsModal
-                isOpen={activeModal === 'bulk_connection_cards'}
-                onClose={() => setActiveModal(null)}
-                classrooms={classrooms}
-                fetchClassrooms={fetchClassrooms}
-                classroomCards={classroomCards}
-                setClassroomCards={setClassroomCards}
-                isFetchingCards={isFetchingCards}
-                fetchClassroomCards={fetchClassroomCards}
-            />
         </div>
     );
 };

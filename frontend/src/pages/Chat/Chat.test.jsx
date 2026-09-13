@@ -74,6 +74,8 @@ const buildFeedLogic = (overrides = {}) => ({
   onEmojiClick: mockOnEmojiClick,
   handleDeleteMessage: mockHandleDeleteMessage,
   handleScroll: mockHandleScroll,
+  file: null,
+  setFile: vi.fn(),
   ...overrides,
 });
 
@@ -100,9 +102,9 @@ describe('Chat Component', () => {
 
   it('does not render the feed container while loading', () => {
     useFeedLogic.mockReturnValue(buildFeedLogic({ loading: true }));
-    const { container } = renderWithProviders(<Chat />);
+    renderWithProviders(<Chat />);
 
-    expect(container.querySelector('.feed-container')).not.toBeInTheDocument();
+    expect(screen.queryByTestId("feed-container")).not.toBeInTheDocument();
     expect(screen.queryByPlaceholderText(/what's on your mind/i)).not.toBeInTheDocument();
   });
 
@@ -252,6 +254,39 @@ describe('Chat Component', () => {
     expect(screen.getByRole('button', { name: /post message/i })).not.toBeDisabled();
   });
 
+  it('Post button is enabled when file is attached without message', () => {
+    useFeedLogic.mockReturnValue(buildFeedLogic({ file: new File([''], 'test.png', { type: 'image/png' }), newMessage: '' }));
+    renderWithProviders(<Chat />);
+
+    expect(screen.getByRole('button', { name: /post message/i })).not.toBeDisabled();
+  });
+
+  it('shows file chip when file is attached', () => {
+    const mockSetFile = vi.fn();
+    useFeedLogic.mockReturnValue(buildFeedLogic({ 
+      file: new File([''], 'test.png', { type: 'image/png' }),
+      setFile: mockSetFile
+    }));
+    renderWithProviders(<Chat />);
+
+    expect(screen.getByText('test.png')).toBeInTheDocument();
+    
+    // Test removing file
+    const removeBtn = screen.getByText('test.png').nextSibling;
+    fireEvent.click(removeBtn);
+    expect(mockSetFile).toHaveBeenCalledWith(null);
+  });
+
+  it('hides targeting options and shows Admin Inbox text when file attached', () => {
+    useFeedLogic.mockReturnValue(buildFeedLogic({ 
+      file: new File([''], 'test.png', { type: 'image/png' })
+    }));
+    renderWithProviders(<Chat />);
+
+    expect(screen.getByText(/sending to admin inbox/i)).toBeInTheDocument();
+    expect(screen.queryByText(/^for$/i)).not.toBeInTheDocument();
+  });
+
   it('calls handleSendMessage on form submit', () => {
     useFeedLogic.mockReturnValue(buildFeedLogic({ newMessage: 'hello' }));
     renderWithProviders(<Chat />);
@@ -265,7 +300,7 @@ describe('Chat Component', () => {
   it('calls handleScroll when messages container is scrolled', () => {
     renderWithProviders(<Chat />);
 
-    const messagesDiv = document.querySelector('.feed-messages');
+    const messagesDiv = screen.getByTestId("feed-messages");
     if (messagesDiv) {
       fireEvent.scroll(messagesDiv);
       expect(mockHandleScroll).toHaveBeenCalledTimes(1);

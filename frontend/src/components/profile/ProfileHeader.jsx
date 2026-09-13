@@ -1,12 +1,12 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { User, History } from 'lucide-react';
+import { User, History, LogIn } from 'lucide-react';
 import SmartImage from '../common/SmartImage';
 import { formatLargeNumber } from '../../utils/formatters';
 import { getApiUrl } from '../../utils/apiUrl';
 
-const ProfileHeader = ({ target, isOwner, pfpInputRef, onPfpChange, editLink }) => {
-    const borderSpeed = target.animated_border_speed === 'slow' ? '3s' : target.animated_border_speed === 'fast' ? '0.5s' : '1.5s';
+const ProfileHeader = ({ target, isOwner, pfpInputRef, onPfpChange, editLink, onJoinClassroomClick }) => {
+    const borderSpeed = '1.5s';
     return (
         <div className="profile-header-card">
             <div 
@@ -60,12 +60,19 @@ const ProfileHeader = ({ target, isOwner, pfpInputRef, onPfpChange, editLink }) 
                     )}
                     {isOwner && (
                         <div className="profile-header-actions">
+                            {(!target.classrooms || target.classrooms.length === 0) && onJoinClassroomClick && (
+                                <button className="btn-settings" onClick={onJoinClassroomClick}>
+                                    <LogIn size={14} /> Join Classroom
+                                </button>
+                            )}
                             <Link to={editLink || "/settings"} className="btn-settings">
                                 <User size={14} /> Edit Profile
                             </Link>
-                            <Link to="/activity" className="btn-settings">
-                                <History size={14} /> Activity
-                            </Link>
+                            {target.has_activity && (
+                                <Link to="/activity" className="btn-settings">
+                                    <History size={14} /> Activity
+                                </Link>
+                            )}
                         </div>
                     )}
                 </div>

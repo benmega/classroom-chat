@@ -6,6 +6,7 @@ import {
     ChevronLeft, Users, Trash2, 
     Check, Plus, Settings, Globe, Link2, BookOpen, Key, Copy, Gamepad2, Code, X, UserPlus
 } from 'lucide-react';
+import { showConfirm } from '../../utils/confirm';
 
 const getCourseIcon = (courseName, courseId) => {
     const text = `${courseName || ''} ${courseId || ''}`.toLowerCase();
@@ -127,7 +128,7 @@ const AdminClassDashboard = () => {
     };
 
     const handleDisconnectCourse = async (instanceId) => {
-        if (!window.confirm('Are you sure you want to disconnect this course from the classroom?')) return;
+        if (!await showConfirm('Are you sure you want to disconnect this course from the classroom?', { title: 'Disconnect Course', destructive: true })) return;
         setFormLoading(true);
         try {
             const res = await client.delete(`/api/admin/crud/courseinstances/${instanceId}`);
@@ -142,7 +143,7 @@ const AdminClassDashboard = () => {
         }
     };
 
-    const fetchClassroomCards = async () => {
+    const fetchClassroomCards = useCallback(async () => {
         setIsFetchingCards(true);
         try {
             const response = await client.get(`/api/admin/classrooms/${classId}/connection_cards`);
@@ -156,7 +157,7 @@ const AdminClassDashboard = () => {
         } finally {
             setIsFetchingCards(false);
         }
-    };
+    }, [classId]);
 
     const handleToggleLanguage = async (langId) => {
         const currentLangs = (classroom.language || '').split(',').map(l => l.trim()).filter(Boolean);
@@ -208,7 +209,7 @@ const AdminClassDashboard = () => {
     const handleRegenerateJoinCode = async () => {
         setFormLoading(true);
         try {
-            const res = await client.post(`/api/admin/classrooms/${classId}/regenerate_code`);
+            const res = await client.post(`/api/admin/classrooms/${classId}/join-code/regenerate`);
             if (res.data.success) {
                 
                 fetchClassroomDetails();
@@ -242,7 +243,7 @@ const AdminClassDashboard = () => {
     };
 
     const handleUnenrollStudent = async (studentId) => {
-        if (!window.confirm('Are you sure you want to remove this student from the classroom?')) return;
+        if (!await showConfirm('Are you sure you want to remove this student from the classroom?', { title: 'Remove Student', destructive: true })) return;
         setFormLoading(true);
         try {
             const res = await client.post(`/api/admin/classrooms/${classId}/unenroll`, {
@@ -260,11 +261,11 @@ const AdminClassDashboard = () => {
     };
 
 
-    if (isLoading) {
+    if (isLoading || !classroom) {
         return (
             <div className="admin-class-dashboard">
                 <div className="dashboard-header">
-                    <Skeleton height="40px" width="300px" className="skeleton-title" />
+                    <Skeleton height="40px" width="300px" data-testid="skeleton-title" className="skeleton-title" />
                 </div>
                 <div className="dashboard-layout">
                     <div className="main-content">

@@ -32,13 +32,13 @@ def test_submit_request_authenticated(logged_in_client, sample_user):
     assert req.status == "pending"
     assert req.url == "http://test.url/level1"
 
-    # Submitting again should return 200 indicating it's already pending
+    # Submitting again should return 200 indicating it's already submitted
     response2 = logged_in_client.post(
         "/api/course-requests/submit",
         json={"course_instance_id": "test_instance_1", "url": "http://test.url/level2"},
     )
     assert response2.status_code == 200
-    assert "already pending" in response2.json["message"]
+    assert "already been submitted" in response2.json["message"]
 
 
 def test_get_pending_requests_non_admin(logged_in_client):

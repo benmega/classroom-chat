@@ -36,6 +36,15 @@ vi.mock('./pages/Error/AccessDenied', () => ({
   default: () => <div>Access Denied Mock</div>
 }));
 
+vi.mock('./components/Layout/Layout', () => ({
+  default: ({ children }) => <div data-testid="layout">{children}</div>
+}));
+
+vi.mock('./components/Layout/AdminLayout', () => ({
+  default: ({ children }) => <div data-testid="admin-layout">{children}</div>
+}));
+
+
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: false } },
 });
@@ -112,7 +121,7 @@ describe('App Component', () => {
   });
 
   it('redirects parent role to parent dashboard', async () => {
-    window.history.pushState({}, 'Test page', '/chat');
+    window.history.pushState({}, 'Test page', '/shop');
     useAuthStore.mockReturnValue({
       isLoading: false,
       isAuthenticated: true,
@@ -122,9 +131,8 @@ describe('App Component', () => {
     });
 
     renderApp();
-    // Parents should be redirected away from /chat to parent dashboard
+    // Parents should be redirected away from /shop to parent dashboard
     expect(await screen.findByText('Parent Dashboard Mock')).toBeInTheDocument();
-    expect(screen.queryByText('Chat Page Mock')).not.toBeInTheDocument();
   });
 
   it('renders AccessDenied for non-admin accessing admin route', () => {

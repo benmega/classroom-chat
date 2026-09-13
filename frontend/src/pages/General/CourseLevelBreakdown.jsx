@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Check, ExternalLink, Brain, GraduationCap, Trophy, Play, Sparkles, BookOpen, AlertCircle } from 'lucide-react';
 import client from '../../api/client';
-import toast from 'react-hot-toast';
+
 import './CourseProgressTree.css';
 import codecombatLogo from '../../assets/codecombat-logo.png';
 import ozariaLogo from '../../assets/ozaria-logo.png';
@@ -118,9 +118,6 @@ const CourseLevelBreakdown = () => {
     const selectedNode = location.state?.selectedNode;
 
     const [userObj, setUserObj] = useState(location.state?.userObj || null);
-    const [localPendingRequest, setLocalPendingRequest] = useState(null);
-    const [isSubmittingRequest, setIsSubmittingRequest] = useState(false);
-    const [isModalOpen, setIsModalOpen] = useState(false);
 
     useEffect(() => {
         if (!userObj && slug) {
@@ -135,28 +132,7 @@ const CourseLevelBreakdown = () => {
         }
     }, [slug, userObj]);
 
-    const activeTrack = userObj?.active_track || location.state?.activeTrack || 'cs';
-    const pendingRequest = localPendingRequest || userObj?.pending_request || location.state?.pendingRequest;
 
-    const handleRequestSubmit = async (e) => {
-        e.preventDefault();
-        setIsSubmittingRequest(true);
-        try {
-            const response = await client.post('/api/track-requests/', {
-                requester_type: 'student',
-                requested_track: selectedNode.track
-            });
-            if (response.data.success) {
-                toast.success("Track change request submitted to your teacher!");
-                setIsModalOpen(false);
-                setLocalPendingRequest({ requested_track: selectedNode.track });
-            }
-        } catch (err) {
-            toast.error(err.response?.data?.message || "Failed to submit request.");
-        } finally {
-            setIsSubmittingRequest(false);
-        }
-    };
 
     if (!selectedNode) {
         return (
@@ -233,98 +209,50 @@ const CourseLevelBreakdown = () => {
                     
                     {/* Merged Play/Next Level Card */}
                     <div className="glass-panel p-1-5rem d-flex flex-col gap-md pos-rel overflow-hidden border-top-glow">
-                        {selectedNode.track === activeTrack ? (
-                            <>
-                                <h3 className="m-0 text-primary d-flex align-center gap-sm">
-                                    <span>Next Level</span>
-                                </h3>
-                                
-                                {nextLevel ? (
-                                    <div 
-                                        className="next-level-card-content p-1rem bg-surface-sec radius-md d-flex flex-col gap-sm"
-                                        style={{
-                                            borderLeft: isCodeCombat ? '4px solid #2b91af' : '4px solid #902edb',
-                                        }}
-                                    >
-                                        <span className="font-semibold text-primary text-md">{nextLevel.name}</span>
-                                        <span className="text-secondary text-xs">Level {nextLevelIndex + 1} of {levels.length}</span>
-                                    </div>
-                                ) : (
-                                    <div className="text-center p-1-5rem bg-success-subtle radius-md border-success" style={{ borderColor: '#10b981' }}>
-                                        <Trophy className="text-success mb-0-5rem" size={32} />
-                                        <h4 className="m-0 text-success font-bold">100% Done</h4>
-                                    </div>
-                                )}
-
-                                <a 
-                                    href={mainGameLink} 
-                                    target="_blank" 
-                                    rel="noopener noreferrer" 
-                                    className={`btn-play-game d-flex align-center justify-center gap-sm p-1rem font-bold text-center radius-md cursor-pointer border-none no-decoration btn-${selectedNode.domain}`}
-                                    style={{
-                                        color: '#ffffff',
-                                        backgroundColor: isCodeCombat ? '#2b91af' : '#902edb',
-                                        transition: 'background-color 0.2s, transform 0.2s',
-                                    }}
-                                    onFocus={() => {}} onMouseOver={(e) => {
-                                        e.currentTarget.style.backgroundColor = isCodeCombat ? '#217088' : '#7122ad';
-                                        e.currentTarget.style.transform = 'translateY(-1px)';
-                                    }}
-                                    onBlur={() => {}} onMouseOut={(e) => {
-                                        e.currentTarget.style.backgroundColor = isCodeCombat ? '#2b91af' : '#902edb';
-                                        e.currentTarget.style.transform = 'none';
-                                    }}
-                                >
-                                    <Play size={18} fill="currentColor" />
-                                    <span>Continue</span>
-                                    <ExternalLink size={16} />
-                                </a>
-                            </>
+                        <h3 className="m-0 text-primary d-flex align-center gap-sm">
+                            <span>Next Level</span>
+                        </h3>
+                        
+                        {nextLevel ? (
+                            <div 
+                                className="next-level-card-content p-1rem bg-surface-sec radius-md d-flex flex-col gap-sm"
+                                style={{
+                                    borderLeft: isCodeCombat ? '4px solid #2b91af' : '4px solid #902edb',
+                                }}
+                            >
+                                <span className="font-semibold text-primary text-md">{nextLevel.name}</span>
+                                <span className="text-secondary text-xs">Level {nextLevelIndex + 1} of {levels.length}</span>
+                            </div>
                         ) : (
-                            <>
-                                <h3 className="m-0 text-primary d-flex align-center gap-sm">
-                                    <span>Get Started Now</span>
-                                </h3>
-                                <p className="text-secondary text-sm m-0">
-                                    Request access to this track to unlock the curriculum and start coding!
-                                </p>
-                                {pendingRequest && pendingRequest.requested_track === selectedNode.track ? (
-                                    <button
-                                        disabled
-                                        className="d-flex align-center justify-center gap-sm p-1rem font-bold text-center radius-md border-none"
-                                        style={{
-                                            color: '#ffffff',
-                                            backgroundColor: '#9ca3af',
-                                            cursor: 'not-allowed',
-                                            width: '100%'
-                                        }}
-                                    >
-                                        <span>Request Pending</span>
-                                    </button>
-                                ) : (
-                                    <button
-                                        onClick={() => setIsModalOpen(true)}
-                                        className={`btn-play-game d-flex align-center justify-center gap-sm p-1rem font-bold text-center radius-md cursor-pointer border-none btn-${selectedNode.domain}`}
-                                        style={{
-                                            color: '#ffffff',
-                                            backgroundColor: isCodeCombat ? '#2b91af' : '#902edb',
-                                            transition: 'background-color 0.2s, transform 0.2s',
-                                            width: '100%'
-                                        }}
-                                        onFocus={() => {}} onMouseOver={(e) => {
-                                            e.currentTarget.style.backgroundColor = isCodeCombat ? '#217088' : '#7122ad';
-                                            e.currentTarget.style.transform = 'translateY(-1px)';
-                                        }}
-                                        onBlur={() => {}} onMouseOut={(e) => {
-                                            e.currentTarget.style.backgroundColor = isCodeCombat ? '#2b91af' : '#902edb';
-                                            e.currentTarget.style.transform = 'none';
-                                        }}
-                                    >
-                                        <span>Request Access</span>
-                                    </button>
-                                )}
-                            </>
+                            <div className="text-center p-1-5rem bg-success-subtle radius-md border-success" style={{ borderColor: '#10b981' }}>
+                                <Trophy className="text-success mb-0-5rem" size={32} />
+                                <h4 className="m-0 text-success font-bold">100% Done</h4>
+                            </div>
                         )}
+
+                        <a 
+                            href={mainGameLink} 
+                            target="_blank" 
+                            rel="noopener noreferrer" 
+                            className={`btn-play-game d-flex align-center justify-center gap-sm p-1rem font-bold text-center radius-md cursor-pointer border-none no-decoration btn-${selectedNode.domain}`}
+                            style={{
+                                color: '#ffffff',
+                                backgroundColor: isCodeCombat ? '#2b91af' : '#902edb',
+                                transition: 'background-color 0.2s, transform 0.2s',
+                            }}
+                            onFocus={() => {}} onMouseOver={(e) => {
+                                e.currentTarget.style.backgroundColor = isCodeCombat ? '#217088' : '#7122ad';
+                                e.currentTarget.style.transform = 'translateY(-1px)';
+                            }}
+                            onBlur={() => {}} onMouseOut={(e) => {
+                                e.currentTarget.style.backgroundColor = isCodeCombat ? '#2b91af' : '#902edb';
+                                e.currentTarget.style.transform = 'none';
+                            }}
+                        >
+                            <Play size={18} fill="currentColor" />
+                            <span>Continue</span>
+                            <ExternalLink size={16} />
+                        </a>
                     </div>
                 </div>
 
@@ -448,30 +376,6 @@ const CourseLevelBreakdown = () => {
                     )}
                 </div>
             </div>
-            {isModalOpen && (
-                <div role="button" tabIndex={0} className="modal-backdrop" onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={() => setIsModalOpen(false)}>
-                    <div role="button" tabIndex={0} className="modal-card glass-panel" onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={e => e.stopPropagation()}>
-                        <div className="modal-header">
-                            <h3>Request Track Access</h3>
-                        </div>
-                        <form onSubmit={handleRequestSubmit}>
-                            <div className="form-group" style={{ marginBottom: '1.5rem' }}>
-                                <p style={{ margin: 0, fontSize: '1rem', color: 'var(--text-primary)', lineHeight: '1.5' }}>
-                                    Are you sure you want to request access to the <strong>{TRACK_NAMES[selectedNode.track] || selectedNode.track}</strong> track?
-                                </p>
-                            </div>
-                            <div className="modal-actions">
-                                <button type="button" className="btn-secondary" onClick={() => setIsModalOpen(false)}>
-                                    Cancel
-                                </button>
-                                <button type="submit" className="btn-primary" disabled={isSubmittingRequest}>
-                                    {isSubmittingRequest ? 'Submitting...' : 'Confirm Request'}
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
         </div>
     );
 };

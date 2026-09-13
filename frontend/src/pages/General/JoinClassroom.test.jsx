@@ -29,7 +29,7 @@ describe('JoinClassroom Component', () => {
     render(<JoinClassroom compact={false} onJoined={mockOnJoined} />);
 
     expect(screen.getByText('Join Your Classroom')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('Enter code e.g. AB3C9')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/Enter code e\.g\. AB3C9/i)).toBeInTheDocument();
   });
 
   it('renders trigger button when compact and expands on click', () => {
@@ -39,13 +39,13 @@ describe('JoinClassroom Component', () => {
     expect(trigger).toBeInTheDocument();
 
     fireEvent.click(trigger);
-    expect(screen.getByPlaceholderText('Enter code e.g. AB3C9')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/Enter code e\.g\. AB3C9/i)).toBeInTheDocument();
   });
 
   it('validates 5-character code requirement on submit', async () => {
     render(<JoinClassroom compact={false} onJoined={mockOnJoined} />);
 
-    const input = screen.getByPlaceholderText('Enter code e.g. AB3C9');
+    const input = screen.getByPlaceholderText(/Enter code e\.g\. AB3C9/i);
     fireEvent.change(input, { target: { value: 'AB' } });
 
     // Submit form directly
@@ -67,7 +67,7 @@ describe('JoinClassroom Component', () => {
 
     render(<JoinClassroom compact={false} onJoined={mockOnJoined} />);
 
-    const input = screen.getByPlaceholderText('Enter code e.g. AB3C9');
+    const input = screen.getByPlaceholderText(/Enter code e\.g\. AB3C9/i);
     fireEvent.change(input, { target: { value: 'AB3C9' } });
 
     const submitBtn = screen.getByRole('button', { name: 'Join' });
@@ -92,7 +92,7 @@ describe('JoinClassroom Component', () => {
 
     render(<JoinClassroom compact={false} onJoined={mockOnJoined} />);
 
-    const input = screen.getByPlaceholderText('Enter code e.g. AB3C9');
+    const input = screen.getByPlaceholderText(/Enter code e\.g\. AB3C9/i);
     fireEvent.change(input, { target: { value: 'WRONG' } });
 
     fireEvent.submit(input.closest('form'));

@@ -26,7 +26,7 @@ def get_children():
     user_obj = db.session.get(User, user_id)
 
     if not user_obj or user_obj.role != "parent":
-        return "Access denied. Parent account required.", 403
+        return {"error": "Access denied. Parent account required."}, 403
 
     children = [
         {
@@ -59,12 +59,12 @@ def get_student_report(student_id):
     user_obj = db.session.get(User, user_id)
 
     if not user_obj or user_obj.role != "parent":
-        return "Access denied. Parent account required.", 403
+        return {"error": "Access denied. Parent account required."}, 403
 
     # Verify the student is linked to this parent
     child_ids = {child.id for child in user_obj.children}
     if student_id not in child_ids:
-        return "Access denied. This student is not linked to your account.", 403
+        return {"error": "Access denied. This student is not linked to your account."}, 403
 
     student = db.session.get(User, student_id)
     if not student:
@@ -133,7 +133,7 @@ def connect_via_code():
     user_obj = db.session.get(User, user_id)
 
     if not user_obj or user_obj.role != "parent":
-        return "Access denied. Parent account required.", 403
+        return {"error": "Access denied. Parent account required."}, 403
 
     # Check rate limits
     is_allowed, error_msg = ConnectionAttempt.check_rate_limits(user_id)
@@ -171,7 +171,7 @@ def disconnect_student(student_id):
     user_obj = db.session.get(User, user_id)
 
     if not user_obj or user_obj.role != "parent":
-        return "Access denied. Parent account required.", 403
+        return {"error": "Access denied. Parent account required."}, 403
 
     student = db.session.get(User, student_id)
     if not student:
@@ -203,11 +203,11 @@ def get_student_history(student_id):
     user_obj = db.session.get(User, user_id)
 
     if not user_obj or user_obj.role != "parent":
-        return "Access denied. Parent account required.", 403
+        return {"error": "Access denied. Parent account required."}, 403
 
     child_ids = {child.id for child in user_obj.children}
     if student_id not in child_ids:
-        return "Access denied. This student is not linked to your account.", 403
+        return {"error": "Access denied. This student is not linked to your account."}, 403
 
     student = db.session.get(User, student_id)
     if not student:
@@ -358,7 +358,7 @@ def contact_teacher():
     user_obj = db.session.get(User, user_id)
 
     if not user_obj or user_obj.role != "parent":
-        return "Access denied. Parent account required.", 403
+        return {"error": "Access denied. Parent account required."}, 403
 
     data = request.json or {}
     subject = data.get("subject", "").strip()

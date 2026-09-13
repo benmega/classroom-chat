@@ -19,11 +19,13 @@ import {
     Eye,
     TrendingUp,
     ChevronDown,
-    ChevronUp
+    ChevronUp,
+    Edit
 } from 'lucide-react';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
 import { getApiUrl } from '../../utils/apiUrl';
+import { showConfirm } from '../../utils/confirm';
 import { formatStaticUrl } from '../../utils/formatters';
 import './ToReview.css';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
@@ -36,7 +38,6 @@ const ToReview = () => {
     const [certificates, setCertificates] = useState([]);
     const [pendingUsers, setPendingUsers] = useState([]);
     const [trades, setTrades] = useState([]);
-    const [trackRequests, setTrackRequests] = useState([]);
     const [courseRequests, setCourseRequests] = useState([]);
 
     // Support tables for dropdown lists
@@ -58,7 +59,6 @@ const ToReview = () => {
     // Bulk Selection State
     const [selectedUsers, setSelectedUsers] = useState(new Set());
     const [selectedTrades, setSelectedTrades] = useState(new Set());
-    const [selectedTracks, setSelectedTracks] = useState(new Set());
 
     const fetchAllData = useCallback(async () => {
         setIsLoading(true);
@@ -69,7 +69,6 @@ const ToReview = () => {
                 projectsRes,
                 usersRes,
                 tradesRes,
-                trackRes,
                 courseRes,
                 classroomsRes,
                 coursesRes
@@ -78,18 +77,15 @@ const ToReview = () => {
                 client.get('/api/admin/manage-projects?filter=pending').catch(() => ({ data: { data: { projects: [] } } })),
                 client.get('/api/admin/pending_users').catch(() => ({ data: { data: { users: [] } } })),
                 client.get('/api/admin/pending_trades').catch(() => ({ data: { data: { trades: [] } } })),
-                client.get('/api/admin/track-requests/').catch(() => ({ data: { requests: [] } })),
                 client.get('/api/course-requests/pending').catch(() => ({ data: { requests: [] } })),
                 client.get('/api/admin/crud/classroom').catch(() => ({ data: { data: [] } })),
                 client.get('/api/admin/crud/course').catch(() => ({ data: { data: [] } }))
             ]);
 
-            // Set main list states
             setCertificates(certsRes.data.certificates || certsRes.data.data?.certificates || []);
             setProjects(projectsRes.data.data?.projects || []);
             setPendingUsers(usersRes.data.data?.users || []);
             setTrades(tradesRes.data.data?.trades || []);
-            setTrackRequests(trackRes.data.requests || trackRes.data.data?.requests || []);
             setCourseRequests(courseRes.data.requests || courseRes.data.data?.requests || []);
 
             // Set options states
@@ -198,7 +194,7 @@ const ToReview = () => {
     };
 
     const handleApproveAllCertificates = async () => {
-        if (!window.confirm("Are you sure you want to mark all pending certificates as reviewed?")) return;
+        if (!await showConfirm("Are you sure you want to mark all pending certificates as reviewed?", { title: 'Review All Certificates', confirmText: 'Review All' })) return;
         setIsProcessing('cert-all');
         try {
             const response = await client.post('/api/achievements/admin/certificates/reviewed/all');
@@ -215,7 +211,7 @@ const ToReview = () => {
 
     // 3. User Signup Review Actions
     const handleUserApproval = async (userId, action, isBulk = false) => {
-        if (!isBulk && action === 'reject' && !window.confirm('Are you sure you want to reject and delete this user?')) return;
+        if (!isBulk && action === 'reject' && !await showConfirm('Are you sure you want to reject and delete this user?', { title: 'Reject User', destructive: true })) return;
         if (!isBulk) setIsProcessing(`user-${userId}`);
         const endpoint = action === 'approve' ? `approve_user/${userId}` : `reject_user/${userId}`;
 
@@ -234,7 +230,7 @@ const ToReview = () => {
 
     const handleBulkUserApproval = async (action) => {
         if (selectedUsers.size === 0) return;
-        if (action === 'reject' && !window.confirm(`Are you sure you want to reject and delete ${selectedUsers.size} users?`)) return;
+        if (action === 'reject' && !await showConfirm(`Are you sure you want to reject and delete ${selectedUsers.size} users?`, { title: 'Reject Users', destructive: true })) return;
         
         setIsProcessing('bulk-user');
         const ids = Array.from(selectedUsers);
@@ -292,42 +288,6 @@ const ToReview = () => {
         setIsProcessing(null);
     };
 
-    // 5. Track Change Request Actions
-    const handleTrackApproval = async (requestId, action, isBulk = false) => {
-        if (!isBulk) setIsProcessing(`track-${requestId}`);
-        const status = action === 'approve' ? 'approved' : 'denied';
-
-        try {
-            const response = await client.put(`/api/admin/track-requests/${requestId}`, { status });
-            if (response.data.success) {
-                
-                setTrackRequests(prev => prev.filter(r => r.id !== requestId));
-            } else {
-                if (!isBulk) toast.error(response.data.message || 'Action failed.');
-            }
-        } catch {
-            if (!isBulk) toast.error('Failed to process track request.');
-        } finally {
-            if (!isBulk) setIsProcessing(null);
-        }
-    };
-
-    const handleBulkTrackApproval = async (action) => {
-        if (selectedTracks.size === 0) return;
-        
-        setIsProcessing('bulk-track');
-        const ids = Array.from(selectedTracks);
-        for (const id of ids) {
-            try {
-                await handleTrackApproval(id, action, true);
-            } catch (e) {
-                console.error(e);
-            }
-        }
-        
-        setSelectedTracks(new Set());
-        setIsProcessing(null);
-    };
 
     // 6. Course Request Actions
     const handleCourseApproval = async (requestId, action) => {
@@ -352,7 +312,7 @@ const ToReview = () => {
                     setCourseRequests(prev => prev.filter(r => r.id !== requestId));
                 }
             } else {
-                if (!window.confirm('Are you sure you want to reject this request?')) {
+                if (!await showConfirm('Are you sure you want to reject this request?', { title: 'Reject Request', destructive: true })) {
                     setIsProcessing(null);
                     return;
                 }
@@ -388,19 +348,14 @@ const ToReview = () => {
         return bytes.some(b => b === 1);
     };
 
-    const getTrackName = (slug) => {
-        const names = { ozaria: 'Ozaria', cs: 'Computer Science', gd: 'Game Design', wd: 'Web Development' };
-        return names[slug] || slug;
-    };
 
     // Tabs setup
     const tabs = [
-        { id: 'all', label: 'All Items', icon: Inbox, count: projects.length + certificates.length + pendingUsers.length + trades.length + trackRequests.length + courseRequests.length },
+        { id: 'all', label: 'All Items', icon: Inbox, count: projects.length + certificates.length + pendingUsers.length + trades.length + courseRequests.length },
         { id: 'projects', label: 'Projects', icon: FolderKanban, count: projects.length },
         { id: 'certificates', label: 'Certificates', icon: Award, count: certificates.length },
         { id: 'users', label: 'Account Signups', icon: Users, count: pendingUsers.length },
         { id: 'trades', label: 'Duck Trades', icon: ArrowLeftRight, count: trades.length },
-        { id: 'tracks', label: 'Track Changes', icon: TrendingUp, count: trackRequests.length },
         { id: 'courses', label: 'Course Requests', icon: CalendarCheck, count: courseRequests.length }
     ];
 
@@ -411,7 +366,6 @@ const ToReview = () => {
         certificates.forEach(c => unified.push({ ...c, type: 'certificate', key: `cert-${c.id}`, timestamp: c.submitted_at || new Date().toISOString() }));
         pendingUsers.forEach(u => unified.push({ ...u, type: 'user', key: `user-${u.id}`, timestamp: new Date().toISOString() })); // default fallback
         trades.forEach(t => unified.push({ ...t, type: 'trade', key: `trade-${t.id}`, timestamp: t.timestamp || new Date().toISOString() }));
-        trackRequests.forEach(r => unified.push({ ...r, type: 'track', key: `track-${r.id}`, timestamp: r.requested_at || new Date().toISOString() }));
         courseRequests.forEach(r => unified.push({ ...r, type: 'course', key: `course-${r.id}`, timestamp: r.requested_at || new Date().toISOString() }));
 
         // Sort descending by timestamp
@@ -424,7 +378,6 @@ const ToReview = () => {
         if (activeTab === 'certificates') return certificates.map(c => ({ ...c, type: 'certificate', key: `cert-${c.id}` }));
         if (activeTab === 'users') return pendingUsers.map(u => ({ ...u, type: 'user', key: `user-${u.id}` }));
         if (activeTab === 'trades') return trades.map(t => ({ ...t, type: 'trade', key: `trade-${t.id}` }));
-        if (activeTab === 'tracks') return trackRequests.map(r => ({ ...r, type: 'track', key: `track-${r.id}` }));
         if (activeTab === 'courses') return courseRequests.map(r => ({ ...r, type: 'course', key: `course-${r.id}` }));
         return [];
     };
@@ -573,6 +526,15 @@ const ToReview = () => {
                         </div>
 
                         <div className="card-actions">
+                            <a
+                                href={`/project/edit/${p.id}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="btn-secondary flex-center gap-6"
+                                title="Edit Project"
+                            >
+                                <Edit size={16} /> Edit
+                            </a>
                             <button 
                                 className="btn-reject"
                                 onClick={() => handleProjectReview(p.id, 'reject')}
@@ -837,66 +799,6 @@ const ToReview = () => {
         );
     };
 
-    const renderTrackCard = (r) => {
-        const isSelected = selectedTracks.has(r.id);
-        const toggleSelect = () => {
-            const next = new Set(selectedTracks);
-            if (next.has(r.id)) next.delete(r.id);
-            else next.add(r.id);
-            setSelectedTracks(next);
-        };
-        return (
-            <div className={`review-card track-review-card ${isSelected ? 'selected' : ''}`} key={r.key}>
-                <div className="review-card-header">
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <input type="checkbox" checked={isSelected} onChange={toggleSelect} style={{ width: '16px', height: '16px', cursor: 'pointer' }} />
-                        <div className="card-badge badge-track">
-                            <TrendingUp size={14} /> Track Change
-                        </div>
-                    </div>
-                    <span className="card-time">
-                        <Clock size={12} /> {new Date(r.requested_at).toLocaleString()}
-                    </span>
-                </div>
-
-                <div className="card-main-content">
-                    <div className="student-profile mb-md">
-                        <div className="avatar-placeholder">
-                            <User size={18} />
-                        </div>
-                        <div>
-                            <h4>{r.student_name || `Student ID: ${r.student_id}`}</h4>
-                            <span className="student-handle">Requested by: {r.requester_type}</span>
-                        </div>
-                    </div>
-
-                    <div className="track-request-details">
-                        <div className="track-change-row">
-                            <span className="track-label">Change Track To:</span>
-                            <span className="track-value-highlight">{getTrackName(r.requested_track)}</span>
-                        </div>
-                    </div>
-
-                    <div className="card-actions">
-                        <button 
-                            className="btn-reject"
-                            onClick={() => handleTrackApproval(r.id, 'reject')}
-                            disabled={isProcessing === `track-${r.id}`}
-                        >
-                            <XCircle size={16} /> Deny Request
-                        </button>
-                        <button 
-                            className="btn-approve"
-                            onClick={() => handleTrackApproval(r.id, 'approve')}
-                            disabled={isProcessing === `track-${r.id}`}
-                        >
-                            <CheckCircle size={16} /> {isProcessing === `track-${r.id}` ? 'Processing...' : 'Approve Track'}
-                        </button>
-                    </div>
-                </div>
-            </div>
-        );
-    };
 
     const renderCourseCard = (c) => {
         return (
@@ -993,7 +895,6 @@ const ToReview = () => {
             case 'certificate': return renderCertificateCard(item);
             case 'user': return renderUserCard(item);
             case 'trade': return renderTradeCard(item);
-            case 'track': return renderTrackCard(item);
             case 'course': return renderCourseCard(item);
             default: return null;
         }
@@ -1002,7 +903,7 @@ const ToReview = () => {
     if (isLoading) {
         return (
             <div className="to-review-page container-fluid">
-                <AdminPageHeader title="To Review" description="Items requiring teacher approvals." />
+                <AdminPageHeader title="To Review" />
                 <div className="review-dashboard-layout">
                     <div className="review-tabs-pane">
                         {[1, 2, 3, 4, 5].map(i => (
@@ -1034,12 +935,7 @@ const ToReview = () => {
 
     return (
         <div className="to-review-page container-fluid">
-            <AdminPageHeader 
-                title="To Review" 
-                description="Items requiring teacher approvals."
-            >
-                
-            </AdminPageHeader>
+            <AdminPageHeader title="To Review" />
 
             <div className="review-dashboard-layout">
                 {/* Left Tabs */}
@@ -1138,30 +1034,6 @@ const ToReview = () => {
                         </div>
                     )}
 
-                    {activeTab === 'tracks' && displayItems.length > 0 && (
-                        <div className="bulk-actions-bar" style={{ display: 'flex', gap: '12px', marginBottom: '16px', alignItems: 'center', justifyContent: 'space-between', background: '#fff', padding: '12px 16px', borderRadius: '12px', border: '1px solid var(--border-subtle)' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                <input 
-                                    type="checkbox" 
-                                    checked={selectedTracks.size === trackRequests.length && trackRequests.length > 0} 
-                                    onChange={(e) => {
-                                        if (e.target.checked) setSelectedTracks(new Set(trackRequests.map(r => r.id)));
-                                        else setSelectedTracks(new Set());
-                                    }}
-                                    style={{ width: '16px', height: '16px', cursor: 'pointer' }}
-                                />
-                                <span style={{ fontWeight: 600, fontSize: '14px', color: 'var(--text-main)' }}>Select All ({selectedTracks.size})</span>
-                            </div>
-                            <div style={{ display: 'flex', gap: '8px' }}>
-                                <button className="btn-reject" onClick={() => handleBulkTrackApproval('reject')} disabled={selectedTracks.size === 0 || isProcessing === 'bulk-track'}>
-                                    <XCircle size={16} /> Deny Selected
-                                </button>
-                                <button className="btn-approve" onClick={() => handleBulkTrackApproval('approve')} disabled={selectedTracks.size === 0 || isProcessing === 'bulk-track'}>
-                                    <CheckCircle size={16} /> Approve Selected
-                                </button>
-                            </div>
-                        </div>
-                    )}
 
                     {displayItems.length > 0 ? (
                         <div className="cards-feed-wrapper">

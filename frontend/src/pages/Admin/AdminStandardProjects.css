@@ -89,3 +89,23 @@
     color: white;
 }
 
+/* Edit/Add Standard Project modal: two-column rows on desktop to cut vertical scrolling */
+.standard-project-form-row {
+    display: flex;
+    flex-direction: column;
+    gap: 1.75rem;
+    width: 100%;
+}
+
+@media (min-width: 700px) {
+    .standard-project-form-row {
+        flex-direction: row;
+        gap: 1.5rem;
+    }
+
+    .standard-project-form-row > .form-group {
+        flex: 1;
+        min-width: 0;
+    }
+}
+

@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Copy, AlertCircle } from 'lucide-react';
-// eslint-disable-next-line
 import toast from 'react-hot-toast';
 import client from '../../api/client';
 import './StudentParentCode.css';
@@ -31,7 +30,7 @@ const StudentParentCode = () => {
     const copyToClipboard = () => {
         if (!code) return;
         navigator.clipboard.writeText(code);
-        
+        toast.success('Code copied!');
     };
 
     if (isLoading) return (

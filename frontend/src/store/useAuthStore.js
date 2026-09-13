@@ -1,6 +1,19 @@
 import { create } from 'zustand';
 import client from '../api/client';
 
+// ---------------------------------------------------------------------------
+// Private helpers — centralise hamburger_override localStorage access so the
+// key string and parsing logic live in exactly one place.
+// ---------------------------------------------------------------------------
+const getHamburgerOverride = (username) => {
+  const val = localStorage.getItem(`hamburger_override_${username}`);
+  return val !== null ? parseFloat(val) : null;
+};
+
+const setHamburgerOverride = (username, progress) => {
+  localStorage.setItem(`hamburger_override_${username}`, progress);
+};
+
 const useAuthStore = create((set) => ({
   user: null,
   isAuthenticated: false,
@@ -19,7 +32,7 @@ const useAuthStore = create((set) => ({
   
   setHamburgerProgress: (progress) => set((state) => {
     if (state.user) {
-      localStorage.setItem(`hamburger_override_${state.user.username}`, progress);
+      setHamburgerOverride(state.user.username, progress);
     }
     return { hamburgerProgress: progress };
   }),
@@ -31,8 +44,8 @@ const useAuthStore = create((set) => ({
       if (response.data.data.logged_in) {
         const user = response.data.data.user;
         const completedChallenges = user.completed_challenges_count ?? 0;
-        const savedOverride = localStorage.getItem(`hamburger_override_${user.username}`);
-        const progress = savedOverride !== null ? parseFloat(savedOverride) : Math.min(completedChallenges / 10, 1.0);
+        const savedOverride = getHamburgerOverride(user.username);
+        const progress = savedOverride !== null ? savedOverride : Math.min(completedChallenges / 10, 1.0);
         
         set({ 
           user, 
@@ -56,8 +69,8 @@ const useAuthStore = create((set) => ({
       const response = await client.post('/user/login', { username, password });
       const user = response.data.user;
       const completedChallenges = user.completed_challenges_count ?? 0;
-      const savedOverride = localStorage.getItem(`hamburger_override_${user.username}`);
-      const progress = savedOverride !== null ? parseFloat(savedOverride) : Math.min(completedChallenges / 10, 1.0);
+      const savedOverride = getHamburgerOverride(user.username);
+      const progress = savedOverride !== null ? savedOverride : Math.min(completedChallenges / 10, 1.0);
 
       set({ 
         user, 

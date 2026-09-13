@@ -6,17 +6,16 @@ Summary: Unit tests for Classroom model methods.
 
 from application.extensions import db
 from application.models.classroom import Classroom
+from tests.factories import ClassroomFactory
 
 
 def test_classroom_methods(app):
     with app.app_context():
-        clsroom = Classroom(
+        clsroom = ClassroomFactory(
             id="test-room-123",
             name="Test Classroom",
             language="Python",
         )
-        db.session.add(clsroom)
-        db.session.commit()
 
         assert repr(clsroom) == "<Classroom(id=test-room-123, name=Test Classroom)>"
 

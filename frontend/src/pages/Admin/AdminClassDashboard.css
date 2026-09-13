@@ -1031,3 +1031,75 @@
     align-items: center;
 }
 
+/* ── Mobile Responsive ─────────────────────────────────────────────────────── */
+@media (max-width: 800px) {
+    .admin-class-dashboard {
+        padding: 0 0.5rem;
+    }
+
+    /* Class HUD: 2-col grid then 1-col on small phones */
+    .class-hud-row {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+    }
+
+    /* Classroom tabs: horizontal scroll */
+    .classroom-tabs {
+        gap: 0;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        padding-bottom: 0;
+        flex-wrap: nowrap;
+    }
+
+    .classroom-tabs::-webkit-scrollbar {
+        display: none;
+    }
+
+    .tab-btn {
+        flex-shrink: 0;
+        padding: 0.85rem 1rem;
+        font-size: 0.9rem;
+        min-height: 48px; /* WCAG touch target */
+    }
+
+    /* Stream chat height adjusted for mobile */
+    .stream-chat-wrapper {
+        height: calc(100dvh - 220px);
+        min-height: 300px;
+    }
+
+    /* Join code bar: stack on mobile */
+    .roster-join-code-bar {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    /* Modal card: full width on small screens */
+    .modal-card {
+        max-width: calc(100vw - 2rem);
+        max-height: calc(100dvh - 2rem);
+    }
+
+    /* Assignments list: smaller tiles on mobile */
+    .assignments-list {
+        gap: 12px;
+    }
+
+    .assignment-tile {
+        width: 110px;
+        padding: 12px 8px;
+    }
+}
+
+@media (max-width: 500px) {
+    .class-hud-row {
+        grid-template-columns: 1fr;
+    }
+
+    .assignment-tile {
+        width: calc(50% - 6px);
+    }
+}

@@ -1,8 +1,17 @@
 import client from '../api/client';
 
 const dataProvider = {
-    getList: async (resource, _params) => {
-        const response = await client.get(`/api/admin/crud/${resource}`);
+    getList: async (resource, params) => {
+        const { page, perPage } = params.pagination;
+        const { field, order } = params.sort;
+        const query = {
+            _sort: field,
+            _order: order,
+            _start: (page - 1) * perPage,
+            _end: page * perPage,
+        };
+        const url = `/api/admin/crud/${resource}?${new URLSearchParams(query).toString()}`;
+        const response = await client.get(url);
         return {
             data: response.data.data,
             total: response.data.total,
@@ -24,11 +33,20 @@ const dataProvider = {
     },
 
     getManyReference: async (resource, params) => {
-        const response = await client.get(`/api/admin/crud/${resource}`);
-        const data = response.data.data.filter(item => item[params.target] === params.id);
+        const { page, perPage } = params.pagination;
+        const { field, order } = params.sort;
+        const query = {
+            _sort: field,
+            _order: order,
+            _start: (page - 1) * perPage,
+            _end: page * perPage,
+            [params.target]: params.id,
+        };
+        const url = `/api/admin/crud/${resource}?${new URLSearchParams(query).toString()}`;
+        const response = await client.get(url);
         return {
-            data,
-            total: data.length,
+            data: response.data.data,
+            total: response.data.total,
         };
     },
 

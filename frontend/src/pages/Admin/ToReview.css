@@ -851,12 +851,68 @@
         width: 100%;
         flex-direction: row;
         overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
         padding: 8px;
         white-space: nowrap;
-        scrollbar-width: thin;
+        scrollbar-width: none; /* Hide scrollbar for clean mobile UX */
+    }
+    .review-tabs-pane::-webkit-scrollbar {
+        display: none;
     }
     .review-tab-item {
         width: auto;
-        padding: 10px 14px;
+        padding: 10px 16px;
+        min-height: 44px; /* WCAG minimum touch target */
+        flex-shrink: 0;
+    }
+}
+
+/* Mobile-specific improvements */
+@media (max-width: 800px) {
+    .to-review-page {
+        padding: var(--spacing-md);
+        /* iOS safe area bottom */
+        padding-bottom: max(var(--spacing-md), env(safe-area-inset-bottom));
+    }
+
+    /* Review card: prevent overflow on small screens */
+    .review-card {
+        padding: var(--spacing-md);
+    }
+
+    /* Action buttons: minimum touch target */
+    .btn-approve,
+    .btn-reject,
+    .btn-secondary {
+        min-height: 44px;
+        padding: 0.6rem 1rem;
+    }
+
+    /* Student profile: allow wrapping if name is long */
+    .student-profile {
+        flex-wrap: wrap;
+    }
+
+    /* Project links: wrap on mobile */
+    .project-links {
+        flex-wrap: wrap;
+    }
+
+    /* Approval buttons row: wrap on very small screens */
+    .review-action-group {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+}
+
+@media (max-width: 500px) {
+    /* Review card: tighter padding on 375px phones */
+    .review-card {
+        padding: var(--spacing-sm);
+    }
+
+    /* Inbox empty state: less padding on small phones */
+    .inbox-empty-state {
+        padding: 40px 20px;
     }
 }

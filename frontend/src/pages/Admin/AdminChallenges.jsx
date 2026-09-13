@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { FileUp, Save, Info, Database, Folder, ArrowLeft, Plus, X, GripVertical } from 'lucide-react';
 import client from '../../api/client';
+import { showConfirm } from '../../utils/confirm';
 import toast from 'react-hot-toast';
 import './AdminChallenges.css';
 import Papa from 'papaparse';
@@ -28,6 +29,12 @@ const AdminChallenges = () => {
     const [editingChallenge, setEditingChallenge] = useState(null);
     const [modalForm, setModalForm] = useState({
         name: '', slug: '', course_id: '', domain: 'codecombat.com', difficulty: 'medium', value: 1, sequence: '', description: ''
+    });
+
+    // Add Course Modal state
+    const [isCourseModalOpen, setIsCourseModalOpen] = useState(false);
+    const [courseForm, setCourseForm] = useState({
+        id: '', name: '', domain: 'codecombat.com', description: ''
     });
 
     // Drag and Drop state
@@ -221,7 +228,7 @@ const AdminChallenges = () => {
     };
 
     const handleDelete = async (id, name) => {
-        if (!window.confirm(`Are you sure you want to delete challenge "${name}"?`)) return;
+        if (!await showConfirm(`Are you sure you want to delete challenge "${name}"?`, { title: 'Delete Challenge', destructive: true })) return;
         try {
             const res = await client.delete(`/api/admin/challenges/${id}`);
             toast.success(res.data.message || 'Challenge deleted.');
@@ -231,27 +238,60 @@ const AdminChallenges = () => {
         }
     };
 
-    const courseIds = useMemo(() => Object.keys(groupedChallenges).sort(), [groupedChallenges]);
+    const openCourseModal = () => {
+        setCourseForm({ id: '', name: '', domain: 'codecombat.com', description: '' });
+        setIsCourseModalOpen(true);
+    };
+
+    const handleCourseSubmit = async (e) => {
+        e.preventDefault();
+        setIsSubmitting(true);
+        try {
+            const res = await client.post('/api/admin/crud/courses', courseForm);
+            toast.success(res.data.message || 'Course added.');
+            setIsCourseModalOpen(false);
+            fetchCourses();
+            setSelectedCourseId(courseForm.id);
+        } catch (error) {
+            toast.error(error.response?.data?.message || 'Failed to add course.');
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const courseIds = useMemo(() => {
+        const ids = new Set(courses.map(c => c.id));
+        Object.keys(groupedChallenges).forEach(id => ids.add(id));
+        return Array.from(ids).sort();
+    }, [courses, groupedChallenges]);
 
     return (
         <div className="admin-challenges-page">
-            <div className="d-flex justify-end mb-1-5rem">
-                <div className="d-flex gap-md">
-                    <button className="secondary-btn" onClick={() => setIsBulkModalOpen(true)}>
-                        <FileUp size={18} /> Bulk Import
-                    </button>
-                    <button className="primary-btn" onClick={() => openModal()}>
-                        <Plus size={18} /> Add Challenge
+            {selectedCourseId === null ? (
+                <div className="d-flex justify-end mb-1-5rem">
+                    <button className="primary-btn" onClick={openCourseModal}>
+                        <Plus size={18} /> Add Course
                     </button>
                 </div>
-            </div>
+            ) : (
+                <div className="d-flex justify-end mb-1-5rem">
+                    <div className="d-flex gap-md">
+                        <button className="secondary-btn" onClick={() => setIsBulkModalOpen(true)}>
+                            <FileUp size={18} /> Bulk Import
+                        </button>
+                        <button className="primary-btn" onClick={() => openModal()}>
+                            <Plus size={18} /> Add Challenge
+                        </button>
+                    </div>
+                </div>
+            )}
 
             <div className="card" style={{ padding: '24px' }}>
                 {isLoadingList ? (
                     <div className="text-center text-muted py-2rem">Loading challenges...</div>
                 ) : courseIds.length === 0 ? (
                     <div className="empty-state text-muted" style={{ width: '100%', textAlign: 'center', padding: '20px' }}>
-                        No challenges found. Try adding some!
+                        No courses found. Try adding one!
                     </div>
                 ) : selectedCourseId === null ? (
                     // COURSES VIEW
@@ -288,7 +328,7 @@ const AdminChallenges = () => {
                                             {courseName}
                                         </div>
                                         <div className="course-card-meta">
-                                            {groupedChallenges[courseId].length} Challenges
+                                            {(groupedChallenges[courseId] || []).length} Challenges
                                         </div>
                                     </div>
                                 </div>
@@ -302,6 +342,12 @@ const AdminChallenges = () => {
                             <ArrowLeft size={16} /> Back to Courses
                         </button>
                         
+                        {!groupedChallenges[selectedCourseId]?.length && (
+                            <div className="empty-state text-muted" style={{ width: '100%', textAlign: 'center', padding: '20px' }}>
+                                No challenges in this course yet. Try adding one!
+                            </div>
+                        )}
+
                         <div className="challenges-list mt-1rem">
                             {groupedChallenges[selectedCourseId]?.map((c, index) => (
                                 <div
@@ -460,6 +506,40 @@ const AdminChallenges = () => {
                         <button type="button" className="btn-secondary" onClick={() => setIsModalOpen(false)} disabled={isSubmitting}>Cancel</button>
                         <button type="submit" className="btn-primary" disabled={isSubmitting}>
                             {isSubmitting ? 'Saving...' : 'Save Challenge'}
+                        </button>
+                    </div>
+                </form>
+            </Modal>
+
+            {/* Add Course Modal */}
+            <Modal isOpen={isCourseModalOpen} onClose={() => setIsCourseModalOpen(false)} title="Add Course">
+                <form onSubmit={handleCourseSubmit} className="admin-form">
+                    <div className="form-group">
+                        <label htmlFor="course-id">Course ID *</label>
+                        <input id="course-id" type="text" required placeholder="e.g. comp-sci-7" value={courseForm.id} onChange={e => setCourseForm({...courseForm, id: e.target.value})} />
+                    </div>
+                    <div className="form-group">
+                        <label htmlFor="course-name">Course Name *</label>
+                        <input id="course-name" type="text" required placeholder="e.g. CS 7" value={courseForm.name} onChange={e => setCourseForm({...courseForm, name: e.target.value})} />
+                    </div>
+                    <div className="form-group">
+                        <label htmlFor="course-domain">Domain *</label>
+                        <select id="course-domain" className="admin-select" value={courseForm.domain} onChange={e => setCourseForm({...courseForm, domain: e.target.value})}>
+                            <option value="codecombat.com">codecombat.com</option>
+                            <option value="studio.code.org">studio.code.org</option>
+                            <option value="ozaria.com">ozaria.com</option>
+                            <option value="other">other</option>
+                        </select>
+                    </div>
+                    <div className="form-group">
+                        <label htmlFor="course-description">Description</label>
+                        <textarea id="course-description" rows="3" value={courseForm.description} onChange={e => setCourseForm({...courseForm, description: e.target.value})} />
+                    </div>
+
+                    <div className="modal-actions mt-1-5rem d-flex justify-end gap-md">
+                        <button type="button" className="btn-secondary" onClick={() => setIsCourseModalOpen(false)} disabled={isSubmitting}>Cancel</button>
+                        <button type="submit" className="btn-primary" disabled={isSubmitting}>
+                            {isSubmitting ? 'Saving...' : 'Save Course'}
                         </button>
                     </div>
                 </form>

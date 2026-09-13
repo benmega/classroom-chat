@@ -145,9 +145,7 @@ def submit_challenge():
         warning = details.get("warning")
 
         challenge_name = details.get("challenge_name")
-        if not reward_issued:
-            message = "Challenge complete! But since you aren't assigned to this track, you didn't get a duck. Ask your teacher to change your track!"
-        elif challenge_name:
+        if challenge_name:
             message = f"Congratulations on completing {challenge_name}! You earned {duck_reward} {duck_word}!"
         else:
             message = f"Congrats {user.username}, you earned {duck_reward} {duck_word}!"
@@ -178,6 +176,31 @@ def submit_challenge():
         "message",
         "Mr. Mega does not recognize this challenge. Are you sure this is the right link?",
     )
+
+    if details.get("course_instance_not_found"):
+        from application.models.course_instance_request import CourseInstanceRequest
+
+        course_instance_id = details.get("course_instance_id")
+        requested_course_id = details.get("requested_course_id")
+
+        if course_instance_id:
+            existing_request = CourseInstanceRequest.query.filter_by(
+                course_instance_id=course_instance_id
+            ).first()
+
+            if not existing_request:
+                new_request = CourseInstanceRequest(
+                    student_id=user.id,
+                    course_instance_id=course_instance_id,
+                    requested_course_id=requested_course_id,
+                    url=url,
+                    status="pending",
+                )
+                db.session.add(new_request)
+                db.session.commit()
+                msg = "This course wasn't connected yet, but we've automatically requested your teacher to add it!"
+            else:
+                msg = "This course wasn't connected yet. A request to add it has already been submitted."
 
     if is_get_submission:
         # Escape single quotes in the message for JS alert
@@ -246,20 +269,18 @@ def detect_and_handle_challenge_url(message, user, duck_multiplier=1, helper=Non
             get_track_for_course_id(challenge.course_id) if challenge else None
         )
 
-        # Compare challenge track with user's active track
-        if challenge_track == user.active_track:
-            # Match: Save progress, grant the duck reward
-            duck_reward = _update_user_ducks(
-                user, match["challenge_slug"], duck_multiplier
-            )
-            log_result["duck_reward"] = duck_reward
-            log_result["reward_issued"] = True
-            log_result["warning"] = None
-        else:
-            # Mismatch: Save progress, skip the duck reward
-            log_result["duck_reward"] = 0
-            log_result["reward_issued"] = False
-            log_result["warning"] = "Off-track completion"
+        # Update user's active track if they completed a challenge on a new track
+        if challenge_track and challenge_track != user.active_track:
+            user.active_track = challenge_track
+            db.session.add(user)
+
+        # Always save progress and grant the duck reward
+        duck_reward = _update_user_ducks(
+            user, match["challenge_slug"], duck_multiplier
+        )
+        log_result["duck_reward"] = duck_reward
+        log_result["reward_issued"] = True
+        log_result["warning"] = None
 
         return {"handled": True, "details": log_result}
     except ValueError as e:

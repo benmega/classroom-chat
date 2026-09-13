@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import client from '../api/client';
+import { showConfirm } from '../utils/confirm';
 import toast from 'react-hot-toast';
 import useAuthStore from '../store/useAuthStore';
 import { formatStaticUrl } from '../utils/formatters';
@@ -190,13 +191,12 @@ export const useProjectManagement = () => {
             const response = await client.post(url, formData);
 
             if (response.data.status === 'success') {
-                if (response.data.data && response.data.data.video_upload_failed) {
-                    toast.error(response.data.data.message || 'Project saved, but video upload failed.');
-                // eslint-disable-next-line
+                if (response.data.data?.video_processing) {
+                    toast.success('Project saved! Your video is being processed in the background.');
                 } else {
-                    
+                    toast.success(projectId ? 'Project updated!' : 'Project created!');
                 }
-                
+
                 if (currentUser?.role === 'admin' && projectData.student_id) {
                     const student = students.find(s => String(s.id) === String(projectData.student_id));
                     if (student?.slug) {
@@ -204,7 +204,7 @@ export const useProjectManagement = () => {
                         return;
                     }
                 }
-                
+
                 navigate('/profile');
             } else {
                 toast.error(response.data.error || 'Failed to save project.');
@@ -218,7 +218,7 @@ export const useProjectManagement = () => {
     };
 
     const handleDelete = async () => {
-        if (!window.confirm('Are you sure you want to delete this project?')) return;
+        if (!await showConfirm('Are you sure you want to delete this project?', { title: 'Delete Project', destructive: true })) return;
         
         setIsSaving(true);
         try {

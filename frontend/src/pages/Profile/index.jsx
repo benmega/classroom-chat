@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { User, Pencil } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import './Profile.css';
@@ -16,12 +16,15 @@ import DigitalNotebook from '../../components/profile/DigitalNotebook';
 import ProjectModal from '../../components/profile/ProjectModal';
 import NoteSlideshow from '../../components/profile/NoteSlideshow';
 import PfpCropModal from '../../components/profile/PfpCropModal';
+import JoinClassroom from '../General/JoinClassroom';
+import Modal from '../../components/common/Modal';
 
 // Hooks
 import { useProfile } from '../../hooks/useProfile';
 
 const Profile = () => {
     const navigate = useNavigate();
+    const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
     const {
         profileData,
         isLoading,
@@ -62,6 +65,7 @@ const Profile = () => {
                 editLink={editLink}
                 pfpInputRef={pfpInputRef}
                 onPfpChange={handlePfpChange}
+                onJoinClassroomClick={() => setIsJoinModalOpen(true)}
             />
 
             <div className="dashboard-grid">
@@ -158,6 +162,25 @@ const Profile = () => {
                 onCancel={() => setIsCropping(false)}
                 onSave={handleSaveCrop}
             />
+
+            <Modal
+                isOpen={isJoinModalOpen}
+                onClose={() => setIsJoinModalOpen(false)}
+                title=""
+                maxWidth="500px"
+            >
+                <div style={{ padding: 'var(--spacing-md)' }}>
+                    <JoinClassroom 
+                        compact={false} 
+                        onJoined={() => {
+                            setTimeout(() => {
+                                setIsJoinModalOpen(false);
+                                window.location.reload();
+                            }, 1500);
+                        }} 
+                    />
+                </div>
+            </Modal>
         </>
     );
 };
