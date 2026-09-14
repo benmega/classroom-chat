@@ -39,6 +39,7 @@ const ToReview = () => {
     const [pendingUsers, setPendingUsers] = useState([]);
     const [trades, setTrades] = useState([]);
     const [courseRequests, setCourseRequests] = useState([]);
+    const [parentMessages, setParentMessages] = useState([]);
 
     // Support tables for dropdown lists
     const [classrooms, setClassrooms] = useState([]);
@@ -71,7 +72,8 @@ const ToReview = () => {
                 tradesRes,
                 courseRes,
                 classroomsRes,
-                coursesRes
+                coursesRes,
+                parentMessagesRes
             ] = await Promise.all([
                 client.get('/api/achievements/admin/certificates').catch(() => ({ data: { certificates: [] } })),
                 client.get('/api/admin/manage-projects?filter=pending').catch(() => ({ data: { data: { projects: [] } } })),
@@ -79,7 +81,8 @@ const ToReview = () => {
                 client.get('/api/admin/pending_trades').catch(() => ({ data: { data: { trades: [] } } })),
                 client.get('/api/course-requests/pending').catch(() => ({ data: { requests: [] } })),
                 client.get('/api/admin/crud/classroom').catch(() => ({ data: { data: [] } })),
-                client.get('/api/admin/crud/course').catch(() => ({ data: { data: [] } }))
+                client.get('/api/admin/crud/course').catch(() => ({ data: { data: [] } })),
+                client.get('/api/admin/parent-messages?status=pending').catch(() => ({ data: { messages: [] } }))
             ]);
 
             setCertificates(certsRes.data.certificates || certsRes.data.data?.certificates || []);
@@ -87,6 +90,7 @@ const ToReview = () => {
             setPendingUsers(usersRes.data.data?.users || []);
             setTrades(tradesRes.data.data?.trades || []);
             setCourseRequests(courseRes.data.requests || courseRes.data.data?.requests || []);
+            setParentMessages(parentMessagesRes.data?.data?.messages || parentMessagesRes.data?.messages || []);
 
             // Set options states
             const clList = classroomsRes.data.data || [];
@@ -329,6 +333,21 @@ const ToReview = () => {
         }
     };
 
+    const handleResolveParentMessage = async (msgId) => {
+        setIsProcessing(`message-${msgId}`);
+        try {
+            const response = await client.post(`/api/admin/parent-messages/${msgId}/resolve`);
+            if (response.data?.status === 'success' || response.data?.message) {
+                toast.success('Parent message marked as resolved.');
+                setParentMessages(prev => prev.filter(m => m.id !== msgId));
+            }
+        } catch (error) {
+            toast.error(error.response?.data?.message || 'Failed to resolve parent message.');
+        } finally {
+            setIsProcessing(null);
+        }
+    };
+
     // Helper functions
     const formatBits = (bits) => {
         if (!bits || !Array.isArray(bits)) return '0000 0000';
@@ -351,7 +370,8 @@ const ToReview = () => {
 
     // Tabs setup
     const tabs = [
-        { id: 'all', label: 'All Items', icon: Inbox, count: projects.length + certificates.length + pendingUsers.length + trades.length + courseRequests.length },
+        { id: 'all', label: 'All Items', icon: Inbox, count: projects.length + certificates.length + pendingUsers.length + trades.length + courseRequests.length + parentMessages.length },
+        { id: 'messages', label: 'Parent Messages', icon: MessageSquare, count: parentMessages.length },
         { id: 'projects', label: 'Projects', icon: FolderKanban, count: projects.length },
         { id: 'certificates', label: 'Certificates', icon: Award, count: certificates.length },
         { id: 'users', label: 'Account Signups', icon: Users, count: pendingUsers.length },
@@ -367,6 +387,7 @@ const ToReview = () => {
         pendingUsers.forEach(u => unified.push({ ...u, type: 'user', key: `user-${u.id}`, timestamp: new Date().toISOString() })); // default fallback
         trades.forEach(t => unified.push({ ...t, type: 'trade', key: `trade-${t.id}`, timestamp: t.timestamp || new Date().toISOString() }));
         courseRequests.forEach(r => unified.push({ ...r, type: 'course', key: `course-${r.id}`, timestamp: r.requested_at || new Date().toISOString() }));
+        parentMessages.forEach(m => unified.push({ ...m, type: 'parent_message', key: `parent-msg-${m.id}`, timestamp: m.created_at || new Date().toISOString() }));
 
         // Sort descending by timestamp
         return unified.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
@@ -374,6 +395,7 @@ const ToReview = () => {
 
     const getDisplayItems = () => {
         if (activeTab === 'all') return getUnifiedList();
+        if (activeTab === 'messages') return parentMessages.map(m => ({ ...m, type: 'parent_message', key: `parent-msg-${m.id}` }));
         if (activeTab === 'projects') return projects.map(p => ({ ...p, type: 'project', key: `project-${p.id}` }));
         if (activeTab === 'certificates') return certificates.map(c => ({ ...c, type: 'certificate', key: `cert-${c.id}` }));
         if (activeTab === 'users') return pendingUsers.map(u => ({ ...u, type: 'user', key: `user-${u.id}` }));
@@ -889,8 +911,69 @@ const ToReview = () => {
         );
     };
 
+    const renderParentMessageCard = (m) => {
+        return (
+            <div className="review-card parent-message-review-card" key={m.key} data-testid={`parent-message-${m.id}`}>
+                <div className="review-card-header">
+                    <div className="card-badge badge-parent-message">
+                        <MessageSquare size={14} /> Parent Message
+                    </div>
+                    <span className="card-time">
+                        <Clock size={12} /> {m.created_at ? new Date(m.created_at).toLocaleString() : 'Recent'}
+                    </span>
+                </div>
+
+                <div className="card-main-content">
+                    <div className="parent-message-sender-row">
+                        <div className="student-profile">
+                            <div className="avatar-placeholder parent-avatar">
+                                <User size={18} />
+                            </div>
+                            <div>
+                                <h4>{m.parent_name || 'Parent'}</h4>
+                                <span className="student-handle">
+                                    {m.parent_username ? `@${m.parent_username}` : ''}
+                                    {m.parent_email ? ` • ${m.parent_email}` : ''}
+                                </span>
+                            </div>
+                        </div>
+
+                        {m.student_names && m.student_names.length > 0 && (
+                            <div className="parent-student-tags">
+                                {m.student_names.map((name, idx) => (
+                                    <span key={idx} className="student-tag-badge" title={`Child: ${name}`}>
+                                        Child: <strong>{name}</strong>
+                                    </span>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="parent-message-body-container">
+                        {m.subject && (
+                            <h3 className="parent-message-subject">{m.subject}</h3>
+                        )}
+                        <p className="parent-message-text">{m.body}</p>
+                    </div>
+
+                    <div className="card-actions" style={{ justifyContent: 'flex-end', marginTop: '1rem' }}>
+                        <button 
+                            className="btn-approve"
+                            onClick={() => handleResolveParentMessage(m.id)}
+                            disabled={isProcessing === `message-${m.id}`}
+                        >
+                            <CheckCircle size={16} /> {isProcessing === `message-${m.id}` ? 'Resolving...' : 'Mark as Resolved'}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
     const renderCard = (item) => {
         switch (item.type) {
+            case 'message':
+            case 'parent_message': return renderParentMessageCard(item);
             case 'project': return renderProjectCard(item);
             case 'certificate': return renderCertificateCard(item);
             case 'user': return renderUserCard(item);

@@ -145,5 +145,65 @@ describe('ToReview Component', () => {
     }
   });
 
+  it('renders parent messages tab and resolves a message', async () => {
+    client.get.mockImplementation((url) => {
+      if (url.includes('/api/admin/crud/classroom') || url.includes('/api/admin/crud/course')) {
+        return Promise.resolve({ data: { data: [] } });
+      }
+      if (url.includes('parent-messages')) {
+        return Promise.resolve({
+          data: {
+            messages: [
+              {
+                id: 101,
+                parent_id: 10,
+                parent_name: 'Jane Doe',
+                parent_username: 'janedoe',
+                parent_email: 'jane@example.com',
+                student_names: ['Tommy'],
+                subject: 'Attendance inquiry',
+                body: 'Will Tommy miss points for absence?',
+                status: 'pending',
+                created_at: '2026-09-13T10:00:00Z',
+              },
+            ],
+          },
+        });
+      }
+      return Promise.resolve({ data: { data: [] } });
+    });
 
+    client.post.mockResolvedValue({
+      data: { status: 'success', message: 'Parent message marked as resolved.' },
+    });
+
+    render(<ToReview />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Parent Messages')).toBeInTheDocument();
+    });
+
+    // Switch to Parent Messages tab
+    fireEvent.click(screen.getByText('Parent Messages'));
+
+    await waitFor(() => {
+      expect(screen.getByText('Jane Doe')).toBeInTheDocument();
+      expect(screen.getByText('Attendance inquiry')).toBeInTheDocument();
+      expect(screen.getByText('Will Tommy miss points for absence?')).toBeInTheDocument();
+      expect(screen.getByText('Tommy')).toBeInTheDocument();
+    });
+
+    // Click Mark as Resolved
+    const resolveBtn = screen.getByRole('button', { name: /Mark as Resolved/i });
+    fireEvent.click(resolveBtn);
+
+    await waitFor(() => {
+      expect(client.post).toHaveBeenCalledWith('/api/admin/parent-messages/101/resolve');
+    });
+
+    // Card is removed from view
+    await waitFor(() => {
+      expect(screen.queryByText('Attendance inquiry')).not.toBeInTheDocument();
+    });
+  });
 });

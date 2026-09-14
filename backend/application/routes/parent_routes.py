@@ -386,10 +386,20 @@ def contact_teacher():
         + body
     )
 
-    # Use the existing Message model to create a system message visible to admins
+    # Record the message in the dedicated ParentMessage model for admin review
     from application.extensions import db as _db
     from application.models.message import Message
+    from application.models.parent_message import ParentMessage
 
+    parent_msg = ParentMessage(
+        parent_id=user_obj.id,
+        subject=subject or None,
+        body=body,
+        status="pending",
+    )
+    _db.session.add(parent_msg)
+
+    # Use the existing Message model to create a system message visible to admins
     msg = Message(
         user_id=user_obj.id,
         content=full_content,

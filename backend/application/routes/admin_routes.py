@@ -13,6 +13,7 @@ from .admin import (
     config_routes,
     dashboard_routes,
     doc_routes,
+    parent_message_routes,
     project_routes,
     submission_routes,
     trade_routes,

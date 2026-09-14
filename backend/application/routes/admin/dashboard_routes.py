@@ -293,6 +293,7 @@ def admin_transactions():
 @api_response
 def get_review_counts():
     from application.models.course_instance_request import CourseInstanceRequest
+    from application.models.parent_message import ParentMessage
     from application.models.project import Project
     from application.models.submission import Submission
     from application.models.user_certificate import UserCertificate
@@ -307,6 +308,7 @@ def get_review_counts():
         status="pending"
     ).count()
     pending_submissions = Submission.query.filter_by(status="pending").count()
+    pending_parent_messages = ParentMessage.query.filter_by(status="pending").count()
 
     total_incomplete = (
         pending_users
@@ -315,6 +317,7 @@ def get_review_counts():
         + pending_certificates
         + pending_course_requests
         + pending_submissions
+        + pending_parent_messages
     )
 
     return {
@@ -324,5 +327,6 @@ def get_review_counts():
         "pending_certificates": pending_certificates,
         "pending_course_requests": pending_course_requests,
         "pending_submissions": pending_submissions,
+        "pending_parent_messages": pending_parent_messages,
         "total_incomplete": total_incomplete,
     }
