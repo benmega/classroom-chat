@@ -99,8 +99,8 @@ pytest tests -q                                 # macOS/Linux venv activated
 python -m mypy .
 
 # Frontend (from frontend/)
-npx vitest run
-npx playwright test
+npm run test
+npm run test:e2e
 npm run lint
 ```
 

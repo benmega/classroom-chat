@@ -15,6 +15,7 @@ def setup_models():
     from .challenge import Challenge
     from .challenge_log import ChallengeLog
     from .classroom import Classroom
+    from .classroom_join_attempt import ClassroomJoinAttempt
     from .configuration import Configuration
     from .connection_attempt import ConnectionAttempt
     from .course import Course

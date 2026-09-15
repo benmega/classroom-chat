@@ -147,7 +147,7 @@ const EditProfile = () => {
 
                 {/* Main Content Layout */}
                 <div className="settings-layout">
-                    {/* Left Column: Profile Information */}
+                    {/* Profile Information */}
                     <div className="settings-panel profile-info-panel">
                         <h2 className="panel-title">Profile Information</h2>
                         
@@ -197,123 +197,120 @@ const EditProfile = () => {
                         </div>
                     </div>
 
-                    {/* Right Column: Connection & Account Security */}
-                    <div className="settings-right-column">
-                        {/* Pairing Code Panel */}
-                        {user?.role !== 'parent' && (
-                            <div className="settings-panel connection-panel">
-                                <h2 className="panel-title">Pairing Code & Connection</h2>
-                                <div className="connection-code-box">
-                                    <input 
-                                        type="text"
-                                        value={connectionCode || 'Loading...'}
-                                        readOnly
-                                        disabled
-                                        className="connection-code-value"
+                    {/* Pairing Code Panel */}
+                    {user?.role !== 'parent' && (
+                        <div className="settings-panel connection-panel">
+                            <h2 className="panel-title">Pairing Code & Connection</h2>
+                            <div className="connection-code-box">
+                                <input 
+                                    type="text"
+                                    value={connectionCode || 'Loading...'}
+                                    readOnly
+                                    disabled
+                                    className="connection-code-value"
+                                />
+                                <button 
+                                    type="button" 
+                                    className="copy-btn-icon" 
+                                    onClick={() => {
+                                        if (connectionCode) {
+                                            navigator.clipboard.writeText(connectionCode);
+                                            toast.success('Code copied to clipboard!');
+                                        }
+                                    }}
+                                    disabled={!connectionCode}
+                                    title="Copy Code"
+                                >
+                                    <Copy size={18} />
+                                </button>
+                            </div>
+                            <div className="connection-icon-wrapper">
+                                <div className="connection-link-circles">
+                                    {/* Simple SVG representation of connected rings */}
+                                    <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                                        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                                    </svg>
+                                </div>
+                            </div>
+                            <button
+                                type="button"
+                                className="btn-secondary w-100 mt-1rem"
+                                onClick={() => setShowConnectionModal(true)}
+                                disabled={!connectionCode}
+                            >
+                                Print Connection Card
+                            </button>
+                            <ConnectionCardModal
+                                isOpen={showConnectionModal}
+                                onClose={() => setShowConnectionModal(false)}
+                                student={user}
+                                connectionCode={connectionCode}
+                            />
+                        </div>
+                    )}
+
+                    {/* Account Security Panel */}
+                    <div className="settings-panel security-panel">
+                        <h2 className="panel-title">Account Security</h2>
+                        <div className="security-fields-row">
+                            <div className="form-group flex-1">
+                                <label htmlFor="input-222">New Password</label>
+                                <div className="password-input-wrapper">
+                                    <input id="input-222" 
+                                        type={showPassword ? "text" : "password"} 
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                        placeholder="New Password" 
+                                        className="form-control password-input" 
+                                        autoComplete="new-password"
                                     />
                                     <button 
                                         type="button" 
-                                        className="copy-btn-icon" 
-                                        onClick={() => {
-                                            if (connectionCode) {
-                                                navigator.clipboard.writeText(connectionCode);
-                                                toast.success('Code copied to clipboard!');
-                                            }
-                                        }}
-                                        disabled={!connectionCode}
-                                        title="Copy Code"
+                                        className="password-toggle-btn"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                        tabIndex="-1"
                                     >
-                                        <Copy size={18} />
+                                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                                     </button>
                                 </div>
-                                <div className="connection-icon-wrapper">
-                                    <div className="connection-link-circles">
-                                        {/* Simple SVG representation of connected rings */}
-                                        <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
-                                            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
-                                            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
-                                        </svg>
-                                    </div>
-                                </div>
-                                <button
-                                    type="button"
-                                    className="btn-secondary w-100 mt-1rem"
-                                    onClick={() => setShowConnectionModal(true)}
-                                    disabled={!connectionCode}
-                                >
-                                    Print Connection Card
-                                </button>
-                                <ConnectionCardModal
-                                    isOpen={showConnectionModal}
-                                    onClose={() => setShowConnectionModal(false)}
-                                    student={user}
-                                    connectionCode={connectionCode}
-                                />
                             </div>
-                        )}
-
-                        {/* Account Security Panel */}
-                        <div className="settings-panel security-panel">
-                            <h2 className="panel-title">Account Security</h2>
-                            <div className="security-fields-row">
-                                <div className="form-group flex-1">
-                                    <label htmlFor="input-222">New Password</label>
-                                    <div className="password-input-wrapper">
-                                        <input id="input-222" 
-                                            type={showPassword ? "text" : "password"} 
-                                            value={password}
-                                            onChange={(e) => setPassword(e.target.value)}
-                                            placeholder="New Password" 
-                                            className="form-control password-input" 
-                                            autoComplete="new-password"
-                                        />
-                                        <button 
-                                            type="button" 
-                                            className="password-toggle-btn"
-                                            onClick={() => setShowPassword(!showPassword)}
-                                            tabIndex="-1"
-                                        >
-                                            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                                        </button>
-                                    </div>
-                                </div>
-                                <div className="form-group flex-1">
-                                    <label htmlFor="input-243">Confirm New Password</label>
-                                    <div className="password-input-wrapper">
-                                        <input id="input-243" 
-                                            type={showConfirmPassword ? "text" : "password"} 
-                                            value={confirmPassword}
-                                            onChange={(e) => setConfirmPassword(e.target.value)}
-                                            placeholder="Confirm New Password" 
-                                            className="form-control password-input" 
-                                            autoComplete="new-password"
-                                        />
-                                        <button 
-                                            type="button" 
-                                            className="password-toggle-btn"
-                                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                            tabIndex="-1"
-                                        >
-                                            {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                                        </button>
-                                    </div>
+                            <div className="form-group flex-1">
+                                <label htmlFor="input-243">Confirm New Password</label>
+                                <div className="password-input-wrapper">
+                                    <input id="input-243" 
+                                        type={showConfirmPassword ? "text" : "password"} 
+                                        value={confirmPassword}
+                                        onChange={(e) => setConfirmPassword(e.target.value)}
+                                        placeholder="Confirm New Password" 
+                                        className="form-control password-input" 
+                                        autoComplete="new-password"
+                                    />
+                                    <button 
+                                        type="button" 
+                                        className="password-toggle-btn"
+                                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                        tabIndex="-1"
+                                    >
+                                        {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                    </button>
                                 </div>
                             </div>
                         </div>
-                        
-                        {/* Save Button Row */}
-                        {hasChanges && (
-                            <div className="settings-footer-actions">
-                                <button type="button" onClick={handleCancel} className="btn-secondary">
-                                    <X size={18} /> Cancel
-                                </button>
-                                <button type="submit" disabled={isSaving} className="btn-primary-save">
-                                    {isSaving ? 'Saving...' : 'Save Changes'}
-                                </button>
-                            </div>
-                        )}
                     </div>
                 </div>
+
+                {/* Save Button Row */}
+                {hasChanges && (
+                    <div className="settings-footer-actions">
+                        <button type="button" onClick={handleCancel} className="btn-secondary">
+                            <X size={18} /> Cancel
+                        </button>
+                        <button type="submit" disabled={isSaving} className="btn-primary-save">
+                            {isSaving ? 'Saving...' : 'Save Changes'}
+                        </button>
+                    </div>
+                )}
             </form>
         </div>
     );

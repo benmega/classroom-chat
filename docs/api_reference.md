@@ -40,7 +40,7 @@ All admin routes require `admin_required` (session user with `is_admin=True`).
 
 ## 5. Classrooms & Courses
 - **`POST /api/classroom/join`, `GET /api/classroom/mine`**: Join-code based classroom enrollment; list the current user's classrooms.
-- **`/track-requests/`, `/admin/track-requests/*`**: Student requests to change course track, and admin review.
+- **`/api/course-requests/*`**: Student requests to change course track, and admin review.
 - **`/api/project-templates`**: CRUD for reusable project templates (admin).
 
 ## 6. User Content
