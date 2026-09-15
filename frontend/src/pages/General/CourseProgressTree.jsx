@@ -6,6 +6,9 @@ import { showConfirm } from '../../utils/confirm';
 import { ArrowLeft, Star, ZoomIn, ZoomOut, Maximize2, CheckCircle, Code, History } from 'lucide-react';
 import codecombatLogo from '../../assets/codecombat-logo.png';
 import ozariaLogo from '../../assets/ozaria-logo.png';
+import modeling3DLogo from '../../assets/3d-modeling-logo.jpg';
+import tinkercadLogo from '../../assets/tinkercad-logo.svg';
+import blenderLogo from '../../assets/blender-logo.svg';
 import useAuthStore from '../../store/useAuthStore';
 import SubmitProgressModal from '../../components/common/SubmitProgressModal';
 import './CourseProgressTree.css';
@@ -350,7 +353,7 @@ const CourseProgressTree = () => {
 
                     const isOzaria = track.id === 'ozaria';
                     const is3D = track.id === '3d';
-                    const logoSrc = isOzaria ? ozariaLogo : codecombatLogo;
+                    const logoSrc = isOzaria ? ozariaLogo : (is3D ? modeling3DLogo : codecombatLogo);
                     const linkUrl = isOzaria ? 'https://ozeria.com' : (is3D ? 'https://tinkercad.com' : 'https://codecombat.com');
                     const linkTitle = isOzaria ? 'Visit Ozaria' : (is3D ? 'Visit Tinkercad' : 'Visit CodeCombat');
 
@@ -458,9 +461,12 @@ const CourseProgressTree = () => {
                                 )}
                                 <div className="skill-icon">
                                     {node.domain === '3d-modeling' ? (
-                                        <div style={{ width: '48px', height: '48px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#3b82f6', borderRadius: '50%', color: 'white' }}>
-                                            <Code size={24} />
-                                        </div>
+                                        <img
+                                            src={node.title.toLowerCase().includes('tinkercad') ? tinkercadLogo : blenderLogo}
+                                            alt={`${node.title} logo`}
+                                            className="domain-logo"
+                                            style={{ width: '48px', height: '48px', objectFit: 'contain', background: 'transparent' }}
+                                        />
                                     ) : (
                                         <img
                                             src={node.domain === 'codecombat' ? codecombatLogo : ozariaLogo}
