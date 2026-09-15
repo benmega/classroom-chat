@@ -284,28 +284,24 @@ describe('AdminModals', () => {
 
   describe('BulkConnectionCardsModal', () => {
     it('renders and fetches data on open', async () => {
-      const fetchClassrooms = vi.fn();
       const fetchClassroomCards = vi.fn();
 
       const { rerender } = render(
         <BulkConnectionCardsModal 
           isOpen={true} 
           onClose={vi.fn()} 
-          fetchClassrooms={fetchClassrooms}
           classroomCards={[]}
           isFetchingCards={false}
           fetchClassroomCards={fetchClassroomCards}
         />
       );
 
-      expect(fetchClassrooms).toHaveBeenCalled();
       expect(fetchClassroomCards).toHaveBeenCalled();
 
       rerender(
         <BulkConnectionCardsModal 
           isOpen={true} 
           onClose={vi.fn()} 
-          fetchClassrooms={fetchClassrooms}
           classroomCards={[{ id: 'card1', username: 'stud1', connection_code: 'XYZ-987' }]}
           isFetchingCards={false}
           fetchClassroomCards={fetchClassroomCards}

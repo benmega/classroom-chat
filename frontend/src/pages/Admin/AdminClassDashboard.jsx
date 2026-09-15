@@ -66,8 +66,8 @@ const AdminClassDashboard = () => {
             // Fetch join code
             try {
                 const codeRes = await client.get(`/api/admin/classrooms/${classId}/join-code`);
-                if (codeRes.data.success) {
-                    setJoinCode(codeRes.data.join_code);
+                if (codeRes.data.status === 'success' || codeRes.data.success) {
+                    setJoinCode(codeRes.data.data?.join_code || codeRes.data.join_code);
                 }
             } catch (err) {
                 console.error("Failed to fetch join code:", err);
@@ -174,7 +174,7 @@ const AdminClassDashboard = () => {
                 name: classroom.name,
                 language: newLanguageStr
             });
-            if (res.data.success) {
+            if (res.data.status === 'success' || res.data.success) {
                 
                 fetchClassroomDetails();
             }
@@ -194,7 +194,7 @@ const AdminClassDashboard = () => {
                 name: editNameValue,
                 language: classroom.language
             });
-            if (res.data.success) {
+            if (res.data.status === 'success' || res.data.success) {
                 
                 fetchClassroomDetails();
                 setIsEditingName(false);
@@ -210,7 +210,7 @@ const AdminClassDashboard = () => {
         setFormLoading(true);
         try {
             const res = await client.post(`/api/admin/classrooms/${classId}/join-code/regenerate`);
-            if (res.data.success) {
+            if (res.data.status === 'success' || res.data.success) {
                 
                 fetchClassroomDetails();
             }
@@ -229,7 +229,7 @@ const AdminClassDashboard = () => {
             const res = await client.post(`/api/admin/classrooms/${classId}/enroll`, {
                 student_id: Number(targetId)
             });
-            if (res.data.success) {
+            if (res.data.status === 'success' || res.data.success) {
                 
                 setSelectedStudentId('');
                 setActiveModal(null);
@@ -249,7 +249,7 @@ const AdminClassDashboard = () => {
             const res = await client.post(`/api/admin/classrooms/${classId}/unenroll`, {
                 student_id: studentId
             });
-            if (res.data.success) {
+            if (res.data.status === 'success' || res.data.success) {
                 
                 fetchClassroomDetails();
             }
@@ -564,10 +564,7 @@ const AdminClassDashboard = () => {
             <BulkConnectionCardsModal
                 isOpen={activeModal === 'bulk_connection_cards'}
                 onClose={() => setActiveModal(null)}
-                classrooms={[classroom]}
-                fetchClassrooms={fetchClassroomDetails}
                 classroomCards={classroomCards}
-                setClassroomCards={setClassroomCards}
                 isFetchingCards={isFetchingCards}
                 fetchClassroomCards={fetchClassroomCards}
             />
