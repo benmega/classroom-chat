@@ -1,8 +1,10 @@
-import { screen, fireEvent } from '@testing-library/react';
+import { screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import Chat from './Chat';
 import { renderWithProviders } from '../../test/test-utils';
 import { HttpResponse } from 'msw';
+import client from '../../api/client';
+import toast from 'react-hot-toast';
 
 // ─── Mock dependencies ──────────────────────────────────────────────────────
 
@@ -13,15 +15,29 @@ vi.mock('react-hot-toast', () => ({
   },
 }));
 
+vi.mock('../../api/client', () => ({
+  default: {
+    get: vi.fn(() => Promise.resolve({ data: {} })),
+    post: vi.fn(() => Promise.resolve({ data: {} })),
+  },
+}));
+
+const socketListeners = {};
+const mockSocket = {
+  connected: false,
+  on: vi.fn((event, cb) => {
+    socketListeners[event] = cb;
+  }),
+  off: vi.fn((event) => {
+    delete socketListeners[event];
+  }),
+  emit: vi.fn(),
+  disconnect: vi.fn(),
+};
+
 // Mock socket.io-client so no real connections are attempted
 vi.mock('socket.io-client', () => ({
-  io: vi.fn(() => ({
-    connected: false,
-    on: vi.fn(),
-    off: vi.fn(),
-    emit: vi.fn(),
-    disconnect: vi.fn(),
-  })),
+  io: vi.fn(() => mockSocket),
 }));
 
 // Mock emoji-picker-react (heavy component, not relevant to logic tests)
@@ -496,5 +512,95 @@ describe('Chat Component', () => {
     const postBtn = screen.getByRole('button', { name: /post message/i });
     expect(postBtn).toBeDisabled();
     expect(postBtn).toHaveTextContent(/wait \(25s\)/i);
+  });
+
+  // ─── Sandbox Mode Tests ───────────────────────────────────────────────────
+
+  it('fetches sandbox status on load and displays sticky banner if sandbox_active is true', async () => {
+    useFeedLogic.mockReturnValue(buildFeedLogic({
+      classrooms: [{ id: 'cls123', name: 'Python 1' }],
+    }));
+
+    client.get.mockImplementation(async (url) => {
+      if (url.includes('/sandbox-status')) {
+        return { data: { sandbox_active: true } };
+      }
+      return { data: {} };
+    });
+
+    renderWithProviders(<Chat filterClassroomId="cls123" />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('sandbox-chat-banner')).toBeInTheDocument();
+      expect(screen.getByText(/All Tests Passed/i)).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Enter Sandbox Arcade/i })).toBeInTheDocument();
+    });
+  });
+
+  it('opens SandboxArcadeModal when Enter Sandbox Arcade is clicked', async () => {
+    useFeedLogic.mockReturnValue(buildFeedLogic({
+      classrooms: [{ id: 'cls123', name: 'Python 1' }],
+    }));
+
+    client.get.mockImplementation((url) => {
+      if (url.includes('/sandbox-status')) {
+        return Promise.resolve({ data: { sandbox_active: true } });
+      }
+      if (url.includes('/sandbox-games')) {
+        return Promise.resolve({ data: { sandbox_active: true, games: [] } });
+      }
+      return Promise.resolve({ data: {} });
+    });
+
+    renderWithProviders(<Chat filterClassroomId="cls123" />);
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /enter sandbox arcade/i })).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /enter sandbox arcade/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText(/Sandbox Arcade — All Tests Passed!/i)).toBeInTheDocument();
+    });
+  });
+
+  it('updates isSandboxActive and shows celebratory toast when sandbox_status_changed event is received', async () => {
+    useFeedLogic.mockReturnValue(buildFeedLogic({
+      classrooms: [{ id: 'cls123', name: 'Python 1' }],
+    }));
+
+    client.get.mockImplementation((url) => {
+      if (url.includes('/sandbox-status')) {
+        return Promise.resolve({ data: { sandbox_active: false } });
+      }
+      return Promise.resolve({ data: {} });
+    });
+
+    renderWithProviders(<Chat filterClassroomId="cls123" />);
+
+    // Wait for initial fetch to settle
+    await waitFor(() => {
+      expect(client.get).toHaveBeenCalledWith('/api/classrooms/cls123/sandbox-status');
+    });
+
+    expect(screen.queryByText(/All Tests Passed! Sandbox Mode is Active!/i)).not.toBeInTheDocument();
+
+    // Trigger socket event
+    expect(socketListeners['sandbox_status_changed']).toBeDefined();
+    act(() => {
+      socketListeners['sandbox_status_changed']({
+        classroom_id: 'cls123',
+        sandbox_active: true,
+      });
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText(/All Tests Passed! Sandbox Mode is Active!/i)).toBeInTheDocument();
+      expect(toast.success).toHaveBeenCalledWith(
+        expect.stringContaining('Sandbox Mode is Active!'),
+        expect.any(Object)
+      );
+    });
   });
 });

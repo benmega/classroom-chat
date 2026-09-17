@@ -20,7 +20,7 @@ const getCookie = (name) => {
   return '';
 };
 
-const getSocket = () => {
+export const getSocket = () => {
   if (!_socket) {
     _socket = io(SOCKET_URL, {
       withCredentials: true,

@@ -25,6 +25,7 @@ from .general_routes import general
 from .message_routes import message
 from .parent_routes import parent
 from .project_template_routes import project_templates_bp
+from .sandbox_routes import sandbox_bp
 from .server_info_routes import server_info
 from .session_routes import session
 from .shop_routes import shop_bp

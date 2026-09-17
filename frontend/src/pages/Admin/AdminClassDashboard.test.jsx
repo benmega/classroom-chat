@@ -507,4 +507,105 @@ describe('AdminClassDashboard', () => {
             expect(screen.getAllByText('NEW456').length).toBeGreaterThan(0);
         });
     });
+
+    it('displays Enable Sandbox button when sandbox_active is false and toggles it on', async () => {
+        mockClassroomApi({
+            id: 'cls123',
+            name: 'Python Level 1',
+            sandbox_active: false,
+            students: [],
+            course_assignments: []
+        });
+
+        client.post.mockImplementation((url) => {
+            if (url.includes('/sandbox/toggle')) {
+                return Promise.resolve({ data: { success: true, sandbox_active: true } });
+            }
+            return Promise.resolve({ data: {} });
+        });
+
+        renderWithRouter(<AdminClassDashboard />);
+
+        await waitFor(() => {
+            expect(screen.getByText('Python Level 1')).toBeInTheDocument();
+        });
+
+        const enableBtn = screen.getByRole('button', { name: /Declare "All Tests Passed" \/ Enable Sandbox/i });
+        expect(enableBtn).toBeInTheDocument();
+
+        fireEvent.click(enableBtn);
+
+        await waitFor(() => {
+            expect(client.post).toHaveBeenCalledWith('/api/admin/classrooms/cls123/sandbox/toggle');
+            expect(screen.getByText(/Sandbox Mode Active — All Tests Passed/i)).toBeInTheDocument();
+            expect(screen.getByRole('button', { name: /End Sandbox/i })).toBeInTheDocument();
+        });
+    });
+
+    it('displays End Sandbox button when sandbox_active is true and toggles it off', async () => {
+        mockClassroomApi({
+            id: 'cls123',
+            name: 'Python Level 1',
+            sandbox_active: true,
+            students: [],
+            course_assignments: []
+        });
+
+        client.post.mockImplementation((url) => {
+            if (url.includes('/sandbox/toggle')) {
+                return Promise.resolve({ data: { success: true, sandbox_active: false } });
+            }
+            return Promise.resolve({ data: {} });
+        });
+
+        renderWithRouter(<AdminClassDashboard />);
+
+        await waitFor(() => {
+            expect(screen.getByText(/Sandbox Mode Active — All Tests Passed/i)).toBeInTheDocument();
+        });
+
+        const endBtn = screen.getByRole('button', { name: /End Sandbox/i });
+        expect(endBtn).toBeInTheDocument();
+
+        fireEvent.click(endBtn);
+
+        await waitFor(() => {
+            expect(client.post).toHaveBeenCalledWith('/api/admin/classrooms/cls123/sandbox/toggle');
+            expect(screen.getByRole('button', { name: /Declare "All Tests Passed" \/ Enable Sandbox/i })).toBeInTheDocument();
+        });
+    });
+
+    it('opens Game Rewards CSV modal when Game Rewards button is clicked', async () => {
+        mockClassroomApi({
+            id: 'cls123',
+            name: 'Python Level 1',
+            sandbox_active: false,
+            students: [],
+            course_assignments: []
+        });
+
+        client.get.mockImplementation((url) => {
+            if (url.includes('/api/admin/level-games')) {
+                return Promise.resolve({ data: { games: [] } });
+            }
+            if (url.includes('/api/admin/classrooms/')) {
+                return Promise.resolve({ data: { classroom: { id: 'cls123', name: 'Python Level 1' } } });
+            }
+            return Promise.resolve({ data: {} });
+        });
+
+        renderWithRouter(<AdminClassDashboard />);
+
+        await waitFor(() => {
+            expect(screen.getByText('Python Level 1')).toBeInTheDocument();
+        });
+
+        const rewardsBtn = screen.getByRole('button', { name: /Game Rewards \(CSV Upload\)/i });
+        fireEvent.click(rewardsBtn);
+
+        await waitFor(() => {
+            expect(screen.getByText(/Game Rewards Management \(CSV Upload\)/i)).toBeInTheDocument();
+            expect(screen.getByText(/Download Sample CSV/i)).toBeInTheDocument();
+        });
+    });
 });
