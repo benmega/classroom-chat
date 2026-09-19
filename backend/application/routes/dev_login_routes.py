@@ -67,6 +67,9 @@ def _perform_login(user_obj: User, role: str):
     User.set_online(user_obj.id)
     session["conversation_id"] = None
 
+    from application.services.achievement_engine import evaluate_user
+    evaluate_user(user_obj)
+
 
 @dev_login.route("/dev-login", methods=["GET"])
 def browser_dev_login():

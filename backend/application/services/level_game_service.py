@@ -219,10 +219,7 @@ def ingest_games_csv(file_content_or_stream, replace_all=True):
 
         if not assigned_lesson:
             lesson_num = row.get("lesson_number") or "1"
-            if chapter_str:
-                assigned_lesson = f"{chapter_str}.{lesson_num}"
-            else:
-                assigned_lesson = "1.1"
+            assigned_lesson = f"{chapter_str}.{lesson_num}" if chapter_str else "1.1"
 
         parsed_lesson = parse_assigned_lesson(assigned_lesson)
         chapter = parsed_lesson["chapter"]
@@ -264,10 +261,7 @@ def ingest_games_csv(file_content_or_stream, replace_all=True):
                     pass
 
         ver_val = row.get("verified", "").strip().lower()
-        if ver_val == "":
-            verified = True
-        else:
-            verified = ver_val in ("true", "1", "yes", "y", "t")
+        verified = True if ver_val == "" else ver_val in ("true", "1", "yes", "y", "t")
 
         game = LevelGame(
             course_id=course_id,
@@ -304,7 +298,7 @@ def ingest_games_csv(file_content_or_stream, replace_all=True):
             "success": False,
             "total_rows": total_rows,
             "inserted": 0,
-            "errors": errors + [str(e)],
+            "errors": [*errors, str(e)],
         }
 
 
@@ -385,7 +379,9 @@ def get_student_sandbox_games(user, classroom):
         student_logs = log_query.all()
 
     completed_slugs = {
-        l.challenge_slug.strip().lower() for l in student_logs if l.challenge_slug
+        log_entry.challenge_slug.strip().lower()
+        for log_entry in student_logs
+        if log_entry.challenge_slug
     }
     completed_count = len(student_logs)
 

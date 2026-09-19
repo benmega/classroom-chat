@@ -154,7 +154,6 @@ const Chat = ({ filterClassroomId = null }) => {
           <div 
             className="sandbox-sticky-banner" 
             data-testid="sandbox-chat-banner"
-            onClick={() => setIsArcadeModalOpen(true)}
           >
             <div className="sandbox-sticky-banner-content">
               <span className="sandbox-sticky-banner-title">

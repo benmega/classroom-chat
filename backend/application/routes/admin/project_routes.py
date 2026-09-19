@@ -85,6 +85,11 @@ def handle_project_review(project_id):
         project.status = "approved"
         db.session.commit()
 
+        if student:
+            from application.services.achievement_engine import evaluate_user
+
+            evaluate_user(student, force=True)
+
         student_nickname = student.nickname if student else "A student"
         student_slug = student.slug if student else ""
 

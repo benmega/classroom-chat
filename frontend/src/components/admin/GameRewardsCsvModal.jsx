@@ -150,12 +150,19 @@ const GameRewardsCsvModal = ({ isOpen, onClose }) => {
 
         {/* Drag & Drop Upload Zone */}
         <div 
+          role="button"
+          tabIndex={0}
           className={`csv-dropzone ${isDragging ? 'is-dragging' : ''} ${csvFile ? 'has-file' : ''}`}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
           onClick={() => !csvFile && fileInputRef.current?.click()}
-          role="region"
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              if (!csvFile) fileInputRef.current?.click();
+            }
+          }}
           aria-label="CSV file upload dropzone"
         >
           <input

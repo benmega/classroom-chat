@@ -244,3 +244,32 @@ def test_to_binary(test_app):
     from application.routes.duck_trade_routes import to_binary
 
     assert to_binary({"test": 2}) == {"test": "10"}
+
+
+def test_submit_trade_triggers_achievement(client, sample_user_with_ducks, test_app):
+    from application.models.achievements import Achievement, UserAchievement
+
+    with test_app.app_context():
+        DuckTradeLog.query.filter_by(user_id=sample_user_with_ducks.id).delete()
+        # Add a trade achievement with requirement 1
+        ach = Achievement(name="Trade Initiate", slug="trade-initiate", type="trade", requirement_value="1", reward=5)
+        db.session.add(ach)
+        db.session.commit()
+
+        with client.session_transaction() as sess:
+            sess["user"] = sample_user_with_ducks.id
+
+        response = client.post(
+            "/duck_trade/submit_trade",
+            json={"digital_ducks": 1},
+            headers={"X-Requested-With": "XMLHttpRequest"},
+        )
+        assert response.status_code == 200
+        data = response.get_json()
+        assert data["status"] == "success"
+        assert "new_awards" in data
+        assert any(a["slug"] == "trade-initiate" for a in data["new_awards"])
+
+        # Check DB
+        ua = UserAchievement.query.filter_by(user_id=sample_user_with_ducks.id, achievement_id=ach.id).first()
+        assert ua is not None

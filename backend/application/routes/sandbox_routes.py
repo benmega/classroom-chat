@@ -52,10 +52,8 @@ def get_admin_level_games():
     if course_id:
         query = query.filter_by(course_id=course_id)
     if chapter is not None and chapter != "":
-        try:
+        with contextlib.suppress(ValueError):
             query = query.filter_by(chapter=int(chapter))
-        except ValueError:
-            pass
 
     games = query.order_by(LevelGame.progression_order.asc(), LevelGame.id.asc()).all()
     return jsonify({
@@ -111,10 +109,7 @@ def toggle_classroom_sandbox(class_id):
         return jsonify({"error": "Classroom not found"}), 404
 
     data = request.get_json(silent=True) or {}
-    if "sandbox_active" in data:
-        is_active = bool(data["sandbox_active"])
-    else:
-        is_active = not classroom.sandbox_active
+    is_active = bool(data["sandbox_active"]) if "sandbox_active" in data else not classroom.sandbox_active
 
     classroom.sandbox_active = is_active
     classroom.sandbox_activated_at = datetime.utcnow() if is_active else None

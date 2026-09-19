@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import confetti from 'canvas-confetti';
 import { 
   X, 
@@ -25,7 +25,25 @@ const SandboxArcadeModal = ({ isOpen, onClose, classId }) => {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const playerContainerRef = useRef(null);
 
-  // Trigger confetti and fetch games when modal opens
+  const fetchGames = useCallback(async () => {
+    if (!classId) return;
+    setIsLoading(true);
+    setError(null);
+    try {
+      const res = await client.get(`/api/student/classrooms/${classId}/sandbox-games`);
+      if (res.data) {
+        setGames(res.data.games || []);
+        setHighestMilestone(res.data.highest_milestone || '');
+      }
+    } catch (err) {
+      console.error('Failed to load sandbox games:', err);
+      setError('Unable to load sandbox games right now.');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [classId]);
+
+  // Load sandbox games when opened & trigger celebration
   useEffect(() => {
     if (isOpen) {
       setActiveGame(null);
@@ -47,25 +65,7 @@ const SandboxArcadeModal = ({ isOpen, onClose, classId }) => {
         fetchGames();
       }
     }
-  }, [isOpen, classId]);
-
-  const fetchGames = async () => {
-    if (!classId) return;
-    setIsLoading(true);
-    setError(null);
-    try {
-      const res = await client.get(`/api/student/classrooms/${classId}/sandbox-games`);
-      if (res.data) {
-        setGames(res.data.games || []);
-        setHighestMilestone(res.data.highest_milestone || '');
-      }
-    } catch (err) {
-      console.error('Failed to load sandbox games:', err);
-      setError('Unable to load sandbox games right now.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  }, [isOpen, classId, fetchGames]);
 
   // Handle ESC key
   useEffect(() => {
@@ -118,6 +118,7 @@ const SandboxArcadeModal = ({ isOpen, onClose, classId }) => {
   if (!isOpen) return null;
 
   return (
+    // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/click-events-have-key-events
     <div 
       className={`sandbox-arcade-overlay ${isFullscreen ? 'fullscreen-mode' : ''}`}
       onClick={(e) => {

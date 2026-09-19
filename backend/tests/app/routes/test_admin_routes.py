@@ -506,6 +506,7 @@ def test_project_template_crud_admin(client, sample_admin, test_app):
 def test_upload_template_image_admin_success(client, sample_admin, test_app):
     """Test image upload for project templates as admin."""
     from io import BytesIO
+
     from PIL import Image
 
     login_as_admin(client, sample_admin)

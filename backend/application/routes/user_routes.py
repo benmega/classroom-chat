@@ -92,6 +92,9 @@ def login():
             if awarded:
                 db.session.commit()
 
+            from application.services.achievement_engine import evaluate_user
+            evaluate_user(user_obj)
+
             if request.is_json:
                 return {"user": user_obj.to_dict(), "awarded_duck": awarded}, 200
 
@@ -391,6 +394,9 @@ def new_project():
                     )
 
         db.session.commit()
+
+        from application.services.achievement_engine import evaluate_user
+        evaluate_user(target_user)
 
         video_started = False
         if "project_video" in request.files:

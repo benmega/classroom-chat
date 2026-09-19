@@ -10,7 +10,7 @@ from datetime import datetime
 from urllib.parse import parse_qs
 
 from application import Configuration
-from application.extensions import csrf, db
+from application.extensions import csrf, db, socketio
 from application.models.challenge import Challenge
 from application.models.challenge_log import ChallengeLog
 from application.models.course_instance import CourseInstance
@@ -157,6 +157,27 @@ def submit_challenge():
         if classroom_id:
             _enroll_user_in_classroom(user, classroom_id)
 
+        # Evaluate achievements on claiming ducks
+        from application.services.achievement_engine import evaluate_user
+
+        new_awards = evaluate_user(user)
+        awards_payload = []
+        if new_awards:
+            awards_payload = [
+                {
+                    "id": a.id,
+                    "name": a.name,
+                    "slug": a.slug,
+                    "badge": f"/static/images/achievement_badges/{a.slug}.png",
+                }
+                for a in new_awards
+            ]
+            socketio.emit(
+                "achievement_unlocked",
+                {"new_awards": awards_payload},
+                room=f"user:{user.id}",
+            )
+
         if is_get_submission:
             return f"<html><body><script>alert('{message}'); window.close();</script>{message}</body></html>"
 
@@ -168,6 +189,7 @@ def submit_challenge():
                 "quack_count": duck_reward,
                 "reward_issued": reward_issued,
                 "warning": warning,
+                "new_awards": awards_payload,
             }
         )
 

@@ -145,14 +145,18 @@ const AdminSubmissions = () => {
             <AdminPageHeader title="Inbox" />
 
             <div className="filter-tabs-container">
-                <div className="filter-tabs">
+                <div className="filter-tabs" role="tablist" aria-label="Submission status filter">
                     <button
+                        role="tab"
+                        aria-selected={statusFilter === 'pending'}
                         className={`tab-btn ${statusFilter === 'pending' ? 'active' : ''}`}
                         onClick={() => setStatusFilter('pending')}
                     >
                         Pending
                     </button>
                     <button
+                        role="tab"
+                        aria-selected={statusFilter === 'all'}
                         className={`tab-btn ${statusFilter === 'all' ? 'active' : ''}`}
                         onClick={() => setStatusFilter('all')}
                     >

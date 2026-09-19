@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { io } from 'socket.io-client';
+import toast from 'react-hot-toast';
 
 const getSocketUrl = () => {
   if (import.meta.env.VITE_API_URL) return import.meta.env.VITE_API_URL;
@@ -80,6 +81,16 @@ const useChatSocket = (onMessageReceived, onClassroomEnrolled, lifecycleCallback
     const onDeleted = (data) => lifecycleRefs.current?.onConversationDeleted?.(data);
     const onMsgDeleted = (data) => lifecycleRefs.current?.onMessageDeleted?.(data);
     const onActivityResolvedEvent = (data) => activityResolvedCallbackRef.current?.(data);
+    const onAchievementUnlocked = (data) => {
+      if (data?.new_awards?.length) {
+        data.new_awards.forEach((award) => {
+          toast.success(`Achievement Unlocked: ${award.name}!`, {
+            icon: '🏆',
+            duration: 6000,
+          });
+        });
+      }
+    };
 
     socket.on('connect', onConnect);
     socket.on('disconnect', onDisconnect);
@@ -91,6 +102,7 @@ const useChatSocket = (onMessageReceived, onClassroomEnrolled, lifecycleCallback
     socket.on('conversation_deleted', onDeleted);
     socket.on('message_deleted', onMsgDeleted);
     socket.on('activity_resolved', onActivityResolvedEvent);
+    socket.on('achievement_unlocked', onAchievementUnlocked);
 
     return () => {
       socket.off('connect', onConnect);
@@ -103,6 +115,7 @@ const useChatSocket = (onMessageReceived, onClassroomEnrolled, lifecycleCallback
       socket.off('conversation_deleted', onDeleted);
       socket.off('message_deleted', onMsgDeleted);
       socket.off('activity_resolved', onActivityResolvedEvent);
+      socket.off('achievement_unlocked', onAchievementUnlocked);
     };
   }, []);
 
