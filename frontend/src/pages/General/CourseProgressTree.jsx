@@ -3,7 +3,7 @@ import { useLocation, useNavigate, useParams, Link } from 'react-router-dom';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
 import { showConfirm } from '../../utils/confirm';
-import { ArrowLeft, Star, ZoomIn, ZoomOut, Maximize2, CheckCircle, Code, History } from 'lucide-react';
+import { ArrowLeft, Star, ZoomIn, ZoomOut, RotateCcw, CheckCircle, Code, History, ChevronUp, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import codecombatLogo from '../../assets/codecombat-logo.png';
 import ozariaLogo from '../../assets/ozaria-logo.png';
 import useAuthStore from '../../store/useAuthStore';
@@ -35,6 +35,9 @@ const CourseProgressTree = () => {
     // Baseline scale factor treated as the "100%" zoom level (naturally zoomed out ~30% from the raw 1.0 scale)
     const ZOOM_BASELINE = 0.7;
     const [zoom, setZoom] = useState(ZOOM_BASELINE);
+    const [panX, setPanX] = useState(0);
+    const [panY, setPanY] = useState(0);
+    const PAN_STEP = 120; // pixels to pan per button press
     const [chapterProjects, setChapterProjects] = useState({});
     const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
     const [hasUrlInput, setHasUrlInput] = useState(false);
@@ -319,7 +322,7 @@ const CourseProgressTree = () => {
             <div 
                 className="zoomable-map-wrapper"
                 style={{
-                    transform: `scale(${zoom})`,
+                    transform: `translate(${panX}px, ${panY}px) scale(${zoom})`,
                     transformOrigin: 'top center',
                     transition: 'transform 0.15s ease-out',
                     width: 'max-content',
@@ -505,32 +508,71 @@ const CourseProgressTree = () => {
         <div className="course-progress-page animate-page-entry">
             {treeContent}
             
-            {/* Zoom Controls */}
-            <div className="zoom-controls glass-panel">
+            {/* Map Navigation Pad — mermaid-style 3×3 grid, bottom-left to avoid Claims Duck/History */}
+            <div className="map-nav-pad">
+                {/* Row 1: up, zoom-in */}
                 <button
-                    onClick={() => setZoom(z => Math.max(0.35, z - ZOOM_BASELINE * 0.1))}
-                    className="zoom-btn"
-                    title="Zoom Out"
-                    disabled={zoom <= 0.35}
+                    className="nav-pad-btn"
+                    title="Pan Up"
+                    onClick={() => setPanY(y => y + PAN_STEP)}
+                    style={{ gridColumn: 2, gridRow: 1 }}
                 >
-                    <ZoomOut size={18} />
+                    <ChevronUp size={18} />
                 </button>
-                <span className="zoom-value">{Math.round((zoom / ZOOM_BASELINE) * 100)}%</span>
                 <button
-                    onClick={() => setZoom(z => Math.min(1.4, z + ZOOM_BASELINE * 0.1))}
-                    className="zoom-btn"
+                    className="nav-pad-btn"
                     title="Zoom In"
+                    onClick={() => setZoom(z => Math.min(1.4, z + ZOOM_BASELINE * 0.1))}
                     disabled={zoom >= 1.4}
+                    style={{ gridColumn: 3, gridRow: 1 }}
                 >
                     <ZoomIn size={18} />
                 </button>
+
+                {/* Row 2: left, reset, right */}
                 <button
-                    onClick={() => setZoom(ZOOM_BASELINE)}
-                    className="zoom-btn reset-btn"
-                    title="Reset Zoom"
-                    disabled={zoom === ZOOM_BASELINE}
+                    className="nav-pad-btn"
+                    title="Pan Left"
+                    onClick={() => setPanX(x => x + PAN_STEP)}
+                    style={{ gridColumn: 1, gridRow: 2 }}
                 >
-                    <Maximize2 size={16} />
+                    <ChevronLeft size={18} />
+                </button>
+                <button
+                    className="nav-pad-btn nav-pad-reset"
+                    title="Reset View"
+                    onClick={() => { setZoom(ZOOM_BASELINE); setPanX(0); setPanY(0); }}
+                    disabled={zoom === ZOOM_BASELINE && panX === 0 && panY === 0}
+                    style={{ gridColumn: 2, gridRow: 2 }}
+                >
+                    <RotateCcw size={16} />
+                </button>
+                <button
+                    className="nav-pad-btn"
+                    title="Pan Right"
+                    onClick={() => setPanX(x => x - PAN_STEP)}
+                    style={{ gridColumn: 3, gridRow: 2 }}
+                >
+                    <ChevronRight size={18} />
+                </button>
+
+                {/* Row 3: down, zoom-out */}
+                <button
+                    className="nav-pad-btn"
+                    title="Pan Down"
+                    onClick={() => setPanY(y => y - PAN_STEP)}
+                    style={{ gridColumn: 2, gridRow: 3 }}
+                >
+                    <ChevronDown size={18} />
+                </button>
+                <button
+                    className="nav-pad-btn"
+                    title="Zoom Out"
+                    onClick={() => setZoom(z => Math.max(0.35, z - ZOOM_BASELINE * 0.1))}
+                    disabled={zoom <= 0.35}
+                    style={{ gridColumn: 3, gridRow: 3 }}
+                >
+                    <ZoomOut size={18} />
                 </button>
             </div>
 
