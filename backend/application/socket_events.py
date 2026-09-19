@@ -242,7 +242,24 @@ def handle_send_message(data):
                 if u.id not in target_users and u.id != user.id:
                     emit("message_received", payload, room=f"user:{u.id}")
 
-    return {"success": True}
+    # Evaluate achievements (respects the 5-minute throttle)
+    from .services.achievement_engine import evaluate_user
+
+    new_awards = evaluate_user(user)
+    awards_payload = []
+    if new_awards:
+        awards_payload = [
+            {
+                "id": a.id,
+                "name": a.name,
+                "slug": a.slug,
+                "badge": f"/static/images/achievement_badges/{a.slug}.png",
+            }
+            for a in new_awards
+        ]
+        emit("achievement_unlocked", {"new_awards": awards_payload}, room=f"user:{user.id}")
+
+    return {"success": True, "new_awards": awards_payload}
 
 
 def emit_classroom_enrolled(user_id: int, classroom_dict: dict):

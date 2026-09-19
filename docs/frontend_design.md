@@ -69,14 +69,13 @@ Real-time features, primarily the Chat system, are implemented using **Socket.io
 ## 5. Design System
 
 ### 5.1 Design Tokens
-Styles are driven by a centralized token system in `variables.css`. This ensures consistency across components.
+Styles are driven by a centralized token system in `variables.css`. This ensures consistency across components. The token system focuses on a flat palette, tight radii, and barely-there structural shadows.
 - **Colors**: Curated palette with HSL values for primary, secondary, and accent colors.
 - **Typography**: Uses 'Inter' for body and 'Outfit' for headings.
-- **Glassmorphism**: Standardized `--glass-bg`, `--glass-blur`, and `--glass-border` tokens.
 
 ### 5.2 Premium UI Components
 Common UI patterns are encapsulated in reusable classes and components:
-- **`glass-panel`**: Applies a backdrop blur and soft border.
+- **`glass-panel`**: Applies a solid background and clean 1px border.
 - **`card-premium`**: Elevated cards with hover lift effects.
 - **`btn-premium`**: Gradient-filled buttons with "bounce" transitions.
 - **`SmartImage`**: A utility component for handling profile pictures with automatic fallbacks.

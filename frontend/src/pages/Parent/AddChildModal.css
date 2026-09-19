@@ -69,7 +69,7 @@
     background: transparent;
 }
 
-.tab-btn {
+.modal-tabs .tab-btn {
     flex: 1;
     padding: 1rem;
     background: transparent;
@@ -86,12 +86,12 @@
     border-bottom: 2px solid transparent;
 }
 
-.tab-btn:hover {
+.modal-tabs .tab-btn:hover {
     color: var(--text-primary, #111827);
     background: var(--bg-secondary, #f3f4f6);
 }
 
-.tab-btn.active {
+.modal-tabs .tab-btn.active {
     color: var(--primary-color, #0f766e);
     border-bottom-color: var(--primary-color, #0f766e);
     background: transparent;

@@ -190,20 +190,26 @@ const DuckTransactions = () => {
 
             {/* Filter Tabs */}
             <div className="filter-tabs-container">
-                <div className="filter-tabs">
+                <div className="filter-tabs" role="tablist" aria-label="Transaction type filter">
                     <button 
+                        role="tab"
+                        aria-selected={typeParam === 'all'}
                         className={`tab-btn ${typeParam === 'all' ? 'active' : ''}`}
                         onClick={() => handleTypeChange('all')}
                     >
                         All Transactions
                     </button>
                     <button 
+                        role="tab"
+                        aria-selected={typeParam === 'earned'}
                         className={`tab-btn ${typeParam === 'earned' ? 'active' : ''}`}
                         onClick={() => handleTypeChange('earned')}
                     >
                         Ducks Earned (+)
                     </button>
                     <button 
+                        role="tab"
+                        aria-selected={typeParam === 'spent'}
                         className={`tab-btn ${typeParam === 'spent' ? 'active' : ''}`}
                         onClick={() => handleTypeChange('spent')}
                     >

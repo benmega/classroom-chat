@@ -499,3 +499,78 @@
     color: var(--text-muted);
     font-style: italic;
 }
+
+/* Sticky Sandbox Mode Banner in Chat */
+.sandbox-sticky-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1.25rem;
+    background: linear-gradient(90deg, #4f46e5 0%, #7c3aed 50%, #db2777 100%);
+    color: #ffffff;
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    box-shadow: 0 4px 14px rgba(79, 70, 229, 0.35);
+    gap: 1rem;
+    animation: bannerSlideDown 0.3s ease-out;
+    cursor: pointer;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+@keyframes bannerSlideDown {
+    from {
+        transform: translateY(-100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.sandbox-sticky-banner-content {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 700;
+    font-size: 0.95rem;
+}
+
+.sandbox-sticky-banner-title {
+    letter-spacing: 0.01em;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+}
+
+.sandbox-sticky-banner-btn {
+    background: #ffffff;
+    color: #4338ca;
+    font-weight: 700;
+    font-size: 0.85rem;
+    padding: 0.45rem 1rem;
+    border-radius: 9999px;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.sandbox-sticky-banner-btn:hover {
+    background: #f8fafc;
+    transform: scale(1.04);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+@media (max-width: 640px) {
+    .sandbox-sticky-banner {
+        flex-direction: column;
+        align-items: stretch;
+        text-align: center;
+        gap: 0.5rem;
+        padding: 0.6rem 0.85rem;
+    }
+    .sandbox-sticky-banner-content {
+        justify-content: center;
+    }
+}

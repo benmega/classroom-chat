@@ -10,7 +10,10 @@ import { initAchievements } from './achievements/achievements.js';
 
 
 document.addEventListener('DOMContentLoaded', async function() {
-    await setupSocket();
+    const socket = await setupSocket();
+    if (socket) {
+        window.socket = socket;
+    }
     setupMessagingAndConversation();
-    initAchievements();
+    initAchievements(socket);
 });

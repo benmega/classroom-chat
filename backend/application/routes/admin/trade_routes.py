@@ -65,6 +65,11 @@ def trade_action():
         )
         trade.approve()
         db.session.commit()
+
+        from application.services.achievement_engine import evaluate_user
+
+        evaluate_user(user, force=True)
+
         return jsonify({"status": "success", "message": "Trade approved"})
 
     elif action == "reject":

@@ -4,7 +4,8 @@ import client from '../../api/client';
 import toast from 'react-hot-toast';
 import { 
     ChevronLeft, Users, Trash2, 
-    Check, Plus, Settings, Globe, Link2, BookOpen, Key, Copy, Gamepad2, Code, X, UserPlus
+    Check, Plus, Settings, Globe, Link2, BookOpen, Key, Copy, Gamepad2, Code, X, UserPlus,
+    Rocket, Sparkles
 } from 'lucide-react';
 import { showConfirm } from '../../utils/confirm';
 
@@ -22,6 +23,7 @@ import Skeleton from '../../components/common/Skeleton';
 import SmartImage from '../../components/common/SmartImage';
 import { getApiUrl } from '../../utils/apiUrl';
 import { BulkConnectionCardsModal, AddCourseModal, EnrollStudentModal } from '../../components/admin/AdminModals';
+import GameRewardsCsvModal from '../../components/admin/GameRewardsCsvModal';
 import './AdminClassDashboard.css';
 
 const getLanguageIconUrl = (language) => {
@@ -57,6 +59,31 @@ const AdminClassDashboard = () => {
     const [isEditingName, setIsEditingName] = useState(false);
     const [editNameValue, setEditNameValue] = useState('');
 
+    // Sandbox Mode state
+    const [isTogglingSandbox, setIsTogglingSandbox] = useState(false);
+
+    const handleToggleSandbox = async () => {
+        setIsTogglingSandbox(true);
+        try {
+            const res = await client.post(`/api/admin/classrooms/${classId}/sandbox/toggle`);
+            const newStatus = res.data?.sandbox_active !== undefined
+                ? Boolean(res.data.sandbox_active)
+                : !classroom?.sandbox_active;
+
+            setClassroom(prev => ({ ...prev, sandbox_active: newStatus }));
+            if (newStatus) {
+                toast.success('Sandbox Mode activated! All tests declared passed.');
+            } else {
+                toast.success('Sandbox Mode deactivated.');
+            }
+        } catch (err) {
+            console.error('Failed to toggle sandbox mode:', err);
+            toast.error(err.response?.data?.error || 'Failed to toggle sandbox mode.');
+        } finally {
+            setIsTogglingSandbox(false);
+        }
+    };
+
     const fetchClassroomDetails = useCallback(async () => {
         setIsLoading(true);
         try {
@@ -66,8 +93,8 @@ const AdminClassDashboard = () => {
             // Fetch join code
             try {
                 const codeRes = await client.get(`/api/admin/classrooms/${classId}/join-code`);
-                if (codeRes.data.success) {
-                    setJoinCode(codeRes.data.join_code);
+                if (codeRes.data.status === 'success' || codeRes.data.success) {
+                    setJoinCode(codeRes.data.data?.join_code || codeRes.data.join_code);
                 }
             } catch (err) {
                 console.error("Failed to fetch join code:", err);
@@ -174,7 +201,7 @@ const AdminClassDashboard = () => {
                 name: classroom.name,
                 language: newLanguageStr
             });
-            if (res.data.success) {
+            if (res.data.status === 'success' || res.data.success) {
                 
                 fetchClassroomDetails();
             }
@@ -194,7 +221,7 @@ const AdminClassDashboard = () => {
                 name: editNameValue,
                 language: classroom.language
             });
-            if (res.data.success) {
+            if (res.data.status === 'success' || res.data.success) {
                 
                 fetchClassroomDetails();
                 setIsEditingName(false);
@@ -210,7 +237,7 @@ const AdminClassDashboard = () => {
         setFormLoading(true);
         try {
             const res = await client.post(`/api/admin/classrooms/${classId}/join-code/regenerate`);
-            if (res.data.success) {
+            if (res.data.status === 'success' || res.data.success) {
                 
                 fetchClassroomDetails();
             }
@@ -229,7 +256,7 @@ const AdminClassDashboard = () => {
             const res = await client.post(`/api/admin/classrooms/${classId}/enroll`, {
                 student_id: Number(targetId)
             });
-            if (res.data.success) {
+            if (res.data.status === 'success' || res.data.success) {
                 
                 setSelectedStudentId('');
                 setActiveModal(null);
@@ -249,7 +276,7 @@ const AdminClassDashboard = () => {
             const res = await client.post(`/api/admin/classrooms/${classId}/unenroll`, {
                 student_id: studentId
             });
-            if (res.data.success) {
+            if (res.data.status === 'success' || res.data.success) {
                 
                 fetchClassroomDetails();
             }
@@ -363,6 +390,56 @@ const AdminClassDashboard = () => {
                         Print Connection Cards
                     </button>
                     
+                </div>
+            </div>
+
+            {/* Sandbox Mode Control Banner */}
+            <div className="admin-sandbox-toolbar" data-testid="admin-sandbox-banner">
+                <div className="sandbox-toolbar-status">
+                    {classroom?.sandbox_active ? (
+                        <div className="sandbox-active-badge glowing" data-testid="sandbox-active-badge">
+                            <span className="sandbox-glowing-dot" />
+                            <span>🟢 Sandbox Mode Active — All Tests Passed</span>
+                        </div>
+                    ) : (
+                        <div className="sandbox-inactive-badge">
+                            <span className="sandbox-status-label">Sandbox Mode:</span>
+                            <span className="sandbox-status-val">Standard Mode</span>
+                        </div>
+                    )}
+                </div>
+
+                <div className="sandbox-toolbar-actions">
+                    {classroom?.sandbox_active ? (
+                        <button 
+                            type="button" 
+                            className="btn-sandbox-end"
+                            onClick={handleToggleSandbox}
+                            disabled={isTogglingSandbox}
+                        >
+                            {isTogglingSandbox ? 'Ending...' : 'End Sandbox'}
+                        </button>
+                    ) : (
+                        <button 
+                            type="button" 
+                            className="btn-sandbox-enable"
+                            onClick={handleToggleSandbox}
+                            disabled={isTogglingSandbox}
+                        >
+                            <Rocket size={16} />
+                            <span>{isTogglingSandbox ? 'Enabling...' : '🚀 Declare "All Tests Passed" / Enable Sandbox'}</span>
+                        </button>
+                    )}
+
+                    <button 
+                        type="button" 
+                        className="btn-sandbox-rewards"
+                        onClick={() => setActiveModal('game_rewards_csv')}
+                        title="Manage Game Rewards CSV"
+                    >
+                        <Gamepad2 size={16} />
+                        <span>🎮 Game Rewards (CSV Upload)</span>
+                    </button>
                 </div>
             </div>
 
@@ -564,10 +641,7 @@ const AdminClassDashboard = () => {
             <BulkConnectionCardsModal
                 isOpen={activeModal === 'bulk_connection_cards'}
                 onClose={() => setActiveModal(null)}
-                classrooms={[classroom]}
-                fetchClassrooms={fetchClassroomDetails}
                 classroomCards={classroomCards}
-                setClassroomCards={setClassroomCards}
                 isFetchingCards={isFetchingCards}
                 fetchClassroomCards={fetchClassroomCards}
             />
@@ -587,6 +661,10 @@ const AdminClassDashboard = () => {
                 joinCode={joinCode}
                 onRegenerateJoinCode={handleRegenerateJoinCode}
                 loading={formLoading}
+            />
+            <GameRewardsCsvModal
+                isOpen={activeModal === 'game_rewards_csv'}
+                onClose={() => setActiveModal(null)}
             />
         </div>
     );

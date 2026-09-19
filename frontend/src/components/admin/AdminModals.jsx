@@ -121,7 +121,7 @@ export const AdjustPacketsModal = ({ isOpen, onClose, onSubmit, user, users, for
                         <option value="">Select a user...</option>
                         {users.map(u => (
                             <option key={u.id} value={u.username}>
-                                {u.username} (Balance: 📦 {(u.packets ?? 0).toFixed(3)})
+                                {u.username} (Balance: 📦 {(u.packets ?? 0).toFixed(4)})
                             </option>
                         ))}
                     </select>
@@ -365,13 +365,12 @@ export const ConnectionCardModal = ({ isOpen, onClose, student, connectionCode }
     );
 };
 
-export const BulkConnectionCardsModal = ({ isOpen, onClose, classroomCards = [], isFetchingCards, fetchClassroomCards, fetchClassrooms }) => {
+export const BulkConnectionCardsModal = ({ isOpen, onClose, classroomCards = [], isFetchingCards, fetchClassroomCards }) => {
     useEffect(() => {
         if (isOpen) {
-            if (fetchClassrooms) fetchClassrooms();
             if (fetchClassroomCards) fetchClassroomCards();
         }
-    }, [isOpen, fetchClassrooms, fetchClassroomCards]);
+    }, [isOpen, fetchClassroomCards]);
 
     return (
         <Modal isOpen={isOpen} onClose={onClose} title="Print Cohort Connection Cards" width="80%">
