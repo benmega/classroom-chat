@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Plus, Code, Play, Settings, CheckCircle, ExternalLink, Layers, Clock } from 'lucide-react';
+import { Plus, Code, Play, Settings, CheckCircle, ExternalLink, Layers, Clock, AlertCircle } from 'lucide-react';
 import SmartImage from '../common/SmartImage';
 import { formatStaticUrl } from '../../utils/formatters';
 
@@ -37,18 +37,22 @@ const ProjectPortfolio = ({ projects, isOwner, setSelectedProject, studentId }) 
                                         fallbackType="project"
                                     />
                                     {project.video_url && <div className="play-overlay"><Play size={24} fill="currentColor" /></div>}
-                                    {!project.teacher_comment && (
+                                    {project.status === 'rejected' ? (
+                                        <span className="rejected-badge" title="Revision Requested">
+                                            <AlertCircle size={12} /> Revision Requested
+                                        </span>
+                                    ) : (!project.teacher_comment || project.status === 'pending') ? (
                                         <span className="in-progress-badge" title="Pending Admin Approval">
                                             <Clock size={12} /> In Progress
                                         </span>
-                                    )}
+                                    ) : null}
                                 </div>
                                 <div className="project-content">
                                     <h3>{project.name}</h3>
                                     
                                     {project.teacher_comment && (
-                                        <div className="card-teacher-feedback">
-                                            <CheckCircle size={14} /> {project.teacher_comment.substring(0, 80)}...
+                                        <div className={`card-teacher-feedback ${project.status === 'rejected' ? 'revision-feedback' : ''}`}>
+                                            {project.status === 'rejected' ? <AlertCircle size={14} /> : <CheckCircle size={14} />} {project.teacher_comment.substring(0, 80)}...
                                         </div>
                                     )}
 

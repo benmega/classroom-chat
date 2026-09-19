@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 import factory
 from application.extensions import db
 from application.models.achievements import Achievement, UserAchievement

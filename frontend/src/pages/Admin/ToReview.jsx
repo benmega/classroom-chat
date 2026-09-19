@@ -20,7 +20,8 @@ import {
     TrendingUp,
     ChevronDown,
     ChevronUp,
-    Edit
+    Edit,
+    RotateCcw
 } from 'lucide-react';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
@@ -391,8 +392,15 @@ const ToReview = () => {
         return (
             <div className="review-card project-review-card" key={p.key}>
                 <div className="review-card-header">
-                    <div className="card-badge badge-project">
-                        <FolderKanban size={14} /> Project
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                        <div className="card-badge badge-project">
+                            <FolderKanban size={14} /> Project
+                        </div>
+                        {p.teacher_comment && (
+                            <div className="card-badge badge-resubmission">
+                                <RotateCcw size={13} /> Resubmitted
+                            </div>
+                        )}
                     </div>
                     <span className="card-time">
                         <Clock size={12} /> {new Date(p.submitted_at || p.created_at).toLocaleString()}
@@ -491,6 +499,13 @@ const ToReview = () => {
                         </div>
                     )}
 
+                    {p.teacher_comment && (
+                        <div className="resubmission-note-box">
+                            <strong>Previous Feedback / Revision Request:</strong>
+                            <p>{p.teacher_comment}</p>
+                        </div>
+                    )}
+
                     <div className="review-action-section">
                         <div className="feedback-field">
                             <label htmlFor={`feedback-${p.id}`} className="field-label">Teacher Feedback (Required to Approve)</label>
@@ -509,16 +524,16 @@ const ToReview = () => {
                         <div className="reward-field">
                             <div className="reward-label-row">
                                 <label htmlFor={`reward-${p.id}`} className="field-label">Packet Reward</label>
-                                <span className="reward-value">{(projectRewards[p.id] !== undefined ? projectRewards[p.id] : 0.006).toFixed(3)} packets</span>
+                                <span className="reward-value">{(projectRewards[p.id] !== undefined ? projectRewards[p.id] : 0.006).toFixed(4)} packets</span>
                             </div>
                             <div className="slider-container">
                                 <Sliders size={16} className="slider-icon" />
                                 <input 
                                     id={`reward-${p.id}`}
                                     type="range" 
-                                    min="0.000" 
-                                    max="0.050" 
-                                    step="0.001" 
+                                    min="0.0000" 
+                                    max="0.0500" 
+                                    step="0.0001" 
                                     value={projectRewards[p.id] !== undefined ? projectRewards[p.id] : 0.006}
                                     onChange={(e) => setProjectRewards(prev => ({ ...prev, [p.id]: parseFloat(e.target.value) }))}
                                 />

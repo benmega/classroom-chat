@@ -165,10 +165,23 @@ def submit_trade():
         db.session.add(trade)
         db.session.commit()
 
+        from application.services.achievement_engine import evaluate_user
+
+        new_awards = evaluate_user(user)
+        awards_payload = [
+            {
+                "id": a.id,
+                "name": a.name,
+                "slug": a.slug,
+                "badge": f"/static/images/achievement_badges/{a.slug}.png",
+            }
+            for a in new_awards
+        ]
+
         msg = "Trade submitted for approval."
 
         if is_ajax:
-            return jsonify({"status": "success", "message": msg})
+            return jsonify({"status": "success", "message": msg, "new_awards": awards_payload})
 
         flash(msg, "success")
         return redirect("/trade")

@@ -1,5 +1,5 @@
 // achievements.js
-export function initAchievements() {
+export function initAchievements(socket) {
     let isCheckingAchievements = false;
 
     async function fetchAchievements() {
@@ -24,8 +24,6 @@ export function initAchievements() {
             isCheckingAchievements = false;
         }
     }
-
-    window.fetchAchievements = fetchAchievements;
 
     function ensurePopupContainer() {
         let container = document.getElementById("achievement-container");
@@ -53,7 +51,20 @@ export function initAchievements() {
         }, 8000);
     }
 
-    // Initial fetch + optional polling
+    window.fetchAchievements = fetchAchievements;
+    window.showAchievement = showAchievement;
+
+    function handleUnlocked(data) {
+        if (data?.new_awards?.length) {
+            data.new_awards.forEach(a => showAchievement(a.name, a.badge));
+        }
+    }
+
+    const activeSocket = socket || window.socket;
+    if (activeSocket && typeof activeSocket.on === "function") {
+        activeSocket.on("achievement_unlocked", handleUnlocked);
+    }
+
+    // Initial fetch on page load
     fetchAchievements();
-    setInterval(fetchAchievements, 10000);
 }

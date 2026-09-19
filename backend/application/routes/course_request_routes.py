@@ -33,16 +33,16 @@ def submit_request():
     if not course_instance_id or not url:
         return jsonify({"success": False, "message": "Missing required fields"}), 400
 
-    # Check if a pending request already exists for this instance
+    # Check if a request already exists for this instance
     existing = CourseInstanceRequest.query.filter_by(
-        course_instance_id=course_instance_id, status="pending"
+        course_instance_id=course_instance_id
     ).first()
 
     if existing:
         return jsonify(
             {
                 "success": True,
-                "message": "A request for this course is already pending approval.",
+                "message": "A request for this course has already been submitted.",
             }
         ), 200
 

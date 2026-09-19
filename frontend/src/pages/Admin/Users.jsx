@@ -427,7 +427,7 @@ const Users = () => {
                                                 {u.role === 'student' ? (
                                                     <div className="economy-info">
                                                         <div className="duck-count">🦆 {(u.duck_balance ?? 0).toLocaleString(undefined, { maximumFractionDigits: 2 })}</div>
-                                                        <div className="packet-count" style={{ fontSize: '0.8rem', color: (u.packets < 0 ? 'var(--error-color, #ff4444)' : 'var(--text-muted)') }}>📦 {(u.packets ?? 0).toLocaleString(undefined, { maximumFractionDigits: 3 })}</div>
+                                                        <div className="packet-count" style={{ fontSize: '0.8rem', color: (u.packets < 0 ? 'var(--error-color, #ff4444)' : 'var(--text-muted)') }}>📦 {(u.packets ?? 0).toLocaleString(undefined, { maximumFractionDigits: 4 })}</div>
                                                         <div className="level-info">Lvl: {u.total_levels || 0}</div>
                                                     </div>
                                                 ) : (
@@ -475,7 +475,7 @@ const Users = () => {
                                             <td onClick={() => navigate(`/admin/users/${u.id}`)} className="cursor-pointer">
                                                 <div className="economy-info">
                                                     <div className="duck-count">🦆 {(u.duck_balance ?? 0).toLocaleString(undefined, { maximumFractionDigits: 2 })}</div>
-                                                    <div className="packet-count" style={{ fontSize: '0.8rem', color: (u.packets < 0 ? 'var(--error-color, #ff4444)' : 'var(--text-muted)') }}>📦 {(u.packets ?? 0).toLocaleString(undefined, { maximumFractionDigits: 3 })}</div>
+                                                    <div className="packet-count" style={{ fontSize: '0.8rem', color: (u.packets < 0 ? 'var(--error-color, #ff4444)' : 'var(--text-muted)') }}>📦 {(u.packets ?? 0).toLocaleString(undefined, { maximumFractionDigits: 4 })}</div>
                                                     <div className="level-info">Lvl: {u.total_levels || 0}</div>
                                                 </div>
                                             </td>

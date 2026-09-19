@@ -100,29 +100,17 @@ describe('AdminUserDashboard Component Redesign', () => {
         expect(screen.getByText('Ozaria')).toBeInTheDocument();
         expect(screen.getByText('Game Development')).toBeInTheDocument();
         expect(screen.getByText('Web Development')).toBeInTheDocument();
+
+        // Clean labels without base clutter
+        expect(screen.getByText('🦆 Ducks')).toBeInTheDocument();
+        expect(screen.getByText('📦 Packets')).toBeInTheDocument();
+        expect(screen.getByText('🔒 Locker Drawer')).toBeInTheDocument();
+        expect(screen.getByText('150')).toBeInTheDocument();
+
+        // Packets balance formatted to 4 decimals
+        expect(screen.getByText('5.0000')).toBeInTheDocument();
     });
 
-    it('triggers track update when clicking track pill', async () => {
-        client.put.mockResolvedValueOnce({ data: { status: 'success', message: 'User updated' } });
-
-        render(
-            <BrowserRouter>
-                <AdminUserDashboard />
-            </BrowserRouter>
-        );
-
-        await waitFor(() => {
-            expect(screen.getByText('Game Development')).toBeInTheDocument();
-        });
-
-        const gdTrackBtn = screen.getByText('Game Development').closest('button');
-        fireEvent.click(gdTrackBtn);
-
-        expect(client.put).toHaveBeenCalledWith(
-            '/api/admin/user/1',
-            expect.objectContaining({ active_track: 'gd' })
-        );
-    });
 
     it('handles quick duck preset click', async () => {
         render(

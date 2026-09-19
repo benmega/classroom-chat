@@ -86,7 +86,11 @@ document.addEventListener("DOMContentLoaded", () => {
                 showBootstrapToast(result.message || "Trade submitted successfully!", "success");
                 form.reset();
                 updateLabels();
-                if (typeof window.fetchAchievements === "function") window.fetchAchievements();
+                if (result.new_awards && result.new_awards.length && typeof window.showAchievement === "function") {
+                    result.new_awards.forEach(a => window.showAchievement(a.name, a.badge));
+                } else if (typeof window.fetchAchievements === "function") {
+                    window.fetchAchievements();
+                }
             } else {
                 showBootstrapToast(result.message || "An error occurred.", "error");
             }

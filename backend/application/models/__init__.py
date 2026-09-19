@@ -15,6 +15,7 @@ def setup_models():
     from .challenge import Challenge
     from .challenge_log import ChallengeLog
     from .classroom import Classroom
+    from .classroom_join_attempt import ClassroomJoinAttempt
     from .configuration import Configuration
     from .connection_attempt import ConnectionAttempt
     from .course import Course
@@ -22,6 +23,7 @@ def setup_models():
     from .course_instance_request import CourseInstanceRequest
     from .duck_trade import DuckTradeLog
     from .duck_transaction import DuckTransaction
+    from .level_game import LevelGame
     from .message import Message
     from .note import Note
     from .parent_student import parent_students

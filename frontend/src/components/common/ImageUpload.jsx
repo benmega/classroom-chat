@@ -4,6 +4,7 @@ import { Upload, X, CheckCircle, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import './ImageUpload.css';
 import SmartImage from './SmartImage';
+import { formatStaticUrl } from '../../utils/formatters';
 
 /**
  * ImageUpload Component
@@ -12,6 +13,7 @@ import SmartImage from './SmartImage';
  * @param {string} fieldName - Form field name for the file
  * @param {string} initialImage - Initial image URL to display
  * @param {function} onUploadSuccess - Callback with server response { new_url, filename }
+ * @param {function} onRemove - Callback when image is removed
  * @param {string} label - Display label
  * @param {string} secondaryLabel - Display secondary text
  */
@@ -20,16 +22,23 @@ const ImageUpload = ({
   fieldName = 'file', 
   initialImage = null, 
   onUploadSuccess = () => {}, 
+  onRemove = () => {},
   label = 'Upload Image',
-  secondaryLabel = 'PNG, JPG or GIF (max. 10MB)'
+  secondaryLabel = 'PNG, JPG, WebP or GIF (max. 10MB)'
 }) => {
   const [preview, setPreview] = useState(initialImage);
   const [isUploading, setIsUploading] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
   const [progress, setProgress] = useState(0);
   const [success, setSuccess] = useState(false);
   const fileInputRef = useRef(null);
   const abortControllerRef = useRef(null);
   const isMountedRef = useRef(true);
+
+  // Sync preview when initialImage changes from parent
+  useEffect(() => {
+    setPreview(initialImage);
+  }, [initialImage]);
 
   // Track mount state so async callbacks don't update state after unmount.
   useEffect(() => {
@@ -40,10 +49,11 @@ const ImageUpload = ({
     };
   }, []);
 
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
+  const processFile = (file) => {
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select a valid image file');
+      return;
+    }
     setSuccess(false);
 
     if (file.size > 10 * 1024 * 1024) {
@@ -58,6 +68,35 @@ const ImageUpload = ({
     reader.readAsDataURL(file);
 
     uploadFile(file);
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    processFile(file);
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!isUploading) setIsDragging(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    if (isUploading) return;
+    const file = e.dataTransfer?.files?.[0];
+    if (file) {
+      processFile(file);
+    }
   };
 
   const uploadFile = async (file) => {
@@ -106,11 +145,13 @@ const ImageUpload = ({
     }
   };
 
-  const clearPreview = () => {
+  const clearPreview = (e) => {
+    if (e) e.stopPropagation();
     abortControllerRef.current?.abort();
-    setPreview(initialImage);
+    setPreview(null);
     setSuccess(false);
     if (fileInputRef.current) fileInputRef.current.value = '';
+    onRemove();
   };
 
   return (
@@ -120,8 +161,12 @@ const ImageUpload = ({
       </div>
       
       <div role="button" tabIndex={0} 
-        className={`image-upload-container ${isUploading ? 'uploading' : ''} ${success ? 'success' : ''}`}
-        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={() => !isUploading && fileInputRef.current.click()}
+        className={`image-upload-container ${isUploading ? 'uploading' : ''} ${isDragging ? 'dragging' : ''} ${success ? 'success' : ''}`}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} 
+        onClick={() => !isUploading && fileInputRef.current?.click()}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
       >
         <input 
           type="file" 
@@ -134,7 +179,7 @@ const ImageUpload = ({
         {preview ? (
           <div className="image-preview-overlay">
             <SmartImage 
-              src={preview} 
+              src={formatStaticUrl(preview)} 
               alt="Upload preview" 
               className="preview-img" 
               fallbackType="project"
@@ -142,14 +187,22 @@ const ImageUpload = ({
             <div className="preview-controls">
               {!isUploading && (
                 <button 
+                  type="button"
                   className="remove-btn" 
-                  onClick={(e) => { e.stopPropagation(); clearPreview(); }}
+                  onClick={clearPreview}
                   title="Remove image"
+                  aria-label="Remove image"
                 >
                   <X size={16} />
                 </button>
               )}
             </div>
+            {!isUploading && (
+              <div className="preview-hover-hint">
+                <Upload size={14} />
+                <span>Change Image</span>
+              </div>
+            )}
           </div>
         ) : (
           <div className="upload-placeholder">

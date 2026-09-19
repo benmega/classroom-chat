@@ -54,8 +54,8 @@ describe('ToReview Component', () => {
       if (url.includes('/api/admin/crud/classroom') || url.includes('/api/admin/crud/course')) {
         return Promise.resolve({ data: { data: [] } });
       }
-      if (url.includes('course-requests') || url.includes('track-requests')) {
-        return Promise.resolve({ data: { requests: [{ id: 1, type: 'track', requested_at: '2023-01-01' }] } });
+      if (url.includes('course-requests')) {
+        return Promise.resolve({ data: { requests: [] } });
       }
       if (url.includes('projects')) {
         return Promise.resolve({ data: { data: { projects: [{ id: 1, name: 'Project 1', submitted_at: '2023-01-01', user_nickname: 'Bob' }] } } });
@@ -100,8 +100,8 @@ describe('ToReview Component', () => {
       if (url.includes('/api/admin/crud/classroom') || url.includes('/api/admin/crud/course')) {
         return Promise.resolve({ data: { data: [] } });
       }
-      if (url.includes('course-requests') || url.includes('track-requests')) {
-        return Promise.resolve({ data: { requests: [{ id: 1, type: 'track', requested_at: '2023-01-01' }] } });
+      if (url.includes('course-requests')) {
+        return Promise.resolve({ data: { requests: [] } });
       }
       if (url.includes('projects')) {
         return Promise.resolve({ data: { data: { projects: [{ id: 1, name: 'Project 1', submitted_at: '2023-01-01', user_nickname: 'Bob' }] } } });
@@ -145,5 +145,34 @@ describe('ToReview Component', () => {
     }
   });
 
+  it('renders resubmitted badge and previous feedback for resubmitted project', async () => {
+    client.get.mockImplementation((url) => {
+      if (url.includes('projects')) {
+        return Promise.resolve({
+          data: {
+            data: {
+              projects: [
+                {
+                  id: 2,
+                  name: 'Resubmitted Game',
+                  submitted_at: '2023-01-01',
+                  user_nickname: 'Alice',
+                  status: 'pending',
+                  teacher_comment: 'Please add a video and comments'
+                }
+              ]
+            }
+          }
+        });
+      }
+      return Promise.resolve({ data: { data: [] } });
+    });
+
+    render(<ToReview />);
+    await waitFor(() => {
+      expect(screen.getByText('Resubmitted')).toBeInTheDocument();
+      expect(screen.getByText(/Please add a video and comments/)).toBeInTheDocument();
+    });
+  });
 
 });

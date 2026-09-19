@@ -63,11 +63,11 @@ Summary: Base layout template with header, navigation, and toast messages.
                             </a>
                         </li>
 
-                        {% if user.packets|float > 0.001 %}
+                        {% if user.packets|float > 0.00001 %}
                             <li>
                                 <a class="digital-ducks">
                                     <span class="label">Packets:</span>
-                                    <span class="count">{{ user.packets|format_number(5) }}</span>
+                                    <span class="count">{{ user.packets|format_number(4) }}</span>
                                 </a>
                             </li>
                         {% endif %}

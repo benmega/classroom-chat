@@ -373,7 +373,7 @@ def adjust_packets():
 
     user = User.query.filter_by(username=username).first()
     if user:
-        user.packets += amount
+        user.packets = (user.packets or 0.0) + amount
         db.session.commit()
         return jsonify(
             {"success": True, "message": f"Updated {username}'s packets by {amount}."}

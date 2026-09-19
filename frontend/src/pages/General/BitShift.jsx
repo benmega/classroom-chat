@@ -132,6 +132,15 @@ const BitShift = () => {
                 setByteDuckCounts(Array(5).fill(0));
                 setHasAttemptedSubmit(false);
                 checkAuth(); // Refresh user balance
+
+                if (response.data.new_awards?.length) {
+                    response.data.new_awards.forEach((award) => {
+                        toast.success(`Achievement Unlocked: ${award.name}!`, {
+                            icon: '🏆',
+                            duration: 6000,
+                        });
+                    });
+                }
             } else {
                 toast.error(response.data.message || 'Trade failed.');
             }

@@ -12,7 +12,6 @@ vi.mock('../../components/common/DesktopNotice', () => ({
     default: () => <div data-testid="desktop-notice" />
 }));
 
-import { showConfirm } from '../../utils/confirm';
 
 vi.mock('../../utils/confirm', () => ({
     showConfirm: vi.fn()

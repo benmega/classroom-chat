@@ -470,7 +470,7 @@ const Shop = () => {
                                                 title="Drag this button to your bookmarks bar!"
                                                 onClick={(e) => { e.preventDefault(); alert("Drag me to your bookmarks bar! Don't click me here!"); }}
                                             >
-                                                Drag to Bookmarks
+                                                Claim Ducks
                                             </a>
                                             <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '4px', display: 'block' }}>Drag to bookmarks bar</span>
                                         </div>

@@ -20,7 +20,6 @@ const SubmitProgressModal = ({ isOpen, onClose, onUrlChange }) => {
     const [helpers, setHelpers] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [showHelperModal, setShowHelperModal] = useState(false);
-    const [pendingCourseRequest, setPendingCourseRequest] = useState(null);
 
     // Certificate support
     const [isCertificate, setIsCertificate] = useState(false);
@@ -76,18 +75,6 @@ const SubmitProgressModal = ({ isOpen, onClose, onUrlChange }) => {
         };
     }, [isOpen, onClose, showHelperModal]);
 
-    const handleCourseRequest = async () => {
-        try {
-            const response = await client.post('/api/course-requests/submit', pendingCourseRequest);
-            if (response.data.success) {
-                setPendingCourseRequest(null);
-                resetForm();
-                if (onClose) onClose();
-            }
-        } catch (error) {
-            toast.error(getErrorMessage(error, 'Failed to submit request'));
-        }
-    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -133,25 +120,28 @@ const SubmitProgressModal = ({ isOpen, onClose, onUrlChange }) => {
                 });
 
                 if (response.data.success) {
-                    if (response.data.reward_issued === false) {
-                        toast(
-                            "Challenge complete! But since you aren't assigned to this track, you didn't get a duck. Ask your teacher to change your track!",
-                            { icon: '⚠️', duration: 6000 }
-                        );
-                    } else {
-                        const duckReward = response.data.duck_reward || 10;
-                        const pCount = Math.min(50 + (duckReward * 10), 500);
+                    const duckReward = response.data.duck_reward || 10;
+                    const pCount = Math.min(50 + (duckReward * 10), 500);
 
-                        confetti({
-                            particleCount: pCount,
-                            spread: Math.min(70 + (duckReward * 2), 160),
-                            origin: { y: 0.6 },
-                            zIndex: 9999
-                        });
-                    }
+                    confetti({
+                        particleCount: pCount,
+                        spread: Math.min(70 + (duckReward * 2), 160),
+                        origin: { y: 0.6 },
+                        zIndex: 9999
+                    });
 
                     resetForm();
                     checkAuth();
+
+                    if (response.data.new_awards?.length) {
+                        response.data.new_awards.forEach((award) => {
+                            toast.success(`Achievement Unlocked: ${award.name}!`, {
+                                icon: '🏆',
+                                duration: 6000,
+                            });
+                        });
+                    }
+
                     if (onClose) onClose();
                 } else {
                     toast.error(response.data.message || 'Submission failed.');
@@ -162,11 +152,10 @@ const SubmitProgressModal = ({ isOpen, onClose, onUrlChange }) => {
             console.error('Submission error:', error);
             const data = error.response?.data;
             if (data?.course_instance_not_found) {
-                setPendingCourseRequest({
-                    course_instance_id: data.course_instance_id,
-                    requested_course_id: data.requested_course_id,
-                    url: url
-                });
+                // The backend automatically creates the request and sets an appropriate message.
+                toast.success(data.message || "This course wasn't connected yet, but we've automatically requested your teacher to add it!");
+                resetForm();
+                if (onClose) onClose();
             } else {
                 toast.error(getErrorMessage(error, 'An error occurred during submission.'));
                 setUrl('');
@@ -311,21 +300,8 @@ const SubmitProgressModal = ({ isOpen, onClose, onUrlChange }) => {
                 
             </div>
             
-            {pendingCourseRequest && (
-                <Modal 
-                    isOpen={!!pendingCourseRequest} 
-                    onClose={() => setPendingCourseRequest(null)}
-                    title="Course Not Connected"
-                >
-                    <p style={{marginBottom: '1rem'}}>
-                        The challenge you submitted belongs to an unrecognized course connection. Would you like to request an admin to add it?
-                    </p>
-                    <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
-                        <button type="button" className="btn-secondary" onClick={() => setPendingCourseRequest(null)}>Cancel</button>
-                        <button type="button" className="btn-premium" onClick={handleCourseRequest}>Request Course Addition</button>
-                    </div>
-                </Modal>
-            )}
+
+
         </>
     );
 };
