@@ -112,8 +112,8 @@ const AdminUserDashboard = () => {
     };
 
     const formatDecimal = (val) => {
-        if (val == null) return '0';
-        return Math.trunc(val).toString(10);
+        if (val == null) return '0.0000';
+        return Number(val || 0).toLocaleString(undefined, { minimumFractionDigits: 4, maximumFractionDigits: 4 });
     };
 
     const getTrackIdFromCourseSlug = (slug) => {
@@ -327,7 +327,7 @@ const AdminUserDashboard = () => {
                                         <span className="econ-balance">{formatDecimal(user.packets)}</span>
                                     </div>
                                     <input type="hidden" name="username" value={user.username} />
-                                    <input type="number" name="amount" step="1" placeholder="Amount (+/-)" required className="inline-input" />
+                                    <input type="number" name="amount" step="any" placeholder="Amount (+/-)" required className="inline-input" />
                                     <button type="submit" className="btn-compact action-green" disabled={formLoading}>
                                         <Check size={14} /> Adjust
                                     </button>

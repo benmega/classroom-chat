@@ -100,6 +100,9 @@ describe('AdminUserDashboard Component Redesign', () => {
         expect(screen.getByText('Ozaria')).toBeInTheDocument();
         expect(screen.getByText('Game Development')).toBeInTheDocument();
         expect(screen.getByText('Web Development')).toBeInTheDocument();
+
+        // Packets balance formatted to 4 decimals
+        expect(screen.getByText('5.0000')).toBeInTheDocument();
     });
 
 

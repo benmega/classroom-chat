@@ -602,6 +602,25 @@
     box-shadow: 0 2px 6px rgba(0,0,0,0.15);
 }
 
+.rejected-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--bg-tertiary);
+    color: var(--error-color, #ef4444);
+    border: 1px solid var(--error-color, #ef4444);
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 4px 8px;
+    border-radius: 12px;
+    text-transform: uppercase;
+    z-index: 10;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+}
+
 .card-teacher-feedback {
     background: var(--bg-secondary);
     border-left: 3px solid var(--success-color);
@@ -614,6 +633,11 @@
     display: flex;
     align-items: flex-start;
     gap: 6px;
+}
+
+.card-teacher-feedback.revision-feedback {
+    border-left: 3px solid var(--error-color, #ef4444);
+    color: var(--error-color, #ef4444);
 }
 
 .card-teacher-feedback svg {
@@ -1231,6 +1255,12 @@
     align-items: center;
     gap: 5px;
     color: var(--success-color);
+}
+.teacher-feedback.revision-feedback {
+    border-left: 4px solid var(--error-color, #ef4444);
+}
+.teacher-feedback.revision-feedback h4 {
+    color: var(--error-color, #ef4444);
 }
 .teacher-feedback blockquote {
     margin: 0;

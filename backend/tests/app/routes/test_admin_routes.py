@@ -634,7 +634,105 @@ def test_project_review_packets(client, sample_admin, sample_user, test_app):
         updated_user3 = db.session.get(User, sample_user.id)
         assert updated_project3.teacher_comment is None
         assert updated_project3.packets_awarded == 0.0
+        assert updated_project3.status == "rejected"
         assert updated_user3.packets == initial_packets
+
+
+def test_project_rejection_and_resubmission_lifecycle(client, sample_admin, sample_user, test_app):
+    """Test that rejecting a project removes it from the pending queue until the student resubmits."""
+    from application.models.project import Project
+    from application.models.user import User
+
+    # 1. Student creates project
+    with test_app.app_context():
+        project = Project(
+            name="Lifecycle Project",
+            description="Initial submission",
+            user_id=sample_user.id,
+        )
+        db.session.add(project)
+        db.session.commit()
+        project_id = project.id
+        initial_packets = sample_user.packets
+
+    # 2. Admin verifies project is in pending queue
+    login_as_admin(client, sample_admin)
+    resp = client.get("/api/admin/manage-projects?filter=pending")
+    assert resp.status_code == 200
+    pending_ids = [p["id"] for p in resp.get_json()["data"]["projects"]]
+    assert project_id in pending_ids
+
+    # 3. Admin rejects project with revision note
+    resp_reject = client.post(
+        f"/api/admin/handle-project-review/{project_id}",
+        json={"action": "reject", "teacher_comment": "Please add more details."},
+    )
+    assert resp_reject.status_code == 200
+
+    db.session.expire_all()
+    with test_app.app_context():
+        p_rejected = db.session.get(Project, project_id)
+        assert p_rejected.status == "rejected"
+        assert p_rejected.teacher_comment == "Please add more details."
+
+    # 4. Project must NOT appear in pending review queue
+    resp_pending_after_reject = client.get("/api/admin/manage-projects?filter=pending")
+    pending_ids_after = [p["id"] for p in resp_pending_after_reject.get_json()["data"]["projects"]]
+    assert project_id not in pending_ids_after
+
+    # 5. Project appears in rejected filter
+    resp_rejected_filter = client.get("/api/admin/manage-projects?filter=rejected")
+    rejected_ids = [p["id"] for p in resp_rejected_filter.get_json()["data"]["projects"]]
+    assert project_id in rejected_ids
+
+    # 6. Student edits project (resubmission)
+    with client.session_transaction() as sess:
+        sess["user"] = sample_user.id
+
+    resp_edit = client.post(
+        f"/user/project/edit/{project_id}",
+        data={
+            "name": "Lifecycle Project (Updated)",
+            "description": "Added more details as requested.",
+        },
+    )
+    assert resp_edit.status_code == 200
+
+    db.session.expire_all()
+    with test_app.app_context():
+        p_resubmitted = db.session.get(Project, project_id)
+        assert p_resubmitted.status == "pending"
+        assert p_resubmitted.name == "Lifecycle Project (Updated)"
+
+    # 7. Admin sees project back in pending queue
+    login_as_admin(client, sample_admin)
+    resp_pending_after_resubmit = client.get("/api/admin/manage-projects?filter=pending")
+    pending_ids_resubmitted = [p["id"] for p in resp_pending_after_resubmit.get_json()["data"]["projects"]]
+    assert project_id in pending_ids_resubmitted
+
+    # 8. Admin approves project
+    resp_approve = client.post(
+        f"/api/admin/handle-project-review/{project_id}",
+        json={
+            "action": "approve",
+            "teacher_comment": "Excellent improvements!",
+            "packet_reward": 0.006,
+        },
+    )
+    assert resp_approve.status_code == 200
+
+    db.session.expire_all()
+    with test_app.app_context():
+        p_approved = db.session.get(Project, project_id)
+        u_updated = db.session.get(User, sample_user.id)
+        assert p_approved.status == "approved"
+        assert p_approved.packets_awarded == 0.006
+        assert u_updated.packets == initial_packets + 0.006
+
+    # 9. No longer in pending queue
+    resp_final = client.get("/api/admin/manage-projects?filter=pending")
+    final_pending_ids = [p["id"] for p in resp_final.get_json()["data"]["projects"]]
+    assert project_id not in final_pending_ids
 
 
 def test_parent_child_endpoints(client, test_app, sample_admin):

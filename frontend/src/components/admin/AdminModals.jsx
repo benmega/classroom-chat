@@ -121,7 +121,7 @@ export const AdjustPacketsModal = ({ isOpen, onClose, onSubmit, user, users, for
                         <option value="">Select a user...</option>
                         {users.map(u => (
                             <option key={u.id} value={u.username}>
-                                {u.username} (Balance: 📦 {(u.packets ?? 0).toFixed(3)})
+                                {u.username} (Balance: 📦 {(u.packets ?? 0).toFixed(4)})
                             </option>
                         ))}
                     </select>

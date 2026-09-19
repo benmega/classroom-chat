@@ -12,17 +12,17 @@ from ..admin_routes import admin_bp
 def manage_projects():
     filter_type = request.args.get("filter", "pending")
 
-    pending_count = Project.query.filter(
-        Project.teacher_comment.is_(None) | (Project.teacher_comment == "")
-    ).count()
+    pending_count = Project.query.filter(Project.status == "pending").count()
 
     total_count = Project.query.count()
 
     query = Project.query
     if filter_type == "pending":
-        query = query.filter(
-            Project.teacher_comment.is_(None) | (Project.teacher_comment == "")
-        )
+        query = query.filter(Project.status == "pending")
+    elif filter_type == "rejected":
+        query = query.filter(Project.status == "rejected")
+    elif filter_type == "approved":
+        query = query.filter(Project.status == "approved")
 
     projects = query.order_by(Project.id.desc()).all()
 
@@ -58,10 +58,14 @@ def handle_project_review(project_id):
         if project.packets_awarded and project.packets_awarded > 0:
             student = project.user
             if student:
-                student.packets = max(0.0, student.packets - project.packets_awarded)
+                student.packets = max(0.0, (student.packets or 0.0) - project.packets_awarded)
 
         project.packets_awarded = 0.0
-        project.teacher_comment = None
+        project.status = "rejected"
+        if comment is not None:
+            project.teacher_comment = comment.strip() or None
+        else:
+            project.teacher_comment = None
         db.session.commit()
         return jsonify(
             {
@@ -74,10 +78,11 @@ def handle_project_review(project_id):
         if student:
             previous_award = project.packets_awarded or 0.0
             diff = packet_reward - previous_award
-            student.packets += diff
+            student.packets = (student.packets or 0.0) + diff
 
         project.packets_awarded = packet_reward
         project.teacher_comment = comment
+        project.status = "approved"
         db.session.commit()
 
         student_nickname = student.nickname if student else "A student"
@@ -126,6 +131,7 @@ def assign_project():
         video_url=video_url,
         code_snippet=code_snippet,
         image_url=image_url,
+        status="pending",
     )
 
     db.session.add(project)
