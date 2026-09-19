@@ -961,58 +961,62 @@
     transform: scale(1.02);
 }
 
-/* Zoom Controls Styles */
-.zoom-controls {
+/* Map Navigation Pad — mermaid-style 3×3 directional grid */
+.map-nav-pad {
     position: fixed;
     bottom: 2rem;
-    right: 2rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem;
-    border-radius: var(--radius-full, 9999px);
+    left: 2rem;
+    display: grid;
+    grid-template-columns: repeat(3, 40px);
+    grid-template-rows: repeat(3, 40px);
+    gap: 6px;
     z-index: 1000;
+    /* Subtle frosted-glass background scoped tightly to the 3×3 area */
     background: var(--surface-primary);
-    border: 2px solid var(--border-subtle);
+    border: 1.5px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    padding: 8px;
     box-shadow: var(--shadow-lg);
     backdrop-filter: blur(10px);
 }
 
-.zoom-btn {
+.nav-pad-btn {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 36px;
-    height: 36px;
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
-    border: none;
-    background: transparent;
+    border: 1.5px solid var(--border-subtle);
+    background: var(--bg-secondary);
     color: var(--text-primary);
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: background 0.15s ease, transform 0.12s ease, border-color 0.15s ease, opacity 0.15s ease;
+    font-size: 0; /* hide any stray text */
 }
 
-.zoom-btn:hover:not(:disabled) {
-    background: var(--bg-secondary);
-    transform: scale(1.05);
+.nav-pad-btn:hover:not(:disabled) {
+    background: var(--bg-tertiary, rgba(255,255,255,0.08));
+    border-color: var(--primary-color);
+    transform: scale(1.08);
 }
 
-.zoom-btn:active:not(:disabled) {
-    transform: scale(0.95);
+.nav-pad-btn:active:not(:disabled) {
+    transform: scale(0.93);
 }
 
-.zoom-btn:disabled {
-    opacity: 0.4;
+.nav-pad-btn:disabled {
+    opacity: 0.35;
     cursor: not-allowed;
 }
 
-.zoom-value {
-    font-size: 0.85rem;
-    font-weight: 700;
-    min-width: 48px;
-    text-align: center;
-    color: var(--text-primary);
-    user-select: none;
+/* Reset button subtle distinction */
+.nav-pad-btn.nav-pad-reset {
+    border-style: dashed;
+}
+
+.nav-pad-btn.nav-pad-reset:hover:not(:disabled) {
+    border-style: solid;
 }
 
 

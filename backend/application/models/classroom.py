@@ -54,6 +54,8 @@ class Classroom(db.Model):
     language = db.Column(db.String(64), nullable=False)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     join_code = db.Column(db.String(5), unique=True, nullable=True, index=True)
+    sandbox_active = db.Column(db.Boolean, default=False, nullable=False)
+    sandbox_activated_at = db.Column(db.DateTime, nullable=True)
 
     # Course assignments this classroom has ever had
     course_assignments = db.relationship("CourseInstance", backref="classroom")
@@ -95,4 +97,8 @@ class Classroom(db.Model):
             "name": self.name,
             "language": self.language,
             "student_count": len(self.users) if self.users else 0,
+            "sandbox_active": bool(self.sandbox_active),
+            "sandbox_activated_at": self.sandbox_activated_at.isoformat()
+            if self.sandbox_activated_at
+            else None,
         }

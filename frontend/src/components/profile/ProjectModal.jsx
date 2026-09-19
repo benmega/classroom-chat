@@ -1,6 +1,6 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
-import { X, ExternalLink, Code, CheckCircle, FileText } from 'lucide-react';
+import { X, ExternalLink, Code, CheckCircle, FileText, AlertCircle } from 'lucide-react';
 import { formatStaticUrl } from '../../utils/formatters';
 import SmartImage from '../common/SmartImage';
 
@@ -78,8 +78,11 @@ const ProjectModal = ({ project, onClose }) => {
                         <h3 className="section-heading"><FileText size={18} /> Description</h3>
                         <p>{project.description}</p>
                         {project.teacher_comment && (
-                            <div className="teacher-feedback">
-                                <h4><CheckCircle size={16} /> Instructor Review</h4>
+                            <div className={`teacher-feedback ${project.status === 'rejected' ? 'revision-feedback' : ''}`}>
+                                <h4>
+                                    {project.status === 'rejected' ? <AlertCircle size={16} /> : <CheckCircle size={16} />}
+                                    {project.status === 'rejected' ? ' Revision Requested' : ' Instructor Review'}
+                                </h4>
                                 <blockquote>"{project.teacher_comment}"</blockquote>
                             </div>
                         )}

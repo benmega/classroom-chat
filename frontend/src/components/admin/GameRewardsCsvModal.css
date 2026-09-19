@@ -1,0 +1,375 @@
+/* GameRewardsCsvModal.css */
+
+.csv-modal-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: 0.5rem 0;
+}
+
+.csv-modal-intro {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.csv-modal-description {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--text-secondary, #64748b);
+  flex: 1;
+  min-width: 260px;
+}
+
+.btn-download-sample {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.85rem;
+  font-size: 0.825rem;
+  font-weight: 600;
+  border-radius: 8px;
+  background: var(--bg-secondary, #f1f5f9);
+  color: var(--primary-accessible, #4f46e5);
+  border: 1px solid var(--border-subtle, #cbd5e1);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.btn-download-sample:hover:not(:disabled) {
+  background: var(--bg-tertiary, #e2e8f0);
+  border-color: var(--primary-accessible, #4f46e5);
+}
+
+.btn-download-sample:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Dropzone */
+.csv-dropzone {
+  border: 2px dashed var(--border-subtle, #cbd5e1);
+  border-radius: 12px;
+  padding: 1.5rem;
+  background: var(--bg-secondary, #f8fafc);
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.csv-dropzone:hover,
+.csv-dropzone.is-dragging {
+  border-color: var(--primary-accessible, #4f46e5);
+  background: rgba(99, 102, 241, 0.05);
+}
+
+.csv-dropzone.has-file {
+  cursor: default;
+  border-style: solid;
+  border-color: var(--primary-accessible, #4f46e5);
+}
+
+.csv-dropzone-prompt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.upload-icon {
+  color: var(--primary-accessible, #6366f1);
+}
+
+.prompt-main {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--text-primary, #1e293b);
+}
+
+.browse-link {
+  color: var(--primary-accessible, #4f46e5);
+  text-decoration: underline;
+  font-weight: 600;
+}
+
+.prompt-sub {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--text-muted, #94a3b8);
+}
+
+/* File Selected */
+.csv-file-selected {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg-primary, #ffffff);
+  border: 1px solid var(--border-subtle, #e2e8f0);
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+}
+
+.file-info-col {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  overflow: hidden;
+}
+
+.file-icon {
+  color: var(--primary-accessible, #4f46e5);
+  flex-shrink: 0;
+}
+
+.file-details {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  overflow: hidden;
+}
+
+.file-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-primary, #1e293b);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 380px;
+}
+
+.file-size {
+  font-size: 0.75rem;
+  color: var(--text-muted, #94a3b8);
+}
+
+.btn-remove-file {
+  background: none;
+  border: none;
+  color: var(--text-muted, #94a3b8);
+  cursor: pointer;
+  padding: 0.35rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.btn-remove-file:hover {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+
+/* Upload Actions */
+.csv-upload-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.btn-upload-submit {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.25rem;
+  border-radius: 8px;
+  background: var(--primary-accessible, #4f46e5);
+  color: #ffffff;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-upload-submit:hover:not(:disabled) {
+  background: var(--primary-hover, #4338ca);
+  transform: translateY(-1px);
+}
+
+.btn-upload-submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Games Section */
+.csv-games-section {
+  border-top: 1px solid var(--border-subtle, #e2e8f0);
+  padding-top: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.csv-games-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.csv-games-title-group {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.csv-games-title-group h4 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary, #1e293b);
+}
+
+.games-total-pill {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.15rem 0.5rem;
+  border-radius: 9999px;
+  background: rgba(99, 102, 241, 0.12);
+  color: var(--primary-accessible, #4f46e5);
+}
+
+.btn-refresh-games {
+  background: none;
+  border: 1px solid var(--border-subtle, #cbd5e1);
+  color: var(--text-secondary, #64748b);
+  border-radius: 6px;
+  padding: 0.35rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.btn-refresh-games:hover:not(:disabled) {
+  background: var(--bg-secondary, #f1f5f9);
+  color: var(--text-primary, #1e293b);
+}
+
+/* Breakdown Stats */
+.csv-breakdown-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.breakdown-stat-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.65rem;
+  background: var(--bg-secondary, #f8fafc);
+  border: 1px solid var(--border-subtle, #e2e8f0);
+  border-radius: 6px;
+  font-size: 0.8rem;
+}
+
+.breakdown-stat-chip .stat-label {
+  color: var(--text-secondary, #64748b);
+}
+
+.breakdown-stat-chip .stat-value {
+  font-weight: 700;
+  color: var(--text-primary, #0f172a);
+}
+
+/* Mini Table */
+.csv-table-container {
+  max-height: 240px;
+  overflow-y: auto;
+  border: 1px solid var(--border-subtle, #e2e8f0);
+  border-radius: 8px;
+  background: var(--bg-primary, #ffffff);
+}
+
+.table-loading-msg,
+.table-empty-msg {
+  padding: 2rem;
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--text-muted, #94a3b8);
+}
+
+.csv-mini-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.825rem;
+  text-align: left;
+}
+
+.csv-mini-table th {
+  background: var(--bg-secondary, #f8fafc);
+  color: var(--text-secondary, #64748b);
+  padding: 0.5rem 0.75rem;
+  font-weight: 600;
+  border-bottom: 1px solid var(--border-subtle, #e2e8f0);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.csv-mini-table td {
+  padding: 0.55rem 0.75rem;
+  border-bottom: 1px solid var(--border-subtle, #f1f5f9);
+  color: var(--text-primary, #1e293b);
+}
+
+.csv-mini-table tr:last-child td {
+  border-bottom: none;
+}
+
+.cell-game-name {
+  font-weight: 600;
+  max-width: 180px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cell-lesson-tag {
+  display: inline-block;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  background: var(--primary-light, #e0e7ff);
+  color: var(--primary-accessible, #4338ca);
+  font-weight: 600;
+  font-size: 0.75rem;
+}
+
+.cell-rating {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  font-weight: 600;
+  color: #d97706;
+}
+
+.cell-account-yes {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  color: #b45309;
+  font-weight: 600;
+}
+
+.cell-muted {
+  color: var(--text-muted, #94a3b8);
+}
+
+.cell-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: var(--primary-accessible, #4f46e5);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.cell-link:hover {
+  text-decoration: underline;
+}

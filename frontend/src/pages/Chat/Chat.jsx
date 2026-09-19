@@ -1,14 +1,18 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import toast from 'react-hot-toast';
 import { 
   Send, 
-  Smile,
-  Globe,
-  Users,
-  Radio,
-  UserPlus,
-  X
+  Smile, 
+  Globe, 
+  Users, 
+  Radio, 
+  UserPlus, 
+  X 
 } from 'lucide-react';
 import EmojiPicker from 'emoji-picker-react';
+import client from '../../api/client';
+import { getSocket } from '../../hooks/useChatSocket';
+import SandboxArcadeModal from '../../components/chat/SandboxArcadeModal';
 import './Chat.css';
 
 import ChatMessage from '../../components/chat/ChatMessage';
@@ -54,6 +58,61 @@ const Chat = ({ filterClassroomId = null }) => {
 
   const fileInputRef = React.useRef(null);
 
+  const [isSandboxActive, setIsSandboxActive] = useState(false);
+  const [isArcadeModalOpen, setIsArcadeModalOpen] = useState(false);
+
+  // Active classroom ID for sandbox mode
+  const activeClassroomId = filterClassroomId || (classrooms && classrooms.find(c => c.id !== 'global')?.id) || user?.classroom_id || null;
+
+  // Fetch sandbox status on load
+  useEffect(() => {
+    if (!activeClassroomId) return;
+    let isMounted = true;
+
+    client.get(`/api/classrooms/${activeClassroomId}/sandbox-status`)
+      .then((res) => {
+        if (isMounted && res?.data) {
+          setIsSandboxActive(Boolean(res.data.sandbox_active));
+        }
+      })
+      .catch((err) => {
+        console.error('Failed to fetch sandbox status:', err);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [activeClassroomId]);
+
+  // Socket listener for sandbox_status_changed
+  useEffect(() => {
+    const socket = getSocket();
+    if (!socket) return;
+
+    const handleSandboxStatusChanged = (data) => {
+      if (!data) return;
+      const isTarget = activeClassroomId
+        ? String(data.classroom_id) === String(activeClassroomId)
+        : (classrooms || []).some(c => String(c.id) === String(data.classroom_id));
+
+      if (isTarget) {
+        const active = Boolean(data.sandbox_active);
+        setIsSandboxActive(active);
+        if (active) {
+          toast.success('🌟 All Tests Passed! Sandbox Mode is Active!', {
+            icon: '🎮',
+            duration: 5000,
+          });
+        }
+      }
+    };
+
+    socket.on('sandbox_status_changed', handleSandboxStatusChanged);
+    return () => {
+      socket.off('sandbox_status_changed', handleSandboxStatusChanged);
+    };
+  }, [activeClassroomId, classrooms]);
+
   if (loading) return (
     <div className="feed-loading-skeleton-container p-2rem">
       <span className="d-none">Loading Feed...</span>
@@ -91,6 +150,29 @@ const Chat = ({ filterClassroomId = null }) => {
   return (
     <div data-testid="feed-container" className="feed-container">
       <div className="feed-main">
+        {isSandboxActive && (
+          <div 
+            className="sandbox-sticky-banner" 
+            data-testid="sandbox-chat-banner"
+          >
+            <div className="sandbox-sticky-banner-content">
+              <span className="sandbox-sticky-banner-title">
+                🌟 All Tests Passed! Sandbox Mode is Active!
+              </span>
+            </div>
+            <button
+              type="button"
+              className="sandbox-sticky-banner-btn"
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsArcadeModalOpen(true);
+              }}
+            >
+              Enter Sandbox Arcade 🎮
+            </button>
+          </div>
+        )}
+
         <div 
           ref={scrollRef}
           data-testid="feed-messages" className="feed-messages"
@@ -265,6 +347,11 @@ const Chat = ({ filterClassroomId = null }) => {
           </form>
         </div>
       </div>
+      <SandboxArcadeModal
+        isOpen={isArcadeModalOpen}
+        onClose={() => setIsArcadeModalOpen(false)}
+        classId={activeClassroomId}
+      />
     </div>
   );
 };

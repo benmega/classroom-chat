@@ -105,15 +105,16 @@ const AdminUserDashboard = () => {
         setDuckAmountInput(String(amount));
     };
 
-    const formatBinary = (val) => {
-        if (val == null) return '0b0';
-        const num = Math.trunc(val);
-        return num < 0 ? `-0b${Math.abs(num).toString(2)}` : `0b${num.toString(2)}`;
+    const formatBaseTen = (val) => {
+        if (val == null) return '0';
+        const num = Number(val);
+        if (isNaN(num)) return '0';
+        return num.toLocaleString(undefined, { maximumFractionDigits: 2 });
     };
 
     const formatDecimal = (val) => {
-        if (val == null) return '0';
-        return Math.trunc(val).toString(10);
+        if (val == null) return '0.0000';
+        return Number(val || 0).toLocaleString(undefined, { minimumFractionDigits: 4, maximumFractionDigits: 4 });
     };
 
     const getTrackIdFromCourseSlug = (slug) => {
@@ -294,11 +295,11 @@ const AdminUserDashboard = () => {
 
                             <div className="compact-panel economy-panel">
                                 <div className="panel-head">Balances & Locker</div>
-                                {/* Ducks (Binary) */}
+                                {/* Ducks */}
                                 <form onSubmit={handleAdjustDucks} className="economy-row-card">
                                     <div className="econ-header">
-                                        <span className="econ-label">🦆 Ducks (Binary)</span>
-                                        <span className="econ-balance">{formatBinary(user.duck_balance)}</span>
+                                        <span className="econ-label">🦆 Ducks</span>
+                                        <span className="econ-balance">{formatBaseTen(user.duck_balance)}</span>
                                     </div>
                                     <input type="hidden" name="username" value={user.username} />
                                     <div className="econ-preset-pills">
@@ -320,23 +321,23 @@ const AdminUserDashboard = () => {
                                     </button>
                                 </form>
 
-                                {/* Packets (Decimal) */}
+                                {/* Packets */}
                                 <form onSubmit={handleAdjustPackets} className="economy-row-card">
                                     <div className="econ-header">
-                                        <span className="econ-label">📦 Packets (Decimal)</span>
+                                        <span className="econ-label">📦 Packets</span>
                                         <span className="econ-balance">{formatDecimal(user.packets)}</span>
                                     </div>
                                     <input type="hidden" name="username" value={user.username} />
-                                    <input type="number" name="amount" step="1" placeholder="Amount (+/-)" required className="inline-input" />
+                                    <input type="number" name="amount" step="any" placeholder="Amount (+/-)" required className="inline-input" />
                                     <button type="submit" className="btn-compact action-green" disabled={formLoading}>
                                         <Check size={14} /> Adjust
                                     </button>
                                 </form>
 
-                                {/* Locker Drawer (Hex) */}
+                                {/* Locker Drawer */}
                                 <form onSubmit={handleSetDrawer} className="economy-row-card">
                                     <div className="econ-header">
-                                        <span className="econ-label">🔒 Locker Drawer (Hex)</span>
+                                        <span className="econ-label">🔒 Locker Drawer</span>
                                         <span className="econ-balance">{user.drawer || 'Not Set'}</span>
                                     </div>
                                     <input type="text" name="drawer" defaultValue={user.drawer || ''} placeholder="e.g. 0x08" maxLength={6} className="inline-input" />

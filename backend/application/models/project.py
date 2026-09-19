@@ -25,8 +25,17 @@ class Project(db.Model):
         db.String(255), nullable=True
     )  # Link to recording (e.g., YouTube/Vimeo/Cloud)
     video_transcript = db.Column(db.Text, nullable=True)
+    status = db.Column(db.String(20), default="pending", nullable=False)
     image_url = db.Column(db.String(255), nullable=True)  # Thumbnail for the card
     created_at = db.Column(db.DateTime, default=db.func.now())
+
+    def __init__(self, **kwargs):
+        if "status" not in kwargs:
+            if kwargs.get("teacher_comment"):
+                kwargs["status"] = "approved"
+            else:
+                kwargs["status"] = "pending"
+        super().__init__(**kwargs)
 
     def __repr__(self):
         return f"<Project {self.name}>"
@@ -45,6 +54,7 @@ class Project(db.Model):
             "video_url": self.video_url,
             "video_transcript": self.video_transcript,
             "image_url": self.image_url,
+            "status": self.status,
             "user_nickname": self.user.nickname if self.user else "Unknown Student",
             "user_slug": self.user.slug if self.user else None,
             "user_username": self.user.username if self.user else None,

@@ -92,6 +92,9 @@ def login():
             if awarded:
                 db.session.commit()
 
+            from application.services.achievement_engine import evaluate_user
+            evaluate_user(user_obj)
+
             if request.is_json:
                 return {"user": user_obj.to_dict(), "awarded_duck": awarded}, 200
 
@@ -367,6 +370,7 @@ def new_project():
                 else None
             ),
             user_id=target_user.id,
+            status="pending",
         )
 
         db.session.add(new_proj)
@@ -390,6 +394,9 @@ def new_project():
                     )
 
         db.session.commit()
+
+        from application.services.achievement_engine import evaluate_user
+        evaluate_user(target_user)
 
         video_started = False
         if "project_video" in request.files:
@@ -450,7 +457,10 @@ def edit_project(project_id):
         project.code_snippet = data.get("code_snippet")
 
         if getattr(current_user, "role", "") == "admin":
-            project.teacher_comment = data.get("teacher_comment")
+            if "teacher_comment" in data:
+                project.teacher_comment = data.get("teacher_comment")
+            if "status" in data:
+                project.status = data.get("status")
 
             # Allow admin to reassign student
             new_student_id = data.get("student_id")
@@ -459,6 +469,11 @@ def edit_project(project_id):
                 if not target_user:
                     return "Invalid student selection.", 400
                 project.user_id = target_user.id
+        else:
+            # Student is updating project
+            # If the project was rejected, mark it as pending (resubmission)
+            if project.status == "rejected":
+                project.status = "pending"
 
         if "project_image" in request.files:
             file = request.files["project_image"]
@@ -589,7 +604,7 @@ def api_upload_project_image():
 
         # We don't link to a specific project yet, just return the URL/filename
         # The frontend will send the filename back when saving the project form
-        new_url = url_for("static", filename=f"images/projects/{filename}")
+        new_url = url_for("user.project_image", filename=filename)
         return {"new_url": new_url, "filename": filename}
 
     except Exception as e:

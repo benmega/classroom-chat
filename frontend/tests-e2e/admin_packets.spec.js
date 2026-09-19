@@ -28,15 +28,18 @@ test.describe('Admin Packets Adjustment', () => {
     
     await packetsForm.locator('button[type="submit"]').click();
 
+    const formatExpected = (val) =>
+      Number(val || 0).toLocaleString(undefined, { minimumFractionDigits: 4, maximumFractionDigits: 4 });
+
     await expect(page.locator('.economy-row-card:has-text("Packets") .econ-balance')).toHaveText(
-      (initialPackets + 5).toLocaleString()
+      formatExpected(initialPackets + 5)
     );
 
     await packetsForm.locator('input[name="amount"]').fill('-20');
     await packetsForm.locator('button[type="submit"]').click();
     
     await expect(page.locator('.economy-row-card:has-text("Packets") .econ-balance')).toHaveText(
-      (initialPackets - 15).toLocaleString()
+      formatExpected(initialPackets - 15)
     );
   });
 });

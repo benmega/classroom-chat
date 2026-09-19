@@ -41,3 +41,4 @@ backend/scratch/
 git_diff*
 app.log
 ${DATABASE_PATH}
+.vite/

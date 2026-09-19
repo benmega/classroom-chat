@@ -23,6 +23,7 @@ def setup_models():
     from .course_instance_request import CourseInstanceRequest
     from .duck_trade import DuckTradeLog
     from .duck_transaction import DuckTransaction
+    from .level_game import LevelGame
     from .message import Message
     from .note import Note
     from .parent_student import parent_students

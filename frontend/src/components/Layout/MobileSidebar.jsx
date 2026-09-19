@@ -130,7 +130,7 @@ const MobileSidebar = ({ user, isParent, isSidebarOpen, setSidebarOpen, handleLo
                                     <li><Link to="/bit-shift" onClick={close}><RefreshCw size={18} /> Bit Shift</Link></li>
                                 )}
 
-                                {Math.abs(user?.packets ?? 0) > 0.001 && (
+                                {Math.abs(user?.packets ?? 0) > 0.00001 && (
                                     <li><Link to="/shop" onClick={close}><ShoppingCart size={18} /> Reward Shop</Link></li>
                                 )}
 

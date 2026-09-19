@@ -148,6 +148,10 @@ def create_app(config_class=None):
     csrf.init_app(app)
     register_blueprints(app)
 
+    from application.routes.sandbox_routes import sandbox_bp
+
+    app.register_blueprint(sandbox_bp, url_prefix="/api")
+
     from . import tasks
 
     tasks.set_app_instance(app)
