@@ -254,4 +254,103 @@ describe('AdminStandardProjects', () => {
         
         expect(screen.queryByPlaceholderText(/e.g. Text-Based Adventure/i)).not.toBeInTheDocument();
     });
+
+    it('displays thumbnail preview when editing an existing project with an image', async () => {
+        const mockProjects = {
+            1: { id: 1, name: 'Project With Image', description: 'Desc', image_url: '/images/standard_projects/proj_1.jpg' }
+        };
+
+        client.get.mockResolvedValue({
+            data: { status: 'success', data: { templates: mockProjects } }
+        });
+
+        renderWithRouter(<AdminStandardProjects />);
+        
+        await waitFor(() => {
+            expect(screen.getByText('Project With Image')).toBeInTheDocument();
+        });
+
+        fireEvent.click(screen.getByText('Project With Image').closest('.project-card'));
+        
+        expect(screen.getByText('Thumbnail Image')).toBeInTheDocument();
+        const preview = screen.getByAltText('Upload preview');
+        expect(preview).toBeInTheDocument();
+        expect(preview.getAttribute('src')).toContain('proj_1.jpg');
+
+        const directUrlInput = screen.getByLabelText(/Direct Image URL/i);
+        expect(directUrlInput).toHaveValue('/images/standard_projects/proj_1.jpg');
+    });
+
+    it('removes thumbnail image when remove button is clicked', async () => {
+        const mockProjects = {
+            1: { id: 1, name: 'Project With Image', description: 'Desc', image_url: '/images/standard_projects/proj_1.jpg' }
+        };
+
+        client.get.mockResolvedValue({
+            data: { status: 'success', data: { templates: mockProjects } }
+        });
+
+        renderWithRouter(<AdminStandardProjects />);
+        
+        await waitFor(() => {
+            expect(screen.getByText('Project With Image')).toBeInTheDocument();
+        });
+
+        fireEvent.click(screen.getByText('Project With Image').closest('.project-card'));
+        
+        const removeBtn = screen.getByRole('button', { name: /Remove image/i });
+        fireEvent.click(removeBtn);
+
+        expect(screen.queryByAltText('Upload preview')).not.toBeInTheDocument();
+        expect(screen.getByText(/Click to upload or drag and drop/i)).toBeInTheDocument();
+
+        const directUrlInput = screen.getByLabelText(/Direct Image URL/i);
+        expect(directUrlInput).toHaveValue('');
+    });
+
+    it('uploads a new thumbnail image when a file is selected', async () => {
+        client.get.mockResolvedValue({
+            data: { status: 'success', data: { templates: {} } }
+        });
+
+        client.post.mockResolvedValueOnce({
+            data: {
+                status: 'success',
+                data: {
+                    new_url: '/user/project_images/uploaded-uuid.png',
+                    filename: 'uploaded-uuid.png'
+                }
+            }
+        });
+
+        renderWithRouter(<AdminStandardProjects />);
+        
+        await waitFor(() => {
+            expect(screen.getByRole('button', { name: /Add Project/i })).toBeInTheDocument();
+        });
+
+        fireEvent.click(screen.getByRole('button', { name: /Add Project/i }));
+
+        const fileInput = document.querySelector('input[type="file"]');
+        expect(fileInput).toBeInTheDocument();
+
+        const file = new File(['mock content'], 'my_thumb.png', { type: 'image/png' });
+        fireEvent.change(fileInput, { target: { files: [file] } });
+
+        await waitFor(() => {
+            expect(client.post).toHaveBeenCalledWith(
+                '/api/project-templates/upload-image',
+                expect.any(FormData),
+                expect.objectContaining({
+                    signal: expect.anything(),
+                    onUploadProgress: expect.any(Function)
+                })
+            );
+        });
+
+        await waitFor(() => {
+            const directUrlInput = screen.getByLabelText(/Direct Image URL/i);
+            expect(directUrlInput).toHaveValue('/user/project_images/uploaded-uuid.png');
+        });
+    });
 });

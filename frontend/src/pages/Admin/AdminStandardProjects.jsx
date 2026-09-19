@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import { Plus, Edit, X, BookOpen } from 'lucide-react';
 import { formatStaticUrl } from '../../utils/formatters';
 import Modal from '../../components/common/Modal';
+import ImageUpload from '../../components/common/ImageUpload';
 import { ALIGNED_NODES } from '../../constants/courseProgress';
 import './AdminStandardProjects.css';
 
@@ -221,9 +222,29 @@ const AdminStandardProjects = () => {
                         </div>
                     </div>
                     <div className="standard-project-form-row">
-                        <div className="form-group">
-                            <label htmlFor="input-189">Default Thumbnail Image URL</label>
-                            <input id="input-189" type="text" value={form.image_url} onChange={e => setForm({...form, image_url: e.target.value})} />
+                        <div className="form-group standard-project-image-group">
+                            <ImageUpload
+                                uploadUrl="/api/project-templates/upload-image"
+                                fieldName="file"
+                                initialImage={form.image_url}
+                                onUploadSuccess={({ new_url }) => setForm(prev => ({ ...prev, image_url: new_url }))}
+                                onRemove={() => setForm(prev => ({ ...prev, image_url: '' }))}
+                                label="Thumbnail Image"
+                                secondaryLabel="PNG, JPG, WebP or GIF (max. 10MB)"
+                            />
+                            <div className="image-url-secondary">
+                                <label htmlFor="input-thumbnail-url" className="image-url-label">
+                                    Or Direct Image URL
+                                </label>
+                                <input 
+                                    id="input-thumbnail-url"
+                                    type="text" 
+                                    value={form.image_url} 
+                                    onChange={e => setForm({...form, image_url: e.target.value})} 
+                                    placeholder="e.g. https://... or /images/..."
+                                    className="admin-input-subtle"
+                                />
+                            </div>
                         </div>
                         <div className="form-group">
                             <label htmlFor="input-concepts">Concepts Covered</label>

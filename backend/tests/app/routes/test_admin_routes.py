@@ -503,6 +503,71 @@ def test_project_template_crud_admin(client, sample_admin, test_app):
         assert db.session.get(ProjectTemplate, new_id) is None
 
 
+def test_upload_template_image_admin_success(client, sample_admin, test_app):
+    """Test image upload for project templates as admin."""
+    from io import BytesIO
+    from PIL import Image
+
+    login_as_admin(client, sample_admin)
+
+    img = Image.new("RGB", (10, 10), color="blue")
+    img_bytes = BytesIO()
+    img.save(img_bytes, format="PNG")
+    img_bytes.seek(0)
+
+    data = {"file": (BytesIO(img_bytes.getvalue()), "thumbnail.png")}
+    resp = client.post(
+        "/api/project-templates/upload-image",
+        data=data,
+        content_type="multipart/form-data",
+    )
+    assert resp.status_code == 200
+    res_data = resp.get_json()["data"]
+    assert "new_url" in res_data
+    assert "filename" in res_data
+    assert res_data["new_url"].startswith("/user/project_images/")
+
+
+def test_upload_template_image_unauthorized(client, sample_user):
+    """Test non-admin cannot upload template image."""
+    from io import BytesIO
+
+    with client.session_transaction() as sess:
+        sess["user"] = sample_user.id
+
+    data = {"file": (BytesIO(b"fake image data"), "thumbnail.png")}
+    resp = client.post(
+        "/api/project-templates/upload-image",
+        data=data,
+        content_type="multipart/form-data",
+    )
+    assert resp.status_code == 403
+
+
+def test_upload_template_image_invalid_file(client, sample_admin):
+    """Test invalid files and missing files for template image upload."""
+    from io import BytesIO
+
+    login_as_admin(client, sample_admin)
+
+    # Missing file
+    resp_empty = client.post(
+        "/api/project-templates/upload-image",
+        data={},
+        content_type="multipart/form-data",
+    )
+    assert resp_empty.status_code == 400
+
+    # Invalid extension
+    data_txt = {"file": (BytesIO(b"hello text"), "test.txt")}
+    resp_txt = client.post(
+        "/api/project-templates/upload-image",
+        data=data_txt,
+        content_type="multipart/form-data",
+    )
+    assert resp_txt.status_code == 400
+
+
 def test_project_review_packets(client, sample_admin, sample_user, test_app):
     """Test project review packet rewards and retraction."""
     from application.models.project import Project

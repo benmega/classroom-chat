@@ -589,7 +589,7 @@ def api_upload_project_image():
 
         # We don't link to a specific project yet, just return the URL/filename
         # The frontend will send the filename back when saving the project form
-        new_url = url_for("static", filename=f"images/projects/{filename}")
+        new_url = url_for("user.project_image", filename=filename)
         return {"new_url": new_url, "filename": filename}
 
     except Exception as e:

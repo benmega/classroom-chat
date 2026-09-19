@@ -39,6 +39,11 @@
   background-color: var(--bg-tertiary);
 }
 
+.image-upload-container.dragging {
+  border-color: var(--primary-color);
+  background-color: var(--primary-light, rgba(59, 130, 246, 0.08));
+}
+
 .image-upload-container.uploading {
   cursor: wait;
 }
@@ -135,6 +140,30 @@
 
 .remove-btn:hover {
   background: var(--error-subtle);
+}
+
+.preview-hover-hint {
+  position: absolute;
+  bottom: 0.75rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(15, 23, 42, 0.75);
+  color: #ffffff;
+  padding: 0.35rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  opacity: 0;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  pointer-events: none;
+  backdrop-filter: blur(4px);
+}
+
+.image-upload-container:hover .preview-hover-hint {
+  opacity: 1;
 }
 
 .upload-progress-overlay {
