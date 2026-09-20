@@ -561,7 +561,7 @@ describe('Chat Component', () => {
     fireEvent.click(screen.getByRole('button', { name: /enter sandbox arcade/i }));
 
     await waitFor(() => {
-      expect(screen.getByText(/Sandbox Arcade — All Tests Passed!/i)).toBeInTheDocument();
+      expect(screen.getByText(/Sandbox Mode!/i)).toBeInTheDocument();
     });
   });
 

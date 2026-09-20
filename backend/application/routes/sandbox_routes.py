@@ -6,6 +6,7 @@ Summary: API routes for Classroom Sandbox Mode, including LevelGame administrati
 """
 
 import contextlib
+import logging
 from datetime import datetime
 
 from application.decorators.admin_required import admin_only
@@ -19,6 +20,8 @@ from application.services.level_game_service import (
     ingest_games_csv,
 )
 from flask import Blueprint, Response, g, jsonify, request, session
+
+logger = logging.getLogger(__name__)
 
 sandbox_bp = Blueprint("sandbox_bp", __name__)
 
@@ -36,9 +39,13 @@ def upload_level_games_csv():
         return jsonify({"success": False, "error": "No selected file"}), 400
 
     replace_all = request.form.get("replace_all", "true").lower() in ("true", "1", "yes")
-    result = ingest_games_csv(file, replace_all=replace_all)
-    status_code = 200 if result.get("success") else 400
-    return jsonify(result), status_code
+    try:
+        result = ingest_games_csv(file, replace_all=replace_all)
+        status_code = 200 if result.get("success") else 400
+        return jsonify(result), status_code
+    except Exception as e:
+        logger.exception("Unexpected error during level games CSV upload")
+        return jsonify({"success": False, "error": f"Failed to ingest CSV: {e!s}"}), 500
 
 
 @sandbox_bp.route("/admin/level-games", methods=["GET"])
@@ -81,10 +88,10 @@ def delete_admin_level_games():
 def download_sample_csv():
     """Downloads a valid sample CSV for level games."""
     sample_csv_content = (
-        "Title,Link,Assigned Lesson,Chapter,Chapter Name,Platform,Comment,RequiresAccount,Rating,Verified\n"
-        "Kithgard Dungeon,https://codecombat.com/play/level/kithgard-dungeon,1.1a,1,CS1,Web,Introductory dungeon level,False,4.5,True\n"
-        "Gems in the Deep,https://codecombat.com/play/level/gems-in-the-deep,1.1b,1,CS1,Web,Basic movement practice,False,4.6,True\n"
-        "Shadow Guard,https://codecombat.com/play/level/shadow-guard,1.2a,1,CS1,Web,Avoid the guard patrol,False,4.7,True\n"
+        "Title,Link,Assigned Lesson,Chapter,Chapter Name,Platform,Comment,RequiresAccount,Rating,Verified,Challenge Slug\n"
+        "Kithgard Dungeon,https://codecombat.com/play/level/kithgard-dungeon,1.1a,1,CS1,Web,Introductory dungeon level,False,4.5,True,kithgard-dungeon\n"
+        "Gems in the Deep,https://codecombat.com/play/level/gems-in-the-deep,1.1b,1,CS1,Web,Basic movement practice,False,4.6,True,\n"
+        "Shadow Guard,https://codecombat.com/play/level/shadow-guard,1.2a,1,CS1,Web,Avoid the guard patrol,False,4.7,True,shadow-guard\n"
     )
     return Response(
         sample_csv_content,

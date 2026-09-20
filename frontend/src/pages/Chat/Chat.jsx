@@ -99,8 +99,7 @@ const Chat = ({ filterClassroomId = null }) => {
         const active = Boolean(data.sandbox_active);
         setIsSandboxActive(active);
         if (active) {
-          toast.success('🌟 All Tests Passed! Sandbox Mode is Active!', {
-            icon: '🎮',
+          toast.success('All Tests Passed! Sandbox Mode is Active!', {
             duration: 5000,
           });
         }
@@ -157,7 +156,7 @@ const Chat = ({ filterClassroomId = null }) => {
           >
             <div className="sandbox-sticky-banner-content">
               <span className="sandbox-sticky-banner-title">
-                🌟 All Tests Passed! Sandbox Mode is Active!
+                All Tests Passed! Sandbox Mode is Active!
               </span>
             </div>
             <button
@@ -168,7 +167,7 @@ const Chat = ({ filterClassroomId = null }) => {
                 setIsArcadeModalOpen(true);
               }}
             >
-              Enter Sandbox Arcade 🎮
+              Enter Sandbox Arcade
             </button>
           </div>
         )}

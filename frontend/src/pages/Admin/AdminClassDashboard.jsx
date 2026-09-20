@@ -23,7 +23,6 @@ import Skeleton from '../../components/common/Skeleton';
 import SmartImage from '../../components/common/SmartImage';
 import { getApiUrl } from '../../utils/apiUrl';
 import { BulkConnectionCardsModal, AddCourseModal, EnrollStudentModal } from '../../components/admin/AdminModals';
-import GameRewardsCsvModal from '../../components/admin/GameRewardsCsvModal';
 import './AdminClassDashboard.css';
 
 const getLanguageIconUrl = (language) => {
@@ -430,16 +429,6 @@ const AdminClassDashboard = () => {
                             <span>{isTogglingSandbox ? 'Enabling...' : '🚀 Declare "All Tests Passed" / Enable Sandbox'}</span>
                         </button>
                     )}
-
-                    <button 
-                        type="button" 
-                        className="btn-sandbox-rewards"
-                        onClick={() => setActiveModal('game_rewards_csv')}
-                        title="Manage Game Rewards CSV"
-                    >
-                        <Gamepad2 size={16} />
-                        <span>🎮 Game Rewards (CSV Upload)</span>
-                    </button>
                 </div>
             </div>
 
@@ -661,10 +650,6 @@ const AdminClassDashboard = () => {
                 joinCode={joinCode}
                 onRegenerateJoinCode={handleRegenerateJoinCode}
                 loading={formLoading}
-            />
-            <GameRewardsCsvModal
-                isOpen={activeModal === 'game_rewards_csv'}
-                onClose={() => setActiveModal(null)}
             />
         </div>
     );

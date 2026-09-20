@@ -65,22 +65,23 @@ describe('SandboxArcadeModal Component', () => {
       })
     );
 
-    expect(screen.getByText(/Sandbox Arcade — All Tests Passed!/i)).toBeInTheDocument();
+    expect(screen.getByText(/Sandbox Mode!/i)).toBeInTheDocument();
     expect(
-      screen.getByText(/You've unlocked games from your most advanced completed lessons/i)
-    ).toBeInTheDocument();
+      screen.queryByText(/You've unlocked games from your most advanced completed lessons/i)
+    ).not.toBeInTheDocument();
 
     await waitFor(() => {
       expect(screen.getByText('Dungeon Crawler')).toBeInTheDocument();
       expect(screen.getByText('Space Invaders Pro')).toBeInTheDocument();
-      expect(screen.getAllByText('Lesson 5.1a').length).toBeGreaterThan(0);
-      expect(screen.getByText('Lesson 4.2')).toBeInTheDocument();
+      expect(screen.getByText('Lesson 5.1a')).toBeInTheDocument();
+      expect(screen.queryByText('Lesson 4.2')).not.toBeInTheDocument();
       expect(screen.getByTitle('Account Required')).toBeInTheDocument();
       expect(screen.getByText('4.8')).toBeInTheDocument();
+      expect(screen.queryByText('Explore the dungeon and defeat the boss!')).not.toBeInTheDocument();
     });
   });
 
-  it('switches to embedded player view when Play Now is clicked', async () => {
+  it('renders Play Now button that opens game_url in a new tab and removes open in new tab button', async () => {
     client.get.mockResolvedValueOnce({ data: mockGamesData });
 
     render(
@@ -91,22 +92,18 @@ describe('SandboxArcadeModal Component', () => {
       expect(screen.getByText('Dungeon Crawler')).toBeInTheDocument();
     });
 
-    const playButtons = screen.getAllByRole('button', { name: /play now/i });
-    fireEvent.click(playButtons[0]);
+    const playLinks = screen.getAllByRole('link', { name: /play now/i });
+    expect(playLinks).toHaveLength(2);
+    expect(playLinks[0]).toHaveAttribute('href', 'https://example.com/dungeon');
+    expect(playLinks[0]).toHaveAttribute('target', '_blank');
+    expect(playLinks[0]).toHaveAttribute('rel', 'noopener noreferrer');
 
-    // Should switch to embedded player
-    expect(screen.getByRole('button', { name: /back to games/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /full screen/i })).toBeInTheDocument();
+    expect(playLinks[1]).toHaveAttribute('href', 'https://example.com/space');
+    expect(playLinks[1]).toHaveAttribute('target', '_blank');
+    expect(playLinks[1]).toHaveAttribute('rel', 'noopener noreferrer');
 
-    const iframe = screen.getByTitle('Dungeon Crawler');
-    expect(iframe).toBeInTheDocument();
-    expect(iframe).toHaveAttribute('src', 'https://example.com/dungeon');
-    expect(iframe).toHaveAttribute('sandbox', 'allow-scripts allow-same-origin allow-forms allow-popups');
-
-    // Clicking Back to Games returns to the grid
-    fireEvent.click(screen.getByRole('button', { name: /back to games/i }));
-    expect(screen.queryByTitle('Dungeon Crawler')).not.toBeInTheDocument();
-    expect(screen.getByText('Dungeon Crawler')).toBeInTheDocument();
+    expect(screen.queryByText(/open in new tab/i)).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /back to games/i })).not.toBeInTheDocument();
   });
 
   it('handles empty games list gracefully', async () => {

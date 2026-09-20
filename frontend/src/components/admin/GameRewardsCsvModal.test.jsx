@@ -23,25 +23,6 @@ describe('GameRewardsCsvModal Component', () => {
     vi.clearAllMocks();
   });
 
-  const mockGames = [
-    {
-      id: 1,
-      game_name: 'Pacman Grid',
-      game_url: 'https://example.com/pacman',
-      assigned_lesson: 'Lesson 1.1',
-      rating: 4.5,
-      requires_account: false,
-    },
-    {
-      id: 2,
-      game_name: 'Snake Duel',
-      game_url: 'https://example.com/snake',
-      assigned_lesson: 'Lesson 2.3',
-      rating: 5,
-      requires_account: true,
-    },
-  ];
-
   it('does not render when isOpen is false', () => {
     const { container } = render(
       <GameRewardsCsvModal isOpen={false} onClose={vi.fn()} />
@@ -49,28 +30,17 @@ describe('GameRewardsCsvModal Component', () => {
     expect(container.firstChild).toBeNull();
   });
 
-  it('renders modal and fetches games list when open', async () => {
-    client.get.mockResolvedValueOnce({ data: { games: mockGames } });
-
+  it('renders modal with concise description and upload dropzone when open', () => {
     render(<GameRewardsCsvModal isOpen={true} onClose={vi.fn()} />);
 
-    expect(screen.getByText(/Game Rewards Management \(CSV Upload\)/i)).toBeInTheDocument();
-    expect(screen.getByText(/Download Sample CSV/i)).toBeInTheDocument();
-
-    await waitFor(() => {
-      expect(screen.getByText('Pacman Grid')).toBeInTheDocument();
-      expect(screen.getByText('Snake Duel')).toBeInTheDocument();
-      expect(screen.getByText('2 total')).toBeInTheDocument();
-    });
+    expect(screen.getByText('Upload Game Rewards CSV')).toBeInTheDocument();
+    expect(screen.getByText('Sample CSV')).toBeInTheDocument();
+    expect(screen.getByText(/Drag and drop your/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Upload CSV/i })).toBeInTheDocument();
   });
 
-  it('downloads sample CSV when Download Sample CSV button is clicked', async () => {
-    client.get.mockImplementation((url) => {
-      if (url.includes('/sample-csv')) {
-        return Promise.resolve({ data: 'game_name,game_url\nTest,http://test' });
-      }
-      return Promise.resolve({ data: { games: [] } });
-    });
+  it('downloads sample CSV when Sample CSV button is clicked', async () => {
+    client.get.mockResolvedValueOnce({ data: 'game_name,game_url\nTest,http://test' });
 
     // Mock URL.createObjectURL
     const mockCreateObjectURL = vi.fn().mockReturnValue('blob:mock-url');
@@ -80,7 +50,7 @@ describe('GameRewardsCsvModal Component', () => {
 
     render(<GameRewardsCsvModal isOpen={true} onClose={vi.fn()} />);
 
-    const downloadBtn = screen.getByRole('button', { name: /download sample csv/i });
+    const downloadBtn = screen.getByRole('button', { name: /sample csv/i });
     fireEvent.click(downloadBtn);
 
     await waitFor(() => {
@@ -93,15 +63,15 @@ describe('GameRewardsCsvModal Component', () => {
   });
 
   it('selects a CSV file and uploads it successfully', async () => {
-    client.get.mockResolvedValue({ data: { games: [] } });
     client.post.mockResolvedValueOnce({
       data: { success: true, inserted: 5, total_rows: 5 },
     });
+    const onClose = vi.fn();
 
-    render(<GameRewardsCsvModal isOpen={true} onClose={vi.fn()} />);
+    render(<GameRewardsCsvModal isOpen={true} onClose={onClose} />);
 
     // Upload button should initially be disabled
-    const uploadBtn = screen.getByRole('button', { name: /upload & process csv/i });
+    const uploadBtn = screen.getByRole('button', { name: /upload csv/i });
     expect(uploadBtn).toBeDisabled();
 
     // Select file
@@ -127,11 +97,11 @@ describe('GameRewardsCsvModal Component', () => {
       expect(toast.success).toHaveBeenCalledWith(
         expect.stringContaining('5 games saved')
       );
+      expect(onClose).toHaveBeenCalled();
     });
   });
 
   it('rejects non-csv files with error toast', () => {
-    client.get.mockResolvedValueOnce({ data: { games: [] } });
     render(<GameRewardsCsvModal isOpen={true} onClose={vi.fn()} />);
 
     const badFile = new File(['binary'], 'image.png', { type: 'image/png' });
@@ -139,6 +109,5 @@ describe('GameRewardsCsvModal Component', () => {
     fireEvent.change(input, { target: { files: [badFile] } });
 
     expect(toast.error).toHaveBeenCalledWith('Please choose a .csv file');
-    expect(screen.queryByText('image.png')).not.toBeInTheDocument();
   });
 });

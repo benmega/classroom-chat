@@ -18,6 +18,7 @@ class LevelGame(db.Model):
     lesson = db.Column(db.Integer, index=True, nullable=True)
     challenge_level = db.Column(db.String(10), index=True, nullable=True)
     assigned_lesson = db.Column(db.String(50), index=True, nullable=False)
+    challenge_slug = db.Column(db.String(255), nullable=True, index=True)
     progression_order = db.Column(db.Integer, index=True, nullable=False)
     game_name = db.Column(db.String(255), nullable=False)
     game_url = db.Column(db.String(1000), nullable=False)
@@ -29,7 +30,7 @@ class LevelGame(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
 
     def __repr__(self):
-        return f"<LevelGame(id={self.id}, name='{self.game_name}', lesson='{self.assigned_lesson}')>"
+        return f"<LevelGame(id={self.id}, name='{self.game_name}', lesson='{self.assigned_lesson}', challenge_slug='{self.challenge_slug}')>"
 
     def to_dict(self):
         return {
@@ -39,6 +40,7 @@ class LevelGame(db.Model):
             "lesson": self.lesson,
             "challenge_level": self.challenge_level,
             "assigned_lesson": self.assigned_lesson,
+            "challenge_slug": self.challenge_slug,
             "progression_order": self.progression_order,
             "game_name": self.game_name,
             "game_url": self.game_url,

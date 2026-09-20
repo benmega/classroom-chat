@@ -7,6 +7,14 @@
     overflow-y: auto;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+}
+
+.course-progress-page::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
+    width: 0;
+    height: 0;
 }
 
 .skill-tree-grid {
@@ -965,7 +973,7 @@
 .map-nav-pad {
     position: fixed;
     bottom: 2rem;
-    left: 2rem;
+    left: calc(var(--nav-rail-width, 72px) + 2rem);
     display: grid;
     grid-template-columns: repeat(3, 40px);
     grid-template-rows: repeat(3, 40px);
@@ -978,6 +986,13 @@
     padding: 8px;
     box-shadow: var(--shadow-lg);
     backdrop-filter: blur(10px);
+}
+
+@media (max-width: 800px) {
+    .map-nav-pad {
+        left: 1.5rem;
+        bottom: 1.5rem;
+    }
 }
 
 .nav-pad-btn {
