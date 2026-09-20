@@ -20,6 +20,7 @@ from application.models.level_game import LevelGame
 from application.models.message import Message
 from application.models.user import User
 from application.services.level_game_service import (
+    estimate_target_challenge_by_position,
     get_student_sandbox_games,
     ingest_games_csv,
     parse_assigned_lesson,
@@ -34,6 +35,7 @@ def test_level_game_model(init_db):
         lesson=2,
         challenge_level="b",
         assigned_lesson="1.2b",
+        challenge_slug="maze-challenge",
         progression_order=10202,
         game_name="Maze Runner",
         game_url="https://example.com/play/maze",
@@ -49,6 +51,7 @@ def test_level_game_model(init_db):
     saved = db.session.get(LevelGame, game.id)
     assert saved is not None
     assert saved.game_name == "Maze Runner"
+    assert saved.challenge_slug == "maze-challenge"
     assert saved.progression_order == 10202
 
     d = saved.to_dict()
@@ -56,6 +59,7 @@ def test_level_game_model(init_db):
     assert d["game_name"] == "Maze Runner"
     assert d["game_url"] == "https://example.com/play/maze"
     assert d["assigned_lesson"] == "1.2b"
+    assert d["challenge_slug"] == "maze-challenge"
     assert d["progression_order"] == 10202
     assert d["verified"] is True
     assert d["requires_account"] is False
@@ -99,6 +103,13 @@ def test_parse_assigned_lesson():
     assert res["challenge_level"] == "a"
     assert res["progression_order"] == 50101
 
+    # Code Combat 2.3a
+    res_cc = parse_assigned_lesson("Code Combat 2.3a")
+    assert res_cc["chapter"] == 2
+    assert res_cc["lesson"] == 3
+    assert res_cc["challenge_level"] == "a"
+    assert res_cc["progression_order"] == 20301
+
     # 5.1
     res = parse_assigned_lesson("5.1")
     assert res["chapter"] == 5
@@ -132,6 +143,35 @@ def test_parse_assigned_lesson():
     assert res_single["chapter"] == 3
     assert res_single["progression_order"] == 30100
 
+    # Lesson number position estimation logic
+    class MockChallenge:
+        def __init__(self, slug, sequence, name=None):
+            self.slug = slug
+            self.sequence = sequence
+            self.name = name
+
+    challenges = [MockChallenge(f"ch-{i}", i, f"Lesson {i}") for i in range(1, 11)]
+
+    # Lesson 1 -> ratio (1-1)/10 = 0.0 -> index 0 -> ch-1
+    est1 = estimate_target_challenge_by_position(challenges, lesson=1, max_lessons_in_course=10)
+    assert est1 is not None and est1.slug == "ch-1"
+
+    # Lesson 6 -> ratio (6-1)/10 = 0.5 -> index 5 -> ch-6
+    est6 = estimate_target_challenge_by_position(challenges, lesson=6, max_lessons_in_course=10)
+    assert est6 is not None and est6.slug == "ch-6"
+
+    # Lesson 10 -> ratio (10-1)/10 = 0.9 -> index 9 -> ch-10
+    est10 = estimate_target_challenge_by_position(challenges, lesson=10, max_lessons_in_course=10)
+    assert est10 is not None and est10.slug == "ch-10"
+
+    # Clamping beyond max lessons (e.g. lesson=15) -> index 9 -> ch-10
+    est_clamp = estimate_target_challenge_by_position(challenges, lesson=15, max_lessons_in_course=10)
+    assert est_clamp is not None and est_clamp.slug == "ch-10"
+
+    # Auto-detection of max_lessons_in_course from challenge names
+    est_auto = estimate_target_challenge_by_position(challenges, lesson=1)
+    assert est_auto is not None and est_auto.slug == "ch-1"
+
 
 def test_ingest_games_csv(init_db):
     course = Course(id="course_cs1", name="CS1", domain="codecombat.com")
@@ -160,6 +200,104 @@ Game 3,https://games.com/3,1.2a,1,CS1,Web,Third game,True,4.8,True
     assert games[2].requires_account is True
 
 
+def test_ingest_with_explicit_challenge_slug(init_db):
+    course = Course(id="course_cs1", name="CS1", domain="codecombat.com")
+    ch = Challenge(name="Dungeon 1", slug="dungeon-1", domain="codecombat.com", sequence=1, course_id="course_cs1")
+    db.session.add_all([course, ch])
+    db.session.commit()
+
+    csv_data = """Title,Link,Assigned Lesson,Chapter,Chapter Name,Platform,Comment,RequiresAccount,Rating,Verified,Challenge Slug
+Dungeon Game,https://games.com/dungeon,1.1a,1,CS1,Web,Intro,False,4.5,True,dungeon-1
+"""
+    result = ingest_games_csv(csv_data, replace_all=True)
+    assert result["success"] is True
+    assert result["inserted"] == 1
+    game = LevelGame.query.first()
+    assert game.challenge_slug == "dungeon-1"
+
+
+def test_ingest_with_no_challenge_slug_fallback(init_db):
+    course = Course(id="course_cs1", name="CS1", domain="codecombat.com")
+    ch1 = Challenge(name="Intro 1", slug="intro-1", domain="codecombat.com", sequence=1, course_id="course_cs1")
+    ch2 = Challenge(name="Intro 2", slug="intro-2", domain="codecombat.com", sequence=2, course_id="course_cs1")
+    db.session.add_all([course, ch1, ch2])
+    db.session.commit()
+
+    csv_data = """Title,Link,Assigned Lesson,Chapter,Chapter Name,Platform,Comment,RequiresAccount,Rating,Verified
+Fallback Game,https://games.com/fallback,,1,CS1,Web,Fallback note,False,4.0,True
+"""
+    result = ingest_games_csv(csv_data, replace_all=True)
+    assert result["success"] is True
+    assert result["inserted"] == 1
+    game = LevelGame.query.first()
+    # Step 3 fallback picks first challenge of course ordered by sequence ASC -> intro-1
+    assert game.challenge_slug == "intro-1"
+
+
+def test_ingest_discards_no_course_rows(init_db):
+    course = Course(id="course_cs1", name="CS1", domain="codecombat.com")
+    db.session.add(course)
+    db.session.commit()
+
+    csv_data = """Title,Link,Assigned Lesson,Chapter,Chapter Name,Platform,Comment,RequiresAccount,Rating,Verified
+Valid Course Game,https://games.com/valid,1.1a,1,CS1,Web,Valid,False,4.5,True
+Catch Up,https://games.com/catchup,General,,,,Web,No course,False,4.0,True
+"""
+    result = ingest_games_csv(csv_data, replace_all=True)
+    assert result["success"] is True
+    assert result["total_rows"] == 2
+    assert result["inserted"] == 1
+    games = LevelGame.query.all()
+    assert len(games) == 1
+    assert games[0].game_name == "Valid Course Game"
+
+
+def test_ingest_carriage_return_newlines(init_db):
+    """Test CSV with bare carriage returns (\\r) which previously triggered _csv.Error."""
+    course = Course(id="course_cs1", name="CS1", domain="codecombat.com")
+    db.session.add(course)
+    db.session.commit()
+
+    # Classic Mac OS style \\r line endings
+    csv_data = "Title,Link,Assigned Lesson,Chapter,Chapter Name,Platform,Comment,RequiresAccount,Rating,Verified\rGame CR,https://games.com/cr,1.1a,1,CS1,Web,Bare CR,False,4.5,True\r"
+    result = ingest_games_csv(csv_data, replace_all=True)
+    assert result["success"] is True
+    assert result["inserted"] == 1
+    game = LevelGame.query.first()
+    assert game.game_name == "Game CR"
+
+
+def test_ingest_mixed_and_double_newlines_and_bom(init_db):
+    """Test CSV with mixed \\r\\r\\n, \\r\\n, \\n, and UTF-8 BOM as bytes."""
+    course = Course(id="course_cs1", name="CS1", domain="codecombat.com")
+    db.session.add(course)
+    db.session.commit()
+
+    csv_text = "Title,Link,Assigned Lesson,Chapter,Chapter Name,Platform,Comment,RequiresAccount,Rating,Verified\r\r\nGame DoubleCR,https://games.com/dcr,1.1a,1,CS1,Web,Double CR,False,4.5,True\r\nGame Normal,https://games.com/norm,1.2a,1,CS1,Web,Normal,False,4.0,True\n"
+    csv_bytes = b"\xef\xbb\xbf" + csv_text.encode("utf-8")
+
+    result = ingest_games_csv(io.BytesIO(csv_bytes), replace_all=True)
+    assert result["success"] is True
+    assert result["inserted"] == 2
+    games = LevelGame.query.order_by(LevelGame.id.asc()).all()
+    assert len(games) == 2
+    assert games[0].game_name == "Game DoubleCR"
+    assert games[1].game_name == "Game Normal"
+
+
+def test_ingest_malformed_csv_row_does_not_crash(init_db):
+    """Ensure malformed CSV rows don't crash the entire ingestion with a 500."""
+    course = Course(id="course_cs1", name="CS1", domain="codecombat.com")
+    db.session.add(course)
+    db.session.commit()
+
+    # Header ok, followed by a valid row, then an empty row
+    csv_data = "Title,Link,Assigned Lesson,Chapter,Chapter Name,Platform,Comment,RequiresAccount,Rating,Verified\nValid,https://games.com/valid,1.1a,1,CS1,Web,Valid,False,4.5,True\n"
+    result = ingest_games_csv(csv_data, replace_all=True)
+    assert result["success"] is True
+    assert result["inserted"] == 1
+
+
 def test_get_student_sandbox_games(init_db, sample_user):
     classroom = Classroom(id="class_test", name="Test Classroom", language="python")
     classroom.sandbox_active = False
@@ -182,51 +320,45 @@ def test_get_student_sandbox_games(init_db, sample_user):
     classroom.sandbox_active = True
     db.session.commit()
 
-    # Add LevelGames: 1.1a (1 game), 1.1b (1 game), 1.2a (1 game), 2.1a (2 games)
-    g1 = LevelGame(
-        course_id="c1", assigned_lesson="1.1a", progression_order=10101,
-        game_name="Game 1.1a", game_url="https://g.com/1", verified=True
-    )
-    g2 = LevelGame(
-        course_id="c1", assigned_lesson="1.1b", progression_order=10102,
-        game_name="Game 1.1b", game_url="https://g.com/2", verified=True
-    )
-    g3 = LevelGame(
-        course_id="c1", assigned_lesson="1.2a", progression_order=10201,
-        game_name="Game 1.2a", game_url="https://g.com/3", verified=True
-    )
-    g4 = LevelGame(
-        course_id="c1", assigned_lesson="2.1a", progression_order=20101,
-        game_name="Game 2.1a-1", game_url="https://g.com/4", verified=True
-    )
-    g5 = LevelGame(
-        course_id="c1", assigned_lesson="2.1a", progression_order=20101,
-        game_name="Game 2.1a-2", game_url="https://g.com/5", verified=True
-    )
-    db.session.add_all([g1, g2, g3, g4, g5])
-    db.session.commit()
-
-    # 2. Student with 0 completed levels: fallback to earliest milestone games, min 3 games
-    res_zero = get_student_sandbox_games(sample_user, classroom)
-    assert res_zero["sandbox_active"] is True
-    assert res_zero["highest_milestone"] == "1.1a"
-    assert len(res_zero["games"]) >= 3
-
-    # 3. Student has completed challenges for 2.1a
-    ch = Challenge(
-        name="Challenge 2.1a",
-        slug="challenge-2-1a",
-        domain="codecombat.com",
-        sequence=4,
-        course_id="c1",
-    )
-    db.session.add(ch)
+    # Add LevelGames bound to challenges
+    ch1 = Challenge(name="Ch 1", slug="ch-1", domain="codecombat.com", sequence=1, course_id="c1")
+    ch2 = Challenge(name="Ch 2", slug="ch-2", domain="codecombat.com", sequence=2, course_id="c1")
+    ch3 = Challenge(name="Ch 3", slug="ch-3", domain="codecombat.com", sequence=3, course_id="c1")
+    ch4 = Challenge(name="Ch 4", slug="ch-4", domain="codecombat.com", sequence=4, course_id="c1")
+    db.session.add_all([ch1, ch2, ch3, ch4])
     db.session.flush()
 
+    g1 = LevelGame(
+        course_id="c1", assigned_lesson="1.1a", challenge_slug="ch-1", progression_order=10101,
+        game_name="Game 1.1a", game_url="https://g.com/1", rating=4.0, verified=True
+    )
+    g2 = LevelGame(
+        course_id="c1", assigned_lesson="1.1b", challenge_slug="ch-2", progression_order=10102,
+        game_name="Game 1.1b", game_url="https://g.com/2", rating=4.5, verified=True
+    )
+    g3 = LevelGame(
+        course_id="c1", assigned_lesson="1.2a", challenge_slug="ch-3", progression_order=10201,
+        game_name="Game 1.2a", game_url="https://g.com/3", rating=5.0, verified=True
+    )
+    g4 = LevelGame(
+        course_id="c1", assigned_lesson="2.1a", challenge_slug="ch-4", progression_order=20101,
+        game_name="Game 2.1a-1", game_url="https://g.com/4", rating=4.8, verified=True
+    )
+    db.session.add_all([g1, g2, g3, g4])
+    db.session.commit()
+
+    # 2. Student with 0 completed levels: returns Dragon Drop fallback game
+    res_zero = get_student_sandbox_games(sample_user, classroom)
+    assert res_zero["sandbox_active"] is True
+    assert len(res_zero["games"]) == 1
+    assert res_zero["games"][0]["game_name"] == "Dragon Drop"
+    assert res_zero["message"] == "Complete your first challenge to unlock more games!"
+
+    # 3. Student has completed challenges up to sequence 4
     log = ChallengeLog(
         user_id=sample_user.id,
         domain="codecombat.com",
-        challenge_slug="challenge-2-1a",
+        challenge_slug="ch-4",
         course_id="c1",
     )
     db.session.add(log)
@@ -234,14 +366,158 @@ def test_get_student_sandbox_games(init_db, sample_user):
 
     res_completed = get_student_sandbox_games(sample_user, classroom)
     assert res_completed["sandbox_active"] is True
-    # Highest milestone should be 2.1a (due to direct match or sequence)
-    assert res_completed["highest_milestone"] == "2.1a"
-    # 2.1a has 2 games, so algorithm steps back to preceding milestone 1.2a to get >= 3 games!
+    # With 4 eligible games, exactly 3 are selected
     assert len(res_completed["games"]) == 3
-    game_names = [g["game_name"] for g in res_completed["games"]]
-    assert "Game 2.1a-1" in game_names
-    assert "Game 2.1a-2" in game_names
-    assert "Game 1.2a" in game_names
+    assert res_completed["message"] is None
+
+
+def test_get_student_sandbox_games_zero_completions(init_db, sample_user):
+    classroom = Classroom(id="class_zc", name="Zero Completions Room", language="python", sandbox_active=True)
+    course = Course(id="c_zc", name="CS Zero", domain="codecombat.com")
+    db.session.add_all([classroom, course])
+    db.session.flush()
+
+    ci = CourseInstance(id="ci_zc", classroom_id=classroom.id, course_id=course.id)
+    db.session.add(ci)
+
+    game = LevelGame(
+        course_id="c_zc", assigned_lesson="1.1a", challenge_slug="ch-zc",
+        progression_order=10101, game_name="Some Game", game_url="https://g.com/1", verified=True
+    )
+    db.session.add(game)
+    db.session.commit()
+
+    res = get_student_sandbox_games(sample_user, classroom)
+    assert res["sandbox_active"] is True
+    assert len(res["games"]) == 1
+    fallback = res["games"][0]
+    assert fallback["game_name"] == "Dragon Drop"
+    assert fallback["game_url"] == "https://www.roomrecess.com/games/DragonDrop/play.html"
+    assert fallback["platform"] == "Room Recess"
+    assert fallback["requires_account"] is False
+    assert fallback["verified"] is True
+    assert res["message"] == "Complete your first challenge to unlock more games!"
+
+
+def test_get_student_sandbox_games_returns_exactly_three(init_db, sample_user):
+    classroom = Classroom(id="class_e3", name="Exact 3 Room", language="python", sandbox_active=True)
+    course = Course(id="c_e3", name="CS Exact", domain="codecombat.com")
+    db.session.add_all([classroom, course])
+    db.session.flush()
+
+    ci = CourseInstance(id="ci_e3", classroom_id=classroom.id, course_id=course.id)
+    db.session.add(ci)
+
+    # 5 challenges, completed by student
+    for i in range(1, 6):
+        ch = Challenge(name=f"Challenge {i}", slug=f"ch-e3-{i}", domain="codecombat.com", sequence=i, course_id="c_e3")
+        db.session.add(ch)
+        log = ChallengeLog(user_id=sample_user.id, domain="codecombat.com", challenge_slug=f"ch-e3-{i}", course_id="c_e3")
+        db.session.add(log)
+
+    # 5 eligible games
+    for i in range(1, 6):
+        g = LevelGame(
+            course_id="c_e3",
+            assigned_lesson=f"1.{i}a",
+            challenge_slug=f"ch-e3-{i}",
+            progression_order=10000 + i * 100,
+            game_name=f"Game E3-{i}",
+            game_url=f"https://g.com/e3-{i}",
+            rating=float(i),
+            verified=True,
+        )
+        db.session.add(g)
+
+    db.session.commit()
+
+    res = get_student_sandbox_games(sample_user, classroom)
+    assert res["sandbox_active"] is True
+    assert len(res["games"]) == 3
+    # Verify all 3 games are unique
+    game_names = [g["game_name"] for g in res["games"]]
+    assert len(set(game_names)) == 3
+
+
+def test_get_student_sandbox_games_daily_seed_stable(init_db, sample_user):
+    classroom = Classroom(id="class_seed", name="Seed Room", language="python", sandbox_active=True)
+    course = Course(id="c_seed", name="CS Seed", domain="codecombat.com")
+    db.session.add_all([classroom, course])
+    db.session.flush()
+
+    ci = CourseInstance(id="ci_seed", classroom_id=classroom.id, course_id=course.id)
+    db.session.add(ci)
+
+    # 6 challenges, completed by student
+    for i in range(1, 7):
+        ch = Challenge(name=f"Ch {i}", slug=f"ch-seed-{i}", domain="codecombat.com", sequence=i, course_id="c_seed")
+        db.session.add(ch)
+        log = ChallengeLog(user_id=sample_user.id, domain="codecombat.com", challenge_slug=f"ch-seed-{i}", course_id="c_seed")
+        db.session.add(log)
+        g = LevelGame(
+            course_id="c_seed",
+            assigned_lesson=f"1.{i}a",
+            challenge_slug=f"ch-seed-{i}",
+            progression_order=10000 + i * 100,
+            game_name=f"Game Seed {i}",
+            game_url=f"https://g.com/seed-{i}",
+            rating=float(i),
+            verified=True,
+        )
+        db.session.add(g)
+
+    db.session.commit()
+
+    res1 = get_student_sandbox_games(sample_user, classroom)
+    res2 = get_student_sandbox_games(sample_user, classroom)
+    assert [g["game_name"] for g in res1["games"]] == [g["game_name"] for g in res2["games"]]
+
+
+def test_get_student_sandbox_games_fewer_than_three(init_db, sample_user):
+    classroom = Classroom(id="class_few", name="Few Room", language="python", sandbox_active=True)
+    course = Course(id="c_few", name="CS Few", domain="codecombat.com")
+    db.session.add_all([classroom, course])
+    db.session.flush()
+
+    ci = CourseInstance(id="ci_few", classroom_id=classroom.id, course_id=course.id)
+    db.session.add(ci)
+
+    ch1 = Challenge(name="Ch 1", slug="ch-few-1", domain="codecombat.com", sequence=1, course_id="c_few")
+    ch2 = Challenge(name="Ch 2", slug="ch-few-2", domain="codecombat.com", sequence=2, course_id="c_few")
+    db.session.add_all([ch1, ch2])
+    db.session.flush()
+
+    # Student completed sequence 1 only
+    log = ChallengeLog(user_id=sample_user.id, domain="codecombat.com", challenge_slug="ch-few-1", course_id="c_few")
+    db.session.add(log)
+
+    # 1 game bound to seq 1 (eligible), 1 game bound to seq 2 (ineligible)
+    g1 = LevelGame(course_id="c_few", assigned_lesson="1.1a", challenge_slug="ch-few-1", progression_order=10101, game_name="Unlocked Game 1", game_url="https://g.com/1", verified=True)
+    g2 = LevelGame(course_id="c_few", assigned_lesson="1.2a", challenge_slug="ch-few-2", progression_order=10201, game_name="Locked Game 2", game_url="https://g.com/2", verified=True)
+    db.session.add_all([g1, g2])
+    db.session.commit()
+
+    # Case: Exactly 1 game eligible -> returns 1 game without error or backfill
+    res = get_student_sandbox_games(sample_user, classroom)
+    assert res["sandbox_active"] is True
+    assert len(res["games"]) == 1
+    assert res["games"][0]["game_name"] == "Unlocked Game 1"
+
+    # Case: Exactly 2 games eligible
+    g2.challenge_slug = "ch-few-1"  # now bound to sequence 1 as well
+    db.session.commit()
+    res2 = get_student_sandbox_games(sample_user, classroom)
+    assert res2["sandbox_active"] is True
+    assert len(res2["games"]) == 2
+
+    # Case: 0 eligible games exist but student has completions
+    g1.verified = False
+    g2.verified = False
+    db.session.commit()
+    res_zero_eligible = get_student_sandbox_games(sample_user, classroom)
+    assert res_zero_eligible["sandbox_active"] is True
+    assert res_zero_eligible["games"] == []
+    assert res_zero_eligible["message"] == "No games assigned to your current progress level yet."
 
 
 def test_sandbox_routes_admin_operations(client, sample_admin, sample_user):
@@ -260,12 +536,20 @@ def test_sandbox_routes_admin_operations(client, sample_admin, sample_user):
     assert resp_sample.status_code == 200
     assert "text/csv" in resp_sample.content_type
     assert b"Assigned Lesson" in resp_sample.data
+    assert b"Challenge Slug" in resp_sample.data
+
+    # Seed course and challenges so uploaded games can be associated
+    course = Course(id="course_cs1", name="CS1", domain="codecombat.com")
+    ch_a = Challenge(name="Ch A", slug="ch-a", domain="codecombat.com", sequence=1, course_id="course_cs1")
+    ch_b = Challenge(name="Ch B", slug="ch-b", domain="codecombat.com", sequence=2, course_id="course_cs1")
+    db.session.add_all([course, ch_a, ch_b])
+    db.session.commit()
 
     # 2. Upload CSV
     csv_content = (
-        b"Title,Link,Assigned Lesson,Chapter,Chapter Name,Platform,Comment,RequiresAccount,Rating,Verified\n"
-        b"Game A,https://games.com/a,1.1a,1,CS1,Web,Note,False,5.0,True\n"
-        b"Game B,https://games.com/b,1.1a,1,CS1,Web,Note,False,4.0,True\n"
+        b"Title,Link,Assigned Lesson,Chapter,Chapter Name,Platform,Comment,RequiresAccount,Rating,Verified,Challenge Slug\n"
+        b"Game A,https://games.com/a,1.1a,1,CS1,Web,Note,False,5.0,True,ch-a\n"
+        b"Game B,https://games.com/b,1.1a,1,CS1,Web,Note,False,4.0,True,ch-b\n"
     )
     data = {"file": (io.BytesIO(csv_content), "test_games.csv")}
     resp_upload = client.post(
@@ -349,10 +633,17 @@ def test_sandbox_toggle_and_status(client, sample_admin, sample_user):
 def test_student_sandbox_games_route(client, sample_user):
     classroom = Classroom(id="class_student_test", name="Room", language="python")
     classroom.sandbox_active = True
-    db.session.add(classroom)
+    course = Course(id="course_student_route", name="CS Route", domain="codecombat.com")
+    db.session.add_all([classroom, course])
+    db.session.flush()
+
+    ci = CourseInstance(id="ci_student_route", classroom_id=classroom.id, course_id=course.id)
+    db.session.add(ci)
 
     game = LevelGame(
+        course_id=course.id,
         assigned_lesson="1.1a",
+        challenge_slug="ch-route",
         progression_order=10101,
         game_name="Game S",
         game_url="https://games.com/s",
@@ -373,18 +664,19 @@ def test_student_sandbox_games_route(client, sample_user):
     assert resp.status_code == 200
     data = resp.get_json()
     assert data["sandbox_active"] is True
-    assert len(data["games"]) >= 1
-    assert data["games"][0]["game_name"] == "Game S"
+    # Student with 0 completions receives fallback Dragon Drop
+    assert len(data["games"]) == 1
+    assert data["games"][0]["game_name"] == "Dragon Drop"
 
 
 def test_algorithm_edge_cases_and_one_to_many(init_db, sample_user):
     """
-    Tests edge cases for level_game_service:
-    - 1-to-many mapping: multiple games for 5.1a
-    - Case a: Highest completed lesson has >= 3 games (verify all >= 3 games returned)
-    - Case b: Highest completed lesson has 1 game, preceding has 2 games (verify 3 games returned across 2 lessons)
-    - Case c: Highest completed lesson has 2 games, preceding has 2 games (verify 4 games returned, not truncated to 3)
-    - Case d: Student with 0 completed levels (verify fallback earliest games)
+    Tests edge cases for level_game_service according to the new behavioural contract:
+    - Case a: >=3 games eligible -> show exactly 3 (daily-seeded, weighted by rating)
+    - Case b: 1 game eligible -> show exactly 1 game (no backfilling)
+    - Case c: 2 games eligible -> show exactly 2 games (no backfilling)
+    - Case d: 0 games eligible but student has completions -> return empty list with informational message
+    - Case e: 0 completed levels -> returns Dragon Drop fallback game
     """
     classroom = Classroom(id="class_algo_test", name="Algo Classroom", language="python", sandbox_active=True)
     db.session.add(classroom)
@@ -397,107 +689,92 @@ def test_algorithm_edge_cases_and_one_to_many(init_db, sample_user):
     db.session.add(ci)
     db.session.commit()
 
-    # --- Scenario Case A: Highest completed lesson has >= 3 games (and 1-to-many mapping) ---
-    # 4 games mapped to 5.1a, 2 games mapped to 4.2
-    g_42_1 = LevelGame(course_id="course_algo", assigned_lesson="4.2", progression_order=40200, game_name="Game 4.2-1", game_url="https://g.com/42-1", verified=True)
-    g_42_2 = LevelGame(course_id="course_algo", assigned_lesson="4.2", progression_order=40200, game_name="Game 4.2-2", game_url="https://g.com/42-2", verified=True)
-    g_51a_1 = LevelGame(course_id="course_algo", assigned_lesson="5.1a", progression_order=50101, game_name="Game 5.1a-1", game_url="https://g.com/51a-1", verified=True)
-    g_51a_2 = LevelGame(course_id="course_algo", assigned_lesson="5.1a", progression_order=50101, game_name="Game 5.1a-2", game_url="https://g.com/51a-2", verified=True)
-    g_51a_3 = LevelGame(course_id="course_algo", assigned_lesson="5.1a", progression_order=50101, game_name="Game 5.1a-3", game_url="https://g.com/51a-3", verified=True)
-    g_51a_4 = LevelGame(course_id="course_algo", assigned_lesson="5.1a", progression_order=50101, game_name="Game 5.1a-4", game_url="https://g.com/51a-4", verified=True)
-    db.session.add_all([g_42_1, g_42_2, g_51a_1, g_51a_2, g_51a_3, g_51a_4])
+    # Create challenges seq 1 to 5
+    for i in range(1, 6):
+        ch = Challenge(name=f"Challenge {i}", slug=f"ch-algo-{i}", domain="codecombat.com", sequence=i, course_id="course_algo")
+        db.session.add(ch)
     db.session.commit()
 
-    # Student completed 5.1a
-    log_51a = ChallengeLog(user_id=sample_user.id, domain="codecombat.com", challenge_slug="lesson-5-1a", course_id="course_algo")
-    db.session.add(log_51a)
+    # --- Scenario Case A: >=3 games eligible -> show exactly 3 ---
+    # Student completed sequence 5
+    for i in range(1, 6):
+        log = ChallengeLog(user_id=sample_user.id, domain="codecombat.com", challenge_slug=f"ch-algo-{i}", course_id="course_algo")
+        db.session.add(log)
+
+    # 4 games bound to challenge sequence 5
+    g1 = LevelGame(course_id="course_algo", assigned_lesson="5.1a", challenge_slug="ch-algo-5", progression_order=50101, game_name="Game 5.1a-1", game_url="https://g.com/51a-1", rating=4.9, verified=True)
+    g2 = LevelGame(course_id="course_algo", assigned_lesson="5.1a", challenge_slug="ch-algo-5", progression_order=50101, game_name="Game 5.1a-2", game_url="https://g.com/51a-2", rating=4.8, verified=True)
+    g3 = LevelGame(course_id="course_algo", assigned_lesson="5.1a", challenge_slug="ch-algo-5", progression_order=50101, game_name="Game 5.1a-3", game_url="https://g.com/51a-3", rating=4.7, verified=True)
+    g4 = LevelGame(course_id="course_algo", assigned_lesson="5.1a", challenge_slug="ch-algo-5", progression_order=50101, game_name="Game 5.1a-4", game_url="https://g.com/51a-4", rating=4.6, verified=True)
+    db.session.add_all([g1, g2, g3, g4])
     db.session.commit()
 
     res_a = get_student_sandbox_games(sample_user, classroom)
     assert res_a["sandbox_active"] is True
-    assert res_a["highest_milestone"] == "5.1a"
-    # Case a requirement: all >= 3 games from that lesson are returned (in this case all 4)
-    assert len(res_a["games"]) == 4
-    names_a = {g["game_name"] for g in res_a["games"]}
-    assert names_a == {"Game 5.1a-1", "Game 5.1a-2", "Game 5.1a-3", "Game 5.1a-4"}
-    # Preceding milestone games (4.2) should NOT be included since 5.1a alone has >= 3 games
-    assert "Game 4.2-1" not in names_a
+    # Exactly 3 games returned from the 4 eligible
+    assert len(res_a["games"]) == 3
 
     # Clean up games and logs for scenario B
     LevelGame.query.delete()
-    ChallengeLog.query.filter_by(user_id=sample_user.id).delete()
+    for cl in ChallengeLog.query.filter_by(user_id=sample_user.id).all():
+        db.session.delete(cl)
     db.session.commit()
 
-    # --- Scenario Case B: Highest completed lesson has 1 game, preceding has 2 games ---
-    # Preceding lesson 5.1a has 2 games; highest completed lesson 5.2 has 1 game
-    g_b_pre1 = LevelGame(course_id="course_algo", assigned_lesson="5.1a", progression_order=50101, game_name="Game 5.1a-A", game_url="https://g.com/51a-a", verified=True)
-    g_b_pre2 = LevelGame(course_id="course_algo", assigned_lesson="5.1a", progression_order=50101, game_name="Game 5.1a-B", game_url="https://g.com/51a-b", verified=True)
-    g_b_high = LevelGame(course_id="course_algo", assigned_lesson="5.2", progression_order=50200, game_name="Game 5.2-Solo", game_url="https://g.com/52-solo", verified=True)
-    db.session.add_all([g_b_pre1, g_b_pre2, g_b_high])
+    # --- Scenario Case B: 1 game eligible -> show exactly 1 game without backfill ---
+    log_1 = ChallengeLog(user_id=sample_user.id, domain="codecombat.com", challenge_slug="ch-algo-1", course_id="course_algo")
+    db.session.add(log_1)
 
-    log_52 = ChallengeLog(user_id=sample_user.id, domain="codecombat.com", challenge_slug="challenge-5-2", course_id="course_algo")
-    db.session.add(log_52)
+    # 1 game bound to seq 1 (eligible), 1 game bound to seq 2 (ineligible)
+    g_b1 = LevelGame(course_id="course_algo", assigned_lesson="1.1a", challenge_slug="ch-algo-1", progression_order=10101, game_name="Solo Game", game_url="https://g.com/solo", rating=5.0, verified=True)
+    g_b2 = LevelGame(course_id="course_algo", assigned_lesson="1.2a", challenge_slug="ch-algo-2", progression_order=10201, game_name="Locked 2", game_url="https://g.com/locked2", rating=4.0, verified=True)
+    db.session.add_all([g_b1, g_b2])
     db.session.commit()
 
     res_b = get_student_sandbox_games(sample_user, classroom)
     assert res_b["sandbox_active"] is True
-    assert res_b["highest_milestone"] == "5.2"
-    # Case b requirement: 3 games returned across 2 lessons
-    assert len(res_b["games"]) == 3
-    names_b = {g["game_name"] for g in res_b["games"]}
-    assert names_b == {"Game 5.2-Solo", "Game 5.1a-A", "Game 5.1a-B"}
+    assert len(res_b["games"]) == 1
+    assert res_b["games"][0]["game_name"] == "Solo Game"
 
     # Clean up for scenario C
     LevelGame.query.delete()
-    ChallengeLog.query.filter_by(user_id=sample_user.id).delete()
+    for cl in ChallengeLog.query.filter_by(user_id=sample_user.id).all():
+        db.session.delete(cl)
     db.session.commit()
 
-    # --- Scenario Case C: Highest completed lesson has 2 games, preceding has 2 games ---
-    # Preceding lesson 5.2 has 2 games; highest completed lesson 6.1 has 2 games
-    g_c_pre1 = LevelGame(course_id="course_algo", assigned_lesson="5.2", progression_order=50200, game_name="Game 5.2-1", game_url="https://g.com/52-1", verified=True)
-    g_c_pre2 = LevelGame(course_id="course_algo", assigned_lesson="5.2", progression_order=50200, game_name="Game 5.2-2", game_url="https://g.com/52-2", verified=True)
-    g_c_high1 = LevelGame(course_id="course_algo", assigned_lesson="6.1", progression_order=60100, game_name="Game 6.1-1", game_url="https://g.com/61-1", verified=True)
-    g_c_high2 = LevelGame(course_id="course_algo", assigned_lesson="6.1", progression_order=60100, game_name="Game 6.1-2", game_url="https://g.com/61-2", verified=True)
-    db.session.add_all([g_c_pre1, g_c_pre2, g_c_high1, g_c_high2])
+    # --- Scenario Case C: 2 games eligible -> show exactly 2 games without backfill ---
+    log_2 = ChallengeLog(user_id=sample_user.id, domain="codecombat.com", challenge_slug="ch-algo-2", course_id="course_algo")
+    db.session.add(log_2)
 
-    log_61 = ChallengeLog(user_id=sample_user.id, domain="codecombat.com", challenge_slug="challenge-6-1", course_id="course_algo")
-    db.session.add(log_61)
+    g_c1 = LevelGame(course_id="course_algo", assigned_lesson="1.1a", challenge_slug="ch-algo-1", progression_order=10101, game_name="Game C1", game_url="https://g.com/c1", rating=4.5, verified=True)
+    g_c2 = LevelGame(course_id="course_algo", assigned_lesson="1.2a", challenge_slug="ch-algo-2", progression_order=10201, game_name="Game C2", game_url="https://g.com/c2", rating=4.6, verified=True)
+    g_c3 = LevelGame(course_id="course_algo", assigned_lesson="1.3a", challenge_slug="ch-algo-3", progression_order=10301, game_name="Game C3", game_url="https://g.com/c3", rating=4.7, verified=True)
+    db.session.add_all([g_c1, g_c2, g_c3])
     db.session.commit()
 
     res_c = get_student_sandbox_games(sample_user, classroom)
     assert res_c["sandbox_active"] is True
-    assert res_c["highest_milestone"] == "6.1"
-    # Case c requirement: 4 games returned, NOT truncated to 3!
-    assert len(res_c["games"]) == 4
+    # Student completed seq 2, so seq 1 and seq 2 games are eligible -> 2 games
+    assert len(res_c["games"]) == 2
     names_c = {g["game_name"] for g in res_c["games"]}
-    assert names_c == {"Game 6.1-1", "Game 6.1-2", "Game 5.2-1", "Game 5.2-2"}
+    assert names_c == {"Game C1", "Game C2"}
+    assert "Game C3" not in names_c
 
     # Clean up for scenario D
-    ChallengeLog.query.filter_by(user_id=sample_user.id).delete()
     LevelGame.query.delete()
+    for cl in ChallengeLog.query.filter_by(user_id=sample_user.id).all():
+        db.session.delete(cl)
     db.session.commit()
 
-    # --- Scenario Case D: Student with 0 completed levels (fallback earliest games) ---
-    g_d_1 = LevelGame(course_id="course_algo", assigned_lesson="1.1a", progression_order=10101, game_name="Game 1.1a-1", game_url="https://g.com/11a-1", verified=True)
-    g_d_2 = LevelGame(course_id="course_algo", assigned_lesson="1.1a", progression_order=10101, game_name="Game 1.1a-2", game_url="https://g.com/11a-2", verified=True)
-    g_d_3 = LevelGame(course_id="course_algo", assigned_lesson="1.2a", progression_order=10201, game_name="Game 1.2a-1", game_url="https://g.com/12a-1", verified=True)
-    g_d_4 = LevelGame(course_id="course_algo", assigned_lesson="1.2a", progression_order=10201, game_name="Game 1.2a-2", game_url="https://g.com/12a-2", verified=True)
-    g_d_5 = LevelGame(course_id="course_algo", assigned_lesson="2.1", progression_order=20100, game_name="Game 2.1-1", game_url="https://g.com/21-1", verified=True)
-    db.session.add_all([g_d_1, g_d_2, g_d_3, g_d_4, g_d_5])
+    # --- Scenario Case D: Student with 0 completed levels -> Dragon Drop fallback game ---
+    g_d_1 = LevelGame(course_id="course_algo", assigned_lesson="1.1a", challenge_slug="ch-algo-1", progression_order=10101, game_name="Game 1.1a-1", game_url="https://g.com/11a-1", verified=True)
+    db.session.add(g_d_1)
     db.session.commit()
 
     res_d = get_student_sandbox_games(sample_user, classroom)
     assert res_d["sandbox_active"] is True
-    assert res_d["highest_milestone"] == "1.1a"
-    # Fallback starts with earliest milestone (1.1a) and advances forward until >= 3
-    # 1.1a (2 games) + 1.2a (2 games) = 4 games returned, all from earliest milestones
-    assert len(res_d["games"]) == 4
-    names_d = {g["game_name"] for g in res_d["games"]}
-    assert "Game 1.1a-1" in names_d
-    assert "Game 1.1a-2" in names_d
-    assert "Game 1.2a-1" in names_d
-    assert "Game 1.2a-2" in names_d
-    assert "Game 2.1-1" not in names_d
+    assert len(res_d["games"]) == 1
+    assert res_d["games"][0]["game_name"] == "Dragon Drop"
+    assert res_d["message"] == "Complete your first challenge to unlock more games!"
 
 
 def test_csv_ingestion_exact_user_columns_and_one_to_many(init_db):
@@ -568,6 +845,10 @@ def test_csv_ingestion_security_url_validation(init_db):
     - file:...
     - Empty domain or invalid format
     """
+    course = Course(id="course_cs1", name="CS1", domain="codecombat.com")
+    db.session.add(course)
+    db.session.commit()
+
     csv_data = """Title,Link,Assigned Lesson,Chapter,Chapter Name,Platform,Comment,RequiresAccount,Rating,Verified
 Valid Game,https://games.com/valid,1.1a,1,CS1,Web,Safe,False,4.5,True
 XSS Game 1,javascript:alert(document.domain),1.1b,1,CS1,Web,Attack,False,1.0,True

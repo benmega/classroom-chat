@@ -85,12 +85,13 @@
     --font-heading: 'Outfit', 'Inter', system-ui, sans-serif;
     --font-body: 'Inter', system-ui, sans-serif;
 
-    /* Spacing */
+    /* Spacing & Layout */
     --spacing-xs: 0.25rem;
     --spacing-sm: 0.5rem;
     --spacing-md: 1rem;
     --spacing-lg: 1.5rem;
     --spacing-xl: 2rem;
+    --nav-rail-width: 72px;
 
     /* Button Tokens */
     --btn-padding-sm: 6px 12px;

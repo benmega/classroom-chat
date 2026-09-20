@@ -506,12 +506,12 @@
     align-items: center;
     justify-content: space-between;
     padding: 0.75rem 1.25rem;
-    background: linear-gradient(90deg, #4f46e5 0%, #7c3aed 50%, #db2777 100%);
+    background: var(--blue-600, #2563eb);
     color: #ffffff;
     position: sticky;
     top: 0;
     z-index: 30;
-    box-shadow: 0 4px 14px rgba(79, 70, 229, 0.35);
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.25);
     gap: 1rem;
     animation: bannerSlideDown 0.3s ease-out;
     cursor: pointer;
@@ -544,7 +544,7 @@
 
 .sandbox-sticky-banner-btn {
     background: #ffffff;
-    color: #4338ca;
+    color: var(--blue-600, #2563eb);
     font-weight: 700;
     font-size: 0.85rem;
     padding: 0.45rem 1rem;

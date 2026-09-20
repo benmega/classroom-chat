@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import AdminStandardProjects from './AdminStandardProjects';
 import AdminAchievements from './AdminAchievements';
 import AdminChallenges from './AdminChallenges';
+import AdminGameCatalog from './AdminGameCatalog';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
-import { BookMarked, Award, Swords, Library } from 'lucide-react';
+import { BookMarked, Award, Swords, Library, Gamepad2 } from 'lucide-react';
 import './AdminLibrary.css';
 
 const AdminLibrary = () => {
@@ -13,6 +14,7 @@ const AdminLibrary = () => {
         { id: 'projects', label: 'Standard Projects', icon: BookMarked },
         { id: 'achievements', label: 'Achievements', icon: Award },
         { id: 'challenges', label: 'Courses', icon: Swords },
+        { id: 'games', label: 'Game Catalog', icon: Gamepad2 },
     ];
 
     const renderContent = () => {
@@ -23,6 +25,8 @@ const AdminLibrary = () => {
                 return <AdminAchievements />;
             case 'challenges':
                 return <AdminChallenges />;
+            case 'games':
+                return <AdminGameCatalog />;
             default:
                 return <AdminStandardProjects />;
         }

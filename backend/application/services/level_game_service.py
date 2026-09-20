@@ -5,11 +5,63 @@ Summary: Service functions for parsing assigned lessons, ingesting CSV level gam
          and calculating unlocked sandbox games for students.
 """
 
+import contextlib
 import csv
 import io
+import logging
+import math
+import random
 import re
 from collections import OrderedDict
+from datetime import date
 from urllib.parse import urlparse
+
+logger = logging.getLogger(__name__)
+
+FALLBACK_GAME = {
+    "id": None,
+    "game_name": "Dragon Drop",
+    "game_url": "https://www.roomrecess.com/games/DragonDrop/play.html",
+    "platform": "Room Recess",
+    "assigned_lesson": None,
+    "challenge_slug": None,
+    "rating": None,
+    "requires_account": False,
+    "verified": True,
+    "comment": None,
+}
+
+
+def estimate_target_challenge_by_position(challenges, lesson, max_lessons_in_course=None):
+    """
+    Estimates the target challenge from a course's challenges ordered by sequence ASC
+    based on the lesson number.
+    Formula: progression_ratio = (lesson - 1) / max_lessons_in_course
+    target_idx = floor(progression_ratio * total_challenges_in_course), clamped to [0, total_challenges - 1].
+    """
+    if not challenges or lesson is None:
+        return None
+
+    if max_lessons_in_course is None:
+        lessons_seen = []
+        for ch in challenges:
+            for text in [getattr(ch, "name", None), getattr(ch, "slug", None)]:
+                if not text:
+                    continue
+                parsed = parse_assigned_lesson(text)
+                if parsed.get("lesson"):
+                    lessons_seen.append(parsed["lesson"])
+                for num_str in re.findall(r'(?:lesson|l)\s*(\d+)', text, re.IGNORECASE):
+                    with contextlib.suppress(ValueError):
+                        lessons_seen.append(int(num_str))
+        max_lessons_in_course = max(lessons_seen) if lessons_seen else 10
+
+    max_lessons_in_course = max(int(max_lessons_in_course), 1)
+    progression_ratio = (lesson - 1) / max_lessons_in_course
+    total_challenges = len(challenges)
+    target_idx = math.floor(progression_ratio * total_challenges)
+    target_idx = max(0, min(int(target_idx), total_challenges - 1))
+    return challenges[target_idx]
 
 
 def parse_assigned_lesson(assigned_lesson_str):
@@ -129,42 +181,89 @@ def ingest_games_csv(file_content_or_stream, replace_all=True):
     Reads CSV with csv.DictReader.
     Ingests user columns:
       Title, Link, Assigned Lesson, Chapter, Chapter Name, ChapterTitle, Platform, Comment,
-      RequiresAccount, Rating, AI Rating, Human Rating, Verified.
+      RequiresAccount, Rating, AI Rating, Human Rating, Verified, Challenge Slug.
     Validates URLs (must start with http:// or https://).
     Resolves course identifiers matching Chapter Name / Chapter against Course table if possible.
+    Resolves challenge slug via priority cascade:
+      Step 1: Explicit Challenge Slug (must exist in Challenge table; otherwise log warning & fallback)
+      Step 2: Lesson Number Position Estimate (ratio based on highest lesson in course's challenges)
+      Step 3: First Challenge of Course (ordered by sequence ASC)
+      Step 4: Discard if course_id is None
     Inserts or replaces LevelGame records.
     Returns summary: {"success": True, "total_rows": N, "inserted": N, "errors": []}.
     """
     from application.extensions import db
+    from application.models.challenge import Challenge
     from application.models.level_game import LevelGame
 
-    if hasattr(file_content_or_stream, "read"):
-        content = file_content_or_stream.read()
-        if isinstance(content, bytes):
-            content = content.decode("utf-8-sig", errors="replace")
-        stream = io.StringIO(content)
-    elif isinstance(file_content_or_stream, bytes):
-        stream = io.StringIO(file_content_or_stream.decode("utf-8-sig", errors="replace"))
-    elif isinstance(file_content_or_stream, str):
-        stream = io.StringIO(file_content_or_stream)
-    else:
-        stream = io.StringIO(str(file_content_or_stream))
+    raw = file_content_or_stream.read() if hasattr(file_content_or_stream, "read") else file_content_or_stream
 
+    if isinstance(raw, bytes):
+        if raw.startswith(b"\xff\xfe") or raw.startswith(b"\xfe\xff"):
+            content = raw.decode("utf-16", errors="replace")
+        else:
+            content = raw.decode("utf-8-sig", errors="replace")
+    elif isinstance(raw, str):
+        content = raw
+    else:
+        content = str(raw)
+
+    # Normalize line endings:
+    # Windows text mode or HTTP multipart can produce \r\r\n.
+    # Classic Mac or certain spreadsheet exports produce bare \r.
+    # Standardizing to \n avoids _csv.Error: new-line character seen in unquoted field.
+    content = content.replace("\r\r\n", "\n").replace("\r\n", "\n").replace("\r", "\n")
+    # Strip null characters which can corrupt csv parsing
+    content = content.replace("\x00", "")
+
+    stream = io.StringIO(content, newline="")
     reader = csv.DictReader(stream)
-    if not reader.fieldnames:
+    try:
+        if not reader.fieldnames:
+            return {
+                "success": False,
+                "total_rows": 0,
+                "inserted": 0,
+                "errors": ["CSV file appears to be empty or has no header row."],
+            }
+    except csv.Error as e:
         return {
             "success": False,
             "total_rows": 0,
             "inserted": 0,
-            "errors": ["CSV file appears to be empty or has no header row."],
+            "errors": [f"CSV formatting error in header: {e!s}"],
         }
 
     games_to_insert = []
     errors = []
     total_rows = 0
 
-    for row_idx, raw_row in enumerate(reader, start=1):
-        if not any(v and v.strip() for v in raw_row.values() if v):
+    course_challenges_cache = {}
+
+    def get_course_challenges(cid):
+        if not cid:
+            return []
+        if cid not in course_challenges_cache:
+            course_challenges_cache[cid] = (
+                Challenge.query.filter_by(course_id=cid)
+                .order_by(Challenge.sequence.asc().nulls_last(), Challenge.id.asc())
+                .all()
+            )
+        return course_challenges_cache[cid]
+
+    row_idx = 0
+    while True:
+        try:
+            raw_row = next(reader)
+            row_idx += 1
+        except StopIteration:
+            break
+        except csv.Error as e:
+            row_idx += 1
+            errors.append(f"Row {row_idx}: Failed to parse CSV row ({e!s}).")
+            continue
+
+        if not raw_row or not any(v and v.strip() for v in raw_row.values() if v):
             continue
 
         total_rows += 1
@@ -239,6 +338,52 @@ def ingest_games_csv(file_content_or_stream, replace_all=True):
             course_val=course_str,
         )
 
+        # Priority Cascade for Challenge Resolution:
+        # Step 1 — Explicit Challenge Slug
+        raw_slug = (
+            row.get("challenge slug")
+            or row.get("challenge_slug")
+            or row.get("challenge")
+            or ""
+        ).strip()
+        resolved_slug = None
+
+        if raw_slug:
+            matched_challenge = Challenge.query.filter_by(slug=raw_slug).first()
+            if matched_challenge:
+                resolved_slug = matched_challenge.slug
+                if not course_id and matched_challenge.course_id:
+                    course_id = matched_challenge.course_id
+            else:
+                logger.warning(
+                    f"Row {row_idx}: Challenge slug '{raw_slug}' does not exist in database. Falling through to position estimate."
+                )
+
+        # Step 2 — Lesson Number Position Estimate (Intermediate)
+        if resolved_slug is None and course_id is not None and lesson is not None:
+            challenges = get_course_challenges(course_id)
+            if challenges:
+                estimated_challenge = estimate_target_challenge_by_position(challenges, lesson)
+                if estimated_challenge:
+                    resolved_slug = estimated_challenge.slug
+                    logger.debug(
+                        f"Row {row_idx}: Estimated challenge '{resolved_slug}' for lesson {lesson} in course '{course_id}'."
+                    )
+
+        # Step 3 — First Challenge of Course (Fallback)
+        if resolved_slug is None and course_id is not None:
+            challenges = get_course_challenges(course_id)
+            if challenges:
+                resolved_slug = challenges[0].slug
+                logger.debug(
+                    f"Row {row_idx}: Fallback to first challenge '{resolved_slug}' for course '{course_id}'."
+                )
+
+        # Step 4 — Discard (No Course)
+        if course_id is None:
+            logger.info(f"Row {row_idx}: Skipped game '{game_name}' - no associated course resolved.")
+            continue
+
         platform = row.get("platform") or None
         comment = row.get("comment") or row.get("notes") or row.get("note") or None
 
@@ -269,6 +414,7 @@ def ingest_games_csv(file_content_or_stream, replace_all=True):
             lesson=lesson,
             challenge_level=challenge_level,
             assigned_lesson=assigned_lesson,
+            challenge_slug=resolved_slug,
             progression_order=progression_order,
             game_name=game_name,
             game_url=game_url,
@@ -304,17 +450,17 @@ def ingest_games_csv(file_content_or_stream, replace_all=True):
 
 def get_student_sandbox_games(user, classroom):
     """
-    Retrieves available sandbox games for a student in a classroom.
-    - Check classroom.sandbox_active. If False, return {"sandbox_active": False, "games": [], "message": "Sandbox mode is inactive"}.
-    - Get student's completed challenges/levels from ChallengeLog for active courses in this classroom.
-    - Algorithm for min 3 games:
-      - Sort distinct lesson milestones in the course descending by progression_order.
-      - Find the student's highest completed lesson milestone (based on completed level sequence/count or direct match).
-      - Select all games for the highest completed milestone.
-      - If total games < 3, step back to preceding milestones and add their games until total >= 3 or no earlier milestones exist.
-      - If student has 0 completed levels, fallback to earliest milestone games (e.g. 1.1a) or return intro games.
-      - Return { "sandbox_active": True, "highest_milestone": ..., "games": [...] }.
+    Retrieves available sandbox games for a student in a classroom based on course progress.
+    3a: Guard clauses (sandbox_active, active courses).
+    3b: Highest completed challenge sequence per active course.
+    3c: Eligible games (verified, active course, bound challenge sequence <= milestone sequence).
+        If 0 completions across all active courses, returns single fallback game (Dragon Drop).
+        If 0 eligible games exist with completions > 0, returns empty list with informational message.
+    3d: Exactly 3 games via daily-seeded weighted random sampling (without replacement).
+        If fewer than 3 eligible games exist, returns all of them.
+    3e: Return shape: {"sandbox_active": True, "games": [game.to_dict(), ...], "message": ...}
     """
+    # 3a — Guard Clauses
     if not classroom.sandbox_active:
         return {
             "sandbox_active": False,
@@ -322,6 +468,7 @@ def get_student_sandbox_games(user, classroom):
             "message": "Sandbox mode is inactive",
         }
 
+    from application.extensions import db
     from application.models.challenge import Challenge
     from application.models.challenge_log import ChallengeLog
     from application.models.level_game import LevelGame
@@ -329,129 +476,120 @@ def get_student_sandbox_games(user, classroom):
     active_course_ids = [
         ci.course_id for ci in (classroom.course_assignments or []) if ci.course_id
     ]
-
-    base_query = LevelGame.query.filter(LevelGame.verified.is_(True))
-    if active_course_ids:
-        course_games = base_query.filter(
-            (LevelGame.course_id.in_(active_course_ids)) | (LevelGame.course_id.is_(None))
-        ).all()
-        if not course_games:
-            course_games = base_query.all()
-    else:
-        course_games = base_query.all()
-
-    if not course_games:
-        course_games = LevelGame.query.all()
-
-    if not course_games:
+    if not active_course_ids:
         return {
             "sandbox_active": True,
-            "highest_milestone": None,
             "games": [],
+            "message": "No courses assigned to this classroom.",
         }
 
-    games_by_milestone = {}
-    milestone_order = {}
-
-    for g in course_games:
-        m = g.assigned_lesson
-        if m not in games_by_milestone:
-            games_by_milestone[m] = []
-            milestone_order[m] = g.progression_order
-        games_by_milestone[m].append(g)
-
-    sorted_milestones_asc = sorted(
-        games_by_milestone.keys(), key=lambda m: (milestone_order[m], m)
+    # 3b — Get Student's Highest Completed Challenge Sequence Per Course
+    completed_rows = (
+        db.session.query(
+            Challenge.slug,
+            Challenge.sequence,
+            Challenge.course_id.label("challenge_course_id"),
+            ChallengeLog.course_id.label("log_course_id"),
+        )
+        .join(ChallengeLog, ChallengeLog.challenge_slug == Challenge.slug)
+        .filter(
+            ChallengeLog.user_id == user.id,
+            (
+                (Challenge.course_id.in_(active_course_ids))
+                | (ChallengeLog.course_id.in_(active_course_ids))
+            ),
+        )
+        .all()
     )
-    sorted_milestones_desc = sorted(
-        games_by_milestone.keys(), key=lambda m: (milestone_order[m], m), reverse=True
-    )
 
-    log_query = ChallengeLog.query.filter(ChallengeLog.user_id == user.id)
-    if active_course_ids:
-        student_logs = log_query.filter(
-            (ChallengeLog.course_id.in_(active_course_ids))
-            | (ChallengeLog.course_id.is_(None))
-        ).all()
-        if not student_logs:
-            student_logs = log_query.all()
-    else:
-        student_logs = log_query.all()
+    milestone_sequence_by_course = {cid: 0 for cid in active_course_ids}
+    total_completions = 0
 
-    completed_slugs = {
-        log_entry.challenge_slug.strip().lower()
-        for log_entry in student_logs
-        if log_entry.challenge_slug
-    }
-    completed_count = len(student_logs)
+    for row in completed_rows:
+        cid = (
+            row.challenge_course_id
+            if (row.challenge_course_id in milestone_sequence_by_course)
+            else row.log_course_id
+        )
+        if cid in milestone_sequence_by_course:
+            total_completions += 1
+            seq = row.sequence or 0
+            if seq > milestone_sequence_by_course[cid]:
+                milestone_sequence_by_course[cid] = seq
 
-    challenges = []
-    if completed_slugs:
-        challenges = Challenge.query.filter(Challenge.slug.in_(completed_slugs)).all()
-
-    max_sequence = 0
-    if challenges:
-        seqs = [c.sequence for c in challenges if c.sequence is not None]
-        if seqs:
-            max_sequence = max(seqs)
-
-    highest_milestone = None
-
-    if completed_count == 0:
-        # Fallback to earliest milestone games
-        highest_milestone = sorted_milestones_asc[0]
-        selected_games = list(games_by_milestone[highest_milestone])
-
-        # Advance forward if < 3 games
-        curr_idx = 0
-        while len(selected_games) < 3 and (curr_idx + 1) < len(sorted_milestones_asc):
-            curr_idx += 1
-            next_m = sorted_milestones_asc[curr_idx]
-            for g in games_by_milestone[next_m]:
-                if g not in selected_games:
-                    selected_games.append(g)
-
+    # Zero completions in ALL active courses: return fallback game Dragon Drop
+    if total_completions == 0:
         return {
             "sandbox_active": True,
-            "highest_milestone": highest_milestone,
-            "games": [g.to_dict() for g in selected_games],
+            "games": [FALLBACK_GAME],
+            "message": "Complete your first challenge to unlock more games!",
+            "highest_milestone": None,
         }
 
-    # 1. Check direct match (in descending order to find highest milestone)
-    for m in sorted_milestones_desc:
-        m_norm = m.strip().lower()
-        if m_norm in completed_slugs:
-            highest_milestone = m
-            break
-        m_hyphen = m_norm.replace(".", "-")
-        pattern = rf"(?:^|[^0-9a-zA-Z]){re.escape(m_hyphen)}(?:$|[^0-9a-zA-Z])"
-        pattern_norm = rf"(?:^|[^0-9a-zA-Z]){re.escape(m_norm)}(?:$|[^0-9a-zA-Z])"
-        if any(re.search(pattern, slug) or re.search(pattern_norm, slug) for slug in completed_slugs):
-            highest_milestone = m
-            break
+    # 3c — Select Eligible Games
+    eligible_candidates = (
+        db.session.query(LevelGame, Challenge.sequence)
+        .join(Challenge, LevelGame.challenge_slug == Challenge.slug)
+        .filter(
+            LevelGame.verified.is_(True),
+            LevelGame.course_id.in_(active_course_ids),
+        )
+        .all()
+    )
 
-    # 2. If no direct match, determine milestone by sequence or completed count
-    if not highest_milestone:
-        if max_sequence > 0:
-            target_idx = min(max_sequence, len(sorted_milestones_asc)) - 1
-        else:
-            target_idx = min(completed_count, len(sorted_milestones_asc)) - 1
-        target_idx = max(0, target_idx)
-        highest_milestone = sorted_milestones_asc[target_idx]
+    eligible_games = []
+    seen_ids = set()
+    for game, ch_seq in eligible_candidates:
+        if ch_seq is not None:
+            course_milestone = milestone_sequence_by_course.get(game.course_id, 0)
+            if ch_seq <= course_milestone:
+                game_key = game.id if game.id is not None else (game.game_name, game.game_url)
+                if game_key not in seen_ids:
+                    seen_ids.add(game_key)
+                    eligible_games.append(game)
 
-    selected_games = list(games_by_milestone[highest_milestone])
+    # If 0 eligible games exist but student has completions
+    if not eligible_games:
+        return {
+            "sandbox_active": True,
+            "games": [],
+            "message": "No games assigned to your current progress level yet.",
+            "highest_milestone": None,
+        }
 
-    # Step back to preceding milestones until >= 3 or no earlier milestones exist
-    curr_idx = sorted_milestones_asc.index(highest_milestone)
-    while len(selected_games) < 3 and curr_idx > 0:
-        curr_idx -= 1
-        preceding_m = sorted_milestones_asc[curr_idx]
-        for g in games_by_milestone[preceding_m]:
-            if g not in selected_games:
-                selected_games.append(g)
+    # Highest completed milestone label for UI banner
+    highest_milestone = None
+    max_seq = max(milestone_sequence_by_course.values(), default=0)
+    if max_seq > 0:
+        top_ch = (
+            Challenge.query.filter(
+                Challenge.sequence == max_seq,
+                Challenge.course_id.in_(active_course_ids),
+            ).first()
+        )
+        if top_ch:
+            highest_milestone = top_ch.name or top_ch.slug
 
+    # 3d — Select Exactly 3 Games with Daily Seeded Weighted Random Sampling
+    # Deterministic base sort: (weight DESC, id ASC)
+    sorted_games = sorted(
+        eligible_games,
+        key=lambda g: (-(g.rating if g.rating is not None else 5.0), g.id or 0),
+    )
+
+    if len(sorted_games) <= 3:
+        selected_games = sorted_games
+    else:
+        seed = hash(str(user.id) + str(date.today().isoformat()))
+        rng = random.Random(seed)
+        shuffled_games = list(sorted_games)
+        rng.shuffle(shuffled_games)
+        selected_games = shuffled_games[:3]
+
+    # 3e — Return Shape
     return {
         "sandbox_active": True,
-        "highest_milestone": highest_milestone,
         "games": [g.to_dict() for g in selected_games],
+        "message": None,
+        "highest_milestone": highest_milestone,
     }
