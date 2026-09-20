@@ -1,10 +1,26 @@
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { BrowserRouter } from 'react-router-dom';
 import AdminClassDashboard from './AdminClassDashboard';
 import client from '../../api/client';
 // eslint-disable-next-line
 import toast from 'react-hot-toast';
+
+const socketListeners = {};
+const mockSocket = {
+    on: vi.fn((event, cb) => {
+        socketListeners[event] = cb;
+    }),
+    off: vi.fn((event) => {
+        delete socketListeners[event];
+    }),
+    emit: vi.fn(),
+};
+
+vi.mock('../../hooks/useChatSocket', () => ({
+    getSocket: () => mockSocket,
+    default: () => ({ sendMessage: vi.fn() }),
+}));
 
 vi.mock('../../api/client', () => ({
     default: {
@@ -572,6 +588,35 @@ describe('AdminClassDashboard', () => {
         await waitFor(() => {
             expect(client.post).toHaveBeenCalledWith('/api/admin/classrooms/cls123/sandbox/toggle');
             expect(screen.getByRole('button', { name: /Declare "All Tests Passed" \/ Enable Sandbox/i })).toBeInTheDocument();
+        });
+    });
+
+    it('updates sandbox state live when sandbox_status_changed socket event is received', async () => {
+        mockClassroomApi({
+            id: 'cls123',
+            name: 'Python Level 1',
+            sandbox_active: false,
+            students: [],
+            course_assignments: []
+        });
+
+        renderWithRouter(<AdminClassDashboard />);
+
+        await waitFor(() => {
+            expect(screen.getByRole('button', { name: /Declare "All Tests Passed" \/ Enable Sandbox/i })).toBeInTheDocument();
+        });
+
+        expect(socketListeners['sandbox_status_changed']).toBeDefined();
+        act(() => {
+            socketListeners['sandbox_status_changed']({
+                classroom_id: 'cls123',
+                sandbox_active: true,
+            });
+        });
+
+        await waitFor(() => {
+            expect(screen.getByText(/Sandbox Mode Active — All Tests Passed/i)).toBeInTheDocument();
+            expect(screen.getByRole('button', { name: /End Sandbox/i })).toBeInTheDocument();
         });
     });
 });

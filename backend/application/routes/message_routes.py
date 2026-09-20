@@ -138,15 +138,35 @@ def get_me_context():
             from application.models.classroom import Classroom
 
             classrooms = Classroom.query.all()
+            for c in classrooms:
+                c.check_sandbox_expiry()
+            db.session.commit()
             users = User.query.filter(User.role != "parent").all()
 
-            classroom_data = [{"id": c.id, "name": c.name} for c in classrooms]
+            classroom_data = [
+                {
+                    "id": c.id,
+                    "name": c.name,
+                    "sandbox_active": bool(c.sandbox_active),
+                }
+                for c in classrooms
+            ]
             user_data = [
                 {"id": u.id, "username": u.username, "nickname": u.nickname}
                 for u in users
             ]
         else:
-            classroom_data = [{"id": c.id, "name": c.name} for c in user.classrooms]
+            for c in user.classrooms:
+                c.check_sandbox_expiry()
+            db.session.commit()
+            classroom_data = [
+                {
+                    "id": c.id,
+                    "name": c.name,
+                    "sandbox_active": bool(c.sandbox_active),
+                }
+                for c in user.classrooms
+            ]
             user_data = []
 
         return jsonify(

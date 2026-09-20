@@ -202,6 +202,9 @@ def get_classroom_sandbox_status(class_id):
     if not classroom:
         return jsonify({"error": "Classroom not found"}), 404
 
+    classroom.check_sandbox_expiry()
+    db.session.commit()
+
     return jsonify({
         "sandbox_active": bool(classroom.sandbox_active),
         "activated_at": (
@@ -224,5 +227,9 @@ def get_student_sandbox_games_route(class_id):
     if not classroom:
         return jsonify({"error": "Classroom not found"}), 404
 
+    classroom.check_sandbox_expiry()
+    db.session.commit()
+
     result = get_student_sandbox_games(user, classroom)
     return jsonify(result), 200
+
