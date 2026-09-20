@@ -6,7 +6,7 @@ Summary: Unit and integration tests for Classroom Sandbox Mode backend features,
 """
 
 import io
-from datetime import datetime
+from datetime import datetime, timedelta
 from unittest.mock import patch
 
 import pytest
@@ -929,4 +929,78 @@ def test_api_authorization_matrix(client, sample_admin, sample_user):
 
     resp_student_auth = client.get(f"/api/student/classrooms/{classroom.id}/sandbox-games")
     assert resp_student_auth.status_code == 200
+
+
+def test_admin_classroom_details_includes_sandbox_state(client, sample_admin):
+    """Verify GET /api/admin/classrooms/<id> returns sandbox_active and sandbox_activated_at."""
+    classroom = Classroom(id="class_details_test", name="Details Test Class", language="python", sandbox_active=True, sandbox_activated_at=datetime.utcnow())
+    db.session.add(classroom)
+    db.session.commit()
+
+    with client.session_transaction() as sess:
+        sess["user"] = sample_admin.id
+
+    resp = client.get(f"/api/admin/classrooms/{classroom.id}")
+    assert resp.status_code == 200
+    data = resp.get_json()
+    assert "classroom" in data
+    assert data["classroom"]["sandbox_active"] is True
+    assert data["classroom"]["sandbox_activated_at"] is not None
+
+
+def test_sandbox_expiry_when_day_ends(init_db):
+    """Verify sandbox mode automatically expires when day ends."""
+    yesterday = datetime.utcnow() - timedelta(days=1)
+    classroom = Classroom(id="class_expire_test", name="Expire Test", language="python", sandbox_active=True, sandbox_activated_at=yesterday)
+    db.session.add(classroom)
+    db.session.commit()
+
+    # Before expiry check, it is True
+    assert classroom.sandbox_active is True
+    # Run expiry check
+    is_still_active = classroom.check_sandbox_expiry()
+    assert is_still_active is False
+    assert classroom.sandbox_active is False
+    assert classroom.sandbox_activated_at is None
+
+    # Now test activated today -> should NOT expire
+    today_active = Classroom(id="class_today_test", name="Today Test", language="python", sandbox_active=True, sandbox_activated_at=datetime.utcnow())
+    db.session.add(today_active)
+    db.session.commit()
+
+    assert today_active.check_sandbox_expiry() is True
+    assert today_active.sandbox_active is True
+
+
+def test_sandbox_status_endpoint_resets_on_expiry(client):
+    """GET /api/classrooms/<id>/sandbox-status auto-expires sandbox mode from previous days."""
+    yesterday = datetime.utcnow() - timedelta(days=2)
+    classroom = Classroom(id="class_endpoint_expire", name="Endpoint Expire", language="python", sandbox_active=True, sandbox_activated_at=yesterday)
+    db.session.add(classroom)
+    db.session.commit()
+
+    resp = client.get(f"/api/classrooms/{classroom.id}/sandbox-status")
+    assert resp.status_code == 200
+    data = resp.get_json()
+    assert data["sandbox_active"] is False
+    assert data["activated_at"] is None
+
+
+def test_get_me_context_includes_sandbox_active(client, sample_user):
+    """GET /message/api/me/context includes sandbox_active on enrolled classrooms."""
+    classroom = Classroom(id="class_context_test", name="Context Class", language="python", sandbox_active=True, sandbox_activated_at=datetime.utcnow())
+    classroom.users.append(sample_user)
+    db.session.add(classroom)
+    db.session.commit()
+
+    with client.session_transaction() as sess:
+        sess["user"] = sample_user.id
+
+    resp = client.get("/message/api/me/context")
+    assert resp.status_code == 200
+    data = resp.get_json()
+    cls_entry = next((c for c in data["classrooms"] if c["id"] == classroom.id), None)
+    assert cls_entry is not None
+    assert cls_entry["sandbox_active"] is True
+
 

@@ -867,6 +867,9 @@ def get_classroom_details(classroom_id):
         for assignment in classroom.course_assignments
     ]
 
+    classroom.check_sandbox_expiry()
+    db.session.commit()
+
     return jsonify(
         {
             "classroom": {
@@ -878,6 +881,10 @@ def get_classroom_details(classroom_id):
                 else None,
                 "students": students,
                 "course_assignments": course_assignments,
+                "sandbox_active": bool(classroom.sandbox_active),
+                "sandbox_activated_at": classroom.sandbox_activated_at.isoformat()
+                if classroom.sandbox_activated_at
+                else None,
             }
         }
     )

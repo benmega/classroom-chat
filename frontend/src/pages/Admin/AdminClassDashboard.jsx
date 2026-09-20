@@ -22,6 +22,7 @@ import Chat from '../Chat/Chat';
 import Skeleton from '../../components/common/Skeleton';
 import SmartImage from '../../components/common/SmartImage';
 import { getApiUrl } from '../../utils/apiUrl';
+import { getSocket } from '../../hooks/useChatSocket';
 import { BulkConnectionCardsModal, AddCourseModal, EnrollStudentModal } from '../../components/admin/AdminModals';
 import './AdminClassDashboard.css';
 
@@ -82,6 +83,20 @@ const AdminClassDashboard = () => {
             setIsTogglingSandbox(false);
         }
     };
+
+    useEffect(() => {
+        const socket = getSocket();
+        if (!socket) return;
+        const handleStatusChanged = (data) => {
+            if (data && String(data.classroom_id) === String(classId)) {
+                setClassroom(prev => prev ? ({ ...prev, sandbox_active: Boolean(data.sandbox_active) }) : prev);
+            }
+        };
+        socket.on('sandbox_status_changed', handleStatusChanged);
+        return () => {
+            socket.off('sandbox_status_changed', handleStatusChanged);
+        };
+    }, [classId]);
 
     const fetchClassroomDetails = useCallback(async () => {
         setIsLoading(true);

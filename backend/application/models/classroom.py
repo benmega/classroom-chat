@@ -90,8 +90,27 @@ class Classroom(db.Model):
             _db.session.commit()
         return self.join_code
 
+    def check_sandbox_expiry(self):
+        """
+        Check if sandbox mode has expired because the day ended.
+        If sandbox is active and was activated on a previous date (UTC),
+        resets sandbox_active to False and sandbox_activated_at to None.
+        Returns True if sandbox is currently active (and not expired), False otherwise.
+        """
+        if self.sandbox_active:
+            if (
+                self.sandbox_activated_at
+                and self.sandbox_activated_at.date() < datetime.utcnow().date()
+            ):
+                self.sandbox_active = False
+                self.sandbox_activated_at = None
+                return False
+            return True
+        return False
+
     def to_dict(self):
         # join_code is intentionally omitted; fetch it via /api/admin/classrooms/<id>/join-code
+        self.check_sandbox_expiry()
         return {
             "id": self.id,
             "name": self.name,

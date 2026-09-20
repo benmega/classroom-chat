@@ -461,6 +461,9 @@ def get_student_sandbox_games(user, classroom):
     3e: Return shape: {"sandbox_active": True, "games": [game.to_dict(), ...], "message": ...}
     """
     # 3a — Guard Clauses
+    if hasattr(classroom, "check_sandbox_expiry"):
+        classroom.check_sandbox_expiry()
+
     if not classroom.sandbox_active:
         return {
             "sandbox_active": False,

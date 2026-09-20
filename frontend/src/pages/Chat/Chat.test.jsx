@@ -603,4 +603,94 @@ describe('Chat Component', () => {
       );
     });
   });
+
+  it('renders sandbox banner for multi-classroom student when a non-first classroom has sandbox active', async () => {
+    useFeedLogic.mockReturnValue(buildFeedLogic({
+      classrooms: [
+        { id: 'cls_alpha', name: 'Alpha Class', sandbox_active: false },
+        { id: 'cls_beta', name: 'Beta Class', sandbox_active: true },
+      ],
+    }));
+
+    client.get.mockImplementation((url) => {
+      if (url.includes('/cls_alpha/sandbox-status')) {
+        return Promise.resolve({ data: { sandbox_active: false } });
+      }
+      if (url.includes('/cls_beta/sandbox-status')) {
+        return Promise.resolve({ data: { sandbox_active: true } });
+      }
+      if (url.includes('/sandbox-games')) {
+        return Promise.resolve({ data: { sandbox_active: true, games: [] } });
+      }
+      return Promise.resolve({ data: {} });
+    });
+
+    renderWithProviders(<Chat />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('sandbox-chat-banner')).toBeInTheDocument();
+      expect(screen.getByText(/All Tests Passed! Sandbox Mode is Active!/i)).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /enter sandbox arcade/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText(/Sandbox Mode!/i)).toBeInTheDocument();
+      expect(client.get).toHaveBeenCalledWith('/api/student/classrooms/cls_beta/sandbox-games');
+    });
+  });
+
+  it('updates banner live when socket event arrives for a non-first enrolled classroom', async () => {
+    useFeedLogic.mockReturnValue(buildFeedLogic({
+      classrooms: [
+        { id: 'cls_alpha', name: 'Alpha Class' },
+        { id: 'cls_beta', name: 'Beta Class' },
+      ],
+    }));
+
+    client.get.mockImplementation((url) => {
+      if (url.includes('/sandbox-status')) {
+        return Promise.resolve({ data: { sandbox_active: false } });
+      }
+      return Promise.resolve({ data: {} });
+    });
+
+    renderWithProviders(<Chat />);
+
+    await waitFor(() => {
+      expect(client.get).toHaveBeenCalledWith('/api/classrooms/cls_alpha/sandbox-status');
+      expect(client.get).toHaveBeenCalledWith('/api/classrooms/cls_beta/sandbox-status');
+    });
+
+    expect(screen.queryByTestId('sandbox-chat-banner')).not.toBeInTheDocument();
+
+    // Trigger socket event for cls_beta
+    expect(socketListeners['sandbox_status_changed']).toBeDefined();
+    act(() => {
+      socketListeners['sandbox_status_changed']({
+        classroom_id: 'cls_beta',
+        sandbox_active: true,
+      });
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId('sandbox-chat-banner')).toBeInTheDocument();
+      expect(toast.success).toHaveBeenCalledWith(
+        expect.stringContaining('Sandbox Mode is Active!'),
+        expect.any(Object)
+      );
+    });
+
+    // Toggle off
+    act(() => {
+      socketListeners['sandbox_status_changed']({
+        classroom_id: 'cls_beta',
+        sandbox_active: false,
+      });
+    });
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('sandbox-chat-banner')).not.toBeInTheDocument();
+    });
+  });
 });

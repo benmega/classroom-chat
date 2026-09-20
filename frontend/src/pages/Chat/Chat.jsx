@@ -58,31 +58,70 @@ const Chat = ({ filterClassroomId = null }) => {
 
   const fileInputRef = React.useRef(null);
 
-  const [isSandboxActive, setIsSandboxActive] = useState(false);
   const [isArcadeModalOpen, setIsArcadeModalOpen] = useState(false);
+  const [sandboxStatusMap, setSandboxStatusMap] = useState({});
 
-  // Active classroom ID for sandbox mode
-  const activeClassroomId = filterClassroomId || (classrooms && classrooms.find(c => c.id !== 'global')?.id) || user?.classroom_id || null;
+  // Relevant classroom IDs for sandbox mode
+  const targetClassroomIds = React.useMemo(() => {
+    if (filterClassroomId) return [String(filterClassroomId)];
+    return (classrooms || [])
+      .filter(c => c.id !== 'global')
+      .map(c => String(c.id));
+  }, [filterClassroomId, classrooms]);
 
-  // Fetch sandbox status on load
+  // Fetch sandbox status for relevant classrooms
   useEffect(() => {
-    if (!activeClassroomId) return;
+    if (targetClassroomIds.length === 0) return;
     let isMounted = true;
 
-    client.get(`/api/classrooms/${activeClassroomId}/sandbox-status`)
-      .then((res) => {
-        if (isMounted && res?.data) {
-          setIsSandboxActive(Boolean(res.data.sandbox_active));
-        }
-      })
-      .catch((err) => {
-        console.error('Failed to fetch sandbox status:', err);
-      });
+    // Check if classrooms already have sandbox_active from context
+    classrooms?.forEach((c) => {
+      if (targetClassroomIds.includes(String(c.id)) && c.sandbox_active !== undefined) {
+        setSandboxStatusMap(prev => ({
+          ...prev,
+          [String(c.id)]: Boolean(c.sandbox_active)
+        }));
+      }
+    });
+
+    targetClassroomIds.forEach((cid) => {
+      client.get(`/api/classrooms/${cid}/sandbox-status`)
+        .then((res) => {
+          if (isMounted && res?.data) {
+            setSandboxStatusMap(prev => ({
+              ...prev,
+              [cid]: Boolean(res.data.sandbox_active)
+            }));
+          }
+        })
+        .catch((err) => {
+          console.error(`Failed to fetch sandbox status for classroom ${cid}:`, err);
+        });
+    });
 
     return () => {
       isMounted = false;
     };
-  }, [activeClassroomId]);
+  }, [targetClassroomIds, classrooms]);
+
+  // Determine active classroom ID for sandbox mode
+  const activeSandboxClassroomId = React.useMemo(() => {
+    if (filterClassroomId) {
+      return sandboxStatusMap[String(filterClassroomId)] ? String(filterClassroomId) : null;
+    }
+    const activeCid = targetClassroomIds.find(cid => sandboxStatusMap[cid] === true);
+    if (activeCid) return activeCid;
+
+    const activeFromClassroom = classrooms?.find(
+      c => targetClassroomIds.includes(String(c.id)) && c.sandbox_active
+    );
+    return activeFromClassroom ? String(activeFromClassroom.id) : null;
+  }, [filterClassroomId, targetClassroomIds, sandboxStatusMap, classrooms]);
+
+  const isSandboxActive = Boolean(activeSandboxClassroomId);
+
+  // Active classroom ID fallback for modal
+  const modalClassroomId = activeSandboxClassroomId || filterClassroomId || (classrooms && classrooms.find(c => c.id !== 'global')?.id) || user?.classroom_id || null;
 
   // Socket listener for sandbox_status_changed
   useEffect(() => {
@@ -90,14 +129,20 @@ const Chat = ({ filterClassroomId = null }) => {
     if (!socket) return;
 
     const handleSandboxStatusChanged = (data) => {
-      if (!data) return;
-      const isTarget = activeClassroomId
-        ? String(data.classroom_id) === String(activeClassroomId)
-        : (classrooms || []).some(c => String(c.id) === String(data.classroom_id));
+      if (!data || data.classroom_id === undefined) return;
+      const cid = String(data.classroom_id);
+
+      const isTarget = filterClassroomId
+        ? cid === String(filterClassroomId)
+        : (targetClassroomIds.length === 0 || targetClassroomIds.includes(cid));
 
       if (isTarget) {
         const active = Boolean(data.sandbox_active);
-        setIsSandboxActive(active);
+        setSandboxStatusMap(prev => ({
+          ...prev,
+          [cid]: active
+        }));
+
         if (active) {
           toast.success('All Tests Passed! Sandbox Mode is Active!', {
             duration: 5000,
@@ -110,7 +155,7 @@ const Chat = ({ filterClassroomId = null }) => {
     return () => {
       socket.off('sandbox_status_changed', handleSandboxStatusChanged);
     };
-  }, [activeClassroomId, classrooms]);
+  }, [filterClassroomId, targetClassroomIds]);
 
   if (loading) return (
     <div className="feed-loading-skeleton-container p-2rem">
@@ -351,7 +396,7 @@ const Chat = ({ filterClassroomId = null }) => {
       <SandboxArcadeModal
         isOpen={isArcadeModalOpen}
         onClose={() => setIsArcadeModalOpen(false)}
-        classId={activeClassroomId}
+        classId={modalClassroomId}
       />
     </div>
   );
