@@ -4,6 +4,7 @@ import { Plus, Users, Globe, X, MoreVertical, Trash2, GripVertical } from 'lucid
 import { showConfirm } from '../../utils/confirm';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
+import adminCache from '../../utils/adminCache';
 
 const applySavedOrder = (items) => {
     try {
@@ -109,8 +110,9 @@ const ClassCardMenu = ({ classroom, onDelete }) => {
 
 const Classes = () => {
     const navigate = useNavigate();
-    const [classrooms, setClassrooms] = useState([]);
-    const [isLoading, setIsLoading] = useState(true);
+    const cachedClassrooms = adminCache.get('admin_classes');
+    const [classrooms, setClassrooms] = useState(() => cachedClassrooms ? applySavedOrder(cachedClassrooms) : []);
+    const [isLoading, setIsLoading] = useState(() => !cachedClassrooms);
 
     // Create Classroom Modal state
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -151,6 +153,7 @@ const Classes = () => {
             } catch (e) {
                 console.error('Failed to save classroom order to localStorage', e);
             }
+            adminCache.invalidate('admin_classes');
             return items;
         });
     }, []);
@@ -167,6 +170,7 @@ const Classes = () => {
             } catch (e) {
                 console.error('Failed to save classroom order to localStorage', e);
             }
+            adminCache.invalidate('admin_classes');
             return items;
         });
     }, []);
@@ -175,6 +179,7 @@ const Classes = () => {
         try {
             const response = await client.get('/api/admin/classrooms');
             const fetched = response.data.data?.classrooms || response.data.classrooms || [];
+            adminCache.set('admin_classes', fetched);
             setClassrooms(applySavedOrder(fetched));
         } catch (error) {
             console.error('Error fetching classrooms:', error);
@@ -195,6 +200,7 @@ const Classes = () => {
         try {
             const res = await client.delete(`/api/admin/classrooms/${classroom.id}`);
             if (res.data.success) {
+                adminCache.invalidate('admin_classes');
                 toast.success(res.data.message || 'Classroom deleted successfully');
                 fetchClassrooms();
             }
@@ -218,6 +224,7 @@ const Classes = () => {
                 language: newLanguage.trim()
             });
 
+            adminCache.invalidate('admin_classes');
             setIsCreateModalOpen(false);
             setNewId('');
             setNewName('');

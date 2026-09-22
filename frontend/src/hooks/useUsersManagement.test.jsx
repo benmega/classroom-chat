@@ -1,6 +1,7 @@
+import adminCache from '../utils/adminCache';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { renderHook, act, waitFor } from '@testing-library/react';
-import { useUsersManagement } from './useUsersManagement';
+import { useUsersManagement, buildUsersCacheKey } from './useUsersManagement';
 import { server } from '../test/mocks/server';
 import { http, HttpResponse } from 'msw';
 // eslint-disable-next-line
@@ -327,4 +328,45 @@ describe('useUsersManagement', () => {
     
   });
 
+
+  it('initializes from cache and revalidates in the background', async () => {
+    const cachedUsersData = {
+      users: [{ id: 99, username: 'cacheduser' }],
+      total: 1,
+      pages: 1,
+      current_page: 1,
+      stats: { online: 5, admins: 2, pending: 1 }
+    };
+    const key = buildUsersCacheKey('', 1, '', [], [], '', 'asc');
+    adminCache.set(key, cachedUsersData);
+
+    const { result } = renderHook(() => useUsersManagement());
+
+    expect(result.current.isLoading).toBe(false);
+    expect(result.current.isRefreshing).toBe(true);
+    expect(result.current.users).toEqual([{ id: 99, username: 'cacheduser' }]);
+    expect(result.current.stats).toEqual({ online: 5, admins: 2, pending: 1 });
+
+    await waitFor(() => {
+      expect(result.current.isRefreshing).toBe(false);
+    });
+
+    expect(result.current.users).toEqual([{ id: 1, username: 'testuser' }]);
+  });
+
+  it('invalidates admin_users cache on mutations', async () => {
+    const key = buildUsersCacheKey('', 1, '', [], [], '', 'asc');
+    adminCache.set(key, { users: [{ id: 1, username: 'u1' }], total: 1 });
+    const { result } = renderHook(() => useUsersManagement());
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    await act(async () => {
+      await result.current.handleRemoveUser('testuser');
+    });
+
+    expect(adminCache.get(key)).toBeNull();
+  });
 });

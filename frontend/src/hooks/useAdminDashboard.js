@@ -2,25 +2,36 @@ import { useState, useEffect, useCallback } from 'react';
 import client from '../api/client';
 import toast from 'react-hot-toast';
 import { showConfirm } from '../utils/confirm';
+import adminCache from '../utils/adminCache';
 
 export const useAdminDashboard = () => {
-    const [dashboardData, setDashboardData] = useState(null);
-    const [isLoading, setIsLoading] = useState(true);
+    const [timeframe, setTimeframe] = useState(7);
+    const cacheKey = `admin_dashboard_${timeframe}`;
+    const [dashboardData, setDashboardData] = useState(() => adminCache.get(cacheKey) || null);
+    const [isLoading, setIsLoading] = useState(() => !adminCache.get(cacheKey));
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [activeModal, setActiveModal] = useState(null);
     const [modalUser, setModalUser] = useState(null);
     const [formLoading, setFormLoading] = useState(false);
     const [formErrors, setFormErrors] = useState({});
 
-    const [timeframe, setTimeframe] = useState(7);
-
     const fetchDashboardData = useCallback(async (days = timeframe) => {
-        setIsRefreshing(true);
+        const currentCacheKey = `admin_dashboard_${days}`;
+        const cached = adminCache.get(currentCacheKey);
+        if (cached) {
+            setDashboardData(cached);
+            setIsLoading(false);
+            setIsRefreshing(true);
+        } else {
+            setIsRefreshing(true);
+        }
+
         try {
             const tzOffset = new Date().getTimezoneOffset();
             const response = await client.get(`/api/admin/dashboard?days=${days}&tz_offset=${tzOffset}`);
             if (response.data.status === 'success') {
                 setDashboardData(response.data.data);
+                adminCache.set(currentCacheKey, response.data.data);
             }
         } catch (error) {
             console.error('Error fetching admin data:', error);
@@ -43,7 +54,7 @@ export const useAdminDashboard = () => {
         try {
             const response = await client.post('/api/admin/toggle-ai');
             if (response.data.success) {
-                
+                adminCache.invalidate('admin_dashboard');
                 fetchDashboardData();
             }
         } catch {
@@ -55,7 +66,7 @@ export const useAdminDashboard = () => {
         try {
             const response = await client.post('/api/admin/toggle-message-sending');
             if (response.data.success) {
-                
+                adminCache.invalidate('admin_dashboard');
                 fetchDashboardData();
             }
         } catch {
@@ -67,7 +78,7 @@ export const useAdminDashboard = () => {
         try {
             const response = await client.post('/api/admin/update_duck_multiplier', { multiplier: val });
             if (response.data.success) {
-                
+                adminCache.invalidate('admin_dashboard');
                 fetchDashboardData();
             }
         } catch {
@@ -85,7 +96,7 @@ export const useAdminDashboard = () => {
             
             const response = await client.post('/api/admin/add-banned-word', formData);
             if (response.data.success) {
-                
+                adminCache.invalidate('admin_dashboard');
                 fetchDashboardData();
                 return true;
             }
@@ -124,7 +135,8 @@ export const useAdminDashboard = () => {
         try {
             const response = await client.post('/api/admin/create_user', formData);
             if (response.data.success) {
-                
+                adminCache.invalidate('admin_dashboard');
+                adminCache.invalidate('admin_users');
                 setActiveModal(null);
                 fetchDashboardData();
             }
@@ -154,7 +166,8 @@ export const useAdminDashboard = () => {
         try {
             const response = await client.post('/api/admin/adjust_ducks', formData);
             if (response.data.success) {
-                
+                adminCache.invalidate('admin_dashboard');
+                adminCache.invalidate('admin_users');
                 setActiveModal(null);
                 fetchDashboardData();
             }
@@ -191,7 +204,6 @@ export const useAdminDashboard = () => {
                 new_password: data.new_password
             });
             if (response.data.success) {
-                
                 setActiveModal(null);
             }
         } catch (error) {
@@ -208,7 +220,6 @@ export const useAdminDashboard = () => {
         try {
             const response = await client.post('/message/start_conversation', data);
             if (response.status === 201) {
-                
                 setActiveModal(null);
             }
         } catch {
@@ -226,7 +237,8 @@ export const useAdminDashboard = () => {
             formData.append('username', username);
             const response = await client.post('/api/admin/remove_user', formData);
             if (response.data.success) {
-                
+                adminCache.invalidate('admin_dashboard');
+                adminCache.invalidate('admin_users');
                 fetchDashboardData();
             }
         } catch (error) {

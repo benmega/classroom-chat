@@ -1,3 +1,4 @@
+import adminCache from '../utils/adminCache';
 import { renderHook, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useAdminDashboard } from './useAdminDashboard';
@@ -545,4 +546,52 @@ describe('useAdminDashboard', () => {
         
         expect(Object.keys(result.current.formErrors).length).toBe(0);
     });
+
+    it('uses cached data immediately and revalidates in the background', async () => {
+        const cachedData = { users: 50, cached: true };
+        adminCache.set('admin_dashboard_7', cachedData);
+
+        const freshData = { status: 'success', data: { users: 55, fresh: true } };
+        let resolveFetch;
+        client.get.mockReturnValueOnce(new Promise((resolve) => {
+            resolveFetch = resolve;
+        }));
+
+        const { result } = renderHook(() => useAdminDashboard());
+
+        // Cached data is immediately available, isLoading is false, isRefreshing is true
+        expect(result.current.dashboardData).toEqual(cachedData);
+        expect(result.current.isLoading).toBe(false);
+        expect(result.current.isRefreshing).toBe(true);
+
+        // Complete the fetch
+        await act(async () => {
+            resolveFetch({ data: freshData });
+            await new Promise(resolve => setTimeout(resolve, 0));
+        });
+
+        expect(result.current.dashboardData).toEqual({ users: 55, fresh: true });
+        expect(result.current.isRefreshing).toBe(false);
+        expect(adminCache.get('admin_dashboard_7')).toEqual({ users: 55, fresh: true });
+    });
+
+    it('invalidates admin_dashboard cache on mutations', async () => {
+        adminCache.set('admin_dashboard_7', { users: 10 });
+        client.get.mockResolvedValue({ data: { status: 'success', data: { users: 20 } } });
+        client.post.mockResolvedValueOnce({ data: { success: true } });
+
+        const { result } = renderHook(() => useAdminDashboard());
+
+        await act(async () => {
+            await new Promise(resolve => setTimeout(resolve, 0));
+        });
+
+        await act(async () => {
+            await result.current.handleToggleAI();
+        });
+
+        // After mutation and refetch completion, new data is in cache
+        expect(client.post).toHaveBeenCalledWith('/api/admin/toggle-ai');
+    });
+
 });

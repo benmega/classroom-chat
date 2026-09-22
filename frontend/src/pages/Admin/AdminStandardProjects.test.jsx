@@ -1,3 +1,4 @@
+import adminCache from '../../utils/adminCache';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { BrowserRouter } from 'react-router-dom';
@@ -36,6 +37,7 @@ vi.mock('../../hooks/useSidebar', () => ({
 
 describe('AdminStandardProjects', () => {
     beforeEach(() => {
+        adminCache.clear();
         vi.clearAllMocks();
     });
 
@@ -353,4 +355,35 @@ describe('AdminStandardProjects', () => {
             expect(directUrlInput).toHaveValue('/user/project_images/uploaded-uuid.png');
         });
     });
+
+    it('initializes from admin_standard_projects cache immediately and fetches in background', async () => {
+        const cached = [
+            { id: 99, name: 'Cached Template', description: 'Cached Desc' }
+        ];
+        adminCache.set('admin_standard_projects', cached);
+
+        client.get.mockResolvedValueOnce({
+            data: {
+                status: 'success',
+                data: {
+                    templates: {
+                        100: { id: 100, name: 'Fresh Template', description: 'Fresh Desc' }
+                    }
+                }
+            }
+        });
+
+        renderWithRouter(<AdminStandardProjects />);
+
+        // Should immediately show cached project without Loading...
+        expect(screen.queryByText('Loading...')).not.toBeInTheDocument();
+        expect(screen.getByText('Cached Template')).toBeInTheDocument();
+
+        // Background fetch resolves and updates view
+        await waitFor(() => {
+            expect(screen.getByText('Fresh Template')).toBeInTheDocument();
+        });
+        expect(adminCache.get('admin_standard_projects')).toBeDefined();
+    });
+
 });
