@@ -43,6 +43,7 @@ vi.mock('react-router-dom', async (importOriginal) => {
 describe('Classes Admin Page', () => {
     beforeEach(() => {
         vi.clearAllMocks();
+        localStorage.clear();
     });
 
     const renderWithRouter = (ui) => {
@@ -197,5 +198,130 @@ describe('Classes Admin Page', () => {
             fireEvent.keyDown(classCard, { key: ' ', target: classCard });
             fireEvent.keyDown(classCard, { key: 'a' }); // No-op branch
         }
+    });
+
+    it('loads classrooms in order preserved in localStorage', async () => {
+        localStorage.setItem('admin_classes_order', JSON.stringify(['c2', 'c1']));
+        const mockClassrooms = [
+            { id: 'c1', name: 'Math 101', language: 'English', student_count: 20 },
+            { id: 'c2', name: 'Science', language: 'Spanish', student_count: 15 }
+        ];
+
+        client.get.mockResolvedValueOnce({
+            data: { classrooms: mockClassrooms }
+        });
+
+        renderWithRouter(<Classes />);
+
+        await waitFor(() => {
+            expect(screen.getByText('Science')).toBeInTheDocument();
+        });
+
+        const links = screen.getAllByRole('link', { name: /Manage classroom/i });
+        expect(links[0]).toHaveTextContent('Science');
+        expect(links[1]).toHaveTextContent('Math 101');
+    });
+
+    it('supports drag and drop reordering and updates localStorage', async () => {
+        const mockClassrooms = [
+            { id: 'c1', name: 'Math 101', language: 'English', student_count: 20 },
+            { id: 'c2', name: 'Science', language: 'Spanish', student_count: 15 }
+        ];
+
+        client.get.mockResolvedValueOnce({
+            data: { classrooms: mockClassrooms }
+        });
+
+        renderWithRouter(<Classes />);
+
+        await waitFor(() => {
+            expect(screen.getByText('Math 101')).toBeInTheDocument();
+        });
+
+        const cards = document.querySelectorAll('.class-card');
+        expect(cards.length).toBe(2);
+
+        // Drag first card over second card
+        fireEvent.dragStart(cards[0]);
+        fireEvent.dragEnter(cards[1]);
+        fireEvent.dragOver(cards[1]);
+        fireEvent.dragEnd(cards[0]);
+
+        await waitFor(() => {
+            const reorderedLinks = screen.getAllByRole('link', { name: /Manage classroom/i });
+            expect(reorderedLinks[0]).toHaveTextContent('Science');
+            expect(reorderedLinks[1]).toHaveTextContent('Math 101');
+        });
+
+        expect(JSON.parse(localStorage.getItem('admin_classes_order'))).toEqual(['c2', 'c1']);
+    });
+
+    it('supports keyboard reordering via drag handle arrow keys', async () => {
+        const mockClassrooms = [
+            { id: 'c1', name: 'Math 101', language: 'English', student_count: 20 },
+            { id: 'c2', name: 'Science', language: 'Spanish', student_count: 15 }
+        ];
+
+        client.get.mockResolvedValueOnce({
+            data: { classrooms: mockClassrooms }
+        });
+
+        renderWithRouter(<Classes />);
+
+        await waitFor(() => {
+            expect(screen.getByText('Math 101')).toBeInTheDocument();
+        });
+
+        const dragHandles = screen.getAllByTestId('class-card-drag-handle');
+        expect(dragHandles.length).toBe(2);
+
+        // Move first card to the right using ArrowRight
+        fireEvent.keyDown(dragHandles[0], { key: 'ArrowRight' });
+
+        await waitFor(() => {
+            const reorderedLinks = screen.getAllByRole('link', { name: /Manage classroom/i });
+            expect(reorderedLinks[0]).toHaveTextContent('Science');
+            expect(reorderedLinks[1]).toHaveTextContent('Math 101');
+        });
+
+        expect(JSON.parse(localStorage.getItem('admin_classes_order'))).toEqual(['c2', 'c1']);
+
+        // Now move the now-second card back using ArrowLeft
+        const updatedHandles = screen.getAllByTestId('class-card-drag-handle');
+        fireEvent.keyDown(updatedHandles[1], { key: 'ArrowLeft' });
+
+        await waitFor(() => {
+            const reorderedLinks = screen.getAllByRole('link', { name: /Manage classroom/i });
+            expect(reorderedLinks[0]).toHaveTextContent('Math 101');
+            expect(reorderedLinks[1]).toHaveTextContent('Science');
+        });
+
+        expect(JSON.parse(localStorage.getItem('admin_classes_order'))).toEqual(['c1', 'c2']);
+    });
+
+    it('does not trigger card navigation while dragging', async () => {
+        const mockClassrooms = [
+            { id: 'c1', name: 'Math 101', language: 'English', student_count: 20 },
+            { id: 'c2', name: 'Science', language: 'Spanish', student_count: 15 }
+        ];
+
+        client.get.mockResolvedValueOnce({
+            data: { classrooms: mockClassrooms }
+        });
+
+        renderWithRouter(<Classes />);
+
+        await waitFor(() => {
+            expect(screen.getByText('Math 101')).toBeInTheDocument();
+        });
+
+        const cards = document.querySelectorAll('.class-card');
+
+        // Start drag on card 0
+        fireEvent.dragStart(cards[0]);
+        // While dragging, click fires
+        fireEvent.click(cards[0]);
+
+        expect(mockNavigate).not.toHaveBeenCalled();
     });
 });
