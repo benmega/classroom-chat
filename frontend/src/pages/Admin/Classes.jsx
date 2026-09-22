@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, Plus, Users, Globe, X, MoreVertical, Trash2 } from 'lucide-react';
+import { Plus, Users, Globe, X, MoreVertical, Trash2 } from 'lucide-react';
 import { showConfirm } from '../../utils/confirm';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
@@ -88,14 +88,12 @@ const Classes = () => {
     const navigate = useNavigate();
     const [classrooms, setClassrooms] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [searchTerm, setSearchTerm] = useState('');
 
     // Create Classroom Modal state
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [newId, setNewId] = useState('');
     const [newName, setNewName] = useState('');
     const [newLanguage, setNewLanguage] = useState('Python');
-    const [newUrl, setNewUrl] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const fetchClassrooms = useCallback(async () => {
@@ -141,15 +139,13 @@ const Classes = () => {
             await client.post('/api/admin/crud/classroom', {
                 id: newId.trim(),
                 name: newName.trim(),
-                language: newLanguage.trim(),
-                url: newUrl.trim() || 'https://classroom.chat'
+                language: newLanguage.trim()
             });
 
             setIsCreateModalOpen(false);
             setNewId('');
             setNewName('');
             setNewLanguage('Python');
-            setNewUrl('');
             fetchClassrooms();
         } catch (error) {
             console.error('Failed to create classroom:', error);
@@ -158,16 +154,6 @@ const Classes = () => {
             setIsSubmitting(false);
         }
     };
-
-    const filteredClassrooms = classrooms.filter(c => {
-        const term = searchTerm.toLowerCase();
-        return (
-            c.name?.toLowerCase().includes(term) ||
-            c.id?.toLowerCase().includes(term) ||
-            c.language?.toLowerCase().includes(term)
-        );
-    });
-
 
     if (isLoading) return (
         <div data-testid="admin-classes-page" className="admin-classes-page">
@@ -194,21 +180,6 @@ const Classes = () => {
     return (
         <div data-testid="admin-classes-page" className="admin-classes-page">
             <AdminPageHeader title="Classroom Directory">
-                <div className="search-bar">
-                    <Search size={18} aria-hidden="true" />
-                    <label htmlFor="classroom-search" className="sr-only" style={{ position: 'absolute', width: '1px', height: '1px', padding: 0, margin: '-1px', overflow: 'hidden', clip: 'rect(0,0,0,0)', border: 0 }}>
-                        Search classrooms by name, ID, or language
-                    </label>
-                    <input
-                        type="text"
-                        id="classroom-search"
-                        aria-label="Search classrooms by name, ID, or language"
-                        placeholder="Search by name, ID, or language..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                    />
-                </div>
-
                 <div className="header-actions-group">
                     <button
                         className="primary-btn"
@@ -223,9 +194,9 @@ const Classes = () => {
             {/* Grid Container */}
             <div className="classes-grid-container">
 
-                {filteredClassrooms.length > 0 ? (
+                {classrooms.length > 0 ? (
                     <div className="classes-grid" aria-label="Classroom Directory Grid">
-                        {filteredClassrooms.map(c => (
+                        {classrooms.map(c => (
                             <div
                                 data-testid="class-card" className="class-card"
                                 key={c.id}
@@ -269,7 +240,7 @@ const Classes = () => {
                     </div>
                 ) : (
                     <div className="empty-state" style={{ padding: '2rem', textAlign: 'center', background: 'white', borderRadius: '12px', border: '1px solid var(--border-subtle, #e2e8f0)' }}>
-                        No classrooms found matching your search.
+                        No classrooms found.
                     </div>
                 )}
             </div>
@@ -323,17 +294,6 @@ const Classes = () => {
                                     onChange={(e) => setNewLanguage(e.target.value)}
                                     placeholder="e.g. Python, Scratch, JavaScript"
                                     required
-                                />
-                            </div>
-
-                            <div className="form-group">
-                                <label htmlFor="new-class-url">Web App / Project URL (Optional)</label>
-                                <input
-                                    type="url"
-                                    id="new-class-url"
-                                    value={newUrl}
-                                    onChange={(e) => setNewUrl(e.target.value)}
-                                    placeholder="https://..."
                                 />
                             </div>
 

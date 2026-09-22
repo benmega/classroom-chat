@@ -86,6 +86,27 @@ def test_crud_create_update_delete(client, sample_admin):
     assert resp.status_code == 404
 
 
+def test_crud_classroom(client, sample_admin):
+    login_as_admin(client, sample_admin)
+
+    resp = client.post(
+        "/api/admin/crud/classroom",
+        json={
+            "id": "TEST_CLS_101",
+            "name": "Test Classroom 101",
+            "language": "Python",
+            "extra_ignored_field": "something",
+        },
+    )
+    assert resp.status_code == 200
+    assert resp.json["data"]["id"] == "TEST_CLS_101"
+    assert resp.json["data"]["name"] == "Test Classroom 101"
+
+    # Delete classroom
+    del_resp = client.delete("/api/admin/crud/classroom/TEST_CLS_101")
+    assert del_resp.status_code == 200
+
+
 def test_bulk_add_challenges(client, sample_admin):
     login_as_admin(client, sample_admin)
 

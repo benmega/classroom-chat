@@ -22,13 +22,6 @@
     margin-top: 1.5rem;
 }
 
-.classes-header-summary {
-    margin-bottom: 1rem;
-    font-size: 0.875rem;
-    color: var(--text-muted, var(--text-muted));
-    font-weight: 600;
-}
-
 .classes-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -100,61 +93,6 @@
     border-top: 1px solid var(--border-subtle, var(--border-subtle));
     display: flex;
     justify-content: flex-end;
-}
-
-/* Semantic Link for Classroom Name */
-.class-name-link {
-    font-weight: 700;
-    color: var(--primary-accessible, var(--blue-600));
-    font-size: 0.975rem;
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    transition: color 0.15s ease;
-    border-radius: 4px;
-}
-
-.class-name-link:hover {
-    color: var(--primary-color, var(--blue-600));
-    text-decoration: underline;
-}
-
-.class-name-link:focus-visible {
-    outline: 2px solid var(--primary-color, var(--blue-600));
-    outline-offset: 3px;
-}
-
-/* High Contrast Badges */
-.class-id-badge {
-    font-family: monospace;
-    font-size: 0.85rem;
-    font-weight: 600;
-    padding: 4px 10px;
-    background: var(--bg-secondary);
-    color: var(--text-primary);
-    border: 1px solid var(--border-subtle);
-    border-radius: 8px;
-}
-
-.language-badge {
-    display: inline-block;
-    padding: 4px 10px;
-    background: #dbeafe;
-    color: var(--primary-accessible);
-    border: 1px solid #bfdbfe;
-    border-radius: 8px;
-    font-size: 0.85rem;
-    font-weight: 700;
-}
-
-.students-count-badge {
-    font-weight: 600;
-    color: var(--text-secondary);
-    font-size: 0.9rem;
-    display: flex;
-    align-items: center;
-    gap: 6px;
 }
 
 /* Create Classroom Modal Overlay & Card */

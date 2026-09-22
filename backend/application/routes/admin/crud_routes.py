@@ -133,9 +133,15 @@ def create(resource):
         "courses",
         "courseinstance",
         "courseinstances",
+        "classroom",
+        "classrooms",
     }:
         protected.add("id")
-    filtered_params = {k: v for k, v in params.items() if k not in protected}
+
+    mapper_cols = {col.key for col in inspect(model).mapper.column_attrs}
+    filtered_params = {
+        k: v for k, v in params.items() if k not in protected and k in mapper_cols
+    }
 
     item = model(**filtered_params)
     db.session.add(item)

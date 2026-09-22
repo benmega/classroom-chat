@@ -69,13 +69,12 @@ def run():
         if not existing_global:
             conn.execute(
                 text(
-                    "INSERT INTO classrooms (id, name, language, url) VALUES (:id, :name, :lang, :url)"
+                    "INSERT INTO classrooms (id, name, language) VALUES (:id, :name, :lang)"
                 ),
                 {
                     "id": GLOBAL_CLASSROOM_ID,
                     "name": "Global Announcements",
                     "lang": "python",
-                    "url": "global",
                 },
             )
             conn.commit()
@@ -96,7 +95,7 @@ def run():
         if not existing_archive:
             conn.execute(
                 text(
-                    "INSERT INTO classrooms (id, name, language, url) VALUES ('archive', 'Archive', 'python', 'archive')"
+                    "INSERT INTO classrooms (id, name, language) VALUES ('archive', 'Archive', 'python')"
                 ),
             )
             conn.commit()

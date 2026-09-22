@@ -92,27 +92,18 @@ describe('Classes Admin Page', () => {
         });
     });
 
-    it('filters classrooms based on search term', async () => {
-        const mockClassrooms = [
-            { id: 'c1', name: 'Math 101', language: 'English', student_count: 20 },
-            { id: 'c2', name: 'Science', language: 'Spanish', student_count: 15 }
-        ];
-
+    it('shows empty state when no classrooms exist', async () => {
         client.get.mockResolvedValueOnce({
-            data: { classrooms: mockClassrooms }
+            data: { classrooms: [] }
         });
 
         renderWithRouter(<Classes />);
-        
+
         await waitFor(() => {
-            expect(screen.getByText('Math 101')).toBeInTheDocument();
+            expect(screen.getByText('No classrooms found.')).toBeInTheDocument();
         });
 
-        const searchInput = screen.getByPlaceholderText(/search/i);
-        fireEvent.change(searchInput, { target: { value: 'math' } });
-
-        expect(screen.getByText('Math 101')).toBeInTheDocument();
-        expect(screen.queryByText('Science')).not.toBeInTheDocument();
+        expect(screen.queryByPlaceholderText(/search/i)).not.toBeInTheDocument();
     });
 
     it('navigates to class details on row click', async () => {
