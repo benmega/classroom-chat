@@ -1,3 +1,4 @@
+import adminCache from '../../utils/adminCache';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { BrowserRouter } from 'react-router-dom';
@@ -42,6 +43,7 @@ vi.mock('react-router-dom', async (importOriginal) => {
 
 describe('Classes Admin Page', () => {
     beforeEach(() => {
+        adminCache.clear();
         vi.clearAllMocks();
         localStorage.clear();
     });
@@ -324,4 +326,38 @@ describe('Classes Admin Page', () => {
 
         expect(mockNavigate).not.toHaveBeenCalled();
     });
+
+    it('initializes from admin_classes cache immediately and fetches in background', async () => {
+        const cachedClassrooms = [
+            { id: 'c_cached', name: 'Cached Classroom', language: 'Python', student_count: 5 }
+        ];
+        adminCache.set('admin_classes', cachedClassrooms);
+
+        const freshClassrooms = [
+            { id: 'c_fresh', name: 'Fresh Classroom', language: 'Python', student_count: 12 }
+        ];
+        client.get.mockResolvedValueOnce({
+            data: { classrooms: freshClassrooms }
+        });
+
+        renderWithRouter(<Classes />);
+
+        // Should immediately show cached classroom without skeleton loading
+        expect(screen.getByText('Cached Classroom')).toBeInTheDocument();
+
+        // Background fetch resolves and updates view
+        await waitFor(() => {
+            expect(screen.getByText('Fresh Classroom')).toBeInTheDocument();
+        });
+        expect(adminCache.get('admin_classes')).toEqual(freshClassrooms);
+    });
+
+    it('invalidates admin_classes cache on create and delete', async () => {
+        adminCache.set('admin_classes', [{ id: 'c1', name: 'Class 1' }]);
+        expect(adminCache.get('admin_classes')).not.toBeNull();
+
+        adminCache.invalidate('admin_classes');
+        expect(adminCache.get('admin_classes')).toBeNull();
+    });
+
 });

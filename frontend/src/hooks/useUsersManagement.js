@@ -2,19 +2,33 @@ import { useState, useEffect, useCallback } from 'react';
 import client from '../api/client';
 import { showConfirm } from '../utils/confirm';
 import toast from 'react-hot-toast';
+import adminCache from '../utils/adminCache';
+
+export const buildUsersCacheKey = (role, page, search, status, accountTypes, sortBy, sortDir) => {
+    const statusPart = Array.isArray(status) ? status.join(',') : (status || '');
+    const accountPart = Array.isArray(accountTypes) ? accountTypes.join(',') : (accountTypes || '');
+    return `admin_users_${role || ''}_${page}_${search || ''}_${statusPart}_${accountPart}_${sortBy || ''}_${sortDir || ''}`;
+};
 
 export const useUsersManagement = (role = '') => {
-    const [users, setUsers] = useState([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [isRefreshing, setIsRefreshing] = useState(false);
+    const initialKey = buildUsersCacheKey(role, 1, '', [], [], '', 'asc');
+    const initialCached = adminCache.get(initialKey);
+    const initialUsers = initialCached?.users || (Array.isArray(initialCached) ? initialCached : []);
+    const initialTotalUsers = initialCached?.total !== undefined ? initialCached.total : (Array.isArray(initialCached) ? initialCached.length : 0);
+    const initialTotalPages = initialCached?.pages || 1;
+    const initialStats = initialCached?.stats || { online: 0, admins: 0, pending: 0 };
+
+    const [users, setUsers] = useState(initialUsers);
+    const [isLoading, setIsLoading] = useState(!initialCached);
+    const [isRefreshing, setIsRefreshing] = useState(!!initialCached);
     const [page, setPage] = useState(1);
-    const [totalPages, setTotalPages] = useState(1);
-    const [totalUsers, setTotalUsers] = useState(0);
+    const [totalPages, setTotalPages] = useState(initialTotalPages);
+    const [totalUsers, setTotalUsers] = useState(initialTotalUsers);
     const [activeModal, setActiveModal] = useState(null);
     const [modalUser, setModalUser] = useState(null);
     const [formLoading, setFormLoading] = useState(false);
     const [formErrors, setFormErrors] = useState({});
-    const [stats, setStats] = useState({ online: 0, admins: 0, pending: 0 });
+    const [stats, setStats] = useState(initialStats);
     const [connectionCode, setConnectionCode] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
@@ -105,7 +119,7 @@ export const useUsersManagement = (role = '') => {
         try {
             const response = await client.post('/api/admin/create_user', formData);
             if (response.data.success) {
-                
+                adminCache.invalidate('admin_users');
                 setActiveModal(null);
                 fetchUsers(page);
             }
@@ -130,7 +144,7 @@ export const useUsersManagement = (role = '') => {
         try {
             const response = await client.post('/api/admin/adjust_ducks', formData);
             if (response.data.success) {
-                
+                adminCache.invalidate('admin_users');
                 setActiveModal(null);
                 fetchUsers(page);
             }
@@ -155,7 +169,7 @@ export const useUsersManagement = (role = '') => {
         try {
             const response = await client.post('/api/admin/adjust_packets', formData);
             if (response.data.success) {
-                
+                adminCache.invalidate('admin_users');
                 setActiveModal(null);
                 fetchUsers(page);
             }
@@ -191,7 +205,7 @@ export const useUsersManagement = (role = '') => {
                 new_password: data.new_password
             });
             if (response.data.success) {
-                
+                adminCache.invalidate('admin_users');
                 setActiveModal(null);
                 fetchUsers(page);
             }
@@ -222,7 +236,7 @@ export const useUsersManagement = (role = '') => {
             
             const response = await client.post('/api/admin/set_drawer', payload);
             if (response.data) {
-                
+                adminCache.invalidate('admin_users');
                 setActiveModal(null);
                 fetchUsers(page);
             }
@@ -251,7 +265,7 @@ export const useUsersManagement = (role = '') => {
             formData.append('username', username);
             const response = await client.post('/api/admin/remove_user', formData);
             if (response.data.success) {
-                
+                adminCache.invalidate('admin_users');
                 fetchUsers(page);
             }
         } catch (error) {
@@ -262,6 +276,7 @@ export const useUsersManagement = (role = '') => {
     const handleToggleChat = async (userId) => {
         try {
             const response = await client.post(`/api/admin/user/${userId}/toggle-chat`);
+            adminCache.invalidate('admin_users');
             
             
             // Optimistically update the specific user in the users array
@@ -298,7 +313,7 @@ export const useUsersManagement = (role = '') => {
             const endpoint = isLinked ? 'unlink' : 'link';
             const response = await client.post(`/api/admin/parents/${parentId}/${endpoint}/${studentId}`);
             if (response.data.success) {
-                
+                adminCache.invalidate('admin_users');
                 await fetchParentChildren(parentId);
             }
         } catch (error) {

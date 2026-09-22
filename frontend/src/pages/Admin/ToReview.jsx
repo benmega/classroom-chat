@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
+import adminCache from '../../utils/adminCache';
 import { getApiUrl } from '../../utils/apiUrl';
 import { showConfirm } from '../../utils/confirm';
 import { formatStaticUrl } from '../../utils/formatters';
@@ -34,19 +35,21 @@ import Skeleton from '../../components/common/Skeleton';
 import SmartImage from '../../components/common/SmartImage';
 
 const ToReview = () => {
+    const cachedReview = adminCache.get('admin_to_review');
+
     // Data lists
-    const [projects, setProjects] = useState([]);
-    const [certificates, setCertificates] = useState([]);
-    const [pendingUsers, setPendingUsers] = useState([]);
-    const [trades, setTrades] = useState([]);
-    const [courseRequests, setCourseRequests] = useState([]);
+    const [projects, setProjects] = useState(() => cachedReview?.projects || []);
+    const [certificates, setCertificates] = useState(() => cachedReview?.certificates || []);
+    const [pendingUsers, setPendingUsers] = useState(() => cachedReview?.pendingUsers || []);
+    const [trades, setTrades] = useState(() => cachedReview?.trades || []);
+    const [courseRequests, setCourseRequests] = useState(() => cachedReview?.courseRequests || []);
 
     // Support tables for dropdown lists
-    const [classrooms, setClassrooms] = useState([]);
-    const [courses, setCourses] = useState([]);
+    const [classrooms, setClassrooms] = useState(() => cachedReview?.classrooms || []);
+    const [courses, setCourses] = useState(() => cachedReview?.courses || []);
 
     // App state
-    const [isLoading, setIsLoading] = useState(true);
+    const [isLoading, setIsLoading] = useState(() => !cachedReview);
     const [activeTab, setActiveTab] = useState('all');
     const [isProcessing, setIsProcessing] = useState(null);
 
@@ -62,7 +65,12 @@ const ToReview = () => {
     const [selectedTrades, setSelectedTrades] = useState(new Set());
 
     const fetchAllData = useCallback(async () => {
-        setIsLoading(true);
+        const cached = adminCache.get('admin_to_review');
+        if (cached) {
+            setIsLoading(false);
+        } else {
+            setIsLoading(true);
+        }
 
         try {
             const [
@@ -83,17 +91,31 @@ const ToReview = () => {
                 client.get('/api/admin/crud/course').catch(() => ({ data: { data: [] } }))
             ]);
 
-            setCertificates(certsRes.data.certificates || certsRes.data.data?.certificates || []);
-            setProjects(projectsRes.data.data?.projects || []);
-            setPendingUsers(usersRes.data.data?.users || []);
-            setTrades(tradesRes.data.data?.trades || []);
-            setCourseRequests(courseRes.data.requests || courseRes.data.data?.requests || []);
-
-            // Set options states
+            const newCerts = certsRes.data.certificates || certsRes.data.data?.certificates || [];
+            const newProjects = projectsRes.data.data?.projects || [];
+            const newUsers = usersRes.data.data?.users || [];
+            const newTrades = tradesRes.data.data?.trades || [];
+            const newRequests = courseRes.data.requests || courseRes.data.data?.requests || [];
             const clList = classroomsRes.data.data || [];
             const coList = coursesRes.data.data || [];
+
+            setCertificates(newCerts);
+            setProjects(newProjects);
+            setPendingUsers(newUsers);
+            setTrades(newTrades);
+            setCourseRequests(newRequests);
             setClassrooms(clList);
             setCourses(coList);
+
+            adminCache.set('admin_to_review', {
+                certificates: newCerts,
+                projects: newProjects,
+                pendingUsers: newUsers,
+                trades: newTrades,
+                courseRequests: newRequests,
+                classrooms: clList,
+                courses: coList
+            });
 
             // Prepopulate selectors with default values
             const initialClassrooms = {};
@@ -149,7 +171,7 @@ const ToReview = () => {
             });
 
             if (response.data.status === 'success') {
-                
+                adminCache.invalidate('admin_to_review');
                 setProjects(prev => prev.filter(p => p.id !== projectId));
                 // Clean up state
                 setProjectComments(prev => { const copy = {...prev}; delete copy[projectId]; return copy; });
@@ -170,6 +192,7 @@ const ToReview = () => {
             try {
                 const response = await client.post(`/api/achievements/admin/certificates/reject/${certId}`, { review_note });
                 if (response.data.status === 'success') {
+                    adminCache.invalidate('admin_to_review');
                     setCertificates(prev => prev.filter(c => c.id !== certId));
                 }
             } catch {
@@ -200,7 +223,7 @@ const ToReview = () => {
         try {
             const response = await client.post('/api/achievements/admin/certificates/reviewed/all');
             if (response.data.status === 'success') {
-                
+                adminCache.invalidate('admin_to_review');
                 setCertificates([]); 
             }
         } catch {
@@ -219,7 +242,7 @@ const ToReview = () => {
         try {
             const response = await client.post(`/api/admin/${endpoint}`);
             if (response.data.status === 'success') {
-                
+                adminCache.invalidate('admin_to_review');
                 setPendingUsers(prev => prev.filter(u => u.id !== userId));
             }
         } catch {
@@ -260,7 +283,7 @@ const ToReview = () => {
         try {
             const response = await client.post('/api/admin/trade_action', formData);
             if (response.data.status === 'success') {
-                
+                adminCache.invalidate('admin_to_review');
                 setTrades(prev => prev.filter(t => t.id !== tradeId));
             } else {
                 if (!isBulk) toast.error(response.data.message || 'Action failed.');
@@ -309,7 +332,7 @@ const ToReview = () => {
                     course_id
                 });
                 if (response.data.success) {
-                    
+                    adminCache.invalidate('admin_to_review');
                     setCourseRequests(prev => prev.filter(r => r.id !== requestId));
                 }
             } else {
