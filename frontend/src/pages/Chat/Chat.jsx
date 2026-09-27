@@ -18,8 +18,6 @@ import './Chat.css';
 import ChatMessage from '../../components/chat/ChatMessage';
 import MultiSelectDropdown from '../../components/chat/MultiSelectDropdown';
 import Skeleton from '../../components/common/Skeleton';
-
-// Hooks
 import { useFeedLogic } from '../../hooks/useFeedLogic';
 
 const Chat = ({ filterClassroomId = null }) => {
@@ -61,7 +59,6 @@ const Chat = ({ filterClassroomId = null }) => {
   const [isArcadeModalOpen, setIsArcadeModalOpen] = useState(false);
   const [sandboxStatusMap, setSandboxStatusMap] = useState({});
 
-  // Relevant classroom IDs for sandbox mode
   const targetClassroomIds = React.useMemo(() => {
     if (filterClassroomId) return [String(filterClassroomId)];
     return (classrooms || [])
@@ -69,12 +66,10 @@ const Chat = ({ filterClassroomId = null }) => {
       .map(c => String(c.id));
   }, [filterClassroomId, classrooms]);
 
-  // Fetch sandbox status for relevant classrooms
   useEffect(() => {
     if (targetClassroomIds.length === 0) return;
     let isMounted = true;
 
-    // Check if classrooms already have sandbox_active from context
     classrooms?.forEach((c) => {
       if (targetClassroomIds.includes(String(c.id)) && c.sandbox_active !== undefined) {
         setSandboxStatusMap(prev => ({
@@ -104,7 +99,6 @@ const Chat = ({ filterClassroomId = null }) => {
     };
   }, [targetClassroomIds, classrooms]);
 
-  // Determine active classroom ID for sandbox mode
   const activeSandboxClassroomId = React.useMemo(() => {
     if (filterClassroomId) {
       return sandboxStatusMap[String(filterClassroomId)] ? String(filterClassroomId) : null;
@@ -120,10 +114,8 @@ const Chat = ({ filterClassroomId = null }) => {
 
   const isSandboxActive = Boolean(activeSandboxClassroomId);
 
-  // Active classroom ID fallback for modal
   const modalClassroomId = activeSandboxClassroomId || filterClassroomId || (classrooms && classrooms.find(c => c.id !== 'global')?.id) || user?.classroom_id || null;
 
-  // Socket listener for sandbox_status_changed
   useEffect(() => {
     const socket = getSocket();
     if (!socket) return;
@@ -161,7 +153,6 @@ const Chat = ({ filterClassroomId = null }) => {
     <div className="feed-loading-skeleton-container p-2rem">
       <span className="d-none">Loading Feed...</span>
       <div className="feed-main w-100">
-        {/* Mock Messages List */}
         <div className="feed-messages-list d-flex flex-col gap-1-5rem">
           {[1, 2, 3].map(i => (
             <div key={i} className="message-wrapper chat-skeleton-message">
@@ -177,7 +168,6 @@ const Chat = ({ filterClassroomId = null }) => {
             </div>
           ))}
         </div>
-        {/* Mock Input Area */}
         <div className="feed-input-area mt-2rem opacity-60">
           <div className="feed-input-wrapper-container chat-skeleton-input">
             <Skeleton height="60px" className="mb-md" />

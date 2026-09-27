@@ -5,7 +5,6 @@ import './Profile.css';
 import '../../assets/css/sprite.css'; 
 import ContributionGraph from '../../components/profile/ContributionGraph';
 
-// New sub-components
 import ProfileHeader from '../../components/profile/ProfileHeader';
 import CourseProgress from '../../components/profile/CourseProgress';
 import CertificationsList from '../../components/profile/CertificationsList';
@@ -19,7 +18,6 @@ import PfpCropModal from '../../components/profile/PfpCropModal';
 import JoinClassroom from '../General/JoinClassroom';
 import Modal from '../../components/common/Modal';
 
-// Hooks
 import { useProfile } from '../../hooks/useProfile';
 
 const Profile = () => {

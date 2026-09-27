@@ -4,12 +4,7 @@ from application.models.message import Message
 
 def test_get_feed_not_logged_in(client, init_db):
     response = client.get("/message/api/feed")
-    # Actually wait, url prefix for message is /message, so the route is /message/api/feed
-    # Let me check __init__.py. It's app.register_blueprint(message, url_prefix="/message")
-    # Yes.
-    assert response.status_code == 302  # login redirect
-    # Wait, @require_login redirects or returns 401 if it's an API.
-    # require_login uses `@login_required` or similar, let's just check redirect
+    assert response.status_code == 302
 
 
 def test_get_feed_admin(client, init_db, sample_user):
@@ -46,23 +41,17 @@ def test_get_feed_parent_forbidden(client, init_db, sample_user):
 
 
 def test_get_feed_student(client, init_db, sample_user, sample_classroom):
-    # User in a classroom
     sample_user.classrooms.append(sample_classroom)
     db.session.commit()
 
-    # Message 1: Global
     msg1 = Message(user_id=sample_user.id, content="global msg", is_global=True)
 
-    # Message 2: Targeted to classroom
     msg2 = Message(user_id=sample_user.id, content="classroom msg", is_global=False)
     db.session.add(msg2)
     msg2.target_classrooms.append(sample_classroom)
 
-    # Message 3: Invisible
     msg3 = Message(user_id=sample_user.id, content="invisible", is_global=False)
-    # wait, authored by user, so it will be visible!
 
-    # Let's create another user
     from application.models.user import User
 
     other_user = User(username="other", role="student")
@@ -124,7 +113,6 @@ def test_delete_message(client, init_db, sample_user):
     with client.session_transaction() as sess:
         sess["user"] = sample_user.id
 
-    # Author delete
     resp = client.delete(f"/message/delete_message/{msg.id}")
     assert resp.status_code == 200
     assert resp.json["success"] is True

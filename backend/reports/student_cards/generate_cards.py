@@ -11,19 +11,12 @@ from reportlab.lib.units import inch
 from reportlab.lib.utils import ImageReader
 from reportlab.pdfgen import canvas
 
-# ================= CONFIGURATION =================
-
-# 1. DYNAMIC PATH CALCULATION
-# This gets the directory where this script is running
 current_dir = os.path.dirname(os.path.abspath(__file__))
-
-# Go up one level (..) to project root, then into static/images
 LOGO_PATH = os.path.join(current_dir, "../..", "static", "images", "logo.ico")
 
 OUTPUT_FILENAME = "classroom_cards.pdf"
 BASE_URL = "https://blossom.benmega.com/user/profile/"
 
-# Card Dimensions
 CARD_WIDTH = 3.5 * inch
 CARD_HEIGHT = 2.0 * inch
 MARGIN_X = 0.75 * inch

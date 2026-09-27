@@ -135,7 +135,6 @@ const AdminUserDashboard = () => {
 
     return (
         <div className="compact-dashboard admin-user-redesign">
-            {/* Banner for Pending Users */}
             {!user.is_approved && !user.is_admin && (
                 <div className="compact-banner warning-banner">
                     <div className="banner-info">
@@ -149,7 +148,6 @@ const AdminUserDashboard = () => {
                 </div>
             )}
 
-            {/* TOP HERO STATUS BAR */}
             <div className="user-hero-bar">
                 <button className="btn-icon small hero-back" onClick={() => navigate('/admin/users')} title="Back to Users">
                     <ChevronLeft size={18} />
@@ -214,7 +212,6 @@ const AdminUserDashboard = () => {
                 </div>
             </div>
 
-                        {/* TABS */}
             <div className="admin-tabs">
                 <button 
                     className={`admin-tab ${activeTab === 'standard' ? 'active' : ''}`}
@@ -239,10 +236,8 @@ const AdminUserDashboard = () => {
             {activeTab === 'standard' && (
                 <>
 
-                {/* SECTION 1: ACADEMIC & PROGRESS */}
                 {user.role === 'student' && (
                     <div className="admin-section section-grid-inline">
-                        {/* Active Learning Track Full Width */}
                         <div className="compact-panel full-width">
                             <div className="panel-head">Current Learning Track</div>
                             <div className="track-cards-grid">
@@ -273,7 +268,6 @@ const AdminUserDashboard = () => {
                     </div>
                 )}
 
-                {/* SECTION 2: ECONOMY & GAMIFICATION */}
                 {user.role === 'student' && (
                     <div className="admin-section section-grid-inline economy-grid">
 
@@ -295,7 +289,6 @@ const AdminUserDashboard = () => {
 
                             <div className="compact-panel economy-panel">
                                 <div className="panel-head">Balances & Locker</div>
-                                {/* Ducks */}
                                 <form onSubmit={handleAdjustDucks} className="economy-row-card">
                                     <div className="econ-header">
                                         <span className="econ-label">🦆 Ducks</span>
@@ -321,7 +314,6 @@ const AdminUserDashboard = () => {
                                     </button>
                                 </form>
 
-                                {/* Packets */}
                                 <form onSubmit={handleAdjustPackets} className="economy-row-card">
                                     <div className="econ-header">
                                         <span className="econ-label">📦 Packets</span>
@@ -334,7 +326,6 @@ const AdminUserDashboard = () => {
                                     </button>
                                 </form>
 
-                                {/* Locker Drawer */}
                                 <form onSubmit={handleSetDrawer} className="economy-row-card">
                                     <div className="econ-header">
                                         <span className="econ-label">🔒 Locker Drawer</span>
@@ -387,7 +378,6 @@ const AdminUserDashboard = () => {
 
             {activeTab === 'account' && (
                 <>
-{/* SECTION 3: IDENTITY & CONNECTIONS */}
                 <div className="admin-section section-grid-inline">
                     <h3 className="section-title"><Shield size={18} /> Identity & Connections</h3>
                     <div className="compact-panel">
@@ -474,7 +464,6 @@ const AdminUserDashboard = () => {
 
             {activeTab === 'sensitive' && (
                 <>
-{/* SECTION 4: ADMINISTRATION & SECURITY */}
                 <div className="admin-section admin-danger-section section-grid-inline">
                     <h3 className="section-title text-danger"><ShieldAlert size={18} /> Administration & Security</h3>
                     <div className="compact-panel">
@@ -528,7 +517,6 @@ const AdminUserDashboard = () => {
                 </>
             )}
 
-            {/* Printable QR Code for Parent Connection */}
             {user.role === 'student' && connectionCode && (
                 <div className="print-only">
                     <h2>{user.nickname || user.username}</h2>
@@ -538,7 +526,6 @@ const AdminUserDashboard = () => {
                 </div>
             )}
 
-            {/* Modals for Course Actions */}
             <Modal isOpen={showAssignProjectModal} onClose={() => setShowAssignProjectModal(false)} title="Assign Project">
                 <form onSubmit={(e) => {
                     handleAssignProjectSubmit(e);

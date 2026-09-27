@@ -1,6 +1,3 @@
-# Filename: add_achievements.py
-# Description: Bulk insert achievements from a CSV into the database.
-
 import csv
 
 from application import DevelopmentConfig, create_app

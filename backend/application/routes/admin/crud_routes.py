@@ -78,12 +78,10 @@ def get_list(resource):
 
     query = model.query
 
-    # Handle filtering
     for key, value in request.args.items():
         if key not in ['_sort', '_order', '_start', '_end'] and hasattr(model, key):
             query = query.filter(getattr(model, key) == value)
 
-    # Handle sorting
     sort_field = request.args.get('_sort')
     sort_order = request.args.get('_order')
     if sort_field and hasattr(model, sort_field):
@@ -92,7 +90,6 @@ def get_list(resource):
 
     total = query.count()
 
-    # Handle pagination
     start = request.args.get('_start', type=int)
     end = request.args.get('_end', type=int)
     if start is not None and end is not None:

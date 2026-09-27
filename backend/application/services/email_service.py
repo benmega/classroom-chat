@@ -1,9 +1,3 @@
-"""
-File: email_service.py
-Type: py
-Summary: Service for sending emails via AWS SES.
-"""
-
 import os
 from threading import Thread
 

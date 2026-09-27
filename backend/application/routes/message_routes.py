@@ -59,11 +59,6 @@ def get_feed():
                 ).filter(message_users.c.user_id == user.id)
                 queries.extend([q2, q3])
 
-            # If a specific classroom filter IS applied, include messages by this user
-            # to ensure they see their own messages in the stream even if they are missing from classroom target somehow
-            # Wait, no, we only want messages targeted at this classroom or global.
-            # But the user might want to see their own global/classroom messages. Those will be caught by q1 and q4.
-
             if user_classroom_ids:
                 q4 = base_query.join(
                     message_classrooms, Message.id == message_classrooms.c.message_id

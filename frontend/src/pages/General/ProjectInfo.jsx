@@ -28,7 +28,6 @@ const ProjectInfo = () => {
             try {
                 let currentProj = project;
                 
-                // Fetch template if not passed in navigation state
                 if (!currentProj) {
                     const res = await client.get('/api/project-templates');
                     const templates = res.data?.data?.templates || {};
@@ -43,7 +42,6 @@ const ProjectInfo = () => {
                     }
                 }
                 
-                // Check if current user already has this project assigned
                 if (user && currentProj) {
                     const profileRes = await client.get('/user/profile');
                     const userProfile = profileRes.data?.data?.target;
@@ -79,7 +77,6 @@ const ProjectInfo = () => {
             const response = await client.post('/user/project/new', formData);
             if (response.data.status === 'success') {
                 
-                // Reload profile data to find newly assigned project
                 const profileRes = await client.get('/user/profile');
                 const userProfile = profileRes.data?.data?.target;
                 if (userProfile && userProfile.projects) {
@@ -157,7 +154,6 @@ const ProjectInfo = () => {
                 </div>
 
                 <div className="project-hero">
-                    {/* Left side: Main Content */}
                     <div className="project-main-content">
                         <div className="project-description-section">
                             <h3 className="project-section-title">
@@ -183,9 +179,7 @@ const ProjectInfo = () => {
                         </div>
                     </div>
 
-                    {/* Right side: Sidebar Actions & Specs */}
                     <div className="project-sidebar-content">
-                        {/* Assignment Action Card */}
                         <div className="action-card">
                             {assignedProject ? (
                                 <div className="action-btn-wrapper">
@@ -212,7 +206,6 @@ const ProjectInfo = () => {
                             )}
                         </div>
 
-                        {/* Metadata Specs Card */}
                         <div className="info-grid-card">
                             <div className="info-item">
                                 <div className="info-icon-box">

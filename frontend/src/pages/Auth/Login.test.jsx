@@ -4,7 +4,7 @@ import Login from './Login';
 import { renderWithProviders } from '../../test/test-utils';
 import toast from 'react-hot-toast';
 
-// Mock react-hot-toast
+
 vi.mock('react-hot-toast', () => ({
   default: {
     success: vi.fn(),

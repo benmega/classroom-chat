@@ -28,14 +28,12 @@ import toast from 'react-hot-toast';
 import './AdminDashboard.css';
 import Skeleton from '../../components/common/Skeleton';
 
-// Extracted Components
 import AdminStats from '../../components/admin/AdminStats';
 import {
     AddBannedWordModal
 } from '../../components/admin/AdminModals';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
 
-// Hooks & Utils
 import { useAdminDashboard } from '../../hooks/useAdminDashboard';
 import { getChartConfig, chartOptions } from './chartConfig';
 
@@ -196,7 +194,6 @@ const AdminDashboard = () => {
                     </div>
 
                     <div className="admin-controls-card card">
-                        {/* Unified Controls Grid */}
                         <div className="admin-controls-grid">
                             <button
                                 onClick={handleToggleAI}

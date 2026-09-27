@@ -1,9 +1,3 @@
-"""
-File: parent_routes.py
-Type: py
-Summary: API endpoints for parent accounts to view linked children, student report cards,
-         historical progress data, and teacher contact functionality.
-"""
 
 from datetime import datetime, timedelta
 

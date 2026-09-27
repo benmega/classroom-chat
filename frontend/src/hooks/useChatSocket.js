@@ -11,7 +11,6 @@ const getSocketUrl = () => {
 
 const SOCKET_URL = getSocketUrl();
 
-// Singleton socket instance
 let _socket = null;
 
 const getCookie = (name) => {

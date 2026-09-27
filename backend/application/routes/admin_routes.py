@@ -6,7 +6,6 @@ from flask import Blueprint
 admin_pass = None
 admin_bp = Blueprint("admin", __name__)
 
-# Import routes to register them on the admin blueprint
 from .admin import (
     advanced_ops,
     challenge_mgmt,

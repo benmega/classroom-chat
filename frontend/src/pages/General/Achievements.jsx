@@ -111,12 +111,9 @@ const Achievements = () => {
         return result;
     }, [achievements, userAchievements]);
 
-    // Shorten descriptions for tooltip display
     const shortenDescription = (desc, _type) => {
         if (!desc) return '';
-        // Already short enough
         if (desc.length <= 80) return desc;
-        // Trim at word boundary
         const trimmed = desc.slice(0, 77);
         return trimmed.slice(0, trimmed.lastIndexOf(' ')) + '…';
     };
@@ -146,7 +143,6 @@ const Achievements = () => {
                     groupedAchievements.map((ach) => {
                         const isEarned = ach.isGrouped ? ach.isEarned : userAchievements.includes(ach.id);
                         
-                        // Show progress for the next level if grouped and earned
                         const showNextLevelProgress = ach.isGrouped && ach.isEarned && ach.nextLevel;
                         const progressTarget = showNextLevelProgress ? ach.nextLevel : ach;
                         

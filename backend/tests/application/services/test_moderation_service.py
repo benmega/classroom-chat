@@ -1,10 +1,3 @@
-"""
-File: test_moderation_service.py
-Type: py
-Summary: Unit tests for banned-word moderation and its wiring into
-         the message save pipeline.
-"""
-
 from application.extensions import db
 from application.models.banned_words import BannedWords
 from application.models.user import User

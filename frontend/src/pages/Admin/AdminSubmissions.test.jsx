@@ -77,15 +77,12 @@ describe('AdminSubmissions Component', () => {
       expect(screen.getByText('Here is my file')).toBeInTheDocument();
     });
 
-    // Test input change
     const input = screen.getByPlaceholderText(/optional note/i);
     fireEvent.change(input, { target: { value: 'Good job!' } });
 
-    // Test approve
     client.post.mockResolvedValueOnce({ data: { status: 'success' } });
     fireEvent.click(screen.getByTitle(/Mark Reviewed/i));
 
-    // Test delete
     showConfirm.mockResolvedValue(true);
     client.delete.mockResolvedValueOnce({ data: { status: 'success' } });
     fireEvent.click(screen.getByTitle(/Delete/i));
@@ -128,10 +125,8 @@ describe('AdminSubmissions Component', () => {
 
     render(<AdminSubmissions />);
 
-    // Should immediately show cached submission
     expect(screen.getByText('cached.py')).toBeInTheDocument();
 
-    // Background fetch resolves and updates view
     await waitFor(() => {
       expect(screen.getByText('fresh.py')).toBeInTheDocument();
     });

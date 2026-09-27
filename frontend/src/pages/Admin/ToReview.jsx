@@ -37,30 +37,25 @@ import SmartImage from '../../components/common/SmartImage';
 const ToReview = () => {
     const cachedReview = adminCache.get('admin_to_review');
 
-    // Data lists
     const [projects, setProjects] = useState(() => cachedReview?.projects || []);
     const [certificates, setCertificates] = useState(() => cachedReview?.certificates || []);
     const [pendingUsers, setPendingUsers] = useState(() => cachedReview?.pendingUsers || []);
     const [trades, setTrades] = useState(() => cachedReview?.trades || []);
     const [courseRequests, setCourseRequests] = useState(() => cachedReview?.courseRequests || []);
 
-    // Support tables for dropdown lists
     const [classrooms, setClassrooms] = useState(() => cachedReview?.classrooms || []);
     const [courses, setCourses] = useState(() => cachedReview?.courses || []);
 
-    // App state
     const [isLoading, setIsLoading] = useState(() => !cachedReview);
     const [activeTab, setActiveTab] = useState('all');
     const [isProcessing, setIsProcessing] = useState(null);
 
-    // Form inputs state
     const [projectComments, setProjectComments] = useState({});
     const [projectRewards, setProjectRewards] = useState({});
     const [selectedClassrooms, setSelectedClassrooms] = useState({});
     const [selectedCourses, setSelectedCourses] = useState({});
     const [expandedCodeSnippets, setExpandedCodeSnippets] = useState({});
 
-    // Bulk Selection State
     const [selectedUsers, setSelectedUsers] = useState(new Set());
     const [selectedTrades, setSelectedTrades] = useState(new Set());
 
@@ -117,7 +112,6 @@ const ToReview = () => {
                 courses: coList
             });
 
-            // Prepopulate selectors with default values
             const initialClassrooms = {};
             const initialCourses = {};
             courseRes.data.requests?.forEach(req => {
@@ -150,9 +144,6 @@ const ToReview = () => {
         fetchAllData();
     }, [fetchAllData]);
 
-    // Action Handlers
-
-    // 1. Project Review Actions
     const handleProjectReview = async (projectId, action) => {
         const comment = projectComments[projectId] || '';
         const reward = projectRewards[projectId] !== undefined ? projectRewards[projectId] : 0.006;
@@ -173,7 +164,6 @@ const ToReview = () => {
             if (response.data.status === 'success') {
                 adminCache.invalidate('admin_to_review');
                 setProjects(prev => prev.filter(p => p.id !== projectId));
-                // Clean up state
                 setProjectComments(prev => { const copy = {...prev}; delete copy[projectId]; return copy; });
                 setProjectRewards(prev => { const copy = {...prev}; delete copy[projectId]; return copy; });
             }
@@ -184,7 +174,6 @@ const ToReview = () => {
         }
     };
 
-    // 2. Certificate Review Actions
     const handleCertificateReview = async (certId, action = 'approve') => {
         if (action === 'reject') {
             const review_note = window.prompt('Reason for rejecting? (optional)') || undefined;
@@ -233,7 +222,6 @@ const ToReview = () => {
         }
     };
 
-    // 3. User Signup Review Actions
     const handleUserApproval = async (userId, action, isBulk = false) => {
         if (!isBulk && action === 'reject' && !await showConfirm('Are you sure you want to reject and delete this user?', { title: 'Reject User', destructive: true })) return;
         if (!isBulk) setIsProcessing(`user-${userId}`);
@@ -273,7 +261,6 @@ const ToReview = () => {
         setIsProcessing(null);
     };
 
-    // 4. Duck Trade Review Actions
     const handleTradeApproval = async (tradeId, action, isBulk = false) => {
         if (!isBulk) setIsProcessing(`trade-${tradeId}`);
         const formData = new FormData();
@@ -313,7 +300,6 @@ const ToReview = () => {
     };
 
 
-    // 6. Course Request Actions
     const handleCourseApproval = async (requestId, action) => {
         setIsProcessing(`course-${requestId}`);
 
@@ -353,7 +339,6 @@ const ToReview = () => {
         }
     };
 
-    // Helper functions
     const formatBits = (bits) => {
         if (!bits || !Array.isArray(bits)) return '0000 0000';
         const paddedBits = [...bits];
@@ -373,7 +358,6 @@ const ToReview = () => {
     };
 
 
-    // Tabs setup
     const tabs = [
         { id: 'all', label: 'All Items', icon: Inbox, count: projects.length + certificates.length + pendingUsers.length + trades.length + courseRequests.length },
         { id: 'projects', label: 'Projects', icon: FolderKanban, count: projects.length },
@@ -392,7 +376,6 @@ const ToReview = () => {
         trades.forEach(t => unified.push({ ...t, type: 'trade', key: `trade-${t.id}`, timestamp: t.timestamp || new Date().toISOString() }));
         courseRequests.forEach(r => unified.push({ ...r, type: 'course', key: `course-${r.id}`, timestamp: r.requested_at || new Date().toISOString() }));
 
-        // Sort descending by timestamp
         return unified.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
     };
 
@@ -407,8 +390,6 @@ const ToReview = () => {
     };
 
     const displayItems = getDisplayItems();
-
-    // Render Cards for each item type
 
     const renderProjectCard = (p) => {
         const isExpanded = !!expandedCodeSnippets[p.id];

@@ -59,7 +59,6 @@ describe('Classes Admin Page', () => {
 
         renderWithRouter(<Classes />);
         expect(screen.getByTestId("admin-classes-page")).toBeInTheDocument();
-        // Since loading state is handled with Skeleton, wait for fetch to finish
         await waitFor(() => {
             expect(screen.getByText('Classroom Directory')).toBeInTheDocument();
         });
@@ -163,26 +162,21 @@ describe('Classes Admin Page', () => {
             expect(screen.getByText('Math 101')).toBeInTheDocument();
         });
 
-        // Create modal
         const addBtn = screen.getByText(/Add Classroom/i);
         fireEvent.click(addBtn);
         await waitFor(() => {
             expect(screen.getByTestId("modal-overlay")).toBeInTheDocument();
         });
         
-        // Close modal
         const closeBtn = screen.getByLabelText('Close modal');
         fireEvent.click(closeBtn);
 
-        // Open kebab menu
         const kebabBtn = screen.getByTestId("kebab-trigger");
         if (kebabBtn) {
             fireEvent.click(kebabBtn);
 
-            // Delete action
             const deleteBtn = screen.getByText(/Delete Class/i);
             
-            // Mock window.confirm
             showConfirm.mockResolvedValue(true);
             client.delete.mockResolvedValueOnce({ data: { success: true } });
             
@@ -193,12 +187,11 @@ describe('Classes Admin Page', () => {
             });
         }
 
-        // Test onKeyDown branch
         const classCard = screen.queryAllByTestId("class-card")[0];
         if (classCard) {
             fireEvent.keyDown(classCard, { key: 'Enter', target: classCard });
             fireEvent.keyDown(classCard, { key: ' ', target: classCard });
-            fireEvent.keyDown(classCard, { key: 'a' }); // No-op branch
+            fireEvent.keyDown(classCard, { key: 'a' });
         }
     });
 
@@ -243,7 +236,6 @@ describe('Classes Admin Page', () => {
         const cards = document.querySelectorAll('.class-card');
         expect(cards.length).toBe(2);
 
-        // Drag first card over second card
         fireEvent.dragStart(cards[0]);
         fireEvent.dragEnter(cards[1]);
         fireEvent.dragOver(cards[1]);
@@ -277,7 +269,6 @@ describe('Classes Admin Page', () => {
         const dragHandles = screen.getAllByTestId('class-card-drag-handle');
         expect(dragHandles.length).toBe(2);
 
-        // Move first card to the right using ArrowRight
         fireEvent.keyDown(dragHandles[0], { key: 'ArrowRight' });
 
         await waitFor(() => {
@@ -288,7 +279,6 @@ describe('Classes Admin Page', () => {
 
         expect(JSON.parse(localStorage.getItem('admin_classes_order'))).toEqual(['c2', 'c1']);
 
-        // Now move the now-second card back using ArrowLeft
         const updatedHandles = screen.getAllByTestId('class-card-drag-handle');
         fireEvent.keyDown(updatedHandles[1], { key: 'ArrowLeft' });
 
@@ -319,9 +309,7 @@ describe('Classes Admin Page', () => {
 
         const cards = document.querySelectorAll('.class-card');
 
-        // Start drag on card 0
         fireEvent.dragStart(cards[0]);
-        // While dragging, click fires
         fireEvent.click(cards[0]);
 
         expect(mockNavigate).not.toHaveBeenCalled();
@@ -342,10 +330,8 @@ describe('Classes Admin Page', () => {
 
         renderWithRouter(<Classes />);
 
-        // Should immediately show cached classroom without skeleton loading
         expect(screen.getByText('Cached Classroom')).toBeInTheDocument();
 
-        // Background fetch resolves and updates view
         await waitFor(() => {
             expect(screen.getByText('Fresh Classroom')).toBeInTheDocument();
         });

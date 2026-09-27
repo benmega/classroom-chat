@@ -29,13 +29,11 @@ export const extractVideoThumbnail = (videoFile, seekTime = 1) => {
                 ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
                 
                 canvas.toBlob((blob) => {
-                    // Cleanup
                     URL.revokeObjectURL(video.src);
                     document.body.removeChild(video);
                     resolve(blob);
                 }, 'image/jpeg', 0.85);
             } catch (err) {
-                // Cleanup on error
                 URL.revokeObjectURL(video.src);
                 document.body.removeChild(video);
                 reject(err);
@@ -43,7 +41,6 @@ export const extractVideoThumbnail = (videoFile, seekTime = 1) => {
         };
 
         video.onerror = () => {
-            // Cleanup
             URL.revokeObjectURL(video.src);
             if (video.parentNode) document.body.removeChild(video);
             reject(new Error('Failed to load video for thumbnail extraction'));

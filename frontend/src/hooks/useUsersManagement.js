@@ -46,7 +46,6 @@ export const useUsersManagement = (role = '') => {
         return () => clearTimeout(timer);
     }, [searchTerm]);
 
-    // Reset to page 1 when search or filters change
     useEffect(() => {
         setPage(1);
     }, [debouncedSearchTerm, statusFilter, accountTypeFilter, sortBy, sortDir]);
@@ -279,15 +278,11 @@ export const useUsersManagement = (role = '') => {
             adminCache.invalidate('admin_users');
             
             
-            // Optimistically update the specific user in the users array
             setUsers(prevUsers => 
                 prevUsers.map(user => 
                     user.id === userId ? { ...user, can_chat: response.data.can_chat } : user
                 )
             );
-            
-            // Optionally re-fetch to ensure consistency if other fields changed
-            // fetchUsers(page);
         } catch (error) {
             toast.error(error.response?.data?.message || 'Failed to toggle chat status.');
         }

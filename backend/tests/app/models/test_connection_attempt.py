@@ -1,9 +1,3 @@
-"""
-File: test_connection_attempt.py
-Type: py
-Summary: Unit tests for ConnectionAttempt model rate limit branches.
-"""
-
 from application.extensions import db
 from application.models.connection_attempt import ConnectionAttempt
 from application.models.user import User
@@ -21,7 +15,6 @@ def test_connection_attempt_rate_limits(app):
         db.session.add(user)
         db.session.commit()
 
-        # Log 5 attempts
         for i in range(5):
             ConnectionAttempt.log_attempt(user.id, f"CODE{i}", success=False)
 

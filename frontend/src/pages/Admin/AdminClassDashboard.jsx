@@ -49,17 +49,14 @@ const AdminClassDashboard = () => {
     const [activeTab, setActiveTab] = useState('stream');
     const [joinCode, setJoinCode] = useState(null);
 
-    // Connection cards & course states
     const [activeModal, setActiveModal] = useState(null);
     const [classroomCards, setClassroomCards] = useState([]);
     const [isFetchingCards, setIsFetchingCards] = useState(false);
     const [courses, setCourses] = useState([]);
     
-    // Name editing state
     const [isEditingName, setIsEditingName] = useState(false);
     const [editNameValue, setEditNameValue] = useState('');
 
-    // Sandbox Mode state
     const [isTogglingSandbox, setIsTogglingSandbox] = useState(false);
 
     const handleToggleSandbox = async () => {
@@ -104,7 +101,6 @@ const AdminClassDashboard = () => {
             const res = await client.get(`/api/admin/classrooms/${classId}`);
             setClassroom(res.data.classroom);
 
-            // Fetch join code
             try {
                 const codeRes = await client.get(`/api/admin/classrooms/${classId}/join-code`);
                 if (codeRes.data.status === 'success' || codeRes.data.success) {
@@ -317,7 +313,6 @@ const AdminClassDashboard = () => {
         );
     }
 
-    // Filter roster students
     const filteredRoster = (classroom.students || []).filter(student => {
         const query = rosterSearchQuery.toLowerCase();
         return (
@@ -326,7 +321,6 @@ const AdminClassDashboard = () => {
         );
     });
 
-    // Determine students available for enrollment (excluding already enrolled)
     const enrolledIds = new Set((classroom.students || []).map(s => s.id));
     const availableStudents = allStudents.filter(s => !enrolledIds.has(s.id));
 
@@ -407,7 +401,6 @@ const AdminClassDashboard = () => {
                 </div>
             </div>
 
-            {/* Sandbox Mode Control Banner */}
             <div className="admin-sandbox-toolbar" data-testid="admin-sandbox-banner">
                 <div className="sandbox-toolbar-status">
                     {classroom?.sandbox_active ? (

@@ -9,7 +9,6 @@ import ScreenRecorder from '../../components/common/ScreenRecorder';
 import Skeleton from '../../components/common/Skeleton';
 import { formatStaticUrl } from '../../utils/formatters';
 
-// Hooks
 import { useProjectManagement } from '../../hooks/useProjectManagement';
 
 const ManageProject = () => {
@@ -36,7 +35,7 @@ const ManageProject = () => {
     } = useProjectManagement();
 
     const [isRecorderOpen, setIsRecorderOpen] = useState(false);
-    const [activeTab, setActiveTab] = useState('core'); // 'core', 'media', 'code'
+    const [activeTab, setActiveTab] = useState('core');
     const descRef = useRef(null);
 
     const onRecordingComplete = (blob) => {
@@ -109,7 +108,6 @@ const ManageProject = () => {
         <div className="manage-project-page">
             <form onSubmit={handleSubmit} className="manage-project-form">
                 <div className="manage-project-grid">
-                    {/* LEFT COLUMN: Input Form */}
                     <div className="form-column">
                         {projectData.status === 'rejected' && (
                             <div className="revision-notice-banner">
@@ -269,7 +267,6 @@ const ManageProject = () => {
 
                     </div>
 
-                    {/* RIGHT COLUMN: Live Preview */}
                     <div className="preview-column">
                         <div className="preview-sticky-container">
                             <div className={`preview-card-wrapper highlight-${activeTab}`}>
@@ -324,7 +321,6 @@ const ManageProject = () => {
                     </div>
                 </div>
 
-                {/* Floating Bottom Bar */}
                 <div className="floating-action-bar">
                     <div className="footer-left">
                         <button type="button" onClick={() => navigate('/profile')} className="btn-cancel">

@@ -121,10 +121,8 @@ describe('AdminClassDashboard', () => {
             expect(screen.getByText('Python Level 1')).toBeInTheDocument();
         });
 
-        // Known languages render as an icon with the language as alt text
         expect(screen.getByAltText('Python')).toBeInTheDocument();
 
-        // The roster lives in the People tab
         fireEvent.click(screen.getByRole('tab', { name: 'People' }));
         expect(screen.getByText('John Doe')).toBeInTheDocument();
         expect(screen.getByText('@student1')).toBeInTheDocument();
@@ -151,7 +149,6 @@ describe('AdminClassDashboard', () => {
 
         fireEvent.click(screen.getByRole('tab', { name: 'People' }));
 
-        // Click the UserPlus button to open the modal
         fireEvent.click(screen.getByRole('button', { name: 'Enroll Student' }));
 
         const select = document.getElementById('student-select-list');
@@ -327,7 +324,6 @@ describe('AdminClassDashboard', () => {
         fireEvent.click(screen.getByRole('tab', { name: 'Classwork' }));
 
         expect(screen.getByRole('button', { name: 'Add Connected Course' })).toBeInTheDocument();
-        // Displays course_name when present, falling back to course_id
         expect(screen.getByText('Python Basics')).toBeInTheDocument();
         expect(screen.getByText('course-js')).toBeInTheDocument();
     });
@@ -510,7 +506,6 @@ describe('AdminClassDashboard', () => {
 
         fireEvent.click(screen.getByRole('tab', { name: 'People' }));
 
-        // Open the modal containing join code & enroll
         fireEvent.click(screen.getByRole('button', { name: 'Enroll Student' }));
 
         expect(screen.getAllByText('OLD123').length).toBeGreaterThan(0);

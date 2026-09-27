@@ -4,7 +4,6 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import AccessDenied from './AccessDenied';
 
-// Mocking image import
 vi.mock('../../assets/you_shall_not_pass.png', () => ({
     default: 'mocked-image-path.png'
 }));

@@ -155,13 +155,12 @@ describe('Signup Component', () => {
       expect(toast.success).toHaveBeenCalledWith('Verification code sent to your email!');
     });
 
-    // Now in verify mode
     expect(screen.getByPlaceholderText('6-Digit Code')).toBeInTheDocument();
     const codeInput = screen.getByPlaceholderText('6-Digit Code');
     fireEvent.change(codeInput, { target: { value: '123456' } });
 
-    client.post.mockResolvedValueOnce({ data: { success: true } }); // verify
-    client.post.mockResolvedValueOnce({ data: { success: true } }); // login
+    client.post.mockResolvedValueOnce({ data: { success: true } });
+    client.post.mockResolvedValueOnce({ data: { success: true } });
 
     const verifyBtn = screen.getByRole('button', { name: /Verify Code/i });
     
@@ -176,7 +175,7 @@ describe('Signup Component', () => {
   });
 
   it('handles parent verify error', async () => {
-    client.post.mockResolvedValueOnce({ data: { success: true } }); // signup
+    client.post.mockResolvedValueOnce({ data: { success: true } });
     renderWithProviders(<Signup />);
     fireEvent.click(screen.getByText('Parent'));
     fireEvent.change(screen.getByPlaceholderText(/email address/i), { target: { value: 'p@ex.com' } });
@@ -202,8 +201,8 @@ describe('Signup Component', () => {
   });
 
   it('handles existing parent account login fallback', async () => {
-    client.post.mockRejectedValueOnce({ response: { data: { error: 'already exists' } } }); // signup
-    client.post.mockResolvedValueOnce({ data: { success: true } }); // login fallback
+    client.post.mockRejectedValueOnce({ response: { data: { error: 'already exists' } } });
+    client.post.mockResolvedValueOnce({ data: { success: true } });
 
     renderWithProviders(<Signup />);
     fireEvent.click(screen.getByText('Parent'));
@@ -223,7 +222,7 @@ describe('Signup Component', () => {
 
   it('handles existing student account login fallback', async () => {
     client.post.mockRejectedValueOnce({ response: { status: 409, data: { error: 'Username already exists.' } } });
-    client.post.mockResolvedValueOnce({ data: { success: true } }); // login fallback
+    client.post.mockResolvedValueOnce({ data: { success: true } });
 
     renderWithProviders(<Signup />);
     fireEvent.change(screen.getByPlaceholderText(/username/i), { target: { value: 'stu1' } });
@@ -258,7 +257,7 @@ describe('Signup Component', () => {
 
   it('handles existing student account login fallback failure', async () => {
     client.post.mockRejectedValueOnce({ response: { status: 409, data: { error: 'Username already exists.' } } });
-    client.post.mockRejectedValueOnce(new Error('Wrong password')); // login fallback fails
+    client.post.mockRejectedValueOnce(new Error('Wrong password'));
 
     
 

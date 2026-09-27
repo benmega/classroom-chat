@@ -1,21 +1,40 @@
 import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
+import react from '@vitejs/plugin-react-swc'
+
+function lucideOptimize() {
+  return {
+    name: 'optimize-lucide',
+    enforce: 'pre',
+    transform(code, id) {
+      if (id.includes('node_modules')) return;
+      if (!code.includes('lucide-react')) return;
+      
+      return code.replace(/import\s+\{([^}]+)\}\s+from\s+['"]lucide-react['"]/g, (match, imports) => {
+        const names = imports.split(',').map(n => n.trim()).filter(Boolean);
+        return names.map(name => {
+          let importName = name;
+          let localName = name;
+          if (name.includes(' as ')) {
+            [importName, localName] = name.split(' as ').map(n => n.trim());
+          }
+          let baseName = importName;
+          if (baseName.endsWith('Icon') && baseName !== 'Icon') {
+            baseName = baseName.replace(/Icon$/, '');
+          }
+          const kebabName = baseName.replace(/([a-z0-9])([A-Z])/g, '$1-$2').replace(/([A-Z])([A-Z][a-z])/g, '$1-$2').replace(/([a-zA-Z])([0-9])/g, '$1-$2').toLowerCase();
+          return `import ${localName} from 'lucide-react/dist/esm/icons/${kebabName}';`;
+        }).join('\n');
+      });
+    }
+  };
+}
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), lucideOptimize()],
   build: {
     rollupOptions: {
       output: {
-        // Split heavy vendor libs into separate cached chunks.
-        // Each chunk is independently cached — an app code change no longer
-        // busts the MUI / react-admin / chart.js cache in the browser.
-        manualChunks: {
-          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
-          'vendor-mui': ['@mui/material', '@emotion/react', '@emotion/styled'],
-          'vendor-charts': ['chart.js', 'react-chartjs-2'],
-          'vendor-react-admin': ['react-admin', 'ra-core'],
-          'vendor-emoji': ['emoji-picker-react'],
-        },
+        // Rollup's default chunking is usually more memory efficient during build
       },
     },
   },

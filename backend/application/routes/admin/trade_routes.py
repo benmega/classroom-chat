@@ -12,7 +12,6 @@ from ..admin_routes import admin_bp
 @admin_only
 @api_response
 def pending_trades():
-    # Join with User to get nickname
     pend_trades = (
         db.session.query(DuckTradeLog, User)
         .outerjoin(User, DuckTradeLog.user_id == User.id)

@@ -97,7 +97,7 @@ describe('Users Page', () => {
     expect(screen.getByText('@admin1')).toBeInTheDocument();
     expect(screen.getByText('@student1')).toBeInTheDocument();
     expect(screen.getByText('@parent1')).toBeInTheDocument();
-    expect(screen.getByText('Drawer:')).toBeInTheDocument(); // student1 has drawer
+    expect(screen.getByText('Drawer:')).toBeInTheDocument();
   });
 
   it('handles search input', () => {
@@ -133,7 +133,6 @@ describe('Users Page', () => {
 
   it('refreshes users', () => {
     renderComponent();
-    // Assuming AdminPageHeader has a refresh button with class .refresh-btn
     const refreshBtns = screen.queryAllByTestId("refresh-btn");
     if (refreshBtns.length > 0) {
       fireEvent.click(refreshBtns[0]);
@@ -150,7 +149,7 @@ describe('Users Page', () => {
       is_admin: false,
       levels_today: 5,
       current_activity: 'Working on loops',
-      last_activity_time: new Date(Date.now() - 5 * 60 * 1000).toISOString(), // 5m ago
+      last_activity_time: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
       is_online: false
     };
     useUsersManagement.mockReturnValue({
@@ -161,10 +160,8 @@ describe('Users Page', () => {
 
     renderComponent();
 
-    // Verify inline role tag
     expect(screen.getByText('Student')).toBeInTheDocument();
 
-    // Verify status info
     expect(screen.getByText('Offline')).toBeInTheDocument();
   });
 
@@ -179,15 +176,12 @@ describe('Users Page', () => {
 
     renderComponent();
 
-    // Click the Parents tab
     const parentTab = screen.getByText('Parents');
     fireEvent.click(parentTab);
 
-    // Open kebab menu
     const kebab = screen.getByTestId("kebab-trigger");
     if (kebab) {
       fireEvent.click(kebab);
-      // Click an action
       const adjustBtn = screen.getByText(/Adjust Ducks/i);
       fireEvent.click(adjustBtn);
       expect(mockSetActiveModal).toHaveBeenCalledWith('adjust');
@@ -207,7 +201,6 @@ describe('Users Page', () => {
       totalUsers: 1,
     });
     
-    // We need to mock client.get
     const client = await import('../../api/client');
     client.default.get.mockResolvedValueOnce({
         data: { children: [{ id: 2, username: 'student1', nickname: 'Student One', profile_picture: 'pic.jpg' }] }
@@ -215,15 +208,12 @@ describe('Users Page', () => {
 
     renderWithProviders(<Users />, { route: '/admin/users?role=parent' });
 
-    // Click expand button
     const expandBtn = screen.getByTestId("expand-btn");
     if (expandBtn) {
       fireEvent.click(expandBtn);
-      // Wait for children list
       await waitFor(() => {
           expect(screen.getByTestId("expanded-children-row")).toBeInTheDocument();
       });
-      // Click unlink button
       const unlinkBtn = screen.getByTestId("child-unlink-btn");
       if (unlinkBtn) {
         fireEvent.click(unlinkBtn);

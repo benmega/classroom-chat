@@ -554,7 +554,6 @@ def api_edit_profile_picture():
         img = Image.open(file)
         img.save(secure_path)
 
-        # Cleanup old image if it exists
         if user_obj.profile_picture:
             old_path = os.path.join(
                 current_app.config["UPLOAD_FOLDER"],

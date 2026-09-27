@@ -1,8 +1,4 @@
-"""
-File: submission.py
-Type: py
-Summary: SQLAlchemy model for student file submissions ("homework inbox").
-"""
+
 
 from ..extensions import db
 

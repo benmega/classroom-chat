@@ -1,6 +1,3 @@
-"""
-Unit tests for classroom_routes.py
-"""
 from application.extensions import db
 from application.models.classroom import Classroom
 from application.models.user import User
@@ -85,13 +82,11 @@ def test_join_classroom_success_and_already_enrolled(client, app):
     with client.session_transaction() as sess:
         sess["user"] = s_id
 
-    # First join: Success
     res = client.post("/api/classroom/join", json={"code": "JOIN1"})
     assert res.status_code == 200
     data = res.get_json()
     assert data["data"]["classroom"]["name"] == "CS 101"
 
-    # Second join: Already enrolled
     res2 = client.post("/api/classroom/join", json={"code": "JOIN1"})
     assert res2.status_code == 400
     data2 = res2.get_json()

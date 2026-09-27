@@ -31,7 +31,7 @@ const MobileSidebar = ({ user, isParent, isSidebarOpen, setSidebarOpen, handleLo
                 <nav className="sidebar-nav">
                     <ul>
                         {isParent ? (
-                            // 👨‍👩‍👧‍👦 Parent Navigation -------------------------------------
+
                             <>
                                 <li>
                                     <Link to="/parent/dashboard" onClick={close}>
@@ -49,7 +49,7 @@ const MobileSidebar = ({ user, isParent, isSidebarOpen, setSidebarOpen, handleLo
                                     </button>
                                 </li>
 
-                                {/* Child report card links */}
+
                                 {children.length > 0 && (
                                     <>
                                         <li className="sidebar-nav-section-label">My Children</li>
@@ -78,7 +78,7 @@ const MobileSidebar = ({ user, isParent, isSidebarOpen, setSidebarOpen, handleLo
                                 )}
                             </>
                         ) : (
-                            // ── Student / Admin Navigation ─────────────────────────────
+
                             <>
                                 <li>
                                     <Link to="/chat" onClick={close}>
@@ -138,7 +138,7 @@ const MobileSidebar = ({ user, isParent, isSidebarOpen, setSidebarOpen, handleLo
                             </>
                         )}
 
-                        {/* Settings — all roles */}
+
                         <li><Link to="/settings" onClick={close}><Settings size={18} /> Settings</Link></li>
                     </ul>
                 </nav>

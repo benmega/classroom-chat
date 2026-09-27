@@ -1,9 +1,3 @@
-"""
-File: test_challenge_log.py
-Type: py
-Summary: Unit tests for challenge log model.
-"""
-
 from datetime import datetime
 
 import pytest
@@ -19,8 +13,6 @@ def test_challenge_log_creation(sample_challenge_log):
     assert db.session.get(User, challenge_log.user_id).username.startswith("user")
     assert challenge_log.domain == "codecombat.com"
 
-    # UPDATED: Check challenge_slug instead of challenge_name
-    # The fixture generates a slug starting with "challenge-slug-"
     assert challenge_log.challenge_slug.startswith("challenge-slug-")
 
     assert challenge_log.course_id == "12345"
@@ -30,7 +22,6 @@ def test_challenge_log_creation(sample_challenge_log):
 
 def test_challenge_log_timestamp(init_db):
     """Test that the timestamp is set correctly when creating a new ChallengeLog."""
-    # UPDATED: Use challenge_slug in constructor
     challenge_log = ChallengeLog(
         user_id=123,
         domain="LeetCode",
@@ -53,19 +44,17 @@ def test_challenge_log_repr(sample_challenge_log):
     assert repr_output.startswith("<ChallengeLog(user_id=")
     assert "domain=codecombat.com" in repr_output
 
-    # UPDATED: The new __repr__ returns 'slug=' instead of 'challenge='
     assert "slug=" in repr_output
     assert "timestamp=" in repr_output
 
 
 def test_challenge_log_missing_field():
     """Test the behavior when required fields are missing."""
-    with pytest.raises(Exception):  # Should raise an IntegrityError
-        # UPDATED: Use challenge_slug in constructor
+    with pytest.raises(Exception):
         challenge_log = ChallengeLog(
             user_id=123,
             domain="codecombat.com",
-            challenge_slug=None,  # Missing required challenge_slug
+            challenge_slug=None,
         )
         db.session.add(challenge_log)
         db.session.commit()
@@ -73,7 +62,6 @@ def test_challenge_log_missing_field():
 
 def test_challenge_log_with_optional_fields(init_db):
     """Test creating ChallengeLog with missing optional fields."""
-    # UPDATED: Use challenge_slug in constructor
     challenge_log = ChallengeLog(
         user_id=123,
         domain="HackerRank",
@@ -85,7 +73,6 @@ def test_challenge_log_with_optional_fields(init_db):
     assert challenge_log.user_id == 123
     assert challenge_log.domain == "HackerRank"
 
-    # UPDATED: Check challenge_slug
     assert challenge_log.challenge_slug == "sample-challenge-slug"
 
     assert challenge_log.course_id is None

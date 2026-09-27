@@ -1,8 +1,4 @@
-"""
-File: classroom.py
-Type: py
-Summary: SQLAlchemy model for Classroom and the user_classrooms join table.
-"""
+
 
 import random
 import string

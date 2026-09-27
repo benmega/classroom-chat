@@ -266,7 +266,6 @@ def admin_transactions():
             )
         )
 
-    # Order by timestamp descending
     query = query.order_by(DuckTransaction.timestamp.desc())
 
     pagination = query.paginate(page=page, per_page=per_page, error_out=False)

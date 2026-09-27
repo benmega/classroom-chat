@@ -27,7 +27,6 @@ def test_save_message_to_db_no_user(mock_get):
 @patch('application.utilities.db_helpers.db.session.commit')
 @patch('application.services.moderation_service.message_is_appropriate')
 def test_save_message_to_db_success(mock_is_appropriate, mock_commit, mock_add, mock_query, mock_get):
-    # Setup user
     mock_user = MagicMock()
     mock_user.role = "admin"
     mock_user.has_animated_border = False
@@ -36,11 +35,9 @@ def test_save_message_to_db_success(mock_is_appropriate, mock_commit, mock_add, 
 
     mock_get.return_value = mock_user
 
-    # Setup target_live online users
     mock_online_user = MagicMock()
     mock_query.filter_by.return_value.all.return_value = [mock_online_user]
 
-    # Run with target_live=True and target_user_ids=[2]
     result = save_message_to_db(
         user_id=1,
         message="Test message",

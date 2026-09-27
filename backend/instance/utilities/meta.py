@@ -1,7 +1,4 @@
-# db_metadata.py
-# Type: Script
-# Location: Local (runs anywhere Python and sqlite3 are available)
-# Summary: Connects to a SQLite database and prints its metadata (tables, columns, indexes).
+
 
 import sqlite3
 

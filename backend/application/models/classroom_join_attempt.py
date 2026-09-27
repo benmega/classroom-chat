@@ -1,9 +1,4 @@
-"""
-File: classroom_join_attempt.py
-Type: py
-Summary: SQLAlchemy model for tracking student classroom join attempts.
-         Used for rate limiting and audit logging.
-"""
+
 
 from datetime import datetime, timedelta
 
@@ -31,7 +26,6 @@ class ClassroomJoinAttempt(db.Model):
     code_attempted = db.Column(db.String(10), nullable=False)
     success = db.Column(db.Boolean, default=False)
 
-    # Relationship back to User
     student = db.relationship(
         "User",
         backref=db.backref(
@@ -41,10 +35,6 @@ class ClassroomJoinAttempt(db.Model):
         ),
         foreign_keys=[student_id],
     )
-
-    # -----------------------------------------------------------------------
-    # Rate-limiting helpers
-    # -----------------------------------------------------------------------
 
     HOURLY_LIMIT = 10
     DAILY_LIMIT = 50

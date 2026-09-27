@@ -25,7 +25,6 @@ export const useAdminUserDashboard = (userId) => {
     const [selectedTemplateName, setSelectedTemplateName] = useState('');
     const [templatesSaving, setTemplatesSaving] = useState(false);
 
-    // Pass chapter state
     const [passChapterLoading, setPassChapterLoading] = useState(false);
     const [selectedChapterId, setSelectedChapterId] = useState('');
     const [passPreview, setPassPreview] = useState(null);

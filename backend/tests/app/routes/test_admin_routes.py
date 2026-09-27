@@ -1,9 +1,3 @@
-"""
-File: test_admin_routes.py
-Type: py
-Summary: Unit tests for admin routes Flask routes.
-"""
-
 import contextlib
 import json
 from unittest.mock import patch
@@ -63,7 +57,6 @@ def test_set_username_route(client, sample_user, sample_admin):
     assert resp.status_code == 200
     assert resp.get_json()["success"] is True
 
-    # Query inside a context
     with client.application.app_context():
         updated = db.session.get(User, sample_user.id)
         assert updated.username == "new_username"
@@ -288,7 +281,6 @@ def test_admin_transactions(client, test_app, sample_admin, sample_user):
     with test_app.app_context():
         from application.models.duck_transaction import DuckTransaction
 
-        # Clear existing transactions if any to start fresh
         DuckTransaction.query.delete()
 
         tx1 = DuckTransaction(
@@ -398,7 +390,6 @@ def test_admin_transactions_route(client, test_app, sample_user, sample_admin):
         data_spent = resp_spent.get_json()["data"]
         assert all(t["amount"] < 0 for t in data_spent["transactions"])
 
-        # Search filter
         resp_search = client.get("/api/admin/transactions?search=Earned")
         assert resp_search.status_code == 200
         data_search = resp_search.get_json()["data"]
@@ -415,7 +406,6 @@ def test_adjust_packets(client, sample_admin, sample_user, test_app):
     )
     assert resp_unauth.status_code == 401
 
-    # Login as admin
     login_as_admin(client, sample_admin)
 
     with test_app.app_context():
@@ -551,7 +541,6 @@ def test_upload_template_image_invalid_file(client, sample_admin):
 
     login_as_admin(client, sample_admin)
 
-    # Missing file
     resp_empty = client.post(
         "/api/project-templates/upload-image",
         data={},
@@ -559,7 +548,6 @@ def test_upload_template_image_invalid_file(client, sample_admin):
     )
     assert resp_empty.status_code == 400
 
-    # Invalid extension
     data_txt = {"file": (BytesIO(b"hello text"), "test.txt")}
     resp_txt = client.post(
         "/api/project-templates/upload-image",
@@ -573,7 +561,6 @@ def test_project_review_packets(client, sample_admin, sample_user, test_app):
     """Test project review packet rewards and retraction."""
     from application.models.project import Project
 
-    # Login as admin
     login_as_admin(client, sample_admin)
 
     with test_app.app_context():

@@ -7,7 +7,7 @@ import MobileSidebar from './MobileSidebar';
 import client from '../../api/client';
 import useAuthStore from '../../store/useAuthStore';
 
-// Mock dependencies
+
 vi.mock('../../api/client', () => ({
     default: {
         get: vi.fn(),
@@ -33,7 +33,7 @@ describe('MobileSidebar Component', () => {
 
     beforeEach(() => {
         vi.clearAllMocks();
-        // Default store state
+
         useAuthStore.mockReturnValue({
             unreadCount: 0,
             activityUnreadCount: 0,

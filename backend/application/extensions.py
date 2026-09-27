@@ -1,8 +1,4 @@
-"""
-File: extensions.py
-Type: py
-Summary: Flask extension instances (DB, SocketIO, limiter, scheduler).
-"""
+
 
 from flask_apscheduler import APScheduler
 from flask_limiter import Limiter

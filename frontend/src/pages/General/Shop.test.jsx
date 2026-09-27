@@ -7,7 +7,6 @@ import { http, HttpResponse } from 'msw';
 import useAuthStore from '../../store/useAuthStore';
 import toast from 'react-hot-toast';
 
-// Mock react-hot-toast
 vi.mock('react-hot-toast', () => ({
   default: {
     success: vi.fn(),
@@ -77,7 +76,6 @@ describe('Shop', () => {
     const purchaseButtons = screen.getAllByText('10.000 Packets');
     expect(purchaseButtons.length).toBeGreaterThan(0);
     
-    // Click purchase button
     fireEvent.click(purchaseButtons[0]);
 
     await waitFor(() => {

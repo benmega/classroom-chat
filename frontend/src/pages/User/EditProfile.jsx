@@ -78,14 +78,12 @@ const EditProfile = () => {
 
         setIsSaving(true);
         try {
-            // 1. Handle Profile Picture if changed
             if (profilePic) {
                 const picData = new FormData();
                 picData.append('profile_picture', profilePic);
                 await client.post('/user/api/profile-picture', picData);
             }
 
-            // 2. Handle Basic Info
             const payload = {
                 bio,
                 password: password || undefined,
@@ -115,7 +113,6 @@ const EditProfile = () => {
     return (
         <div className="edit-profile-page">
             <form onSubmit={handleSave} className="settings-form">
-                {/* Header Section */}
                 <div className="profile-settings-header">
                     <div className="profile-header-avatar-section">
                         <div className="avatar-wrapper">
@@ -145,9 +142,7 @@ const EditProfile = () => {
                     </div>
                 </div>
 
-                {/* Main Content Layout */}
                 <div className="settings-layout">
-                    {/* Profile Information */}
                     <div className="settings-panel profile-info-panel">
                         <h2 className="panel-title">Profile Information</h2>
                         
@@ -197,7 +192,6 @@ const EditProfile = () => {
                         </div>
                     </div>
 
-                    {/* Pairing Code Panel */}
                     {user?.role !== 'parent' && (
                         <div className="settings-panel connection-panel">
                             <h2 className="panel-title">Pairing Code & Connection</h2>
@@ -250,7 +244,6 @@ const EditProfile = () => {
                         </div>
                     )}
 
-                    {/* Account Security Panel */}
                     <div className="settings-panel security-panel">
                         <h2 className="panel-title">Account Security</h2>
                         <div className="security-fields-row">
@@ -300,7 +293,6 @@ const EditProfile = () => {
                     </div>
                 </div>
 
-                {/* Save Button Row */}
                 {hasChanges && (
                     <div className="settings-footer-actions">
                         <button type="button" onClick={handleCancel} className="btn-secondary">

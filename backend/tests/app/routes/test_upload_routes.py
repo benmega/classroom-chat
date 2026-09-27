@@ -1,10 +1,3 @@
-"""
-File: test_upload_routes.py
-Type: py
-Summary: Unit tests for the hardened upload routes: auth required,
-         only validated images/PDFs accepted, no server paths leaked.
-"""
-
 import os
 
 from application.config import Config

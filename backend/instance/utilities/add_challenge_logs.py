@@ -1,5 +1,4 @@
-# Filename: update_challenge_logs.py
-# Description: Script to bulk insert challenge logs into the database.
+
 from application import DevelopmentConfig, create_app
 from application.extensions import db
 from application.models.challenge import Challenge
@@ -51,21 +50,18 @@ def add_course_challenge_logs(username, domain, course_id):
     :param course_id: The course ID associated with the challenges.
     """
     try:
-        # Query all active challenges for the given course_id
         challenges = (
             db.session.query(Challenge.name)
             .filter(Challenge.course_id == course_id, Challenge.is_active)
             .all()
         )
 
-        # Convert to a list of challenge names
         challenge_names = [challenge.name for challenge in challenges]
 
         if not challenge_names:
             print(f"No active challenges found for course_id: {course_id}")
             return
 
-        # Call add_challenge_logs with the retrieved challenges
         try:
             add_challenge_logs(username, domain, challenge_names, course_id=course_id)
             print(

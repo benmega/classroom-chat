@@ -1,7 +1,4 @@
-# run_sql.py
-# Type: Script
-# Location: Local (runs anywhere Python and sqlite3 are available)
-# Summary: Opens a SQLite database, runs custom SQL, prints results.
+
 
 import sqlite3
 

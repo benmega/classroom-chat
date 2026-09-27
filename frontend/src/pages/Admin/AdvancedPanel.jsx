@@ -18,7 +18,7 @@ import Skeleton from '../../components/common/Skeleton';
 
 const AdvancedPanel = () => {
     const navigate = useNavigate();
-    const isLoading = false; // Currently static
+    const isLoading = false;
     const [logs, setLogs] = useState('');
     const [showLogModal, setShowLogModal] = useState(false);
     const [showStatsModal, setShowStatsModal] = useState(false);

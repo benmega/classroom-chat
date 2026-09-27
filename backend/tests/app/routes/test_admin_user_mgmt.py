@@ -53,12 +53,10 @@ def test_approve_and_reject_user(client, sample_admin, init_db):
     db.session.add_all([u1, u2])
     db.session.commit()
 
-    # Approve
     resp = client.post(f"/api/admin/approve_user/{u1.id}")
     assert resp.status_code == 200
     assert u1.is_approved is True
 
-    # Reject
     resp = client.post(f"/api/admin/reject_user/{u2.id}")
     assert resp.status_code == 200
     assert User.query.filter_by(username="rejectstudent").first() is None
@@ -69,12 +67,10 @@ def test_toggle_user_chat(client, sample_admin, sample_user):
 
     assert getattr(sample_user, "can_chat", True) is True
 
-    # Toggle to False
     resp = client.post(f"/api/admin/user/{sample_user.id}/toggle-chat")
     assert resp.status_code == 200
     assert resp.get_json()["data"]["can_chat"] is False
 
-    # Toggle to True
     resp = client.post(f"/api/admin/user/{sample_user.id}/toggle-chat")
     assert resp.status_code == 200
     assert resp.get_json()["data"]["can_chat"] is True
@@ -83,14 +79,12 @@ def test_toggle_user_chat(client, sample_admin, sample_user):
 def test_get_users_pagination_and_search(client, sample_admin, sample_user):
     login_as_admin(client, sample_admin)
 
-    # Search by username
     resp = client.get(f"/api/admin/users?search={sample_user.username}")
     assert resp.status_code == 200
     data = resp.get_json()
     assert len(data["users"]) == 1
     assert data["users"][0]["username"] == sample_user.username
 
-    # Search with no results
     resp = client.get("/api/admin/users?search=nonexistent_search_query")
     assert resp.status_code == 200
     data = resp.get_json()
@@ -153,7 +147,6 @@ def test_create_user(client, sample_admin, init_db):
     )
     assert resp.status_code == 400
 
-    # Duplicate username
     resp = client.post(
         "/api/admin/create_user",
         data={"username": "newstudent", "password": "password", "ducks": 0},
@@ -174,7 +167,6 @@ def test_remove_user(client, sample_admin, sample_user):
     assert resp.get_json()["success"] is True
     assert User.query.filter_by(username=sample_user.username).first() is None
 
-    # Cannot remove admin
     other_admin = User(username="otheradmin2", role="admin", password_hash="dummy")
     db.session.add(other_admin)
     db.session.commit()
@@ -218,7 +210,6 @@ def test_parent_linking(client, sample_admin, init_db):
     db.session.add_all([parent, child])
     db.session.commit()
 
-    # Link parent and child
     resp = client.post(f"/api/admin/parents/{parent.id}/link/{child.id}")
     assert resp.status_code == 200
     assert child in parent.children
@@ -228,7 +219,6 @@ def test_parent_linking(client, sample_admin, init_db):
     assert len(resp.get_json()["children"]) == 1
     assert resp.get_json()["children"][0]["username"] == "childuser"
 
-    # Unlink
     resp = client.post(f"/api/admin/parents/{parent.id}/unlink/{child.id}")
     assert resp.status_code == 200
     assert child not in parent.children
@@ -262,18 +252,15 @@ def test_classrooms_and_connection_cards(client, sample_admin, sample_user, init
     db.session.add(classroom)
     db.session.commit()
 
-    # List classrooms
     resp = client.get("/api/admin/classrooms")
     assert resp.status_code == 200
     classrooms = resp.get_json()["data"]["classrooms"]
     assert any(c["id"] == "class_101" for c in classrooms)
 
-    # Classroom cards list
     resp = client.get(f"/api/admin/classrooms/{classroom.id}/connection_cards")
     assert resp.status_code == 200
     assert len(resp.get_json()["data"]["cards"]) == 1
 
-    # All cards list
     resp = client.get("/api/admin/classrooms/all/connection_cards")
     assert resp.status_code == 200
 
@@ -299,14 +286,12 @@ def test_set_drawer(client, sample_admin, sample_user, init_db):
     assert resp.status_code == 200
     assert sample_user.drawer == "0x06"
 
-    # Out of range drawer
     resp = client.post(
         "/api/admin/set_drawer",
         json={"username": sample_user.username, "drawer": "0x40"},
     )
     assert resp.status_code == 400
 
-    # Conflict assigning drawer to another user
     other_student = User(username="otherstudent", role="student", password_hash="dummy")
     db.session.add(other_student)
     db.session.commit()
@@ -317,7 +302,6 @@ def test_set_drawer(client, sample_admin, sample_user, init_db):
     )
     assert resp.status_code == 409
 
-    # Reassign using force=True
     resp = client.post(
         "/api/admin/set_drawer",
         json={"username": other_student.username, "drawer": "0x06", "force": True},
@@ -326,7 +310,6 @@ def test_set_drawer(client, sample_admin, sample_user, init_db):
     assert other_student.drawer == "0x06"
     assert sample_user.drawer is None
 
-    # Clear drawer
     resp = client.post(
         "/api/admin/set_drawer", json={"username": other_student.username, "drawer": ""}
     )
@@ -361,7 +344,6 @@ def test_classroom_detail_management(client, sample_admin, init_db):
     assert c.name == "Updated Classroom Name"
     assert c.language == "Scratch"
 
-    # Enroll student
     resp = client.post(
         f"/api/admin/classrooms/{c.id}/enroll", json={"student_id": student.id}
     )
@@ -374,7 +356,6 @@ def test_classroom_detail_management(client, sample_admin, init_db):
     assert len(data["students"]) == 1
     assert data["students"][0]["username"] == "testclassroomstudent"
 
-    # Unenroll student
     resp = client.post(
         f"/api/admin/classrooms/{c.id}/unenroll", json={"student_id": student.id}
     )
@@ -429,7 +410,6 @@ def test_pass_chapter_preview_and_pass_chapter(
     db.session.add(ach)
     db.session.commit()
 
-    # Call preview with frontend ID "cs-1"
     resp = client.post(
         f"/api/admin/user/{sample_user.id}/pass_chapter_preview",
         json={"course_id": "cs-1"},
@@ -441,7 +421,6 @@ def test_pass_chapter_preview_and_pass_chapter(
     assert data["preview"]["ducks_to_award"] == 15
     assert "CS1 Certificate" in data["preview"]["certificates_to_award"]
 
-    # Call pass chapter with frontend ID "cs-1"
     resp = client.post(
         f"/api/admin/user/{sample_user.id}/pass_chapter", json={"course_id": "cs-1"}
     )
@@ -460,11 +439,9 @@ def test_pass_chapter_preview_and_pass_chapter(
 def test_student_activity_and_get_users_roles(client, sample_admin, sample_user):
     login_as_admin(client, sample_admin)
 
-    # student_activity online
     resp = client.get("/api/admin/student_activity?is_online=true")
     assert resp.status_code == 200
 
-    # get_users role filter
     resp2 = client.get("/api/admin/users?role=student")
     assert resp2.status_code == 200
 

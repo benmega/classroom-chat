@@ -80,7 +80,6 @@ def test_bit_shift_get(client, test_app):
         assert response.headers["Location"] == "/trade"
 
 
-# New tests for coverage
 def test_duck_trade_index(client):
     response = client.get("/duck_trade/")
     assert response.status_code == 302
@@ -270,6 +269,5 @@ def test_submit_trade_triggers_achievement(client, sample_user_with_ducks, test_
         assert "new_awards" in data
         assert any(a["slug"] == "trade-initiate" for a in data["new_awards"])
 
-        # Check DB
         ua = UserAchievement.query.filter_by(user_id=sample_user_with_ducks.id, achievement_id=ach.id).first()
         assert ua is not None

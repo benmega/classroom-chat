@@ -1,11 +1,3 @@
-"""
-File: test_activity_routes.py
-Type: py
-Summary: Unit tests for the merged student activity timeline endpoint
-(GET /api/me/activity), covering all four source types, sorting, reward
-rules, pagination, user scoping, and bad-input handling.
-"""
-
 import uuid
 from datetime import datetime, timedelta
 

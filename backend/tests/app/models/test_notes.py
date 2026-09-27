@@ -18,7 +18,6 @@ def test_note_url_property(sample_note):
     expected_bucket = "classroom-chat-student-notes"
     expected_region = "ap-southeast-1"
 
-    # Expected: https://{BUCKET}.s3.{REGION}.amazonaws.com/{filename}
     expected_url = f"https://{expected_bucket}.s3.{expected_region}.amazonaws.com/{sample_note.filename}"
 
     assert sample_note.url == expected_url

@@ -1,10 +1,4 @@
-"""
-File: constants.py
-Type: py
-Summary: Application-level constants for multi-tenant classroom architecture.
-         Import these symbols everywhere — never use raw strings to identify
-         the global classroom or conversation.
-"""
+
 
 # ---------------------------------------------------------------------------
 # Global Classroom — a reserved classroom that every authenticated user can

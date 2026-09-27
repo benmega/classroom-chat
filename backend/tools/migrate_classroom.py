@@ -1,8 +1,4 @@
 """
-File: migrate_classroom.py
-Path: backend/tools/migrate_classroom.py
-Type: py
-
 DATA SEEDING ONLY — no DDL here.
 ────────────────────────────────────────────────────────────────────────────
 This script handles the *data* side of the multi-tenant classroom setup:

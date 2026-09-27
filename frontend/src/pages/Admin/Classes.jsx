@@ -59,7 +59,6 @@ const LanguageSymbol = ({ language }) => {
             </svg>
         );
     }
-    // Fallback Code icon
     return <Globe size={18} aria-hidden="true" style={{ color: 'var(--text-muted)' }} />;
 };
 
@@ -114,14 +113,12 @@ const Classes = () => {
     const [classrooms, setClassrooms] = useState(() => cachedClassrooms ? applySavedOrder(cachedClassrooms) : []);
     const [isLoading, setIsLoading] = useState(() => !cachedClassrooms);
 
-    // Create Classroom Modal state
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [newId, setNewId] = useState('');
     const [newName, setNewName] = useState('');
     const [newLanguage, setNewLanguage] = useState('Python');
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // Drag and Drop state
     const dragItem = useRef(null);
     const dragOverItem = useRef(null);
     const isDraggingRef = useRef(false);
@@ -274,7 +271,6 @@ const Classes = () => {
                 </div>
             </AdminPageHeader>
 
-            {/* Grid Container */}
             <div className="classes-grid-container">
 
                 {classrooms.length > 0 ? (
@@ -379,7 +375,6 @@ const Classes = () => {
                 )}
             </div>
 
-            {/* Create Classroom Modal */}
             {isCreateModalOpen && (
                 <div data-testid="modal-overlay" className="modal-overlay" role="dialog" aria-labelledby="modal-title-create-classroom" aria-modal="true">
                     <div className="modal-card">

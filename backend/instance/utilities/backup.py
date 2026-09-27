@@ -1,6 +1,3 @@
-# Filename: export_database_tables.py
-# Description: Script to export all database tables to CSV files in a human-readable format.
-
 import csv
 import json
 import os
@@ -62,22 +59,17 @@ def export_tables_to_csv(output_dir=None):
     # Export each table
     for table_name in table_names:
         try:
-            # Execute raw SQL to get all data from the table
             result = db.session.execute(text(f"SELECT * FROM {table_name}"))
 
-            # Get column names
             columns = list(result.keys())
 
-            # Convert result to list of dictionaries more safely
             rows = []
             for row in result:
-                # Convert row object to dictionary using column names as keys
                 row_dict = {}
                 for i, column in enumerate(columns):
                     row_dict[column] = row[i]
                 rows.append(row_dict)
 
-            # Write to CSV
             file_path = os.path.join(full_output_path, f"{table_name}.csv")
             with open(file_path, "w", newline="", encoding="utf-8") as csv_file:
                 writer = csv.DictWriter(csv_file, fieldnames=columns)

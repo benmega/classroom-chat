@@ -10,7 +10,7 @@ const ConnectChild = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const { user, isAuthenticated, completeTutorial } = useAuthStore();
-    const [status, setStatus] = useState('loading'); // loading, success, error
+    const [status, setStatus] = useState('loading');
     const [message, setMessage] = useState('Connecting to student...');
     
     const code = searchParams.get('code');
@@ -25,7 +25,6 @@ const ConnectChild = () => {
         }
 
         if (!isAuthenticated) {
-            // Save code and redirect to signup
             localStorage.setItem('pendingConnectionCode', code);
             navigate('/signup?role=parent', { state: { from: location.pathname + location.search } });
             return;

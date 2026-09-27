@@ -12,7 +12,6 @@ def test_set_app_instance(app):
 
 
 def test_scheduled_cleanup_no_app_instance():
-    # Set instance to None
     set_app_instance(None)
 
     with patch("application.tasks.logger") as mock_logger:

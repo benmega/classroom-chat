@@ -1,9 +1,3 @@
-"""
-File: test_achievement_routes.py
-Type: py
-Summary: Unit tests for achievement routes Flask routes.
-"""
-
 from io import BytesIO
 from unittest.mock import patch
 

@@ -21,6 +21,7 @@ const CourseProgressTree = () => {
     const { slug } = useParams();
     const { user: authUser } = useAuthStore();
     const isAdmin = authUser?.role === 'admin';
+    const isParent = authUser?.role === 'parent' || location.pathname.startsWith('/parent');
 
     const containerRef = useRef(null);
     const nodeRefs = useRef({});
@@ -576,66 +577,70 @@ const CourseProgressTree = () => {
                 </button>
             </div>
 
-            {/* Quick Submit Widget */}
-            <div style={{
-                position: 'fixed',
-                bottom: '6rem',
-                right: '2rem',
-                zIndex: 1000,
-                display: 'flex',
-                alignItems: 'center',
-                gap: '1rem'
-            }}>
-                <Link 
-                    to="/activity" 
-                    className="btn-icon"
-                    style={{ 
-                        background: 'var(--bg-secondary)', 
-                        border: '1px solid var(--border-subtle)', 
-                        boxShadow: 'var(--shadow-md)', 
-                        padding: '0.75rem', 
-                        borderRadius: '50%',
+            {!isParent && (
+                <>
+                    {/* Quick Submit Widget */}
+                    <div style={{
+                        position: 'fixed',
+                        bottom: '6rem',
+                        right: '2rem',
+                        zIndex: 1000,
                         display: 'flex',
                         alignItems: 'center',
-                        justifyContent: 'center',
-                        color: 'var(--text-primary)'
-                    }}
-                    title="View History"
-                >
-                    <History size={20} />
-                </Link>
+                        gap: '1rem'
+                    }}>
+                        <Link 
+                            to="/activity" 
+                            className="btn-icon"
+                            style={{ 
+                                background: 'var(--bg-secondary)', 
+                                border: '1px solid var(--border-subtle)', 
+                                boxShadow: 'var(--shadow-md)', 
+                                padding: '0.75rem', 
+                                borderRadius: '50%',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                color: 'var(--text-primary)'
+                            }}
+                            title="View History"
+                        >
+                            <History size={20} />
+                        </Link>
 
-                <button 
-                    id="claim-ducks-btn"
-                    className="btn-premium" 
-                    onClick={() => {
-                        if (isSubmitModalOpen) {
-                            const btn = document.getElementById('claim-ducks-submit-btn');
-                            if (btn) btn.click();
-                        } else {
-                            setIsSubmitModalOpen(true);
-                        }
-                    }}
-                    style={{ 
-                        padding: '0.75rem 1.5rem',
-                        borderRadius: '30px',
-                        boxShadow: 'var(--shadow-lg)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                        fontSize: '1rem'
-                    }}
-                >
-                    <CheckCircle size={18} />
-                    {hasUrlInput ? 'Go!!!' : 'Claim Ducks'}
-                </button>
-            </div>
+                        <button 
+                            id="claim-ducks-btn"
+                            className="btn-premium" 
+                            onClick={() => {
+                                if (isSubmitModalOpen) {
+                                    const btn = document.getElementById('claim-ducks-submit-btn');
+                                    if (btn) btn.click();
+                                } else {
+                                    setIsSubmitModalOpen(true);
+                                }
+                            }}
+                            style={{ 
+                                padding: '0.75rem 1.5rem',
+                                borderRadius: '30px',
+                                boxShadow: 'var(--shadow-lg)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px',
+                                fontSize: '1rem'
+                            }}
+                        >
+                            <CheckCircle size={18} />
+                            {hasUrlInput ? 'Go!!!' : 'Claim Ducks'}
+                        </button>
+                    </div>
 
-            <SubmitProgressModal 
-                isOpen={isSubmitModalOpen} 
-                onClose={() => setIsSubmitModalOpen(false)} 
-                onUrlChange={(url) => setHasUrlInput(!!url.trim())}
-            />
+                    <SubmitProgressModal 
+                        isOpen={isSubmitModalOpen} 
+                        onClose={() => setIsSubmitModalOpen(false)} 
+                        onUrlChange={(url) => setHasUrlInput(!!url.trim())}
+                    />
+                </>
+            )}
         </div>
     );
 };

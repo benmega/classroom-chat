@@ -145,20 +145,29 @@ function makeInput(col, resourceName, isCreate = false) {
 function useSchema(resourceName) {
     const [fields, setFields] = useState(() => getCachedSchema(resourceName));
     const [error, setError]   = useState(null);
+    const [prevResource, setPrevResource] = useState(resourceName);
+
+    if (resourceName !== prevResource) {
+        setPrevResource(resourceName);
+        setFields(getCachedSchema(resourceName));
+        setError(null);
+    }
 
     useEffect(() => {
         const cached = getCachedSchema(resourceName);
-        if (cached) {
-            if (!fields || fields.length !== cached.length) {
-                setFields(cached);
-            }
-            return;
-        }
+        if (cached) return;
 
+        let isMounted = true;
         const hidden = HIDDEN_FIELDS[resourceName] || new Set();
         fetchSchema(resourceName)
-            .then(cols => setFields(cols.filter(c => !hidden.has(c.name))))
-            .catch(err  => setError(err.message));
+            .then(cols => {
+                if (isMounted) setFields(cols.filter(c => !hidden.has(c.name)));
+            })
+            .catch(err => {
+                if (isMounted) setError(err.message);
+            });
+            
+        return () => { isMounted = false; };
     }, [resourceName]);
 
     return { fields, error };

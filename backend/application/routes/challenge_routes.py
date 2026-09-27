@@ -1,8 +1,4 @@
-"""
-File: challenge_routes.py
-Type: py
-Summary: Flask routes for challenge routes functionality (Merged Version).
-"""
+
 
 import os
 import re
@@ -105,7 +101,6 @@ def submit_challenge():
                 return jsonify({"status": "ready"})
             return redirect("/challenges/submit")
     else:
-        # Handle both Form and JSON data
         if request.is_json:
             data = request.get_json()
             url = data.get("url")
@@ -124,7 +119,6 @@ def submit_challenge():
     if user.has_double_duck:
         duck_multiplier *= 2
 
-    # Process the URL
     challenge_check = detect_and_handle_challenge_url(
         url, user, duck_multiplier, helper
     )
@@ -134,9 +128,7 @@ def submit_challenge():
 
     details = challenge_check.get("details") or {}
 
-    # Success path
     if challenge_check.get("handled") and details.get("success"):
-        # Explicit commit to ensure log and user duck updates are saved
         db.session.commit()
         duck_reward = details.get("duck_reward", 0)
         duck_word = "duck" if duck_reward == 1 else "ducks"
@@ -157,7 +149,6 @@ def submit_challenge():
         if classroom_id:
             _enroll_user_in_classroom(user, classroom_id)
 
-        # Evaluate achievements on claiming ducks
         from application.services.achievement_engine import evaluate_user
 
         new_awards = evaluate_user(user)
@@ -193,7 +184,6 @@ def submit_challenge():
             }
         )
 
-    # Failure path
     msg = details.get(
         "message",
         "Mr. Mega does not recognize this challenge. Are you sure this is the right link?",
@@ -291,12 +281,10 @@ def detect_and_handle_challenge_url(message, user, duck_multiplier=1, helper=Non
             get_track_for_course_id(challenge.course_id) if challenge else None
         )
 
-        # Update user's active track if they completed a challenge on a new track
         if challenge_track and challenge_track != user.active_track:
             user.active_track = challenge_track
             db.session.add(user)
 
-        # Always save progress and grant the duck reward
         duck_reward = _update_user_ducks(
             user, match["challenge_slug"], duck_multiplier
         )
@@ -447,7 +435,6 @@ def _update_user_ducks(user, challenge_slug, duck_multiplier=1):
         challenge = Challenge.query.filter(Challenge.slug.ilike(challenge_slug)).first()
 
         if not challenge:
-            # Fallback: sometimes URLs have dashes where DB has spaces
             slug_with_spaces = challenge_slug.replace("-", " ")
             challenge = Challenge.query.filter(
                 Challenge.slug.ilike(slug_with_spaces)

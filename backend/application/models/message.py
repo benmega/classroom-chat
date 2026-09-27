@@ -1,8 +1,4 @@
-"""
-File: message.py
-Type: py
-Summary: SQLAlchemy model for feed posts (messages) and visibility targeting.
-"""
+
 
 from datetime import datetime
 
@@ -64,17 +60,14 @@ class Message(db.Model):
     edited_at = db.Column(db.DateTime, nullable=True)
     deleted_at = db.Column(db.DateTime, nullable=True)
 
-    # Snapshot of User Perks at Send Time
     has_animated_border = db.Column(db.Boolean, default=False)
     animated_border_speed = db.Column(db.String(10), default="normal")
     animated_border_color = db.Column(db.String(7), nullable=True)
     chat_font_color = db.Column(db.String(7), nullable=True)
 
-    # Targeting metadata
     is_global = db.Column(db.Boolean, default=False)
     target_live = db.Column(db.Boolean, default=False)
 
-    # Relationships
     user = db.relationship(
         "User",
         backref=db.backref("messages", lazy="selectin", cascade="all, delete-orphan"),

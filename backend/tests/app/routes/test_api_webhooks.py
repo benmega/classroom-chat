@@ -12,7 +12,6 @@ def mock_webhook_secret():
 
 
 def test_webhook_unauthorized(client):
-    # No secret set or invalid secret
     resp = client.post(
         "/api/webhooks/youtube", json={"project_id": 1, "video_id": "123"}
     )
@@ -61,7 +60,6 @@ def test_webhook_transcribe_success(client, mock_webhook_secret, sample_user):
     db.session.add(p)
     db.session.commit()
 
-    # Unauthorized test
     resp = client.post(
         "/api/webhooks/transcribe", json={"project_id": p.id, "transcript": "some text"}
     )

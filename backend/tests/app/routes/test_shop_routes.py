@@ -9,8 +9,6 @@ def test_shop_routes_unauthenticated(client):
 
 
 def test_shop_flow_success(client, init_db):
-    # (they are already seeded by seed_global_data in conftest.py init_db fixture!)
-    # Let's verify by querying them
     items = StoreItem.query.all()
     assert len(items) > 0
 
@@ -28,7 +26,6 @@ def test_shop_flow_success(client, init_db):
     items_data = resp.json
     assert len(items_data) > 0
 
-    # Let's find "Chat Font Color" item
     font_item = None
     for it in items_data:
         if it["name"] == "Chat Font Color":
@@ -48,11 +45,9 @@ def test_shop_flow_success(client, init_db):
     db.session.refresh(test_user)
     assert test_user.has_chat_font is True
 
-    # Already purchased check
     resp = client.post(f"/api/shop/purchase/{font_item['id']}")
     assert resp.status_code == 400
 
-    # Configure owned perk success
     resp = client.put(
         "/api/shop/configure", json={"perk_name": "chat_font_color", "value": "#ff0000"}
     )
@@ -60,20 +55,17 @@ def test_shop_flow_success(client, init_db):
     db.session.refresh(test_user)
     assert test_user.chat_font_color == "#ff0000"
 
-    # Configure owned perk invalid value
     resp = client.put(
         "/api/shop/configure", json={"perk_name": "chat_font_color", "value": "red"}
     )
     assert resp.status_code == 400
 
-    # Configure unowned perk failure
     resp = client.put(
         "/api/shop/configure",
         json={"perk_name": "profile_wallpaper", "value": "bg.jpg"},
     )
     assert resp.status_code == 403
 
-    # Unknown perk
     resp = client.put(
         "/api/shop/configure", json={"perk_name": "unknown", "value": "value"}
     )
@@ -146,23 +138,19 @@ def test_configure_perk_wallpaper_and_animated_border(client, init_db):
         sess["user"] = user.id
         sess["_user_id"] = str(user.id)
 
-    # 0. Chat Font Color unowned -> 403
     resp_font = client.put(
         "/api/shop/configure", json={"perk_name": "chat_font_color", "value": "#ff0000"}
     )
     assert resp_font.status_code == 403
 
-    # 1. Profile Wallpaper unowned -> 403
     resp = client.put(
         "/api/shop/configure", json={"perk_name": "profile_wallpaper", "value": "my_bg.jpg"}
     )
     assert resp.status_code == 403
 
-    # Grant profile wallpaper perk
     user.has_custom_wallpaper = True
     db.session.commit()
 
-    # Profile Wallpaper owned -> 200
     resp = client.put(
         "/api/shop/configure", json={"perk_name": "profile_wallpaper", "value": "my_bg.jpg"}
     )
@@ -170,23 +158,19 @@ def test_configure_perk_wallpaper_and_animated_border(client, init_db):
     db.session.refresh(user)
     assert user.profile_wallpaper == "my_bg.jpg"
 
-    # 2. Animated border speed unowned -> 403
     resp = client.put(
         "/api/shop/configure", json={"perk_name": "animated_border_speed", "value": "fast"}
     )
     assert resp.status_code == 403
 
-    # Grant animated border perk
     user.has_animated_border = True
     db.session.commit()
 
-    # Invalid speed value -> 400
     resp = client.put(
         "/api/shop/configure", json={"perk_name": "animated_border_speed", "value": "hyper"}
     )
     assert resp.status_code == 400
 
-    # Valid speed value -> 200
     resp = client.put(
         "/api/shop/configure", json={"perk_name": "animated_border_speed", "value": "fast"}
     )
@@ -194,7 +178,6 @@ def test_configure_perk_wallpaper_and_animated_border(client, init_db):
     db.session.refresh(user)
     assert user.animated_border_speed == "fast"
 
-    # Test animated_border_color
     resp = client.put(
         "/api/shop/configure", json={"perk_name": "animated_border_color", "value": "red"}
     )

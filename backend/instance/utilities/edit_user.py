@@ -125,7 +125,6 @@ def interactive_edit_user():
 
             new_value = input(f"Enter the new value for '{field_name}': ").strip()
 
-            # Auto-convert numbers where appropriate
             try:
                 if isinstance(selected_user[field_name], int):
                     new_value = int(new_value)

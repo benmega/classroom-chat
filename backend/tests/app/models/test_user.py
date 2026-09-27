@@ -1,10 +1,3 @@
-"""
-File: test_user.py
-Type: py
-Summary: Unit tests for user model.
-"""
-
-
 def test_user_creation(add_sample_user):
     user = add_sample_user("testuser", "hashed_pwd")
     assert user.username == "testuser"
@@ -14,7 +7,6 @@ def test_user_creation(add_sample_user):
 def test_user_duck_update(add_sample_user):
     user = add_sample_user("testuser", "hashed_pwd")
     user.add_ducks(5)
-    # Access the correct `db` instance from your app
     from application import db
 
     db.session.commit()
@@ -58,7 +50,7 @@ def test_user_connection_code(add_sample_user):
     assert code is not None
     assert len(code) == 6
     code2 = user.get_connection_code()
-    assert code == code2  # Cached
+    assert code == code2
 
 
 def test_user_set_online(add_sample_user, init_db):
@@ -71,7 +63,6 @@ def test_user_set_online(add_sample_user, init_db):
     User.set_online(user.id, False)
     assert user.is_online is False
 
-    # Non existent
     User.set_online(9999, True)
 
 
@@ -113,7 +104,6 @@ def test_user_get_contribution_data_with_logs(add_sample_user, init_db):
     today = datetime.now()
     logs = []
 
-    # level 1 (1 log)
     logs.append(
         ChallengeLog(
             user_id=user.id,
@@ -122,7 +112,6 @@ def test_user_get_contribution_data_with_logs(add_sample_user, init_db):
             timestamp=today,
         )
     )
-    # level 2 (2 logs)
     logs.extend(
         [
             ChallengeLog(
@@ -134,7 +123,6 @@ def test_user_get_contribution_data_with_logs(add_sample_user, init_db):
             for _ in range(2)
         ]
     )
-    # level 3 (5 logs)
     logs.extend(
         [
             ChallengeLog(
@@ -146,7 +134,6 @@ def test_user_get_contribution_data_with_logs(add_sample_user, init_db):
             for _ in range(5)
         ]
     )
-    # level 4 (7 logs)
     logs.extend(
         [
             ChallengeLog(
@@ -167,7 +154,6 @@ def test_user_get_contribution_data_with_logs(add_sample_user, init_db):
     assert "months" in data
     assert "rows" in data
 
-    # Also test get_completed_levels
     levels = user.get_completed_levels()
     assert "a" in levels
     assert "b" in levels
@@ -213,8 +199,6 @@ def test_user_get_course_progress_data(add_sample_user, init_db):
     cc_data = data["codecombat"]
     assert "breakdown" in cc_data
 
-
-# ── earned_ducks floor guard ──────────────────────────────────────────────────
 
 def test_earned_ducks_never_go_negative_via_large_deduction(add_sample_user):
     """A large negative add_ducks call must not push earned_ducks below 0.

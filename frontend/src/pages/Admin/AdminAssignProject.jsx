@@ -15,7 +15,7 @@ const AdminAssignProject = () => {
     const [activeTab, setActiveTab] = useState('core');
     const [isSubmitting, setIsSubmitting] = useState(false);
     
-    // Form State
+
     const [assignForm, setAssignForm] = useState({
         name: '',
         description: '',
@@ -26,10 +26,10 @@ const AdminAssignProject = () => {
         image_url: ''
     });
 
-    // Standard Projects
+
     const [standardProjects, setStandardProjects] = useState([]);
 
-    // User Search State
+
     const [userSearchQuery, setUserSearchQuery] = useState('');
     const [userSearchResults, setUserSearchResults] = useState([]);
     const [isSearchingUsers, setIsSearchingUsers] = useState(false);

@@ -17,11 +17,9 @@ def api_response(
         try:
             data = f(*args, **kwargs)
 
-            # If the function returns a Flask Response object (like a redirect), return it directly
             if isinstance(data, Response):
                 return data
 
-            # If the function returns a tuple (response, status_code)
             if isinstance(data, tuple):
                 response_data, raw_code = data
                 status_code = int(raw_code) if raw_code is not None else 200
@@ -29,7 +27,6 @@ def api_response(
                 response_data = data
                 status_code = 200
 
-            # Standard envelope
             payload = {
                 "status": "success" if 200 <= status_code < 400 else "error",
                 "data": response_data if 200 <= status_code < 400 else None,

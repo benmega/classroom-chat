@@ -1,7 +1,6 @@
 import { http, HttpResponse } from 'msw';
 
 export const handlers = [
-  // Mock checkAuth status
   http.get('*/user/api/auth/status', () => {
     return HttpResponse.json({
       data: {
@@ -16,7 +15,6 @@ export const handlers = [
     });
   }),
 
-  // Mock login
   http.post('*/user/login', async ({ request }) => {
     const { username, password } = await request.json();
     
@@ -38,7 +36,6 @@ export const handlers = [
     );
   }),
 
-  // Mock logout
   http.get('*/user/logout', () => {
     return HttpResponse.json({ success: true });
   }),

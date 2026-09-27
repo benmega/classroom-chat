@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
-import clientCache, { get, set, has, invalidate, clear } from './clientCache';
+import { get, set, has, invalidate, clear } from './clientCache';
 
 describe('clientCache utility', () => {
     beforeEach(() => {

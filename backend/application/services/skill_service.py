@@ -1,7 +1,6 @@
 from application.extensions import db
 from application.models.skill import Skill
 
-# Project Specific Skill Map
 DEFAULT_PROJECT_SKILLS = {
     "CS1 Capstone": ["Turtle Graphics", "Drawing"],
     "CS2 Capstone": ["Game Design", "Conditional Logic"],

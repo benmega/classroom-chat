@@ -1,8 +1,4 @@
-"""
-File: challenge.py
-Type: py
-Summary: SQLAlchemy model for coding challenges and rewards.
-"""
+
 
 from sqlalchemy.event import listens_for
 

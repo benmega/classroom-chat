@@ -188,7 +188,6 @@ describe('DuckTransactions', () => {
     const form = input.closest('form');
     fireEvent.submit(form);
 
-    // After submit, fetchTransactions is re-called with search param
     await waitFor(() => expect(client.get).toHaveBeenCalledTimes(2));
   });
 

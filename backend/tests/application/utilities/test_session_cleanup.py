@@ -1,7 +1,3 @@
-"""
-Unit tests for session cleanup utility.
-"""
-
 from datetime import datetime, timedelta
 from unittest.mock import patch
 

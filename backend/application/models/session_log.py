@@ -1,11 +1,6 @@
 # application/models/session_log.py
 
-"""
-Model: SessionLog
-Type: SQLAlchemy ORM model
-Location: application/models/session_log.py
-Summary: Tracks when a user starts and ends a session in the classroom chat.
-"""
+
 
 from datetime import datetime
 
@@ -23,7 +18,6 @@ class SessionLog(db.Model):
     end_time = db.Column(db.DateTime, nullable=True)  # set when user goes offline
     last_seen = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
 
-    # Relationships
     user = db.relationship(
         "User",
         backref=db.backref("session_logs", lazy=True, cascade="all, delete-orphan"),

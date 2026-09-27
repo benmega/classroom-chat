@@ -12,7 +12,6 @@ def test_generate_certificate_default():
 @patch('application.utilities.cert_generator.os.path.exists')
 @patch('application.utilities.cert_generator.fitz.open')
 def test_generate_certificate_with_template(mock_fitz_open, mock_exists):
-    # Setup mocks
     mock_exists.return_value = True
 
     mock_doc = MagicMock()
@@ -24,11 +23,9 @@ def test_generate_certificate_with_template(mock_fitz_open, mock_exists):
     # Test generating a certificate with a template, saving to output path
     generate_certificate("dummy_template.pdf", "output.pdf", "Jane Doe")
 
-    # Verify the document was saved and closed
     mock_doc.save.assert_called_once_with("output.pdf")
     mock_doc.close.assert_called_once()
 
-    # Verify text was inserted
     mock_page.insert_text.assert_called()
 
 @patch('application.utilities.cert_generator.os.path.exists')

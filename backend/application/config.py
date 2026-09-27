@@ -1,8 +1,4 @@
-"""
-File: config.py
-Type: py
-Summary: Configuration classes and settings for different environments.
-"""
+
 
 import os
 from typing import ClassVar

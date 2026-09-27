@@ -35,12 +35,10 @@ const mockSocket = {
   disconnect: vi.fn(),
 };
 
-// Mock socket.io-client so no real connections are attempted
 vi.mock('socket.io-client', () => ({
   io: vi.fn(() => mockSocket),
 }));
 
-// Mock emoji-picker-react (heavy component, not relevant to logic tests)
 vi.mock('emoji-picker-react', () => ({
   default: ({ onEmojiClick }) => (
     <div data-testid="emoji-picker">
@@ -287,7 +285,6 @@ describe('Chat Component', () => {
 
     expect(screen.getByText('test.png')).toBeInTheDocument();
     
-    // Test removing file
     const removeBtn = screen.getByText('test.png').nextSibling;
     fireEvent.click(removeBtn);
     expect(mockSetFile).toHaveBeenCalledWith(null);
@@ -412,7 +409,6 @@ describe('Chat Component', () => {
     }));
     renderWithProviders(<Chat />);
 
-    // MultiSelectDropdown renders the defaultLabel "Classes"
     expect(screen.getByText(/classes/i)).toBeInTheDocument();
   });
 
@@ -425,7 +421,6 @@ describe('Chat Component', () => {
     }));
     renderWithProviders(<Chat />);
 
-    // Only Math 101 should appear (global is filtered out)
     expect(screen.queryByText('Global')).not.toBeInTheDocument();
   });
 
@@ -579,14 +574,12 @@ describe('Chat Component', () => {
 
     renderWithProviders(<Chat filterClassroomId="cls123" />);
 
-    // Wait for initial fetch to settle
     await waitFor(() => {
       expect(client.get).toHaveBeenCalledWith('/api/classrooms/cls123/sandbox-status');
     });
 
     expect(screen.queryByText(/All Tests Passed! Sandbox Mode is Active!/i)).not.toBeInTheDocument();
 
-    // Trigger socket event
     expect(socketListeners['sandbox_status_changed']).toBeDefined();
     act(() => {
       socketListeners['sandbox_status_changed']({
@@ -664,7 +657,6 @@ describe('Chat Component', () => {
 
     expect(screen.queryByTestId('sandbox-chat-banner')).not.toBeInTheDocument();
 
-    // Trigger socket event for cls_beta
     expect(socketListeners['sandbox_status_changed']).toBeDefined();
     act(() => {
       socketListeners['sandbox_status_changed']({
@@ -681,7 +673,6 @@ describe('Chat Component', () => {
       );
     });
 
-    // Toggle off
     act(() => {
       socketListeners['sandbox_status_changed']({
         classroom_id: 'cls_beta',

@@ -42,11 +42,9 @@ def get_extended_stats():
 
     import psutil
 
-    # Process stats
     process = psutil.Process(os.getpid())
     memory_info = process.memory_info()
 
-    # DB stats (simple count for now)
     table_counts = {}
     for mapper in db.Model.registry.mappers:
         model = mapper.class_

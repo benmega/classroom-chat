@@ -1,5 +1,5 @@
-﻿import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
-import adminCache, { get, set, invalidate, clear } from './adminCache';
+import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
+import adminCache, { get } from './adminCache';
 
 describe('adminCache', () => {
     beforeEach(() => {
@@ -27,15 +27,12 @@ describe('adminCache', () => {
         vi.useFakeTimers();
         const mockData = { count: 42 };
         
-        // Custom TTL 1000ms
         adminCache.set('short_lived', mockData, 1000);
         expect(adminCache.get('short_lived')).toEqual(mockData);
 
-        // Advance 999ms - still valid
         vi.advanceTimersByTime(999);
         expect(adminCache.get('short_lived')).toEqual(mockData);
 
-        // Advance 2ms - expired
         vi.advanceTimersByTime(2);
         expect(adminCache.get('short_lived')).toBeNull();
     });
@@ -45,11 +42,9 @@ describe('adminCache', () => {
         const mockData = { user: 'admin' };
         adminCache.set('default_ttl', mockData);
 
-        // Advance 4 minutes 59 seconds - still valid
         vi.advanceTimersByTime(4 * 60 * 1000 + 59 * 1000);
         expect(adminCache.get('default_ttl')).toEqual(mockData);
 
-        // Advance past 5 minutes - expired
         vi.advanceTimersByTime(2000);
         expect(adminCache.get('default_ttl')).toBeNull();
     });
@@ -60,7 +55,6 @@ describe('adminCache', () => {
         adminCache.set('admin_users_page_1', { page: 1 });
         adminCache.set('admin_classes', { classes: [] });
 
-        // Invalidate prefix 'admin_dashboard'
         adminCache.invalidate('admin_dashboard');
 
         expect(adminCache.get('admin_dashboard_7')).toBeNull();
@@ -68,7 +62,6 @@ describe('adminCache', () => {
         expect(adminCache.get('admin_users_page_1')).not.toBeNull();
         expect(adminCache.get('admin_classes')).not.toBeNull();
 
-        // Invalidate exact key
         adminCache.invalidate('admin_classes');
         expect(adminCache.get('admin_classes')).toBeNull();
         expect(adminCache.get('admin_users_page_1')).not.toBeNull();

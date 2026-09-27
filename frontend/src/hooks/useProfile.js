@@ -18,7 +18,6 @@ export const useProfile = () => {
     const cameraInputRef = useRef(null);
     const pfpInputRef = useRef(null);
 
-    // Profile Picture Cropping State
     const [isCropping, setIsCropping] = useState(false);
     const [cropImage, setCropImage] = useState(null);
     const [isUploadingPic, setIsUploadingPic] = useState(false);

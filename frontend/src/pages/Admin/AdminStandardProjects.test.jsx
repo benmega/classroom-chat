@@ -375,11 +375,9 @@ describe('AdminStandardProjects', () => {
 
         renderWithRouter(<AdminStandardProjects />);
 
-        // Should immediately show cached project without Loading...
         expect(screen.queryByText('Loading...')).not.toBeInTheDocument();
         expect(screen.getByText('Cached Template')).toBeInTheDocument();
 
-        // Background fetch resolves and updates view
         await waitFor(() => {
             expect(screen.getByText('Fresh Template')).toBeInTheDocument();
         });

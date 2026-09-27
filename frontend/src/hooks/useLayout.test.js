@@ -2,13 +2,11 @@ import { renderHook, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useLayout } from './useLayout';
 
-// Mock react-router-dom
 vi.mock('react-router-dom', () => ({
   useNavigate: () => vi.fn(),
   useLocation: () => ({ pathname: '/' }),
 }));
 
-// Mock useSidebar
 vi.mock('./useSidebar', () => ({
   default: () => ({
     isSidebarOpen: false,
@@ -17,7 +15,6 @@ vi.mock('./useSidebar', () => ({
   }),
 }));
 
-// Mock client
 vi.mock('../api/client', () => ({
   default: {
     post: vi.fn().mockResolvedValue({}),
@@ -35,7 +32,6 @@ let currentStoreState = {
   setLastReadMessageId: vi.fn(),
 };
 
-// Mock useAuthStore
 vi.mock('../store/useAuthStore', () => {
   const store = () => currentStoreState;
   store.getState = () => currentStoreState;
