@@ -19,7 +19,6 @@ from flask import (
     flash,
     jsonify,
     redirect,
-    render_template,
     request,
     send_from_directory,
     session,
@@ -110,12 +109,7 @@ def login():
 
     if request.is_json or request.accept_mimetypes.accept_json:
         return {"error": "Method not allowed for JSON. Use POST to login."}, 405
-    # For testing and direct access, return the login page
-    # In this app, it might be served by a template
-    try:
-        return render_template("login.html"), 200
-    except Exception:
-        return "Login Page", 200
+    return "Login Page", 200
 
 
 @user.route("/api/auth/status", methods=["GET"])
