@@ -11,7 +11,7 @@ Classroom Chat employs a multi-layered testing strategy to ensure application st
 
 ### 2.1 Backend Testing
 - **Framework**: [Pytest](https://pytest.org/)
-- **Extensions**: `pytest-flask`, `pytest-socketio`
+- **Extensions**: `pytest-flask`, `pytest-playwright` (see `backend/requirements.txt`)
 - **Key Files**:
     - `backend/tests/conftest.py`: Defines fixtures for the app instance, database, and authenticated clients.
     - `backend/tests/app/`: Contains functional and integration tests for various modules (Auth, Admin, Message).
@@ -32,17 +32,16 @@ Classroom Chat employs a multi-layered testing strategy to ensure application st
 - **Tool**: [Playwright](https://playwright.dev/)
 - **Location**: `frontend/tests-e2e/`
 - **Scenarios**:
-    - **Auth Flow**: Signup -> Login -> Dashboard redirect.
-    - **Messaging**: Real-time message exchange between multiple mock users.
-    - **Responsiveness**: Visual regression checks across desktop and mobile viewports.
+    - Current specs: `auth.spec.js` (signup/login flow) and `navigation.spec.js` (page navigation).
+    - Multi-user real-time messaging and visual regression checks are not implemented yet.
 
 ---
 
 ## 3. Automation (CI)
-Tests are automatically executed on every push and pull request via GitHub Actions.
+Tests run via GitHub Actions.
 
-- **`tests.yml`**: Triggers full test suite (Backend + Frontend).
-- **`lint.yml`**: Runs ESLint (frontend) and Ruff (backend) to ensure code style consistency.
+- **`tests.yml`**: On push and pull request to `main`/`master`: `flask db check` plus Pytest (backend) and Vitest (frontend). Playwright E2E specs are not run in CI.
+- **`lint.yml`**: On push and pull request: Ruff (backend). ESLint is run locally with `npm run lint`.
 
 ---
 
@@ -50,7 +49,7 @@ Tests are automatically executed on every push and pull request via GitHub Actio
 Classroom Chat uses a specialized human-in-the-loop auditing process for UI bugs:
 1. **Automated Crawling**: Playwright scripts navigate common user paths.
 2. **Visual Audit**: Screenshots are captured for key pages (Profile, Chat, Admin).
-3. **Issue Creation**: Visual or functional bugs are documented as Jira-style markdown files in the `issues/` directory for systematic resolution.
+3. **Issue Creation**: Visual or functional bugs are filed as GitHub Issues (`gh issue create`; see [issue_resolver_guide.md](issue_resolver_guide.md)) for systematic resolution.
 
 ---
 

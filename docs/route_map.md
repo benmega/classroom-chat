@@ -30,32 +30,39 @@ Every available page in the React application, its component, and its required u
 
 ## Backend API Endpoints
 
-Key functional endpoints identified across backend blueprints.
+The complete, verified backend catalogue lives in [api_reference.md](api_reference.md). Blueprint
+prefixes (`backend/application/routes/__init__.py`): admin `/api/admin`, user `/user`, ai `/ai`,
+upload `/upload`, message `/message`, duck_trade `/duck_trade`, achievements `/achievements` and
+`/api/achievements`, session `/api/session`, notes `/notes`, webhooks `/api/webhooks`, challenge
+`/challenge`, server_info `/server`, dev login `/dev-login` and `/api/dev-login` (non-production only).
 
-| Path | Handler | Required Role | Blueprint |
+Key endpoints used by the React app:
+
+| Path | Handler | Access | Source |
 | :--- | :--- | :--- | :--- |
 | `/user/login` | `login` | Public | `user_routes.py` |
 | `/user/api/auth/status` | `auth_status` | Public | `user_routes.py` |
 | `/user/logout` | `logout` | Public | `user_routes.py` |
 | `/user/signup` | `signup` | Public | `user_routes.py` |
-| `/user/profile` | `profile` | Student | `user_routes.py` |
-| `/user/profile/<slug>` | `view_user_profile` | Public | `user_routes.py` |
-| `/user/edit_profile` | `edit_profile` | Student | `user_routes.py` |
-| `/user/project/new` | `new_project` | Student | `user_routes.py` |
-| `/user/project/edit/<id>` | `edit_project` | Student | `user_routes.py` |
-| `/admin/dashboard` | `dashboard` | Admin | `admin_routes.py` |
-| `/admin/approve_user/<id>` | `approve_user` | Admin | `admin_routes.py` |
-| `/admin/reject_user/<id>` | `reject_user` | Admin | `admin_routes.py` |
-| `/admin/update_duck_multiplier` | `update_duck_multiplier` | **Public (Risk!)** | `admin_routes.py` |
-| `/admin/project/edit/<id>` | `edit_project_details` | **Public (Risk!)** | `admin_routes.py` |
-| `/message/send_message` | `send_message` | Student | `message_routes.py` |
-| `/message/api/conversations/<id>` | `get_conversation_history` | **Public (Risk!)** | `message_routes.py` |
-| `/message/view_conversation/` | `view_conversation` | Public | `message_routes.py` |
-| `/achievements/` | `achievements_page` | Student | `achievement_routes.py` |
-| `/achievements/submit_certificate` | `submit_certificate` | Student | `achievement_routes.py` |
-| `/achievements/view_certificate/<id>` | `view_certificate` | Public | `achievement_routes.py` |
-| `/challenge/submit` | `submit_challenge` | Student | `challenge_routes.py` |
-| `/session/heartbeat` | `heartbeat` | Student | `session_routes.py` |
+| `/user/profile` | `profile` | Login | `user_routes.py` |
+| `/user/profile/<slug>` | `view_user_profile` | Public (by design) | `user_routes.py` |
+| `/user/edit_profile` | `edit_profile` | Login | `user_routes.py` |
+| `/user/project/new`, `/user/project/edit/<id>` | `new_project`, `edit_project` | Login | `user_routes.py` |
+| `/api/admin/dashboard` | `dashboard_data` | Admin | `admin/dashboard_routes.py` |
+| `/api/admin/approve_user/<id>`, `/api/admin/reject_user/<id>` | `approve_user`, `reject_user` | Admin | `admin/user_mgmt.py` |
+| `/api/admin/update_duck_multiplier` | `update_duck_multiplier` | Admin | `admin/config_routes.py` |
+| `/api/admin/manage-projects`, `/api/admin/handle-project-review/<id>` | project review | Admin | `admin/project_routes.py` |
+| `/api/admin/crud/<resource>` | React-Admin CRUD | Admin | `admin/crud_routes.py` |
+| `/message/api/conversations/<user_id>` | `get_conversation_history` | Login (owner or admin) | `message_routes.py` |
+| `/message/view_conversation/<conversation_id>` | `view_conversation` | Login | `message_routes.py` |
+| `/api/achievements/view_certificate/<id>` | `api_view_certificate` | Public (by design) | `api_achievements.py` |
+| `/api/achievements/submit_certificate` | `api_submit_certificate` | Student | `api_achievements.py` |
+| `/challenge/submit` | `submit_challenge` | Honor system (by design) | `challenge_routes.py` |
+| `/api/session/heartbeat` | `heartbeat` | Student | `session_routes.py` |
+
+Chat messages are not sent over HTTP. The client emits the Socket.IO `send_message` event
+(`useChatSocket.js`); the server handles it in `socket_events.py`, and reports failures via
+`message_error`.
 
 ## Orphaned Routes
 
@@ -63,18 +70,10 @@ Key functional endpoints identified across backend blueprints.
 | :--- | :--- | :--- |
 | `/settings` | Frontend | No direct link in sidebar/dropdown. Only accessible from the Profile page. |
 | `/admin/dashboard` | Frontend | Exists but navigation links only to `/admin`. |
-| `/admin/set_username` | Backend | No UI or API call found in the current application. |
-| `/admin/verify_password` | Backend | Legacy route, not used by the current frontend. |
-| `/admin/clear-partial-history`| Backend | Functional but missing a corresponding button in the Admin UI. |
-| `/admin/strike_message/<id>` | Backend | Not linked in the Chat or Dashboard UI. |
 
-## Security Discrepancies & Discovered Flaws
+## Access Notes
 
-| Path | Risk | Fault Description |
-| :--- | :--- | :--- |
-| `/admin/update_duck_multiplier` | **Critical** | Missing `@admin_only` decorator. Any user can manipulate global reward rates. |
-| `/admin/project/edit/<id>` | **High** | Missing `@admin_only` decorator. Publicly editable project metadata. |
-| `/message/api/conversations/<id>` | **High** | Public access to sensitive private chat histories without ownership check. |
-| `/achievements/view_certificate/` | **Medium** | Student certificates are served publicly viacert_id. |
-| `/message/view_conversation/` | **Medium** | Publicly accessible conversation view. |
-| `Profile/index.jsx` Broken Link | **Functional** | Links to `/admin/certificates/view/` which 404s (should be `/achievements/view_certificate/`). |
+- Public by design: user profiles, user search, certificate view/download, challenge claims (honor system).
+- `/api/admin/*` routes are protected with `@admin_only`.
+- Frontend paths for certificates use `/api/achievements/view_certificate/<id>` (see
+  `frontend/src/components/profile/CertificationsList.jsx`, `pages/Admin/AdminCertificates.jsx`).

@@ -1,52 +1,85 @@
-# Classroom Chat and Duck System
+# Installation and Local Development
 
-![Demo Screenshot](assets/demo_screenshot.png)
+Classroom Chat is a Flask + Flask-SocketIO backend (`backend/`) and a React/Vite frontend (`frontend/`).
+In development you run both servers.
 
 ## Prerequisites
-- Python 3.8+
-- Flask and associated dependencies (see requirements.txt)
-- PostgreSQL or SQLite
+- Python 3.11 (the version used in CI)
+- Node.js 20 and npm (the version used in CI)
+- Git
 
-## Installation Steps
-1. Clone the repository:
-   ```bash
-   git clone <<repository_url>>
-   cd <<repository_directory>>
-   ```
+## 1. Clone
 
-Create and activate a virtual environment:
+```bash
+git clone https://github.com/benmega/classroom-chat.git
+cd classroom-chat
+```
 
-python3 -m venv venv
+## 2. Backend (Flask, port 8000)
+
+```bash
+python -m venv venv
+
 # Activate the virtual environment
-# On Unix/macOS:
+# Unix/macOS:
 source venv/bin/activate
-# On Windows PowerShell:
-.\\venv\\Scripts\\Activate.ps1
-# On Windows Command Prompt:
-.\\venv\\Scripts\\activate.bat
+# Windows PowerShell:
+.\venv\Scripts\Activate.ps1
 
-Install dependencies:
+pip install -r backend/requirements.txt
 
-pip install -r requirements.txt
+cd backend
+python main.py
+```
 
-## Getting Started
+Notes:
+- Run backend commands from `backend/` (that is where `main.py`, `pytest.ini` and `migrations/` live).
+- In development (`FLASK_ENV` not `production`) the app creates the SQLite database
+  (`backend/instance/dev_users.db`) on startup with `db.create_all()`, so no migration step is needed.
+  If you want to exercise Alembic, run `flask db upgrade` from `backend/` with `FLASK_APP=main.py`.
+  Do not run `flask db init`; `backend/migrations/` already exists.
+- Development falls back to a dev `SECRET_KEY` and admin password. To override settings, copy
+  `backend/.env.example` to `backend/.env` (never commit it). See the environment variable table
+  in [infrastructure_and_devops.md](infrastructure_and_devops.md).
+- `PORT` (default 8000) and `FLASK_DEBUG` (default on) are read by `main.py`.
 
-To start the application locally, you need to run both the backend (Flask) and the frontend (Vite) servers.
+## 3. Frontend (Vite, port 5173)
 
-Set up the database:
+In a second terminal:
 
-flask db init
-flask db migrate
-flask db upgrade
-
-# Run the backend development server:
-flask run
-
-# In a new terminal, run the frontend dev server (Vite):
+```bash
 cd frontend
-npm run dev -- --host
+npm install
+npm run dev
+```
 
-Access the application at http://127.0.0.1:8000.
+Open http://localhost:5173. Vite proxies the API paths (`/api`, `/user`, `/message`,
+`/socket.io`, ...) to the Flask server on http://localhost:8000 (see `frontend/vite.config.js`).
+Port 8000 is the API, not the UI: in development Flask does not serve the React app.
 
-## API Documentation
-### Main REST API Endpoints
+To point the frontend at a different API host, set `VITE_API_URL` before `npm run dev` or `npm run build`.
+
+`run_dev.ps1` (repo root) starts both servers in separate PowerShell windows on Windows.
+
+## 4. Logging in during development
+
+`/dev-login` (backend, non-production only) creates a session without a password. See
+`.agents/skills/login_automation/SKILL.md` and [api_reference.md](api_reference.md).
+
+## 5. Tests
+
+```bash
+# Backend (from backend/)
+pytest
+
+# Frontend unit tests (from frontend/)
+npm run test -- --run
+
+# Frontend end-to-end tests (from frontend/; first time: npx playwright install)
+npm run test:e2e
+```
+
+## 6. Production build
+
+Production deployment is done by GitHub Actions, not by hand; see
+[infrastructure_and_devops.md](infrastructure_and_devops.md). To build the SPA locally: `cd frontend && npm run build` (output in `frontend/dist/`).

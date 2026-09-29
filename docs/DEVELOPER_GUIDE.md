@@ -2,106 +2,96 @@
 
 ## Project Structure
 
-### High-Level Overview:
-├── backend/
-│   └── application/      # Flask app code
-│       ├── ai/
-│       ├── models/
-│       ├── routes/
-│       ├── services/
-│       ├── extensions.py
-│       └── config.py
-├── docs/                # Documentation files
-├── frontend/            # Vite + React SPA
-│   ├── src/             # Source code
-│   └── public/          # Static assets
-├── userData/            # Uploaded user assets
-└── ... (other support files)
-
-
-### Detailed Project Structure:
-The repository follows a clear layout:
 ```text
 classroom-chat/
-├── backend/
-│   └── application/      # Flask application
-│       ├── ai/            # AI services
-│       ├── models/        # SQLAlchemy models
-│       ├── routes/        # Flask blueprints
-│       ├── services/      # Business logic
-│       ├── extensions.py  # Shared extensions
-│       └── config.py      # Configuration
-├── docs/                # Documentation
-├── frontend/            # Vite + React SPA
-│   ├── src/             # Source code
-│   └── public/          # Static assets
-├── userData/            # Uploaded user assets
-└── ... (other support files)
-```  
-  - **Application Directory**:  
-    - Core app logic divided into modules: `api/`, `models/`, `routes/`, `utilities/`, etc.  
-  - **Static and Templates**:  
-    - Static files (CSS, JS, images) and HTML templates.  
-  - **Instance Folder**:  
-    - Contains SQLite database files and utility scripts.  
-  - **Tests**:  
-    - Unit tests for the project.  
-  - **UserData**:  
-    - User-related files, images, and other assets.
+├── backend/                  # Flask + Flask-SocketIO API
+│   ├── main.py               # Entry point (python main.py in dev; gunicorn main:app in prod)
+│   ├── application/
+│   │   ├── __init__.py       # App factory (create_app)
+│   │   ├── config.py         # Development / Testing / Production config
+│   │   ├── socket_events.py  # Socket.IO handlers (send_message, connect, ...)
+│   │   ├── tasks.py          # Scheduled jobs
+│   │   ├── constants.py
+│   │   ├── ai/               # AI teacher services (currently disabled)
+│   │   ├── decorators/       # require_login, admin_only, api_response, ...
+│   │   ├── models/           # SQLAlchemy models
+│   │   ├── routes/           # Flask blueprints (admin/ is a package)
+│   │   ├── services/         # Business logic (e.g. message_service)
+│   │   └── utilities/        # Helpers (e.g. spa.py serves the React index.html)
+│   ├── migrations/           # Alembic migrations (flask db upgrade)
+│   ├── tools/                # One-off scripts (e.g. migrate_classroom.py)
+│   ├── tests/                # pytest suite (pytest.ini lives in backend/)
+│   └── requirements.txt
+├── frontend/                 # React + Vite SPA
+│   ├── src/                  # Components, pages, hooks, stores
+│   ├── tests-e2e/            # Playwright specs
+│   └── templates/dev_login.html  # Only remaining Jinja template (dev login page)
+├── docs/                     # Documentation
+├── infrastructure/, reports/, templates/   # Ops notes, reports and templates used by the app
+├── userData/                 # Uploaded user assets
+├── .agents/                  # Agent workflows and skills (see agentic_workflows.md)
+├── .github/workflows/        # CI and deployment
+├── deploy.sh                 # EC2 deployment script (run by deploy.yml)
+└── run_dev.ps1               # Starts backend and frontend on Windows
+```
 
-#### 2. **Docs Directory**  
-Stores documentation files like:
-- `API.md` - API details.
-- `DEVELOPER_GUIDE.md` - This guide.
-- `INSTALLATION.md` - Setup instructions.
+The legacy Jinja templates, JS and CSS were removed. In production Flask serves the built React
+`index.html` (from `frontend/dist`) through `application/utilities/spa.py`; in development use the
+Vite server on port 5173. See [INSTALLATION.md](INSTALLATION.md) for setup.
 
-#### 3. **Tests Directory**  
-Includes:
-- `.pytest_cache/` - Cached test data.  
-- `test_app.py` - Unit tests for the app.
+Issues are tracked in GitHub Issues (see [issue_resolver_guide.md](issue_resolver_guide.md)).
 
 ---
 
 ## Coding Standards
 
-- Follow **PEP 8** guidelines for Python code.
-- Use meaningful and descriptive variable and function names.
-- Maintain clean and modular code.
+- Follow **PEP 8** for Python (CI runs `ruff check .`) and the ESLint config in `frontend/eslint.config.js`.
+- Use meaningful, descriptive names and keep code modular.
+- Chat messages are sent only through the Socket.IO `send_message` event; put validation rules in
+  `services/message_service.validate_and_save_message`, not in a route.
 
 ---
 
 ## Branching Strategy
 
-- Create **feature branches** for new functionality (e.g., `feature/ducks`).  
-- Ensure all code changes are thoroughly tested before merging into `main`.  
-- Resolve merge conflicts and rebase when necessary.  
+- The default branch is `master`. Create feature branches from it (e.g. `feature/ducks`).
+- Pushing to `deploy-gunicorn` triggers production deployment (`deploy.yml` and `deploy-frontend.yml`).
+- Test changes before merging; resolve conflicts and rebase when necessary.
 
 ---
 
 ## Testing
 
-- Write unit tests for all new features and ensure existing tests pass.  
-- Run tests before submitting pull requests:  
+- Backend (from `backend/`):
   ```bash
-  pytest ../tests/
+  pytest
+  ```
+- Frontend unit tests (from `frontend/`):
+  ```bash
+  npm run test -- --run
+  ```
+- Frontend E2E (from `frontend/`; first time run `npx playwright install`):
+  ```bash
+  npm run test:e2e
+  ```
+- Lint: `npm run lint` (frontend) and `ruff check .` (backend).
+
+See [testing_and_qa.md](testing_and_qa.md) for details.
+
+---
 
 ## Contributing
-Fork the repository: Create your own copy of the repository.
-Feature Development: Work on a new feature branch.
-Submit Pull Requests: Provide a clear description of changes made.
-Contact
-For questions, suggestions, or feedback, contact:
-<<maintainer_email>>
 
-Additional Notes:
-- Keep your branches synchronized with the main repository.
-- Add clear and concise documentation for all new features or changes.
-- Use meaningful commit messages to explain the reasoning behind each change.
+1. Fork or branch from `master`.
+2. Develop the feature or fix on a branch, with tests.
+3. Open a pull request with a clear description; reference the issue with `Fixes #<number>`.
+4. Use meaningful commit messages and keep documentation in step with the code.
 
-Front-end notes:
-- Flash messages (Bootstrap toasts) are positioned in the bottom-right of the viewport to avoid overlaying header/profile icons; see `templates/base.html` and `static/css/base.css` for implementation details.
+For questions or feedback, open a GitHub issue at https://github.com/benmega/classroom-chat/issues.
 
+---
 
+## Front-end notes
 
-
-
+- Toast notifications use `react-hot-toast` (mounted in `App.jsx`).
+- API documentation: [api_reference.md](api_reference.md).

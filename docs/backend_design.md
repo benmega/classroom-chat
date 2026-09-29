@@ -8,11 +8,11 @@ The Classroom Chat backend is a robust Python application built using the Flask 
 ### Core Technology Stack
 - **Framework**: [Flask 3.1.1](https://flask.palletsprojects.com/)
 - **ORM**: [SQLAlchemy](https://www.sqlalchemy.org/) & [Flask-SQLAlchemy](https://flask-sqlalchemy.palletsprojects.com/)
-- **Real-time**: [Flask-SocketIO](https://flask-socketio.readthedocs.io/) (via [Eventlet](https://eventlet.net/))
+- **Real-time**: [Flask-SocketIO](https://flask-socketio.readthedocs.io/) (async mode: [gevent](https://www.gevent.org/), with `gevent-websocket`)
 - **Security**: [Flask-Limiter](https://flask-limiter.readthedocs.io/), [Flask-WTF (CSRF)](https://flask-wtf.readthedocs.io/), [Cryptography](https://cryptography.io/)
 - **Scheduling**: [Flask-APScheduler](https://github.com/viniciuschiele/flask-apscheduler)
 - **AI Integration**: [OpenAI Python Library](https://github.com/openai/openai-python)
-- **Admin Interface**: [Flask-Admin](https://flask-admin.readthedocs.io/)
+- **Admin Interface**: JSON CRUD API under `/api/admin/crud/<resource>` consumed by the React-Admin based admin UI (Flask-Admin is not used)
 - **Environment**: [python-dotenv](https://github.com/theskumar/python-dotenv)
 
 ---
@@ -24,12 +24,21 @@ The app uses the **Application Factory** pattern (`create_app`) located in `appl
 
 ### Modular Routing (Blueprints)
 API endpoints are structured into logical modules using **Flask Blueprints**. This ensures a separation of concerns and maintainable code:
-- **`user`**: Profile management, auth status, and user-specific actions.
-- **`admin`**: System management, duck balance adjustments, and advanced controls.
-- **`message`**: Conversation creation and message history.
-- **`ai`**: Integration with AI teaching logic and settings.
-- **`achievements`**: Badge and milestone tracking.
-- **`upload`**: Handling of profile pictures and static assets.
+- **`user`** (`/user`): Profile management, auth status, and user-specific actions.
+- **`admin`** (`/api/admin`): System management, duck balance adjustments, CRUD, documents and advanced controls.
+- **`message`** (`/message`): Conversation management and history (messages are sent via Socket.IO, not HTTP).
+- **`ai`** (`/ai`): Integration with AI teaching logic (the AI teacher is currently off).
+- **`achievements`** (`/achievements`) and **`achievements_api`** (`/api/achievements`): Badges, milestones and certificates.
+- **`upload`** (`/upload`) and **`notes`** (`/notes`): File uploads and notes.
+- **`duck_trade`** (`/duck_trade`): Duck trading and the bit-shift exercise.
+- **`challenge`** (`/challenge`): Challenge submission (honor system, CORS for codecombat.com / ozaria.com).
+- **`session`** (`/api/session`): Presence heartbeat.
+- **`webhooks_api`** (`/api/webhooks`): YouTube and transcription callbacks.
+- **`server_info`** (`/server`): Health check and server IP.
+- **`general`**: Serves the React `index.html` and Vite public assets.
+- **`dev_login`**: `/dev-login` and `/api/dev-login`, registered only outside production.
+
+See [api_reference.md](api_reference.md) for every route.
 
 ### Proxy & WSGI Support
 - **ProxyFix**: Configured to trust headers when running behind a reverse proxy (like Nginx).
@@ -40,7 +49,7 @@ API endpoints are structured into logical modules using **Flask Blueprints**. Th
 ## 3. Database & Models
 
 ### Relational Mapping
-The system uses **SQLite** (or PostgreSQL in production) via the SQLAlchemy ORM. The relational schema is extensive, with core entities including:
+The system uses **SQLite** (`prod_users.db` in production) via the SQLAlchemy ORM. The relational schema is extensive, with core entities including:
 - **Users**: Core entity with password hashing (Werkzeug) and relationship links to projects, achievements, and messages.
 - **Conversations & Messages**: Real-time messaging entities with participant tracking.
 - **Projects & Challenges**: Student submission workflows.
@@ -48,7 +57,7 @@ The system uses **SQLite** (or PostgreSQL in production) via the SQLAlchemy ORM.
 
 ### Initialization Strategy
 - **`setup_models()`**: A centralized helper to register all models during app startup.
-- **Automatic Schema Creation**: The app factory checks for the existence of core tables and initializes the database (`db.create_all()`) and a default configuration if missing.
+- **Schema creation**: Outside production the app factory runs `db.create_all()` and seeds defaults. In production `create_all` is skipped; the schema is managed by Alembic (`flask db upgrade`, run by `deploy.sh`). See [database_schema.md](database_schema.md).
 
 ---
 
@@ -56,8 +65,8 @@ The system uses **SQLite** (or PostgreSQL in production) via the SQLAlchemy ORM.
 The backend implements a custom **Session-based Authentication** system:
 - **`require_login` Decorator**: A central security decorator (`application/decorators/login_required.py`) used to protect API routes. It returns a `401 Unauthorized` response for JSON requests or redirects to the login page for browser requests if no session is found.
 - **`before_request` Hook**: Automatically loads the logged-in user from the session into Flask's `g` object for easy access across the application.
-- **CSRF Protection**: Enabled via `Flask-WTF` to prevent cross-site request forgery.
-- **Secure Sessions**: Permanent sessions with a strictly defined timeout (**10 hours**) and secure cookie settings to minimize disruptive logouts during class.
+- **CSRF Protection**: Enabled via `Flask-WTF` in production; disabled in the Development and Testing configs. Some routes are explicitly `csrf.exempt` (login, signup and `/challenge/submit`).
+- **Secure Sessions**: Permanent sessions with a strictly defined timeout (**10 hours**) and cookie settings configured in `config.py` to minimize disruptive logouts during class.
 
 ### Rate Limiting
 **Flask-Limiter** is used to prevent abuse and brute-force attacks:
@@ -71,7 +80,9 @@ The backend implements a custom **Session-based Authentication** system:
 
 Real-time features are powered by **Socket.io**.
 - **`socket_events.py`**: Contains centralized event handlers for chat messages, user status updates, and notification broadcasts.
-- **Async Mode**: Configured to use `eventlet` for high-performance concurrent socket connections.
+- **Async Mode**: `gevent` (`SOCKETIO_ASYNC_MODE`, see `config.py` and `main.py`).
+- **Sending messages**: The client emits `send_message`; the handler calls `services/message_service.validate_and_save_message` and emits `message_received` to the classroom room, or `message_error` to the sender. There is no HTTP send route.
+- **Other events**: `user_status_change`, `classroom_enrolled`.
 - **Room Management**: Conversations are isolated into specific socket rooms to ensure broadcast privacy.
 
 ---
@@ -100,10 +111,16 @@ backend/
 │   ├── models/        # SQLAlchemy model definitions
 │   ├── routes/        # API Blueprints
 │   ├── services/      # Business logic and external wrappers
-│   ├── static/        # User-uploaded files and static assets
-│   ├── utilities/     # Internal helpers and formatting
-│   └── extensions.py  # Shared Flask extension instances
-├── infrastructure/    # DB connection and deployment configs
+│   ├── utilities/     # Internal helpers, formatting, spa.py (serves the React index.html)
+│   ├── extensions.py  # Shared Flask extension instances
+│   ├── config.py      # Environment configs
+│   ├── constants.py
+│   ├── socket_events.py  # Socket.IO handlers
+│   └── tasks.py       # Scheduled jobs
+├── infrastructure/    # Lambda transcriber and related deployment files
+├── migrations/        # Alembic migrations
+├── tools/             # One-off maintenance scripts
+├── tests/             # pytest suite
 ├── main.py            # Entry point for the Flask application
 └── requirements.txt   # Backend dependencies
 ```

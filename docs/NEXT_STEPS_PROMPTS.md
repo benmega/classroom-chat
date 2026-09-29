@@ -1,72 +1,55 @@
 # Classroom Chat: Next Steps Prompts
 
-These prompts are designed for an agent to continue the work of separating the frontend and backend of the Classroom Chat application.
+The original prompts in this file covered the Jinja2 to React migration (component migration,
+Socket.IO client, FormData uploads, production build and deployment). All four are complete and were
+removed, because following them now would cause regressions:
+
+- The React pages and `useChatSocket` hook exist; chat messages are sent only via the Socket.IO
+  `send_message` event (errors come back as `message_error`).
+- Image uploads use `/user/api/profile-picture` and `/user/api/project-image` with FormData.
+- Flask serves `frontend/dist/index.html` in production via `application/utilities/spa.py`
+  (`TEMPLATE_FOLDER` / `STATIC_FOLDER` in `config.py`). CORS is an explicit origin list, not `*`.
+- `deploy.sh` intentionally does not build the frontend; GitHub Actions builds it (`deploy.yml`,
+  `deploy-frontend.yml`).
+
+The prompts below are the remaining valid follow-ups. Check the current code and the open GitHub
+Issues (`gh issue list --state open`) before starting, and file new work as GitHub Issues.
 
 ---
 
-## 1. Component Migration (Jinja2 to React)
+## 1. Re-enable the AI teacher as a chatbot
 
-**Task:** Migrate the core "Chat" and "Profile" pages from Jinja2 templates to functional React components.
-
-**Context:**
-- **Backend**: `backend/application/routes/user_routes.py` and `message_routes.py` already support JSON responses.
-- **Frontend**: A Vite + React project is initialized in `frontend/`. Global state (auth) is managed in `src/store/useAuthStore.js`.
-- **Legacy templates**: Located in `frontend/templates/`. Specifically, look at `user/profile.html` and `chat/index.html`.
-- **Legacy CSS**: Located in `frontend/static/css/`. Use `variables.css` for brand consistency.
-- **Requirement**: Use `lucide-react` for icons and implement a clean, premium design. Ensure the "Chat" interface uses `message_routes.py` for history and the standard JSON envelope (`{ status, data, error }`).
+**Task:** The AI teacher is currently switched off (`Configuration.ai_teacher_enabled`, `/ai/get_ai_response`,
+`/api/admin/toggle-ai`, code in `backend/application/ai/`). Re-introduce it as a chatbot in the React UI.
 
 **Key Files to Review:**
-- `frontend/templates/user/profile.html`
-- `backend/application/routes/message_routes.py`
-- `frontend/src/App.jsx` (Add new routes here)
+- `backend/application/ai/`, `backend/application/routes/ai_routes.py`
+- `backend/application/routes/admin/config_routes.py` (toggle)
+- `backend/application/socket_events.py` and `services/message_service.py` (the single message path)
+- `frontend/src/hooks/useChatSocket.js`
 
 ---
 
-## 2. Socket.io Client Implementation
+## 2. Confirm the production Gunicorn worker class
 
-**Task:** Re-integrate real-time chat functionality by connecting the React frontend to the backend's Socket.io instance.
-
-**Context:**
-- **Backend**: Flask-SocketIO is initialized in `backend/application/__init__.py` and events are defined in `backend/application/socket_events.py`. CORS is currently set to `*`.
-- **Frontend**: Install `socket.io-client`. Create a logic (e.g., a custom hook `useChatSocket`) that listens for `'message_received'` and emits `'send_message'`.
-- **Integration**: Ensure the socket uses `withCredentials: true` and connects to the backend base URL (from `frontend/src/api/client.js`).
+**Task:** The app runs Flask-SocketIO in gevent mode. Confirm on the EC2 host which worker class the
+`gunicorn-benmega` systemd unit uses, and update `docs/infrastructure_and_devops.md` (and the unit) if it
+is not a gevent-capable worker.
 
 **Key Files to Review:**
-- `backend/application/socket_events.py`
-- `backend/application/__init__.py` (SocketIO init section)
-- `frontend/src/api/client.js`
+- `docs/infrastructure_and_devops.md` (section 4)
+- `backend/main.py`, `backend/requirements.txt`
 
 ---
 
-## 3. File Upload Refactor (FormData)
+## 3. Move remaining EC2-served assets behind the S3/CloudFront setup
 
-**Task:** Refactor profile picture and project image upload routes to support SPA interactions via FormData.
-
-**Context:**
-- **Current logic**: `user_routes.py` has `handle_profile_picture_upload` and `handle_project_image_upload` which expect standard form-data and redirect/flash on success.
-- **Goal**: 
-    1. Update the backend to return JSON response envelopes (using `@api_response`) containing the new file URL.
-    2. Implement an `ImageUpload` component in React that uses `axios` and `FormData`.
-    3. Ensure error handling (file too large, invalid format) returns a `400` status with a clear error payload.
+**Task:** The frontend is deployed to S3 + CloudFront (`.github/workflows/deploy-frontend.yml`), but some
+assets (for example user certificates and uploads) are still served by the EC2 Flask backend. Decide
+which should move and how cross-origin cookies and CORS behave between `blossom.benmega.com` and
+`api-blossom.benmega.com`.
 
 **Key Files to Review:**
-- `backend/application/routes/user_routes.py` (helpers at the bottom)
-- `backend/application/decorators/api_response.py`
-- `backend/application/routes/upload_routes.py`
-
----
-
-## 4. Production Build & Deployment Setup
-
-**Task:** Update the deployment pipeline to build the React frontend and configure the Flask backend to serve the production assets.
-
-**Context:**
-- **Backend Servicing**: Update `backend/application/__init__.py` to set the `static_folder` and `template_folder` paths to `../../frontend/dist` when `FLASK_ENV=production`.
-- **Catch-all Route**: Implement a catch-all route in Flask that serves `dist/index.html` for any non-API routes, allowing React Router to handle client-side navigation.
-- **Deployment Script**: Update `deploy.sh` to include a build step: `cd frontend && npm install && npm run build`.
-- **CORS Handling**: Ensure CORS is configured correctly for production origins.
-
-**Key Files to Review:**
-- `deploy.sh`
-- `backend/application/__init__.py` (App creation logic)
-- `backend/application/routes/general_routes.py` (Potential location for catch-all)
+- `.github/workflows/deploy-frontend.yml`
+- `backend/application/__init__.py` (CORS setup), `backend/application/config.py`
+- `backend/application/routes/api_achievements.py`, `upload_routes.py`, `user_routes.py`

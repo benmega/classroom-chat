@@ -10,12 +10,8 @@
 
 ## Duck System
 - Ducks are awarded upon challenge completion.
-- Real-time updates to profile and leaderboard.
-
-## Leaderboards
-- Displays top 10 performers with duck counts.
-- Sorted dynamically based on achievements.
+- Duck balances and achievements are shown on profiles.
 
 ## Customizable Profiles
-- Users can edit their username and password.
+- Users can change their password, skills and profile picture, and add projects.
 - Ducks and achievements displayed prominently.

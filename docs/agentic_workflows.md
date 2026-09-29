@@ -1,6 +1,6 @@
 # Agentic Workflows - Classroom Chat
 
-This document documents the automation workflows designed for AI agents (like Antigravity) to assist with project maintenance, debugging, and feature development.
+This document documents the automation workflows designed for AI agents (such as Claude Code) to assist with project maintenance, debugging, and feature development.
 
 ## 1. Overview
 The project includes a suite of "Workflows" (located in `.agents/workflows/`) that define standardized procedures for common development tasks. These allow AI agents to work autonomously or in a pair-programming mode with high reliability.
@@ -9,22 +9,23 @@ The project includes a suite of "Workflows" (located in `.agents/workflows/`) th
 
 ## 2. Core Workflows
 
-### 2.1 Issue Resolution (`solve-issue.md`)
-A systematic process for handling bugs or feature requests documented in the `issues/` directory.
-- **Path**: Locate issue -> Analyze code -> implement Fix -> Verify -> Archive.
+### 2.1 Issue Resolution (`solve-issue.md`, `solve-all-issues.md`)
+A systematic process for handling bugs or feature requests tracked as GitHub Issues (`gh issue list`, `gh issue view`).
+- **Path**: Locate issue -> Analyze code -> implement fix -> Verify -> PR with `Fixes #N` (closes the issue on merge).
 - **Benefit**: Ensures every bug fix follows a standardized verification path.
+- See [issue_resolver_guide.md](issue_resolver_guide.md) for labels and commands. Do not apply the `ai-plan` or `ai-draft` labels; they trigger automated AI workflows.
 
-### 2.2 UI Quality Assurance (`test-ui-desktop.md` & `test-ui-mobile.md`)
-Automated procedures for auditing the user interface.
-- **Coverage**: Navigation, responsive breakpoints, hover states, and premium visual elements.
-- **Output**: Generates standardized Jira-style markdown issue reports for UI inconsistencies.
+### 2.2 UI Quality Assurance (`test-ui-desktop.md`, `test-ui-mobile.md`, `extract-issues.md`)
+Automated procedures for auditing the user interface and for turning review transcripts into issues.
+- **Coverage**: Navigation, responsive breakpoints, hover states, and visual elements.
+- **Output**: GitHub Issues (`gh issue create`) for UI inconsistencies.
 
-### 2.3 Code Health (`cleanup-code.md`)
+### 2.3 Code Health (`cleanup-code.md`, `cleanup-comments.md`, `remove-dead-code.md`)
 A workflow dedicated to reducing technical debt and resolving linting warnings.
 - **Operations**: Removes unused imports, standardizes CSS variable usage, and fixes common React anti-patterns (e.g., missing dependencies).
 
 ### 2.4 Authentication Maintenance (`login.md`)
-Standardized procedure for logging into the application with different user roles (Student/Admin).
+Standardized procedure for logging into the application with different user roles (Student/Admin). The reusable skill is `.agents/skills/login_automation/SKILL.md` (the only skill in `.agents/skills/`).
 - **Utility**: Facilitates automated browser-based testing for protected routes.
 
 ---

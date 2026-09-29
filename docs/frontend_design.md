@@ -30,7 +30,7 @@ The application uses a layout-based approach to share common UI elements across 
   - **`AdminLayout`**: A specialized layout for administrative pages, providing distinct navigation and sidebar options.
 
 ### Routing Logic
-Routing is managed by `react-router-dom`. Routes are split into:
+Routing is managed by `react-router-dom` (v7). The admin UI also uses `react-admin`. Routes are split into:
 1. **Public Routes**: `/login`, `/signup`.
 2. **Student Routes**: Dashboard (`/`), Profile (`/profile/:slug?`), Chat, Achievements, etc.
 3. **Admin Routes**: Nested under `/admin/*`, protecting all administrative panels with `adminOnly` flags.
