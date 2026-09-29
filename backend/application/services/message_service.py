@@ -81,9 +81,8 @@ def validate_and_save_message(user, conversation_id, content):
             raise MessageRejected(
                 "Only instructors may post to the Global Announcements feed.", 403
             )
-    elif not user.is_admin:
-        if not user_enrolled_in(user.id, conv.classroom_id):
-            raise MessageRejected("You are not enrolled in this classroom.", 403)
+    elif not user.is_admin and not user_enrolled_in(user.id, conv.classroom_id):
+        raise MessageRejected("You are not enrolled in this classroom.", 403)
 
     if not user.is_admin:
         if conv.is_locked:
