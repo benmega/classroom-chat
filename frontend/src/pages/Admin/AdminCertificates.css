@@ -2,16 +2,16 @@
 
 /* Standardized Header handled by AdminPageHeader.css */
 
-.controls-bar {
+:where(.admin-certificates-page) .controls-bar {
     margin-bottom: 2.5rem;
 }
 
-.search-box {
+:where(.admin-certificates-page) .search-box {
     position: relative;
     max-width: 500px;
 }
 
-.search-box svg {
+:where(.admin-certificates-page) .search-box svg {
     position: absolute;
     left: 12px;
     top: 50%;
@@ -19,26 +19,26 @@
     color: var(--text-muted);
 }
 
-.search-box input {
+:where(.admin-certificates-page) .search-box input {
     width: 100%;
     padding: 12px 12px 12px 42px;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--border-subtle);
     border-radius: 12px;
-    background: white;
+    background: var(--bg-primary);
     font-size: 0.95rem;
 }
 
 /* Certs Grid */
-.certs-grid {
+:where(.admin-certificates-page) .certs-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 350px), 1fr));
     gap: 2rem;
 }
 
-.cert-review-card {
-    background: white;
+:where(.admin-certificates-page) .cert-review-card {
+    background: var(--bg-primary);
     border-radius: 20px;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--border-subtle);
     padding: 1.5rem;
     position: relative;
     display: flex;
@@ -46,13 +46,13 @@
     transition: all 0.2s;
 }
 
-.cert-review-card:hover {
+:where(.admin-certificates-page) .cert-review-card:hover {
     transform: translateY(-5px);
     box-shadow: var(--shadow-lg);
     border-color: var(--primary-color);
 }
 
-.cert-status-badge {
+:where(.admin-certificates-page) .cert-status-badge {
     position: absolute;
     top: 1.5rem;
     right: 1.5rem;
@@ -65,22 +65,22 @@
     gap: 4px;
 }
 
-.cert-status-badge.pending { background: #fff7ed; color: #9a3412; }
+:where(.admin-certificates-page) .cert-status-badge.pending { background: #fff7ed; color: #9a3412; }
 
-.cert-header {
+:where(.admin-certificates-page) .cert-header {
     margin-bottom: 1.5rem;
 }
 
-.user-info {
+:where(.admin-certificates-page) .user-info {
     display: flex;
     align-items: center;
     gap: 12px;
 }
 
-.user-avatar {
+:where(.admin-certificates-page) .user-avatar {
     width: 48px;
     height: 48px;
-    background: #f1f5f9;
+    background: var(--bg-tertiary);
     border-radius: 12px;
     display: flex;
     align-items: center;
@@ -88,51 +88,51 @@
     color: var(--text-muted);
 }
 
-.user-info h3 { font-size: 1.1rem; color: #1e293b; margin: 0; }
-.user-info span { font-size: 0.85rem; color: var(--text-muted); }
+:where(.admin-certificates-page) .user-info h3 { font-size: 1.1rem; color: var(--slate-800); margin: 0; }
+:where(.admin-certificates-page) .user-info span { font-size: 0.85rem; color: var(--text-muted); }
 
-.cert-body {
+:where(.admin-certificates-page) .cert-body {
     flex-grow: 1;
     display: flex;
     flex-direction: column;
     gap: 12px;
     padding: 1.25rem;
-    background: #f8fafc;
+    background: var(--bg-secondary);
     border-radius: 16px;
     margin-bottom: 1.5rem;
 }
 
-.achievement-info, .submission-date, .cert-url {
+:where(.admin-certificates-page) .achievement-info, :where(.admin-certificates-page) .submission-date, :where(.admin-certificates-page) .cert-url {
     display: flex;
     align-items: center;
     gap: 10px;
     font-size: 0.95rem;
-    color: #1e293b;
+    color: var(--slate-800);
     font-weight: 600;
 }
 
-.submission-date { color: var(--text-muted); font-weight: 500; font-size: 0.85rem; }
+:where(.admin-certificates-page) .submission-date { color: var(--text-muted); font-weight: 500; font-size: 0.85rem; }
 
-.cert-url a {
+:where(.admin-certificates-page) .cert-url a {
     color: var(--primary-color);
     text-decoration: none;
     font-size: 0.9rem;
 }
 
-.cert-url a:hover { text-decoration: underline; }
+:where(.admin-certificates-page) .cert-url a:hover { text-decoration: underline; }
 
-.cert-footer {
+:where(.admin-certificates-page) .cert-footer {
     display: flex;
     flex-direction: column;
     gap: 12px;
 }
 
-.file-actions {
+:where(.admin-certificates-page) .file-actions {
     display: flex;
     gap: 10px;
 }
 
-.btn-view {
+:where(.admin-certificates-page) .btn-view {
     flex: 1;
     display: flex;
     align-items: center;
@@ -147,16 +147,16 @@
     font-size: 0.9rem;
 }
 
-.btn-download {
+:where(.admin-certificates-page) .btn-download {
     padding: 10px;
-    background: #f1f5f9;
+    background: var(--bg-tertiary);
     color: var(--text-secondary);
     border-radius: 12px;
     display: flex;
     align-items: center;
 }
 
-.btn-approve {
+:where(.admin-certificates-page) .btn-approve {
     width: 100%;
     padding: 12px;
     background: var(--primary-color);
@@ -172,10 +172,10 @@
     transition: background 0.2s;
 }
 
-.btn-approve:hover { background: #2563eb; }
+:where(.admin-certificates-page) .btn-approve:hover { background: var(--blue-600); }
 
 /* Empty State */
-.empty-state {
+:where(.admin-certificates-page) .empty-state {
     grid-column: 1 / -1;
     padding: 4rem;
     text-align: center;
@@ -185,7 +185,17 @@
     gap: 1rem;
 }
 
-.empty-state svg { color: #cbd5e1; }
-.empty-state h3 { font-size: 1.5rem; color: #1e293b; margin: 0; }
-.empty-state p { color: var(--text-muted); }
+:where(.admin-certificates-page) .empty-state svg { color: var(--border-rich); }
+:where(.admin-certificates-page) .empty-state h3 { font-size: 1.5rem; color: var(--slate-800); margin: 0; }
+:where(.admin-certificates-page) .empty-state p { color: var(--text-muted); }
 
+
+@media (max-width: 600px) {
+    :where(.admin-certificates-page) .certs-grid {
+        gap: 1rem;
+    }
+
+    :where(.admin-certificates-page) .empty-state {
+        padding: 2.5rem 1rem;
+    }
+}

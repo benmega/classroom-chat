@@ -1,5 +1,5 @@
 @import './assets/css/variables.css';
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap');
+/* Inter/Outfit fonts are loaded from <link> tags in index.html (iss_661) */
 
 * {
   box-sizing: border-box;
@@ -273,7 +273,7 @@ select:focus {
   outline: none;
   border-color: var(--primary-color);
   box-shadow: var(--shadow-glow);
-  background: white;
+  background: var(--bg-primary);
 }
 
 input::placeholder, 
@@ -292,6 +292,13 @@ label {
 button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+/* Keyboard focus ring (iss_661/iss_557/iss_602/iss_515). :where() keeps specificity at zero so any
+   component that defines its own focus style still wins. Inputs keep their glow style above. */
+:where(a, button, [role="button"], [tabindex]:not([tabindex="-1"]), summary, select):focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
 }
 
 /* --- React Admin Layout Fixes --- */

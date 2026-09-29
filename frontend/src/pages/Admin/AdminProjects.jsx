@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
+import '../../components/admin/AdminShared.css';
 import './AdminProjects.css';
 import SmartImage from '../../components/common/SmartImage';
 import Skeleton from '../../components/common/Skeleton';

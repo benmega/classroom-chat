@@ -6,8 +6,8 @@
     min-height: auto;
 }
 
-.form-card {
-    background: white;
+:where(.submit-certificate-page) .form-card {
+    background: var(--bg-primary);
     padding: 2rem;
     border-radius: 20px;
     box-shadow: var(--shadow-lg);
@@ -37,7 +37,7 @@
     gap: 1.25rem;
 }
 
-.form-group label {
+:where(.submit-certificate-page) .form-group label {
     display: block;
     font-weight: 600;
     margin-bottom: 0.5rem;
@@ -45,7 +45,7 @@
     font-size: 0.95rem;
 }
 
-.form-control {
+:where(.submit-certificate-page) .form-control {
     width: 100%;
     padding: 12px 16px;
     border-radius: 12px;
@@ -55,19 +55,19 @@
     transition: all 0.2s;
 }
 
-.form-control:focus {
+:where(.submit-certificate-page) .form-control:focus {
     border-color: var(--primary-color);
-    background: white;
+    background: var(--bg-primary);
     box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
     outline: none;
 }
 
-.form-control.is-invalid {
+:where(.submit-certificate-page) .form-control.is-invalid {
     border-color: var(--error-color);
     background-color: var(--error-subtle);
 }
 
-.form-control.is-invalid:focus {
+:where(.submit-certificate-page) .form-control.is-invalid:focus {
     box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.1);
 }
 
@@ -139,7 +139,7 @@
     color: var(--primary-color);
 }
 
-.submit-button {
+:where(.submit-certificate-page) .submit-button {
     width: 100%;
     padding: 1rem;
     font-size: 1.1rem;
@@ -154,13 +154,13 @@
     margin-top: 0.5rem;
 }
 
-.submit-button:hover:not(:disabled) {
-    background: var(--primary-color-dark, var(--blue-600));
+:where(.submit-certificate-page) .submit-button:hover:not(:disabled) {
+    background: var(--blue-600);
     transform: translateY(-2px);
     box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.4);
 }
 
-.submit-button:disabled {
+:where(.submit-certificate-page) .submit-button:disabled {
     opacity: 0.6;
     cursor: not-allowed;
 }
@@ -188,7 +188,7 @@
     .submit-certificate-page {
         padding: 1rem;
     }
-    .form-card {
+    :where(.submit-certificate-page) .form-card {
         padding: 1.5rem;
     }
     .form-title {
@@ -204,3 +204,83 @@
     }
 }
 
+
+/* Preserved appearance (iss_558): before these page selectors were scoped, this page
+   picked up the look of the other pages' global .form-card/.form-group/.submit-button
+   rules. They are made explicit here so the page looks exactly as it did. */
+:where(.submit-certificate-page) .form-card {
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    padding: 2.5rem;
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-rich);
+    border: 1px solid var(--glass-border);
+    max-width: 700px;
+    position: relative;
+    overflow: hidden;
+    transition: var(--transition-smooth);
+}
+
+:where(.submit-certificate-page) .form-card:hover {
+    background: var(--glass-bg-hover);
+    box-shadow: var(--shadow-glow), var(--shadow-rich);
+    border-color: var(--primary-color);
+}
+
+:where(.submit-certificate-page) .form-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 6px;
+    background: var(--gradient-primary);
+    z-index: 10;
+}
+
+:where(.submit-certificate-page) .form-group label {
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+:where(.submit-certificate-page) .form-group {
+    margin-bottom: 1.5rem;
+}
+
+:where(.submit-certificate-page) .form-control {
+    color: var(--text-primary);
+}
+
+:where(.submit-certificate-page) .form-control:focus {
+    transform: translateY(-2px);
+}
+
+:where(.submit-certificate-page) .submit-button {
+    font-size: 1.15rem;
+    font-weight: 800;
+    background: var(--gradient-primary);
+    border-radius: var(--radius-lg);
+    transition: var(--transition-bounce);
+    box-shadow: var(--shadow-lg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+}
+
+:where(.submit-certificate-page) .submit-button:hover:not(:disabled) {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-glow), var(--shadow-xl);
+    filter: brightness(1.1);
+}
+
+:where(.submit-certificate-page) .submit-button:active {
+    transform: translateY(-2px);
+}
+
+@media (max-width: 768px), (max-height: 850px) {
+    :where(.submit-certificate-page) .form-card {
+        padding: 1.5rem;
+    }
+}

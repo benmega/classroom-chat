@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
+import '../../components/admin/AdminShared.css';
 import './PendingTrades.css';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
 

@@ -26,6 +26,7 @@ import {
 } from 'chart.js';
 import { Line } from 'react-chartjs-2';
 import { useNavigate } from 'react-router-dom';
+import '../../components/admin/AdminShared.css';
 import './AdminDashboard.css';
 import Skeleton from '../../components/common/Skeleton';
 

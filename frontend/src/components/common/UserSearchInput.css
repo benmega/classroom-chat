@@ -16,7 +16,7 @@
 
 .search-input-wrapper-common.active,
 .search-input-wrapper-common:focus-within {
-    background: white;
+    background: var(--bg-primary);
     border-color: var(--primary-color);
     box-shadow: var(--shadow-glow);
 }
@@ -94,7 +94,7 @@
     border-radius: var(--radius-md);
     box-shadow: var(--shadow-rich);
     overflow: hidden;
-    z-index: 1001;
+    z-index: var(--z-dropdown);
     animation: dropdownFade-common 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 

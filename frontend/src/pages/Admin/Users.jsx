@@ -15,6 +15,7 @@ import {
     AdjustDucksModal, 
     ResetPasswordModal 
 } from '../../components/admin/AdminModals';
+import '../../components/admin/AdminShared.css';
 import './Users.css';
 import Skeleton from '../../components/common/Skeleton';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';

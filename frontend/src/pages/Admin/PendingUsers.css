@@ -2,18 +2,18 @@
     padding: 2.5rem;
     max-width: 1200px;
     margin: 0 auto;
-    animation: fadeIn 0.4s ease-out;
+    animation: admin-fadeIn 0.4s ease-out;
 }
 
 /* Standardized Header handled by AdminPageHeader.css */
 
-.users-list {
+:where(.admin-pending-users-page) .users-list {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 360px), 1fr));
     gap: 2rem;
 }
 
-.user-card {
+:where(.admin-pending-users-page) .user-card {
     background: var(--bg-primary);
     border: 1px solid var(--border-subtle);
     border-radius: 20px;
@@ -26,25 +26,25 @@
     overflow: hidden;
 }
 
-.user-card:hover {
+:where(.admin-pending-users-page) .user-card:hover {
     transform: translateY(-8px);
     border-color: var(--primary-light);
     box-shadow: 0 12px 30px rgba(0,0,0,0.15);
 }
 
-.user-card-header {
+:where(.admin-pending-users-page) .user-card-header {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
 }
 
-.user-info {
+:where(.admin-pending-users-page) .user-info {
     display: flex;
     gap: 1rem;
     align-items: center;
 }
 
-.avatar-placeholder {
+:where(.admin-pending-users-page) .avatar-placeholder {
     width: 52px;
     height: 52px;
     background: var(--primary-light);
@@ -52,22 +52,22 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--primary);
+    color: var(--primary-color);
     border: 1px solid var(--primary-light);
 }
 
-.user-info h3 {
+:where(.admin-pending-users-page) .user-info h3 {
     margin: 0;
     font-size: 1.25rem;
     font-weight: 700;
 }
 
-.nickname {
+:where(.admin-pending-users-page) .nickname {
     font-size: 0.9rem;
     margin: 0;
 }
 
-.user-badge {
+:where(.admin-pending-users-page) .user-badge {
     display: flex;
     align-items: center;
     gap: 0.4rem;
@@ -79,13 +79,7 @@
     letter-spacing: 0.05em;
 }
 
-.badge-pending {
-    background: rgba(245, 158, 11, 0.1);
-    color: #f59e0b;
-    border: 1px solid rgba(245, 158, 11, 0.2);
-}
-
-.user-details {
+:where(.admin-pending-users-page) .user-details {
     background: rgba(255,255,255,0.03);
     border-radius: 12px;
     padding: 1rem;
@@ -94,29 +88,29 @@
     gap: 0.75rem;
 }
 
-.detail-row {
+:where(.admin-pending-users-page) .detail-row {
     display: flex;
     justify-content: space-between;
     font-size: 0.9rem;
 }
 
-.detail-row .label {
+:where(.admin-pending-users-page) .detail-row .label {
     color: var(--text-secondary);
 }
 
-.detail-row .value {
+:where(.admin-pending-users-page) .detail-row .value {
     color: var(--text-primary);
     font-weight: 500;
 }
 
-.user-actions {
+:where(.admin-pending-users-page) .user-actions {
     display: grid;
     grid-template-columns: 1fr 2fr;
     gap: 1rem;
     margin-top: auto;
 }
 
-.btn-approve, .btn-reject {
+:where(.admin-pending-users-page) .btn-approve, :where(.admin-pending-users-page) .btn-reject {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -130,37 +124,32 @@
     border: none;
 }
 
-.btn-approve {
+:where(.admin-pending-users-page) .btn-approve {
     background: var(--primary-color);
     color: white;
     box-shadow: 0 4px 14px rgba(14, 178, 187, 0.3);
 }
 
-.btn-approve:hover:not(:disabled) {
+:where(.admin-pending-users-page) .btn-approve:hover:not(:disabled) {
     background: var(--primary-dark);
     transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(14, 178, 187, 0.4);
 }
 
-.btn-reject {
+:where(.admin-pending-users-page) .btn-reject {
     background: rgba(239, 68, 68, 0.1);
-    color: #ef4444;
+    color: var(--error-color);
     border: 1px solid rgba(239, 68, 68, 0.2);
 }
 
-.btn-reject:hover:not(:disabled) {
-    background: #ef4444;
+:where(.admin-pending-users-page) .btn-reject:hover:not(:disabled) {
+    background: var(--error-color);
     color: white;
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
 }
 
-button:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-}
-
-.empty-state-card {
+:where(.admin-pending-users-page) .empty-state-card {
     grid-column: 1 / -1;
     background: var(--bg-primary);
     border: 1px dashed var(--border-subtle);
@@ -172,10 +161,10 @@ button:disabled {
     justify-content: center;
     text-align: center;
     gap: 1.5rem;
-    animation: slideUp 0.5s ease-out;
+    animation: admin-slideUp 0.5s ease-out;
 }
 
-.empty-icon-wrapper {
+:where(.admin-pending-users-page) .empty-icon-wrapper {
     width: 100px;
     height: 100px;
     background: var(--bg-secondary);
@@ -187,21 +176,21 @@ button:disabled {
     margin-bottom: 0.5rem;
 }
 
-.empty-state-card h3 {
+:where(.admin-pending-users-page) .empty-state-card h3 {
     font-size: 1.75rem;
     margin: 0;
 }
 
-.empty-state-card p {
+:where(.admin-pending-users-page) .empty-state-card p {
     color: var(--text-muted);
     font-size: 1.1rem;
     max-width: 400px;
 }
 
-.return-btn {
+:where(.admin-pending-users-page) .return-btn {
     margin-top: 1rem;
     padding: 0.85rem 2rem;
-    background: var(--primary);
+    background: var(--primary-color);
     color: white;
     border: none;
     border-radius: 12px;
@@ -210,42 +199,29 @@ button:disabled {
     transition: all 0.2s ease;
 }
 
-.return-btn:hover {
+:where(.admin-pending-users-page) .return-btn:hover {
     transform: translateY(-2px);
     background: var(--primary-dark);
 }
 
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+
+@media (max-width: 600px) {
+    .admin-pending-users-page {
+        padding: 1rem;
+    }
+
+    :where(.admin-pending-users-page) .users-list {
+        gap: 1rem;
+    }
+
+    :where(.admin-pending-users-page) .user-card {
+        padding: 1.25rem;
+    }
 }
 
-@keyframes slideUp {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
+/* Pending-approval badge (JSX renders `.user-badge.pending`; the old `.badge-pending` selector was dead) */
+:where(.admin-pending-users-page) .user-badge.pending {
+    background: rgba(245, 158, 11, 0.1);
+    color: #b45309;
+    border: 1px solid rgba(245, 158, 11, 0.2);
 }
-
-/* Loader */
-.admin-loading-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 60vh;
-}
-
-.admin-loader {
-    width: 48px;
-    height: 48px;
-    border: 4px solid var(--primary-faint);
-    border-top: 4px solid var(--primary);
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-    margin-bottom: 1.5rem;
-}
-
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-

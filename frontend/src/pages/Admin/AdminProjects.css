@@ -3,15 +3,15 @@
 /* Standardized Header handled by AdminPageHeader.css */
 
 /* Filter Tabs */
-.filter-tabs {
+:where(.admin-projects-page) .filter-tabs {
     display: flex;
-    background: #f1f5f9;
+    background: var(--bg-tertiary);
     padding: 6px;
     border-radius: 14px;
     gap: 4px;
 }
 
-.filter-tabs button {
+:where(.admin-projects-page) .filter-tabs button {
     padding: 10px 24px;
     border: none;
     background: none;
@@ -26,14 +26,14 @@
     gap: 8px;
 }
 
-.filter-tabs button.active {
-    background: white;
+:where(.admin-projects-page) .filter-tabs button.active {
+    background: var(--bg-primary);
     color: var(--primary-color);
     box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
 }
 
-.count-badge {
-    background: #e2e8f0;
+:where(.admin-projects-page) .count-badge {
+    background: var(--border-subtle);
     color: var(--text-secondary);
     padding: 2px 8px;
     border-radius: 8px;
@@ -41,25 +41,25 @@
     font-weight: 800;
 }
 
-.active .count-badge {
+:where(.admin-projects-page) .active .count-badge {
     background: #dbeafe;
     color: #1e40af;
 }
 
 /* Controls */
-.controls-bar {
+:where(.admin-projects-page) .controls-bar {
     margin-bottom: 2.5rem;
     display: flex;
     gap: 1.5rem;
 }
 
-.search-box {
+:where(.admin-projects-page) .search-box {
     position: relative;
     max-width: 400px;
     width: 100%;
 }
 
-.search-box svg {
+:where(.admin-projects-page) .search-box svg {
     position: absolute;
     left: 12px;
     top: 50%;
@@ -67,26 +67,26 @@
     color: var(--text-muted);
 }
 
-.search-box input {
+:where(.admin-projects-page) .search-box input {
     width: 100%;
     padding: 12px 12px 12px 42px;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--border-subtle);
     border-radius: 12px;
-    background: white;
+    background: var(--bg-primary);
     font-size: 0.95rem;
 }
 
 /* List Grid */
-.projects-list-grid {
+:where(.admin-projects-page) .projects-list-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
     gap: 2rem;
 }
 
-.admin-project-card {
-    background: white;
+:where(.admin-projects-page) .admin-project-card {
+    background: var(--bg-primary);
     border-radius: 20px;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--border-subtle);
     overflow: hidden;
     cursor: pointer;
     transition: all 0.2s;
@@ -94,25 +94,25 @@
     flex-direction: column;
 }
 
-.admin-project-card:hover {
+:where(.admin-projects-page) .admin-project-card:hover {
     transform: translateY(-5px);
     box-shadow: var(--shadow-lg);
     border-color: var(--primary-color);
 }
 
-.p-thumb {
+:where(.admin-projects-page) .p-thumb {
     height: 180px;
     position: relative;
-    background: #f1f5f9;
+    background: var(--bg-tertiary);
 }
 
-.p-thumb img {
+:where(.admin-projects-page) .p-thumb img {
     width: 100%;
     height: 100%;
     object-fit: cover;
 }
 
-.pending-indicator {
+:where(.admin-projects-page) .pending-indicator {
     position: absolute;
     top: 16px;
     left: 16px;
@@ -134,7 +134,7 @@
     transition: all 0.3s ease;
 }
 
-.pending-indicator::before {
+:where(.admin-projects-page) .pending-indicator::before {
     content: '';
     display: inline-block;
     width: 6px;
@@ -161,21 +161,21 @@
 }
 
 
-.p-content {
+:where(.admin-projects-page) .p-content {
     padding: 1.5rem;
     flex-grow: 1;
     display: flex;
     flex-direction: column;
 }
 
-.p-content h3 {
+:where(.admin-projects-page) .p-content h3 {
     font-size: 1.15rem;
     font-weight: 700;
-    color: #1e293b;
+    color: var(--slate-800);
     margin-bottom: 6px;
 }
 
-.p-meta {
+:where(.admin-projects-page) .p-meta {
     font-size: 0.85rem;
     color: var(--text-muted);
     display: flex;
@@ -184,7 +184,7 @@
     align-items: center;
 }
 
-.student-info {
+:where(.admin-projects-page) .student-info {
     display: flex;
     align-items: center;
     gap: 6px;
@@ -192,8 +192,8 @@
     color: var(--text-primary);
 }
 
-.id-pill {
-    background: #f1f5f9;
+:where(.admin-projects-page) .id-pill {
+    background: var(--bg-tertiary);
     color: var(--text-muted);
     padding: 2px 6px;
     border-radius: 4px;
@@ -201,36 +201,36 @@
     font-weight: 700;
 }
 
-.p-desc {
+:where(.admin-projects-page) .p-desc {
     font-size: 0.9rem;
     color: var(--text-secondary);
     line-height: 1.5;
     margin-bottom: 1.5rem;
 }
 
-.card-footer {
+:where(.admin-projects-page) .card-footer {
     margin-top: auto;
     padding-top: 1rem;
-    border-top: 1px solid #f1f5f9;
+    border-top: 1px solid var(--bg-tertiary);
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
 
-.status-text {
+:where(.admin-projects-page) .status-text {
     font-size: 0.8rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.05em;
 }
 
-.status-text.pending { color: #ef4444; }
-.status-text.approved { color: #10b981; }
+:where(.admin-projects-page) .status-text.pending { color: var(--error-color); }
+:where(.admin-projects-page) .status-text.approved { color: var(--success-color); }
 
 /* Detail View */
 /* Back button in detail view now handled by secondary button style or component */
 
-.project-review-card {
+:where(.admin-projects-page) .project-review-card {
     max-width: 1200px;
     margin: 0 auto;
     border: none;
@@ -238,14 +238,14 @@
     box-shadow: none;
 }
 
-.review-grid {
+:where(.admin-projects-page) .review-grid {
     display: grid;
     grid-template-columns: 1.2fr 0.8fr;
     gap: 2rem;
     align-items: start;
 }
 
-.review-header-flex {
+:where(.admin-projects-page) .review-header-flex {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -254,26 +254,26 @@
     gap: 1rem;
 }
 
-.project-info-panel {
-    background: white;
+:where(.admin-projects-page) .project-info-panel {
+    background: var(--bg-primary);
     padding: 2.5rem;
     border-radius: 24px;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--border-subtle);
     box-shadow: var(--shadow-sm);
 }
 
-.project-info-panel h2 { 
+:where(.admin-projects-page) .project-info-panel h2 { 
     font-size: 1.75rem; 
     margin: 0; 
-    color: #1e293b;
+    color: var(--slate-800);
 }
 
-.student-profile-link {
+:where(.admin-projects-page) .student-profile-link {
     display: flex;
     align-items: center;
     gap: 8px;
     padding: 8px 16px;
-    background: white;
+    background: var(--bg-primary);
     color: var(--primary-color);
     text-decoration: none;
     border-radius: 12px;
@@ -283,13 +283,13 @@
     transition: all 0.2s;
 }
 
-.student-profile-link:hover {
+:where(.admin-projects-page) .student-profile-link:hover {
     background: var(--primary-color);
     color: white;
     box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.2);
 }
 
-.project-info-panel .description { 
+:where(.admin-projects-page) .project-info-panel .description { 
     font-size: 1.1rem; 
     line-height: 1.6; 
     color: var(--text-secondary); 
@@ -299,28 +299,28 @@
     padding-right: 10px;
 }
 
-.project-info-panel .description::-webkit-scrollbar {
+:where(.admin-projects-page) .project-info-panel .description::-webkit-scrollbar {
     width: 6px;
 }
 
-.project-info-panel .description::-webkit-scrollbar-thumb {
-    background: #e2e8f0;
+:where(.admin-projects-page) .project-info-panel .description::-webkit-scrollbar-thumb {
+    background: var(--border-subtle);
     border-radius: 3px;
 }
 
-.links-section {
+:where(.admin-projects-page) .links-section {
     display: flex;
     gap: 1rem;
     margin-bottom: 2rem;
 }
 
-.project-link {
+:where(.admin-projects-page) .project-link {
     display: flex;
     align-items: center;
     gap: 8px;
     padding: 8px 16px;
     background: #eff6ff;
-    color: #2563eb;
+    color: var(--blue-600);
     text-decoration: none;
     border-radius: 10px;
     font-weight: 700;
@@ -328,62 +328,62 @@
     transition: all 0.2s;
 }
 
-.project-link:hover {
+:where(.admin-projects-page) .project-link:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
 }
 
-.project-link.github { background: #f8fafc; color: #334155; border: 1px solid #e2e8f0; }
-.project-link.github:hover { background: #f1f5f9; }
+:where(.admin-projects-page) .project-link.github { background: var(--bg-secondary); color: var(--text-secondary); border: 1px solid var(--border-subtle); }
+:where(.admin-projects-page) .project-link.github:hover { background: var(--bg-tertiary); }
 
-.project-link.video { background: #fff1f2; color: #e11d48; }
-.project-link.video:hover { background: #ffe4e6; }
+:where(.admin-projects-page) .project-link.video { background: #fff1f2; color: #e11d48; }
+:where(.admin-projects-page) .project-link.video:hover { background: #ffe4e6; }
 
-.review-image-container {
+:where(.admin-projects-page) .review-image-container {
     width: 100%;
     max-height: 450px;
     border-radius: 16px;
     overflow: hidden;
-    background: #f1f5f9;
-    border: 1px solid #e2e8f0;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-subtle);
     margin-bottom: 2rem;
 }
 
-.review-preview-img {
+:where(.admin-projects-page) .review-preview-img {
     width: 100%;
     height: 100%;
     object-fit: cover;
     display: block;
 }
 
-.review-actions-panel {
+:where(.admin-projects-page) .review-actions-panel {
     position: sticky;
     top: 2rem;
-    background: white;
+    background: var(--bg-primary);
     padding: 2rem;
     border-radius: 24px;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--border-subtle);
     box-shadow: var(--shadow-md);
 }
 
-.review-textarea {
+:where(.admin-projects-page) .review-textarea {
     width: 100%;
     padding: 1.25rem;
     border-radius: 12px;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--border-subtle);
     font-size: 0.95rem;
-    background: #f8fafc;
+    background: var(--bg-secondary);
     margin: 1rem 0 1.5rem 0;
     resize: none;
     line-height: 1.5;
 }
 
-.review-buttons {
+:where(.admin-projects-page) .review-buttons {
     display: flex;
     gap: 1.25rem;
 }
 
-.btn-approve, .btn-reject {
+:where(.admin-projects-page) .btn-approve, :where(.admin-projects-page) .btn-reject {
     flex: 1;
     padding: 14px;
     border-radius: 12px;
@@ -396,37 +396,37 @@
     cursor: pointer;
 }
 
-.btn-approve { background: #065f46; color: white; } /* Darker green for contrast */
-.btn-reject { background: #f1f5f9; color: #ef4444; }
+:where(.admin-projects-page) .btn-approve { background: #065f46; color: white; } /* Darker green for contrast */
+:where(.admin-projects-page) .btn-reject { background: var(--bg-tertiary); color: var(--error-color); }
 
-.extra-context-section {
+:where(.admin-projects-page) .extra-context-section {
     margin-top: 2rem;
     display: flex;
     flex-direction: column;
     gap: 2rem;
 }
 
-.context-block {
-    background: #f8fafc;
+:where(.admin-projects-page) .context-block {
+    background: var(--bg-secondary);
     border-radius: 16px;
     padding: 1.5rem;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--border-subtle);
 }
 
-.context-block h4 {
+:where(.admin-projects-page) .context-block h4 {
     display: flex;
     align-items: center;
     gap: 8px;
     font-size: 1rem;
     font-weight: 700;
-    color: #1e293b;
+    color: var(--slate-800);
     margin-bottom: 1rem;
     margin-top: 0;
 }
 
-.code-view {
-    background: #1e293b;
-    color: #e2e8f0;
+:where(.admin-projects-page) .code-view {
+    background: var(--slate-800);
+    color: var(--border-subtle);
     padding: 1.25rem;
     border-radius: 12px;
     font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
@@ -439,59 +439,116 @@
     border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.code-view::-webkit-scrollbar {
+:where(.admin-projects-page) .code-view::-webkit-scrollbar {
     width: 8px;
     height: 8px;
 }
 
-.code-view::-webkit-scrollbar-track {
+:where(.admin-projects-page) .code-view::-webkit-scrollbar-track {
     background: rgba(255, 255, 255, 0.05);
     border-radius: 4px;
 }
 
-.code-view::-webkit-scrollbar-thumb {
+:where(.admin-projects-page) .code-view::-webkit-scrollbar-thumb {
     background: rgba(255, 255, 255, 0.2);
     border-radius: 4px;
 }
 
-.code-view::-webkit-scrollbar-thumb:hover {
+:where(.admin-projects-page) .code-view::-webkit-scrollbar-thumb:hover {
     background: rgba(255, 255, 255, 0.3);
 }
 
-.transcript-view {
+:where(.admin-projects-page) .transcript-view {
     max-height: 300px;
     overflow-y: auto;
     font-size: 0.95rem;
     color: var(--text-secondary);
     line-height: 1.7;
-    background: white;
+    background: var(--bg-primary);
     padding: 1.25rem;
     border-radius: 12px;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--border-subtle);
 }
 
 /* Scrollbar for transcript */
-.transcript-view::-webkit-scrollbar {
+:where(.admin-projects-page) .transcript-view::-webkit-scrollbar {
     width: 8px;
 }
 
-.transcript-view::-webkit-scrollbar-track {
-    background: #f1f5f9;
+:where(.admin-projects-page) .transcript-view::-webkit-scrollbar-track {
+    background: var(--bg-tertiary);
     border-radius: 4px;
 }
 
-.transcript-view::-webkit-scrollbar-thumb {
+:where(.admin-projects-page) .transcript-view::-webkit-scrollbar-thumb {
     background: #cbd5e1;
     border-radius: 4px;
 }
 
-.transcript-view::-webkit-scrollbar-thumb:hover {
+:where(.admin-projects-page) .transcript-view::-webkit-scrollbar-thumb:hover {
     background: var(--text-muted);
 }
 
 @media (max-width: 1000px) {
-    .review-grid {
+    :where(.admin-projects-page) .review-grid {
         grid-template-columns: 1fr;
     }
 }
 
+
+/* --- Rules moved here from other admin stylesheets that Projects relied on via global leakage --- */
+:where(.admin-projects-page) .section-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--slate-800);
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 2px solid var(--bg-tertiary);
+    padding-bottom: 12px;
+}
+
+:where(.admin-projects-page) .empty-state {
+    grid-column: 1 / -1;
+    padding: 4rem;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
+/* Placeholder shown when a project has no thumbnail (iss_517) */
+:where(.admin-projects-page) .no-img {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--border-rich);
+}
+
+@media (max-width: 600px) {
+    :where(.admin-projects-page) .controls-bar {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    :where(.admin-projects-page) .search-box {
+        max-width: none;
+    }
+
+    :where(.admin-projects-page) .filter-tabs {
+        overflow-x: auto;
+    }
+
+    :where(.admin-projects-page) .project-info-panel {
+        padding: 1.25rem;
+    }
+
+    :where(.admin-projects-page) .review-buttons {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+}

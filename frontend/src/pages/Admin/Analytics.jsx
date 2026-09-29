@@ -23,6 +23,7 @@ import {
 import { Line, Pie } from 'react-chartjs-2';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
+import '../../components/admin/AdminShared.css';
 import './Analytics.css';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
 

@@ -2,13 +2,6 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { 
     User, 
-    Shield, 
-    Award, 
-    FileCheck, 
-    Zap, 
-    RefreshCw, 
-    Disc, 
-    MessageSquare, 
     LogOut,
     Package,
     Menu,
@@ -22,6 +15,7 @@ import Tutorial from '../common/Tutorial';
 
 // Hooks
 import { useLayout } from '../../hooks/useLayout';
+import { getUserNavLinks } from '../../utils/navLinks';
 
 const Layout = ({ children }) => {
     const {
@@ -145,16 +139,18 @@ const Layout = ({ children }) => {
                                             </li>
                                         )}
                                         <li className="mobile-only-stat dropdown-divider"></li>
-                                        <li><Link to="/profile" onClick={() => setIsDropdownOpen(false)} data-testid="nav-profile"><User size={18} /> Profile</Link></li>
-                                        {user?.is_admin && (
-                                            <li><Link to="/admin" onClick={() => setIsDropdownOpen(false)}><Shield size={18} /> Admin Panel</Link></li>
-                                        )}
-                                        <li><Link to="/achievements" onClick={() => setIsDropdownOpen(false)}><Award size={18} /> Achievements</Link></li>
-                                        <li><Link to="/submit-certificate" onClick={() => setIsDropdownOpen(false)}><FileCheck size={18} /> Certificate</Link></li>
-                                        <li><Link to="/submit-challenge" onClick={() => setIsDropdownOpen(false)}><Zap size={18} /> Challenge</Link></li>
-                                        <li><Link to="/bit-shift" onClick={() => setIsDropdownOpen(false)}><RefreshCw size={18} /> Bit Shift</Link></li>
-                                        <li><a href="https://benmega.github.io/screen-recorder/" target="_blank" rel="noopener noreferrer" onClick={() => setIsDropdownOpen(false)}><Disc size={18} /> Record</a></li>
-                                        <li><Link to="/history" onClick={() => setIsDropdownOpen(false)}><MessageSquare size={18} /> History</Link></li>
+                                        {getUserNavLinks(user?.is_admin).map(({ to, href, label, icon, testId }) => {
+                                            const Icon = icon;
+                                            return (
+                                                <li key={label}>
+                                                    {href ? (
+                                                        <a href={href} target="_blank" rel="noopener noreferrer" onClick={() => setIsDropdownOpen(false)}><Icon size={18} /> {label}</a>
+                                                    ) : (
+                                                        <Link to={to} onClick={() => setIsDropdownOpen(false)} data-testid={testId}><Icon size={18} /> {label}</Link>
+                                                    )}
+                                                </li>
+                                            );
+                                        })}
                                         <li><button onClick={() => { handleLogout(); setIsDropdownOpen(false); }} className="logout-btn"><LogOut size={18} /> Logout</button></li>
                                     </ul>
                                 </li>
@@ -192,16 +188,18 @@ const Layout = ({ children }) => {
 
                         <nav className="sidebar-nav">
                             <ul>
-                                <li><Link to="/profile" onClick={() => setSidebarOpen(false)}><User size={18} /> Profile</Link></li>
-                                {user?.is_admin && (
-                                    <li><Link to="/admin" onClick={() => setSidebarOpen(false)}><Shield size={18} /> Admin Panel</Link></li>
-                                )}
-                                <li><Link to="/achievements" onClick={() => setSidebarOpen(false)}><Award size={18} /> Achievements</Link></li>
-                                <li><Link to="/submit-certificate" onClick={() => setSidebarOpen(false)}><FileCheck size={18} /> Certificate</Link></li>
-                                <li><Link to="/submit-challenge" onClick={() => setSidebarOpen(false)}><Zap size={18} /> Challenge</Link></li>
-                                <li><Link to="/bit-shift" onClick={() => setSidebarOpen(false)}><RefreshCw size={18} /> Bit Shift</Link></li>
-                                <li><a href="https://benmega.github.io/screen-recorder/" target="_blank" rel="noopener noreferrer" onClick={() => setSidebarOpen(false)}><Disc size={18} /> Record</a></li>
-                                <li><Link to="/history" onClick={() => setSidebarOpen(false)}><MessageSquare size={18} /> History</Link></li>
+                                {getUserNavLinks(user?.is_admin).map(({ to, href, label, icon }) => {
+                                    const Icon = icon;
+                                    return (
+                                        <li key={label}>
+                                            {href ? (
+                                                <a href={href} target="_blank" rel="noopener noreferrer" onClick={() => setSidebarOpen(false)}><Icon size={18} /> {label}</a>
+                                            ) : (
+                                                <Link to={to} onClick={() => setSidebarOpen(false)}><Icon size={18} /> {label}</Link>
+                                            )}
+                                        </li>
+                                    );
+                                })}
                             </ul>
                         </nav>
 

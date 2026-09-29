@@ -15,62 +15,6 @@
     align-items: start;
 }
 
-.admin-advanced-panel .model-links-section {
-    padding: 2rem;
-}
-
-.admin-advanced-panel .section-header {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 1.25rem;
-    color: var(--primary-color);
-}
-
-.admin-advanced-panel .section-header h2 { font-size: 1.35rem; margin: 0; color: #1e293b; }
-.admin-advanced-panel .section-desc { font-size: 0.95rem; color: var(--text-muted); margin-bottom: 1.75rem; line-height: 1.5; }
-
-
-.admin-advanced-panel .model-list {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: 1.25rem;
-}
-
-.admin-advanced-panel .model-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1rem 1.5rem;
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 16px;
-    text-decoration: none;
-    color: #1e293b;
-    font-weight: 700;
-    transition: all 0.2s;
-}
-
-.admin-advanced-panel .model-item:hover {
-    background: white;
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-sm);
-    border-color: var(--primary-color);
-    color: var(--primary-color);
-}
-
-.admin-advanced-panel .model-name {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.admin-advanced-panel .ext-icon {
-    color: #cbd5e1;
-}
-
-.admin-advanced-panel .model-item:hover .ext-icon { color: var(--primary-color); }
-
 /* Utility Stack */
 .admin-advanced-panel .utility-stack {
     display: flex;
@@ -82,7 +26,7 @@
     display: flex;
     gap: 1.5rem;
     padding: 2rem;
-    background: white;
+    background: var(--bg-primary);
     border-radius: 20px;
 }
 
@@ -100,7 +44,7 @@
 .admin-advanced-panel .utility-icon.primary { background: #eff6ff; color: #3b82f6; }
 .admin-advanced-panel .utility-icon.secondary { background: #f0fdf4; color: #22c55e; }
 
-.admin-advanced-panel .utility-content h3 { font-size: 1.1rem; font-weight: 700; color: #1e293b; margin-bottom: 4px; }
+.admin-advanced-panel .utility-content h3 { font-size: 1.1rem; font-weight: 700; color: var(--slate-800); margin-bottom: 4px; }
 .admin-advanced-panel .utility-content p { font-size: 0.9rem; color: var(--text-muted); margin-bottom: 12px; }
 
 .admin-advanced-panel .btn-utility {
@@ -108,7 +52,7 @@
     align-items: center;
     justify-content: center;
     gap: 8px;
-    background: #f1f5f9;
+    background: var(--bg-tertiary);
     border: none;
     padding: 10px 18px;
     border-radius: 12px;
@@ -120,14 +64,14 @@
 }
 
 .admin-advanced-panel .btn-utility:hover { 
-    background: #e2e8f0; 
-    color: #1e293b;
+    background: var(--border-subtle); 
+    color: var(--slate-800);
     transform: translateY(-1px);
 }
 
 /* Danger Zone */
 .admin-advanced-panel .danger-zone {
-    background: #fef2f2;
+    background: var(--error-subtle);
     border: 1px solid #fee2e2;
     border-radius: 24px;
     padding: 2.5rem;
@@ -147,7 +91,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: white;
+    background: var(--bg-primary);
     padding: 1.5rem;
     border-radius: 16px;
     border: 1px solid #fee2e2;
@@ -184,20 +128,21 @@
 }
 
 /* Log Modal */
-.log-modal-overlay {
+:where(.admin-advanced-panel) .log-modal-overlay {
     position: fixed;
     inset: 0;
     background: rgba(15, 23, 42, 0.4);
     backdrop-filter: blur(8px);
-    z-index: 2000;
+    z-index: 2100;
+    /*  above the shared Modal overlay (z-index 2000) so stacking is deterministic  */
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 2rem;
 }
 
-.log-modal {
-    background: white;
+:where(.admin-advanced-panel) .log-modal {
+    background: var(--bg-primary);
     width: 100%;
     max-width: 1000px;
     height: 80vh;
@@ -207,7 +152,7 @@
     overflow: hidden;
 }
 
-.log-modal-header {
+:where(.admin-advanced-panel) .log-modal-header {
     padding: 1.5rem 2rem;
     border-bottom: 1px solid var(--border-subtle);
     display: flex;
@@ -215,21 +160,21 @@
     align-items: center;
 }
 
-.log-modal-header .title-group {
+:where(.admin-advanced-panel) .log-modal-header .title-group {
     display: flex;
     align-items: center;
     gap: 12px;
     color: var(--primary-color);
 }
 
-.log-modal-header h3 {
+:where(.admin-advanced-panel) .log-modal-header h3 {
     font-size: 1.25rem;
     font-weight: 800;
     margin: 0;
-    color: #1e293b;
+    color: var(--slate-800);
 }
 
-.log-content {
+:where(.admin-advanced-panel) .log-content {
     flex: 1;
     overflow: auto;
     padding: 2rem;
@@ -240,40 +185,40 @@
     line-height: 1.6;
 }
 
-.log-content pre {
+:where(.admin-advanced-panel) .log-content pre {
     margin: 0;
     white-space: pre-wrap;
 }
 
-.log-modal-footer {
+:where(.admin-advanced-panel) .log-modal-footer {
     padding: 1.25rem 2rem;
     border-top: 1px solid var(--border-subtle);
     display: flex;
     justify-content: flex-end;
     gap: 1rem;
-    background: #f8fafc;
+    background: var(--bg-secondary);
 }
 
-.close-btn {
+:where(.admin-advanced-panel) .log-modal-header .close-btn {
     color: var(--text-muted);
     padding: 8px;
     border-radius: 8px;
     transition: all 0.2s;
 }
 
-.close-btn:hover {
-    background: #f1f5f9;
-    color: #1e293b;
+:where(.admin-advanced-panel) .log-modal-header .close-btn:hover {
+    background: var(--bg-tertiary);
+    color: var(--slate-800);
 }
 
-.log-content .stats-grid {
+:where(.admin-advanced-panel) .log-content .stats-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 1.5rem;
     margin-bottom: 2.5rem;
 }
 
-.log-content .stat-box {
+:where(.admin-advanced-panel) .log-content .stat-box {
     background: rgba(255, 255, 255, 0.05);
     padding: 1.5rem;
     border-radius: 16px;
@@ -283,32 +228,32 @@
     border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.log-content .stat-box .label {
+:where(.admin-advanced-panel) .log-content .stat-box .label {
     font-size: 0.8rem;
     color: var(--text-muted);
     text-transform: uppercase;
     letter-spacing: 0.05em;
 }
 
-.log-content .stat-box .value {
+:where(.admin-advanced-panel) .log-content .stat-box .value {
     font-size: 1.5rem;
     font-weight: 700;
     color: white;
 }
 
-.log-content h4 {
+:where(.admin-advanced-panel) .log-content h4 {
     color: white;
     margin-bottom: 1rem;
     font-size: 1.1rem;
 }
 
-.log-content .table-counts {
+:where(.admin-advanced-panel) .log-content .table-counts {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
     gap: 10px;
 }
 
-.log-content .table-row {
+:where(.admin-advanced-panel) .log-content .table-row {
     display: flex;
     justify-content: space-between;
     padding: 12px 16px;
@@ -316,33 +261,63 @@
     border-radius: 10px;
 }
 
-.log-content .table-row span { color: var(--text-muted); }
-.log-content .table-row strong { color: var(--primary-color); }
+:where(.admin-advanced-panel) .log-content .table-row span { color: var(--text-muted); }
+:where(.admin-advanced-panel) .log-content .table-row strong { color: var(--primary-color); }
 
 /* Purge Confirmation */
-.purge-confirm .log-content {
-    background: white;
-    color: #1e293b;
+:where(.admin-advanced-panel) .purge-confirm .log-content {
+    background: var(--bg-primary);
+    color: var(--slate-800);
     font-family: inherit;
     font-size: 1.1rem;
     text-align: center;
     padding: 3rem 2rem;
 }
 
-.warning-text {
+:where(.admin-advanced-panel) .warning-text {
     color: #dc2626;
     margin-bottom: 1rem;
 }
 
-.log-modal-header.danger {
+:where(.admin-advanced-panel) .log-modal-header.danger {
     border-bottom: 2px solid #fee2e2;
 }
 
-.log-modal-header.danger .title-group {
+:where(.admin-advanced-panel) .log-modal-header.danger .title-group {
     color: #dc2626;
 }
 
-.purge-confirm {
-    height: auto !important;
+:where(.admin-advanced-panel) .log-modal.purge-confirm {
+    height: auto;
 }
 
+
+/* --- Classes used by AdvancedPanel.jsx that previously had no CSS (iss_517) --- */
+.admin-advanced-panel .utility-icon.premium { background: var(--secondary-light); color: var(--secondary-color); }
+
+.admin-advanced-panel .danger-content {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+@media (max-width: 600px) {
+    .admin-advanced-panel {
+        padding: 1rem;
+    }
+
+    .admin-advanced-panel .utility-card,
+    .admin-advanced-panel .danger-zone {
+        padding: 1.25rem;
+    }
+
+    .admin-advanced-panel .danger-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    :where(.admin-advanced-panel) .log-modal-overlay {
+        padding: 1rem;
+    }
+}

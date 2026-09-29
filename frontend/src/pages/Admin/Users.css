@@ -1,26 +1,21 @@
 .admin-users-page {
-    animation: fadeIn 0.4s ease-out;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    animation: admin-fadeIn 0.4s ease-out;
 }
 
 /* Standardized Header handled by AdminPageHeader.css */
 
-.header-actions {
+:where(.admin-users-page) .header-actions {
     display: flex;
     align-items: center;
     gap: 1rem;
 }
 
-.search-bar {
+:where(.admin-users-page) .search-bar {
     position: relative;
     width: 320px;
 }
 
-.search-bar svg {
+:where(.admin-users-page) .search-bar svg {
     position: absolute;
     left: 12px;
     top: 50%;
@@ -28,61 +23,41 @@
     color: var(--text-muted);
 }
 
-.search-bar input {
+:where(.admin-users-page) .search-bar input {
     width: 100%;
     padding: 12px 12px 12px 42px;
-    background: white;
-    border: 1px solid #e2e8f0;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-subtle);
     border-radius: 12px;
     font-size: 0.95rem;
     outline: none;
     transition: all 0.2s;
 }
 
-.search-bar input:focus {
+:where(.admin-users-page) .search-bar input:focus {
     border-color: var(--primary-color);
     box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
 }
 
-.primary-btn {
-    padding: 12px 20px;
-    background: var(--primary-color);
-    color: white;
-    border: none;
-    border-radius: 12px;
-    font-weight: 700;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.primary-btn:hover {
-    opacity: 0.9;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
-}
-
 /* Stats Row */
-.users-stats-row {
+:where(.admin-users-page) .users-stats-row {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 1.5rem;
     margin-bottom: 2.5rem;
 }
 
-.stat-mini-card {
-    background: white;
+:where(.admin-users-page) .stat-mini-card {
+    background: var(--bg-primary);
     padding: 1.25rem;
     border-radius: 16px;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--border-subtle);
     display: flex;
     flex-direction: column;
     gap: 4px;
 }
 
-.stat-mini-card .label {
+:where(.admin-users-page) .stat-mini-card .label {
     font-size: 0.8rem;
     text-transform: uppercase;
     letter-spacing: 0.05em;
@@ -90,63 +65,64 @@
     font-weight: 700;
 }
 
-.stat-mini-card .value {
+:where(.admin-users-page) .stat-mini-card .value {
     font-size: 1.75rem;
     font-weight: 800;
-    color: #1e293b;
+    color: var(--slate-800);
 }
 
 /* Table Card */
-.users-table-container {
+:where(.admin-users-page) .users-table-container {
     padding: 0;
-    overflow: hidden;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
-.users-table {
+:where(.admin-users-page) .users-table {
     width: 100%;
     border-collapse: collapse;
 }
 
-.users-table th {
-    background: #f8fafc;
+:where(.admin-users-page) .users-table th {
+    background: var(--bg-secondary);
     text-align: left;
     padding: 16px 24px;
     font-size: 0.85rem;
     font-weight: 700;
     color: var(--text-muted);
-    border-bottom: 1px solid #e2e8f0;
+    border-bottom: 1px solid var(--border-subtle);
 }
 
-.users-table td {
+:where(.admin-users-page) .users-table td {
     padding: 12px 16px;
-    border-bottom: 1px solid #f1f5f9;
+    border-bottom: 1px solid var(--bg-tertiary);
 }
 
-.users-table tr:last-child td {
+:where(.admin-users-page) .users-table tr:last-child td {
     border-bottom: none;
 }
 
-.users-table tr:hover {
-    background: #f8fafc;
+:where(.admin-users-page) .users-table tr:hover {
+    background: var(--bg-secondary);
 }
 
-.user-profile-cell {
+:where(.admin-users-page) .user-profile-cell {
     display: flex;
     align-items: center;
     gap: 12px;
 }
 
-.user-profile-cell .avatar {
-    width: 44px !important;
-    height: 44px !important;
+:where(.admin-users-page) .user-profile-cell .avatar {
+    width: 44px;
+    height: 44px;
     border-radius: 12px;
     object-fit: cover;
     flex-shrink: 0;
 }
 
-.user-profile-cell .name {
+:where(.admin-users-page) .user-profile-cell .name {
     font-weight: 700;
-    color: #1e293b;
+    color: var(--slate-800);
     font-size: 0.95rem;
     white-space: nowrap;
     overflow: hidden;
@@ -154,7 +130,7 @@
     max-width: 140px;
 }
 
-.user-profile-cell .handle {
+:where(.admin-users-page) .user-profile-cell .handle {
     font-size: 0.8rem;
     color: var(--text-muted);
     white-space: nowrap;
@@ -163,7 +139,7 @@
     max-width: 140px;
 }
 
-.user-role-badge {
+:where(.admin-users-page) .user-role-badge {
     padding: 4px 10px;
     border-radius: 8px;
     font-size: 0.75rem;
@@ -176,22 +152,22 @@
     box-shadow: var(--shadow-sm);
 }
 
-.user-role-badge.student { background: linear-gradient(135deg, #eff6ff, #dbeafe); color: #1e40af; border: 1px solid #bfdbfe; }
-.user-role-badge.admin { background: linear-gradient(135deg, #fef2f2, #fee2e2); color: #b91c1c; border: 1px solid #fecaca; }
+:where(.admin-users-page) .user-role-badge.student { background: linear-gradient(135deg, #eff6ff, #dbeafe); color: #1e40af; border: 1px solid #bfdbfe; }
+:where(.admin-users-page) .user-role-badge.admin { background: linear-gradient(135deg, var(--error-subtle), #fee2e2); color: #b91c1c; border: 1px solid #fecaca; }
 
 
-.economy-info .duck-count {
+:where(.admin-users-page) .economy-info .duck-count {
     font-weight: 700;
     color: #92400e;
     font-size: 0.95rem;
 }
 
-.economy-info .level-info {
+:where(.admin-users-page) .economy-info .level-info {
     font-size: 0.8rem;
     color: var(--text-muted);
 }
 
-.status-indicator {
+:where(.admin-users-page) .status-indicator {
     display: flex;
     align-items: center;
     gap: 8px;
@@ -199,28 +175,28 @@
     font-weight: 600;
 }
 
-.status-indicator .dot {
+:where(.admin-users-page) .status-indicator .dot {
     width: 8px;
     height: 8px;
     border-radius: 50%;
 }
 
-.status-indicator.online { color: #166534; }
-.status-indicator.online .dot { background: #22c55e; box-shadow: 0 0 8px rgba(34, 197, 94, 0.4); }
-.status-indicator.offline { color: var(--text-muted); }
-.status-indicator.offline .dot { background: #cbd5e1; }
+:where(.admin-users-page) .status-indicator.online { color: #166534; }
+:where(.admin-users-page) .status-indicator.online .dot { background: #22c55e; box-shadow: 0 0 8px rgba(34, 197, 94, 0.4); }
+:where(.admin-users-page) .status-indicator.offline { color: var(--text-muted); }
+:where(.admin-users-page) .status-indicator.offline .dot { background: #cbd5e1; }
 
-.action-group {
+:where(.admin-users-page) .action-group {
     display: flex;
     gap: 8px;
 }
 
-.action-btn {
+:where(.admin-users-page) .action-btn {
     width: 36px;
     height: 36px;
     border-radius: 10px;
-    border: 1px solid #e2e8f0;
-    background: white;
+    border: 1px solid var(--border-subtle);
+    background: var(--bg-primary);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -229,115 +205,117 @@
     transition: all 0.2s;
 }
 
-.action-btn:hover {
-    background: #f8fafc;
+:where(.admin-users-page) .action-btn:hover {
+    background: var(--bg-secondary);
     border-color: #cbd5e1;
-    color: #1e293b;
+    color: var(--slate-800);
 }
 
-.action-btn.adjust:hover { background: #fffbeb; border-color: #fcd34d; color: #b45309; }
-.action-btn.pass:hover { background: #eef2ff; border-color: #c7d2fe; color: #4338ca; }
-.action-btn.delete:hover { background: #fef2f2; border-color: #fecaca; color: #b91c1c; }
+:where(.admin-users-page) .action-btn.adjust:hover { background: #fffbeb; border-color: #fcd34d; color: #b45309; }
+:where(.admin-users-page) .action-btn.pass:hover { background: #eef2ff; border-color: #c7d2fe; color: #4338ca; }
+:where(.admin-users-page) .action-btn.delete:hover { background: var(--error-subtle); border-color: #fecaca; color: #b91c1c; }
 
-.empty-row {
+:where(.admin-users-page) .users-table .empty-row {
     text-align: center;
-    padding: 60px !important;
+    padding: 60px;
     color: var(--text-muted);
     font-style: italic;
 }
 
 /* Modal Enhancements */
-.submit-btn {
-    padding: 14px;
-    background: var(--primary-color);
-    color: white;
-    border: none;
-    border-radius: 12px;
-    font-weight: 700;
-    cursor: pointer;
-}
 
-.submit-btn.danger { background: #ef4444; }
-
-.submit-btn:hover { opacity: 0.9; }
-
-.form-group input.readonly {
-    background: #f1f5f9;
+:where(.admin-users-page) .form-group input.readonly {
+    background: var(--bg-tertiary);
     opacity: 0.8;
 }
 
-.user-badge-display {
+:where(.admin-users-page) .user-badge-display {
     display: flex;
     align-items: center;
     gap: 12px;
     padding: 12px;
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-subtle);
     border-radius: 12px;
 }
 
-.user-badge-display .avatar-small {
-    width: 40px !important;
-    height: 40px !important;
+:where(.admin-users-page) .user-badge-display .avatar-small {
+    width: 40px;
+    height: 40px;
     border-radius: 10px;
     object-fit: cover;
     flex-shrink: 0;
 }
 
-.user-info-text {
+:where(.admin-users-page) .user-info-text {
     display: flex;
     flex-direction: column;
 }
 
-.user-nickname {
+:where(.admin-users-page) .user-nickname {
     font-weight: 700;
-    color: #1e293b;
+    color: var(--slate-800);
     font-size: 0.95rem;
 }
 
-.user-handle {
+:where(.admin-users-page) .user-handle {
     font-size: 0.8rem;
     color: var(--text-muted);
 }
 
-.admin-select {
+:where(.admin-users-page) .admin-select {
     cursor: pointer;
 }
 
-/* @media handled by AdminPageHeader.css */
+/* Header @media handled by AdminPageHeader.css */
+
+@media (max-width: 768px) {
+    :where(.admin-users-page) .users-table {
+        min-width: 720px;
+    }
+
+    :where(.admin-users-page) .pagination-container {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    :where(.admin-users-page) .search-bar {
+        width: 100%;
+    }
+}
 
 /* Pagination Styling */
-.pagination-container {
+:where(.admin-users-page) .pagination-container {
     padding: 20px 24px;
-    background: #f8fafc;
-    border-top: 1px solid #e2e8f0;
+    background: var(--bg-secondary);
+    border-top: 1px solid var(--border-subtle);
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
 
-.pagination-info {
+:where(.admin-users-page) .pagination-info {
     font-size: 0.9rem;
     color: var(--text-muted);
 }
 
-.pagination-info strong {
-    color: #1e293b;
+:where(.admin-users-page) .pagination-info strong {
+    color: var(--slate-800);
 }
 
-.pagination-controls {
+:where(.admin-users-page) .pagination-controls {
     display: flex;
     gap: 12px;
     align-items: center;
 }
 
-.pagination-btn {
+:where(.admin-users-page) .pagination-btn {
     display: flex;
     align-items: center;
     gap: 8px;
     padding: 8px 16px;
-    background: white;
-    border: 1px solid #e2e8f0;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-subtle);
     border-radius: 8px;
     color: var(--text-secondary);
     font-weight: 600;
@@ -346,25 +324,43 @@
     transition: all 0.2s;
 }
 
-.pagination-btn:hover:not(:disabled) {
+:where(.admin-users-page) .pagination-btn:hover:not(:disabled) {
     color: var(--primary-color);
     border-color: var(--primary-color);
-    background: #f8fafc;
+    background: var(--bg-secondary);
 }
 
-.pagination-btn:disabled {
+:where(.admin-users-page) .pagination-btn:disabled {
     opacity: 0.5;
     cursor: not-allowed;
-    background: #f1f5f9;
+    background: var(--bg-tertiary);
 }
 
-.page-indicator {
+:where(.admin-users-page) .page-indicator {
     font-size: 0.9rem;
     color: var(--text-muted);
     padding: 0 8px;
 }
 
-.page-indicator strong {
+:where(.admin-users-page) .page-indicator strong {
     color: var(--primary-color);
 }
 
+
+/* --- Classes used by Users.jsx that previously had no CSS (iss_517) --- */
+:where(.admin-users-page) .type-badge {
+    display: inline-flex;
+    align-items: center;
+}
+
+:where(.admin-users-page) .pagination-pages {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Appearance preserved for NON-admin pages (iss_518): see AdminAchievements.css */
+:where(.auth-page, .bit-shift-page, .submit-certificate-page, .submit-challenge-page, .edit-profile-page, .manage-project-page) .form-group input.readonly {
+    background: var(--bg-tertiary);
+    opacity: 0.8;
+}

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Award, PlusCircle, Info, Coins, Tag } from 'lucide-react';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
+import '../../components/admin/AdminShared.css';
 import './AdminAchievements.css';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
 

@@ -1,0 +1,112 @@
+/* Shared admin styles (loading/error states, keyframes, small utilities).
+   Keyframes are admin-prefixed so they cannot override same-named keyframes
+   used by non-admin pages; generic classes are scoped to the admin layout body
+   (zero specificity via :where so page rules can still override them). */
+
+@keyframes admin-fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes admin-slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes admin-spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* Loading / error states (rendered outside each page's root wrapper) */
+.admin-loading,
+.admin-error {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 40vh;
+    padding: 2rem;
+    text-align: center;
+    font-size: var(--font-lg);
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+.admin-error {
+    color: var(--error-color);
+}
+
+.admin-loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 60vh;
+}
+
+.admin-loader {
+    width: 48px;
+    height: 48px;
+    border: 4px solid var(--primary-faint);
+    border-top: 4px solid var(--primary-color);
+    border-radius: 50%;
+    animation: admin-spin 1s linear infinite;
+    margin-bottom: 1.5rem;
+}
+
+/* Shared small controls used across admin pages */
+:where(.admin-body) .icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+    border: 1px solid var(--border-subtle);
+    background: var(--bg-primary);
+    border-radius: 10px;
+    cursor: pointer;
+    color: var(--text-muted);
+    transition: var(--transition-fast);
+}
+
+:where(.admin-body) .icon-btn:hover:not(:disabled) {
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+:where(.admin-body) .icon-btn.adjust { color: var(--warning-color); }
+:where(.admin-body) .icon-btn.adjust:hover:not(:disabled) { border-color: var(--warning-color); background: #fffbeb; color: var(--warning-color); }
+:where(.admin-body) .icon-btn.pass { color: var(--secondary-color); }
+:where(.admin-body) .icon-btn.pass:hover:not(:disabled) { border-color: var(--secondary-color); background: var(--secondary-light); color: var(--secondary-color); }
+:where(.admin-body) .icon-btn.delete:hover:not(:disabled) { color: var(--error-color); border-color: var(--error-color); background: var(--error-subtle); }
+
+:where(.admin-body) .primary-btn {
+    padding: 12px 20px;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+:where(.admin-body) .primary-btn:hover {
+    opacity: 0.9;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+}
+
+:where(.admin-body) .admin-select {
+    cursor: pointer;
+}
+
+:where(.admin-body) .text-muted {
+    color: var(--text-muted);
+}
+
+:where(.admin-body) .font-mono {
+    font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+}

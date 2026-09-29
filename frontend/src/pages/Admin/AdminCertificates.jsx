@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
+import '../../components/admin/AdminShared.css';
 import './AdminCertificates.css';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
 import { safeUrl } from '../../utils/safeUrl';

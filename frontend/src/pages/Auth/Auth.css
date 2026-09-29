@@ -135,7 +135,7 @@
 }
 
 .auth-input:focus {
-    background: white !important;
+    background: var(--bg-primary) !important;
     border-color: var(--primary-color) !important;
     box-shadow: var(--shadow-glow);
 }
@@ -359,3 +359,13 @@
     }
 }
 
+
+/* Login/Signup .form-group used to be styled only by other pages' global .form-group rules
+   (iss_558); made explicit here so the auth forms look exactly as before. */
+.auth-form .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    width: 100%;
+    margin-bottom: 1.5rem;
+}

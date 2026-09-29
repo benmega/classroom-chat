@@ -25,7 +25,7 @@ const NewConversationModal = ({
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      zIndex: 1000,
+      zIndex: 'var(--z-modal)',
       backdropFilter: 'blur(4px)'
     }}>
       <div style={{

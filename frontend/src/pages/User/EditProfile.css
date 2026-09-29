@@ -7,7 +7,7 @@
 }
 
 .settings-container {
-    background: white;
+    background: var(--bg-primary);
     padding: 3.5rem;
     border-radius: 28px;
     box-shadow: var(--shadow-lg);
@@ -39,7 +39,7 @@
     margin-bottom: 3.5rem;
 }
 
-.avatar-wrapper {
+:where(.edit-profile-page) .avatar-wrapper {
     position: relative;
     width: 160px;
     height: 160px;
@@ -55,7 +55,7 @@
     object-fit: cover;
 }
 
-.upload-overlay {
+:where(.edit-profile-page) .upload-overlay {
     position: absolute;
     top: 0;
     left: 0;
@@ -75,7 +75,7 @@
     gap: 8px;
 }
 
-.avatar-wrapper:hover .upload-overlay {
+:where(.edit-profile-page) .avatar-wrapper:hover .upload-overlay {
     opacity: 1;
 }
 
@@ -98,11 +98,11 @@
     border-bottom: 2px solid var(--bg-tertiary);
 }
 
-.form-group {
+:where(.edit-profile-page) .form-group {
     margin-bottom: 1.5rem;
 }
 
-.form-group label {
+:where(.edit-profile-page) .form-group label {
     display: block;
     font-weight: 600;
     margin-bottom: 0.75rem;
@@ -110,7 +110,7 @@
     font-size: 0.9rem;
 }
 
-.form-control {
+:where(.edit-profile-page) .form-control {
     width: 100%;
     padding: 12px 16px;
     border-radius: 12px;
@@ -120,14 +120,14 @@
     transition: all 0.2s;
 }
 
-.form-control:focus {
+:where(.edit-profile-page) .form-control:focus {
     border-color: var(--primary-color);
-    background: white;
+    background: var(--bg-primary);
     box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
     outline: none;
 }
 
-.form-control.readonly {
+:where(.edit-profile-page) .form-control.readonly {
     background: var(--bg-tertiary);
     color: var(--text-muted);
     cursor: not-allowed;
@@ -187,3 +187,37 @@
     }
 }
 
+
+/* Preserved appearance (iss_558): these values used to leak in from other pages' global
+   rules (same class names). They are kept explicit so this page looks exactly as before. */
+:where(.edit-profile-page) .avatar-wrapper {
+    flex-shrink: 0;
+    cursor: pointer;
+}
+
+:where(.edit-profile-page) .preview-avatar {
+    cursor: pointer;
+}
+
+:where(.edit-profile-page) .upload-overlay {
+    z-index: 5;
+}
+
+:where(.edit-profile-page) .form-group label {
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+:where(.edit-profile-page) .form-control {
+    color: var(--text-primary);
+}
+
+:where(.edit-profile-page) .form-control:focus {
+    transform: translateY(-2px);
+}
+
+:where(.edit-profile-page) textarea.form-control {
+    resize: vertical;
+    min-height: 120px;
+    line-height: 1.5;
+}

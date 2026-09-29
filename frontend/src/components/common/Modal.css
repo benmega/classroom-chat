@@ -10,7 +10,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 2000;
+    z-index: var(--z-modal);
     padding: 1rem;
     animation: fadeIn 0.3s ease-out;
 }
@@ -34,7 +34,7 @@
     to { transform: scale(1) translateY(0); opacity: 1; }
 }
 
-.modal-header {
+:where(.admin-modal-content) .modal-header {
     padding: 1.5rem 2rem;
     border-bottom: 1px solid var(--border-subtle);
     display: flex;
@@ -44,14 +44,14 @@
     flex-shrink: 0;
 }
 
-.modal-header h3 {
+:where(.admin-modal-content) .modal-header h3 {
     margin: 0;
     font-size: 1.5rem;
     font-weight: 800;
     font-family: var(--font-heading);
 }
 
-.close-btn {
+:where(.admin-modal-content) .close-btn {
     background: var(--bg-tertiary);
     border: none;
     color: var(--text-secondary);
@@ -66,13 +66,13 @@
     padding: 0;
 }
 
-.close-btn:hover { 
+:where(.admin-modal-content) .close-btn:hover {
     background: #fee2e2;
     color: #ef4444; 
     transform: rotate(90deg) scale(1.1);
 }
 
-.modal-body {
+:where(.admin-modal-content) .modal-body {
     padding: 2.5rem;
     overflow-y: auto;
     flex-grow: 1;
@@ -80,16 +80,19 @@
 }
 
 /* Custom Scrollbar for Modal Body */
-.modal-body::-webkit-scrollbar {
+:where(.admin-modal-content) .modal-body::-webkit-scrollbar {
     width: 6px;
 }
 
-.modal-body::-webkit-scrollbar-thumb {
+:where(.admin-modal-content) .modal-body::-webkit-scrollbar-thumb {
     background: var(--border-subtle);
     border-radius: 3px;
 }
 
 /* --- Admin Form Styling in Modals --- */
+/* NOTE: the bare .form-group rules below are deliberately global: they are the shared base
+   form-group layout that Login/Signup and the user pages (which add page-scoped tweaks on top)
+   rely on (iss_558). Everything else in this file is scoped to .admin-modal-content. */
 .admin-form {
     display: flex;
     flex-direction: column;
@@ -188,7 +191,7 @@
 .admin-form select:focus, 
 .admin-form textarea:focus {
     border-color: var(--primary-color);
-    background: white;
+    background: var(--bg-primary);
     box-shadow: var(--shadow-glow);
 }
 
@@ -205,7 +208,7 @@
         max-width: 650px; /* Slightly wider for desktop readability */
     }
     
-    .modal-body {
+    :where(.admin-modal-content) .modal-body {
         padding: 3rem;
     }
 }
@@ -250,3 +253,26 @@
 
 
 
+
+/* Preserved appearance (iss_604): the AdvancedPanel log/stats/purge modal close buttons used to
+   pick up the global .close-btn rules above. Kept explicit now that .close-btn is scoped. */
+:where(.log-modal-header) .close-btn {
+    background: var(--bg-tertiary);
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: var(--transition-bounce);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+
+:where(.log-modal-header) .close-btn:hover {
+    background: #fee2e2;
+    color: #ef4444;
+    transform: rotate(90deg) scale(1.1);
+}

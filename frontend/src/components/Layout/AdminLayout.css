@@ -45,7 +45,7 @@
     width: var(--sidebar-collapsed-width);
 }
 
-.sidebar-header {
+:where(.admin-app-container) .sidebar-header {
     height: var(--top-bar-height);
     display: flex;
     align-items: center;
@@ -105,7 +105,7 @@
     background: rgba(255, 255, 255, 0.1);
 }
 
-.sidebar-nav {
+:where(.admin-app-container) .sidebar-nav {
     flex: 1;
     padding: 1.5rem 0.75rem;
     overflow-y: auto;
@@ -169,7 +169,7 @@
     top: 20%;
     height: 60%;
     width: 4px;
-    background: white;
+    background: var(--bg-primary);
     border-radius: 0 4px 4px 0;
 }
 
@@ -205,7 +205,7 @@
     pointer-events: none;
 }
 
-.logout-btn {
+:where(.admin-app-container) .logout-btn {
     width: 100%;
     background: transparent;
     border: none;
@@ -213,7 +213,7 @@
     text-align: left;
 }
 
-.logout-btn:hover {
+:where(.admin-app-container) .logout-btn:hover {
     background: rgba(239, 68, 68, 0.1);
     color: #ef4444;
 }
@@ -293,7 +293,7 @@
 
 .admin-top-bar {
     height: var(--top-bar-height);
-    background: white;
+    background: var(--bg-primary);
     border-bottom: 1px solid var(--admin-border);
     padding: 0 2rem;
     display: flex;
@@ -332,7 +332,7 @@
     font-size: 1.25rem;
     font-weight: 700;
     margin: 0;
-    color: #1e293b;
+    color: var(--slate-800);
 }
 
 .top-bar-right {
@@ -345,7 +345,7 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    background: #f1f5f9;
+    background: var(--bg-tertiary);
     padding: 6px 12px;
     border-radius: 20px;
 }
@@ -388,7 +388,7 @@
 .admin-site-footer {
     padding: 1.5rem 2rem;
     border-top: 1px solid var(--admin-border);
-    background: white;
+    background: var(--bg-primary);
     color: var(--admin-text-muted);
     font-size: 0.85rem;
     display: flex;
@@ -411,7 +411,7 @@
 }
 
 .access-denied-card {
-    background: white;
+    background: var(--bg-primary);
     padding: 3rem;
     border-radius: 24px;
     text-align: center;
@@ -423,7 +423,7 @@
     margin: 1.5rem 0 0.5rem;
     font-size: 2rem;
     font-weight: 800;
-    color: #1e293b;
+    color: var(--slate-800);
 }
 
 .access-denied-card p {
@@ -474,7 +474,7 @@
         z-index: 999;
     }
 
-    .sidebar-header {
+    :where(.admin-app-container) .sidebar-header {
         justify-content: space-between;
     }
 
@@ -500,3 +500,22 @@
     }
 }
 
+
+/* Preserved appearance (iss_604): these used to be styled through Layout.css / Chat.css rules
+   with the same (global) class names; kept explicit now that those are scoped. */
+:where(.admin-app-container) .sidebar-header {
+    padding: 1.5rem 1.25rem;
+    flex-direction: column;
+    gap: 1.25rem;
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+:where(.admin-app-container) .logout-btn {
+    border-top: 1px solid var(--border-subtle) !important;
+    margin-top: 4px;
+    color: var(--error-color) !important;
+}
+
+.admin-top-bar .hamburger-toggle:hover {
+    color: var(--primary-color);
+}

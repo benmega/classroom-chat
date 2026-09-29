@@ -41,23 +41,25 @@
     z-index: 2;
 }
 
-.avatar-wrapper {
+:where(.profile-page) .avatar-wrapper {
     position: relative;
     flex-shrink: 0;
     cursor: pointer;
     overflow: hidden;
     border-radius: 50%;
-    width: 140px;
-    height: 140px;
-    border: 4px solid var(--bg-primary);
-    box-shadow: 0 8px 20px rgba(0, 1, 3, 0.1);
+    /* size/border/shadow below are the values previously applied via the collision with
+       EditProfile.css (iss_558); kept so the avatar looks exactly as before */
+    width: 160px;
+    height: 160px;
+    border: 6px solid var(--bg-tertiary);
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
 }
 
-.avatar-wrapper:hover .upload-overlay {
+:where(.profile-page) .avatar-wrapper:hover .upload-overlay {
     opacity: 1;
 }
 
-.upload-overlay {
+:where(.profile-page) .upload-overlay {
     position: absolute;
     top: 0;
     left: 0;
@@ -85,7 +87,7 @@
     transition: var(--transition-smooth);
 }
 
-.avatar-wrapper:hover .avatar-img {
+:where(.profile-page) .avatar-wrapper:hover .avatar-img {
     transform: scale(1.02);
 }
 
@@ -462,17 +464,6 @@
     object-fit: cover;
 }
 
-.code-placeholder {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--text-muted);
-    font-size: 3rem;
-    background: var(--bg-tertiary);
-}
-
 .play-overlay {
     position: absolute;
     top: 50%;
@@ -487,26 +478,6 @@
     align-items: center;
     justify-content: center;
     backdrop-filter: blur(4px);
-}
-
-.edit-overlay {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    background: rgba(0, 0, 0, 0.6);
-    color: white;
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    opacity: 0;
-    transition: opacity 0.2s;
-}
-
-.project-thumb:hover .edit-overlay {
-    opacity: 1;
 }
 
 .project-content {
@@ -556,8 +527,7 @@
 }
 
 .btn-text,
-.btn-add,
-.btn-icon-link {
+.btn-add {
     padding: 8px 12px;
     border-radius: var(--radius-sm);
     font-size: 0.85rem;
@@ -800,7 +770,7 @@
 }
 
 .weekday-label {
-    font-size: 10px;
+    font-size: 0.625rem;
     color: var(--text-muted);
     height: 10px;
     line-height: 10px;
@@ -834,7 +804,7 @@
     align-items: center;
     gap: 8px;
     margin-top: 12px;
-    font-size: 11px;
+    font-size: 0.6875rem;
     color: var(--text-muted);
     justify-content: flex-end;
 }
@@ -858,7 +828,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 1000;
+    z-index: var(--z-modal); /* above header + dropdowns (iss_561) */
     padding: 30px;
     animation: fadeIn var(--transition-fast);
 }
@@ -918,7 +888,7 @@
     margin-bottom: 2rem;
 }
 
-.modal-body {
+:where(.modal-content) .modal-body {
     padding: 0 2.5rem 2.5rem;
     gap: 2.5rem;
     grid-template-columns: 1fr 340px;
@@ -1089,7 +1059,7 @@
     .cert-item { flex-basis: 150px; }
     .note-item { flex-basis: 120px; }
 
-    .modal-body {
+    :where(.modal-content) .modal-body {
         grid-template-columns: 1fr;
     }
 }
@@ -1189,3 +1159,39 @@
         object-fit: contain;
     }
 }
+
+/* Preserved appearance (iss_604): the project/crop modals used to pick up Modal.css's global
+   .modal-header/.modal-body rules (same class names). Kept explicit here now that Modal.css
+   is scoped to .admin-modal-content. */
+:where(.modal-content) .modal-header {
+    padding: 1.5rem 2rem;
+    border-bottom: 1px solid var(--border-subtle);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--bg-secondary);
+    flex-shrink: 0;
+}
+
+:where(.modal-content) .modal-body {
+    padding: 2.5rem;
+    overflow-y: auto;
+    flex-grow: 1;
+    -webkit-overflow-scrolling: touch;
+}
+
+:where(.modal-content) .modal-body::-webkit-scrollbar {
+    width: 6px;
+}
+
+:where(.modal-content) .modal-body::-webkit-scrollbar-thumb {
+    background: var(--border-subtle);
+    border-radius: 3px;
+}
+
+@media (min-width: 800px) {
+    :where(.modal-content) .modal-body {
+        padding: 3rem;
+    }
+}
+

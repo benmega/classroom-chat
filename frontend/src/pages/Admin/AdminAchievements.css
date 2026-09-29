@@ -3,7 +3,7 @@
 /* Standardized Header handled by AdminPageHeader.css */
 
 /* Form Container */
-.achievement-form-container {
+:where(.admin-achievements-page) .achievement-form-container {
     display: grid;
     grid-template-columns: 1fr 380px;
     gap: 3rem;
@@ -11,29 +11,29 @@
     padding: 3rem;
 }
 
-.achievement-form {
+:where(.admin-achievements-page) .achievement-form {
     display: flex;
     flex-direction: column;
     gap: 2.5rem;
 }
 
-.section-title {
+:where(.admin-achievements-page) .section-title {
     font-size: 1.25rem;
     font-weight: 700;
-    color: #1e293b;
+    color: var(--slate-800);
     margin-bottom: 1.5rem;
     display: flex;
     align-items: center;
     gap: 12px;
-    border-bottom: 2px solid #f1f5f9;
+    border-bottom: 2px solid var(--bg-tertiary);
     padding-bottom: 12px;
 }
 
-.form-group {
+:where(.admin-achievements-page) .form-group {
     margin-bottom: 1.5rem;
 }
 
-.form-group label {
+:where(.admin-achievements-page) .form-group label {
     display: block;
     font-weight: 700;
     margin-bottom: 0.5rem;
@@ -41,43 +41,43 @@
     font-size: 0.9rem;
 }
 
-.form-group input, .form-group select, .form-group textarea {
+:where(.admin-achievements-page) .form-group input, :where(.admin-achievements-page) .form-group select, :where(.admin-achievements-page) .form-group textarea {
     width: 100%;
     padding: 12px 16px;
     border-radius: 12px;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--border-subtle);
     font-size: 1rem;
-    background: #f8fafc;
+    background: var(--bg-secondary);
     transition: all 0.2s;
     font-family: inherit;
 }
 
-.form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+:where(.admin-achievements-page) .form-group input:focus, :where(.admin-achievements-page) .form-group select:focus, :where(.admin-achievements-page) .form-group textarea:focus {
     border-color: var(--primary-color);
-    background: white;
+    background: var(--bg-primary);
     box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
     outline: none;
 }
 
-.hint {
+:where(.admin-achievements-page) .hint {
     display: block;
     font-size: 0.8rem;
     color: var(--text-muted);
     margin-top: 6px;
 }
 
-.form-row {
+:where(.admin-achievements-page) .form-row {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 1.5rem;
 }
 
-.form-footer {
+:where(.admin-achievements-page) .form-footer {
     padding-top: 2rem;
-    border-top: 1px solid #f1f5f9;
+    border-top: 1px solid var(--bg-tertiary);
 }
 
-.btn-submit {
+:where(.admin-achievements-page) .btn-submit {
     width: 100%;
     padding: 16px;
     background: var(--primary-color);
@@ -95,23 +95,23 @@
     box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.3);
 }
 
-.btn-submit:hover:not(:disabled) {
-    background: #2563eb;
+:where(.admin-achievements-page) .btn-submit:hover:not(:disabled) {
+    background: var(--blue-600);
     transform: translateY(-2px);
     box-shadow: 0 15px 20px -3px rgba(59, 130, 246, 0.3);
 }
 
 /* Preview Panel */
-.achievement-preview-panel {
-    background: #f8fafc;
+:where(.admin-achievements-page) .achievement-preview-panel {
+    background: var(--bg-secondary);
     padding: 2rem;
     border-radius: 24px;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--border-subtle);
     position: sticky;
     top: 2rem;
 }
 
-.achievement-preview-panel h3 {
+:where(.admin-achievements-page) .achievement-preview-panel h3 {
     margin-bottom: 2rem;
     font-size: 1.1rem;
     font-weight: 700;
@@ -120,22 +120,22 @@
     gap: 10px;
 }
 
-.preview-achievement-card {
-    background: white;
+:where(.admin-achievements-page) .preview-achievement-card {
+    background: var(--bg-primary);
     padding: 1.5rem;
     border-radius: 20px;
     box-shadow: var(--shadow-md);
     margin-bottom: 2rem;
 }
 
-.badge-wrapper {
+:where(.admin-achievements-page) .badge-wrapper {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
     margin-bottom: 1rem;
 }
 
-.preview-badge {
+:where(.admin-achievements-page) .preview-badge {
     width: 64px;
     height: 64px;
     background: #eff6ff;
@@ -146,7 +146,7 @@
     justify-content: center;
 }
 
-.reward-tag {
+:where(.admin-achievements-page) .reward-tag {
     background: #fffbeb;
     color: #d97706;
     padding: 4px 12px;
@@ -155,20 +155,20 @@
     font-size: 0.85rem;
 }
 
-.preview-text h4 { font-size: 1.15rem; font-weight: 700; margin-bottom: 8px; }
-.preview-text p { font-size: 0.9rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 1rem; }
+:where(.admin-achievements-page) .preview-text h4 { font-size: 1.15rem; font-weight: 700; margin-bottom: 8px; }
+:where(.admin-achievements-page) .preview-text p { font-size: 0.9rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 1rem; }
 
-.req-pill {
+:where(.admin-achievements-page) .req-pill {
     display: inline-block;
     padding: 4px 10px;
-    background: #f1f5f9;
+    background: var(--bg-tertiary);
     color: var(--text-secondary);
     border-radius: 8px;
     font-size: 0.8rem;
     font-weight: 700;
 }
 
-.pro-tip {
+:where(.admin-achievements-page) .pro-tip {
     display: flex;
     gap: 10px;
     background: #eff6ff;
@@ -179,33 +179,40 @@
 }
 
 @media (max-width: 1100px) {
-    .achievement-form-container {
+    :where(.admin-achievements-page) .achievement-form-container {
         grid-template-columns: 1fr;
     }
 }
 
 /* File Upload Styling */
-.file-upload-wrapper {
+:where(.admin-achievements-page) .file-upload-wrapper {
     position: relative;
     width: 100%;
 }
 
-.file-input {
+:where(.admin-achievements-page) .file-input {
     width: 0.1px;
     height: 0.1px;
     opacity: 0;
     overflow: hidden;
     position: absolute;
-    z-index: -1;
 }
 
-.file-label {
+/* Visible keyboard focus for the visually hidden file input */
+:where(.admin-achievements-page) .file-input:focus-visible + .file-label {
+    border-color: var(--primary-color);
+    background: var(--primary-light);
+    color: var(--primary-color);
+    box-shadow: var(--shadow-glow);
+}
+
+:where(.admin-achievements-page) .file-label {
     display: flex;
     align-items: center;
     gap: 10px;
     padding: 12px 16px;
-    background: #f8fafc;
-    border: 2px dashed #e2e8f0;
+    background: var(--bg-secondary);
+    border: 2px dashed var(--border-subtle);
     border-radius: 12px;
     cursor: pointer;
     transition: all 0.2s;
@@ -213,13 +220,13 @@
     font-weight: 600;
 }
 
-.file-label:hover {
+:where(.admin-achievements-page) .file-label:hover {
     border-color: var(--primary-color);
     background: #eff6ff;
     color: var(--primary-color);
 }
 
-.preview-badge.custom {
+:where(.admin-achievements-page) .preview-badge.custom {
     background: none;
     padding: 0;
     overflow: hidden;
@@ -230,9 +237,241 @@
     justify-content: center;
 }
 
-.preview-badge.custom img {
+:where(.admin-achievements-page) .preview-badge.custom img {
     max-width: 100%;
     max-height: 100%;
     object-fit: contain;
 }
 
+
+/* ---------------------------------------------------------------------------
+   Appearance preserved for NON-admin pages (iss_518).
+   These .form-group rules used to leak globally from this file. It is loaded after every other
+   non-admin stylesheet and after the shared Modal.css base .form-group rules, so the rules are
+   kept here, scoped to the pages that relied on them, and those pages look exactly as before.
+   --------------------------------------------------------------------------- */
+:where(.auth-page, .bit-shift-page, .submit-certificate-page, .submit-challenge-page, .edit-profile-page, .manage-project-page) .form-group {
+    margin-bottom: 1.5rem;
+}
+
+:where(.auth-page, .bit-shift-page, .submit-certificate-page, .submit-challenge-page, .edit-profile-page, .manage-project-page) .form-group label {
+    display: block;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+:where(.auth-page, .bit-shift-page, .submit-certificate-page, .submit-challenge-page, .edit-profile-page, .manage-project-page) .form-group input,
+:where(.auth-page, .bit-shift-page, .submit-certificate-page, .submit-challenge-page, .edit-profile-page, .manage-project-page) .form-group select,
+:where(.auth-page, .bit-shift-page, .submit-certificate-page, .submit-challenge-page, .edit-profile-page, .manage-project-page) .form-group textarea {
+    width: 100%;
+    padding: 12px 16px;
+    border-radius: 12px;
+    border: 1px solid var(--border-subtle);
+    font-size: 1rem;
+    background: var(--bg-secondary);
+    transition: all 0.2s;
+    font-family: inherit;
+}
+
+:where(.auth-page, .bit-shift-page, .submit-certificate-page, .submit-challenge-page, .edit-profile-page, .manage-project-page) .form-group input:focus,
+:where(.auth-page, .bit-shift-page, .submit-certificate-page, .submit-challenge-page, .edit-profile-page, .manage-project-page) .form-group select:focus,
+:where(.auth-page, .bit-shift-page, .submit-certificate-page, .submit-challenge-page, .edit-profile-page, .manage-project-page) .form-group textarea:focus {
+    border-color: var(--primary-color);
+    background: var(--bg-primary);
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+    outline: none;
+}
+
+/* moved from admin CSS to preserve appearance (iss_518)
+   Non-admin pages (Achievements, History, ManageProject, EditProfile, the header .stat-badge) depended on
+   these rules leaking out of the admin stylesheets. They are kept here, scoped to those pages, so the pages
+   look unchanged. They must stay in a sheet that loads after the non-admin page sheets. */
+:where(.achievements-page, .manage-project-page) .card {
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    padding: 2.5rem;
+    border-radius: 32px;
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--shadow-rich);
+    margin-bottom: 3rem;
+    transition: var(--transition-smooth);
+}
+
+:where(.achievements-page, .manage-project-page) .card:hover {
+    box-shadow: var(--shadow-xl);
+}
+
+:where(.achievements-page) .badge-wrapper {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+}
+
+/* Achievements .search-box: net effect of the .search-box rules that Dashboard/Projects/Certificates/Documents CSS used to leak (later files won ties) */
+:where(.achievements-page) .search-box {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-subtle);
+    border-radius: 18px;
+    padding: 0 16px;
+    transition: var(--transition-fast);
+    position: relative;
+    max-width: 400px;
+    width: 100%;
+}
+
+:where(.achievements-page) .search-box:focus-within {
+    border-color: var(--primary-color);
+    box-shadow: var(--shadow-glow);
+    background: white;
+}
+
+:where(.achievements-page) .search-box svg {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+}
+
+:where(.achievements-page) .search-box input {
+    width: 100%;
+    padding: 10px 10px 10px 42px;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    background: white;
+    font-size: 0.95rem;
+    font-weight: 500;
+}
+
+:where(.edit-profile-page, .manage-project-page) .section-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 2px solid #f1f5f9;
+    padding-bottom: 12px;
+}
+
+:where(.manage-project-page) .hint {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-top: 6px;
+}
+
+:where(.manage-project-page) .form-footer {
+    padding-top: 2rem;
+    border-top: 1px solid #f1f5f9;
+}
+
+:where(.history-page) .stat-card {
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    padding: 2rem;
+    border-radius: 28px;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--shadow-soft);
+    position: relative;
+    overflow: hidden;
+}
+
+:where(.history-page) .stat-card::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+    pointer-events: none;
+}
+
+:where(.history-page) .stat-label {
+    display: block;
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    font-weight: 700;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    overflow-wrap: break-word;
+    white-space: normal;
+}
+
+:where(.history-page) .stat-value {
+    font-size: 2.2rem;
+    font-weight: 900;
+    font-family: var(--font-heading);
+    color: var(--text-primary);
+    line-height: 1;
+}
+
+:where(.history-page) .search-bar {
+    position: relative;
+    width: 320px;
+}
+
+:where(.history-page) .search-bar svg {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+}
+
+:where(.history-page) .search-bar input {
+    width: 100%;
+    padding: 12px 12px 12px 42px;
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    font-size: 0.95rem;
+    outline: none;
+    transition: all 0.2s;
+}
+
+:where(.history-page) .search-bar input:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+}
+
+:where(.stat-badge) .stat-icon {
+    width: 70px;
+    height: 70px;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    box-shadow: var(--shadow-lg);
+    z-index: 1;
+}
+
+:where(.stat-badge) .stat-label {
+    display: block;
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    font-weight: 700;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    overflow-wrap: break-word;
+    white-space: normal;
+}
+
+:where(.stat-badge) .stat-value {
+    font-size: 2.2rem;
+    font-weight: 900;
+    font-family: var(--font-heading);
+    color: var(--text-primary);
+    line-height: 1;
+}
