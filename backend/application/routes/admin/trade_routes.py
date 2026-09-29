@@ -39,6 +39,17 @@ def trade_action():
     if not trade:
         return jsonify({"status": "error", "message": "Trade not found"}), 404
 
+    if trade.status != "pending":
+        return (
+            jsonify(
+                {
+                    "status": "error",
+                    "message": f"Trade already {trade.status}",
+                }
+            ),
+            409,
+        )
+
     if action == "approve":
         user = User.query.filter_by(username=trade.username).first()
         if not user:

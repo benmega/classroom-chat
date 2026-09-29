@@ -47,6 +47,7 @@ const getSocket = () => {
  * @param {Function} onMessageReceived - Callback for 'message_received' events
  * @param {Function} onClassroomEnrolled - Callback for 'classroom_enrolled' events
  * @param {Object} lifecycleCallbacks - Optional callbacks for conversation lifecycle events
+ *   (onConversationCreated/Updated/Deleted) and onMessageError ('message_error': send rejected)
  */
 const useChatSocket = (onMessageReceived, onClassroomEnrolled, lifecycleCallbacks = {}) => {
   const socketRef = useRef(null);
@@ -75,6 +76,7 @@ const useChatSocket = (onMessageReceived, onClassroomEnrolled, lifecycleCallback
     const onCreated = (data) => lifecycleRefs.current?.onConversationCreated?.(data);
     const onUpdated = (data) => lifecycleRefs.current?.onConversationUpdated?.(data);
     const onDeleted = (data) => lifecycleRefs.current?.onConversationDeleted?.(data);
+    const onMessageError = (data) => lifecycleRefs.current?.onMessageError?.(data);
 
     socket.on('connect', onConnect);
     socket.on('disconnect', onDisconnect);
@@ -84,6 +86,7 @@ const useChatSocket = (onMessageReceived, onClassroomEnrolled, lifecycleCallback
     socket.on('conversation_created', onCreated);
     socket.on('conversation_updated', onUpdated);
     socket.on('conversation_deleted', onDeleted);
+    socket.on('message_error', onMessageError);
 
     return () => {
       socket.off('connect', onConnect);
@@ -94,6 +97,7 @@ const useChatSocket = (onMessageReceived, onClassroomEnrolled, lifecycleCallback
       socket.off('conversation_created', onCreated);
       socket.off('conversation_updated', onUpdated);
       socket.off('conversation_deleted', onDeleted);
+      socket.off('message_error', onMessageError);
     };
   }, []);
 

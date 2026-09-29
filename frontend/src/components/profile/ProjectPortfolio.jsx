@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Plus, Code, Play, Settings, CheckCircle, ExternalLink, Layers } from 'lucide-react';
 import SmartImage from '../common/SmartImage';
 import { formatStaticUrl } from '../../utils/formatters';
+import { safeUrl } from '../../utils/safeUrl';
 
 const ProjectPortfolio = ({ projects, isOwner, setSelectedProject }) => {
     const navigate = useNavigate();
@@ -40,7 +41,7 @@ const ProjectPortfolio = ({ projects, isOwner, setSelectedProject }) => {
 
                                 <p>{project.description?.substring(0, 80)}...</p>
                                 <div className="project-footer">
-                                    {project.link && <a href={project.link} target="_blank" rel="noreferrer" className="link-icon"><ExternalLink size={16} /></a>}
+                                    {safeUrl(project.link) && <a href={safeUrl(project.link)} target="_blank" rel="noreferrer" className="link-icon"><ExternalLink size={16} /></a>}
                                     <button className="btn-text" onClick={() => setSelectedProject(project)}>Details</button>
                                     {isOwner && (
                                         <button className="link-icon" onClick={() => navigate(`/project/edit/${project.id}`)} title="Edit Project">

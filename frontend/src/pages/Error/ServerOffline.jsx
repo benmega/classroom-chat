@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import useAuthStore from '../../store/useAuthStore';
-import client from '../../api/client';
 
 const FUN_MESSAGES = [
   "🔌 Plugging in...",
@@ -76,7 +75,7 @@ const ServerOffline = () => {
         }
       }, 8000);
 
-    } catch (err) {
+    } catch {
       setIsWakingUp(false);
       setErrorMsg('Error waking server. Try again soon.');
     }

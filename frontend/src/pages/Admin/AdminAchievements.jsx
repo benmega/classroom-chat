@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Award, PlusCircle, Trash2, ArrowLeft, Info, Coins, Shield, Tag } from 'lucide-react';
+import { Award, PlusCircle, Info, Coins, Tag } from 'lucide-react';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
 import './AdminAchievements.css';

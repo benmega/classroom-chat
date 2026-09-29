@@ -2,10 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { 
     Users, 
     CheckCircle, 
-    XCircle, 
     User, 
-    Clock, 
-    ArrowLeft,
+    Clock,
     Shield,
     Trash2
 } from 'lucide-react';

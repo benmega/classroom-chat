@@ -19,7 +19,6 @@ from application.constants import (
     GLOBAL_CLASSROOM_ID as GLOBAL_CLASSROOM_ID,
 )  # imported for side-effect availability
 
-from .license_checker import load_license
 from application.utilities.helper_functions import format_number
 from application.utilities.schema_check import check_for_schema_drift
 from flask_wtf.csrf import generate_csrf
@@ -64,19 +63,6 @@ def create_app(config_class=None):
     app = Flask(__name__, template_folder=template_folder, static_folder=static_folder)
     app.config.from_object(config_class)
 
-    # In production, TEMPLATE_FOLDER points to the built frontend/dist.
-    # We add frontend/templates as a fallback so Flask-Admin templates are still found.
-    from jinja2 import ChoiceLoader, FileSystemLoader
-
-    app.jinja_loader = ChoiceLoader(
-        [
-            app.jinja_loader,
-            FileSystemLoader(
-                os.path.join(app.config.get("BASE_DIR", ""), "frontend", "templates")
-            ),
-        ]
-    )
-
     cors_origins = getattr(
         config_class,
         "CORS_ORIGINS",
@@ -101,18 +87,6 @@ def create_app(config_class=None):
     app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_port=1)
 
     app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(hours=10)
-
-    base_dir = os.path.abspath(os.path.dirname(__file__))
-    license_dir = os.path.abspath(os.path.join(base_dir, "..", "license"))
-
-    public_key_path = os.path.join(license_dir, "public_key.pem")
-    license_path = os.path.join(license_dir, "license.lic")
-
-    license_data = load_license(
-        public_key_path=public_key_path, license_path=license_path
-    )
-    app.config["IS_PREMIUM"] = license_data["is_premium"]
-    app.config["LICENSEE"] = license_data.get("licensee", "Unknown")
 
     db.init_app(app)
     migrate.init_app(app, db)

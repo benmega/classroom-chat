@@ -4,9 +4,25 @@ Type: py
 Summary: Flask routes for general routes functionality.
 """
 
-from flask import Blueprint, request
+import os
+
+from flask import Blueprint, current_app, request, send_from_directory
 
 general = Blueprint("general", __name__)
+
+
+@general.route("/static/lib/<path:filename>")
+@general.route("/static/sounds/<path:filename>", defaults={"sub": "sounds"})
+def vite_public_static(filename, sub="lib"):
+    """
+    Dev fallback: the Vite dev server proxies /static to Flask, but the
+    cropper library and sounds live in frontend/public/static (shipped in
+    dist for S3/production). Serve them from there.
+    """
+    root = os.path.abspath(
+        os.path.join(current_app.root_path, "..", "..", "frontend", "public", "static", sub)
+    )
+    return send_from_directory(root, filename)
 
 
 @general.route("/", defaults={"path": ""}, endpoint="index")
@@ -26,7 +42,9 @@ def index(path):
 
         return jsonify({"error": "Route not found"}), 404
 
-    from flask import render_template, g
+    from flask import g
+
+    from application.utilities.spa import serve_spa_index
 
     username = g.user.username if hasattr(g, "user") and g.user else None
-    return render_template("index.html", username=username)
+    return serve_spa_index(username=username)

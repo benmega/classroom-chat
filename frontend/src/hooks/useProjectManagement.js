@@ -10,6 +10,7 @@ export const useProjectManagement = () => {
     const { projectId } = useParams();
     const navigate = useNavigate();
     const { user: currentUser } = useAuthStore();
+    const isAdmin = !!currentUser?.is_admin;
     
     const [projectData, setProjectData] = useState({
         name: '',
@@ -36,7 +37,7 @@ export const useProjectManagement = () => {
             setIsLoading(true);
             try {
                 const [studentRes, projectRes] = await Promise.all([
-                    currentUser?.is_admin ? client.get('/user/project/new') : Promise.resolve(null),
+                    isAdmin ? client.get('/user/project/new') : Promise.resolve(null),
                     projectId ? client.get(`/user/project/edit/${projectId}`) : Promise.resolve(null)
                 ]);
 
@@ -76,7 +77,7 @@ export const useProjectManagement = () => {
         };
 
         fetchData();
-    }, [projectId, currentUser]);
+    }, [projectId, isAdmin]);
 
     const adjustTextareaHeight = (target) => {
         if (!target) return;

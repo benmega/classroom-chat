@@ -5,8 +5,6 @@ Summary: Flask routes for message/conversation functionality.
          Enforces classroom-scoped RBAC and Global Announcement access rules.
 """
 
-from datetime import datetime
-
 from flask import (
     Blueprint,
     request,
@@ -15,118 +13,22 @@ from flask import (
     redirect,
 )
 
-from application.ai.ai_teacher import get_ai_response
 from application.constants import GLOBAL_CLASSROOM_ID
 import application.constants as _constants
 from application.extensions import db, limiter
 from application.models.classroom import Classroom
-from application.models.configuration import Configuration
 from application.models.conversation import Conversation
 from application.models.user import User
-from application.utilities.db_helpers import get_user, save_message_to_db
 from application.decorators.login_required import require_login
 
 from application.services.message_service import serialize_message
 from application.services.classroom_service import (
     get_enrolled_classroom_ids,
-    user_enrolled_in,
 )
-from application.services.moderation_service import message_is_appropriate
 
 from sqlalchemy.orm import joinedload, selectinload
 
 message = Blueprint("message", __name__)
-
-
-# ============================================================================
-# SEND MESSAGE
-# ============================================================================
-
-
-@message.route("/send_message", methods=["POST"])
-@limiter.limit("20 per minute; 100 per day")
-def send_message():
-    session_userid = session.get("user")
-    form_message = request.form.get("message")
-
-    if not session_userid:
-        return jsonify(success=False, error="No session username found"), 400
-
-    user = get_user(session_userid)
-    if not user:
-        return jsonify(success=False, error="Unknown User"), 403
-
-    config = Configuration.query.first()
-    if not config:
-        return jsonify(success=False, error="No Configuration Found"), 500
-    if not user.is_admin and not config.message_sending_enabled:
-        return jsonify(success=False, error="Non-admin messages are disabled"), 403
-
-    conversation_id = request.form.get("conversation_id")
-    if not conversation_id:
-        return jsonify(success=False, error="conversation_id is required"), 400
-
-    conv = db.session.get(Conversation, conversation_id)
-    if not conv:
-        return jsonify(success=False, error="Conversation not found"), 404
-
-    # ---- Global Announcement guard ----------------------------------------
-    if conv.classroom_id == GLOBAL_CLASSROOM_ID:
-        if not user.is_admin:
-            return (
-                jsonify(
-                    success=False,
-                    error="Only instructors may post to the Global Announcements feed.",
-                ),
-                403,
-            )
-
-    # ---- Classroom enrollment guard (non-global) ---------------------------
-    elif not user.is_admin:
-        if not user_enrolled_in(user.id, conv.classroom_id):
-            return (
-                jsonify(success=False, error="You are not enrolled in this classroom."),
-                403,
-            )
-
-    # ---- Conversation-level moderation ------------------------------------
-    if conv.is_locked and not user.is_admin:
-        return jsonify(success=False, error="This conversation is locked by admin"), 403
-
-    if conv.slow_mode_delay > 0 and not user.is_admin:
-        from application.models.message import Message
-
-        last_msg = (
-            Message.query.filter_by(conversation_id=conv.id, user_id=user.id)
-            .order_by(Message.created_at.desc())
-            .first()
-        )
-        if last_msg:
-            time_passed = (datetime.utcnow() - last_msg.created_at).total_seconds()
-            if time_passed < conv.slow_mode_delay:
-                wait_time = int(conv.slow_mode_delay - time_passed)
-                return (
-                    jsonify(
-                        success=False,
-                        error=f"Slow mode active. Please wait {wait_time} more seconds.",
-                    ),
-                    429,
-                )
-
-    if not message_is_appropriate(form_message):
-        return (
-            jsonify(success=False, error="Inappropriate messages are not allowed"),
-            403,
-        )
-
-    if not save_message_to_db(user.id, form_message, conversation_id=conversation_id):
-        return jsonify(success=False, error="Database commit failed"), 500
-
-    if config.ai_teacher_enabled:
-        ai_teacher_response = get_ai_response(form_message, user.username)
-        return jsonify(success=True, ai_teacher_response=ai_teacher_response)
-
-    return jsonify(success=True), 200
 
 
 # ============================================================================

@@ -20,9 +20,10 @@ from application.models.user_certificate import UserCertificate
 @pytest.fixture
 def mock_render_template(client):
     """
-    Mocks render_template to prevent TemplateNotFound errors if templates are missing.
+    Legacy Jinja templates are gone; browser navigation hands off to the SPA
+    index via serve_spa_index. Mock that so tests verify the route logic only.
     """
-    with patch("application.routes.achievement_routes.render_template") as mock:
+    with patch("application.routes.achievement_routes.serve_spa_index") as mock:
         mock.return_value = "Mocked Template Content"
         yield mock
 
@@ -511,3 +512,20 @@ def test_user_achievement_earned_at_timestamp(init_db, sample_user, sample_achie
     assert user_achievement.earned_at is not None
     # Allow for small time differences in test execution
     assert before_time <= user_achievement.earned_at <= after_time
+
+
+def test_achievement_pages_without_index_template_return_json_404_not_500(
+    client, init_db, sample_user, sample_admin
+):
+    """Browser GETs must not 500 with TemplateNotFound when index.html is absent."""
+    with client.session_transaction() as sess:
+        sess["user"] = sample_admin.id
+
+    for path in (
+        "/achievements/",
+        "/achievements/add",
+        "/achievements/submit_certificate",
+    ):
+        response = client.get(path, headers={"Accept": "text/html"})
+        assert response.status_code == 404, path
+        assert response.is_json

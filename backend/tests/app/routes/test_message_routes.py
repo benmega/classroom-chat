@@ -6,86 +6,18 @@ Summary: Unit tests for message routes Flask routes.
 
 import json
 
-from application import db, Configuration
+from application import db
 from application.constants import GLOBAL_CLASSROOM_ID
-from application.models.conversation import Conversation
 from application.models.classroom import Classroom
-from application.models.user import User
+from application.models.conversation import Conversation
 
 
-def test_send_message(client, init_db, sample_admin):
-    """Test sending a message."""
-    # Set up session for user
-
-    with client.session_transaction() as sess:
-        sess["user"] = sample_admin.id
-
-    # Create configuration
-    config = Configuration(message_sending_enabled=True, ai_teacher_enabled=False)
-    init_db.session.add(config)
-    init_db.session.commit()
-
-    # Create a non-locked conversation and enroll user
-    classroom = Classroom(id="test-class", name="Test Class", language="python", url="http://test")
-    db.session.add(classroom)
-    # Re-fetch user to avoid detached instance issues if any
-    db_user = db.session.get(User, sample_admin.id)
-    classroom.users.append(db_user)
-    
-    conversation = Conversation(title="Test", classroom_id="test-class")
-    db.session.add(conversation)
-    db.session.commit()
-
-
-    # Mock dependencies
-    from unittest.mock import patch
-
-    with patch(
-        "application.routes.message_routes.message_is_appropriate", return_value=True
-    ), patch(
-        "application.routes.message_routes.save_message_to_db", return_value=True
-    ):
-        response = client.post("/message/send_message", data={"message": "Hello!", "conversation_id": conversation.id})
-        print(response.data.decode())  # Output the response content for debugging
-        assert response.status_code == 200
-        assert b"success" in response.data
-
-
-def test_send_message_no_session(client):
-    """Test sending message with no active session."""
-    response = client.post("/message/send_message", data={"message": "Hello!"})
-    assert response.status_code == 400
-    assert b"No session username found" in response.data
-
-
-def test_send_message_inappropriate(client, init_db, sample_user, sample_configuration):
-    """Test sending an inappropriate message."""
-    # Set up session for user
+def test_http_send_message_route_removed(client, sample_user):
+    """Chat is Socket.IO only; the legacy HTTP send route no longer exists."""
     with client.session_transaction() as sess:
         sess["user"] = sample_user.id
-
-    # Mock dependencies
-    from unittest.mock import patch
-
-    with patch(
-        "application.routes.message_routes.message_is_appropriate", return_value=False
-    ):
-        # Create a non-locked conversation and enroll user
-        classroom = Classroom(id="test-class-2", name="Test Class 2", language="python", url="http://test")
-        db.session.add(classroom)
-        db_user = db.session.get(User, sample_user.id)
-        classroom.users.append(db_user)
-        
-        conversation = Conversation(title="Test 2", classroom_id="test-class-2")
-        db.session.add(conversation)
-        db.session.commit()
-
-        
-        response = client.post("/message/send_message", data={"message": "Poop!", "conversation_id": conversation.id})
-
-    print(response.data.decode())  # Output the response content for debugging
-    assert response.status_code == 403
-    assert b"Inappropriate messages are not allowed" in response.data
+    response = client.post("/message/send_message", data={"message": "Hello!"})
+    assert response.status_code in (404, 405)
 
 
 def test_start_conversation(client, init_db, sample_admin):

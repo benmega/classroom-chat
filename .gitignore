@@ -11,7 +11,6 @@ userData/
 frontend/static/images/projects/
 *.env
 backend/reports/certificates/
-/backend/license/license.lic
 *.iml
 *.ipr
 *.iws

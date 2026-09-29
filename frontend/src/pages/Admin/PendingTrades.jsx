@@ -4,9 +4,7 @@ import {
     CheckCircle, 
     XCircle, 
     User, 
-    Clock, 
-    ArrowLeft,
-    AlertCircle,
+    Clock,
     Hash
 } from 'lucide-react';
 import client from '../../api/client';

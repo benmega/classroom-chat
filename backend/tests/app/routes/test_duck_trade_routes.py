@@ -32,11 +32,11 @@ def test_submit_trade_valid(client, sample_user_with_ducks, test_app):
         response = client.post(
             url_for("duck_trade.submit_trade"),
             data=form_data,
-            follow_redirects=True,
+            follow_redirects=False,
         )
 
-        # Assert the page loaded successfully
-        assert response.status_code == 200
+        # Assert the request redirected (no legacy Jinja page to follow to)
+        assert response.status_code == 302
 
         # Verify the database state actually changed
         trade = DuckTradeLog.query.filter_by(username=sample_user_with_ducks.username, status="pending").first()
@@ -75,12 +75,14 @@ def test_submit_trade_one_pending_limit(client, sample_user_with_ducks, test_app
         response = client.post(
             url_for("duck_trade.submit_trade"),
             data=form_data,
-            follow_redirects=True,
+            follow_redirects=False,
         )
 
         # Assert the request was blocked by checking the flashed error message
-        assert response.status_code == 200
-        assert b"You already have a pending trade" in response.data
+        assert response.status_code == 302
+        with client.session_transaction() as sess:
+            flashed = [msg for _cat, msg in sess.get("_flashes", [])]
+        assert any("You already have a pending trade" in m for m in flashed)
 
         # Ensure a second trade wasn't added to the DB
         trade_count = DuckTradeLog.query.filter_by(username=sample_user_with_ducks.username).count()

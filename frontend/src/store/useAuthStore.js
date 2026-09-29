@@ -32,9 +32,11 @@ const useAuthStore = create((set) => ({
       set({ user: response.data.user, isAuthenticated: true });
       return { success: true, awarded_duck: response.data.awarded_duck };
     } catch (error) {
+      const body = error.response?.data;
+      const serverError = typeof body === 'string' ? body : body?.error;
       return { 
         success: false, 
-        error: error.response?.data?.error || 'Login failed' 
+        error: (typeof serverError === 'string' && serverError) || 'Login failed' 
       };
     }
   },

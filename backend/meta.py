@@ -51,6 +51,5 @@ if __name__ == "__main__":
 # ├── instance/              # SQLite DB files
 # ├── static/                # CSS, JS, images
 # ├── templates/             # Jinja2 HTML templates
-# ├── license/               # License file for freemium check
 # ├── main.py                # Flask entry point
 # └── ...

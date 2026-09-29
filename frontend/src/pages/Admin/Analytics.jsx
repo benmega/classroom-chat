@@ -1,10 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
-    TrendingUp, 
-    TrendingDown, 
     Activity, 
     Calendar,
-    ArrowLeft,
     PieChart as PieChartIcon,
     RefreshCw,
     Download,

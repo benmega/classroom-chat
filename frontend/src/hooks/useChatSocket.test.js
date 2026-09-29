@@ -42,4 +42,14 @@ describe('useChatSocket Hook', () => {
     result.current.sendMessage({ text: 'Hello' });
     expect(mockSocket.emit).toHaveBeenCalledWith('send_message', { text: 'Hello' });
   });
+
+  it('should forward message_error events to onMessageError', () => {
+    const onMessageError = vi.fn();
+    renderHook(() => useChatSocket(undefined, undefined, { onMessageError }));
+    const mockSocket = socketIoClient.io();
+    const call = mockSocket.on.mock.calls.find(([name]) => name === 'message_error');
+    expect(call).toBeTruthy();
+    call[1]({ error: 'locked' });
+    expect(onMessageError).toHaveBeenCalledWith({ error: 'locked' });
+  });
 });

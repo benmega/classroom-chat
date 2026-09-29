@@ -43,10 +43,9 @@ def collect_directory_datas(source_dir):
 static_files = collect_directory_datas('frontend/static')
 template_files = collect_directory_datas('frontend/templates')
 application_files = collect_directory_datas('backend/application')
-license_files = collect_directory_datas('backend/license') if os.path.exists('backend/license') else []
 instance_files = collect_directory_datas('backend/instance') if os.path.exists('backend/instance') else []
 
-all_datas = static_files + template_files + application_files + license_files + instance_files
+all_datas = static_files + template_files + application_files + instance_files
 
 # --- Step 3: PyInstaller Analysis ---
 a = Analysis(

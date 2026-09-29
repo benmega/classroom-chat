@@ -3,18 +3,9 @@ import {
     Search, 
     PlusCircle, 
     Hash, 
-    X, 
-    User as UserIcon, 
-    MessageSquare, 
-    Shield,
-    Award,
-    FileCheck,
-    Zap,
-    RefreshCw,
-    Disc,
-    LogOut
+    X
 } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import useAuthStore from '../../store/useAuthStore';
 
 import ChatSidebarFooter from './ChatSidebarFooter';
@@ -65,7 +56,6 @@ const ChatSidebar = ({
             return titleMatch || formattedTitleMatch || messageMatch || participantMatch;
         });
 
-        console.debug(`[ChatSearch] Term: "${searchLower}", Results: ${results.length}/${conversations.length}`);
         return results;
     }, [conversations, searchTerm, formatConversationTitle]);
 

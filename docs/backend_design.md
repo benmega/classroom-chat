@@ -90,14 +90,7 @@ The backend integrates with **OpenAI** to provide an "AI Teacher" experience:
 
 ---
 
-## 7. License & Premium System
-Classroom Chat includes a custom **Premium License System**:
-- **Cryptographic Validation**: Uses RSA public keys to verify digital signatures in `.lic` files.
-- **Tiered Features**: Specific features are conditionally enabled based on the `IS_PREMIUM` status derived from the license.
-
----
-
-## 8. Directory Structure
+## 7. Directory Structure
 
 ```text
 backend/
@@ -111,7 +104,6 @@ backend/
 │   ├── utilities/     # Internal helpers and formatting
 │   └── extensions.py  # Shared Flask extension instances
 ├── infrastructure/    # DB connection and deployment configs
-├── license/           # Cryptographic keys and license files
 ├── main.py            # Entry point for the Flask application
 └── requirements.txt   # Backend dependencies
 ```

@@ -315,3 +315,108 @@
     .search-box { width: 100%; }
 }
 
+
+/* --- Restored dashboard rules (scoped; see iss_517) --- */
+.admin-dashboard .quick-actions {
+    margin-bottom: 2.5rem;
+}
+
+.admin-dashboard .action-buttons {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.admin-dashboard .settings-card .setting-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 0;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.admin-dashboard .setting-info span { display: block; font-weight: 700; font-size: 0.95rem; }
+.admin-dashboard .setting-info small { color: #64748b; }
+
+.admin-dashboard .switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 24px;
+}
+
+.admin-dashboard .switch input { opacity: 0; width: 0; height: 0; }
+
+.admin-dashboard .slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: #cbd5e1;
+    transition: .4s;
+    border-radius: 34px;
+}
+
+.admin-dashboard .slider:before {
+    position: absolute;
+    content: "";
+    height: 18px; width: 18px;
+    left: 3px; bottom: 3px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+.admin-dashboard input:checked + .slider { background-color: var(--primary-color); }
+.admin-dashboard input:checked + .slider:before { transform: translateX(26px); }
+
+.admin-dashboard .multiplier-input {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #f8fafc;
+    padding: 8px 12px;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    width: fit-content;
+}
+
+.admin-dashboard .multiplier-input input {
+    background: transparent;
+    border: none;
+    width: 60px;
+    font-weight: 700;
+    color: #1e293b;
+    outline: none;
+}
+
+.admin-dashboard .add-word-form {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 1.5rem;
+}
+
+.admin-dashboard .add-word-form input {
+    flex: 1;
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+    background: #f8fafc;
+    font-size: 0.9rem;
+}
+
+.admin-dashboard .add-btn {
+    padding: 10px;
+    background: #1e293b;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+.admin-dashboard .words-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 1.5rem;
+}

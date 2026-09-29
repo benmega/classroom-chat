@@ -93,22 +93,6 @@ def dashboard_data():
     }
 
 
-@admin_bp.route("/stats", methods=["GET"])
-@admin_only
-@api_response
-def admin_stats():
-    user_count = User.query.count()
-    total_ducks = db.session.query(func.sum(User.duck_balance)).scalar() or 0
-    pending_approvals = User.query.filter_by(is_approved=False).count()
-
-    return {
-        "user_count": user_count,
-        "total_ducks": total_ducks,
-        "pending_approvals": pending_approvals,
-        "timestamp": datetime.utcnow().isoformat(),
-    }
-
-
 @admin_bp.route("/logs", methods=["GET"])
 @admin_only
 @api_response

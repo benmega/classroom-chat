@@ -54,73 +54,6 @@ def test_get_users_with_auth(client, sample_admin, sample_users):
         assert user.username in usernames
 
 
-def test_set_username_route(client, sample_user, sample_admin):
-    """Test setting a username as an admin."""
-    login_as_admin(client, sample_admin)
-
-    resp = client.post(
-        "/api/admin/set_username",
-        data={"user_id": sample_user.id, "username": "new_username"},
-    )
-    assert resp.status_code == 200
-    assert resp.get_json()["success"] is True
-
-    # Query inside a context
-    with client.application.app_context():
-        updated = db.session.get(User, sample_user.id)
-        assert updated.username == "new_username"
-
-
-def test_verify_password_success(client, test_app, sample_admin):
-    """Test successful password verification."""
-    from application.config import TestingConfig
-
-    login_as_admin(client, sample_admin)
-
-    # Test with correct password using the logged-in admin
-    with patch(
-        "application.routes.admin_routes.admin_pass",
-        TestingConfig.ADMIN_PASSWORD,
-    ):
-        # We MUST provide user_id, otherwise the backend tries to find user by IP (127.0.0.1)
-        # which fails in testing, causing the AttributeError seen in logs.
-        response = client.post(
-            "/api/admin/verify_password",
-            data={
-                "password": TestingConfig.ADMIN_PASSWORD,
-                "username": "verified_username",
-                "user_id": sample_admin.id
-            },
-        )
-
-    assert response.status_code == 200
-    data = json.loads(response.data)
-    assert data["success"] is True
-
-    # Verify username was updated
-    with test_app.app_context():
-        updated_user = db.session.get(User, sample_admin.id)
-        assert updated_user.username == "verified_username"
-
-
-def test_verify_password_failure(client, sample_admin):
-    """Test failed password verification."""
-    login_as_admin(client, sample_admin)
-
-    response = client.post(
-        "/api/admin/verify_password",
-        data={
-            "password": "wrong_password",
-            "username": "any_username",
-            "user_id": sample_admin.id
-        },
-    )
-
-    assert response.status_code == 401
-    data = json.loads(response.data)
-    assert data["success"] is False
-
-
 def test_dashboard(client, sample_admin, sample_configuration):
     """Test accessing the admin dashboard."""
     login_as_admin(client, sample_admin)
@@ -265,6 +198,49 @@ def test_trade_action_reject(client, sample_admin, sample_duck_trade, init_db):
         mock_reject.assert_called_once()
 
 
+def test_trade_action_double_approve_deducts_once(
+    client, sample_admin, sample_user, sample_duck_trade, test_app, init_db
+):
+    login_as_admin(client, sample_admin)
+    trade_id = sample_duck_trade.id
+    user_id = sample_user.id
+    sample_user.duck_balance = 100
+    db.session.commit()
+
+    first = client.post(
+        "/api/admin/trade_action", data={"trade_id": str(trade_id), "action": "approve"}
+    )
+    assert first.status_code == 200
+    balance_after_first = db.session.get(User, user_id).duck_balance
+
+    second = client.post(
+        "/api/admin/trade_action", data={"trade_id": str(trade_id), "action": "approve"}
+    )
+    assert second.status_code == 409
+    assert db.session.get(User, user_id).duck_balance == balance_after_first
+    assert db.session.get(DuckTradeLog, trade_id).status == "approved"
+
+
+def test_trade_action_rejects_non_pending_trade(
+    client, sample_admin, sample_duck_trade, init_db
+):
+    login_as_admin(client, sample_admin)
+    trade_id = sample_duck_trade.id
+
+    assert (
+        client.post(
+            "/api/admin/trade_action", data={"trade_id": str(trade_id), "action": "reject"}
+        ).status_code
+        == 200
+    )
+    for action in ("approve", "reject"):
+        resp = client.post(
+            "/api/admin/trade_action", data={"trade_id": str(trade_id), "action": action}
+        )
+        assert resp.status_code == 409
+    assert db.session.get(DuckTradeLog, trade_id).status == "rejected"
+
+
 def test_reset_password(client, sample_admin, sample_user, test_app, init_db):
     """Test resetting a user's password."""
     login_as_admin(client, sample_admin)
@@ -313,21 +289,52 @@ def test_get_users(client, test_app, sample_users, sample_admin, init_db):
         assert user_data["username"] == sample_users[0].username
 
 
-def test_set_username_proper_case_handling(client, test_app, sample_user, sample_admin):
-    """Test that usernames are properly converted to lowercase per the User model."""
+def test_toggle_messages_text_matches_state(client, sample_configuration, sample_admin):
     login_as_admin(client, sample_admin)
+    sample_configuration.message_sending_enabled = False
+    db.session.commit()
 
-    with test_app.app_context():
-        mixed_case_username = "MixedCaseUsername"
+    data = json.loads(client.post("/api/admin/toggle-message-sending").data)
+    assert data["status"] is True
+    assert "enabled" in data["message"] and "disabled" not in data["message"]
 
-        response = client.post(
-            url_for("admin.set_username_route"),
-            data={"user_id": sample_user.id, "username": mixed_case_username},
-        )
+    data = json.loads(client.post("/api/admin/toggle-message-sending").data)
+    assert data["status"] is False
+    assert "disabled" in data["message"]
 
-        assert response.status_code == 200
-        json_response = json.loads(response.data)
-        assert json_response["success"] is True
 
-        updated_user = db.session.get(User, sample_user.id)
-        assert updated_user.username == mixed_case_username.lower()
+def test_toggle_message_sending_without_config_row(client, init_db, sample_admin):
+    login_as_admin(client, sample_admin)
+    data = json.loads(client.post("/api/admin/toggle-message-sending").data)
+    assert data["status"] is True
+    assert Configuration.query.first().message_sending_enabled is True
+
+
+def test_toggle_ai_text_matches_state(client, sample_configuration, sample_admin):
+    login_as_admin(client, sample_admin)
+    sample_configuration.ai_teacher_enabled = False
+    db.session.commit()
+    data = json.loads(client.post("/api/admin/toggle-ai").data)
+    assert data["status"] is True
+    assert "enabled" in data["message"] and "disabled" not in data["message"]
+
+
+def test_update_duck_multiplier_rejects_student_and_anonymous(
+    client, sample_configuration, sample_user
+):
+    response = client.post("/api/admin/update_duck_multiplier", json={"multiplier": 1000})
+    assert response.status_code in (401, 403)
+
+    with client.session_transaction() as sess:
+        sess["_user_id"] = str(sample_user.id)
+        sess["user"] = sample_user.id
+    response = client.post("/api/admin/update_duck_multiplier", json={"multiplier": 1000})
+    assert response.status_code in (401, 403)
+    assert Configuration.query.first().duck_multiplier == 1
+
+
+def test_update_duck_multiplier_admin_ok(client, sample_configuration, sample_admin):
+    login_as_admin(client, sample_admin)
+    response = client.post("/api/admin/update_duck_multiplier", json={"multiplier": 2})
+    assert response.status_code == 200
+    assert Configuration.query.first().duck_multiplier == 2

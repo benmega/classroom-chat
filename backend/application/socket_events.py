@@ -18,7 +18,7 @@ from application.extensions import db, socketio
 from application.constants import GLOBAL_CLASSROOM_ID
 from .models.user import User
 from .models.classroom import user_classrooms
-from .utilities.db_helpers import save_message_to_db
+from .services.message_service import MessageRejected, validate_and_save_message
 
 from sqlalchemy import select
 
@@ -104,69 +104,51 @@ def handle_disconnect(auth=None):
 @socketio.on("send_message")
 def handle_send_message(data):
     """
-    Handle 'send_message' from the client.
-    Server re-validates enrollment — client room IDs are not trusted.
+    Handle 'send_message' from the client (the single message-sending path).
+    All rules live in message_service.validate_and_save_message. On rejection a
+    'message_error' event is emitted to the sender only.
     Emits 'message_received' only to the correct classroom room.
     """
     user_id = session.get("user")
-    if not user_id:
-        return
-
-    user = db.session.get(User, user_id)
+    user = db.session.get(User, user_id) if user_id else None
     if not user:
+        emit("message_error", {"error": "Not logged in"})
         return
 
-    content = data.get("content")
+    if not isinstance(data, dict):
+        emit("message_error", {"error": "Invalid message payload"})
+        return
+
     conversation_id = data.get("conversation_id")
 
-    if not content or not conversation_id:
+    try:
+        result = validate_and_save_message(user, conversation_id, data.get("content"))
+    except MessageRejected as exc:
+        emit(
+            "message_error",
+            {"error": exc.reason, "conversation_id": conversation_id},
+        )
         return
 
-    # Re-fetch the conversation to get its classroom_id
-    from .models.conversation import Conversation
-
-    conv = db.session.get(Conversation, conversation_id)
-    if not conv:
-        return
-
-    classroom_id = conv.classroom_id
+    msg = result["message"]
+    classroom_id = result["classroom_id"]
     is_global = classroom_id == GLOBAL_CLASSROOM_ID
 
-    # ---- Server-side authorization ----------------------------------------
-    if is_global:
-        if not user.is_admin:
-            # Silently drop — UI should have already gated this
-            return
-    else:
-        if not user.is_admin:
-            enrolled = db.session.execute(
-                select(user_classrooms.c.classroom_id).where(
-                    user_classrooms.c.user_id == user.id,
-                    user_classrooms.c.classroom_id == classroom_id,
-                )
-            ).first()
-            if not enrolled:
-                return  # Not enrolled — drop silently; HTTP route returns 403
-
-    # Ensure conversation is tracked in session for save_message_to_db
-    session["conversation_id"] = conversation_id
-
-    save_result = save_message_to_db(user.id, content, conversation_id=conversation_id)
-
-    if not save_result.get("success"):
-        return
-
     payload = {
-        "id": save_result.get("message_id"),
+        "id": msg.id,
         "user_id": user.id,
         "sender_id": user.id,
         "username": user.username,
         "nickname": user.nickname or user.username,
         "user_profile_pic": user.profile_picture,
         "slug": user.slug,
-        "content": content,
-        "timestamp": datetime.utcnow().isoformat(),
-        "conversation_id": save_result.get("conversation_id"),
+        "content": msg.content,
+        "timestamp": (
+            msg.created_at.isoformat()
+            if msg.created_at
+            else datetime.utcnow().isoformat()
+        ),
+        "conversation_id": msg.conversation_id,
         "classroom_id": classroom_id,
         "is_global": is_global,
         "message_type": "text",

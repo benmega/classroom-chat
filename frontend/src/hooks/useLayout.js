@@ -20,14 +20,18 @@ export const useLayout = () => {
     // --- Duck Balance Tracking for Quack Sound ---
     const prevDuckBalanceRef = useRef(user?.duck_balance);
 
+    const duckBalance = user?.duck_balance;
+
     useEffect(() => {
-        if (!user || user.duck_balance === undefined) {
-            prevDuckBalanceRef.current = user?.duck_balance;
+        if (duckBalance === undefined) {
+            prevDuckBalanceRef.current = duckBalance;
             return;
         }
 
+        let quackInterval = null;
+
         if (prevDuckBalanceRef.current !== undefined && prevDuckBalanceRef.current !== null) {
-            const currentDucks = Math.floor(user.duck_balance || 0);
+            const currentDucks = Math.floor(duckBalance || 0);
             const prevDucks = Math.floor(prevDuckBalanceRef.current || 0);
             const diff = currentDucks - prevDucks;
 
@@ -35,7 +39,7 @@ export const useLayout = () => {
                 const quackCount = Math.min(diff, 100);
                 let quacksPlayed = 0;
                 
-                const quackInterval = setInterval(() => {
+                quackInterval = setInterval(() => {
                     if (quacksPlayed >= quackCount) {
                         clearInterval(quackInterval);
                         return;
@@ -47,8 +51,12 @@ export const useLayout = () => {
             }
         }
         
-        prevDuckBalanceRef.current = user.duck_balance;
-    }, [user?.duck_balance, user]);
+        prevDuckBalanceRef.current = duckBalance;
+
+        return () => {
+            if (quackInterval) clearInterval(quackInterval);
+        };
+    }, [duckBalance]);
 
     // --- Heartbeat ---
     useEffect(() => {

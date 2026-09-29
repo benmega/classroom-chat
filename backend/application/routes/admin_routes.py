@@ -1,6 +1,5 @@
 from flask import Blueprint
 
-admin_pass = "duckduck"
 admin_bp = Blueprint("admin", __name__)
 
 # Import routes to register them on the admin blueprint

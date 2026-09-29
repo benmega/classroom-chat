@@ -1,6 +1,7 @@
 import React from 'react';
 import { X, ExternalLink, Code, CheckCircle, FileText } from 'lucide-react';
 import { formatStaticUrl } from '../../utils/formatters';
+import { safeUrl } from '../../utils/safeUrl';
 import SmartImage from '../common/SmartImage';
 
 const getYoutubeEmbedUrl = (url) => {
@@ -39,8 +40,8 @@ const ProjectModal = ({ project, onClose }) => {
                 <div className="modal-header">
                     <h2>{project.name}</h2>
                     <div className="modal-actions">
-                        {project.link && <a href={project.link} className="btn-primary" target="_blank" rel="noreferrer"><ExternalLink size={18} /> Launch Live</a>}
-                        {project.github_link && <a href={project.github_link} className="btn-secondary" target="_blank" rel="noreferrer"><Code size={18} /> Source</a>}
+                        {safeUrl(project.link) && <a href={safeUrl(project.link)} className="btn-primary" target="_blank" rel="noreferrer"><ExternalLink size={18} /> Launch Live</a>}
+                        {safeUrl(project.github_link) && <a href={safeUrl(project.github_link)} className="btn-secondary" target="_blank" rel="noreferrer"><Code size={18} /> Source</a>}
                     </div>
                 </div>
                 <div className="modal-body">

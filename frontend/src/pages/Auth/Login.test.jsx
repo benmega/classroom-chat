@@ -62,7 +62,7 @@ describe('Login Component', () => {
     fireEvent.click(loginButton);
 
     await waitFor(() => {
-      expect(toast.error).toHaveBeenCalled();
+      expect(toast.error).toHaveBeenCalledWith('Invalid username or password.');
     });
   });
 });

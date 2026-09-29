@@ -6,11 +6,9 @@ import {
     ExternalLink, 
     MessageSquare, 
     User, 
-    Clock, 
-    Filter,
+    Clock,
     Search,
     ChevronRight,
-    ArrowLeft,
     Code,
     Video,
     Github
@@ -22,6 +20,7 @@ import SmartImage from '../../components/common/SmartImage';
 import Skeleton from '../../components/common/Skeleton';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
 import { formatStaticUrl } from '../../utils/formatters';
+import { safeUrl } from '../../utils/safeUrl';
 
 const AdminProjects = () => {
     const [projects, setProjects] = useState([]);
@@ -123,18 +122,18 @@ const AdminProjects = () => {
                             <p className="description">{selectedProject.description}</p>
                             
                             <div className="links-section">
-                                {selectedProject.link && (
-                                    <a href={selectedProject.link} target="_blank" rel="noopener noreferrer" className="project-link">
+                                {safeUrl(selectedProject.link) && (
+                                    <a href={safeUrl(selectedProject.link)} target="_blank" rel="noopener noreferrer" className="project-link">
                                         <ExternalLink size={18} /> Launch Demo
                                     </a>
                                 )}
-                                {selectedProject.github_link && (
-                                    <a href={selectedProject.github_link} target="_blank" rel="noopener noreferrer" className="project-link github">
+                                {safeUrl(selectedProject.github_link) && (
+                                    <a href={safeUrl(selectedProject.github_link)} target="_blank" rel="noopener noreferrer" className="project-link github">
                                         <Github size={18} /> GitHub Repo
                                     </a>
                                 )}
-                                {selectedProject.video_url && (
-                                    <a href={selectedProject.video_url} target="_blank" rel="noopener noreferrer" className="project-link video">
+                                {(safeUrl(selectedProject.video_url) || (selectedProject.video_url?.startsWith('/') && !selectedProject.video_url.startsWith('//') ? selectedProject.video_url : null)) && (
+                                    <a href={(safeUrl(selectedProject.video_url) || (selectedProject.video_url?.startsWith('/') && !selectedProject.video_url.startsWith('//') ? selectedProject.video_url : null))} target="_blank" rel="noopener noreferrer" className="project-link video">
                                         <Video size={18} /> Watch Recording
                                     </a>
                                 )}

@@ -33,7 +33,7 @@ export const handlers = [
     }
 
     return new HttpResponse(
-      JSON.stringify({ error: 'Invalid credentials' }),
+      JSON.stringify({ error: 'Invalid username or password.' }),
       { status: 401 }
     );
   }),

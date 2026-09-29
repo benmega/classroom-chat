@@ -2,15 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { 
     File, 
     FileText, 
-    Image as ImageIcon, 
     Download, 
     Eye, 
     Trash2, 
     Search, 
-    Database, 
-    HardDrive,
+    Database,
     AlertCircle,
-    ChevronDown,
     Filter
 } from 'lucide-react';
 import client from '../../api/client';

@@ -46,9 +46,9 @@ class LoginForm(FlaskForm):
 def login():
     form = LoginForm()
     if request.is_json:
-        data = request.get_json()
-        username = data.get("username", "").lower()
-        password = data.get("password", "")
+        data = request.get_json(silent=True) or {}
+        username = str(data.get("username") or "").lower()
+        password = str(data.get("password") or "")
     else:
         if form.validate_on_submit():
             username = form.username.data.lower()
@@ -87,7 +87,7 @@ def login():
             return redirect(url_for("general.index"))
         else:
             if request.is_json:
-                return "Invalid username or password.", 401
+                return {"error": "Invalid username or password."}, 401
             flash("Invalid username or password.", "error")
             return "Invalid username or password.", 200
 
@@ -210,18 +210,19 @@ def edit_profile():
             data = request.get_json() if request.is_json else request.form
             # 1. Update Basic Info (Password, IP, Online Status)
             if not update_basic_user_info(user_obj, data):
-                return {"error": "Passwords do not match."}, 400
+                return "Passwords do not match.", 400
 
-            # 2. Update Skills (Clear and Re-add)
-            clear_user_skills(user_obj)
-            add_user_skills(
-                user_obj,
-                (
-                    data.getlist("skills[]")
-                    if hasattr(data, "getlist")
-                    else data.get("skills", [])
-                ),
-            )
+            # 2. Update Skills (Clear and Re-add) - only when skills were sent
+            if "skills" in data or "skills[]" in data:
+                clear_user_skills(user_obj)
+                add_user_skills(
+                    user_obj,
+                    (
+                        data.getlist("skills[]")
+                        if hasattr(data, "getlist")
+                        else data.get("skills") or []
+                    ),
+                )
 
             # 3. Handle Profile Picture (if uploaded via this form, currently only form-data)
             if not request.is_json:
@@ -649,6 +650,12 @@ def update_basic_user_info(user_obj, data):
         user_obj.is_online = (
             data.get("is_online") == "true" or data.get("is_online") is True
         )
+
+    # Update nickname if provided (existing profile slug is left unchanged)
+    if "nickname" in data:
+        nickname = (data.get("nickname") or "").strip()
+        if nickname:
+            user_obj.nickname = nickname[:50]
 
     # Update bio if provided
     if "bio" in data:

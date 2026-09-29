@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { 
-    FileText, 
     Download, 
     Eye, 
     CheckCircle, 
@@ -14,6 +13,7 @@ import client from '../../api/client';
 import toast from 'react-hot-toast';
 import './AdminCertificates.css';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
+import { safeUrl } from '../../utils/safeUrl';
 
 const AdminCertificates = () => {
     const [certificates, setCertificates] = useState([]);
@@ -106,10 +106,10 @@ const AdminCertificates = () => {
                                     <Clock size={16} />
                                     <span>Submitted {new Date(cert.submitted_at).toLocaleDateString()}</span>
                                 </div>
-                                {cert.url && (
+                                {safeUrl(cert.url) && (
                                     <div className="cert-url">
                                         <Eye size={16} />
-                                        <a href={cert.url} target="_blank" rel="noopener noreferrer">View Original Link</a>
+                                        <a href={safeUrl(cert.url)} target="_blank" rel="noopener noreferrer">View Original Link</a>
                                     </div>
                                 )}
                             </div>

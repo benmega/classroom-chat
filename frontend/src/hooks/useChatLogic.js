@@ -34,6 +34,10 @@ export const useChatLogic = () => {
   const scrollRef = useRef(null);
   const textareaRef = useRef(null);
   const emojiPickerRef = useRef(null);
+  const activeConversationRef = useRef(null);
+  const handledConvSearchRef = useRef(null);
+  activeConversationRef.current = activeConversation;
+  const userId = user?.id;
 
   const onMessageReceived = useCallback((data) => {
     setConversations(prevConvs => {
@@ -57,7 +61,8 @@ export const useChatLogic = () => {
       const exists = prev.some(m => m.id === data.id);
       if (exists) return prev;
 
-      if (prev.length > 0 && prev[0]?.conversation_id && prev[0].conversation_id !== data.conversation_id) {
+      // Only show messages that belong to the conversation that is currently open
+      if (activeConversationRef.current?.conversation_id !== data.conversation_id) {
         return prev;
       }
       return [...prev, data];
@@ -65,12 +70,12 @@ export const useChatLogic = () => {
   }, []);
 
   const fetchHistory = useCallback(async (defaultConvId = null) => {
-    if (!user?.id) {
+    if (!userId) {
       setLoading(false);
       return;
     }
     try {
-      const response = await client.get(`/message/api/conversations/${user.id}`);
+      const response = await client.get(`/message/api/conversations/${userId}`);
       const historyData = response.data.data || response.data;
       setConversations(historyData);
 
@@ -86,7 +91,7 @@ export const useChatLogic = () => {
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [userId]);
 
   const onClassroomEnrolled = useCallback((data) => {
     const classroom = data?.classroom;
@@ -120,15 +125,20 @@ export const useChatLogic = () => {
     }
   }, [activeConversation]);
 
+  const onMessageError = useCallback((data) => {
+    toast.error(data?.error || 'Message could not be sent');
+  }, []);
+
   const { sendMessage } = useChatSocket(onMessageReceived, onClassroomEnrolled, {
     onConversationCreated,
     onConversationUpdated,
-    onConversationDeleted
+    onConversationDeleted,
+    onMessageError
   });
 
   useEffect(() => {
     const initChat = async () => {
-      if (!user?.id) {
+      if (!userId) {
         setLoading(false);
         return;
       }
@@ -149,15 +159,18 @@ export const useChatLogic = () => {
     };
 
     initChat();
-  }, [user, fetchHistory]);
+  }, [userId, fetchHistory]);
 
   useEffect(() => {
     if (conversations.length > 0) {
       const params = new URLSearchParams(location.search);
       const convId = params.get('conv');
-      if (convId) {
+      if (!convId) handledConvSearchRef.current = null;
+      // Apply the ?conv= param once per query string so later selections are not reset
+      if (convId && handledConvSearchRef.current !== location.search) {
         const targetConv = conversations.find(c => c.conversation_id === parseInt(convId));
         if (targetConv) {
+          handledConvSearchRef.current = location.search;
           setActiveConversation(targetConv);
           setMessages(targetConv.messages || []);
         }

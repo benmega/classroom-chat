@@ -11,7 +11,6 @@ from flask import (
     url_for,
     request,
     send_from_directory,
-    render_template,
 )
 from sqlalchemy.orm import joinedload
 from werkzeug.utils import secure_filename
@@ -23,6 +22,7 @@ from application.models.user_certificate import UserCertificate
 from application.decorators.admin_required import admin_only
 from application.decorators.api_response import api_response
 from application.utilities.helper_functions import allowed_file
+from application.utilities.spa import serve_spa_index
 
 achievements = Blueprint("achievements", __name__)
 
@@ -108,7 +108,7 @@ def achievements_page():
     if not current_user:
         return jsonify({"success": False, "error": "User not found!"}), 404
 
-    return render_template("achievements.html", user=current_user)
+    return serve_spa_index(user=current_user)
 
 
 @achievements.route("/add", methods=["GET", "POST"])
@@ -122,7 +122,7 @@ def add_achievement():
     if request.method == "GET":
         if request.is_json or request.accept_mimetypes.accept_json:
             return jsonify({"status": "ready"}), 200
-        return render_template("add_achievement.html"), 200
+        return serve_spa_index()
 
     name = data.get("name")
     slug = data.get("slug")
@@ -308,7 +308,7 @@ def submit_certificate():
 
     if request.is_json or request.accept_mimetypes.accept_json:
         return jsonify({"status": "ready"}), 200
-    return render_template("submit_certificate.html"), 200
+    return serve_spa_index()
 
 
 @achievements.route("/view_certificate/<int:cert_id>")

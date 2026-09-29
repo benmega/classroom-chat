@@ -5,7 +5,6 @@ from application.models.user import User
 from application.decorators.api_response import api_response
 from application.decorators.admin_required import admin_only
 
-from flask import current_app
 from ..admin_routes import admin_bp
 
 
@@ -81,9 +80,6 @@ def get_users():
     user_data = []
     for u in users:
         d = u.to_dict_summary(precomputed)
-        # Defensive pop redundant but kept for safety with existing patterns
-        for field in ["password_hash", "salt", "ip_address"]:
-            d.pop(field, None)
         user_data.append(d)
 
     return jsonify(
@@ -209,48 +205,3 @@ def adjust_ducks():
             jsonify({"success": False, "message": f"User '{username}' not found."}),
             404,
         )
-
-
-@admin_bp.route("/set_username", methods=["POST"])
-@admin_only
-def set_username_route():
-    user_id = request.form.get("user_id")
-    username = request.form.get("username")
-
-    if not user_id or not username:
-        return jsonify({"success": False, "message": "Missing arguments"}), 400
-
-    user = db.session.get(User, user_id)
-    if not user:
-        return jsonify({"success": False, "message": "User not found"}), 404
-
-    user.username = username.lower()
-    db.session.commit()
-    return jsonify({"success": True, "message": "Username set successfully"})
-
-
-@admin_bp.route("/verify_password", methods=["POST"])
-@admin_only
-def verify_password():
-    password = request.form.get("password")
-    username = request.form.get("username")
-    user_id = request.form.get("user_id")
-
-    # testing patch is done against application.routes.admin_routes.admin_pass by test framework
-    # so we should use current_app for normal usage but support testing
-    try:
-        from application.routes.admin_routes import admin_pass
-
-        app_admin_pass = admin_pass
-    except ImportError:
-        app_admin_pass = current_app.config.get("ADMIN_PASSWORD", "duckduck")
-
-    if password == app_admin_pass:
-        if user_id and username:
-            user = db.session.get(User, user_id)
-            if user:
-                user.username = username.lower()
-                db.session.commit()
-        return jsonify({"success": True})
-    else:
-        return jsonify({"success": False}), 401
