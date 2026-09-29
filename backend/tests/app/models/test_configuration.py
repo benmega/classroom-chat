@@ -38,7 +38,7 @@ def test_configuration_default_values(init_db):
     retrieved_config = Configuration.query.first()
     assert retrieved_config is not None
     assert retrieved_config.ai_teacher_enabled is False
-    assert retrieved_config.message_sending_enabled is False
+    assert retrieved_config.message_sending_enabled is True
 
 
 def test_configuration_query(sample_configuration):

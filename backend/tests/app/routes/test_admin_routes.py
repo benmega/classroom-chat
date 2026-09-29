@@ -305,9 +305,10 @@ def test_toggle_messages_text_matches_state(client, sample_configuration, sample
 
 def test_toggle_message_sending_without_config_row(client, init_db, sample_admin):
     login_as_admin(client, sample_admin)
+    # A missing row counts as enabled, so the first toggle disables sending.
     data = json.loads(client.post("/api/admin/toggle-message-sending").data)
-    assert data["status"] is True
-    assert Configuration.query.first().message_sending_enabled is True
+    assert data["status"] is False
+    assert Configuration.query.first().message_sending_enabled is False
 
 
 def test_toggle_ai_text_matches_state(client, sample_configuration, sample_admin):

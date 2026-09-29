@@ -235,10 +235,10 @@ const AdminDashboard = () => {
                         <div className="setting-item">
                             <div className="setting-info">
                                 <span>Public Messaging</span>
-                                <small>{config?.message_sending_enabled ? 'Enabled' : 'Disabled'}</small>
+                                <small>{(config?.message_sending_enabled ?? true) ? 'Enabled' : 'Disabled'}</small>
                             </div>
                             <label className="switch">
-                                <input type="checkbox" checked={config?.message_sending_enabled || false} onChange={handleToggleMessages} />
+                                <input type="checkbox" checked={config?.message_sending_enabled ?? true} onChange={handleToggleMessages} />
                                 <span className="slider"></span>
                             </label>
                         </div>

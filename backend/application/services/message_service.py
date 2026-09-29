@@ -67,9 +67,9 @@ def validate_and_save_message(user, conversation_id, content):
     if not conversation_id:
         raise MessageRejected("conversation_id is required", 400)
 
-    # A missing Configuration row behaves like the column default (disabled).
+    # A missing Configuration row behaves like the column default (enabled).
     config = Configuration.query.first()
-    if not user.is_admin and not (config and config.message_sending_enabled):
+    if not user.is_admin and config and not config.message_sending_enabled:
         raise MessageRejected("Non-admin messages are disabled", 403)
 
     conv = db.session.get(Conversation, conversation_id)

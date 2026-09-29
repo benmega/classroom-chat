@@ -77,13 +77,13 @@ def test_service_blocks_students_when_sending_disabled(init_db, sample_user):
     assert "disabled" in _reason(sample_user, conv.id, "hello")
 
 
-def test_service_missing_config_row_blocks_students_not_admins(
+def test_service_missing_config_row_allows_sending(
     init_db, sample_user, sample_admin
 ):
     Configuration.query.delete()
     db.session.commit()
     conv = _classroom_conv(sample_user)
-    assert "disabled" in _reason(sample_user, conv.id, "hello")
+    assert validate_and_save_message(sample_user, conv.id, "hello")["message"].content == "hello"
     result = validate_and_save_message(sample_admin, conv.id, "hi")
     assert result["message"].content == "hi"
 
