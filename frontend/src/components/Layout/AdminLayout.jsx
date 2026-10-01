@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { NavLink, Link, useLocation } from 'react-router-dom';
 import {
     Home,
@@ -20,6 +20,7 @@ import {
 import useAuthStore from '../../store/useAuthStore';
 import useSidebar from '../../hooks/useSidebar';
 import client from '../../api/client';
+import ContentLoader from '../common/ContentLoader';
 import './AdminLayout.css';
 
 const AdminLayout = ({ children }) => {
@@ -211,7 +212,9 @@ const AdminLayout = ({ children }) => {
                 key={location.pathname.startsWith('/admin/advanced-crud') ? '/admin/advanced-crud' : location.pathname}
                 className="admin-body animate-page-entry"
             >
-                {children}
+                <Suspense fallback={<ContentLoader />}>
+                    {children}
+                </Suspense>
             </main>
         </div>
     );

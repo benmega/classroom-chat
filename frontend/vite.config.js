@@ -9,12 +9,22 @@ export default defineConfig({
         // Split heavy vendor libs into separate cached chunks.
         // Each chunk is independently cached — an app code change no longer
         // busts the MUI / react-admin / chart.js cache in the browser.
-        manualChunks: {
-          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
-          'vendor-mui': ['@mui/material', '@emotion/react', '@emotion/styled'],
-          'vendor-charts': ['chart.js', 'react-chartjs-2'],
-          'vendor-react-admin': ['react-admin', 'ra-core'],
-          'vendor-emoji': ['emoji-picker-react'],
+        //
+        // Function form on purpose: the object form drags every transitive
+        // dependency of a listed package into its chunk, so react/jsx-runtime
+        // landed in vendor-charts and @tanstack/react-query (imported eagerly by
+        // main.jsx) in vendor-react-admin. Every page then statically imported
+        // the admin/chart/MUI stack (~300 kB gzip) and /login preloaded it all.
+        // Here each module is assigned by package path, so only the packages the
+        // app shell needs (react, react-dom, react-router, react-query) sit in
+        // the eagerly loaded vendor-react chunk; the others are lazy-only.
+        manualChunks(id) {
+          if (!id.includes('node_modules')) return
+          if (/node_modules\/(react|react-dom|react-router|react-router-dom|scheduler|@tanstack)\//.test(id)) return 'vendor-react'
+          if (/node_modules\/(@mui|@emotion)\//.test(id)) return 'vendor-mui'
+          if (/node_modules\/(chart\.js|react-chartjs-2|@kurkle)\//.test(id)) return 'vendor-charts'
+          if (/node_modules\/(react-admin|ra-[a-z0-9-]+)\//.test(id)) return 'vendor-react-admin'
+          if (/node_modules\/emoji-picker-react\//.test(id)) return 'vendor-emoji'
         },
       },
     },

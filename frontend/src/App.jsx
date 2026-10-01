@@ -6,6 +6,7 @@ import useAuthStore from './store/useAuthStore';
 import { SidebarProvider } from './context/SidebarContext';
 import { THEME } from './utils/theme';
 import ConfirmDialog from './components/common/ConfirmDialog';
+import ErrorBoundary from './components/common/ErrorBoundary';
 
 
 import Layout from './components/Layout/Layout';
@@ -61,64 +62,13 @@ const JoinClassroomLink = React.lazy(() => import('./pages/General/JoinClassroom
 import DevLogin from './pages/Auth/DevLogin';
 
 /**
- * Catches chunk-load errors (e.g. after a deploy that invalidates old JS hashes).
- * Instead of silently force-refreshing in a `React.lazy` wrapper (which can cause
- * infinite reload loops), we surface a user-friendly "Reload" prompt.
+ * Resets the boundary on route change so a page that crashed does not stay stuck on the
+ * error screen after the user navigates elsewhere. Must render inside <Router>.
  */
-class ChunkErrorBoundary extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = { hasError: false };
-  }
-
-  static getDerivedStateFromError() {
-    return { hasError: true };
-  }
-
-  componentDidCatch(error, info) {
-    console.error('Chunk load error caught by boundary:', error, info);
-  }
-
-  render() {
-    if (this.state.hasError) {
-      return (
-        <div style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '1rem',
-          justifyContent: 'center',
-          alignItems: 'center',
-          height: '100vh',
-          background: 'var(--bg-primary)',
-          color: 'var(--text-primary)',
-          textAlign: 'center',
-          padding: '2rem',
-        }}>
-          <h2 style={{ margin: 0, fontSize: 'var(--font-2xl)' }}>A new version is available</h2>
-          <p style={{ opacity: 0.7, fontSize: 'var(--font-sm)', margin: 0 }}>
-            Please reload the page to get the latest update.
-          </p>
-          <button
-            onClick={() => window.location.reload()}
-            style={{
-              padding: '0.6rem 1.5rem',
-              borderRadius: 'var(--radius-lg)',
-              border: 'none',
-              background: 'var(--primary-color)',
-              color: '#fff',
-              cursor: 'pointer',
-              fontWeight: 600,
-              fontSize: 'var(--font-sm)',
-            }}
-          >
-            Reload
-          </button>
-        </div>
-      );
-    }
-    return this.props.children;
-  }
-}
+const RouteAwareBoundary = ({ children }) => {
+  const location = useLocation();
+  return <ErrorBoundary resetKeys={[location.pathname]}>{children}</ErrorBoundary>;
+};
 
 // Fallback spinner shown while lazy chunks are loading
 const PageLoader = () => (
@@ -247,7 +197,7 @@ function App() {
             }}
         />
         <ConfirmDialog />
-      <ChunkErrorBoundary>
+      <RouteAwareBoundary>
       <Suspense fallback={<PageLoader />}>
       <Routes>
         <Route path="/login" element={isAuthenticated ? <Navigate to={authRedirect} /> : <Login />} />
@@ -458,7 +408,7 @@ function App() {
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
       </Suspense>
-      </ChunkErrorBoundary>
+      </RouteAwareBoundary>
       </SidebarProvider>
     </Router>
   );
