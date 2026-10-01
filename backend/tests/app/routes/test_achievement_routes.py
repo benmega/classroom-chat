@@ -519,7 +519,7 @@ def test_add_achievement_rejects_gif_and_svg_badges(
         sess["user"] = test_admin.id
 
     response = client.post(
-        "/achievements/add",
+        "/api/achievements/add",
         data={
             "name": "Bad Badge",
             "slug": "bad-badge",
@@ -547,7 +547,7 @@ def test_add_achievement_rejects_unsafe_slug(client, init_db, test_admin, slug):
         sess["user"] = test_admin.id
 
     response = client.post(
-        "/achievements/add",
+        "/api/achievements/add",
         data={"name": "Unsafe", "slug": slug, "type": "ducks", "reward": 10},
     )
 
@@ -562,7 +562,7 @@ def test_add_achievement_rejects_non_string_json_slug(client, init_db, test_admi
         sess["user"] = test_admin.id
 
     response = client.post(
-        "/achievements/add", json={"name": "Num", "slug": 123, "type": "ducks"}
+        "/api/achievements/add", json={"name": "Num", "slug": 123, "type": "ducks"}
     )
 
     assert response.status_code == 400
@@ -575,7 +575,7 @@ def test_add_achievement_rejects_invalid_reward(client, init_db, test_admin, rew
         sess["user"] = test_admin.id
 
     response = client.post(
-        "/achievements/add",
+        "/api/achievements/add",
         data={"name": "Bad Reward", "slug": "bad-reward", "reward": reward},
     )
 
@@ -593,7 +593,7 @@ def test_add_achievement_rejects_invalid_json_reward(
         sess["user"] = test_admin.id
 
     response = client.post(
-        "/achievements/add",
+        "/api/achievements/add",
         json={"name": "Bad JSON Reward", "slug": "bad-json-reward", "reward": reward},
     )
 
@@ -612,7 +612,7 @@ def test_add_achievement_reward_defaults_and_parsing(
         sess["user"] = test_admin.id
 
     response = client.post(
-        "/achievements/add", data={"name": "Rewarded", "slug": "rewarded", **form}
+        "/api/achievements/add", data={"name": "Rewarded", "slug": "rewarded", **form}
     )
 
     assert response.status_code == 200
@@ -624,11 +624,11 @@ def _login_admin(client, admin):
         sess["user"] = admin.id
 
 
-def test_edit_achievement_updates_fields(client, init_db, test_admin, test_achievement):
+def test_edit_achievement_updates_name_slug_and_reward(client, init_db, test_admin, test_achievement):
     _login_admin(client, test_admin)
 
     response = client.put(
-        f"/achievements/edit/{test_achievement.id}",
+        f"/api/achievements/edit/{test_achievement.id}",
         data={"name": "Renamed", "slug": "renamed-slug", "reward": "25"},
     )
 
@@ -645,7 +645,7 @@ def test_edit_achievement_rejects_unsafe_slug(
     old_slug, old_name = test_achievement.slug, test_achievement.name
 
     response = client.put(
-        f"/achievements/edit/{test_achievement.id}",
+        f"/api/achievements/edit/{test_achievement.id}",
         data={"name": "Changed", "slug": slug},
     )
 
@@ -665,7 +665,7 @@ def test_edit_achievement_accepts_unchanged_legacy_slug(
     _login_admin(client, test_admin)
 
     response = client.put(
-        f"/achievements/edit/{test_achievement.id}",
+        f"/api/achievements/edit/{test_achievement.id}",
         data={"name": "Still Editable", "slug": "Legacy_Slug", "reward": "3"},
     )
 
@@ -685,7 +685,7 @@ def test_edit_achievement_legacy_slug_still_gets_its_badge(
     _login_admin(client, test_admin)
 
     response = client.put(
-        f"/achievements/edit/{test_achievement.id}",
+        f"/api/achievements/edit/{test_achievement.id}",
         data={"slug": "Legacy_Slug", "badge": (BytesIO(b"fake"), "badge.png")},
         content_type="multipart/form-data",
     )
@@ -708,7 +708,7 @@ def test_edit_achievement_never_writes_a_badge_outside_the_badge_dir(
     _login_admin(client, test_admin)
 
     response = client.put(
-        f"/achievements/edit/{test_achievement.id}",
+        f"/api/achievements/edit/{test_achievement.id}",
         data={"slug": stored_slug, "badge": (BytesIO(b"fake"), "badge.png")},
         content_type="multipart/form-data",
     )
@@ -726,7 +726,7 @@ def test_edit_achievement_rejects_invalid_reward(
     _login_admin(client, test_admin)
 
     response = client.put(
-        f"/achievements/edit/{test_achievement.id}",
+        f"/api/achievements/edit/{test_achievement.id}",
         data={"name": "Changed", "reward": reward},
     )
 
@@ -746,7 +746,7 @@ def test_edit_achievement_invalid_badge_ext_is_400(
     _login_admin(client, test_admin)
 
     response = client.put(
-        f"/achievements/edit/{test_achievement.id}",
+        f"/api/achievements/edit/{test_achievement.id}",
         data={"badge": (BytesIO(b"fake"), "badge.gif")},
         content_type="multipart/form-data",
     )

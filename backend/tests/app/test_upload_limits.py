@@ -5,7 +5,6 @@ project video upload endpoints.
 Upload endpoints and the body size each one legitimately needs:
   - user.new_project / user.edit_project   project video, up to 500 MB (raised limit)
   - submission.submit_work                 20 MB file (Config.SUBMISSION_MAX_BYTES)
-  - upload.upload_file                     10 MB decoded base64 JSON (about 13.4 MB on the wire)
   - user profile picture / project image / wallpaper, project template image:
                                            5-10 MB images
   - notes upload / kiosk upload, achievement badge / certificate / template PDFs,
@@ -21,7 +20,6 @@ from application import create_app
 from application.config import Config, TestingConfig
 from application.extensions import db, scheduler, socketio
 from application.models.project import Project
-from application.routes.upload_routes import MAX_UPLOAD_BYTES
 
 OVER_GLOBAL_LIMIT = Config.MAX_CONTENT_LENGTH + 1
 VIDEO_START = "application.routes.user_routes.start_video_upload_thread"
@@ -48,10 +46,8 @@ def test_large_upload_endpoints_are_real_endpoints(test_app):
 
 
 def test_ordinary_upload_caps_fit_under_the_global_limit():
-    base64_on_the_wire = MAX_UPLOAD_BYTES * 4 // 3 + 4096
     for needed in (
         Config.SUBMISSION_MAX_BYTES + 4096,  # multipart overhead
-        base64_on_the_wire,
         10 * 1024 * 1024 + 4096,  # largest image upload
     ):
         assert needed < Config.MAX_CONTENT_LENGTH
