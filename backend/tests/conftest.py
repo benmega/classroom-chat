@@ -115,7 +115,7 @@ def live_server(test_app):  # <--- CHANGED: Request 'test_app' explicitly
     thread.daemon = True
     thread.start()
 
-    # Return an object compatible with pytest-flask
+    # Return an object with the url/app attributes of the old pytest-flask live_server
     class ServerInfo:
         url = f"http://localhost:{port}"
         app = test_app  # <--- Assign the actual Flask object

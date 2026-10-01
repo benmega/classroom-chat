@@ -120,7 +120,9 @@ backend/
 ├── tools/              # Maintenance helpers (migrate_classroom runs on every deploy; the rest are manual)
 ├── tests/               # Pytest suite
 ├── main.py             # Entry point for the Flask application
-└── requirements.txt   # Backend dependencies
+├── requirements.txt       # Runtime dependencies (the only file deploy.sh installs)
+├── requirements-dev.txt   # Runtime + test/lint tooling (pytest, ruff, mypy)
+└── requirements-tools.txt # Runtime + extras for the manual scripts (reportlab, qrcode, playwright)
 ```
 
 Uploaded user assets (profile pictures, project images, certificates) live in `userData/` at the repo root, not under `backend/`.
@@ -128,7 +130,7 @@ Uploaded user assets (profile pictures, project images, certificates) live in `u
 ---
 
 ## 8. Testing Strategy
-- **Tool**: [Pytest](https://pytest.org/) with [pytest-flask](https://github.com/pytest-dev/pytest-flask).
+- **Tool**: [Pytest](https://pytest.org/) (with pytest-cov), installed through `requirements-dev.txt`.
 - **Scope**:
     - **Unit Tests**: Coverage for individual models and utility functions.
     - **Integration Tests**: Verification of API endpoints via the Flask test client.

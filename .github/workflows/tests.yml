@@ -23,11 +23,15 @@ jobs:
         with:
           python-version: "3.11"
           cache: 'pip'
+          cache-dependency-path: |
+            backend/requirements.txt
+            backend/requirements-dev.txt
           
       - name: Install dependencies
+        # requirements-dev.txt = requirements.txt + pytest, mypy and the other test tooling.
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
       - name: Run Mypy
         run: python -m mypy .
 
@@ -79,6 +83,7 @@ jobs:
           cache-dependency-path: backend/requirements.txt
           
       - name: Install Backend Dependencies
+        # Runtime only: this job just starts `python main.py` for the E2E run.
         working-directory: backend
         run: |
           python -m pip install --upgrade pip

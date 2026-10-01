@@ -1,3 +1,4 @@
+import pytest
 from application.extensions import db
 from application.models.challenge import Challenge
 
@@ -124,7 +125,7 @@ def test_bulk_add_challenges(client, sample_admin):
     assert data["skipped"] == 1
 
 
-def test_advanced_ops(client, sample_admin):
+def test_advanced_ops(client, sample_admin, monkeypatch):
     import sys
     from unittest.mock import MagicMock
 
@@ -132,17 +133,34 @@ def test_advanced_ops(client, sample_admin):
     mock_psutil.Process.return_value.memory_info.return_value.rss = 100 * 1024 * 1024
     mock_psutil.Process.return_value.cpu_percent.return_value = 5.0
     mock_psutil.Process.return_value.create_time.return_value = 1000.0
-    mock_psutil.time.time.return_value = 2000.0
-    sys.modules["psutil"] = mock_psutil
+    # Scoped to this test: a bare sys.modules assignment leaked the mock into the rest
+    # of the session, so a psutil missing from requirements.txt was never noticed.
+    monkeypatch.setitem(sys.modules, "psutil", mock_psutil)
 
     login_as_admin(client, sample_admin)
 
     # stats-extended
     resp = client.get("/api/admin/advanced/stats-extended")
     assert resp.status_code == 200
-    assert "memory_usage_mb" in resp.json["data"]
+    assert resp.json["data"]["memory_usage_mb"] == 100.0
+    assert resp.json["data"]["cpu_percent"] == 5.0
 
     # purge-history
     resp = client.post("/api/admin/advanced/purge-history")
     assert resp.status_code == 200
     assert resp.json["data"]["deleted_messages"] >= 0
+
+
+def test_extended_stats_with_real_psutil(client, sample_admin):
+    # psutil is a runtime requirement; skipped only where it is not installed yet.
+    pytest.importorskip("psutil")
+    login_as_admin(client, sample_admin)
+
+    resp = client.get("/api/admin/advanced/stats-extended")
+
+    assert resp.status_code == 200
+    data = resp.json["data"]
+    assert data["memory_usage_mb"] > 0
+    assert data["cpu_percent"] >= 0
+    assert data["uptime_seconds"] >= 0
+    assert isinstance(data["table_counts"], dict)

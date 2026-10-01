@@ -2,6 +2,7 @@
 File: generate_user_qr_codes.py
 Type: py
 Summary: Generate QR codes for approved students linking to their profile pages.
+Requires: the optional qrcode package (pip install -r requirements-tools.txt).
 """
 
 import argparse

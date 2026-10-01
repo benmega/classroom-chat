@@ -1,3 +1,8 @@
+"""Generate printable student QR cards (PDF).
+
+Needs the optional script packages (reportlab, qrcode): pip install -r requirements-tools.txt
+"""
+
 import argparse
 import io
 import os

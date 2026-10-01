@@ -22,7 +22,9 @@ classroom-chat/
 │   ├── tests/                  # Pytest suite (unit, route, service, socket tests)
 │   ├── tools/                  # Maintenance helpers: migrate_classroom (data steps, run by deploy.sh) + manual scrape/asset scripts
 │   ├── main.py                  # WSGI entrypoint (`gunicorn -w 1 main:app`)
-│   └── requirements.txt
+│   ├── requirements.txt        # Runtime dependencies (what deploy.sh installs)
+│   ├── requirements-dev.txt    # Runtime + test/lint tooling (pytest, ruff, mypy)
+│   └── requirements-tools.txt  # Runtime + extras for the manual scripts (reportlab, qrcode, playwright)
 ├── frontend/
 │   ├── src/                    # React 19 + Vite SPA (current UI)
 │   │   ├── admin/               # react-admin CRUD panel (advanced/debug tooling)

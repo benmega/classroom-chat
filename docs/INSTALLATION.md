@@ -1,7 +1,7 @@
 # Installation - Classroom Chat and Duck System
 
 ## Prerequisites
-- Python 3.11 (matches CI; 3.8+ generally works)
+- Python 3.11 (matches CI; 3.10 is the minimum the pinned dependencies support)
 - Node.js 20+ and npm (for the Vite/React frontend)
 - SQLite (bundled with Python — no separate database server needed for local dev)
 
@@ -25,8 +25,9 @@
 
 3. Install backend dependencies:
    ```bash
-   pip install -r requirements.txt
+   pip install -r requirements-dev.txt
    ```
+   `requirements-dev.txt` is `requirements.txt` (what the app needs to run, and the only file `deploy.sh` installs on the server) plus the test and lint tooling (pytest, pytest-cov, ruff, mypy, factory_boy). If you only want to run the app, `pip install -r requirements.txt` is enough. The one-off scripts that generate student cards (`reports/student_cards/generate_cards.py`), QR codes (`tools/generate_user_qr_codes.py`) and screenshots (`screenshot.py`, `scripts/capture_*.py`) need a few more packages: `pip install -r requirements-tools.txt` (then `playwright install chromium` for the screenshot scripts).
 
 4. Create `backend/.env` with at least:
    ```env
