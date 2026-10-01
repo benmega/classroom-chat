@@ -978,6 +978,47 @@ def test_dashboard_extended(client, sample_admin, test_app, sample_user):
         assert resp2.status_code == 200
 
 
+def test_dashboard_weekly_ducks_use_a_naive_utc_window(
+    client, sample_admin, sample_user
+):
+    """The 7-day window is built from naive UTC, matching the naive DB timestamps."""
+    from datetime import timedelta
+
+    from application.models.duck_transaction import DuckTransaction
+    from application.utilities.helper_functions import utcnow_naive
+
+    login_as_admin(client, sample_admin)
+    now = utcnow_naive()
+    db.session.add_all(
+        [
+            DuckTransaction(
+                user_id=sample_user.id,
+                amount=7.0,
+                reason="Recent earned",
+                timestamp=now - timedelta(days=1),
+            ),
+            DuckTransaction(
+                user_id=sample_user.id,
+                amount=100.0,
+                reason="Too old",
+                timestamp=now - timedelta(days=8),
+            ),
+            DuckTransaction(
+                user_id=sample_user.id,
+                amount=-3.0,
+                reason="Recent spent",
+                timestamp=now - timedelta(days=1),
+            ),
+        ]
+    )
+    db.session.commit()
+
+    resp = client.get("/api/admin/dashboard")
+
+    assert resp.status_code == 200
+    assert resp.get_json()["data"]["ducks_earned_this_week"] == 7
+
+
 def test_admin_logs(client, sample_admin, test_app):
     """Test the /logs route."""
     import os

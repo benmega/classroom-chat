@@ -4,13 +4,21 @@ Type: py
 Summary: Unit tests for achievement routes Flask routes.
 """
 
+import re
+import zipfile
 from io import BytesIO
+from types import SimpleNamespace
 from unittest.mock import patch
 
 import pytest
 from application.extensions import db
 from application.models.achievements import Achievement, UserAchievement
 from application.models.user_certificate import UserCertificate
+from application.routes.achievement_routes import (
+    CERT_URL_REGEX,
+    MAX_CERT_URL_LENGTH,
+    _certificate_download_name,
+)
 from tests.factories import AchievementFactory, AdminFactory, UserFactory
 
 
@@ -149,7 +157,7 @@ def test_submit_certificate_invalid_url(client, init_db, test_user):
         headers={"X-Requested-With": "XMLHttpRequest"},
     )
 
-    assert response.status_code == 200
+    assert response.status_code == 400
 
     assert db.session.query(UserCertificate).count() == initial_count
 
@@ -174,7 +182,7 @@ def test_submit_certificate_no_matching_achievement(client, init_db, test_user):
         headers={"X-Requested-With": "XMLHttpRequest"},
     )
 
-    assert response.status_code == 200
+    assert response.status_code == 422
     assert db.session.query(UserCertificate).count() == initial_count
 
     assert response.is_json
@@ -900,10 +908,13 @@ def test_mark_reviewed(client, init_db, test_admin, test_user, test_achievement)
     assert response.json["status"] == "success"
     assert cert.status == "approved"
 
+    # /api/ routes answer in JSON whether or not the caller sends the AJAX header
     cert.status = "pending"
     db.session.commit()
     response2 = client.post(f"/api/achievements/admin/certificates/reviewed/{cert.id}")
-    assert response2.status_code == 302
+    assert response2.status_code == 200
+    assert response2.json["status"] == "success"
+    assert cert.status == "approved"
 
 
 def test_reject_certificate(client, init_db, test_admin, test_user, test_achievement):
@@ -928,11 +939,14 @@ def test_reject_certificate(client, init_db, test_admin, test_user, test_achieve
     assert cert.status == "rejected"
     assert cert.review_note == "Not a valid certificate."
 
+    # /api/ routes answer in JSON whether or not the caller sends the AJAX header
     cert.status = "pending"
     cert.review_note = None
     db.session.commit()
     response2 = client.post(f"/api/achievements/admin/certificates/reject/{cert.id}")
-    assert response2.status_code == 302
+    assert response2.status_code == 200
+    assert response2.json["status"] == "success"
+    assert cert.status == "rejected"
 
 
 def test_download_certificate(
@@ -990,10 +1004,13 @@ def test_mark_all_reviewed(
     assert response.status_code == 200
     assert cert1.status == "approved"
 
+    # /api/ routes answer in JSON whether or not the caller sends the AJAX header
     cert1.status = "pending"
     db.session.commit()
     response2 = client.post("/api/achievements/admin/certificates/reviewed/all")
-    assert response2.status_code == 302
+    assert response2.status_code == 200
+    assert response2.json["status"] == "success"
+    assert cert1.status == "approved"
 
 
 @patch("application.routes.achievement_routes.io.BytesIO")
@@ -1244,9 +1261,10 @@ def test_certificate_template_preview_url_is_under_api_prefix(
     )
 
 
-def test_review_redirects_land_on_the_api_url(
+def test_review_actions_never_redirect(
     client, init_db, test_admin, test_user, test_achievement
 ):
+    """A plain (non-AJAX) POST gets the JSON answer, not a flash and a redirect."""
     cert = UserCertificate(
         user_id=test_user.id,
         achievement_id=test_achievement.id,
@@ -1260,8 +1278,10 @@ def test_review_redirects_land_on_the_api_url(
 
     response = client.post(f"/api/achievements/admin/certificates/reject/{cert.id}")
 
-    assert response.status_code == 302
-    assert response.headers["Location"].endswith("/api/achievements/admin/certificates")
+    assert response.status_code == 200
+    assert response.is_json
+    assert "Location" not in response.headers
+    assert response.json == {"status": "success", "message": "Certificate rejected."}
 
 
 def test_download_missing_certificate_without_referrer_redirects_to_react_page(
@@ -1446,3 +1466,351 @@ def test_edit_achievement_sprite_rebuild_failure(
 
     assert response.status_code == 500
     assert response.json["status"] == "error"
+
+
+# --- Certificate submission: URL anchoring, stored file names, download names ---
+
+PDF = b"%PDF-1.4 test certificate"
+
+
+@pytest.fixture
+def cert_folder(test_app, tmp_path, monkeypatch):
+    """Point the certificate upload folder at an empty temp directory."""
+    monkeypatch.setitem(test_app.config, "UPLOAD_FOLDER", str(tmp_path))
+    return tmp_path
+
+
+def _submit_cert(client, url, **extra):
+    return client.post(
+        "/api/achievements/submit_certificate",
+        data={"certificate_url": url, **extra},
+        content_type="multipart/form-data",
+        headers={"X-Requested-With": "XMLHttpRequest"},
+    )
+
+
+def _add_cert(user, achievement, file_path, **extra):
+    cert = UserCertificate(
+        user_id=user.id,
+        achievement_id=achievement.id,
+        url="http://test",
+        file_path=file_path,
+        **extra,
+    )
+    db.session.add(cert)
+    db.session.commit()
+    return cert
+
+
+@pytest.mark.parametrize(
+    ("url", "slug"),
+    [
+        ("https://codecombat.com/certificates/abc123?course=cs-1", "cs-1"),
+        ("https://www.ozaria.com/certificates/abc123?course=oz1", "oz1"),
+        ("https://codecombat.com/certificates/abc123?course=cs-1&x=2", "cs-1"),
+        ("https://codecombat.com/certificates/abc123?class=9&course=cs-1", "cs-1"),
+        ("https://codecombat.com/certificates/abc123?x=1&course=cs-1&y=2", "cs-1"),
+        ("https://codecombat.com/certificates/abc123?course=cs-1#top", "cs-1"),
+    ],
+)
+def test_cert_url_regex_accepts_certificate_urls(url, slug):
+    match = re.fullmatch(CERT_URL_REGEX, url)
+
+    assert match is not None
+    assert match.group(1) == slug
+
+
+@pytest.mark.parametrize(
+    "url",
+    [
+        "https://evil.example/?x=https://codecombat.com/certificates/a?course=b",
+        "xhttps://codecombat.com/certificates/a?course=b",
+        "http://codecombat.com/certificates/a?course=b",
+        "https://codecombat.com.evil.example/certificates/a?course=b",
+        "https://codecombat.com/certificates/a?course=b extra",
+        "https://codecombat.com/certificates/a?course=b\nhttps://evil.example",
+        "https://codecombat.com/certificates/a?xcourse=b",
+        "https://codecombat.com/certificates/a?course=",
+        "https://codecombat.com/certificates/a#?course=b",
+        "https://codecombat.com/certificates/a",
+    ],
+)
+def test_cert_url_regex_rejects_prefixed_or_malformed_urls(url):
+    assert re.fullmatch(CERT_URL_REGEX, url) is None
+
+
+def test_submit_certificate_rejects_url_with_evil_prefix(
+    client, init_db, test_user, test_achievement
+):
+    with client.session_transaction() as sess:
+        sess["user"] = test_user.id
+    url = (
+        "https://evil.example/?x="
+        f"https://codecombat.com/certificates/a?course={test_achievement.slug}"
+    )
+
+    response = _submit_cert(client, url)
+
+    assert response.status_code == 400
+    assert response.json["success"] is False
+    assert "Invalid certificate URL" in response.json["error"]
+    assert UserCertificate.query.count() == 0
+
+
+def test_submit_certificate_url_length_is_capped(
+    client, init_db, test_user, test_achievement, cert_folder
+):
+    """A valid link is only matched up to MAX_CERT_URL_LENGTH characters."""
+    with client.session_transaction() as sess:
+        sess["user"] = test_user.id
+    start = f"https://codecombat.com/certificates/abc123?course={test_achievement.slug}&pad="
+    longest = start + "x" * (MAX_CERT_URL_LENGTH - len(start))
+
+    too_long = _submit_cert(client, longest + "x")
+    assert too_long.status_code == 400
+    assert "Invalid certificate URL" in too_long.json["error"]
+    assert UserCertificate.query.count() == 0
+
+    at_the_cap = _submit_cert(
+        client, longest, certificate_file=(BytesIO(PDF), "cert.pdf")
+    )
+    assert at_the_cap.status_code == 200
+    assert UserCertificate.query.one().url == longest
+
+
+def test_submit_certificate_accepts_url_with_trailing_parameters(
+    client, init_db, test_user, test_achievement, cert_folder
+):
+    with client.session_transaction() as sess:
+        sess["user"] = test_user.id
+    url = (
+        "https://codecombat.com/certificates/abc123"
+        f"?class=9&course={test_achievement.slug}&utm=x#top"
+    )
+
+    response = _submit_cert(client, url, certificate_file=(BytesIO(PDF), "cert.pdf"))
+
+    assert response.status_code == 200
+    assert response.json["success"] is True
+    assert UserCertificate.query.one().url == url
+
+
+def test_submit_certificate_trims_the_url(
+    client, init_db, test_user, test_achievement, cert_folder
+):
+    with client.session_transaction() as sess:
+        sess["user"] = test_user.id
+    url = f"https://codecombat.com/certificates/abc123?course={test_achievement.slug}"
+
+    response = _submit_cert(
+        client, f"  {url}\t", certificate_file=(BytesIO(PDF), "cert.pdf")
+    )
+
+    assert response.status_code == 200
+    assert UserCertificate.query.one().url == url
+
+
+def test_submit_certificate_non_string_url_is_a_400(client, init_db, test_user):
+    with client.session_transaction() as sess:
+        sess["user"] = test_user.id
+
+    response = client.post(
+        "/api/achievements/submit_certificate", json={"certificate_url": 5}
+    )
+
+    assert response.status_code == 400
+    assert "Invalid certificate URL" in response.json["error"]
+
+
+def test_submit_certificate_rejects_non_pdf_upload(
+    client, init_db, test_user, test_achievement, cert_folder
+):
+    with client.session_transaction() as sess:
+        sess["user"] = test_user.id
+    url = f"https://codecombat.com/certificates/abc123?course={test_achievement.slug}"
+
+    response = _submit_cert(client, url, certificate_file=(BytesIO(b"x"), "cert.txt"))
+
+    assert response.status_code == 400
+    assert response.json["success"] is False
+    assert "Only PDF is allowed" in response.json["error"]
+    assert UserCertificate.query.count() == 0
+    assert list(cert_folder.iterdir()) == []
+
+
+def test_submit_certificate_stores_only_the_file_name(
+    client, init_db, test_user, test_achievement, cert_folder
+):
+    with client.session_transaction() as sess:
+        sess["user"] = test_user.id
+    url = f"https://codecombat.com/certificates/abc123?course={test_achievement.slug}"
+
+    response = _submit_cert(client, url, certificate_file=(BytesIO(PDF), "cert.pdf"))
+
+    assert response.status_code == 200
+    expected = f"{test_user.username}_{test_achievement.slug}.pdf"
+    cert = UserCertificate.query.one()
+    assert cert.file_path == expected
+    assert (cert_folder / expected).read_bytes() == PDF
+    # The stored name resolves against the upload folder when the file is served
+    served = client.get(f"/api/achievements/view_certificate/{cert.id}")
+    assert served.status_code == 200
+    assert served.mimetype == "application/pdf"
+    assert served.data == PDF
+
+
+def test_resubmission_replaces_a_legacy_absolute_path(
+    client, init_db, test_user, test_achievement, cert_folder
+):
+    with client.session_transaction() as sess:
+        sess["user"] = test_user.id
+    cert = _add_cert(
+        test_user,
+        test_achievement,
+        "/home/ubuntu/classroom-chat/userData/old.pdf",
+        status="approved",
+    )
+    url = f"https://codecombat.com/certificates/abc123?course={test_achievement.slug}"
+
+    response = _submit_cert(client, url, certificate_file=(BytesIO(PDF), "cert.pdf"))
+
+    assert response.status_code == 200
+    db.session.refresh(cert)
+    assert cert.file_path == f"{test_user.username}_{test_achievement.slug}.pdf"
+    assert cert.status == "pending"
+
+
+def test_view_certificate_serves_a_legacy_absolute_path_that_exists(
+    client, init_db, test_user, test_achievement, cert_folder, tmp_path_factory
+):
+    legacy = tmp_path_factory.mktemp("legacy") / "old.pdf"
+    legacy.write_bytes(b"%PDF legacy")
+    cert = _add_cert(test_user, test_achievement, str(legacy))
+
+    response = client.get(f"/api/achievements/view_certificate/{cert.id}")
+
+    assert response.status_code == 200
+    assert response.data == b"%PDF legacy"
+
+
+@pytest.mark.parametrize(
+    "stored",
+    [
+        "alice_cs1.pdf",
+        "/home/ubuntu/classroom-chat/userData/alice_cs1.pdf",
+        "C:\\srv\\classroom-chat\\userData\\alice_cs1.pdf",
+    ],
+)
+def test_certificate_files_fall_back_to_the_upload_folder(
+    client, init_db, test_user, test_achievement, cert_folder, stored
+):
+    """A bare name, or a stale absolute path from another host, finds the file by name."""
+    (cert_folder / "alice_cs1.pdf").write_bytes(PDF)
+    cert = _add_cert(test_user, test_achievement, stored)
+
+    viewed = client.get(f"/api/achievements/view_certificate/{cert.id}")
+    downloaded = client.get(f"/api/achievements/download_certificate/{cert.id}")
+
+    assert viewed.status_code == 200
+    assert viewed.data == PDF
+    assert downloaded.status_code == 200
+    assert downloaded.data == PDF
+    assert downloaded.headers["Content-Disposition"].startswith("attachment")
+
+
+def test_certificate_without_a_file_is_not_found(
+    client, init_db, test_user, test_achievement, cert_folder
+):
+    cert = _add_cert(test_user, test_achievement, None)
+
+    viewed = client.get(f"/api/achievements/view_certificate/{cert.id}")
+    downloaded = client.get(f"/api/achievements/download_certificate/{cert.id}")
+
+    assert viewed.status_code == 404
+    assert downloaded.status_code == 302
+
+
+def test_certificate_json_never_exposes_the_server_path(
+    client, init_db, test_admin, test_user, test_achievement
+):
+    _add_cert(
+        test_user,
+        test_achievement,
+        "/home/ubuntu/classroom-chat/userData/alice_cs1.pdf",
+    )
+    with client.session_transaction() as sess:
+        sess["user"] = test_admin.id
+
+    response = client.get("/api/achievements/admin/certificates")
+
+    certificates = response.json["data"]["certificates"]
+    assert [c["file_path"] for c in certificates] == ["alice_cs1.pdf"]
+
+
+@pytest.mark.parametrize(
+    ("nickname", "achievement_name", "expected"),
+    [
+        ("Sam Lee", "Intro to CS", "Sam_Lee_Intro_to_CS.pdf"),
+        (None, "CS 1", "samuser_CS_1.pdf"),
+        ("", "CS 1", "samuser_CS_1.pdf"),
+        ("../../etc/passwd", "CS/1", "etc_passwd_CS_1.pdf"),
+        ("\u674e\u96f7", "CS 1", "samuser_CS_1.pdf"),
+        ("\u674e\u96f7", "\u8bfe\u7a0b", "samuser.pdf"),
+    ],
+)
+def test_certificate_download_name_is_sanitised(nickname, achievement_name, expected):
+    cert = SimpleNamespace(
+        id=7,
+        user=SimpleNamespace(nickname=nickname, username="samuser"),
+        achievement=SimpleNamespace(name=achievement_name),
+    )
+
+    assert _certificate_download_name(cert) == expected
+
+
+def test_certificate_download_name_falls_back_when_nothing_is_left():
+    cert = SimpleNamespace(
+        id=7,
+        user=SimpleNamespace(nickname="\u674e\u96f7", username="\u674e\u96f7"),
+        achievement=SimpleNamespace(name="\u8bfe\u7a0b"),
+    )
+
+    assert _certificate_download_name(cert) == "certificate_7.pdf"
+    assert _certificate_download_name(cert, with_id=True) == "certificate_7.pdf"
+
+
+def test_download_certificate_names_the_file_after_student_and_achievement(
+    client, init_db, test_user, test_achievement, cert_folder
+):
+    test_user.nickname = "Sam / Lee"
+    db.session.commit()
+    (cert_folder / "stored.pdf").write_bytes(PDF)
+    cert = _add_cert(test_user, test_achievement, "stored.pdf")
+
+    response = client.get(f"/api/achievements/download_certificate/{cert.id}")
+
+    assert response.status_code == 200
+    base = f"Sam_Lee_{test_achievement.name.replace(' ', '_')}"
+    assert f"filename={base}.pdf" in response.headers["Content-Disposition"]
+
+
+def test_download_all_certificates_zip_entries_are_safe_and_unique(
+    client, init_db, test_admin, test_achievement, cert_folder
+):
+    users = [UserFactory(nickname="Sam / Lee") for _ in range(3)]
+    db.session.commit()
+    for i, user in enumerate(users[:2]):
+        (cert_folder / f"cert{i}.pdf").write_bytes(PDF)
+        _add_cert(user, test_achievement, f"cert{i}.pdf")
+    _add_cert(users[2], test_achievement, None)  # no file: left out of the zip
+    with client.session_transaction() as sess:
+        sess["user"] = test_admin.id
+
+    response = client.get("/api/achievements/admin/certificates/download_all")
+
+    assert response.status_code == 200
+    names = zipfile.ZipFile(BytesIO(response.data)).namelist()
+    base = f"Sam_Lee_{test_achievement.name.replace(' ', '_')}"
+    assert len(names) == len(set(names)) == 2
+    assert f"{base}.pdf" in names
+    assert all(n.startswith(base) and n.endswith(".pdf") for n in names)

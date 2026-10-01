@@ -97,7 +97,8 @@ def test_submit_trade_not_logged_in(client):
     response = client.post(
         "/duck_trade/submit_trade", json={"digital_ducks": 1}, headers=AJAX
     )
-    assert response.status_code == 403
+    # 401, not 403: the axios client only clears a logged-out SPA's auth state on 401
+    assert response.status_code == 401
     assert response.get_json() == {
         "status": "error",
         "message": "You must be logged in.",

@@ -300,6 +300,56 @@ def test_remove_user(client, sample_admin, sample_user):
     assert resp.status_code == 400
 
 
+def test_remove_user_blocked_by_related_records_is_a_logged_409(
+    client, sample_admin, sample_user, caplog
+):
+    from unittest.mock import patch
+
+    from sqlalchemy.exc import IntegrityError
+
+    login_as_admin(client, sample_admin)
+    username = sample_user.username
+
+    with (
+        caplog.at_level("ERROR"),
+        patch(
+            "application.extensions.db.session.commit",
+            side_effect=IntegrityError("DELETE FROM users", {}, Exception("FK failed")),
+        ),
+    ):
+        resp = client.post("/api/admin/remove_user", data={"username": username})
+
+    assert resp.status_code == 409
+    assert resp.get_json() == {
+        "success": False,
+        "message": "User has related records that prevent deletion",
+    }
+    assert "remove_user blocked by related records" in caplog.text
+    assert User.query.filter_by(username=username).first() is not None
+
+
+def test_remove_user_unexpected_failure_is_logged(
+    client, sample_admin, sample_user, caplog
+):
+    from unittest.mock import patch
+
+    login_as_admin(client, sample_admin)
+    username = sample_user.username
+
+    with (
+        caplog.at_level("ERROR"),
+        patch(
+            "application.extensions.db.session.commit", side_effect=Exception("DB Error")
+        ),
+    ):
+        resp = client.post("/api/admin/remove_user", data={"username": username})
+
+    assert resp.status_code == 500
+    assert resp.get_json()["message"] == "Internal server error"
+    assert "remove_user failed" in caplog.text
+    assert User.query.filter_by(username=username).first() is not None
+
+
 def test_adjust_ducks(client, sample_admin, sample_user):
     login_as_admin(client, sample_admin)
 

@@ -7,7 +7,8 @@ from application.extensions import db
 from application.models.challenge_log import ChallengeLog
 from application.models.user import User, save_new_user
 from application.utilities.db_helpers import get_canonical_course_slug
-from flask import jsonify, request
+from flask import current_app, jsonify, request
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
 
 from ..admin_routes import admin_bp
@@ -316,8 +317,19 @@ def remove_user():
         db.session.delete(user)
         db.session.commit()
         return jsonify(success=True, message=f"User '{username}' removed successfully")
+    except IntegrityError:
+        db.session.rollback()
+        current_app.logger.exception("remove_user blocked by related records: %s", username)
+        return (
+            jsonify(
+                success=False,
+                message="User has related records that prevent deletion",
+            ),
+            409,
+        )
     except Exception:
         db.session.rollback()
+        current_app.logger.exception("remove_user failed: %s", username)
         return jsonify(success=False, message="Internal server error"), 500
 
 

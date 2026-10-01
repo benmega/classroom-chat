@@ -9,6 +9,7 @@ from application.models.configuration import Configuration
 from application.models.duck_trade import DuckTradeLog
 from application.models.duck_transaction import DuckTransaction
 from application.models.user import User
+from application.utilities.helper_functions import utcnow_naive
 from flask import Response, current_app, request
 from sqlalchemy import func
 from sqlalchemy.orm import selectinload
@@ -25,7 +26,7 @@ def dashboard_data():
     pending_trades = DuckTradeLog.query.filter_by(status="pending").count()
     pending_users = User.query.filter_by(is_approved=False).filter(User.role != 'admin').count()
 
-    last_week = datetime.utcnow() - timedelta(days=7)
+    last_week = utcnow_naive() - timedelta(days=7)
     ducks_earned_week = (
         db.session.query(func.sum(DuckTransaction.amount))
         .filter(DuckTransaction.amount > 0, DuckTransaction.timestamp >= last_week)
@@ -48,7 +49,7 @@ def dashboard_data():
 
     days_param = request.args.get("days", "7")
     tz_offset = request.args.get("tz_offset", 0, type=int)
-    now_utc = datetime.utcnow()
+    now_utc = utcnow_naive()
     now_local = now_utc - timedelta(minutes=tz_offset)
 
     first_tx = DuckTransaction.query.order_by(DuckTransaction.timestamp.asc()).first()
@@ -143,7 +144,7 @@ def get_logs():
     """Returns the last 500 lines of the application log file."""
     import os
 
-    log_path = os.path.join(current_app.config.get("INSTANCE_FOLDER"), "app.log")
+    log_path = os.path.join(current_app.config["INSTANCE_FOLDER"], "app.log")
 
     if not os.path.exists(log_path):
         return {"logs": "Log file not found."}

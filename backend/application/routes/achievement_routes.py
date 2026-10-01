@@ -16,6 +16,7 @@ from application.models.user_certificate import UserCertificate
 from application.utilities.helper_functions import allowed_file
 from flask import (
     Blueprint,
+    current_app,
     flash,
     jsonify,
     redirect,
@@ -30,9 +31,19 @@ from werkzeug.utils import secure_filename
 
 achievements = Blueprint("achievements", __name__)
 
-# Updated to allow codecombat.com and ozaria.com (with optional www)
-CERT_URL_REGEX = r"https://(?:www\.)?(?:codecombat|ozaria)\.com/certificates/[\w\d]+\?.*course=([\w\d-]+)"
+# Updated to allow codecombat.com and ozaria.com (with optional www). Used with
+# re.fullmatch, so nothing may precede the scheme or follow the URL. The ``course``
+# parameter may sit anywhere in the query string and be followed by more
+# parameters or a #fragment.
+CERT_URL_REGEX = (
+    r"https://(?:www\.)?(?:codecombat|ozaria)\.com/certificates/[\w\d]+"
+    r"\?(?:[^\s#]*&)?course=([\w\d-]+)(?:[&#]\S*)?"
+)
 
+
+# Far longer than any real certificate link. The pattern is not linear on a long run
+# of ``&course=`` pairs, so longer input is turned away without being matched.
+MAX_CERT_URL_LENGTH = 2048
 
 ALLOWED_EXTENSIONS = {"pdf"}
 
@@ -53,6 +64,38 @@ def _parse_reward(value):
     except (TypeError, ValueError):
         return None
     return reward if reward >= 1 else None
+
+
+def _certificate_dir():
+    """Folder the certificate PDFs are written to."""
+    return current_app.config.get(
+        "UPLOAD_FOLDER", os.path.join(current_app.config["BASE_DIR"], "certificates")
+    )
+
+
+def _certificate_abs_path(cert):
+    """Absolute path of ``cert``'s PDF, or None when the row has no file.
+
+    New rows store only the file name, which lives in the upload folder. Older
+    rows hold the absolute path of the host that saved them: that path is used
+    while it still exists, otherwise the same name is looked up in the upload folder.
+    """
+    name = cert.stored_filename
+    if not name:
+        return None
+    if os.path.isabs(cert.file_path) and os.path.exists(cert.file_path):
+        return os.path.abspath(cert.file_path)
+    return os.path.abspath(os.path.join(_certificate_dir(), name))
+
+
+def _certificate_download_name(cert, with_id=False):
+    """Safe ``<student>_<achievement>.pdf`` name; ``with_id`` keeps zip entries unique."""
+    user = cert.user
+    owner = secure_filename(user.nickname or "") or secure_filename(user.username or "")
+    stem = secure_filename(f"{owner}_{cert.achievement.name}") or "certificate"
+    if with_id or stem == "certificate":
+        stem = f"{stem}_{cert.id}"
+    return f"{stem}.pdf"
 
 
 # API for the achievements data
@@ -287,11 +330,14 @@ def submit_certificate():
 
     data = request.get_json(silent=True) or request.form
     url = data.get("certificate_url")
+    url = url.strip() if isinstance(url, str) else ""
 
     # 1. Check URL
-    match = re.search(CERT_URL_REGEX, url or "")
+    match = None
+    if len(url) <= MAX_CERT_URL_LENGTH:
+        match = re.fullmatch(CERT_URL_REGEX, url)
     if not match:
-        return jsonify({"success": False, "error": "Invalid certificate URL."}), 200
+        return jsonify({"success": False, "error": "Invalid certificate URL."}), 400
 
     course_slug = match.group(1)
 
@@ -314,13 +360,12 @@ def submit_certificate():
         return jsonify({
             "success": False,
             "error": "No matching achievement found for this course."
-        }), 200
+        }), 422
 
     # 2. Handle File (Upload or Generate)
     file = request.files.get("certificate_file")
-    from flask import current_app
 
-    cert_dir = os.path.join(current_app.config.get("UPLOAD_FOLDER", os.path.join(current_app.config["BASE_DIR"], "certificates")))
+    cert_dir = _certificate_dir()
     os.makedirs(cert_dir, exist_ok=True)
     filename = secure_filename(f"{current_user.username}_{achievement.slug}.pdf")
     filepath = os.path.join(cert_dir, filename)
@@ -328,7 +373,7 @@ def submit_certificate():
     if file and file.filename:
         from application.utilities.helper_functions import allowed_file
         if not allowed_file(file.filename, {'pdf'}):
-            return jsonify({"success": False, "error": "Invalid file type. Only PDF is allowed."}), 200
+            return jsonify({"success": False, "error": "Invalid file type. Only PDF is allowed."}), 400
         file.save(filepath)
     else:
         from application.utilities.cert_generator import generate_certificate
@@ -352,7 +397,7 @@ def submit_certificate():
             user_id=current_user.id,
             achievement_id=achievement.id,
             url=url,
-            file_path=filepath,
+            file_path=filename,
             status="pending",
             is_auto_recommended=is_auto_recommended,
             recommendation_reason=recommendation_reason
@@ -361,7 +406,7 @@ def submit_certificate():
         db.session.add(cert)
     else:
         cert.url = url
-        cert.file_path = filepath
+        cert.file_path = filename
         # A resubmission always requires fresh admin review — never
         # auto-approve just because a prior submission existed.
         cert.status = "pending"
@@ -380,14 +425,14 @@ def view_certificate(cert_id):
     # Intentionally public: certificates are shareable achievements, and this
     # tradeoff is disclosed and accepted during onboarding.
     cert = db.get_or_404(UserCertificate, cert_id)
-    full_path = os.path.abspath(cert.file_path)
-    directory = os.path.dirname(full_path)
-    filename = os.path.basename(full_path)
+    full_path = _certificate_abs_path(cert)
 
-    if not os.path.exists(full_path):
+    if not full_path or not os.path.exists(full_path):
         flash("Certificate file not found on the server.", "error")
         return "File Not Found", 404  # Returns a 404 status code
 
+    directory = os.path.dirname(full_path)
+    filename = os.path.basename(full_path)
     return send_from_directory(directory, filename, mimetype="application/pdf")
 
 
@@ -451,13 +496,7 @@ def mark_reviewed(cert_id):
 
     _send_certificate_approval_email(cert)
 
-    msg = "Certificate marked as reviewed."
-
-    if request.is_json or request.headers.get("X-Requested-With") == "XMLHttpRequest":
-        return jsonify({"status": "success", "message": msg})
-
-    flash(msg, "success")
-    return redirect(url_for("achievements.admin_certificates"))
+    return jsonify({"status": "success", "message": "Certificate marked as reviewed."})
 
 
 @achievements.route("/admin/certificates/reject/<int:cert_id>", methods=["POST"])
@@ -474,33 +513,28 @@ def reject_certificate(cert_id):
 
     emit_activity_resolved(cert.user_id, "certificate", cert.id, "rejected")
 
-    msg = "Certificate rejected."
-
-    if request.is_json or request.headers.get("X-Requested-With") == "XMLHttpRequest":
-        return jsonify({"status": "success", "message": msg})
-
-    flash(msg, "success")
-    return redirect(url_for("achievements.admin_certificates"))
+    return jsonify({"status": "success", "message": "Certificate rejected."})
 
 
 @achievements.route("/download_certificate/<int:cert_id>")
 def download_certificate(cert_id):
     # Intentionally public — see view_certificate.
     cert = db.get_or_404(UserCertificate, cert_id)
-    full_path = os.path.abspath(cert.file_path)
-    directory = os.path.dirname(full_path)
-    filename = os.path.basename(full_path)
+    full_path = _certificate_abs_path(cert)
 
-    if not os.path.exists(full_path):
+    if not full_path or not os.path.exists(full_path):
         flash("Certificate file not found on the server.", "error")
         # The achievements page is a React route (served as the SPA index)
         return redirect(request.referrer or "/achievements")
 
-    # Helper to construct a nice filename for the download
-    download_name = f"{cert.user.nickname}_{cert.achievement.name}.pdf"
+    directory = os.path.dirname(full_path)
+    filename = os.path.basename(full_path)
 
     return send_from_directory(
-        directory, filename, as_attachment=True, download_name=download_name
+        directory,
+        filename,
+        as_attachment=True,
+        download_name=_certificate_download_name(cert),
     )
 
 
@@ -527,13 +561,12 @@ def mark_all_reviewed():
     for user in users_to_evaluate:
         evaluate_user(user, force=True)
 
-    msg = f"{len(certs)} certificates marked as reviewed."
-
-    if request.is_json or request.headers.get("X-Requested-With") == "XMLHttpRequest":
-        return jsonify({"status": "success", "message": msg})
-
-    flash(msg, "success")
-    return redirect(url_for("achievements.admin_certificates"))
+    return jsonify(
+        {
+            "status": "success",
+            "message": f"{len(certs)} certificates marked as reviewed.",
+        }
+    )
 
 
 @achievements.route("/admin/certificates/download_all")
@@ -553,10 +586,15 @@ def download_all_certificates():
 
     memory_file = io.BytesIO()
     with zipfile.ZipFile(memory_file, "w", zipfile.ZIP_DEFLATED) as zf:
+        used_names = set()
         for cert in certs:
-            full_path = os.path.abspath(cert.file_path)
-            if os.path.exists(full_path):
-                filename = f"{cert.user.nickname}_{cert.achievement.name}.pdf"
+            full_path = _certificate_abs_path(cert)
+            if full_path and os.path.exists(full_path):
+                filename = _certificate_download_name(cert)
+                if filename in used_names:
+                    # Two students (or two courses) can share a nickname
+                    filename = _certificate_download_name(cert, with_id=True)
+                used_names.add(filename)
                 zf.write(full_path, filename)
 
     memory_file.seek(0)

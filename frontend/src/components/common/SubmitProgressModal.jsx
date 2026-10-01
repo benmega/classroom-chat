@@ -158,7 +158,11 @@ const SubmitProgressModal = ({ isOpen, onClose, onUrlChange }) => {
                 if (onClose) onClose();
             } else {
                 toast.error(getErrorMessage(error, 'An error occurred during submission.'));
-                setUrl('');
+                // A certificate the server turned away (bad link, no matching course, wrong
+                // file type) keeps the form filled in so only that part needs fixing.
+                const status = error.response?.status;
+                const rejectedCertificate = isCertificate && status >= 400 && status < 500;
+                if (!rejectedCertificate) setUrl('');
             }
         } finally {
             setIsSubmitting(false);

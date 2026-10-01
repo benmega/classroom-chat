@@ -6,6 +6,7 @@ Summary: Flask routes for duck trade routes functionality.
 
 from application.extensions import db
 from application.models.duck_trade import DuckTradeLog
+from application.models.user import User
 from flask import Blueprint, jsonify, request, session
 
 duck_trade = Blueprint("duck_trade", __name__)
@@ -35,10 +36,8 @@ def submit_trade():
         if not userid:
             return (
                 jsonify({"status": "error", "message": "You must be logged in."}),
-                403,
+                401,
             )
-
-        from application import User
 
         user = db.session.get(User, userid)
 

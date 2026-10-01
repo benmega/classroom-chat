@@ -109,6 +109,56 @@ def test_dev_login_get_redirects_to_role_page(client, make_agent_users, url, rol
     assert b"const error = null;" in resp.data
 
 
+def test_dev_login_redirect_follows_the_vite_dev_url(client, make_agent_users):
+    with (
+        patch(
+            "application.routes.dev_login_routes._is_dev_environment",
+            return_value=True,
+        ),
+        patch("application.routes.dev_login_routes.VITE_DEV_URL", "http://localhost:5199"),
+    ):
+        resp = client.get("/dev-login?role=student")
+
+    assert b'const redirectUrl = "http://localhost:5199/chat";' in resp.data
+
+
+@pytest.mark.parametrize("role", [5, ["admin"], {"role": "admin"}, True, 1.5])
+def test_dev_login_post_with_a_non_string_role_is_a_400(client, make_agent_users, role):
+    with patch(
+        "application.routes.dev_login_routes._is_dev_environment", return_value=True
+    ):
+        resp = client.post("/api/dev-login", json={"role": role})
+
+    assert resp.status_code == 400
+    assert "Unknown role" in resp.json["error"]
+    with client.session_transaction() as sess:
+        assert "user" not in sess
+
+
+@pytest.mark.parametrize("body", [{}, {"role": None}, [1, 2], "student", 7, None])
+def test_dev_login_post_without_a_usable_role_defaults_to_admin(
+    client, make_agent_users, body
+):
+    """A body without a role (or not even an object) never raises; it means 'admin'."""
+    with patch(
+        "application.routes.dev_login_routes._is_dev_environment", return_value=True
+    ):
+        resp = client.post("/api/dev-login", json=body)
+
+    assert resp.status_code == 200
+    assert resp.json["role"] == "admin"
+
+
+def test_dev_login_post_role_is_case_insensitive(client, make_agent_users):
+    with patch(
+        "application.routes.dev_login_routes._is_dev_environment", return_value=True
+    ):
+        resp = client.post("/api/dev-login", json={"role": "STUDENT"})
+
+    assert resp.status_code == 200
+    assert resp.json["role"] == "student"
+
+
 @pytest.mark.parametrize("url", ["/dev-login", "/api/dev-login"])
 def test_dev_login_get_establishes_session(client, make_agent_users, url):
     admin, _student, _parent = make_agent_users

@@ -135,6 +135,26 @@ def test_configure_logging_attaches_each_handler_once(restore_logging):
     assert console_handler.formatter is not None
 
 
+def test_log_file_and_log_viewer_share_one_instance_dir(restore_logging):
+    """The log file handler and the admin log viewer (INSTANCE_FOLDER) use one folder."""
+    root = restore_logging
+    _detach_app_handlers(root)
+
+    _configure_logging()
+
+    file_handler = next(h for h in root.handlers if h.get_name() == "app_file")
+    assert file_handler.baseFilename == os.path.abspath(
+        os.path.join(config_module.INSTANCE_DIR, "app.log")
+    )
+    for config_class in (
+        config_module.Config,
+        DevelopmentConfig,
+        TestingConfig,
+        ProductionConfig,
+    ):
+        assert config_class.INSTANCE_FOLDER == config_module.INSTANCE_DIR
+
+
 def test_configure_logging_fills_in_only_the_missing_handler(restore_logging):
     root = restore_logging
     _detach_app_handlers(root)

@@ -7,6 +7,7 @@ from logging.handlers import RotatingFileHandler
 
 from application.config import (
     DEFAULT_DEV_CORS_ORIGINS,
+    INSTANCE_DIR,
     DevelopmentConfig,
     ProductionConfig,
     TestingConfig,
@@ -50,13 +51,10 @@ def _configure_logging():
         root_logger.addHandler(console_handler)
 
     if _FILE_HANDLER_NAME not in attached:
-        log_dir = os.path.join(
-            os.path.abspath(os.path.dirname(os.path.dirname(__file__))), "instance"
-        )
-        os.makedirs(log_dir, exist_ok=True)
+        os.makedirs(INSTANCE_DIR, exist_ok=True)
         # delay=True: the file is opened on the first write, not on creation.
         file_handler = RotatingFileHandler(
-            os.path.join(log_dir, "app.log"),
+            os.path.join(INSTANCE_DIR, "app.log"),
             maxBytes=10 * 1024 * 1024,
             backupCount=5,
             delay=True,

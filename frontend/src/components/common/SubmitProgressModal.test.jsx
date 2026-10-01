@@ -168,5 +168,38 @@ describe('SubmitProgressModal', () => {
 
             await waitFor(() => expect(toast.error).toHaveBeenCalledWith('Submission failed.'));
         });
+
+        it.each([
+            [400, 'Invalid certificate URL.'],
+            [400, 'Invalid file type. Only PDF is allowed.'],
+            [422, 'No matching achievement found for this course.'],
+        ])('shows the server message of a %i rejection and keeps the form filled in', async (status, error) => {
+            vi.spyOn(console, 'error').mockImplementation(() => {});
+            client.post.mockRejectedValueOnce({ response: { status, data: { success: false, error } } });
+            const onClose = vi.fn();
+            renderModal({ onClose });
+
+            typeUrl(CERT_URL);
+            await screen.findByText('Please upload the certificate PDF');
+            submit();
+
+            await waitFor(() => expect(toast.error).toHaveBeenCalledWith(error));
+            expect(document.getElementById('url').value).toBe(CERT_URL);
+            expect(screen.getByText('Please upload the certificate PDF')).toBeInTheDocument();
+            expect(onClose).not.toHaveBeenCalled();
+        });
+
+        it('clears the url after a server failure', async () => {
+            vi.spyOn(console, 'error').mockImplementation(() => {});
+            client.post.mockRejectedValueOnce({ response: { status: 500, data: { success: false, error: 'Failed to generate certificate: boom' } } });
+            renderModal();
+
+            typeUrl(CERT_URL);
+            await screen.findByText('Please upload the certificate PDF');
+            submit();
+
+            await waitFor(() => expect(toast.error).toHaveBeenCalledWith('Failed to generate certificate: boom'));
+            await waitFor(() => expect(document.getElementById('url').value).toBe(''));
+        });
     });
 });

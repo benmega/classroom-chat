@@ -1,9 +1,14 @@
 """
 File: dev_login_routes.py
 Type: py
-Summary: Local-only development shortcut login route.
+Summary: Local-only development shortcut login routes.
          Blocked in production and from non-localhost addresses.
-         Agents should use /dev-login for authentication during normal tasks.
+         Agents should POST {"role": "admin"} to /api/dev-login for authentication
+         during normal tasks. GET /dev-login and GET /api/dev-login log in from a
+         browser tab and show a helper page that forwards to the Vite dev server.
+         The Vite dev server proxies /api/* to Flask, so /api/dev-login works on
+         both ports; /dev-login is only Flask's (the Vite server's own /dev-login
+         is the React DevLogin page, which POSTs to /api/dev-login).
 
 WARNING: This route must NEVER be enabled in production.
          It bypasses the standard password-based login flow.
@@ -12,6 +17,7 @@ WARNING: This route must NEVER be enabled in production.
 import os
 
 from application.models.user import User
+from application.utilities.spa import VITE_DEV_URL
 from flask import (
     Blueprint,
     current_app,
@@ -52,12 +58,15 @@ def _resolve_role() -> str:
     Read the role from whichever source is available:
       GET  → query param  ?role=admin
       POST → JSON body    {"role": "admin"}
-    Defaults to 'admin' if omitted.
+    Defaults to 'admin' if omitted. A role that is not a string is returned as its
+    text, so it is reported as an unknown role instead of raising.
     """
     if request.method == "GET":
-        return request.args.get("role", "admin").lower()
-    data = request.get_json(silent=True) or {}
-    return data.get("role", "admin").lower()
+        role = request.args.get("role")
+    else:
+        data = request.get_json(silent=True)
+        role = data.get("role") if isinstance(data, dict) else None
+    return "admin" if role is None else str(role).lower()
 
 
 def _guard_response():
@@ -71,7 +80,7 @@ def _guard_response():
 
 def _redirect_url_for(role: str) -> str:
     """Vite dev-server page to open once logged in as ``role``."""
-    redirect_url = "http://localhost:5173/"
+    redirect_url = f"{VITE_DEV_URL}/"
     if role == "admin":
         redirect_url += "admin/dashboard"
     elif role == "parent":
@@ -88,7 +97,7 @@ def _render_dev_login(role: str, error=None):
     )
 
 
-def _perform_login(user_obj: User, role: str):
+def _perform_login(user_obj: User):
     """Internal helper to establish the session for a user."""
     session["user"] = user_obj.id
     session.permanent = True
@@ -101,8 +110,11 @@ def _perform_login(user_obj: User, role: str):
 @dev_login.route("/dev-login", methods=["GET"])
 def browser_dev_login():
     """
-    Premium browser-facing shortcut for dev-login.
-    Matches the 'main app' aesthetics while providing instant authentication.
+    Browser-facing dev-login: log in, then show the helper page that forwards to
+    the Vite dev server (GET /dev-login?role=admin).
+
+    This is Flask's page (e.g. http://localhost:8000/dev-login). On the Vite dev
+    server itself /dev-login is the React DevLogin page, not this route.
     """
     blocked = _guard_response()
     if blocked:
@@ -119,7 +131,7 @@ def browser_dev_login():
         if not user_obj:
             error = f"Agent user '{username}' not found in DB."
         else:
-            _perform_login(user_obj, role)
+            _perform_login(user_obj)
 
     # In development, redirect to the Vite dev server to ensure the 'main app' loads.
     # If the user is already on the Vite server, this just brings them to /.
@@ -131,8 +143,9 @@ def agent_dev_login():
     """
     Local-only authentication shortcut for agent/automated tasks.
 
-    GET  (browser navigation): /dev-login?role=admin
-    POST (programmatic):       body { "role": "admin" | "student" }
+    POST (programmatic):       /api/dev-login, body { "role": "admin" | "student" | "parent" }
+    GET  (browser navigation): /api/dev-login?role=admin, shows the same helper
+                               page as GET /dev-login
 
     Both methods apply the same security guards. Fails closed on any
     non-local request, production environment, or unrecognised role.
@@ -161,9 +174,9 @@ def agent_dev_login():
             404,
         )
 
-    _perform_login(user_obj, role)
+    _perform_login(user_obj)
 
-    # For browser navigation (GET), use the premium template or redirect.
+    # For browser navigation (GET), show the helper page that forwards to Vite.
     if request.method == "GET":
         return _render_dev_login(role)
 

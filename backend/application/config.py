@@ -48,13 +48,19 @@ def cors_origins_from_env(default):
     return split_csv(os.getenv("CORS_ORIGINS", "")) or list(default)
 
 
+# backend/instance: the SQLite databases and the application log (app.log) live here.
+INSTANCE_DIR = os.path.abspath(
+    os.path.join(os.path.dirname(os.path.dirname(__file__)), "instance")
+)
+
+
 class Config:
     # BASE_DIR is classroom-chat/
     BASE_DIR = os.path.abspath(
         os.path.join(os.path.dirname(os.path.dirname(__file__)), "..")
     )
 
-    INSTANCE_FOLDER = os.path.join(BASE_DIR, "backend", "instance")
+    INSTANCE_FOLDER = INSTANCE_DIR
     STATIC_FOLDER = os.path.join(BASE_DIR, "frontend", "static")
     TEMPLATE_FOLDER = os.path.join(BASE_DIR, "frontend", "templates")
 
