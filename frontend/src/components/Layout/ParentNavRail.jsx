@@ -27,7 +27,7 @@ const ParentNavRail = ({ handleLogout }) => {
         <aside className="desktop-nav-rail">
             {/* Logo */}
             <Link to="/parent/dashboard" className="nav-rail-logo" data-tooltip="Classroom Chat">
-                <img src="/images/logo.ico" alt="Classroom Chat Logo" />
+                <img src="/images/logo.png" alt="Classroom Chat Logo" />
             </Link>
 
             {/* Center nav items */}

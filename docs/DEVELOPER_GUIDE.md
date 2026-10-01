@@ -34,6 +34,7 @@ classroom-chat/
 │   ├── tests-e2e/               # Playwright end-to-end tests
 │   ├── templates/dev_login.html # Only remaining Jinja template (dev login page)
 │   ├── static/                  # Images (the legacy Jinja-era CSS/JS was removed)
+│   ├── public/                  # Copied as-is into dist/ by Vite for the SPA; public/static/images is the SPA's copy of the default avatar/placeholder, static/images the backend's (keep both small)
 │   └── package.json
 ├── infrastructure/              # nginx config, Cognito CFN template, Lambda transcriber, DNS/db-sync scripts
 ├── docs/                        # This documentation

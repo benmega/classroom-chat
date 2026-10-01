@@ -62,7 +62,7 @@ const Layout = ({ children }) => {
                         <div id="logo-container" className="header-logo-wrap">
                             <Link to={isParent ? "/parent/dashboard" : "/chat"} className="logo-link">
                                 <div className="logo-icon-wrapper">
-                                    <img src="/images/logo.ico" alt="Classroom Chat Logo" className="logo-img" />
+                                    <img src="/images/logo.png" alt="Classroom Chat Logo" className="logo-img" />
                                 </div>
                                 <span className="logo-text">ClassroomChat</span>
                             </Link>

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { formatLargeNumber, formatStaticUrl, formatRelativeTime } from './formatters';
+import { formatLargeNumber, formatStaticUrl, cssUrl, formatRelativeTime } from './formatters';
 
 describe('formatters', () => {
     describe('formatLargeNumber', () => {
@@ -37,6 +37,34 @@ describe('formatters', () => {
             expect(formatStaticUrl('/avatar.png')).toBe('/avatar.png');
             // Relative path prepends /static/
             expect(formatStaticUrl('logo.png')).toBe('/static/logo.png');
+        });
+    });
+
+    describe('cssUrl', () => {
+        it('returns none when there is no image', () => {
+            expect(cssUrl('')).toBe('none');
+            expect(cssUrl(null)).toBe('none');
+            expect(cssUrl(undefined)).toBe('none');
+        });
+
+        it('quotes plain urls', () => {
+            expect(cssUrl('/images/standard_projects/proj_1.jpg')).toBe('url("/images/standard_projects/proj_1.jpg")');
+            expect(cssUrl('images/projects/a.jpg')).toBe('url("/static/images/projects/a.jpg")');
+            expect(cssUrl('https://example.com/a.png')).toBe('url("https://example.com/a.png")');
+        });
+
+        it('encodes spaces and parentheses', () => {
+            expect(cssUrl('images/projects/Tepun - Text-Based Adventure (2).jpg'))
+                .toBe('url("/static/images/projects/Tepun%20-%20Text-Based%20Adventure%20%282%29.jpg")');
+        });
+
+        it('cannot be broken out of by quotes or backslashes in a filename', () => {
+            expect(cssUrl('/user/project_images/a"b\\c.jpg')).toBe('url("/user/project_images/a%22b%5Cc.jpg")');
+        });
+
+        it('does not double-encode urls that are already percent-encoded', () => {
+            expect(cssUrl('/images/projects/My%20Project.jpg')).toBe('url("/images/projects/My%20Project.jpg")');
+            expect(cssUrl('/images/projects/100%.jpg')).toBe('url("/images/projects/100%25.jpg")');
         });
     });
 

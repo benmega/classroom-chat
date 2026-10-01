@@ -108,7 +108,7 @@ const AdminLayout = ({ children }) => {
                     title="Admin HQ Home"
                     aria-label="Admin HQ Home"
                 >
-                    <img src="/images/logo.ico" alt="Admin HQ Logo" />
+                    <img src="/images/logo.png" alt="Admin HQ Logo" />
                     <span className="admin-brand-text">Admin HQ</span>
                 </Link>
 

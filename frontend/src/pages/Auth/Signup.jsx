@@ -118,7 +118,7 @@ const Signup = () => {
             <div className="auth-container">
                 <div className="auth-header">
                     <div className="brand-logo">
-                        <img src="/images/logo.ico" alt="Classroom Chat Logo" />
+                        <img src="/images/logo.png" alt="Classroom Chat Logo" />
                     </div>
                     <h1 className="auth-title">
                         {selectedRole === 'student' ? 'Welcome new student' : 'Welcome new parent'}

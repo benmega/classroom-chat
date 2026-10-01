@@ -3,7 +3,7 @@ import client from '../../api/client';
 import { showConfirm } from '../../utils/confirm';
 import toast from 'react-hot-toast';
 import { Plus, Edit, X, BookOpen } from 'lucide-react';
-import { formatStaticUrl } from '../../utils/formatters';
+import { cssUrl } from '../../utils/formatters';
 import Modal from '../../components/common/Modal';
 import ImageUpload from '../../components/common/ImageUpload';
 import { ALIGNED_NODES } from '../../constants/courseProgress';
@@ -148,7 +148,7 @@ const AdminStandardProjects = () => {
                                 <div 
                                     className="project-card-header" 
                                     style={{ 
-                                        backgroundImage: p.image_url ? `url(${formatStaticUrl(p.image_url)})` : 'none',
+                                        backgroundImage: cssUrl(p.image_url),
                                         backgroundColor: p.image_url ? 'transparent' : 'var(--blue-600)'
                                     }}
                                 >

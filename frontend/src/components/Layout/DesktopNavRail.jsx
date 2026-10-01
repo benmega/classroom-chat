@@ -20,7 +20,7 @@ const DesktopNavRail = ({ user, location, handleLogout }) => {
     return (
         <aside className="desktop-nav-rail">
             <Link to="/chat" className="nav-rail-logo" data-tooltip="Classroom Chat">
-                <img src="/images/logo.ico" alt="Classroom Chat Logo" />
+                <img src="/images/logo.png" alt="Classroom Chat Logo" />
             </Link>
             
             <div className="nav-rail-center">

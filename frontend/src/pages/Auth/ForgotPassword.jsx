@@ -44,7 +44,7 @@ const ForgotPassword = () => {
             <div className="auth-container">
                 <div className="auth-header">
                     <div className="brand-logo">
-                        <img src="/images/logo.ico" alt="Classroom Chat Logo" />
+                        <img src="/images/logo.png" alt="Classroom Chat Logo" />
                     </div>
                     <h1 className="auth-title">Forgot Password</h1>
                     <p className="auth-subtitle">Select your role to reset your password</p>

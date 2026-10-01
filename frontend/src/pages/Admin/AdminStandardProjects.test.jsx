@@ -76,6 +76,27 @@ describe('AdminStandardProjects', () => {
         expect(screen.getByText('Desc 1')).toBeInTheDocument();
     });
 
+    it('quotes and encodes thumbnail urls so names with spaces and parentheses work', async () => {
+        const mockProjects = {
+            1: { id: 1, name: 'Project 1', description: 'Desc 1', image_url: 'images/projects/Tepun - Text-Based Adventure (2).jpg' },
+            2: { id: 2, name: 'Project 2', description: 'Desc 2' }
+        };
+
+        client.get.mockResolvedValueOnce({
+            data: { status: 'success', data: { templates: mockProjects } }
+        });
+
+        renderWithRouter(<AdminStandardProjects />);
+
+        await waitFor(() => {
+            expect(screen.getByText('Project 1')).toBeInTheDocument();
+        });
+        const withImage = screen.getByText('Project 1').closest('.project-card').querySelector('.project-card-header');
+        expect(withImage.style.backgroundImage).toContain('Tepun%20-%20Text-Based%20Adventure%20%282%29.jpg');
+        const withoutImage = screen.getByText('Project 2').closest('.project-card').querySelector('.project-card-header');
+        expect(withoutImage.style.backgroundImage).toBe('none');
+    });
+
     it('opens add modal, fills form, and submits new project', async () => {
         client.get.mockResolvedValue({
             data: { status: 'success', data: { templates: {} } }

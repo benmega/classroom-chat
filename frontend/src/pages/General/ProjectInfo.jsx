@@ -4,7 +4,7 @@ import { ArrowLeft, Award, BookOpen, Code2, CheckCircle2, HelpCircle, Loader2, C
 import client from '../../api/client';
 import useAuthStore from '../../store/useAuthStore';
 import toast from 'react-hot-toast';
-import { formatStaticUrl } from '../../utils/formatters';
+import { cssUrl } from '../../utils/formatters';
 import './ProjectInfo.css';
 
 
@@ -140,7 +140,7 @@ const ProjectInfo = () => {
                         <div 
                             className="project-header-cover-img"
                             style={{ 
-                                backgroundImage: project.image_url ? `url(${formatStaticUrl(project.image_url)})` : 'none',
+                                backgroundImage: cssUrl(project.image_url),
                                 backgroundColor: project.image_url ? 'transparent' : 'var(--blue-600)',
                                 display: 'flex',
                                 alignItems: 'center',
