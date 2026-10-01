@@ -125,6 +125,22 @@ describe('App Component', () => {
     expect(screen.getByText('Classroom Chat')).toBeInTheDocument();
   });
 
+  it('colours the loading spinner from the --blue-600 CSS variable', () => {
+    useAuthStore.mockReturnValue({
+      isLoading: true,
+      isAuthenticated: false,
+      isServerOffline: false,
+      user: null,
+      checkAuth: vi.fn(),
+    });
+
+    window.history.pushState({}, 'Test page', '/chat');
+    renderApp();
+    const spinner = document.querySelector('svg');
+    expect(spinner.getAttribute('style')).toContain('color: var(--blue-600)');
+    expect(spinner.getAttribute('stroke')).toBe('currentColor');
+  });
+
   it('redirects parent role to parent dashboard', async () => {
     window.history.pushState({}, 'Test page', '/shop');
     useAuthStore.mockReturnValue({

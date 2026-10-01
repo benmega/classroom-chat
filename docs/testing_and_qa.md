@@ -44,7 +44,7 @@ Classroom Chat employs a multi-layered testing strategy to ensure application st
 ## 3. Automation (CI)
 Tests run automatically via GitHub Actions (`.github/workflows/`).
 
-- **`tests.yml`**: On push and pull request to `main`/`master`: runs the backend job (mypy + pytest) and the frontend job (`npm run test -- --run`) in parallel. Reusable via `workflow_call` so deploy workflows can gate on it.
+- **`tests.yml`**: On push and pull request to `main`/`master`: runs the backend job (mypy + pytest) and the frontend job (`npm run test -- --coverage`) in parallel. Reusable via `workflow_call` so deploy workflows can gate on it.
 - **`lint.yml`**: On every pull request and on pushes to `main`/`master`/`working`: runs Ruff over the backend and ESLint (`npm run lint`) over the frontend as two separate jobs. Reusable via `workflow_call` so deploy workflows can gate on it. It is still worth running `npm run lint` locally before pushing frontend changes.
 - **`deploy.yml` / `deploy-frontend.yml`**: Deploy to EC2 / S3+CloudFront on pushes to the `deploy` branch, gated on `tests.yml` and `lint.yml` passing first.
 

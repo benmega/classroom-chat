@@ -1,15 +1,11 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { io } from 'socket.io-client';
 import toast from 'react-hot-toast';
+import { getAbsoluteApiBaseUrl } from '../utils/apiUrl';
 
-const getSocketUrl = () => {
-  if (import.meta.env.VITE_API_URL) return import.meta.env.VITE_API_URL;
-  
-  // Use same origin in both dev and prod to leverage Vite proxy/same-host serving.
-  return `${window.location.protocol}//${window.location.hostname}${window.location.port ? `:${window.location.port}` : ''}`;
-};
-
-const SOCKET_URL = getSocketUrl();
+// VITE_API_URL when set, otherwise this page's own origin (the Vite proxy in dev,
+// same-host serving in prod).
+const SOCKET_URL = getAbsoluteApiBaseUrl();
 
 // Singleton socket instance
 let _socket = null;

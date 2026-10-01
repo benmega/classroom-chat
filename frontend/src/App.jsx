@@ -4,7 +4,6 @@ import { Toaster } from 'react-hot-toast';
 import { Loader2 } from 'lucide-react';
 import useAuthStore from './store/useAuthStore';
 import { SidebarProvider } from './context/SidebarContext';
-import { THEME } from './utils/theme';
 import ConfirmDialog from './components/common/ConfirmDialog';
 import ErrorBoundary from './components/common/ErrorBoundary';
 
@@ -79,7 +78,7 @@ const PageLoader = () => (
     height: '100vh',
     background: 'var(--bg-primary)',
   }}>
-    <Loader2 style={{ animation: 'spin 1s linear infinite' }} size={40} strokeWidth={1.5} color={THEME.colors.blue600} />
+    <Loader2 style={{ animation: 'spin 1s linear infinite', color: 'var(--blue-600)' }} size={40} strokeWidth={1.5} />
   </div>
 );
 
@@ -106,7 +105,7 @@ const ProtectedRoute = ({ children, adminOnly = false, parentOnly = false }) => 
       background: 'var(--bg-primary)', 
       color: 'var(--text-primary)',
     }}>
-        <Loader2 style={{ animation: 'spin 1s linear infinite' }} size={64} strokeWidth={1.5} color={THEME.colors.blue600} />
+        <Loader2 style={{ animation: 'spin 1s linear infinite', color: 'var(--blue-600)' }} size={64} strokeWidth={1.5} />
         <div style={{ textAlign: 'center' }}>
           <h2 style={{ margin: 0, fontSize: 'var(--font-2xl)', fontWeight: 'bold', letterSpacing: '-0.025em' }}>Classroom Chat</h2>
           <p style={{ margin: '0.25rem 0 0 0', opacity: 0.7, fontSize: 'var(--font-sm)' }}>Preparing your workspace...</p>

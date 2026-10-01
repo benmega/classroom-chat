@@ -220,3 +220,33 @@ describe('useChatSocket Hook', () => {
     });
   });
 });
+
+describe('useChatSocket server URL', () => {
+  // The URL is resolved when the module loads, so each case imports a fresh copy.
+  const connectedUrl = async (viteApiUrl) => {
+    vi.resetModules();
+    vi.stubEnv('VITE_API_URL', viteApiUrl);
+    const { io } = await import('socket.io-client');
+    const { getSocket } = await import('./useChatSocket');
+    io.mockClear();
+    getSocket();
+    return io.mock.calls[0][0];
+  };
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.resetModules();
+  });
+
+  it('connects to this page origin when VITE_API_URL is unset (the Vite proxy in dev)', async () => {
+    expect(await connectedUrl('')).toBe(window.location.origin);
+  });
+
+  it('connects to VITE_API_URL when it is set', async () => {
+    expect(await connectedUrl('https://api.example.com')).toBe('https://api.example.com');
+  });
+
+  it('drops a trailing slash from VITE_API_URL', async () => {
+    expect(await connectedUrl('https://api.example.com/')).toBe('https://api.example.com');
+  });
+});

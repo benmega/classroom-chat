@@ -196,6 +196,26 @@ describe('Shop', () => {
     expect(screen.queryByText(/Upload Wallpaper/i)).toBeInTheDocument();
   });
 
+  describe('Claim Ducks bookmarklet', () => {
+    afterEach(() => vi.unstubAllEnvs());
+
+    const bookmarkletHref = async () => {
+      renderWithProviders(<Shop />);
+      const link = await screen.findByText('Claim Ducks');
+      return link.getAttribute('href');
+    };
+
+    it('submits to this page origin when VITE_API_URL is unset', async () => {
+      vi.stubEnv('VITE_API_URL', '');
+      expect(await bookmarkletHref()).toContain(`'${window.location.origin}/challenge/submit?url='`);
+    });
+
+    it('submits to the configured API origin, without doubling the slash', async () => {
+      vi.stubEnv('VITE_API_URL', 'https://api.example.com/');
+      expect(await bookmarkletHref()).toContain("'https://api.example.com/challenge/submit?url='");
+    });
+  });
+
   describe('wallpaper cropping', () => {
     const chooseWallpaper = async () => {
       renderWithProviders(<Shop />);

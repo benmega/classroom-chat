@@ -60,3 +60,12 @@ jobs:
     - name: Run ESLint
       run: npm run lint
 
+    # Advisory only: surfaces vulnerable / outdated packages in the log without
+    # failing the lint gate that the deploy workflows depend on.
+    - name: Audit dependencies (advisory)
+      run: npm audit --audit-level=high
+      continue-on-error: true
+
+    - name: List outdated dependencies (advisory)
+      run: npm outdated || true
+

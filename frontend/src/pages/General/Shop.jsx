@@ -5,6 +5,7 @@ import useAuthStore from '../../store/useAuthStore';
 import client from '../../api/client';
 import { loadCropper } from '../../utils/loadCropper';
 import { getErrorMessage } from '../../utils/apiError';
+import { getAbsoluteApiBaseUrl } from '../../utils/apiUrl';
 import './Shop.css'; // Let's use a standard CSS file
 import WallpaperCropModal from '../../components/profile/WallpaperCropModal';
 import Skeleton from '../../components/common/Skeleton';
@@ -41,8 +42,7 @@ const Shop = () => {
     const cropperRef = React.useRef(null);
     const cropImgRef = React.useRef(null);
 
-    const apiBase = import.meta.env.VITE_API_URL || '';
-    const fullApiUrl = apiBase.startsWith('http') ? apiBase : (window.location.origin + apiBase);
+    const fullApiUrl = getAbsoluteApiBaseUrl();
 
     const bookmarkletCode = `javascript:(function(){
         const url = window.location.href;

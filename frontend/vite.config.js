@@ -1,5 +1,47 @@
-import { defineConfig } from 'vite'
+import fs from 'node:fs'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
+import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
+
+const frontendDir = path.dirname(fileURLToPath(import.meta.url))
+const publicDir = path.join(frontendDir, 'public')
+
+// Flask backend that the dev and preview servers forward API traffic to. Override
+// with VITE_DEV_API (shell variable or frontend/.env, see .env.example).
+const API = loadEnv('development', frontendDir, 'VITE_').VITE_DEV_API || 'http://localhost:8000'
+
+// A production build ships frontend/public, while Flask serves its own frontend/static.
+// Where both hold a /static file, let the public/ copy win so dev and preview show what
+// production shows; everything else (achievement badges, project templates, ...) still
+// comes from the backend. Returning a URL makes Vite serve it instead of proxying.
+const servePublicFirst = (req) => {
+  try {
+    const file = path.join(publicDir, decodeURIComponent(req.url.split('?')[0]))
+    if (file.startsWith(publicDir + path.sep) && fs.statSync(file).isFile()) return req.url
+  } catch {
+    // Not in public/ (or a malformed URL): let the backend answer.
+  }
+}
+
+// Only prefixes the frontend requests belong here. Everything under /api (admin,
+// achievements, dev-login, project-templates, session, ...) is already covered by '/api'.
+const proxy = {
+  '/api': API,
+  '/message': API,
+  '/user': API,
+  '/challenge': API,
+  '/duck_trade': API,
+  '/notes': API,
+  // No direct frontend caller, but the backend returns stored-file URLs under /upload/uploads/.
+  '/upload': API,
+  '/static': { target: API, changeOrigin: true, bypass: servePublicFirst },
+  '/socket.io': {
+    target: API,
+    ws: true,
+    changeOrigin: true,
+  },
+}
 
 export default defineConfig({
   plugins: [react()],
@@ -83,29 +125,7 @@ export default defineConfig({
       },
     },
   },
-  server: {
-    proxy: {
-      '/api': 'http://localhost:8000',
-      '/track-requests': 'http://localhost:8000',
-      '/admin/track-requests': 'http://localhost:8000',
-      '/message': 'http://localhost:8000',
-      '/user': 'http://localhost:8000',
-      '/session': 'http://localhost:8000',
-      '/upload': 'http://localhost:8000',
-      '/challenge': 'http://localhost:8000',
-      '/api/admin': 'http://localhost:8000',
-      '/duck_trade': 'http://localhost:8000',
-      '/api/achievements': 'http://localhost:8000',
-      '/notes': 'http://localhost:8000',
-      '/server': 'http://localhost:8000',
-      '/api/dev-login': 'http://localhost:8000',
-      '/api/project-templates': 'http://localhost:8000',
-      '/static': 'http://localhost:8000',
-      '/socket.io': {
-        target: 'http://localhost:8000',
-        ws: true,
-        changeOrigin: true,
-      },
-    },
-  },
+  server: { proxy },
+  // `vite preview` serves the production build (port 4173) and needs the same backend routes.
+  preview: { proxy },
 })

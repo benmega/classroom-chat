@@ -3,13 +3,17 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "dev": "vite",
     "build": "cross-env NODE_OPTIONS=--max-old-space-size=4096 vite build",
     "build:strict": "cross-env NODE_OPTIONS=--max-old-space-size=512 vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "vitest",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui"
   },
@@ -41,8 +45,6 @@
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",
-    "@types/react": "^19.2.14",
-    "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^4.7.0",
     "@vitest/coverage-v8": "^2.1.9",
     "cross-env": "^10.1.0",
@@ -52,7 +54,6 @@
     "eslint-plugin-react-refresh": "^0.5.2",
     "globals": "^17.4.0",
     "happy-dom": "^20.8.9",
-    "jsdom": "^29.0.2",
     "msw": "^2.13.2",
     "vite": "^5.4.21",
     "vitest": "^2.1.0"

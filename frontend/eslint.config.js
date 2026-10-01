@@ -19,12 +19,6 @@ export default defineConfig([
       ecmaVersion: 2020,
       globals: {
         ...globals.browser,
-        Swal: 'readonly',
-        Chart: 'readonly',
-        io: 'readonly',
-        bootstrap: 'readonly',
-        Cropper: 'readonly',
-        showBootstrapToast: 'readonly',
       },
       parserOptions: {
         ecmaVersion: 'latest',

@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi, afterEach } from 'vitest'
 import config from './vite.config.js'
 
 // Guards the route-level code splitting: the student entry path (index.html) must only
@@ -56,4 +56,99 @@ describe('vite manualChunks', () => {
       expect(manualChunks(dep(pkg))).toBeUndefined()
     },
   )
+})
+
+// Re-evaluates the config so the VITE_DEV_API handling can be exercised ('' = unset).
+const loadConfig = async (devApi = '') => {
+  vi.resetModules()
+  vi.stubEnv('VITE_DEV_API', devApi)
+  return (await import('./vite.config.js')).default
+}
+const targetOf = (entry) => (typeof entry === 'string' ? entry : entry.target)
+
+describe('vite dev/preview proxy', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs()
+    vi.resetModules()
+  })
+
+  it('shares one proxy between the dev server and vite preview', async () => {
+    const { server, preview } = await loadConfig()
+    expect(preview.proxy).toBe(server.proxy)
+  })
+
+  it('only lists the backend prefixes the frontend uses, without /api sub-paths or dead routes', async () => {
+    const { server } = await loadConfig()
+    expect(Object.keys(server.proxy).sort()).toEqual([
+      '/api',
+      '/challenge',
+      '/duck_trade',
+      '/message',
+      '/notes',
+      '/socket.io',
+      '/static',
+      '/upload',
+      '/user',
+    ])
+  })
+
+  it('forwards every prefix to http://localhost:8000 by default', async () => {
+    const { server } = await loadConfig()
+    expect(new Set(Object.values(server.proxy).map(targetOf))).toEqual(new Set(['http://localhost:8000']))
+  })
+
+  it('lets VITE_DEV_API retarget every prefix at once', async () => {
+    const { server } = await loadConfig('http://localhost:9100')
+    expect(new Set(Object.values(server.proxy).map(targetOf))).toEqual(new Set(['http://localhost:9100']))
+  })
+
+  it('keeps websocket upgrades and origin rewriting on the Socket.IO entry', async () => {
+    const { server } = await loadConfig()
+    expect(server.proxy['/socket.io']).toMatchObject({ ws: true, changeOrigin: true })
+  })
+})
+
+describe('vite /static proxy bypass', () => {
+  const req = (url) => ({ url })
+  const bypass = async () => (await loadConfig()).server.proxy['/static'].bypass
+
+  afterEach(() => {
+    vi.unstubAllEnvs()
+    vi.resetModules()
+  })
+
+  it('serves files that exist in frontend/public instead of proxying them', async () => {
+    const fn = await bypass()
+    expect(fn(req('/static/images/Default_pfp.png'))).toBe('/static/images/Default_pfp.png')
+    expect(fn(req('/static/sounds/quack.mp3'))).toBe('/static/sounds/quack.mp3')
+  })
+
+  it('keeps the query string when it serves a public file', async () => {
+    const fn = await bypass()
+    expect(fn(req('/static/images/Default_pfp.png?v=2'))).toBe('/static/images/Default_pfp.png?v=2')
+  })
+
+  it('proxies files that only the backend has (achievement badges, project templates)', async () => {
+    const fn = await bypass()
+    expect(fn(req('/static/images/achievement_badges/10-messages.png'))).toBeUndefined()
+    expect(fn(req('/static/images/bit_shift.png'))).toBeUndefined()
+  })
+
+  it('proxies directories and unknown paths', async () => {
+    const fn = await bypass()
+    expect(fn(req('/static/images'))).toBeUndefined()
+    expect(fn(req('/static/'))).toBeUndefined()
+    expect(fn(req('/static/nope.png'))).toBeUndefined()
+  })
+
+  it('never serves files outside frontend/public', async () => {
+    const fn = await bypass()
+    expect(fn(req('/static/../package.json'))).toBeUndefined()
+    expect(fn(req('/static/%2e%2e/package.json'))).toBeUndefined()
+  })
+
+  it('proxies malformed URLs instead of throwing', async () => {
+    const fn = await bypass()
+    expect(fn(req('/static/%E0%A4%A'))).toBeUndefined()
+  })
 })

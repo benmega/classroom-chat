@@ -1,6 +1,5 @@
 import React from 'react';
 import { Loader2 } from 'lucide-react';
-import { THEME } from '../../utils/theme';
 
 /**
  * In-content Suspense fallback for the layouts. Unlike App's full-viewport
@@ -20,7 +19,7 @@ const ContentLoader = () => (
       width: '100%',
     }}
   >
-    <Loader2 style={{ animation: 'spin 1s linear infinite' }} size={40} strokeWidth={1.5} color={THEME.colors.blue600} />
+    <Loader2 style={{ animation: 'spin 1s linear infinite', color: 'var(--blue-600)' }} size={40} strokeWidth={1.5} />
   </div>
 );
 

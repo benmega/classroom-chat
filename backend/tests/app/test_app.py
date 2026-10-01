@@ -244,6 +244,27 @@ def test_create_app_prod_proxy_fix():
             assert app.config["SESSION_COOKIE_SECURE"] is True
 
 
+@pytest.mark.parametrize("origin", ["http://localhost:4173", "http://127.0.0.1:4173"])
+def test_dev_cors_allows_vite_preview_origin(origin):
+    # `vite preview` serves the production build on port 4173 and proxies the API and
+    # Socket.IO to this backend, so both CORS and the Socket.IO handshake must accept it.
+    with patch.object(scheduler, "start"), patch.object(socketio, "init_app") as socketio_init:
+        app = create_app(TestingConfig)
+
+    assert origin in socketio_init.call_args.kwargs["cors_allowed_origins"]
+    res = app.test_client().get("/server/health", headers={"Origin": origin})
+    assert res.headers["Access-Control-Allow-Origin"] == origin
+
+
+def test_dev_cors_still_rejects_unlisted_origin():
+    with patch.object(scheduler, "start"), patch.object(socketio, "init_app") as socketio_init:
+        app = create_app(TestingConfig)
+
+    assert "http://localhost:4174" not in socketio_init.call_args.kwargs["cors_allowed_origins"]
+    res = app.test_client().get("/server/health", headers={"Origin": "http://localhost:4174"})
+    assert "Access-Control-Allow-Origin" not in res.headers
+
+
 def test_create_app_dev_schema_drift():
     with patch.object(scheduler, "start"), patch.object(socketio, "init_app"):
         with patch.dict(os.environ, {"FLASK_ENV": "development"}):
