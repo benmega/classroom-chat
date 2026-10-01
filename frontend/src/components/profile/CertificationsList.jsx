@@ -19,8 +19,8 @@ const CertificationsList = ({ certificates }) => {
                 <div className="cert-list">
                     {certificates.map(cert => {
                         const submittedDate = safeDate(cert.submitted_at, { month: 'short', year: 'numeric' });
-                        return (
-                            <div role="button" tabIndex={0} key={cert.id} className="cert-item" onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={() => cert.file_path && window.open(getApiUrl(`/api/achievements/view_certificate/${cert.id}`), '_blank')}>
+                        const content = (
+                            <>
                                 <div className="cert-icon">
                                     <div className={`badge badge-${cert.achievement?.slug || 'default'}`}></div>
                                 </div>
@@ -28,6 +28,22 @@ const CertificationsList = ({ certificates }) => {
                                     <h4>{cert.achievement?.name || 'Certification'}</h4>
                                     {submittedDate && <span className="cert-date">{submittedDate}</span>}
                                 </div>
+                            </>
+                        );
+                        // Only a certificate with a file can be opened: that one is a real link, the rest are plain items.
+                        return cert.file_path ? (
+                            <a
+                                key={cert.id}
+                                href={getApiUrl(`/api/achievements/view_certificate/${cert.id}`)}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="cert-item"
+                            >
+                                {content}
+                            </a>
+                        ) : (
+                            <div key={cert.id} className="cert-item">
+                                {content}
                             </div>
                         );
                     })}

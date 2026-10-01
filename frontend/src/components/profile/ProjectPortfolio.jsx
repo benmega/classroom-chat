@@ -65,7 +65,7 @@ const ProjectPortfolio = ({ projects, isOwner, setSelectedProject, studentId }) 
 
                                     {project.description && <p>{truncate(project.description)}</p>}
                                     <div className="project-footer">
-                                        {safeUrl(project.link) && <a href={safeUrl(project.link)} target="_blank" rel="noreferrer" className="link-icon"><ExternalLink size={16} /></a>}
+                                        {safeUrl(project.link) && <a href={safeUrl(project.link)} target="_blank" rel="noreferrer" className="link-icon" aria-label={`Open ${project.name} link`}><ExternalLink size={16} /></a>}
                                         <button className="btn-text" onClick={() => setSelectedProject(project)}>Details</button>
                                         {isOwner && (
                                             <button className="link-icon" onClick={() => navigate(`/project/edit/${project.id}`)} title="Edit Project">

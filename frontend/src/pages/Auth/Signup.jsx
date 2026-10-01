@@ -151,6 +151,9 @@ const Signup = () => {
                                     onChange={(e) => setCode(e.target.value)} 
                                     required
                                     placeholder="6-Digit Code"
+                                    aria-label="Verification code"
+                                    autoComplete="one-time-code"
+                                    id="verificationCode"
                                     className="auth-input"
                                 />
                                 <ShieldCheck className="input-icon" size={18} />
@@ -174,6 +177,7 @@ const Signup = () => {
                                 type="button"
                                 className={`auth-role-btn ${selectedRole === 'student' ? 'active' : 'inactive'}`}
                                 onClick={() => setSelectedRole('student')}
+                                aria-pressed={selectedRole === 'student'}
                             >
                                 Student
                             </button>
@@ -181,6 +185,7 @@ const Signup = () => {
                                 type="button"
                                 className={`auth-role-btn ${selectedRole === 'parent' ? 'active' : 'inactive'}`}
                                 onClick={() => setSelectedRole('parent')}
+                                aria-pressed={selectedRole === 'parent'}
                             >
                                 Parent
                             </button>
@@ -196,6 +201,7 @@ const Signup = () => {
                                         onChange={(e) => setEmail(e.target.value)} 
                                         required
                                         placeholder="Email Address"
+                                        aria-label="Email address"
                                         autoComplete="email"
                                         className="auth-input"
                                     />
@@ -214,6 +220,7 @@ const Signup = () => {
                                         pattern="[a-zA-Z0-9_]{3,30}"
                                         title="Username must be 3-30 chars: letters, numbers, or underscores only."
                                         placeholder="Username"
+                                        aria-label="Username"
                                         autoComplete="username"
                                         className="auth-input"
                                     />
@@ -231,6 +238,7 @@ const Signup = () => {
                                     onChange={(e) => setPassword(e.target.value)} 
                                     required
                                     placeholder={selectedRole === 'parent' ? "Password (min 8 chars)" : "Password"}
+                                    aria-label="Password"
                                     autoComplete="new-password"
                                     className="auth-input has-password-toggle"
                                 />
@@ -239,8 +247,8 @@ const Signup = () => {
                                     type="button" 
                                     className="toggle-password-btn"
                                     onClick={() => setShowPassword(!showPassword)}
-                                    aria-label={showPassword ? "Hide password" : "Show password"}
-                                    tabIndex="-1"
+                                    aria-label="Show password"
+                                    aria-pressed={showPassword}
                                 >
                                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                                 </button>
@@ -256,6 +264,7 @@ const Signup = () => {
                                     onChange={(e) => setConfirmPassword(e.target.value)} 
                                     required
                                     placeholder="Confirm Password"
+                                    aria-label="Confirm password"
                                     autoComplete="new-password"
                                     className="auth-input has-password-toggle"
                                 />
@@ -264,8 +273,8 @@ const Signup = () => {
                                     type="button" 
                                     className="toggle-password-btn"
                                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                    aria-label={showConfirmPassword ? "Hide password" : "Show password"}
-                                    tabIndex="-1"
+                                    aria-label="Show password"
+                                    aria-pressed={showConfirmPassword}
                                 >
                                     {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                                 </button>

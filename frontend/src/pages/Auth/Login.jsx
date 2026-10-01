@@ -81,6 +81,7 @@ const Login = () => {
                                 onChange={(e) => setUsernameOrEmail(e.target.value)}
                                 required
                                 placeholder="Username or Email"
+                                aria-label="Username or email"
                                 autoComplete="username"
                                 className="auth-input"
                             />
@@ -97,6 +98,7 @@ const Login = () => {
                                 onChange={(e) => setPassword(e.target.value)}
                                 required
                                 placeholder="Password"
+                                aria-label="Password"
                                 autoComplete="current-password"
                                 className="auth-input has-password-toggle"
                             />
@@ -105,8 +107,8 @@ const Login = () => {
                                 type="button"
                                 className="toggle-password-btn"
                                 onClick={() => setShowPassword(!showPassword)}
-                                aria-label={showPassword ? "Hide password" : "Show password"}
-                                tabIndex="-1"
+                                aria-label="Show password"
+                                aria-pressed={showPassword}
                             >
                                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                             </button>

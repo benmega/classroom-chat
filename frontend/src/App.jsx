@@ -1,6 +1,6 @@
 import React, { useEffect, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useParams } from 'react-router-dom';
-import { Toaster } from 'react-hot-toast';
+import { Toaster, ToastBar } from 'react-hot-toast';
 import { Loader2 } from 'lucide-react';
 import useAuthStore from './store/useAuthStore';
 import { SidebarProvider } from './context/SidebarContext';
@@ -131,6 +131,17 @@ const ProtectedRoute = ({ children, adminOnly = false, parentOnly = false }) => 
   return children;
 };
 
+const TOAST_POSITION = 'bottom-right';
+
+// react-hot-toast announces every toast politely (role="status"). Errors should interrupt the screen
+// reader instead, so they are rendered as an assertive alert; the bar, its styling and animation are unchanged.
+const renderToast = (t) => (
+  <ToastBar
+    toast={t.type === 'error' ? { ...t, ariaProps: { role: 'alert', 'aria-live': 'assertive' } } : t}
+    position={t.position || TOAST_POSITION}
+  />
+);
+
 function App() {
   const { checkAuth, isAuthenticated, isServerOffline, user } = useAuthStore();
 
@@ -155,7 +166,7 @@ function App() {
     <Router>
       <SidebarProvider>
         <Toaster 
-            position="bottom-right"
+            position={TOAST_POSITION}
             gutter={12}
             containerStyle={{
                 bottom: 24,
@@ -194,7 +205,9 @@ function App() {
                     },
                 },
             }}
-        />
+        >
+            {renderToast}
+        </Toaster>
         <ConfirmDialog />
       <RouteAwareBoundary>
       <Suspense fallback={<PageLoader />}>

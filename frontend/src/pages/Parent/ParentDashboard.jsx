@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef, useId } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Loader2, MoreVertical, User, Trophy, Bell, Activity, Zap, Clock, Star, BookOpen, Folder, Award, ChevronRight, AlertCircle, Plus, UserMinus } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -8,6 +8,7 @@ import { showConfirm } from '../../utils/confirm';
 import { getApiUrl } from '../../utils/apiUrl';
 
 import DesktopNotice from '../../components/common/DesktopNotice';
+import useModalA11y from '../../hooks/useModalA11y';
 import './ParentDashboard.css';
 import Skeleton from '../../components/common/Skeleton';
 
@@ -40,6 +41,8 @@ const ParentDashboard = () => {
     const [connectError, setConnectError] = useState(null);
     const [isConnecting, setIsConnecting] = useState(false);
     const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
+    const linkDialogRef = useRef(null);
+    const linkTitleId = useId();
 
     // Per-child report and history data
     const [childReports, setChildReports] = useState({});
@@ -101,6 +104,25 @@ const ParentDashboard = () => {
             if (list.length > 0) fetchChildReports(list);
         });
     }, [fetchChildren, fetchChildReports]);
+
+    // Close the open child menu on a press anywhere outside it, or on Escape.
+    useEffect(() => {
+        if (openMenu === null) return undefined;
+        const handleMouseDown = (e) => {
+            if (!e.target.closest?.('.child-card-menu')) setOpenMenu(null);
+        };
+        const handleKeyDown = (e) => {
+            if (e.key === 'Escape') setOpenMenu(null);
+        };
+        document.addEventListener('mousedown', handleMouseDown);
+        document.addEventListener('keydown', handleKeyDown);
+        return () => {
+            document.removeEventListener('mousedown', handleMouseDown);
+            document.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [openMenu]);
+
+    useModalA11y({ isOpen: isLinkModalOpen, onClose: () => setIsLinkModalOpen(false), containerRef: linkDialogRef });
 
     // ── Connect child ──────────────────────────────────────────────────────────
     const handleConnectChild = async (e) => {
@@ -252,7 +274,7 @@ const ParentDashboard = () => {
     }
 
     return (
-        <div role="button" tabIndex={0} className="parent-dashboard animate-page-entry" onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={() => setOpenMenu(null)}>
+        <div className="parent-dashboard animate-page-entry">
             <div className="parent-body">
                 
 
@@ -406,7 +428,8 @@ const ParentDashboard = () => {
                                     return (
                                         <div role="button" tabIndex={0} 
                                             key={child.id} 
-                                            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={() => navigate(`/parent/report/${child.id}`)}
+                                            // Only the card itself opens the report: Enter/Space on the options button inside it must reach that button.
+                                            onKeyDown={(e) => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); e.currentTarget.click(); } }} onClick={() => navigate(`/parent/report/${child.id}`)}
                                             style={{ 
                                                 display: 'flex', 
                                                 alignItems: 'center', 
@@ -440,7 +463,8 @@ const ParentDashboard = () => {
                                             </div>
 
                                             {/* Options Menu Only (No Duck Balance) */}
-                                            <div role="button" tabIndex={0} className="d-flex align-center" onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={(e) => e.stopPropagation()}>
+                                            {/* Keeps clicks inside the menu from also opening the child's report card. */}
+                                            <div role="presentation" className="d-flex align-center" onClick={(e) => e.stopPropagation()}>
                                                 <div className="child-card-menu pos-rel top-auto right-auto">
                                                     <button
                                                         type="button"
@@ -482,7 +506,7 @@ const ParentDashboard = () => {
 
             {/* Link Another Child Modal */}
             {isLinkModalOpen && (
-                <div role="button" tabIndex={0} 
+                <div role="presentation"
                     style={{
                         position: 'fixed',
                         inset: 0,
@@ -494,9 +518,9 @@ const ParentDashboard = () => {
                         zIndex: 1000,
                         animation: 'fadeIn 0.25s ease'
                     }}
-                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={() => setIsLinkModalOpen(false)}
+                    onClick={(e) => { if (e.target === e.currentTarget) setIsLinkModalOpen(false); }}
                 >
-                    <div role="button" tabIndex={0} 
+                    <div ref={linkDialogRef} role="dialog" aria-modal="true" aria-labelledby={linkTitleId} tabIndex={-1}
                         className="glass-panel"
                         style={{
                             width: '90%',
@@ -507,9 +531,8 @@ const ParentDashboard = () => {
                             boxShadow: 'var(--shadow-xl)',
                             position: 'relative'
                         }}
-                        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={(e) => e.stopPropagation()}
                     >
-                        <h3 style={{ fontSize: '1.2rem', margin: '0 0 0.5rem 0', fontWeight: '700' }}>Link Another Child</h3>
+                        <h3 id={linkTitleId} style={{ fontSize: '1.2rem', margin: '0 0 0.5rem 0', fontWeight: '700' }}>Link Another Child</h3>
                         <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '0 0 1.25rem 0', lineHeight: 1.4 }}>
                             Enter the 6-character connection code to link another student.
                         </p>

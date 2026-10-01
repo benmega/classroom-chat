@@ -101,6 +101,8 @@
     cursor: pointer;
     border-radius: 8px;
     transition: all 0.2s;
+    font-size: inherit; /* the steps are buttons, which would otherwise use the browser's smaller button font */
+    line-height: inherit;
 }
 
 .form-wizard-header .step:hover {
@@ -186,6 +188,12 @@
     font-weight: 600;
     transition: all 0.2s;
     border: 1px solid transparent;
+}
+
+/* The file input inside the label is visually hidden, so keyboard focus is shown on the label. */
+label.file-upload-btn:has(input:focus-visible) {
+    outline: 2px solid var(--primary-accessible);
+    outline-offset: 2px;
 }
 
 .primary-upload {

@@ -73,6 +73,13 @@
     opacity: 1;
 }
 
+/* The file input inside is visually hidden, so keyboard focus is shown on the whole overlay (inside, the wrapper clips). */
+.upload-overlay:has(input:focus-visible) {
+    opacity: 1;
+    outline: 2px solid var(--text-on-primary);
+    outline-offset: -4px;
+}
+
 .profile-header-info {
     display: flex;
     flex-direction: column;

@@ -75,6 +75,18 @@ describe('ProjectPortfolio', () => {
         expect(mockNavigate).toHaveBeenCalledWith('/project/edit/2'); // top one is id:2
     });
 
+    it('names the external-link icon after the project it opens', () => {
+        const projects = [
+            { id: 1, name: 'Platformer', image_url: '/a.png', link: 'https://example.com/platformer' },
+            { id: 2, name: 'No Demo', image_url: '/b.png', link: null },
+        ];
+        render(<ProjectPortfolio projects={projects} isOwner={false} setSelectedProject={vi.fn()} />, { wrapper: MemoryRouter });
+
+        const link = screen.getByRole('link', { name: 'Open Platformer link' });
+        expect(link).toHaveAttribute('href', 'https://example.com/platformer');
+        expect(screen.queryByRole('link', { name: /No Demo/ })).not.toBeInTheDocument();
+    });
+
     describe('card text', () => {
         const renderOne = (project) => render(
             <ProjectPortfolio projects={[{ id: 1, name: 'P', image_url: '/i.png', ...project }]} isOwner={false} setSelectedProject={vi.fn()} />,

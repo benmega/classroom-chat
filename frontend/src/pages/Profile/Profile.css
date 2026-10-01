@@ -709,6 +709,14 @@
     box-shadow: var(--shadow-md);
 }
 
+/* A certificate with a file is a link: keep it looking like the plain card. */
+a.cert-item,
+a.cert-item:hover {
+    color: inherit;
+    font-weight: inherit;
+    text-decoration: none;
+}
+
 .cert-icon {
     width: 40px;
     height: 40px;
@@ -827,6 +835,22 @@
     transform: scale(1.1);
 }
 
+/* The thumbnail is a button so it can be reached and opened from the keyboard; it must look like the bare image. */
+.note-thumb-btn {
+    display: block;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    border: none;
+    background: none;
+    cursor: pointer;
+}
+
+/* .note-item clips its overflow, so the focus ring is drawn inside the thumbnail. */
+.note-thumb-btn:focus-visible {
+    outline-offset: -3px;
+}
+
 .delete-note {
     position: absolute;
     top: 5px;
@@ -843,7 +867,8 @@
     transition: opacity 0.2s;
 }
 
-.note-item:hover .delete-note {
+.note-item:hover .delete-note,
+.delete-note:focus-visible {
     opacity: 1;
 }
 

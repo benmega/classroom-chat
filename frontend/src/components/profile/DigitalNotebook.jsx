@@ -22,11 +22,11 @@ const DigitalNotebook = ({ notes, isOwner, onFileUpload, onDeleteNote, setSlides
                 {isOwner && (
                     <div className="note-actions">
                         {isMobile ? (
-                            <label className="btn-icon" htmlFor="camera-upload-input" title="Scan Note" style={{ cursor: 'pointer' }}>
+                            <label className="btn-icon" htmlFor="camera-upload-input" title="Scan Note" aria-label="Scan note" style={{ cursor: 'pointer' }}>
                                 <Camera size={18} />
                             </label>
                         ) : (
-                            <button className="btn-icon" onClick={() => setIsCameraOpen(true)} title="Scan Note">
+                            <button className="btn-icon" onClick={() => setIsCameraOpen(true)} title="Scan Note" aria-label="Scan note">
                                 <Camera size={18} />
                             </button>
                         )}
@@ -38,12 +38,12 @@ const DigitalNotebook = ({ notes, isOwner, onFileUpload, onDeleteNote, setSlides
                             Programmatic clicks (via button onClick) will also strip the capture intent on iOS. Always use 
                             <label htmlFor="..."> to trigger the hidden file input on mobile.
                         */}
-                        <input id="camera-upload-input" type="file" ref={cameraInputRef} onChange={(e) => onFileUpload(e, 'camera')} style={{ position: 'absolute', width: '1px', height: '1px', padding: 0, margin: '-1px', overflow: 'hidden', clip: 'rect(0, 0, 0, 0)', whiteSpace: 'nowrap', border: 0 }} accept="image/*" capture />
+                        <input id="camera-upload-input" type="file" ref={cameraInputRef} onChange={(e) => onFileUpload(e, 'camera')} style={{ position: 'absolute', width: '1px', height: '1px', padding: 0, margin: '-1px', overflow: 'hidden', clip: 'rect(0, 0, 0, 0)', whiteSpace: 'nowrap', border: 0 }} accept="image/*" capture aria-label="Scan note" />
                         
-                        <label className="btn-icon" htmlFor="file-upload-input" title="Upload Note" style={{ cursor: 'pointer' }}>
+                        <label className="btn-icon" htmlFor="file-upload-input" title="Upload Note" aria-label="Upload note" style={{ cursor: 'pointer' }}>
                             <Upload size={18} />
                         </label>
-                        <input id="file-upload-input" type="file" ref={fileInputRef} onChange={(e) => onFileUpload(e, 'upload')} style={{ position: 'absolute', width: '1px', height: '1px', padding: 0, margin: '-1px', overflow: 'hidden', clip: 'rect(0, 0, 0, 0)', whiteSpace: 'nowrap', border: 0 }} accept="image/*" />
+                        <input id="file-upload-input" type="file" ref={fileInputRef} onChange={(e) => onFileUpload(e, 'upload')} style={{ position: 'absolute', width: '1px', height: '1px', padding: 0, margin: '-1px', overflow: 'hidden', clip: 'rect(0, 0, 0, 0)', whiteSpace: 'nowrap', border: 0 }} accept="image/*" aria-label="Upload note" />
                     </div>
                 )}
             </div>
@@ -51,14 +51,15 @@ const DigitalNotebook = ({ notes, isOwner, onFileUpload, onDeleteNote, setSlides
                 <div className="note-grid">
                     {notes?.map((note, idx) => (
                         <div key={note.id} className="note-item">
-                            <SmartImage 
-                                src={note.url} 
-                                alt="Note" 
-                                onClick={() => setSlideshowIndex(idx)} 
-                                fallbackType="project"
-                            />
+                            <button type="button" className="note-thumb-btn" aria-label={`View note ${idx + 1}`} onClick={() => setSlideshowIndex(idx)}>
+                                <SmartImage
+                                    src={note.url}
+                                    alt=""
+                                    fallbackType="project"
+                                />
+                            </button>
                             {isOwner && (
-                                <button className="delete-note" onClick={() => onDeleteNote(note.id)}>
+                                <button className="delete-note" onClick={() => onDeleteNote(note.id)} aria-label={`Delete note ${idx + 1}`}>
                                     <Trash2 size={14} />
                                 </button>
                             )}

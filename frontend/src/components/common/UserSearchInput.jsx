@@ -1,9 +1,12 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useId } from 'react';
 import { Search, Loader2, X } from 'lucide-react';
 import { getApiUrl } from '../../utils/apiUrl';
 import client from '../../api/client';
 import SmartImage from './SmartImage';
 import './UserSearchInput.css';
+
+// The id of option `index` in the listbox `listId`: the input points at it with aria-activedescendant.
+const optionIdFor = (listId, index) => `${listId}-opt-${index}`;
 
 const UserSearchInput = ({ 
     value, 
@@ -26,6 +29,8 @@ const UserSearchInput = ({
     const [isOpen, setIsOpen] = useState(false);
     const [selectedIndex, setSelectedIndex] = useState(-1);
     const containerRef = useRef(null);
+    // Ties the input to the listbox (aria-controls) and its options (aria-activedescendant).
+    const listId = useId();
     // True once the user has closed the dropdown (Escape, select, clear, click outside)
     // and has not typed or reopened it since. A search response that arrives later
     // must not pop the dropdown back open.
@@ -115,6 +120,14 @@ const UserSearchInput = ({
         }
     };
 
+    const isListOpen = isOpen && results.length > 0;
+
+    // Keep the option picked with the arrow keys visible.
+    useEffect(() => {
+        if (selectedIndex < 0) return;
+        document.getElementById(optionIdFor(listId, selectedIndex))?.scrollIntoView?.({ block: 'nearest' });
+    }, [selectedIndex, listId]);
+
     const handleKeyDown = (e) => {
         if (e.key === 'ArrowDown') {
             e.preventDefault();
@@ -125,12 +138,18 @@ const UserSearchInput = ({
         } else if (e.key === 'ArrowUp') {
             e.preventDefault();
             setSelectedIndex(prev => (prev > 0 ? prev - 1 : prev));
+        } else if ((e.key === 'Home' || e.key === 'End') && isListOpen && selectedIndex >= 0) {
+            // Only while an option is active: otherwise Home/End keep moving the caret in the text field.
+            e.preventDefault();
+            setSelectedIndex(e.key === 'Home' ? 0 : results.length - 1);
         } else if (e.key === 'Enter') {
             if (selectedIndex >= 0 && selectedIndex < results.length) {
                 e.preventDefault();
                 handleSelectInternal(results[selectedIndex]);
             }
         } else if (e.key === 'Escape') {
+            // The key that closes the list is used up here: an enclosing dialog must not also close on it.
+            if (isListOpen) e.preventDefault();
             dismissedRef.current = true;
             setIsOpen(false);
         }
@@ -170,6 +189,12 @@ const UserSearchInput = ({
                     placeholder={placeholder}
                     className={`user-search-input-common ${className}`}
                     autoComplete="off"
+                    role="combobox"
+                    aria-label={placeholder}
+                    aria-autocomplete="list"
+                    aria-expanded={isListOpen}
+                    aria-controls={isListOpen ? listId : undefined}
+                    aria-activedescendant={isListOpen && selectedIndex >= 0 ? optionIdFor(listId, selectedIndex) : undefined}
                 />
                 <div className="status-indicator">
                     {isLoading ? (
@@ -182,18 +207,24 @@ const UserSearchInput = ({
                 </div>
             </div>
 
-            {isOpen && results.length > 0 && (
-                <div className={`search-results-dropdown-common ${dropdownClassName}`}>
+            {isListOpen && (
+                <div id={listId} role="listbox" aria-label={placeholder} className={`search-results-dropdown-common ${dropdownClassName}`}>
                     {results.map((user, index) => (
-                        <div role="button" tabIndex={0}
+                        // Keyboard users pick options from the input (arrow keys + aria-activedescendant), so the rows take no focus.
+                        // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/interactive-supports-focus
+                        <div
+                            role="option"
+                            id={optionIdFor(listId, index)}
+                            aria-selected={index === selectedIndex}
                             key={user.id}
                             className={`search-result-item-common ${index === selectedIndex ? 'selected' : ''}`}
-                            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={() => handleSelectInternal(user)}
+                            onMouseDown={(e) => e.preventDefault()}
+                            onClick={() => handleSelectInternal(user)}
                         >
                             <div className="result-avatar-common">
                                 <SmartImage 
                                     src={getApiUrl(user.profile_picture_url)} 
-                                    alt={user.nickname} 
+                                    alt=""
                                     fallbackType="avatar"
                                 />
                             </div>

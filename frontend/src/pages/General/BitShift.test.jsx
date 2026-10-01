@@ -1,5 +1,6 @@
 import React from 'react';
-import { render, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import BitShift from './BitShift';
 import client from '../../api/client';
@@ -109,5 +110,54 @@ describe('BitShift', () => {
 
         submit();
         await waitFor(() => expect(toast.error).toHaveBeenCalledWith('An unexpected error occurred.'));
+    });
+
+    describe('keyboard and screen reader access', () => {
+        it('exposes the bit/Byte switch as a named control that Tab reaches and Space flips', async () => {
+            const user = userEvent.setup();
+            render(<BitShift />);
+            const toggle = screen.getByRole('switch', { name: 'Byte mode' });
+            const byteRow = document.querySelector('.byte-row-container');
+
+            await user.tab();
+            expect(toggle).toHaveFocus();
+            expect(toggle).not.toBeChecked();
+            expect(byteRow).not.toHaveClass('expanded');
+
+            await user.keyboard(' ');
+            expect(toggle).toBeChecked();
+            expect(byteRow).toHaveClass('expanded');
+
+            await user.keyboard(' ');
+            expect(toggle).not.toBeChecked();
+            expect(byteRow).not.toHaveClass('expanded');
+        });
+
+        it('hides the switch input visually instead of taking it out of the tab order', () => {
+            render(<BitShift />);
+            const toggle = screen.getByRole('switch', { name: 'Byte mode' });
+
+            // display:none (.d-none) would make the input unfocusable.
+            expect(toggle).toHaveClass('sr-only');
+            expect(toggle).not.toHaveClass('d-none');
+            // The checked and focus styles of the slider rely on this adjacency.
+            expect(toggle.nextElementSibling).toHaveClass('toggle-slider');
+        });
+
+        it('still flips the switch when the slider label is clicked', () => {
+            render(<BitShift />);
+            const toggle = screen.getByRole('switch', { name: 'Byte mode' });
+
+            fireEvent.click(toggle.nextElementSibling);
+
+            expect(toggle).toBeChecked();
+        });
+
+        it('labels the decimal ducks input and ties it to the balance', () => {
+            render(<BitShift />);
+
+            const input = screen.getByRole('spinbutton', { name: 'Ducks to trade (decimal)' });
+            expect(input).toHaveAccessibleDescription('Cache: 20');
+        });
     });
 });

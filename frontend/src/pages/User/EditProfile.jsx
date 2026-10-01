@@ -195,8 +195,8 @@ const EditProfile = () => {
                                     key={profilePic ? 'pfp-selected' : 'pfp-empty'}
                                     type="file" 
                                     id="pfp-upload" 
-                                    hidden 
-                                    onChange={handleFileChange} 
+                                    className="sr-only"
+                                    onChange={handleFileChange}
                                     accept={PROFILE_PICTURE_TYPES.join(',')} 
                                 />
                             </label>
@@ -271,6 +271,7 @@ const EditProfile = () => {
                                     value={connectionCode || 'Loading...'}
                                     readOnly
                                     disabled
+                                    aria-label="Pairing code"
                                     className="connection-code-value"
                                 />
                                 <button 
@@ -284,6 +285,7 @@ const EditProfile = () => {
                                     }}
                                     disabled={!connectionCode}
                                     title="Copy Code"
+                                    aria-label="Copy pairing code"
                                 >
                                     <Copy size={18} />
                                 </button>
@@ -333,7 +335,8 @@ const EditProfile = () => {
                                         type="button" 
                                         className="password-toggle-btn"
                                         onClick={() => setShowPassword(!showPassword)}
-                                        tabIndex="-1"
+                                        aria-label="Show new password"
+                                        aria-pressed={showPassword}
                                     >
                                         {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                                     </button>
@@ -354,7 +357,8 @@ const EditProfile = () => {
                                         type="button" 
                                         className="password-toggle-btn"
                                         onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                        tabIndex="-1"
+                                        aria-label="Show confirm new password"
+                                        aria-pressed={showConfirmPassword}
                                     >
                                         {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                                     </button>

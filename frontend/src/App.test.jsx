@@ -1,6 +1,7 @@
 import React from 'react';
 import { render, screen, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import toast from 'react-hot-toast';
 import App from './App';
 import useAuthStore from './store/useAuthStore';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -266,6 +267,66 @@ describe('App Component', () => {
 
       expect(await screen.findByText('Login Page Mock')).toBeInTheDocument();
       expect(screen.queryByText('Something went wrong')).not.toBeInTheDocument();
+    });
+  });
+
+  describe('toast announcements', () => {
+    beforeEach(() => {
+      useAuthStore.mockReturnValue({
+        isLoading: false,
+        isAuthenticated: false,
+        isServerOffline: false,
+        user: null,
+        checkAuth: vi.fn(),
+      });
+    });
+
+    afterEach(() => {
+      act(() => { toast.remove(); });
+    });
+
+    it('announces an error toast as an assertive alert', async () => {
+      renderApp();
+      await screen.findByText('Landing Page Mock');
+
+      act(() => { toast.error('Passwords do not match.'); });
+
+      const alert = await screen.findByRole('alert');
+      expect(alert).toHaveTextContent('Passwords do not match.');
+      expect(alert).toHaveAttribute('aria-live', 'assertive');
+    });
+
+    it('keeps announcing success toasts politely', async () => {
+      renderApp();
+      await screen.findByText('Landing Page Mock');
+
+      act(() => { toast.success('Saved!'); });
+
+      const status = await screen.findByRole('status');
+      expect(status).toHaveTextContent('Saved!');
+      expect(status).toHaveAttribute('aria-live', 'polite');
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    });
+
+    it('keeps the configured toast styling on the alert', async () => {
+      renderApp();
+      await screen.findByText('Landing Page Mock');
+
+      act(() => { toast.error('Something broke'); });
+
+      const style = (await screen.findByRole('alert')).parentElement.getAttribute('style');
+      expect(style).toContain('background: var(--bg-primary)');
+      expect(style).toContain('padding: 14px 20px');
+      expect(style).toContain('max-width: 420px');
+    });
+
+    it('still alerts for a toast that sets its own position', async () => {
+      renderApp();
+      await screen.findByText('Landing Page Mock');
+
+      act(() => { toast.error('Up here', { position: 'top-center' }); });
+
+      expect(await screen.findByRole('alert')).toHaveTextContent('Up here');
     });
   });
 });

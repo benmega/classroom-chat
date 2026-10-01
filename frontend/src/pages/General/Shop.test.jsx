@@ -178,6 +178,18 @@ describe('Shop', () => {
     });
   });
 
+  it('names the red, green and blue border colour controls', async () => {
+    renderWithProviders(<Shop />);
+    await waitFor(() => {
+      expect(screen.getByText('RGB Color:')).toBeInTheDocument();
+    });
+
+    ['Red', 'Green', 'Blue'].forEach((label) => {
+      expect(screen.getByRole('slider', { name: `${label} channel` })).toBeInTheDocument();
+      expect(screen.getByRole('spinbutton', { name: `${label} channel value` })).toBeInTheDocument();
+    });
+  });
+
   it('handles wallpaper upload (clicking the button)', async () => {
     renderWithProviders(<Shop />);
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useLayoutEffect, useCallback } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useCallback, useRef, useId } from 'react';
 import { useLocation } from 'react-router-dom';
 import { 
   X, 
@@ -7,6 +7,7 @@ import {
   Sparkles
 } from 'lucide-react';
 import useAuthStore from '../../store/useAuthStore';
+import useModalA11y from '../../hooks/useModalA11y';
 import './Tutorial.css';
 
 const studentSlides = [
@@ -79,6 +80,8 @@ const Tutorial = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [spotlightRect, setSpotlightRect] = useState(null);
+  const cardRef = useRef(null);
+  const titleId = useId();
   const location = useLocation();
   const { user, completeTutorial } = useAuthStore();
 
@@ -115,6 +118,9 @@ const Tutorial = () => {
     }
     setIsOpen(false);
   }, [user, completeTutorial]);
+
+  // Escape closes the tour, Tab stays on its card, focus moves to the card and comes back on close.
+  useModalA11y({ isOpen, onClose: handleClose, containerRef: cardRef });
 
   useLayoutEffect(() => {
     if (isOpen) {
@@ -232,7 +238,7 @@ const Tutorial = () => {
 
   return (
     <div className="spotlight-overlay">
-      <svg className="spotlight-svg">
+      <svg className="spotlight-svg" aria-hidden="true">
         <defs>
           <mask id="spotlight-mask">
             <rect width="100%" height="100%" fill="white" />
@@ -251,10 +257,18 @@ const Tutorial = () => {
         <rect width="100%" height="100%" fill="rgba(15, 23, 42, 0.7)" mask="url(#spotlight-mask)" />
       </svg>
 
-      <div className={`spotlight-card glass-panel ${slide.position}`} style={getCardStyles()}>
+      <div
+        ref={cardRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        tabIndex={-1}
+        className={`spotlight-card glass-panel ${slide.position}`}
+        style={getCardStyles()}
+      >
         <div className="spotlight-header">
           <div className="spotlight-icon">{slide.icon}</div>
-          <h3 className="spotlight-title">{slide.title}</h3>
+          <h3 id={titleId} className="spotlight-title">{slide.title}</h3>
         </div>
         <p className="spotlight-desc">{slide.description}</p>
         

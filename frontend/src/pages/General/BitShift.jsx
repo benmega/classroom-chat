@@ -173,9 +173,12 @@ const BitShift = () => {
                                     });
                                     setHasAttemptedSubmit(false);
                                 }}
-                                className="d-none"
+                                className="sr-only"
+                                role="switch"
                             />
-                            <label htmlFor="duck-type-toggle" className="toggle-slider" aria-label="Toggle duck type"></label>
+                            <label htmlFor="duck-type-toggle" className="toggle-slider">
+                                <span className="sr-only">Byte mode</span>
+                            </label>
                         </div>
                         <span className={`toggle-text byte-text ${showByteRow ? 'active' : ''}`}>Byte</span>
                     </div>
@@ -201,12 +204,14 @@ const BitShift = () => {
                                     setHasAttemptedSubmit(false);
                                 }}
                                 className="digital-ducks-input"
+                                aria-label="Ducks to trade (decimal)"
+                                aria-describedby="digital-ducks-balance"
                                 min="0"
                                 max={user?.duck_balance || 0}
                                 required
                             />
                             <div className="balance-info-inline">
-                                <span>Cache: {(user?.duck_balance ?? 0).toLocaleString(undefined, { maximumFractionDigits: 3 })}</span>
+                                <span id="digital-ducks-balance">Cache: {(user?.duck_balance ?? 0).toLocaleString(undefined, { maximumFractionDigits: 3 })}</span>
                             </div>
                         </div>
                     </div>

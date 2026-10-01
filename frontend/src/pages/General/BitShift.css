@@ -444,6 +444,12 @@
     transform: translateX(32px);
 }
 
+/* The real checkbox is visually hidden, so its focus ring is drawn on the slider. */
+.toggle-switch input:focus-visible + .toggle-slider {
+    outline: 2px solid var(--primary-accessible);
+    outline-offset: 2px;
+}
+
 .toggle-text {
     font-weight: 800;
     color: var(--text-muted);

@@ -39,6 +39,12 @@
   background-color: var(--bg-tertiary);
 }
 
+/* The file input inside is visually hidden, so keyboard focus is shown on the drop area. */
+.image-upload-container:has(input:focus-visible) {
+  outline: 2px solid var(--primary-accessible);
+  outline-offset: 2px;
+}
+
 .image-upload-container.dragging {
   border-color: var(--primary-color);
   background-color: var(--primary-light, rgba(59, 130, 246, 0.08));

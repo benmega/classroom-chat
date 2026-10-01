@@ -399,6 +399,8 @@ button:disabled {
 .font-mono { font-family: monospace; }
 .language-badge-styled { padding: 4px 8px; background: var(--primary-light); color: var(--primary-accessible); border-radius: 6px; font-size: 0.85rem; font-weight: 500; }
 .d-none { display: none; }
+/* Hidden on screen but still focusable and read out: use instead of display:none for inputs and labels. */
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 .w-fit-content { width: fit-content; }
 .p-2rem { padding: 2rem; }
 .p-1rem { padding: 1rem; }

@@ -57,6 +57,7 @@ const ForgotPassword = () => {
                             type="button"
                             className={`auth-role-btn ${selectedRole === 'student' ? 'active' : 'inactive'}`}
                             onClick={() => setSelectedRole('student')}
+                            aria-pressed={selectedRole === 'student'}
                         >
                             Student
                         </button>
@@ -64,6 +65,7 @@ const ForgotPassword = () => {
                             type="button"
                             className={`auth-role-btn ${selectedRole === 'parent' ? 'active' : 'inactive'}`}
                             onClick={() => setSelectedRole('parent')}
+                            aria-pressed={selectedRole === 'parent'}
                         >
                             Parent
                         </button>
@@ -86,6 +88,7 @@ const ForgotPassword = () => {
                                         onChange={(e) => setEmail(e.target.value)} 
                                         required
                                         placeholder="Enter your Email Address"
+                                        aria-label="Email address"
                                         autoComplete="email"
                                         className="auth-input"
                                     />

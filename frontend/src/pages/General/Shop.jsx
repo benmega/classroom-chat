@@ -353,6 +353,7 @@ const Shop = () => {
                                                                 <input 
                                                                     type="range" 
                                                                     min="0" max="255" 
+                                                                    aria-label={`${label} channel`}
                                                                     value={val} 
                                                                     onChange={(e) => handleRgbChange(channel, e.target.value)}
                                                                     onMouseUp={handleBorderColorSubmit}
@@ -362,6 +363,7 @@ const Shop = () => {
                                                                 <input 
                                                                     type="number" 
                                                                     min="0" max="255" 
+                                                                    aria-label={`${label} channel value`}
                                                                     value={val}
                                                                     onChange={(e) => handleRgbChange(channel, e.target.value)}
                                                                     onBlur={handleBorderColorSubmit}

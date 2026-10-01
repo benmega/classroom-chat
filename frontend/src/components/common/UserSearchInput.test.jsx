@@ -1,7 +1,9 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import UserSearchInput from './UserSearchInput';
+import Modal from './Modal';
 import client from '../../api/client';
 
 vi.mock('../../api/client', () => ({
@@ -296,14 +298,14 @@ describe('UserSearchInput', () => {
         expect(dropdown()).toBeNull();
     });
 
-    it('selects a result with the keyboard on the item itself', async () => {
+    it('selects a result by clicking its row', async () => {
         client.get.mockResolvedValue(usersResponse([alice]));
         const onSelect = vi.fn();
         renderInput({ onSelect });
 
         type('al');
         await waitFor(() => expect(screen.getByText('Alice')).toBeInTheDocument());
-        fireEvent.keyDown(screen.getByText('Alice').closest('[role="button"]'), { key: 'Enter' });
+        fireEvent.click(screen.getByRole('option', { name: /Alice/ }));
 
         expect(onSelect).toHaveBeenCalledWith(alice);
     });
@@ -332,6 +334,223 @@ describe('UserSearchInput', () => {
         expect(signal.aborted).toBe(true);
         await act(async () => { pending.resolve(usersResponse([alice])); });
         expect(console.error).not.toHaveBeenCalled();
+    });
+
+    describe('combobox semantics and keyboard use', () => {
+        const optionsOf = () => screen.getAllByRole('option');
+
+        it('is a labelled combobox that reports whether the list is open', async () => {
+            client.get.mockResolvedValue(usersResponse([alice, bob]));
+            renderInput();
+            const combo = screen.getByRole('combobox', { name: 'Search users...' });
+
+            expect(combo).toHaveAttribute('aria-autocomplete', 'list');
+            expect(combo).toHaveAttribute('aria-expanded', 'false');
+            expect(combo).not.toHaveAttribute('aria-controls');
+
+            type('al');
+            await waitFor(() => expect(combo).toHaveAttribute('aria-expanded', 'true'));
+            expect(screen.getByRole('listbox')).toHaveAttribute('id', combo.getAttribute('aria-controls'));
+        });
+
+        it('uses the placeholder prop as the accessible name', () => {
+            renderInput({ placeholder: 'Search by username or nickname...' });
+
+            expect(screen.getByRole('combobox', { name: 'Search by username or nickname...' })).toBeInTheDocument();
+        });
+
+        it('renders the results as options named after the person, with a decorative avatar', async () => {
+            client.get.mockResolvedValue(usersResponse([alice, bob]));
+            renderInput();
+
+            type('al');
+            await waitFor(() => expect(optionsOf()).toHaveLength(2));
+
+            expect(screen.getByRole('option', { name: 'Alice @alice' })).toBeInTheDocument();
+            expect(screen.getByRole('option', { name: 'Bobby @bob' })).toBeInTheDocument();
+            expect(screen.getByRole('listbox').querySelectorAll('img[alt=""]')).toHaveLength(2);
+            optionsOf().forEach((option) => expect(option).not.toHaveAttribute('tabindex'));
+            expect(screen.queryByRole('button', { name: /Alice/ })).not.toBeInTheDocument();
+        });
+
+        it('points aria-activedescendant at the option picked with the arrow keys', async () => {
+            const user = userEvent.setup();
+            client.get.mockResolvedValue(usersResponse([alice, bob]));
+            renderInput();
+            const combo = screen.getByRole('combobox');
+
+            await user.type(combo, 'al');
+            await waitFor(() => expect(optionsOf()).toHaveLength(2));
+            expect(combo).not.toHaveAttribute('aria-activedescendant');
+            optionsOf().forEach((option) => expect(option).toHaveAttribute('aria-selected', 'false'));
+
+            await user.keyboard('{ArrowDown}');
+            expect(combo).toHaveAttribute('aria-activedescendant', optionsOf()[0].id);
+            expect(optionsOf()[0]).toHaveAttribute('aria-selected', 'true');
+            expect(optionsOf()[1]).toHaveAttribute('aria-selected', 'false');
+
+            await user.keyboard('{ArrowDown}');
+            expect(combo).toHaveAttribute('aria-activedescendant', optionsOf()[1].id);
+            expect(optionsOf()[1]).toHaveAttribute('aria-selected', 'true');
+
+            await user.keyboard('{ArrowUp}');
+            expect(combo).toHaveAttribute('aria-activedescendant', optionsOf()[0].id);
+            // Focus never leaves the input: the option is only "active".
+            expect(combo).toHaveFocus();
+        });
+
+        it('gives every option and list a distinct id, also across two instances', async () => {
+            client.get.mockResolvedValue(usersResponse([alice, bob]));
+            render(
+                <>
+                    <UserSearchInput debounceMs={DEBOUNCE} placeholder="First" />
+                    <UserSearchInput debounceMs={DEBOUNCE} placeholder="Second" />
+                </>
+            );
+
+            fireEvent.change(screen.getByRole('combobox', { name: 'First' }), { target: { value: 'al' } });
+            fireEvent.change(screen.getByRole('combobox', { name: 'Second' }), { target: { value: 'al' } });
+            await waitFor(() => expect(screen.getAllByRole('listbox')).toHaveLength(2));
+
+            const ids = [...screen.getAllByRole('listbox'), ...screen.getAllByRole('option')].map((el) => el.id);
+            expect(ids.every(Boolean)).toBe(true);
+            expect(new Set(ids).size).toBe(ids.length);
+        });
+
+        it('selects the active option with Enter', async () => {
+            const user = userEvent.setup();
+            client.get.mockResolvedValue(usersResponse([alice, bob]));
+            const onSelect = vi.fn();
+            renderInput({ onSelect });
+
+            await user.type(screen.getByRole('combobox'), 'al');
+            await waitFor(() => expect(optionsOf()).toHaveLength(2));
+            await user.keyboard('{ArrowDown}{ArrowDown}{Enter}');
+
+            expect(onSelect).toHaveBeenCalledWith(bob);
+            expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
+            expect(screen.getByRole('combobox')).toHaveAttribute('aria-expanded', 'false');
+        });
+
+        it('jumps to the first and last option with Home and End while an option is active', async () => {
+            const user = userEvent.setup();
+            const carol = { id: 3, username: 'carol', nickname: 'Carol', profile_picture_url: '/pics/carol.png' };
+            client.get.mockResolvedValue(usersResponse([alice, bob, carol]));
+            const combo = () => screen.getByRole('combobox');
+            renderInput();
+
+            await user.type(combo(), 'al');
+            await waitFor(() => expect(optionsOf()).toHaveLength(3));
+            await user.keyboard('{ArrowDown}');
+            expect(combo()).toHaveAttribute('aria-activedescendant', optionsOf()[0].id);
+
+            await user.keyboard('{End}');
+            expect(combo()).toHaveAttribute('aria-activedescendant', optionsOf()[2].id);
+            await user.keyboard('{Home}');
+            expect(combo()).toHaveAttribute('aria-activedescendant', optionsOf()[0].id);
+        });
+
+        it('leaves Home and End to the text field when no option is active', async () => {
+            client.get.mockResolvedValue(usersResponse([alice, bob]));
+            renderInput();
+
+            type('al');
+            await waitFor(() => expect(optionsOf()).toHaveLength(2));
+
+            const home = new KeyboardEvent('keydown', { key: 'Home', bubbles: true, cancelable: true });
+            input().dispatchEvent(home);
+
+            expect(home.defaultPrevented).toBe(false);
+            expect(input()).not.toHaveAttribute('aria-activedescendant');
+        });
+
+        it('closes the list on Escape and keeps the key from also closing an enclosing dialog', async () => {
+            client.get.mockResolvedValue(usersResponse([alice]));
+            renderInput();
+            type('al');
+            await waitFor(() => expect(optionsOf()).toHaveLength(1));
+
+            const escape = new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true });
+            input().dispatchEvent(escape);
+
+            expect(escape.defaultPrevented).toBe(true);
+            await waitFor(() => expect(screen.queryByRole('listbox')).not.toBeInTheDocument());
+            expect(screen.getByRole('combobox')).toHaveAttribute('aria-expanded', 'false');
+        });
+
+        it('lets Escape through to an enclosing dialog while the list is closed', () => {
+            renderInput();
+
+            const escape = new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true });
+            input().dispatchEvent(escape);
+
+            expect(escape.defaultPrevented).toBe(false);
+        });
+
+        it('scrolls the active option into view', async () => {
+            const user = userEvent.setup();
+            client.get.mockResolvedValue(usersResponse([alice, bob]));
+            renderInput();
+            await user.type(screen.getByRole('combobox'), 'al');
+            await waitFor(() => expect(optionsOf()).toHaveLength(2));
+            const scrollIntoView = vi.fn();
+            optionsOf().forEach((option) => { option.scrollIntoView = scrollIntoView; });
+
+            await user.keyboard('{ArrowDown}');
+
+            expect(scrollIntoView).toHaveBeenCalledWith({ block: 'nearest' });
+        });
+
+        it('keeps the focus in the input when a row is pressed with the mouse', async () => {
+            client.get.mockResolvedValue(usersResponse([alice]));
+            renderInput();
+            type('al');
+            await waitFor(() => expect(optionsOf()).toHaveLength(1));
+
+            const press = new MouseEvent('mousedown', { bubbles: true, cancelable: true });
+            optionsOf()[0].dispatchEvent(press);
+
+            expect(press.defaultPrevented).toBe(true);
+        });
+    });
+
+    describe('inside a modal', () => {
+        it('closes the list on the first Escape and the modal only on the second', async () => {
+            const user = userEvent.setup();
+            const onClose = vi.fn();
+            client.get.mockResolvedValue(usersResponse([alice]));
+            render(
+                <Modal isOpen onClose={onClose} title="Who helped you?">
+                    <UserSearchInput debounceMs={DEBOUNCE} />
+                </Modal>
+            );
+            await user.type(screen.getByRole('combobox'), 'al');
+            await waitFor(() => expect(screen.getByRole('listbox')).toBeInTheDocument());
+
+            await user.keyboard('{Escape}');
+            expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
+            expect(onClose).not.toHaveBeenCalled();
+
+            await user.keyboard('{Escape}');
+            expect(onClose).toHaveBeenCalledTimes(1);
+        });
+
+        it('can pick a result with the arrow keys and Enter without leaving the input', async () => {
+            const user = userEvent.setup();
+            const onSelect = vi.fn();
+            client.get.mockResolvedValue(usersResponse([alice, bob]));
+            render(
+                <Modal isOpen onClose={vi.fn()} title="Who helped you?">
+                    <UserSearchInput debounceMs={DEBOUNCE} onSelect={onSelect} />
+                </Modal>
+            );
+
+            await user.type(screen.getByRole('combobox'), 'al');
+            await waitFor(() => expect(screen.getAllByRole('option')).toHaveLength(2));
+            await user.keyboard('{ArrowDown}{Enter}');
+
+            expect(onSelect).toHaveBeenCalledWith(alice);
+        });
     });
 
     describe('value prop', () => {

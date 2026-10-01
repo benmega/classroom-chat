@@ -245,6 +245,83 @@ describe('Tutorial', () => {
         expect(document.querySelector('.spotlight-overlay')).toBeNull();
     });
 
+    describe('dialog accessibility', () => {
+        const card = () => document.querySelector('.spotlight-card');
+
+        it('is a modal dialog named by the current slide title', async () => {
+            await openTutorial();
+
+            const dialog = screen.getByRole('dialog', { name: 'Welcome!' });
+            expect(dialog).toBe(card());
+            expect(dialog).toHaveAttribute('aria-modal', 'true');
+        });
+
+        it('updates its name when the slide changes', async () => {
+            addElement('<aside class="desktop-nav-rail"></aside>', rectAt(0, 0, 80, 600));
+            await openTutorial();
+
+            await next();
+
+            expect(screen.getByRole('dialog', { name: 'Account' })).toBe(card());
+        });
+
+        it('hides the decorative spotlight mask from assistive technology', async () => {
+            await openTutorial();
+
+            expect(document.querySelector('.spotlight-svg')).toHaveAttribute('aria-hidden', 'true');
+        });
+
+        it('moves focus to the Next button when it opens', async () => {
+            await openTutorial();
+
+            expect(nextButton()).toHaveFocus();
+        });
+
+        it('keeps focus on the same button as the slides advance', async () => {
+            addElement('<a class="stat-badge ducks"></a>', rectAt(400, 10, 60, 30));
+            await openTutorial();
+
+            await next();
+
+            expect(title()).toBe('Rewards');
+            expect(nextButton()).toHaveFocus();
+        });
+
+        it('closes on Escape and records that it was seen', async () => {
+            await openTutorial();
+
+            await act(async () => { fireEvent.keyDown(document, { key: 'Escape' }); });
+
+            expect(completeTutorial).toHaveBeenCalledTimes(1);
+            expect(document.querySelector('.spotlight-overlay')).toBeNull();
+        });
+
+        it('keeps Tab and Shift+Tab on the card', async () => {
+            await openTutorial();
+            const close = screen.getByLabelText('Close tutorial');
+
+            close.focus();
+            fireEvent.keyDown(close, { key: 'Tab' });
+            expect(nextButton()).toHaveFocus();
+
+            fireEvent.keyDown(nextButton(), { key: 'Tab', shiftKey: true });
+            expect(close).toHaveFocus();
+        });
+
+        it('returns focus to the element that had it before the tour opened', async () => {
+            const trigger = addElement('<button id="before-tour">Menu</button>', rectAt(0, 0, 10, 10));
+            renderTutorial('/');
+            trigger.focus();
+            await act(async () => { vi.advanceTimersByTime(1000); });
+            await act(async () => { vi.advanceTimersByTime(20); });
+            expect(nextButton()).toHaveFocus();
+
+            await act(async () => { fireEvent.click(screen.getByLabelText('Close tutorial')); });
+
+            expect(trigger).toHaveFocus();
+        });
+    });
+
     describe('parents', () => {
         beforeEach(() => {
             useAuthStore.setState({

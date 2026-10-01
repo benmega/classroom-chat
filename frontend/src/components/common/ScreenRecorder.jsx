@@ -411,6 +411,8 @@ const ScreenRecorder = ({ isOpen, onClose, onRecordingComplete }) => {
                     <input 
                       type="range" 
                       min="0" max="3" step="1" 
+                      aria-label="Recording quality"
+                      aria-valuetext={settings.quality}
                       value={qIndex >= 0 ? qIndex : 1}
                       onChange={(e) => setSettings({...settings, quality: qMap[e.target.value]})}
                     />
@@ -420,6 +422,8 @@ const ScreenRecorder = ({ isOpen, onClose, onRecordingComplete }) => {
                     <input 
                       type="range" 
                       min="25" max="60" step="1" 
+                      aria-label="Camera overlay size"
+                      aria-valuetext={`${settings.overlaySize}%`}
                       value={settings.overlaySize}
                       onChange={(e) => setSettings({...settings, overlaySize: parseInt(e.target.value, 10)})}
                     />
@@ -431,6 +435,7 @@ const ScreenRecorder = ({ isOpen, onClose, onRecordingComplete }) => {
                     onKeyDown={(e) => handleKeyDownAction(e, () => setSettings({...settings, includeMicrophone: !settings.includeMicrophone}))}
                     tabIndex="0"
                     role="switch"
+                    aria-label="Microphone"
                     aria-checked={settings.includeMicrophone}
                   >
                     {settings.includeMicrophone ? <Mic size={24} color="var(--text-secondary)" /> : <MicOff size={24} color="var(--error-color)" />}

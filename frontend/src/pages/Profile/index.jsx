@@ -179,6 +179,7 @@ const Profile = () => {
                 isOpen={isJoinModalOpen}
                 onClose={() => setIsJoinModalOpen(false)}
                 title=""
+                ariaLabel="Join a classroom"
                 maxWidth="500px"
             >
                 <div style={{ padding: 'var(--spacing-md)' }}>

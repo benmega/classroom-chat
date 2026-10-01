@@ -1,4 +1,5 @@
 import { render, screen, fireEvent } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
 import CertificationsList from './CertificationsList';
@@ -10,8 +11,7 @@ describe('CertificationsList', () => {
         expect(container.firstChild).toBeNull();
     });
 
-    it('renders certificates and handles click', () => {
-        vi.spyOn(window, 'open').mockImplementation(() => {});
+    it('renders a certificate with a file as a link that opens it in a new tab', () => {
         vi.spyOn(apiUrlModule, 'getApiUrl').mockImplementation(path => `http://mock${path}`);
 
         const mockCerts = [
@@ -29,15 +29,14 @@ describe('CertificationsList', () => {
         render(<CertificationsList certificates={mockCerts} />, { wrapper: MemoryRouter });
 
         expect(screen.getByText('Certifications')).toBeInTheDocument();
-        expect(screen.getByText('Test Cert')).toBeInTheDocument();
-
-        const certItem = screen.getByText('Test Cert').closest('.cert-item');
-        fireEvent.click(certItem);
-
-        expect(window.open).toHaveBeenCalledWith('http://mock/api/achievements/view_certificate/1', '_blank');
+        const link = screen.getByRole('link', { name: /Test Cert/ });
+        expect(link).toHaveClass('cert-item');
+        expect(link).toHaveAttribute('href', 'http://mock/api/achievements/view_certificate/1');
+        expect(link).toHaveAttribute('target', '_blank');
+        expect(link).toHaveAttribute('rel', 'noopener noreferrer');
     });
 
-    it('handles certificate with no file_path gracefully', () => {
+    it('renders a certificate without a file as a plain item that is not a tab stop', () => {
         vi.spyOn(window, 'open').mockImplementation(() => {});
         const mockCerts = [
             {
@@ -54,9 +53,28 @@ describe('CertificationsList', () => {
         render(<CertificationsList certificates={mockCerts} />, { wrapper: MemoryRouter });
 
         const certItem = screen.getByText('No File Cert').closest('.cert-item');
-        fireEvent.click(certItem);
+        expect(certItem.tagName).toBe('DIV');
+        expect(certItem).not.toHaveAttribute('role');
+        expect(certItem).not.toHaveAttribute('tabindex');
+        expect(screen.queryByRole('button')).not.toBeInTheDocument();
+        expect(screen.queryByRole('link', { name: /No File Cert/ })).not.toBeInTheDocument();
 
+        fireEvent.click(certItem);
         expect(window.open).not.toHaveBeenCalled();
+    });
+
+    it('puts only the certificates that have a file into the tab order', async () => {
+        const user = userEvent.setup();
+        const certs = [
+            { id: 5, submitted_at: '2023-01-01T00:00:00Z', file_path: null, achievement: { name: 'Plain Cert', slug: 'plain' } },
+            { id: 6, submitted_at: '2023-01-01T00:00:00Z', file_path: 'x', achievement: { name: 'Linked Cert', slug: 'linked' } },
+        ];
+        render(<CertificationsList certificates={certs} />, { wrapper: MemoryRouter });
+
+        await user.tab();
+        expect(screen.getByRole('link', { name: 'Submit Certificate' })).toHaveFocus();
+        await user.tab();
+        expect(screen.getByRole('link', { name: /Linked Cert/ })).toHaveFocus();
     });
 
     it('formats the submitted date as month and year', () => {
