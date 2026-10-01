@@ -21,8 +21,6 @@ from werkzeug.utils import secure_filename
 
 notes_bp = Blueprint("notes", __name__)
 
-S3_NOTES_BUCKET = "classroom-chat-student-notes"
-
 
 @notes_bp.route("/upload", methods=["POST"])
 @limiter.limit("200 per day")
@@ -148,7 +146,7 @@ def handle_note_s3_upload(s3_client, file, user_obj):
     try:
         s3_client.upload_fileobj(
             file,
-            S3_NOTES_BUCKET,
+            current_app.config["S3_NOTES_BUCKET"],
             s3_key,
             ExtraArgs={
                 "ContentType": file.content_type,
@@ -179,7 +177,9 @@ def delete_note(note_id):
             # 1. S3 Delete
             s3_client = get_s3_client()
             if s3_client:
-                s3_client.delete_object(Bucket=S3_NOTES_BUCKET, Key=note.filename)
+                s3_client.delete_object(
+                    Bucket=current_app.config["S3_NOTES_BUCKET"], Key=note.filename
+                )
         else:
             # 2. Local Delete
             local_path = os.path.join(

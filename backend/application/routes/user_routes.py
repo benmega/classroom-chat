@@ -34,8 +34,6 @@ from wtforms.validators import DataRequired
 
 user = Blueprint("user", __name__)
 
-S3_UPLOAD_BUCKET = "youtube-upload-source-classroom-chat"
-
 
 from application.decorators.login_required import require_login
 
@@ -844,9 +842,10 @@ def _do_s3_upload(app, file_bytes, filename, content_type, username, project_nam
             # which ignores MultipartUpload events unless explicitly enabled.
             config = TransferConfig(multipart_threshold=1024 * 1024 * 500)
 
+            bucket = app.config["S3_UPLOAD_BUCKET"]
             s3_client.upload_fileobj(
                 BytesIO(file_bytes),
-                S3_UPLOAD_BUCKET,
+                bucket,
                 s3_filename,
                 ExtraArgs={
                     "ContentType": content_type or "video/mp4",
@@ -855,10 +854,8 @@ def _do_s3_upload(app, file_bytes, filename, content_type, username, project_nam
                 Config=config,
             )
 
-            region = os.environ.get("AWS_REGION", "ap-southeast-1")
-            video_url = (
-                f"https://{S3_UPLOAD_BUCKET}.s3.{region}.amazonaws.com/{s3_filename}"
-            )
+            region = os.environ.get("AWS_REGION", Config.AWS_REGION)
+            video_url = f"https://{bucket}.s3.{region}.amazonaws.com/{s3_filename}"
 
             project = db.session.get(Project, project_id)
             if project:

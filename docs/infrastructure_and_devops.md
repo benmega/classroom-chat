@@ -43,10 +43,14 @@ See `backend/.env.example` for the full list of required variables. The code rea
 | `DEV_DATABASE_URI` | `config.py` (development) | Optional dev override |
 | `WEBHOOK_SECRET` | webhook routes | Injected by `deploy.yml` |
 | `WEBHOOK_URL` | `infrastructure/lambda_transcriber/lambda_function.py` (Lambda environment, not the Flask app) | Optional |
-| `CORS_ORIGINS` | `config.py` | Comma-separated. Not written by `deploy.yml`, so the default origin list in `config.py` is used |
-| `SOCKETIO_ASYNC_MODE` | `main.py` | Default `gevent` |
-| `PORT`, `FLASK_DEBUG` | `main.py` (`python main.py` only) | Defaults 8000 / on |
-| `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION` | notes upload, helper functions, `user_routes.py` (S3); default region `ap-southeast-1` | Optional |
+| `CORS_ORIGINS` | `config.py` (production), `routes/challenge_routes.py` | Comma-separated (whitespace and empty entries are ignored). Not written by `deploy.yml`, so the default origin list in `config.py` is used. Localhost origins are defaults only outside production; `/challenge/submit` additionally allows the CodeCombat/Ozaria bookmarklet origins |
+| `SOCKETIO_ASYNC_MODE` | `main.py`, `config.py` | Default `gevent`. `main.py` loads `.env` before deciding whether to monkey-patch, so both read the same value |
+| `PORT`, `FLASK_DEBUG`, `FLASK_USE_RELOADER` | `main.py` (`python main.py` only) | Defaults 8000 / on / on |
+| `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION` | `config.py`, notes upload, helper functions, `user_routes.py` (S3); default region `ap-southeast-1` | Optional |
+| `S3_NOTES_BUCKET`, `S3_UPLOAD_BUCKET` | `config.py` (notes images, project videos) | Optional; the defaults are the production buckets (`classroom-chat-student-notes`, `youtube-upload-source-classroom-chat`) |
+| `AWS_SES_REGION`, `SES_SENDER_EMAIL`, `ADMIN_EMAIL_ADDRESS` | `config.py` (SES email) | Optional; defaults `ap-southeast-1` / `noreply@benmega.com` / unset (admin emails skipped) |
+| `AWS_SES_ACCESS_KEY_ID`, `AWS_SES_SECRET_ACCESS_KEY` | `services/email_service.py` | Optional; dedicated SES credentials, otherwise the default AWS credentials are used |
+| `PROFILE_BASE_URL` | `tools/profile_urls.py` (QR-code tools only) | Optional; default `https://blossom.benmega.com` |
 
 ---
 
@@ -71,9 +75,11 @@ sudo mkswap /swapfile
 sudo swapon /swapfile
 echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
 
-# 4. Create backend/.env (use .env.example as a template)
+# 4. Create backend/.env (use .env.example as a template). The example defaults to
+#    FLASK_ENV=development, so set FLASK_ENV=production and fill in real values.
+#    deploy.yml overwrites this file on every deploy.
 cp backend/.env.example backend/.env
-nano backend/.env  # fill in real values
+nano backend/.env
 
 # 5. Nothing to do for the database: the first deploy.sh run creates the schema from the
 #    models and stamps it to head (see section 8). `flask db upgrade` alone cannot build a
@@ -129,7 +135,8 @@ It covers:
 - CORS preflight: `OPTIONS` requests to the API routes are answered by nginx itself, ahead of Flask
 - Proxying of the API route prefixes (`api`, `user`, `session`, `message`, `upload`, `challenge`, `ai`,
   `duck_trade`, `notes`, `server`) to Gunicorn on `127.0.0.1:8000`, with 300 s read/send timeouts and a
-  500 MB request body limit for uploads
+  500 MB request body limit for uploads (Flask itself caps request bodies at 25 MB, except the project
+  video upload endpoints, which may send up to 500 MB)
 - WebSocket (`/socket.io`) proxying with the `Upgrade` headers
 
 `/dev-login` is deliberately not proxied: it is disabled in production. The React app uses

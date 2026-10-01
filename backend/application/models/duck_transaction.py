@@ -24,5 +24,5 @@ class DuckTransaction(db.Model):
             "user_id": self.user_id,
             "amount": self.amount,
             "reason": self.reason,
-            "timestamp": self.timestamp.isoformat(),
+            "timestamp": self.timestamp.isoformat() if self.timestamp else None,
         }

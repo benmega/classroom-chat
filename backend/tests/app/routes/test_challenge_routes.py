@@ -10,6 +10,11 @@ from unittest.mock import patch
 
 import pytest
 from application import db
+from application.config import (
+    BOOKMARKLET_ORIGINS,
+    DEFAULT_DEV_CORS_ORIGINS,
+    DEFAULT_PROD_CORS_ORIGINS,
+)
 from application.models.challenge import Challenge
 from application.models.challenge_log import ChallengeLog
 from application.models.configuration import Configuration
@@ -1453,3 +1458,130 @@ def test_log_challenge_other_users_helper_credits_the_helper(init_db):
     log = ChallengeLog.query.filter_by(user_id=friend.id).one()
     assert log.helper == "Ben"
     assert compute_user_stats(ben)["community_count"] == 1
+
+
+# ---------------------------------------------------------------------------
+# CORS: bookmarklet origins and the allow-list shared with the app-wide config
+# ---------------------------------------------------------------------------
+
+
+def _preflight(client, origin):
+    return client.options(
+        "/challenge/submit",
+        headers={"Origin": origin, "Access-Control-Request-Method": "POST"},
+    )
+
+
+@pytest.mark.parametrize("origin", BOOKMARKLET_ORIGINS)
+def test_challenge_submit_preflight_allows_bookmarklet_origins(client, origin):
+    """The CodeCombat/Ozaria bookmarklet posts credentialed requests from these sites."""
+    response = _preflight(client, origin)
+
+    assert response.status_code == 200
+    assert response.headers["Access-Control-Allow-Origin"] == origin
+    assert response.headers["Access-Control-Allow-Credentials"] == "true"
+
+
+def test_bookmarklet_origins_are_the_codecombat_and_ozaria_sites():
+    assert BOOKMARKLET_ORIGINS == [
+        "https://codecombat.com",
+        "https://www.codecombat.com",
+        "https://ozaria.com",
+        "https://www.ozaria.com",
+    ]
+
+
+def test_challenge_submit_preflight_allows_app_origins(client):
+    from application.routes.challenge_routes import FRONTEND_ORIGINS
+
+    for origin in FRONTEND_ORIGINS:
+        response = _preflight(client, origin)
+        assert response.headers["Access-Control-Allow-Origin"] == origin
+        assert response.headers["Access-Control-Allow-Credentials"] == "true"
+
+
+def test_challenge_submit_preflight_rejects_unknown_origin(client):
+    response = _preflight(client, "https://evil.example.com")
+
+    assert "Access-Control-Allow-Origin" not in response.headers
+
+
+def test_challenge_origins_are_app_plus_bookmarklet_origins():
+    from application.routes.challenge_routes import CHALLENGE_ORIGINS, FRONTEND_ORIGINS
+
+    assert [*FRONTEND_ORIGINS, *BOOKMARKLET_ORIGINS] == CHALLENGE_ORIGINS
+
+
+def test_frontend_origins_follow_environment(monkeypatch):
+    """Localhost origins are defaults only outside production; CORS_ORIGINS overrides both."""
+    from application.routes.challenge_routes import _frontend_origins
+
+    monkeypatch.delenv("CORS_ORIGINS", raising=False)
+
+    monkeypatch.setenv("FLASK_ENV", "production")
+    assert _frontend_origins() == DEFAULT_PROD_CORS_ORIGINS
+    assert not any("localhost" in o or "127.0.0.1" in o for o in _frontend_origins())
+
+    monkeypatch.setenv("FLASK_ENV", "development")
+    assert _frontend_origins() == DEFAULT_DEV_CORS_ORIGINS
+
+    monkeypatch.setenv("FLASK_ENV", "production")
+    monkeypatch.setenv("CORS_ORIGINS", " https://a.example , https://b.example ,")
+    assert _frontend_origins() == ["https://a.example", "https://b.example"]
+
+
+# ---------------------------------------------------------------------------
+# Enrollment logging: lines go through the module logger (not the root logger),
+# so they survive the root logger no longer being forced to INFO.
+# ---------------------------------------------------------------------------
+
+
+def _enrollment_records(caplog):
+    return [r for r in caplog.records if "[Enrollment]" in r.getMessage()]
+
+
+def test_enrollment_logs_through_the_module_logger(init_db, caplog):
+    from application.routes.challenge_routes import _enroll_user_in_classroom
+    from tests.factories import ClassroomFactory
+
+    user = UserFactory()
+    classroom = ClassroomFactory()
+
+    with caplog.at_level(logging.INFO, logger=CHALLENGE_LOGGER):
+        with patch("application.socket_events.emit_classroom_enrolled"):
+            _enroll_user_in_classroom(user, classroom.id)
+
+    records = _enrollment_records(caplog)
+    assert [(r.name, r.levelno) for r in records] == [(CHALLENGE_LOGGER, logging.INFO)]
+    assert f"User {user.id} enrolled in classroom '{classroom.id}'" in records[0].getMessage()
+
+
+def test_enrollment_warns_through_the_module_logger_for_an_unknown_classroom(init_db, caplog):
+    from application.routes.challenge_routes import _enroll_user_in_classroom
+
+    user = UserFactory()
+
+    with caplog.at_level(logging.INFO, logger=CHALLENGE_LOGGER):
+        _enroll_user_in_classroom(user, "no-such-classroom")
+
+    records = _enrollment_records(caplog)
+    assert [(r.name, r.levelno) for r in records] == [(CHALLENGE_LOGGER, logging.WARNING)]
+
+
+def test_enrollment_failure_is_logged_through_the_module_logger(init_db, caplog):
+    from application.routes.challenge_routes import _enroll_user_in_classroom
+    from tests.factories import ClassroomFactory
+
+    user = UserFactory()
+    classroom = ClassroomFactory()
+
+    with caplog.at_level(logging.INFO, logger=CHALLENGE_LOGGER):
+        with patch(
+            "application.socket_events.emit_classroom_enrolled",
+            side_effect=RuntimeError("socket down"),
+        ):
+            _enroll_user_in_classroom(user, classroom.id)
+
+    failures = [r for r in _enrollment_records(caplog) if r.levelno == logging.ERROR]
+    assert [r.name for r in failures] == [CHALLENGE_LOGGER]
+    assert failures[0].exc_info

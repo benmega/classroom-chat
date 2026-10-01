@@ -11,6 +11,12 @@ from datetime import datetime
 from urllib.parse import parse_qs
 
 from application import Configuration
+from application.config import (
+    BOOKMARKLET_ORIGINS,
+    DEFAULT_DEV_CORS_ORIGINS,
+    DEFAULT_PROD_CORS_ORIGINS,
+    cors_origins_from_env,
+)
 from application.extensions import csrf, db, socketio
 from application.models.challenge import Challenge
 from application.models.challenge_log import ChallengeLog
@@ -44,30 +50,18 @@ BASE_PATTERN = (
 URL_PATTERN = BASE_PATTERN + r"(?P<params>\?[^ \n\r\t]*)?"
 
 
-FRONTEND_ORIGINS = (
-    os.getenv("CORS_ORIGINS", "").split(",")
-    if os.getenv("CORS_ORIGINS")
-    else [
-        "https://blossom.benmega.com",
-        "https://d2pa3ix3n5behv.cloudfront.net",
-        "http://localhost:5173",
-        "http://localhost:5174",
-        "http://localhost:5175",
-        "http://localhost:8000",
-        "http://127.0.0.1:5173",
-        "http://127.0.0.1:5174",
-        "http://127.0.0.1:5175",
-        "http://127.0.0.1:8000",
-    ]
-)
+def _frontend_origins():
+    """The app-wide CORS allow-list: CORS_ORIGINS if set, else the defaults for
+    this environment (localhost origins only outside production)."""
+    is_production = os.getenv("FLASK_ENV", "development").lower() == "production"
+    return cors_origins_from_env(
+        DEFAULT_PROD_CORS_ORIGINS if is_production else DEFAULT_DEV_CORS_ORIGINS
+    )
 
-CHALLENGE_ORIGINS = [
-    *FRONTEND_ORIGINS,
-    "https://codecombat.com",
-    "https://www.codecombat.com",
-    "https://ozaria.com",
-    "https://www.ozaria.com",
-]
+
+FRONTEND_ORIGINS = _frontend_origins()
+
+CHALLENGE_ORIGINS = [*FRONTEND_ORIGINS, *BOOKMARKLET_ORIGINS]
 
 
 def _wants_json():
@@ -586,9 +580,7 @@ def _enroll_user_in_classroom(user, classroom_id: str):
 
         classroom = db.session.get(Classroom, classroom_id)
         if not classroom:
-            import logging
-
-            logging.warning(
+            logger.warning(
                 f"[Enrollment] Classroom '{classroom_id}' not found — skipping enrollment."
             )
             return
@@ -601,9 +593,7 @@ def _enroll_user_in_classroom(user, classroom_id: str):
             )
         )
         db.session.commit()
-        import logging
-
-        logging.info(
+        logger.info(
             f"[Enrollment] User {user.id} enrolled in classroom '{classroom_id}'."
         )
 
@@ -614,8 +604,6 @@ def _enroll_user_in_classroom(user, classroom_id: str):
 
     except Exception as exc:
         db.session.rollback()
-        import logging
-
-        logging.exception(
+        logger.exception(
             f"[Enrollment] Failed for user {user.id} → '{classroom_id}': {exc}"
         )

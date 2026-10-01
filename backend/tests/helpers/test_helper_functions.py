@@ -47,3 +47,19 @@ def test_safe_parse_datetime():
     assert parsed is not None
     assert parsed.year == 2026
     assert safe_parse_datetime("not-a-date") is None
+
+
+def test_get_s3_client_region_defaults_to_config(monkeypatch):
+    from unittest.mock import patch
+
+    from application.config import Config
+
+    monkeypatch.delenv("AWS_REGION", raising=False)
+    with patch("boto3.client") as mock_client:
+        get_s3_client()
+    assert mock_client.call_args.kwargs["region_name"] == Config.AWS_REGION
+
+    monkeypatch.setenv("AWS_REGION", "us-east-1")
+    with patch("boto3.client") as mock_client:
+        get_s3_client()
+    assert mock_client.call_args.kwargs["region_name"] == "us-east-1"

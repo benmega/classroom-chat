@@ -1013,6 +1013,35 @@ def test_handle_video_s3_upload_helper(init_db, test_app):
         assert ".mp4" in project.video_url
 
 
+def test_video_upload_uses_configured_bucket_and_region(init_db, test_app, monkeypatch):
+    from application.routes.user_routes import start_video_upload_thread
+
+    sample_user = UserFactory()
+
+    class DummyVideoFile:
+        filename = "demo.mp4"
+        content_type = "video/mp4"
+        def seek(self, pos): pass
+        def read(self): return b"fake video bytes"
+
+    project = Project(name="Cfg Proj", user_id=sample_user.id)
+    db.session.add(project)
+    db.session.commit()
+
+    monkeypatch.setitem(test_app.config, "S3_UPLOAD_BUCKET", "custom-video-bucket")
+    monkeypatch.setenv("AWS_REGION", "eu-west-1")
+
+    with patch("application.routes.user_routes.threading.Thread.start", synchronous_thread_start):
+        with patch("application.routes.user_routes.get_s3_client") as mock_get_s3:
+            with test_app.app_context():
+                started = start_video_upload_thread(DummyVideoFile(), sample_user, project.name, project.id)
+    assert started is True
+
+    assert mock_get_s3.return_value.upload_fileobj.call_args.args[1] == "custom-video-bucket"
+    db.session.refresh(project)
+    assert project.video_url.startswith("https://custom-video-bucket.s3.eu-west-1.amazonaws.com/")
+
+
 def test_new_and_edit_project_video_upload(client, init_db):
     sample_user = UserFactory()
     with client.session_transaction() as sess:

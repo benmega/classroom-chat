@@ -7,10 +7,18 @@ Summary: Entry point for starting the Flask application.
 import os
 import sys
 
+from dotenv import load_dotenv
+
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
+# Load .env before the check below so a SOCKETIO_ASYNC_MODE set only in .env
+# is honoured here as well as in application.config (which reads the same
+# variable). Importing application.config this early would pull in
+# gevent-sensitive modules before they are patched.
+load_dotenv()
+
 # Monkey patch for gevent if it's the selected async mode
-if os.getenv("SOCKETIO_ASYNC_MODE", "gevent") == "gevent":
+if (os.getenv("SOCKETIO_ASYNC_MODE") or "gevent") == "gevent":
     from gevent import monkey
 
     monkey.patch_all()

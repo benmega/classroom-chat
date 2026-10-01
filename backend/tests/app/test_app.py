@@ -2,14 +2,28 @@
 Unit tests for application initialization (__init__.py) and seed command (commands/seed.py).
 """
 
+import logging
 import os
+import subprocess
 import sys
+from typing import ClassVar
 from unittest.mock import MagicMock, patch
 
 import pytest
-from application import create_app, ensure_default_configuration, seed_global_data
+from application import (
+    _configure_logging,
+    create_app,
+    ensure_default_configuration,
+    seed_global_data,
+)
 from application.commands.seed import generate_kebab_slug, seed_command
-from application.config import DevelopmentConfig, ProductionConfig, TestingConfig
+from application.config import (
+    DEFAULT_DEV_CORS_ORIGINS,
+    DEFAULT_PROD_CORS_ORIGINS,
+    DevelopmentConfig,
+    ProductionConfig,
+    TestingConfig,
+)
 from application.extensions import db, scheduler, socketio
 from application.models.classroom import Classroom
 from application.models.configuration import Configuration
@@ -36,13 +50,190 @@ def test_create_app_configs():
             assert app_dev is not None
 
 
-def test_create_app_log_dir_not_exists(tmp_path):
+APP_HANDLER_NAMES = ("app_console", "app_file")
+THIRD_PARTY_LOGGERS = ("werkzeug", "sqlalchemy.engine", "engineio", "socketio")
+
+
+@pytest.fixture
+def restore_logging():
+    """Let a test reconfigure logging, then put back the process-wide logging state."""
+    root = logging.getLogger()
+    saved_handlers = list(root.handlers)
+    saved_root_level = root.level
+    names = ("application", *THIRD_PARTY_LOGGERS)
+    saved_levels = {name: logging.getLogger(name).level for name in names}
+    yield root
+    for handler in list(root.handlers):
+        if handler not in saved_handlers:
+            root.removeHandler(handler)
+            handler.close()
+    for handler in saved_handlers:
+        if handler not in root.handlers:
+            root.addHandler(handler)
+    root.setLevel(saved_root_level)
+    for name, level in saved_levels.items():
+        logging.getLogger(name).setLevel(level)
+
+
+def _detach_app_handlers(root):
+    for handler in list(root.handlers):
+        if handler.get_name() in APP_HANDLER_NAMES:
+            root.removeHandler(handler)
+
+
+def _app_handler_names(root):
+    return [h.get_name() for h in root.handlers if h.get_name() in APP_HANDLER_NAMES]
+
+
+def test_create_app_log_dir_not_exists(restore_logging):
+    """The log dir is created (idempotently) when the log handlers are first attached."""
+    _detach_app_handlers(restore_logging)
     with patch.object(scheduler, "start"), patch.object(socketio, "init_app"):
-        with patch("os.path.exists", side_effect=lambda path: False if "instance" in str(path) else os.path.exists(path)):
-            with patch("os.makedirs") as mock_mkdir:
-                app = create_app(TestingConfig)
-                assert app is not None
-                mock_mkdir.assert_called()
+        with patch("os.makedirs") as mock_mkdir:
+            app = create_app(TestingConfig)
+            assert app is not None
+            first_call = mock_mkdir.call_args_list[0]
+            assert os.path.basename(first_call.args[0]) == "instance"
+            assert first_call.kwargs == {"exist_ok": True}
+
+
+def test_create_app_does_not_stack_logging_handlers(restore_logging):
+    """Every create_app() call used to add another console and file handler."""
+    root = restore_logging
+    with patch.object(scheduler, "start"), patch.object(socketio, "init_app"):
+        create_app(TestingConfig)
+        before = list(root.handlers)
+        create_app(TestingConfig)
+        create_app(TestingConfig)
+
+    assert root.handlers == before
+    assert sorted(_app_handler_names(root)) == sorted(APP_HANDLER_NAMES)
+
+
+def test_configure_logging_attaches_each_handler_once(restore_logging):
+    root = restore_logging
+    _detach_app_handlers(root)
+
+    _configure_logging()
+    _configure_logging()
+
+    assert sorted(_app_handler_names(root)) == sorted(APP_HANDLER_NAMES)
+    file_handler = next(h for h in root.handlers if h.get_name() == "app_file")
+    console_handler = next(h for h in root.handlers if h.get_name() == "app_console")
+    assert os.path.basename(file_handler.baseFilename) == "app.log"
+    # The file is opened on the first write, not when the handler is created.
+    assert file_handler.stream is None
+    assert not isinstance(console_handler, logging.FileHandler)
+    assert file_handler.formatter is not None
+    assert console_handler.formatter is not None
+
+
+def test_configure_logging_fills_in_only_the_missing_handler(restore_logging):
+    root = restore_logging
+    _detach_app_handlers(root)
+    _configure_logging()
+    console_handler = next(h for h in root.handlers if h.get_name() == "app_console")
+    root.removeHandler(next(h for h in root.handlers if h.get_name() == "app_file"))
+
+    _configure_logging()
+
+    assert sorted(_app_handler_names(root)) == sorted(APP_HANDLER_NAMES)
+    assert console_handler in root.handlers
+
+
+def test_configure_logging_does_not_force_root_level(restore_logging):
+    """Only the app's loggers log at INFO; third-party libraries stay quiet."""
+    root = restore_logging
+    root.setLevel(logging.WARNING)
+    for name in ("application", *THIRD_PARTY_LOGGERS):
+        logging.getLogger(name).setLevel(logging.NOTSET)
+
+    _configure_logging()
+
+    assert root.level == logging.WARNING
+    assert logging.getLogger("application").level == logging.INFO
+    assert logging.getLogger("application.routes.challenge_routes").isEnabledFor(logging.INFO)
+    for name in THIRD_PARTY_LOGGERS:
+        assert logging.getLogger(name).level == logging.WARNING
+        assert not logging.getLogger(name).isEnabledFor(logging.INFO)
+    assert not logging.getLogger("some.third.party").isEnabledFor(logging.INFO)
+
+
+def test_importing_the_application_does_not_call_basic_config():
+    """duck_trade_routes used to call logging.basicConfig() at import, adding a duplicate console handler."""
+    backend_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    code = (
+        "import logging\n"
+        "calls = []\n"
+        "logging.basicConfig = lambda *a, **k: calls.append((a, k))\n"
+        "import application\n"
+        "import application.routes.duck_trade_routes\n"
+        "print(len(calls), len(logging.getLogger().handlers))\n"
+    )
+    result = subprocess.run(
+        [sys.executable, "-c", code], cwd=backend_dir, capture_output=True, text=True, timeout=120
+    )
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.split() == ["0", "0"]
+
+
+def _preflight(client, origin, **kwargs):
+    return client.options(
+        "/user/login",
+        headers={"Origin": origin, "Access-Control-Request-Method": "POST"},
+        **kwargs,
+    )
+
+
+@pytest.mark.parametrize("origin", DEFAULT_DEV_CORS_ORIGINS)
+def test_dev_and_testing_apps_allow_the_default_dev_origins(client, origin):
+    response = _preflight(client, origin)
+
+    assert response.headers["Access-Control-Allow-Origin"] == origin
+    assert response.headers["Access-Control-Allow-Credentials"] == "true"
+
+
+def test_dev_default_origins_cover_the_vite_and_backend_ports():
+    for host in ("localhost", "127.0.0.1"):
+        for port in (5173, 5174, 5175, 4173, 8000):
+            assert f"http://{host}:{port}" in DEFAULT_DEV_CORS_ORIGINS
+
+
+def test_dev_app_rejects_unlisted_origins(client):
+    for origin in ("https://evil.example.com", "https://blossom.benmega.com"):
+        assert "Access-Control-Allow-Origin" not in _preflight(client, origin).headers
+
+
+def test_production_app_does_not_allow_localhost_origins():
+    class ProdCorsConfig(ProductionConfig):
+        SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"
+
+    # Independent of any CORS_ORIGINS set in the environment that ran the tests.
+    ProdCorsConfig.CORS_ORIGINS = list(DEFAULT_PROD_CORS_ORIGINS)
+
+    with patch.object(scheduler, "start"), patch.object(socketio, "init_app"):
+        with patch.dict(os.environ, {"FLASK_ENV": "production"}):
+            app = create_app(ProdCorsConfig)
+
+    prod_client = app.test_client()
+    base_url = "https://api-blossom.benmega.com"
+    for origin in DEFAULT_PROD_CORS_ORIGINS:
+        response = _preflight(prod_client, origin, base_url=base_url)
+        assert response.headers["Access-Control-Allow-Origin"] == origin
+    response = _preflight(prod_client, "http://localhost:5173", base_url=base_url)
+    assert "Access-Control-Allow-Origin" not in response.headers
+
+
+def test_socketio_uses_the_same_origins_as_http_cors():
+    class CustomOriginsConfig(TestingConfig):
+        CORS_ORIGINS: ClassVar[list[str]] = ["https://one.example", "https://two.example"]
+
+    with patch.object(scheduler, "start"), patch.object(socketio, "init_app") as init_app:
+        create_app(CustomOriginsConfig)
+        assert init_app.call_args.kwargs["cors_allowed_origins"] == CustomOriginsConfig.CORS_ORIGINS
+
+        create_app(TestingConfig)
+        assert init_app.call_args.kwargs["cors_allowed_origins"] == DEFAULT_DEV_CORS_ORIGINS
 
 
 def test_create_app_prod_proxy_fix():

@@ -2,8 +2,14 @@ import contextlib
 import logging
 import os
 from datetime import timedelta
+from logging.handlers import RotatingFileHandler
 
-from application.config import DevelopmentConfig, ProductionConfig, TestingConfig
+from application.config import (
+    DEFAULT_DEV_CORS_ORIGINS,
+    DevelopmentConfig,
+    ProductionConfig,
+    TestingConfig,
+)
 from application.extensions import csrf, db, limiter, migrate, scheduler, socketio
 from application.models import setup_models
 from application.models.configuration import Configuration
@@ -11,7 +17,7 @@ from application.models.user import User
 from application.routes import register_blueprints
 from application.utilities.helper_functions import format_number
 from application.utilities.schema_check import check_for_schema_drift
-from flask import Flask, g, jsonify, session
+from flask import Flask, g, jsonify, request, session
 from flask_cors import CORS
 from flask_limiter import RateLimitExceeded
 from flask_talisman import Talisman
@@ -20,32 +26,54 @@ from sqlalchemy import inspect
 from werkzeug.exceptions import RequestEntityTooLarge
 from werkzeug.middleware.proxy_fix import ProxyFix
 
+_CONSOLE_HANDLER_NAME = "app_console"
+_FILE_HANDLER_NAME = "app_file"
 
-def create_app(config_class=None):
+
+def _configure_logging():
+    """
+    Attach the console and rotating-file handlers to the root logger, once per
+    process: create_app() runs again for every test and reload, and must not
+    stack up duplicate handlers (repeated lines, leaked file handles).
+    """
+    root_logger = logging.getLogger()
+    attached = {handler.get_name() for handler in root_logger.handlers}
     log_formatter = logging.Formatter(
         "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
     )
 
-    console_handler = logging.StreamHandler()
-    console_handler.setFormatter(log_formatter)
+    if _CONSOLE_HANDLER_NAME not in attached:
+        console_handler = logging.StreamHandler()
+        console_handler.set_name(_CONSOLE_HANDLER_NAME)
+        console_handler.setFormatter(log_formatter)
+        root_logger.addHandler(console_handler)
 
-    log_dir = os.path.join(
-        os.path.abspath(os.path.dirname(os.path.dirname(__file__))), "instance"
-    )
-    if not os.path.exists(log_dir):
-        os.makedirs(log_dir)
-    from logging.handlers import RotatingFileHandler
+    if _FILE_HANDLER_NAME not in attached:
+        log_dir = os.path.join(
+            os.path.abspath(os.path.dirname(os.path.dirname(__file__))), "instance"
+        )
+        os.makedirs(log_dir, exist_ok=True)
+        # delay=True: the file is opened on the first write, not on creation.
+        file_handler = RotatingFileHandler(
+            os.path.join(log_dir, "app.log"),
+            maxBytes=10 * 1024 * 1024,
+            backupCount=5,
+            delay=True,
+        )
+        file_handler.set_name(_FILE_HANDLER_NAME)
+        file_handler.setFormatter(log_formatter)
+        root_logger.addHandler(file_handler)
 
-    file_handler = RotatingFileHandler(
-        os.path.join(log_dir, "app.log"), maxBytes=10 * 1024 * 1024, backupCount=5
-    )
-    file_handler.setFormatter(log_formatter)
+    # Only the app's own loggers ("application", which is also Flask's
+    # app.logger, and its children) log at INFO; the root logger keeps its
+    # default level so third-party libraries are not forced to INFO.
+    logging.getLogger("application").setLevel(logging.INFO)
+    for noisy in ("werkzeug", "sqlalchemy.engine", "engineio", "socketio"):
+        logging.getLogger(noisy).setLevel(logging.WARNING)
 
-    root_logger = logging.getLogger()
-    root_logger.setLevel(logging.INFO)
-    root_logger.addHandler(console_handler)
-    root_logger.addHandler(file_handler)
 
+def create_app(config_class=None):
+    _configure_logging()
     logger = logging.getLogger(__name__)
 
     # Dynamically select config if not explicitly passed
@@ -64,20 +92,7 @@ def create_app(config_class=None):
     app = Flask(__name__, template_folder=template_folder, static_folder=static_folder)
     app.config.from_object(config_class)
 
-    cors_origins = getattr(
-        config_class,
-        "CORS_ORIGINS",
-        [
-            "http://localhost:5173",
-            "http://localhost:5174",
-            "http://localhost:5175",
-            "http://localhost:8000",
-            "http://127.0.0.1:5173",
-            "http://127.0.0.1:5174",
-            "http://127.0.0.1:5175",
-            "http://127.0.0.1:8000",
-        ],
-    )
+    cors_origins = getattr(config_class, "CORS_ORIGINS", DEFAULT_DEV_CORS_ORIGINS)
     CORS(
         app,
         origins=cors_origins,
@@ -128,6 +143,16 @@ def create_app(config_class=None):
         scheduler.init_app(app)
 
     from . import socket_events as socket_events
+
+    # Requests are capped by MAX_CONTENT_LENGTH, except the video-upload
+    # endpoints, which get the larger limit. This hook must be registered
+    # before csrf.init_app: Flask-WTF's CSRF check reads request.form for
+    # multipart POSTs, which parses the body under whatever limit is in force,
+    # so setting the limit inside the view would be too late.
+    @app.before_request
+    def allow_large_uploads():
+        if request.endpoint in app.config["LARGE_UPLOAD_ENDPOINTS"]:
+            request.max_content_length = app.config["LARGE_UPLOAD_MAX_CONTENT_LENGTH"]
 
     csrf.init_app(app)
     register_blueprints(app)

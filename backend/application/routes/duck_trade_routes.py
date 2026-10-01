@@ -4,14 +4,11 @@ Type: py
 Summary: Flask routes for duck trade routes functionality.
 """
 
-import logging
-
 from application.extensions import db
 from application.models.duck_trade import DuckTradeLog
 from flask import Blueprint, jsonify, request, session
 
 duck_trade = Blueprint("duck_trade", __name__)
-logging.basicConfig(level=logging.INFO)
 
 # Each trade stores one 0/1-style count per binary place (8 places).
 DUCK_PLACES = 8

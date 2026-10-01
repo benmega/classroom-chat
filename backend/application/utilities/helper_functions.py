@@ -4,11 +4,11 @@ Type: py
 Summary: General utility helpers for file uploads and formatting.
 """
 
+from application.config import Config
+
 
 def allowed_file(filename, allowed_extensions=None):
     if allowed_extensions is None:
-        from application.config import Config
-
         allowed_extensions = Config.ALLOWED_EXTENSIONS
 
     return "." in filename and filename.rsplit(".", 1)[1].lower() in allowed_extensions
@@ -20,7 +20,7 @@ def get_s3_client():
     import boto3
 
     try:
-        kwargs = {"region_name": os.environ.get("AWS_REGION", "ap-southeast-1")}
+        kwargs = {"region_name": os.environ.get("AWS_REGION", Config.AWS_REGION)}
         if os.environ.get("AWS_ACCESS_KEY_ID") and os.environ.get(
             "AWS_SECRET_ACCESS_KEY"
         ):

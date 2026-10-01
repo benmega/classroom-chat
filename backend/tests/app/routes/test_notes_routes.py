@@ -312,3 +312,30 @@ def test_kiosk_upload_note_success_s3(
     assert response.json["status"] == "success"
     mock_s3.upload_fileobj.assert_called_once()
 
+
+@patch(f"{ROUTE_MODULE_PATH}.get_s3_client")
+def test_note_s3_upload_and_delete_use_configured_bucket(
+    mock_get_s3_client, logged_in_client, monkeypatch
+):
+    """The notes bucket comes from the app config (S3_NOTES_BUCKET), not a literal."""
+    mock_s3 = mock_get_s3_client.return_value
+    mock_s3.upload_fileobj.return_value = None
+    mock_s3.delete_object.return_value = {}
+    app_config = logged_in_client.application.config
+    monkeypatch.setitem(app_config, "USE_S3", True)
+    monkeypatch.setitem(app_config, "S3_NOTES_BUCKET", "custom-notes-bucket")
+
+    response = logged_in_client.post(
+        "/notes/upload",
+        data={"note_image": (io.BytesIO(b"bytes"), "scan.png")},
+        content_type="multipart/form-data",
+    )
+    assert response.status_code == 200
+    assert mock_s3.upload_fileobj.call_args.args[1] == "custom-notes-bucket"
+    assert response.json["note"]["url"].startswith(
+        "https://custom-notes-bucket.s3."
+    )
+
+    resp = logged_in_client.post(f"/notes/delete/{response.json['note']['id']}")
+    assert resp.status_code == 200
+    assert mock_s3.delete_object.call_args.kwargs["Bucket"] == "custom-notes-bucket"

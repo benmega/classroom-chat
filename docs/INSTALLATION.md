@@ -34,7 +34,7 @@
    SECRET_KEY=some-dev-secret
    ADMIN_PASSWORD=some-dev-password
    ```
-   `SECRET_KEY`/`ADMIN_PASSWORD` fall back to insecure dev defaults if omitted in development, but `FLASK_ENV=production` will refuse to start without them (`application/config.py`). Cognito-backed parent auth additionally needs the `COGNITO_*` vars, which are optional for local development of the rest of the app.
+   `backend/.env.example` is a template for this file; it defaults to `FLASK_ENV=development` and lists every optional variable. `SECRET_KEY`/`ADMIN_PASSWORD` fall back to insecure dev defaults if omitted in development, but production needs `FLASK_ENV=production` and will refuse to start without them (`application/config.py`). On the server, `deploy.yml` writes `backend/.env` (including `FLASK_ENV=production`) from GitHub Secrets; if you create it by hand from the example, change `FLASK_ENV` to `production`. Cognito-backed parent auth additionally needs the `COGNITO_*` vars, which are optional for local development of the rest of the app.
 
 5. Install frontend dependencies:
    ```bash
