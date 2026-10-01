@@ -77,12 +77,13 @@ Most JSON API endpoints use a standard wrapper (`@api_response` decorator in `ap
   "error": "Optional error detail code"
 }
 ```
+For error statuses (>= 400) `error` is always a string. A view that returns a dict body such as `{"conflict": true, "message": "...", "current_owner": "..."}` gets `error` set from its `error` (or else `message`) text, and the dict's other keys are placed next to `error` at the top level. Unhandled exceptions return `"Internal server error"` and roll the database session back.
 A handful of legacy/session-rendered routes (e.g. the `/api/achievements` and some `/user` routes) predate this convention — check the route source before assuming the envelope.
 
 ---
 
 ## 10. Access Control
-- **`login_required`**: Requires a valid session cookie (`application/decorators/login_required.py`).
-- **`admin_only`**: Requires the authenticated user to have `role == "admin"` (`application/decorators/admin_required.py`).
+- **`login_required`**: Requires a valid session cookie; anonymous requests get a JSON `401` (`application/decorators/login_required.py`).
+- **`admin_only`**: Requires the authenticated user to have `role == "admin"`; anonymous requests get a JSON `401` and other users a JSON `403`, whatever the client accepts (`application/decorators/admin_required.py`).
 - **CSRF**: Enforced by `flask-wtf` in production (disabled in the Development and Testing configs); the frontend reads the `csrf_token_v2` cookie and sends it back as a header on mutating requests. Routes marked `csrf.exempt` (for example `POST /challenge/submit`) skip it.
 - **Ownership checks**: Applied in-route for user-specific content (projects, notes, messages).

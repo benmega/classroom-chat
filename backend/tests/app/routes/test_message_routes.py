@@ -3,13 +3,17 @@ from application.models.message import Message
 
 
 def test_get_feed_not_logged_in(client, init_db):
+    # The message blueprint is mounted at /message, so the route is /message/api/feed
     response = client.get("/message/api/feed")
-    # Actually wait, url prefix for message is /message, so the route is /message/api/feed
-    # Let me check __init__.py. It's app.register_blueprint(message, url_prefix="/message")
-    # Yes.
-    assert response.status_code == 302  # login redirect
-    # Wait, @require_login redirects or returns 401 if it's an API.
-    # require_login uses `@login_required` or similar, let's just check redirect
+    # @require_login answers every anonymous request with a JSON 401, never a redirect
+    assert response.status_code == 401
+    assert response.get_json() == {"error": "Authentication required. Please log in."}
+
+
+def test_get_feed_not_logged_in_html_client(client, init_db):
+    response = client.get("/message/api/feed", headers={"Accept": "text/html"})
+    assert response.status_code == 401
+    assert response.is_json
 
 
 def test_get_feed_admin(client, init_db, sample_user):

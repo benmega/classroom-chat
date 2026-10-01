@@ -6,7 +6,7 @@ from application.decorators.login_required import require_login
 from application.extensions import db
 from application.models.note import Note
 from application.models.user import User
-from application.utilities.db_helpers import get_user
+from application.utilities.db_helpers import find_user
 from application.utilities.helper_functions import allowed_file, get_s3_client
 from flask import (
     Blueprint,
@@ -168,7 +168,9 @@ def delete_note(note_id):
     if not user_id:
         return jsonify({"error": "Unauthorized"}), 401
 
-    current_user = get_user(user_id)
+    current_user = find_user(user_id)
+    if not current_user:
+        return jsonify({"error": "Unauthorized"}), 401
     if note.user_id != current_user.id and current_user.role != 'admin':
         return jsonify({"success": False, "error": "Unauthorized"}), 403
 
@@ -215,7 +217,7 @@ def delete_note(note_id):
 @limiter.limit("500 per day")
 def kiosk_upload_note():
     user_id = session.get("user")
-    current_user = get_user(user_id)
+    current_user = find_user(user_id)
     if not current_user or getattr(current_user, "role", "") != 'admin':
         return jsonify({"status": "error", "error": "Unauthorized"}), 403
 

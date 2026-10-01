@@ -3,7 +3,6 @@ import { renderHook, act, waitFor } from '@testing-library/react';
 import { useUsersManagement } from './useUsersManagement';
 import { server } from '../test/mocks/server';
 import { http, HttpResponse } from 'msw';
-// eslint-disable-next-line
 import toast from 'react-hot-toast';
 
 vi.mock('react-hot-toast', () => ({
@@ -325,6 +324,62 @@ describe('useUsersManagement', () => {
 
     // No success toast — action was cancelled
     
+  });
+
+  it('offers to take over a drawer when the backend reports a conflict', async () => {
+    // @api_response puts conflict/current_owner/message next to `error`, not under it
+    const posted = [];
+    server.use(
+      http.post('*/api/admin/set_drawer', async ({ request }) => {
+        const body = await request.json();
+        posted.push(body);
+        if (!body.force) {
+          return HttpResponse.json({
+            status: 'error',
+            data: null,
+            error: 'Drawer 0x09 is already assigned to @ada.',
+            conflict: true,
+            message: 'Drawer 0x09 is already assigned to @ada.',
+            current_owner: 'ada',
+          }, { status: 409 });
+        }
+        return HttpResponse.json({ status: 'success', data: { message: 'Drawer updated' }, error: null });
+      })
+    );
+    const { result } = renderHook(() => useUsersManagement());
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    window.FormData = class { get(k) { return k === 'username' ? 'grace' : '0x09'; } };
+
+    await act(async () => {
+      await result.current.handleSetDrawer({ preventDefault: vi.fn(), target: {} });
+    });
+
+    expect(showConfirm).toHaveBeenCalledTimes(1);
+    expect(showConfirm.mock.calls[0][0]).toContain('@ada');
+    expect(posted).toEqual([
+      { username: 'grace', drawer: '0x09' },
+      { username: 'grace', drawer: '0x09', force: true },
+    ]);
+    expect(toast.error).not.toHaveBeenCalled();
+  });
+
+  it('shows the error message when setting a drawer fails without a conflict', async () => {
+    server.use(
+      http.post('*/api/admin/set_drawer', () => HttpResponse.json(
+        { status: 'error', data: null, error: 'Drawer must be in hex format', message: 'Drawer must be in hex format' },
+        { status: 400 }
+      ))
+    );
+    const { result } = renderHook(() => useUsersManagement());
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    window.FormData = class { get(k) { return k === 'username' ? 'grace' : 'zz'; } };
+
+    await act(async () => {
+      await result.current.handleSetDrawer({ preventDefault: vi.fn(), target: {} });
+    });
+
+    expect(showConfirm).not.toHaveBeenCalled();
+    expect(toast.error).toHaveBeenCalledWith('Drawer must be in hex format');
   });
 
 });

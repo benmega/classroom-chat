@@ -33,6 +33,7 @@ from application.models.note import Note
 from application.models.project import Project
 from application.models.skill import Skill
 from application.models.user import User
+from application.services import moderation_service
 from flask_login import LoginManager
 from PIL import Image
 
@@ -135,6 +136,14 @@ def logged_in_client(client, sample_user):
         sess["user"] = sample_user.id
         sess["_user_id"] = str(sample_user.id)
     return client
+
+
+@pytest.fixture(autouse=True)
+def reset_moderation_cache():
+    """The banned-word patterns are cached per process; start and end each test without them."""
+    moderation_service.clear_cache()
+    yield
+    moderation_service.clear_cache()
 
 
 @pytest.fixture(autouse=True)

@@ -2,8 +2,10 @@ from datetime import date, datetime, timezone
 
 from application.decorators.admin_required import admin_only
 from application.extensions import db
+from application.models.banned_words import BannedWords
 from application.models.classroom import Classroom
 from application.models.user import User
+from application.services import moderation_service
 from flask import Blueprint, current_app, jsonify, request
 from sqlalchemy import Enum, String, false, inspect, or_
 from sqlalchemy.exc import DataError, DBAPIError, IntegrityError, SQLAlchemyError, StatementError
@@ -210,6 +212,12 @@ def _json_body():
     return data
 
 
+def _banned_words_changed(item):
+    """Moderation caches the banned words, so a change to one must drop that cache."""
+    if isinstance(item, BannedWords):
+        moderation_service.clear_cache()
+
+
 def _commit():
     """Commit the session; on failure roll back and raise a JSON error for the admin UI."""
     try:
@@ -338,6 +346,7 @@ def create(resource):
     item = model(**_coerce_values(columns, filtered_params))
     db.session.add(item)
     _commit()
+    _banned_words_changed(item)
 
     if isinstance(item, Classroom):
         # Connected admins read every classroom: put their sockets in the new room
@@ -371,6 +380,7 @@ def update(resource, id):
         setattr(item, key, value)
 
     _commit()
+    _banned_words_changed(item)
 
     if isinstance(item, User) and "role" in values:
         # Promoted/demoted: their open sockets gain or lose the admin rooms
@@ -394,6 +404,7 @@ def delete(resource, id):
 
     db.session.delete(item)
     _commit()
+    _banned_words_changed(item)
 
     if isinstance(item, Classroom):
         from application.socket_events import close_classroom_room

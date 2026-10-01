@@ -11,6 +11,7 @@ from application.models.banned_words import BannedWords
 from application.models.classroom import Classroom
 from application.models.configuration import Configuration
 from application.models.message import Message
+from application.services import moderation_service
 
 
 @pytest.fixture(autouse=True)
@@ -135,6 +136,8 @@ def test_only_active_banned_words_block_messages(connect, sample_user):
 
     word.active = False
     db.session.commit()
+    # The admin routes do this after changing a word; the banned words are cached
+    moderation_service.clear_cache()
     ack = _send(
         socket_client,
         {"content": "this is a badword", "target_classrooms": [classroom.id]},

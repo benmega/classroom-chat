@@ -339,3 +339,32 @@ def test_note_s3_upload_and_delete_use_configured_bucket(
     resp = logged_in_client.post(f"/notes/delete/{response.json['note']['id']}")
     assert resp.status_code == 200
     assert mock_s3.delete_object.call_args.kwargs["Bucket"] == "custom-notes-bucket"
+
+
+def test_delete_note_stale_session_user(logged_in_client, sample_user, init_db):
+    note = Note(user_id=sample_user.id, filename="stale_session_note.png")
+    db.session.add(note)
+    db.session.commit()
+
+    with logged_in_client.session_transaction() as sess:
+        sess["user"] = 999999
+
+    resp = logged_in_client.post(f"/notes/delete/{note.id}")
+
+    assert resp.status_code == 401
+    assert resp.json["error"] == "Unauthorized"
+    assert db.session.get(Note, note.id) is not None
+
+
+def test_kiosk_upload_stale_session_user(logged_in_client):
+    with logged_in_client.session_transaction() as sess:
+        sess["user"] = 999999
+
+    response = logged_in_client.post(
+        "/notes/kiosk-upload",
+        data={"student_id": "1", "note": (io.BytesIO(b"img"), "kiosk.png")},
+        content_type="multipart/form-data",
+    )
+
+    assert response.status_code == 403
+    assert response.json["error"] == "Unauthorized"

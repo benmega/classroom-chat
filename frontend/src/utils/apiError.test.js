@@ -31,15 +31,15 @@ describe('getErrorMessage', () => {
         expect(getErrorMessage(errorWith(body), 'Fallback')).toBe('Passwords do not match.');
     });
 
-    it('reads @api_response envelopes carrying an object error', () => {
-        expect(getErrorMessage(errorWith({ status: 'error', error: { error: 'Nested' } }), 'Fallback')).toBe('Nested');
-        expect(getErrorMessage(errorWith({ status: 'error', error: { message: 'Nested msg' } }), 'Fallback')).toBe('Nested msg');
+    it('reads @api_response envelopes that carry extra top-level fields', () => {
+        const body = { status: 'error', data: null, error: 'Drawer taken.', conflict: true, message: 'Drawer taken.' };
+        expect(getErrorMessage(errorWith(body), 'Fallback')).toBe('Drawer taken.');
     });
 
     it('uses the fallback for non-string details', () => {
         expect(getErrorMessage(errorWith({ error: 42 }), 'Fallback')).toBe('Fallback');
         expect(getErrorMessage(errorWith({ error: { code: 1 } }), 'Fallback')).toBe('Fallback');
-        expect(getErrorMessage(errorWith({ error: { error: { deep: true } } }), 'Fallback')).toBe('Fallback');
+        expect(getErrorMessage(errorWith({ error: { error: 'Nested' } }), 'Fallback')).toBe('Fallback');
         expect(getErrorMessage(errorWith({ error: ['a'] }), 'Fallback')).toBe('Fallback');
         expect(getErrorMessage(errorWith({}), 'Fallback')).toBe('Fallback');
     });

@@ -4,6 +4,7 @@ from application.decorators.admin_required import admin_only
 from application.extensions import db
 from application.models.banned_words import BannedWords
 from application.models.configuration import Configuration
+from application.services import moderation_service
 from flask import jsonify, request
 
 from ..admin_routes import admin_bp
@@ -81,6 +82,7 @@ def add_banned_word():
     new_banned_word = BannedWords(word=word, reason=reason)
     db.session.add(new_banned_word)
     db.session.commit()
+    moderation_service.clear_cache()
 
     return jsonify(
         {"success": True, "message": f"'{word}' has been added to banned words"}

@@ -4,9 +4,12 @@ Type: py
 Summary: General utility helpers for file uploads and formatting.
 """
 
+import logging
 from datetime import datetime, timezone
 
 from application.config import Config
+
+logger = logging.getLogger(__name__)
 
 
 def utcnow_naive():
@@ -40,9 +43,7 @@ def get_s3_client():
 
         return boto3.client("s3", **kwargs)
     except Exception:
-        import traceback
-
-        traceback.print_exc()
+        logger.exception("Could not create the S3 client")
         return None
 
 

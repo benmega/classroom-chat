@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 def check_for_schema_drift(app):
     """
-    Compares the database schema with the models and prints a loud warning
+    Compares the database schema with the models and logs a loud warning
     if there is a mismatch (missing migrations).
     """
     try:
@@ -20,18 +20,26 @@ def check_for_schema_drift(app):
             connection.close()
 
             if diff:
-                print("\n" + "!" * 80)
-                print(" " * 25 + "DATABASE SCHEMA DRIFT DETECTED")
-                print("!" * 80)
-                print("\nYour models and database schema are out of sync!")
-                print("Please run the following commands to update your migrations:")
-                print("\n    export FLASK_APP=main.py")
-                print('    flask db migrate -m "Your description"')
-                print("    flask db upgrade")
-                print("\nDifferences detected:")
-                for d in diff:
-                    print(f"  - {d}")
-                print("\n" + "!" * 80 + "\n")
+                banner = "!" * 80
+                lines = [
+                    "",
+                    banner,
+                    " " * 25 + "DATABASE SCHEMA DRIFT DETECTED",
+                    banner,
+                    "",
+                    "Your models and database schema are out of sync!",
+                    "Please run the following commands to update your migrations:",
+                    "",
+                    "    export FLASK_APP=main.py",
+                    '    flask db migrate -m "Your description"',
+                    "    flask db upgrade",
+                    "",
+                    "Differences detected:",
+                    *(f"  - {d}" for d in diff),
+                    "",
+                    banner,
+                ]
+                logger.error("\n".join(lines))
 
                 # We don't crash the app, just warn loudly
                 logger.warning(

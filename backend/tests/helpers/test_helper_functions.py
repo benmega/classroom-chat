@@ -75,3 +75,15 @@ def test_utcnow_naive_is_naive_utc():
     assert before <= now <= after
     # Same clock as the deprecated utcnow() it replaces, so stored rows stay comparable
     assert abs(now - datetime.utcnow()) < timedelta(seconds=5)
+
+
+def test_get_s3_client_failure_is_logged_not_printed(capsys):
+    from unittest.mock import patch
+
+    with patch("boto3.client", side_effect=RuntimeError("no credentials")), patch(
+        "application.utilities.helper_functions.logger.exception"
+    ) as mock_log:
+        assert get_s3_client() is None
+
+    mock_log.assert_called_once()
+    assert capsys.readouterr().err == ""

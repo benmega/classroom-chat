@@ -65,7 +65,7 @@ The backend implements a multi-layered **Authentication** system:
 - **AWS Cognito / External SSO**: The `cognito_routes` handles robust OAuth/SSO login flows.
 - **Development Login**: The `dev_login_routes` allows for quick authentication bypasses during local development.
 - **Custom Sessions**: For standard users, the app relies on cookie-based Flask sessions.
-- **`require_login` Decorator**: A central security decorator (`application/decorators/login_required.py`) used to protect API routes. It returns a `401 Unauthorized` response for JSON requests or redirects to the login page for browser requests if no session is found.
+- **`require_login` Decorator**: A central security decorator (`application/decorators/login_required.py`) used to protect API routes. It returns a JSON `401 Unauthorized` response, whatever the client accepts, if no session is found.
 - **`before_request` Hook**: Automatically loads the logged-in user from the session into Flask's `g` object for easy access across the application.
 - **CSRF Protection**: Enabled via `Flask-WTF` in production; disabled in the Development and Testing configs. Some routes are explicitly `csrf.exempt` (for example login, signup and `/challenge/submit`).
 - **Secure Sessions**: Permanent sessions with a strictly defined timeout (**10 hours**) and cookie settings configured in `config.py` to minimize disruptive logouts during class.

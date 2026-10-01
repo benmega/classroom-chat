@@ -849,3 +849,46 @@ def test_update_user_details_rejects_taken_username(client, sample_admin, sample
 
     assert resp.status_code == 409
     assert db.session.get(User, sample_user.id).username == original
+
+
+def test_set_drawer_conflict_keeps_its_fields_at_the_top_level(
+    client, sample_admin, sample_user, init_db
+):
+    # The drawer-conflict dialog in the admin UI reads conflict/current_owner/message
+    # straight off the response body
+    login_as_admin(client, sample_admin)
+    sample_user.role = "student"
+    other_student = User(username="drawerrival", role="student", password_hash="dummy")
+    db.session.add(other_student)
+    db.session.commit()
+    first = client.post(
+        "/api/admin/set_drawer", json={"username": sample_user.username, "drawer": "0x09"}
+    )
+    assert first.status_code == 200
+
+    resp = client.post(
+        "/api/admin/set_drawer", json={"username": other_student.username, "drawer": "0x09"}
+    )
+
+    assert resp.status_code == 409
+    body = resp.get_json()
+    assert body["conflict"] is True
+    assert body["current_owner"] == sample_user.username
+    assert body["message"] == f"Drawer 0x09 is already assigned to @{sample_user.username}."
+    # `error` stays a plain string for generic error handling
+    assert body["error"] == body["message"]
+    assert body["status"] == "error"
+    assert body["data"] is None
+
+
+def test_update_user_details_errors_are_plain_strings(client, sample_admin, sample_user):
+    login_as_admin(client, sample_admin)
+
+    missing = client.put("/api/admin/user/999999", json={"nickname": "nobody"})
+    assert missing.status_code == 404
+    assert missing.get_json()["error"] == "User not found"
+
+    invalid = client.put(f"/api/admin/user/{sample_user.id}", json={"username": "a"})
+    assert invalid.status_code == 400
+    assert isinstance(invalid.get_json()["error"], str)
+    assert "3-30 chars" in invalid.get_json()["error"]

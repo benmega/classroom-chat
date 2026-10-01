@@ -87,6 +87,24 @@ def get_canonical_course_slug(course_identifier):
     return c_lower
 
 
+def find_user(identifier):
+    """
+    Look up a user by ID or username without aborting.
+
+    Args:
+        identifier (str or int): The user ID (int) or the username (str). Usernames
+            are matched case-insensitively because they are stored lower-cased.
+
+    Returns:
+        User or None: The User object, or None when there is no such user.
+    """
+    if identifier is None or isinstance(identifier, bool):
+        return None
+    if isinstance(identifier, int):
+        return db.session.get(User, identifier)
+    return User.query.filter_by(username=str(identifier).strip().lower()).first()
+
+
 def get_user(identifier):
     """
     Retrieve a user by username or ID.
@@ -98,20 +116,13 @@ def get_user(identifier):
         User: The User object if found, otherwise raises a 404.
 
     Raises:
-        404: If the user is not found.
+        404: If the user is not found. Database errors propagate unchanged, so
+            they end up as a normal 500 without exposing the exception text.
     """
-    try:
-        if isinstance(identifier, int):
-            user = db.session.get(User, identifier)
-        else:
-            user = User.query.filter_by(username=identifier).first()
-
-        if not user:
-            abort(404, description="User not found.")
-
-        return user
-    except Exception as e:
-        abort(500, description=f"An error occurred: {e!s}")
+    user = find_user(identifier)
+    if user is None:
+        abort(404, description="User not found.")
+    return user
 
 
 def save_message_to_db(
@@ -141,7 +152,7 @@ def save_message_to_db(
     """
     try:
         from application.models.classroom import Classroom
-        from application.services.moderation_service import message_is_appropriate
+        from application.services.moderation_service import is_appropriate
 
         user = db.session.get(User, user_id)
         if not user:
@@ -149,7 +160,7 @@ def save_message_to_db(
 
         # Screen every non-admin message (students and parents)
         # against the banned-words list before it is stored or broadcast.
-        if user.role != 'admin' and not message_is_appropriate(message):
+        if user.role != 'admin' and not is_appropriate(message):
             return {
                 "success": False,
                 "error": "Your message contains language that isn't allowed here.",
