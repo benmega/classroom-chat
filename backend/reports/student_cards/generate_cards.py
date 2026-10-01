@@ -175,7 +175,7 @@ def create_pdf(users, output_path=DEFAULT_OUTPUT_PATH):
 
 def get_card_users():
     """Active, non-admin users with a profile slug (needs an app context)."""
-    # last_daily_duck is a Date column written with date.today()
+    # last_daily_duck is a Date column holding the UTC day of the last award
     cutoff = date.today() - timedelta(days=ACTIVE_DAYS)
 
     return User.query.filter(

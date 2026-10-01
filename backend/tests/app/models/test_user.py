@@ -5,18 +5,20 @@ Summary: Unit tests for user model.
 """
 
 from contextlib import contextmanager
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 from unittest.mock import patch
 
 import pytest
 from application.extensions import db
 from application.models.challenge_log import ChallengeLog
+from application.models.duck_transaction import DuckTransaction
 from application.models.project import Project
 from application.models.session_log import SessionLog
 from application.models.user import User, save_new_user
-from sqlalchemy import event
+from sqlalchemy import event, select, update
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import Session, selectinload
+from sqlalchemy.orm.attributes import set_committed_value
 from tests.factories import AchievementFactory, ChallengeFactory, UserFactory
 
 
@@ -302,6 +304,200 @@ def test_earned_ducks_invariant_with_legacy_balance(add_sample_user):
     assert user.earned_ducks >= user.duck_balance, (
         f"Invariant violated after add_ducks: earned={user.earned_ducks}, balance={user.duck_balance}"
     )
+
+
+# ── atomic balance updates and the daily duck ─────────────────────────────────
+# The test database is a single shared connection, so true parallelism cannot be
+# reproduced; instead a second Session commits a change that this session's
+# already-loaded (stale) instance knows nothing about, which is exactly the
+# state two overlapping requests leave behind.
+
+
+def _commit_from_another_session(user_id, **values):
+    with Session(db.engine) as other:
+        other.execute(update(User).where(User.id == user_id).values(**values))
+        other.commit()
+
+
+def _stored_balances(user_id):
+    with Session(db.engine) as other:
+        row = other.execute(
+            select(User.duck_balance, User.earned_ducks).where(User.id == user_id)
+        ).one()
+    return tuple(row)
+
+
+def test_add_ducks_does_not_overwrite_a_concurrent_update(add_sample_user):
+    user = add_sample_user("lost_update", "pwd")
+    assert user.duck_balance == 0  # load the copy that is about to go stale
+    user_id = user.id
+
+    # Another request credits the same user and commits first.
+    _commit_from_another_session(user_id, duck_balance=7, earned_ducks=7)
+
+    assert user.add_ducks(5, reason="mine") is True
+    # The instance already shows the real totals, before any commit.
+    assert (user.duck_balance, user.earned_ducks) == (12, 12)
+    db.session.commit()
+
+    assert _stored_balances(user_id) == (12, 12)
+    assert DuckTransaction.query.filter_by(user_id=user_id).count() == 1
+
+
+def test_add_ducks_deduction_is_applied_to_the_stored_balance(add_sample_user):
+    user = add_sample_user("lost_debit", "pwd", earned_ducks=10)
+    assert user.duck_balance == 10
+    user_id = user.id
+
+    _commit_from_another_session(user_id, duck_balance=4)  # spent elsewhere
+
+    user.add_ducks(-3, reason="debit")
+    db.session.commit()
+
+    # Applied to the stored 4, not to the stale 10 the instance still held.
+    assert _stored_balances(user_id) == (1, 10)
+
+
+def test_add_ducks_min_balance_refuses_an_overdraw(add_sample_user):
+    user = add_sample_user("min_balance", "pwd", earned_ducks=10)
+
+    assert user.add_ducks(-11, reason="too much", min_balance=0) is False
+    assert (user.duck_balance, user.earned_ducks) == (10, 10)
+    assert DuckTransaction.query.filter_by(user_id=user.id).count() == 0
+
+    # Spending down to exactly the floor is allowed.
+    assert user.add_ducks(-10, reason="all of it", min_balance=0) is True
+    db.session.commit()
+    assert (user.duck_balance, user.earned_ducks) == (0, 10)
+    assert DuckTransaction.query.filter_by(user_id=user.id).count() == 1
+
+
+def test_add_ducks_min_balance_checks_the_stored_balance_not_a_stale_copy(
+    add_sample_user,
+):
+    user = add_sample_user("stale_overdraw", "pwd", earned_ducks=10)
+    assert user.duck_balance == 10  # stale copy says there is enough
+    user_id = user.id
+
+    _commit_from_another_session(user_id, duck_balance=0)  # spent in the meantime
+
+    assert user.add_ducks(-10, reason="trade", min_balance=0) is False
+    db.session.commit()
+
+    assert _stored_balances(user_id) == (0, 10)
+    assert DuckTransaction.query.filter_by(user_id=user_id).count() == 0
+
+
+def test_add_ducks_without_a_database_row_uses_plain_arithmetic():
+    user = User(username="transient", password_hash="x", earned_ducks=0, duck_balance=0)
+
+    assert user.add_ducks(3, reason="in memory") is True
+    assert (user.duck_balance, user.earned_ducks) == (3, 3)
+
+    assert user.add_ducks(-5, reason="too much", min_balance=0) is False
+    assert (user.duck_balance, user.earned_ducks) == (3, 3)
+
+    assert user.add_ducks(-2, reason="spend", min_balance=0) is True
+    assert (user.duck_balance, user.earned_ducks) == (1, 3)
+    db.session.rollback()  # drop the (user-less) transaction rows staged above
+
+
+@pytest.mark.parametrize("amount", [float("nan"), float("inf"), float("-inf")])
+def test_add_ducks_rejects_non_finite_amounts(add_sample_user, amount):
+    user = add_sample_user("non_finite", "pwd", earned_ducks=5)
+
+    with pytest.raises(ValueError):
+        user.add_ducks(amount, reason="poison")
+    db.session.commit()
+
+    assert _stored_balances(user.id) == (5, 5)
+    assert DuckTransaction.query.filter_by(user_id=user.id).count() == 0
+
+
+def test_add_ducks_reports_that_parents_get_nothing(add_sample_user):
+    user = add_sample_user("parent_noop", "pwd")
+    user.role = "parent"
+    db.session.commit()
+
+    assert user.add_ducks(10, reason="x") is False
+    assert user.duck_balance == 0
+
+
+def test_award_daily_duck_only_awards_once_per_day(add_sample_user):
+    user = add_sample_user("daily_once", "pwd")
+    user_id = user.id
+
+    assert user.award_daily_duck() is True
+    db.session.commit()
+    assert user.last_daily_duck == datetime.now(timezone.utc).date()
+    assert user.duck_balance == 1
+
+    # A copy that has not seen the award yet (a second tab / request) loses the
+    # conditional claim instead of awarding again.
+    set_committed_value(user, "last_daily_duck", None)
+    assert user.award_daily_duck() is False
+    db.session.commit()
+
+    assert _stored_balances(user_id) == (1, 1)
+    assert DuckTransaction.query.filter_by(user_id=user_id).count() == 1
+
+
+def test_award_daily_duck_loses_the_race_to_a_concurrent_login(add_sample_user):
+    user = add_sample_user("daily_race", "pwd")
+    assert user.last_daily_duck is None  # stale: nothing awarded yet
+    user_id = user.id
+
+    # The other login awarded today's duck and committed first.
+    _commit_from_another_session(
+        user_id,
+        last_daily_duck=datetime.now(timezone.utc).date(),
+        duck_balance=1,
+        earned_ducks=1,
+    )
+
+    assert user.award_daily_duck() is False
+    db.session.commit()
+
+    assert _stored_balances(user_id) == (1, 1)
+    assert DuckTransaction.query.filter_by(user_id=user_id).count() == 0
+
+
+def test_award_daily_duck_awards_again_the_next_day(add_sample_user):
+    user = add_sample_user("daily_next", "pwd")
+    user.last_daily_duck = datetime.now(timezone.utc).date() - timedelta(days=1)
+    db.session.commit()
+
+    assert user.award_daily_duck() is True
+    db.session.commit()
+    assert user.duck_balance == 1
+
+
+def test_award_daily_duck_day_boundary_is_utc(add_sample_user):
+    class FrozenDatetime(datetime):
+        @classmethod
+        def now(cls, tz=None):
+            return datetime(2030, 1, 15, 23, 30, tzinfo=timezone.utc).astimezone(tz)
+
+    user = add_sample_user("daily_utc", "pwd")
+
+    with patch("application.models.user.datetime", FrozenDatetime):
+        assert user.award_daily_duck() is True
+    db.session.commit()
+
+    # 23:30 UTC is already the 16th in any zone east of UTC+0:30; the stored day
+    # must still be the UTC one.
+    assert user.last_daily_duck == date(2030, 1, 15)
+
+
+def test_award_daily_duck_for_an_unsaved_user_sets_the_day_in_memory():
+    user = User(
+        username="daily_transient", password_hash="x", earned_ducks=0, duck_balance=0
+    )
+
+    assert user.award_daily_duck() is True
+    assert user.last_daily_duck == datetime.now(timezone.utc).date()
+    assert user.duck_balance == 1
+    db.session.rollback()  # drop the (user-less) transaction row staged above
 
 
 # --- Helpers for the tests below ----------------------------------------------

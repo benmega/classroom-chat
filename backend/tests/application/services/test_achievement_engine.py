@@ -789,11 +789,12 @@ def test_evaluate_user_gives_up_quietly_on_persistent_integrity_error(
 
 
 def test_evaluate_user_recovers_from_a_real_concurrent_insert(init_db, test_user):
-    """The winner commits on its own connection after our snapshot (no mocks).
+    """The winner commits on its own connection after our snapshot.
 
     Our flush then hits the real UNIQUE(user_id, achievement_id) violation; the
     evaluation rolls back, re-reads what is earned and returns without error or
-    a duplicate reward.
+    a duplicate reward.  The winner's insert is injected just before add_ducks,
+    because add_ducks flushes the staged UserAchievement as part of its UPDATE.
     """
     from application.models.duck_transaction import DuckTransaction
 
@@ -806,11 +807,10 @@ def test_evaluate_user_recovers_from_a_real_concurrent_insert(init_db, test_user
     db.session.commit()
     ach_id, user_id = ach.id, test_user.id
 
-    real_award = achievement_engine._award_new_achievements
+    real_add_ducks = User.add_ducks
     raced = []
 
-    def award_then_lose_race(user, all_achievements, stats):
-        awards = real_award(user, all_achievements, stats)
+    def add_ducks_after_losing_race(self, *args, **kwargs):
         if not raced:
             raced.append(True)
             with db.engine.begin() as other_connection:
@@ -819,11 +819,9 @@ def test_evaluate_user_recovers_from_a_real_concurrent_insert(init_db, test_user
                         user_id=user_id, achievement_id=ach_id
                     )
                 )
-        return awards
+        return real_add_ducks(self, *args, **kwargs)
 
-    with patch.object(
-        achievement_engine, "_award_new_achievements", side_effect=award_then_lose_race
-    ):
+    with patch.object(User, "add_ducks", add_ducks_after_losing_race):
         awards = evaluate_user(test_user, force=True)
 
     assert raced

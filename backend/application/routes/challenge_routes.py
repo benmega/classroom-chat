@@ -99,7 +99,7 @@ def submit_challenge():
         flash("Unknown user", "error")
         return redirect(url_for("user.login"))
 
-    config = Configuration.query.first()
+    config = Configuration.get_current()
     if not config:
         if _wants_json():
             return jsonify({"success": False, "message": "Configuration missing"}), 503

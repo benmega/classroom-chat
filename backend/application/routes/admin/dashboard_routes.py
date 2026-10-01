@@ -42,7 +42,7 @@ def dashboard_data():
     all_users = db.session.query(
         User.id, User._username, User.nickname, User.duck_balance, User.role, User.is_online
     ).all()
-    config = Configuration.query.first()
+    config = Configuration.get_current()
     banned_words = BannedWords.query.all()
     classrooms = Classroom.query.all()
 

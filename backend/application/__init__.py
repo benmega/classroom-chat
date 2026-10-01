@@ -284,10 +284,8 @@ def _should_start_scheduler(app):
 
 
 def ensure_default_configuration():
-    if Configuration.query.first() is None:
-        default_config = Configuration()
-        db.session.add(default_config)
-        db.session.commit()
+    Configuration.get_or_create()
+    db.session.commit()
 
 
 def seed_global_data():

@@ -1,3 +1,4 @@
+import math
 import re
 
 from application.decorators.admin_required import admin_only
@@ -10,6 +11,11 @@ from flask import jsonify, request
 from sqlalchemy.orm import selectinload
 
 from ..admin_routes import admin_bp
+
+# Per-request ceilings on admin-entered amounts. They guard against typos and
+# NaN/inf input (which would poison a stored balance), not against large balances.
+MAX_ADMIN_ADJUSTMENT = 10_000
+MAX_INITIAL_DUCKS = 10_000
 
 
 @admin_bp.route("/student_activity", methods=["GET"])
@@ -211,7 +217,10 @@ def get_users():
 @admin_bp.route("/reset_password", methods=["POST"])
 @admin_only
 def reset_password():
-    data = request.json
+    # Accept JSON or form posts; a missing/null/garbage body falls through to the 400 below.
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict):
+        data = request.form
     username = data.get("username")
     new_password = data.get("new_password")
 
@@ -249,6 +258,15 @@ def create_user():
             jsonify(
                 success=False,
                 message="Username, password, and non-negative ducks required",
+            ),
+            400,
+        )
+
+    if ducks > MAX_INITIAL_DUCKS:
+        return (
+            jsonify(
+                success=False,
+                message=f"Initial ducks must be between 0 and {MAX_INITIAL_DUCKS}",
             ),
             400,
         )
@@ -303,6 +321,15 @@ def remove_user():
         return jsonify(success=False, message="Internal server error"), 500
 
 
+def _amount_error(amount):
+    """Return a message when an admin-entered amount is unusable, else None."""
+    if not math.isfinite(amount):
+        return "Amount must be a finite number"
+    if abs(amount) > MAX_ADMIN_ADJUSTMENT:
+        return f"Amount must be between -{MAX_ADMIN_ADJUSTMENT} and {MAX_ADMIN_ADJUSTMENT}"
+    return None
+
+
 @admin_bp.route("/adjust_ducks", methods=["POST"])
 @admin_only
 def adjust_ducks():
@@ -315,10 +342,18 @@ def adjust_ducks():
             400,
         )
 
+    error = _amount_error(amount)
+    if error:
+        return jsonify({"success": False, "message": error}), 400
+
     user = User.query.filter_by(username=username).first()
     if user:
-        user.add_ducks(amount, reason="Admin Adjustment")
-        db.session.commit()
+        try:
+            user.add_ducks(amount, reason="Admin Adjustment")
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            return jsonify({"success": False, "message": "Internal server error"}), 500
         return jsonify(
             {"success": True, "message": f"Updated {username}'s ducks by {amount}."}
         )
@@ -340,6 +375,10 @@ def adjust_packets():
             jsonify({"success": False, "message": "Username and amount required"}),
             400,
         )
+
+    error = _amount_error(amount)
+    if error:
+        return jsonify({"success": False, "message": error}), 400
 
     user = User.query.filter_by(username=username).first()
     if user:
@@ -1017,16 +1056,9 @@ def pass_chapter(user_id):
 
     # Manually bypass duck caps for this admin override
     if total_ducks > 0:
-        user_obj.earned_ducks += total_ducks
-        user_obj.duck_balance += total_ducks
-        from application.models.duck_transaction import DuckTransaction
-
-        tx = DuckTransaction(
-            user_id=user_obj.id,
-            amount=total_ducks,
-            reason=f"Admin Pass Chapter Override for {course_id}",
+        user_obj.add_ducks(
+            total_ducks, reason=f"Admin Pass Chapter Override for {course_id}"
         )
-        db.session.add(tx)
 
     certificate_achievements = Achievement.query.filter(
         (Achievement.type == "certificate")

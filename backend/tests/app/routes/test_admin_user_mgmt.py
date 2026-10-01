@@ -1,7 +1,15 @@
+from unittest.mock import patch
+
+import pytest
 from application.extensions import db
 from application.models.challenge_log import ChallengeLog
 from application.models.classroom import Classroom
+from application.models.duck_transaction import DuckTransaction
 from application.models.user import User
+from application.routes.admin.user_mgmt import (
+    MAX_ADMIN_ADJUSTMENT,
+    MAX_INITIAL_DUCKS,
+)
 from tests.factories import UserFactory
 
 
@@ -130,6 +138,45 @@ def test_reset_password(client, sample_admin, sample_user):
     assert resp.status_code == 400
 
 
+def test_reset_password_accepts_a_form_post(client, sample_admin, sample_user):
+    login_as_admin(client, sample_admin)
+
+    resp = client.post(
+        "/api/admin/reset_password",
+        data={"username": sample_user.username, "new_password": "formpassword123"},
+    )
+
+    assert resp.status_code == 200
+    assert resp.get_json()["success"] is True
+    assert db.session.get(User, sample_user.id).check_password("formpassword123")
+
+
+@pytest.mark.parametrize(
+    ("body", "content_type"),
+    [
+        ("null", "application/json"),
+        ("[1, 2]", "application/json"),
+        ("not json at all", "application/json"),
+        ("plain text", "text/plain"),
+        ("", None),
+    ],
+)
+def test_reset_password_without_a_usable_body_is_a_400(
+    client, sample_admin, body, content_type
+):
+    login_as_admin(client, sample_admin)
+
+    resp = client.post(
+        "/api/admin/reset_password", data=body, content_type=content_type
+    )
+
+    assert resp.status_code == 400
+    assert resp.get_json() == {
+        "success": False,
+        "message": "Username and new password required",
+    }
+
+
 def test_create_user(client, sample_admin, init_db):
     login_as_admin(client, sample_admin)
 
@@ -163,6 +210,41 @@ def test_create_user(client, sample_admin, init_db):
 
     resp = client.post("/api/admin/create_user", data={})
     assert resp.status_code == 400
+
+
+def test_create_user_rejects_initial_ducks_above_the_cap(
+    client, sample_admin, init_db
+):
+    login_as_admin(client, sample_admin)
+
+    for index, ducks in enumerate(
+        [MAX_INITIAL_DUCKS + 1, 10**12, "9" * 400]
+    ):
+        resp = client.post(
+            "/api/admin/create_user",
+            data={"username": f"richkid{index}", "password": "password123", "ducks": ducks},
+        )
+
+        assert resp.status_code == 400
+        assert resp.get_json() == {
+            "success": False,
+            "message": f"Initial ducks must be between 0 and {MAX_INITIAL_DUCKS}",
+        }
+        assert User.query.filter_by(username=f"richkid{index}").first() is None
+
+
+def test_create_user_accepts_the_maximum_initial_ducks(client, sample_admin, init_db):
+    login_as_admin(client, sample_admin)
+
+    resp = client.post(
+        "/api/admin/create_user",
+        data={"username": "maxducks", "password": "password123", "ducks": MAX_INITIAL_DUCKS},
+    )
+
+    assert resp.status_code == 200
+    created = User.query.filter_by(username="maxducks").one()
+    assert created.duck_balance == MAX_INITIAL_DUCKS
+    assert created.earned_ducks == MAX_INITIAL_DUCKS
 
 
 def test_create_user_retries_when_generated_slug_collides(
@@ -237,6 +319,99 @@ def test_adjust_ducks(client, sample_admin, sample_user):
 
     resp = client.post("/api/admin/adjust_ducks", data={})
     assert resp.status_code == 400
+
+
+BAD_ADMIN_AMOUNTS = [
+    "nan",
+    "NaN",
+    "inf",
+    "-inf",
+    "1e999",
+    "1e308",
+    "-1e308",
+    str(MAX_ADMIN_ADJUSTMENT + 0.5),
+    str(-MAX_ADMIN_ADJUSTMENT - 1),
+]
+
+
+@pytest.mark.parametrize("amount", BAD_ADMIN_AMOUNTS)
+def test_adjust_ducks_rejects_non_finite_and_oversized_amounts(
+    client, sample_admin, sample_user, amount
+):
+    login_as_admin(client, sample_admin)
+    sample_user.duck_balance = 10
+    sample_user.earned_ducks = 10
+    db.session.commit()
+
+    resp = client.post(
+        "/api/admin/adjust_ducks", data={"username": sample_user.username, "amount": amount}
+    )
+
+    assert resp.status_code == 400
+    assert resp.get_json()["success"] is False
+    user = db.session.get(User, sample_user.id)
+    assert (user.duck_balance, user.earned_ducks) == (10, 10)
+    assert DuckTransaction.query.filter_by(user_id=user.id).count() == 0
+
+
+def test_adjust_ducks_accepts_the_maximum_amount(client, sample_admin, sample_user):
+    login_as_admin(client, sample_admin)
+
+    resp = client.post(
+        "/api/admin/adjust_ducks",
+        data={"username": sample_user.username, "amount": MAX_ADMIN_ADJUSTMENT},
+    )
+
+    assert resp.status_code == 200
+    assert db.session.get(User, sample_user.id).duck_balance == MAX_ADMIN_ADJUSTMENT
+
+
+def test_adjust_ducks_failure_is_a_generic_500_and_rolls_back(
+    client, sample_admin, sample_user
+):
+    login_as_admin(client, sample_admin)
+    user_id = sample_user.id
+
+    with patch.object(User, "add_ducks", side_effect=RuntimeError("secret detail")):
+        resp = client.post(
+            "/api/admin/adjust_ducks", data={"username": sample_user.username, "amount": 5}
+        )
+
+    assert resp.status_code == 500
+    assert resp.get_json() == {"success": False, "message": "Internal server error"}
+    assert db.session.get(User, user_id).duck_balance == 0
+
+
+@pytest.mark.parametrize("amount", BAD_ADMIN_AMOUNTS)
+def test_adjust_packets_rejects_non_finite_and_oversized_amounts(
+    client, sample_admin, sample_user, amount
+):
+    login_as_admin(client, sample_admin)
+    sample_user.packets = 3
+    db.session.commit()
+
+    resp = client.post(
+        "/api/admin/adjust_packets",
+        data={"username": sample_user.username, "amount": amount},
+    )
+
+    assert resp.status_code == 400
+    assert resp.get_json()["success"] is False
+    assert db.session.get(User, sample_user.id).packets == 3
+
+
+def test_adjust_packets_accepts_a_valid_amount(client, sample_admin, sample_user):
+    login_as_admin(client, sample_admin)
+    sample_user.packets = 3
+    db.session.commit()
+
+    resp = client.post(
+        "/api/admin/adjust_packets",
+        data={"username": sample_user.username, "amount": MAX_ADMIN_ADJUSTMENT},
+    )
+
+    assert resp.status_code == 200
+    assert db.session.get(User, sample_user.id).packets == 3 + MAX_ADMIN_ADJUSTMENT
 
 
 def test_parent_linking(client, sample_admin, init_db):
@@ -484,6 +659,14 @@ def test_pass_chapter_preview_and_pass_chapter(
         user_id=sample_user.id, achievement_id=ach.id
     ).first()
     assert cert is not None
+
+    # The override credits ducks through add_ducks: balances and the log agree.
+    db.session.refresh(sample_user)
+    assert sample_user.duck_balance == 15
+    assert sample_user.earned_ducks == 15
+    tx = DuckTransaction.query.filter_by(user_id=sample_user.id).one()
+    assert tx.amount == 15
+    assert tx.reason == "Admin Pass Chapter Override for cs-1"
 
 
 def test_student_activity_and_get_users_roles(client, sample_admin, sample_user):

@@ -1,7 +1,8 @@
+import math
 import re
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 
-from sqlalchemy import event, func
+from sqlalchemy import case, event, func, or_, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.hybrid import hybrid_property
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -586,22 +587,58 @@ class User(db.Model):
             },
         }
 
-    def add_ducks(self, amount, reason=None):
+    def add_ducks(self, amount, reason=None, min_balance=None):
+        """Credit (or debit) ducks and log a DuckTransaction.
+
+        Returns True when the change was applied and False when it was not:
+        parents never hold ducks, and with ``min_balance`` set the change is
+        refused if it would leave duck_balance below that value.  Non-finite
+        amounts raise ValueError.
+
+        For a persisted user the balances change in a single SQL UPDATE
+        (``col = col + amount``) rather than read-modify-write on the loaded
+        instance, so concurrent credits/debits (trades, achievements, admin
+        adjustments) cannot overwrite each other; the instance is refreshed
+        from the row afterwards.  The caller must commit the session.
+        """
         if self.role == "parent":
-            return
+            return False
 
-        if amount > 0:
-            self.earned_ducks += amount
-            # Note: Packets are no longer earned here. They are earned via projects or admin adjustment.
+        if not math.isfinite(amount):
+            raise ValueError("amount must be a finite number")
 
-        self.duck_balance += amount
+        # Note: Packets are no longer earned here. They are earned via projects or admin adjustment.
+        earned_gain = amount if amount > 0 else 0
 
-        # Invariant: earned_ducks >= duck_balance at all times.
-        # earned_ducks is a lifetime counter (never decremented by spending or penalties).
-        # If duck_balance somehow exceeds earned_ducks (e.g. due to legacy migration data),
-        # clamp earned_ducks up to duck_balance so the invariant always holds.
-        if self.earned_ducks < self.duck_balance:
-            self.earned_ducks = self.duck_balance
+        if self.id is not None and self in db.session:
+            new_balance = User.duck_balance + amount
+            new_earned = User.earned_ducks + earned_gain
+            update_stmt = update(User).where(User.id == self.id)
+            if min_balance is not None:
+                update_stmt = update_stmt.where(new_balance >= min_balance)
+            result = db.session.execute(
+                update_stmt.values(
+                    duck_balance=new_balance,
+                    # Invariant: earned_ducks >= duck_balance at all times.
+                    # earned_ducks is a lifetime counter (never decremented by spending or penalties).
+                    # If duck_balance somehow exceeds earned_ducks (e.g. due to legacy migration data),
+                    # clamp earned_ducks up to duck_balance so the invariant always holds.
+                    earned_ducks=case(
+                        (new_earned < new_balance, new_balance), else_=new_earned
+                    ),
+                ).execution_options(synchronize_session=False)
+            )
+            if result.rowcount != 1:
+                return False
+            db.session.refresh(self, ["duck_balance", "earned_ducks"])
+        else:
+            # Not persisted yet (no row to update): plain in-memory arithmetic.
+            if min_balance is not None and self.duck_balance + amount < min_balance:
+                return False
+            self.earned_ducks += earned_gain
+            self.duck_balance += amount
+            if self.earned_ducks < self.duck_balance:
+                self.earned_ducks = self.duck_balance
 
         # Record the transaction
         from .duck_transaction import DuckTransaction
@@ -609,6 +646,7 @@ class User(db.Model):
         transaction = DuckTransaction(user_id=self.id, amount=amount, reason=reason)
         db.session.add(transaction)
         # Note: The caller must commit the session
+        return True
 
     def award_daily_duck(self, amount=1):
         if self.role == "parent":
@@ -617,15 +655,31 @@ class User(db.Model):
         if self.has_double_duck:
             amount *= 2
 
-        from datetime import date
+        # The day boundary is UTC, like every other timestamp in the app.
+        today = datetime.now(timezone.utc).date()
+        if self.last_daily_duck == today:
+            return False
 
-        today = date.today()
-        if self.last_daily_duck != today:
-            self.add_ducks(amount, reason="Daily Duck")
+        if self.id is not None and self in db.session:
+            # Claim today with a conditional UPDATE before awarding, so two
+            # concurrent logins cannot both pass the check above and both award.
+            claimed = db.session.execute(
+                update(User)
+                .where(
+                    User.id == self.id,
+                    or_(User.last_daily_duck.is_(None), User.last_daily_duck != today),
+                )
+                .values(last_daily_duck=today)
+                .execution_options(synchronize_session=False)
+            )
+            if claimed.rowcount != 1:
+                return False
+            db.session.refresh(self, ["last_daily_duck"])
+        else:
             self.last_daily_duck = today
-            # Note: The caller must commit the session
-            return True
-        return False
+
+        # Note: The caller must commit the session
+        return self.add_ducks(amount, reason="Daily Duck")
 
     def get_contribution_data(self):
         """

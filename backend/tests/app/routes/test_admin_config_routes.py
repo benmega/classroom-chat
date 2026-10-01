@@ -1,4 +1,5 @@
 import pytest
+from application.extensions import db
 from application.models.banned_words import BannedWords
 from application.models.configuration import Configuration
 
@@ -98,6 +99,61 @@ def test_update_duck_multiplier_accepts_boundaries(
     assert resp.status_code == 200
     assert resp.json["new_multiplier"] == float(value)
     assert Configuration.query.first().duck_multiplier == float(value)
+
+
+@pytest.mark.parametrize(
+    ("body", "content_type"),
+    [
+        ("null", "application/json"),
+        ("[1, 2]", "application/json"),
+        ("not json at all", "application/json"),
+        ("multiplier=2", "application/x-www-form-urlencoded"),
+        ("", None),
+    ],
+)
+def test_update_duck_multiplier_without_a_json_object_is_a_400(
+    client, sample_admin, sample_configuration, body, content_type
+):
+    login_as_admin(client, sample_admin)
+
+    resp = client.post(
+        "/api/admin/update_duck_multiplier", data=body, content_type=content_type
+    )
+
+    assert resp.status_code == 400
+    assert resp.json == {"success": False, "error": "No multiplier provided"}
+    assert Configuration.query.first().duck_multiplier == 1.0
+
+
+def test_toggle_message_sending_creates_a_missing_configuration(
+    client, sample_admin, init_db
+):
+    login_as_admin(client, sample_admin)
+    Configuration.query.delete()
+    db.session.commit()
+
+    resp = client.post("/api/admin/toggle-message-sending")
+
+    assert resp.status_code == 200
+    # The created row starts enabled, so the toggle disables it.
+    assert resp.json["status"] is False
+    assert Configuration.query.one().message_sending_enabled is False
+
+
+def test_update_duck_multiplier_creates_a_missing_configuration(
+    client, sample_admin, init_db
+):
+    login_as_admin(client, sample_admin)
+    Configuration.query.delete()
+    db.session.commit()
+
+    resp = client.post("/api/admin/update_duck_multiplier", json={"multiplier": 3})
+
+    assert resp.status_code == 200
+    assert resp.json == {"success": True, "new_multiplier": 3.0}
+    config = Configuration.query.one()
+    assert config.duck_multiplier == 3.0
+    assert config.message_sending_enabled is True
 
 
 def test_add_banned_word_strips_whitespace(client, sample_admin):

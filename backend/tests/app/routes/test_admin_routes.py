@@ -12,8 +12,11 @@ from application.extensions import db
 from application.models.banned_words import BannedWords
 from application.models.configuration import Configuration
 from application.models.duck_trade import DuckTradeLog
+from application.models.duck_transaction import DuckTransaction
 from application.models.user import User
 from flask import url_for
+from sqlalchemy import update
+from sqlalchemy.orm import Session
 
 
 def login_as_admin(client, admin_user):
@@ -137,43 +140,51 @@ def test_adjust_ducks(client, sample_admin, sample_user, test_app):
 
 
 def test_trade_action_approve(
-    client, sample_admin, sample_user, sample_duck_trade, test_app, init_db
+    client, sample_admin, sample_user, sample_duck_trade, init_db
 ):
     login_as_admin(client, sample_admin)
+    user_id = sample_user.id
+    trade_id = sample_duck_trade.id
+    sample_user.duck_balance = 100
+    db.session.commit()
+    cost = sample_duck_trade.digital_ducks
 
-    with test_app.app_context():
-        sample_user.duck_balance = 100
-        db.session.commit()
+    response = client.post(
+        "/api/admin/trade_action",
+        data={"trade_id": str(trade_id), "action": "approve"},
+        content_type="application/x-www-form-urlencoded",
+    )
 
-        trade_id = sample_duck_trade.id
-
-        with patch.object(DuckTradeLog, "approve") as mock_approve:
-            response = client.post(
-                "/api/admin/trade_action",
-                data={"trade_id": str(trade_id), "action": "approve"},
-                content_type="application/x-www-form-urlencoded",
-            )
-
-            data = json.loads(response.data)
-            assert response.status_code == 200
-            assert data["status"] == "success"
-            mock_approve.assert_called_once()
+    data = json.loads(response.data)
+    assert response.status_code == 200
+    assert data["status"] == "success"
+    assert db.session.get(DuckTradeLog, trade_id).status == "approved"
+    assert db.session.get(User, user_id).duck_balance == 100 - cost
+    tx = DuckTransaction.query.filter_by(user_id=user_id).one()
+    assert tx.amount == -cost
+    assert tx.reason.startswith("Trade Approval")
 
 
-def test_trade_action_reject(client, sample_admin, sample_duck_trade, init_db):
+def test_trade_action_reject(
+    client, sample_admin, sample_user, sample_duck_trade, init_db
+):
     """Test rejecting a duck trade."""
     login_as_admin(client, sample_admin)
+    user_id = sample_user.id
+    trade_id = sample_duck_trade.id
+    balance = sample_user.duck_balance
 
-    with patch.object(DuckTradeLog, "reject") as mock_reject:
-        response = client.post(
-            "/api/admin/trade_action",
-            data={"trade_id": sample_duck_trade.id, "action": "reject"},
-        )
+    response = client.post(
+        "/api/admin/trade_action",
+        data={"trade_id": trade_id, "action": "reject"},
+    )
 
-        data = json.loads(response.data)
-        assert response.status_code == 200
-        assert data["status"] == "success"
-        mock_reject.assert_called_once()
+    data = json.loads(response.data)
+    assert response.status_code == 200
+    assert data["status"] == "success"
+    assert db.session.get(DuckTradeLog, trade_id).status == "rejected"
+    assert db.session.get(User, user_id).duck_balance == balance
+    assert DuckTransaction.query.filter_by(user_id=user_id).count() == 0
 
 
 def test_trade_action_double_approve_deducts_once(
@@ -217,6 +228,124 @@ def test_trade_action_rejects_non_pending_trade(
         )
         assert resp.status_code == 400
     assert db.session.get(DuckTradeLog, trade_id).status == "rejected"
+
+
+def test_trade_action_approve_with_insufficient_balance_changes_nothing(
+    client, sample_admin, sample_user, sample_duck_trade, init_db
+):
+    login_as_admin(client, sample_admin)
+    user_id = sample_user.id
+    trade_id = sample_duck_trade.id
+    sample_user.duck_balance = 0
+    db.session.commit()
+
+    response = client.post(
+        "/api/admin/trade_action", data={"trade_id": str(trade_id), "action": "approve"}
+    )
+
+    assert response.status_code == 400
+    assert response.get_json()["message"] == "Insufficient ducks"
+    assert db.session.get(User, user_id).duck_balance == 0
+    assert db.session.get(DuckTradeLog, trade_id).status == "pending"
+    assert DuckTransaction.query.filter_by(user_id=user_id).count() == 0
+
+
+def _commit_from_another_session(statement):
+    """Run one UPDATE in its own session, as a concurrent request would."""
+    with Session(db.engine) as other:
+        other.execute(statement)
+        other.commit()
+
+
+def test_trade_action_approve_loses_the_race_to_a_concurrent_approval(
+    client, sample_admin, sample_user, sample_duck_trade, init_db
+):
+    """A second admin whose page still shows the trade as pending must not
+    deduct the ducks again after the first admin's approval was committed."""
+    login_as_admin(client, sample_admin)
+    user_id = sample_user.id
+    trade_id = sample_duck_trade.id
+    cost = sample_duck_trade.digital_ducks
+    # This session's copy of the trade still says "pending" (not yet reloaded).
+    assert db.session.get(DuckTradeLog, trade_id).status == "pending"
+
+    _commit_from_another_session(
+        update(DuckTradeLog).where(DuckTradeLog.id == trade_id).values(status="approved")
+    )
+    _commit_from_another_session(
+        update(User).where(User.id == user_id).values(duck_balance=100 - cost)
+    )
+
+    response = client.post(
+        "/api/admin/trade_action", data={"trade_id": str(trade_id), "action": "approve"}
+    )
+
+    assert response.status_code == 400
+    assert db.session.get(DuckTradeLog, trade_id).status == "approved"
+    assert db.session.get(User, user_id).duck_balance == 100 - cost
+    assert DuckTransaction.query.filter_by(user_id=user_id).count() == 0
+
+
+def test_trade_action_approve_cannot_overdraw_a_balance_spent_in_the_meantime(
+    client, sample_admin, sample_user, sample_duck_trade, init_db
+):
+    login_as_admin(client, sample_admin)
+    user_id = sample_user.id
+    trade_id = sample_duck_trade.id
+    assert db.session.get(User, user_id).duck_balance == 100  # stale copy: enough
+
+    # The student spent everything elsewhere after the page loaded.
+    _commit_from_another_session(
+        update(User).where(User.id == user_id).values(duck_balance=0)
+    )
+
+    response = client.post(
+        "/api/admin/trade_action", data={"trade_id": str(trade_id), "action": "approve"}
+    )
+
+    assert response.status_code == 400
+    assert response.get_json()["message"] == "Insufficient ducks"
+    assert db.session.get(User, user_id).duck_balance == 0
+    # The failed attempt must not leave the trade claimed.
+    assert db.session.get(DuckTradeLog, trade_id).status == "pending"
+    assert DuckTransaction.query.filter_by(user_id=user_id).count() == 0
+
+
+def test_trade_action_reject_cannot_overwrite_a_concurrent_approval(
+    client, sample_admin, sample_user, sample_duck_trade, init_db
+):
+    login_as_admin(client, sample_admin)
+    trade_id = sample_duck_trade.id
+    assert db.session.get(DuckTradeLog, trade_id).status == "pending"  # stale copy
+
+    _commit_from_another_session(
+        update(DuckTradeLog).where(DuckTradeLog.id == trade_id).values(status="approved")
+    )
+
+    response = client.post(
+        "/api/admin/trade_action", data={"trade_id": str(trade_id), "action": "reject"}
+    )
+
+    assert response.status_code == 400
+    assert db.session.get(DuckTradeLog, trade_id).status == "approved"
+
+
+def test_trade_action_rejects_unknown_trade_and_action(
+    client, sample_admin, sample_duck_trade, init_db
+):
+    login_as_admin(client, sample_admin)
+
+    missing = client.post(
+        "/api/admin/trade_action", data={"trade_id": "99999", "action": "approve"}
+    )
+    assert missing.status_code == 404
+
+    bad_action = client.post(
+        "/api/admin/trade_action",
+        data={"trade_id": str(sample_duck_trade.id), "action": "refund"},
+    )
+    assert bad_action.status_code == 400
+    assert db.session.get(DuckTradeLog, sample_duck_trade.id).status == "pending"
 
 
 def test_reset_password(client, sample_admin, sample_user, test_app, init_db):

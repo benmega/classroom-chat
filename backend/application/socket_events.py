@@ -278,7 +278,7 @@ def handle_send_message(data):
 
         from .models.configuration import Configuration
 
-        config = Configuration.query.first()
+        config = Configuration.get_current()
         if config and not config.message_sending_enabled:
             return {"success": False, "error": "Chat is currently disabled"}
         # Students can't send global messages

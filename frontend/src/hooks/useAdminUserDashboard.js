@@ -4,6 +4,10 @@ import client from '../api/client';
 import toast from 'react-hot-toast';
 import { showConfirm } from '../utils/confirm';
 
+// The admin endpoints answer a failure with { message } (or { error } from the auth guard).
+const errorMessage = (err) =>
+    err.response?.data?.message || err.response?.data?.error || 'An error occurred.';
+
 export const useAdminUserDashboard = (userId) => {
     const navigate = useNavigate();
     const [user, setUser] = useState(null);
@@ -114,7 +118,7 @@ export const useAdminUserDashboard = (userId) => {
                 toast.error(res.data.message || "Failed to adjust ducks");
             }
         } catch (err) {
-            toast.error(err.response?.data?.error || 'An error occurred.');
+            toast.error(errorMessage(err));
         } finally {
             setFormLoading(false);
         }
@@ -135,7 +139,7 @@ export const useAdminUserDashboard = (userId) => {
                 toast.error(res.data.message || "Failed to adjust packets");
             }
         } catch (err) {
-            toast.error(err.response?.data?.error || 'An error occurred.');
+            toast.error(errorMessage(err));
         } finally {
             setFormLoading(false);
         }
@@ -162,11 +166,20 @@ export const useAdminUserDashboard = (userId) => {
 
     const handleResetPassword = async (e) => {
         e.preventDefault();
-        setFormLoading(true);
         const formData = new FormData(e.target);
-        
+        const newPassword = formData.get('new_password');
+        if (newPassword !== formData.get('confirm_password')) {
+            toast.error('Passwords do not match');
+            return;
+        }
+
+        setFormLoading(true);
         try {
-            const res = await client.post('/api/admin/reset_password', formData);
+            // The endpoint is keyed by username; the form itself has no such field.
+            const res = await client.post('/api/admin/reset_password', {
+                username: user.username,
+                new_password: newPassword,
+            });
             if (res.data.success) {
                 
                 e.target.reset();
@@ -174,7 +187,7 @@ export const useAdminUserDashboard = (userId) => {
                 toast.error(res.data.message || "Failed to reset password");
             }
         } catch (err) {
-            toast.error(err.response?.data?.error || 'An error occurred.');
+            toast.error(errorMessage(err));
         } finally {
             setFormLoading(false);
         }

@@ -16,10 +16,7 @@ MAX_DUCK_MULTIPLIER = 100
 @admin_bp.route("/toggle-message-sending", methods=["POST"])
 @admin_only
 def toggle_message_sending():
-    config = Configuration.query.first()
-    if config is None:
-        config = Configuration(message_sending_enabled=True)
-        db.session.add(config)
+    config = Configuration.get_or_create()
 
     config.message_sending_enabled = not config.message_sending_enabled
     db.session.commit()
@@ -36,7 +33,9 @@ def toggle_message_sending():
 @admin_bp.route("/update_duck_multiplier", methods=["POST"])
 @admin_only
 def update_duck_multiplier():
-    data = request.get_json()
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict):
+        data = {}
     new_multiplier = data.get("multiplier")
 
     if new_multiplier is None:
@@ -56,9 +55,7 @@ def update_duck_multiplier():
                 ),
                 400,
             )
-        config = Configuration.query.first()
-        if config is None:
-            return jsonify({"success": False, "error": "Configuration not found"}), 404
+        config = Configuration.get_or_create()
         config.duck_multiplier = new_multiplier
         db.session.commit()
         return jsonify({"success": True, "new_multiplier": new_multiplier})

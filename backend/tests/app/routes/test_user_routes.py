@@ -6,7 +6,7 @@ Summary: Unit tests for user routes Flask routes, adjusted for recent route refa
 
 import json
 import uuid
-from datetime import date
+from datetime import datetime, timezone
 from io import BytesIO
 from unittest.mock import patch
 
@@ -502,7 +502,8 @@ def test_daily_duck_logic(client, init_db):
 
     db.session.refresh(sample_user)
     assert sample_user.duck_balance >= 1
-    assert sample_user.last_daily_duck == date.today()
+    # The daily-duck day boundary is UTC, not the server's local date.
+    assert sample_user.last_daily_duck == datetime.now(timezone.utc).date()
 
     # Second login same day (should not award again)
     initial_balance = sample_user.duck_balance

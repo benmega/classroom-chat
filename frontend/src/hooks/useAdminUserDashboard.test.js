@@ -193,6 +193,98 @@ describe('useAdminUserDashboard', () => {
         
     });
 
+    const passwordForm = (newPassword, confirmPassword) => {
+        const form = document.createElement('form');
+        for (const [name, value] of [['new_password', newPassword], ['confirm_password', confirmPassword]]) {
+            const input = document.createElement('input');
+            input.name = name;
+            input.value = value;
+            form.appendChild(input);
+        }
+        form.reset = vi.fn();
+        return form;
+    };
+
+    it('posts the username and new password as JSON when resetting a password', async () => {
+        client.get.mockResolvedValue({ data: { user: { id: 1, username: 'testuser' } } });
+        client.post.mockResolvedValueOnce({ data: { success: true } });
+
+        const { result } = renderHook(() => useAdminUserDashboard(1));
+        await act(async () => { await new Promise(r => setTimeout(r, 10)); });
+
+        const form = passwordForm('s3cret-pass', 's3cret-pass');
+        await act(async () => {
+            await result.current.handleResetPassword({ preventDefault: vi.fn(), target: form });
+        });
+
+        expect(client.post).toHaveBeenCalledWith('/api/admin/reset_password', {
+            username: 'testuser',
+            new_password: 's3cret-pass',
+        });
+        expect(form.reset).toHaveBeenCalled();
+        expect(toast.error).not.toHaveBeenCalled();
+    });
+
+    it('does not reset a password when the confirmation does not match', async () => {
+        client.get.mockResolvedValue({ data: { user: { id: 1, username: 'testuser' } } });
+
+        const { result } = renderHook(() => useAdminUserDashboard(1));
+        await act(async () => { await new Promise(r => setTimeout(r, 10)); });
+
+        const form = passwordForm('s3cret-pass', 'different');
+        await act(async () => {
+            await result.current.handleResetPassword({ preventDefault: vi.fn(), target: form });
+        });
+
+        expect(toast.error).toHaveBeenCalledWith('Passwords do not match');
+        expect(client.post).not.toHaveBeenCalled();
+        expect(form.reset).not.toHaveBeenCalled();
+    });
+
+    it('shows the backend message when resetting a password is refused', async () => {
+        client.get.mockResolvedValue({ data: { user: { id: 1, username: 'testuser' } } });
+        client.post.mockResolvedValueOnce({ data: { success: false, message: 'Cannot reset password of another admin' } });
+        client.post.mockResolvedValueOnce({ data: { success: false } });
+
+        const { result } = renderHook(() => useAdminUserDashboard(1));
+        await act(async () => { await new Promise(r => setTimeout(r, 10)); });
+
+        const form = passwordForm('s3cret-pass', 's3cret-pass');
+        const event = { preventDefault: vi.fn(), target: form };
+        await act(async () => { await result.current.handleResetPassword(event); });
+        expect(toast.error).toHaveBeenLastCalledWith('Cannot reset password of another admin');
+
+        await act(async () => { await result.current.handleResetPassword(event); });
+        expect(toast.error).toHaveBeenLastCalledWith('Failed to reset password');
+        expect(form.reset).not.toHaveBeenCalled();
+    });
+
+    it.each([
+        ['handleAdjustDucks'],
+        ['handleAdjustPackets'],
+        ['handleResetPassword'],
+    ])('%s reports the message from a failed request', async (handler) => {
+        client.get.mockResolvedValue({ data: { user: { id: 1, username: 'testuser' } } });
+        const { result } = renderHook(() => useAdminUserDashboard(1));
+        await act(async () => { await new Promise(r => setTimeout(r, 10)); });
+
+        const form = passwordForm('same-pass', 'same-pass');
+        const event = { preventDefault: vi.fn(), target: form };
+
+        // The 400 body of the admin routes carries { message }; the auth guard uses { error }.
+        client.post.mockRejectedValueOnce({ response: { data: { message: 'Amount must be a finite number' } } });
+        await act(async () => { await result.current[handler](event); });
+        expect(toast.error).toHaveBeenLastCalledWith('Amount must be a finite number');
+
+        client.post.mockRejectedValueOnce({ response: { data: { error: 'Admin access required' } } });
+        await act(async () => { await result.current[handler](event); });
+        expect(toast.error).toHaveBeenLastCalledWith('Admin access required');
+
+        client.post.mockRejectedValueOnce(new Error('Network Error'));
+        await act(async () => { await result.current[handler](event); });
+        expect(toast.error).toHaveBeenLastCalledWith('An error occurred.');
+    });
+
     it('sets drawer', async () => {
         client.get.mockResolvedValue({ data: { user: { id: 1, username: 'testuser' } } });
         client.post.mockResolvedValueOnce({ status: 200, data: { message: 'Drawer set' } });
