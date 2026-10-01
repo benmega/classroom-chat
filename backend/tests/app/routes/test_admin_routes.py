@@ -125,23 +125,6 @@ def test_dashboard(client, sample_admin, sample_configuration):
     assert response.status_code == 200
 
 
-def test_toggle_ai(client, test_app, sample_configuration, sample_admin):
-    """Test toggling AI teacher functionality."""
-    login_as_admin(client, sample_admin)
-
-    with test_app.app_context():
-        initial_state = sample_configuration.ai_teacher_enabled
-
-        response = client.post("/api/admin/toggle-ai")
-        data = json.loads(response.data)
-
-        assert response.status_code == 200
-        assert data["success"] is True
-
-        updated_config = Configuration.query.first()
-        assert updated_config.ai_teacher_enabled != initial_state
-
-
 def test_toggle_message_sending(client, test_app, sample_configuration, sample_admin):
     """Test toggling message sending functionality."""
     login_as_admin(client, sample_admin)
@@ -431,15 +414,6 @@ def test_toggle_message_sending_without_config_row(client, init_db, sample_admin
     data = json.loads(client.post("/api/admin/toggle-message-sending").data)
     assert data["status"] is False
     assert Configuration.query.first().message_sending_enabled is False
-
-
-def test_toggle_ai_text_matches_state(client, sample_configuration, sample_admin):
-    login_as_admin(client, sample_admin)
-    sample_configuration.ai_teacher_enabled = False
-    db.session.commit()
-    data = json.loads(client.post("/api/admin/toggle-ai").data)
-    assert data["status"] is True
-    assert "enabled" in data["message"] and "disabled" not in data["message"]
 
 
 def test_update_duck_multiplier_rejects_student_and_anonymous(

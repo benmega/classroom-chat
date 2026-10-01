@@ -83,7 +83,6 @@ export default defineConfig({
       '/session': 'http://localhost:8000',
       '/upload': 'http://localhost:8000',
       '/challenge': 'http://localhost:8000',
-      '/ai': 'http://localhost:8000',
       '/api/admin': 'http://localhost:8000',
       '/duck_trade': 'http://localhost:8000',
       '/api/achievements': 'http://localhost:8000',

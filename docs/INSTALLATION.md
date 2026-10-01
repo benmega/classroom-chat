@@ -34,7 +34,7 @@
    SECRET_KEY=some-dev-secret
    ADMIN_PASSWORD=some-dev-password
    ```
-   `SECRET_KEY`/`ADMIN_PASSWORD` fall back to insecure dev defaults if omitted in development, but `FLASK_ENV=production` will refuse to start without them (`application/config.py`). AI-teacher features additionally need `OPENAI_API_KEY`; Cognito-backed parent auth needs the `COGNITO_*` vars — both are optional for local development of the rest of the app.
+   `SECRET_KEY`/`ADMIN_PASSWORD` fall back to insecure dev defaults if omitted in development, but `FLASK_ENV=production` will refuse to start without them (`application/config.py`). Cognito-backed parent auth additionally needs the `COGNITO_*` vars, which are optional for local development of the rest of the app.
 
 5. Install frontend dependencies:
    ```bash

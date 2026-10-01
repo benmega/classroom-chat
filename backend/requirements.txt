@@ -24,7 +24,6 @@ flask_wtf
 playwright
 pytest-flask
 pytest-playwright
-openai
 ruff
 botocore[crt]
 Flask-Migrate~=4.1.0

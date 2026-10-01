@@ -41,7 +41,6 @@ See `backend/.env.example` for the full list of required variables. The code rea
 | `ADMIN_USERNAME`, `ADMIN_PASSWORD` | `config.py` | `ADMIN_PASSWORD` required in production |
 | `DATABASE_URL` | `config.py` (production) | SQLite file `prod_users.db` |
 | `DEV_DATABASE_URI` | `config.py` (development) | Optional dev override |
-| `OPENAI_API_KEY` | `config.py` | AI teacher (currently off) |
 | `WEBHOOK_SECRET` | webhook routes | Injected by `deploy.yml` |
 | `WEBHOOK_URL` | `infrastructure/lambda_transcriber/lambda_function.py` (Lambda environment, not the Flask app) | Optional |
 | `CORS_ORIGINS` | `config.py` | Comma-separated. Not written by `deploy.yml`, so the default origin list in `config.py` is used |
@@ -180,7 +179,8 @@ server {
   Do not add those labels casually; they start automated AI workflows.
 
 Required GitHub Secrets: `EC2_HOST`, `EC2_USERNAME`, `EC2_SSH_KEY`, `SECRET_KEY`,
-`ADMIN_USERNAME`, `ADMIN_PASSWORD`, `OPENAI_API_KEY`, `WEBHOOK_SECRET`, as well as AWS credentials for S3 uploads.
+`ADMIN_USERNAME`, `ADMIN_PASSWORD`, `WEBHOOK_SECRET`, as well as AWS credentials for S3 uploads.
+The `ai-planner.yml` and `ai-coder.yml` workflows additionally use the `OPENAI_API_KEY` secret; the Flask app itself no longer reads it.
 
 ---
 

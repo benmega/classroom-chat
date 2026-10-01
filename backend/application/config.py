@@ -28,7 +28,6 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ECHO = False
 
-    OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
     SECRET_KEY = os.getenv("SECRET_KEY")
     if not SECRET_KEY:
         # Generate a random one for dev if not provided, but don't allow this in production

@@ -6,7 +6,6 @@
 classroom-chat/
 ├── backend/
 │   ├── application/
-│   │   ├── ai/               # AI teacher integration (OpenAI)
 │   │   ├── commands/          # Flask CLI commands (e.g. `flask seed`)
 │   │   ├── decorators/        # login_required, admin_required, api_response
 │   │   ├── models/            # SQLAlchemy models (users, classrooms, projects, ducks, ...)
@@ -54,7 +53,7 @@ classroom-chat/
   - `/achievements` (session) + `/api/achievements` (JSON API)
   - `/api/auth/cognito` — parent authentication via AWS Cognito
   - `/api/shop`, `/api/classroom`, `/api/project-templates`, `/api/session`
-  - `/notes`, `/ai`, `/upload` — notes uploads, AI teacher, generic file uploads
+  - `/notes`, `/upload` — notes uploads, generic file uploads
   - `/dev-login` — localhost-only dev shortcut, never registered when `FLASK_ENV=production`
 - **Real-time**: Flask-SocketIO (gevent async mode) — event handlers in `socket_events.py`.
 - **Auth**: session-cookie based (`Flask-Login`/session), CSRF via `flask-wtf` (double-submit cookie `csrf_token_v2`), rate limiting via `Flask-Limiter` (disabled in `TestingConfig`). Parents authenticate through AWS Cognito.

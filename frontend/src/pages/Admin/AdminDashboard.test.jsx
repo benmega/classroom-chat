@@ -60,7 +60,6 @@ const mockDashboardData = {
     { id: 4, username: 'admin', nickname: 'Admin', role: 'admin', is_admin: true, duck_balance: 0, is_online: false },
   ],
   config: {
-    ai_teacher_enabled: true,
     message_sending_enabled: false,
     duck_multiplier: 1.0,
   },
@@ -96,7 +95,6 @@ const defaultHookReturn = {
   timeframe: 7,
   setTimeframe: vi.fn(),
   fetchDashboardData: vi.fn(),
-  handleToggleAI: vi.fn(),
   handleToggleMessages: vi.fn(),
   handleUpdateMultiplier: vi.fn(),
   handleAddBannedWord: vi.fn().mockResolvedValue(true),
@@ -134,17 +132,13 @@ describe('AdminDashboard', () => {
 
   it('renders global config settings', () => {
     renderComponent();
-    expect(screen.getByText('AI Teacher')).toBeInTheDocument();
+    expect(screen.queryByText('AI Teacher')).not.toBeInTheDocument();
     expect(screen.getByText('Public Messaging')).toBeInTheDocument();
     expect(screen.getByText('Duck Multiplier')).toBeInTheDocument();
   });
 
-  it('calls handleToggleAI and handleToggleMessages', () => {
+  it('calls handleToggleMessages', () => {
     renderComponent();
-    const aiBtn = screen.getByRole('button', { name: /AI Teacher/i });
-    fireEvent.click(aiBtn);
-    expect(defaultHookReturn.handleToggleAI).toHaveBeenCalledTimes(1);
-
     const msgBtn = screen.getByRole('button', { name: /Public Messaging/i });
     fireEvent.click(msgBtn);
     expect(defaultHookReturn.handleToggleMessages).toHaveBeenCalledTimes(1);

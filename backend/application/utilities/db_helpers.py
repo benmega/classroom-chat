@@ -148,7 +148,7 @@ def save_message_to_db(
         if not user:
             return {"success": False, "error": "User not found"}
 
-        # Screen every non-admin message (students, parents, and AI output)
+        # Screen every non-admin message (students and parents)
         # against the banned-words list before it is stored or broadcast.
         if user.role != 'admin' and not message_is_appropriate(message):
             return {

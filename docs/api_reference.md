@@ -24,7 +24,7 @@ Split across `backend/application/routes/admin/*.py` by concern:
 - **`standard_project_routes.py`**: CRUD for `/standard-projects`.
 - **`trade_routes.py`**: `GET /pending_trades`, `POST /trade_action`.
 - **`challenge_mgmt.py`**: `POST /challenges/bulk_add`.
-- **`config_routes.py`**: `POST /toggle-ai`, `/toggle-message-sending`, `/update_duck_multiplier`, `/add-banned-word`.
+- **`config_routes.py`**: `POST /toggle-message-sending`, `/update_duck_multiplier`, `/add-banned-word`.
 - **`doc_routes.py`**: `GET /documents`, download/view/delete document, `GET /documents/stats`.
 - **`crud_routes.py`**: generic resource CRUD (`/schema/<resource>`, `GET/POST/PUT/DELETE /<resource>[/<id>]`) — backs the `react-admin` panel at `/admin/advanced-crud`.
 - **`advanced_ops.py`**: `POST /advanced/purge-history`, `GET /advanced/stats-extended`.
@@ -55,7 +55,6 @@ All admin routes require `admin_required` (session user with `is_admin=True`).
 - **`GET /user/api/users/search`, `/get_users`, `/get_user_id`**: User lookup/search.
 - **`/notes/upload`, `/notes/view/<filename>`, `/notes/delete/<id>`**: Educational/admin note attachments.
 - **`/achievements/*` (session) and `/api/achievements/*` (JSON)**: Achievement listing, certificate submission and review, downloads. The React app uses `/api/achievements/*`.
-- **`POST /ai/get_ai_response`**: AI teacher chat responses (OpenAI-backed, toggleable via admin config).
 - **`POST /upload/upload_file`, `GET /upload/uploads/<filename>`**: Generic file upload/serving.
 
 ## 7. Parents (`/api/parents`)

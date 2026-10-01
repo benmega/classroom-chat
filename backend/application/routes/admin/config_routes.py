@@ -7,26 +7,6 @@ from flask import jsonify, request
 from ..admin_routes import admin_bp
 
 
-@admin_bp.route("/toggle-ai", methods=["POST"])
-@admin_only
-def toggle_ai():
-    config = Configuration.query.first()
-    if config is None:
-        config = Configuration(ai_teacher_enabled=False)
-        db.session.add(config)
-
-    config.ai_teacher_enabled = not config.ai_teacher_enabled
-    db.session.commit()
-
-    return jsonify(
-        {
-            "success": True,
-            "message": f"AI Teacher has been {'enabled' if config.ai_teacher_enabled else 'disabled'}",
-            "status": config.ai_teacher_enabled,
-        }
-    )
-
-
 @admin_bp.route("/toggle-message-sending", methods=["POST"])
 @admin_only
 def toggle_message_sending():

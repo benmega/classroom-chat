@@ -21,7 +21,7 @@ Classroom Chat employs a multi-layered testing strategy to ensure application st
 - **Strategy**: 
     - Focused on API endpoint validation (status codes, JSON payloads).
     - Database state verification after operations.
-    - Mocking of external services (e.g., OpenAI).
+    - Mocking of external services (e.g., AWS S3, Cognito).
 
 ### 2.2 Frontend Testing
 - **Framework**: [Vitest](https://vitest.dev/)

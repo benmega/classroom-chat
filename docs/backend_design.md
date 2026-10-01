@@ -11,7 +11,6 @@ The Classroom Chat backend is a robust Python application built using the Flask 
 - **Real-time**: [Flask-SocketIO](https://flask-socketio.readthedocs.io/) (via [gevent](http://www.gevent.org/))
 - **Security**: [Flask-Limiter](https://flask-limiter.readthedocs.io/), [Flask-WTF (CSRF)](https://flask-wtf.readthedocs.io/), [Cryptography](https://cryptography.io/)
 - **Scheduling**: [Flask-APScheduler](https://github.com/viniciuschiele/flask-apscheduler)
-- **AI Integration**: [OpenAI Python Library](https://github.com/openai/openai-python)
 - **Admin Interface**: Custom React Admin UI backed by Flask API routes
 - **Environment**: [python-dotenv](https://github.com/theskumar/python-dotenv)
 
@@ -27,7 +26,6 @@ API endpoints are structured into logical modules using **Flask Blueprints**. Th
 - **`user`** (`/user`): Profile management, auth status, and user-specific actions.
 - **`admin`** (`/api/admin`): System management, duck balance adjustments, CRUD, documents and advanced controls.
 - **`message`** (`/message`): Conversation creation and message history (messages are sent via Socket.IO, not HTTP).
-- **`ai`** (`/ai`): Integration with AI teaching logic and settings (the AI teacher is currently off).
 - **`achievements`** (`/achievements`) and **`achievements_api`** (`/api/achievements`): Badges, milestones and certificates.
 - **`upload`** (`/upload`) and **`notes`** (`/notes`): File uploads and notes.
 - **`cognito`** / **`dev_login`**: External Authentication flows (AWS Cognito SSO) and development-only auto-login.
@@ -91,17 +89,12 @@ Real-time features are powered by **Socket.io**.
 
 ---
 
-## 6. Background Tasks & AI
+## 6. Background Tasks
 
 ### 6.1 Task Scheduling
 **Flask-APScheduler** handles periodic system tasks:
 - **Project Maintenance**: Automatic cleanup or status updates.
 - **System Logs**: Periodic rotation or flushing of temporary session data.
-
-### 6.2 AI Service
-The backend integrates with **OpenAI** to provide an "AI Teacher" experience:
-- **`application/ai/`**: Contains the logic for processing AI-assisted conversations and validating AI-generated feedback.
-- **Global Toggle**: Controlled via the admin panel through the system configuration model.
 
 ---
 
@@ -110,7 +103,6 @@ The backend integrates with **OpenAI** to provide an "AI Teacher" experience:
 ```text
 backend/
 ├── application/       # Core app logic
-│   ├── ai/            # AI teacher services
 │   ├── commands/       # Flask CLI commands (e.g. `flask seed`)
 │   ├── decorators/    # Custom Flask decorators
 │   ├── models/        # SQLAlchemy model definitions
@@ -139,4 +131,4 @@ Uploaded user assets (profile pictures, project images, certificates) live in `u
 - **Scope**:
     - **Unit Tests**: Coverage for individual models and utility functions.
     - **Integration Tests**: Verification of API endpoints via the Flask test client.
-    - **Task Tests**: Validating APScheduler jobs and AI service wrappers.
+    - **Task Tests**: Validating APScheduler jobs.

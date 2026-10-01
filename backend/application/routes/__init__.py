@@ -12,7 +12,6 @@ from flask import Flask
 from .achievement_routes import achievements
 from .activity_routes import activity_bp
 from .admin_routes import admin_bp
-from .ai_routes import ai
 from .api_achievements import achievements_api
 from .api_webhooks import webhooks_api
 from .challenge_routes import challenge
@@ -39,7 +38,6 @@ def register_blueprints(app: Flask):
     app.register_blueprint(parent, url_prefix="/api/parents")
     app.register_blueprint(user, url_prefix="/user")
     app.register_blueprint(project_templates_bp, url_prefix="/api/project-templates")
-    app.register_blueprint(ai, url_prefix="/ai")
     app.register_blueprint(upload, url_prefix="/upload")
     app.register_blueprint(message, url_prefix="/message")
     app.register_blueprint(duck_trade, url_prefix="/duck_trade")

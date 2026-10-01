@@ -1,10 +1,8 @@
 # Features
 
-## Real-Time Chat & AI
+## Real-Time Chat
 - Built using Flask-SocketIO for efficient, real-time communication.
 - Detects URLs for educational purposes, such as CodeCombat links.
-- "AI Teacher" integration for automated conversational support.
-- **AI Settings**: Dynamic configuration for the AI Teacher, allowing admins to modify the AI's role/prompt, customize its username, and toggle the bot on or off globally.
 
 ## Challenge Tracking & Gamification
 - Challenges are assigned unique slug names for easy reference.

@@ -21,7 +21,6 @@ from application import create_app
 from application.config import TestingConfig
 from application.extensions import db
 from application.models.achievements import Achievement, UserAchievement
-from application.models.ai_settings import AISettings
 from application.models.banned_words import BannedWords
 from application.models.challenge import Challenge
 from application.models.challenge_log import ChallengeLog
@@ -266,22 +265,6 @@ def sample_classroom(init_db, sample_user):
 
 
 @pytest.fixture
-def sample_ai_settings(test_app):
-    with test_app.app_context():
-        db.create_all()
-        settings = [
-            AISettings(key="role", value="Custom AI role"),
-            AISettings(key="username", value="AI Teacher"),
-            AISettings(key="chat_bot_enabled", value="True"),
-        ]
-        db.session.add_all(settings)
-        db.session.commit()
-        yield settings
-        db.session.remove()
-        db.drop_all()
-
-
-@pytest.fixture
 def sample_banned_words(init_db):
     words = [
         BannedWords(word="forbidden", reason="Inappropriate language", active=True),
@@ -296,7 +279,6 @@ def sample_banned_words(init_db):
 def sample_configuration(init_db):
     from tests.factories import ConfigurationFactory
     config = ConfigurationFactory(
-        ai_teacher_enabled=True,
         message_sending_enabled=True,
         duck_multiplier=1.0,
     )

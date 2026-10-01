@@ -61,41 +61,6 @@ describe('useAdminDashboard', () => {
         expect(result.current.isLoading).toBe(false);
     });
 
-    it('toggles AI successfully', async () => {
-        client.get.mockResolvedValueOnce({ data: { status: 'success', data: {} } });
-        client.post.mockResolvedValueOnce({ data: { success: true, message: 'AI toggled' } });
-        const { result } = renderHook(() => useAdminDashboard());
-
-        await act(async () => {
-            await new Promise(resolve => setTimeout(resolve, 0));
-        });
-
-        await act(async () => {
-            await result.current.handleToggleAI();
-        });
-
-        expect(client.post).toHaveBeenCalledWith('/api/admin/toggle-ai');
-        
-        expect(client.get).toHaveBeenCalledTimes(2); // refetch
-    });
-
-    it('fails to toggle AI', async () => {
-        client.get.mockResolvedValueOnce({ data: { status: 'success', data: {} } });
-        client.post.mockRejectedValueOnce(new Error('Network error'));
-        const { result } = renderHook(() => useAdminDashboard());
-
-        await act(async () => {
-            await new Promise(resolve => setTimeout(resolve, 0));
-        });
-
-        await act(async () => {
-            await result.current.handleToggleAI();
-        });
-
-        expect(client.post).toHaveBeenCalledWith('/api/admin/toggle-ai');
-        expect(toast.error).toHaveBeenCalledWith('Failed to toggle AI.');
-    });
-
     it('toggles messages successfully', async () => {
         client.get.mockResolvedValueOnce({ data: { status: 'success', data: {} } });
         client.post.mockResolvedValueOnce({ data: { success: true, message: 'Messages toggled' } });

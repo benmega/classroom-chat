@@ -76,6 +76,8 @@ export const FK_OVERRIDES = {
  */
 export const HIDDEN_FIELDS = {
     User: new Set(["password_hash"]),
+    // Deprecated: the AI teacher was removed; the column stays until a drop migration lands.
+    Configuration: new Set(["ai_teacher_enabled"]),
 };
 
 /**
@@ -99,7 +101,6 @@ export const RESOURCES = [
     "Project",
     "ProjectTemplate",
     "Challenge",
-    "AISettings",
     "BannedWords",
     "Configuration",
     "Classroom",

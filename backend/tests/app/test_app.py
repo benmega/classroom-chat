@@ -134,7 +134,7 @@ def test_ensure_default_configuration(test_app):
         ensure_default_configuration()
         config = Configuration.query.first()
         assert config is not None
-        assert config.ai_teacher_enabled is False
+        assert config.message_sending_enabled is True
 
         # Calling again when configuration already exists
         ensure_default_configuration()

@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import {
     Search,
     Menu,
-    Bot,
     MessageSquare,
     AlertTriangle,
     Calendar,
@@ -65,7 +64,6 @@ const AdminDashboard = () => {
         formLoading,
         timeframe,
         setTimeframe,
-        handleToggleAI,
         handleToggleMessages,
         handleUpdateMultiplier,
         handleAddBannedWord
@@ -199,17 +197,6 @@ const AdminDashboard = () => {
                     <div className="admin-controls-card card">
                         {/* Unified Controls Grid */}
                         <div className="admin-controls-grid">
-                            <button
-                                onClick={handleToggleAI}
-                                className={`action-item ${config?.ai_teacher_enabled ? 'action-item-success' : 'action-item-error'}`}
-                            >
-                                <div className={`icon ${config?.ai_teacher_enabled ? 'icon-success' : 'icon-error'}`}><Bot size={20} /></div>
-                                <div>
-                                    <span className="action-text-main d-block">AI Teacher</span>
-                                    <small className="action-text-sub">{config?.ai_teacher_enabled ? 'Enabled' : 'Disabled'}</small>
-                                </div>
-                            </button>
-                            
                             <button 
                                 onClick={handleToggleMessages}
                                 className={`action-item ${(config?.message_sending_enabled ?? true) ? 'action-item-success' : 'action-item-error'}`}

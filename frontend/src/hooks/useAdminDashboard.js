@@ -39,18 +39,6 @@ export const useAdminDashboard = () => {
         setFormErrors({});
     }, [activeModal]);
 
-    const handleToggleAI = async () => {
-        try {
-            const response = await client.post('/api/admin/toggle-ai');
-            if (response.data.success) {
-                
-                fetchDashboardData();
-            }
-        } catch {
-            toast.error('Failed to toggle AI.');
-        }
-    };
-
     const handleToggleMessages = async () => {
         try {
             const response = await client.post('/api/admin/toggle-message-sending');
@@ -247,7 +235,6 @@ export const useAdminDashboard = () => {
         timeframe,
         setTimeframe,
         fetchDashboardData,
-        handleToggleAI,
         handleToggleMessages,
         handleUpdateMultiplier,
         handleAddBannedWord,
