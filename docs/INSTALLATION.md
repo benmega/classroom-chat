@@ -74,7 +74,7 @@ npm run test:e2e
 ```
 
 ## API Documentation
-See [`api_reference.md`](api_reference.md) for the endpoint catalog, or run the backend and browse Swagger UI at `/api/docs`.
+See [`api_reference.md`](api_reference.md) for the endpoint catalog (it also has a one-liner that prints every registered route).
 
 ## Production Deployment
 Production deployment is split between AWS S3/CloudFront for the React frontend and an EC2 instance behind nginx for the Flask backend. Both pipelines are gated by CI (`tests.yml` + `lint.yml`) on pushes to the `deploy` branch — see `.github/workflows/deploy-frontend.yml` and `.github/workflows/deploy.yml` (which triggers `deploy.sh`) for the full pipeline.

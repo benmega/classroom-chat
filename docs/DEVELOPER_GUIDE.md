@@ -34,7 +34,7 @@ classroom-chat/
 │   │   └── test/                 # Vitest setup + MSW mocks
 │   ├── tests-e2e/               # Playwright end-to-end tests
 │   ├── templates/dev_login.html # Only remaining Jinja template (dev login page)
-│   ├── static/                  # Images + swagger.json (the legacy Jinja-era CSS/JS was removed)
+│   ├── static/                  # Images (the legacy Jinja-era CSS/JS was removed)
 │   └── package.json
 ├── infrastructure/              # nginx config, Cognito CFN template, Lambda transcriber, DNS/db-sync scripts
 ├── docs/                        # This documentation
@@ -56,7 +56,6 @@ classroom-chat/
   - `/api/shop`, `/api/classroom`, `/api/project-templates`, `/api/session`
   - `/notes`, `/ai`, `/upload` — notes uploads, AI teacher, generic file uploads
   - `/dev-login` — localhost-only dev shortcut, never registered when `FLASK_ENV=production`
-  - `/api/docs` — Swagger UI (spec at `/static/swagger.json`)
 - **Real-time**: Flask-SocketIO (gevent async mode) — event handlers in `socket_events.py`.
 - **Auth**: session-cookie based (`Flask-Login`/session), CSRF via `flask-wtf` (double-submit cookie `csrf_token_v2`), rate limiting via `Flask-Limiter` (disabled in `TestingConfig`). Parents authenticate through AWS Cognito.
 - **DB**: SQLAlchemy + Flask-Migrate/Alembic. In non-production environments the app calls `db.create_all()` on startup; production is migration-only (`flask db upgrade`) — see the architecture note in `deploy.sh`.

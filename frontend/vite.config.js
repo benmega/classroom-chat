@@ -90,7 +90,6 @@ export default defineConfig({
       '/notes': 'http://localhost:8000',
       '/server': 'http://localhost:8000',
       '/api/dev-login': 'http://localhost:8000',
-      '/api/docs': 'http://localhost:8000',
       '/api/project-templates': 'http://localhost:8000',
       '/static': 'http://localhost:8000',
       '/socket.io': {

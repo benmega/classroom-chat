@@ -1,6 +1,6 @@
 # API Reference - Classroom Chat
 
-A high-level catalog of the backend's blueprints and endpoints. All are registered in `backend/application/routes/__init__.py`. This is the single API catalog for the backend (it replaces the former `API.md`). It is not exhaustive line-by-line — for the full, current list, run the app and browse Swagger UI at `/api/docs` (spec: `/static/swagger.json`), or print every registered route from `backend/`:
+A high-level catalog of the backend's blueprints and endpoints. All are registered in `backend/application/routes/__init__.py`. This is the single API catalog for the backend (it replaces the former `API.md`). It is not exhaustive line-by-line — for the full, current list, print every registered route from `backend/`:
 
 ```bash
 python -c "from application import create_app; app = create_app(); [print(r.rule, sorted(r.methods)) for r in sorted(app.url_map.iter_rules(), key=lambda r: r.rule)]"

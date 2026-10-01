@@ -53,3 +53,14 @@ def test_dev_login_template_renders_values_as_json(client):
         )
     assert "const error = null;" in html
     assert 'const redirectUrl = "http://localhost:5173/";' in html
+
+
+def test_swagger_ui_is_not_served(client):
+    """Swagger/OpenAPI was removed (#85): /api/docs falls through to the API 404."""
+    for path in ("/api/docs", "/api/docs/", "/static/swagger.json"):
+        response = client.get(path)
+        assert response.status_code == 404, path
+    assert not any(
+        "swagger" in rule.endpoint.lower() or rule.rule.startswith("/api/docs")
+        for rule in client.application.url_map.iter_rules()
+    )

@@ -8,7 +8,6 @@ import os
 
 from application.routes.notes_routes import notes_bp
 from flask import Flask
-from flask_swagger_ui import get_swaggerui_blueprint
 
 from .achievement_routes import achievements
 from .activity_routes import activity_bp
@@ -57,14 +56,6 @@ def register_blueprints(app: Flask):
     app.register_blueprint(submission_bp, url_prefix="/api/submissions")
     app.register_blueprint(course_request_bp)
     app.register_blueprint(classroom_bp, url_prefix="/api/classroom")
-
-    # ── Swagger UI ───────────────────────────────────────────────────────────
-    SWAGGER_URL = "/api/docs"
-    API_URL = "/static/swagger.json"
-    swaggerui_blueprint = get_swaggerui_blueprint(
-        SWAGGER_URL, API_URL, config={"app_name": "Classroom Chat API"}
-    )
-    app.register_blueprint(swaggerui_blueprint, url_prefix=SWAGGER_URL)
 
     # ── Development-only shortcut ────────────────────────────────────────────
     # /dev-login is never registered in production; the blueprint itself also

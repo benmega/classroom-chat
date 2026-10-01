@@ -29,13 +29,6 @@ const AdvancedPanel = () => {
     const [isPurging, setIsPurging] = useState(false);
     const [extendedStats, setExtendedStats] = useState(null);
 
-    // In production, the API is served from the same origin as the frontend.
-    // In development, we fallback to the known Flask port (8000).
-    const apiBaseUrl = import.meta.env.VITE_API_URL ||
-        (import.meta.env.DEV ? 'http://localhost:8000' : window.location.origin);
-
-
-
     const fetchLogs = async () => {
         setIsFetchingLogs(true);
         try {
@@ -109,10 +102,6 @@ const AdvancedPanel = () => {
             <div className="advanced-grid">
                 <button className="btn-premium action-button" onClick={() => navigate('/admin/advanced-crud')}>
                     <Layers size={18} /> Headless Database CRUD
-                </button>
-
-                <button className="btn-utility action-button" onClick={() => window.open(`${apiBaseUrl}/api/docs/`, '_blank')}>
-                    <Terminal size={18} /> API Documentation
                 </button>
 
                 <button
