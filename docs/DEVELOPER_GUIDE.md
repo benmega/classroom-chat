@@ -33,13 +33,12 @@ classroom-chat/
 │   │   ├── api/                  # Axios client
 │   │   └── test/                 # Vitest setup + MSW mocks
 │   ├── tests-e2e/               # Playwright end-to-end tests
-│   ├── templates/, static/      # Legacy Jinja2 templates/CSS — retained only as a fallback
-│   │                             # for Flask-Admin's advanced panel; not used by the SPA
+│   ├── templates/dev_login.html # Only remaining Jinja template (dev login page)
+│   ├── static/                  # Images + swagger.json (the legacy Jinja-era CSS/JS was removed)
 │   └── package.json
 ├── infrastructure/              # nginx config, Cognito CFN template, Lambda transcriber, DNS/db-sync scripts
 ├── docs/                        # This documentation
-├── issues/completed/            # Archive of resolved bug/feature tickets (Jira-style markdown)
-├── .agents/workflows/           # AI-agent workflow definitions (see docs/agentic_workflows.md)
+├── .agents/                     # AI-agent rules and skills (see docs/agentic_workflows.md)
 ├── .github/workflows/           # CI: tests.yml, lint.yml, deploy.yml, deploy-frontend.yml, ai-*.yml
 ├── userData/                    # Uploaded user assets (profile pictures, project images, certificates)
 └── deploy.sh                    # Production deploy script (migrations, health check, rollback)
@@ -67,7 +66,7 @@ classroom-chat/
 - Global auth/session state via `zustand` (`src/store/useAuthStore.js`).
 - Data fetching via `axios` (`src/api/client.js`) and `@tanstack/react-query` in places; real-time chat via `socket.io-client` (`src/hooks/useChatSocket.js`).
 - Admin has two surfaces: a hand-built admin UI (`src/pages/Admin/*`, `src/admin/AdminPanel.css`) and a generic `react-admin`-powered CRUD/debug panel (`src/admin/AdminPanel.jsx`, mounted at `/admin/advanced-crud`) backed by `routes/admin/crud_routes.py`.
-- `frontend/templates/` and `frontend/static/` are **legacy** Jinja2 assets from before the React migration. They are kept only because the Flask app registers them as a Jinja loader fallback (for Flask-Admin's advanced panel templates) — new UI work should always go in `frontend/src/`.
+- The legacy Jinja2 templates, JS and CSS from before the React migration were removed; `frontend/templates/dev_login.html` is the only Jinja template left. Where Flask hands a browser navigation over to the SPA it goes through `application/utilities/spa.py` (`serve_spa_index`): in production that serves the built React `index.html` from `frontend/dist`; in development it returns a JSON 404 pointing at the Vite server on port 5173. New UI work should always go in `frontend/src/`.
 
 ---
 
@@ -77,6 +76,7 @@ classroom-chat/
 - JavaScript/JSX: enforced by ESLint (`npm run lint` from `frontend/`), including `jsx-a11y` and `react-hooks` rules.
 - Keep the app's tone intact — see [`PERSONALITY_GUIDE.md`](../PERSONALITY_GUIDE.md) at the repo root before removing anything that looks like an "easter egg" (e.g. the duck quack sound in `useLayout.js`).
 - Prefer small, focused route modules — the `routes/admin/` split (dashboard, user_mgmt, project_routes, etc.) is the pattern to follow for new admin functionality rather than growing a single monolithic file.
+- Chat messages are sent only through the Socket.IO `send_message` event; put validation rules in its handler (`handle_send_message` in `application/socket_events.py`), not in an HTTP route.
 
 ---
 
@@ -112,9 +112,9 @@ npm run lint
 2. Work on a feature branch; keep it in sync with `main`.
 3. Add or update tests for any behavior change.
 4. Run the relevant lint/test commands above before opening a PR.
-5. Submit a PR with a clear description of the change.
+5. Submit a PR with a clear description of the change; reference the issue it resolves with `Fixes #<number>`.
 
-Bugs and small UI issues are tracked as markdown tickets in `issues/` and archived to `issues/completed/` once resolved — see [`issue_resolver_guide.md`](issue_resolver_guide.md) and [`agentic_workflows.md`](agentic_workflows.md) for the agent-driven workflow around this.
+Bugs and small UI issues are tracked in GitHub Issues (https://github.com/benmega/classroom-chat/issues) and handled with the `gh` CLI — see [`issue_resolver_guide.md`](issue_resolver_guide.md) and [`agentic_workflows.md`](agentic_workflows.md) for the agent-driven workflow around this.
 
 ### Front-end notes
 - Toast notifications use `react-hot-toast`, anchored bottom-right (see the `<Toaster />` config in `frontend/src/App.jsx`) to avoid overlapping the header/profile icons.

@@ -216,9 +216,6 @@ def get_users():
     for u in users:
         d = u.to_dict_summary(precomputed)
         d["levels_today"] = levels_today_map.get(u.id, 0)
-        # Defensive pop redundant but kept for safety with existing patterns
-        for field in ["password_hash", "salt", "ip_address"]:
-            d.pop(field, None)
         user_data.append(d)
 
     return jsonify(

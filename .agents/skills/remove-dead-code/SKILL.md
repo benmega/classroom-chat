@@ -21,7 +21,7 @@ This workflow systematically identifies code that appears unused or unnecessary,
         -   **Commented-out code**: Large blocks of commented code that have persisted (not recent TODOs).
         -   **Unreachable logic**: Code behind always-false conditions, after unconditional returns, or in unused branches.
         -   **Deprecated helpers**: Utility functions superseded by newer implementations.
-    - **Architecture Context**: Reference [frontend_design.md](file:///c:/Users/Ben/AntiGravity/classroom-chat/docs/frontend_design.md) and [backend_design.md](file:///c:/Users/Ben/AntiGravity/classroom-chat/docs/backend_design.md) to understand which modules are expected entry points, plug-ins, or dynamically loaded — these may appear unused but are intentional.
+    - **Architecture Context**: Reference [frontend_design.md](../../../docs/frontend_design.md) and [backend_design.md](../../../docs/backend_design.md) to understand which modules are expected entry points, plug-ins, or dynamically loaded — these may appear unused but are intentional.
 
 3.  **Evidence Gathering**:
     - For each candidate, search the **entire** project to confirm zero references:

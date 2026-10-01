@@ -13,7 +13,7 @@ import { formatStaticUrl } from '../../utils/formatters';
 import { useProjectManagement } from '../../hooks/useProjectManagement';
 
 const ManageProject = () => {
-    const { currentUser } = useAuthStore();
+    const { user: currentUser } = useAuthStore();
     const {
         projectId,
         projectData,

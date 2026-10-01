@@ -141,7 +141,7 @@
 .search-box input:focus {
     border-color: var(--primary-color);
     box-shadow: var(--shadow-glow);
-    background: white;
+    background: var(--bg-primary);
 }
 
 /* ── Category Dropdown ────────────────────────────── */
@@ -318,7 +318,7 @@
 }
 
 .achievement-card {
-    background: white;
+    background: var(--bg-primary);
     border: 1px solid var(--border-subtle);
     border-radius: 16px;
     padding: 0;
@@ -511,24 +511,6 @@
     color: var(--slate-800);
 }
 
-.ach-loading-container {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    height: 400px;
-    gap: 1.5rem;
-}
-
-.ach-loader {
-    width: 48px;
-    height: 48px;
-    border: 4px solid var(--bg-tertiary);
-    border-top: 4px solid #3b82f6;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-}
-
 @keyframes spin {
     to { transform: rotate(360deg); }
 }
@@ -538,7 +520,4 @@
         grid-template-columns: 1fr;
     }
     
-    .ach-header h1 {
-        font-size: 2rem;
-    }
 }

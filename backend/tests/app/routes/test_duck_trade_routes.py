@@ -19,9 +19,11 @@ def test_submit_trade_valid(client, sample_user_with_ducks, test_app):
         response = client.post(
             url_for("duck_trade.submit_trade"),
             data=form_data,
-            follow_redirects=True,
+            follow_redirects=False,
         )
-        assert response.status_code == 200
+
+        # Assert the request redirected (no legacy Jinja page to follow to)
+        assert response.status_code == 302
 
         trade = DuckTradeLog.query.filter_by(
             user_id=sample_user_with_ducks.id, status="pending"
@@ -56,10 +58,14 @@ def test_submit_trade_one_pending_limit(client, sample_user_with_ducks, test_app
         response = client.post(
             url_for("duck_trade.submit_trade"),
             data=form_data,
-            follow_redirects=True,
+            follow_redirects=False,
         )
-        assert response.status_code == 200
-        assert b"You already have a pending trade" in response.data
+
+        # Assert the request was blocked by checking the flashed error message
+        assert response.status_code == 302
+        with client.session_transaction() as sess:
+            flashed = [msg for _cat, msg in sess.get("_flashes", [])]
+        assert any("You already have a pending trade" in m for m in flashed)
 
         trade_count = DuckTradeLog.query.filter_by(
             user_id=sample_user_with_ducks.id
@@ -77,14 +83,14 @@ def test_bit_shift_get(client, test_app):
 
         response = client.get(url_for("duck_trade.bit_shift"))
         assert response.status_code == 302
-        assert response.headers["Location"] == "/trade"
+        assert response.headers["Location"] == "/bit-shift"
 
 
 # New tests for coverage
 def test_duck_trade_index(client):
     response = client.get("/duck_trade/")
     assert response.status_code == 302
-    assert response.headers["Location"] == "/trade"
+    assert response.headers["Location"] == "/bit-shift"
 
     response = client.get("/duck_trade/", headers={"Accept": "application/json"})
     assert response.status_code == 200
@@ -93,10 +99,12 @@ def test_duck_trade_index(client):
 
 def test_submit_trade_not_logged_in(client):
     response = client.post(
-        "/duck_trade/submit_trade", data={"digital_ducks": 1}, follow_redirects=True
+        "/duck_trade/submit_trade", data={"digital_ducks": 1}, follow_redirects=False
     )
-    assert response.status_code == 200
-    assert b"You must be logged in" in response.data
+    assert response.status_code == 302
+    with client.session_transaction() as sess:
+        flashed = [msg for _cat, msg in sess.get("_flashes", [])]
+    assert any("You must be logged in" in m for m in flashed)
 
     response = client.post(
         "/duck_trade/submit_trade",
@@ -111,9 +119,12 @@ def test_submit_trade_user_not_found(client, test_app):
         sess["user"] = 9999
 
     response = client.post(
-        "/duck_trade/submit_trade", data={"digital_ducks": 1}, follow_redirects=True
+        "/duck_trade/submit_trade", data={"digital_ducks": 1}, follow_redirects=False
     )
-    assert b"User profile not found" in response.data
+    assert response.status_code == 302
+    with client.session_transaction() as sess:
+        flashed = [msg for _cat, msg in sess.get("_flashes", [])]
+    assert any("User profile not found" in m for m in flashed)
 
     response = client.post(
         "/duck_trade/submit_trade",
@@ -165,8 +176,11 @@ def test_submit_trade_invalid_form(client, sample_user_with_ducks, test_app):
     with client.session_transaction() as sess:
         sess["user"] = sample_user_with_ducks.id
 
-    response = client.post("/duck_trade/submit_trade", data={}, follow_redirects=True)
-    assert b"Error: Check your inputs" in response.data
+    response = client.post("/duck_trade/submit_trade", data={}, follow_redirects=False)
+    assert response.status_code == 302
+    with client.session_transaction() as sess:
+        flashed = [msg for _cat, msg in sess.get("_flashes", [])]
+    assert any("Error: Check your inputs" in m for m in flashed)
 
     response = client.post(
         "/duck_trade/submit_trade",
@@ -204,10 +218,12 @@ def test_submit_trade_exception_handling(
             form_data[f"byte_duck_selection-byte_ducks-{i}"] = 0
 
         response = client.post(
-            "/duck_trade/submit_trade", data=form_data, follow_redirects=True
+            "/duck_trade/submit_trade", data=form_data, follow_redirects=False
         )
-        assert response.status_code == 200
-        assert b"An unexpected error occurred" in response.data
+        assert response.status_code == 302
+        with client.session_transaction() as sess:
+            flashed = [msg for _cat, msg in sess.get("_flashes", [])]
+        assert any("An unexpected error occurred" in m for m in flashed)
 
 
 def test_submit_trade_existing_trade_ajax(client, sample_user_with_ducks, test_app):

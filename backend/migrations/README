@@ -1,1 +1,8 @@
 Single-database configuration for Flask.
+
+Run these from the `backend/` directory with `FLASK_APP=main.py`:
+
+    flask db upgrade                       # apply migrations (also run by deploy.sh)
+    flask db migrate -m "describe change"  # create a new migration after editing models
+
+Do not run `flask db init`; this directory already exists. See docs/infrastructure_and_devops.md.

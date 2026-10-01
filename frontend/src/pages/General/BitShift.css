@@ -44,22 +44,14 @@
     -webkit-text-fill-color: transparent;
 }
 
-.form-subheading {
-    text-align: center; 
-    color: var(--text-secondary); 
-    margin-bottom: 2rem; 
-    font-size: 1rem;
-    font-weight: 500;
-}
-
-.form-group.main-input {
+:where(.bit-shift-page) .form-group.main-input {
     display: flex;
     flex-direction: column;
     align-items: center;
     margin-bottom: 1rem;
 }
 
-.form-group.main-input label {
+:where(.bit-shift-page) .form-group.main-input label {
     font-size: 1.1rem;
     font-weight: 700;
     margin-bottom: 1rem;
@@ -291,12 +283,6 @@
     transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
-.math-check-banner.neutral {
-    background: var(--bg-tertiary);
-    border-color: var(--border-subtle);
-    color: var(--text-secondary); /* Darker for contrast */
-}
-
 .math-check-banner.match {
     background: rgba(34, 197, 94, 0.12);
     border-color: #22c55e;
@@ -381,7 +367,7 @@
     text-transform: none;
 }
 
-.header-container {
+:where(.bit-shift-page) .header-container {
     display: flex;
     flex-direction: row;
     align-items: center;
@@ -430,7 +416,7 @@
     width: 24px;
     left: 4px;
     top: 4px;
-    background-color: white;
+    background-color: var(--bg-primary);
     border-radius: 50%;
     transition: 0.4s;
     box-shadow: var(--shadow-md);
@@ -458,7 +444,7 @@
     text-shadow: 0 0 15px rgba(14, 178, 187, 0.3);
 }
 
-.submit-button {
+:where(.bit-shift-page) .submit-button {
     width: 100%;
     padding: 1rem !important;
     font-size: 1.15rem !important;
@@ -476,13 +462,13 @@
     gap: 0.75rem;
 }
 
-.submit-button:hover:not(:disabled) {
+:where(.bit-shift-page) .submit-button:hover:not(:disabled) {
     transform: translateY(-6px);
     box-shadow: var(--shadow-glow), var(--shadow-xl);
     filter: brightness(1.1);
 }
 
-.submit-button:active {
+:where(.bit-shift-page) .submit-button:active {
     transform: translateY(-2px);
 }
 
@@ -505,10 +491,6 @@
     .form-heading {
         font-size: 1.75rem;
     }
-    .form-subheading {
-        font-size: 0.9rem;
-        margin-bottom: 1.5rem;
-    }
     .trade-form-section {
         padding: 1.5rem 0.75rem;
     }
@@ -528,12 +510,8 @@
     .form-heading {
         font-size: 1.75rem;
     }
-    .form-subheading {
-        margin-bottom: 1rem;
-    }
-    .form-group.main-input,
-    .ducks-grid,
-    .toggle-container {
+    :where(.bit-shift-page) .form-group.main-input,
+    .ducks-grid {
         margin-bottom: 1.25rem;
     }
     .digital-ducks-input {

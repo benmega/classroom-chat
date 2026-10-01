@@ -17,7 +17,7 @@ The project is more than just a chat app; it is an integration of several specia
 
 ### 2.2 The Real-Time Chat
 - Enables peer-to-peer and group communication.
-- Features an "AI Teacher" assistant that can participate in conversations to provide educational support.
+- Includes an "AI Teacher" assistant (currently off; planned to return as a chatbot).
 
 ### 2.3 The Admin Engine
 - A powerful backend for educators to manage user accounts, approve submissions, moderate content, and control global system settings (e.g., multipliers for currency rewards).
@@ -37,12 +37,12 @@ The project is more than just a chat app; it is an integration of several specia
 1. **Frontend (React)**: Captures user interaction and state.
 2. **Real-time (Socket.io)**: Bridges the client and server for instant updates.
 3. **Backend (Flask)**: Processes business logic, validates security, and manages permissions.
-4. **Persistence (SQLite/SQLAlchemy)**: Stores the long-term history of the community.
-5. **AI (OpenAI)**: Adds an intelligent layer to messaging and feedback.
+4. **Persistence (SQLite via SQLAlchemy; Alembic migrations)**: Stores the long-term history of the community.
+5. **AI (OpenAI)**: Optional AI teacher layer (currently switched off).
 
 ---
 
 ## 4. Why This Architecture?
-- **Separation of Concerns**: By decoupled the frontend (Vite/React) and backend (Flask API), the project ensures scalability and allows for independent updates to the UI or Business Logic.
-- **Security First**: All operations go through a centralized API layer with robust rate-limiting and CSRF protection.
+- **Separation of Concerns**: By decoupling the frontend (Vite/React) and backend (Flask API), the project ensures scalability and allows for independent updates to the UI or Business Logic.
+- **Security First**: Operations go through a centralized API layer with rate limiting, session auth, and CSRF protection in production.
 - **Extensibility**: The Blueprint system on the backend and Component structure on the frontend make adding new features (like a new gamification mechanic) straightforward.

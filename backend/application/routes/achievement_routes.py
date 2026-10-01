@@ -14,12 +14,12 @@ from application.models.achievements import Achievement
 from application.models.user import User
 from application.models.user_certificate import UserCertificate
 from application.utilities.helper_functions import allowed_file
+from application.utilities.spa import serve_spa_index
 from flask import (
     Blueprint,
     flash,
     jsonify,
     redirect,
-    render_template,
     request,
     send_file,
     send_from_directory,
@@ -113,7 +113,7 @@ def achievements_page():
     if not current_user:
         return jsonify({"success": False, "error": "User not found!"}), 404
 
-    return render_template("achievements.html", user=current_user)
+    return serve_spa_index(user=current_user)
 
 
 @achievements.route("/add", methods=["GET", "POST"])
@@ -124,7 +124,7 @@ def add_achievement():
     if request.method == "GET":
         if request.is_json or request.accept_mimetypes.accept_json:
             return jsonify({"status": "ready"}), 200
-        return render_template("add_achievement.html"), 200
+        return serve_spa_index()
 
     name = data.get("name")
     slug = data.get("slug")
@@ -376,7 +376,7 @@ def submit_certificate():
 
     if request.is_json or request.accept_mimetypes.accept_json:
         return jsonify({"status": "ready"}), 200
-    return render_template("submit_certificate.html"), 200
+    return serve_spa_index()
 
 
 @achievements.route("/view_certificate/<int:cert_id>")

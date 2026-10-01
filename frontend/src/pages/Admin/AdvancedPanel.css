@@ -29,7 +29,7 @@
 }
 
 .admin-advanced-panel .btn-utility:hover { 
-    background: var(--btn-secondary-hover); 
+    background: var(--btn-secondary-hover);
     color: var(--slate-800);
     transform: translateY(-1px);
 }
@@ -97,7 +97,7 @@
 }
 
 /* Log Modal */
-.log-modal-overlay {
+:where(.admin-advanced-panel) .log-modal-overlay {
     position: fixed;
     inset: 0;
     background: rgba(15, 23, 42, 0.4);
@@ -108,8 +108,8 @@
     padding: 2rem;
 }
 
-.log-modal {
-    background: white;
+:where(.admin-advanced-panel) .log-modal {
+    background: var(--bg-primary);
     width: 100%;
     max-width: 1000px;
     height: 80vh;
@@ -119,7 +119,7 @@
     overflow: hidden;
 }
 
-.log-modal-header {
+:where(.admin-advanced-panel) .log-modal-header {
     padding: 1rem 1.5rem;
     border-bottom: 1px solid var(--border-subtle);
     display: flex;
@@ -127,21 +127,21 @@
     align-items: center;
 }
 
-.log-modal-header .title-group {
+:where(.admin-advanced-panel) .log-modal-header .title-group {
     display: flex;
     align-items: center;
     gap: 12px;
     color: var(--primary-accessible);
 }
 
-.log-modal-header h3 {
+:where(.admin-advanced-panel) .log-modal-header h3 {
     font-size: 1.25rem;
     font-weight: 800;
     margin: 0;
     color: var(--slate-800);
 }
 
-.log-content {
+:where(.admin-advanced-panel) .log-content {
     flex: 1;
     overflow: auto;
     padding: 1.5rem;
@@ -152,12 +152,12 @@
     line-height: 1.6;
 }
 
-.log-content pre {
+:where(.admin-advanced-panel) .log-content pre {
     margin: 0;
     white-space: pre-wrap;
 }
 
-.log-modal-footer {
+:where(.admin-advanced-panel) .log-modal-footer {
     padding: 1rem 1.5rem;
     border-top: 1px solid var(--border-subtle);
     display: flex;
@@ -166,26 +166,26 @@
     background: var(--bg-secondary);
 }
 
-.close-btn {
+:where(.admin-advanced-panel) .log-modal-header .close-btn {
     color: var(--text-muted);
     padding: 8px;
     border-radius: 8px;
     transition: all 0.2s;
 }
 
-.close-btn:hover {
+:where(.admin-advanced-panel) .log-modal-header .close-btn:hover {
     background: var(--bg-tertiary);
     color: var(--slate-800);
 }
 
-.log-content .stats-grid {
+:where(.admin-advanced-panel) .log-content .stats-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 1.5rem;
     margin-bottom: 2.5rem;
 }
 
-.log-content .stat-box {
+:where(.admin-advanced-panel) .log-content .stat-box {
     background: rgba(255, 255, 255, 0.05);
     padding: 1rem;
     border-radius: 16px;
@@ -195,32 +195,32 @@
     border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.log-content .stat-box .label {
+:where(.admin-advanced-panel) .log-content .stat-box .label {
     font-size: 0.8rem;
     color: var(--text-muted);
     text-transform: uppercase;
     letter-spacing: 0.05em;
 }
 
-.log-content .stat-box .value {
+:where(.admin-advanced-panel) .log-content .stat-box .value {
     font-size: 1.5rem;
     font-weight: 700;
     color: white;
 }
 
-.log-content h4 {
+:where(.admin-advanced-panel) .log-content h4 {
     color: white;
     margin-bottom: 1rem;
     font-size: 1.1rem;
 }
 
-.log-content .table-counts {
+:where(.admin-advanced-panel) .log-content .table-counts {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
     gap: 10px;
 }
 
-.log-content .table-row {
+:where(.admin-advanced-panel) .log-content .table-row {
     display: flex;
     justify-content: space-between;
     padding: 12px 16px;
@@ -228,12 +228,12 @@
     border-radius: 10px;
 }
 
-.log-content .table-row span { color: var(--text-muted); }
-.log-content .table-row strong { color: var(--primary-accessible); }
+:where(.admin-advanced-panel) .log-content .table-row span { color: var(--text-muted); }
+:where(.admin-advanced-panel) .log-content .table-row strong { color: var(--primary-accessible); }
 
 /* Purge Confirmation */
-.purge-confirm .log-content {
-    background: white;
+:where(.admin-advanced-panel) .purge-confirm .log-content {
+    background: var(--bg-primary);
     color: var(--slate-800);
     font-family: inherit;
     font-size: 1.1rem;
@@ -241,20 +241,25 @@
     padding: 3rem 2rem;
 }
 
-.warning-text {
+:where(.admin-advanced-panel) .warning-text {
     color: var(--error-color);
     margin-bottom: 1rem;
 }
 
-.log-modal-header.danger {
+:where(.admin-advanced-panel) .log-modal-header.danger {
     border-bottom: 2px solid var(--error-subtle);
 }
 
-.log-modal-header.danger .title-group {
+:where(.admin-advanced-panel) .log-modal-header.danger .title-group {
     color: var(--error-color);
 }
 
-.purge-confirm {
-    height: auto !important;
+:where(.admin-advanced-panel) .log-modal.purge-confirm {
+    height: auto;
 }
 
+@media (max-width: 600px) {
+    :where(.admin-advanced-panel) .log-modal-overlay {
+        padding: 1rem;
+    }
+}

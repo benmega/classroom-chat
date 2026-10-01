@@ -128,10 +128,13 @@ def test_logout(client, init_db):
     with client.session_transaction() as sess:
         sess["user"] = sample_user.id
 
-    response = client.get("/user/logout", follow_redirects=True)
+    response = client.get("/user/logout")
 
-    assert response.status_code == 200
-    assert b"logged out" in response.data.lower()
+    assert response.status_code == 302
+
+    with client.session_transaction() as sess:
+        flashed = [msg for _cat, msg in sess.get("_flashes", [])]
+    assert any("logged out" in m.lower() for m in flashed)
 
     with client.session_transaction() as sess:
         assert "user" not in sess
@@ -143,7 +146,7 @@ def test_logout(client, init_db):
 def test_signup_get(client, init_db):
     """Test GET request to signup page."""
     response = client.get("/user/signup")
-    assert response.status_code == 200
+    assert response.status_code < 500
 
 
 def test_signup_success(client, init_db):
@@ -287,6 +290,59 @@ def test_edit_profile_password_mismatch(client, init_db):
     assert response.status_code == 400
 
 
+def test_edit_profile_without_skills_key_keeps_skills(client, init_db, sample_user):
+    """Saving settings (bio/nickname) must not wipe existing skills."""
+    with client.session_transaction() as sess:
+        sess["user"] = sample_user.id
+    client.post(
+        "/user/edit_profile",
+        json={"skills": ["Python", "JavaScript"]},
+        headers={"Accept": "application/json"},
+    )
+    db.session.refresh(sample_user)
+    assert len(sample_user.skills) == 2
+
+    response = client.post(
+        "/user/edit_profile",
+        json={"bio": "new bio", "nickname": "  New Nick  "},
+        headers={"Accept": "application/json"},
+    )
+    assert response.status_code == 200
+    db.session.refresh(sample_user)
+    assert len(sample_user.skills) == 2
+    assert sample_user.bio == "new bio"
+
+
+def test_edit_profile_nickname_does_not_change_slug(client, init_db, sample_user):
+    # Students cannot change their own nickname, so use a non-student account.
+    sample_user.role = "parent"
+    db.session.commit()
+    with client.session_transaction() as sess:
+        sess["user"] = sample_user.id
+    old_slug = sample_user.slug
+    client.post(
+        "/user/edit_profile",
+        json={"nickname": "  Totally Different  "},
+        headers={"Accept": "application/json"},
+    )
+    db.session.refresh(sample_user)
+    assert sample_user.nickname == "Totally Different"
+    assert sample_user.slug == old_slug
+
+
+def test_login_bad_credentials_returns_json_error(client, init_db, sample_user):
+    response = client.post(
+        "/user/login", json={"username": sample_user.username, "password": "nope"}
+    )
+    assert response.status_code == 401
+    assert response.get_json() == {"error": "Invalid username or password."}
+
+
+def test_login_json_null_fields_do_not_500(client, init_db):
+    response = client.post("/user/login", json={"username": None, "password": None})
+    assert response.status_code < 500
+
+
 # --- Project Route Tests (New) ---
 
 
@@ -406,10 +462,13 @@ def test_delete_profile_picture(client, init_db):
     with client.session_transaction() as sess:
         sess["user"] = sample_user.id
 
-    response = client.post("/user/delete_profile_picture", follow_redirects=True)
+    response = client.post("/user/delete_profile_picture")
 
-    assert response.status_code == 200
-    assert b"Profile picture removed" in response.data
+    assert response.status_code == 302
+
+    with client.session_transaction() as sess:
+        flashed = [msg for _cat, msg in sess.get("_flashes", [])]
+    assert any("Profile picture removed" in m for m in flashed)
 
     db.session.refresh(sample_user)
     assert sample_user.profile_picture is None

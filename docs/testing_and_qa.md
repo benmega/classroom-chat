@@ -42,10 +42,10 @@ Classroom Chat employs a multi-layered testing strategy to ensure application st
 ---
 
 ## 3. Automation (CI)
-Tests are automatically executed on every push and pull request via GitHub Actions (`.github/workflows/`).
+Tests run automatically via GitHub Actions (`.github/workflows/`).
 
-- **`tests.yml`**: Runs the backend job (mypy + pytest) and the frontend job (`npm run test -- --run`) in parallel. Reusable via `workflow_call` so deploy workflows can gate on it.
-- **`lint.yml`**: Runs Ruff over the backend. (There is currently no dedicated CI job for `eslint`; run `npm run lint` locally before pushing frontend changes.)
+- **`tests.yml`**: On push and pull request to `main`/`master`: runs the backend job (mypy + pytest) and the frontend job (`npm run test -- --run`) in parallel. Reusable via `workflow_call` so deploy workflows can gate on it.
+- **`lint.yml`**: On every push and pull request: runs Ruff over the backend. (There is currently no dedicated CI job for `eslint`; run `npm run lint` locally before pushing frontend changes.)
 - **`deploy.yml` / `deploy-frontend.yml`**: Deploy to EC2 / S3+CloudFront on pushes to the `deploy` branch, gated on `tests.yml` and `lint.yml` passing first.
 
 ---
@@ -54,7 +54,7 @@ Tests are automatically executed on every push and pull request via GitHub Actio
 Classroom Chat uses a specialized human-in-the-loop auditing process for UI bugs:
 1. **Automated Crawling**: Playwright scripts navigate common user paths.
 2. **Visual Audit**: Screenshots are captured for key pages (Profile, Chat, Admin).
-3. **Issue Creation**: Visual or functional bugs are documented as Jira-style markdown files in the `issues/` directory for systematic resolution.
+3. **Issue Creation**: Visual or functional bugs are filed as GitHub Issues (`gh issue create`; see [issue_resolver_guide.md](issue_resolver_guide.md)) for systematic resolution.
 
 ---
 

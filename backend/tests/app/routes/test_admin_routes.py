@@ -258,6 +258,49 @@ def test_trade_action_reject(client, sample_admin, sample_duck_trade, init_db):
         mock_reject.assert_called_once()
 
 
+def test_trade_action_double_approve_deducts_once(
+    client, sample_admin, sample_user, sample_duck_trade, test_app, init_db
+):
+    login_as_admin(client, sample_admin)
+    trade_id = sample_duck_trade.id
+    user_id = sample_user.id
+    sample_user.duck_balance = 100
+    db.session.commit()
+
+    first = client.post(
+        "/api/admin/trade_action", data={"trade_id": str(trade_id), "action": "approve"}
+    )
+    assert first.status_code == 200
+    balance_after_first = db.session.get(User, user_id).duck_balance
+
+    second = client.post(
+        "/api/admin/trade_action", data={"trade_id": str(trade_id), "action": "approve"}
+    )
+    assert second.status_code == 400
+    assert db.session.get(User, user_id).duck_balance == balance_after_first
+    assert db.session.get(DuckTradeLog, trade_id).status == "approved"
+
+
+def test_trade_action_rejects_non_pending_trade(
+    client, sample_admin, sample_duck_trade, init_db
+):
+    login_as_admin(client, sample_admin)
+    trade_id = sample_duck_trade.id
+
+    assert (
+        client.post(
+            "/api/admin/trade_action", data={"trade_id": str(trade_id), "action": "reject"}
+        ).status_code
+        == 200
+    )
+    for action in ("approve", "reject"):
+        resp = client.post(
+            "/api/admin/trade_action", data={"trade_id": str(trade_id), "action": action}
+        )
+        assert resp.status_code == 400
+    assert db.session.get(DuckTradeLog, trade_id).status == "rejected"
+
+
 def test_reset_password(client, sample_admin, sample_user, test_app, init_db):
     """Test resetting a user's password."""
     login_as_admin(client, sample_admin)
@@ -366,6 +409,58 @@ def test_set_username_proper_case_handling(client, test_app, sample_user, sample
 
         updated_user = db.session.get(User, sample_user.id)
         assert updated_user.username == mixed_case_username.lower()
+
+
+def test_toggle_messages_text_matches_state(client, sample_configuration, sample_admin):
+    login_as_admin(client, sample_admin)
+    sample_configuration.message_sending_enabled = False
+    db.session.commit()
+
+    data = json.loads(client.post("/api/admin/toggle-message-sending").data)
+    assert data["status"] is True
+    assert "enabled" in data["message"] and "disabled" not in data["message"]
+
+    data = json.loads(client.post("/api/admin/toggle-message-sending").data)
+    assert data["status"] is False
+    assert "disabled" in data["message"]
+
+
+def test_toggle_message_sending_without_config_row(client, init_db, sample_admin):
+    login_as_admin(client, sample_admin)
+    # A missing row counts as enabled, so the first toggle disables sending.
+    data = json.loads(client.post("/api/admin/toggle-message-sending").data)
+    assert data["status"] is False
+    assert Configuration.query.first().message_sending_enabled is False
+
+
+def test_toggle_ai_text_matches_state(client, sample_configuration, sample_admin):
+    login_as_admin(client, sample_admin)
+    sample_configuration.ai_teacher_enabled = False
+    db.session.commit()
+    data = json.loads(client.post("/api/admin/toggle-ai").data)
+    assert data["status"] is True
+    assert "enabled" in data["message"] and "disabled" not in data["message"]
+
+
+def test_update_duck_multiplier_rejects_student_and_anonymous(
+    client, sample_configuration, sample_user
+):
+    response = client.post("/api/admin/update_duck_multiplier", json={"multiplier": 1000})
+    assert response.status_code in (401, 403)
+
+    with client.session_transaction() as sess:
+        sess["_user_id"] = str(sample_user.id)
+        sess["user"] = sample_user.id
+    response = client.post("/api/admin/update_duck_multiplier", json={"multiplier": 1000})
+    assert response.status_code in (401, 403)
+    assert Configuration.query.first().duck_multiplier == 1
+
+
+def test_update_duck_multiplier_admin_ok(client, sample_configuration, sample_admin):
+    login_as_admin(client, sample_admin)
+    response = client.post("/api/admin/update_duck_multiplier", json={"multiplier": 2})
+    assert response.status_code == 200
+    assert Configuration.query.first().duck_multiplier == 2
 
 
 def test_admin_transactions_route(client, test_app, sample_user, sample_admin):

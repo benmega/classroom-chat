@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Award, PlusCircle, Trash2, ArrowLeft, Info, Coins, Shield, Tag, Plus, Edit, X, Search, FileUp, Image as ImageIcon } from 'lucide-react';
+import { Award, PlusCircle, ArrowLeft, Info, Coins, Tag, Plus, Edit, X, Search, FileUp, Image as ImageIcon } from 'lucide-react';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
+import '../../components/admin/AdminShared.css';
 import './AdminAchievements.css';
 import { formatStaticUrl } from '../../utils/formatters';
 

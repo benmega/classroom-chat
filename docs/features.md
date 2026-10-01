@@ -21,7 +21,7 @@
 - **Bit Shift (Binary-to-Decimal Duck Trade)**: An educational mini-game where students convert their "digital ducks" into "bit" and "byte" ducks by solving binary math conversions.
 
 ## Customizable Profiles & Portfolios
-- Users can edit their username, password, and avatar.
+- Users can edit their password and avatar.
 - Ducks, achievements, and earned certificates are displayed prominently.
 - **Projects**: Students can build and showcase programming projects on their profile.
 - **Skills**: Students can list acquired programming skills.

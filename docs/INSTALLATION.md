@@ -9,7 +9,7 @@
 
 1. Clone the repository and enter it:
    ```bash
-   git clone <repository_url>
+   git clone https://github.com/benmega/classroom-chat.git
    cd classroom-chat
    ```
 

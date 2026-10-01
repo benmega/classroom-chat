@@ -106,7 +106,8 @@ const EditProfile = () => {
             await checkAuth(true);
         } catch (error) {
             console.error('Update error:', error);
-            toast.error(error.response?.data?.error || 'Failed to update profile.');
+            const serverError = error.response?.data?.error;
+            toast.error(typeof serverError === 'string' && serverError ? serverError : 'Failed to update profile.');
         } finally {
             setIsSaving(false);
         }

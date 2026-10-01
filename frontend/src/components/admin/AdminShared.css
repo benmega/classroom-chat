@@ -1,0 +1,116 @@
+/* Shared admin styles (loading/error states, keyframes, small utilities).
+   Keyframes are admin-prefixed so they cannot override same-named keyframes
+   used by non-admin pages; generic classes are scoped to the admin layout body
+   (zero specificity via :where so page rules can still override them).
+   The shared Modal renders through a portal outside .admin-body, so classes that
+   are also used inside modals are scoped to .admin-modal-overlay as well. */
+
+@keyframes admin-fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes admin-slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes admin-spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* Loading / error states (rendered outside each page's root wrapper, i.e. as
+   direct children of .admin-body; inline .admin-error banners inside a page
+   root keep that page's own styling) */
+:where(.admin-body) > .admin-loading,
+:where(.admin-body) > .admin-error {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 40vh;
+    padding: 2rem;
+    text-align: center;
+    font-size: var(--font-lg);
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+:where(.admin-body) > .admin-error {
+    color: var(--error-color);
+}
+
+.admin-loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 60vh;
+}
+
+.admin-loader {
+    width: 48px;
+    height: 48px;
+    border: 4px solid var(--primary-faint);
+    border-top: 4px solid var(--primary-color);
+    border-radius: 50%;
+    animation: admin-spin 1s linear infinite;
+    margin-bottom: 1.5rem;
+}
+
+/* Shared small controls used across admin pages */
+:where(.admin-body) .icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+    border: 1px solid var(--border-subtle);
+    background: var(--bg-primary);
+    border-radius: 10px;
+    cursor: pointer;
+    color: var(--text-muted);
+    transition: var(--transition-fast);
+}
+
+:where(.admin-body) .icon-btn:hover:not(:disabled) {
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+:where(.admin-body) .icon-btn.adjust { color: var(--warning-color); }
+:where(.admin-body) .icon-btn.adjust:hover:not(:disabled) { border-color: var(--warning-color); background: #fffbeb; color: var(--warning-color); }
+:where(.admin-body) .icon-btn.pass { color: var(--secondary-color); }
+:where(.admin-body) .icon-btn.pass:hover:not(:disabled) { border-color: var(--secondary-color); background: var(--secondary-light); color: var(--secondary-color); }
+:where(.admin-body) .icon-btn.delete:hover:not(:disabled) { color: var(--error-color); border-color: var(--error-color); background: var(--error-subtle); }
+
+:where(.admin-body, .admin-modal-overlay) .primary-btn {
+    padding: 12px 20px;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+:where(.admin-body, .admin-modal-overlay) .primary-btn:hover {
+    opacity: 0.9;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+:where(.admin-body, .admin-modal-overlay) .admin-select {
+    cursor: pointer;
+}
+
+:where(.admin-body) .text-muted {
+    color: var(--text-muted);
+}
+
+:where(.admin-body) .font-mono {
+    font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+}

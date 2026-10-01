@@ -184,7 +184,7 @@
 .admin-form select:focus, 
 .admin-form textarea:focus {
     border-color: var(--primary-color);
-    background: white;
+    background: var(--bg-primary);
 }
 
 .admin-form input.readonly {

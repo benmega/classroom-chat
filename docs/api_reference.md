@@ -1,6 +1,10 @@
 # API Reference - Classroom Chat
 
-A high-level catalog of the backend's blueprints and endpoints. All are registered in `backend/application/routes/__init__.py`. This is not exhaustive line-by-line — for the full, current list, run the app and browse Swagger UI at `/api/docs` (spec: `/static/swagger.json`).
+A high-level catalog of the backend's blueprints and endpoints. All are registered in `backend/application/routes/__init__.py`. This is the single API catalog for the backend (it replaces the former `API.md`). It is not exhaustive line-by-line — for the full, current list, run the app and browse Swagger UI at `/api/docs` (spec: `/static/swagger.json`), or print every registered route from `backend/`:
+
+```bash
+python -c "from application import create_app; app = create_app(); [print(r.rule, sorted(r.methods)) for r in sorted(app.url_map.iter_rules(), key=lambda r: r.rule)]"
+```
 
 ## 1. Authentication & Session (`/user`)
 - **`POST /user/login`**: Authenticates a user and starts a session. Returns user data and any awarded daily currency.
@@ -31,7 +35,7 @@ All admin routes require `admin_required` (session user with `is_admin=True`).
 - **`GET /message/api/feed`**: Chat feed for the current user's conversation(s).
 - **`GET /message/api/me/context`**: Current user's messaging context (conversation membership, unread state, etc.).
 - **`DELETE /message/delete_message/<id>`**: Deletes a message (author/admin only).
-- **WebSocket (`socket.io`)**, handlers in `backend/application/socket_events.py`: real-time message broadcast, typing indicators, presence.
+- **WebSocket (`socket.io`)**, handlers in `backend/application/socket_events.py`: real-time message broadcast and presence. Sending a message is **not** an HTTP route: the client emits the `send_message` event and the server emits `message_received` to the target rooms. Other server events: `user_status_change`, `classroom_enrolled`, `activity_resolved`, `achievement_unlocked`, `message_deleted`, `sandbox_status_changed`. There is no `typing` event.
 
 ## 4. Ducks, Trading & Shop
 - **`GET /duck_trade/`, `POST /duck_trade/submit_trade`**: Peer-to-peer currency trade requests.
@@ -42,6 +46,7 @@ All admin routes require `admin_required` (session user with `is_admin=True`).
 - **`POST /api/classroom/join`, `GET /api/classroom/mine`**: Join-code based classroom enrollment; list the current user's classrooms.
 - **`/api/course-requests/*`**: Student requests to change course track, and admin review.
 - **`/api/project-templates`**: CRUD for reusable project templates (admin).
+- **`GET|POST /challenge/submit`**: Challenge claim (honor system by design; csrf-exempt, CORS for codecombat.com / ozaria.com).
 
 ## 6. User Content
 - **`GET /user/profile`, `GET /user/profile/<slug>`**: Own / public profile data.
@@ -49,7 +54,7 @@ All admin routes require `admin_required` (session user with `is_admin=True`).
 - **`POST /user/api/profile-picture`, `/api/project-image`, `/api/profile-wallpaper`**: Multipart image uploads (crop-modal driven).
 - **`GET /user/api/users/search`, `/get_users`, `/get_user_id`**: User lookup/search.
 - **`/notes/upload`, `/notes/view/<filename>`, `/notes/delete/<id>`**: Educational/admin note attachments.
-- **`/achievements/*` (session) and `/api/achievements/*` (JSON)**: Achievement listing, certificate submission and review, downloads.
+- **`/achievements/*` (session) and `/api/achievements/*` (JSON)**: Achievement listing, certificate submission and review, downloads. The React app uses `/api/achievements/*`.
 - **`POST /ai/get_ai_response`**: AI teacher chat responses (OpenAI-backed, toggleable via admin config).
 - **`POST /upload/upload_file`, `GET /upload/uploads/<filename>`**: Generic file upload/serving.
 
@@ -60,8 +65,9 @@ All admin routes require `admin_required` (session user with `is_admin=True`).
 - **`POST /contact-teacher`**: Send a message to the teacher/admin.
 
 ## 8. Webhooks & Server Info
-- **`POST /webhooks/youtube`, `POST /webhooks/transcribe`**: External integrations (e.g. Lambda transcriber in `infrastructure/lambda_transcriber/`).
+- **`POST /api/webhooks/youtube`, `POST /api/webhooks/transcribe`**: External integrations (e.g. Lambda transcriber in `infrastructure/lambda_transcriber/`).
 - **`GET /server/ip`, `GET /server/health`**: Health check (used by `deploy.sh`'s post-deploy check) and IP info.
+- **`GET /`, `GET /<path>`**: SPA catch-all in `general_routes.py`; returns the React `index.html` via `application/utilities/spa.py` (production: `frontend/dist`). In development the React app runs on the Vite dev server, which proxies API paths to Flask.
 
 ---
 
@@ -82,5 +88,5 @@ A handful of legacy/session-rendered routes (e.g. some `/achievements` and `/use
 ## 10. Access Control
 - **`login_required`**: Requires a valid session cookie (`application/decorators/login_required.py`).
 - **`admin_required`**: Requires the authenticated user to have `is_admin=True` (`application/decorators/admin_required.py`).
-- **CSRF**: Enforced by `flask-wtf`; the frontend reads the `csrf_token_v2` cookie and sends it back as a header on mutating requests.
+- **CSRF**: Enforced by `flask-wtf` in production (disabled in the Development and Testing configs); the frontend reads the `csrf_token_v2` cookie and sends it back as a header on mutating requests. Routes marked `csrf.exempt` (for example `POST /challenge/submit`) skip it.
 - **Ownership checks**: Applied in-route for user-specific content (projects, notes, messages).

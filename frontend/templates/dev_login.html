@@ -162,16 +162,16 @@
 
     <script>
         // Extract role and message from server-side context
-        const role = "{{ role }}";
-        const error = "{{ error }}";
-        const redirectUrl = "{{ redirect_url }}";
+        const role = {{ role|tojson }};
+        const error = {{ error|tojson }};
+        const redirectUrl = {{ redirect_url|tojson }};
 
         const statusText = document.getElementById('statusText');
         const loader = document.getElementById('loader');
         const errorCard = document.getElementById('errorCard');
         const errorMessage = document.getElementById('errorMessage');
 
-        if (error && error !== 'None' && error !== '') {
+        if (error) {
             statusText.style.display = 'none';
             loader.style.display = 'none';
             errorCard.style.display = 'block';

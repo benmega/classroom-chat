@@ -94,20 +94,6 @@ def app(test_app):
     return test_app
 
 
-@pytest.fixture(scope="session", autouse=True)
-def create_dummy_license():
-    license_dir = os.path.join(os.getcwd(), "license")
-    os.makedirs(license_dir, exist_ok=True)
-    license_path = os.path.join(license_dir, "license.lic")
-
-    # Only create if it doesn't exist
-    if not os.path.exists(license_path):
-        with open(license_path, "w") as f:
-            f.write("DUMMY_LICENSE_FOR_TESTING")
-
-    yield
-
-
 @pytest.fixture(scope="session")
 def live_server(test_app):  # <--- CHANGED: Request 'test_app' explicitly
     """

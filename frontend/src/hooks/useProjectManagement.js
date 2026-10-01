@@ -13,6 +13,7 @@ export const useProjectManagement = () => {
     const [searchParams] = useSearchParams();
     const studentIdParam = searchParams.get('student_id');
     const { user: currentUser } = useAuthStore();
+    const isAdmin = currentUser?.role === 'admin';
     
     const [projectData, setProjectData] = useState({
         name: '',
@@ -48,7 +49,7 @@ export const useProjectManagement = () => {
             setIsLoading(true);
             try {
                 const [studentRes, projectRes, templatesRes] = await Promise.all([
-                    currentUser?.role === 'admin' ? client.get('/user/project/new') : Promise.resolve(null),
+                    isAdmin ? client.get('/user/project/new') : Promise.resolve(null),
                     projectId ? client.get(`/user/project/edit/${projectId}`) : Promise.resolve(null),
                     client.get('/api/project-templates')
                 ]);
@@ -101,7 +102,7 @@ export const useProjectManagement = () => {
         };
 
         fetchData();
-    }, [projectId, currentUser]);
+    }, [projectId, isAdmin]);
 
     const adjustTextareaHeight = (target) => {
         if (!target) return;

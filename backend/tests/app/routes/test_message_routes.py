@@ -131,3 +131,12 @@ def test_delete_message(client, init_db, sample_user):
 
     resp = client.delete("/message/delete_message/99999")
     assert resp.status_code == 404
+
+
+def test_http_send_message_route_removed(client, init_db, sample_user):
+    """Chat is Socket.IO only; the legacy HTTP send route no longer exists."""
+    with client.session_transaction() as sess:
+        sess["user"] = sample_user.id
+
+    response = client.post("/message/send_message", data={"message": "Hello!"})
+    assert response.status_code in (404, 405)

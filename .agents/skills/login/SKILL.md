@@ -58,7 +58,7 @@ After the `/dev-login` request succeeds, navigate to `http://localhost:5173/` an
 
 Use this **only** when the task explicitly asks you to test login or signup behaviour.
 
-1. Refer to the `Login Automation` skill in `c:\Users\Ben\AntiGravity\classroom-chat\.agents\skills\login_automation\SKILL.md` for credentials.
+1. Refer to the `Login Automation` skill in `../login_automation/SKILL.md` for credentials.
 2. Use the `browser_subagent` to navigate to `http://localhost:5173/login`.
 3. Fill in the username and password as specified in the skill.
 4. Click the submit button (`#login-submit-btn`).

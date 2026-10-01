@@ -67,19 +67,6 @@ def create_app(config_class=None):
     app = Flask(__name__, template_folder=template_folder, static_folder=static_folder)
     app.config.from_object(config_class)
 
-    # In production, TEMPLATE_FOLDER points to the built frontend/dist.
-    # We add frontend/templates as a fallback so Flask-Admin templates are still found.
-    from jinja2 import ChoiceLoader, FileSystemLoader
-
-    app.jinja_loader = ChoiceLoader(
-        [
-            app.jinja_loader,
-            FileSystemLoader(
-                os.path.join(app.config.get("BASE_DIR", ""), "frontend", "templates")
-            ),
-        ]
-    )
-
     cors_origins = getattr(
         config_class,
         "CORS_ORIGINS",

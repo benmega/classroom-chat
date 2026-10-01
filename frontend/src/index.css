@@ -307,7 +307,7 @@ select:focus {
   outline: none; /* Custom ring via box-shadow below */
   border-color: var(--primary-accessible);
   box-shadow: var(--focus-ring);
-  background: white;
+  background: var(--bg-primary);
 }
 
 input::placeholder, 

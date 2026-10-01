@@ -28,6 +28,7 @@ import toast from 'react-hot-toast';
 import { getApiUrl } from '../../utils/apiUrl';
 import { showConfirm } from '../../utils/confirm';
 import { formatStaticUrl } from '../../utils/formatters';
+import { safeUrl } from '../../utils/safeUrl';
 import './ToReview.css';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
 import Skeleton from '../../components/common/Skeleton';
@@ -389,6 +390,11 @@ const ToReview = () => {
 
     const renderProjectCard = (p) => {
         const isExpanded = !!expandedCodeSnippets[p.id];
+        // Student-supplied links: only http(s) URLs (or a site-relative video path) become hrefs.
+        const linkHref = safeUrl(p.link);
+        const githubHref = safeUrl(p.github_link);
+        const videoHref = safeUrl(p.video_url)
+            || (p.video_url?.startsWith('/') && !p.video_url.startsWith('//') ? p.video_url : null);
         return (
             <div className="review-card project-review-card" key={p.key}>
                 <div className="review-card-header">
@@ -448,18 +454,18 @@ const ToReview = () => {
                     </div>
 
                     <div className="project-links">
-                        {p.link && (
-                            <a href={p.link} target="_blank" rel="noopener noreferrer" className="project-link-btn">
+                        {linkHref && (
+                            <a href={linkHref} target="_blank" rel="noopener noreferrer" className="project-link-btn">
                                 <ExternalLink size={14} /> Live Project
                             </a>
                         )}
-                        {p.github_link && (
-                            <a href={p.github_link} target="_blank" rel="noopener noreferrer" className="project-link-btn">
+                        {githubHref && (
+                            <a href={githubHref} target="_blank" rel="noopener noreferrer" className="project-link-btn">
                                 <ExternalLink size={14} /> GitHub Repo
                             </a>
                         )}
-                        {p.video_url && (
-                            <a href={p.video_url} target="_blank" rel="noopener noreferrer" className="project-link-btn video">
+                        {videoHref && (
+                            <a href={videoHref} target="_blank" rel="noopener noreferrer" className="project-link-btn video">
                                 <ExternalLink size={14} /> Watch Recording
                             </a>
                         )}
@@ -637,8 +643,8 @@ const ToReview = () => {
                             </div>
                         )}
 
-                        {c.url && (
-                            <a href={c.url} target="_blank" rel="noopener noreferrer" className="original-cert-link">
+                        {safeUrl(c.url) && (
+                            <a href={safeUrl(c.url)} target="_blank" rel="noopener noreferrer" className="original-cert-link">
                                 <ExternalLink size={14} /> Original Certificate Link
                             </a>
                         )}

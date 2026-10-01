@@ -75,7 +75,7 @@ def index():
         return jsonify(
             {"message": "Duck trade endpoint. Use /submit_trade POST for actions."}
         )
-    return redirect("/trade")
+    return redirect("/bit-shift")
 
 
 @duck_trade.route("/submit_trade", methods=["POST"])
@@ -96,7 +96,7 @@ def submit_trade():
                 400,
             )
         flash(error_msg, "danger")
-        return redirect("/trade")
+        return redirect("/bit-shift")
 
     try:
         userid = session.get("user")
@@ -105,7 +105,7 @@ def submit_trade():
             if is_ajax:
                 return jsonify({"status": "error", "message": msg}), 403
             flash(msg, "warning")
-            return redirect("/trade")
+            return redirect("/bit-shift")
 
         from application import User
 
@@ -127,7 +127,7 @@ def submit_trade():
             if is_ajax:
                 return jsonify({"status": "error", "message": msg}), 400
             flash(msg, "warning")
-            return redirect("/trade")
+            return redirect("/bit-shift")
 
         if is_ajax and request.is_json:
             data = request.get_json()
@@ -184,7 +184,7 @@ def submit_trade():
             return jsonify({"status": "success", "message": msg, "new_awards": awards_payload})
 
         flash(msg, "success")
-        return redirect("/trade")
+        return redirect("/bit-shift")
 
     except Exception:
         db.session.rollback()
@@ -198,4 +198,4 @@ def submit_trade():
 def bit_shift():
     if request.is_json or request.accept_mimetypes.accept_json:
         return jsonify({"message": "Bit Shift interface has migrated to React."})
-    return redirect("/trade")
+    return redirect("/bit-shift")

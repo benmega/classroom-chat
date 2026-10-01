@@ -112,4 +112,23 @@
     --transition-fast: 120ms ease;
     --transition-smooth: 200ms ease;
     --transition-bounce: 200ms ease;
+
+    /* admin tokens */
+    --primary-faint: rgba(14, 178, 187, 0.15); /* faint tint of --primary-color (loader track etc.) */
+
+    /* page tokens */
+    /* Tokens that page/component CSS referenced but nothing defined (iss_560). */
+    --primary-color-dark: var(--primary-dark);
+    --primary-alpha: rgba(14, 178, 187, 0.2); /* faint border tint of --primary-color */
+    --highlight-hover: var(--primary-color);   /* AI avatar background, chat link underline on hover */
+    --shadow-glow-primary: var(--shadow-glow);
+
+    /* z-index scale (iss_561/iss_604). Higher value = closer to the viewer.
+       Modals must sit above the header and its dropdowns/sidebars. */
+    --z-header: 1000;
+    --z-dropdown: 1001;   /* dropdowns, mobile overlay */
+    --z-sidebar: 1002;    /* mobile slide-in sidebar */
+    --z-modal: 2000;      /* modal overlays (the shared Modal.css overlay stays above toasts at 10000) */
+    --z-toast: 9999;      /* toasts (react-hot-toast default) */
+    --z-tutorial: 10000;  /* onboarding tutorial overlay */
 }

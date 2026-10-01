@@ -133,7 +133,7 @@
 }
 
 .auth-input:focus {
-    background: white !important;
+    background: var(--bg-primary) !important;
     border-color: var(--primary-color) !important;
     box-shadow: var(--shadow-glow);
 }

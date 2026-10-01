@@ -1,7 +1,8 @@
 from functools import wraps
 
 from application.models.user import User
-from flask import jsonify, render_template, request, session
+from application.utilities.spa import serve_spa_index
+from flask import jsonify, request, session
 
 
 def admin_only(f):
@@ -20,7 +21,7 @@ def admin_only(f):
         if not user_id:
             if is_api:
                 return jsonify({"error": "Authentication required"}), 401
-            return render_template("index.html")
+            return serve_spa_index()
 
         from application.extensions import db
 
@@ -28,7 +29,7 @@ def admin_only(f):
         if not user or user.role != 'admin':
             if is_api:
                 return jsonify({"error": "Admin access required"}), 403
-            return render_template("index.html")
+            return serve_spa_index()
 
         return f(*args, **kwargs)
 

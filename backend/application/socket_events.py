@@ -117,8 +117,11 @@ def handle_send_message(data):
     if getattr(user, "role", None) == "parent":
         return {"success": False, "error": "Forbidden: Parents cannot send chat messages"}
 
+    if not isinstance(data, dict):
+        return {"success": False, "error": "Invalid message payload"}
+
     content = data.get("content")
-    if not content or len(content) > 4000:
+    if not isinstance(content, str) or not content.strip() or len(content) > 4000:
         return {"success": False, "error": "Invalid message length"}
 
     # Parse targeting parameters from frontend

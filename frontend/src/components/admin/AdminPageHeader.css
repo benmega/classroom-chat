@@ -21,7 +21,7 @@
     align-items: center;
     gap: 6px;
     padding: 8px 16px;
-    background: white;
+    background: var(--bg-primary);
     border: 1px solid var(--border-subtle);
     border-radius: 10px;
     color: var(--text-muted);

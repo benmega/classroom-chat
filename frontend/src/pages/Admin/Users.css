@@ -1,10 +1,5 @@
 .admin-users-page {
-    animation: fadeIn 0.4s ease-out;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    animation: admin-fadeIn 0.4s ease-out;
 }
 
 /* Standardized Header handled by AdminPageHeader.css */
@@ -32,7 +27,7 @@
 .search-bar input {
     width: 100%;
     padding: 12px 12px 12px 42px;
-    background: white;
+    background: var(--bg-primary);
     border: 1px solid var(--border-subtle);
     border-radius: 12px;
     font-size: 0.95rem;
@@ -66,15 +61,15 @@
 }
 
 /* Stats Row */
-.users-stats-row {
+:where(.admin-users-page) .users-stats-row {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 1rem;
     margin-bottom: 1rem;
 }
 
-.users-stats-row .stat-mini-card {
-    background: white;
+:where(.admin-users-page) .users-stats-row .stat-mini-card {
+    background: var(--bg-primary);
     padding: 0.75rem;
     border-radius: 16px;
     border: 1px solid var(--border-subtle);
@@ -84,7 +79,7 @@
     justify-content: space-between;
 }
 
-.users-stats-row .stat-mini-card .label {
+:where(.admin-users-page) .users-stats-row .stat-mini-card .label {
     font-size: 0.75rem;
     text-transform: uppercase;
     letter-spacing: 0.05em;
@@ -92,14 +87,14 @@
     font-weight: 700;
 }
 
-.users-stats-row .stat-mini-card .value {
+:where(.admin-users-page) .users-stats-row .stat-mini-card .value {
     font-size: 1.25rem;
     font-weight: 800;
     color: var(--slate-800);
 }
 
 /* Table Card */
-.users-table-container {
+:where(.admin-users-page) .users-table-container {
     padding: 0;
     overflow: visible !important;
 }
@@ -110,7 +105,7 @@
     -webkit-overflow-scrolling: touch;
 }
 
-.users-table {
+:where(.admin-users-page) .users-table {
     width: 100%;
     border-collapse: collapse;
 }
@@ -120,7 +115,7 @@
     overflow: visible !important;
 }
 
-.users-table th {
+:where(.admin-users-page) .users-table th {
     background: var(--bg-secondary);
     text-align: left;
     padding: 12px 16px;
@@ -130,34 +125,34 @@
     border-bottom: 1px solid var(--border-subtle);
 }
 
-.users-table td {
+:where(.admin-users-page) .users-table td {
     padding: 8px 12px;
     border-bottom: 1px solid var(--bg-tertiary);
 }
 
-.users-table tr:last-child td {
+:where(.admin-users-page) .users-table tr:last-child td {
     border-bottom: none;
 }
 
-.users-table tr:hover {
+:where(.admin-users-page) .users-table tr:hover {
     background: var(--bg-secondary);
 }
 
-.user-profile-cell {
+:where(.admin-users-page) .user-profile-cell {
     display: flex;
     align-items: center;
     gap: 12px;
 }
 
-.user-profile-cell .avatar {
-    width: 36px !important;
-    height: 36px !important;
+:where(.admin-users-page) .user-profile-cell .avatar {
+    width: 36px;
+    height: 36px;
     border-radius: 10px;
     object-fit: cover;
     flex-shrink: 0;
 }
 
-.user-profile-cell .name {
+:where(.admin-users-page) .user-profile-cell .name {
     font-weight: 700;
     color: var(--slate-800);
     font-size: 0.95rem;
@@ -167,7 +162,7 @@
     max-width: 140px;
 }
 
-.user-profile-cell .handle {
+:where(.admin-users-page) .user-profile-cell .handle {
     font-size: 0.8rem;
     color: var(--text-muted);
     white-space: nowrap;
@@ -176,7 +171,7 @@
     max-width: 140px;
 }
 
-.user-role-badge {
+:where(.admin-users-page) .user-role-badge {
     padding: 4px 10px;
     border-radius: 8px;
     font-size: 0.75rem;
@@ -189,17 +184,17 @@
     box-shadow: var(--shadow-sm);
 }
 
-.user-role-badge.student { background: linear-gradient(135deg, #eff6ff, #dbeafe); color: var(--primary-accessible); border: 1px solid #bfdbfe; }
-.user-role-badge.admin { background: linear-gradient(135deg, var(--error-subtle), var(--error-subtle)); color: var(--error-color); border: 1px solid var(--error-light); }
-.user-role-badge.parent { background: linear-gradient(135deg, #f5f3ff, #ede9fe); color: #6d28d9; border: 1px solid #ddd6fe; }
+:where(.admin-users-page) .user-role-badge.student { background: linear-gradient(135deg, #eff6ff, #dbeafe); color: var(--primary-accessible); border: 1px solid #bfdbfe; }
+:where(.admin-users-page) .user-role-badge.admin { background: linear-gradient(135deg, var(--error-subtle), var(--error-subtle)); color: var(--error-color); border: 1px solid var(--error-light); }
+:where(.admin-users-page) .user-role-badge.parent { background: linear-gradient(135deg, #f5f3ff, #ede9fe); color: #6d28d9; border: 1px solid #ddd6fe; }
 
-.economy-info .duck-count {
+:where(.admin-users-page) .economy-info .duck-count {
     font-weight: 700;
     color: var(--warning-color);
     font-size: 0.95rem;
 }
 
-.economy-info .level-info {
+:where(.admin-users-page) .economy-info .level-info {
     font-size: 0.8rem;
     color: var(--text-muted);
 }
@@ -233,7 +228,7 @@
     height: 32px;
     border-radius: 8px;
     border: 1px solid var(--border-subtle);
-    background: white;
+    background: var(--bg-primary);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -260,19 +255,6 @@
 }
 
 /* Modal Enhancements */
-.submit-btn {
-    padding: 14px;
-    background: var(--primary-color);
-    color: white;
-    border: none;
-    border-radius: 12px;
-    font-weight: 700;
-    cursor: pointer;
-}
-
-.submit-btn.danger { background: var(--error-color); }
-
-.submit-btn:hover { opacity: 0.9; }
 
 .form-group input.readonly {
     background: var(--bg-tertiary);
@@ -400,7 +382,7 @@
     align-items: center;
     gap: 8px;
     padding: 8px 16px;
-    background: white;
+    background: var(--bg-primary);
     border: 1px solid var(--border-subtle);
     border-radius: 8px;
     color: var(--text-secondary);
@@ -673,4 +655,16 @@
         width: 100%;
         justify-content: center;
     }
+}
+
+/* --- Classes used by Users.jsx that previously had no CSS (iss_517) --- */
+:where(.admin-users-page) .type-badge {
+    display: inline-flex;
+    align-items: center;
+}
+
+:where(.admin-users-page) .pagination-pages {
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }

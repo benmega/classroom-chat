@@ -25,6 +25,7 @@ import { Line, Pie } from 'react-chartjs-2';
 import { useNavigate } from 'react-router-dom';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
+import '../../components/admin/AdminShared.css';
 import './AdminDashboard.css';
 import Skeleton from '../../components/common/Skeleton';
 
@@ -211,12 +212,12 @@ const AdminDashboard = () => {
                             
                             <button 
                                 onClick={handleToggleMessages}
-                                className={`action-item ${config?.message_sending_enabled ? 'action-item-success' : 'action-item-error'}`}
+                                className={`action-item ${(config?.message_sending_enabled ?? true) ? 'action-item-success' : 'action-item-error'}`}
                             >
-                                <div className={`icon ${config?.message_sending_enabled ? 'icon-success' : 'icon-error'}`}><MessageSquare size={20} /></div>
+                                <div className={`icon ${(config?.message_sending_enabled ?? true) ? 'icon-success' : 'icon-error'}`}><MessageSquare size={20} /></div>
                                 <div>
                                     <span className="action-text-main d-block">Public Messaging</span>
-                                    <small className="action-text-sub">{config?.message_sending_enabled ? 'Enabled' : 'Disabled'}</small>
+                                    <small className="action-text-sub">{(config?.message_sending_enabled ?? true) ? 'Enabled' : 'Disabled'}</small>
                                 </div>
                             </button>
 

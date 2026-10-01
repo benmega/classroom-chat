@@ -69,9 +69,18 @@ describe('useAuthStore', () => {
     const result = await useAuthStore.getState().login('wrong', 'wrong');
     
     expect(result.success).toBe(false);
-    expect(result.error).toBeDefined();
+    expect(result.error).toBe('Invalid username or password.');
     const state = useAuthStore.getState();
     expect(state.isAuthenticated).toBe(false);
+  });
+
+  it('login tolerates a plain string error body', async () => {
+    server.use(
+      http.post('*/user/login', () => new HttpResponse('Invalid username or password.', { status: 401 }))
+    );
+    const result = await useAuthStore.getState().login('wrong', 'wrong');
+    expect(result.success).toBe(false);
+    expect(result.error).toBe('Invalid username or password.');
   });
 
   it('loginParentCognito updates state on success', async () => {

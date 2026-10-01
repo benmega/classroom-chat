@@ -12,15 +12,16 @@ The project includes a suite of "Workflows" (located in `.agents/workflows/`) th
 Current workflow files live in `.agents/workflows/`:
 
 ### 2.1 Issue Resolution (`solve-issue.md`, `solve-all-issues.md`)
-A systematic process for handling bugs or feature requests documented in the `issues/` directory.
-- **Path**: Locate issue -> Analyze code -> implement Fix -> Verify -> Archive.
-- `solve-all-issues.md` drives this loop across every pending issue rather than a single one.
+A systematic process for handling bugs or feature requests tracked as GitHub Issues (`gh issue list`, `gh issue view`).
+- **Path**: Locate issue -> Analyze code -> implement Fix -> Verify -> Close (`Fixes #N` in the commit/PR closes the issue on merge).
+- `solve-all-issues.md` drives this loop across every open issue rather than a single one.
 - **Benefit**: Ensures every bug fix follows a standardized verification path.
+- See [issue_resolver_guide.md](issue_resolver_guide.md) for labels and commands. Do not apply the `ai-plan` or `ai-draft` labels; they trigger automated AI workflows.
 
 ### 2.2 UI Quality Assurance (`test-ui-desktop.md` & `test-ui-mobile.md`)
 Automated procedures for auditing the user interface at desktop and mobile breakpoints.
 - **Coverage**: Navigation, responsive breakpoints, hover states, and premium visual elements.
-- **Output**: Generates standardized Jira-style markdown issue reports (via `extract-issues.md`) for UI inconsistencies.
+- **Output**: Files GitHub Issues (`gh issue create`, via `extract-issues.md`) for UI inconsistencies.
 
 ### 2.3 Code Health (`cleanup-code.md`, `cleanup-comments.md`, `remove-dead-code.md`)
 Workflows dedicated to reducing technical debt.

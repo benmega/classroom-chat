@@ -24,17 +24,22 @@ The app uses the **Application Factory** pattern (`create_app`) located in `appl
 
 ### Modular Routing (Blueprints)
 API endpoints are structured into logical modules using **Flask Blueprints**. This ensures a separation of concerns and maintainable code:
-- **`user`**: Profile management, auth status, and user-specific actions.
-- **`admin`**: System management, duck balance adjustments, and advanced controls.
-- **`message`**: Conversation creation and message history.
-- **`ai`**: Integration with AI teaching logic and settings.
-- **`achievements`**: Badge and milestone tracking.
-- **`upload`**: Handling of profile pictures and static assets.
+- **`user`** (`/user`): Profile management, auth status, and user-specific actions.
+- **`admin`** (`/api/admin`): System management, duck balance adjustments, CRUD, documents and advanced controls.
+- **`message`** (`/message`): Conversation creation and message history (messages are sent via Socket.IO, not HTTP).
+- **`ai`** (`/ai`): Integration with AI teaching logic and settings (the AI teacher is currently off).
+- **`achievements`** (`/achievements`) and **`achievements_api`** (`/api/achievements`): Badges, milestones and certificates.
+- **`upload`** (`/upload`) and **`notes`** (`/notes`): File uploads and notes.
 - **`cognito`** / **`dev_login`**: External Authentication flows (AWS Cognito SSO) and development-only auto-login.
 - **`shop`** / **`duck_trade`**: Economy systems for virtual storefront purchases and peer trading.
 - **`parent`**: APIs handling the parent portal data and parent-student linkages.
 - **`api_webhooks`**: Ingress for external systems (e.g., Stripe, analytics).
+- **`challenge`** (`/challenge`): Challenge submission (honor system, CORS for codecombat.com / ozaria.com).
+- **`session`** (`/api/session`): Presence heartbeat.
+- **`server_info`** (`/server`): Health check and server IP.
+- **`general`**: Serves the React `index.html` and Vite public assets.
 
+See [api_reference.md](api_reference.md) for the endpoint catalog.
 
 ### Proxy & WSGI Support
 - **ProxyFix**: Configured to trust headers when running behind a reverse proxy (like Nginx).
@@ -53,7 +58,7 @@ The system uses **SQLite** via the SQLAlchemy ORM in both development and produc
 
 ### Initialization Strategy
 - **`setup_models()`**: A centralized helper to register all models during app startup.
-- **Automatic Schema Creation**: The app factory checks for the existence of core tables and initializes the database (`db.create_all()`) and a default configuration if missing.
+- **Schema creation**: Outside production the app factory runs `db.create_all()` and seeds defaults. In production `create_all` is skipped; the schema is managed by Alembic (`flask db upgrade`, run by `deploy.sh`). See [database_schema.md](database_schema.md).
 
 ---
 
@@ -64,8 +69,8 @@ The backend implements a multi-layered **Authentication** system:
 - **Custom Sessions**: For standard users, the app relies on cookie-based Flask sessions.
 - **`require_login` Decorator**: A central security decorator (`application/decorators/login_required.py`) used to protect API routes. It returns a `401 Unauthorized` response for JSON requests or redirects to the login page for browser requests if no session is found.
 - **`before_request` Hook**: Automatically loads the logged-in user from the session into Flask's `g` object for easy access across the application.
-- **CSRF Protection**: Enabled via `Flask-WTF` to prevent cross-site request forgery.
-- **Secure Sessions**: Permanent sessions with a strictly defined timeout (**10 hours**) and secure cookie settings to minimize disruptive logouts during class.
+- **CSRF Protection**: Enabled via `Flask-WTF` in production; disabled in the Development and Testing configs. Some routes are explicitly `csrf.exempt` (for example login, signup and `/challenge/submit`).
+- **Secure Sessions**: Permanent sessions with a strictly defined timeout (**10 hours**) and cookie settings configured in `config.py` to minimize disruptive logouts during class.
 
 ### Rate Limiting
 **Flask-Limiter** is used to prevent abuse and brute-force attacks:
@@ -80,6 +85,8 @@ The backend implements a multi-layered **Authentication** system:
 Real-time features are powered by **Socket.io**.
 - **`socket_events.py`**: Contains centralized event handlers for chat messages, user status updates, and notification broadcasts.
 - **Async Mode**: Configured to use `gevent` (`SOCKETIO_ASYNC_MODE` in `application/config.py`); `main.py` applies `gevent.monkey.patch_all()` before the app is imported so the standard library plays nicely with it.
+- **Sending messages**: The client emits `send_message`; the handler validates and saves the message and emits `message_received` to the target rooms. There is no HTTP send route.
+- **Other events**: `user_status_change`, `classroom_enrolled`, `activity_resolved`, `achievement_unlocked`, `message_deleted`, `sandbox_status_changed`.
 - **Room Management**: Conversations are isolated into specific socket rooms to ensure broadcast privacy.
 
 ---
@@ -109,11 +116,15 @@ backend/
 │   ├── models/        # SQLAlchemy model definitions
 │   ├── routes/        # API Blueprints (routes/admin/ holds the admin sub-modules)
 │   ├── services/      # Business logic and external wrappers
-│   ├── utilities/     # Internal helpers and formatting
+│   ├── utilities/     # Internal helpers, formatting, spa.py (serves the React index.html)
+│   ├── config.py      # Environment configs
+│   ├── constants.py
 │   ├── socket_events.py  # Socket.IO event handlers
+│   ├── tasks.py       # Scheduled jobs
 │   └── extensions.py  # Shared Flask extension instances
 ├── instance/           # SQLite DB files, logs (gitignored)
 ├── migrations/          # Alembic migrations (Flask-Migrate)
+├── tools/              # One-off maintenance scripts
 ├── tests/               # Pytest suite
 ├── main.py             # Entry point for the Flask application
 └── requirements.txt   # Backend dependencies

@@ -32,7 +32,7 @@ def toggle_ai():
 def toggle_message_sending():
     config = Configuration.query.first()
     if config is None:
-        config = Configuration(message_sending_enabled=False)
+        config = Configuration(message_sending_enabled=True)
         db.session.add(config)
 
     config.message_sending_enabled = not config.message_sending_enabled
