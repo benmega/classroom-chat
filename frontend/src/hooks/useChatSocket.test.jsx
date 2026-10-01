@@ -1,6 +1,6 @@
 import { renderHook, act } from '@testing-library/react';
 import { vi } from 'vitest';
-import useChatSocket from './useChatSocket';
+import useChatSocket, { getSocket, resetSocket } from './useChatSocket';
 import * as socketIoClient from 'socket.io-client';
 
 vi.mock('socket.io-client', () => {
@@ -8,6 +8,9 @@ vi.mock('socket.io-client', () => {
     on: vi.fn(),
     off: vi.fn(),
     emit: vi.fn(),
+    connect: vi.fn(),
+    disconnect: vi.fn(),
+    removeAllListeners: vi.fn(),
     connected: true
   };
   return {
@@ -122,5 +125,98 @@ describe('useChatSocket Hook', () => {
 
     handlers['activity_resolved']({ id: 7 });
     expect(onActivityResolved).toHaveBeenCalledWith({ id: 7 });
+  });
+
+  describe('resetSocket', () => {
+    it('disconnects the socket, drops its listeners and forces a fresh one next time', () => {
+      renderHook(() => useChatSocket());
+      const mockSocket = socketIoClient.io();
+      socketIoClient.io.mockClear();
+
+      resetSocket();
+
+      expect(mockSocket.removeAllListeners).toHaveBeenCalledTimes(1);
+      expect(mockSocket.disconnect).toHaveBeenCalledTimes(1);
+      expect(socketIoClient.io).not.toHaveBeenCalled();
+      getSocket();
+      expect(socketIoClient.io).toHaveBeenCalledTimes(1);
+      getSocket();
+      expect(socketIoClient.io).toHaveBeenCalledTimes(1);
+    });
+
+    it('does nothing when there is no socket', () => {
+      resetSocket();
+      const mockSocket = socketIoClient.io();
+      mockSocket.disconnect.mockClear();
+
+      resetSocket();
+
+      expect(mockSocket.disconnect).not.toHaveBeenCalled();
+    });
+
+    it('does not open a new socket when a still-mounted hook re-renders', () => {
+      const { rerender, result } = renderHook(() => useChatSocket());
+      resetSocket();
+      socketIoClient.io.mockClear();
+
+      rerender();
+
+      expect(socketIoClient.io).not.toHaveBeenCalled();
+      expect(result.current.socket).toBeNull();
+    });
+  });
+
+  it('opens the socket with the session cookie and no CSRF header', () => {
+    resetSocket();
+    socketIoClient.io.mockClear();
+
+    getSocket();
+
+    const [, options] = socketIoClient.io.mock.calls[0];
+    expect(options.withCredentials).toBe(true);
+    expect(options).not.toHaveProperty('extraHeaders');
+  });
+
+  describe('server-initiated disconnect', () => {
+    const disconnectHandler = () => {
+      const call = socketIoClient.io().on.mock.calls.find(([event]) => event === 'disconnect');
+      return call[1];
+    };
+
+    beforeEach(() => vi.useFakeTimers());
+    afterEach(() => vi.useRealTimers());
+
+    it('reconnects after a pause, because socket.io does not retry on its own', () => {
+      const { result } = renderHook(() => useChatSocket());
+      const mockSocket = socketIoClient.io();
+
+      act(() => disconnectHandler()('io server disconnect'));
+
+      expect(result.current.isConnected).toBe(false);
+      expect(mockSocket.connect).not.toHaveBeenCalled();
+      act(() => vi.advanceTimersByTime(1000));
+      expect(mockSocket.connect).toHaveBeenCalledTimes(1);
+    });
+
+    it('leaves reconnecting to socket.io for every other reason', () => {
+      renderHook(() => useChatSocket());
+      const mockSocket = socketIoClient.io();
+
+      act(() => disconnectHandler()('transport close'));
+      act(() => vi.advanceTimersByTime(5000));
+
+      expect(mockSocket.connect).not.toHaveBeenCalled();
+    });
+
+    it('does not reconnect a socket that was reset in the meantime', () => {
+      renderHook(() => useChatSocket());
+      const mockSocket = socketIoClient.io();
+
+      act(() => disconnectHandler()('io server disconnect'));
+      resetSocket();
+      act(() => vi.advanceTimersByTime(5000));
+
+      expect(mockSocket.connect).not.toHaveBeenCalled();
+    });
   });
 });

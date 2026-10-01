@@ -1,7 +1,11 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import useAuthStore from './useAuthStore';
+import client from '../api/client';
+import { resetSocket } from '../hooks/useChatSocket';
 import { server } from '../test/mocks/server';
 import { http, HttpResponse } from 'msw';
+
+vi.mock('../hooks/useChatSocket', () => ({ resetSocket: vi.fn() }));
 
 describe('useAuthStore', () => {
   beforeEach(() => {
@@ -12,6 +16,8 @@ describe('useAuthStore', () => {
       isLoading: true,
       isServerOffline: false,
     });
+    // Resetting an authenticated store counts as a cleared session; start each test from zero
+    resetSocket.mockClear();
   });
 
   it('initializes with default state', () => {
@@ -114,6 +120,55 @@ describe('useAuthStore', () => {
     const state = useAuthStore.getState();
     expect(state.isAuthenticated).toBe(false);
     expect(state.user).toBeNull();
+  });
+
+  it('logout discards the chat socket so the next login gets a fresh one', async () => {
+    useAuthStore.setState({ isAuthenticated: true, user: { id: 1 } });
+
+    await useAuthStore.getState().logout();
+
+    expect(resetSocket).toHaveBeenCalled();
+  });
+
+  it('logout discards the chat socket and clears state even when the request fails', async () => {
+    server.use(http.get('*/user/logout', () => HttpResponse.error()));
+    useAuthStore.setState({ isAuthenticated: true, user: { id: 1 } });
+
+    await expect(useAuthStore.getState().logout()).rejects.toThrow();
+
+    expect(resetSocket).toHaveBeenCalled();
+    expect(useAuthStore.getState().isAuthenticated).toBe(false);
+  });
+
+  it('discards the chat socket when an auth check finds the session gone', async () => {
+    server.use(
+      http.get('*/user/api/auth/status', () => HttpResponse.json({ data: { logged_in: false } }))
+    );
+    useAuthStore.setState({ isAuthenticated: true, user: { id: 1 } });
+    expect(resetSocket).not.toHaveBeenCalled();
+
+    await useAuthStore.getState().checkAuth();
+
+    expect(resetSocket).toHaveBeenCalledTimes(1);
+  });
+
+  it('discards the chat socket when the 401 interceptor clears the session', async () => {
+    server.use(http.get('*/some/protected', () => new HttpResponse(null, { status: 401 })));
+    useAuthStore.setState({ isAuthenticated: true, user: { id: 1 } });
+
+    await expect(client.get('/some/protected')).rejects.toThrow();
+
+    await vi.waitFor(() => expect(resetSocket).toHaveBeenCalledTimes(1));
+    expect(useAuthStore.getState().isAuthenticated).toBe(false);
+  });
+
+  it('keeps the chat socket while the session lives', async () => {
+    useAuthStore.setState({ isAuthenticated: true, user: { id: 1 } });
+    useAuthStore.setState({ unreadCount: 3 });
+    await useAuthStore.getState().checkAuth(true);
+
+    expect(useAuthStore.getState().isAuthenticated).toBe(true);
+    expect(resetSocket).not.toHaveBeenCalled();
   });
 
   it('checkAuth sets isServerOffline to true on 502 Bad Gateway', async () => {

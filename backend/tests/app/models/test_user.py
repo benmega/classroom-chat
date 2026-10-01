@@ -610,3 +610,53 @@ def test_end_session_closes_every_open_session(sample_user):
 
 def test_end_session_without_open_session_returns_none(sample_user):
     assert SessionLog.end_session(sample_user.id) is None
+
+
+def test_touch_refreshes_last_seen_of_the_open_session(sample_user):
+    log = SessionLog.start_session(sample_user.id)
+    log.last_seen = datetime.utcnow() - timedelta(minutes=20)
+    db.session.commit()
+    now = datetime.utcnow()
+
+    touched = SessionLog.touch(sample_user.id, now=now)
+
+    assert touched.id == log.id
+    assert db.session.get(SessionLog, log.id).last_seen == now
+    assert db.session.get(SessionLog, log.id).end_time is None
+
+
+def test_touch_without_open_session_does_nothing(sample_user):
+    SessionLog.start_session(sample_user.id)
+    SessionLog.end_session(sample_user.id)
+
+    assert SessionLog.touch(sample_user.id) is None
+    assert SessionLog.query.filter_by(user_id=sample_user.id).count() == 1
+
+
+def test_touch_only_bumps_the_newest_open_session(sample_user):
+    now = datetime.utcnow()
+    orphan_seen = now - timedelta(hours=4)
+    orphan = SessionLog(
+        user_id=sample_user.id, start_time=now - timedelta(hours=5), last_seen=orphan_seen
+    )
+    current = SessionLog(
+        user_id=sample_user.id,
+        start_time=now - timedelta(minutes=30),
+        last_seen=now - timedelta(minutes=20),
+    )
+    db.session.add_all([orphan, current])
+    db.session.commit()
+
+    SessionLog.touch(sample_user.id, now=now)
+
+    assert db.session.get(SessionLog, current.id).last_seen == now
+    assert db.session.get(SessionLog, orphan.id).last_seen == orphan_seen
+
+
+def test_touch_can_leave_the_commit_to_the_caller(sample_user):
+    log = SessionLog.start_session(sample_user.id)
+    old = log.last_seen
+
+    with patch.object(db.session, "commit") as commit:
+        SessionLog.touch(sample_user.id, now=old + timedelta(minutes=1), commit=False)
+        commit.assert_not_called()

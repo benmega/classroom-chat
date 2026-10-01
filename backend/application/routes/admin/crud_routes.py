@@ -2,6 +2,8 @@ from datetime import date, datetime, timezone
 
 from application.decorators.admin_required import admin_only
 from application.extensions import db
+from application.models.classroom import Classroom
+from application.models.user import User
 from flask import Blueprint, current_app, jsonify, request
 from sqlalchemy import Enum, String, false, inspect, or_
 from sqlalchemy.exc import DataError, DBAPIError, IntegrityError, SQLAlchemyError, StatementError
@@ -337,6 +339,12 @@ def create(resource):
     db.session.add(item)
     _commit()
 
+    if isinstance(item, Classroom):
+        # Connected admins read every classroom: put their sockets in the new room
+        from application.socket_events import sync_admin_rooms
+
+        sync_admin_rooms()
+
     return jsonify({"data": model_to_dict(item)})
 
 
@@ -363,6 +371,13 @@ def update(resource, id):
         setattr(item, key, value)
 
     _commit()
+
+    if isinstance(item, User) and "role" in values:
+        # Promoted/demoted: their open sockets gain or lose the admin rooms
+        from application.socket_events import sync_user_rooms
+
+        sync_user_rooms(item.id)
+
     return jsonify({"data": model_to_dict(item)})
 
 
@@ -379,4 +394,10 @@ def delete(resource, id):
 
     db.session.delete(item)
     _commit()
+
+    if isinstance(item, Classroom):
+        from application.socket_events import close_classroom_room
+
+        close_classroom_room(id)
+
     return jsonify({"data": {"id": id}})

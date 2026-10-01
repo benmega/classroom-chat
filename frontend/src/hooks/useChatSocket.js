@@ -14,20 +14,14 @@ const SOCKET_URL = getSocketUrl();
 // Singleton socket instance
 let _socket = null;
 
-const getCookie = (name) => {
-  const value = `; ${document.cookie}`;
-  const parts = value.split(`; ${name}=`);
-  if (parts.length === 2) return parts.pop().split(';').shift();
-  return '';
-};
+// socket.io does not retry a disconnect the server initiated, so we do it after this pause. The
+// pause lets a logout's cleared cookie reach the browser first, or the retry would reuse the old session.
+const SERVER_DISCONNECT_RETRY_MS = 1000;
 
 export const getSocket = () => {
   if (!_socket) {
     _socket = io(SOCKET_URL, {
       withCredentials: true,
-      extraHeaders: {
-        'X-CSRFToken': getCookie('csrf_token_v2')
-      },
       // Polling first then upgrade is more reliable through proxies.
       transports: ['polling', 'websocket'],
       reconnection: true,
@@ -38,6 +32,19 @@ export const getSocket = () => {
     });
   }
   return _socket;
+};
+
+/**
+ * Disconnect and discard the singleton socket. The server ties a socket to the session and rooms
+ * it had at handshake time, so it must not outlive its login: call this when the session ends and
+ * the next getSocket() handshakes again with the cookies of whoever is signed in then.
+ * Listeners are removed too, so nothing still holding the old socket keeps receiving events.
+ */
+export const resetSocket = () => {
+  if (!_socket) return;
+  _socket.removeAllListeners();
+  _socket.disconnect();
+  _socket = null;
 };
 
 /**
@@ -70,7 +77,16 @@ const useChatSocket = (onMessageReceived, onClassroomEnrolled, lifecycleCallback
     socketRef.current = socket;
 
     const onConnect = () => setIsConnected(true);
-    const onDisconnect = () => setIsConnected(false);
+    const onDisconnect = (reason) => {
+      setIsConnected(false);
+      if (reason === 'io server disconnect') {
+        // The server dropped us (e.g. another login of this user signed out): reconnect with the
+        // cookies as they are now, which the server rejects if the session is gone.
+        setTimeout(() => {
+          if (_socket === socket) socket.connect();
+        }, SERVER_DISCONNECT_RETRY_MS);
+      }
+    };
     const onConnectError = () => setIsConnected(false);
 
     const onMessage = (data) => messageCallbackRef.current?.(data);
@@ -143,7 +159,8 @@ const useChatSocket = (onMessageReceived, onClassroomEnrolled, lifecycleCallback
   return {
     isConnected,
     sendMessage,
-    socket: getSocket(),
+    // Not getSocket(): re-rendering after resetSocket() must not open a socket for a session that just ended
+    socket: _socket,
   };
 };
 

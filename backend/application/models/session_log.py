@@ -61,6 +61,26 @@ class SessionLog(db.Model):
         return log
 
     @classmethod
+    def touch(cls, user_id, now=None, commit=True):
+        """Record activity: bump last_seen on the user's current open session.
+
+        Used for presence signals that do not come from the HTTP heartbeat
+        (socket connects and messages). Returns the session, or None when the
+        user has none open. Only the newest open session is touched: older
+        ones are orphans and must keep their last_seen (see end_session).
+        """
+        log = (
+            cls.query.filter_by(user_id=user_id, end_time=None)
+            .order_by(cls.start_time.desc(), cls.id.desc())
+            .first()
+        )
+        if log:
+            log.last_seen = now or datetime.utcnow()
+            if commit:
+                db.session.commit()
+        return log
+
+    @classmethod
     def end_session(cls, user_id, commit=True):
         """Close every open session of the user; return the most recent one.
 

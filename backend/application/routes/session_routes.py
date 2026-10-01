@@ -84,5 +84,9 @@ def heartbeat():
             )
         except Exception:
             pass
+    else:
+        # The cleanup job closed the session while the user was away: a
+        # heartbeat means they are back, so show them online again
+        User.set_online(user_id, True)
 
     return jsonify(success=True, timestamp=datetime.utcnow().isoformat())

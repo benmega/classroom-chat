@@ -584,6 +584,7 @@ def update_user_details(user_id):
     if not user_obj:
         return {"error": "User not found"}, 404
 
+    previous_role = user_obj.role
     data = request.get_json() or request.form.to_dict()
 
     # Username
@@ -676,6 +677,11 @@ def update_user_details(user_id):
 
     try:
         db.session.commit()
+        if user_obj.role != previous_role:
+            # Promoted/demoted: their open sockets gain or lose the admin rooms
+            from application.socket_events import sync_user_rooms
+
+            sync_user_rooms(user_obj.id)
         d = user_obj.to_dict()
         for field in ["password_hash", "salt", "ip_address"]:
             d.pop(field, None)
@@ -852,6 +858,10 @@ def delete_classroom(classroom_id):
 
     db.session.delete(classroom)
     db.session.commit()
+
+    from application.socket_events import close_classroom_room
+
+    close_classroom_room(classroom_id)
     return jsonify({"success": True, "message": "Classroom deleted successfully"})
 
 
@@ -877,6 +887,10 @@ def enroll_student_in_classroom(classroom_id):
         classroom.users.append(student)
         db.session.commit()
 
+        from application.socket_events import emit_classroom_enrolled
+
+        emit_classroom_enrolled(student.id, classroom.to_dict())
+
     return jsonify({"success": True, "message": "Student enrolled successfully"})
 
 
@@ -901,6 +915,10 @@ def unenroll_student_from_classroom(classroom_id):
     if student in classroom.users:
         classroom.users.remove(student)
         db.session.commit()
+
+        from application.socket_events import sync_user_rooms
+
+        sync_user_rooms(student.id)
 
     return jsonify({"success": True, "message": "Student unenrolled successfully"})
 

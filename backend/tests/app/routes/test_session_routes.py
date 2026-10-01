@@ -1,7 +1,11 @@
+from datetime import datetime, timedelta
 from unittest.mock import MagicMock, patch
 
 import pytest
+from application.extensions import db
 from application.models.session_log import SessionLog
+from application.models.user import User
+from application.utilities.session_cleanup import close_stale_sessions
 
 
 @pytest.fixture
@@ -51,3 +55,41 @@ def test_heartbeat_cloudwatch_error(mock_cw_client, logged_in_client_with_sessio
     resp = logged_in_client_with_session.post("/api/session/heartbeat")
     assert resp.status_code == 200
     assert resp.json["success"] is True
+
+
+@patch("application.routes.session_routes.get_cloudwatch_client")
+def test_heartbeat_refreshes_last_seen_of_the_open_session(mock_cw_client, logged_in_client_with_session, sample_user):
+    log = SessionLog.query.filter_by(user_id=sample_user.id, end_time=None).one()
+    log.last_seen = datetime.utcnow() - timedelta(minutes=5)
+    db.session.commit()
+
+    resp = logged_in_client_with_session.post("/api/session/heartbeat")
+
+    assert resp.status_code == 200
+    db.session.expire_all()
+    assert SessionLog.query.filter_by(user_id=sample_user.id, end_time=None).one().last_seen > (
+        datetime.utcnow() - timedelta(minutes=1)
+    )
+
+
+@patch("application.routes.session_routes.get_cloudwatch_client")
+def test_heartbeat_reopens_session_the_cleanup_job_closed(mock_cw_client, client, sample_user):
+    with client.session_transaction() as sess:
+        sess["user"] = sample_user.id
+    # The user was away long enough for close_stale_sessions to end their session
+    log = SessionLog.start_session(sample_user.id)
+    sample_user.is_online = True
+    log.last_seen = datetime.utcnow() - timedelta(minutes=30)
+    db.session.commit()
+    assert close_stale_sessions(timeout_minutes=10) == 1
+    assert db.session.get(User, sample_user.id).is_online is False
+
+    resp = client.post("/api/session/heartbeat")
+
+    assert resp.status_code == 200
+    assert resp.json["success"] is True
+    db.session.expire_all()
+    assert db.session.get(User, sample_user.id).is_online is True
+    open_logs = SessionLog.query.filter_by(user_id=sample_user.id, end_time=None).all()
+    assert len(open_logs) == 1
+    assert open_logs[0].id != log.id

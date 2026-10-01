@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import client from '../api/client';
+import { resetSocket } from '../hooks/useChatSocket';
 
 // ---------------------------------------------------------------------------
 // Private helpers — centralise hamburger_override localStorage access so the
@@ -116,6 +117,8 @@ const useAuthStore = create((set) => ({
     try {
       await client.get('/user/logout');
     } finally {
+      // The next login must handshake a fresh socket, not reuse this user's
+      resetSocket();
       set({ user: null, isAuthenticated: false, hamburgerProgress: 0 });
     }
   },
@@ -129,5 +132,10 @@ const useAuthStore = create((set) => ({
     }
   },
 }));
+
+// However the session ends (logout, a 401, a failed auth check), the chat socket it opened must go too
+useAuthStore.subscribe((state, prev) => {
+  if (prev.isAuthenticated && !state.isAuthenticated) resetSocket();
+});
 
 export default useAuthStore;

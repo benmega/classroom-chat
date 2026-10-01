@@ -9,7 +9,7 @@ python -c "from application import create_app; app = create_app(); [print(r.rule
 ## 1. Authentication & Session (`/user`)
 - **`POST /user/login`**: Authenticates a user and starts a session. Returns user data and any awarded daily currency.
 - **`POST /user/signup`**: New user registration (requires admin approval by default).
-- **`GET /user/logout`**: Terminates the current session.
+- **`GET /user/logout`**: Terminates the current session and disconnects the user's open sockets (a client of the same user on another device simply reconnects).
 - **`GET /user/api/auth/status`**: Returns the current authenticated user's profile and roles.
 - **`POST /user/api/auth/tutorial/complete`**: Marks the onboarding tutorial as complete for the current user.
 - **`POST /api/session/heartbeat`**: Keeps the session/presence alive (used for online-status tracking).

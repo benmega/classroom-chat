@@ -85,7 +85,8 @@ Real-time features are powered by **Socket.io**.
 - **Async Mode**: Configured to use `gevent` (`SOCKETIO_ASYNC_MODE` in `application/config.py`); `main.py` applies `gevent.monkey.patch_all()` before the app is imported so the standard library plays nicely with it.
 - **Sending messages**: The client emits `send_message`; the handler validates and saves the message and emits `message_received` to the target rooms. There is no HTTP send route.
 - **Other events**: `user_status_change`, `classroom_enrolled`, `activity_resolved`, `achievement_unlocked`, `message_deleted`, `sandbox_status_changed`.
-- **Room Management**: Conversations are isolated into specific socket rooms to ensure broadcast privacy.
+- **Room Management**: Conversations are isolated into specific socket rooms to ensure broadcast privacy. A connection joins `user:<id>`, `classroom:global` and the room of each classroom the user is enrolled in; admins join the room of every classroom plus `admin`. Rooms are fixed at connect time, so enrolling or unenrolling a user, deleting a classroom and changing a user's role re-sync the rooms of their open sockets (`sync_user_rooms`) without a reconnect. Logout disconnects the user's sockets, so one never outlives the login it was opened for.
+- **Presence**: `_active_sessions` (per process) tracks open sockets per user. Socket connects and messages refresh the open `SessionLog.last_seen`, and the stale-session cleanup leaves users with an open socket alone, since pages without the HTTP heartbeat (admin pages) keep their socket open.
 
 ---
 

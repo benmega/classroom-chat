@@ -162,6 +162,11 @@ def tutorial_complete():
 def logout():
     user_id = session.get("user")
     if user_id:
+        # An open socket keeps the rooms and session it had at handshake time,
+        # so it must not outlive this login (a different user may sign in next)
+        from application.socket_events import disconnect_user_sockets
+
+        disconnect_user_sockets(user_id)
         User.set_online(user_id, False)
 
     session.pop("user", None)

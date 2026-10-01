@@ -73,6 +73,11 @@ def join_classroom():
     db.session.commit()
     ClassroomJoinAttempt.log_attempt(user_id, code, success=True)
 
+    # Put the student's open sockets in the classroom's room right away
+    from application.socket_events import emit_classroom_enrolled
+
+    emit_classroom_enrolled(user.id, classroom.to_dict())
+
     return {
         "message": "Successfully joined classroom.",
         "classroom": {
