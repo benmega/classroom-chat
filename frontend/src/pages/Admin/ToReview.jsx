@@ -34,6 +34,9 @@ import AdminPageHeader from '../../components/admin/AdminPageHeader';
 import Skeleton from '../../components/common/Skeleton';
 import SmartImage from '../../components/common/SmartImage';
 
+// submitted_at is nullable on certificates; new Date(null/undefined) would show a bogus date.
+const formatSubmittedAt = (value) => (value ? new Date(value).toLocaleString() : 'Unknown date');
+
 const ToReview = () => {
     // Data lists
     const [projects, setProjects] = useState([]);
@@ -75,7 +78,7 @@ const ToReview = () => {
                 classroomsRes,
                 coursesRes
             ] = await Promise.all([
-                client.get('/api/achievements/admin/certificates').catch(() => ({ data: { certificates: [] } })),
+                client.get('/api/achievements/admin/certificates').catch(() => ({ data: { data: { certificates: [] } } })),
                 client.get('/api/admin/manage-projects?filter=pending').catch(() => ({ data: { data: { projects: [] } } })),
                 client.get('/api/admin/pending_users').catch(() => ({ data: { data: { users: [] } } })),
                 client.get('/api/admin/pending_trades').catch(() => ({ data: { data: { trades: [] } } })),
@@ -84,7 +87,7 @@ const ToReview = () => {
                 client.get('/api/admin/crud/course').catch(() => ({ data: { data: [] } }))
             ]);
 
-            setCertificates(certsRes.data.certificates || certsRes.data.data?.certificates || []);
+            setCertificates(certsRes.data.data?.certificates || []);
             setProjects(projectsRes.data.data?.projects || []);
             setPendingUsers(usersRes.data.data?.users || []);
             setTrades(tradesRes.data.data?.trades || []);
@@ -585,7 +588,7 @@ const ToReview = () => {
                         <Award size={14} /> Certificate
                     </div>
                     <span className="card-time">
-                        <Clock size={12} /> {new Date(c.submitted_at).toLocaleString()}
+                        <Clock size={12} /> {formatSubmittedAt(c.submitted_at)}
                     </span>
                 </div>
 

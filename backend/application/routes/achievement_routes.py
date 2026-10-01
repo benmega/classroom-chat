@@ -36,6 +36,24 @@ CERT_URL_REGEX = r"https://(?:www\.)?(?:codecombat|ozaria)\.com/certificates/[\w
 
 ALLOWED_EXTENSIONS = {"pdf"}
 
+# The slug names the badge file on disk, so keep it to a path-safe charset.
+SLUG_RE = re.compile(r"[a-z0-9-]+")
+SLUG_ERROR = "Slug may only contain lowercase letters, digits and hyphens."
+REWARD_ERROR = "Reward must be a whole number of at least 1."
+
+
+def _parse_reward(value):
+    """Return ``value`` as a whole number >= 1, or None if it is not one."""
+    if isinstance(value, bool):
+        return None
+    try:
+        if isinstance(value, float) and not value.is_integer():
+            return None
+        reward = int(value)
+    except (TypeError, ValueError):
+        return None
+    return reward if reward >= 1 else None
+
 
 # API for the achievements data
 @achievements.route("/all")
@@ -92,7 +110,7 @@ def add_achievement():
     slug = data.get("slug")
     description = data.get("description")
     achievement_type = data.get("type", "ducks")
-    reward = int(data.get("reward") or 1)
+    raw_reward = data.get("reward")
     requirement_value = data.get("requirement_value") or None
     source = data.get("source")
 
@@ -101,6 +119,13 @@ def add_achievement():
             jsonify({"status": "error", "message": "Name and Slug are required."}),
             400,
         )
+
+    if not isinstance(slug, str) or not SLUG_RE.fullmatch(slug):
+        return jsonify({"status": "error", "message": SLUG_ERROR}), 400
+
+    reward = 1 if raw_reward in (None, "") else _parse_reward(raw_reward)
+    if reward is None:
+        return jsonify({"status": "error", "message": REWARD_ERROR}), 400
 
     # Check for existing slug
     existing = Achievement.query.filter_by(slug=slug).first()
@@ -122,7 +147,7 @@ def add_achievement():
         if not allowed_file(badge_file.filename, allowed_badge_ext):
             return (
                 jsonify({"status": "error", "message": "Invalid badge file type."}),
-                200,
+                400,
             )
 
         from flask import current_app
@@ -202,6 +227,16 @@ def edit_achievement(id):
     requirement_value = data.get("requirement_value")
     source = data.get("source")
 
+    # Validate before touching ``ach``. An unchanged slug is accepted as-is so an
+    # achievement created before slugs were restricted can still be edited.
+    if slug and slug != ach.slug and not SLUG_RE.fullmatch(slug):
+        return jsonify({"status": "error", "message": SLUG_ERROR}), 400
+    new_reward = None
+    if reward:
+        new_reward = _parse_reward(reward)
+        if new_reward is None:
+            return jsonify({"status": "error", "message": REWARD_ERROR}), 400
+
     if name: ach.name = name
     if slug:
         existing = Achievement.query.filter(Achievement.slug == slug, Achievement.id != id).first()
@@ -210,7 +245,7 @@ def edit_achievement(id):
         ach.slug = slug
     if description is not None: ach.description = description
     if achievement_type: ach.type = achievement_type
-    if reward: ach.reward = int(reward)
+    if new_reward is not None: ach.reward = new_reward
     if requirement_value is not None: ach.requirement_value = requirement_value
     if source is not None: ach.source = source
 
@@ -226,6 +261,10 @@ def edit_achievement(id):
 
         ext = (badge_file.filename or "").rsplit(".", 1)[1].lower()
         filename = f"{ach.slug}.{ext}"
+        # An unchanged slug is not re-validated above, so a stored slug that predates
+        # SLUG_RE must still never be able to write outside the badge directory.
+        if os.path.basename(filename) != filename:
+            return jsonify({"status": "error", "message": SLUG_ERROR}), 400
         filepath = os.path.join(badge_dir, filename)
         badge_file.save(filepath)
 

@@ -81,6 +81,40 @@ describe('Users Page', () => {
     expect(screen.getByText(/No users found matching your search/i)).toBeInTheDocument();
   });
 
+  describe('pagination footer', () => {
+    const footerText = () => document.querySelector('.pagination-info').textContent.replace(/\s+/g, ' ').trim();
+
+    it('shows "0 of 0" rather than "1-0 of 0" when the list is empty', () => {
+      renderComponent();
+      expect(footerText()).toBe('Showing 0 of 0 users');
+      expect(screen.queryByText(/1-0/)).not.toBeInTheDocument();
+    });
+
+    it('shows the range for a partial first page', () => {
+      useUsersManagement.mockReturnValue({ ...defaultMockState, totalUsers: 3, page: 1 });
+      renderComponent();
+      expect(footerText()).toBe('Showing 1-3 of 3 users');
+    });
+
+    it('shows 50 rows per page for a middle page', () => {
+      useUsersManagement.mockReturnValue({ ...defaultMockState, totalUsers: 120, totalPages: 3, page: 2 });
+      renderComponent();
+      expect(footerText()).toBe('Showing 51-100 of 120 users');
+    });
+
+    it('caps the range at the total on the last page', () => {
+      useUsersManagement.mockReturnValue({ ...defaultMockState, totalUsers: 120, totalPages: 3, page: 3 });
+      renderComponent();
+      expect(footerText()).toBe('Showing 101-120 of 120 users');
+    });
+
+    it('never shows an inverted range if the page is past the end', () => {
+      useUsersManagement.mockReturnValue({ ...defaultMockState, totalUsers: 100, totalPages: 2, page: 3 });
+      renderComponent();
+      expect(footerText()).toBe('Showing 100-100 of 100 users');
+    });
+  });
+
   it('renders user list correctly', () => {
     useUsersManagement.mockReturnValue({
       ...defaultMockState,

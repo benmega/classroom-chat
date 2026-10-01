@@ -1,3 +1,5 @@
+import math
+
 from application.decorators.admin_required import admin_only
 from application.extensions import db
 from application.models.banned_words import BannedWords
@@ -5,6 +7,10 @@ from application.models.configuration import Configuration
 from flask import jsonify, request
 
 from ..admin_routes import admin_bp
+
+# Upper bound for the global duck multiplier; it scales challenge rewards, so it
+# must stay finite and non-negative (a negative value would deduct ducks).
+MAX_DUCK_MULTIPLIER = 100
 
 
 @admin_bp.route("/toggle-message-sending", methods=["POST"])
@@ -38,13 +44,25 @@ def update_duck_multiplier():
 
     try:
         new_multiplier = float(new_multiplier)
+        if not math.isfinite(new_multiplier) or not (
+            0 <= new_multiplier <= MAX_DUCK_MULTIPLIER
+        ):
+            return (
+                jsonify(
+                    {
+                        "success": False,
+                        "error": f"Multiplier must be between 0 and {MAX_DUCK_MULTIPLIER}",
+                    }
+                ),
+                400,
+            )
         config = Configuration.query.first()
         if config is None:
             return jsonify({"success": False, "error": "Configuration not found"}), 404
         config.duck_multiplier = new_multiplier
         db.session.commit()
         return jsonify({"success": True, "new_multiplier": new_multiplier})
-    except (ValueError, TypeError):
+    except (ValueError, TypeError, OverflowError):
         return jsonify({"success": False, "error": "Invalid multiplier value"}), 400
     except Exception:
         db.session.rollback()
@@ -54,7 +72,7 @@ def update_duck_multiplier():
 @admin_bp.route("/add-banned-word", methods=["POST"])
 @admin_only
 def add_banned_word():
-    word = request.form.get("word")
+    word = (request.form.get("word") or "").strip()
     reason = request.form.get("reason", None)
 
     if not word:

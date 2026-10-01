@@ -3,6 +3,8 @@ import client from '../api/client';
 import { showConfirm } from '../utils/confirm';
 import toast from 'react-hot-toast';
 
+export const USERS_PER_PAGE = 50;
+
 export const useUsersManagement = (role = '') => {
     const [users, setUsers] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -40,7 +42,7 @@ export const useUsersManagement = (role = '') => {
     const fetchUsers = useCallback(async (targetPage = page) => {
         setIsRefreshing(true);
         try {
-            let url = `/api/admin/users?page=${targetPage}&per_page=50`;
+            let url = `/api/admin/users?page=${targetPage}&per_page=${USERS_PER_PAGE}`;
             if (role) {
                 url += `&role=${role}`;
             }

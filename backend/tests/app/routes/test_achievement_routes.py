@@ -503,9 +503,258 @@ def test_add_achievement_invalid_badge_ext(mock_allowed, client, init_db, test_a
         },
         content_type="multipart/form-data",
     )
-    assert response.status_code == 200
+    assert response.status_code == 400
     assert response.json["status"] == "error"
     assert "Invalid badge file type" in response.json["message"]
+    assert Achievement.query.filter_by(slug="badge-ach-2").first() is None
+
+
+@pytest.mark.parametrize("filename", ["badge.gif", "badge.svg"])
+@patch("werkzeug.datastructures.FileStorage.save")
+@patch("application.routes.achievement_routes.subprocess.run")
+def test_add_achievement_rejects_gif_and_svg_badges(
+    mock_subprocess, mock_save, filename, client, init_db, test_admin
+):
+    with client.session_transaction() as sess:
+        sess["user"] = test_admin.id
+
+    response = client.post(
+        "/achievements/add",
+        data={
+            "name": "Bad Badge",
+            "slug": "bad-badge",
+            "type": "ducks",
+            "reward": 10,
+            "badge": (BytesIO(b"fake image"), filename),
+        },
+        content_type="multipart/form-data",
+    )
+
+    assert response.status_code == 400
+    assert response.json["status"] == "error"
+    assert "Invalid badge file type" in response.json["message"]
+    mock_save.assert_not_called()
+    mock_subprocess.assert_not_called()
+    assert Achievement.query.filter_by(slug="bad-badge").first() is None
+
+
+@pytest.mark.parametrize(
+    "slug",
+    ["Bad Slug", "../x", "a/b", "a\\b", "UPPER", "under_score", "dot.png", " lead"],
+)
+def test_add_achievement_rejects_unsafe_slug(client, init_db, test_admin, slug):
+    with client.session_transaction() as sess:
+        sess["user"] = test_admin.id
+
+    response = client.post(
+        "/achievements/add",
+        data={"name": "Unsafe", "slug": slug, "type": "ducks", "reward": 10},
+    )
+
+    assert response.status_code == 400
+    assert response.json["status"] == "error"
+    assert "Slug may only contain" in response.json["message"]
+    assert Achievement.query.filter_by(name="Unsafe").first() is None
+
+
+def test_add_achievement_rejects_non_string_json_slug(client, init_db, test_admin):
+    with client.session_transaction() as sess:
+        sess["user"] = test_admin.id
+
+    response = client.post(
+        "/achievements/add", json={"name": "Num", "slug": 123, "type": "ducks"}
+    )
+
+    assert response.status_code == 400
+    assert "Slug may only contain" in response.json["message"]
+
+
+@pytest.mark.parametrize("reward", ["abc", "1.5", "0", "-3", "1e3"])
+def test_add_achievement_rejects_invalid_reward(client, init_db, test_admin, reward):
+    with client.session_transaction() as sess:
+        sess["user"] = test_admin.id
+
+    response = client.post(
+        "/achievements/add",
+        data={"name": "Bad Reward", "slug": "bad-reward", "reward": reward},
+    )
+
+    assert response.status_code == 400
+    assert response.json["status"] == "error"
+    assert "whole number" in response.json["message"]
+    assert Achievement.query.filter_by(slug="bad-reward").first() is None
+
+
+@pytest.mark.parametrize("reward", [1.5, 0, True, "nan", [1]])
+def test_add_achievement_rejects_invalid_json_reward(
+    client, init_db, test_admin, reward
+):
+    with client.session_transaction() as sess:
+        sess["user"] = test_admin.id
+
+    response = client.post(
+        "/achievements/add",
+        json={"name": "Bad JSON Reward", "slug": "bad-json-reward", "reward": reward},
+    )
+
+    assert response.status_code == 400
+    assert "whole number" in response.json["message"]
+
+
+@pytest.mark.parametrize(
+    "form, expected",
+    [({}, 1), ({"reward": ""}, 1), ({"reward": " 7 "}, 7), ({"reward": "12"}, 12)],
+)
+def test_add_achievement_reward_defaults_and_parsing(
+    client, init_db, test_admin, form, expected
+):
+    with client.session_transaction() as sess:
+        sess["user"] = test_admin.id
+
+    response = client.post(
+        "/achievements/add", data={"name": "Rewarded", "slug": "rewarded", **form}
+    )
+
+    assert response.status_code == 200
+    assert Achievement.query.filter_by(slug="rewarded").one().reward == expected
+
+
+def _login_admin(client, admin):
+    with client.session_transaction() as sess:
+        sess["user"] = admin.id
+
+
+def test_edit_achievement_updates_fields(client, init_db, test_admin, test_achievement):
+    _login_admin(client, test_admin)
+
+    response = client.put(
+        f"/achievements/edit/{test_achievement.id}",
+        data={"name": "Renamed", "slug": "renamed-slug", "reward": "25"},
+    )
+
+    assert response.status_code == 200
+    ach = db.session.get(Achievement, test_achievement.id)
+    assert (ach.name, ach.slug, ach.reward) == ("Renamed", "renamed-slug", 25)
+
+
+@pytest.mark.parametrize("slug", ["Bad Slug", "../x", "a/b"])
+def test_edit_achievement_rejects_unsafe_slug(
+    client, init_db, test_admin, test_achievement, slug
+):
+    _login_admin(client, test_admin)
+    old_slug, old_name = test_achievement.slug, test_achievement.name
+
+    response = client.put(
+        f"/achievements/edit/{test_achievement.id}",
+        data={"name": "Changed", "slug": slug},
+    )
+
+    assert response.status_code == 400
+    assert "Slug may only contain" in response.json["message"]
+    db.session.expire_all()
+    ach = db.session.get(Achievement, test_achievement.id)
+    assert (ach.slug, ach.name) == (old_slug, old_name)
+
+
+def test_edit_achievement_accepts_unchanged_legacy_slug(
+    client, init_db, test_admin, test_achievement
+):
+    """An achievement created before slugs were restricted stays editable."""
+    test_achievement.slug = "Legacy_Slug"
+    db.session.commit()
+    _login_admin(client, test_admin)
+
+    response = client.put(
+        f"/achievements/edit/{test_achievement.id}",
+        data={"name": "Still Editable", "slug": "Legacy_Slug", "reward": "3"},
+    )
+
+    assert response.status_code == 200
+    ach = db.session.get(Achievement, test_achievement.id)
+    assert (ach.name, ach.slug, ach.reward) == ("Still Editable", "Legacy_Slug", 3)
+
+
+@patch("application.routes.achievement_routes.subprocess.run")
+@patch("werkzeug.datastructures.FileStorage.save")
+def test_edit_achievement_legacy_slug_still_gets_its_badge(
+    mock_save, mock_subprocess, client, init_db, test_admin, test_achievement
+):
+    """A path-safe slug that predates SLUG_RE can still have a badge uploaded."""
+    test_achievement.slug = "Legacy_Slug"
+    db.session.commit()
+    _login_admin(client, test_admin)
+
+    response = client.put(
+        f"/achievements/edit/{test_achievement.id}",
+        data={"slug": "Legacy_Slug", "badge": (BytesIO(b"fake"), "badge.png")},
+        content_type="multipart/form-data",
+    )
+
+    assert response.status_code == 200
+    mock_save.assert_called_once()
+    assert mock_save.call_args[0][0].endswith("Legacy_Slug.png")
+    mock_subprocess.assert_called_once()
+
+
+@pytest.mark.parametrize("stored_slug", ["../evil", "sub/dir"])
+@patch("application.routes.achievement_routes.subprocess.run")
+@patch("werkzeug.datastructures.FileStorage.save")
+def test_edit_achievement_never_writes_a_badge_outside_the_badge_dir(
+    mock_save, mock_subprocess, stored_slug, client, init_db, test_admin, test_achievement
+):
+    """A stored slug that is not path-safe (unchanged, so not re-validated) is refused for badges."""
+    test_achievement.slug = stored_slug
+    db.session.commit()
+    _login_admin(client, test_admin)
+
+    response = client.put(
+        f"/achievements/edit/{test_achievement.id}",
+        data={"slug": stored_slug, "badge": (BytesIO(b"fake"), "badge.png")},
+        content_type="multipart/form-data",
+    )
+
+    assert response.status_code == 400
+    assert "Slug may only contain" in response.json["message"]
+    mock_save.assert_not_called()
+    mock_subprocess.assert_not_called()
+
+
+@pytest.mark.parametrize("reward", ["abc", "1.5", "0", "-2"])
+def test_edit_achievement_rejects_invalid_reward(
+    client, init_db, test_admin, test_achievement, reward
+):
+    _login_admin(client, test_admin)
+
+    response = client.put(
+        f"/achievements/edit/{test_achievement.id}",
+        data={"name": "Changed", "reward": reward},
+    )
+
+    assert response.status_code == 400
+    assert "whole number" in response.json["message"]
+    db.session.expire_all()
+    ach = db.session.get(Achievement, test_achievement.id)
+    assert ach.reward == 10
+    assert ach.name != "Changed"
+
+
+@patch("application.routes.achievement_routes.subprocess.run")
+@patch("werkzeug.datastructures.FileStorage.save")
+def test_edit_achievement_invalid_badge_ext_is_400(
+    mock_save, mock_subprocess, client, init_db, test_admin, test_achievement
+):
+    _login_admin(client, test_admin)
+
+    response = client.put(
+        f"/achievements/edit/{test_achievement.id}",
+        data={"badge": (BytesIO(b"fake"), "badge.gif")},
+        content_type="multipart/form-data",
+    )
+
+    assert response.status_code == 400
+    assert "Invalid badge file type" in response.json["message"]
+    mock_save.assert_not_called()
+    mock_subprocess.assert_not_called()
 
 
 @patch("werkzeug.datastructures.FileStorage.save")

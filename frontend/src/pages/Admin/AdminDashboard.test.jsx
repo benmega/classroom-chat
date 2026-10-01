@@ -1,6 +1,8 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { BrowserRouter } from 'react-router-dom';
 import { renderWithProviders } from '../../test/test-utils';
+import { SidebarProvider } from '../../context/SidebarContext';
 import AdminDashboard from './AdminDashboard';
 import { useAdminDashboard } from '../../hooks/useAdminDashboard';
 import client from '../../api/client';
@@ -92,6 +94,7 @@ const defaultHookReturn = {
   setModalUser: vi.fn(),
   formLoading: false,
   formErrors: {},
+  pendingToggle: false,
   timeframe: 7,
   setTimeframe: vi.fn(),
   fetchDashboardData: vi.fn(),
@@ -125,6 +128,40 @@ describe('AdminDashboard', () => {
     expect(screen.getByText(/Error loading dashboard/i)).toBeInTheDocument();
   });
 
+  it('offers a Retry button on the error state that refetches the dashboard', () => {
+    useAdminDashboard.mockReturnValue({ ...defaultHookReturn, isLoading: false, dashboardData: null });
+    renderComponent();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
+
+    expect(defaultHookReturn.fetchDashboardData).toHaveBeenCalledTimes(1);
+    // Called without the click event so the hook falls back to the current timeframe.
+    expect(defaultHookReturn.fetchDashboardData).toHaveBeenCalledWith();
+  });
+
+  it('disables Retry while the retry request is running', () => {
+    useAdminDashboard.mockReturnValue({ ...defaultHookReturn, isLoading: false, isRefreshing: true, dashboardData: null });
+    renderComponent();
+
+    expect(screen.getByRole('button', { name: 'Retrying...' })).toBeDisabled();
+  });
+
+  it('says there are no users yet when the user list is empty', () => {
+    useAdminDashboard.mockReturnValue({
+      ...defaultHookReturn,
+      dashboardData: { ...mockDashboardData, all_users: [] },
+    });
+    renderComponent();
+
+    expect(screen.getByText('No users yet')).toBeInTheDocument();
+    expect(screen.getByText('0% of users are currently online')).toBeInTheDocument();
+  });
+
+  it('does not show the empty-users text when there are users', () => {
+    renderComponent();
+    expect(screen.queryByText('No users yet')).not.toBeInTheDocument();
+  });
+
   it('renders the dashboard header with title', () => {
     renderComponent();
     expect(screen.getByText('Dashboard')).toBeInTheDocument();
@@ -140,8 +177,19 @@ describe('AdminDashboard', () => {
   it('calls handleToggleMessages', () => {
     renderComponent();
     const msgBtn = screen.getByRole('button', { name: /Public Messaging/i });
+    expect(msgBtn).toBeEnabled();
     fireEvent.click(msgBtn);
     expect(defaultHookReturn.handleToggleMessages).toHaveBeenCalledTimes(1);
+  });
+
+  it('disables the Public Messaging toggle while a toggle request is pending', () => {
+    useAdminDashboard.mockReturnValue({ ...defaultHookReturn, pendingToggle: true });
+    renderComponent();
+
+    const msgBtn = screen.getByRole('button', { name: /Public Messaging/i });
+    expect(msgBtn).toBeDisabled();
+    fireEvent.click(msgBtn);
+    expect(defaultHookReturn.handleToggleMessages).not.toHaveBeenCalled();
   });
 
   it('opens bannedWord modal', () => {
@@ -151,12 +199,134 @@ describe('AdminDashboard', () => {
     expect(defaultHookReturn.setActiveModal).toHaveBeenCalledWith('bannedWord');
   });
 
-  it('calls handleUpdateMultiplier', () => {
-    renderComponent();
-    const input = screen.getByLabelText('Duck Multiplier');
-    fireEvent.change(input, { target: { value: '2.0' } });
-    fireEvent.blur(input);
-    expect(defaultHookReturn.handleUpdateMultiplier).toHaveBeenCalledWith('2.0');
+  describe('duck multiplier', () => {
+    const withMultiplier = (duck_multiplier) => useAdminDashboard.mockReturnValue({
+      ...defaultHookReturn,
+      dashboardData: { ...mockDashboardData, config: { ...mockDashboardData.config, duck_multiplier } },
+    });
+
+    it('calls handleUpdateMultiplier with a number when Save is clicked', () => {
+      renderComponent();
+      const input = screen.getByLabelText('Duck Multiplier');
+      const save = screen.getByRole('button', { name: 'Save' });
+      expect(save).toBeDisabled();
+
+      fireEvent.change(input, { target: { value: '2.5' } });
+      expect(save).toBeEnabled();
+      fireEvent.click(save);
+
+      expect(defaultHookReturn.handleUpdateMultiplier).toHaveBeenCalledTimes(1);
+      expect(defaultHookReturn.handleUpdateMultiplier).toHaveBeenCalledWith(2.5);
+    });
+
+    it('saves on Enter (form submit)', () => {
+      renderComponent();
+      const input = screen.getByLabelText('Duck Multiplier');
+      fireEvent.change(input, { target: { value: '3' } });
+
+      fireEvent.submit(input.closest('form'));
+
+      expect(defaultHookReturn.handleUpdateMultiplier).toHaveBeenCalledWith(3);
+    });
+
+    it('makes no request when the field is blurred without a change', () => {
+      renderComponent();
+      const input = screen.getByLabelText('Duck Multiplier');
+
+      fireEvent.focus(input);
+      fireEvent.blur(input);
+      fireEvent.submit(input.closest('form'));
+
+      expect(defaultHookReturn.handleUpdateMultiplier).not.toHaveBeenCalled();
+      expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled();
+    });
+
+    it('renders a stored multiplier of 0 as 0, not 1', () => {
+      withMultiplier(0);
+      renderComponent();
+
+      expect(screen.getByLabelText('Duck Multiplier')).toHaveValue(0);
+      expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled();
+    });
+
+    it('can save 0 as the multiplier', () => {
+      renderComponent();
+      const input = screen.getByLabelText('Duck Multiplier');
+      fireEvent.change(input, { target: { value: '0' } });
+
+      fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+      expect(defaultHookReturn.handleUpdateMultiplier).toHaveBeenCalledWith(0);
+    });
+
+    it('treats a missing stored multiplier as 1', () => {
+      useAdminDashboard.mockReturnValue({
+        ...defaultHookReturn,
+        dashboardData: { ...mockDashboardData, config: { message_sending_enabled: true } },
+      });
+      renderComponent();
+
+      expect(screen.getByLabelText('Duck Multiplier')).toHaveValue(1);
+    });
+
+    it('shows an inline message and makes no request for an empty value', () => {
+      renderComponent();
+      const input = screen.getByLabelText('Duck Multiplier');
+
+      fireEvent.change(input, { target: { value: '' } });
+
+      expect(screen.getByRole('alert')).toHaveTextContent('Enter a number.');
+      expect(input).toHaveAttribute('aria-invalid', 'true');
+      expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled();
+      fireEvent.submit(input.closest('form'));
+      fireEvent.blur(input);
+      expect(defaultHookReturn.handleUpdateMultiplier).not.toHaveBeenCalled();
+      expect(toast.error).not.toHaveBeenCalled();
+    });
+
+    it.each(['-1', '100.5', '1000'])('rejects the out-of-range value %s', (value) => {
+      renderComponent();
+      const input = screen.getByLabelText('Duck Multiplier');
+
+      fireEvent.change(input, { target: { value } });
+
+      expect(screen.getByRole('alert')).toHaveTextContent('Must be between 0 and 100.');
+      expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled();
+      fireEvent.submit(input.closest('form'));
+      expect(defaultHookReturn.handleUpdateMultiplier).not.toHaveBeenCalled();
+    });
+
+    it('accepts the upper bound and mirrors the range on the input', () => {
+      renderComponent();
+      const input = screen.getByLabelText('Duck Multiplier');
+      expect(input).toHaveAttribute('min', '0');
+      expect(input).toHaveAttribute('max', '100');
+      expect(input).toHaveAttribute('step', '0.1');
+
+      fireEvent.change(input, { target: { value: '100' } });
+
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Save' })).toBeEnabled();
+    });
+
+    it('re-syncs the field when the stored multiplier changes after a refetch', () => {
+      const Wrapper = ({ children }) => (
+        <BrowserRouter>
+          <SidebarProvider>{children}</SidebarProvider>
+        </BrowserRouter>
+      );
+      withMultiplier(1);
+      const { rerender } = render(<AdminDashboard />, { wrapper: Wrapper });
+      const input = screen.getByLabelText('Duck Multiplier');
+      fireEvent.change(input, { target: { value: '2.50' } });
+      expect(input).toHaveValue(2.5);
+
+      withMultiplier(2.5);
+      rerender(<AdminDashboard />);
+
+      expect(screen.getByLabelText('Duck Multiplier')).toHaveValue(2.5);
+      expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled();
+    });
   });
 
   it('calls handleExportTransactions on success', async () => {
@@ -191,6 +361,25 @@ describe('AdminDashboard', () => {
     const form = wordInput.closest('form');
     fireEvent.submit(form);
     expect(defaultHookReturn.handleAddBannedWord).toHaveBeenCalledWith('testword', '');
+    await waitFor(() => expect(defaultHookReturn.setActiveModal).toHaveBeenCalledWith(null));
+  });
+
+  it('keeps the banned word modal open and the text when adding fails', async () => {
+    const handleAddBannedWord = vi.fn().mockResolvedValue(false);
+    useAdminDashboard.mockReturnValue({
+      ...defaultHookReturn,
+      handleAddBannedWord,
+      activeModal: 'bannedWord',
+    });
+    renderComponent();
+    const wordInput = screen.getByPlaceholderText(/e.g. badword/i);
+    fireEvent.change(wordInput, { target: { value: 'dupe' } });
+
+    fireEvent.submit(wordInput.closest('form'));
+
+    await waitFor(() => expect(handleAddBannedWord).toHaveBeenCalledWith('dupe', ''));
+    expect(defaultHookReturn.setActiveModal).not.toHaveBeenCalled();
+    expect(screen.getByPlaceholderText(/e.g. badword/i)).toHaveValue('dupe');
   });
 
   it('handles timeframe select', () => {

@@ -85,6 +85,63 @@ describe('useAdminDashboard', () => {
 
         expect(client.post).toHaveBeenCalledWith('/api/admin/toggle-message-sending');
         expect(toast.error).toHaveBeenCalledWith('Failed to toggle messaging.');
+        expect(result.current.pendingToggle).toBe(false);
+    });
+
+    it('ignores a second toggle while the first request is still in flight', async () => {
+        client.get.mockResolvedValue({ data: { status: 'success', data: {} } });
+        let resolvePost;
+        client.post.mockImplementationOnce(() => new Promise((resolve) => { resolvePost = resolve; }));
+        const { result } = renderHook(() => useAdminDashboard());
+        await act(async () => {
+            await new Promise(resolve => setTimeout(resolve, 0));
+        });
+        expect(result.current.pendingToggle).toBe(false);
+
+        let first;
+        let second;
+        await act(async () => {
+            // Both calls see the same render, as a fast double click would.
+            first = result.current.handleToggleMessages();
+            second = result.current.handleToggleMessages();
+        });
+
+        expect(client.post).toHaveBeenCalledTimes(1);
+        expect(result.current.pendingToggle).toBe(true);
+
+        await act(async () => {
+            resolvePost({ data: { success: true } });
+            await Promise.all([first, second]);
+        });
+
+        expect(client.post).toHaveBeenCalledTimes(1);
+        expect(result.current.pendingToggle).toBe(false);
+        // The dashboard was refetched before the toggle was released.
+        expect(client.get).toHaveBeenCalledTimes(2);
+
+        // Once settled, the toggle works again.
+        client.post.mockResolvedValueOnce({ data: { success: true } });
+        await act(async () => {
+            await result.current.handleToggleMessages();
+        });
+        expect(client.post).toHaveBeenCalledTimes(2);
+    });
+
+    it('releases the toggle after a failed request so it can be retried', async () => {
+        client.get.mockResolvedValue({ data: { status: 'success', data: {} } });
+        client.post.mockRejectedValueOnce(new Error('Network error'));
+        client.post.mockResolvedValueOnce({ data: { success: true } });
+        const { result } = renderHook(() => useAdminDashboard());
+
+        await act(async () => {
+            await result.current.handleToggleMessages();
+        });
+        await act(async () => {
+            await result.current.handleToggleMessages();
+        });
+
+        expect(client.post).toHaveBeenCalledTimes(2);
+        expect(toast.error).toHaveBeenCalledTimes(1);
     });
 
     it('updates multiplier successfully', async () => {
@@ -112,6 +169,18 @@ describe('useAdminDashboard', () => {
         expect(toast.error).toHaveBeenCalledWith('Failed to update multiplier.');
     });
 
+    it('shows the server reason when the multiplier is rejected', async () => {
+        client.get.mockResolvedValueOnce({ data: { status: 'success', data: {} } });
+        client.post.mockRejectedValueOnce({ response: { data: { success: false, error: 'Multiplier must be between 0 and 100' } } });
+        const { result } = renderHook(() => useAdminDashboard());
+
+        await act(async () => {
+            await result.current.handleUpdateMultiplier(500);
+        });
+
+        expect(toast.error).toHaveBeenCalledWith('Multiplier must be between 0 and 100');
+    });
+
     it('adds banned word successfully', async () => {
         client.get.mockResolvedValueOnce({ data: { status: 'success', data: {} } });
         client.post.mockResolvedValueOnce({ data: { success: true, message: 'Word added' } });
@@ -131,11 +200,46 @@ describe('useAdminDashboard', () => {
         client.get.mockResolvedValueOnce({ data: { status: 'success', data: {} } });
         const { result } = renderHook(() => useAdminDashboard());
 
+        let res;
         await act(async () => {
-            await result.current.handleAddBannedWord(' ', 'reason');
+            res = await result.current.handleAddBannedWord(' ', 'reason');
         });
 
         expect(client.post).not.toHaveBeenCalled();
+        expect(res).toBe(false);
+    });
+
+    it('trims the banned word before sending it', async () => {
+        client.get.mockResolvedValue({ data: { status: 'success', data: {} } });
+        client.post.mockResolvedValueOnce({ data: { success: true } });
+        const { result } = renderHook(() => useAdminDashboard());
+
+        await act(async () => {
+            await result.current.handleAddBannedWord('  padded \t', 'reason');
+        });
+
+        const [, formData] = client.post.mock.calls[0];
+        expect(formData.get('word')).toBe('padded');
+        expect(formData.get('reason')).toBe('reason');
+    });
+
+    it('is loading while the banned word request runs', async () => {
+        client.get.mockResolvedValue({ data: { status: 'success', data: {} } });
+        let resolvePost;
+        client.post.mockImplementationOnce(() => new Promise((resolve) => { resolvePost = resolve; }));
+        const { result } = renderHook(() => useAdminDashboard());
+
+        let pending;
+        await act(async () => {
+            pending = result.current.handleAddBannedWord('word', '');
+        });
+        expect(result.current.formLoading).toBe(true);
+
+        await act(async () => {
+            resolvePost({ data: { success: true } });
+            await pending;
+        });
+        expect(result.current.formLoading).toBe(false);
     });
 
     it('fails to add banned word api error', async () => {

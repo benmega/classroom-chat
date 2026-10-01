@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import client from '../api/client';
 import toast from 'react-hot-toast';
 import { showConfirm } from '../utils/confirm';
@@ -11,6 +11,9 @@ export const useAdminDashboard = () => {
     const [modalUser, setModalUser] = useState(null);
     const [formLoading, setFormLoading] = useState(false);
     const [formErrors, setFormErrors] = useState({});
+    const [pendingToggle, setPendingToggle] = useState(false);
+    // The ref blocks a second click before React re-renders with the disabled button.
+    const toggleInFlight = useRef(false);
 
     const [timeframe, setTimeframe] = useState(7);
 
@@ -40,14 +43,21 @@ export const useAdminDashboard = () => {
     }, [activeModal]);
 
     const handleToggleMessages = async () => {
+        // The endpoint flips the stored value on every call, so never overlap two.
+        if (toggleInFlight.current) return;
+        toggleInFlight.current = true;
+        setPendingToggle(true);
         try {
             const response = await client.post('/api/admin/toggle-message-sending');
             if (response.data.success) {
-                
-                fetchDashboardData();
+                // Keep the toggle locked until the refetch shows the new state.
+                await fetchDashboardData();
             }
         } catch {
             toast.error('Failed to toggle messaging.');
+        } finally {
+            toggleInFlight.current = false;
+            setPendingToggle(false);
         }
     };
 
@@ -58,17 +68,19 @@ export const useAdminDashboard = () => {
                 
                 fetchDashboardData();
             }
-        } catch {
-            toast.error('Failed to update multiplier.');
+        } catch (error) {
+            toast.error(error.response?.data?.error || 'Failed to update multiplier.');
         }
     };
 
     const handleAddBannedWord = async (word, reason) => {
-        if (!word.trim()) return;
+        const trimmed = word.trim();
+        if (!trimmed) return false;
         
         try {
+            setFormLoading(true);
             const formData = new FormData();
-            formData.append('word', word);
+            formData.append('word', trimmed);
             formData.append('reason', reason);
             
             const response = await client.post('/api/admin/add-banned-word', formData);
@@ -79,6 +91,8 @@ export const useAdminDashboard = () => {
             }
         } catch (error) {
             toast.error(error.response?.data?.message || 'Failed to add word.');
+        } finally {
+            setFormLoading(false);
         }
         return false;
     };
@@ -232,6 +246,7 @@ export const useAdminDashboard = () => {
         setModalUser,
         formLoading,
         formErrors,
+        pendingToggle,
         timeframe,
         setTimeframe,
         fetchDashboardData,

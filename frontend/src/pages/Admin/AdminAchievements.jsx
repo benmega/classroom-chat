@@ -6,6 +6,10 @@ import '../../components/admin/AdminShared.css';
 import './AdminAchievements.css';
 import { formatStaticUrl } from '../../utils/formatters';
 
+// Mirrors SLUG_RE in backend/application/routes/achievement_routes.py (the slug names the badge file).
+// The hyphen is escaped so the pattern also compiles under the browser's unicode-sets (v) flag.
+const SLUG_PATTERN = '[a-z0-9\\-]+';
+
 const AdminAchievements = () => {
     const [viewMode, setViewMode] = useState('list'); // 'list' or 'form'
     const [achievements, setAchievements] = useState([]);
@@ -92,11 +96,19 @@ const AdminAchievements = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        // The multipart body carries every field as a string, so reject a bad reward here.
+        const reward = Number(formData.reward);
+        if (!Number.isInteger(reward) || reward < 1) {
+            toast.error('Reward must be a whole number of at least 1.');
+            return;
+        }
+
         setIsSubmitting(true);
 
         const data = new FormData();
         Object.keys(formData).forEach(key => {
-            data.append(key, formData[key]);
+            data.append(key, key === 'reward' ? reward : formData[key]);
         });
         if (badgeFile) {
             data.append('badge', badgeFile);
@@ -108,12 +120,16 @@ const AdminAchievements = () => {
                 if (response.data.status === 'success') {
                     toast.success(response.data.message || 'Achievement updated.');
                     setViewMode('list');
+                } else {
+                    toast.error(response.data.message || 'Failed to save achievement.');
                 }
             } else {
                 const response = await client.post('/api/achievements/add', data);
                 if (response.data.status === 'success') {
                     toast.success(response.data.message || 'Achievement created.');
                     setViewMode('list');
+                } else {
+                    toast.error(response.data.message || 'Failed to save achievement.');
                 }
             }
         } catch (error) {
@@ -123,6 +139,9 @@ const AdminAchievements = () => {
             setIsSubmitting(false);
         }
     };
+
+    // An unchanged slug from before slugs were restricted must stay editable.
+    const slugPattern = editingAchievement && formData.slug === editingAchievement.slug ? undefined : SLUG_PATTERN;
 
     if (viewMode === 'list') {
         return (
@@ -224,10 +243,12 @@ const AdminAchievements = () => {
                                 name="slug" 
                                 value={formData.slug} 
                                 onChange={handleInputChange} 
-                                required 
+                                required
+                                pattern={slugPattern}
+                                title="Lowercase letters, digits and hyphens only"
                                 placeholder="master-coder"
                             />
-                            <small className="hint">Used for internal tracking and URL paths.</small>
+                            <small className="hint">Used for internal tracking and URL paths. Lowercase letters, digits and hyphens only.</small>
                         </div>
 
                         <div className="form-group">
@@ -285,6 +306,7 @@ const AdminAchievements = () => {
                                     value={formData.reward} 
                                     onChange={handleInputChange} 
                                     min="1"
+                                    step="1"
                                     required
                                 />
                             </div>

@@ -36,7 +36,7 @@ import client from '../../api/client';
 import toast from 'react-hot-toast';
 
 // Hooks
-import { useUsersManagement } from '../../hooks/useUsersManagement';
+import { useUsersManagement, USERS_PER_PAGE } from '../../hooks/useUsersManagement';
 
 const TABS = [
     { label: 'All', value: '' },
@@ -229,6 +229,10 @@ const Users = () => {
 
     // Compute column count based on active tab
     const colCount = activeRole === '' ? 5 : 4;
+
+    // Range shown in the pagination footer ("0" when the list is empty)
+    const rangeEnd = Math.min(page * USERS_PER_PAGE, totalUsers);
+    const rangeStart = Math.min((page - 1) * USERS_PER_PAGE + 1, rangeEnd);
 
     if (isLoading) return (
         <div className="admin-users-page">
@@ -607,7 +611,7 @@ const Users = () => {
                 
                 <div className="pagination-container">
                     <div className="pagination-info">
-                        Showing <strong>{(page - 1) * 50 + 1}-{Math.min(page * 50, totalUsers)}</strong> of <strong>{totalUsers}</strong> users
+                        Showing <strong>{totalUsers === 0 ? 0 : `${rangeStart}-${rangeEnd}`}</strong> of <strong>{totalUsers}</strong> users
                     </div>
                     <div className="pagination-controls">
                         <button 
