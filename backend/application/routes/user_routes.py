@@ -25,6 +25,7 @@ from flask import (
     session,
     url_for,
 )
+from flask_limiter.util import get_remote_address
 from flask_wtf import FlaskForm
 from PIL import Image
 from sqlalchemy.orm import selectinload
@@ -54,7 +55,9 @@ class LoginForm(FlaskForm):
 
 @csrf.exempt
 @user.route("/login", methods=["GET", "POST"])
-@limiter.limit("10 per minute; 100 per hour", methods=["POST"])
+@limiter.limit(
+    "10 per minute; 100 per hour", methods=["POST"], key_func=get_remote_address
+)
 def login():
     form = LoginForm()
     if request.is_json:
@@ -176,7 +179,7 @@ def logout():
 
 @csrf.exempt
 @user.route("/signup", methods=["POST"])
-@limiter.limit("5 per minute; 30 per hour")
+@limiter.limit("5 per minute; 30 per hour", key_func=get_remote_address)
 @api_response
 def signup():
     data = request.get_json()

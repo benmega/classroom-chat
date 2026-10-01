@@ -15,6 +15,16 @@ test.describe('Fun Features and Personality Guardrails', () => {
       });
     });
 
+    // These specs fake the logged-in state, so the real backend has no session for the
+    // heartbeat and would answer 401, which the API client treats as an expired session.
+    await page.route('**/heartbeat', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ status: 'success' }),
+      });
+    });
+
     await page.goto('/chat');
   });
 

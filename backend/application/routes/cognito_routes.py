@@ -13,6 +13,7 @@ from application.extensions import db, limiter
 from application.models.user import User
 from botocore.exceptions import ClientError
 from flask import Blueprint, current_app, jsonify, request, session
+from flask_limiter.util import get_remote_address
 from jose import jwt
 
 cognito_bp = Blueprint("cognito", __name__)
@@ -64,7 +65,7 @@ def sync_cognito_user(email, cognito_sub):
 
 
 @cognito_bp.route("/register", methods=["POST"])
-@limiter.limit("10 per minute")
+@limiter.limit("10 per minute", key_func=get_remote_address)
 def register():
     data = request.json
     email = data.get("email")
@@ -131,7 +132,7 @@ def verify():
 
 
 @cognito_bp.route("/login", methods=["POST"])
-@limiter.limit("20 per minute")
+@limiter.limit("20 per minute", key_func=get_remote_address)
 def login():
     data = request.json
     email = data.get("email")
@@ -180,7 +181,7 @@ def login():
 
 
 @cognito_bp.route("/forgot-password", methods=["POST"])
-@limiter.limit("5 per minute")
+@limiter.limit("5 per minute", key_func=get_remote_address)
 def forgot_password():
     data = request.json
     email = data.get("email")

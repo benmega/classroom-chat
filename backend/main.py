@@ -23,7 +23,7 @@ if (os.getenv("SOCKETIO_ASYNC_MODE") or "gevent") == "gevent":
 
     monkey.patch_all()
 
-from application import create_app
+from application import create_app, reloader_enabled
 from application.extensions import socketio
 
 app = create_app()
@@ -47,9 +47,8 @@ def main():
         host="0.0.0.0",
         port=port,
         log_output=True,
-        use_reloader=not is_production
-        and os.getenv("FLASK_USE_RELOADER", "True").lower() in ("true", "1", "t")
-        and not getattr(sys, "frozen", False),
+        # The same test create_app uses to leave the scheduler to the reloader's child.
+        use_reloader=reloader_enabled(),
         allow_unsafe_werkzeug=not is_production,
         debug=debug,
     )

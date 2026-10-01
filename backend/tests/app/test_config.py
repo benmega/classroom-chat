@@ -154,7 +154,9 @@ def _run_main_header(tmp_path, env_file_text=None, extra_env=None):
     shutil.copy(MAIN_PATH, tmp_path / "main.py")
     package = tmp_path / "application"
     package.mkdir()
-    (package / "__init__.py").write_text("def create_app():\n    return object()\n")
+    (package / "__init__.py").write_text(
+        "def create_app():\n    return object()\n\n\ndef reloader_enabled():\n    return False\n"
+    )
     (package / "extensions.py").write_text("socketio = object()\n")
     if env_file_text is not None:
         (tmp_path / ".env").write_text(env_file_text)

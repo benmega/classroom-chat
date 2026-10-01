@@ -1,6 +1,7 @@
 import contextlib
 import logging
 import os
+import sys
 from datetime import timedelta
 from logging.handlers import RotatingFileHandler
 
@@ -119,12 +120,19 @@ def create_app(config_class=None):
     }
     Talisman(app, force_https=is_prod, content_security_policy=csp, session_cookie_secure=is_prod, session_cookie_http_only=True)
 
-    # x_for=1 tells Flask to trust the first X-Forwarded-For header.
-    # Only trust proxy headers in production, where nginx sets them. Trusting
-    # them in development would let anyone on the network spoof
+    # Trust the X-Forwarded-* headers set by the reverse proxies in front of the app.
+    # TRUSTED_PROXY_COUNT is 1 in production (nginx) and 0 elsewhere: trusting the
+    # headers in development would let anyone on the network spoof
     # X-Forwarded-For: 127.0.0.1 and pass dev-login's localhost-only guard.
-    if os.getenv("FLASK_ENV", "development").lower() == "production":
-        app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_port=1)
+    proxy_count = app.config.get("TRUSTED_PROXY_COUNT", 0)
+    if proxy_count > 0:
+        app.wsgi_app = ProxyFix(
+            app.wsgi_app,
+            x_for=proxy_count,
+            x_proto=proxy_count,
+            x_host=proxy_count,
+            x_port=proxy_count,
+        )
 
     app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(hours=10)
 
@@ -183,11 +191,14 @@ def create_app(config_class=None):
             # Ensure the default configuration exists, including on a fresh DB
             ensure_default_configuration()
 
-        try:
-            if not getattr(scheduler, "running", False):
-                scheduler.start()
-        except Exception:
-            pass
+        if _should_start_scheduler(app):
+            try:
+                if not getattr(scheduler, "running", False):
+                    scheduler.start()
+            except Exception:
+                logger.exception("Could not start the session cleanup scheduler")
+        else:
+            logger.info("Session cleanup scheduler not started in this process")
 
         # Ensure the reserved classrooms, store items and project templates exist.
         seed_global_data()
@@ -242,6 +253,34 @@ def create_app(config_class=None):
     app.cli.add_command(seed_command)
 
     return app
+
+
+def reloader_enabled():
+    """Whether main() runs the dev server under the Werkzeug reloader."""
+    return (
+        os.getenv("FLASK_ENV", "development").lower() != "production"
+        and os.getenv("FLASK_USE_RELOADER", "True").lower() in ("true", "1", "t")
+        and not getattr(sys, "frozen", False)
+    )
+
+
+def _should_start_scheduler(app):
+    """Whether this process should run the session cleanup scheduler.
+
+    The job must run in exactly one process. It is skipped under test, for
+    'flask db' commands, when SCHEDULER_ENABLED is off (set it to 0 on every
+    worker but one if gunicorn ever runs more than one) and in the Werkzeug
+    reloader's parent process, whose child imports the app again and starts its
+    own scheduler. Production (gunicorn, one worker) starts it by default.
+    """
+    if app.config.get("TESTING") or "db" in sys.argv:
+        return False
+    if not app.config.get("SCHEDULER_ENABLED", True):
+        return False
+    is_reloader_parent = (
+        reloader_enabled() and os.environ.get("WERKZEUG_RUN_MAIN") != "true"
+    )
+    return not is_reloader_parent
 
 
 def ensure_default_configuration():

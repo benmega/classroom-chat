@@ -4,7 +4,18 @@ Type: py
 Summary: General utility helpers for file uploads and formatting.
 """
 
+from datetime import datetime, timezone
+
 from application.config import Config
+
+
+def utcnow_naive():
+    """Current UTC time as a naive datetime.
+
+    Replaces the deprecated datetime.utcnow(). The result stays naive on purpose:
+    the DateTime columns it is compared with and stored in carry no timezone.
+    """
+    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
 def allowed_file(filename, allowed_extensions=None):

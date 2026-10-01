@@ -1,7 +1,7 @@
 """
 Unit tests for helper_functions.py
 """
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 
 from application.utilities.helper_functions import (
     allowed_file,
@@ -9,6 +9,7 @@ from application.utilities.helper_functions import (
     format_number,
     get_s3_client,
     safe_parse_datetime,
+    utcnow_naive,
 )
 
 
@@ -63,3 +64,14 @@ def test_get_s3_client_region_defaults_to_config(monkeypatch):
     with patch("boto3.client") as mock_client:
         get_s3_client()
     assert mock_client.call_args.kwargs["region_name"] == "us-east-1"
+
+
+def test_utcnow_naive_is_naive_utc():
+    before = datetime.now(timezone.utc).replace(tzinfo=None)
+    now = utcnow_naive()
+    after = datetime.now(timezone.utc).replace(tzinfo=None)
+
+    assert now.tzinfo is None
+    assert before <= now <= after
+    # Same clock as the deprecated utcnow() it replaces, so stored rows stay comparable
+    assert abs(now - datetime.utcnow()) < timedelta(seconds=5)

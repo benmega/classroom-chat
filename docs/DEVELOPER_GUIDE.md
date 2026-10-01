@@ -57,6 +57,7 @@ classroom-chat/
   - `/notes` — notes uploads
   - `/dev-login` — localhost-only dev shortcut, never registered when `FLASK_ENV=production`
 - **Real-time**: Flask-SocketIO (gevent async mode) — event handlers in `socket_events.py`.
+- **One process**: the rate limiter, Socket.IO presence (`_active_sessions`) and the APScheduler session-cleanup job all keep state in the memory of a single process, which is why production runs `gunicorn -w 1`. See [Single-process assumptions](infrastructure_and_devops.md#single-process-assumptions) before adding workers; `SCHEDULER_ENABLED=0` keeps a process from starting the scheduler.
 - **Auth**: session-cookie based (`Flask-Login`/session), CSRF via `flask-wtf` (double-submit cookie `csrf_token_v2`), rate limiting via `Flask-Limiter` (disabled in `TestingConfig`). Parents authenticate through AWS Cognito.
 - **DB**: SQLAlchemy + Flask-Migrate/Alembic. In non-production environments the app calls `db.create_all()` on startup; production is migration-only (`flask db upgrade`) — see the architecture note in `deploy.sh`.
 

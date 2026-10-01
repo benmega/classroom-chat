@@ -46,6 +46,10 @@ See `backend/.env.example` for the full list of required variables. The code rea
 | `CORS_ORIGINS` | `config.py` (production), `routes/challenge_routes.py` | Comma-separated (whitespace and empty entries are ignored). Not written by `deploy.yml`, so the default origin list in `config.py` is used. Localhost origins are defaults only outside production; `/challenge/submit` additionally allows the CodeCombat/Ozaria bookmarklet origins |
 | `SOCKETIO_ASYNC_MODE` | `main.py`, `config.py` | Default `gevent`. `main.py` loads `.env` before deciding whether to monkey-patch, so both read the same value |
 | `PORT`, `FLASK_DEBUG`, `FLASK_USE_RELOADER` | `main.py` (`python main.py` only) | Defaults 8000 / on / on |
+| `RATELIMIT_STORAGE_URI` | `config.py` (Flask-Limiter) | Default `memory://` (per process, see [Single-process assumptions](#single-process-assumptions)) |
+| `SCHEDULER_ENABLED` | `config.py`, `__init__.py` | Default on. `0`/`false`/`no` stops this process from starting the session cleanup scheduler |
+| `SESSION_STALE_TIMEOUT_MINUTES` | `config.py`, `tasks.py` | Default `10`. Minutes without a heartbeat before an open session is closed (the current session of a user with an open Socket.IO connection counts as active) |
+| `TRUSTED_PROXY_COUNT` | `config.py`, `__init__.py` | Reverse proxies whose `X-Forwarded-*` headers are trusted (werkzeug `ProxyFix`). Default `1` in production (nginx), `0` elsewhere |
 | `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION` | `config.py`, notes upload, helper functions, `user_routes.py` (S3); default region `ap-southeast-1` | Optional |
 | `S3_NOTES_BUCKET`, `S3_UPLOAD_BUCKET` | `config.py` (notes images, project videos) | Optional; the defaults are the production buckets (`classroom-chat-student-notes`, `youtube-upload-source-classroom-chat`) |
 | `AWS_SES_REGION`, `SES_SENDER_EMAIL`, `ADMIN_EMAIL_ADDRESS` | `config.py` (SES email) | Optional; defaults `ap-southeast-1` / `noreply@benmega.com` / unset (admin emails skipped) |
@@ -116,6 +120,35 @@ WantedBy=multi-user.target
 Key points:
 - `WorkingDirectory` must be `backend/` so gunicorn finds `main.py` and `application/`
 - `venv` is at the **project root**, not inside `backend/`
+
+### Single-process assumptions
+
+The app is built to run as **one gunicorn worker** (`-w 1`, as in the unit above). Several pieces
+of state live in that one process's memory, so a second worker (or any other long-running process
+that loads the app) does not fail loudly, it just gives wrong answers:
+
+| State | Where | With more than one process |
+| :--- | :--- | :--- |
+| Rate limiter | `limiter` in `extensions.py`; storage is `RATELIMIT_STORAGE_URI`, default `memory://` | Each worker counts separately, so every limit is multiplied by the worker count. Sharing the counters needs a shared store (for example Redis); the `redis` package is not installed and nothing is provisioned. |
+| Socket.IO presence and rooms | `_active_sessions` in `socket_events.py`; `socketio.init_app` has no `message_queue` | Presence, "first connection" detection and broadcasts only see the clients connected to the same worker. |
+| Session cleanup scheduler | APScheduler job `session_cleanup` (`tasks.py`), started by `create_app` | Every process that runs `create_app` starts its own scheduler and runs the job. The cleanup only spares users whose socket is open in its own process (`connected_user_ids()`), so in another process it would treat them as disconnected. |
+| Heartbeat CloudWatch metric | `heartbeat` in `routes/session_routes.py` | Published synchronously by whichever worker serves the heartbeat; it is not throttled, and any throttling added later would also be per process. |
+
+Rate limits are keyed by user id for logged-in requests and by client address otherwise; the
+login, signup and the Cognito register, login and forgot-password routes are always keyed by address.
+
+The scheduler is the one piece with an off switch. If more than one worker is ever run, start the
+scheduler in exactly one of them and set `SCHEDULER_ENABLED=0` in the environment of all the
+others. By default it starts in every process that loads the app, except:
+
+- under pytest (`TESTING`), and for `flask db ...` commands
+- the parent process of the Werkzeug reloader used by `python main.py` in development (its child
+  starts it), unless `FLASK_USE_RELOADER=False`
+- any process started with `SCHEDULER_ENABLED=0`
+
+Moving to several workers (or hosts) is a separate piece of work: it needs the rate limiter on a
+shared store, a Socket.IO `message_queue` with presence moved out of `_active_sessions`, and a
+verified gevent-capable worker class (see the note above).
 
 ---
 

@@ -4,16 +4,21 @@ Type: py
 Summary: Flask routes for session routes functionality.
 """
 
-from datetime import datetime
+from datetime import timedelta
 
 import boto3
 import requests
 from application.extensions import db
 from application.models.session_log import SessionLog
+from application.utilities.helper_functions import utcnow_naive
 from flask import Blueprint, jsonify
 from flask import session as flask_session
 
 session = Blueprint("session", __name__)
+
+# A heartbeat only rewrites SessionLog.last_seen when it is older than this. The
+# stale-session cutoff is minutes, so the coarser value changes nothing there.
+HEARTBEAT_WRITE_INTERVAL = timedelta(seconds=60)
 
 _ec2_metadata_cache = None
 
@@ -50,11 +55,17 @@ def get_cloudwatch_client():
 def heartbeat():
     userid = flask_session.get("user")
     if not userid:
-        return jsonify(success=False, error="Missing username"), 400
+        return jsonify(success=False, error="Not authenticated"), 401
 
     from application import User
 
-    current_user = User.query.filter_by(id=userid).first()
+    # The request already loaded this user (load_user), so this is an identity-map
+    # hit, not another query.
+    current_user = db.session.get(User, userid)
+    if current_user is None:
+        # The account was deleted while the session cookie lived on.
+        flask_session.clear()
+        return jsonify(success=False, error="Not authenticated"), 401
     user_id = current_user.id
 
     log = (
@@ -63,8 +74,10 @@ def heartbeat():
         .first()
     )
     if log:
-        log.last_seen = datetime.utcnow()
-        db.session.commit()
+        now = utcnow_naive()
+        if now - log.last_seen >= HEARTBEAT_WRITE_INTERVAL:
+            log.last_seen = now
+            db.session.commit()
 
         try:
             instance_id, _ = get_ec2_metadata()
@@ -89,4 +102,4 @@ def heartbeat():
         # heartbeat means they are back, so show them online again
         User.set_online(user_id, True)
 
-    return jsonify(success=True, timestamp=datetime.utcnow().isoformat())
+    return jsonify(success=True, timestamp=utcnow_naive().isoformat())

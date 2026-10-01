@@ -1,12 +1,16 @@
 import { renderHook, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useLayout } from './useLayout';
+import client from '../api/client';
 
 // Mock react-router-dom
 vi.mock('react-router-dom', () => ({
   useNavigate: () => vi.fn(),
   useLocation: () => ({ pathname: '/' }),
 }));
+
+// The chat socket is not under test here; keep it from opening a connection
+vi.mock('./useChatSocket', () => ({ default: vi.fn() }));
 
 // Mock useSidebar
 vi.mock('./useSidebar', () => ({
@@ -161,5 +165,86 @@ describe('useLayout - Quack sound for earning ducks', () => {
     rerender();
 
     expect(audioConstructorSpy).not.toHaveBeenCalled();
+  });
+});
+
+describe('useLayout - heartbeat', () => {
+  const HEARTBEAT = '/api/session/heartbeat';
+  const heartbeatCalls = () => client.post.mock.calls.filter(([url]) => url === HEARTBEAT);
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.useFakeTimers();
+    client.post.mockResolvedValue({});
+
+    currentStoreState = {
+      user: { id: 1, username: 'testuser', duck_balance: 10 },
+      logout: vi.fn(),
+      isAuthenticated: true,
+      hamburgerProgress: 0,
+      unreadCount: 0,
+      setUnreadCount: vi.fn(),
+      setLastReadMessageId: vi.fn(),
+    };
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('sends a heartbeat on load and then every 30 seconds while logged in', () => {
+    renderHook(() => useLayout());
+    expect(heartbeatCalls()).toHaveLength(1);
+
+    act(() => {
+      vi.advanceTimersByTime(30000);
+    });
+    expect(heartbeatCalls()).toHaveLength(2);
+
+    act(() => {
+      vi.advanceTimersByTime(60000);
+    });
+    expect(heartbeatCalls()).toHaveLength(4);
+  });
+
+  it('does not send heartbeats when logged out', () => {
+    currentStoreState = { ...currentStoreState, user: null, isAuthenticated: false };
+
+    renderHook(() => useLayout());
+    act(() => {
+      vi.advanceTimersByTime(120000);
+    });
+
+    expect(heartbeatCalls()).toHaveLength(0);
+  });
+
+  it('stops heartbeating once the session is gone and the store is logged out', () => {
+    // A 401 from the heartbeat makes the API client flip the store to logged out
+    const { rerender } = renderHook(() => useLayout());
+    expect(heartbeatCalls()).toHaveLength(1);
+
+    currentStoreState = { ...currentStoreState, user: null, isAuthenticated: false };
+    rerender();
+    act(() => {
+      vi.advanceTimersByTime(120000);
+    });
+
+    expect(heartbeatCalls()).toHaveLength(1);
+  });
+
+  it('logs a failed heartbeat and keeps the loop running', async () => {
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const failure = new Error('network down');
+    client.post.mockRejectedValue(failure);
+
+    renderHook(() => useLayout());
+    await act(async () => {});
+    expect(consoleError).toHaveBeenCalledWith('Heartbeat failed:', failure);
+
+    await act(async () => {
+      vi.advanceTimersByTime(30000);
+    });
+    expect(heartbeatCalls()).toHaveLength(2);
+    consoleError.mockRestore();
   });
 });

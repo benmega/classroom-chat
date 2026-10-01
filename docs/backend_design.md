@@ -40,7 +40,7 @@ API endpoints are structured into logical modules using **Flask Blueprints**. Th
 See [api_reference.md](api_reference.md) for the endpoint catalog.
 
 ### Proxy & WSGI Support
-- **ProxyFix**: Configured to trust headers when running behind a reverse proxy (like Nginx).
+- **ProxyFix**: Applied when `TRUSTED_PROXY_COUNT` is above 0 (1 in production behind Nginx, 0 elsewhere), so forwarded headers are never trusted in development.
 - **CORS**: Robustly configured via `flask-cors` to support specific origins and credential sharing (crucial for local development with Vite).
 
 ---
@@ -72,7 +72,7 @@ The backend implements a multi-layered **Authentication** system:
 
 ### Rate Limiting
 **Flask-Limiter** is used to prevent abuse and brute-force attacks:
-- **Default Limits**: 50/sec, 500/min, 20000/day.
+- **Default Limits**: 50/sec, 500/min, 20000/day. Logged-in requests are counted per user id, everything else per client address (`rate_limit_key` in `extensions.py`).
 - **Error Handling**: A custom handler returns a JSON response with a "retry-after" message when limits are hit.
 
 

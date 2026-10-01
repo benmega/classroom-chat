@@ -116,6 +116,23 @@ class Config:
     # to gevent-monkey-patch, so the two always agree.
     SOCKETIO_ASYNC_MODE = os.getenv("SOCKETIO_ASYNC_MODE") or "gevent"
 
+    # Rate limiter storage. The in-memory default is per process, which is only
+    # correct while a single worker serves the app (see docs/infrastructure_and_devops.md).
+    RATELIMIT_STORAGE_URI = os.getenv("RATELIMIT_STORAGE_URI", "memory://")
+
+    # Background session cleanup (application/tasks.py). The scheduler must run in
+    # exactly one process: set SCHEDULER_ENABLED=0 on every worker but one.
+    SCHEDULER_ENABLED = os.getenv("SCHEDULER_ENABLED", "1").strip().lower() not in (
+        "0",
+        "false",
+        "no",
+    )
+    SESSION_STALE_TIMEOUT_MINUTES = int(os.getenv("SESSION_STALE_TIMEOUT_MINUTES", 10))
+
+    # Number of reverse proxies in front of the app whose X-Forwarded-* headers
+    # are trusted (werkzeug ProxyFix). 0 ignores them.
+    TRUSTED_PROXY_COUNT = int(os.getenv("TRUSTED_PROXY_COUNT", 0))
+
 
 class DevelopmentConfig(Config):
     DEBUG = True
@@ -143,6 +160,9 @@ class ProductionConfig(Config):
         "DATABASE_URL",
         f"sqlite:///{os.path.join(Config.INSTANCE_FOLDER, 'prod_users.db')}",
     )
+    # nginx is the one proxy in front of gunicorn.
+    TRUSTED_PROXY_COUNT = int(os.getenv("TRUSTED_PROXY_COUNT", 1))
+
     SESSION_COOKIE_DOMAIN = ".benmega.com"
     SESSION_COOKIE_SAMESITE = "Lax"
     SESSION_COOKIE_SECURE = True

@@ -12,7 +12,7 @@ python -c "from application import create_app; app = create_app(); [print(r.rule
 - **`GET /user/logout`**: Terminates the current session and disconnects the user's open sockets (a client of the same user on another device simply reconnects).
 - **`GET /user/api/auth/status`**: Returns the current authenticated user's profile and roles.
 - **`POST /user/api/auth/tutorial/complete`**: Marks the onboarding tutorial as complete for the current user.
-- **`POST /api/session/heartbeat`**: Keeps the session/presence alive (used for online-status tracking).
+- **`POST /api/session/heartbeat`**: Keeps the session/presence alive (used for online-status tracking). Returns `401` when there is no logged-in session (or the account no longer exists).
 - **`/api/auth/cognito/*`**: Parent auth via AWS Cognito — `register`, `verify`, `login`, `forgot-password`, `confirm-forgot-password`.
 - **`GET|POST /dev-login`, `/api/dev-login`**: Localhost-only dev shortcut for logging in as any role without credentials. Never registered when `FLASK_ENV=production`.
 
