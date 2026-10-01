@@ -90,6 +90,25 @@
     --purple-800: #6B21A8;
     --student-badge-color: #2B91AF; /* text of the admin dashboard student requester badge */
 
+    /* Palette steps that page CSS used as raw hex (value-identical to those literals) */
+    --slate-100: #F1F5F9;
+    --slate-300: #CBD5E1;
+    --slate-400: #94A3B8;
+    --slate-500: #64748B;
+    --green-50: #F0FDF4;
+    --green-500: #22C55E;
+    --green-900: #14532D;
+    --amber-700: #B45309;
+
+    /* White text/icons on gradients, dark overlays and other saturated fills (surfaces use --bg-primary) */
+    --text-on-primary: #FFFFFF;
+
+    /* Contribution graph intensity levels, lightest to darkest */
+    --graph-level-1: #BAE6FD;
+    --graph-level-2: #7DD3FC;
+    --graph-level-3: #38BDF8;
+    --graph-level-4: #0284C7;
+
     /* Gradients — both endpoints pass AA with white text */
     --gradient-primary: linear-gradient(135deg, #007880 0%, #4F52C9 100%);
     --gradient-warning: linear-gradient(135deg, #D97706 0%, #B45309 100%);

@@ -301,7 +301,7 @@ const CustomTopMenu = () => (
 );
 
 const CustomLayout = (props) => (
-    <Layout {...props} menu={() => null} sidebar={() => null}>
+    <Layout {...props} className="admin-crud-layout" menu={() => null} sidebar={() => null}>
         <CustomTopMenu />
         {props.children}
     </Layout>

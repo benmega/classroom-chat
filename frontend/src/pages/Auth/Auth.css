@@ -18,6 +18,8 @@
     height: 100%;
     z-index: 0;
     pointer-events: none;
+    /* The blobs overhang the page on purpose; clip them so they do not add scrollable area */
+    overflow: hidden;
 }
 
 .auth-blob {
@@ -124,17 +126,30 @@
 
 .auth-input {
     width: 100%;
-    padding: 1rem 1.25rem 1rem 3.25rem !important;
-    font-size: 1.05rem !important;
-    background: rgba(255, 255, 255, 0.4) !important;
-    border: 2px solid var(--border-subtle) !important;
     border-radius: var(--radius-md);
     transition: var(--transition-fast);
 }
 
+/* The next three rules are scoped under .auth-container so they outrank the global form-control rules
+   in index.css (and the .form-group input rules that leak in from other pages) without !important. */
+.auth-container .auth-input {
+    padding: 1rem 1.25rem 1rem 3.25rem;
+    font-size: 1.05rem;
+    background: rgba(255, 255, 255, 0.4);
+    border: 2px solid var(--border-subtle);
+}
+
+/* index.css input:hover:not(:focus) is more specific than the rule above and would recolour the border */
+.auth-container .auth-input:hover:not(:focus) {
+    border-color: var(--border-subtle);
+}
+
+.auth-container .auth-input:focus {
+    background: var(--bg-primary);
+    border-color: var(--primary-color);
+}
+
 .auth-input:focus {
-    background: var(--bg-primary) !important;
-    border-color: var(--primary-color) !important;
     box-shadow: var(--shadow-glow);
 }
 
@@ -162,14 +177,17 @@
     color: var(--text-primary);
 }
 
-.auth-input.has-password-toggle {
-    padding-right: 3.25rem !important;
+.auth-container .auth-input.has-password-toggle {
+    padding-right: 3.25rem;
+}
+
+.auth-container .auth-button {
+    padding: 1.2rem;
+    font-size: 1.15rem;
 }
 
 .auth-button {
     margin-top: 1rem;
-    padding: 1.2rem !important;
-    font-size: 1.15rem !important;
     font-weight: 700;
     letter-spacing: 0.02em;
     background: var(--gradient-primary);
@@ -381,7 +399,7 @@
     }
 }
 
-/* Cognito Button & Divider Styles */
+/* Divider Styles */
 .auth-divider {
     display: flex;
     align-items: center;
@@ -401,19 +419,6 @@
     padding: 0 1rem;
     font-size: 0.9rem;
     font-weight: 600;
-}
-
-.cognito-btn {
-    background: var(--bg-primary) !important;
-    color: var(--text-primary) !important;
-    border: 2px solid var(--border-subtle) !important;
-    box-shadow: none !important;
-}
-
-.cognito-btn:hover {
-    border-color: var(--primary-color) !important;
-    background: var(--bg-secondary) !important;
-    box-shadow: var(--shadow-sm) !important;
 }
 
 .auth-footer-container {

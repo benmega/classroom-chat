@@ -180,7 +180,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    color: white;
+    color: var(--text-on-primary);
     box-shadow: var(--shadow-lg);
     z-index: 1;
 }
@@ -327,7 +327,7 @@
     width: 36px;
     height: 36px;
     border-radius: 10px;
-    border: 2px solid white;
+    border: 2px solid var(--bg-primary);
     box-shadow: var(--shadow-soft);
     object-fit: cover;
 }
@@ -339,7 +339,7 @@
     font-weight: 700;
 }
 
-:where(.admin-dashboard) .status-pill.online { background: var(--stat-green-dark); color: white; } /* Much darker green */
+:where(.admin-dashboard) .status-pill.online { background: var(--stat-green-dark); color: var(--text-on-primary); } /* Much darker green */
 
 /* Quick Actions Sidebar */
 .admin-controls-grid {
@@ -383,7 +383,7 @@
     align-items: center;
     justify-content: center;
     border-radius: 10px;
-    color: white;
+    color: var(--text-on-primary);
 }
 
 .icon-primary { background: var(--primary-color); }
@@ -465,7 +465,7 @@
 /* Banned Words */
 :where(.admin-dashboard) .word-chip {
     background: var(--gradient-error);
-    color: white;
+    color: var(--text-on-primary);
     padding: 8px 16px;
     border-radius: 12px;
     box-shadow: var(--shadow-sm);
@@ -516,7 +516,7 @@
 .requests-count-badge {
     padding: 0.25rem 0.6rem;
     background: var(--gradient-primary);
-    color: white;
+    color: var(--text-on-primary);
     font-size: 0.8rem;
     font-weight: 700;
     border-radius: 12px;
@@ -624,7 +624,7 @@
 
 .btn-action.approve {
     background: var(--success-color);
-    color: white;
+    color: var(--text-on-primary);
 }
 
 .btn-action.approve:hover {
@@ -634,7 +634,7 @@
 
 .btn-action.deny {
     background: var(--error-color);
-    color: white;
+    color: var(--text-on-primary);
 }
 
 .btn-action.deny:hover {

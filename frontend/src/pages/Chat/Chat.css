@@ -304,7 +304,7 @@
     box-shadow: var(--shadow-sm);
     color: var(--text-primary);
     max-width: 75%;
-    flex: 0 1 auto !important;
+    flex: 0 1 auto;
 }
 
 .own-message .message-bubble {
@@ -314,7 +314,7 @@
     box-shadow: var(--shadow-md);
     color: white;
     max-width: 75%;
-    flex: 0 1 auto !important;
+    flex: 0 1 auto;
 }
 
 .own-message .message-bubble a {

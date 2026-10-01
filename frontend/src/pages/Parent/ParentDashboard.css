@@ -53,7 +53,7 @@
     padding: 0 6px;
     border-radius: 99px;
     background: var(--primary-color, #0f766e);
-    color: #fff;
+    color: var(--text-on-primary);
     font-size: 0.7rem;
     font-weight: 700;
     letter-spacing: 0.02em;
@@ -184,7 +184,7 @@
     bottom: -2px;
     right: -2px;
     color: #f59e0b;
-    background: white;
+    background: var(--bg-primary);
     border-radius: 50%;
     padding: 2px;
     box-shadow: 0 1px 4px rgba(0,0,0,0.15);
@@ -427,7 +427,7 @@
     position: absolute;
     top: 100%;
     right: 0;
-    background: white;
+    background: var(--bg-primary);
     border: 1px solid var(--border-subtle);
     border-radius: 6px;
     box-shadow: var(--shadow-md);
@@ -504,12 +504,12 @@
     width: 13px;
     height: 13px;
     border-radius: 50%;
-    border: 2px solid white;
+    border: 2px solid var(--bg-primary);
     box-shadow: 0 1px 3px rgba(0,0,0,0.15);
 }
 
 .activity-dot--active {
-    background: #22c55e;
+    background: var(--green-500);
     animation: pulse-dot 2s ease-in-out infinite;
 }
 
@@ -559,7 +559,7 @@
 
 .duck-label {
     font-size: 0.7rem;
-    color: #b45309;
+    color: var(--amber-700);
     font-weight: 500;
 }
 
@@ -715,7 +715,7 @@
     justify-content: center;
     padding: 3rem 2rem;
     background: var(--error-subtle);
-    border: 1px solid #fecaca;
+    border: 1px solid var(--error-light);
     border-radius: var(--radius-lg, 0.5rem);
     text-align: center;
     gap: 0.5rem;

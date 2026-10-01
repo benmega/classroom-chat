@@ -75,7 +75,7 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    color: white;
+    color: var(--text-on-primary);
     font-size: 0.85rem;
     font-weight: 600;
     opacity: 0;
@@ -97,9 +97,10 @@
 }
 
 /* Crop Modal Specifics */
-.crop-modal-content {
-    max-width: 500px !important;
-    padding-top: 20px !important; /* Reduced from 40px */
+/* Chained with .modal-content (declared further down) so the narrower max-width wins on specificity
+   rather than !important. The 20px padding-top comes from .modal-content. */
+.modal-content.crop-modal-content {
+    max-width: 500px;
 }
 
 .crop-area {
@@ -466,7 +467,7 @@
     font-weight: 600;
 }
 
-/* Proficiency borders matching levels */
+/* Proficiency borders matching levels: bronze / silver / gold are deliberate constants, not theme colours */
 .tech-skill-card.proficiency-1 { border-bottom: 3px solid #cd7f32; }
 .tech-skill-card.proficiency-2 { border-bottom: 3px solid #b0c4de; }
 .tech-skill-card.proficiency-3 { border-bottom: 3px solid #ffd700; }
@@ -530,7 +531,7 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    color: white;
+    color: var(--text-on-primary);
     background: rgba(0,0,0,0.4);
     width: 50px;
     height: 50px;
@@ -654,7 +655,7 @@
 
 .btn-add:hover {
     background: var(--primary-color);
-    color: white;
+    color: var(--text-on-primary);
 }
 
 .btn-text {
@@ -831,7 +832,7 @@
     top: 5px;
     right: 5px;
     background: var(--error-color);
-    color: white;
+    color: var(--text-on-primary);
     width: 24px;
     height: 24px;
     border-radius: 4px;
@@ -929,10 +930,10 @@
     flex-shrink: 0;
 }
 
-.graph-cell.level-1 { background: #bae6fd; }
-.graph-cell.level-2 { background: #7dd3fc; }
-.graph-cell.level-3 { background: #38bdf8; }
-.graph-cell.level-4 { background: #0284c7; }
+.graph-cell.level-1 { background: var(--graph-level-1); }
+.graph-cell.level-2 { background: var(--graph-level-2); }
+.graph-cell.level-3 { background: var(--graph-level-3); }
+.graph-cell.level-4 { background: var(--graph-level-4); }
 
 .graph-footer {
     display: flex;
@@ -997,12 +998,12 @@
     top: 30px;
     right: 30px;
     background: rgba(255, 255, 255, 0.1);
-    color: white;
+    color: var(--text-on-primary);
 }
 
 .close-slideshow:hover {
     background: rgba(255, 255, 255, 0.2);
-    color: white;
+    color: var(--text-on-primary);
 }
 
 .modal-content {
@@ -1241,7 +1242,7 @@
     top: 50%;
     transform: translateY(-50%);
     background: rgba(255, 255, 255, 0.1);
-    color: white;
+    color: var(--text-on-primary);
     border: none;
     border-radius: 50%;
     width: 60px;
@@ -1346,7 +1347,7 @@
 }
 
 .label-hamburger {
-    color: #D97706; /* Hamburger golden amber */
+    color: var(--warning-color); /* Hamburger golden amber */
 }
 
 .label-menu {
@@ -1375,7 +1376,7 @@
     background: var(--primary-color);
     cursor: pointer;
     box-shadow: 0 2px 8px rgba(14, 178, 187, 0.4);
-    border: 2px solid white;
+    border: 2px solid var(--bg-primary);
     transition: transform var(--transition-fast) ease, box-shadow var(--transition-fast) ease;
 }
 
@@ -1391,7 +1392,7 @@
     background: var(--primary-color);
     cursor: pointer;
     box-shadow: 0 2px 8px rgba(14, 178, 187, 0.4);
-    border: 2px solid white;
+    border: 2px solid var(--bg-primary);
     transition: transform var(--transition-fast) ease, box-shadow var(--transition-fast) ease;
 }
 

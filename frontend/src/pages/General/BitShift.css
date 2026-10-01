@@ -64,7 +64,7 @@
     width: 220px;
     border: 2px solid var(--border-rich);
     border-radius: var(--radius-lg);
-    background: white;
+    background: var(--bg-primary);
     overflow: hidden;
     transition: var(--transition-bounce);
     box-shadow: var(--shadow-md);
@@ -80,21 +80,31 @@
     border-color: var(--primary-color);
     transform: translateY(-4px) scale(1.02);
     box-shadow: var(--shadow-glow);
+    /* The input inside has no outline of its own: this one shows in forced-colors mode, where the border
+       colour change is lost */
+    outline: 2px solid transparent;
+    outline-offset: 2px;
 }
 
 .digital-ducks-input {
-    width: 100% !important;
-    padding: 0.75rem 1rem !important;
-    font-size: 1.5rem !important;
-    font-weight: 800 !important;
     text-align: center;
-    border: none !important;
-    border-radius: 0 !important;
-    background: transparent !important;
-    color: var(--primary-accessible) !important;
-    box-shadow: none !important;
-    outline: none !important;
-    transition: none !important;
+}
+
+/* Chained under the page and container (0,3,0) so it outranks the global form-control rules in index.css,
+   including input:hover:not(:focus) (0,2,1), and the .form-group input rules that leak in from other pages,
+   without !important. */
+.bit-shift-page .input-combined-container .digital-ducks-input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    font-size: 1.5rem;
+    font-weight: 800;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    color: var(--primary-accessible);
+    box-shadow: none;
+    outline: none;
+    transition: none;
 }
 
 .balance-info-inline {
@@ -240,7 +250,7 @@
     transition: fill 0.3s ease;
 }
 
-/* Active State (1) */
+/* Active State (1) - the duck colours below are deliberate illustration constants, not theme colours */
 .bit-toggle.active .duck-body,
 .bit-toggle.active .duck-head {
     fill: #FFD700; /* Vivid duck yellow */
@@ -285,15 +295,15 @@
 
 .math-check-banner.match {
     background: rgba(34, 197, 94, 0.12);
-    border-color: #22c55e;
-    color: #14532d; /* Dark green for contrast */
+    border-color: var(--green-500);
+    color: var(--green-900); /* Dark green for contrast */
     box-shadow: 0 0 16px rgba(34, 197, 94, 0.2);
 }
 
 .math-check-banner.mismatch {
     background: rgba(239, 68, 68, 0.1);
     border-color: var(--error-color);
-    color: #dc2626;
+    color: var(--error-color);
     box-shadow: 0 0 16px rgba(239, 68, 68, 0.15);
     animation: shake 0.35s ease;
 }
@@ -318,13 +328,17 @@
 }
 
 .binary-value {
-    font-family: 'Courier New', Courier, monospace !important;
-    font-size: 1.3rem !important;
     letter-spacing: 0.08em;
 }
 
-.decimal-value {
-    font-size: 1.3rem !important;
+/* Chained under .math-check-equation to outrank .math-check-equation strong without !important */
+.math-check-equation .binary-value {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 1.3rem;
+}
+
+.math-check-equation .decimal-value {
+    font-size: 1.3rem;
 }
 
 .math-check-status {
@@ -444,12 +458,17 @@
     text-shadow: 0 0 15px rgba(14, 178, 187, 0.3);
 }
 
+/* Specificity (0,2,0) beats .btn-premium and the unscoped .submit-button rules in SubmitProgressModal.css and
+   SubmitCertificate.css whichever order the stylesheets load in, so these need no !important. */
+.bit-shift-page .submit-button {
+    padding: 1rem;
+    font-size: 1.15rem;
+    font-weight: 800;
+}
+
 :where(.bit-shift-page) .submit-button {
     width: 100%;
-    padding: 1rem !important;
-    font-size: 1.15rem !important;
-    font-weight: 800 !important;
-    color: white;
+    color: var(--text-on-primary);
     background: var(--gradient-primary);
     border: none;
     border-radius: var(--radius-lg);
@@ -514,9 +533,9 @@
     .ducks-grid {
         margin-bottom: 1.25rem;
     }
-    .digital-ducks-input {
-        font-size: 1.5rem !important;
-        padding: 0.75rem !important;
+    .bit-shift-page .input-combined-container .digital-ducks-input {
+        font-size: 1.5rem;
+        padding: 0.75rem;
     }
 }
 
@@ -563,8 +582,8 @@
     padding: 0.6rem 1.5rem;
     font-size: 0.9rem;
     font-weight: 700;
-    color: white;
-    background: linear-gradient(135deg, var(--warning-color), #d97706);
+    color: var(--text-on-primary);
+    background: linear-gradient(135deg, var(--warning-color), var(--warning-color)); /* end stop was #d97706, the same value */
     border: none;
     border-radius: var(--radius-full);
     cursor: pointer;

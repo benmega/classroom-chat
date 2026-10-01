@@ -186,6 +186,19 @@ describe('AdminPanel', () => {
         });
     });
 
+    describe('layout', () => {
+        it('tags the react-admin layout so the panel styles can be scoped to it, and renders no sidebar', async () => {
+            const { container } = renderPanel('/Message');
+
+            expect(await screen.findByText('hello world')).toBeInTheDocument();
+            // AdminPanel.css scopes its .RaLayout-appFrame rule under this class instead of a global !important rule
+            const frame = container.querySelector('.RaLayout-appFrame');
+            expect(frame.closest('.admin-crud-layout')).not.toBeNull();
+            // The sidebar is nulled out in CustomLayout, which is why no .RaSidebar-root rule is needed
+            expect(container.querySelector('.RaSidebar-root')).toBeNull();
+        });
+    });
+
     describe('schema loading', () => {
         it('shows a spinner, then an alert naming the resource when the schema cannot be loaded', async () => {
             const { container } = renderPanel('/Note');

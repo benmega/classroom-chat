@@ -99,7 +99,7 @@
 
 .tab-badge-count {
     background: var(--border-rich);
-    color: white;
+    color: var(--text-on-primary);
     font-size: 0.75rem;
     font-weight: 700;
     padding: 2px 8px;
@@ -323,7 +323,7 @@
 
 .project-link-btn:hover {
     background: var(--primary-accessible);
-    color: white;
+    color: var(--text-on-primary);
 }
 
 .project-link-btn.video {
@@ -535,7 +535,7 @@
     border-radius: var(--radius-md);
     overflow: hidden;
     position: relative;
-    background: white;
+    background: var(--bg-primary);
 }
 
 .cert-preview-thumbnail iframe {
@@ -558,7 +558,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    color: white;
+    color: var(--text-on-primary);
     opacity: 0;
     transition: opacity 0.2s ease;
 }
@@ -791,7 +791,7 @@
 
 .btn-approve {
     background: var(--primary-accessible);
-    color: white;
+    color: var(--text-on-primary);
     box-shadow: 0 2px 8px rgba(0, 109, 116, 0.2);
     flex-grow: 1.5;
 }
@@ -811,7 +811,7 @@
 
 .btn-reject:hover:not(:disabled) {
     background: var(--error-color);
-    color: white;
+    color: var(--text-on-primary);
     transform: translateY(-1px);
 }
 
