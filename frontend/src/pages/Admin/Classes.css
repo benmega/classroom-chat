@@ -140,9 +140,9 @@
 .language-badge {
     display: inline-block;
     padding: 4px 10px;
-    background: #dbeafe;
+    background: var(--blue-100);
     color: var(--primary-accessible);
-    border: 1px solid #bfdbfe;
+    border: 1px solid var(--blue-200);
     border-radius: 8px;
     font-size: 0.85rem;
     font-weight: 700;

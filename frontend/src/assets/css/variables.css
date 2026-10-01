@@ -52,6 +52,44 @@
     --slate-800: #1E293B;
     --blue-600: #2563EB;
 
+    /* Palette steps (Tailwind-derived) for admin badges, tints and gradients.
+       Each holds exactly the literal it replaced, so migrating a rule changes nothing visually. */
+    --slate-700: #334155;           /* same value as --text-secondary */
+    --red-100: #FEE2E2;
+    --red-800: #991B1B;
+    --rose-50: #FFF1F2;
+    --rose-100: #FFE4E6;
+    --rose-700: #BE123C;
+    --amber-50: #FFFBEB;
+    --amber-100: #FEF3C7;
+    --amber-950: #451A03;
+    --yellow-200: #FEF08A;
+    --yellow-300: #FDE047;
+    --yellow-700: #A16207;
+    --green-100: #DCFCE7;
+    --green-700: #15803D;
+    --green-800: #166534;
+    --sky-100: #E0F2FE;
+    --sky-500: #0EA5E9;
+    --sky-700: #0369A1;
+    --blue-50: #EFF6FF;
+    --blue-100: #DBEAFE;
+    --blue-200: #BFDBFE;
+    --blue-700: #1D4ED8;
+    --indigo-200: #C7D2FE;
+    --indigo-600: #4F46E5;
+    --indigo-700: #4338CA;
+    --violet-50: #F5F3FF;
+    --violet-100: #EDE9FE;
+    --violet-200: #DDD6FE;
+    --violet-600: #7C3AED;
+    --violet-700: #6D28D9;
+    --violet-800: #5B21B6;
+    --purple-100: #F3E8FF;
+    --purple-700: #7E22CE;
+    --purple-800: #6B21A8;
+    --student-badge-color: #2B91AF; /* text of the admin dashboard student requester badge */
+
     /* Gradients — both endpoints pass AA with white text */
     --gradient-primary: linear-gradient(135deg, #007880 0%, #4F52C9 100%);
     --gradient-warning: linear-gradient(135deg, #D97706 0%, #B45309 100%);

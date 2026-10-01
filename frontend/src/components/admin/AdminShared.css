@@ -78,7 +78,7 @@
 }
 
 :where(.admin-body) .icon-btn.adjust { color: var(--warning-color); }
-:where(.admin-body) .icon-btn.adjust:hover:not(:disabled) { border-color: var(--warning-color); background: #fffbeb; color: var(--warning-color); }
+:where(.admin-body) .icon-btn.adjust:hover:not(:disabled) { border-color: var(--warning-color); background: var(--amber-50); color: var(--warning-color); }
 :where(.admin-body) .icon-btn.pass { color: var(--secondary-color); }
 :where(.admin-body) .icon-btn.pass:hover:not(:disabled) { border-color: var(--secondary-color); background: var(--secondary-light); color: var(--secondary-color); }
 :where(.admin-body) .icon-btn.delete:hover:not(:disabled) { color: var(--error-color); border-color: var(--error-color); background: var(--error-subtle); }

@@ -100,7 +100,7 @@
     border: none;
     background: transparent;
     color: var(--text-secondary);
-    font-family: var(--font-primary);
+    font-family: var(--font-body);
     font-weight: 600;
     font-size: 0.875rem;
     border-radius: 8px;

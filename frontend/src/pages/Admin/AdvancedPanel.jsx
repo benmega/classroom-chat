@@ -6,20 +6,16 @@ import {
     Terminal,
     Activity,
     Trash2,
-    Code,
-    BarChart3
+    X
 } from 'lucide-react';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
 import '../../components/admin/AdminShared.css';
 import './AdvancedPanel.css';
-import { X } from 'lucide-react';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
-import Skeleton from '../../components/common/Skeleton';
 
 const AdvancedPanel = () => {
     const navigate = useNavigate();
-    const isLoading = false; // Currently static
     const [logs, setLogs] = useState('');
     const [showLogModal, setShowLogModal] = useState(false);
     const [showStatsModal, setShowStatsModal] = useState(false);
@@ -76,24 +72,6 @@ const AdvancedPanel = () => {
             setIsPurging(false);
         }
     };
-
-
-
-    if (isLoading) return (
-        <div className="admin-advanced-panel animate-page-entry p-2rem">
-            <header className="page-header">
-                <Skeleton height="40px" width="300px" className="skeleton-title mb-2rem" />
-            </header>
-            <div className="advanced-grid">
-                {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
-                    <div key={i} className="action-button" style={{ background: 'var(--bg-secondary)', borderRadius: '12px', border: '1px solid var(--border-subtle)' }}>
-                        <Skeleton height="28px" width="28px" borderRadius="8px" style={{ marginBottom: '8px' }} />
-                        <Skeleton height="20px" width="70%" />
-                    </div>
-                ))}
-            </div>
-        </div>
-    );
 
     return (
         <div className="admin-advanced-panel">

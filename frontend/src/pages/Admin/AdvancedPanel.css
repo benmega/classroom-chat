@@ -101,7 +101,7 @@
     position: fixed;
     inset: 0;
     background: rgba(15, 23, 42, 0.4);
-    z-index: 2000;
+    z-index: var(--z-modal);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -195,9 +195,10 @@
     border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
+/* On the dark console --text-muted is only ~2.4:1, so its sub-text uses --border-rich (~7:1) */
 :where(.admin-advanced-panel) .log-content .stat-box .label {
     font-size: 0.8rem;
-    color: var(--text-muted);
+    color: var(--border-rich);
     text-transform: uppercase;
     letter-spacing: 0.05em;
 }
@@ -228,8 +229,8 @@
     border-radius: 10px;
 }
 
-:where(.admin-advanced-panel) .log-content .table-row span { color: var(--text-muted); }
-:where(.admin-advanced-panel) .log-content .table-row strong { color: var(--primary-accessible); }
+:where(.admin-advanced-panel) .log-content .table-row span { color: var(--border-rich); }
+:where(.admin-advanced-panel) .log-content .table-row strong { color: var(--primary-color); }
 
 /* Purge Confirmation */
 :where(.admin-advanced-panel) .purge-confirm .log-content {
