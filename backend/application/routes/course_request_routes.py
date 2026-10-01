@@ -5,6 +5,7 @@ Summary: Flask routes for student course instance requests.
 """
 
 from application.extensions import db
+from application.models.classroom import Classroom
 from application.models.course_instance import CourseInstance
 from application.models.course_instance_request import CourseInstanceRequest
 from application.utilities.db_helpers import find_user
@@ -83,7 +84,7 @@ def get_pending_requests():
         student = find_user(req.student_id)
         if student:
             req_dict["student_username"] = student.username
-            classrooms = [c.to_dict() for c in student.classrooms]
+            classrooms = Classroom.to_dicts(student.classrooms)
             req_dict["student_classrooms"] = classrooms
         enriched_requests.append(req_dict)
 

@@ -26,7 +26,7 @@ from flask import (
     session,
     url_for,
 )
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import contains_eager, joinedload
 from werkzeug.utils import secure_filename
 
 achievements = Blueprint("achievements", __name__)
@@ -440,12 +440,19 @@ def view_certificate(cert_id):
 @admin_only
 @api_response
 def admin_certificates():
-    # Only show pending certificates by default, matching the template
+    # Only show pending certificates by default, matching the template.
+    # The joins used for filtering also load the student and the achievement that
+    # to_dict() reads, so the list is one query however many certificates there are.
     certs = (
         db.session.query(UserCertificate)
         .filter_by(status="pending")
         .join(User)
         .join(Achievement)
+        .options(
+            contains_eager(UserCertificate.user),
+            contains_eager(UserCertificate.achievement),
+        )
+        .order_by(UserCertificate.submitted_at, UserCertificate.id)
         .all()
     )
 

@@ -139,7 +139,7 @@ const AdminDashboard = () => {
         </div>
     );
 
-    const { config, chart_data, all_users } = dashboardData;
+    const { config, chart_data, user_distribution, top_earners } = dashboardData;
 
     const parsedMultiplier = multiplierInput.trim() === '' ? NaN : Number(multiplierInput);
     let multiplierError = '';
@@ -178,16 +178,18 @@ const AdminDashboard = () => {
         },
     };
 
-    const engagementPct = all_users.length ? (all_users.filter(u => u.is_online).length / all_users.length * 100) : 0;
+    const engagementPct = dashboardData.total_users_count
+        ? (dashboardData.active_users_count / dashboardData.total_users_count * 100)
+        : 0;
 
     const userDistributionData = {
         labels: ['Active Students', 'Inactive Students', 'Parents', 'Administrators'],
         datasets: [{
             data: [
-                all_users.filter(u => u.is_online && u.role === 'student').length,
-                all_users.filter(u => !u.is_online && u.role === 'student').length,
-                all_users.filter(u => u.role === 'parent').length,
-                all_users.filter(u => u.role === 'admin').length
+                user_distribution.active_students,
+                user_distribution.inactive_students,
+                user_distribution.parents,
+                user_distribution.admins
             ],
             backgroundColor: ['#10B981', '#94A3B8', '#4F52C9', '#0EB2BB'], // success, border-rich, secondary, primary
             borderWidth: 0,
@@ -306,8 +308,8 @@ const AdminDashboard = () => {
                         <h3><Calendar size={20} /> High Value Earners</h3>
                     </div>
                     <div className="top-earners">
-                        {all_users.length === 0 && <p className="text-muted">No users yet</p>}
-                        {[...all_users].sort((a, b) => b.duck_balance - a.duck_balance).slice(0, 5).map(u => (
+                        {top_earners.length === 0 && <p className="text-muted">No users yet</p>}
+                        {top_earners.map(u => (
                             <div key={u.id} className="earner-item">
                                 <div className="user-info">
                                     <div className="name">{u.nickname || u.username}</div>

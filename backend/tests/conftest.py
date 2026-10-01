@@ -12,6 +12,7 @@ import string
 import tempfile
 import threading
 import uuid
+from contextlib import contextmanager
 from io import BytesIO
 from unittest.mock import patch
 from wsgiref.simple_server import make_server
@@ -36,6 +37,7 @@ from application.models.user import User
 from application.services import moderation_service
 from flask_login import LoginManager
 from PIL import Image
+from sqlalchemy import event
 
 db_fd, db_path = tempfile.mkstemp(suffix=".db")
 
@@ -128,6 +130,36 @@ def live_server(test_app):  # <--- CHANGED: Request 'test_app' explicitly
 @pytest.fixture
 def client(test_app):
     return test_app.test_client()
+
+
+@pytest.fixture
+def count_queries(init_db):
+    """Context manager counting the SQL statements sent to the database.
+
+    with count_queries() as statements:
+        ...
+    len(statements)  # statements the block sent, as text, in order
+
+    Only statements sent from the calling thread count, so a thread left over
+    from another test cannot change the figure.
+    """
+
+    @contextmanager
+    def _count():
+        statements = []
+        thread_id = threading.get_ident()
+
+        def record(conn, cursor, statement, parameters, context, executemany):
+            if threading.get_ident() == thread_id:
+                statements.append(statement)
+
+        event.listen(db.engine, "before_cursor_execute", record)
+        try:
+            yield statements
+        finally:
+            event.remove(db.engine, "before_cursor_execute", record)
+
+    return _count
 
 
 @pytest.fixture

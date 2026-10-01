@@ -264,11 +264,15 @@ def handle_send_message(data):
 
         from .models.message import Message
 
-        last_message = (
-            Message.query.filter_by(user_id=user.id).order_by(Message.id.desc()).first()
+        # Only the timestamp is needed, not the message and everything it targets
+        last_message_at = db.session.scalar(
+            select(Message.created_at)
+            .where(Message.user_id == user.id)
+            .order_by(Message.id.desc())
+            .limit(1)
         )
-        if last_message:
-            time_elapsed = (datetime.utcnow() - last_message.created_at).total_seconds()
+        if last_message_at:
+            time_elapsed = (datetime.utcnow() - last_message_at).total_seconds()
             if time_elapsed < 30:
                 remaining = int(30 - time_elapsed)
                 return {
@@ -313,37 +317,30 @@ def handle_send_message(data):
             "error": save_result.get("error", "Failed to save message"),
         }
 
-    from .models.message import Message
-
-    msg = db.session.get(Message, save_result.get("message_id"))
+    # save_message_to_db hands back what the broadcast needs: no second load of the message
+    msg = save_result["message"]
 
     payload = {
-        "id": msg.id,
+        "id": msg["id"],
         "user_id": user.id,
         "user_name": user.nickname if user.nickname else user.username,
         "slug": user.slug,
         "user_profile_pic": user.profile_picture,
-        "content": msg.content,
-        "message_type": msg.message_type,
-        "created_at": msg.created_at.isoformat()
-        if msg.created_at
+        "content": msg["content"],
+        "message_type": msg["message_type"],
+        "created_at": msg["created_at"].isoformat()
+        if msg["created_at"]
         else datetime.utcnow().isoformat(),
-        "is_global": msg.is_global,
-        "target_live": msg.target_live,
-        "target_classrooms": [c.name for c in msg.target_classrooms]
-        if msg.target_classrooms
-        else [],
-        "target_classroom_ids": [c.id for c in msg.target_classrooms]
-        if msg.target_classrooms
-        else [],
-        "target_users": [(u.nickname or u.username) for u in msg.target_users]
-        if msg.target_users
-        else [],
-        "is_struck": msg.is_struck,
-        "has_animated_border": msg.has_animated_border,
-        "animated_border_speed": msg.animated_border_speed,
-        "animated_border_color": msg.animated_border_color,
-        "chat_font_color": msg.chat_font_color,
+        "is_global": msg["is_global"],
+        "target_live": msg["target_live"],
+        "target_classrooms": [c["name"] for c in save_result["target_classrooms"]],
+        "target_classroom_ids": [c["id"] for c in save_result["target_classrooms"]],
+        "target_users": save_result["target_user_names"],
+        "is_struck": msg["is_struck"],
+        "has_animated_border": msg["has_animated_border"],
+        "animated_border_speed": msg["animated_border_speed"],
+        "animated_border_color": msg["animated_border_color"],
+        "chat_font_color": msg["chat_font_color"],
     }
 
     # Emit to appropriate rooms
@@ -363,11 +360,14 @@ def handle_send_message(data):
                 emit("message_received", payload, room=f"user:{uid}")
 
         if target_live:
-            online_users = User.query.filter_by(is_online=True).all()
-            for u in online_users:
-                # Basic dedup: if u in target_users, we already sent
-                if u.id not in target_users and u.id != user.id:
-                    emit("message_received", payload, room=f"user:{u.id}")
+            # Only the ids are needed to address the rooms
+            online_user_ids = db.session.scalars(
+                select(User.id).where(User.is_online.is_(True))
+            ).all()
+            for online_id in online_user_ids:
+                # Basic dedup: if the user is in target_users, we already sent
+                if online_id not in target_users and online_id != user.id:
+                    emit("message_received", payload, room=f"user:{online_id}")
 
     # Evaluate achievements (respects the 5-minute throttle)
     from .services.achievement_engine import evaluate_user

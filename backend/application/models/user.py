@@ -90,7 +90,7 @@ class User(db.Model):
         "Classroom",
         secondary="user_classrooms",
         back_populates="users",
-        lazy="selectin",
+        lazy="select",
     )
 
     notes = db.relationship(
@@ -106,8 +106,8 @@ class User(db.Model):
         secondary="parent_students",
         primaryjoin="User.id == parent_students.c.parent_id",
         secondaryjoin="User.id == parent_students.c.student_id",
-        lazy="selectin",
-        backref=db.backref("parents", lazy="selectin"),
+        lazy="select",
+        backref=db.backref("parents", lazy="select"),
     )
 
     def __repr__(self):

@@ -420,10 +420,13 @@ def new_project():
 
     # GET logic
     if request.is_json or request.accept_mimetypes.accept_json:
+        # Only three columns are needed for the picker: no full User rows
         student_list = (
             [
-                {"id": u.id, "username": u.username, "slug": u.slug}
-                for u in User.query.all()
+                {"id": uid, "username": username, "slug": slug}
+                for uid, username, slug in db.session.query(
+                    User.id, User._username, User.slug
+                ).order_by(User.id)
             ]
             if getattr(user_obj, "role", "") == "admin"
             else None

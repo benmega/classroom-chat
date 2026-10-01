@@ -1,68 +1,105 @@
+from collections import deque
 from datetime import datetime, timedelta
 
 from application.decorators.admin_required import admin_only
 from application.decorators.api_response import api_response
 from application.extensions import db
-from application.models.banned_words import BannedWords
-from application.models.classroom import Classroom
 from application.models.configuration import Configuration
 from application.models.duck_trade import DuckTradeLog
 from application.models.duck_transaction import DuckTransaction
 from application.models.user import User
 from application.utilities.helper_functions import utcnow_naive
 from flask import Response, current_app, request
-from sqlalchemy import func
-from sqlalchemy.orm import selectinload
+from sqlalchemy import and_, case, func
 
 from ..admin_routes import admin_bp
+
+# The longest chart range a caller can ask for by number of days ("all" follows the data)
+MAX_CHART_DAYS = 365
+# Rows in the "high value earners" list
+TOP_EARNERS_COUNT = 5
 
 
 @admin_bp.route("/dashboard", methods=["GET"])
 @admin_only
 @api_response
 def dashboard_data():
-    total_ducks = db.session.query(func.sum(User.duck_balance)).scalar() or 0
-    active_users = User.query.filter_by(is_online=True).count()
-    pending_trades = DuckTradeLog.query.filter_by(status="pending").count()
-    pending_users = User.query.filter_by(is_approved=False).filter(User.role != 'admin').count()
-
-    last_week = utcnow_naive() - timedelta(days=7)
-    ducks_earned_week = (
-        db.session.query(func.sum(DuckTransaction.amount))
-        .filter(DuckTransaction.amount > 0, DuckTransaction.timestamp >= last_week)
-        .scalar()
-        or 0
+    # Every roster-wide figure comes from one grouped query: no user is loaded
+    roster = (
+        db.session.query(
+            User.role,
+            User.is_online,
+            func.count(User.id),
+            func.sum(User.duck_balance),
+            func.sum(
+                case((and_(User.is_approved.is_(False), User.role != 'admin'), 1), else_=0)
+            ),
+        )
+        .group_by(User.role, User.is_online)
+        .all()
     )
+    total_users_count = 0
+    active_users = 0
+    total_ducks = 0
+    pending_users = 0
+    user_distribution = {
+        "active_students": 0,
+        "inactive_students": 0,
+        "parents": 0,
+        "admins": 0,
+    }
+    for role, is_online, role_count, role_ducks, role_pending in roster:
+        total_users_count += role_count
+        total_ducks += role_ducks or 0
+        pending_users += int(role_pending or 0)
+        if is_online:
+            active_users += role_count
+        if role == "student":
+            user_distribution["active_students" if is_online else "inactive_students"] += role_count
+        elif role == "parent":
+            user_distribution["parents"] += role_count
+        elif role == "admin":
+            user_distribution["admins"] += role_count
 
-    total_users_count = User.query.count()
-    users = User.query.options(selectinload(User.projects)).limit(10).all()
-    # Column-only projection: avoids loading full ORM objects (and lazy relationship
-    # triggers) just to produce the slim per-user list below. Unlike `users` above,
-    # this is NOT capped, so it's safe to use for roster-wide stats (counts,
-    # averages, breakdowns) without the cost of to_dict_summary() per user.
-    all_users = db.session.query(
-        User.id, User._username, User.nickname, User.duck_balance, User.role, User.is_online
-    ).all()
+    top_earners = (
+        db.session.query(User.id, User._username, User.nickname, User.duck_balance)
+        .order_by(User.duck_balance.desc(), User.id)
+        .limit(TOP_EARNERS_COUNT)
+        .all()
+    )
+    pending_trades = DuckTradeLog.query.filter_by(status="pending").count()
     config = Configuration.get_current()
-    banned_words = BannedWords.query.all()
-    classrooms = Classroom.query.all()
 
     days_param = request.args.get("days", "7")
     tz_offset = request.args.get("tz_offset", 0, type=int)
     now_utc = utcnow_naive()
     now_local = now_utc - timedelta(minutes=tz_offset)
 
-    first_tx = DuckTransaction.query.order_by(DuckTransaction.timestamp.asc()).first()
+    # The first transaction and this week's earnings in a single pass over the table
+    last_week = now_utc - timedelta(days=7)
+    first_tx_time, ducks_earned_week = db.session.query(
+        func.min(DuckTransaction.timestamp),
+        func.sum(
+            case(
+                (
+                    and_(DuckTransaction.amount > 0, DuckTransaction.timestamp >= last_week),
+                    DuckTransaction.amount,
+                ),
+                else_=0,
+            )
+        ),
+    ).one()
+    ducks_earned_week = ducks_earned_week or 0
     max_history_days = 0
-    if first_tx and first_tx.timestamp:
-        first_tx_local = first_tx.timestamp - timedelta(minutes=tz_offset)
+    if first_tx_time:
+        first_tx_local = first_tx_time - timedelta(minutes=tz_offset)
         max_history_days = (now_local.date() - first_tx_local.date()).days + 1
 
     if days_param == "all":
         days = max_history_days if max_history_days > 0 else 7
     else:
         try:
-            days = int(days_param)
+            days = max(1, min(int(days_param), MAX_CHART_DAYS))
         except ValueError:
             days = 7
 
@@ -112,21 +149,17 @@ def dashboard_data():
         "pending_users_count": pending_users,
         "ducks_earned_this_week": ducks_earned_week,
         "total_users_count": total_users_count,
-        "users": User.to_dict_summaries(users),
-        "all_users": [
+        "user_distribution": user_distribution,
+        "top_earners": [
             {
-                "id": u.id,
-                "username": u._username,
-                "nickname": u.nickname,
-                "duck_balance": u.duck_balance,
-                "role": u.role,
-                "is_online": u.is_online,
+                "id": uid,
+                "username": username,
+                "nickname": nickname,
+                "duck_balance": duck_balance,
             }
-            for u in all_users
+            for uid, username, nickname, duck_balance in top_earners
         ],
-        "classrooms": [c.to_dict() for c in classrooms],
         "config": config.to_dict() if config else {},
-        "banned_words": [bw.to_dict() for bw in banned_words],
         "chart_data": {
             "labels": labels,
             "dates": dates,
@@ -150,10 +183,9 @@ def get_logs():
         return {"logs": "Log file not found."}
 
     try:
-        with open(log_path, "r") as f:
-            # Read all lines and take last 500
-            lines = f.readlines()
-            last_lines = lines[-500:]
+        # The file can be 10 MB: stream it and keep only the last 500 lines
+        with open(log_path, "r", errors="replace") as f:
+            last_lines = deque(f, maxlen=500)
             return {"logs": "".join(last_lines)}
     except Exception as e:
         return {"error": f"Failed to read logs: {e!s}"}, 500

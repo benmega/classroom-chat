@@ -75,24 +75,27 @@ class Message(db.Model):
     target_live = db.Column(db.Boolean, default=False)
 
     # Relationships
+    # The author is one row, so it is joined into the message query. The reverse
+    # collections (User.messages, *.targeted_messages) grow with the history and
+    # must never load as a side effect of loading a user or classroom.
     user = db.relationship(
         "User",
-        backref=db.backref("messages", lazy="selectin", cascade="all, delete-orphan"),
-        lazy="selectin",
+        backref=db.backref("messages", lazy="select", cascade="all, delete-orphan"),
+        lazy="joined",
     )
 
     target_classrooms = db.relationship(
         "Classroom",
         secondary=message_classrooms,
         lazy="selectin",
-        backref=db.backref("targeted_messages", lazy="selectin"),
+        backref=db.backref("targeted_messages", lazy="select"),
     )
 
     target_users = db.relationship(
         "User",
         secondary=message_users,
         lazy="selectin",
-        backref=db.backref("targeted_messages", lazy="selectin"),
+        backref=db.backref("targeted_messages", lazy="select"),
     )
 
     def __repr__(self):

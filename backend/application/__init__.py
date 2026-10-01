@@ -204,7 +204,9 @@ def create_app(config_class=None):
     @app.before_request
     def load_user():
         user_id = session.get("user")
-        g.user = User.query.filter_by(id=user_id).first() if user_id else None
+        # A primary-key lookup: the row lands in the identity map, so the routes' own
+        # db.session.get(User, ...) calls in the same request cost no further query
+        g.user = db.session.get(User, user_id) if user_id else None
 
     @app.context_processor
     def inject_user():

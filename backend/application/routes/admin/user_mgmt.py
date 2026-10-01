@@ -495,7 +495,7 @@ def get_classrooms_list():
     from application.models.classroom import Classroom
 
     classrooms = Classroom.query.order_by(Classroom.name).all()
-    return {"classrooms": [c.to_dict() for c in classrooms]}
+    return {"classrooms": Classroom.to_dicts(classrooms)}
 
 
 @admin_bp.route("/classrooms/<classroom_id>/connection_cards", methods=["GET"])
@@ -764,7 +764,9 @@ def get_student_parents(student_id):
 @admin_bp.route("/parents/connections", methods=["GET"])
 @admin_only
 def get_parent_child_connections():
-    parents = User.query.filter_by(role="parent").all()
+    parents = (
+        User.query.options(selectinload(User.children)).filter_by(role="parent").all()
+    )
     connections = []
     for parent in parents:
         for child in parent.children:

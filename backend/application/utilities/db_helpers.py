@@ -9,6 +9,7 @@ import logging
 from application.models.message import Message
 from application.models.user import User, db
 from flask import abort
+from sqlalchemy import or_, select
 
 logger = logging.getLogger(__name__)
 
@@ -148,10 +149,16 @@ def save_message_to_db(
 
     Returns:
         dict: A dictionary containing success status, message ID,
-              or error details if applicable.
+              or error details if applicable. On success it also holds
+              what a broadcast of the message needs, so the caller does not
+              have to load the message again: "message" (the stored column
+              values), "target_classrooms" (id and name of each classroom
+              targeted) and "target_user_names" (display name of each user
+              targeted).
     """
     try:
         from application.models.classroom import Classroom
+        from application.models.message import message_users
         from application.services.moderation_service import is_appropriate
 
         user = db.session.get(User, user_id)
@@ -178,31 +185,74 @@ def save_message_to_db(
             chat_font_color=user.chat_font_color,
         )
 
+        # The users to target (the online ones and/or the listed ids) in one query,
+        # as columns: a user row is all that is needed, never a loaded User
+        user_filters = []
         if target_live:
-            # Get currently online users
-            online_users = User.query.filter_by(is_online=True).all()
-            new_message.target_users.extend(online_users)
-
+            user_filters.append(User.is_online.is_(True))
         if target_user_ids:
-            for uid in target_user_ids:
-                u = db.session.get(User, uid)
-                if u and u not in new_message.target_users:
-                    new_message.target_users.append(u)
+            user_filters.append(User.id.in_(target_user_ids))
+        targeted_users = (
+            db.session.execute(
+                select(User.id, User.nickname, User._username)
+                .where(or_(*user_filters))
+                .order_by(User.id)
+            ).all()
+            if user_filters
+            else []
+        )
 
+        # Every targeted classroom in one query, in the order they were asked for
+        targeted_classrooms = []
         if target_classrooms:
-            for cid in target_classrooms:
-                classroom = db.session.get(Classroom, cid)
-                if classroom:
-                    new_message.target_classrooms.append(classroom)
+            found = {
+                c.id: c
+                for c in db.session.scalars(
+                    select(Classroom).where(Classroom.id.in_(target_classrooms))
+                )
+            }
+            targeted_classrooms = [
+                found[cid] for cid in dict.fromkeys(target_classrooms) if cid in found
+            ]
+            new_message.target_classrooms.extend(targeted_classrooms)
 
         db.session.add(new_message)
-        db.session.commit()
+        # The flush assigns the id and column defaults, and writes the message row
+        # the user links below refer to
+        db.session.flush()
+        if targeted_users:
+            db.session.execute(
+                message_users.insert(),
+                [{"message_id": new_message.id, "user_id": row[0]} for row in targeted_users],
+            )
 
-        logger.info(f"Message saved with ID: {new_message.id} for user {user_id}")
-        return {
+        # Read everything the caller needs before the commit: it expires every
+        # loaded row, and reading an expired row is a query each
+        result = {
             "success": True,
             "message_id": new_message.id,
+            "message": {
+                "id": new_message.id,
+                "content": new_message.content,
+                "message_type": new_message.message_type,
+                "created_at": new_message.created_at,
+                "is_global": new_message.is_global,
+                "target_live": new_message.target_live,
+                "is_struck": new_message.is_struck,
+                "has_animated_border": new_message.has_animated_border,
+                "animated_border_speed": new_message.animated_border_speed,
+                "animated_border_color": new_message.animated_border_color,
+                "chat_font_color": new_message.chat_font_color,
+            },
+            "target_classrooms": [
+                {"id": c.id, "name": c.name} for c in targeted_classrooms
+            ],
+            "target_user_names": [row[1] or row[2] for row in targeted_users],
         }
+        db.session.commit()
+
+        logger.info(f"Message saved with ID: {result['message_id']} for user {user_id}")
+        return result
 
     except Exception:
         logger.exception("Error saving message to database")

@@ -31,7 +31,8 @@ Split across `backend/application/routes/admin/*.py` by concern:
 All admin routes require `admin_only` (a session user whose `role` is `admin`).
 
 ## 3. Messaging (`/message`)
-- **`GET /message/api/feed`**: Chat feed for the current user: global messages, messages in their classrooms, and direct messages (admins see everything unless a `classroom_id` is given).
+- **`GET /message/api/feed`**: Chat feed for the current user: global messages, messages in their classrooms, and direct messages (admins see everything unless a `classroom_id` is given). `limit` is clamped to 1-100 (default 50); page back with `before_id`.
+- **`GET /message/api/unread-count`**: Unread badge without the messages: `{count, latest_id}` for the newest 50 messages the feed would show; `count` is those newer than `last_read_id`, `latest_id` is the newest visible id (or `null`).
 - **`GET /message/api/me/context`**: Current user's messaging context: their classrooms (with sandbox state) and, for admins, the list of messageable users.
 - **`DELETE /message/delete_message/<id>`**: Deletes a message (author/admin only).
 - **WebSocket (`socket.io`)**, handlers in `backend/application/socket_events.py`: real-time message broadcast and presence. Sending a message is **not** an HTTP route: the client emits the `send_message` event and the server emits `message_received` to the target rooms. Other server events: `user_status_change`, `classroom_enrolled`, `activity_resolved`, `achievement_unlocked`, `message_deleted`, `sandbox_status_changed`. There is no `typing` event.

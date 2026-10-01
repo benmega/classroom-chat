@@ -39,7 +39,7 @@ vi.mock('react-chartjs-2', () => ({
       onFocus={(e) => options.onHover({ native: { target: e.target } }, [{ datasetIndex: 0, index: 1 }])}
     />
   ),
-  Pie: () => <canvas data-testid="pie-chart" />,
+  Pie: ({ data }) => <canvas data-testid="pie-chart" data-values={data.datasets[0].data.join(',')} />,
 }));
 
 vi.mock('../../hooks/useAdminDashboard');
@@ -51,24 +51,16 @@ vi.mock('../../hooks/useSidebar', () => ({
 global.URL.createObjectURL = vi.fn(() => 'blob:url');
 
 const mockDashboardData = {
-  users: [
-    { id: 1, username: 'alice', nickname: 'Alice', role: 'student', is_admin: false, duck_balance: 50, is_online: true },
-    { id: 2, username: 'bob', nickname: 'Bob', role: 'parent', is_admin: false, duck_balance: 10, is_online: false },
-  ],
-  all_users: [
-    { id: 1, username: 'alice', nickname: 'Alice', role: 'student', is_admin: false, duck_balance: 50, is_online: true },
-    { id: 2, username: 'bob', nickname: 'Bob', role: 'parent', is_admin: false, duck_balance: 10, is_online: false },
-    { id: 3, username: 'charlie', nickname: null, role: 'student', is_admin: false, duck_balance: 20, is_online: true },
-    { id: 4, username: 'admin', nickname: 'Admin', role: 'admin', is_admin: true, duck_balance: 0, is_online: false },
+  user_distribution: { active_students: 2, inactive_students: 3, parents: 1, admins: 1 },
+  top_earners: [
+    { id: 1, username: 'alice', nickname: 'Alice', duck_balance: 50 },
+    { id: 3, username: 'charlie', nickname: null, duck_balance: 20 },
+    { id: 2, username: 'bob', nickname: 'Bob', duck_balance: 10 },
   ],
   config: {
     message_sending_enabled: false,
     duck_multiplier: 1.0,
   },
-  banned_words: [
-    { id: 1, word: 'badword' },
-    { id: 2, word: 'anotherbad' },
-  ],
   chart_data: {
     dates: ['2023-01-01', '2023-01-02', '2023-01-03'],
     labels: ['Mon', 'Tue', 'Wed'],
@@ -76,8 +68,8 @@ const mockDashboardData = {
     spent: [5, 8, 12],
     max_history_days: 90,
   },
-  classrooms: [],
-  total_users_count: 2,
+  total_users_count: 7,
+  active_users_count: 2,
   total_ducks: 100,
   ducks_earned_this_week: 30,
   pending_users_count: 3,
@@ -146,10 +138,16 @@ describe('AdminDashboard', () => {
     expect(screen.getByRole('button', { name: 'Retrying...' })).toBeDisabled();
   });
 
-  it('says there are no users yet when the user list is empty', () => {
+  it('says there are no users yet when there are no top earners', () => {
     useAdminDashboard.mockReturnValue({
       ...defaultHookReturn,
-      dashboardData: { ...mockDashboardData, all_users: [] },
+      dashboardData: {
+        ...mockDashboardData,
+        top_earners: [],
+        total_users_count: 0,
+        active_users_count: 0,
+        user_distribution: { active_students: 0, inactive_students: 0, parents: 0, admins: 0 },
+      },
     });
     renderComponent();
 
@@ -160,6 +158,30 @@ describe('AdminDashboard', () => {
   it('does not show the empty-users text when there are users', () => {
     renderComponent();
     expect(screen.queryByText('No users yet')).not.toBeInTheDocument();
+  });
+
+  it('charts the user breakdown the server computed', () => {
+    renderComponent();
+    expect(screen.getByTestId('pie-chart')).toHaveAttribute('data-values', '2,3,1,1');
+  });
+
+  it('derives the online share from the active and total user counts', () => {
+    useAdminDashboard.mockReturnValue({
+      ...defaultHookReturn,
+      dashboardData: { ...mockDashboardData, total_users_count: 8, active_users_count: 2 },
+    });
+    renderComponent();
+
+    expect(screen.getByText('25% of users are currently online')).toBeInTheDocument();
+  });
+
+  it('lists the top earners in the order the server sent them', () => {
+    renderComponent();
+
+    const names = [...document.querySelectorAll('.earner-item .name')].map(n => n.textContent);
+    expect(names).toEqual(['Alice', 'charlie', 'Bob']);
+    expect(screen.getByText('@charlie')).toBeInTheDocument();
+    expect(screen.getByText(/50\.0/)).toBeInTheDocument();
   });
 
   it('renders the dashboard header with title', () => {

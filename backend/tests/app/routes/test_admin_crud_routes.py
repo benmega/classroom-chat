@@ -361,9 +361,29 @@ def test_list_does_not_load_relationships_it_never_serializes(admin_client):
     finally:
         event.remove(User, "load", remember)
 
-    # User.messages is a selectin relationship: the listed row must not have hydrated it
+    # The listed row must not have hydrated User.messages (or any other relationship)
     [listed] = [u for u in loaded if u.id == user_id]
     assert "messages" in inspect(listed).unloaded
+
+
+def test_message_list_does_not_load_the_relationships_it_never_serializes(admin_client):
+    # Message.user is joined and its targets are selectin-loaded by default
+    message = MessageFactory(user_id=UserFactory().id, is_global=True)
+    message_id = message.id
+    loaded = []
+
+    def remember(target, context):
+        loaded.append(target)
+
+    db.session.remove()
+    event.listen(Message, "load", remember)
+    try:
+        assert admin_client.get(f"{BASE}/message?id={message_id}").status_code == 200
+    finally:
+        event.remove(Message, "load", remember)
+
+    [listed] = [m for m in loaded if m.id == message_id]
+    assert {"user", "target_classrooms", "target_users"} <= inspect(listed).unloaded
 
 
 def test_every_model_lists_and_matches_its_schema(admin_client):
