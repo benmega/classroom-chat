@@ -6,6 +6,12 @@ on:
       - deploy
   workflow_dispatch:
 
+# One S3 publish at a time (push and manual runs share the group). Never cancel
+# an in-flight sync; a queued run is superseded by the newest one.
+concurrency:
+  group: deploy-frontend-s3
+  cancel-in-progress: false
+
 jobs:
   # Gates: deploy must not run unless both of these succeed.
   tests:
@@ -33,7 +39,7 @@ jobs:
           VITE_API_URL: https://api-blossom.benmega.com
         run: |
           cd frontend
-          npm install
+          npm ci
           npm run build
 
       - name: Configure AWS Credentials

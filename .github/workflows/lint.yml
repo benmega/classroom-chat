@@ -1,7 +1,10 @@
 name: Linting
 
 on:
+  # Push runs are limited to long-lived branches so a push to a PR branch is
+  # linted once (by the pull_request run) instead of twice.
   push:
+    branches: [ main, master, working ]
   pull_request:
   # Allow other workflows (e.g. deploy) to require this as a gate.
   workflow_call:

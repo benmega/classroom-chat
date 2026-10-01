@@ -5,6 +5,13 @@ on:
     branches:
       - deploy
 
+# One backend deploy at a time: overlapping runs would execute deploy.sh
+# concurrently on the EC2 host. Never cancel an in-flight deploy; a queued run
+# is superseded by the newest one.
+concurrency:
+  group: deploy-backend-ec2
+  cancel-in-progress: false
+
 jobs:
   # Gates: deploy must not run unless both of these succeed.
   tests:

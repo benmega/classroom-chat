@@ -117,53 +117,23 @@ Key points:
 
 Nginx is used exclusively as a reverse proxy for the API, handling SSL termination for `api-blossom.benmega.com` and forwarding traffic to Gunicorn.
 
-File: `/etc/nginx/sites-available/benmega`
+The config is versioned in the repo at
+[`infrastructure/nginx/api-blossom.benmega.com.conf`](../infrastructure/nginx/api-blossom.benmega.com.conf).
+On every deploy `deploy.sh` copies it to `/etc/nginx/sites-available/benmega`, symlinks it into
+`sites-enabled` if needed and reloads nginx. Edit the file in the repo, not on the server (the next
+deploy overwrites the server copy); it is intentionally not duplicated here so this page cannot drift.
 
-```nginx
-# Redirect HTTP → HTTPS
-server {
-    listen 80;
-    server_name api-blossom.benmega.com;
-    client_max_body_size 500M;
-    return 301 https://$host$request_uri;
-}
+It covers:
+- HTTP to HTTPS redirect and TLS (Let's Encrypt certificate for `api-blossom.benmega.com`)
+- Security headers (HSTS, `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`)
+- CORS preflight: `OPTIONS` requests to the API routes are answered by nginx itself, ahead of Flask
+- Proxying of the API route prefixes (`api`, `user`, `session`, `message`, `upload`, `challenge`, `ai`,
+  `duck_trade`, `notes`, `server`) to Gunicorn on `127.0.0.1:8000`, with 300 s read/send timeouts and a
+  500 MB request body limit for uploads
+- WebSocket (`/socket.io`) proxying with the `Upgrade` headers
 
-server {
-    listen 443 ssl;
-    server_name api-blossom.benmega.com;
-    client_max_body_size 500M;
-
-    ssl_certificate     /etc/letsencrypt/live/api-blossom.benmega.com/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/api-blossom.benmega.com/privkey.pem;
-    include /etc/letsencrypt/options-ssl-nginx.conf;
-    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
-
-    # API / backend routes → proxy to Gunicorn.
-    # The React app uses /api/achievements/*; the legacy /achievements/* blueprint and /dev-login
-    # are not proxied (dev-login is disabled in production anyway).
-    location ~ ^/(api|user|session|message|upload|challenge|ai|duck_trade|notes|server)(/|$) {
-        proxy_pass         http://127.0.0.1:8000;
-        proxy_http_version 1.1;
-        proxy_set_header   Host              $host;
-        proxy_set_header   X-Real-IP         $remote_addr;
-        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
-        proxy_set_header   X-Forwarded-Proto $scheme;
-    }
-
-    # WebSocket (socket.io) → proxy to Gunicorn
-    location /socket.io/ {
-        proxy_pass         http://127.0.0.1:8000;
-        proxy_http_version 1.1;
-        proxy_set_header   Upgrade           $http_upgrade;
-        proxy_set_header   Connection        "upgrade";
-        proxy_set_header   Host              $host;
-        proxy_set_header   X-Real-IP         $remote_addr;
-        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
-        proxy_set_header   X-Forwarded-Proto $scheme;
-        proxy_read_timeout 120s;
-    }
-}
-```
+The legacy `/achievements/*` blueprint and `/dev-login` are deliberately not proxied: the React app uses
+`/api/achievements/*`, and dev-login is disabled in production.
 
 > **Note on Frontend Routing**: The frontend SPA (`blossom.benmega.com`) is hosted on **AWS S3** and served globally via **AWS CloudFront**. CloudFront handles SSL termination and redirects, and the S3 bucket is configured to serve `index.html` for client-side routing.
 
@@ -171,14 +141,14 @@ server {
 
 ## 6. CI/CD Pipeline (GitHub Actions)
 
-- **`deploy-frontend.yml`**: Triggers on push to `deploy`. Builds the React SPA and uploads the static assets directly to the AWS S3 bucket.
-- **`deploy.yml`**: Triggers on push to `deploy`. SSHes into EC2, writes `backend/.env` from GitHub Secrets, then runs `deploy.sh` (dependency install, DB backup, `flask db upgrade`, `python -m tools.migrate_classroom`, `flask seed`, service restart, health check with automatic rollback; see [section 8](#8-database-migrations)).
-- **`lint.yml`**: ESLint (React) + Ruff (Python) on every PR.
-- **`tests.yml`**: Vitest + Pytest on every PR.
+- **`deploy-frontend.yml`**: Triggers on push to `deploy`. Builds the React SPA and uploads the static assets directly to the AWS S3 bucket. Runs are serialised (`concurrency` group); a newer push queues behind an in-flight run instead of cancelling it.
+- **`deploy.yml`**: Triggers on push to `deploy`. SSHes into EC2, writes `backend/.env` from GitHub Secrets, then runs `deploy.sh` (dependency install, online SQLite DB backup, `flask db upgrade`, `python -m tools.migrate_classroom`, `flask seed`, service restart, health check with automatic rollback; see [section 8](#8-database-migrations)). Runs are serialised (`concurrency` group) so two deploys never run `deploy.sh` at the same time.
+- **`lint.yml`**: Ruff (Python) + ESLint (React) on every PR and on pushes to `main`/`master`/`working`. Also the lint gate for both deploy workflows.
+- **`tests.yml`**: On pushes and PRs to `main`/`master`: a backend job (mypy, Alembic single-head check, Pytest) and a frontend job (Vitest with coverage, Playwright E2E against a locally started backend). Also the test gate for both deploy workflows.
 - **`ai-planner.yml`, `ai-coder.yml`**: run when an issue or pull request receives an AI label.
   Do not add those labels casually; they start automated AI workflows.
 
-Required GitHub Secrets: `EC2_HOST`, `EC2_USERNAME`, `EC2_SSH_KEY`, `SECRET_KEY`,
+Required GitHub Secrets: `EC2_USERNAME`, `EC2_SSH_KEY`, `SECRET_KEY`,
 `ADMIN_USERNAME`, `ADMIN_PASSWORD`, `WEBHOOK_SECRET`, as well as AWS credentials for S3 uploads.
 The `ai-planner.yml` and `ai-coder.yml` workflows additionally use the `OPENAI_API_KEY` secret; the Flask app itself no longer reads it.
 
@@ -208,8 +178,9 @@ scripts, `run_migrations.py`, `backend/instance/utilities/`) has been removed. D
 `set -e` aborts the deploy if a step fails, so the service is never restarted on a schema that
 does not match the code.
 
-1. **Backup**: copy `prod_users.db` to `backend/instance/backups/pre_deploy_<timestamp>.db`. The
-   automatic rollback restores this copy if the health check fails.
+1. **Backup**: take an online SQLite backup of `prod_users.db` (plain file copy as a fallback) into
+   `backend/instance/backups/pre_deploy_<timestamp>.db`. The automatic rollback restores this copy
+   if the health check fails.
 2. **Heal `last_daily_duck`**: a small inline `sqlite3` snippet that repairs integer values in
    `users.last_daily_duck`, run before the app is imported.
 3. **Bootstrap check**: with no `alembic_version` table this is a fresh install, so
