@@ -6,7 +6,7 @@ from application.extensions import db
 from application.models.challenge_log import ChallengeLog
 from application.models.user import User, save_new_user
 from application.utilities.db_helpers import get_canonical_course_slug
-from flask import current_app, jsonify, request
+from flask import jsonify, request
 from sqlalchemy.orm import selectinload
 
 from ..admin_routes import admin_bp
@@ -355,78 +355,6 @@ def adjust_packets():
         )
 
 
-@admin_bp.route("/set_username", methods=["POST"])
-@admin_only
-def set_username_route():
-    user_id = request.form.get("user_id", type=int)
-    username = request.form.get("username")
-
-    if not user_id or not username:
-        return jsonify({"success": False, "message": "Missing arguments"}), 400
-
-    if not re.fullmatch(r"[a-z0-9_]{3,30}", username.lower()):
-        return jsonify(
-            success=False,
-            message="Username must be 3-30 chars: lowercase letters, numbers, or underscores only",
-        ), 400
-
-    user = db.session.get(User, user_id)
-    if not user:
-        return jsonify({"success": False, "message": "User not found"}), 404
-
-    import sqlalchemy.exc
-
-    try:
-        user.username = username.lower()
-        db.session.commit()
-        return jsonify({"success": True, "message": "Username set successfully"})
-    except sqlalchemy.exc.IntegrityError:
-        db.session.rollback()
-        return jsonify({"success": False, "message": "Username already exists"}), 409
-
-
-@admin_bp.route("/verify_password", methods=["POST"])
-@admin_only
-def verify_password():
-    password = request.form.get("password")
-    username = request.form.get("username")
-    user_id = request.form.get("user_id", type=int)
-
-    # Tests monkeypatch application.routes.admin_routes.admin_pass to inject a
-    # known value; in normal operation it's None, so we use the real
-    # ADMIN_PASSWORD from config.
-    from application.routes.admin_routes import admin_pass
-
-    app_admin_pass = (
-        admin_pass
-        if admin_pass is not None
-        else current_app.config.get("ADMIN_PASSWORD")
-    )
-
-    if password == app_admin_pass:
-        if user_id and username:
-            if not re.fullmatch(r"[a-z0-9_]{3,30}", username.lower()):
-                return jsonify(
-                    {"success": False, "message": "Invalid username format"}
-                ), 400
-
-            user = db.session.get(User, user_id)
-            if user:
-                import sqlalchemy.exc
-
-                try:
-                    user.username = username.lower()
-                    db.session.commit()
-                except sqlalchemy.exc.IntegrityError:
-                    db.session.rollback()
-                    return jsonify(
-                        {"success": False, "message": "Username already exists"}
-                    ), 409
-        return jsonify({"success": True})
-    else:
-        return jsonify({"success": False}), 401
-
-
 @admin_bp.route("/parents/<int:parent_id>/children", methods=["GET"])
 @admin_only
 def get_parent_children(parent_id):
@@ -629,9 +557,9 @@ def get_user_details(user_id):
         d.pop(field, None)
 
     # ChallengeLog rows are only ever written at challenge-completion time
-    # (Challenge.complete_challenge, the claim endpoint, admin bulk-pass), so
-    # the newest row by timestamp is the student's most recently completed
-    # challenge; its course_id tells us which course that challenge belongs to.
+    # (the claim endpoint, admin bulk-pass), so the newest row by timestamp is
+    # the student's most recently completed challenge; its course_id tells us
+    # which course that challenge belongs to.
     most_recently_completed_challenge = (
         ChallengeLog.query.filter(
             ChallengeLog.user_id == user_id, ChallengeLog.course_id.isnot(None)

@@ -4,9 +4,6 @@ import os
 from datetime import timedelta
 
 from application.config import DevelopmentConfig, ProductionConfig, TestingConfig
-from application.constants import (
-    GLOBAL_CLASSROOM_ID as GLOBAL_CLASSROOM_ID,
-)  # imported for side-effect availability
 from application.extensions import csrf, db, limiter, migrate, scheduler, socketio
 from application.models import setup_models
 from application.models.configuration import Configuration
@@ -157,12 +154,9 @@ def create_app(config_class=None):
         inspector = inspect(db.engine)
         if "db" not in sys.argv:
             if not inspector.has_table("users"):
-                # This part is now redundant for create_all, but we still want to ensure default config if it was a fresh DB
-                ensure_default_configuration()
                 logger.info("Database initialized for the first time.")
-            else:
-                # Still check if we need to ensure default configuration even if users exists
-                ensure_default_configuration()
+            # Ensure the default configuration exists, including on a fresh DB
+            ensure_default_configuration()
 
         try:
             if not getattr(scheduler, "running", False):
@@ -170,8 +164,7 @@ def create_app(config_class=None):
         except Exception:
             pass
 
-        # Ensure global classroom + conversation exist and update the
-        # in-process GLOBAL_CONVERSATION_ID constant.
+        # Ensure the reserved classrooms, store items and project templates exist.
         seed_global_data()
 
     @app.before_request
@@ -235,12 +228,11 @@ def ensure_default_configuration():
 
 def seed_global_data():
     """
-    Idempotently ensure the reserved classrooms and global conversation exist.
-    Populates application.constants.GLOBAL_CONVERSATION_ID in-process so
-    routes can import it as a constant without hitting the DB every request.
+    Idempotently ensure the reserved classrooms, default store items and
+    default project templates exist.
 
-    Skips gracefully if the schema is not yet migrated (e.g. during
-    'flask db upgrade' before the conversations table has classroom_id).
+    Skips gracefully when running a 'flask db' command, so that
+    'flask db upgrade' can load the app before the schema is migrated.
     """
     import logging
 

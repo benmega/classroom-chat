@@ -1,5 +1,3 @@
-import os
-
 from application.extensions import db
 from application.models.challenge import Challenge
 
@@ -124,88 +122,6 @@ def test_bulk_add_challenges(client, sample_admin):
     data = resp.json["data"]
     assert data["added"] == 2
     assert data["skipped"] == 1
-
-
-def test_document_routes(client, sample_admin, test_app):
-    login_as_admin(client, sample_admin)
-
-    upload_dir = test_app.config["UPLOAD_FOLDER"]
-    category_dir = os.path.join(upload_dir, "other")
-    os.makedirs(category_dir, exist_ok=True)
-    test_file = os.path.join(category_dir, "test_doc.txt")
-    with open(test_file, "w") as f:
-        f.write("Hello World doc test")
-
-    try:
-        resp_view_403 = client.get(
-            "/api/admin/documents/other/..%2F..%2F..%2Fetc%2Fpasswd/view"
-        )
-        assert resp_view_403.status_code in [403, 404]
-
-        resp_dl_403 = client.get(
-            "/api/admin/documents/other/..%2F..%2F..%2Fetc%2Fpasswd/download"
-        )
-        assert resp_dl_403.status_code in [403, 404]
-
-        resp_stats = client.get("/api/admin/documents/stats")
-        assert resp_stats.status_code == 200
-        stats_data = resp_stats.get_json()["data"]["stats"]
-        assert "total_files" in stats_data
-        assert "by_category" in stats_data
-        assert stats_data["total_files"] >= 1
-
-        resp = client.get("/api/admin/documents")
-        assert resp.status_code == 200
-        docs = resp.json["data"]["documents"]
-        assert any(d["filename"] == "test_doc.txt" for d in docs)
-
-        resp = client.get("/api/admin/documents/invalid_cat/test_doc.txt/view")
-        assert resp.status_code == 400
-        resp = client.get("/api/admin/documents/other/nonexistent.txt/view")
-        assert resp.status_code == 404
-        resp = client.get("/api/admin/documents/other/test_doc.txt/view")
-        assert resp.status_code == 200
-        assert resp.data == b"Hello World doc test"
-
-        resp = client.get("/api/admin/documents/invalid_cat/test_doc.txt/download")
-        assert resp.status_code == 400
-        resp = client.get("/api/admin/documents/other/nonexistent.txt/download")
-        assert resp.status_code == 404
-        resp = client.get("/api/admin/documents/other/test_doc.txt/download")
-        assert resp.status_code == 200
-        assert resp.headers.get("Content-Disposition") is not None
-
-        # Empty fields
-        resp = client.post("/api/admin/delete-document", data={})
-        assert resp.status_code == 400
-        resp = client.post(
-            "/api/admin/delete-document",
-            data={"category": "invalid_cat", "filename": "test_doc.txt"},
-        )
-        assert resp.status_code == 400
-        resp = client.post(
-            "/api/admin/delete-document",
-            data={"category": "other", "filename": "nonexistent.txt"},
-        )
-        assert resp.status_code == 404
-
-        resp_del_403 = client.post(
-            "/api/admin/delete-document",
-            data={"category": "other", "filename": "../../../etc/passwd"},
-        )
-        assert resp_del_403.status_code in [403, 404]
-
-        resp = client.post(
-            "/api/admin/delete-document",
-            data={"category": "other", "filename": "test_doc.txt"},
-        )
-        assert resp.status_code == 200
-        assert resp.json["data"]["success"] is True
-        assert not os.path.exists(test_file)
-
-    finally:
-        if os.path.exists(test_file):
-            os.remove(test_file)
 
 
 def test_advanced_ops(client, sample_admin):

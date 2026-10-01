@@ -43,7 +43,6 @@ from sqlalchemy import text
 
 def run():
     """Execute all data-seeding steps inside a single application context."""
-    import application.constants as _constants
     from application import create_app
     from application.constants import GLOBAL_CLASSROOM_ID
     from application.extensions import db
@@ -253,11 +252,6 @@ def run():
                 print(
                     f"       - global conversation already exists id={global_conv[0]}, skipping"
                 )
-
-            # Propagate the discovered ID back to the in-process constant so that
-            # any code running in the same process immediately sees the right value.
-            _constants.GLOBAL_CONVERSATION_ID = global_conv[0]
-            print(f"       [OK] GLOBAL_CONVERSATION_ID = {global_conv[0]}")
         else:
             print("       - conversations table not present, skipping")
 

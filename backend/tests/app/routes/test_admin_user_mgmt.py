@@ -501,34 +501,6 @@ def test_student_activity_and_get_users_roles(client, sample_admin, sample_user)
 def test_user_mgmt_error_branches(client, sample_admin, sample_user, init_db):
     login_as_admin(client, sample_admin)
 
-    resp = client.post("/api/admin/set_username", data={})
-    assert resp.status_code == 400  # Missing arguments
-
-    resp = client.post(
-        "/api/admin/set_username",
-        data={"user_id": sample_user.id, "username": "Inval!d"},
-    )
-    assert resp.status_code == 400  # Invalid regex
-
-    resp = client.post(
-        "/api/admin/set_username", data={"user_id": 99999, "username": "validname"}
-    )
-    assert resp.status_code == 404  # Not found
-
-    # We test IntegrityError via verify_password later or set_username by mock
-
-    from application.config import TestingConfig
-
-    resp = client.post(
-        "/api/admin/verify_password",
-        data={
-            "password": TestingConfig.ADMIN_PASSWORD,
-            "username": "Inval!d",
-            "user_id": sample_user.id,
-        },
-    )
-    assert resp.status_code == 400  # Invalid format
-
     parent = User(username="parent_error", role="parent", password_hash="dummy")
     db.session.add(parent)
     db.session.commit()
@@ -630,8 +602,6 @@ def test_user_mgmt_error_branches(client, sample_admin, sample_user, init_db):
     # Exception mocking for create/remove user
     from unittest.mock import patch
 
-    import sqlalchemy.exc
-
     with patch(
         "application.extensions.db.session.commit", side_effect=Exception("DB Error")
     ):
@@ -645,30 +615,6 @@ def test_user_mgmt_error_branches(client, sample_admin, sample_user, init_db):
             "/api/admin/remove_user", data={"username": sample_user.username}
         )
         assert resp.status_code == 500
-
-    # IntegrityError mocking for set_username
-    with patch(
-        "application.extensions.db.session.commit",
-        side_effect=sqlalchemy.exc.IntegrityError("x", "y", "z"),
-    ):
-        resp = client.post(
-            "/api/admin/set_username",
-            data={"user_id": sample_user.id, "username": "takenname"},
-        )
-        assert resp.status_code == 409
-
-        # also for verify_password
-        from application.config import TestingConfig
-
-        resp = client.post(
-            "/api/admin/verify_password",
-            data={
-                "password": TestingConfig.ADMIN_PASSWORD,
-                "username": "takenname",
-                "user_id": sample_user.id,
-            },
-        )
-        assert resp.status_code == 409
 
 
 def test_update_user_details(client, sample_admin, sample_user):
@@ -707,3 +653,16 @@ def test_update_user_details(client, sample_admin, sample_user):
     # Test not found
     resp_404 = client.put("/api/admin/user/999999", json={"nickname": "nobody"})
     assert resp_404.status_code == 404
+
+
+def test_update_user_details_rejects_taken_username(client, sample_admin, sample_user):
+    login_as_admin(client, sample_admin)
+    other = UserFactory()
+    original = sample_user.username
+
+    resp = client.put(
+        f"/api/admin/user/{sample_user.id}", json={"username": other.username}
+    )
+
+    assert resp.status_code == 409
+    assert db.session.get(User, sample_user.id).username == original

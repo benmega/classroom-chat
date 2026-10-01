@@ -5,7 +5,6 @@ Summary: Database helper functions for users, messages, and conversations.
 """
 
 import logging
-import uuid
 
 from application.models.message import Message
 from application.models.user import User, db
@@ -198,7 +197,3 @@ def save_message_to_db(
         logger.exception("Error saving message to database")
         db.session.rollback()
         return {"success": False, "error": "Failed to save message"}
-
-
-def generate_unique_username():
-    return f"user_{uuid.uuid4()}"

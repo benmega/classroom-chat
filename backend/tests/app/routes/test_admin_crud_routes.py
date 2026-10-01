@@ -170,7 +170,7 @@ def test_list_order_ends_with_the_primary_key_so_pages_do_not_overlap(admin_clie
     assert re.search(r"ORDER BY challenges\.domain DESC, challenges\.id\b", page)
 
 
-@pytest.mark.parametrize("field", ["query", "to_dict", "complete_challenge", "nope"])
+@pytest.mark.parametrize("field", ["query", "to_dict", "scale_value", "nope"])
 def test_list_ignores_non_column_sort_fields(admin_client, field):
     ChallengeFactory(name="a")
     ChallengeFactory(name="b")
@@ -426,7 +426,7 @@ _NEW_CHALLENGE = {"name": "New", "slug": "new", "domain": "d", "difficulty": "ea
 
 
 def test_create_rejects_unknown_fields(admin_client):
-    resp = admin_client.post(f"{BASE}/challenge", json={**_NEW_CHALLENGE, "bogus": 1, "skills": [], "complete_challenge": 2})
+    resp = admin_client.post(f"{BASE}/challenge", json={**_NEW_CHALLENGE, "bogus": 1, "skills": [], "scale_value": 2})
     assert resp.status_code == 400
     assert "bogus" in resp.json["error"] and "skills" in resp.json["error"]
     assert Challenge.query.count() == 0

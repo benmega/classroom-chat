@@ -48,13 +48,13 @@ classroom-chat/
 - **App factory**: `backend/application/__init__.py` (`create_app`). Config is selected via `FLASK_ENV` (`development` / `testing` / `production`).
 - **Blueprints**: registered in `backend/application/routes/__init__.py`. Notable prefixes:
   - `/user` — auth, profile, projects (`user_routes.py`)
-  - `/api/admin` — admin blueprint, split across `routes/admin/*.py` (dashboard, user_mgmt, project_routes, crud_routes, doc_routes, trade_routes, challenge_mgmt, config_routes, standard_project_routes, advanced_ops)
+  - `/api/admin` — admin blueprint, split across `routes/admin/*.py` (dashboard, user_mgmt, project_routes, crud_routes, trade_routes, challenge_mgmt, config_routes, standard_project_routes, advanced_ops)
   - `/message` — chat feed and message CRUD
   - `/duck_trade` — peer-to-peer currency trading and Bit Shift
-  - `/achievements` (session) + `/api/achievements` (JSON API)
+  - `/api/achievements` — achievements and certificates (JSON API)
   - `/api/auth/cognito` — parent authentication via AWS Cognito
   - `/api/shop`, `/api/classroom`, `/api/project-templates`, `/api/session`
-  - `/notes`, `/upload` — notes uploads, generic file uploads
+  - `/notes` — notes uploads
   - `/dev-login` — localhost-only dev shortcut, never registered when `FLASK_ENV=production`
 - **Real-time**: Flask-SocketIO (gevent async mode) — event handlers in `socket_events.py`.
 - **Auth**: session-cookie based (`Flask-Login`/session), CSRF via `flask-wtf` (double-submit cookie `csrf_token_v2`), rate limiting via `Flask-Limiter` (disabled in `TestingConfig`). Parents authenticate through AWS Cognito.

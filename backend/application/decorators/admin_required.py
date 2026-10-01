@@ -13,7 +13,6 @@ def admin_only(f):
         # Check if this is an API request
         is_api = (
             request.path.startswith("/api/")
-            or request.path.startswith("/achievements/")
             or request.is_json
             or request.accept_mimetypes.accept_json
         )

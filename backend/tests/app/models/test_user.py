@@ -90,15 +90,6 @@ def test_user_set_online(add_sample_user, init_db):
     User.set_online(9999, True)
 
 
-def test_user_projects(add_sample_user, init_db):
-    user = add_sample_user("testuser_proj", "pwd")
-    user.add_project("test_proj", "desc", "link")
-    assert len(user.projects) == 1
-    proj_id = user.projects[0].id
-    user.remove_project(proj_id)
-    assert len(user.projects) == 0
-
-
 def test_user_ducks_parent(add_sample_user, init_db):
     user = add_sample_user("testuser_parent", "pwd")
     user.role = "parent"

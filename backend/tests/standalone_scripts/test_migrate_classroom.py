@@ -83,7 +83,6 @@ def test_timestamps_written_by_the_script_are_naive_utc(monkeypatch, test_app):
     db.session.commit()
     db.session.remove()
     monkeypatch.setattr(application, "create_app", lambda: test_app)
-    monkeypatch.setattr("application.constants.GLOBAL_CONVERSATION_ID", None, raising=False)
 
     started = datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(seconds=2)
     try:

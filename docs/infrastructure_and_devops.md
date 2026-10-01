@@ -132,8 +132,8 @@ It covers:
   500 MB request body limit for uploads
 - WebSocket (`/socket.io`) proxying with the `Upgrade` headers
 
-The legacy `/achievements/*` blueprint and `/dev-login` are deliberately not proxied: the React app uses
-`/api/achievements/*`, and dev-login is disabled in production.
+`/dev-login` is deliberately not proxied: it is disabled in production. The React app uses
+`/api/achievements/*`, which is covered by the `api` prefix.
 
 > **Note on Frontend Routing**: The frontend SPA (`blossom.benmega.com`) is hosted on **AWS S3** and served globally via **AWS CloudFront**. CloudFront handles SSL termination and redirects, and the S3 bucket is configured to serve `index.html` for client-side routing.
 

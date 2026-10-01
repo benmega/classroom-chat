@@ -6,7 +6,6 @@ Summary: Unit tests for db helpers.
 
 import pytest
 from application.utilities.db_helpers import (
-    generate_unique_username,
     get_user,
     save_message_to_db,
 )
@@ -29,14 +28,6 @@ def test_get_user_not_found(init_db):
     with pytest.raises(Exception) as e:
         get_user("non_existent_user")
     assert "User not found" in str(e.value)
-
-
-def test_generate_unique_username():
-    username1 = generate_unique_username()
-    username2 = generate_unique_username()
-    assert username1 != username2
-    assert username1.startswith("user_")
-    assert username2.startswith("user_")
 
 
 def test_save_message_to_db_basic(init_db, sample_user, client):

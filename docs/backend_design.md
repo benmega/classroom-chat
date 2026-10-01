@@ -24,17 +24,17 @@ The app uses the **Application Factory** pattern (`create_app`) located in `appl
 ### Modular Routing (Blueprints)
 API endpoints are structured into logical modules using **Flask Blueprints**. This ensures a separation of concerns and maintainable code:
 - **`user`** (`/user`): Profile management, auth status, and user-specific actions.
-- **`admin`** (`/api/admin`): System management, duck balance adjustments, CRUD, documents and advanced controls.
+- **`admin`** (`/api/admin`): System management, duck balance adjustments, CRUD and advanced controls.
 - **`message`** (`/message`): Conversation creation and message history (messages are sent via Socket.IO, not HTTP).
-- **`achievements`** (`/achievements`) and **`achievements_api`** (`/api/achievements`): Badges, milestones and certificates.
-- **`upload`** (`/upload`) and **`notes`** (`/notes`): File uploads and notes.
+- **`achievements`** and **`achievements_api`** (both under `/api/achievements`): Badges, milestones and certificates.
+- **`notes`** (`/notes`): Note uploads.
 - **`cognito`** / **`dev_login`**: External Authentication flows (AWS Cognito SSO) and development-only auto-login.
 - **`shop`** / **`duck_trade`**: Economy systems for virtual storefront purchases and peer trading.
 - **`parent`**: APIs handling the parent portal data and parent-student linkages.
 - **`api_webhooks`**: Ingress for external systems (e.g., Stripe, analytics).
 - **`challenge`** (`/challenge`): Challenge submission (honor system, CORS for codecombat.com / ozaria.com).
 - **`session`** (`/api/session`): Presence heartbeat.
-- **`server_info`** (`/server`): Health check and server IP.
+- **`server_info`** (`/server`): Health check.
 - **`general`**: Serves the React `index.html` and Vite public assets.
 
 See [api_reference.md](api_reference.md) for the endpoint catalog.

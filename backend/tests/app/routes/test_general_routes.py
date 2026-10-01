@@ -40,6 +40,21 @@ def test_index_serves_template_when_present(client):
     assert b"Classroom Chat" in response.data
 
 
+def test_react_achievements_page_is_not_an_api_path(client):
+    """/achievements is a React route: only /api/* is answered with the JSON 404."""
+    with patch(
+        "application.utilities.spa.render_template", return_value="<html>Classroom Chat</html>"
+    ):
+        for path in ("/achievements", "/achievements/"):
+            response = client.get(path)
+            assert response.status_code == 200, path
+            assert b"Classroom Chat" in response.data
+
+        response = client.get("/api/achievements/nope")
+    assert response.status_code == 404
+    assert response.json["error"] == "Route not found"
+
+
 def test_dev_login_template_renders_values_as_json(client):
     """dev_login.html must keep rendering (used by the login_automation skill)."""
     from flask import render_template

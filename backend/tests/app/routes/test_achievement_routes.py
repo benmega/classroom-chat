@@ -11,7 +11,7 @@ import pytest
 from application.extensions import db
 from application.models.achievements import Achievement, UserAchievement
 from application.models.user_certificate import UserCertificate
-from tests.factories import AchievementFactory, AdminFactory, UserAchievementFactory, UserFactory
+from tests.factories import AchievementFactory, AdminFactory, UserFactory
 
 
 @pytest.fixture
@@ -32,95 +32,6 @@ def test_achievement(init_db):
     db.session.commit()
     return ach
 
-@pytest.fixture
-def test_user_achievement(init_db, test_user, test_achievement):
-    ua = UserAchievementFactory(user_id=test_user.id, achievement_id=test_achievement.id)
-    db.session.commit()
-    return ua
-
-
-
-@pytest.fixture
-def mock_render_template(client):
-    """
-    Legacy Jinja templates are gone; browser navigation hands off to the SPA
-    index via serve_spa_index. Mock that so tests verify the route logic only.
-    """
-    with patch("application.routes.achievement_routes.serve_spa_index") as mock:
-        mock.return_value = "Mocked Template Content"
-        yield mock
-
-
-def test_achievements_page(
-    client, init_db, test_user, test_achievement, mock_render_template
-):
-    """Test retrieving achievements page with a logged-in user."""
-    with client.session_transaction() as sess:
-        sess["user"] = test_user.id
-
-    response = client.get("/achievements/")
-    assert response.status_code == 200
-    # Since we mocked the template, we verify the route logic executed successfully
-    assert b"Mocked Template Content" in response.data
-
-
-def test_achievements_page_with_user_achievements(
-    client, init_db, test_user, test_user_achievement, mock_render_template
-):
-    """Test achievements page showing user's completed achievements."""
-    with client.session_transaction() as sess:
-        sess["user"] = test_user.id
-
-    response = client.get("/achievements/")
-    assert response.status_code == 200
-
-
-def test_achievements_page_multiple_types(
-    client, init_db, test_user, mock_render_template
-):
-    """Test achievements page with multiple achievement types."""
-    with client.session_transaction() as sess:
-        sess["user"] = test_user.id
-
-    achievements = [
-        Achievement(
-            name="Duck Master",
-            slug="duck-100",
-            type="ducks",
-            reward=50,
-            description="Collect 100 ducks",
-            requirement_value="100",
-        ),
-        Achievement(
-            name="Project Pro",
-            slug="project-5",
-            type="project",
-            reward=25,
-            description="Complete 5 projects",
-            requirement_value="5",
-        ),
-        Achievement(
-            name="Chat Champion",
-            slug="chat-50",
-            type="chat",
-            reward=15,
-            description="Send 50 messages",
-            requirement_value="50",
-        ),
-        Achievement(
-            name="Course Complete",
-            slug="course-complete",
-            type="certificate",
-            reward=100,
-            description="Complete a course",
-            source="codecombat.com",
-        ),
-    ]
-    db.session.add_all(achievements)
-    db.session.commit()
-
-    response = client.get("/achievements/")
-    assert response.status_code == 200
 
 
 def test_add_achievement_post(client, init_db, test_admin):
@@ -129,7 +40,7 @@ def test_add_achievement_post(client, init_db, test_admin):
         sess["user"] = test_admin.id
 
     response = client.post(
-        "/achievements/add",
+        "/api/achievements/add",
         data={
             "name": "JavaScript Expert",
             "slug": "javascript-advanced",
@@ -155,7 +66,7 @@ def test_add_achievement_no_requirement(client, init_db, test_admin):
         sess["user"] = test_admin.id
 
     response = client.post(
-        "/achievements/add",
+        "/api/achievements/add",
         data={
             "name": "Quick Starter",
             "slug": "quick-start",
@@ -178,7 +89,7 @@ def test_add_achievement_no_user(client, init_db):
     initial_count = db.session.query(UserCertificate).count()
 
     response = client.post(
-        "/achievements/add",
+        "/api/achievements/add",
         data={
             "name": "Test Achievement",
             "slug": "test-ach",
@@ -193,16 +104,6 @@ def test_add_achievement_no_user(client, init_db):
     assert response.status_code == 401
 
 
-def test_submit_certificate_get(client, init_db, test_user, mock_render_template):
-    """Test GET request to submit certificate page."""
-    with client.session_transaction() as sess:
-        sess["user"] = test_user.id
-
-    response = client.get("/achievements/submit_certificate")
-    assert response.status_code == 200
-    assert b"Mocked Template Content" in response.data
-
-
 def test_submit_certificate_valid(client, init_db, test_user, test_achievement):
     """Test submitting a valid certificate via AJAX."""
     with client.session_transaction() as sess:
@@ -214,7 +115,7 @@ def test_submit_certificate_valid(client, init_db, test_user, test_achievement):
 
     # Use X-Requested-With to get a JSON response
     response = client.post(
-        "/achievements/submit_certificate",
+        "/api/achievements/submit_certificate",
         data={"certificate_url": valid_url},
         content_type="multipart/form-data",
         headers={"X-Requested-With": "XMLHttpRequest"},
@@ -240,7 +141,7 @@ def test_submit_certificate_invalid_url(client, init_db, test_user):
     initial_count = db.session.query(UserCertificate).count()
 
     response = client.post(
-        "/achievements/submit_certificate",
+        "/api/achievements/submit_certificate",
         data={
             "certificate_url": "https://invalid-url.com",
         },
@@ -265,7 +166,7 @@ def test_submit_certificate_no_matching_achievement(client, init_db, test_user):
     initial_count = db.session.query(UserCertificate).count()
 
     response = client.post(
-        "/achievements/submit_certificate",
+        "/api/achievements/submit_certificate",
         data={
             "certificate_url": "https://codecombat.com/certificates/abc123?course=nonexistent-course",
         },
@@ -309,7 +210,7 @@ def test_submit_certificate_update_existing(
     )
 
     response = client.post(
-        "/achievements/submit_certificate",
+        "/api/achievements/submit_certificate",
         data={"certificate_url": new_url},
         content_type="multipart/form-data",
         headers={"X-Requested-With": "XMLHttpRequest"},
@@ -329,7 +230,7 @@ def test_submit_certificate_no_user(client, init_db):
     """Test submitting certificate without logged in user."""
     # Direct POST without session
     response = client.post(
-        "/achievements/submit_certificate",
+        "/api/achievements/submit_certificate",
         data={
             "certificate_url": "https://codecombat.com/certificates/abc?course=test",
         },
@@ -339,25 +240,6 @@ def test_submit_certificate_no_user(client, init_db):
 
     assert response.status_code == 400
     assert response.json["success"] is False
-
-
-def test_achievements_page_no_user(client, init_db):
-    """Test achievements page without logged in user."""
-    response = client.get("/achievements/")
-
-    assert response.status_code == 404
-    assert response.is_json
-    assert "User not found" in response.json["error"]
-
-
-def test_add_achievement_get(client, init_db, test_admin, mock_render_template):
-    """Test GET request to add achievement page."""
-    with client.session_transaction() as sess:
-        sess["user"] = test_admin.id
-
-    response = client.get("/achievements/add")
-    assert response.status_code == 200
-    assert b"Mocked Template Content" in response.data
 
 
 def test_user_achievement_uniqueness(init_db, test_user, test_achievement):
@@ -517,19 +399,11 @@ def test_calculate_consistency_year_transition(init_db, test_user):
     assert streak == 3
 
 
-def test_add_achievement_get_json(client, init_db, test_admin):
-    with client.session_transaction() as sess:
-        sess["user"] = test_admin.id
-    response = client.get("/achievements/add", headers={"Accept": "application/json"})
-    assert response.status_code == 200
-    assert response.json["status"] == "ready"
-
-
 def test_add_achievement_post_json(client, init_db, test_admin):
     with client.session_transaction() as sess:
         sess["user"] = test_admin.id
     response = client.post(
-        "/achievements/add",
+        "/api/achievements/add",
         json={
             "name": "JSON Achievement",
             "slug": "json-ach",
@@ -547,7 +421,7 @@ def test_add_achievement_post_json(client, init_db, test_admin):
 def test_add_achievement_missing_fields(client, init_db, test_admin):
     with client.session_transaction() as sess:
         sess["user"] = test_admin.id
-    response = client.post("/achievements/add", data={"name": ""})
+    response = client.post("/api/achievements/add", data={"name": ""})
     assert response.status_code == 400
     assert response.json["status"] == "error"
     assert "required" in response.json["message"]
@@ -559,7 +433,7 @@ def test_add_achievement_duplicate_slug(
     with client.session_transaction() as sess:
         sess["user"] = test_admin.id
     response = client.post(
-        "/achievements/add",
+        "/api/achievements/add",
         data={
             "name": "Duplicate",
             "slug": test_achievement.slug,
@@ -593,7 +467,7 @@ def test_add_achievement_with_badge(
     img_file = (BytesIO(img_data), "badge.png")
 
     response = client.post(
-        "/achievements/add",
+        "/api/achievements/add",
         data={
             "name": "Badge Ach",
             "slug": "badge-ach",
@@ -619,7 +493,7 @@ def test_add_achievement_invalid_badge_ext(mock_allowed, client, init_db, test_a
     img_file = (BytesIO(img_data), "badge.txt")
 
     response = client.post(
-        "/achievements/add",
+        "/api/achievements/add",
         data={
             "name": "Badge Ach 2",
             "slug": "badge-ach-2",
@@ -651,7 +525,7 @@ def test_add_achievement_badge_subprocess_fail(
 
     img_file = (BytesIO(b"fake image"), "badge.png")
     response = client.post(
-        "/achievements/add",
+        "/api/achievements/add",
         data={
             "name": "Badge Ach 3",
             "slug": "badge-ach-3",
@@ -678,7 +552,7 @@ def test_add_achievement_badge_subprocess_exception(
 
     img_file = (BytesIO(b"fake image"), "badge.png")
     response = client.post(
-        "/achievements/add",
+        "/api/achievements/add",
         data={
             "name": "Badge Ach 4",
             "slug": "badge-ach-4",
@@ -690,16 +564,6 @@ def test_add_achievement_badge_subprocess_exception(
     )
     assert response.status_code == 500
     assert response.json["status"] == "error"
-
-
-def test_submit_certificate_get_json(client, init_db, test_user):
-    with client.session_transaction() as sess:
-        sess["user"] = test_user.id
-    response = client.get(
-        "/achievements/submit_certificate", headers={"Accept": "application/json"}
-    )
-    assert response.status_code == 200
-    assert response.json["status"] == "ready"
 
 
 def test_view_certificate(
@@ -719,7 +583,7 @@ def test_view_certificate(
     with patch(
         "application.routes.achievement_routes.os.path.exists", return_value=False
     ):
-        response = client.get(f"/achievements/view_certificate/{cert.id}")
+        response = client.get(f"/api/achievements/view_certificate/{cert.id}")
         assert response.status_code == 404
 
     with (
@@ -731,7 +595,7 @@ def test_view_certificate(
             return_value="fake_file",
         ),
     ):
-        response = client.get(f"/achievements/view_certificate/{cert.id}")
+        response = client.get(f"/api/achievements/view_certificate/{cert.id}")
         assert response.status_code == 200
 
 
@@ -756,14 +620,14 @@ def test_view_certificate_is_public(client, init_db, test_user, test_achievement
             return_value="fake_file",
         ),
     ):
-        response = client.get(f"/achievements/view_certificate/{cert.id}")
+        response = client.get(f"/api/achievements/view_certificate/{cert.id}")
         assert response.status_code == 200
 
 
 def test_admin_certificates(client, init_db, test_admin):
     with client.session_transaction() as sess:
         sess["user"] = test_admin.id
-    response = client.get("/achievements/admin/certificates")
+    response = client.get("/api/achievements/admin/certificates")
     assert response.status_code == 200
 
 
@@ -780,7 +644,7 @@ def test_mark_reviewed(client, init_db, test_admin, test_user, test_achievement)
         sess["user"] = test_admin.id
 
     response = client.post(
-        f"/achievements/admin/certificates/reviewed/{cert.id}",
+        f"/api/achievements/admin/certificates/reviewed/{cert.id}",
         headers={"X-Requested-With": "XMLHttpRequest"},
     )
     assert response.status_code == 200
@@ -789,7 +653,7 @@ def test_mark_reviewed(client, init_db, test_admin, test_user, test_achievement)
 
     cert.status = "pending"
     db.session.commit()
-    response2 = client.post(f"/achievements/admin/certificates/reviewed/{cert.id}")
+    response2 = client.post(f"/api/achievements/admin/certificates/reviewed/{cert.id}")
     assert response2.status_code == 302
 
 
@@ -806,7 +670,7 @@ def test_reject_certificate(client, init_db, test_admin, test_user, test_achieve
         sess["user"] = test_admin.id
 
     response = client.post(
-        f"/achievements/admin/certificates/reject/{cert.id}",
+        f"/api/achievements/admin/certificates/reject/{cert.id}",
         json={"review_note": "Not a valid certificate."},
         headers={"X-Requested-With": "XMLHttpRequest"},
     )
@@ -818,7 +682,7 @@ def test_reject_certificate(client, init_db, test_admin, test_user, test_achieve
     cert.status = "pending"
     cert.review_note = None
     db.session.commit()
-    response2 = client.post(f"/achievements/admin/certificates/reject/{cert.id}")
+    response2 = client.post(f"/api/achievements/admin/certificates/reject/{cert.id}")
     assert response2.status_code == 302
 
 
@@ -839,7 +703,7 @@ def test_download_certificate(
     with patch(
         "application.routes.achievement_routes.os.path.exists", return_value=False
     ):
-        response = client.get(f"/achievements/download_certificate/{cert.id}")
+        response = client.get(f"/api/achievements/download_certificate/{cert.id}")
         assert response.status_code == 302
 
     with (
@@ -851,7 +715,7 @@ def test_download_certificate(
             return_value="fake_file",
         ),
     ):
-        response = client.get(f"/achievements/download_certificate/{cert.id}")
+        response = client.get(f"/api/achievements/download_certificate/{cert.id}")
         assert response.status_code == 200
 
 
@@ -871,7 +735,7 @@ def test_mark_all_reviewed(
         sess["user"] = test_admin.id
 
     response = client.post(
-        "/achievements/admin/certificates/reviewed/all",
+        "/api/achievements/admin/certificates/reviewed/all",
         headers={"X-Requested-With": "XMLHttpRequest"},
     )
     assert response.status_code == 200
@@ -879,7 +743,7 @@ def test_mark_all_reviewed(
 
     cert1.status = "pending"
     db.session.commit()
-    response2 = client.post("/achievements/admin/certificates/reviewed/all")
+    response2 = client.post("/api/achievements/admin/certificates/reviewed/all")
     assert response2.status_code == 302
 
 
@@ -898,7 +762,7 @@ def test_download_all_certificates(
         sess["user"] = test_admin.id
 
     # No certs
-    response = client.get("/achievements/admin/certificates/download_all")
+    response = client.get("/api/achievements/admin/certificates/download_all")
     assert response.status_code == 302
 
     cert = UserCertificate(
@@ -918,14 +782,14 @@ def test_download_all_certificates(
             "application.routes.achievement_routes.send_file", return_value="fake_zip"
         ),
     ):
-        response = client.get("/achievements/admin/certificates/download_all")
+        response = client.get("/api/achievements/admin/certificates/download_all")
         assert response.status_code == 200
 
 
 def test_admin_certificate_templates(client, init_db, test_admin):
     with client.session_transaction() as sess:
         sess["user"] = test_admin.id
-    response = client.get("/achievements/admin/certificate_templates")
+    response = client.get("/api/achievements/admin/certificate_templates")
     assert response.status_code == 200
     assert "templates" in response.json.get("data", response.json)
 
@@ -934,7 +798,7 @@ def test_admin_certificate_templates_view(client, init_db, test_admin):
     with client.session_transaction() as sess:
         sess["user"] = test_admin.id
     with patch("application.routes.achievement_routes.send_from_directory", return_value="fake_file"):
-        response = client.get("/achievements/admin/certificate_templates/cs-1/view")
+        response = client.get("/api/achievements/admin/certificate_templates/cs-1/view")
         assert response.status_code == 200
 
 
@@ -946,7 +810,7 @@ def test_admin_certificate_templates_upload(client, init_db, test_admin):
     img_file = (BytesIO(img_data), "template.pdf")
     with patch("werkzeug.datastructures.FileStorage.save"):
         response = client.post(
-            "/achievements/admin/certificate_templates/cs-1/upload",
+            "/api/achievements/admin/certificate_templates/cs-1/upload",
             data={"template_file": img_file},
             content_type="multipart/form-data"
         )
@@ -959,7 +823,7 @@ def test_admin_certificate_templates_test_generate(client, init_db, test_admin):
         sess["user"] = test_admin.id
     with patch("application.utilities.cert_generator.generate_certificate", return_value=b"fake pdf content"), patch("application.routes.achievement_routes.send_file", return_value="fake_file"):
         response = client.post(
-            "/achievements/admin/certificate_templates/cs-1/test_generate",
+            "/api/achievements/admin/certificate_templates/cs-1/test_generate",
             data={"student_name": "Test Student"}
         )
         assert response.status_code == 200
@@ -969,7 +833,7 @@ def test_get_achievements_json_success(client, init_db, test_user, test_achievem
     with client.session_transaction() as sess:
         sess["user"] = test_user.id
 
-    response = client.get("/achievements/all")
+    response = client.get("/api/achievements/all")
     assert response.status_code == 200
     data = response.get_json()
     assert data["status"] == "success"
@@ -977,7 +841,7 @@ def test_get_achievements_json_success(client, init_db, test_user, test_achievem
 
 
 def test_get_achievements_json_no_user(client, init_db):
-    response = client.get("/achievements/all")
+    response = client.get("/api/achievements/all")
     assert response.status_code == 404
     assert response.get_json()["error"] == "User not found!"
 
@@ -990,7 +854,7 @@ def test_submit_certificate_generation_failure(client, init_db, test_user, test_
 
     with patch("application.utilities.cert_generator.generate_certificate", side_effect=Exception("Generator Failed")):
         response = client.post(
-            "/achievements/submit_certificate",
+            "/api/achievements/submit_certificate",
             data={"certificate_url": valid_url},
             content_type="multipart/form-data",
             headers={"X-Requested-With": "XMLHttpRequest"},
@@ -1005,12 +869,12 @@ def test_admin_certificate_templates_view_fallback_and_error(client, init_db, te
 
     # Fallback preview generation
     with patch("os.path.exists", return_value=False), patch("application.utilities.cert_generator.generate_certificate", return_value=b"generated pdf"):
-        response = client.get("/achievements/admin/certificate_templates/cs-1/view")
+        response = client.get("/api/achievements/admin/certificate_templates/cs-1/view")
         assert response.status_code == 200
 
     # Exception during fallback preview generation
     with patch("os.path.exists", return_value=False), patch("application.utilities.cert_generator.generate_certificate", side_effect=Exception("Render error")):
-        response = client.get("/achievements/admin/certificate_templates/cs-1/view")
+        response = client.get("/api/achievements/admin/certificate_templates/cs-1/view")
         assert response.status_code == 500
         assert response.get_json()["error"] == "Render error"
 
@@ -1020,14 +884,14 @@ def test_admin_certificate_templates_upload_invalid_file(client, init_db, test_a
         sess["user"] = test_admin.id
 
     # No file uploaded
-    res1 = client.post("/achievements/admin/certificate_templates/cs-1/upload", data={})
+    res1 = client.post("/api/achievements/admin/certificate_templates/cs-1/upload", data={})
     assert res1.status_code == 400
     assert res1.get_json()["error"] == "No file uploaded"
 
     # Non-PDF file
     file_data = (BytesIO(b"not a pdf"), "test.txt")
     res2 = client.post(
-        "/achievements/admin/certificate_templates/cs-1/upload",
+        "/api/achievements/admin/certificate_templates/cs-1/upload",
         data={"template_file": file_data},
         content_type="multipart/form-data"
     )
@@ -1041,28 +905,11 @@ def test_admin_certificate_templates_test_generate_error(client, init_db, test_a
 
     with patch("application.utilities.cert_generator.generate_certificate", side_effect=Exception("Test gen error")):
         response = client.post(
-            "/achievements/admin/certificate_templates/cs-1/test_generate",
+            "/api/achievements/admin/certificate_templates/cs-1/test_generate",
             data={"student_name": "Test Student"}
         )
         assert response.status_code == 500
         assert response.get_json()["error"] == "Test gen error"
-
-
-def test_achievement_pages_without_index_template_return_json_404_not_500(
-    client, init_db, test_admin
-):
-    """Browser GETs must not 500 with TemplateNotFound when index.html is absent."""
-    with client.session_transaction() as sess:
-        sess["user"] = test_admin.id
-
-    for path in (
-        "/achievements/",
-        "/achievements/add",
-        "/achievements/submit_certificate",
-    ):
-        response = client.get(path, headers={"Accept": "text/html"})
-        assert response.status_code == 404, path
-        assert response.is_json
 
 
 def test_get_achievements_json_reports_progress_and_ignores_bad_requirements(
@@ -1077,7 +924,7 @@ def test_get_achievements_json_reports_progress_and_ignores_bad_requirements(
     with client.session_transaction() as sess:
         sess["user"] = test_user.id
 
-    response = client.get("/achievements/all")
+    response = client.get("/api/achievements/all")
 
     assert response.status_code == 200
     data = response.get_json()["data"]
@@ -1090,3 +937,263 @@ def test_get_achievements_json_reports_progress_and_ignores_bad_requirements(
     # Certificates have no numeric requirement; an approved certificate is it
     assert by_id[cert.id]["requirement_value"] == 1
     assert data["user_achievements"] == []
+
+
+# --- /api/achievements/* is the only URL family -------------------------------
+
+
+def test_legacy_achievements_urls_are_gone(test_app):
+    rules = [rule.rule for rule in test_app.url_map.iter_rules()]
+    assert not [r for r in rules if r.startswith("/achievements")]
+    assert "/api/achievements/edit/<int:id>" in rules
+
+
+def test_achievements_endpoints_resolve_under_api_prefix(test_app):
+    """url_for() calls inside achievement_routes keep working under the new prefix."""
+    from flask import url_for
+
+    with test_app.test_request_context():
+        assert (
+            url_for("achievements.admin_certificates")
+            == "/api/achievements/admin/certificates"
+        )
+        assert (
+            url_for("achievements.admin_certificate_templates_view", course_id="cs-1")
+            == "/api/achievements/admin/certificate_templates/cs-1/view"
+        )
+
+
+@pytest.mark.parametrize(
+    "path", ["/api/achievements/add", "/api/achievements/submit_certificate"]
+)
+def test_form_page_gets_are_not_routed(client, init_db, test_admin, path):
+    """The old page-style GETs on these URLs are gone; the endpoints are POST-only."""
+    with client.session_transaction() as sess:
+        sess["user"] = test_admin.id
+
+    response = client.get(path, headers={"Accept": "application/json"})
+
+    # No GET rule matches, so the API catch-all answers with its JSON 404
+    assert response.status_code == 404
+    assert response.json["error"] == "Route not found"
+
+
+def test_certificate_template_preview_url_is_under_api_prefix(
+    client, init_db, test_admin
+):
+    with client.session_transaction() as sess:
+        sess["user"] = test_admin.id
+
+    with patch("application.routes.achievement_routes.os.path.exists", return_value=True):
+        response = client.get("/api/achievements/admin/certificate_templates")
+
+    assert response.status_code == 200
+    templates = response.json["data"]["templates"]
+    cs1 = next(t for t in templates if t["id"] == "cs-1")
+    assert (
+        cs1["preview_url"] == "/api/achievements/admin/certificate_templates/cs-1/view"
+    )
+
+
+def test_review_redirects_land_on_the_api_url(
+    client, init_db, test_admin, test_user, test_achievement
+):
+    cert = UserCertificate(
+        user_id=test_user.id,
+        achievement_id=test_achievement.id,
+        url="http://test",
+        file_path="test.pdf",
+    )
+    db.session.add(cert)
+    db.session.commit()
+    with client.session_transaction() as sess:
+        sess["user"] = test_admin.id
+
+    response = client.post(f"/api/achievements/admin/certificates/reject/{cert.id}")
+
+    assert response.status_code == 302
+    assert response.headers["Location"].endswith("/api/achievements/admin/certificates")
+
+
+def test_download_missing_certificate_without_referrer_redirects_to_react_page(
+    client, init_db, test_admin, test_user, test_achievement
+):
+    cert = UserCertificate(
+        user_id=test_user.id,
+        achievement_id=test_achievement.id,
+        url="http://test",
+        file_path="test.pdf",
+    )
+    db.session.add(cert)
+    db.session.commit()
+
+    with patch(
+        "application.routes.achievement_routes.os.path.exists", return_value=False
+    ):
+        response = client.get(f"/api/achievements/download_certificate/{cert.id}")
+
+    assert response.status_code == 302
+    assert response.headers["Location"] == "/achievements"
+
+
+# --- PUT /api/achievements/edit/<id> (used by the admin achievements editor) ---
+
+
+def _edit(client, achievement_id, **fields):
+    """Mirror the admin UI: a multipart FormData PUT."""
+    return client.put(
+        f"/api/achievements/edit/{achievement_id}",
+        data=fields,
+        content_type="multipart/form-data",
+    )
+
+
+def test_edit_achievement_updates_fields(client, init_db, test_admin, test_achievement):
+    with client.session_transaction() as sess:
+        sess["user"] = test_admin.id
+
+    response = _edit(
+        client,
+        test_achievement.id,
+        name="Renamed",
+        slug="renamed-slug",
+        description="new description",
+        type="chat",
+        reward="25",
+        requirement_value="7",
+        source="codecombat.com",
+    )
+
+    assert response.status_code == 200
+    assert response.json["status"] == "success"
+    assert "Renamed" in response.json["message"]
+    db.session.refresh(test_achievement)
+    assert test_achievement.name == "Renamed"
+    assert test_achievement.slug == "renamed-slug"
+    assert test_achievement.description == "new description"
+    assert test_achievement.type == "chat"
+    assert test_achievement.reward == 25
+    assert test_achievement.requirement_value == "7"
+    assert test_achievement.source == "codecombat.com"
+
+
+def test_edit_achievement_partial_update_keeps_other_fields(
+    client, init_db, test_admin, test_achievement
+):
+    original_slug = test_achievement.slug
+    original_reward = test_achievement.reward
+    with client.session_transaction() as sess:
+        sess["user"] = test_admin.id
+
+    response = _edit(client, test_achievement.id, name="Only The Name")
+
+    assert response.status_code == 200
+    db.session.refresh(test_achievement)
+    assert test_achievement.name == "Only The Name"
+    assert test_achievement.slug == original_slug
+    assert test_achievement.reward == original_reward
+
+
+def test_edit_achievement_can_keep_its_own_slug(
+    client, init_db, test_admin, test_achievement
+):
+    with client.session_transaction() as sess:
+        sess["user"] = test_admin.id
+
+    response = _edit(client, test_achievement.id, slug=test_achievement.slug, name="Same Slug")
+
+    assert response.status_code == 200
+    assert response.json["status"] == "success"
+
+
+def test_edit_achievement_not_found(client, init_db, test_admin):
+    with client.session_transaction() as sess:
+        sess["user"] = test_admin.id
+
+    response = _edit(client, 999999, name="Ghost")
+
+    assert response.status_code == 404
+    assert response.json["status"] == "error"
+
+
+def test_edit_achievement_rejects_duplicate_slug(
+    client, init_db, test_admin, test_achievement
+):
+    other = AchievementFactory()
+    db.session.commit()
+    original_slug = test_achievement.slug
+    with client.session_transaction() as sess:
+        sess["user"] = test_admin.id
+
+    response = _edit(client, test_achievement.id, slug=other.slug)
+
+    assert response.status_code == 400
+    assert "already exists" in response.json["message"]
+    db.session.refresh(test_achievement)
+    assert test_achievement.slug == original_slug
+
+
+def test_edit_achievement_requires_admin(client, init_db, test_user, test_achievement):
+    response = _edit(client, test_achievement.id, name="Anonymous")
+    assert response.status_code == 401
+
+    with client.session_transaction() as sess:
+        sess["user"] = test_user.id
+    response = _edit(client, test_achievement.id, name="Student")
+    assert response.status_code == 403
+
+    db.session.refresh(test_achievement)
+    assert test_achievement.name not in ("Anonymous", "Student")
+
+
+@patch("werkzeug.datastructures.FileStorage.save")
+@patch("application.routes.achievement_routes.os.makedirs")
+@patch("application.routes.achievement_routes.subprocess.run")
+def test_edit_achievement_with_badge(
+    mock_subprocess, mock_makedirs, mock_save, client, init_db, test_admin, test_achievement
+):
+    with client.session_transaction() as sess:
+        sess["user"] = test_admin.id
+
+    response = _edit(
+        client, test_achievement.id, badge=(BytesIO(b"fake image"), "badge.png")
+    )
+
+    assert response.status_code == 200
+    assert response.json["status"] == "success"
+    mock_save.assert_called_once()
+    mock_subprocess.assert_called_once()
+
+
+@patch("werkzeug.datastructures.FileStorage.save")
+def test_edit_achievement_rejects_invalid_badge_type(
+    mock_save, client, init_db, test_admin, test_achievement
+):
+    with client.session_transaction() as sess:
+        sess["user"] = test_admin.id
+
+    response = _edit(
+        client, test_achievement.id, badge=(BytesIO(b"not an image"), "badge.txt")
+    )
+
+    assert response.status_code == 400
+    assert "Invalid badge file type" in response.json["message"]
+    mock_save.assert_not_called()
+
+
+@patch("werkzeug.datastructures.FileStorage.save")
+@patch("application.routes.achievement_routes.os.makedirs")
+@patch("application.routes.achievement_routes.subprocess.run")
+def test_edit_achievement_sprite_rebuild_failure(
+    mock_subprocess, mock_makedirs, mock_save, client, init_db, test_admin, test_achievement
+):
+    mock_subprocess.side_effect = Exception("boom")
+    with client.session_transaction() as sess:
+        sess["user"] = test_admin.id
+
+    response = _edit(
+        client, test_achievement.id, badge=(BytesIO(b"fake image"), "badge.png")
+    )
+
+    assert response.status_code == 500
+    assert response.json["status"] == "error"

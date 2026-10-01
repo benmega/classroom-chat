@@ -14,7 +14,6 @@ from application.models.achievements import Achievement
 from application.models.user import User
 from application.models.user_certificate import UserCertificate
 from application.utilities.helper_functions import allowed_file
-from application.utilities.spa import serve_spa_index
 from flask import (
     Blueprint,
     flash,
@@ -84,30 +83,10 @@ def get_achievements_json():
     )
 
 
-# Legacy SSR page for achievements
-@achievements.route("/")
-@achievements.route("/view")
-def achievements_page():
-    if request.is_json or request.accept_mimetypes.accept_json:
-        return get_achievements_json()
-
-    user_id = session.get("user")
-    current_user = User.query.filter_by(id=user_id).first()
-    if not current_user:
-        return jsonify({"success": False, "error": "User not found!"}), 404
-
-    return serve_spa_index(user=current_user)
-
-
-@achievements.route("/add", methods=["GET", "POST"])
+@achievements.route("/add", methods=["POST"])
 @admin_only
 def add_achievement():
     data = request.get_json() if request.is_json else request.form
-
-    if request.method == "GET":
-        if request.is_json or request.accept_mimetypes.accept_json:
-            return jsonify({"status": "ready"}), 200
-        return serve_spa_index()
 
     name = data.get("name")
     slug = data.get("slug")
@@ -260,106 +239,101 @@ def edit_achievement(id):
     db.session.commit()
     return jsonify({"status": "success", "message": f"Achievement '{ach.name}' updated successfully!"})
 
-@achievements.route("/submit_certificate", methods=["GET", "POST"])
+@achievements.route("/submit_certificate", methods=["POST"])
 def submit_certificate():
     user_id = session.get("user")
     current_user = User.query.filter_by(id=user_id).first()
     if not current_user:
         return jsonify({"success": False, "error": "User not found!"}), 400
 
-    if request.method == "POST":
-        data = request.get_json(silent=True) or request.form
-        url = data.get("certificate_url")
+    data = request.get_json(silent=True) or request.form
+    url = data.get("certificate_url")
 
-        # 1. Check URL
-        match = re.search(CERT_URL_REGEX, url or "")
-        if not match:
-            return jsonify({"success": False, "error": "Invalid certificate URL."}), 200
+    # 1. Check URL
+    match = re.search(CERT_URL_REGEX, url or "")
+    if not match:
+        return jsonify({"success": False, "error": "Invalid certificate URL."}), 200
 
-        course_slug = match.group(1)
+    course_slug = match.group(1)
 
-        from application.utilities.db_helpers import resolve_course_id
-        db_course_id = resolve_course_id(course_slug)
+    from application.utilities.db_helpers import resolve_course_id
+    db_course_id = resolve_course_id(course_slug)
 
-        achievement = Achievement.query.filter(
-            (Achievement.slug == course_slug) |
-            (Achievement.source == course_slug) |
-            (Achievement.slug == db_course_id) |
-            (Achievement.source == db_course_id)
-        ).first()
+    achievement = Achievement.query.filter(
+        (Achievement.slug == course_slug) |
+        (Achievement.source == course_slug) |
+        (Achievement.slug == db_course_id) |
+        (Achievement.source == db_course_id)
+    ).first()
 
-        is_auto_recommended = False
-        recommendation_reason = "No matching achievement found for this course."
-        if achievement:
-            is_auto_recommended = True
-            recommendation_reason = f"Valid certificate URL matching achievement '{achievement.name}'."
-        else:
-            return jsonify({
-                "success": False,
-                "error": "No matching achievement found for this course."
-            }), 200
+    is_auto_recommended = False
+    recommendation_reason = "No matching achievement found for this course."
+    if achievement:
+        is_auto_recommended = True
+        recommendation_reason = f"Valid certificate URL matching achievement '{achievement.name}'."
+    else:
+        return jsonify({
+            "success": False,
+            "error": "No matching achievement found for this course."
+        }), 200
 
-        # 2. Handle File (Upload or Generate)
-        file = request.files.get("certificate_file")
-        from flask import current_app
+    # 2. Handle File (Upload or Generate)
+    file = request.files.get("certificate_file")
+    from flask import current_app
 
-        cert_dir = os.path.join(current_app.config.get("UPLOAD_FOLDER", os.path.join(current_app.config["BASE_DIR"], "certificates")))
-        os.makedirs(cert_dir, exist_ok=True)
-        filename = secure_filename(f"{current_user.username}_{achievement.slug}.pdf")
-        filepath = os.path.join(cert_dir, filename)
+    cert_dir = os.path.join(current_app.config.get("UPLOAD_FOLDER", os.path.join(current_app.config["BASE_DIR"], "certificates")))
+    os.makedirs(cert_dir, exist_ok=True)
+    filename = secure_filename(f"{current_user.username}_{achievement.slug}.pdf")
+    filepath = os.path.join(cert_dir, filename)
 
-        if file and file.filename:
-            from application.utilities.helper_functions import allowed_file
-            if not allowed_file(file.filename, {'pdf'}):
-                return jsonify({"success": False, "error": "Invalid file type. Only PDF is allowed."}), 200
-            file.save(filepath)
-        else:
-            from application.utilities.cert_generator import generate_certificate
+    if file and file.filename:
+        from application.utilities.helper_functions import allowed_file
+        if not allowed_file(file.filename, {'pdf'}):
+            return jsonify({"success": False, "error": "Invalid file type. Only PDF is allowed."}), 200
+        file.save(filepath)
+    else:
+        from application.utilities.cert_generator import generate_certificate
 
-            # Use Alice_CS1.pdf as our template
-            template_path = os.path.join(current_app.config["BASE_DIR"], "mockups", "Certificate_Samples", "CodeCombat", "Alice_CS1.pdf")
-            student_name = current_user.nickname or current_user.username
+        # Use Alice_CS1.pdf as our template
+        template_path = os.path.join(current_app.config["BASE_DIR"], "mockups", "Certificate_Samples", "CodeCombat", "Alice_CS1.pdf")
+        student_name = current_user.nickname or current_user.username
 
-            try:
-                generate_certificate(template_path, filepath, student_name)
-            except Exception as e:
-                return jsonify({"success": False, "error": f"Failed to generate certificate: {e}"}), 500
+        try:
+            generate_certificate(template_path, filepath, student_name)
+        except Exception as e:
+            return jsonify({"success": False, "error": f"Failed to generate certificate: {e}"}), 500
 
-        # 3. Create or update cert entry
-        cert = UserCertificate.query.filter_by(
-            user_id=current_user.id, achievement_id=achievement.id
-        ).first()
+    # 3. Create or update cert entry
+    cert = UserCertificate.query.filter_by(
+        user_id=current_user.id, achievement_id=achievement.id
+    ).first()
 
-        if not cert:
-            cert = UserCertificate(
-                user_id=current_user.id,
-                achievement_id=achievement.id,
-                url=url,
-                file_path=filepath,
-                status="pending",
-                is_auto_recommended=is_auto_recommended,
-                recommendation_reason=recommendation_reason
+    if not cert:
+        cert = UserCertificate(
+            user_id=current_user.id,
+            achievement_id=achievement.id,
+            url=url,
+            file_path=filepath,
+            status="pending",
+            is_auto_recommended=is_auto_recommended,
+            recommendation_reason=recommendation_reason
 
-            )
-            db.session.add(cert)
-        else:
-            cert.url = url
-            cert.file_path = filepath
-            # A resubmission always requires fresh admin review — never
-            # auto-approve just because a prior submission existed.
-            cert.status = "pending"
-            cert.reviewed_at = None
-
-        db.session.commit()
-
-        # Success return
-        return jsonify(
-            {"success": True, "message": "Certificate submitted successfully."}
         )
+        db.session.add(cert)
+    else:
+        cert.url = url
+        cert.file_path = filepath
+        # A resubmission always requires fresh admin review — never
+        # auto-approve just because a prior submission existed.
+        cert.status = "pending"
+        cert.reviewed_at = None
 
-    if request.is_json or request.accept_mimetypes.accept_json:
-        return jsonify({"status": "ready"}), 200
-    return serve_spa_index()
+    db.session.commit()
+
+    # Success return
+    return jsonify(
+        {"success": True, "message": "Certificate submitted successfully."}
+    )
 
 
 @achievements.route("/view_certificate/<int:cert_id>")
@@ -480,7 +454,8 @@ def download_certificate(cert_id):
 
     if not os.path.exists(full_path):
         flash("Certificate file not found on the server.", "error")
-        return redirect(request.referrer or url_for("achievements.achievements_page"))
+        # The achievements page is a React route (served as the SPA index)
+        return redirect(request.referrer or "/achievements")
 
     # Helper to construct a nice filename for the download
     download_name = f"{cert.user.nickname}_{cert.achievement.name}.pdf"

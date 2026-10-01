@@ -87,3 +87,62 @@ def test_dev_login_success_get_and_post(client, make_agent_users):
 
         resp = client.get("/dev-login?role=parent")
         assert resp.status_code == 200
+
+
+@pytest.mark.parametrize("url", ["/dev-login", "/api/dev-login"])
+@pytest.mark.parametrize(
+    "role, page",
+    [
+        ("admin", "admin/dashboard"),
+        ("parent", "parent/dashboard"),
+        ("student", "chat"),
+    ],
+)
+def test_dev_login_get_redirects_to_role_page(client, make_agent_users, url, role, page):
+    with patch(
+        "application.routes.dev_login_routes._is_dev_environment", return_value=True
+    ):
+        resp = client.get(f"{url}?role={role}")
+
+    assert resp.status_code == 200
+    assert f'const redirectUrl = "http://localhost:5173/{page}";'.encode() in resp.data
+    assert b"const error = null;" in resp.data
+
+
+@pytest.mark.parametrize("url", ["/dev-login", "/api/dev-login"])
+def test_dev_login_get_establishes_session(client, make_agent_users, url):
+    admin, _student, _parent = make_agent_users
+    with patch(
+        "application.routes.dev_login_routes._is_dev_environment", return_value=True
+    ):
+        resp = client.get(f"{url}?role=admin")
+
+    assert resp.status_code == 200
+    with client.session_transaction() as sess:
+        assert sess["user"] == admin.id
+        # Left over from the removed Conversation model; nothing reads it any more
+        assert "conversation_id" not in sess
+
+
+def test_browser_dev_login_shows_errors_on_the_page(client, make_agent_users):
+    with patch(
+        "application.routes.dev_login_routes._is_dev_environment", return_value=True
+    ):
+        resp = client.get("/dev-login?role=unknown")
+        assert resp.status_code == 200
+        assert b"Unknown role" in resp.data
+
+    with client.session_transaction() as sess:
+        assert "user" not in sess
+
+
+def test_browser_dev_login_missing_user_shows_error_on_the_page(client, init_db):
+    with patch(
+        "application.routes.dev_login_routes._is_dev_environment", return_value=True
+    ):
+        resp = client.get("/dev-login?role=admin")
+
+    assert resp.status_code == 200
+    assert b"not found in DB" in resp.data
+    with client.session_transaction() as sess:
+        assert "user" not in sess

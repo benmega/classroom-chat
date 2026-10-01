@@ -3,26 +3,13 @@ Unit tests for helper_functions.py
 """
 from datetime import datetime
 
-from application.extensions import db
-from application.models.user import User
 from application.utilities.helper_functions import (
     allowed_file,
-    cleanup_missing_user_pfps,
     format_file_size,
     format_number,
     get_s3_client,
-    request_database_commit,
     safe_parse_datetime,
 )
-
-
-def test_request_database_commit_success(app):
-    with app.app_context():
-        u = User(username="commit_user_test")
-        u.set_password("pass123")
-        db.session.add(u)
-        res = request_database_commit()
-        assert res is True
 
 
 def test_allowed_file():
@@ -60,21 +47,3 @@ def test_safe_parse_datetime():
     assert parsed is not None
     assert parsed.year == 2026
     assert safe_parse_datetime("not-a-date") is None
-
-
-def test_cleanup_missing_user_pfps(app, tmp_path, monkeypatch):
-    with app.app_context():
-        u1 = User(username="pfp_user_1_test", profile_picture="nonexistent.png")
-        u1.set_password("pass123")
-        u2 = User(username="pfp_user_2_test", profile_picture="Default_pfp.jpg")
-        u2.set_password("pass123")
-        db.session.add_all([u1, u2])
-        db.session.commit()
-
-        # Monkeypatch Config.UPLOAD_FOLDER to tmp_path
-        from application.config import Config
-        monkeypatch.setattr(Config, "UPLOAD_FOLDER", str(tmp_path))
-
-        fixed = cleanup_missing_user_pfps()
-        assert fixed >= 1
-        assert u1.profile_picture == "Default_pfp.jpg"

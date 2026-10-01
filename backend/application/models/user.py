@@ -586,38 +586,6 @@ class User(db.Model):
             },
         }
 
-    def add_skill(self, skill_name):
-        from .skill import Skill
-
-        new_skill = Skill(name=skill_name, user_id=self.id)
-        db.session.add(new_skill)
-        db.session.commit()
-
-    def remove_skill(self, skill_id):
-        from .skill import Skill
-
-        skill = db.session.get(Skill, skill_id)
-        if skill and skill.user_id == self.id:
-            db.session.delete(skill)
-            db.session.commit()
-
-    def add_project(self, name, description=None, link=None):
-        from .project import Project
-
-        new_project = Project(
-            name=name, description=description, link=link, user_id=self.id
-        )
-        db.session.add(new_project)
-        db.session.commit()
-
-    def remove_project(self, project_id):
-        from .project import Project
-
-        project = db.session.get(Project, project_id)
-        if project and project.user_id == self.id:
-            db.session.delete(project)
-            db.session.commit()
-
     def add_ducks(self, amount, reason=None):
         if self.role == "parent":
             return

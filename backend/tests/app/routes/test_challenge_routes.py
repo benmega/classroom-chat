@@ -546,26 +546,6 @@ def test_update_user_ducks_case_insensitive(init_db):
     assert reward == 10
 
 
-def test_challenge_complete_challenge_method(init_db):
-    """Test Challenge model's complete_challenge method."""
-    sample_user = UserFactory()
-    challenge = ChallengeFactory(
-        slug="dungeons-of-kithgard",
-        domain="codecombat.com",
-        difficulty="medium",
-        value=10,
-        is_active=True
-    )
-
-    initial_log_count = ChallengeLog.query.count()
-
-    challenge.complete_challenge(sample_user)
-
-    assert ChallengeLog.query.count() == initial_log_count + 1
-    log = ChallengeLog.query.filter_by(user_id=sample_user.id).first()
-    assert log.challenge_slug == challenge.slug
-
-
 def test_challenge_scale_value_easy(init_db):
     """Test scaling challenge value for easy difficulty."""
     challenge = ChallengeFactory(

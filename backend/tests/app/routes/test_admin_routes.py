@@ -52,71 +52,6 @@ def test_get_users_with_auth(client, sample_admin, sample_users):
         assert user.username in usernames
 
 
-def test_set_username_route(client, sample_user, sample_admin):
-    """Test setting a username as an admin."""
-    login_as_admin(client, sample_admin)
-
-    resp = client.post(
-        "/api/admin/set_username",
-        data={"user_id": sample_user.id, "username": "new_username"},
-    )
-    assert resp.status_code == 200
-    assert resp.get_json()["success"] is True
-
-    # Query inside a context
-    with client.application.app_context():
-        updated = db.session.get(User, sample_user.id)
-        assert updated.username == "new_username"
-
-
-def test_verify_password_success(client, test_app, sample_admin):
-    """Test successful password verification."""
-    from application.config import TestingConfig
-
-    login_as_admin(client, sample_admin)
-
-    with patch(
-        "application.routes.admin_routes.admin_pass",
-        TestingConfig.ADMIN_PASSWORD,
-    ):
-        # We MUST provide user_id, otherwise the backend tries to find user by IP (127.0.0.1)
-        # which fails in testing, causing the AttributeError seen in logs.
-        response = client.post(
-            "/api/admin/verify_password",
-            data={
-                "password": TestingConfig.ADMIN_PASSWORD,
-                "username": "verified_username",
-                "user_id": sample_admin.id,
-            },
-        )
-
-    assert response.status_code == 200
-    data = json.loads(response.data)
-    assert data["success"] is True
-
-    with test_app.app_context():
-        updated_user = db.session.get(User, sample_admin.id)
-        assert updated_user.username == "verified_username"
-
-
-def test_verify_password_failure(client, sample_admin):
-    """Test failed password verification."""
-    login_as_admin(client, sample_admin)
-
-    response = client.post(
-        "/api/admin/verify_password",
-        data={
-            "password": "wrong_password",
-            "username": "any_username",
-            "user_id": sample_admin.id,
-        },
-    )
-
-    assert response.status_code == 401
-    data = json.loads(response.data)
-    assert data["success"] is False
-
-
 def test_dashboard(client, sample_admin, sample_configuration):
     """Test accessing the admin dashboard."""
     login_as_admin(client, sample_admin)
@@ -374,21 +309,19 @@ def test_get_users(client, test_app, sample_users, sample_admin, init_db):
         assert "levels_today" in user_data
 
 
-def test_set_username_proper_case_handling(client, test_app, sample_user, sample_admin):
+def test_update_user_username_proper_case_handling(client, test_app, sample_user, sample_admin):
     """Test that usernames are properly converted to lowercase per the User model."""
     login_as_admin(client, sample_admin)
 
     with test_app.app_context():
         mixed_case_username = "MixedCaseUsername"
 
-        response = client.post(
-            url_for("admin.set_username_route"),
-            data={"user_id": sample_user.id, "username": mixed_case_username},
+        response = client.put(
+            url_for("admin.update_user_details", user_id=sample_user.id),
+            json={"username": mixed_case_username},
         )
 
         assert response.status_code == 200
-        json_response = json.loads(response.data)
-        assert json_response["success"] is True
 
         updated_user = db.session.get(User, sample_user.id)
         assert updated_user.username == mixed_case_username.lower()
@@ -914,17 +847,6 @@ def test_dashboard_extended(client, sample_admin, test_app, sample_user):
 
         resp2 = client.get("/api/admin/dashboard?days=invalid")
         assert resp2.status_code == 200
-
-
-def test_admin_stats(client, sample_admin, test_app):
-    """Test the /stats route."""
-    login_as_admin(client, sample_admin)
-
-    resp = client.get("/api/admin/stats")
-    assert resp.status_code == 200
-    data = resp.get_json()
-    assert "user_count" in data["data"]
-    assert "total_ducks" in data["data"]
 
 
 def test_admin_logs(client, sample_admin, test_app):

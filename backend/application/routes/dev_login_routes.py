@@ -60,12 +60,39 @@ def _resolve_role() -> str:
     return data.get("role", "admin").lower()
 
 
+def _guard_response():
+    """Return a 403 JSON response unless this is a local request in development."""
+    if not _is_dev_environment():
+        return jsonify({"error": "dev-login is disabled in production"}), 403
+    if not _is_local_request():
+        return jsonify({"error": "dev-login is only accessible from localhost"}), 403
+    return None
+
+
+def _redirect_url_for(role: str) -> str:
+    """Vite dev-server page to open once logged in as ``role``."""
+    redirect_url = "http://localhost:5173/"
+    if role == "admin":
+        redirect_url += "admin/dashboard"
+    elif role == "parent":
+        redirect_url += "parent/dashboard"
+    else:
+        redirect_url += "chat"
+    return redirect_url
+
+
+def _render_dev_login(role: str, error=None):
+    """Render the browser landing page that forwards to the Vite dev server."""
+    return render_template(
+        "dev_login.html", role=role, error=error, redirect_url=_redirect_url_for(role)
+    )
+
+
 def _perform_login(user_obj: User, role: str):
     """Internal helper to establish the session for a user."""
     session["user"] = user_obj.id
     session.permanent = True
     User.set_online(user_obj.id)
-    session["conversation_id"] = None
 
     from application.services.achievement_engine import evaluate_user
     evaluate_user(user_obj)
@@ -77,12 +104,11 @@ def browser_dev_login():
     Premium browser-facing shortcut for dev-login.
     Matches the 'main app' aesthetics while providing instant authentication.
     """
-    if not _is_dev_environment():
-        return jsonify({"error": "dev-login is disabled in production"}), 403
-    if not _is_local_request():
-        return jsonify({"error": "dev-login is only accessible from localhost"}), 403
+    blocked = _guard_response()
+    if blocked:
+        return blocked
 
-    role = request.args.get("role", "admin").lower()
+    role = _resolve_role()
     username = _AGENT_ROLES.get(role)
     error = None
 
@@ -97,17 +123,7 @@ def browser_dev_login():
 
     # In development, redirect to the Vite dev server to ensure the 'main app' loads.
     # If the user is already on the Vite server, this just brings them to /.
-    redirect_url = "http://localhost:5173/"
-    if role == "admin":
-        redirect_url += "admin/dashboard"
-    elif role == "parent":
-        redirect_url += "parent/dashboard"
-    else:
-        redirect_url += "chat"
-
-    return render_template(
-        "dev_login.html", role=role, error=error, redirect_url=redirect_url
-    )
+    return _render_dev_login(role, error)
 
 
 @dev_login.route("/api/dev-login", methods=["GET", "POST"])
@@ -121,13 +137,10 @@ def agent_dev_login():
     Both methods apply the same security guards. Fails closed on any
     non-local request, production environment, or unrecognised role.
     """
-    # --- Guard 1: production is always blocked ---
-    if not _is_dev_environment():
-        return jsonify({"error": "dev-login is disabled in production"}), 403
-
-    # --- Guard 2: must originate from localhost ---
-    if not _is_local_request():
-        return jsonify({"error": "dev-login is only accessible from localhost"}), 403
+    # Guards: production is always blocked, and the request must be from localhost.
+    blocked = _guard_response()
+    if blocked:
+        return blocked
 
     role = _resolve_role()
     username = _AGENT_ROLES.get(role)
@@ -152,17 +165,7 @@ def agent_dev_login():
 
     # For browser navigation (GET), use the premium template or redirect.
     if request.method == "GET":
-        redirect_url = "http://localhost:5173/"
-        if role == "admin":
-            redirect_url += "admin/dashboard"
-        elif role == "parent":
-            redirect_url += "parent/dashboard"
-        else:
-            redirect_url += "chat"
-
-        return render_template(
-            "dev_login.html", role=role, error=None, redirect_url=redirect_url
-        )
+        return _render_dev_login(role)
 
     return (
         jsonify(

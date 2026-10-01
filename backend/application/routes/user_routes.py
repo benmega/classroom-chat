@@ -576,42 +576,6 @@ def api_edit_profile_picture():
         return "Server error during image processing.", 500
 
 
-@user.route("/api/project-image", methods=["POST"])
-@require_login
-@api_response
-def api_upload_project_image():
-    if "project_image" not in request.files:
-        return "No image part in request", 400
-
-    file = request.files["project_image"]
-    if file.filename == "":
-        return "No file selected", 400
-
-    if not allowed_file(file.filename):
-        return "Invalid file format.", 400
-
-    # Limit size to 10MB for projects
-    file.seek(0, os.SEEK_END)
-    file_size = file.tell()
-    file.seek(0)
-    if file_size > 10 * 1024 * 1024:
-        return "File too large. Maximum size is 10MB.", 400
-
-    try:
-        filename = handle_project_image_upload(file)
-        if not filename:
-            return "Failed to process image.", 500
-
-        # We don't link to a specific project yet, just return the URL/filename
-        # The frontend will send the filename back when saving the project form
-        new_url = url_for("user.project_image", filename=filename)
-        return {"new_url": new_url, "filename": filename}
-
-    except Exception as e:
-        print(f"Error saving image: {e!s}")
-        return "Error saving image", 500
-
-
 @user.route("/api/profile-wallpaper", methods=["POST"])
 @require_login
 @api_response
@@ -675,26 +639,6 @@ def api_edit_profile_wallpaper():
         return "Error saving wallpaper", 500
 
 
-@user.route("/delete_profile_picture", methods=["POST"])
-@require_login
-def delete_profile_picture():
-    user_id = session.get("user")
-    user_obj = db.session.get(User, user_id)
-
-    if user_obj.profile_picture:
-        filepath = os.path.join(
-            Config.UPLOAD_FOLDER, "profile_pictures", user_obj.profile_picture
-        )
-        if os.path.exists(filepath):
-            os.remove(filepath)
-
-        user_obj.profile_picture = None
-        db.session.commit()
-
-    flash("Profile picture removed.", "success")
-    return redirect("/profile")
-
-
 @limiter.limit("50 per minute")
 @user.route("/profile_pictures/<path:filename>")
 def profile_picture(filename):
@@ -756,15 +700,6 @@ def project_image(filename):
         )
 
 
-@user.route("/get_users", methods=["GET"])
-@require_login
-def get_users_simple_list():
-
-    users = User.query.all()
-    users_data = [{"id": u.id, "username": u.username} for u in users]
-    return jsonify(users_data)
-
-
 @user.route("/api/users/search", methods=["GET"])
 @require_login
 @api_response
@@ -800,25 +735,6 @@ def search_users():
             for u in users
         ]
     }
-
-
-@user.route("/get_user_id", methods=["GET"])
-@require_login
-def get_user_id():
-
-    user_id = session.get("user")
-    if user_id:
-        return jsonify({"user_id": user_id})
-    return jsonify({"user_id": None}), 404
-
-
-@user.route("/remove_skill/<int:skill_id>", methods=["POST"])
-@require_login
-def remove_skill(skill_id):
-    user_id = session.get("user")
-    user_obj = db.session.get(User, user_id)
-    user_obj.remove_skill(skill_id)
-    return jsonify(success=True)
 
 
 def update_basic_user_info(user_obj, data):

@@ -17,44 +17,6 @@ from application.models.user import User
 from PIL import Image
 from tests.factories import AdminFactory, UserFactory
 
-
-def test_get_users(client, init_db):
-    sample_user = UserFactory()
-    """Test retrieving all users."""
-    with client.session_transaction() as sess:
-        sess["user"] = sample_user.id
-
-    response = client.get("/user/get_users", headers={"Accept": "application/json"})
-    assert response.status_code == 200
-
-    data = json.loads(response.data)
-    assert isinstance(data, list)
-    assert len(data) > 0
-    assert any(u["username"] == sample_user.username for u in data)
-
-
-def test_get_user_id_authenticated(client, init_db):
-    sample_user = UserFactory()
-    """Test getting user ID when authenticated."""
-    with client.session_transaction() as sess:
-        sess["user"] = sample_user.id
-
-    response = client.get("/user/get_user_id")
-    assert response.status_code == 200
-
-    data = json.loads(response.data)
-    assert data["user_id"] == sample_user.id
-
-
-def test_get_user_id_not_authenticated(client, init_db):
-    """Test getting user ID without authentication."""
-    response = client.get("/user/get_user_id", headers={"Accept": "application/json"})
-    assert response.status_code == 401
-
-    data = json.loads(response.data)
-    assert "error" in data
-
-
 # --- Authentication Tests ---
 
 
@@ -475,28 +437,6 @@ def test_edit_profile_picture_no_file(client, init_db):
     assert b"No file part" in response.data
 
 
-def test_delete_profile_picture(client, init_db):
-    sample_user = UserFactory()
-    """Test deleting profile picture."""
-    # Set a profile picture
-    sample_user.profile_picture = "test_picture.png"
-    db.session.commit()
-
-    with client.session_transaction() as sess:
-        sess["user"] = sample_user.id
-
-    response = client.post("/user/delete_profile_picture")
-
-    assert response.status_code == 302
-
-    with client.session_transaction() as sess:
-        flashed = [msg for _cat, msg in sess.get("_flashes", [])]
-    assert any("Profile picture removed" in m for m in flashed)
-
-    db.session.refresh(sample_user)
-    assert sample_user.profile_picture is None
-
-
 def test_profile_picture_endpoint(client, init_db):
     """Test serving profile pictures."""
     with patch("application.routes.user_routes.send_from_directory") as mock_send:
@@ -511,27 +451,6 @@ def test_profile_picture_path_traversal_protection(client, init_db):
     assert response.status_code == 400
 
 
-# --- Skill Tests ---
-
-
-def test_remove_skill(client, init_db):
-    sample_user = UserFactory()
-    """Test removing a skill via AJAX."""
-    skill = Skill(name="Python", user_id=sample_user.id)
-    db.session.add(skill)
-    db.session.commit()
-
-    with client.session_transaction() as sess:
-        sess["user"] = sample_user.id
-
-    response = client.post(f"/user/remove_skill/{skill.id}")
-
-    assert response.status_code == 200
-    data = json.loads(response.data)
-    assert data["success"] is True
-    assert db.session.get(Skill, skill.id) is None
-
-
 # --- Helper Function & Model Tests ---
 
 
@@ -540,7 +459,7 @@ def test_helper_functions_clear_user_skills(init_db):
     """Test clear_user_skills helper function."""
     from application.routes.user_routes import clear_user_skills
 
-    sample_user.add_skill("Python")
+    db.session.add(Skill(name="Python", user_id=sample_user.id))
     db.session.commit()
     assert len(sample_user.skills) > 0
 
@@ -564,16 +483,6 @@ def test_helper_functions_add_user_skills(init_db):
     assert len(sample_user.skills) == 3
     skill_names = [s.name for s in sample_user.skills]
     assert "Python" in skill_names
-
-
-def test_user_model_add_skill(init_db):
-    sample_user = UserFactory()
-    """Test User model's add_skill method."""
-    initial_skill_count = len(sample_user.skills)
-    sample_user.add_skill("Java")
-
-    assert len(sample_user.skills) == initial_skill_count + 1
-    assert any(s.name == "Java" for s in sample_user.skills)
 
 
 def test_daily_duck_logic(client, init_db):
@@ -609,22 +518,6 @@ def test_daily_duck_logic(client, init_db):
     assert sample_user.duck_balance == initial_balance
 
 
-def test_pfp_integrity_cleanup(init_db):
-    sample_user = UserFactory()
-    """Test the cleanup of missing profile picture files."""
-    from application.utilities.helper_functions import cleanup_missing_user_pfps
-
-    # Set a custom PFP that doesn't exist on disk
-    sample_user.profile_picture = "missing_image.png"
-    db.session.commit()
-
-    fixed_count = cleanup_missing_user_pfps()
-
-    db.session.refresh(sample_user)
-    assert fixed_count == 1
-    assert sample_user.profile_picture == "Default_pfp.jpg"
-
-
 def test_get_project_templates(client, init_db):
     sample_user = UserFactory()
     """Test retrieving list of default projects."""
@@ -658,7 +551,7 @@ def test_search_users(client, init_db):
     assert resp.json["data"]["users"][0]["username"] == sample_user.username
 
 
-def test_project_image_and_wallpaper_upload(client, init_db):
+def test_profile_wallpaper_upload(client, init_db):
     sample_user = UserFactory()
     # Generate a valid PNG image in memory
     from PIL import Image
@@ -670,13 +563,6 @@ def test_project_image_and_wallpaper_upload(client, init_db):
 
     with client.session_transaction() as sess:
         sess["user"] = sample_user.id
-
-    data = {"project_image": (BytesIO(img_bytes.getvalue()), "image.png")}
-    resp = client.post(
-        "/user/api/project-image", data=data, content_type="multipart/form-data"
-    )
-    assert resp.status_code == 200
-    assert "filename" in resp.json["data"]
 
     # Try unauthorized first (user does not have perk)
     resp_wall = client.post(
@@ -1031,35 +917,6 @@ def test_api_profile_picture_validations(client, init_db):
     assert resp.status_code == 400
 
 
-def test_api_project_image_validations(client, init_db):
-    sample_user = UserFactory()
-    with client.session_transaction() as sess:
-        sess["user"] = sample_user.id
-
-    # Missing project_image -> 400
-    resp = client.post("/user/api/project-image", data={})
-    assert resp.status_code == 400
-
-    # Empty filename -> 400
-    resp = client.post("/user/api/project-image", data={"project_image": (BytesIO(b""), "")})
-    assert resp.status_code == 400
-
-    # Invalid file format -> 400
-    resp = client.post(
-        "/user/api/project-image",
-        data={"project_image": (BytesIO(b"test"), "doc.txt")},
-    )
-    assert resp.status_code == 400
-
-    # Large file > 10MB -> 400
-    large_data = BytesIO(b"0" * (10 * 1024 * 1024 + 10))
-    resp = client.post(
-        "/user/api/project-image",
-        data={"project_image": (large_data, "huge.png")},
-    )
-    assert resp.status_code == 400
-
-
 def test_api_profile_wallpaper_validations(client, init_db):
     sample_user = UserFactory()
     sample_user.has_custom_wallpaper = True
@@ -1103,15 +960,6 @@ def test_search_users_empty_query(client, init_db):
     resp = client.get("/user/api/users/search?q=")
     assert resp.status_code == 200
     assert resp.json["data"]["users"] == []
-
-
-def test_get_user_id_nonexistent_user(client, init_db):
-    with client.session_transaction() as sess:
-        sess["user"] = 999999
-
-    resp = client.get("/user/get_user_id")
-    assert resp.status_code == 200
-    assert resp.json["user_id"] == 999999
 
 
 def test_get_parent_code_user_not_found(client, init_db):
