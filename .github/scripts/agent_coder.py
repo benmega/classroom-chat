@@ -2,10 +2,13 @@ import json
 import os
 import pathlib
 import subprocess
+import sys
 
 from openai import OpenAI
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
+MAX_TEST_OUTPUT = 4000
 
 
 # --- TOOLS ---
@@ -60,11 +63,18 @@ def patch_file(path, start_line, end_line, new_content):
 
 
 def run_tests():
-    """Execute pytest and return results."""
-    result = subprocess.run(["pytest"], capture_output=True, text=True)
-    return (
-        f"STDOUT: {result.stdout}\nSTDERR: {result.stderr}\nCode: {result.returncode}"
+    """Execute pytest from backend/ (its config and the app live there) and return results."""
+    result = subprocess.run(
+        [sys.executable, "-m", "pytest", "-q", "-x", "--disable-warnings"],
+        cwd="backend",
+        env={**os.environ, "FLASK_ENV": "testing"},
+        capture_output=True,
+        text=True,
     )
+    # Warnings are hidden and only the tail (the failure summary) is kept so a long run cannot
+    # flood the model context.
+    stdout, stderr = result.stdout[-MAX_TEST_OUTPUT:], result.stderr[-MAX_TEST_OUTPUT:]
+    return f"STDOUT: {stdout}\nSTDERR: {stderr}\nCode: {result.returncode}"
 
 
 def get_discussion_context():
@@ -97,7 +107,7 @@ def get_discussion_context():
 
 def main():
     obj_type = "Pull Request" if os.getenv("IS_PR") == "true" else "Issue"
-    plan_context = os.getenv("ISSUE_PLAN", "No plan provided.")
+    plan_context = os.getenv("ISSUE_PLAN") or "No plan provided."
 
     messages = [
         {

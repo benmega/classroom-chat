@@ -145,12 +145,13 @@ The legacy `/achievements/*` blueprint and `/dev-login` are deliberately not pro
 - **`deploy.yml`**: Triggers on push to `deploy`. SSHes into EC2, writes `backend/.env` from GitHub Secrets, then runs `deploy.sh` (dependency install, online SQLite DB backup, `flask db upgrade`, `python -m tools.migrate_classroom`, `flask seed`, service restart, health check with automatic rollback; see [section 8](#8-database-migrations)). Runs are serialised (`concurrency` group) so two deploys never run `deploy.sh` at the same time.
 - **`lint.yml`**: Ruff (Python) + ESLint (React) on every PR and on pushes to `main`/`master`/`working`. Also the lint gate for both deploy workflows.
 - **`tests.yml`**: On pushes and PRs to `main`/`master`: a backend job (mypy, Alembic single-head check, Pytest) and a frontend job (Vitest with coverage, Playwright E2E against a locally started backend). Also the test gate for both deploy workflows.
-- **`ai-planner.yml`, `ai-coder.yml`**: run when an issue or pull request receives an AI label.
+- **`ai-coder.yml`**: the single AI workflow; runs when an issue or pull request receives the `ai-plan` label
+  (plan, then code) or the `ai-draft` label (code directly). Runs are serialized per issue/PR.
   Do not add those labels casually; they start automated AI workflows.
 
 Required GitHub Secrets: `EC2_USERNAME`, `EC2_SSH_KEY`, `SECRET_KEY`,
 `ADMIN_USERNAME`, `ADMIN_PASSWORD`, `WEBHOOK_SECRET`, as well as AWS credentials for S3 uploads.
-The `ai-planner.yml` and `ai-coder.yml` workflows additionally use the `OPENAI_API_KEY` secret; the Flask app itself no longer reads it.
+The `ai-coder.yml` workflow additionally uses the `OPENAI_API_KEY` secret; the Flask app itself no longer reads it.
 
 ---
 

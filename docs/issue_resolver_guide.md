@@ -8,7 +8,7 @@ and **close** issues. Their definitions live in `.agents/skills/` (one `SKILL.md
 
 Use `bug`, `enhancement`, `documentation`, plus optional `priority:critical|high|medium|low` and `type:*`
 labels (`gh label list` shows what exists in the repo). **Never add the `ai-plan` or `ai-draft` labels**: they
-trigger automated AI workflows (`.github/workflows/ai-planner.yml`, `ai-coder.yml`).
+trigger the automated AI workflow (`.github/workflows/ai-coder.yml`).
 
 ---
 
