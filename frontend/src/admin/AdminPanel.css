@@ -1,5 +1,5 @@
 .admin-schema-error {
-    color: var(--error-color, red);
+    margin: 16px;
 }
 
 .admin-top-menu {

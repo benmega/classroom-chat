@@ -23,48 +23,50 @@
  *
  * The resource name in the key must be the CamelCase name used in AdminPanel
  * (e.g. "User", "Achievement", "Course") — NOT the SQLAlchemy table name.
+ *
+ * displayField is a key of the referenced record, i.e. a column attribute name. User's
+ * username column is mapped as "_username" (a "username" property sits on top of it).
  */
 export const FK_OVERRIDES = {
-    // User
-    "Conversation.creator_id":      { reference: "User",         displayField: "username" },
-    "Conversation.classroom_id":    { reference: "Classroom",    displayField: "name" },
-
     // Challenge
     "Challenge.classroom_id":       { reference: "Classroom",    displayField: "name" },
 
     // Message
-    "Message.user_id":              { reference: "User",         displayField: "username" },
-    "Message.conversation_id":      { reference: "Conversation", displayField: "title" },
+    "Message.user_id":              { reference: "User",         displayField: "_username" },
 
     // UserAchievement
-    "UserAchievement.user_id":      { reference: "User",         displayField: "username" },
+    "UserAchievement.user_id":      { reference: "User",         displayField: "_username" },
     "UserAchievement.achievement_id":{ reference: "Achievement", displayField: "name" },
 
     // UserCertificate
-    "UserCertificate.user_id":      { reference: "User",         displayField: "username" },
+    "UserCertificate.user_id":      { reference: "User",         displayField: "_username" },
     "UserCertificate.achievement_id":{ reference: "Achievement", displayField: "name" },
 
     // Project
-    "Project.user_id":              { reference: "User",         displayField: "username" },
+    "Project.user_id":              { reference: "User",         displayField: "_username" },
 
     // SessionLog
-    "SessionLog.user_id":           { reference: "User",         displayField: "username" },
+    "SessionLog.user_id":           { reference: "User",         displayField: "_username" },
 
     // Skill
-    "Skill.user_id":                { reference: "User",         displayField: "username" },
+    "Skill.user_id":                { reference: "User",         displayField: "_username" },
 
     // CourseInstance
     "CourseInstance.classroom_id":  { reference: "Classroom",    displayField: "name" },
     "CourseInstance.course_id":     { reference: "Course",       displayField: "name" },
 
     // DuckTransaction
-    "DuckTransaction.user_id":      { reference: "User",         displayField: "username" },
+    "DuckTransaction.user_id":      { reference: "User",         displayField: "_username" },
+
+    // DuckTradeLog
+    "DuckTradeLog.user_id":         { reference: "User",         displayField: "_username" },
 
     // ChallengeLog
+    "ChallengeLog.user_id":         { reference: "User",         displayField: "_username" },
     "ChallengeLog.course_id":       { reference: "Course",       displayField: "name" },
 
     // Note
-    "Note.user_id":                 { reference: "User",         displayField: "username" },
+    "Note.user_id":                 { reference: "User",         displayField: "_username" },
 };
 
 /**
@@ -94,7 +96,6 @@ export const RESOURCES = [
     "User",
     "Message",
     "Achievement",
-    "Conversation",
     "SessionLog",
     "UserAchievement",
     "UserCertificate",
