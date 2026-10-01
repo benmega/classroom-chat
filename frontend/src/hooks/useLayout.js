@@ -1,14 +1,14 @@
 import { useEffect, useRef, useCallback } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import useAuthStore from '../store/useAuthStore';
 import client from '../api/client';
 import useSidebar from './useSidebar';
 import useChatSocket from './useChatSocket';
+import useLogout from './useLogout';
 
 export const useLayout = () => {
     const {
         user,
-        logout,
         isAuthenticated,
         hamburgerProgress,
         setUnreadCount,
@@ -16,7 +16,7 @@ export const useLayout = () => {
         activityUnreadCount,
         setActivityUnreadCount
     } = useAuthStore();
-    const navigate = useNavigate();
+    const handleLogout = useLogout();
     const location = useLocation();
     const { isSidebarOpen, toggleSidebar, setSidebarOpen } = useSidebar();
 
@@ -151,11 +151,6 @@ export const useLayout = () => {
         return () => clearInterval(interval);
     }, [isAuthenticated, user]);
 
-
-    const handleLogout = async () => {
-        await logout();
-        navigate('/');
-    };
 
     const isGuestPage = ['/login', '/signup'].includes(location.pathname);
     const isChatPage = location.pathname === '/' || location.pathname.startsWith('/chat');

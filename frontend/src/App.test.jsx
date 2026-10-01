@@ -35,9 +35,20 @@ vi.mock('./pages/Admin/AdminDashboard', () => ({
 vi.mock('./pages/Parent/ParentDashboard', () => ({
   default: () => <div>Parent Dashboard Mock</div>
 }));
-vi.mock('./pages/Auth/Login', () => ({
-  default: () => <div>Login Page Mock</div>
-}));
+// Shows where the guard said the user came from, so the tests can read the redirect state
+vi.mock('./pages/Auth/Login', async () => {
+  const { useLocation } = await import('react-router-dom');
+  const LoginMock = () => {
+    const { state } = useLocation();
+    return (
+      <>
+        <div>Login Page Mock</div>
+        {state?.from && <span data-testid="login-from">{state.from}</span>}
+      </>
+    );
+  };
+  return { default: LoginMock };
+});
 vi.mock('./pages/Error/AccessDenied', () => ({
   default: () => <div>Access Denied Mock</div>
 }));
@@ -111,6 +122,42 @@ describe('App Component', () => {
     expect(await screen.findByText('Chat Page Mock')).toBeInTheDocument();
   });
 
+  it.each(['/signup', '/forgot-password', '/reset-password'])(
+    'redirects an authenticated user away from %s',
+    async (path) => {
+      window.history.pushState({}, 'Test page', path);
+      useAuthStore.mockReturnValue({
+        isLoading: false,
+        isAuthenticated: true,
+        isServerOffline: false,
+        user: { role: 'student', is_admin: false },
+        checkAuth: vi.fn(),
+      });
+
+      renderApp();
+
+      expect(await screen.findByText('Chat Page Mock')).toBeInTheDocument();
+      expect(window.location.pathname).toBe('/chat');
+    }
+  );
+
+  it('sends a signed-in user back to the page they were bounced from, not their home page', async () => {
+    window.history.pushState({ usr: { from: '/profile' }, key: 'bounced', idx: 0 }, 'Test page', '/login');
+    useAuthStore.mockReturnValue({
+      isLoading: false,
+      isAuthenticated: true,
+      isServerOffline: false,
+      user: { role: 'student', is_admin: false },
+      checkAuth: vi.fn(),
+    });
+
+    renderApp();
+
+    expect(await screen.findByText('Profile Page Mock')).toBeInTheDocument();
+    expect(screen.queryByText('Chat Page Mock')).not.toBeInTheDocument();
+    expect(window.location.pathname).toBe('/profile');
+  });
+
   it('shows loading spinner when isLoading is true', () => {
     useAuthStore.mockReturnValue({
       isLoading: true,
@@ -140,6 +187,56 @@ describe('App Component', () => {
     const spinner = document.querySelector('svg');
     expect(spinner.getAttribute('style')).toContain('color: var(--blue-600)');
     expect(spinner.getAttribute('stroke')).toBe('currentColor');
+  });
+
+  describe('when a signed-out user opens a protected page', () => {
+    beforeEach(() => {
+      useAuthStore.mockReturnValue({
+        isLoading: false,
+        isAuthenticated: false,
+        isServerOffline: false,
+        user: null,
+        checkAuth: vi.fn(),
+      });
+    });
+
+    it('redirects to /login and remembers the page, with its query and hash', async () => {
+      window.history.pushState({}, 'Test page', '/activity?tab=2#recent');
+
+      renderApp();
+
+      expect(await screen.findByText('Login Page Mock')).toBeInTheDocument();
+      expect(window.location.pathname).toBe('/login');
+      expect(screen.getByTestId('login-from')).toHaveTextContent('/activity?tab=2#recent');
+    });
+
+    it('replaces the protected page in history so Back does not bounce straight back to /login', async () => {
+      const push = vi.spyOn(window.history, 'pushState');
+      const replace = vi.spyOn(window.history, 'replaceState');
+      window.history.pushState({}, 'Test page', '/activity');
+      push.mockClear();
+
+      renderApp();
+      await screen.findByText('Login Page Mock');
+
+      expect(push).not.toHaveBeenCalled();
+      expect(replace).toHaveBeenCalledWith(
+        expect.objectContaining({ usr: { from: '/activity' } }),
+        '',
+        expect.stringContaining('/login')
+      );
+      push.mockRestore();
+      replace.mockRestore();
+    });
+
+    it('does not invent a return page for a user who opens /login directly', async () => {
+      window.history.pushState({}, 'Test page', '/login');
+
+      renderApp();
+
+      expect(await screen.findByText('Login Page Mock')).toBeInTheDocument();
+      expect(screen.queryByTestId('login-from')).not.toBeInTheDocument();
+    });
   });
 
   it('redirects parent role to parent dashboard', async () => {

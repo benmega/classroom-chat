@@ -4,8 +4,9 @@ import { useLayout } from './useLayout';
 import client from '../api/client';
 
 // Mock react-router-dom
+const navigateMock = vi.hoisted(() => vi.fn());
 vi.mock('react-router-dom', () => ({
-  useNavigate: () => vi.fn(),
+  useNavigate: () => navigateMock,
   useLocation: () => ({ pathname: '/' }),
 }));
 
@@ -342,5 +343,36 @@ describe('useLayout - unread count', () => {
 
     expect(consoleError).not.toHaveBeenCalled();
     consoleError.mockRestore();
+  });
+});
+
+describe('useLayout - logout', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    client.post.mockResolvedValue({});
+    client.get.mockResolvedValue({ data: { success: true, count: 0, latest_id: null } });
+    currentStoreState = {
+      user: { id: 1, username: 'testuser', duck_balance: 10 },
+      logout: vi.fn().mockResolvedValue(undefined),
+      isAuthenticated: true,
+      hamburgerProgress: 0,
+      unreadCount: 0,
+      setUnreadCount: vi.fn(),
+      setLastReadMessageId: vi.fn(),
+    };
+  });
+
+  it('signs out first and only then returns to the landing page', async () => {
+    const order = [];
+    currentStoreState.logout.mockImplementation(async () => { order.push('logout'); });
+    navigateMock.mockImplementation(() => { order.push('navigate'); });
+    const { result } = renderHook(() => useLayout());
+
+    await act(async () => {
+      await result.current.handleLogout();
+    });
+
+    expect(order).toEqual(['logout', 'navigate']);
+    expect(navigateMock).toHaveBeenCalledWith('/');
   });
 });

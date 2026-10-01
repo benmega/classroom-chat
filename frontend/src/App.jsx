@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useParam
 import { Toaster, ToastBar } from 'react-hot-toast';
 import { Loader2 } from 'lucide-react';
 import useAuthStore from './store/useAuthStore';
+import { isSigningOut } from './hooks/useLogout';
 import { SidebarProvider } from './context/SidebarContext';
 import ConfirmDialog from './components/common/ConfirmDialog';
 import ErrorBoundary from './components/common/ErrorBoundary';
@@ -90,29 +91,37 @@ const LegacyProfileRedirect = () => {
   return <Navigate to={`/profile/${encodeURIComponent(slug)}`} replace />;
 };
 
+// Full-page loader shown while the first auth check is still running
+const AuthLoader = () => (
+  <div style={{
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1.5rem',
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: '100vh',
+    background: 'var(--bg-primary)',
+    color: 'var(--text-primary)',
+  }}>
+      <Loader2 style={{ animation: 'spin 1s linear infinite', color: 'var(--blue-600)' }} size={64} strokeWidth={1.5} />
+      <div style={{ textAlign: 'center' }}>
+        <h2 style={{ margin: 0, fontSize: 'var(--font-2xl)', fontWeight: 'bold', letterSpacing: '-0.025em' }}>Classroom Chat</h2>
+        <p style={{ margin: '0.25rem 0 0 0', opacity: 0.7, fontSize: 'var(--font-sm)' }}>Preparing your workspace...</p>
+      </div>
+  </div>
+);
+
 const ProtectedRoute = ({ children, adminOnly = false, parentOnly = false }) => {
   const { isAuthenticated, user, isLoading } = useAuthStore();
   const location = useLocation();
-  
-  if (isLoading) return (
-    <div style={{ 
-      display: 'flex', 
-      flexDirection: 'column', 
-      gap: '1.5rem', 
-      justifyContent: 'center', 
-      alignItems: 'center', 
-      height: '100vh', 
-      background: 'var(--bg-primary)', 
-      color: 'var(--text-primary)',
-    }}>
-        <Loader2 style={{ animation: 'spin 1s linear infinite', color: 'var(--blue-600)' }} size={64} strokeWidth={1.5} />
-        <div style={{ textAlign: 'center' }}>
-          <h2 style={{ margin: 0, fontSize: 'var(--font-2xl)', fontWeight: 'bold', letterSpacing: '-0.025em' }}>Classroom Chat</h2>
-          <p style={{ margin: '0.25rem 0 0 0', opacity: 0.7, fontSize: 'var(--font-sm)' }}>Preparing your workspace...</p>
-        </div>
-    </div>
-  );
-  if (!isAuthenticated) return <Navigate to="/login" />;
+
+  if (isLoading) return <AuthLoader />;
+  if (!isAuthenticated) {
+    // replace: Back must not return to the page that just bounced the user.
+    // from: Login sends them back here once they have signed in again. Not after a deliberate sign-out.
+    const from = location.pathname + location.search + location.hash;
+    return <Navigate to="/login" replace state={isSigningOut() ? null : { from }} />;
+  }
   if (adminOnly && user?.role !== 'admin') return <AccessDenied />;
 
   if (user?.role === 'parent' && 
@@ -142,8 +151,19 @@ const renderToast = (t) => (
   />
 );
 
+// Sign-in and sign-up pages are for signed-out users. Once signed in, go where ProtectedRoute (or a
+// join link) came from, else to the user's home page. Deciding that here keeps the destination
+// fixed instead of racing Login's own navigation.
+const GuestRoute = ({ redirectTo, children }) => {
+  const { isAuthenticated } = useAuthStore();
+  const location = useLocation();
+
+  if (isAuthenticated) return <Navigate to={location.state?.from || redirectTo} replace />;
+  return children;
+};
+
 function App() {
-  const { checkAuth, isAuthenticated, isServerOffline, user } = useAuthStore();
+  const { checkAuth, isServerOffline, user } = useAuthStore();
 
   useEffect(() => {
     checkAuth();
@@ -212,10 +232,10 @@ function App() {
       <RouteAwareBoundary>
       <Suspense fallback={<PageLoader />}>
       <Routes>
-        <Route path="/login" element={isAuthenticated ? <Navigate to={authRedirect} /> : <Login />} />
-        <Route path="/signup" element={isAuthenticated ? <Navigate to={authRedirect} /> : <Signup />} />
-        <Route path="/forgot-password" element={isAuthenticated ? <Navigate to={authRedirect} /> : <ForgotPassword />} />
-        <Route path="/reset-password" element={isAuthenticated ? <Navigate to={authRedirect} /> : <ResetPassword />} />
+        <Route path="/login" element={<GuestRoute redirectTo={authRedirect}><Login /></GuestRoute>} />
+        <Route path="/signup" element={<GuestRoute redirectTo={authRedirect}><Signup /></GuestRoute>} />
+        <Route path="/forgot-password" element={<GuestRoute redirectTo={authRedirect}><ForgotPassword /></GuestRoute>} />
+        <Route path="/reset-password" element={<GuestRoute redirectTo={authRedirect}><ResetPassword /></GuestRoute>} />
 
 
         {/* Development-only shortcut — guarded so browsers in production never see this route */}

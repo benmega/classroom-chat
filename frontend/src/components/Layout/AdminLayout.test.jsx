@@ -1,9 +1,11 @@
 import React from 'react';
-import { render, screen, act } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { render, screen, act, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { MemoryRouter, useLocation } from 'react-router-dom';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import AdminLayout from './AdminLayout';
 import useAuthStore from '../../store/useAuthStore';
+import client from '../../api/client';
 import { SidebarProvider } from '../../context/SidebarContext';
 
 vi.mock('../../api/client', () => ({
@@ -63,5 +65,48 @@ describe('AdminLayout Component', () => {
         expect(screen.getByText('Lazy Admin Page')).toBeInTheDocument();
         expect(screen.queryByRole('status', { name: 'Loading page' })).not.toBeInTheDocument();
         expect(screen.getByRole('link', { name: 'Admin HQ Home' })).toBeInTheDocument();
+    });
+});
+
+describe('AdminLayout logout', () => {
+    // The probe sits outside AdminLayout: signing out turns the layout into Access Denied
+    const LocationProbe = () => <div data-testid="location">{useLocation().pathname}</div>;
+
+    const renderWithLocation = () => render(
+        <MemoryRouter initialEntries={['/admin/dashboard']}>
+            <SidebarProvider>
+                <AdminLayout><div>Admin Page Content</div></AdminLayout>
+                <LocationProbe />
+            </SidebarProvider>
+        </MemoryRouter>
+    );
+
+    beforeEach(() => {
+        useAuthStore.setState({
+            isAuthenticated: true,
+            user: { role: 'admin', username: 'admin1' },
+        });
+    });
+
+    it('signs out and returns to the landing page through the router', async () => {
+        renderWithLocation();
+
+        await userEvent.click(screen.getByRole('button', { name: 'Logout' }));
+
+        await waitFor(() => expect(screen.getByTestId('location').textContent).toBe('/'));
+        expect(useAuthStore.getState().isAuthenticated).toBe(false);
+        expect(client.get).toHaveBeenCalledWith('/user/logout');
+    });
+
+    it('still leaves the admin area when the logout request fails', async () => {
+        const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+        renderWithLocation();
+        client.get.mockRejectedValueOnce(new Error('Network Error'));
+
+        await userEvent.click(screen.getByRole('button', { name: 'Logout' }));
+
+        await waitFor(() => expect(screen.getByTestId('location').textContent).toBe('/'));
+        expect(useAuthStore.getState().isAuthenticated).toBe(false);
+        warn.mockRestore();
     });
 });

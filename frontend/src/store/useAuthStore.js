@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import toast from 'react-hot-toast';
 import client from '../api/client';
 import { resetSocket } from '../hooks/useChatSocket';
 
@@ -15,7 +16,7 @@ const setHamburgerOverride = (username, progress) => {
   localStorage.setItem(`hamburger_override_${username}`, progress);
 };
 
-const useAuthStore = create((set) => ({
+const useAuthStore = create((set, get) => ({
   user: null,
   isAuthenticated: false,
   isLoading: true,
@@ -113,13 +114,28 @@ const useAuthStore = create((set) => ({
     }
   },
   
+  // The one definition of "signed out": the user and everything derived from them
+  clearSession: () => set({
+    user: null,
+    isAuthenticated: false,
+    hamburgerProgress: 0,
+    unreadCount: 0,
+    lastReadMessageId: null,
+    activityUnreadCount: 0,
+  }),
+
   logout: async () => {
     try {
       await client.get('/user/logout');
+    } catch (error) {
+      // Sign out locally regardless: callers navigate away afterwards, so they must not get a rejection.
+      // The server may still hold the session though, which a reload would pick up again.
+      console.warn('Logout request failed; clearing the local session anyway', error);
+      toast.error('Could not end your session on the server. You may still be signed in after a reload.');
     } finally {
       // The next login must handshake a fresh socket, not reuse this user's
       resetSocket();
-      set({ user: null, isAuthenticated: false, hamburgerProgress: 0 });
+      get().clearSession();
     }
   },
   

@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import useAuthStore from '../../store/useAuthStore';
 import useSidebar from '../../hooks/useSidebar';
+import useLogout from '../../hooks/useLogout';
 import client from '../../api/client';
 import ContentLoader from '../common/ContentLoader';
 import './AdminLayout.css';
@@ -28,6 +29,7 @@ const AdminLayout = ({ children }) => {
     const userRole = useAuthStore((s) => s.user?.role);
     const user = useAuthStore((s) => s.user);
     const { isSidebarOpen, setSidebarOpen } = useSidebar();
+    const handleLogout = useLogout();
     const location = useLocation();
     const [reviewCounts, setReviewCounts] = useState({
         pending_users: 0,
@@ -178,10 +180,7 @@ const AdminLayout = ({ children }) => {
                     <div className="admin-rail-item-container admin-logout-container">
                         <div className="admin-rail-indicator" />
                         <button
-                            onClick={async () => {
-                                await useAuthStore.getState().logout();
-                                window.location.href = '/';
-                            }}
+                            onClick={handleLogout}
                             className="admin-rail-item admin-logout-btn"
                             data-tooltip="Logout"
                             title="Logout"

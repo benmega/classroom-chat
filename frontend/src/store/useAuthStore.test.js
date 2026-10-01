@@ -1,13 +1,17 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import useAuthStore from './useAuthStore';
 import client from '../api/client';
 import { resetSocket } from '../hooks/useChatSocket';
 import { server } from '../test/mocks/server';
 import { http, HttpResponse } from 'msw';
+import toast from 'react-hot-toast';
 
 vi.mock('../hooks/useChatSocket', () => ({ resetSocket: vi.fn() }));
+vi.mock('react-hot-toast', () => ({ default: { error: vi.fn() } }));
 
 describe('useAuthStore', () => {
+  let warn;
+
   beforeEach(() => {
     // Reset store state
     useAuthStore.setState({
@@ -18,6 +22,13 @@ describe('useAuthStore', () => {
     });
     // Resetting an authenticated store counts as a cleared session; start each test from zero
     resetSocket.mockClear();
+    toast.error.mockClear();
+    // A failed logout logs a warning; keep it out of the test output and let tests assert on it
+    warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    warn.mockRestore();
   });
 
   it('initializes with default state', () => {
@@ -134,10 +145,80 @@ describe('useAuthStore', () => {
     server.use(http.get('*/user/logout', () => HttpResponse.error()));
     useAuthStore.setState({ isAuthenticated: true, user: { id: 1 } });
 
-    await expect(useAuthStore.getState().logout()).rejects.toThrow();
+    await expect(useAuthStore.getState().logout()).resolves.toBeUndefined();
 
     expect(resetSocket).toHaveBeenCalled();
     expect(useAuthStore.getState().isAuthenticated).toBe(false);
+    expect(useAuthStore.getState().user).toBeNull();
+  });
+
+  it('logout does not reject on a server error, so callers still navigate away', async () => {
+    server.use(http.get('*/user/logout', () => new HttpResponse(null, { status: 500 })));
+    useAuthStore.setState({ isAuthenticated: true, user: { id: 1 }, hamburgerProgress: 0.4 });
+
+    await expect(useAuthStore.getState().logout()).resolves.toBeUndefined();
+
+    const state = useAuthStore.getState();
+    expect(state.isAuthenticated).toBe(false);
+    expect(state.user).toBeNull();
+    expect(state.hamburgerProgress).toBe(0);
+  });
+
+  it('logout warns that the server may still hold the session when the request fails', async () => {
+    server.use(http.get('*/user/logout', () => HttpResponse.error()));
+    useAuthStore.setState({ isAuthenticated: true, user: { id: 1 } });
+
+    await useAuthStore.getState().logout();
+
+    expect(toast.error).toHaveBeenCalledWith(expect.stringContaining('still be signed in'));
+    expect(warn).toHaveBeenCalled();
+  });
+
+  it('logout stays quiet when the request succeeds', async () => {
+    useAuthStore.setState({ isAuthenticated: true, user: { id: 1 } });
+
+    await useAuthStore.getState().logout();
+
+    expect(toast.error).not.toHaveBeenCalled();
+    expect(warn).not.toHaveBeenCalled();
+  });
+
+  it('clearSession resets the user and everything derived from them', () => {
+    useAuthStore.setState({
+      user: { id: 1, username: 'testuser' },
+      isAuthenticated: true,
+      hamburgerProgress: 0.7,
+      unreadCount: 4,
+      lastReadMessageId: 99,
+      activityUnreadCount: 2,
+    });
+
+    useAuthStore.getState().clearSession();
+
+    const state = useAuthStore.getState();
+    expect(state.user).toBeNull();
+    expect(state.isAuthenticated).toBe(false);
+    expect(state.hamburgerProgress).toBe(0);
+    expect(state.unreadCount).toBe(0);
+    expect(state.lastReadMessageId).toBeNull();
+    expect(state.activityUnreadCount).toBe(0);
+  });
+
+  it('logout leaves the next user no unread badges from the previous one', async () => {
+    useAuthStore.setState({
+      isAuthenticated: true,
+      user: { id: 1 },
+      unreadCount: 3,
+      lastReadMessageId: 12,
+      activityUnreadCount: 5,
+    });
+
+    await useAuthStore.getState().logout();
+
+    const state = useAuthStore.getState();
+    expect(state.unreadCount).toBe(0);
+    expect(state.lastReadMessageId).toBeNull();
+    expect(state.activityUnreadCount).toBe(0);
   });
 
   it('discards the chat socket when an auth check finds the session gone', async () => {

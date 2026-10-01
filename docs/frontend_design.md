@@ -24,7 +24,7 @@ The Classroom Chat frontend is a modern, responsive single-page application (SPA
 The application uses a layout-based approach to share common UI elements across different routes:
 
 - **`App.jsx`**: The root component containing the Router, Global Providers (QueryClient, SidebarContext, Toaster), and high-level Route definitions.
-- **Protected Routes**: A `ProtectedRoute` wrapper handles authentication checks and redirects unauthenticated users to `/login`.
+- **Protected Routes**: A `ProtectedRoute` wrapper handles authentication checks and redirects unauthenticated users to `/login` (replacing the history entry and passing the requested page as `state.from`, which the sign-in pages send them back to).
 - **Layouts**:
   - **`Layout`**: The default layout for students, including the sidebar and main content area.
   - **`AdminLayout`**: A specialized layout for administrative pages, providing distinct navigation and sidebar options.
