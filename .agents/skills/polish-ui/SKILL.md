@@ -16,7 +16,7 @@ Example: `@[/polish-ui] Refine the dashboard cards. Iterate 5 times.`
 
 1.  **Context Gathering**: 
     - Identify the target URL or component from the user's request.
-    - Review the [Aesthetic Guidelines](file:///c:/Users/Ben/AntiGravity/classroom-chat/docs/AESTHETIC_GUIDELINES.md) in the core app documentation to understand the current target aesthetic ("Flat with strategic glassmorphism").
+    - Review the [Aesthetic Guidelines](../../../docs/AESTHETIC_GUIDELINES.md) in the core app documentation to understand the current target aesthetic ("Flat with strategic glassmorphism").
     - If the user provides feedback in their request that conflicts with the established `AESTHETIC_GUIDELINES.md`, explicitly **notify the user of the conflict** and **update the guidelines file** to reflect their new preference before proceeding.
 2.  **Authentication**:
     - If the target requires authentication, instruct the subagents to navigate to `http://localhost:8000/dev-login?role=admin` first to get an active session. (Note: port 8000 is backend, 5173 is frontend).

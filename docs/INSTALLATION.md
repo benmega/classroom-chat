@@ -56,6 +56,12 @@ python main.py
 npm run dev -- --host
 ```
 
+**Windows one-click start:** `run_dev.ps1` in the repository root opens both servers above in separate PowerShell windows (frontend with `--host`, backend with `python main.py`). It works from any directory, and activates `backend/.venv` or `backend/venv` first when one exists:
+
+```powershell
+.\run_dev.ps1
+```
+
 - Frontend dev server: http://localhost:5173
 - Backend API: http://127.0.0.1:8000 (default port, overridable via the `PORT` env var)
 

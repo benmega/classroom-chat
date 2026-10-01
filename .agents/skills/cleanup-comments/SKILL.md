@@ -16,7 +16,7 @@ Iterate through the identified files and evaluate comments based on these criter
 - **Outdated**: Check if the comment refers to variables, functions, or logic that have since changed or been removed.
 - **Unhelpful**: Identify comments that state the obvious (redundant descriptions of self-documenting code).
 - **Superfluous**: Look for legacy TODOs or commented-out dead code blocks.
-- **Preserve Personality**: DO NOT remove humorous comments, Easter eggs, or "storytelling" if they contribute to the app's whimsical vibe as defined in [PERSONALITY_GUIDE.md](file:///c:/Users/Ben/AntiGravity/classroom-chat/PERSONALITY_GUIDE.md).
+- **Preserve Personality**: DO NOT remove humorous comments, Easter eggs, or "storytelling" if they contribute to the app's whimsical vibe as defined in [PERSONALITY_GUIDE.md](../../../PERSONALITY_GUIDE.md).
 
 ## Phase 3: Implementation
 1. **Draft Changes**: Prepare precise code edits using `replace_file_content` or `multi_replace_file_content`.

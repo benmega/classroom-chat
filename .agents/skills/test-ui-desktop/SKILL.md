@@ -8,15 +8,10 @@ description: Automatically test the Desktop UI for bugs, and file them as GitHub
 This workflow provides the standardized procedure for finding and recording UI bugs specifically for desktop resolutions.
 
 1.  **Locate**: Run `gh issue list --state open --limit 100` to see existing issues so you do not file duplicates.
-2.  **Health Check**: Before starting deep exploration, ensure the `browser` subagent is available (use the `invoke_subagent` tool to start the `browser` subagent if it is not running). Then, perform a simple navigation to `http://localhost:5173/` using the `browser` subagent. 
+2.  **Health Check**: Before starting deep exploration, perform a simple navigation to `http://localhost:5173/` using `browser_subagent`. 
     - If the browser fails to return a Page ID or throws a CDP error, stop and report "Browser Environment Unstable" to the user.
-3.  **Authentication**: If testing a protected route or a user flow that requires being logged in, **YOU MUST** follow the `@[/login]` workflow. Summary:
-    1. Navigate to `http://localhost:8000/dev-login?role=admin` — the backend returns JSON confirming the session.
-    2. Then navigate to `http://localhost:5173/` and verify the dashboard/chat loads (not the login page).
-    - **CRITICAL**: Port **8000** is the backend. Port **5173** is the React app. They share the same session cookie.
-    - Do NOT use the standard `/login` form unless the task is explicitly about testing login behaviour.
-    - If `/dev-login` returns an error, **stop and report the failure**. Do not attempt workarounds.
-4.  **Explore**: Use the `browser` subagent to systematically navigate through the application focusing on **common user flows** (e.g., Login -> Dashboard -> Chat -> Profile).
+3.  **Authentication**: If testing a protected route or a user flow that requires being logged in, **YOU MUST** follow the [`login` skill](../login/SKILL.md) (default: the `/dev-login` path; do not use the standard `/login` form unless the task is explicitly about testing login behaviour).
+4.  **Explore**: Use `browser_subagent` to systematically navigate through the application focusing on **common user flows** (e.g., Login -> Dashboard -> Chat -> Profile).
     - **QA Standards**: Reference [testing_and_qa.md](../../../docs/testing_and_qa.md) for the standardized audit criteria.
     - Prioritize desktop viewports (e.g., 1440px and 1280px).
     - Focus on desktop-specific interactions: hover states, sidebar navigation, and expanded layouts.

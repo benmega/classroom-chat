@@ -1,3 +1,4 @@
+import argparse
 import io
 import os
 from datetime import datetime, timedelta, timezone
@@ -21,6 +22,11 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 LOGO_PATH = os.path.join(current_dir, "../..", "static", "images", "logo.ico")
 
 OUTPUT_FILENAME = "classroom_cards.pdf"
+# The PDF holds student names and profile QR links, so by default it goes into the
+# git-ignored backend/userData/ folder instead of whatever the current directory is.
+DEFAULT_OUTPUT_PATH = os.path.normpath(
+    os.path.join(current_dir, "../..", "userData", "student_cards", OUTPUT_FILENAME)
+)
 BASE_URL = "https://blossom.benmega.com/user/profile/"
 
 # Card Dimensions
@@ -106,8 +112,19 @@ def draw_card(c, x, y, user, logo_img):
     )
 
 
-def create_pdf(users):
-    c = canvas.Canvas(OUTPUT_FILENAME, pagesize=letter)
+def parse_args(argv=None):
+    parser = argparse.ArgumentParser(description="Generate printable student QR cards.")
+    parser.add_argument(
+        "--output",
+        default=DEFAULT_OUTPUT_PATH,
+        help="Where to write the PDF (default: backend/userData/student_cards/classroom_cards.pdf)",
+    )
+    return parser.parse_args(argv)
+
+
+def create_pdf(users, output_path=DEFAULT_OUTPUT_PATH):
+    os.makedirs(os.path.dirname(os.path.abspath(output_path)), exist_ok=True)
+    c = canvas.Canvas(output_path, pagesize=letter)
     _width, height = letter
 
     # Debug print to confirm path
@@ -142,7 +159,7 @@ def create_pdf(users):
             row = 0
 
     c.save()
-    print(f"PDF generated successfully: {OUTPUT_FILENAME}")
+    print(f"PDF generated successfully: {output_path}")
 
 
 # =================================================
@@ -153,6 +170,7 @@ app = create_app()
 
 
 if __name__ == "__main__":
+    args = parse_args()
     with app.app_context():
         # Calculate 90 days ago in UTC
         ninety_days_ago = datetime.now(timezone.utc) - timedelta(days=90)
@@ -163,4 +181,4 @@ if __name__ == "__main__":
             User.last_daily_duck > ninety_days_ago,
         ).all()
 
-        create_pdf(all_students)
+        create_pdf(all_students, args.output)

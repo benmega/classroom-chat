@@ -10,13 +10,8 @@ This workflow provides the standardized procedure for finding and recording UI b
 1.  **Locate**: Run `gh issue list --state open --limit 100` to see existing issues so you do not file duplicates.
 2.  **Health Check**: Before starting deep exploration, perform a simple navigation to `http://localhost:5173/` using `browser_subagent`. 
     - If the browser fails to return a Page ID or throws a CDP error, stop and report "Browser Environment Unstable" to the user.
-3.  **Authentication**: If testing a protected route or a user flow that requires being logged in, **YOU MUST** follow the `@[/login]` workflow. Summary:
-    1. Navigate to `http://localhost:8000/dev-login?role=admin` — the backend returns JSON confirming the session.
-    2. Then navigate to `http://localhost:5173/` and verify the dashboard/chat loads (not the login page).
-    - **CRITICAL**: Port **8000** is the backend. Port **5173** is the React app. They share the same session cookie.
+3.  **Authentication**: If testing a protected route or a user flow that requires being logged in, **YOU MUST** follow the [`login` skill](../login/SKILL.md) (default: the `/dev-login` path; do not use the standard `/login` form unless the task is explicitly about testing login behaviour or you are using the test parent credentials below).
     - **Parent Account Testing**: When reviewing the mobile view for parents, you can use the dev-login shortcut by navigating to `http://localhost:8000/dev-login?role=parent`. Alternatively, navigate to the standard `/login` form and use credentials: username `test_parent` and password `parent123`.
-    - Do NOT use the standard `/login` form unless the task is explicitly about testing login behaviour, or you are using the test parent credentials.
-    - If `/dev-login` returns an error, **stop and report the failure**. Do not attempt workarounds.
 4.  **Explore**: Use `browser_subagent` to systematically navigate through the application focusing on **common user flows** (e.g., Login -> Dashboard -> Chat -> Profile).
     - **QA Standards**: Reference [testing_and_qa.md](../../../docs/testing_and_qa.md) for the standardized audit criteria.
     - Prioritize mobile viewports (e.g., 390px width for iPhone 13/14).
