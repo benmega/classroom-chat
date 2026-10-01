@@ -3,6 +3,7 @@
 # Location: tools/
 # Summary: Packs all achievement badge images into one sprite sheet and writes CSS mapping.
 
+import hashlib
 from math import ceil, sqrt
 from pathlib import Path
 
@@ -88,12 +89,16 @@ def build_sprite():
     sheet.save(SPRITE_PATH, "WEBP", quality=80)
     print(f"Sprite saved to {SPRITE_PATH}")
 
+    # Version the URL by content: the sprite is served with a long-lived cache, so
+    # a browser holding an older sprite must fetch the new one with the new positions.
+    version = hashlib.md5(SPRITE_PATH.read_bytes()).hexdigest()[:8]
+
     # Save CSS
     css_header = (
         ".badge {\n"
         f"  width: {ICON_SIZE[0]}px;\n"
         f"  height: {ICON_SIZE[1]}px;\n"
-        f"  background-image: url('/static/images/achievement_badges/sprite.webp');\n"
+        f"  background-image: url('/static/images/achievement_badges/sprite.webp?v={version}');\n"
         "  background-repeat: no-repeat;\n"
         "  display: inline-block;\n"
         "}\n\n"

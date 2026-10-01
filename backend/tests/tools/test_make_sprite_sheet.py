@@ -2,6 +2,7 @@
 Tests for tools/make_sprite_sheet.py (achievement badge sprite builder).
 """
 
+import hashlib
 import importlib.util
 import re
 from pathlib import Path
@@ -128,3 +129,21 @@ def test_committed_sprite_css_matches_the_badge_images(sprite_tool):
     assert len({(x, y) for _, x, y in rules}) == len(rules)
     for slug, x, y in rules:
         assert x + 128 <= width and y + 128 <= height, slug
+
+
+def test_sprite_url_is_versioned_by_content(sprite_tool):
+    """The CSS points at sprite.webp?v=<hash of the sprite>, so a changed sprite busts caches."""
+    make_image(sprite_tool.BADGE_DIR / "alpha.png")
+    sprite_tool.build_sprite()
+
+    version = hashlib.md5(sprite_tool.SPRITE_PATH.read_bytes()).hexdigest()[:8]
+    assert f"sprite.webp?v={version}'" in sprite_tool.CSS_PATH.read_text(encoding="utf-8")
+
+
+def test_committed_sprite_css_version_matches_the_committed_sprite(sprite_tool):
+    repo = sprite_tool.REPO_ROOT
+    sprite = repo / "frontend" / "static" / "images" / "achievement_badges" / "sprite.webp"
+    css = (repo / "frontend" / "src" / "assets" / "css" / "sprite.css").read_text(encoding="utf-8")
+
+    version = hashlib.md5(sprite.read_bytes()).hexdigest()[:8]
+    assert f"sprite.webp?v={version}'" in css
