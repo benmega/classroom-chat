@@ -36,7 +36,7 @@ import sys
 # Allow running directly from the backend/ directory
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import text
 
@@ -50,9 +50,8 @@ def run():
 
     app = create_app()
 
-    with app.app_context():
-        conn = db.engine.connect()
-
+    # The connection is closed on exit, including when a step raises
+    with app.app_context(), db.engine.connect() as conn:
         print("=" * 60)
         print("Classroom Data Seeding -- starting")
         print("=" * 60)
@@ -136,7 +135,11 @@ def run():
                         "INSERT OR IGNORE INTO user_classrooms (user_id, classroom_id, enrolled_at) "
                         "VALUES (:uid, :cid, :ts)"
                     ),
-                    {"uid": user_id, "cid": cid, "ts": datetime.utcnow()},
+                    {
+                        "uid": user_id,
+                        "cid": cid,
+                        "ts": datetime.now(timezone.utc).replace(tzinfo=None),
+                    },
                 )
                 migrated += 1
 
@@ -233,7 +236,10 @@ def run():
                         INSERT INTO conversations (title, classroom_id, is_locked, slow_mode_delay, created_at)
                         VALUES ('Global Announcements', :cid, 0, 0, :ts)
                     """),
-                    {"cid": GLOBAL_CLASSROOM_ID, "ts": datetime.utcnow()},
+                    {
+                        "cid": GLOBAL_CLASSROOM_ID,
+                        "ts": datetime.now(timezone.utc).replace(tzinfo=None),
+                    },
                 )
                 conn.commit()
                 global_conv = conn.execute(
@@ -269,8 +275,6 @@ def run():
             print(f"       [OK] Enforced admin role on {result.rowcount} users")
         else:
             print("       - users table missing role or username column, skipping")
-
-        conn.close()
 
         print("\n" + "=" * 60)
         print("Data seeding complete [OK]")

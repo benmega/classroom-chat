@@ -149,6 +149,21 @@ describe('App Component', () => {
     expect(screen.getByText('Access Denied Mock')).toBeInTheDocument();
   });
 
+  it('redirects printed card links (/user/profile/:slug) to the public profile page', async () => {
+    window.history.pushState({}, 'Test page', '/user/profile/jane-doe');
+    useAuthStore.mockReturnValue({
+      isLoading: false,
+      isAuthenticated: false,
+      isServerOffline: false,
+      user: null,
+      checkAuth: vi.fn(),
+    });
+
+    renderApp();
+    expect(await screen.findByText('Profile Page Mock')).toBeInTheDocument();
+    expect(window.location.pathname).toBe('/profile/jane-doe');
+  });
+
   it('calls checkAuth on mount', () => {
     const mockCheckAuth = vi.fn();
     useAuthStore.mockReturnValue({

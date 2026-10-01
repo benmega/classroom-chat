@@ -10,7 +10,7 @@ from unittest.mock import MagicMock
 import application
 import pytest
 
-BACKEND_DIR = Path(__file__).resolve().parents[1]
+BACKEND_DIR = Path(__file__).resolve().parents[2]
 SCRIPT_PATH = BACKEND_DIR / "reports" / "student_cards" / "generate_cards.py"
 
 

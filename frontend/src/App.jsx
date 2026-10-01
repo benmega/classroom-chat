@@ -1,5 +1,5 @@
 import React, { useEffect, Suspense } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useParams } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { Loader2 } from 'lucide-react';
 import useAuthStore from './store/useAuthStore';
@@ -133,6 +133,13 @@ const PageLoader = () => (
   </div>
 );
 
+
+// Printed student cards and QR codes link to /user/profile/:slug (the API path),
+// which is not a page. Send those scans to the public profile page.
+const LegacyProfileRedirect = () => {
+  const { slug } = useParams();
+  return <Navigate to={`/profile/${encodeURIComponent(slug)}`} replace />;
+};
 
 const ProtectedRoute = ({ children, adminOnly = false, parentOnly = false }) => {
   const { isAuthenticated, user, isLoading } = useAuthStore();
@@ -445,6 +452,8 @@ function App() {
             </Layout>
           </ProtectedRoute>
         } />
+
+        <Route path="/user/profile/:slug" element={<LegacyProfileRedirect />} />
 
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
