@@ -278,4 +278,39 @@ describe('Signup Component', () => {
 
     
   });
+
+  it('shows the envelope error text on student signup failure', async () => {
+    client.post.mockRejectedValueOnce({
+      response: { status: 400, data: { status: 'error', data: null, error: 'Username is too short.' } },
+    });
+    renderWithProviders(<Signup />);
+    fireEvent.change(screen.getByPlaceholderText(/username/i), { target: { value: 'stu1' } });
+    fireEvent.change(screen.getByPlaceholderText(/^Password/i), { target: { value: 'password123' } });
+    fireEvent.change(screen.getByPlaceholderText(/^Confirm Password/i), { target: { value: 'password123' } });
+
+    await act(async () => {
+        fireEvent.click(screen.getByRole('button', { name: /Request Access/i }));
+    });
+
+    await waitFor(() => {
+      expect(toast.error).toHaveBeenCalledWith('Username is too short.');
+    });
+  });
+
+  it('falls back to a generic message when a parent signup error body is not a string', async () => {
+    client.post.mockRejectedValueOnce({ response: { status: 500, data: { error: { code: 7 } } } });
+    renderWithProviders(<Signup />);
+    fireEvent.click(screen.getByText('Parent'));
+    fireEvent.change(screen.getByPlaceholderText(/email address/i), { target: { value: 'p@ex.com' } });
+    fireEvent.change(screen.getByPlaceholderText(/^Password/i), { target: { value: 'password123' } });
+    fireEvent.change(screen.getByPlaceholderText(/^Confirm Password/i), { target: { value: 'password123' } });
+
+    await act(async () => {
+        fireEvent.click(screen.getByRole('button', { name: /Request Access/i }));
+    });
+
+    await waitFor(() => {
+      expect(toast.error).toHaveBeenCalledWith('Signup failed.');
+    });
+  });
 });

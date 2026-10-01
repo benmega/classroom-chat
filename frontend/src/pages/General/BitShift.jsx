@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { Package, ArrowRightLeft, CreditCard, Zap } from 'lucide-react';
 import DuckIcon from '../../components/Icons/DuckIcon';
 import client from '../../api/client';
+import { getErrorMessage } from '../../utils/apiError';
 import toast from 'react-hot-toast';
 import useAuthStore from '../../store/useAuthStore';
 import confetti from 'canvas-confetti';
@@ -142,11 +143,11 @@ const BitShift = () => {
                     });
                 }
             } else {
-                toast.error(response.data.message || 'Trade failed.');
+                toast.error(getErrorMessage({ response }, 'Trade failed.'));
             }
         } catch (error) {
             console.error('Error submitting trade:', error);
-            toast.error(error.response?.data?.message || 'An unexpected error occurred.');
+            toast.error(getErrorMessage(error, 'An unexpected error occurred.'));
         } finally {
             setIsLoading(false);
         }

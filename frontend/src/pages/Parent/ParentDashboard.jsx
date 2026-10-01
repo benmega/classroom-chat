@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Loader2, MoreVertical, User, Trophy, Bell, Activity, Zap, Clock, Star, BookOpen, Folder, Award, ChevronRight, AlertCircle, Plus, UserMinus } from 'lucide-react';
 import toast from 'react-hot-toast';
 import client from '../../api/client';
+import { getErrorMessage } from '../../utils/apiError';
 import { showConfirm } from '../../utils/confirm';
 import { getApiUrl } from '../../utils/apiUrl';
 
@@ -53,7 +54,7 @@ const ParentDashboard = () => {
             setChildren(list);
             return list;
         } catch (err) {
-            toast.error(err.response?.data?.error || 'Failed to load children');
+            toast.error(getErrorMessage(err, 'Failed to load children'));
             return [];
         } finally {
             setIsLoading(false);
@@ -114,7 +115,7 @@ const ParentDashboard = () => {
             const list = await fetchChildren();
             if (list.length > 0) fetchChildReports(list);
         } catch (err) {
-            const msg = err.response?.data?.error || 'Failed to connect. Invalid code?';
+            const msg = getErrorMessage(err, 'Failed to connect. Invalid code?');
             setConnectError(msg);
             toast.error(msg);
         } finally {
@@ -131,7 +132,7 @@ const ParentDashboard = () => {
             const list = await fetchChildren();
             if (list.length > 0) fetchChildReports(list);
         } catch (err) {
-            toast.error(err.response?.data?.error || 'Failed to disconnect');
+            toast.error(getErrorMessage(err, 'Failed to disconnect'));
         }
     };
 

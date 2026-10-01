@@ -58,4 +58,27 @@ describe('CertificationsList', () => {
 
         expect(window.open).not.toHaveBeenCalled();
     });
+
+    it('formats the submitted date as month and year', () => {
+        const certs = [
+            { id: 3, submitted_at: '2023-06-15T12:00:00Z', file_path: 'x', achievement: { name: 'Dated Cert', slug: 'dated' } },
+        ];
+        const { container } = render(<CertificationsList certificates={certs} />, { wrapper: MemoryRouter });
+
+        expect(container.querySelector('.cert-date').textContent).toBe(
+            new Date('2023-06-15T12:00:00Z').toLocaleDateString(undefined, { month: 'short', year: 'numeric' })
+        );
+    });
+
+    it.each([null, undefined, '', 'not a date'])('shows no date instead of "Invalid Date" for %p', (submittedAt) => {
+        const certs = [
+            { id: 4, submitted_at: submittedAt, file_path: 'x', achievement: { name: 'Undated Cert', slug: 'undated' } },
+        ];
+        const { container } = render(<CertificationsList certificates={certs} />, { wrapper: MemoryRouter });
+
+        expect(screen.getByText('Undated Cert')).toBeInTheDocument();
+        expect(container.querySelector('.cert-date')).toBeNull();
+        expect(container).not.toHaveTextContent('Invalid Date');
+        expect(container).not.toHaveTextContent('1970');
+    });
 });

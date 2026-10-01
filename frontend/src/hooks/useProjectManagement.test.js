@@ -44,6 +44,7 @@ describe('useProjectManagement', () => {
         mockUser = { id: 1, is_admin: true };
         vi.spyOn(window, 'confirm').mockReturnValue(true);
         window.URL.createObjectURL = vi.fn().mockReturnValue('blob:url');
+        window.URL.revokeObjectURL = vi.fn();
     });
 
     it.skip('fetches project data correctly', async () => {
@@ -257,5 +258,162 @@ describe('useProjectManagement', () => {
         expect(client.post).toHaveBeenCalledWith('/user/project/edit/1', expect.any(FormData));
         
         expect(mockNavigate).toHaveBeenCalledWith('/profile/student2');
+    });
+
+    describe('image preview object URLs', () => {
+        const mount = async () => {
+            client.get.mockResolvedValue(null);
+            const hook = renderHook(() => useProjectManagement());
+            await act(async () => {
+                await new Promise(r => setTimeout(r, 10));
+            });
+            return hook;
+        };
+        const pickImage = (result, name = 'img.png') => act(async () => {
+            await result.current.handleFileChange({
+                target: { name: 'project_image', files: [new File([''], name, { type: 'image/png' })] },
+            });
+        });
+
+        it('releases the previous preview when another image is chosen', async () => {
+            window.URL.createObjectURL.mockReturnValueOnce('blob:first').mockReturnValueOnce('blob:second');
+            const { result } = await mount();
+
+            await pickImage(result, 'a.png');
+            expect(result.current.imagePreview).toBe('blob:first');
+            expect(URL.revokeObjectURL).not.toHaveBeenCalled();
+
+            await pickImage(result, 'b.png');
+            expect(result.current.imagePreview).toBe('blob:second');
+            expect(URL.revokeObjectURL).toHaveBeenCalledTimes(1);
+            expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:first');
+        });
+
+        it('releases the current preview on unmount', async () => {
+            window.URL.createObjectURL.mockReturnValueOnce('blob:only');
+            const { result, unmount } = await mount();
+            await pickImage(result);
+            expect(URL.revokeObjectURL).not.toHaveBeenCalled();
+
+            unmount();
+
+            expect(URL.revokeObjectURL).toHaveBeenCalledTimes(1);
+            expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:only');
+        });
+
+        it('does not revoke anything when no local preview was made', async () => {
+            const { unmount } = await mount();
+
+            unmount();
+
+            expect(URL.revokeObjectURL).not.toHaveBeenCalled();
+        });
+
+        it('releases a video-thumbnail preview when it is replaced by a chosen image', async () => {
+            window.URL.createObjectURL.mockReturnValueOnce('blob:thumb').mockReturnValueOnce('blob:chosen');
+            const { result } = await mount();
+
+            await act(async () => {
+                await result.current.handleFileChange({
+                    target: { name: 'project_video', files: [new File([''], 'vid.mp4', { type: 'video/mp4' })] },
+                });
+            });
+            expect(result.current.imagePreview).toBe('blob:thumb');
+
+            await pickImage(result);
+
+            expect(result.current.imagePreview).toBe('blob:chosen');
+            expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:thumb');
+        });
+
+        it('releases a recorded-video thumbnail preview on unmount', async () => {
+            window.URL.createObjectURL.mockReturnValueOnce('blob:recorded-thumb');
+            const { result, unmount } = await mount();
+
+            await act(async () => {
+                await result.current.handleRecordedVideo(new Blob(['']));
+            });
+            expect(result.current.imagePreview).toBe('blob:recorded-thumb');
+            unmount();
+
+            expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:recorded-thumb');
+        });
+
+        it('makes no preview URL for a thumbnail that finishes extracting after unmount', async () => {
+            let finishExtraction;
+            extractVideoThumbnail.mockImplementationOnce(() => new Promise((resolve) => { finishExtraction = resolve; }));
+            const { result, unmount } = await mount();
+
+            let pending;
+            act(() => {
+                pending = result.current.handleFileChange({
+                    target: { name: 'project_video', files: [new File([''], 'vid.mp4', { type: 'video/mp4' })] },
+                });
+            });
+            unmount();
+            await act(async () => {
+                finishExtraction(new Blob(['']));
+                await pending;
+            });
+
+            expect(window.URL.createObjectURL).not.toHaveBeenCalled();
+            expect(URL.revokeObjectURL).not.toHaveBeenCalled();
+        });
+
+        it('only revokes blob previews, never the saved image URL', async () => {
+            client.get.mockImplementation((url) => {
+                if (url === '/user/project/edit/1') {
+                    return Promise.resolve({ data: { status: 'success', data: { project: { name: 'Proj', user_id: '2', image_url: '/saved.png' } } } });
+                }
+                if (url === '/api/project-templates') {
+                    return Promise.resolve({ data: { data: { templates: {} } } });
+                }
+                return Promise.resolve(null);
+            });
+            window.URL.createObjectURL.mockReturnValueOnce('blob:local');
+            const { result, unmount } = renderHook(() => useProjectManagement());
+            await act(async () => {
+                await new Promise(r => setTimeout(r, 10));
+            });
+            expect(result.current.imagePreview).toBe('/saved.png');
+            expect(URL.revokeObjectURL).not.toHaveBeenCalled();
+
+            await pickImage(result);
+            expect(URL.revokeObjectURL).not.toHaveBeenCalled();
+
+            unmount();
+            expect(URL.revokeObjectURL).toHaveBeenCalledTimes(1);
+            expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:local');
+        });
+    });
+
+    describe('save errors', () => {
+        const submit = async (result) => {
+            await act(async () => {
+                await result.current.handleSubmit({ preventDefault: vi.fn() });
+            });
+        };
+
+        it('shows the server error of an unsuccessful save response', async () => {
+            client.get.mockResolvedValue(null);
+            client.post.mockResolvedValueOnce({ data: { status: 'error', error: 'Project name is required.' } });
+            const { result } = renderHook(() => useProjectManagement());
+            await act(async () => { await new Promise(r => setTimeout(r, 10)); });
+
+            await submit(result);
+
+            expect(toast.error).toHaveBeenCalledWith('Project name is required.');
+        });
+
+        it('shows the message of a failed request, whichever field the route uses', async () => {
+            client.get.mockResolvedValue(null);
+            client.post.mockRejectedValueOnce({ response: { data: { success: false, message: 'Not allowed.' } } });
+            const { result } = renderHook(() => useProjectManagement());
+            await act(async () => { await new Promise(r => setTimeout(r, 10)); });
+
+            await submit(result);
+
+            expect(toast.error).toHaveBeenCalledWith('Not allowed.');
+        });
     });
 });

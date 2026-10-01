@@ -41,6 +41,15 @@ export const cssUrl = (url) => {
     return `url("${encoded}")`;
 };
 
+// Locale date for a timestamp, or '' when it is missing or not a valid date
+// (instead of "Invalid Date", or 1970 for null).
+export const safeDate = (value, options) => {
+    if (!value) return '';
+    const date = new Date(value);
+    if (isNaN(date.getTime())) return '';
+    return date.toLocaleDateString(undefined, options);
+};
+
 export const formatRelativeTime = (dateStr) => {
     if (!dateStr) return 'Never';
     

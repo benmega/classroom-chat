@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { Lock, ShieldCheck, ArrowRight, Eye, EyeOff } from 'lucide-react';
 import client from '../../api/client';
+import { getErrorMessage } from '../../utils/apiError';
 import toast from 'react-hot-toast';
 import './Auth.css';
 
@@ -44,7 +45,7 @@ const ResetPassword = () => {
                 navigate('/login');
             }
         } catch (error) {
-            toast.error(error.response?.data?.error || 'Failed to reset password.');
+            toast.error(getErrorMessage(error, 'Failed to reset password.'));
         } finally {
             setIsLoading(false);
         }

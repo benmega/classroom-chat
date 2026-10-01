@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Mail, ArrowRight } from 'lucide-react';
 import client from '../../api/client';
+import { getErrorMessage } from '../../utils/apiError';
 import toast from 'react-hot-toast';
 import './Auth.css';
 
@@ -28,7 +29,7 @@ const ForgotPassword = () => {
                 navigate(`/reset-password?email=${encodeURIComponent(email)}`);
             }
         } catch (error) {
-            toast.error(error.response?.data?.error || 'Failed to send verification code.');
+            toast.error(getErrorMessage(error, 'Failed to send verification code.'));
         } finally {
             setIsLoading(false);
         }

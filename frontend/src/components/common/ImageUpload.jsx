@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import './ImageUpload.css';
 import SmartImage from './SmartImage';
 import { formatStaticUrl } from '../../utils/formatters';
+import { getErrorMessage } from '../../utils/apiError';
 
 /**
  * ImageUpload Component
@@ -130,13 +131,13 @@ const ImageUpload = ({
         toast.success('Image uploaded successfully');
         onUploadSuccess({ new_url, filename });
       } else {
-        toast.error(response.data.error || 'Upload failed');
+        toast.error(getErrorMessage({ response }, 'Upload failed'));
       }
     } catch (err) {
       if (err.name === 'CanceledError' || err.code === 'ERR_CANCELED') return;
       if (!isMountedRef.current) return;
       console.error('Upload error:', err);
-      const errorMessage = err.response?.data?.error || 'Server error during upload';
+      const errorMessage = getErrorMessage(err, 'Server error during upload');
       toast.error(errorMessage);
     } finally {
       if (isMountedRef.current) {

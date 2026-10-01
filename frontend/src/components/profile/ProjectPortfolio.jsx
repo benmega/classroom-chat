@@ -5,6 +5,12 @@ import SmartImage from '../common/SmartImage';
 import { formatStaticUrl } from '../../utils/formatters';
 import { safeUrl } from '../../utils/safeUrl';
 
+// Cut long text for the card; short or missing text gets no ellipsis.
+const truncate = (text, max = 80) => {
+    if (!text) return '';
+    return text.length > max ? `${text.slice(0, max)}...` : text;
+};
+
 const ProjectPortfolio = ({ projects, isOwner, setSelectedProject, studentId }) => {
     const navigate = useNavigate();
 
@@ -53,11 +59,11 @@ const ProjectPortfolio = ({ projects, isOwner, setSelectedProject, studentId }) 
                                     
                                     {project.teacher_comment && (
                                         <div className={`card-teacher-feedback ${project.status === 'rejected' ? 'revision-feedback' : ''}`}>
-                                            {project.status === 'rejected' ? <AlertCircle size={14} /> : <CheckCircle size={14} />} {project.teacher_comment.substring(0, 80)}...
+                                            {project.status === 'rejected' ? <AlertCircle size={14} /> : <CheckCircle size={14} />} {truncate(project.teacher_comment)}
                                         </div>
                                     )}
 
-                                    <p>{project.description?.substring(0, 80)}...</p>
+                                    {project.description && <p>{truncate(project.description)}</p>}
                                     <div className="project-footer">
                                         {safeUrl(project.link) && <a href={safeUrl(project.link)} target="_blank" rel="noreferrer" className="link-icon"><ExternalLink size={16} /></a>}
                                         <button className="btn-text" onClick={() => setSelectedProject(project)}>Details</button>

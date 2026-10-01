@@ -28,6 +28,8 @@ const Profile = () => {
     const {
         profileData,
         isLoading,
+        loadError,
+        retryProfile,
         selectedProject,
         setSelectedProject,
         slideshowIndex,
@@ -49,7 +51,17 @@ const Profile = () => {
 
 
     if (isLoading) return <div className="profile-loading">Loading Profile...</div>;
-    if (!profileData) return <div className="profile-error">Profile not found.</div>;
+    if (!profileData) {
+        if (loadError) {
+            return (
+                <div className="profile-error">
+                    <p>We couldn't load this profile.</p>
+                    <button type="button" className="btn-secondary" onClick={retryProfile}>Try again</button>
+                </div>
+            );
+        }
+        return <div className="profile-error">Profile not found.</div>;
+    }
 
     const { target, viewer } = profileData;
     const isTargetUser = viewer?.id === target?.id;

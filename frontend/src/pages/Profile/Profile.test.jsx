@@ -103,6 +103,27 @@ describe('Profile Page Component', () => {
     expect(screen.getByText('Profile not found.')).toBeInTheDocument();
   });
 
+  it('offers a retry instead of "not found" when the profile failed to load', () => {
+    const retryProfile = vi.fn();
+    useProfile.mockReturnValue({
+      isLoading: false,
+      profileData: null,
+      loadError: true,
+      retryProfile,
+    });
+
+    render(
+      <BrowserRouter>
+        <Profile />
+      </BrowserRouter>
+    );
+
+    expect(screen.queryByText('Profile not found.')).not.toBeInTheDocument();
+    expect(screen.getByText("We couldn't load this profile.")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Try again' }));
+    expect(retryProfile).toHaveBeenCalledTimes(1);
+  });
+
   it('renders about me section with bio', () => {
     useProfile.mockReturnValue({
       isLoading: false,

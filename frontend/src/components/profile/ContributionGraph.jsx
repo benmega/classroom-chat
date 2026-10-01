@@ -1,5 +1,12 @@
 import React from 'react';
 
+// Padding cells (before the first / after the last day of the grid) are null: no tooltip for them.
+const cellTitle = (cell) => {
+    if (!cell) return undefined;
+    const count = cell.count || 0;
+    return `${count} ${count === 1 ? 'challenge' : 'challenges'} on ${cell.date}`;
+};
+
 const ContributionGraph = ({ data }) => {
     if (!data || !data.rows) return <div className="no-data">No activity data available.</div>;
 
@@ -25,9 +32,9 @@ const ContributionGraph = ({ data }) => {
                         <div key={rIdx} className="graph-row">
                             {row.map((cell, cIdx) => (
                                 <div 
-                                    key={cIdx} 
+                                    key={cell?.date ?? cIdx}
                                     className={`graph-cell level-${cell?.level || 0}`}
-                                    title={`completed ${cell?.count || 0} of levels on ${cell?.date || 'unknown'}`}
+                                    title={cellTitle(cell)}
                                 ></div>
                             ))}
                         </div>

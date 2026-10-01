@@ -14,7 +14,10 @@ const FUN_MESSAGES = [
   "✨ Final touches..."
 ];
 
-const WAKEUP_API_URL = 'https://e5fsaweh7l.execute-api.ap-southeast-1.amazonaws.com/server-start';
+const DEFAULT_WAKEUP_API_URL = 'https://e5fsaweh7l.execute-api.ap-southeast-1.amazonaws.com/server-start';
+// Build-time override; the fallback keeps builds without VITE_WAKEUP_API_URL working.
+const getWakeupUrl = () => import.meta.env.VITE_WAKEUP_API_URL || DEFAULT_WAKEUP_API_URL;
+const WAKEUP_REQUEST_TIMEOUT_MS = 10000; // give up on a hung wake-up request
 const TOTAL_TIME = 300; // 5 minutes
 
 const ServerOffline = () => {
@@ -29,6 +32,7 @@ const ServerOffline = () => {
   const messageIntervalRef = useRef(null);
   const pollIntervalRef = useRef(null);
   const startTimeRef = useRef(null);
+  const wakeRequestRef = useRef(null);
 
   const formatTime = (sec) => {
     const mins = Math.floor(sec / 60);
@@ -36,12 +40,42 @@ const ServerOffline = () => {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
+  // The countdown ran out. If the server came up meanwhile, App swaps this page out on
+  // its own; if it is still down, go back to the idle screen rather than reloading
+  // into the same dead server.
+  const handleCountdownDone = async () => {
+    clearInterval(progressIntervalRef.current);
+    clearInterval(messageIntervalRef.current);
+
+    try {
+      await checkAuth();
+    } catch {
+      // A failed check just means the server is not up yet.
+    }
+    if (!useAuthStore.getState().isServerOffline) return;
+
+    clearInterval(pollIntervalRef.current);
+    setIsWakingUp(false);
+    setProgress(0);
+    setTimeLeft(TOTAL_TIME);
+    setCurrentMessageIndex(0);
+    setErrorMsg('Still starting up - try again in a minute');
+  };
+
   const handleWakeUp = async () => {
     setErrorMsg('');
     setIsWakingUp(true);
 
+    const controller = new AbortController();
+    wakeRequestRef.current = controller;
+    let timedOut = false;
+    const timeout = setTimeout(() => {
+      timedOut = true;
+      controller.abort();
+    }, WAKEUP_REQUEST_TIMEOUT_MS);
+
     try {
-      const resp = await fetch(WAKEUP_API_URL, { method: 'POST', mode: 'cors' });
+      const resp = await fetch(getWakeupUrl(), { method: 'POST', mode: 'cors', signal: controller.signal });
       if (!resp.ok) throw new Error();
       
       startTimeRef.current = Date.now();
@@ -56,8 +90,7 @@ const ServerOffline = () => {
         setTimeLeft(remaining);
 
         if (pct >= 100) {
-          clearInterval(progressIntervalRef.current);
-          window.location.reload();
+          handleCountdownDone();
         }
       }, 100);
 
@@ -77,15 +110,20 @@ const ServerOffline = () => {
       }, 8000);
 
     } catch (err) {
+      // Aborted because the page went away: there is nothing left to update.
+      if (controller.signal.aborted && !timedOut) return;
       console.error('Wake up error:', err);
       setIsWakingUp(false);
       setErrorMsg('Error waking server. Try again soon.');
+    } finally {
+      clearTimeout(timeout);
     }
   };
 
   // Clean up timers on unmount
   useEffect(() => {
     return () => {
+      if (wakeRequestRef.current) wakeRequestRef.current.abort();
       if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
       if (messageIntervalRef.current) clearInterval(messageIntervalRef.current);
       if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);

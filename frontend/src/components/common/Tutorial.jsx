@@ -1,9 +1,8 @@
-import React, { useState, useEffect, useLayoutEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import { 
   X, 
   ChevronRight, 
-  MessageSquare, 
   MousePointer2,
   Sparkles
 } from 'lucide-react';
@@ -17,20 +16,6 @@ const studentSlides = [
     description: "Ready to explore?",
     icon: <Sparkles size={32} />,
     position: 'center'
-  },
-  {
-    target: '.chat-sidebar',
-    title: "Channels",
-    description: "Join the conversation here.",
-    icon: <MessageSquare size={24} />,
-    position: 'right'
-  },
-  {
-    target: '#sidebar-announcements-pin',
-    title: "Notices",
-    description: "Important updates from instructors.",
-    icon: <Sparkles size={24} />,
-    position: 'right'
   },
   {
     target: '.stat-badge.ducks',
@@ -57,13 +42,6 @@ const parentSlides = [
     position: 'center'
   },
   {
-    target: '.connect-card',
-    title: "Link Your Student",
-    description: "Enter the 6-character code from their instructor to connect.",
-    icon: <MousePointer2 size={24} />,
-    position: 'top'
-  },
-  {
     target: '.hamburger-toggle, .desktop-nav-rail',
     title: "Account Settings",
     description: "Manage your profile and settings here.",
@@ -72,16 +50,44 @@ const parentSlides = [
   }
 ];
 
+// A selector can match several elements, some of them hidden at the current
+// viewport size (e.g. the desktop rail on phones, the hamburger on desktop).
+// Take the first one that is actually laid out: a display:none element still
+// has a rect, but an all-zero one.
+const resolveTarget = (selector) => (
+  Array.from(document.querySelectorAll(selector)).find((el) => {
+    const rect = el.getBoundingClientRect();
+    return rect.width > 0 && rect.height > 0;
+  }) || null
+);
+
+// Slides whose target is not on screen (hidden at this viewport size, or not rendered
+// at all) are skipped instead of pointing the spotlight at nothing.
+const getVisibleSlides = (allSlides) => (
+  allSlides.filter((slide) => slide.target === 'body' || resolveTarget(slide.target))
+);
+
+const getSpotlightRect = (slide) => {
+  if (slide.target === 'body') return null;
+  const element = resolveTarget(slide.target);
+  return element ? element.getBoundingClientRect() : null;
+};
+
+const sameSlides = (a, b) => a.length === b.length && a.every((slide, i) => slide === b[i]);
+
 const Tutorial = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [spotlightRect, setSpotlightRect] = useState(null);
-  const containerRef = useRef(null);
   const location = useLocation();
   const { user, completeTutorial } = useAuthStore();
 
   const isParent = user?.role === 'parent';
   const slides = isParent ? parentSlides : studentSlides;
+  // The slides that can be shown right now; recomputed when the tour opens and on resize.
+  const [visibleSlides, setVisibleSlides] = useState(slides);
+  // Keeps the index valid if a resize shrinks the list under the current slide.
+  const slideIndex = Math.min(currentSlide, visibleSlides.length - 1);
 
   useEffect(() => {
     if (!user) return;
@@ -94,10 +100,14 @@ const Tutorial = () => {
     }
 
     if (!user.has_seen_tutorial) {
-      const timer = setTimeout(() => setIsOpen(true), 1000);
+      const timer = setTimeout(() => {
+        const nextSlides = getVisibleSlides(slides);
+        setVisibleSlides((prev) => (sameSlides(prev, nextSlides) ? prev : nextSlides));
+        setIsOpen(true);
+      }, 1000);
       return () => clearTimeout(timer);
     }
-  }, [location.pathname, user, isParent]);
+  }, [location.pathname, user, isParent, slides]);
 
   const handleClose = useCallback(() => {
     if (user && !user.has_seen_tutorial) {
@@ -108,16 +118,14 @@ const Tutorial = () => {
 
   useLayoutEffect(() => {
     if (isOpen) {
-      const slide = slides[currentSlide];
-      const element = document.querySelector(slide.target);
-      const rect = element ? element.getBoundingClientRect() : null;
+      const rect = getSpotlightRect(visibleSlides[slideIndex]);
       
       const frame = requestAnimationFrame(() => {
         setSpotlightRect(rect);
       });
       return () => cancelAnimationFrame(frame);
     }
-  }, [isOpen, currentSlide, slides, handleClose]);
+  }, [isOpen, slideIndex, visibleSlides]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -126,12 +134,15 @@ const Tutorial = () => {
     const updateRect = () => {
       if (frameId) cancelAnimationFrame(frameId);
       frameId = requestAnimationFrame(() => {
-        const slide = slides[currentSlide];
+        // A resize can show or hide targets, so re-check which slides apply.
+        const nextSlides = getVisibleSlides(slides);
+        setVisibleSlides((prev) => (sameSlides(prev, nextSlides) ? prev : nextSlides));
+        const slide = nextSlides[Math.min(currentSlide, nextSlides.length - 1)];
         if (slide.target === 'body') {
           setSpotlightRect(null);
           return;
         }
-        const element = document.querySelector(slide.target);
+        const element = resolveTarget(slide.target);
         if (element) {
           setSpotlightRect(element.getBoundingClientRect());
         }
@@ -139,14 +150,17 @@ const Tutorial = () => {
     };
     updateRect();
     window.addEventListener('resize', updateRect);
-    return () => window.removeEventListener('resize', updateRect);
+    return () => {
+      window.removeEventListener('resize', updateRect);
+      if (frameId) cancelAnimationFrame(frameId);
+    };
   }, [isOpen, currentSlide, slides]);
 
 
 
   const handleNext = () => {
-    if (currentSlide < slides.length - 1) {
-      setCurrentSlide(currentSlide + 1);
+    if (slideIndex < visibleSlides.length - 1) {
+      setCurrentSlide(slideIndex + 1);
     } else {
       handleClose();
     }
@@ -154,7 +168,7 @@ const Tutorial = () => {
 
   if (!isOpen) return null;
 
-  const slide = slides[currentSlide];
+  const slide = visibleSlides[slideIndex];
 
   const getCardStyles = () => {
     if (!spotlightRect) return { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' };
@@ -217,7 +231,7 @@ const Tutorial = () => {
   };
 
   return (
-    <div className="spotlight-overlay" ref={containerRef}>
+    <div className="spotlight-overlay">
       <svg className="spotlight-svg">
         <defs>
           <mask id="spotlight-mask">
@@ -246,12 +260,12 @@ const Tutorial = () => {
         
         <div className="spotlight-footer">
           <div className="spotlight-dots">
-            {slides.map((_, i) => (
-              <div key={i} className={`spotlight-dot ${i === currentSlide ? 'active' : ''}`} />
+            {visibleSlides.map((_, i) => (
+              <div key={i} className={`spotlight-dot ${i === slideIndex ? 'active' : ''}`} />
             ))}
           </div>
           <button className="btn-premium btn-premium-sm" onClick={handleNext}>
-            {currentSlide === slides.length - 1 ? 'Got it!' : 'Next'}
+            {slideIndex === visibleSlides.length - 1 ? 'Got it!' : 'Next'}
             <ChevronRight size={16} />
           </button>
         </div>

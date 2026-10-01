@@ -195,4 +195,33 @@ describe('ImageUpload Component', () => {
       });
     });
   });
+
+  it('shows the server error when the upload response is not a success', async () => {
+    axios.post.mockResolvedValueOnce({ data: { status: 'error', error: 'Image is corrupt.' } });
+    render(<ImageUpload uploadUrl="/api/upload" onUploadSuccess={vi.fn()} />);
+
+    const input = document.querySelector('input[type="file"]');
+    fireEvent.change(input, { target: { files: [new File(['x'], 'pic.png', { type: 'image/png' })] } });
+
+    await waitFor(() => {
+      expect(toast.error).toHaveBeenCalledWith('Image is corrupt.');
+    });
+  });
+
+  it('shows the message of a failed upload request, and a generic one without text', async () => {
+    axios.post.mockRejectedValueOnce({ response: { data: { success: false, message: 'Quota exceeded.' } } });
+    axios.post.mockRejectedValueOnce(new Error('Network Error'));
+    render(<ImageUpload uploadUrl="/api/upload" onUploadSuccess={vi.fn()} />);
+
+    const input = document.querySelector('input[type="file"]');
+    fireEvent.change(input, { target: { files: [new File(['x'], 'a.png', { type: 'image/png' })] } });
+    await waitFor(() => {
+      expect(toast.error).toHaveBeenCalledWith('Quota exceeded.');
+    });
+
+    fireEvent.change(document.querySelector('input[type="file"]'), { target: { files: [new File(['y'], 'b.png', { type: 'image/png' })] } });
+    await waitFor(() => {
+      expect(toast.error).toHaveBeenCalledWith('Server error during upload');
+    });
+  });
 });

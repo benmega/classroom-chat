@@ -29,6 +29,8 @@ S3 + CloudFront.
 
 - `VITE_API_URL` (optional): base URL of the backend API and Socket.IO server. When unset, requests use the
   same origin (the Vite proxy in development). The S3/CloudFront build sets it to `https://api-blossom.benmega.com`.
+- `VITE_WAKEUP_API_URL` (optional): endpoint the "server is sleeping" page calls to start the backend. When unset, the
+  built-in production wake-up URL is used. The S3/CloudFront build sets it explicitly.
 
 ## Testing
 

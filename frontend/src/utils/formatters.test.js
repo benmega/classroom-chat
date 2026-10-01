@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { formatLargeNumber, formatStaticUrl, cssUrl, formatRelativeTime } from './formatters';
+import { formatLargeNumber, formatStaticUrl, cssUrl, formatRelativeTime, safeDate } from './formatters';
 
 describe('formatters', () => {
     describe('formatLargeNumber', () => {
@@ -102,6 +102,29 @@ describe('formatters', () => {
             const wayPast = new Date(now.getTime() - 10 * 24 * 60 * 60 * 1000).toISOString();
             expect(formatRelativeTime(wayPast)).not.toBe('Never');
             expect(formatRelativeTime(wayPast)).not.toContain('ago');
+        });
+    });
+
+    describe('safeDate', () => {
+        it('formats valid dates and timestamps', () => {
+            const iso = '2023-06-15T12:00:00Z';
+            expect(safeDate(iso)).toBe(new Date(iso).toLocaleDateString());
+            expect(safeDate(new Date(iso))).toBe(new Date(iso).toLocaleDateString());
+            expect(safeDate(1686830400000)).toBe(new Date(1686830400000).toLocaleDateString());
+        });
+
+        it('passes formatting options through', () => {
+            const iso = '2023-06-15T12:00:00Z';
+            const options = { month: 'short', year: 'numeric' };
+            expect(safeDate(iso, options)).toBe(new Date(iso).toLocaleDateString(undefined, options));
+        });
+
+        it('returns an empty string for missing or invalid values', () => {
+            expect(safeDate(null)).toBe('');
+            expect(safeDate(undefined)).toBe('');
+            expect(safeDate('')).toBe('');
+            expect(safeDate('not a date')).toBe('');
+            expect(safeDate(NaN)).toBe('');
         });
     });
 });

@@ -235,4 +235,33 @@ describe('ProjectInfo', () => {
         fireEvent.click(screen.getByText('Back to Map'));
         expect(mockNavigate).toHaveBeenCalledWith(-1);
     });
+
+    it('shows the message of a failed assignment request, whichever field the route uses', async () => {
+        client.get.mockImplementation((url) => {
+            if (url === '/api/project-templates') {
+                return Promise.resolve({
+                    data: { data: { templates: { '1': { id: '1', name: 'Test Project' } } } }
+                });
+            }
+            if (url === '/user/profile') {
+                return Promise.resolve({
+                    data: { data: { target: { projects: [] } } }
+                });
+            }
+            return Promise.resolve({ data: {} });
+        });
+
+        renderWithRouter(<ProjectInfo />);
+
+        await waitFor(() => {
+            expect(screen.getByRole('button', { name: /Assign to me/i })).toBeInTheDocument();
+        });
+
+        client.post.mockRejectedValueOnce({ response: { data: { success: false, message: 'You already have this project.' } } });
+        fireEvent.click(screen.getByRole('button', { name: /Assign to me/i }));
+
+        await waitFor(() => {
+            expect(toast.error).toHaveBeenCalledWith('You already have this project.');
+        });
+    });
 });

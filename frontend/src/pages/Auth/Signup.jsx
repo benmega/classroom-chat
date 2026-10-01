@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { User, Lock, UserPlus, CheckCircle, Mail, ShieldCheck, ArrowRight, Eye, EyeOff } from 'lucide-react';
 import client from '../../api/client';
+import { getErrorMessage } from '../../utils/apiError';
 import toast from 'react-hot-toast';
 import './Auth.css';
 
@@ -59,7 +60,8 @@ const Signup = () => {
                 setIsSuccess(true);
             }
         } catch (error) {
-            if (selectedRole === 'parent' && error.response?.data?.error?.includes('already exists')) {
+            const errorMsg = getErrorMessage(error, '');
+            if (selectedRole === 'parent' && errorMsg.includes('already exists')) {
                 try {
                     const loginRes = await client.post('/api/auth/cognito/login', { email, password });
                     if (loginRes.data.success) {
@@ -71,7 +73,7 @@ const Signup = () => {
                     toast.error('Account exists, but password was incorrect. Please log in.');
                     setTimeout(() => window.location.href = '/login', 1500);
                 }
-            } else if (selectedRole !== 'parent' && error.response?.status === 409 && error.response?.data?.error === 'Username already exists.') {
+            } else if (selectedRole !== 'parent' && error.response?.status === 409 && errorMsg === 'Username already exists.') {
                 try {
                     await client.post('/user/login', { username, password });
                     toast.success('Account found! Logging you in...');
@@ -82,7 +84,7 @@ const Signup = () => {
                     setTimeout(() => window.location.href = '/login', 1500);
                 }
             } else {
-                toast.error(error.response?.data?.error || 'Signup failed.');
+                toast.error(errorMsg || 'Signup failed.');
             }
         } finally {
             setIsLoading(false);
@@ -102,7 +104,7 @@ const Signup = () => {
                 }
             }
         } catch (error) {
-            toast.error(error.response?.data?.error || 'Verification failed.');
+            toast.error(getErrorMessage(error, 'Verification failed.'));
         } finally {
             setIsLoading(false);
         }

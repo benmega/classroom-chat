@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X } from 'lucide-react';
 import client from '../../api/client';
+import { getErrorMessage } from '../../utils/apiError';
 import './AddChildModal.css';
 
 const AddChildModal = ({ isOpen, onClose, onAdded }) => {
@@ -21,7 +22,7 @@ const AddChildModal = ({ isOpen, onClose, onAdded }) => {
             onClose();
             setCode('');
         } catch (err) {
-            setCodeError(err.response?.data?.error || 'Failed to connect. Invalid code?');
+            setCodeError(getErrorMessage(err, 'Failed to connect. Invalid code?'));
         } finally {
             setIsSubmittingCode(false);
         }

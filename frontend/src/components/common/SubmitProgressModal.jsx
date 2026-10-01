@@ -109,7 +109,7 @@ const SubmitProgressModal = ({ isOpen, onClose, onUrlChange }) => {
                     setUploadProgress(0);
                     if (onClose) onClose();
                 } else {
-                    toast.error(response.data.error || 'Submission failed.');
+                    toast.error(getErrorMessage({ response }, 'Submission failed.'));
                 }
             } else {
                 const response = await client.post('/challenge/submit', {
@@ -144,7 +144,7 @@ const SubmitProgressModal = ({ isOpen, onClose, onUrlChange }) => {
 
                     if (onClose) onClose();
                 } else {
-                    toast.error(response.data.message || 'Submission failed.');
+                    toast.error(getErrorMessage({ response }, 'Submission failed.'));
                     setUrl('');
                 }
             }

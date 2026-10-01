@@ -26,20 +26,32 @@ const UserSearchInput = ({
     const [isOpen, setIsOpen] = useState(false);
     const [selectedIndex, setSelectedIndex] = useState(-1);
     const containerRef = useRef(null);
+    // True once the user has closed the dropdown (Escape, select, clear, click outside)
+    // and has not typed or reopened it since. A search response that arrives later
+    // must not pop the dropdown back open.
+    const dismissedRef = useRef(false);
 
-    // Sync internal query with external value (e.g. for clearing the field or initial load)
+    // Sync internal query with external value (e.g. for clearing the field or initial load).
+    // Only when the prop itself changes: a controlled parent that does not echo onChange
+    // must not have its user's typing reverted.
     useEffect(() => {
-        if (value !== undefined && value !== query) {
+        if (value !== undefined) {
             setQuery(value || '');
         }
-    }, [value, query]);
+    }, [value]);
 
     useEffect(() => {
+        // Each run owns its own request: the cleanup below aborts it and marks the run
+        // stale, so an out-of-date response can never overwrite newer results.
+        const controller = new AbortController();
+        let cancelled = false;
+
         const fetchResults = async () => {
             // Only fetch if query is long enough
             if (query.trim().length < minChars) {
                 setResults([]);
                 setIsOpen(false);
+                setIsLoading(false);
                 return;
             }
 
@@ -47,27 +59,37 @@ const UserSearchInput = ({
             try {
                 // If it's for the challenge, we only search for other people
                 // backend handles exclusion by standard search logic but usually we want all
-                const response = await client.get(`/user/api/users/search?q=${encodeURIComponent(query)}`);
+                const response = await client.get(`/user/api/users/search?q=${encodeURIComponent(query)}`, {
+                    signal: controller.signal,
+                });
+                if (cancelled) return;
                 const data = response.data.data?.users || response.data.users || [];
                 setResults(data);
-                setIsOpen(data.length > 0);
+                setIsOpen(!dismissedRef.current && data.length > 0);
                 setSelectedIndex(-1);
             } catch (error) {
+                if (cancelled) return;
                 console.error('Error fetching search results:', error);
                 setResults([]);
             } finally {
-                setIsLoading(false);
+                // A newer run is responsible for the loading state once this one is stale.
+                if (!cancelled) setIsLoading(false);
             }
         };
 
         const timer = setTimeout(fetchResults, debounceMs);
-        return () => clearTimeout(timer);
+        return () => {
+            clearTimeout(timer);
+            cancelled = true;
+            controller.abort();
+        };
     }, [query, debounceMs, minChars]);
 
     // Handle click outside to close dropdown
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (containerRef.current && !containerRef.current.contains(event.target)) {
+                dismissedRef.current = true;
                 setIsOpen(false);
             }
         };
@@ -76,7 +98,13 @@ const UserSearchInput = ({
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
+    const openDropdown = () => {
+        dismissedRef.current = false;
+        setIsOpen(true);
+    };
+
     const handleSelectInternal = (user) => {
+        dismissedRef.current = true;
         setIsOpen(false);
         if (onSelect) {
             onSelect(user);
@@ -92,7 +120,7 @@ const UserSearchInput = ({
             e.preventDefault();
             if (results.length > 0) {
                 setSelectedIndex(prev => (prev < results.length - 1 ? prev + 1 : prev));
-                setIsOpen(true);
+                openDropdown();
             }
         } else if (e.key === 'ArrowUp') {
             e.preventDefault();
@@ -103,6 +131,7 @@ const UserSearchInput = ({
                 handleSelectInternal(results[selectedIndex]);
             }
         } else if (e.key === 'Escape') {
+            dismissedRef.current = true;
             setIsOpen(false);
         }
     };
@@ -112,12 +141,14 @@ const UserSearchInput = ({
         setQuery(newVal);
         if (onChange) onChange(newVal);
         setSelectedIndex(-1);
+        dismissedRef.current = false;
         if (newVal.trim().length >= minChars) {
             setIsOpen(true);
         }
     };
 
     const handleClear = () => {
+        dismissedRef.current = true;
         setQuery('');
         if (onChange) onChange('');
         setResults([]);
@@ -134,7 +165,7 @@ const UserSearchInput = ({
                     type="text"
                     value={query}
                     onChange={handleInputChange}
-                    onFocus={() => query.trim().length >= minChars && results.length > 0 && setIsOpen(true)}
+                    onFocus={() => query.trim().length >= minChars && results.length > 0 && openDropdown()}
                     onKeyDown={handleKeyDown}
                     placeholder={placeholder}
                     className={`user-search-input-common ${className}`}

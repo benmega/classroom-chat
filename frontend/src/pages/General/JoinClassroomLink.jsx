@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import useAuthStore from '../../store/useAuthStore';
 import client from '../../api/client';
+import { getErrorMessage } from '../../utils/apiError';
 import { Loader2, CheckCircle, XCircle } from 'lucide-react';
 import '../Parent/ConnectChild.css'; // reuse same minimal card styling
 
@@ -44,7 +45,7 @@ const JoinClassroomLink = () => {
                 setTimeout(() => navigate('/submit-work'), 2500);
             } catch (err) {
                 setStatus('error');
-                setMessage(err.response?.data?.error || 'Failed to join. The code might be invalid.');
+                setMessage(getErrorMessage(err, 'Failed to join. The code might be invalid.'));
                 localStorage.removeItem('pendingClassroomCode');
             }
         };

@@ -74,4 +74,51 @@ describe('ProjectPortfolio', () => {
         fireEvent.click(editBtns[0]);
         expect(mockNavigate).toHaveBeenCalledWith('/project/edit/2'); // top one is id:2
     });
+
+    describe('card text', () => {
+        const renderOne = (project) => render(
+            <ProjectPortfolio projects={[{ id: 1, name: 'P', image_url: '/i.png', ...project }]} isOwner={false} setSelectedProject={vi.fn()} />,
+            { wrapper: MemoryRouter }
+        );
+        const card = () => screen.getByText('P').closest('.project-card');
+
+        it('shows a short description in full, without an ellipsis', () => {
+            renderOne({ description: 'Short and sweet' });
+            expect(card().querySelector('.project-content p').textContent).toBe('Short and sweet');
+        });
+
+        it('truncates a long description to 80 characters plus an ellipsis', () => {
+            renderOne({ description: 'x'.repeat(120) });
+            expect(card().querySelector('.project-content p').textContent).toBe(`${'x'.repeat(80)}...`);
+        });
+
+        it('does not add an ellipsis to a description of exactly 80 characters', () => {
+            renderOne({ description: 'y'.repeat(80) });
+            expect(card().querySelector('.project-content p').textContent).toBe('y'.repeat(80));
+        });
+
+        it('renders no description paragraph when the description is missing or empty', () => {
+            renderOne({ description: null });
+            expect(card().querySelector('.project-content p')).toBeNull();
+            expect(card()).not.toHaveTextContent('...');
+        });
+
+        it('renders no description paragraph for an empty string', () => {
+            renderOne({ description: '' });
+            expect(card().querySelector('.project-content p')).toBeNull();
+        });
+
+        it('truncates a long teacher comment the same way and leaves a short one alone', () => {
+            renderOne({ description: 'd', teacher_comment: 'c'.repeat(100) });
+            expect(card().querySelector('.card-teacher-feedback').textContent).toContain(`${'c'.repeat(80)}...`);
+            expect(card().querySelector('.card-teacher-feedback').textContent).not.toContain('c'.repeat(81));
+        });
+
+        it('shows a short teacher comment without an ellipsis', () => {
+            renderOne({ description: 'd', teacher_comment: 'Nice work' });
+            const feedback = card().querySelector('.card-teacher-feedback');
+            expect(feedback.textContent).toContain('Nice work');
+            expect(feedback.textContent).not.toContain('...');
+        });
+    });
 });

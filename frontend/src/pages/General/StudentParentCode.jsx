@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Copy, AlertCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import client from '../../api/client';
+import { getErrorMessage } from '../../utils/apiError';
 import './StudentParentCode.css';
 import Skeleton from '../../components/common/Skeleton';
 
@@ -21,7 +22,7 @@ const StudentParentCode = () => {
             const response = await client.get('/api/user/parent-code');
             setCode(response.data.data?.connection_code || response.data.connection_code);
         } catch (err) {
-            setError(err.response?.data?.error || 'Failed to load connection code');
+            setError(getErrorMessage(err, 'Failed to load connection code'));
         } finally {
             setIsLoading(false);
         }

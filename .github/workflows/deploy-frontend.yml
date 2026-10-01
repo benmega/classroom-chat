@@ -37,6 +37,7 @@ jobs:
       - name: Build Frontend
         env:
           VITE_API_URL: https://api-blossom.benmega.com
+          VITE_WAKEUP_API_URL: https://e5fsaweh7l.execute-api.ap-southeast-1.amazonaws.com/server-start
         run: |
           cd frontend
           npm ci
