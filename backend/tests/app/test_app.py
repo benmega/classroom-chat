@@ -11,7 +11,10 @@ from application import create_app, ensure_default_configuration, seed_global_da
 from application.commands.seed import generate_kebab_slug, seed_command
 from application.config import DevelopmentConfig, ProductionConfig, TestingConfig
 from application.extensions import db, scheduler, socketio
+from application.models.classroom import Classroom
 from application.models.configuration import Configuration
+from application.models.course import Course
+from application.models.course_instance import CourseInstance
 from application.models.project_template import ProjectTemplate
 from flask import session
 from flask_limiter import RateLimitExceeded
@@ -197,6 +200,12 @@ def test_seed_command_missing_files(test_app):
 def test_seed_command_success(test_app):
     runner = test_app.test_cli_runner()
 
+    with test_app.app_context():
+        db.session.add(Classroom(id="class_1", name="Class 1", language="python"))
+        db.session.add(Course(id="course_1", name="Course 1", domain="codecombat.com"))
+        db.session.add(Course(id="course_2", name="Course 2", domain="ozaria.com"))
+        db.session.commit()
+
     instances_csv_content = (
         "id,classroom_id,course_id\n"
         "inst_test_1,class_1,course_1\n"
@@ -225,13 +234,65 @@ def test_seed_command_success(test_app):
         res1 = runner.invoke(seed_command)
         assert res1.exit_code == 0
         assert "Successfully inserted" in res1.output
+        assert "Successfully inserted 2 new course instances (skipped 0 orphan rows)" in res1.output
 
         # Run second time (updates existing challenges)
         res2 = runner.invoke(seed_command)
         assert res2.exit_code == 0
         assert "updated" in res2.output
+        assert "Successfully inserted 0 new course instances (skipped 0 orphan rows)" in res2.output
 
     with test_app.app_context():
+        assert {i.id for i in CourseInstance.query.all()} == {"inst_test_1", "inst_test_2"}
+        db.session.rollback()
+
+
+def test_seed_command_skips_orphan_course_instances(test_app):
+    runner = test_app.test_cli_runner()
+
+    with test_app.app_context():
+        db.session.add(Classroom(id="class_1", name="Class 1", language="python"))
+        db.session.add(Course(id="course_1", name="Course 1", domain="codecombat.com"))
+        db.session.add(CourseInstance(id="inst_existing", classroom_id="class_1", course_id="course_1"))
+        db.session.commit()
+
+    instances_csv_content = (
+        "id,classroom_id,course_id\n"
+        "inst_ok,class_1,course_1\n"
+        "inst_no_course,class_1,\n"
+        "inst_bad_classroom,class_missing,course_1\n"
+        "inst_empty_classroom,,course_1\n"
+        "inst_bad_course,class_1,course_missing\n"
+        "inst_existing,class_missing,course_missing\n"
+    )
+    challenges_csv_content = "name,domain,slug,difficulty,value,description,course_id\n"
+
+    from io import StringIO
+
+    def mock_open(path, mode="r", encoding=None):
+        if "course_instances_seed.csv" in str(path):
+            return StringIO(instances_csv_content)
+        if "level_seed_data.csv" in str(path):
+            return StringIO(challenges_csv_content)
+        return open(path, mode, encoding=encoding)
+
+    with patch("os.path.exists", return_value=True), patch("builtins.open", side_effect=mock_open):
+        result = runner.invoke(seed_command)
+
+    assert result.exit_code == 0
+    assert "Successfully inserted 2 new course instances (skipped 3 orphan rows)" in result.output
+    assert "Skipping orphan course instance inst_bad_classroom: unknown classroom 'class_missing'." in result.output
+    assert "Skipping orphan course instance inst_empty_classroom: unknown classroom ''." in result.output
+    assert "Skipping orphan course instance inst_bad_course: unknown course 'course_missing'." in result.output
+    # An instance that already exists is left alone, not reported as an orphan.
+    assert "inst_existing" not in result.output
+
+    with test_app.app_context():
+        instances = {i.id: i for i in CourseInstance.query.all()}
+        assert set(instances) == {"inst_existing", "inst_ok", "inst_no_course"}
+        # An empty course_id is stored as NULL (the column is nullable), not "".
+        assert instances["inst_no_course"].course_id is None
+        assert instances["inst_ok"].course_id == "course_1"
         db.session.rollback()
 
 

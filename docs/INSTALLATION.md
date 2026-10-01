@@ -44,7 +44,7 @@
 
 ## Getting Started
 
-The database (SQLite, at `backend/instance/dev_users.db`) is created automatically on first run in development — `flask db` migrations are only required in production. To run locally:
+The database (SQLite, at `backend/instance/dev_users.db`) is created automatically on first run in development — `flask db` migrations are only required in production. Schema changes are still made as Alembic migrations (`flask db migrate`), never as ad hoc scripts; production applies them through `deploy.sh` (see [infrastructure_and_devops.md](infrastructure_and_devops.md#8-database-migrations)). To run locally:
 
 ```bash
 # Terminal 1 — backend (from backend/, venv activated)

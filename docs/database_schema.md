@@ -8,8 +8,11 @@ The project uses SQLite (in both local development and production) managed throu
 - **Development / testing**: SQLite (`DEV_DATABASE_URI`, default `backend/instance/dev_users.db`).
 - **Production**: `DATABASE_URL`, set by `deploy.yml` to the SQLite file `backend/instance/prod_users.db`.
 - **Schema management**: production schema changes go through Alembic (`backend/migrations/`,
-  applied by `deploy.sh` with `flask db upgrade`, followed by `python -m tools.migrate_classroom`).
-  `db.create_all()` is only run outside production (`application/__init__.py`).
+  applied by `deploy.sh` with `flask db upgrade`, followed by `python -m tools.migrate_classroom`
+  and `flask seed`; a brand-new database is first created with `db.create_all()` and stamped to
+  head). `db.create_all()` is otherwise only run outside production (`application/__init__.py`).
+  The full ordered list and the rules for schema and data changes are in the "Database upgrade
+  path" section of [infrastructure_and_devops.md](infrastructure_and_devops.md#8-database-migrations).
 
 ---
 

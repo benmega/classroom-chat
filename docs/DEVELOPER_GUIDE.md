@@ -20,7 +20,7 @@ classroom-chat/
 │   ├── instance/               # SQLite DB files, logs (gitignored)
 │   ├── migrations/             # Alembic migrations (Flask-Migrate)
 │   ├── tests/                  # Pytest suite (unit, route, service, socket tests)
-│   ├── tools/                  # One-off/maintenance scripts (e.g. migrate_classroom)
+│   ├── tools/                  # Maintenance helpers: migrate_classroom (data steps, run by deploy.sh) + manual scrape/asset scripts
 │   ├── main.py                  # WSGI entrypoint (`gunicorn -w 1 main:app`)
 │   └── requirements.txt
 ├── frontend/

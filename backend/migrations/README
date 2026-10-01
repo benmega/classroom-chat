@@ -5,4 +5,17 @@ Run these from the `backend/` directory with `FLASK_APP=main.py`:
     flask db upgrade                       # apply migrations (also run by deploy.sh)
     flask db migrate -m "describe change"  # create a new migration after editing models
 
-Do not run `flask db init`; this directory already exists. See docs/infrastructure_and_devops.md.
+Do not run `flask db init`; this directory already exists.
+
+This is the only supported way to change the schema. Production is upgraded by deploy.sh in this
+order: backup, bootstrap/stamp check, `flask db upgrade`, `python -m tools.migrate_classroom`
+(idempotent data steps, no DDL), `flask seed`. The root revision is an empty placeholder, so the
+history cannot build a database from scratch; a brand-new database is created from the models and
+stamped to head by deploy.sh.
+
+Rules:
+- Schema changes only via `flask db migrate`; there must be a single head (`flask db heads`).
+- No raw-SQL or one-off database scripts.
+- Data fixes go in an Alembic data migration or an idempotent step in tools/migrate_classroom.py.
+
+See the "Database upgrade path" in docs/infrastructure_and_devops.md.

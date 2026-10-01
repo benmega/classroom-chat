@@ -75,9 +75,9 @@ echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
 cp backend/.env.example backend/.env
 nano backend/.env  # fill in real values
 
-# 5. Initialise / upgrade the database schema (Alembic, from backend/)
-cd backend
-FLASK_APP=main.py FLASK_ENV=production ../venv/bin/python3 -m flask db upgrade
+# 5. Nothing to do for the database: the first deploy.sh run creates the schema from the
+#    models and stamps it to head (see section 8). `flask db upgrade` alone cannot build a
+#    schema from an empty database.
 ```
 
 ---
@@ -172,7 +172,7 @@ server {
 ## 6. CI/CD Pipeline (GitHub Actions)
 
 - **`deploy-frontend.yml`**: Triggers on push to `deploy`. Builds the React SPA and uploads the static assets directly to the AWS S3 bucket.
-- **`deploy.yml`**: Triggers on push to `deploy`. SSHes into EC2, writes `backend/.env` from GitHub Secrets, then runs `deploy.sh` (dependency install, DB backup, `flask db upgrade`, `python -m tools.migrate_classroom`, service restart, health check with automatic rollback).
+- **`deploy.yml`**: Triggers on push to `deploy`. SSHes into EC2, writes `backend/.env` from GitHub Secrets, then runs `deploy.sh` (dependency install, DB backup, `flask db upgrade`, `python -m tools.migrate_classroom`, `flask seed`, service restart, health check with automatic rollback; see [section 8](#8-database-migrations)).
 - **`lint.yml`**: ESLint (React) + Ruff (Python) on every PR.
 - **`tests.yml`**: Vitest + Pytest on every PR.
 - **`ai-planner.yml`, `ai-coder.yml`**: run when an issue or pull request receives an AI label.
@@ -196,9 +196,58 @@ The health check endpoint is proxied through nginx to gunicorn.
 
 ## 8. Database Migrations
 
-Schema changes are Alembic migrations in `backend/migrations/versions/`. `deploy.sh` runs, from
-`backend/`, `flask db upgrade` and then the idempotent `python -m tools.migrate_classroom` script,
-after taking a copy of `prod_users.db` into `backend/instance/backups/`.
+Alembic (Flask-Migrate) is the only supported way to change the database schema. The migrations
+live in `backend/migrations/versions/` as one linear history with a single head; `tests.yml`
+fails the build when there is more than one. The older one-off script system (raw `sqlite3`
+scripts, `run_migrations.py`, `backend/instance/utilities/`) has been removed. Do not bring it back.
+
+### Database upgrade path
+
+`deploy.sh` is the only upgrade path for production, and `deploy.yml` runs it on every push to
+`deploy`. Its database section runs from `backend/` with `FLASK_ENV=production`, in this order.
+`set -e` aborts the deploy if a step fails, so the service is never restarted on a schema that
+does not match the code.
+
+1. **Backup**: copy `prod_users.db` to `backend/instance/backups/pre_deploy_<timestamp>.db`. The
+   automatic rollback restores this copy if the health check fails.
+2. **Heal `last_daily_duck`**: a small inline `sqlite3` snippet that repairs integer values in
+   `users.last_daily_duck`, run before the app is imported.
+3. **Bootstrap check**: with no `alembic_version` table this is a fresh install, so
+   `db.create_all()` builds the schema from the models and the database is stamped to `head`.
+   Otherwise it is an existing install: Alembic owns the schema and `create_all` is not called.
+4. **Dangling-stamp purge**: if `flask db current` fails because `alembic_version` points at a
+   revision that no longer exists, `flask db stamp base --purge` clears the stamp.
+5. **`flask db upgrade`**: applies the pending migrations (a no-op on a fresh install).
+6. **`python -m tools.migrate_classroom`**: idempotent *data* steps only (the reserved `global` and
+   `archive` classrooms, enrolment backfills, archiving orphaned conversations, admin roles). It
+   contains no DDL and is safe to re-run.
+7. **`flask seed`**: seed data that is backed by files in the repo: course instances
+   (`backend/instance/migration/course_instances_seed.csv`; rows whose classroom or course does
+   not exist are skipped with a warning), challenges (`level_seed_data.csv`) and the standard
+   project templates (`application/commands/projects_data.py`).
+8. **Admin role**: `sqlite3 ... UPDATE users SET role='admin' WHERE LOWER(username)='ben'`.
+
+After that the service restarts and the health check runs; if it fails, the code is reset to the
+previous commit and the step 1 backup is restored.
+
+The bootstrap in step 3 exists because the root revision (`3a10e78a7fd0`) is an empty placeholder:
+the history upgrades an existing schema and cannot build one from nothing (`flask db upgrade` on a
+blank database fails with `NoSuchTableError: users`).
+
+### Rules
+
+- Schema changes are made only with Alembic: change the models, run `flask db migrate -m "..."`,
+  review the generated file and commit it with the model change. Run `flask db heads` before
+  pushing; there must be exactly one head. `backend/scripts/lint_migrations.py` (run by
+  `scripts/preflight.ps1`) lints migrations for idempotency.
+- No raw-SQL or one-off database scripts (ad hoc `sqlite3` files, `ALTER TABLE` snippets, helper
+  scripts kept under `backend/instance/`). Steps 2 and 8 above are the only raw SQL left in
+  `deploy.sh`; do not add more.
+- A data fix is either an Alembic data migration (runs once) or an idempotent step in
+  `tools/migrate_classroom.py` (runs on every deploy). Never put DDL in `tools/migrate_classroom.py`.
+- `db.create_all()` does not ALTER existing tables, so never rely on it for schema changes. The
+  app factory only calls it outside production; `deploy.sh` uses it once to bootstrap a brand-new
+  database before stamping it to head.
 
 Create a new migration on a development machine (from `backend/`, with `FLASK_APP=main.py`):
 
@@ -206,7 +255,3 @@ Create a new migration on a development machine (from `backend/`, with `FLASK_AP
 flask db migrate -m "describe the change"
 flask db upgrade
 ```
-
-`db.create_all()` does not ALTER existing tables, so never rely on it for schema changes (the app
-factory only calls it outside production; `deploy.sh` uses it once to bootstrap a brand-new database
-before stamping it to head).
