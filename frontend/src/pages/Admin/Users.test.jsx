@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { screen, fireEvent, waitFor } from '@testing-library/react';
+import { screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { renderWithProviders } from '../../test/test-utils';
 import Users from './Users';
 import { useUsersManagement } from '../../hooks/useUsersManagement';
@@ -299,5 +299,41 @@ describe('Users Page', () => {
           fireEvent.click(selectAll);
       }
     }
+  });
+
+  describe('removing users', () => {
+    const openRowMenu = (handle) => {
+      const row = screen.getByText(handle).closest('tr');
+      fireEvent.click(within(row).getByTestId('kebab-trigger'));
+    };
+
+    it('offers Remove User for a student and passes the username on', () => {
+      useUsersManagement.mockReturnValue({
+        ...defaultMockState,
+        users: [{ id: 2, username: 'student1', nickname: 'Student', role: 'student', can_chat: true }],
+        totalUsers: 1,
+      });
+      renderComponent();
+
+      openRowMenu('@student1');
+      fireEvent.click(screen.getByText('Remove User'));
+
+      expect(mockHandleRemoveUser).toHaveBeenCalledWith('student1');
+    });
+
+    it('does not offer Remove User for an administrator', () => {
+      useUsersManagement.mockReturnValue({
+        ...defaultMockState,
+        users: [{ id: 1, username: 'boss', nickname: 'Boss', role: 'admin' }],
+        totalUsers: 1,
+      });
+      renderComponent();
+
+      openRowMenu('@boss');
+
+      // The menu is open (it still has the other actions) but offers no removal.
+      expect(screen.getByText('Reset Password')).toBeInTheDocument();
+      expect(screen.queryByText('Remove User')).not.toBeInTheDocument();
+    });
   });
 });

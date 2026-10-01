@@ -16,6 +16,11 @@ vi.mock('../../hooks/useSidebar', () => ({
 }));
 
 import client from '../../api/client';
+import toast from 'react-hot-toast';
+
+vi.mock('react-hot-toast', () => ({
+  default: { success: vi.fn(), error: vi.fn() },
+}));
 
 const mockTransactions = [
   {
@@ -264,5 +269,17 @@ describe('DuckTransactions', () => {
     await waitFor(() => {
       expect(screen.getByText('No reason provided')).toBeInTheDocument();
     });
+  });
+
+  it('shows the reason the server gives when the transactions cannot be loaded', async () => {
+    client.get.mockRejectedValue({ response: { status: 403, data: { status: 'error', data: null, error: 'Admin access required' } } });
+    renderComponent();
+    await waitFor(() => expect(toast.error).toHaveBeenCalledWith('Admin access required'));
+  });
+
+  it('falls back to a generic message when the failure has no body', async () => {
+    client.get.mockRejectedValue(new Error('Network Error'));
+    renderComponent();
+    await waitFor(() => expect(toast.error).toHaveBeenCalledWith('Failed to load transactions.'));
   });
 });

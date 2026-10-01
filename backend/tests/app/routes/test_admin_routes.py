@@ -230,6 +230,39 @@ def test_trade_action_rejects_non_pending_trade(
     assert db.session.get(DuckTradeLog, trade_id).status == "rejected"
 
 
+def test_trade_action_insufficient_ducks(
+    client, sample_admin, sample_user, sample_duck_trade, init_db
+):
+    """A trade the student can no longer afford is refused with a reason and stays pending."""
+    login_as_admin(client, sample_admin)
+    trade_id = sample_duck_trade.id
+    user_id = sample_user.id
+    sample_duck_trade.digital_ducks = 50
+    sample_user.duck_balance = 10
+    db.session.commit()
+
+    response = client.post(
+        "/api/admin/trade_action", data={"trade_id": str(trade_id), "action": "approve"}
+    )
+
+    assert response.status_code == 400
+    data = response.get_json()
+    assert data["status"] == "error"
+    assert data["message"] == "Insufficient ducks"
+    assert db.session.get(User, user_id).duck_balance == 10
+    assert db.session.get(DuckTradeLog, trade_id).status == "pending"
+
+    # Still pending, so it can be approved once the balance covers it.
+    sample_user.duck_balance = 60
+    db.session.commit()
+    response = client.post(
+        "/api/admin/trade_action", data={"trade_id": str(trade_id), "action": "approve"}
+    )
+    assert response.status_code == 200
+    assert db.session.get(User, user_id).duck_balance == 10
+    assert db.session.get(DuckTradeLog, trade_id).status == "approved"
+
+
 def test_trade_action_approve_with_insufficient_balance_changes_nothing(
     client, sample_admin, sample_user, sample_duck_trade, init_db
 ):

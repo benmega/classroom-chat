@@ -273,8 +273,8 @@ export const useProjectManagement = () => {
 
                 navigate('/profile');
             }
-        } catch {
-            toast.error('Failed to delete project.');
+        } catch (error) {
+            toast.error(getErrorMessage(error, 'Failed to delete project.'));
         } finally {
             setIsSaving(false);
         }

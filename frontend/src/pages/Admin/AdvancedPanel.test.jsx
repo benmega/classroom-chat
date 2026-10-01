@@ -161,4 +161,33 @@ describe('AdvancedPanel', () => {
     await waitFor(() => expect(toast.error).toHaveBeenCalledWith('Failed to purge history.'));
     expect(screen.getByText('Confirm History Purge')).toBeInTheDocument();
   });
+
+  it('shows the reason the server gives when the logs cannot be fetched', async () => {
+    client.get.mockRejectedValue({ response: { status: 403, data: { error: 'Admin access required' } } });
+
+    render(<AdvancedPanel />);
+    fireEvent.click(screen.getByText('System Logs'));
+
+    await waitFor(() => expect(toast.error).toHaveBeenCalledWith('Admin access required'));
+  });
+
+  it('shows the reason the server gives when the statistics cannot be fetched', async () => {
+    client.get.mockRejectedValue({ response: { status: 500, data: { status: 'error', data: null, error: 'Statistics unavailable' } } });
+
+    render(<AdvancedPanel />);
+    fireEvent.click(screen.getByText('Server Performance Stats'));
+
+    await waitFor(() => expect(toast.error).toHaveBeenCalledWith('Statistics unavailable'));
+  });
+
+  it('shows the reason the server gives when the purge fails and keeps the modal open', async () => {
+    client.post.mockRejectedValue({ response: { status: 500, data: { error: 'Failed to purge history: database is locked' } } });
+
+    render(<AdvancedPanel />);
+    fireEvent.click(screen.getByText('Purge History'));
+    fireEvent.click(screen.getByText('Yes, Delete All History'));
+
+    await waitFor(() => expect(toast.error).toHaveBeenCalledWith('Failed to purge history: database is locked'));
+    expect(screen.getByText('Confirm History Purge')).toBeInTheDocument();
+  });
 });

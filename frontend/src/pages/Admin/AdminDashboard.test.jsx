@@ -82,10 +82,7 @@ const defaultHookReturn = {
   isRefreshing: false,
   activeModal: null,
   setActiveModal: vi.fn(),
-  modalUser: null,
-  setModalUser: vi.fn(),
   formLoading: false,
-  formErrors: {},
   pendingToggle: false,
   timeframe: 7,
   setTimeframe: vi.fn(),
@@ -93,11 +90,6 @@ const defaultHookReturn = {
   handleToggleMessages: vi.fn(),
   handleUpdateMultiplier: vi.fn(),
   handleAddBannedWord: vi.fn().mockResolvedValue(true),
-  handleCreateUser: vi.fn(),
-  handleAdjustDucks: vi.fn(),
-  handleResetPassword: vi.fn(),
-  handleStartConversation: vi.fn(),
-  handleRemoveUser: vi.fn(),
 };
 
 const renderComponent = () => renderWithProviders(<AdminDashboard />);

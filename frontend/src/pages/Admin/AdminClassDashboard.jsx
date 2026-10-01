@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
+import { getErrorMessage } from '../../utils/apiError';
 import { 
     ChevronLeft, Users, Trash2, 
     Check, Plus, Settings, Globe, Link2, BookOpen, Key, Copy, Gamepad2, Code, X, UserPlus,
@@ -78,7 +79,7 @@ const AdminClassDashboard = () => {
             }
         } catch (err) {
             console.error('Failed to toggle sandbox mode:', err);
-            toast.error(err.response?.data?.error || 'Failed to toggle sandbox mode.');
+            toast.error(getErrorMessage(err, 'Failed to toggle sandbox mode.'));
         } finally {
             setIsTogglingSandbox(false);
         }
@@ -162,7 +163,7 @@ const AdminClassDashboard = () => {
                 fetchClassroomDetails();
             }
         } catch (err) {
-            toast.error(err.response?.data?.error || 'Failed to connect course.');
+            toast.error(getErrorMessage(err, 'Failed to connect course.'));
         } finally {
             setFormLoading(false);
         }
@@ -178,7 +179,7 @@ const AdminClassDashboard = () => {
                 fetchClassroomDetails();
             }
         } catch (err) {
-            toast.error(err.response?.data?.error || 'Failed to disconnect course.');
+            toast.error(getErrorMessage(err, 'Failed to disconnect course.'));
         } finally {
             setFormLoading(false);
         }
@@ -220,7 +221,7 @@ const AdminClassDashboard = () => {
                 fetchClassroomDetails();
             }
         } catch (err) {
-            toast.error(err.response?.data?.error || 'Failed to update languages.');
+            toast.error(getErrorMessage(err, 'Failed to update languages.'));
         }
     };
 
@@ -241,7 +242,7 @@ const AdminClassDashboard = () => {
                 setIsEditingName(false);
             }
         } catch (err) {
-            toast.error(err.response?.data?.error || 'Failed to update name.');
+            toast.error(getErrorMessage(err, 'Failed to update name.'));
         } finally {
             setFormLoading(false);
         }
@@ -256,7 +257,7 @@ const AdminClassDashboard = () => {
                 fetchClassroomDetails();
             }
         } catch (err) {
-            toast.error(err.response?.data?.error || 'Failed to regenerate code.');
+            toast.error(getErrorMessage(err, 'Failed to regenerate code.'));
         } finally {
             setFormLoading(false);
         }
@@ -277,7 +278,7 @@ const AdminClassDashboard = () => {
                 fetchClassroomDetails();
             }
         } catch (err) {
-            toast.error(err.response?.data?.error || 'Failed to enroll student.');
+            toast.error(getErrorMessage(err, 'Failed to enroll student.'));
         } finally {
             setFormLoading(false);
         }
@@ -295,7 +296,7 @@ const AdminClassDashboard = () => {
                 fetchClassroomDetails();
             }
         } catch (err) {
-            toast.error(err.response?.data?.error || 'Failed to unenroll student.');
+            toast.error(getErrorMessage(err, 'Failed to unenroll student.'));
         } finally {
             setFormLoading(false);
         }

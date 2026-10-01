@@ -71,7 +71,8 @@ const AdminUserDashboard = () => {
                 bio: user.bio || '',
                 email: user.email || '',
                 can_chat: user.can_chat ?? true,
-                is_admin: !!user.is_admin,
+                // The API reports admins through `role`; it has no is_admin field.
+                is_admin: user.role === 'admin',
                 is_approved: !!user.is_approved
             });
         }
@@ -127,6 +128,7 @@ const AdminUserDashboard = () => {
         return null;
     };
 
+    const isAdminUser = user.role === 'admin';
     const recentTrackId = getTrackIdFromCourseSlug(user.most_recently_completed_challenge_course);
     const recentTrack = TRACKS.find(t => t.id === recentTrackId);
     const RecentTrackIcon = recentTrack?.icon;
@@ -136,7 +138,7 @@ const AdminUserDashboard = () => {
     return (
         <div className="compact-dashboard admin-user-redesign">
             {/* Banner for Pending Users */}
-            {!user.is_approved && !user.is_admin && (
+            {!user.is_approved && !isAdminUser && (
                 <div className="compact-banner warning-banner">
                     <div className="banner-info">
                         <ShieldAlert size={18} />
@@ -515,7 +517,7 @@ const AdminUserDashboard = () => {
                         </form>
                     </div>
 
-                    {!user.is_admin && (
+                    {!isAdminUser && (
                         <div className="compact-panel danger-box">
                             <div className="panel-head">Danger Zone</div>
                             <p style={{ fontSize: '0.8rem', color: '#b91c1c', marginBottom: '0.75rem', fontWeight: 600 }}>This action is permanent and cannot be undone.</p>

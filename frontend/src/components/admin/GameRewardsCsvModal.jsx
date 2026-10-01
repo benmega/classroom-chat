@@ -3,6 +3,7 @@ import { UploadCloud, Download, FileText, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Modal from '../common/Modal';
 import client from '../../api/client';
+import { getErrorMessage } from '../../utils/apiError';
 import './GameRewardsCsvModal.css';
 
 const GameRewardsCsvModal = ({ isOpen, onClose }) => {
@@ -106,7 +107,7 @@ const GameRewardsCsvModal = ({ isOpen, onClose }) => {
       }
     } catch (err) {
       console.error('Upload error:', err);
-      toast.error(err.response?.data?.error || err.response?.data?.message || 'Failed to upload CSV.');
+      toast.error(getErrorMessage(err, 'Failed to upload CSV.'));
     } finally {
       setIsUploading(false);
     }

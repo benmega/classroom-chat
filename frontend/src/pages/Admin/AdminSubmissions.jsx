@@ -13,6 +13,7 @@ import {
 import client from '../../api/client';
 import { showConfirm } from '../../utils/confirm';
 import toast from 'react-hot-toast';
+import { getErrorMessage } from '../../utils/apiError';
 import { getApiUrl } from '../../utils/apiUrl';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
 import Skeleton from '../../components/common/Skeleton';
@@ -82,7 +83,7 @@ const AdminSubmissions = () => {
                 toast.error(response.data.error || 'Failed to update submission.');
             }
         } catch (error) {
-            toast.error(error.response?.data?.error || 'Failed to update submission.');
+            toast.error(getErrorMessage(error, 'Failed to update submission.'));
         } finally {
             setIsProcessing(null);
         }
@@ -105,7 +106,7 @@ const AdminSubmissions = () => {
                 toast.error(response.data.error || 'Failed to delete submission.');
             }
         } catch (error) {
-            toast.error(error.response?.data?.error || 'Failed to delete submission.');
+            toast.error(getErrorMessage(error, 'Failed to delete submission.'));
         } finally {
             setIsProcessing(null);
         }

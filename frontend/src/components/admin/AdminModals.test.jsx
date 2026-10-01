@@ -2,7 +2,7 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { CreateUserModal, AdjustDucksModal, AdjustPacketsModal, SetDrawerModal, ResetPasswordModal, StartConversationModal, ManageChildrenModal, ConnectionCardModal, BulkConnectionCardsModal, AddCourseModal } from './AdminModals';
+import { CreateUserModal, AdjustDucksModal, AdjustPacketsModal, SetDrawerModal, ResetPasswordModal, ManageChildrenModal, ConnectionCardModal, BulkConnectionCardsModal, AddCourseModal } from './AdminModals';
 
 describe('AdminModals', () => {
   beforeEach(() => {
@@ -194,32 +194,6 @@ describe('AdminModals', () => {
       await userEvent.type(newPassInput, 'newpass');
       await userEvent.type(confirmPassInput, 'newpass');
       await userEvent.click(screen.getByRole('button', { name: 'Reset Password' }));
-      expect(onSubmit).toHaveBeenCalled();
-    });
-  });
-
-  describe('StartConversationModal', () => {
-    it('renders classrooms and submits', async () => {
-      const classrooms = [{ id: 'global', name: 'Global' }, { id: 'class1', name: 'Class 1' }];
-      const onSubmit = vi.fn((e) => e.preventDefault());
-
-      render(
-        <StartConversationModal 
-          isOpen={true} 
-          onClose={vi.fn()} 
-          onSubmit={onSubmit} 
-          loading={false} 
-          classrooms={classrooms} 
-        />
-      );
-
-      expect(screen.getByRole('combobox')).toBeInTheDocument();
-      expect(screen.getByText('Global (Announcements)')).toBeInTheDocument();
-      expect(screen.getByText('Class 1')).toBeInTheDocument();
-
-      await userEvent.selectOptions(screen.getByRole('combobox'), 'class1');
-      await userEvent.type(document.querySelector('input[name="title"]'), 'Test Topic');
-      await userEvent.click(screen.getByRole('button', { name: 'Start Conversation' }));
       expect(onSubmit).toHaveBeenCalled();
     });
   });

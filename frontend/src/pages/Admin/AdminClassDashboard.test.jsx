@@ -3,7 +3,6 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { BrowserRouter } from 'react-router-dom';
 import AdminClassDashboard from './AdminClassDashboard';
 import client from '../../api/client';
-// eslint-disable-next-line
 import toast from 'react-hot-toast';
 
 const socketListeners = {};
@@ -617,6 +616,57 @@ describe('AdminClassDashboard', () => {
         await waitFor(() => {
             expect(screen.getByText(/Sandbox Mode Active — All Tests Passed/i)).toBeInTheDocument();
             expect(screen.getByRole('button', { name: /End Sandbox/i })).toBeInTheDocument();
+        });
+    });
+
+    it('shows the reason the server gives when the sandbox cannot be toggled', async () => {
+        mockClassroomApi({
+            id: 'cls123',
+            name: 'Python Level 1',
+            sandbox_active: false,
+            students: [],
+            course_assignments: []
+        });
+        client.post.mockRejectedValueOnce({
+            response: { status: 403, data: { status: 'error', data: null, error: 'Admin access required' } }
+        });
+
+        renderWithRouter(<AdminClassDashboard />);
+        await waitFor(() => {
+            expect(screen.getByText('Python Level 1')).toBeInTheDocument();
+        });
+
+        fireEvent.click(screen.getByRole('button', { name: /Declare "All Tests Passed" \/ Enable Sandbox/i }));
+
+        await waitFor(() => {
+            expect(toast.error).toHaveBeenCalledWith('Admin access required');
+        });
+    });
+
+    it('shows the reason the server gives when a student cannot be unenrolled', async () => {
+        mockClassroomApi(
+            {
+                id: 'cls123',
+                name: 'Python Level 1',
+                students: [{ id: 10, username: 'student1', nickname: 'John Doe', is_online: true }],
+                course_assignments: []
+            },
+            [{ id: 10, username: 'student1', nickname: 'John Doe', role: 'student' }]
+        );
+        showConfirm.mockResolvedValue(true);
+        client.post.mockRejectedValueOnce({
+            response: { status: 404, data: { success: false, error: 'Student is not enrolled' } }
+        });
+
+        renderWithRouter(<AdminClassDashboard />);
+        await waitFor(() => {
+            expect(screen.getByText('Python Level 1')).toBeInTheDocument();
+        });
+        fireEvent.click(screen.getByRole('tab', { name: 'People' }));
+        fireEvent.click(screen.getByRole('button', { name: /Remove/i }));
+
+        await waitFor(() => {
+            expect(toast.error).toHaveBeenCalledWith('Student is not enrolled');
         });
     });
 });

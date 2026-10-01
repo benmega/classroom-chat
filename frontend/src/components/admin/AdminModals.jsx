@@ -226,31 +226,6 @@ export const ResetPasswordModal = ({ isOpen, onClose, onSubmit, user, formErrors
     );
 };
 
-export const StartConversationModal = ({ isOpen, onClose, onSubmit, loading, classrooms = [] }) => (
-    <Modal isOpen={isOpen} onClose={onClose} title="Start New Conversation">
-        <form onSubmit={onSubmit} className="admin-form">
-            <div className="form-group">
-                <label htmlFor="input-231">Target Classroom <span className="text-error">*</span></label>
-                <select id="input-231" name="classroom_id" className="admin-select" required defaultValue="">
-                    <option value="" disabled>Select a classroom...</option>
-                    {classrooms.map(c => (
-                        <option key={c.id} value={c.id}>
-                            {c.name} {c.id === 'global' ? '(Announcements)' : ''}
-                        </option>
-                    ))}
-                </select>
-            </div>
-            <div className="form-group">
-                <label htmlFor="input-242">Conversation Topic (Optional)</label>
-                <input id="input-242" type="text" name="title" placeholder="Leave empty for default..." />
-            </div>
-            <button type="submit" className="btn-primary" disabled={loading}>
-                {loading ? 'Starting...' : 'Start Conversation'}
-            </button>
-        </form>
-    </Modal>
-);
-
 export const AddBannedWordModal = ({ isOpen, onClose, onSubmit, newWord, setNewWord, loading }) => (
     <Modal isOpen={isOpen} onClose={onClose} title="Add Banned Word">
         <form onSubmit={onSubmit} className="admin-form">

@@ -1,16 +1,14 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import client from '../api/client';
 import toast from 'react-hot-toast';
-import { showConfirm } from '../utils/confirm';
+import { getErrorMessage } from '../utils/apiError';
 
 export const useAdminDashboard = () => {
     const [dashboardData, setDashboardData] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [activeModal, setActiveModal] = useState(null);
-    const [modalUser, setModalUser] = useState(null);
     const [formLoading, setFormLoading] = useState(false);
-    const [formErrors, setFormErrors] = useState({});
     const [pendingToggle, setPendingToggle] = useState(false);
     // The ref blocks a second click before React re-renders with the disabled button.
     const toggleInFlight = useRef(false);
@@ -38,10 +36,6 @@ export const useAdminDashboard = () => {
         fetchDashboardData(timeframe);
     }, [timeframe, fetchDashboardData]);
 
-    useEffect(() => {
-        setFormErrors({});
-    }, [activeModal]);
-
     const handleToggleMessages = async () => {
         // The endpoint flips the stored value on every call, so never overlap two.
         if (toggleInFlight.current) return;
@@ -53,8 +47,8 @@ export const useAdminDashboard = () => {
                 // Keep the toggle locked until the refetch shows the new state.
                 await fetchDashboardData();
             }
-        } catch {
-            toast.error('Failed to toggle messaging.');
+        } catch (error) {
+            toast.error(getErrorMessage(error, 'Failed to toggle messaging.'));
         } finally {
             toggleInFlight.current = false;
             setPendingToggle(false);
@@ -69,7 +63,7 @@ export const useAdminDashboard = () => {
                 fetchDashboardData();
             }
         } catch (error) {
-            toast.error(error.response?.data?.error || 'Failed to update multiplier.');
+            toast.error(getErrorMessage(error, 'Failed to update multiplier.'));
         }
     };
 
@@ -90,150 +84,11 @@ export const useAdminDashboard = () => {
                 return true;
             }
         } catch (error) {
-            toast.error(error.response?.data?.message || 'Failed to add word.');
+            toast.error(getErrorMessage(error, 'Failed to add word.'));
         } finally {
             setFormLoading(false);
         }
         return false;
-    };
-
-    const handleCreateUser = async (e) => {
-        e.preventDefault();
-        const formData = new FormData(e.target);
-        const username = formData.get('username');
-        const password = formData.get('password');
-        
-        const errors = {};
-        if (!username) {
-            errors.username = 'Username is required';
-        } else if (!/^[a-z0-9_]{3,30}$/.test(username)) {
-            errors.username = '3-30 chars, lowercase, numbers, or underscores.';
-        }
-        
-        if (!password) {
-            errors.password = 'Initial password is required';
-        } else if (password.length < 6) {
-            errors.password = 'Password must be at least 6 characters.';
-        }
-        
-        if (Object.keys(errors).length > 0) {
-            setFormErrors(errors);
-            return;
-        }
-        
-        setFormErrors({});
-        setFormLoading(true);
-        try {
-            const response = await client.post('/api/admin/create_user', formData);
-            if (response.data.success) {
-                
-                setActiveModal(null);
-                fetchDashboardData();
-            }
-        } catch (error) {
-            toast.error(error.response?.data?.message || 'Failed to create user.');
-        } finally {
-            setFormLoading(false);
-        }
-    };
-
-    const handleAdjustDucks = async (e) => {
-        e.preventDefault();
-        const formData = new FormData(e.target);
-        
-        const errors = {};
-        if (!formData.get('amount')) {
-            errors.amount = 'Adjustment amount is required';
-        }
-        
-        if (Object.keys(errors).length > 0) {
-            setFormErrors(errors);
-            return;
-        }
-
-        setFormErrors({});
-        setFormLoading(true);
-        try {
-            const response = await client.post('/api/admin/adjust_ducks', formData);
-            if (response.data.success) {
-                
-                setActiveModal(null);
-                fetchDashboardData();
-            }
-        } catch (error) {
-            toast.error(error.response?.data?.message || 'Failed to adjust ducks.');
-        } finally {
-            setFormLoading(false);
-        }
-    };
-
-    const handleResetPassword = async (e) => {
-        e.preventDefault();
-        const formData = new FormData(e.target);
-        const data = Object.fromEntries(formData);
-        
-        const errors = {};
-        if (!data.new_password) errors.new_password = 'New password is required';
-        if (!data.confirm_password) errors.confirm_password = 'Confirmation is required';
-        
-        if (data.new_password && data.confirm_password && data.new_password !== data.confirm_password) {
-            errors.confirm_password = 'Passwords do not match';
-        }
-        
-        if (Object.keys(errors).length > 0) {
-            setFormErrors(errors);
-            return;
-        }
-
-        setFormErrors({});
-        setFormLoading(true);
-        try {
-            const response = await client.post('/api/admin/reset_password', {
-                username: data.username,
-                new_password: data.new_password
-            });
-            if (response.data.success) {
-                
-                setActiveModal(null);
-            }
-        } catch (error) {
-            toast.error(error.response?.data?.message || 'Failed to reset password.');
-        } finally {
-            setFormLoading(false);
-        }
-    };
-
-    const handleStartConversation = async (e) => {
-        e.preventDefault();
-        const data = new FormData(e.target);
-        setFormLoading(true);
-        try {
-            const response = await client.post('/message/start_conversation', data);
-            if (response.status === 201) {
-                
-                setActiveModal(null);
-            }
-        } catch {
-            toast.error('Failed to start conversation.');
-        } finally {
-            setFormLoading(false);
-        }
-    };
-
-    const handleRemoveUser = async (username) => {
-        if (!await showConfirm(`Are you sure you want to PERMANENTLY remove @${username}?`, { title: 'Remove User', destructive: true })) return;
-        
-        try {
-            const formData = new FormData();
-            formData.append('username', username);
-            const response = await client.post('/api/admin/remove_user', formData);
-            if (response.data.success) {
-                
-                fetchDashboardData();
-            }
-        } catch (error) {
-            toast.error(error.response?.data?.message || 'Failed to remove user.');
-        }
     };
 
     return {
@@ -242,21 +97,13 @@ export const useAdminDashboard = () => {
         isRefreshing,
         activeModal,
         setActiveModal,
-        modalUser,
-        setModalUser,
         formLoading,
-        formErrors,
         pendingToggle,
         timeframe,
         setTimeframe,
         fetchDashboardData,
         handleToggleMessages,
         handleUpdateMultiplier,
-        handleAddBannedWord,
-        handleCreateUser,
-        handleAdjustDucks,
-        handleResetPassword,
-        handleStartConversation,
-        handleRemoveUser
+        handleAddBannedWord
     };
 };

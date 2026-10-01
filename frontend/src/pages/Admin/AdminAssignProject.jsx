@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Save, LayoutTemplate, ImageIcon, Code, User, Search, XCircle, Play, CheckCircle, ExternalLink } from 'lucide-react';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
+import { getErrorMessage } from '../../utils/apiError';
 import SmartImage from '../../components/common/SmartImage';
 import { formatStaticUrl } from '../../utils/formatters';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
@@ -103,7 +104,7 @@ const AdminAssignProject = () => {
                 navigate('/admin/to-review');
             }
         } catch (error) {
-            toast.error(error.response?.data?.message || 'Failed to assign project.');
+            toast.error(getErrorMessage(error, 'Failed to assign project.'));
         } finally {
             setIsSubmitting(false);
         }

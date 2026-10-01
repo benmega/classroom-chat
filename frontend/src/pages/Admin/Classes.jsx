@@ -4,6 +4,7 @@ import { Search, Plus, Users, Globe, X, MoreVertical, Trash2 } from 'lucide-reac
 import { showConfirm } from '../../utils/confirm';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
+import { getErrorMessage } from '../../utils/apiError';
 import Skeleton from '../../components/common/Skeleton';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
 import './Classes.css';
@@ -125,7 +126,7 @@ const Classes = () => {
                 fetchClassrooms();
             }
         } catch (err) {
-            toast.error(err.response?.data?.error || 'Failed to delete classroom.');
+            toast.error(getErrorMessage(err, 'Failed to delete classroom.'));
         }
     };
 
@@ -153,7 +154,7 @@ const Classes = () => {
             fetchClassrooms();
         } catch (error) {
             console.error('Failed to create classroom:', error);
-            toast.error(error.response?.data?.error || 'Failed to create classroom.');
+            toast.error(getErrorMessage(error, 'Failed to create classroom.'));
         } finally {
             setIsSubmitting(false);
         }

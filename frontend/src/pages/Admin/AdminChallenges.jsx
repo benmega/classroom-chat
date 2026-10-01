@@ -3,6 +3,7 @@ import { FileUp, Save, Info, Database, Folder, ArrowLeft, Plus, X, GripVertical 
 import client from '../../api/client';
 import { showConfirm } from '../../utils/confirm';
 import toast from 'react-hot-toast';
+import { getErrorMessage } from '../../utils/apiError';
 import './AdminChallenges.css';
 import Papa from 'papaparse';
 import Modal from '../../components/common/Modal';
@@ -65,8 +66,8 @@ const AdminChallenges = () => {
         try {
             await client.put('/api/admin/challenges/reorder', { updates });
             // We successfully saved order, no toast to avoid spam
-        } catch {
-            toast.error('Failed to save new order');
+        } catch (error) {
+            toast.error(getErrorMessage(error, 'Failed to save new order'));
         }
     };
 
@@ -180,7 +181,7 @@ const AdminChallenges = () => {
                 fetchGroupedChallenges();
             }
         } catch (error) {
-            toast.error(error.response?.data?.message || 'Failed to add challenges.');
+            toast.error(getErrorMessage(error, 'Failed to add challenges.'));
         } finally {
             setIsSubmitting(false);
         }
@@ -221,7 +222,7 @@ const AdminChallenges = () => {
             setIsModalOpen(false);
             fetchGroupedChallenges();
         } catch (error) {
-            toast.error(error.response?.data?.message || 'Action failed.');
+            toast.error(getErrorMessage(error, 'Action failed.'));
         } finally {
             setIsSubmitting(false);
         }
@@ -233,8 +234,8 @@ const AdminChallenges = () => {
             const res = await client.delete(`/api/admin/challenges/${id}`);
             toast.success(res.data.message || 'Challenge deleted.');
             fetchGroupedChallenges();
-        } catch {
-            toast.error('Failed to delete challenge.');
+        } catch (error) {
+            toast.error(getErrorMessage(error, 'Failed to delete challenge.'));
         }
     };
 
@@ -253,7 +254,7 @@ const AdminChallenges = () => {
             fetchCourses();
             setSelectedCourseId(courseForm.id);
         } catch (error) {
-            toast.error(error.response?.data?.message || 'Failed to add course.');
+            toast.error(getErrorMessage(error, 'Failed to add course.'));
         } finally {
             setIsSubmitting(false);
         }

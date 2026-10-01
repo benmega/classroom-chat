@@ -4,6 +4,7 @@ import { useProjectManagement } from './useProjectManagement';
 import client from '../api/client';
 import toast from 'react-hot-toast';
 import { extractVideoThumbnail } from '../utils/video';
+import { showConfirm } from '../utils/confirm';
 
 const mockNavigate = vi.fn();
 vi.mock('react-router-dom', () => ({
@@ -29,6 +30,10 @@ vi.mock('react-hot-toast', () => ({
 let mockUser = { id: 1, is_admin: true };
 vi.mock('../store/useAuthStore', () => ({
     default: () => ({ user: mockUser }),
+}));
+
+vi.mock('../utils/confirm', () => ({
+    showConfirm: vi.fn(),
 }));
 
 vi.mock('../utils/video', () => ({
@@ -414,6 +419,46 @@ describe('useProjectManagement', () => {
             await submit(result);
 
             expect(toast.error).toHaveBeenCalledWith('Not allowed.');
+        });
+    });
+
+    describe('delete errors', () => {
+        const attemptDelete = async () => {
+            client.get.mockResolvedValue(null);
+            const { result } = renderHook(() => useProjectManagement());
+            await act(async () => { await new Promise(r => setTimeout(r, 10)); });
+            await act(async () => { await result.current.handleDelete(); });
+            return result;
+        };
+
+        beforeEach(() => {
+            showConfirm.mockResolvedValue(true);
+        });
+
+        it('shows the reason the server gives when the project cannot be deleted', async () => {
+            client.post.mockRejectedValueOnce({ response: { status: 403, data: { status: 'error', data: null, error: 'You do not own this project' } } });
+
+            const result = await attemptDelete();
+
+            expect(toast.error).toHaveBeenCalledWith('You do not own this project');
+            expect(mockNavigate).not.toHaveBeenCalled();
+            expect(result.current.isSaving).toBe(false);
+        });
+
+        it('falls back to a generic message when the failure has no body', async () => {
+            client.post.mockRejectedValueOnce(new Error('Network Error'));
+
+            await attemptDelete();
+
+            expect(toast.error).toHaveBeenCalledWith('Failed to delete project.');
+        });
+
+        it('does nothing when the confirmation is cancelled', async () => {
+            showConfirm.mockResolvedValue(false);
+
+            await attemptDelete();
+
+            expect(client.post).not.toHaveBeenCalled();
         });
     });
 });

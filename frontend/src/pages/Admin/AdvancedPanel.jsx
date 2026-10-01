@@ -13,6 +13,7 @@ import toast from 'react-hot-toast';
 import '../../components/admin/AdminShared.css';
 import './AdvancedPanel.css';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
+import { getErrorMessage } from '../../utils/apiError';
 
 const AdvancedPanel = () => {
     const navigate = useNavigate();
@@ -34,7 +35,7 @@ const AdvancedPanel = () => {
                 setShowLogModal(true);
             }
         } catch (err) {
-            toast.error('Failed to fetch system logs.');
+            toast.error(getErrorMessage(err, 'Failed to fetch system logs.'));
             console.error(err);
         } finally {
             setIsFetchingLogs(false);
@@ -50,7 +51,7 @@ const AdvancedPanel = () => {
                 setShowStatsModal(true);
             }
         } catch (err) {
-            toast.error('Failed to fetch server statistics.');
+            toast.error(getErrorMessage(err, 'Failed to fetch server statistics.'));
             console.error(err);
         } finally {
             setIsFetchingStats(false);
@@ -66,7 +67,7 @@ const AdvancedPanel = () => {
                 setShowPurgeModal(false);
             }
         } catch (err) {
-            toast.error('Failed to purge history.');
+            toast.error(getErrorMessage(err, 'Failed to purge history.'));
             console.error(err);
         } finally {
             setIsPurging(false);

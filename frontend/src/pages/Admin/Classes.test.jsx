@@ -207,4 +207,27 @@ describe('Classes Admin Page', () => {
             fireEvent.keyDown(classCard, { key: 'a' }); // No-op branch
         }
     });
+
+    it('shows the reason the server gives when a classroom cannot be deleted', async () => {
+        client.get.mockResolvedValue({
+            data: { classrooms: [{ id: 'c1', name: 'Math 101', language: 'English', student_count: 20 }] }
+        });
+
+        renderWithRouter(<Classes />);
+        await waitFor(() => {
+            expect(screen.getByText('Math 101')).toBeInTheDocument();
+        });
+
+        fireEvent.click(screen.getByTestId('kebab-trigger'));
+        showConfirm.mockResolvedValue(true);
+        // The route is wrapped by @api_response, which answers a failure with a string `error`.
+        client.delete.mockRejectedValueOnce({
+            response: { status: 403, data: { status: 'error', data: null, error: 'Classroom still has students' } }
+        });
+        fireEvent.click(screen.getByText(/Delete Class/i));
+
+        await waitFor(() => {
+            expect(toast.error).toHaveBeenCalledWith('Classroom still has students');
+        });
+    });
 });

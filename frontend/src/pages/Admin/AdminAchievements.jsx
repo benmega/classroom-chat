@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Award, PlusCircle, ArrowLeft, Info, Coins, Tag, Plus, Edit, X, Search, FileUp, Image as ImageIcon } from 'lucide-react';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
+import { getErrorMessage } from '../../utils/apiError';
 import '../../components/admin/AdminShared.css';
 import './AdminAchievements.css';
 import { formatStaticUrl } from '../../utils/formatters';
@@ -134,7 +135,7 @@ const AdminAchievements = () => {
             }
         } catch (error) {
             console.error('Save achievement error:', error);
-            toast.error(error.response?.data?.message || 'Failed to save achievement.');
+            toast.error(getErrorMessage(error, 'Failed to save achievement.'));
         } finally {
             setIsSubmitting(false);
         }

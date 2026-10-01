@@ -300,6 +300,21 @@ def test_remove_user(client, sample_admin, sample_user):
     assert resp.status_code == 400
 
 
+def test_remove_user_refuses_to_remove_the_logged_in_admin(
+    client, sample_admin, init_db
+):
+    login_as_admin(client, sample_admin)
+    admin_id = sample_admin.id
+
+    resp = client.post("/api/admin/remove_user", data={"username": sample_admin.username})
+
+    assert resp.status_code == 403
+    body = resp.get_json()
+    assert body["success"] is False
+    assert body["message"] == "Cannot remove another admin"
+    assert db.session.get(User, admin_id) is not None
+
+
 def test_remove_user_blocked_by_related_records_is_a_logged_409(
     client, sample_admin, sample_user, caplog
 ):

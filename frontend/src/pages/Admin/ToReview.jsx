@@ -26,11 +26,13 @@ import {
 import client from '../../api/client';
 import toast from 'react-hot-toast';
 import { getApiUrl } from '../../utils/apiUrl';
+import { getErrorMessage } from '../../utils/apiError';
 import { showConfirm } from '../../utils/confirm';
 import { formatStaticUrl } from '../../utils/formatters';
 import { safeUrl } from '../../utils/safeUrl';
 import './ToReview.css';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
+import Modal from '../../components/common/Modal';
 import Skeleton from '../../components/common/Skeleton';
 import SmartImage from '../../components/common/SmartImage';
 
@@ -64,6 +66,10 @@ const ToReview = () => {
     // Bulk Selection State
     const [selectedUsers, setSelectedUsers] = useState(new Set());
     const [selectedTrades, setSelectedTrades] = useState(new Set());
+
+    // Certificate waiting for a rejection reason; the reason modal is open while this is set.
+    const [rejectingCertId, setRejectingCertId] = useState(null);
+    const [rejectReason, setRejectReason] = useState('');
 
     const fetchAllData = useCallback(async () => {
         setIsLoading(true);
@@ -144,6 +150,17 @@ const ToReview = () => {
             return;
         }
 
+        if (!await showConfirm(
+            action === 'approve'
+                ? `Approve this project and award ${Number(reward).toFixed(4)} packets?`
+                : 'Send this project back for revision? Any packets already awarded will be retracted.',
+            {
+                title: action === 'approve' ? 'Approve Project' : 'Request Revision',
+                confirmText: action === 'approve' ? 'Approve' : 'Request Revision',
+                destructive: action === 'reject'
+            }
+        )) return;
+
         setIsProcessing(`project-${projectId}`);
         try {
             const response = await client.post(`/api/admin/handle-project-review/${projectId}`, {
@@ -160,7 +177,7 @@ const ToReview = () => {
                 setProjectRewards(prev => { const copy = {...prev}; delete copy[projectId]; return copy; });
             }
         } catch (err) {
-            toast.error(err.response?.data?.message || 'Failed to review project.');
+            toast.error(getErrorMessage(err, 'Failed to review project.'));
         } finally {
             setIsProcessing(null);
         }
@@ -169,21 +186,13 @@ const ToReview = () => {
     // 2. Certificate Review Actions
     const handleCertificateReview = async (certId, action = 'approve') => {
         if (action === 'reject') {
-            const review_note = window.prompt('Reason for rejecting? (optional)') || undefined;
-            setIsProcessing(`cert-${certId}`);
-            try {
-                const response = await client.post(`/api/achievements/admin/certificates/reject/${certId}`, { review_note });
-                if (response.data.status === 'success') {
-                    setCertificates(prev => prev.filter(c => c.id !== certId));
-                }
-            } catch {
-                toast.error('Failed to reject certificate.');
-            } finally {
-                setIsProcessing(null);
-            }
+            // The optional reason is collected in a modal; closing it cancels the rejection.
+            setRejectReason('');
+            setRejectingCertId(certId);
             return;
         }
 
+        if (!await showConfirm('Mark this certificate as reviewed and approved? The student will be notified and this cannot be undone.', { title: 'Approve Certificate', confirmText: 'Approve' })) return;
         setIsProcessing(`cert-${certId}`);
         try {
             const response = await client.post(`/api/achievements/admin/certificates/reviewed/${certId}`);
@@ -191,8 +200,25 @@ const ToReview = () => {
 
                 setCertificates(prev => prev.filter(c => c.id !== certId));
             }
-        } catch {
-            toast.error('Failed to approve certificate.');
+        } catch (error) {
+            toast.error(getErrorMessage(error, 'Failed to approve certificate.'));
+        } finally {
+            setIsProcessing(null);
+        }
+    };
+
+    const submitCertificateRejection = async () => {
+        const certId = rejectingCertId;
+        const review_note = rejectReason.trim() || undefined;
+        setRejectingCertId(null);
+        setIsProcessing(`cert-${certId}`);
+        try {
+            const response = await client.post(`/api/achievements/admin/certificates/reject/${certId}`, { review_note });
+            if (response.data.status === 'success') {
+                setCertificates(prev => prev.filter(c => c.id !== certId));
+            }
+        } catch (error) {
+            toast.error(getErrorMessage(error, 'Failed to reject certificate.'));
         } finally {
             setIsProcessing(null);
         }
@@ -207,16 +233,24 @@ const ToReview = () => {
                 
                 setCertificates([]); 
             }
-        } catch {
-            toast.error('Failed to mark all as reviewed.');
+        } catch (error) {
+            toast.error(getErrorMessage(error, 'Failed to mark all as reviewed.'));
         } finally {
             setIsProcessing(null);
         }
     };
 
+    // Bulk runs skip the per-item toasts and report what failed, with the server's reasons, in one toast.
+    const reportBulkFailures = (failures, total, noun) => {
+        if (failures.length === 0) return;
+        const reasons = [...new Set(failures.map(f => f.reason))].join('; ');
+        toast.error(`${failures.length} of ${total} ${noun} could not be processed: ${reasons}`);
+    };
+
     // 3. User Signup Review Actions
+    // Resolves to null on success (or when the admin cancels), otherwise to the failure reason.
     const handleUserApproval = async (userId, action, isBulk = false) => {
-        if (!isBulk && action === 'reject' && !await showConfirm('Are you sure you want to reject and delete this user?', { title: 'Reject User', destructive: true })) return;
+        if (!isBulk && action === 'reject' && !await showConfirm('Are you sure you want to reject and delete this user?', { title: 'Reject User', destructive: true })) return null;
         if (!isBulk) setIsProcessing(`user-${userId}`);
         const endpoint = action === 'approve' ? `approve_user/${userId}` : `reject_user/${userId}`;
 
@@ -226,8 +260,11 @@ const ToReview = () => {
                 
                 setPendingUsers(prev => prev.filter(u => u.id !== userId));
             }
-        } catch {
-            if (!isBulk) toast.error(`Failed to ${action} user.`);
+            return null;
+        } catch (error) {
+            const reason = getErrorMessage(error, `Failed to ${action} user.`);
+            if (!isBulk) toast.error(reason);
+            return reason;
         } finally {
             if (!isBulk) setIsProcessing(null);
         }
@@ -239,23 +276,32 @@ const ToReview = () => {
         
         setIsProcessing('bulk-user');
         const ids = Array.from(selectedUsers);
-        let successCount = 0;
+        const failures = [];
         for (const id of ids) {
-            try {
-                await handleUserApproval(id, action, true);
-                // eslint-disable-next-line
-                successCount++;
-            } catch (e) {
-                console.error(e);
-            }
+            const reason = await handleUserApproval(id, action, true);
+            if (reason) failures.push({ id, reason });
         }
-        
-        setSelectedUsers(new Set());
+        reportBulkFailures(failures, ids.length, 'users');
+
+        // Anything that failed stays selected so it can be retried.
+        setSelectedUsers(new Set(failures.map(f => f.id)));
         setIsProcessing(null);
     };
 
     // 4. Duck Trade Review Actions
+    // Resolves to null on success (or when the admin cancels), otherwise to the failure reason.
+    // Bulk runs are confirmed once up front by handleBulkTradeApproval.
     const handleTradeApproval = async (tradeId, action, isBulk = false) => {
+        if (!isBulk && !await showConfirm(
+            action === 'approve'
+                ? 'Approve this trade? The student\'s duck balance will be debited.'
+                : 'Reject this trade? This cannot be undone.',
+            {
+                title: action === 'approve' ? 'Approve Trade' : 'Reject Trade',
+                confirmText: action === 'approve' ? 'Approve' : 'Reject',
+                destructive: action === 'reject'
+            }
+        )) return null;
         if (!isBulk) setIsProcessing(`trade-${tradeId}`);
         const formData = new FormData();
         formData.append('trade_id', tradeId);
@@ -266,11 +312,12 @@ const ToReview = () => {
             if (response.data.status === 'success') {
                 
                 setTrades(prev => prev.filter(t => t.id !== tradeId));
-            } else {
-                if (!isBulk) toast.error(response.data.message || 'Action failed.');
             }
-        } catch {
-            if (!isBulk) toast.error('Failed to process trade.');
+            return null;
+        } catch (error) {
+            const reason = getErrorMessage(error, 'Failed to process trade.');
+            if (!isBulk) toast.error(reason);
+            return reason;
         } finally {
             if (!isBulk) setIsProcessing(null);
         }
@@ -278,18 +325,31 @@ const ToReview = () => {
 
     const handleBulkTradeApproval = async (action) => {
         if (selectedTrades.size === 0) return;
-        
+
+        const count = selectedTrades.size;
+        const noun = count === 1 ? 'trade' : 'trades';
+        if (!await showConfirm(
+            action === 'approve'
+                ? `Approve ${count} ${noun}? Each student's duck balance will be debited.`
+                : `Reject ${count} ${noun}? This cannot be undone.`,
+            {
+                title: action === 'approve' ? 'Approve Trades' : 'Reject Trades',
+                confirmText: action === 'approve' ? 'Approve Selected' : 'Reject Selected',
+                destructive: action === 'reject'
+            }
+        )) return;
+
         setIsProcessing('bulk-trade');
         const ids = Array.from(selectedTrades);
+        const failures = [];
         for (const id of ids) {
-            try {
-                await handleTradeApproval(id, action, true);
-            } catch (e) {
-                console.error(e);
-            }
+            const reason = await handleTradeApproval(id, action, true);
+            if (reason) failures.push({ id, reason });
         }
-        
-        setSelectedTrades(new Set());
+        reportBulkFailures(failures, ids.length, 'trades');
+
+        // Anything that failed stays selected so it can be retried.
+        setSelectedTrades(new Set(failures.map(f => f.id)));
         setIsProcessing(null);
     };
 
@@ -328,7 +388,7 @@ const ToReview = () => {
                 }
             }
         } catch (error) {
-            toast.error(error.response?.data?.message || 'Failed to process course request.');
+            toast.error(getErrorMessage(error, 'Failed to process course request.'));
         } finally {
             setIsProcessing(null);
         }
@@ -1074,6 +1134,26 @@ const ToReview = () => {
                     )}
                 </div>
             </div>
+
+            <Modal isOpen={rejectingCertId !== null} onClose={() => setRejectingCertId(null)} title="Reject Certificate">
+                <form className="admin-form" onSubmit={(e) => { e.preventDefault(); submitCertificateRejection(); }}>
+                    <div className="form-group">
+                        <label htmlFor="cert-reject-reason">Reason (optional)</label>
+                        <textarea
+                            id="cert-reject-reason"
+                            rows={3}
+                            value={rejectReason}
+                            onChange={(e) => setRejectReason(e.target.value)}
+                            placeholder="Why is this certificate being rejected?"
+                        />
+                        <small>The student sees this note in their activity feed.</small>
+                    </div>
+                    <div style={{ display: 'flex', gap: '12px', alignItems: 'stretch' }}>
+                        <button type="button" className="btn-secondary" style={{ marginTop: '1rem' }} onClick={() => setRejectingCertId(null)}>Cancel</button>
+                        <button type="submit" className="btn-danger" style={{ flex: 1 }}>Reject Certificate</button>
+                    </div>
+                </form>
+            </Modal>
         </div>
     );
 };

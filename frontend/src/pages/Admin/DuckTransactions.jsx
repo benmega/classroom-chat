@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
+import { getErrorMessage } from '../../utils/apiError';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
 import './DuckTransactions.css';
 import Skeleton from '../../components/common/Skeleton';
@@ -54,7 +55,7 @@ const DuckTransactions = () => {
             }
         } catch (error) {
             console.error('Error fetching transactions:', error);
-            toast.error('Failed to load transactions.');
+            toast.error(getErrorMessage(error, 'Failed to load transactions.'));
         } finally {
             setIsLoading(false);
             

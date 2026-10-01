@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import client from '../../api/client';
 import { showConfirm } from '../../utils/confirm';
 import toast from 'react-hot-toast';
+import { getErrorMessage } from '../../utils/apiError';
 import { Plus, Edit, X, BookOpen } from 'lucide-react';
 import { cssUrl } from '../../utils/formatters';
 import Modal from '../../components/common/Modal';
@@ -105,7 +106,7 @@ const AdminStandardProjects = () => {
                 }
             }
         } catch (error) {
-            toast.error(error.response?.data?.message || 'Action failed.');
+            toast.error(getErrorMessage(error, 'Action failed.'));
         } finally {
             setIsSubmitting(false);
         }
@@ -120,8 +121,8 @@ const AdminStandardProjects = () => {
                 
                 fetchProjects();
             }
-        } catch {
-            toast.error('Failed to delete standard project.');
+        } catch (error) {
+            toast.error(getErrorMessage(error, 'Failed to delete standard project.'));
         }
     };
 

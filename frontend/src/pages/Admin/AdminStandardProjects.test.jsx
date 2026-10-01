@@ -374,4 +374,46 @@ describe('AdminStandardProjects', () => {
             expect(directUrlInput).toHaveValue('/user/project_images/uploaded-uuid.png');
         });
     });
+
+    it('shows the reason the server gives when a project cannot be deleted', async () => {
+        client.get.mockResolvedValue({
+            data: { status: 'success', data: { templates: { 1: { id: 1, name: 'Project 1', description: 'Desc 1' } } } }
+        });
+
+        renderWithRouter(<AdminStandardProjects />);
+        await waitFor(() => {
+            expect(screen.getByText('Project 1')).toBeInTheDocument();
+        });
+
+        showConfirm.mockResolvedValueOnce(true);
+        client.delete.mockRejectedValueOnce({ response: { status: 400, data: { status: 'error', data: null, error: 'Template not found' } } });
+        fireEvent.click(screen.getByTitle(/Delete Project/i));
+
+        await waitFor(() => {
+            expect(toast.error).toHaveBeenCalledWith('Template not found');
+        });
+    });
+
+    it('shows the reason the server gives when a project cannot be saved', async () => {
+        client.get.mockResolvedValue({
+            data: { status: 'success', data: { templates: {} } }
+        });
+
+        renderWithRouter(<AdminStandardProjects />);
+        await waitFor(() => {
+            expect(screen.getByRole('button', { name: /Add Project/i })).toBeInTheDocument();
+        });
+
+        fireEvent.click(screen.getByRole('button', { name: /Add Project/i }));
+        fireEvent.change(screen.getByPlaceholderText(/e.g. Text-Based Adventure/i), { target: { value: 'New Template' } });
+
+        client.post.mockRejectedValueOnce({ response: { status: 400, data: { status: 'error', data: null, error: 'A template with this name already exists.' } } });
+        const saveButtons = screen.getAllByRole('button', { name: /Save Template/i })
+            .filter(el => el.tagName === 'BUTTON');
+        fireEvent.submit(saveButtons[0].closest('form'));
+
+        await waitFor(() => {
+            expect(toast.error).toHaveBeenCalledWith('A template with this name already exists.');
+        });
+    });
 });
